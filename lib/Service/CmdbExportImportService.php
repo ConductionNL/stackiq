@@ -96,6 +96,27 @@ class CmdbExportImportService {
 	public const ENGINE_CLASS = 'OCA\OpenRegister\Service\MigrationPack\MappingEngine';
 
 	/**
+	 * OpenRegister's schema mapper (not a public contract).
+	 */
+	public const SCHEMA_MAPPER_CLASS = 'OCA\OpenRegister\Db\SchemaMapper';
+
+	/**
+	 * The properties every match search and the module key rely on, per schema.
+	 *
+	 * OpenRegister answers a filter on a property its schema does not declare
+	 * with no rows, not an error; without these the import would create a
+	 * duplicate of every record instead of matching it.
+	 *
+	 * @var array<string, array<int, string>>
+	 */
+	private const MATCH_PROPERTIES = [
+		'module' => ['externalKey', 'externalId', 'externalNumber'],
+		'organization' => ['name', 'type'],
+		'usage' => ['consumer', 'module'],
+		'contactPerson' => ['contactsUid', 'organization'],
+	];
+
+	/**
 	 * Page size for loading the organisations a name may match.
 	 */
 	private const PAGE_SIZE = 500;
@@ -254,9 +275,9 @@ class CmdbExportImportService {
 	 *
 	 * @return array<string, mixed> The report (contract.md).
 	 *
-	 * @throws CmdbImportException MAPPING_UNAVAILABLE, NOT_CONFIGURED, READER_UNAVAILABLE, NOT_XLSX,
-	 *                             NO_SOURCE_SHEET, MISSING_COLUMN, TOO_MANY_ROWS, MUNICIPALITY_REQUIRED
-	 *                             or MUNICIPALITY_INVALID.
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE, NOT_CONFIGURED, SCHEMA_OUTDATED, WORKBOOK_TOO_LARGE,
+	 *                             READER_UNAVAILABLE, NOT_XLSX, NO_SOURCE_SHEET, MISSING_COLUMN,
+	 *                             TOO_MANY_ROWS, MUNICIPALITY_REQUIRED or MUNICIPALITY_INVALID.
 	 * @throws \Exception         An unexpected OpenRegister error outside a row, such as
 	 *                             creating the municipality; rows catch their own.
 	 *
@@ -1239,7 +1260,8 @@ class CmdbExportImportService {
 	 *
 	 * @return array{objectService: ObjectServiceInterface, register: int, module: int, organization: int, usage: int, contactPerson: int}
 	 *
-	 * @throws CmdbImportException NOT_CONFIGURED when OpenRegister or a schema is not configured.
+	 * @throws CmdbImportException NOT_CONFIGURED when OpenRegister or a schema is not configured,
+	 *                             SCHEMA_OUTDATED when a schema lacks a match property.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 */
@@ -1252,7 +1274,7 @@ class CmdbExportImportService {
 
 		$register = (int)($this->settingsService->getVoorzieningenConfig()['register'] ?? 0);
 		$schemas = [];
-		foreach (['module', 'organization', 'usage', 'contactPerson'] as $type) {
+		foreach (array_keys(self::MATCH_PROPERTIES) as $type) {
 			$schemas[$type] = (int)($this->settingsService->getSchemaIdForObjectType($type) ?? 0);
 		}
 
@@ -1263,8 +1285,59 @@ class CmdbExportImportService {
 			);
 		}
 
+		$this->assertMatchProperties(schemas: $schemas);
+
 		return array_merge(['objectService' => $objectService, 'register' => $register], $schemas);
 	}//end resolveCoordinates()
+
+	/**
+	 * Refuse the import when a schema does not declare the properties the matching relies on.
+	 *
+	 * The module properties arrive with the register fragment (module 0.3.5 and
+	 * later), which an installation gets only after its register configuration
+	 * is imported again.
+	 *
+	 * @param array<string, int> $schemas Schema key => schema id.
+	 *
+	 * @return void
+	 *
+	 * @throws CmdbImportException NOT_CONFIGURED when the schemas cannot be read,
+	 *                             SCHEMA_OUTDATED when one lacks a match property.
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+	 */
+	private function assertMatchProperties(array $schemas): void {
+		try {
+			$mapper = $this->container->get(static::SCHEMA_MAPPER_CLASS);
+		} catch (Throwable $e) {
+			$mapper = null;
+		}
+
+		if (is_object($mapper) === false || method_exists($mapper, 'find') === false) {
+			throw new CmdbImportException(errorCode: CmdbImportException::NOT_CONFIGURED, message: 'OpenRegister SchemaMapper is not available');
+		}
+
+		foreach (self::MATCH_PROPERTIES as $type => $required) {
+			try {
+				$properties = $mapper->find(id: $schemas[$type], _rbac: false, _multitenancy: false)->getProperties();
+			} catch (Throwable $e) {
+				throw new CmdbImportException(
+					errorCode: CmdbImportException::NOT_CONFIGURED,
+					message: 'The ' . $type . ' schema cannot be read: ' . get_class($e),
+					previous: $e
+				);
+			}
+
+			$missing = array_values(array_diff($required, array_keys((array)$properties)));
+			if ($missing !== []) {
+				throw new CmdbImportException(
+					errorCode: CmdbImportException::SCHEMA_OUTDATED,
+					message: 'The ' . $type . ' schema does not declare the properties the import matches on',
+					details: ['schema' => $type, 'missing' => $missing]
+				);
+			}
+		}
+	}//end assertMatchProperties()
 
 	/**
 	 * The coordinates of the current run.

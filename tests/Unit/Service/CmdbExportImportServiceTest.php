@@ -362,6 +362,74 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end objectService()
 
 	/**
+	 * OpenRegister's schema mapper over the declared properties.
+	 *
+	 * @return object
+	 */
+	private function schemaMapper(): object {
+		$test = $this;
+		return new class($test) {
+			/**
+			 * Constructor.
+			 *
+			 * @param CmdbExportImportServiceTest $test The test, for the declared properties.
+			 */
+			public function __construct(
+				private CmdbExportImportServiceTest $test,
+			) {
+			}
+
+			/**
+			 * A schema with the declared properties.
+			 *
+			 * @param int|string $id The schema id.
+			 * @param array<mixed>|null $_extend Ignored.
+			 * @param bool $_rbac Must be false.
+			 * @param bool $_multitenancy Must be false.
+			 *
+			 * @return object
+			 */
+			public function find(int|string $id, ?array $_extend = [], bool $_rbac = true, bool $_multitenancy = true): object {
+				$properties = array_fill_keys($this->test->schemaProperties(schema: (int)$id, rbac: $_rbac, multitenancy: $_multitenancy), ['type' => 'string']);
+				return new class($properties) {
+					/**
+					 * Constructor.
+					 *
+					 * @param array<string, mixed> $properties The properties.
+					 */
+					public function __construct(
+						private array $properties,
+					) {
+					}
+
+					/**
+					 * The properties.
+					 *
+					 * @return array<string, mixed>
+					 */
+					public function getProperties(): array {
+						return $this->properties;
+					}
+				};
+			}
+		};
+	}//end schemaMapper()
+
+	/**
+	 * The declared properties of a schema, for the schema mapper double.
+	 *
+	 * @param int $schema The schema id.
+	 * @param bool $rbac The `_rbac` argument.
+	 * @param bool $multitenancy The `_multitenancy` argument.
+	 *
+	 * @return array<int, string>
+	 */
+	public function schemaProperties(int $schema, bool $rbac, bool $multitenancy): array {
+		$this->noteScope(method: 'SchemaMapper::find', rbac: $rbac, multitenancy: $multitenancy);
+		return $this->declaredProperties(schema: $schema);
+	}//end schemaProperties()
+
+	/**
 	 * The Contacts bridge over a fake address book.
 	 *
 	 * @return StackiqContactSyncService
@@ -527,12 +595,17 @@ class CmdbExportImportServiceTest extends TestCase {
 	 */
 	private function service(?CmdbWorkbookReader $reader = null, ?string $profileDir = null, array $config = ['register' => '20']): CmdbExportImportService {
 		$objectService = $this->objectService();
+		$schemaMapper = $this->schemaMapper();
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('has')->willReturn(false);
 		$container->method('get')->willReturnCallback(
-			function (string $id) use ($objectService) {
+			function (string $id) use ($objectService, $schemaMapper) {
 				if ($id === ObjectServiceInterface::class) {
 					return $objectService;
+				}
+
+				if ($id === CmdbExportImportService::SCHEMA_MAPPER_CLASS) {
+					return $schemaMapper;
 				}
 
 				throw new RuntimeException('not in this container: ' . $id);
@@ -736,6 +809,28 @@ class CmdbExportImportServiceTest extends TestCase {
 		$municipalities = array_filter($this->objects(self::ORGANIZATION), fn (array $o): bool => $o['type'] === 'Municipality');
 		$this->assertCount(1, $municipalities);
 	}//end testReimportingTheSameExportChangesNothing()
+
+	/**
+	 * A module schema without externalKey stops the import before reading: no duplicates of every record.
+	 *
+	 * @return void
+	 */
+	public function testAModuleSchemaWithoutTheMatchPropertiesStopsTheImport(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->undeclared[self::MODULE] = ['externalKey', 'externalNumber'];
+
+		try {
+			$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+			$this->fail('SCHEMA_OUTDATED expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('SCHEMA_OUTDATED', $e->getErrorCode());
+			$this->assertSame(503, $e->getHttpStatus());
+			$this->assertSame(['schema' => 'module', 'missing' => ['externalKey', 'externalNumber']], $e->getDetails());
+		}
+
+		$this->assertSame([], $this->saves);
+		$this->assertSame([], $this->searches, 'refused before any search');
+	}//end testAModuleSchemaWithoutTheMatchPropertiesStopsTheImport()
 
 	/**
 	 * A search on a property the schema does not declare yields nothing, as in OpenRegister.
