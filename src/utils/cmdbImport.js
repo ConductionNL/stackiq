@@ -7,7 +7,8 @@
  *
  * The routes, field names, report shape and error codes are fixed by
  * openspec/changes/cmdb-export-import/contract.md. The server stays the
- * authority: every check here is repeated there.
+ * authority: every check here is repeated there. The texts are rendered by
+ * CmdbImport.vue as text, so translations with placeholders use AS_TEXT.
  *
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
  */
@@ -31,6 +32,15 @@ export const PROFILE_DEFAULTS = Object.freeze({
 	maxRowsPerSheet: 10000,
 	sheets: Object.freeze(['Onbeh Applicaties CMDB', 'Beheerde Applicaties CMDB']),
 })
+
+/**
+ * The l10n options for a translation with placeholders that is rendered as
+ * text, through `{{ }}` or a text prop. By default translate() escapes the
+ * placeholder values for HTML and sanitises the result, and Vue escapes the
+ * text again, so a name like "Berkel & Rodenrijs" showed as
+ * "Berkel &amp; Rodenrijs". Never use it for a string that goes into v-html.
+ */
+export const AS_TEXT = Object.freeze({ escape: false, sanitize: false })
 
 /** Every row outcome the report can carry, in display order. */
 export const OUTCOMES = ['created', 'updated', 'unchanged', 'skipped', 'failed']
@@ -99,7 +109,7 @@ export function makeCmdbOperationId() {
  */
 export function formatMegabytes(bytes) {
 	const megabytes = Math.round((Number(bytes) / (1024 * 1024)) * 10) / 10
-	return t('stackiq', '{size} MB', { size: String(megabytes) })
+	return t('stackiq', '{size} MB', { size: String(megabytes) }, AS_TEXT)
 }
 
 /**
@@ -417,6 +427,7 @@ export function errorText(error) {
 								'stackiq',
 								'The file is larger than {size}, the most the import accepts.',
 								{ size: formatMegabytes(details.maxBytes) },
+								AS_TEXT,
 							)
 						: t(
 								'stackiq',
@@ -471,6 +482,7 @@ export function errorText(error) {
 						first: String(expected[0] ?? PROFILE_DEFAULTS.sheets[0]),
 						second: String(expected[1] ?? PROFILE_DEFAULTS.sheets[1]),
 					},
+					AS_TEXT,
 				),
 			}
 		}
@@ -483,6 +495,7 @@ export function errorText(error) {
 						sheet: String(details.sheet ?? ''),
 						column: String(details.column ?? ''),
 					},
+					AS_TEXT,
 				),
 				hint: t(
 					'stackiq',
@@ -496,6 +509,7 @@ export function errorText(error) {
 							'stackiq',
 							'The sheet "{sheet}" has more rows than the import can process.',
 							{ sheet: String(details.sheet) },
+							AS_TEXT,
 						)
 					: t(
 							'stackiq',
@@ -507,6 +521,7 @@ export function errorText(error) {
 								'stackiq',
 								'A source sheet may hold at most {limit} rows. Split the export and import the parts one after the other.',
 								{ limit: Number(details.limit).toLocaleString() },
+								AS_TEXT,
 							)
 						: t(
 								'stackiq',
@@ -599,9 +614,14 @@ export function cancelFailureText(error) {
 			'The import cannot be cancelled now: the server has not started its rows yet, or has already finished them. If the import keeps running, press Cancel import again in a moment.',
 		)
 	}
-	return t('stackiq', 'The import could not be cancelled: {reason}', {
-		reason: errorText(error).title,
-	})
+	return t(
+		'stackiq',
+		'The import could not be cancelled: {reason}',
+		{
+			reason: errorText(error).title,
+		},
+		AS_TEXT,
+	)
 }
 
 /**
@@ -629,10 +649,15 @@ export function cmdbProgressView(progress) {
 		percentage,
 		detail:
 			total > 0
-				? t('stackiq', '{processed} of {total} rows processed', {
-						processed,
-						total,
-					})
+				? t(
+						'stackiq',
+						'{processed} of {total} rows processed',
+						{
+							processed,
+							total,
+						},
+						AS_TEXT,
+					)
 				: '',
 	}
 }

@@ -39,6 +39,7 @@
 							'stackiq',
 							'A new municipality "{name}" is created, unless one with this name already exists.',
 							{ name: municipality.label },
+							asText,
 						)
 					}}
 				</p>
@@ -92,6 +93,7 @@
 								second: profileDefaults.sheets[1],
 								size: formatMegabytes(profileDefaults.maxFileBytes),
 							},
+							asText,
 						)
 					}}
 				</p>
@@ -187,7 +189,12 @@
 				</p>
 				<p class="cmdb-import__code">
 					{{
-						t('stackiq', 'Error code: {code}', { code: errorView.code })
+						t(
+							'stackiq',
+							'Error code: {code}',
+							{ code: errorView.code },
+							asText,
+						)
 					}}
 				</p>
 			</NcNoteCard>
@@ -288,10 +295,15 @@
 					data-testid="cmdb-import-more">
 					<p class="cmdb-import__help">
 						{{
-							t('stackiq', 'Showing {shown} of {total} rows.', {
-								shown: visibleRows.length,
-								total: sortedRows.length,
-							})
+							t(
+								'stackiq',
+								'Showing {shown} of {total} rows.',
+								{
+									shown: visibleRows.length,
+									total: sortedRows.length,
+								},
+								asText,
+							)
 						}}
 					</p>
 					<NcButton
@@ -299,12 +311,17 @@
 						data-testid="cmdb-import-show-more"
 						@click="showMoreRows">
 						{{
-							t('stackiq', 'Show {count} more rows', {
-								count: Math.min(
-									reportPageSize,
-									sortedRows.length - visibleRows.length,
-								),
-							})
+							t(
+								'stackiq',
+								'Show {count} more rows',
+								{
+									count: Math.min(
+										reportPageSize,
+										sortedRows.length - visibleRows.length,
+									),
+								},
+								asText,
+							)
 						}}
 					</NcButton>
 				</div>
@@ -333,6 +350,7 @@
 									first: profileDefaults.sheets[0],
 									second: profileDefaults.sheets[1],
 								},
+								asText,
 							)
 						}}
 					</li>
@@ -385,6 +403,7 @@ import TrayArrowUp from 'vue-material-design-icons/TrayArrowUp.vue'
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 import { startProgressPolling } from '../../../utils/archiMateImportProgress.js'
 import {
+	AS_TEXT,
 	buildImportForm,
 	cancelCmdbImport,
 	cancelFailureText,
@@ -411,7 +430,9 @@ import {
  * The "CMDB import" section of stackiq's admin settings.
  *
  * Rendered by the settings page (src/settings.js), never by the app's router.
- * Every value from the report is rendered as text.
+ * Every value from the report is rendered as text. Translations with
+ * placeholders are built with AS_TEXT (no HTML escaping), because Vue escapes
+ * the text it renders; none of them may go into v-html.
  *
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
  */
@@ -456,6 +477,7 @@ export default {
 			reportPageSize: REPORT_PAGE_SIZE,
 			visibleRowCount: REPORT_PAGE_SIZE,
 			profileDefaults: PROFILE_DEFAULTS,
+			asText: AS_TEXT,
 			outcomeColors: {
 				created: 'success',
 				updated: 'info',
@@ -552,6 +574,7 @@ export default {
 					'stackiq',
 					'Import for {name} cancelled after {read} rows.',
 					counts,
+					AS_TEXT,
 				)
 			}
 			if (this.report?.municipality?.created) {
@@ -559,12 +582,14 @@ export default {
 					'stackiq',
 					'Import finished. The municipality {name} was created. {read} rows read: {created} created, {updated} updated, {unchanged} unchanged.',
 					counts,
+					AS_TEXT,
 				)
 			}
 			return t(
 				'stackiq',
 				'Import for {name} finished. {read} rows read: {created} created, {updated} updated, {unchanged} unchanged.',
 				counts,
+				AS_TEXT,
 			)
 		},
 
@@ -798,13 +823,23 @@ export default {
 		 */
 		formatFileSize(bytes) {
 			if (bytes < 1024 * 1024) {
-				return t('stackiq', '{size} KB', {
-					size: Math.max(1, Math.round((bytes || 0) / 1024)),
-				})
+				return t(
+					'stackiq',
+					'{size} KB',
+					{
+						size: Math.max(1, Math.round((bytes || 0) / 1024)),
+					},
+					AS_TEXT,
+				)
 			}
-			return t('stackiq', '{size} MB', {
-				size: (bytes / (1024 * 1024)).toFixed(1),
-			})
+			return t(
+				'stackiq',
+				'{size} MB',
+				{
+					size: (bytes / (1024 * 1024)).toFixed(1),
+				},
+				AS_TEXT,
+			)
 		},
 
 		/**
