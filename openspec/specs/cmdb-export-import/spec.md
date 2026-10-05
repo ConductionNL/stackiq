@@ -594,5 +594,5 @@ Stackiq's admin settings page SHALL show a section "CMDB import", rendered by th
 ## Notes
 
 - Mapping decisions per column, including the columns that are not mapped because the target schema has no field, are listed in the change's [design.md](../../changes/archive/2026-10-05-cmdb-export-import/design.md).
-- Connections, suites, hosting parties ("Hostingpartij"), "Leverancier", the archive sheet "Gearchiveerde Applicaties" and `missingRecords: mark|remove` are follow-ups (proposal, Out of Scope).
+- Connections, suites, hosting parties ("Hostingpartij"), "Leverancier", the archive sheet "Gearchiveerde Applicaties" and `missingRecords: mark|remove` are follow-ups (the change's [proposal](../../changes/archive/2026-10-05-cmdb-export-import/proposal.md#out-of-scope), Out of Scope).
 - Related: stackiq#373 (live TOPdesk connector), stackiq#1127 (record reconciliation), stackiq#1134 (ITSM exchange, the opposite direction), sbom-import and archimate-import (the upload patterns this follows).
