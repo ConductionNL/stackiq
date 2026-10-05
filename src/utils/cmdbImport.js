@@ -105,7 +105,7 @@ export function makeCmdbOperationId() {
  *
  * @param {number} bytes The size
  * @return {string} The size with its unit
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-user-with-the-stackiq-admin-settings-req-cmdb-001
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin-req-cmdb-001
  */
 export function formatMegabytes(bytes) {
 	const megabytes = Math.round((Number(bytes) / (1024 * 1024)) * 10) / 10
@@ -121,7 +121,7 @@ export function formatMegabytes(bytes) {
  *
  * @param {File|null} file The chosen file
  * @return {{error: string, details: object}|null} An error in the server's shape, or null when the file may be sent
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-user-with-the-stackiq-admin-settings-req-cmdb-001
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin-req-cmdb-001
  */
 export function checkFile(file) {
 	if (!file) {
@@ -171,7 +171,7 @@ export function buildImportForm({
  * The URL of the import endpoint.
  *
  * @return {string} The URL
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-user-with-the-stackiq-admin-settings-req-cmdb-001
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin-req-cmdb-001
  */
 export function importUrl() {
 	return generateUrl('/apps/stackiq/api/cmdb-import')
@@ -226,7 +226,7 @@ const INTERRUPTED_STATUSES = new Set([0, 502, 503, 504])
  *
  * @param {object} error The axios error
  * @return {{error: string, message: string, details: object, status: number, interrupted: boolean}} The error
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-user-with-the-stackiq-admin-settings-req-cmdb-001
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin-req-cmdb-001
  */
 export function normaliseError(error) {
 	const status = error?.response?.status ?? 0
@@ -398,7 +398,7 @@ const KNOWN_ERRORS = new Set([
  *
  * @param {string} code The error code
  * @return {boolean} True for a code with its own text
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-user-with-the-stackiq-admin-settings-req-cmdb-001
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin-req-cmdb-001
  */
 export function isKnownError(code) {
 	return KNOWN_ERRORS.has(code)
@@ -664,12 +664,9 @@ export function errorText(error) {
 			return {
 				title: t(
 					'stackiq',
-					"You may not use stackiq's admin settings, so you cannot import a CMDB export.",
+					'Only Nextcloud administrators can import a CMDB export.',
 				),
-				hint: t(
-					'stackiq',
-					"Ask a Nextcloud administrator to run the import, or to delegate stackiq's admin settings to your group.",
-				),
+				hint: '',
 			}
 		case 'CSRF_FAILED':
 			return {

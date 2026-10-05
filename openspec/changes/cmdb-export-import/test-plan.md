@@ -39,7 +39,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **test command**: PHPUnit `CmdbExportImportServiceTest`
 
 ### TC-5: Upload validation (type, size, columns, sheets, options)
-- **spec_ref**: `spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-user-with-the-stackiq-admin-settings-req-cmdb-001`, `#requirement-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422-req-cmdb-003`, `#requirement-records-missing-from-a-newer-export-shall-be-left-untouched-req-cmdb-012`
+- **spec_ref**: `spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin-req-cmdb-001`, `#requirement-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422-req-cmdb-003`, `#requirement-records-missing-from-a-newer-export-shall-be-left-untouched-req-cmdb-012`
 - **type**: api
 - **preconditions**: admin session
 - **steps**: post `applications.csv`; a text file named `.xlsx`; a 10 MB + 1 byte file; `topdesk-missing-appid.xlsx`; a workbook with only "Blad1"; the fixture with `missingRecords=remove`; the fixture without a municipality
@@ -47,7 +47,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **test command**: PHPUnit `CmdbImportControllerTest`, Newman (Postman collection), `/test-api`; the missing-column UI message also in Playwright
 
 ### TC-6: Authorisation and CSRF
-- **spec_ref**: `spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-user-with-the-stackiq-admin-settings-req-cmdb-001`, `#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013`
+- **spec_ref**: `spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin-req-cmdb-001`, `#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013`
 - **type**: security
 - **preconditions**: a non-admin user, also one in `software-catalog-admins`
 - **steps**: post the fixture and the cancel route as that user; post as admin without `requesttoken`

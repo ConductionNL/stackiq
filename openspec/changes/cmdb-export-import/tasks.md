@@ -87,10 +87,10 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
 - [x] Test
 
 ### Task 8: Controller, routes and API tests
-- **spec_ref**: `SPEC#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-user-with-the-stackiq-admin-settings-req-cmdb-001` (cmdb-export-import#REQ-CMDB-001, #REQ-CMDB-012, #REQ-CMDB-013)
+- **spec_ref**: `SPEC#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin-req-cmdb-001` (cmdb-export-import#REQ-CMDB-001, #REQ-CMDB-012, #REQ-CMDB-013)
 - **files**: `lib/Controller/CmdbImportController.php`, `appinfo/routes.php`, `tests/Unit/Controller/CmdbImportControllerTest.php`, `postman/stackiq-tests.json`, `openapi.json`
 - **acceptance_criteria**:
-  - GIVEN `cmdbImport#import` and `cmdbImport#cancel` WHEN their attributes are inspected THEN neither has `NoAdminRequired` or `NoCSRFRequired` (hydra gates route-auth, csrf-cochange, no-admin-idor)
+  - GIVEN `cmdbImport#import` and `cmdbImport#cancel` WHEN their attributes are inspected THEN neither has `AuthorizedAdminSetting`, `NoAdminRequired` or `NoCSRFRequired` (hydra gates route-auth, csrf-cochange, no-admin-idor)
   - GIVEN the validation order in design.md D10 THEN each error code from contract.md is returned with its status, and every service exception is translated (hydra gate controller-exception-translation)
   - GIVEN Newman WHEN run against the rig THEN 403 for a non-admin and for a `software-catalog-admins` member, 412 without requesttoken, 413 for an oversized file, 422 `MISSING_RECORDS_UNSUPPORTED`, and 200 with the report for the fixture
 - [x] Implement
@@ -108,7 +108,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
   - The e2e file references every `@e2e tests/e2e/spec-coverage/cmdb-import.spec.ts` scenario in the spec (hydra gate e2e-coverage)
 - [x] Implement
 - [ ] Test
-  - Status: the jest tests of `src/utils/cmdbImport.js` pass. The Playwright file has not been run against the current revision (it now also covers the typed municipality, cancel and the refusal of a user without the stackiq admin settings).
+  - Status: the jest tests of `src/utils/cmdbImport.js` pass. The Playwright file has not been run against the current revision (it now also covers the typed municipality, cancel and the refusal of a user who is not a Nextcloud admin).
 
 ### Task 10: Administrator documentation with screenshots
 - **spec_ref**: `SPEC#purpose`

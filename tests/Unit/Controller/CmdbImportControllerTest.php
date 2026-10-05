@@ -24,7 +24,6 @@ namespace OCA\Stackiq\Tests\Unit\Controller;
 use OCA\Stackiq\Controller\CmdbImportController;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\CmdbExportImportService;
-use OCA\Stackiq\Settings\StackiqAdmin;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
@@ -176,35 +175,40 @@ class CmdbImportControllerTest extends TestCase {
 	}//end file()
 
 	/**
-	 * Both methods declare AuthorizedAdminSetting for StackiqAdmin, as attribute and annotation.
+	 * Both methods are for Nextcloud admins only, and declare that with a reason.
+	 *
+	 * Nextcloud's default (no auth attribute) is the admin gate, so the
+	 * declaration is the `@auth admin-only <reason>` tag: the import writes with
+	 * RBAC and multitenancy off, across tenants.
 	 *
 	 * @return void
 	 */
-	public function testBothRoutesRequireTheStackiqAdminSetting(): void {
+	public function testBothRoutesAreForNextcloudAdminsOnly(): void {
 		foreach (['import', 'cancel'] as $method) {
 			$reflection = new ReflectionMethod(CmdbImportController::class, $method);
 
-			$attributes = $reflection->getAttributes(AuthorizedAdminSetting::class);
-			$this->assertCount(1, $attributes, $method);
-			$this->assertSame(['settings' => StackiqAdmin::class], $attributes[0]->getArguments(), $method);
-
-			preg_match_all(self::ANNOTATION, (string)$reflection->getDocComment(), $matches);
-			$byName = array_combine($matches['annotation'], array_map('trim', $matches['parameter']));
-			$this->assertArrayHasKey('AuthorizedAdminSetting', $byName, $method);
-			$this->assertSame('(settings=' . StackiqAdmin::class . ')', $byName['AuthorizedAdminSetting'], $method);
+			$this->assertSame([], $reflection->getAttributes(), $method . ' carries no attribute');
+			$this->assertMatchesRegularExpression(
+				'/^\h+\*\h+@auth admin-only \S.{19,}$/m',
+				(string)$reflection->getDocComment(),
+				$method . ' declares @auth admin-only with a reason'
+			);
 		}
-	}//end testBothRoutesRequireTheStackiqAdminSetting()
+	}//end testBothRoutesAreForNextcloudAdminsOnly()
 
 	/**
-	 * Neither method opens itself to every user, to anonymous users or to requests without CSRF.
+	 * Neither method admits delegated admins, every user, anonymous users or requests without CSRF.
 	 *
-	 * Checked as attribute and as the annotation Nextcloud's regex reads, so a
-	 * comment line that starts with one of these tokens fails too.
+	 * Checked on the class and both methods, as attribute and as the annotation
+	 * Nextcloud's regex reads, so a comment line that starts with one of these
+	 * tokens fails too. `AuthorizedAdminSetting` is in the list because it would
+	 * admit the groups an admin delegated stackiq's settings to.
 	 *
 	 * @return void
 	 */
 	public function testNeitherRouteDeclaresAnExemption(): void {
 		$exemptions = [
+			'AuthorizedAdminSetting' => AuthorizedAdminSetting::class,
 			'NoAdminRequired' => NoAdminRequired::class,
 			'NoCSRFRequired' => NoCSRFRequired::class,
 			'PublicPage' => PublicPage::class,

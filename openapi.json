@@ -13,7 +13,7 @@
             "post": {
                 "operationId": "cmdbImport-import",
                 "summary": "Import a TOPdesk CMDB export (xlsx) for one municipality",
-                "description": "Nextcloud admins and users delegated the stackiq admin settings, CSRF-protected (requesttoken header or OCS-APIRequest: true). Creates or updates modules, supplier organisations, usages and owner contact persons, matched on topdesk:<municipality uuid>:<APPID>. See openspec/changes/cmdb-export-import/contract.md.",
+                "description": "Nextcloud admins only (not the groups delegated the stackiq admin settings), CSRF-protected (requesttoken header or OCS-APIRequest: true). Creates or updates modules, supplier organisations, usages and owner contact persons, matched on topdesk:<municipality uuid>:<APPID>. See openspec/changes/cmdb-export-import/contract.md.",
                 "tags": [
                     "cmdb-import"
                 ],
@@ -102,7 +102,7 @@
                         "description": "Not signed in"
                     },
                     "403": {
-                        "description": "Not an admin of the stackiq settings"
+                        "description": "Not a Nextcloud admin (delegated stackiq admin settings are not enough)"
                     },
                     "409": {
                         "description": "IMPORT_IN_PROGRESS: another CMDB import holds the register's lock; nothing is read or written",
@@ -164,7 +164,7 @@
             "post": {
                 "operationId": "cmdbImport-cancel",
                 "summary": "Ask a running CMDB import to stop between rows",
-                "description": "Nextcloud admins and users delegated the stackiq admin settings, CSRF-protected (requesttoken header or OCS-APIRequest: true). No body.",
+                "description": "Nextcloud admins only (not the groups delegated the stackiq admin settings), CSRF-protected (requesttoken header or OCS-APIRequest: true). No body.",
                 "tags": [
                     "cmdb-import"
                 ],
@@ -207,7 +207,7 @@
                         "description": "Not signed in"
                     },
                     "403": {
-                        "description": "Not an admin of the stackiq settings"
+                        "description": "Not a Nextcloud admin (delegated stackiq admin settings are not enough)"
                     },
                     "404": {
                         "description": "OPERATION_NOT_FOUND: no CMDB import with this id is running",

@@ -36,7 +36,7 @@ Admin settings, "CMDB import" section (CmdbImport.vue)
   │  multipart: cmdbFile, municipalityUuid | municipalityName,
   │             updateExisting, missingRecords, operationId   (+ requesttoken)
   ▼
-CmdbImportController::import()              admin-only, CSRF, size/type checks
+CmdbImportController::import()              Nextcloud admins only, CSRF, size/type checks
   ▼
 CmdbExportImportService::import()
   ├─ CmdbImportProfile        lib/Settings/cmdb-import/topdesk-profile.json + 5 packs
@@ -122,7 +122,7 @@ The key is the TOPdesk APPID (the ICT Applicatienummer), scoped to the municipal
 Per row:
 
 1. A row without an APPID is skipped (`missing APPID`). An APPID already seen on the same sheet is skipped (`duplicate APPID in file`). An APPID on both sheets is imported from the sheet the profile's `sheetPrecedence` ranks first ("Beheerde Applicaties CMDB"), whichever sheet the export lists first; the other row is skipped with that reason and a warning naming the APPID and the winning sheet. The CMDB sheets have no "Soort" column, so there is no row-kind filter.
-2. Look up the module with `searchObjects` on the configured register and module schema, filtered on `externalKey`, with `_rbac: false` and `_multitenancy: false` (as `SbomImportService` does; the caller is an admin). The result is cached for the run.
+2. Look up the module with `searchObjects` on the configured register and module schema, filtered on `externalKey`, with `_rbac: false` and `_multitenancy: false` (as `SbomImportService` does; the caller is a Nextcloud admin, and the route does not admit the groups delegated stackiq's admin settings, because these reads and writes cross tenants). The result is cached for the run.
 3. No match: create the module from the mapped data, plus `externalKey`, the create-only defaults (`type: Application`), and `publicationDate` (D6).
    A module found by `externalKey` counts as a match only when it has a usage whose consumer is this municipality, or no usage at all. `externalKey` is a module property, so on its own it is not proof of ownership: a module only another organisation uses is a conflict, reported as `skipped` and neither changed nor duplicated. The property also carries a write rule (`update: admin`), so only a Nextcloud admin can set it outside the import.
 4. Match and `updateExisting=false`: skip with reason `exists`.
@@ -228,7 +228,7 @@ Source columns of "Onbeh Applicaties CMDB" and "Beheerde Applicaties CMDB" and w
 
 The authoritative interface is in `contract.md`. In short:
 
-- `POST /api/cmdb-import`: multipart `cmdbFile`, plus `municipalityUuid` or `municipalityName`, `updateExisting` (default `true`), `missingRecords` (default `keep`) and `operationId`. Admin, CSRF. Answers 200 with the report, or one of the errors in D10.
+- `POST /api/cmdb-import`: multipart `cmdbFile`, plus `municipalityUuid` or `municipalityName`, `updateExisting` (default `true`), `missingRecords` (default `keep`) and `operationId`. Nextcloud admins only, not delegated groups; CSRF. Answers 200 with the report, or one of the errors in D10.
 - `POST /api/cmdb-import/{operationId}/cancel`: admin, CSRF. Answers 200 `{cancelRequested: true}`.
 - `GET /api/progress/{operationId}`: the existing route, unchanged.
 
@@ -256,7 +256,7 @@ The fragment bumps `module` to `0.3.5`. Fragments are merged in filename order a
 
 ## Nextcloud Integration
 
-- Controllers: `CmdbImportController` (`import`, `cancel`), admin-only with CSRF, no `NoAdminRequired` / `NoCSRFRequired`.
+- Controllers: `CmdbImportController` (`import`, `cancel`), for Nextcloud admins only with CSRF: no `AuthorizedAdminSetting` (it would admit delegated groups), no `NoAdminRequired` / `NoCSRFRequired`.
 - Services: `CmdbExportImportService` (orchestration), `Cmdb\CmdbWorkbookReader`, `Cmdb\CmdbRowNormaliser`, `Cmdb\CmdbImportProfile` (loads and validates the profile and packs). They reuse `ProgressTracker`, `SettingsService` (register and schema ids) and `StackiqContactSyncService`.
 - OCP: `IRequest::getUploadedFile()`, `IUserSession`, `IL10N`, `OCP\Contacts\IManager` (through `StackiqContactSyncService`), `ICacheFactory` (through `ProgressTracker`).
 - OpenRegister: `ObjectServiceInterface::searchObjects()` / `saveObject()` (contract), `MigrationPack\MappingEngine` and `PackDefinitionValidator` (container, guarded), PhpSpreadsheet (guarded).
@@ -265,7 +265,7 @@ The fragment bumps `module` to `0.3.5`. Fragments are merged in filename order a
 
 ## Security Considerations
 
-- **Auth and CSRF:** both routes are admin-only through Nextcloud's middleware, with CSRF required. This is stricter than `SbomController` and `importArchiMate`, which carry `NoCSRFRequired`. The admin check happens before the body is read.
+- **Auth and CSRF:** both routes are for Nextcloud admins only through Nextcloud's middleware, with CSRF required. They carry no `AuthorizedAdminSetting`, so a group an admin delegated stackiq's admin settings to is refused: the import writes with RBAC and multitenancy off, across tenants. This is stricter than `SbomController` and `importArchiMate`, which carry `NoCSRFRequired`. The admin check happens before the body is read.
 - **File checks before parsing:** size limit (10 MB, profile), `.xlsx` extension, ZIP signature and `xl/workbook.xml`. `.xlsm` and `.xls` are rejected. The upload is read from PHP's temporary upload file and never written into Nextcloud Files.
 - **No evaluation, no fetching:** read-data-only, profile sheets only, cached values for formula cells, no `getCalculatedValue()`, no HTTP client in the reader. External connections, Power Query packages and hyperlinks are inert.
 - **Resource bounds:** row cap per sheet, and only allowlisted columns are kept. Memory is bounded by loading only the two CMDB sheets.

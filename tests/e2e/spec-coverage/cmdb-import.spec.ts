@@ -737,8 +737,8 @@ test.describe.serial('CMDB import section', () => {
 		await ctx.dispose()
 	})
 
-	// @e2e cmdb-export-import::a-user-without-the-stackiq-admin-settings-cannot-import
-	test('a signed-in user without the stackiq admin settings is refused', async () => {
+	// @e2e cmdb-export-import::a-user-who-is-not-a-nextcloud-admin-cannot-import
+	test('a signed-in user who is not a Nextcloud admin is refused', async () => {
 		const ctx = await newApiContext()
 		const userId = `cmdb-${RUN_ID}`
 		const password = `Cmdb-${RUN_ID}-Pw!9`

@@ -23,11 +23,13 @@ Specification: [`openspec/changes/cmdb-export-import/`](https://github.com/Condu
 
 ## Who can import
 
-Nextcloud administrators, and members of the groups an administrator
-delegated stackiq's admin settings to (**Administration settings →
-Administration privileges**). Membership of `software-catalog-admins` alone
-is not enough. The section is part of stackiq's admin settings, under
-**Administration settings → Stackiq → CMDB import**.
+Only Nextcloud administrators. The import writes into the catalogue of
+any municipality, past OpenRegister's access rules and organisation
+boundaries, so it is not open to the groups an administrator delegated
+stackiq's admin settings to (**Administration settings → Administration
+privileges**), nor to members of `software-catalog-admins`. The section is
+part of stackiq's admin settings, under **Administration settings → Stackiq
+→ CMDB import**.
 
 ## Before you start
 
@@ -296,9 +298,9 @@ it shows `IMPORT_INTERRUPTED`: wait a few minutes and check the
 municipality's applications before importing again. Importing the same file
 again creates no duplicates.
 
-A message that you are not signed in, may not use stackiq's admin settings,
-or that your session expired comes from Nextcloud itself: sign in again, use
-an account that may (see [Who can import](#who-can-import)), or reload the
+A message that you are not signed in, not an administrator, or that your
+session expired comes from Nextcloud itself: sign in again, use an
+administrator account (see [Who can import](#who-can-import)), or reload the
 page.
 
 ## Limits
