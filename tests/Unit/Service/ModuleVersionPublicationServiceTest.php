@@ -423,6 +423,23 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	}//end testAFailedVersionWriteInTheJobIsTriedAgain()
 
 	/**
+	 * A version that cannot be written while a published module is copied onto it is tried again too.
+	 *
+	 * @return void
+	 */
+	public function testAFailedBackfillInTheJobIsTriedAgain(): void {
+		$service = $this->service();
+		$this->objects->method('find')->willReturn(self::entity('m-1', '43', ['registeredBy' => 'Supplier']));
+		$this->objects->method('searchObjects')->willReturn([self::entity('v-1', '46', ['module' => 'm-1'])]);
+		$this->objects->method('saveObject')->willThrowException(new \RuntimeException('lock wait timeout'));
+
+		$service->objectSaved(object: self::entity('m-1', '43', ['registeredBy' => 'Supplier']));
+		$this->runQueuedJobs();
+
+		$this->assertSame([['module' => 'm-1', 'deleted' => false, 'attempt' => 2]], array_column($this->retries, 0));
+	}//end testAFailedBackfillInTheJobIsTriedAgain()
+
+	/**
 	 * A depublication that cannot be written is logged as critical: the version stays public.
 	 *
 	 * @return void
