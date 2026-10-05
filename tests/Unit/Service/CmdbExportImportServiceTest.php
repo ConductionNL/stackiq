@@ -1710,7 +1710,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$stored = $this->cache['progress_cmdb-progress-1'];
 		$this->assertSame('cmdb_import', $stored['operation_type']);
 		$this->assertSame('completed', $stored['status']);
-		$this->assertSame($report, $stored['statistics']['report']);
+		$this->assertSame(array_merge($report, ['rowsStored' => 2, 'rowsTruncated' => false]), $stored['statistics']['report']);
 	}//end testProgressIsRecordedAndHoldsTheReport()
 
 	/**
@@ -1838,7 +1838,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertCount(1, $report['rows']);
 		$this->assertCount(1, $this->store[self::MODULE], 'row 1 stays');
 		$this->assertSame('cancelled', $this->cache['progress_cmdb-cancel-01']['status']);
-		$this->assertSame($report, $this->cache['progress_cmdb-cancel-01']['statistics']['report']);
+		$this->assertSame(array_merge($report, ['rowsStored' => 1, 'rowsTruncated' => false]), $this->cache['progress_cmdb-cancel-01']['statistics']['report']);
 	}//end testACancelStopsBetweenRows()
 
 	/**

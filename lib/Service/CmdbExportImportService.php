@@ -130,6 +130,11 @@ class CmdbExportImportService {
 	public const TIME_LIMIT_SECONDS = 3000;
 
 	/**
+	 * The most report rows stored with the operation in the distributed cache; the counts are always kept.
+	 */
+	public const STORED_REPORT_ROWS = 500;
+
+	/**
 	 * The URI of the importing admin's address book that new owner contacts go into.
 	 */
 	public const OWNER_ADDRESS_BOOK_URI = 'stackiq-cmdb-owners';
@@ -472,7 +477,7 @@ class CmdbExportImportService {
 			}
 
 			$result = $report->toArray();
-			$this->finishOperation(report: $result);
+			$this->finishOperation(report: $report->toStoredArray(maxRows: self::STORED_REPORT_ROWS));
 		} catch (Throwable $e) {
 			// Rows catch their own errors; this is the run itself failing, so the
 			// operation stops as failed instead of staying running until it expires.
