@@ -528,6 +528,7 @@ class CmdbImportControllerTest extends TestCase {
 					'municipalityUuid' => '',
 					'municipalityName' => 'Gemeente Voorbeeldstad',
 					'updateExisting' => false,
+					'publish' => true,
 					'operationId' => 'cmdb-00000000-0000-0000-0000-000000000000',
 					'fileName' => 'export.xlsx',
 				]
@@ -561,6 +562,7 @@ class CmdbImportControllerTest extends TestCase {
 					'municipalityUuid' => '00000000-0000-0000-0000-000000000001',
 					'municipalityName' => 'Gemeente Voorbeeldstad',
 					'updateExisting' => true,
+					'publish' => true,
 					'operationId' => 'not-a-cmdb-id',
 					'fileName' => 'export.xlsx',
 				]
@@ -680,6 +682,45 @@ class CmdbImportControllerTest extends TestCase {
 
 		$this->assertSame(200, $response->getStatus());
 	}//end testUpdateExistingAcceptsOnlyExplicitValues()
+
+	/**
+	 * Only true/false and 1/0 decide whether created modules are published; anything else is 400 FIELD_INVALID.
+	 *
+	 * The spellings are those of updateExisting: a typo never publishes what the admin chose to keep unpublished.
+	 *
+	 * @param mixed $value The form value, or null for an absent field.
+	 * @param bool|null $expected The value passed to the import, or null for a refusal.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('updateExistingValues')]
+	public function testPublishAcceptsOnlyExplicitValues(mixed $value, ?bool $expected): void {
+		$service = $this->service();
+		$params = ['municipalityName' => 'Gemeente Voorbeeldstad'];
+		if ($value !== null) {
+			$params['publish'] = $value;
+		}
+
+		if ($expected === null) {
+			$service->expects($this->never())->method('import');
+		} else {
+			$service->expects($this->once())->method('import')
+				->with($this->anything(), $this->callback(fn (array $options): bool => $options['publish'] === $expected))
+				->willReturn(['success' => true]);
+		}
+
+		$response = $this->controller(file: $this->file(path: $this->upload()), params: $params, service: $service)->import();
+
+		if ($expected === null) {
+			$this->assertSame(400, $response->getStatus());
+			$this->assertSame('FIELD_INVALID', $response->getData()['error']);
+			$this->assertEquals((object)['field' => 'publish', 'accepted' => ['true', 'false']], $response->getData()['details']);
+			$this->assertSame('Field "publish" must be one of: true, false.', $response->getData()['message']);
+			return;
+		}
+
+		$this->assertSame(200, $response->getStatus());
+	}//end testPublishAcceptsOnlyExplicitValues()
 
 	/**
 	 * A text field sent as an array is 400 FIELD_INVALID naming it, not the string "Array".

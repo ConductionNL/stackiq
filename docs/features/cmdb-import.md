@@ -40,7 +40,8 @@ catalogue that includes the register `stackiq` and the schema `module`. In
 OpenCatalogi, open the catalogue that should show the municipality's
 applications and add that register and schema. A newly imported module gets
 a publication date (the moment the import started), so it is listed from then
-on.
+on, unless you turn off **Publish the applications this import creates**
+(see the steps below).
 
 **Portaliq ("Software we use").** Portaliq shows an application to a
 municipality through a usage whose consumer is that municipality. The portal
@@ -65,7 +66,14 @@ page in stackiq.
    applications that are new for this municipality; rows that match an
    existing application are then reported as *skipped* with reason `exists`
    and nothing about them changes.
-5. Press **Import**. A progress bar shows how many rows have been processed.
+5. **Publish the applications this import creates.** On by default. A
+   published application is visible to anyone, including anonymous visitors
+   of OpenCatalogi. Turn it off to create the new applications without a
+   publication date; they stay unpublished until you publish them by hand,
+   and the summary counts them as *created unpublished*. Applications that
+   were imported before keep their publication as it is, whichever you
+   choose.
+6. Press **Import**. A progress bar shows how many rows have been processed.
    **Cancel import** stops the import before the next row; rows that were
    already processed stay imported. The section says whether the server
    accepted the cancel; one pressed before the server has started on the
@@ -79,7 +87,8 @@ finished.
 When the import finishes, the section shows:
 
 - the **summary**: rows read, created, updated, unchanged, skipped, failed
-  and warnings;
+  and warnings, and, when publishing was off, how many applications were
+  created unpublished;
 - **warnings for the whole file**, for example an optional column that is
   missing;
 - the **rows** table: sheet, row number, APPID, application, outcome,
@@ -174,8 +183,10 @@ Applicatienummer) stays the same when TOPdesk changes the Applicatie Code
 (Middel-ID). Two municipalities can each have an APPID `101` without
 colliding.
 
-- **New APPID**: a module and a usage are created. The module gets a
-  publication date (the moment the import started), so OpenCatalogi lists it.
+- **New APPID**: a module and a usage are created. With **Publish the
+  applications this import creates** on, the module gets a publication date
+  (the moment the import started), so OpenCatalogi lists it; with it off,
+  the module has no publication date and is not public.
 - **Known APPID, values changed**: only the fields in the column table
   are updated. Everything else on the module stays as it is, for example a
   website an administrator added. The publication date and the depublication
@@ -252,7 +263,7 @@ and the section shows the reason and the error code.
 | `WORKBOOK_TOO_LARGE` | Unpacked, the workbook is larger than the import reads (50 MB by default). An `.xlsx` is a compressed package, so a small file can unpack to far more. The message names the limit. | Remove sheets the import does not read, such as the archive sheet, or split the export. |
 | `MUNICIPALITY_AMBIGUOUS` | More than one municipality has the typed name. The import does not guess which one. | Pick the municipality from the list instead of typing its name. |
 | `IMPORT_IN_PROGRESS` | Another CMDB import is running. Only one import runs at a time. | Wait until it has finished and try again. |
-| `FIELD_INVALID` | A form field of the request has a value the import does not accept, for example an `updateExisting` that is neither `true` nor `false`. The message names the field. | Not reachable from the section; reported for API callers. |
+| `FIELD_INVALID` | A form field of the request has a value the import does not accept, for example an `updateExisting` or `publish` that is neither `true` nor `false`. The message names the field. | Not reachable from the section; reported for API callers. |
 | `UPLOAD_FAILED` | The file reached the server but could not be stored there. | Try again; the Nextcloud log has the details. |
 | `MISSING_RECORDS_UNSUPPORTED` | The request asked to mark or remove records missing from the export. Only keeping them is supported. | Not reachable from the section; reported for API callers. |
 | `MAPPING_UNAVAILABLE` | OpenRegister's mapping engine is missing, or one of the mapping files is invalid. | Update OpenRegister. If you changed a mapping file, check it against the Nextcloud log. |

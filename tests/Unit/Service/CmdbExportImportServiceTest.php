@@ -805,7 +805,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertTrue($report['success']);
 		$this->assertFalse($report['cancelled']);
 		$this->assertSame('cmdb-test-0001', $report['operationId']);
-		$this->assertSame(['rowsRead' => 2, 'processed' => 2, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 0, 'warnings' => 0], $report['summary']);
+		$this->assertSame(['rowsRead' => 2, 'processed' => 2, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 0, 'warnings' => 0, 'unpublished' => 0], $report['summary']);
 		$this->assertSame('Gemeente Voorbeeldstad', $report['municipality']['name']);
 		$this->assertTrue($report['municipality']['created']);
 		$this->assertSame(['No municipality named "Gemeente Voorbeeldstad" was found, so it was created. Check the name if you meant an existing one.'], array_column($report['importWarnings'], 'message'), 'only the warning that the municipality was created');
@@ -1153,6 +1153,43 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertArrayNotHasKey('type', $this->store[self::MODULE]['mod-1'], 'type is create-only');
 		$this->assertSame('Applicatie 1', $this->store[self::MODULE]['mod-1']['name']);
 	}//end testAnUpdateNeverWritesPublicationDate()
+
+	/**
+	 * With publish false a created module gets no publicationDate and is counted; with true it gets the start time.
+	 *
+	 * An update leaves publicationDate as it was either way.
+	 *
+	 * @return void
+	 */
+	public function testPublishDecidesThePublicationDateOfCreatedModulesOnly(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->store[self::MODULE]['mod-old'] = [
+			'id' => 'mod-old',
+			'name' => 'Oud',
+			'externalKey' => 'topdesk:muni-1:1',
+			'publicationDate' => '2026-01-01T00:00:00+00:00',
+		];
+		$rows = [$this->row(appId: '1', row: 2), $this->row(appId: '2', row: 3), $this->row(appId: '3', row: 4)];
+
+		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1', 'publish' => false]);
+
+		$this->assertSame(['updated', 'created', 'created'], array_column($report['rows'], 'outcome'));
+		$this->assertSame(2, $report['summary']['unpublished']);
+		$this->assertSame('2026-01-01T00:00:00+00:00', $this->store[self::MODULE]['mod-old']['publicationDate'], 'an update keeps it');
+		foreach ([$report['rows'][1]['moduleUuid'], $report['rows'][2]['moduleUuid']] as $uuid) {
+			$this->assertArrayNotHasKey('publicationDate', $this->store[self::MODULE][$uuid]);
+		}
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '4', row: 2)]))->import(path: '', options: ['municipalityUuid' => 'muni-1', 'publish' => true]);
+
+		$this->assertSame(0, $report['summary']['unpublished']);
+		$published = $this->store[self::MODULE][$report['rows'][0]['moduleUuid']]['publicationDate'];
+		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+00:00$/', $published);
+		$this->assertSame('2026-01-01T00:00:00+00:00', $this->store[self::MODULE]['mod-old']['publicationDate']);
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '5', row: 2)]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$this->assertArrayHasKey('publicationDate', $this->store[self::MODULE][$report['rows'][0]['moduleUuid']], 'publish defaults to true');
+	}//end testPublishDecidesThePublicationDateOfCreatedModulesOnly()
 
 	/**
 	 * A municipality uuid must be an organisation of type Municipality.
@@ -1549,7 +1586,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testAnImportedContactPersonIsNeverAUser()
 
 	/**
-	 * An import logs who ran it, on which file and municipality, with which updateExisting, and the counts.
+	 * An import logs who ran it, on which file and municipality, with which updateExisting and publish, and the counts.
 	 *
 	 * @return void
 	 */
@@ -1557,10 +1594,10 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
 		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(
 			path: '',
-			options: ['municipalityUuid' => 'muni-1', 'updateExisting' => false, 'operationId' => 'cmdb-audit-01', 'fileName' => 'C:\\Users\\beheer\\export.xlsx']
+			options: ['municipalityUuid' => 'muni-1', 'updateExisting' => false, 'publish' => false, 'operationId' => 'cmdb-audit-01', 'fileName' => 'C:\\Users\\beheer\\export.xlsx']
 		);
 
-		$audit = '"operationId":"cmdb-audit-01","uid":"admin","fileName":"export.xlsx","municipality":"muni-1","municipalityCreated":false,"updateExisting":false';
+		$audit = '"operationId":"cmdb-audit-01","uid":"admin","fileName":"export.xlsx","municipality":"muni-1","municipalityCreated":false,"updateExisting":false,"publish":false';
 		$started = array_values(array_filter($this->logLines, static fn (string $line): bool => str_starts_with($line, 'CmdbExportImportService: import started')));
 		$finished = array_values(array_filter($this->logLines, static fn (string $line): bool => str_starts_with($line, 'CmdbExportImportService: import finished')));
 		$this->assertCount(1, $started);
@@ -1633,7 +1670,7 @@ class CmdbExportImportServiceTest extends TestCase {
 
 		$this->assertSame(['created', 'failed', 'created'], array_column($report['rows'], 'outcome'));
 		$this->assertStringStartsWith('step "module" failed', $report['rows'][1]['reasons'][0]);
-		$this->assertSame(['rowsRead' => 3, 'processed' => 3, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 1, 'warnings' => 0], $report['summary']);
+		$this->assertSame(['rowsRead' => 3, 'processed' => 3, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 1, 'warnings' => 0, 'unpublished' => 0], $report['summary']);
 		$this->assertCount(2, $this->store[self::MODULE]);
 	}//end testOneBadRowDoesNotStopTheOthers()
 

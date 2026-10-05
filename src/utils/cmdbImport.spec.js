@@ -136,6 +136,22 @@ describe('buildImportForm', () => {
 		expect(form.get('municipalityName')).toBe('Berkel & Rodenrijs')
 		expect(form.get('updateExisting')).toBe('false')
 	})
+
+	it('publishes what the import creates unless told not to', () => {
+		const options = {
+			file,
+			municipality: { uuid: 'uuid-1', name: 'Tilburg' },
+			updateExisting: true,
+			operationId: 'cmdb-abcdefgh',
+		}
+		expect(buildImportForm(options).get('publish')).toBe('true')
+		expect(buildImportForm({ ...options, publish: true }).get('publish')).toBe(
+			'true',
+		)
+		expect(buildImportForm({ ...options, publish: false }).get('publish')).toBe(
+			'false',
+		)
+	})
 })
 
 describe('the endpoints', () => {

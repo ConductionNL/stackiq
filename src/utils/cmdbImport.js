@@ -140,14 +140,17 @@ export function checkFile(file) {
  * @param {File} options.file The export
  * @param {{uuid: string|null, name: string}} options.municipality The chosen municipality: an existing one has a uuid, a new one only a name
  * @param {boolean} options.updateExisting Whether matched rows are updated
+ * @param {boolean} [options.publish] Whether the modules the import creates are published; true when left out
  * @param {string} options.operationId The progress operation id
  * @return {FormData} The body
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin-req-cmdb-004
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-newly-created-module-shall-get-a-publicationdate-when-the-admin-publishes-and-an-existing-one-shall-keep-its-own-req-cmdb-007
  */
 export function buildImportForm({
 	file,
 	municipality,
 	updateExisting,
+	publish = true,
 	operationId,
 }) {
 	const form = new FormData()
@@ -158,6 +161,7 @@ export function buildImportForm({
 		form.append('municipalityName', municipality.name)
 	}
 	form.append('updateExisting', updateExisting ? 'true' : 'false')
+	form.append('publish', publish ? 'true' : 'false')
 	form.append('missingRecords', 'keep')
 	form.append('operationId', operationId)
 	return form

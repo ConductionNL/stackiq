@@ -116,6 +116,23 @@
 					}}
 				</p>
 			</div>
+			<div class="cmdb-import__field">
+				<NcCheckboxRadioSwitch
+					v-model="publish"
+					:disabled="importing"
+					aria-describedby="cmdb-import-publish-help"
+					data-testid="cmdb-import-publish">
+					{{ t('stackiq', 'Publish the applications this import creates') }}
+				</NcCheckboxRadioSwitch>
+				<p id="cmdb-import-publish-help" class="cmdb-import__help">
+					{{
+						t(
+							'stackiq',
+							'A published application is visible to anyone, including anonymous visitors of OpenCatalogi. When off, the applications this import creates stay unpublished until you publish them by hand. Applications imported before keep their publication as it is.',
+						)
+					}}
+				</p>
+			</div>
 
 			<!-- 4. Actions -->
 			<div class="cmdb-import__actions">
@@ -470,6 +487,7 @@ export default {
 			municipalityLoadError: '',
 			selectedFile: null,
 			updateExisting: true,
+			publish: true,
 			importing: false,
 			cancelling: false,
 			cancelStatus: '',
@@ -559,7 +577,11 @@ export default {
 				{ key: 'skipped', label: t('stackiq', 'Skipped') },
 				{ key: 'failed', label: t('stackiq', 'Failed') },
 				{ key: 'warnings', label: t('stackiq', 'Warnings') },
-			].map((tile) => ({ ...tile, value: Number(summary[tile.key]) || 0 }))
+				{ key: 'unpublished', label: t('stackiq', 'Created unpublished') },
+			]
+				.map((tile) => ({ ...tile, value: Number(summary[tile.key]) || 0 }))
+				// Only an import run with publishing off leaves modules unpublished.
+				.filter((tile) => tile.key !== 'unpublished' || tile.value > 0)
 		},
 
 		/**
@@ -890,6 +912,7 @@ export default {
 						name: this.municipality.label,
 					},
 					updateExisting: this.updateExisting,
+					publish: this.publish,
 					operationId: this.operationId,
 				})
 				const response = await axios.post(importUrl(), form)

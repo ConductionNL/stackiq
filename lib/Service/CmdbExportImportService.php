@@ -25,8 +25,9 @@
  *   supplier on its normalised name and type Supplier; a contact person on
  *   (contactsUid, organization). An organisation that was merged away
  *   (status `merged`) or is `Inactive` is never matched by name.
- * - `publicationDate` is set to the import's start on create and never
- *   written on update; neither is `depublicationDate`.
+ * - `publicationDate` is set to the import's start on create, unless the
+ *   admin chose not to publish (`publish` false), and never written on
+ *   update; neither is `depublicationDate`.
  * - Records missing from a newer export are left untouched.
  * - Owners become contact persons, never Nextcloud user accounts, and no
  *   report entry or log line carries an owner name or e-mail address.
@@ -322,8 +323,8 @@ class CmdbExportImportService {
 	 * before the file is read until it returns or throws.
 	 *
 	 * @param string $path The xlsx file, already checked by assertXlsx().
-	 * @param array<string, mixed> $options municipalityUuid, municipalityName, updateExisting, operationId,
-	 *                                      and fileName (the upload's name, for the audit log line).
+	 * @param array<string, mixed> $options municipalityUuid, municipalityName, updateExisting, publish,
+	 *                                      operationId, and fileName (the upload's name, for the audit log line).
 	 *
 	 * @return array<string, mixed> The report (contract.md).
 	 *
@@ -449,6 +450,11 @@ class CmdbExportImportService {
 
 		$this->winningSheets = $this->winningSheets(rows: $rows);
 		$updateExisting = (($options['updateExisting'] ?? true) !== false);
+		$publish = (($options['publish'] ?? true) !== false);
+		$publicationDate = null;
+		if ($publish === true) {
+			$publicationDate = $startedAt;
+		}
 		$audit = [
 			'operationId' => $operationId,
 			'uid' => $this->userSession->getUser()?->getUID(),
@@ -456,6 +462,7 @@ class CmdbExportImportService {
 			'municipality' => $municipality['uuid'],
 			'municipalityCreated' => $municipality['created'],
 			'updateExisting' => $updateExisting,
+			'publish' => $publish,
 		];
 		$this->logger->info('CmdbExportImportService: import started', array_merge($audit, ['rows' => count($rows)]));
 		try {
@@ -468,8 +475,7 @@ class CmdbExportImportService {
 				$this->processRow(
 					row: $row,
 					municipalityUuid: $municipality['uuid'],
-					updateExisting: $updateExisting,
-					startedAt: $startedAt,
+					options: ['updateExisting' => $updateExisting, 'publicationDate' => $publicationDate],
 					date1904: $workbook['date1904'],
 					report: $report
 				);
@@ -498,8 +504,8 @@ class CmdbExportImportService {
 	 *
 	 * @param array{sheet: string, row: int, cells: array<string, mixed>, uncached?: array<int, string>} $row The reader row.
 	 * @param string $municipalityUuid The consumer.
-	 * @param bool $updateExisting Whether matched rows are updated.
-	 * @param string $startedAt ISO start time of the import.
+	 * @param array{updateExisting: bool, publicationDate: string|null} $options Whether matched rows are updated, and the
+	 *                                                                         publicationDate of a created module (null: unpublished).
 	 * @param bool $date1904 The workbook's date system.
 	 * @param CmdbImportReport $report The report.
 	 *
@@ -510,8 +516,7 @@ class CmdbExportImportService {
 	private function processRow(
 		array $row,
 		string $municipalityUuid,
-		bool $updateExisting,
-		string $startedAt,
+		array $options,
 		bool $date1904,
 		CmdbImportReport $report,
 	): void {
@@ -564,13 +569,12 @@ class CmdbExportImportService {
 			$providerUuid = $this->resolveManufacturer(values: $values, rowNumber: $rowNumber);
 
 			$step = 'module';
-			$externalKey = $this->profile->externalKeyPrefix() . ':' . $municipalityUuid . ':' . $matchKey;
-			$moduleResult = $this->upsertModule(
+			$moduleResult = $this->importModule(
 				data: $module['data'],
-				externalKey: $externalKey,
+				externalKey: $this->profile->externalKeyPrefix() . ':' . $municipalityUuid . ':' . $matchKey,
 				providerUuid: $providerUuid,
-				startedAt: $startedAt,
-				updateExisting: $updateExisting
+				options: $options,
+				report: $report
 			);
 			$moduleUuid = $moduleResult['uuid'];
 			if ($moduleResult['outcome'] === 'exists') {
@@ -941,19 +945,49 @@ class CmdbExportImportService {
 	}//end resolveManufacturer()
 
 	/**
+	 * Upsert the row's module, and count it when it was created unpublished.
+	 *
+	 * @param array<string, mixed> $data The mapped module fields.
+	 * @param string $externalKey The match key.
+	 * @param string|null $providerUuid The supplier, when there is one.
+	 * @param array{updateExisting: bool, publicationDate: string|null} $options The run's choices.
+	 * @param CmdbImportReport $report The report.
+	 *
+	 * @return array{uuid: string, outcome: string} The outcome of upsertModule().
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+	 */
+	private function importModule(array $data, string $externalKey, ?string $providerUuid, array $options, CmdbImportReport $report): array {
+		$result = $this->upsertModule(
+			data: $data,
+			externalKey: $externalKey,
+			providerUuid: $providerUuid,
+			publicationDate: $options['publicationDate'],
+			updateExisting: $options['updateExisting']
+		);
+
+		if ($result['outcome'] === CmdbImportReport::CREATED && $options['publicationDate'] === null) {
+			$report->countUnpublished();
+		}
+
+		return $result;
+	}//end importModule()
+
+	/**
 	 * Create, update, or leave the module matched on its external key.
 	 *
 	 * @param array<string, mixed> $data The mapped module fields.
 	 * @param string $externalKey The match key.
 	 * @param string|null $providerUuid The supplier, when there is one.
-	 * @param string $startedAt ISO start time of the import.
+	 * @param string|null $publicationDate ISO start time of the import for a module that is published
+	 *                                     when created, or null to create it unpublished.
 	 * @param bool $updateExisting Whether a match is updated.
 	 *
 	 * @return array{uuid: string, outcome: string} Outcome created, updated, unchanged or exists.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 */
-	private function upsertModule(array $data, string $externalKey, ?string $providerUuid, string $startedAt, bool $updateExisting): array {
+	private function upsertModule(array $data, string $externalKey, ?string $providerUuid, ?string $publicationDate, bool $updateExisting): array {
 		$data['externalKey'] = $externalKey;
 		if ($providerUuid !== null) {
 			$data['provider'] = $providerUuid;
@@ -962,7 +996,11 @@ class CmdbExportImportService {
 		$existing = $this->findOne(schemaKey: 'module', filters: ['externalKey' => $externalKey]);
 		if ($existing === null) {
 			$create = array_merge($this->profile->createOnlyDefaults(target: 'module'), $data);
-			$create['publicationDate'] = $startedAt;
+			unset($create['publicationDate']);
+			if ($publicationDate !== null) {
+				$create['publicationDate'] = $publicationDate;
+			}
+
 			return ['uuid' => $this->save(schemaKey: 'module', data: $create, uuid: null), 'outcome' => CmdbImportReport::CREATED];
 		}
 

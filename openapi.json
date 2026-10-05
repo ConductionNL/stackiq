@@ -50,6 +50,15 @@
                                         "default": "true",
                                         "description": "false reports matched rows as skipped (exists). 1 and 0 are accepted too, trimmed and in any case; any other value is refused with 400 FIELD_INVALID"
                                     },
+                                    "publish": {
+                                        "type": "string",
+                                        "enum": [
+                                            "true",
+                                            "false"
+                                        ],
+                                        "default": "true",
+                                        "description": "true gives every module the import creates a publicationDate (the import's start), so it is public, also to anonymous visitors; false creates them without one, for publication by hand. An update never changes publicationDate either way. 1 and 0 are accepted too, trimmed and in any case; any other value is refused with 400 FIELD_INVALID"
+                                    },
                                     "missingRecords": {
                                         "type": "string",
                                         "enum": [
@@ -80,7 +89,7 @@
                         }
                     },
                     "400": {
-                        "description": "NO_FILE_UPLOADED, NOT_XLSX, or FIELD_INVALID (updateExisting not true/false/1/0, or a text field sent as an array; details.field names it)",
+                        "description": "NO_FILE_UPLOADED, NOT_XLSX, or FIELD_INVALID (updateExisting or publish not true/false/1/0, or a text field sent as an array; details.field names it)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -480,7 +489,8 @@
                             "unchanged",
                             "skipped",
                             "failed",
-                            "warnings"
+                            "warnings",
+                            "unpublished"
                         ],
                         "properties": {
                             "rowsRead": {
@@ -506,6 +516,10 @@
                             },
                             "warnings": {
                                 "type": "integer"
+                            },
+                            "unpublished": {
+                                "type": "integer",
+                                "description": "Modules this import created without a publicationDate (publish=false); 0 when publish is true"
                             }
                         }
                     },

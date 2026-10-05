@@ -3,7 +3,7 @@
 ## Consumers
 
 - `stackiq` frontend: the "CMDB import" admin-settings section (`src/views/settings/sections/CmdbImport.vue`) is the only caller of the two new endpoints.
-- `opencatalogi` and `portaliq` call no new endpoint. They read the objects the import writes through their existing OpenRegister paths. Their interface is the data shape below: `module.publicationDate` for OpenCatalogi, and `usage.consumer` / `usage.module` for Portaliq. Neither gets owner data anonymously: `usage` and `contactPerson` have no public read rule, and a public `module` refers to them by id only.
+- `opencatalogi` and `portaliq` call no new endpoint. They read the objects the import writes through their existing OpenRegister paths. Their interface is the data shape below: `module.publicationDate` for OpenCatalogi (set on create only when the request has `publish=true`, the default), and `usage.consumer` / `usage.module` for Portaliq. Neither gets owner data anonymously: `usage` and `contactPerson` have no public read rule, and a public `module` refers to them by id only.
 
 Paths are relative to `/index.php/apps/stackiq`.
 
@@ -20,6 +20,7 @@ Paths are relative to `/index.php/apps/stackiq`.
 | `municipalityUuid` | string (uuid) | one of the two | | an existing `organization` of type Municipality |
 | `municipalityName` | string | one of the two | | name of a Municipality to reuse (same normalised name) or create |
 | `updateExisting` | `true`/`false` | no | `true` | `false` reports matched rows as skipped (`exists`). `1`/`0` are accepted too, trimmed and in any case; any other value is refused with 400 `FIELD_INVALID` |
+| `publish` | `true`/`false` | no | `true` | `true` gives every module the import creates `publicationDate` = the import's start, so it is public, also to anonymous visitors of OpenCatalogi; `false` creates them without a `publicationDate`, for publication by hand. An update never changes `publicationDate` or `depublicationDate`, whatever the value. Parsed like `updateExisting`: `1`/`0` are accepted too, any other value is refused with 400 `FIELD_INVALID` |
 | `missingRecords` | string | no | `keep` | only `keep` is accepted; `mark` and `remove` are reserved |
 | `operationId` | string | no | generated | progress operation id, readable through `GET /api/progress/{operationId}`; `cmdb-` followed by 8 to 64 letters, digits or hyphens (for example `cmdb-` plus a uuid v4). Any other value, and the id of a `cmdb_import` that is still running, is replaced by a generated id, returned as `operationId` |
 
@@ -30,7 +31,7 @@ Paths are relative to `/index.php/apps/stackiq`.
   "operationId": "cmdb-00000000-0000-0000-0000-000000000000",
   "cancelled": false,
   "municipality": { "uuid": "00000000-0000-0000-0000-000000000001", "name": "Gemeente Voorbeeldstad", "created": false },
-  "summary": { "rowsRead": 2, "processed": 2, "created": 2, "updated": 0, "unchanged": 0, "skipped": 0, "failed": 0, "warnings": 1 },
+  "summary": { "rowsRead": 2, "processed": 2, "created": 2, "updated": 0, "unchanged": 0, "skipped": 0, "failed": 0, "warnings": 1, "unpublished": 0 },
   "importWarnings": [],
   "rows": [
     {
@@ -48,7 +49,7 @@ Paths are relative to `/index.php/apps/stackiq`.
 }
 ```
 
-`appId` is the row's APPID, the match key (`''` when the row has none). `outcome` is one of `created`, `updated`, `unchanged`, `skipped`, `failed`. `reasons` and `warnings` are translated strings that name columns and values; a formula cell without a cached value gives the warning `Column "<column>": formula without a cached value, read as empty`. They never contain owner names, e-mail addresses or other person data. `summary.rowsRead` counts the non-empty rows in the workbook; `summary.processed` counts the rows in `rows`, which is lower than `rowsRead` only after a cancel. `summary.warnings` counts row warnings; `importWarnings` are not included.
+`appId` is the row's APPID, the match key (`''` when the row has none). `outcome` is one of `created`, `updated`, `unchanged`, `skipped`, `failed`. `reasons` and `warnings` are translated strings that name columns and values; a formula cell without a cached value gives the warning `Column "<column>": formula without a cached value, read as empty`. They never contain owner names, e-mail addresses or other person data. `summary.rowsRead` counts the non-empty rows in the workbook; `summary.processed` counts the rows in `rows`, which is lower than `rowsRead` only after a cancel. `summary.warnings` counts row warnings; `importWarnings` are not included. `summary.unpublished` counts the modules this import created without a `publicationDate` (`publish=false`), including one whose row then failed at the usage step; it is 0 with `publish=true`.
 
 **Errors:**
 | Code | Condition |
@@ -95,7 +96,7 @@ Returns the `ProgressTracker` snapshot for the `cmdb_import` operation: `progres
 | `FILE_TOO_LARGE` | too large | larger than the profile's `maxFileBytes` (10 MB), or stopped by PHP's `upload_max_filesize` or `post_max_size` |
 | `UPLOAD_FAILED` | upload not stored (500) | PHP reported `UPLOAD_ERR_NO_TMP_DIR`, `UPLOAD_ERR_CANT_WRITE` or `UPLOAD_ERR_EXTENSION`; logged |
 | `MISSING_RECORDS_UNSUPPORTED` | option not supported | `missingRecords` is not `keep` |
-| `FIELD_INVALID` | malformed field (400) | `updateExisting` is not `true`, `false`, `1` or `0`, or `missingRecords`, `municipalityUuid` or `municipalityName` is sent as an array (`name[]=…`) |
+| `FIELD_INVALID` | malformed field (400) | `updateExisting` or `publish` is not `true`, `false`, `1` or `0`, or `missingRecords`, `municipalityUuid` or `municipalityName` is sent as an array (`name[]=…`) |
 | `MUNICIPALITY_REQUIRED` | no consumer | neither `municipalityUuid` nor `municipalityName` given |
 | `MUNICIPALITY_INVALID` | wrong consumer | uuid unknown, or the organisation is not of type Municipality |
 | `MUNICIPALITY_AMBIGUOUS` | consumer not unique (422) | more than one live organisation of type Municipality (not `merged`, not `Inactive`) has the typed name after normalisation; the import does not guess and writes nothing |

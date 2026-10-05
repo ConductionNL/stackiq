@@ -1119,6 +1119,9 @@
         "Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.": "Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.",
         "{count} municipalities have this name.": "{count} municipalities have this name.",
         "Several municipalities have this name.": "Several municipalities have this name.",
-        "Choose the municipality from the list instead of typing its name. Nothing was imported.": "Choose the municipality from the list instead of typing its name. Nothing was imported."
+        "Choose the municipality from the list instead of typing its name. Nothing was imported.": "Choose the municipality from the list instead of typing its name. Nothing was imported.",
+        "Publish the applications this import creates": "Publish the applications this import creates",
+        "A published application is visible to anyone, including anonymous visitors of OpenCatalogi. When off, the applications this import creates stay unpublished until you publish them by hand. Applications imported before keep their publication as it is.": "A published application is visible to anyone, including anonymous visitors of OpenCatalogi. When off, the applications this import creates stay unpublished until you publish them by hand. Applications imported before keep their publication as it is.",
+        "Created unpublished": "Created unpublished"
     }
 }

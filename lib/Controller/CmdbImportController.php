@@ -87,7 +87,7 @@ class CmdbImportController extends Controller {
 	 * Import a TOPdesk CMDB export for one municipality.
 	 *
 	 * Multipart fields: `cmdbFile`, `municipalityUuid` or `municipalityName`,
-	 * `updateExisting` (default true), `missingRecords` (only `keep`) and
+	 * `updateExisting` (default true), `publish` (default true), `missingRecords` (only `keep`) and
 	 * `operationId` (pattern `cmdb-` plus 8 to 64 letters, digits or hyphens).
 	 *
 	 * @AuthorizedAdminSetting(settings=OCA\Stackiq\Settings\StackiqAdmin)
@@ -241,6 +241,12 @@ class CmdbImportController extends Controller {
 			return $this->invalidField(field: 'updateExisting', accepted: ['true', 'false']);
 		}
 
+		// Read like updateExisting: a typo must not publish what the admin chose to keep unpublished.
+		$publish = $this->booleanParam(name: 'publish', default: true);
+		if ($publish === null) {
+			return $this->invalidField(field: 'publish', accepted: ['true', 'false']);
+		}
+
 		$municipalityUuid = $this->stringParam(name: 'municipalityUuid', default: '');
 		$municipalityName = $this->stringParam(name: 'municipalityName', default: '');
 		if ($municipalityUuid === null) {
@@ -263,6 +269,7 @@ class CmdbImportController extends Controller {
 				'municipalityUuid' => $municipalityUuid,
 				'municipalityName' => $municipalityName,
 				'updateExisting' => $updateExisting,
+				'publish' => $publish,
 				'operationId' => $this->request->getParam('operationId'),
 				'fileName' => basename(str_replace('\\', '/', $fileName)),
 			],

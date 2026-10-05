@@ -23159,6 +23159,81 @@
 					]
 				},
 				{
+					"name": "CMDB import: 400 FIELD_INVALID for publish=maybe",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/cmdb-import",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"cmdb-import"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{admin_user}}"
+								},
+								{
+									"key": "password",
+									"value": "{{admin_pass}}"
+								}
+							]
+						},
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "cmdbFile",
+									"type": "file",
+									"src": "tests/fixtures/cmdb/topdesk-export-anonymised.xlsx"
+								},
+								{
+									"key": "municipalityName",
+									"value": "Gemeente Voorbeeldstad",
+									"type": "text"
+								},
+								{
+									"key": "publish",
+									"value": "maybe",
+									"type": "text"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"An unrecognised publish is refused, not read as true\", function () {",
+									"    pm.response.to.have.status(400);",
+									"    pm.expect(pm.response.json().error).to.eql(\"FIELD_INVALID\");",
+									"});",
+									"pm.test(\"The refusal names the field and the accepted values\", function () {",
+									"    var details = pm.response.json().details;",
+									"    pm.expect(details.field).to.eql(\"publish\");",
+									"    pm.expect(details.accepted).to.eql([\"true\", \"false\"]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
 					"name": "CMDB import: 422 MUNICIPALITY_REQUIRED without a municipality",
 					"request": {
 						"method": "POST",

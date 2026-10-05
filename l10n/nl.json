@@ -1189,6 +1189,9 @@
         "Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.": "Er loopt maar één import tegelijk. Wacht tot die klaar is en probeer het opnieuw. Er is niets geïmporteerd.",
         "{count} municipalities have this name.": "{count} gemeenten hebben deze naam.",
         "Several municipalities have this name.": "Meerdere gemeenten hebben deze naam.",
-        "Choose the municipality from the list instead of typing its name. Nothing was imported.": "Kies de gemeente uit de lijst in plaats van de naam te typen. Er is niets geïmporteerd."
+        "Choose the municipality from the list instead of typing its name. Nothing was imported.": "Kies de gemeente uit de lijst in plaats van de naam te typen. Er is niets geïmporteerd.",
+        "Publish the applications this import creates": "De applicaties die deze import aanmaakt publiceren",
+        "A published application is visible to anyone, including anonymous visitors of OpenCatalogi. When off, the applications this import creates stay unpublished until you publish them by hand. Applications imported before keep their publication as it is.": "Een gepubliceerde applicatie is voor iedereen zichtbaar, ook voor anonieme bezoekers van OpenCatalogi. Staat dit uit, dan blijven de applicaties die deze import aanmaakt ongepubliceerd tot u ze zelf publiceert. Eerder geïmporteerde applicaties houden hun publicatie zoals die is.",
+        "Created unpublished": "Ongepubliceerd aangemaakt"
     }
 }

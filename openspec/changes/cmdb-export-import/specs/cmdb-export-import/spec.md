@@ -241,15 +241,15 @@ For each row the service SHALL compute `externalKey` = `topdesk:<municipality uu
 - **AND** the workbook SHALL NOT be read and no object SHALL be written
 - **AND** the section SHALL point the admin to importing the register configuration again
 
-### Requirement: A newly created module SHALL get a publicationDate, and an existing one SHALL keep its own (REQ-CMDB-007)
+### Requirement: A newly created module SHALL get a publicationDate when the admin publishes, and an existing one SHALL keep its own (REQ-CMDB-007)
 
-When the service creates a `module` it SHALL set `publicationDate` to the time the import started, as an ISO 8601 date-time, so OpenCatalogi lists the module. When it updates an existing `module` it SHALL NOT change `publicationDate` or `depublicationDate`, also when they are empty.
+The request SHALL carry `publish`, `true` by default, parsed like `updateExisting`: `true`, `false`, `1` or `0`, trimmed and in any case; any other value SHALL be refused with 400 `FIELD_INVALID` naming the field and the accepted values, before anything is read or written. With `publish=true`, when the service creates a `module` it SHALL set `publicationDate` to the time the import started, as an ISO 8601 date-time, so OpenCatalogi lists the module, also to anonymous visitors. With `publish=false` it SHALL create the module without a `publicationDate`, so the module is not public until an admin publishes it, and the report summary SHALL count those modules in `unpublished`. When it updates an existing `module` it SHALL NOT change `publicationDate` or `depublicationDate`, whatever `publish` says, also when they are empty. The section SHALL offer the choice as a switch "Publish the applications this import creates", on by default, whose help text says a published application is visible to anyone, including anonymous visitors of OpenCatalogi.
 
 #### Scenario: OpenCatalogi can list an imported application
 @e2e exclude Crosses into OpenCatalogi, whose catalogue configuration is outside this change; tests/Unit/Service/CmdbExportImportServiceTest.php asserts publicationDate on created modules, and the manual test plan checks the search in OpenCatalogi.
 
 - **GIVEN** an OpenCatalogi catalogue that includes the stackiq register's `module` schema
-- **WHEN** the anonymised export is imported
+- **WHEN** the anonymised export is imported with `publish` left at its default, `true`
 - **THEN** each created module SHALL have a `publicationDate` that is not later than the moment the import finished
 - **AND** a search in OpenCatalogi for `Aangetekend Mailen` SHALL find the module
 
@@ -260,6 +260,23 @@ When the service creates a `module` it SHALL set `publicationDate` to the time t
 - **WHEN** a newer export is imported that changes both modules' names
 - **THEN** the module with APPID `1234` SHALL keep `publicationDate` 2026-10-01T09:00:00+00:00
 - **AND** the module with APPID `2` SHALL keep its `depublicationDate` and SHALL NOT get a new `publicationDate`
+
+#### Scenario: An import with publishing off creates unpublished modules
+@e2e exclude The outcome is the absence of a field on the stored module; tests/Unit/Service/CmdbExportImportServiceTest.php testPublishDecidesThePublicationDateOfCreatedModulesOnly imports with publish false and asserts no publicationDate on the created modules, the unpublished count, and an updated module's publicationDate unchanged, then with publish true and absent asserts it is set, and src/utils/cmdbImport.spec.js asserts the section sends the switch as publish.
+
+- **GIVEN** a module with APPID `1` that was published on 2026-01-01, and an export with APPID `1`, `2` and `3`
+- **WHEN** a Nextcloud admin turns off "Publish the applications this import creates" and imports it
+- **THEN** the modules for APPID `2` and `3` SHALL be created without a `publicationDate`, so an anonymous OpenCatalogi visitor does not find them
+- **AND** the report summary SHALL show `unpublished` = 2
+- **AND** the module with APPID `1` SHALL be updated and SHALL keep `publicationDate` 2026-01-01
+
+#### Scenario: An unrecognised publish value is refused
+@e2e exclude Validation; tests/Unit/Controller/CmdbImportControllerTest.php testPublishAcceptsOnlyExplicitValues asserts every accepted spelling and 400 FIELD_INVALID for the others with no import, and the Newman collection posts publish=maybe and asserts the 400.
+
+- **GIVEN** a valid export
+- **WHEN** an API caller posts it with `publish=maybe`
+- **THEN** the endpoint SHALL answer 400 with error `FIELD_INVALID`, `details.field` = `publish` and `details.accepted` = `["true", "false"]`
+- **AND** the workbook SHALL NOT be read and no object SHALL be written
 
 ### Requirement: A manufacturer SHALL become one supplier organisation, however many rows name it (REQ-CMDB-008)
 
@@ -449,6 +466,7 @@ Stackiq's admin settings page SHALL show a section "CMDB import", rendered by th
 - [ ] A Nextcloud admin imports the anonymised TOPdesk export for a chosen municipality, and the report lists both data rows as created.
 - [ ] Importing the same export again creates no object, and reports both rows as unchanged.
 - [ ] A changed "Applicatie Naam" in a newer export updates the same module (matched on APPID); `publicationDate` and fields the export does not map stay as they were.
+- [ ] With "Publish the applications this import creates" off, the created modules have no `publicationDate` and the summary counts them as unpublished.
 - [ ] Rows with the same "Vendor" share one supplier organisation.
 - [ ] Every imported module has one usage whose consumer is the municipality.
 - [ ] A missing "APPID" or "Applicatie Naam" column stops the import with 422 naming the column and sheet; a non-xlsx or oversized file is rejected before reading.
