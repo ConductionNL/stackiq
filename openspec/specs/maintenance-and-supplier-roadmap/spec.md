@@ -29,7 +29,7 @@ The product page SHALL list its maintenance windows, and the dashboard SHALL lis
 
 ### Requirement: REQ-MSR-003 The owners of every usage are notified
 
-When a supplier announces a window, stackiq SHALL notify the business and technical owners of every usage of the product, and SHALL remind them a day before the window starts while it is still planned. Only the product's own supplier (the organisation named as its provider) or a catalogue administrator SHALL reach those owners, and a refused window SHALL hold no owners to notify.
+When a supplier announces a window, stackiq SHALL notify the business and technical owners of every usage of the product, and SHALL remind them a day before the window starts while it is still planned. Only the product's own supplier (the organisation named as its provider) or a catalogue administrator SHALL reach those owners; a product that names no provider SHALL be announced by a catalogue administrator only, and a refused window SHALL hold no owners to notify.
 
 #### Scenario: Owners get the announcement
 @e2e exclude Delivered by OpenRegister's notification engine; tests/Unit/EventListener/MaintenanceRecipientsListenerTest.php asserts the resolved owners and tests/Unit/Settings/MaintenanceRoadmapFragmentTest.php the rules.

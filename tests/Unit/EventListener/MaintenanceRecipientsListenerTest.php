@@ -30,6 +30,7 @@ use OCA\Stackiq\Service\MaintenanceAnnouncerCheck;
 use OCA\Stackiq\Service\MaintenanceRecipientService;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\StackiqContactSyncService;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJobList;
 use OCP\EventDispatcher\Event;
@@ -67,6 +68,34 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 	 * @var array<int, string>
 	 */
 	private array $warnings = [];
+
+	/**
+	 * The retries the job scheduled.
+	 *
+	 * @var array<int, mixed>
+	 */
+	private array $retries = [];
+
+	/**
+	 * Whether the object service fails every save.
+	 *
+	 * @var bool
+	 */
+	private bool $failSave = false;
+
+	/**
+	 * Whether the object service fails the usage search.
+	 *
+	 * @var bool
+	 */
+	private bool $failUsages = false;
+
+	/**
+	 * The logger double of the current test.
+	 *
+	 * @var LoggerInterface&\PHPUnit\Framework\MockObject\MockObject
+	 */
+	private $logger;
 
 	/**
 	 * The object service double, with every save it received.
@@ -156,6 +185,10 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->objectService->method('searchObjects')->willReturnCallback(
 			function (array $query=[], bool $_rbac=true, bool $_multitenancy=true, ?array $ids=null) use ($usages, $people): array {
+				if ($query['schema'] === self::SCHEMAS['usage'] && $this->failUsages === true) {
+					throw new \RuntimeException('index offline');
+				}
+
 				if ($query['schema'] === self::SCHEMAS['usage']) {
 					$this->assertSame('x', $query['module']);
 					return $usages;
@@ -166,6 +199,10 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 		);
 		$this->objectService->method('saveObject')->willReturnCallback(
 			function (array $object) {
+				if ($this->failSave === true) {
+					throw new \RuntimeException('lock wait timeout');
+				}
+
 				$this->saved[] = $object;
 				return $this->createMock(ObjectEntity::class);
 			}
@@ -215,13 +252,20 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 				$this->queued[] = [$job, $argument];
 			}
 		);
+		$this->jobList->method('scheduleAfter')->willReturnCallback(
+			function (string $job, int $runAfter, mixed $argument): void {
+				$this->assertSame(MaintenanceRecipientsJob::class, $job);
+				$this->retries[] = $argument;
+			}
+		);
 
 		$groups = $this->createMock(IGroupManager::class);
 		$groups->method('isInGroup')->willReturnCallback(
 			fn (string $uid, string $group): bool => $group === 'software-catalog-admins' && in_array($uid, $this->catalogAdmins, true)
 		);
 
-		$logger = $this->createMock(LoggerInterface::class);
+		$logger       = $this->createMock(LoggerInterface::class);
+		$this->logger = $logger;
 		$logger->method('warning')->willReturnCallback(
 			function (string $message): void {
 				$this->warnings[] = $message;
@@ -239,7 +283,7 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 	private function runQueuedJobs(): void {
 		foreach ($this->queued as [$class, $argument]) {
 			$this->assertSame(MaintenanceRecipientsJob::class, $class);
-			$job = new MaintenanceRecipientsJob($this->createMock(ITimeFactory::class), $this->service);
+			$job = new MaintenanceRecipientsJob($this->createMock(ITimeFactory::class), $this->service, $this->jobList, $this->logger);
 			$run = new \ReflectionMethod($job, 'run');
 			$run->invoke($job, $argument);
 		}
@@ -316,7 +360,7 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 	 */
 	public function testAWindowWithoutAnOrganisationIsRefused(): void {
 		$listener = $this->listener();
-		$window   = $this->entity('w4', self::SCHEMAS['maintenanceWindow'], ['module' => 'x'], null, 'mallory');
+		$window   = $this->entity('w4', self::SCHEMAS['maintenanceWindow'], ['module' => 'x', 'notifyUserIds' => ['victim']], null, 'mallory');
 
 		$this->windows['w4'] = $window;
 
@@ -343,7 +387,135 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 
 		$this->assertSame([], $this->saved);
 		$this->assertSame([], $this->warnings, 'not logged as a refusal');
+		$this->assertSame([['uuid' => 'w8', 'register' => '7', 'schema' => '40', 'attempt' => 2]], $this->retries, 'tried again later');
 	}//end testAnUnreadableProductWritesNothing()
+
+	/**
+	 * After the last try a failing resolution is given up and logged as critical.
+	 *
+	 * @return void
+	 */
+	public function testAFailingResolutionIsGivenUpAfterTheLastTry(): void {
+		$listener = $this->listener();
+		$this->windows['x'] = new \RuntimeException('database went away');
+		$this->windows['w9'] = $this->entity('w9', self::SCHEMAS['maintenanceWindow'], ['module' => 'x'], self::SUPPLIER, 'jan');
+		$this->logger->expects($this->once())->method('critical')->with($this->stringContains('gave up'));
+
+		$this->queued = [[MaintenanceRecipientsJob::class, ['uuid' => 'w9', 'attempt' => MaintenanceRecipientsJob::MAX_ATTEMPTS]]];
+		$this->runQueuedJobs();
+
+		$this->assertSame([], $this->retries);
+		$this->assertSame([], $this->saved);
+	}//end testAFailingResolutionIsGivenUpAfterTheLastTry()
+
+	/**
+	 * A window deleted before its job ran is nothing to do: no retry, no write.
+	 *
+	 * @return void
+	 */
+	public function testAWindowDeletedBeforeTheJobIsLeftAlone(): void {
+		$this->listener();
+		$this->windows['w13'] = new DoesNotExistException('gone');
+
+		$this->queued = [[MaintenanceRecipientsJob::class, ['uuid' => 'w13']]];
+		$this->runQueuedJobs();
+
+		$this->assertSame([], $this->retries);
+		$this->assertSame([], $this->saved);
+	}//end testAWindowDeletedBeforeTheJobIsLeftAlone()
+
+	/**
+	 * A product that no longer exists refuses the window.
+	 *
+	 * @return void
+	 */
+	public function testAProductThatNoLongerExistsRefuses(): void {
+		$listener = $this->listener();
+		$this->windows['x'] = new DoesNotExistException('gone');
+		$window = $this->entity('w10', self::SCHEMAS['maintenanceWindow'], ['module' => 'x', 'notifyUserIds' => ['victim']], self::SUPPLIER, 'jan');
+
+		$this->windows['w10'] = $window;
+
+		$listener->handle(new ObjectCreatedEvent($window));
+		$this->runQueuedJobs();
+
+		$this->assertSame([[]], array_column($this->saved, 'notifyUserIds'));
+		$this->assertSame([], $this->retries);
+	}//end testAProductThatNoLongerExistsRefuses()
+
+	/**
+	 * A refused window that names nobody is not written at all.
+	 *
+	 * @return void
+	 */
+	public function testARefusedWindowWithoutIdsIsNotRewritten(): void {
+		$listener = $this->listener();
+		$window   = $this->entity('w11', self::SCHEMAS['maintenanceWindow'], ['module' => 'x'], 'org-competitor', 'mallory');
+
+		$this->windows['w11'] = $window;
+
+		$listener->handle(new ObjectCreatedEvent($window));
+		$this->runQueuedJobs();
+
+		$this->assertSame([], $this->saved);
+		$this->assertCount(1, $this->warnings, 'still logged as a refusal');
+	}//end testARefusedWindowWithoutIdsIsNotRewritten()
+
+	/**
+	 * A product that names no provider is not announced by the organisation that owns its record:
+	 * that is often the default organisation, which suppliers without one of their own share.
+	 *
+	 * @return void
+	 */
+	public function testAProductWithoutAProviderIsAnnouncedByAnAdministratorOnly(): void {
+		$listener = $this->listener();
+		$this->windows['x'] = $this->entity('x', self::SCHEMAS['module'], ['name' => 'Product X', 'provider' => []], 'org-default');
+		$this->windows['w12'] = $this->entity('w12', self::SCHEMAS['maintenanceWindow'], ['module' => 'x', 'notifyUserIds' => ['victim']], 'org-default', 'mallory');
+		$this->windows['w14'] = $this->entity('w14', self::SCHEMAS['maintenanceWindow'], ['module' => 'x'], 'org-default', 'beheer');
+
+		$listener->handle(new ObjectCreatedEvent($this->windows['w12']));
+		$listener->handle(new ObjectCreatedEvent($this->windows['w14']));
+		$this->runQueuedJobs();
+
+		$this->assertSame([[], ['anna.nc', 'bram.nc', 'carla.nc']], array_column($this->saved, 'notifyUserIds'), 'the supplier is refused, the administrator is not');
+	}//end testAProductWithoutAProviderIsAnnouncedByAnAdministratorOnly()
+
+	/**
+	 * A retry that finds the product readable records the owners.
+	 *
+	 * @return void
+	 */
+	public function testARetryThatSucceedsRecordsTheOwners(): void {
+		$this->listener();
+		$this->windows['w15'] = $this->entity('w15', self::SCHEMAS['maintenanceWindow'], ['module' => 'x'], self::SUPPLIER, 'jan');
+
+		$this->queued = [[MaintenanceRecipientsJob::class, ['uuid' => 'w15', 'attempt' => 2]]];
+		$this->runQueuedJobs();
+
+		$this->assertSame([['anna.nc', 'bram.nc', 'carla.nc']], array_column($this->saved, 'notifyUserIds'));
+		$this->assertSame([], $this->retries);
+	}//end testARetryThatSucceedsRecordsTheOwners()
+
+	/**
+	 * A window that cannot be written, or owners that cannot be read, are tried again rather than resolved empty.
+	 *
+	 * @return void
+	 */
+	public function testAFailedWriteOrOwnerReadIsTriedAgain(): void {
+		$listener = $this->listener();
+		$this->failSave  = true;
+		$this->windows['w16'] = $this->entity('w16', self::SCHEMAS['maintenanceWindow'], ['module' => 'x'], self::SUPPLIER, 'jan');
+		$listener->handle(new ObjectCreatedEvent($this->windows['w16']));
+		$this->runQueuedJobs();
+
+		$this->failSave    = false;
+		$this->failUsages  = true;
+		$this->queued      = [[MaintenanceRecipientsJob::class, ['uuid' => 'w16']]];
+		$this->runQueuedJobs();
+
+		$this->assertSame([], $this->saved, 'no empty list is recorded as resolved');
+		$this->assertSame([2, 2], array_column($this->retries, 'attempt'));
+	}//end testAFailedWriteOrOwnerReadIsTriedAgain()
 
 	/**
 	 * A catalogue administrator may announce maintenance on any product.
@@ -372,7 +544,7 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 	public function testTheOrganisationThatOnlyOwnsTheProductRecordIsRefused(): void {
 		$listener = $this->listener();
 		$this->windows['x'] = $this->entity('x', self::SCHEMAS['module'], ['name' => 'Product X', 'provider' => ['id' => self::SUPPLIER]], 'org-default');
-		$window = $this->entity('w6', self::SCHEMAS['maintenanceWindow'], ['module' => 'x'], 'org-default', 'jan');
+		$window = $this->entity('w6', self::SCHEMAS['maintenanceWindow'], ['module' => 'x', 'notifyUserIds' => ['victim']], 'org-default', 'jan');
 
 		$this->windows['w6'] = $window;
 

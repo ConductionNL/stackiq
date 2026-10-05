@@ -92,7 +92,11 @@ class MaintenanceRecipientService {
 	 * @param string|int|null $register The register it lives in.
 	 * @param string|int|null $schema   Its schema.
 	 *
-	 * @return array<int, string>|null The user ids written, or null when nothing was written.
+	 * @return array<int, string>|null The user ids recorded, or null when no owners were recorded.
+	 *
+	 * @throws \Throwable When the window or the product cannot be read (DoesNotExistException
+	 *                    for a window that is gone), or the window cannot be written; the job
+	 *                    decides whether to try again.
 	 *
 	 * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md#requirement-req-msr-003-the-owners-of-every-usage-are-notified
 	 */
@@ -102,16 +106,7 @@ class MaintenanceRecipientService {
 			return null;
 		}
 
-		try {
-			$window = $objectService->find(id: $uuid, register: $register, schema: $schema, _rbac: false, _multitenancy: false);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'MaintenanceRecipientService: could not read the maintenance window',
-				['uuid' => $uuid, 'error' => $e->getMessage()]
-			);
-			return null;
-		}
-
+		$window = $objectService->find(id: $uuid, register: $register, schema: $schema, _rbac: false, _multitenancy: false);
 		if ($window === null) {
 			return null;
 		}
@@ -138,6 +133,8 @@ class MaintenanceRecipientService {
 	 *
 	 * @return array<int, string>|null The user ids written, or null when no owners were recorded.
 	 *
+	 * @throws \Throwable When the product or the owners cannot be read, or the window cannot be written.
+	 *
 	 * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md#requirement-req-msr-003-the-owners-of-every-usage-are-notified
 	 */
 	public function recordRecipients(ObjectEntityInterface $window, ?DateTimeImmutable $now=null): ?array {
@@ -148,33 +145,28 @@ class MaintenanceRecipientService {
 			return null;
 		}
 
-		try {
-			if ($this->announcers->mayAnnounce(objectService: $objectService, window: $window, moduleId: $moduleId) === false) {
-				$this->logger->warning(
-					'MaintenanceRecipientService: the window is not from the supplier of the product; no owners are notified',
-					['uuid' => $window->getUuid(), 'module' => $moduleId, 'organisation' => $window->getOrganisation()]
-				);
+		if ($this->announcers->mayAnnounce(objectService: $objectService, window: $window, moduleId: $moduleId) === false) {
+			$this->logger->warning(
+				'MaintenanceRecipientService: the window is not from the supplier of the product; no owners are notified',
+				['uuid' => $window->getUuid(), 'module' => $moduleId, 'organisation' => $window->getOrganisation()]
+			);
+			if (empty($data['notifyUserIds']) === false) {
 				$data['notifyUserIds'] = [];
 				$this->saveWindow(objectService: $objectService, window: $window, data: $data);
-				return null;
 			}
 
-			if (empty($data['recipientsResolvedAt']) === false) {
-				return null;
-			}
-
-			$userIds = $this->ownerUserIds(objectService: $objectService, moduleId: $moduleId);
-
-			$data['notifyUserIds']        = $userIds;
-			$data['recipientsResolvedAt'] = ($now ?? new DateTimeImmutable())->format(DateTimeInterface::ATOM);
-			$this->saveWindow(objectService: $objectService, window: $window, data: $data);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'MaintenanceRecipientService: could not check or record the owners to notify; nothing was written',
-				['uuid' => $window->getUuid(), 'error' => $e->getMessage()]
-			);
 			return null;
 		}
+
+		if (empty($data['recipientsResolvedAt']) === false) {
+			return null;
+		}
+
+		$userIds = $this->ownerUserIds(objectService: $objectService, moduleId: $moduleId);
+
+		$data['notifyUserIds']        = $userIds;
+		$data['recipientsResolvedAt'] = ($now ?? new DateTimeImmutable())->format(DateTimeInterface::ATOM);
+		$this->saveWindow(objectService: $objectService, window: $window, data: $data);
 
 		return $userIds;
 	}//end recordRecipients()
@@ -225,17 +217,14 @@ class MaintenanceRecipientService {
 			return [];
 		}
 
-		try {
-			$people = $objectService->searchObjects(
-				query: ['register' => $register, 'schema' => $schema, '_limit' => count($contactIds)],
-				_rbac: false,
-				_multitenancy: false,
-				ids: $contactIds
-			);
-		} catch (\Throwable $e) {
-			$this->logger->error('MaintenanceRecipientService: could not read the owners', ['error' => $e->getMessage()]);
-			return [];
-		}
+		// A failed read is thrown, not taken as "nobody to notify": the job tries
+		// again, while an empty list would be recorded as resolved for good.
+		$people = $objectService->searchObjects(
+			query: ['register' => $register, 'schema' => $schema, '_limit' => count($contactIds)],
+			_rbac: false,
+			_multitenancy: false,
+			ids: $contactIds
+		);
 
 		$userIds = [];
 		foreach ((array) $people as $person) {
@@ -263,16 +252,11 @@ class MaintenanceRecipientService {
 			return [];
 		}
 
-		try {
-			$usages = $objectService->searchObjects(
-				query: ['register' => $register, 'schema' => $schema, 'module' => $moduleId, '_limit' => self::USAGE_LIMIT],
-				_rbac: false,
-				_multitenancy: false
-			);
-		} catch (\Throwable $e) {
-			$this->logger->error('MaintenanceRecipientService: could not read the usages', ['error' => $e->getMessage()]);
-			return [];
-		}
+		$usages = $objectService->searchObjects(
+			query: ['register' => $register, 'schema' => $schema, 'module' => $moduleId, '_limit' => self::USAGE_LIMIT],
+			_rbac: false,
+			_multitenancy: false
+		);
 
 		$ids = [];
 		foreach ((array) $usages as $usage) {

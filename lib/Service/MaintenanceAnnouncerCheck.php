@@ -58,10 +58,12 @@ class MaintenanceAnnouncerCheck {
 	 *
 	 * Yes when a catalogue administrator created it, or when the organisation
 	 * that owns the window is the product's supplier (`provider`). The
-	 * organisation that merely owns the product record does not count: a
-	 * product entered by an administrator or an import carries the importer's
-	 * organisation, often the default one, which says nothing about who supplies
-	 * it. A product that no longer exists refuses; a read that fails for any
+	 * organisation that owns the product record never counts, not even for a
+	 * product that names no provider: a product entered by an administrator or
+	 * an import carries the importer's organisation, often the default one, and
+	 * a supplier without an organisation of its own works under that same
+	 * default organisation. A product without a provider is therefore announced
+	 * by a catalogue administrator, or once its supplier is set. A product that no longer exists refuses; a read that fails for any
 	 * other reason is thrown, so the caller writes nothing rather than treating
 	 * a real supplier's window as refused.
 	 *
@@ -104,6 +106,10 @@ class MaintenanceAnnouncerCheck {
 		$provider = ($module->getObject()['provider'] ?? null);
 		if (is_array($provider) === true) {
 			$provider = ($provider['id'] ?? ($provider['uuid'] ?? null));
+		}
+
+		if (is_string($provider) === false || $provider === '') {
+			return false;
 		}
 
 		return $organisation === $provider;
