@@ -13,7 +13,8 @@ built_by: openspec/changes/cmdb-export-import
 
 ## Purpose
 
-A Nextcloud admin imports a TOPdesk CMDB export (xlsx) into stackiq for one
+A Nextcloud admin, or a member of a group an admin delegated stackiq's admin
+settings to, imports a TOPdesk CMDB export (xlsx) into stackiq for one
 municipality. Every application row becomes, or updates, a `module` with its
 manufacturer `organization`, a `usage` that links it to the municipality, and
 `contactPerson` objects for its owners, all stored as OpenRegister objects
@@ -31,7 +32,8 @@ umbrella requirement below anchors the capability until then.
 
 ### Requirement: Stackiq imports a TOPdesk CMDB export into OpenRegister objects (REQ-CMDB-000)
 
-Stackiq MUST offer Nextcloud admins one import path for a TOPdesk CMDB export
+Stackiq MUST offer Nextcloud admins, and the groups delegated stackiq's admin
+settings, one import path for a TOPdesk CMDB export
 (xlsx) that writes only OpenRegister objects in the `stackiq` register
 (`module`, `organization`, `usage`, `contactPerson`), with no app-local table,
 and that matches rows on the TOPdesk APPID so that a repeated import

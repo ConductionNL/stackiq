@@ -300,7 +300,7 @@ describe('cancelFailureText', () => {
 
 	it('names the reason for any other refusal', () => {
 		expect(cancelFailureText(normaliseError(httpError(403, '')))).toBe(
-			'The import could not be cancelled: Only Nextcloud administrators can import a CMDB export.',
+			"The import could not be cancelled: You may not use stackiq's admin settings, so you cannot import a CMDB export.",
 		)
 	})
 })

@@ -7,7 +7,7 @@
 
 ## Purpose
 
-A Nextcloud admin imports a TOPdesk CMDB export (xlsx) into stackiq for one municipality. Every application row of the export's two CMDB sheets ("Onbeh Applicaties CMDB", applications without arranged maintenance, and "Beheerde Applicaties CMDB", with arranged maintenance) becomes, or updates, a `module` (schema:SoftwareApplication) with its vendor `organization` (schema:Organization), a `usage` that links the application to the municipality, and a `contactPerson` (schema:Person) for its owner, which is never publicly readable. All data is stored as OpenRegister objects (ADR-001). The column-to-field mapping is declarative JSON executed by OpenRegister's mapping engine (ADR-011, ADR-031), so the import can be repeated with a newer export without creating duplicates. OpenCatalogi lists the imported applications, and Portaliq shows them to the municipality.
+A Nextcloud admin, or a member of a group an admin delegated stackiq's admin settings to, imports a TOPdesk CMDB export (xlsx) into stackiq for one municipality. Every application row of the export's two CMDB sheets ("Onbeh Applicaties CMDB", applications without arranged maintenance, and "Beheerde Applicaties CMDB", with arranged maintenance) becomes, or updates, a `module` (schema:SoftwareApplication) with its vendor `organization` (schema:Organization), a `usage` that links the application to the municipality, and a `contactPerson` (schema:Person) for its owner, which is never publicly readable. All data is stored as OpenRegister objects (ADR-001). The column-to-field mapping is declarative JSON executed by OpenRegister's mapping engine (ADR-011, ADR-031), so the import can be repeated with a newer export without creating duplicates. OpenCatalogi lists the imported applications, and Portaliq shows them to the municipality.
 
 Nextcloud OCP interfaces used: `OCP\IRequest` (multipart upload), `OCP\IUserSession` and `OCP\IGroupManager` (admin check), `OCP\Contacts\IManager` (owner identity, through `StackiqContactSyncService`), `OCP\ICacheFactory` (progress, through `ProgressTracker`), `OCP\IL10N` (messages). OpenRegister: `OCA\OpenRegister\Contract\ObjectServiceInterface` for every read and write.
 
@@ -15,7 +15,7 @@ Nextcloud OCP interfaces used: `OCP\IRequest` (multipart upload), `OCP\IUserSess
 
 ### Requirement: REQ-CMDB-001 The import endpoint SHALL accept only a bounded xlsx upload from a Nextcloud admin
 
-`POST /api/cmdb-import` SHALL be reachable only by Nextcloud admins and SHALL require Nextcloud's CSRF token. The endpoint SHALL NOT carry `#[NoAdminRequired]` or `#[NoCSRFRequired]`. It SHALL reject the upload before any parsing when the file is larger than the configured maximum (default 10 MB), when its name does not end in `.xlsx`, or when its content is not a ZIP package containing `xl/workbook.xml`. Macro-enabled (`.xlsm`), legacy (`.xls`) and CSV files SHALL be rejected. No object SHALL be written in any of these cases.
+`POST /api/cmdb-import` SHALL be reachable only by Nextcloud admins and by members of the groups an admin delegated stackiq's admin settings to (`#[AuthorizedAdminSetting(StackiqAdmin)]`), and SHALL require Nextcloud's CSRF token. The endpoint SHALL NOT carry `#[NoAdminRequired]` or `#[NoCSRFRequired]`. It SHALL reject the upload before any parsing when the file is larger than the configured maximum (default 10 MB), when its name does not end in `.xlsx`, or when its content is not a ZIP package containing `xl/workbook.xml`. Macro-enabled (`.xlsm`), legacy (`.xls`) and CSV files SHALL be rejected. No object SHALL be written in any of these cases.
 
 #### Scenario: A file that is not xlsx is rejected
 @e2e tests/e2e/spec-coverage/cmdb-import.spec.ts
@@ -33,10 +33,10 @@ Nextcloud OCP interfaces used: `OCP\IRequest` (multipart upload), `OCP\IUserSess
 - **THEN** the endpoint SHALL answer 413 with error `FILE_TOO_LARGE`
 - **AND** the workbook reader SHALL NOT be invoked
 
-#### Scenario: A user who is not a Nextcloud admin cannot import
-@e2e exclude Authorisation rule; tests/Unit/Controller/CmdbImportControllerTest.php asserts the method has no NoAdminRequired attribute, and the Newman collection asserts 403 for a non-admin user.
+#### Scenario: A user without the stackiq admin settings cannot import
+@e2e exclude Authorisation rule enforced by Nextcloud's middleware; tests/Unit/Controller/CmdbImportControllerTest.php (testBothRoutesRequireTheStackiqAdminSetting, testNeitherRouteDeclaresAnExemption) asserts both routes require the StackiqAdmin setting and declare no exemption, and the Newman collection asserts 403 for a user who is not an admin and for a software-catalog-admins member.
 
-- **GIVEN** a signed-in user who is not a Nextcloud admin, including a member of `software-catalog-admins`
+- **GIVEN** a signed-in user who is neither a Nextcloud admin nor a member of a group delegated stackiq's admin settings, for example a member of `software-catalog-admins` only
 - **WHEN** they post an export to `POST /api/cmdb-import`
 - **THEN** Nextcloud SHALL answer 403
 - **AND** no object SHALL be written
@@ -360,7 +360,7 @@ The import SHALL accept `missingRecords` with the value `keep`, which is also th
 
 ### Requirement: REQ-CMDB-013 A running import SHALL report its progress and SHALL stop when cancelled
 
-The import SHALL run as a `ProgressTracker` operation of type `cmdb_import` under the `operationId` the client sends, and SHALL update the processed row count after every row, readable through the existing `GET /api/progress/{operationId}`. `POST /api/cmdb-import/{operationId}/cancel`, admin-only and CSRF-protected, SHALL request cancellation. The service SHALL check for cancellation between rows, SHALL keep the rows already processed, and SHALL return the report with `cancelled: true`. The final report SHALL also be stored with the operation, so it can be read again within the tracker's lifetime.
+The import SHALL run as a `ProgressTracker` operation of type `cmdb_import` under the `operationId` the client sends, and SHALL update the processed row count after every row, readable through the existing `GET /api/progress/{operationId}`. `POST /api/cmdb-import/{operationId}/cancel`, open to the same users as the import and CSRF-protected, SHALL request cancellation. The service SHALL check for cancellation between rows, SHALL keep the rows already processed, and SHALL return the report with `cancelled: true`. The final report SHALL also be stored with the operation, so it can be read again within the tracker's lifetime.
 
 #### Scenario: The admin follows and cancels a running import
 @e2e exclude Timing-dependent with a two-row fixture; tests/Unit/Service/CmdbExportImportServiceTest.php requests cancellation after row 1 of three and asserts one processed row and cancelled true.

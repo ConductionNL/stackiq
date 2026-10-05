@@ -598,9 +598,12 @@ export function errorText(error) {
 			return {
 				title: t(
 					'stackiq',
-					'Only Nextcloud administrators can import a CMDB export.',
+					"You may not use stackiq's admin settings, so you cannot import a CMDB export.",
 				),
-				hint: '',
+				hint: t(
+					'stackiq',
+					"Ask a Nextcloud administrator to run the import, or to delegate stackiq's admin settings to your group.",
+				),
 			}
 		case 'CSRF_FAILED':
 			return {
