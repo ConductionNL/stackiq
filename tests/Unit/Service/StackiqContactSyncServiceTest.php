@@ -72,16 +72,34 @@ class StackiqContactSyncServiceTest extends TestCase {
 	}//end backend()
 
 	/**
-	 * The service for user "admin", with no existing contact anywhere.
+	 * The service for user "admin", with the given contacts (none by default) across their address books.
 	 *
 	 * @param object $backend The CardDAV backend.
+	 * @param array<int, array<string, mixed>> $contacts What the contacts manager's search finds, each with its addressbook-key.
 	 *
 	 * @return StackiqContactSyncService
 	 */
-	private function service(object $backend): StackiqContactSyncService {
+	private function service(object $backend, array $contacts = []): StackiqContactSyncService {
 		$manager = $this->createMock(IManager::class);
 		$manager->method('isEnabled')->willReturn(true);
-		$manager->method('search')->willReturn([]);
+		$manager->method('search')->willReturnCallback(
+			function (string $pattern, array $properties) use ($contacts): array {
+				return array_values(
+					array_filter(
+						$contacts,
+						static function (array $contact) use ($pattern, $properties): bool {
+							foreach ($properties as $property) {
+								if (str_contains(mb_strtolower((string)($contact[$property] ?? '')), mb_strtolower($pattern)) === true) {
+									return true;
+								}
+							}
+
+							return false;
+						}
+					)
+				);
+			}
+		);
 		$manager->expects($this->never())->method('createOrUpdate');
 		$manager->expects($this->never())->method('getUserAddressBooks');
 
@@ -121,6 +139,47 @@ class StackiqContactSyncServiceTest extends TestCase {
 		$this->assertStringContainsString("\r\nTITLE:Hoofd\; ICT\\, beheer\r\n", $card, 'text values are escaped');
 		$this->assertStringEndsWith("END:VCARD\r\n", $card);
 	}//end testNewContactsGoIntoTheNamedAddressBook()
+
+	/**
+	 * An e-mail address matches only a contact in the named address book; a personal contact with it is not linked.
+	 *
+	 * @return void
+	 */
+	public function testAnExistingContactIsMatchedOnlyInTheNamedAddressBook(): void {
+		$backend = $this->backend();
+		$backend->books['principals/users/admin|stackiq-cmdb-owners'] = ['id' => 7, 'displayname' => 'Stackiq CMDB owners'];
+		$contacts = [
+			['UID' => 'personal-1', 'FN' => 'Voornaam Achternaam', 'EMAIL' => 'owner@example.org', 'addressbook-key' => '3'],
+			['UID' => 'owners-1', 'FN' => 'Functioneel Beheer', 'EMAIL' => 'beheer@example.org', 'addressbook-key' => '7'],
+		];
+		$service = $this->service(backend: $backend, contacts: $contacts);
+
+		$matched = $service->syncToNamedAddressBook(objectType: 'contactPerson', record: ['achternaam' => 'Functioneel Beheer', 'email' => 'beheer@example.org'], addressBookUri: 'stackiq-cmdb-owners', displayName: 'Stackiq CMDB owners');
+		$this->assertSame('owners-1', $matched);
+		$this->assertSame([], $backend->cards, 'a match creates nothing');
+
+		$created = $service->syncToNamedAddressBook(objectType: 'contactPerson', record: ['voornaam' => 'Voornaam', 'achternaam' => 'Achternaam', 'email' => 'owner@example.org'], addressBookUri: 'stackiq-cmdb-owners', displayName: 'Stackiq CMDB owners');
+		$this->assertNotSame('personal-1', $created, 'the personal contact with that address is not linked');
+		$this->assertCount(1, $backend->cards);
+		$this->assertSame(7, $backend->cards[0][0], 'the new contact goes into the named address book');
+
+		$this->assertSame(['owners-1'], array_column($service->searchNamedAddressBook(query: 'e', addressBookUri: 'stackiq-cmdb-owners', properties: ['FN']), 'uid'));
+	}//end testAnExistingContactIsMatchedOnlyInTheNamedAddressBook()
+
+	/**
+	 * Without the named address book a search finds nothing and creates no address book.
+	 *
+	 * @return void
+	 */
+	public function testSearchingAMissingNamedAddressBookFindsNothing(): void {
+		$backend = $this->backend();
+		$contacts = [['UID' => 'personal-1', 'FN' => 'Voornaam Achternaam', 'EMAIL' => '', 'addressbook-key' => '3']];
+
+		$found = $this->service(backend: $backend, contacts: $contacts)->searchNamedAddressBook(query: 'Voornaam Achternaam', addressBookUri: 'stackiq-cmdb-owners', properties: ['FN']);
+
+		$this->assertSame([], $found);
+		$this->assertSame([], $backend->books);
+	}//end testSearchingAMissingNamedAddressBookFindsNothing()
 
 	/**
 	 * A long value is folded at 75 octets without splitting a character.

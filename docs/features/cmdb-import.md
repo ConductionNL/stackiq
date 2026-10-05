@@ -241,12 +241,14 @@ owner's function in the person column; the import then uses that function as
 the contact's name. No technical owner is imported: the functional
 administrator (FB contactpersoon) is not read.
 
-The identity is kept in **Nextcloud Contacts**. A contact the import
-creates goes into a dedicated address book, **Stackiq CMDB owners**, of the
-administrator who runs the import; the import creates that address book the
-first time it needs it. The import never adds owners to that administrator's
-own address books. The CMDB sheets have no e-mail address, so a contact is
-found by an exact match on the name, and created when there is none. The
+The identity is kept in **Nextcloud Contacts**, in a dedicated address book,
+**Stackiq CMDB owners**, of the administrator who runs the import; the import
+creates that address book the first time it needs it. The import looks for
+an existing contact only in that address book, never in the administrator's
+own address books: a personal contact who happens to have the owner's name
+is not linked to the application. The CMDB sheets have no e-mail address, so
+a contact is found by an exact match on the name in **Stackiq CMDB owners**,
+and created there when there is none. The
 stackiq contact person object only holds the link to that contact, the role
 and the municipality. The same owner on several rows is one contact person.
 

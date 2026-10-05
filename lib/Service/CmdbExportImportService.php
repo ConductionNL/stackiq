@@ -1262,12 +1262,13 @@ class CmdbExportImportService {
 	/**
 	 * Resolve the Nextcloud contact of an owner identity.
 	 *
-	 * With an e-mail address, StackiqContactSyncService matches on it or
-	 * creates the contact. A new contact goes into the importing admin's
-	 * dedicated "Stackiq CMDB owners" address book, never into the admin's
-	 * own address book. Without one, only a contact whose display name is
-	 * exactly the owner's name (case-insensitive) is reused, so an owner
-	 * known by name alone is not created again on every import.
+	 * Contacts are matched, and created, only in the importing admin's
+	 * dedicated "Stackiq CMDB owners" address book, never in the admin's
+	 * other address books. With an e-mail address, StackiqContactSyncService
+	 * matches on it there or creates the contact. Without one, only a contact
+	 * there whose display name is exactly the owner's name (case-insensitive)
+	 * is reused, so an owner known by name alone is not created again on
+	 * every import.
 	 *
 	 * @param array<string, mixed> $identity name, email and role from the owner pack.
 	 *
@@ -1321,7 +1322,11 @@ class CmdbExportImportService {
 	}//end resolveContactUid()
 
 	/**
-	 * The contact whose display name is exactly this one, case-insensitive.
+	 * The contact in the owners' address book whose display name is exactly this one, case-insensitive.
+	 *
+	 * Only the dedicated "Stackiq CMDB owners" address book is searched: a
+	 * namesake in another address book of the admin, such as a personal
+	 * contact, is never linked to an imported owner.
 	 *
 	 * @param string $displayName The display name.
 	 *
@@ -1331,7 +1336,8 @@ class CmdbExportImportService {
 	 */
 	private function contactByDisplayName(string $displayName): ?string {
 		$needle = mb_strtolower($displayName);
-		foreach ($this->contactSync->searchContacts(query: $displayName) as $contact) {
+		$contacts = $this->contactSync->searchNamedAddressBook(query: $displayName, addressBookUri: self::OWNER_ADDRESS_BOOK_URI, properties: ['FN']);
+		foreach ($contacts as $contact) {
 			if (mb_strtolower(trim((string)($contact['name'] ?? ''))) === $needle) {
 				return (string)$contact['uid'];
 			}

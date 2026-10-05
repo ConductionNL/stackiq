@@ -92,7 +92,9 @@ class CmdbExportImportServiceTest extends TestCase {
 	/**
 	 * Contacts in the fake address book: uid => name, email.
 	 *
-	 * @var array<string, array{name: string, email: string}>
+	 * `book` is the address book's URI; a contact without one is in the admin's personal address book.
+	 *
+	 * @var array<string, array{name: string, email: string, book?: string}>
 	 */
 	private array $contacts = [];
 
@@ -514,11 +516,14 @@ class CmdbExportImportServiceTest extends TestCase {
 	private function contactSync(): StackiqContactSyncService {
 		$sync = $this->createMock(StackiqContactSyncService::class);
 		$sync->method('isAvailable')->willReturnCallback(fn (): bool => $this->contactsEnabled);
-		$sync->method('searchContacts')->willReturnCallback(
-			function (string $query): array {
+		$sync->method('searchContacts')->willThrowException(new \LogicException('owners are only searched in the named address book'));
+		$sync->method('searchNamedAddressBook')->willReturnCallback(
+			function (string $query, string $addressBookUri): array {
 				$found = [];
 				foreach ($this->contacts as $uid => $contact) {
-					if (str_contains(mb_strtolower($contact['name']), mb_strtolower($query)) === true) {
+					if (($contact['book'] ?? 'personal') === $addressBookUri
+						&& str_contains(mb_strtolower($contact['name']), mb_strtolower($query)) === true
+					) {
 						$found[] = ['uid' => $uid, 'name' => $contact['name'], 'email' => $contact['email']];
 					}
 				}
@@ -532,13 +537,17 @@ class CmdbExportImportServiceTest extends TestCase {
 				$this->addressBooks[$addressBookUri] = $displayName;
 				$email = (string)($record['email'] ?? '');
 				foreach ($this->contacts as $uid => $contact) {
-					if ($email !== '' && strcasecmp($contact['email'], $email) === 0) {
+					if ($email !== '' && ($contact['book'] ?? 'personal') === $addressBookUri && strcasecmp($contact['email'], $email) === 0) {
 						return $uid;
 					}
 				}
 
 				$uid = 'contact-' . (count($this->contacts) + 1);
-				$this->contacts[$uid] = ['name' => trim(($record['voornaam'] ?? '') . ' ' . ($record['achternaam'] ?? '')), 'email' => $email];
+				$this->contacts[$uid] = [
+					'name' => trim(($record['voornaam'] ?? '') . ' ' . ($record['achternaam'] ?? '')),
+					'email' => $email,
+					'book' => $addressBookUri,
+				];
 				return $uid;
 			}
 		);
@@ -1570,7 +1579,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	public function testAnOwnerByNameIsMatchedExactly(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
 		// A contact whose name merely contains the owner's name must not match.
-		$this->contacts['contact-other'] = ['name' => 'Voornaam Achternaam-Anders', 'email' => ''];
+		$this->contacts['contact-other'] = ['name' => 'Voornaam Achternaam-Anders', 'email' => '', 'book' => 'stackiq-cmdb-owners'];
 		$rows = [$this->row(appId: '1', cells: ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam'])];
 
 		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
@@ -1583,6 +1592,30 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertArrayNotHasKey('role', $people[0]);
 		$this->assertSame($people[0]['id'], $this->objects(self::USAGE)[0]['businessOwner']);
 	}//end testAnOwnerByNameIsMatchedExactly()
+
+	/**
+	 * A namesake in the admin's personal address book is never linked; a contact in the owners' address book is reused.
+	 *
+	 * @return void
+	 */
+	public function testOwnersAreMatchedOnlyInTheOwnersAddressBook(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->contacts['contact-personal'] = ['name' => 'Voornaam Achternaam', 'email' => ''];
+		$this->contacts['contact-owner'] = ['name' => 'Teamleider Applicatiebeheer', 'email' => '', 'book' => 'stackiq-cmdb-owners'];
+		$rows = [
+			$this->row(appId: '1', cells: ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam'], row: 2),
+			$this->row(appId: '2', cells: ['Applicatie Eigenaar (Persoon)' => 'Teamleider Applicatiebeheer'], row: 3),
+		];
+
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$uids = array_column($this->objects(self::CONTACT_PERSON), 'contactsUid');
+		$this->assertNotContains('contact-personal', $uids, 'a personal contact with the same name is not linked');
+		$this->assertContains('contact-owner', $uids, 'the contact in the owners\' address book is reused');
+		$this->assertCount(3, $this->contacts, 'one new contact, in the owners\' address book');
+		$created = array_diff_key($this->contacts, ['contact-personal' => true, 'contact-owner' => true]);
+		$this->assertSame(['stackiq-cmdb-owners'], array_values(array_unique(array_column($created, 'book'))));
+	}//end testOwnersAreMatchedOnlyInTheOwnersAddressBook()
 
 	/**
 	 * No technical owner is written, whatever the row holds.
