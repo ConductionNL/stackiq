@@ -189,12 +189,14 @@ class CmdbImportController extends Controller {
 	/**
 	 * A PHP size setting such as `10M`, in bytes.
 	 *
-	 * @param string $name The ini setting.
-	 *
 	 * Protected so a test can stand in for php.ini, whose size settings cannot
 	 * be changed at run time.
 	 *
+	 * @param string $name The ini setting.
+	 *
 	 * @return int|null Null when it is unset or not a size; 0 means no limit.
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
 	 */
 	protected function iniBytes(string $name): ?int {
 		$value = trim((string)ini_get($name));
