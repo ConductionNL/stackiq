@@ -13,7 +13,7 @@
             "post": {
                 "operationId": "cmdbImport-import",
                 "summary": "Import a TOPdesk CMDB export (xlsx) for one municipality",
-                "description": "Nextcloud admins only (not the groups delegated the stackiq admin settings), CSRF-protected (requesttoken header or OCS-APIRequest: true). Creates or updates modules, supplier organisations, usages and owner contact persons, matched on topdesk:<municipality uuid>:<APPID>. See openspec/changes/cmdb-export-import/contract.md.",
+                "description": "Nextcloud admins only (not the groups delegated the stackiq admin settings), CSRF-protected (requesttoken header or OCS-APIRequest: true). Creates or updates modules, supplier organisations, usages and owner contact persons, matched on topdesk:<municipality uuid>:<APPID>. See openspec/changes/archive/2026-10-05-cmdb-export-import/contract.md.",
                 "tags": [
                     "cmdb-import"
                 ],

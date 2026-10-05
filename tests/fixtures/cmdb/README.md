@@ -1,6 +1,6 @@
 # CMDB import fixtures
 
-Test workbooks for the TOPdesk CMDB import (`openspec/changes/cmdb-export-import`).
+Test workbooks for the TOPdesk CMDB import (`openspec/changes/archive/2026-10-05-cmdb-export-import`).
 They are used by the PHPUnit tests under `tests/Unit/` and by the Playwright test
 `tests/e2e/spec-coverage/cmdb-import.spec.ts`.
 
