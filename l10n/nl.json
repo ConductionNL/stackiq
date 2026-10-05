@@ -1119,6 +1119,8 @@
         "The workbook has neither of the sheets %s.": "De werkmap bevat geen van de tabbladen %s.",
         "Column \"%1$s\": %2$s": "Kolom \"%1$s\": %2$s",
         "Optional column \"%s\" not found": "Optionele kolom \"%s\" niet gevonden",
+        "Sheet \"%1$s\" not found; %2$s not read": "Tabblad \"%1$s\" niet gevonden; %2$s niet ingelezen",
+        "Column \"%1$s\" not found; %2$s not read": "Kolom \"%1$s\" niet gevonden; %2$s niet ingelezen",
         "Owner from column \"%s\" could not be resolved": "Eigenaar uit kolom \"%s\" kon niet worden gevonden",
         "Owner from column \"%s\" could not be resolved in Nextcloud Contacts": "Eigenaar uit kolom \"%s\" kon niet worden gevonden in Nextcloud Contacten",
         "Owners skipped: Nextcloud Contacts is unavailable": "Eigenaren overgeslagen: Nextcloud Contacten is niet beschikbaar",

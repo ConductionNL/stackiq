@@ -2,7 +2,7 @@
   "id": "topdesk-cmdb",
   "name": "TOPdesk CMDB export",
   "version": "2.0.0",
-  "description": "How stackiq reads a TOPdesk CMDB export (xlsx): the two CMDB sheets, the key and required columns, date and id columns, values that mean empty, the pack per target and the limits. Columns that neither this profile nor a pack names are never read.",
+  "description": "How stackiq reads a TOPdesk CMDB export (xlsx): the two CMDB sheets and the \"Invoer\" sheet each looks the owner's e-mail address and phone number up in, the key and required columns, date and id columns, values that mean empty, the pack per target and the limits. Columns that neither this profile nor a pack names are never read.",
   "maxFileBytes": 10485760,
   "maxRowsPerSheet": 10000,
   "maxUncompressedBytes": 52428800,
@@ -10,11 +10,13 @@
     {
       "name": "Onbeh Applicaties CMDB",
       "constants": { "Beheer": "Beheer geregeld: nee" },
-      "absentColumns": ["Nickname"]
+      "absentColumns": ["Nickname"],
+      "lookup": { "sheet": "Invoer AIA data", "on": "Applicatie Code", "key": "Middel-ID", "columns": ["Eigenaar e-mail", "Eigenaar mobiel nummer"] }
     },
     {
       "name": "Beheerde Applicaties CMDB",
-      "constants": { "Beheer": "Beheer geregeld: ja" }
+      "constants": { "Beheer": "Beheer geregeld: ja" },
+      "lookup": { "sheet": "Invoer APP data", "on": "Applicatie Code", "key": "Middel-ID", "columns": ["Eigenaar e-mail", "Eigenaar mobiel nummer"] }
     }
   ],
   "sheetPrecedence": ["Beheerde Applicaties CMDB", "Onbeh Applicaties CMDB"],
@@ -22,7 +24,7 @@
   "nameColumn": "Applicatie Naam",
   "requiredColumns": ["APPID", "Applicatie Naam"],
   "dateColumns": ["Datum", "Referentie datum wijziging", "End-of-Life Functioneel"],
-  "idColumns": ["APPID"],
+  "idColumns": ["APPID", "Eigenaar mobiel nummer"],
   "emptyValues": {
     "BNN Classificatie": ["NB"]
   },

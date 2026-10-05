@@ -514,16 +514,41 @@ class CmdbExportImportServiceTest extends TestCase {
 	private function contactSync(): StackiqContactSyncService {
 		$sync = $this->createMock(StackiqContactSyncService::class);
 		$sync->method('isAvailable')->willReturnCallback(fn (): bool => $this->contactsEnabled);
-		$sync->method('searchContacts')->willReturnCallback(
-			function (string $query): array {
+		$sync->method('findContactForRecord')->willReturnCallback(
+			function (string $objectType, array $record): ?array {
+				foreach ($this->contacts as $uid => $contact) {
+					if (($record['email'] ?? '') !== '' && strcasecmp($contact['email'], $record['email']) === 0) {
+						return $this->searchResult(uid: $uid);
+					}
+				}
+
+				return null;
+			}
+		);
+		$sync->method('findContactsByDisplayName')->willReturnCallback(
+			function (string $displayName): array {
 				$found = [];
 				foreach ($this->contacts as $uid => $contact) {
-					if (str_contains(mb_strtolower($contact['name']), mb_strtolower($query)) === true) {
-						$found[] = ['uid' => $uid, 'name' => $contact['name'], 'email' => $contact['email']];
+					if (mb_strtolower($contact['name']) === mb_strtolower($displayName)) {
+						$found[] = $this->searchResult(uid: $uid);
 					}
 				}
 
 				return $found;
+			}
+		);
+		$sync->method('completeContact')->willReturnCallback(
+			function (array $contact, array $channels): bool {
+				$uid = $contact['UID'];
+				$updated = false;
+				foreach (['EMAIL' => 'email', 'TEL' => 'phone'] as $property => $field) {
+					if (($channels[$property] ?? '') !== '' && ($this->contacts[$uid][$field] ?? '') === '') {
+						$this->contacts[$uid][$field] = $channels[$property];
+						$updated = true;
+					}
+				}
+
+				return $updated;
 			}
 		);
 		$sync->method('syncToContacts')->willThrowException(new \LogicException('owners go into the named address book, not the first writable one'));
@@ -538,13 +563,36 @@ class CmdbExportImportServiceTest extends TestCase {
 				}
 
 				$uid = 'contact-' . (count($this->contacts) + 1);
-				$this->contacts[$uid] = ['name' => trim(($record['voornaam'] ?? '') . ' ' . ($record['achternaam'] ?? '')), 'email' => $email];
+				$this->contacts[$uid] = [
+					'name' => trim(($record['voornaam'] ?? '') . ' ' . ($record['achternaam'] ?? '')),
+					'email' => $email,
+					'phone' => (string)($record['telefoonnummer'] ?? ''),
+				];
 				return $uid;
 			}
 		);
 
 		return $sync;
 	}//end contactSync()
+
+	/**
+	 * A fake contact as IManager::search() returns it.
+	 *
+	 * @param string $uid The contact UID.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function searchResult(string $uid): array {
+		$contact = $this->contacts[$uid];
+		return [
+			'UID' => $uid,
+			'URI' => $uid . '.vcf',
+			'addressbook-key' => '1',
+			'FN' => $contact['name'],
+			'EMAIL' => $contact['email'],
+			'TEL' => ($contact['phone'] ?? ''),
+		];
+	}//end searchResult()
 
 	/**
 	 * A ProgressTracker on an in-memory distributed cache.
@@ -1208,6 +1256,25 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testAVendorIsOneSupplier()
 
 	/**
+	 * A Vendor that is the municipality's own name is the municipality, also where a Supplier of that name exists.
+	 *
+	 * @return void
+	 */
+	public function testAVendorNamedAsTheMunicipalityIsTheMunicipality(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->seedOrganisation(uuid: 'supplier-twin', name: 'Gemeente Voorbeeldstad', type: 'Supplier');
+		$rows = [
+			$this->row(appId: '1', cells: ['Vendor' => 'Gemeente Voorbeeldstad'], row: 2),
+			$this->row(appId: '2', cells: ['Vendor' => 'gemeente  voorbeeldstad'], row: 3),
+		];
+
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame([1 => 'muni-1', 2 => 'muni-1'], array_column($this->objects(self::MODULE), 'provider', 'externalNumber'));
+		$this->assertCount(2, $this->objects(self::ORGANIZATION), 'no organisation is created');
+	}//end testAVendorNamedAsTheMunicipalityIsTheMunicipality()
+
+	/**
 	 * updateExisting=false reports a match as skipped "exists" and writes nothing.
 	 *
 	 * @return void
@@ -1403,7 +1470,11 @@ class CmdbExportImportServiceTest extends TestCase {
 		$municipality = $report['municipality']['uuid'];
 
 		$this->assertEqualsCanonicalizing(['Voornaam Achternaam', 'Teamleider Applicatiebeheer'], array_column($this->contacts, 'name'));
-		$this->assertSame(['', ''], array_column($this->contacts, 'email'), 'the CMDB sheets carry no e-mail address');
+		$this->assertSame(
+			['Voornaam Achternaam' => 'letter.achternaam@gemeente.nl', 'Teamleider Applicatiebeheer' => ''],
+			array_column($this->contacts, 'email', 'name'),
+			'the e-mail address comes from the Invoer sheet row with the same Middel-ID; the Beheerde row\'s Invoer row has none'
+		);
 		$this->assertSame(['stackiq-cmdb-owners' => 'Stackiq CMDB owners'], $this->addressBooks, 'new owner contacts go into the dedicated address book only');
 
 		$people = $this->objects(self::CONTACT_PERSON);
@@ -1458,6 +1529,50 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertArrayNotHasKey('role', $people[0]);
 		$this->assertSame($people[0]['id'], $this->objects(self::USAGE)[0]['businessOwner']);
 	}//end testAnOwnerByNameIsMatchedExactly()
+
+	/**
+	 * An owner whose contact was made without an e-mail address or phone number gets both, in the same contact.
+	 *
+	 * @return void
+	 */
+	public function testAnOwnerKnownByNameGetsTheEmailAndPhoneItLacks(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->contacts['contact-old'] = ['name' => 'Voornaam Achternaam', 'email' => '', 'phone' => ''];
+		$owner = [
+			'Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam',
+			'Eigenaar e-mail' => 'letter.achternaam@gemeente.nl',
+			'Eigenaar mobiel nummer' => '0612345678',
+		];
+
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: $owner)]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(
+			['contact-old' => ['name' => 'Voornaam Achternaam', 'email' => 'letter.achternaam@gemeente.nl', 'phone' => '0612345678']],
+			$this->contacts
+		);
+		$this->assertSame('contact-old', $this->objects(self::CONTACT_PERSON)[0]['contactsUid']);
+
+		$stored = json_encode([$this->objects(self::CONTACT_PERSON), $this->objects(self::USAGE), $this->objects(self::MODULE)]);
+		$this->assertStringNotContainsString('letter.achternaam', (string)$stored, 'the e-mail address lives in Contacts only');
+		$this->assertStringNotContainsString('0612345678', (string)$stored, 'the phone number lives in Contacts only');
+	}//end testAnOwnerKnownByNameGetsTheEmailAndPhoneItLacks()
+
+	/**
+	 * A contact with the owner's name but another e-mail address is someone else; an address it has is never replaced.
+	 *
+	 * @return void
+	 */
+	public function testANamesakeWithAnotherEmailIsNotTaken(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->contacts['contact-namesake'] = ['name' => 'Voornaam Achternaam', 'email' => 'iemand.anders@example.org', 'phone' => ''];
+		$owner = ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'Eigenaar e-mail' => 'letter.achternaam@gemeente.nl'];
+
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: $owner)]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertCount(2, $this->contacts);
+		$this->assertSame('iemand.anders@example.org', $this->contacts['contact-namesake']['email']);
+		$this->assertNotSame('contact-namesake', $this->objects(self::CONTACT_PERSON)[0]['contactsUid']);
+	}//end testANamesakeWithAnotherEmailIsNotTaken()
 
 	/**
 	 * No technical owner is written, whatever the row holds.

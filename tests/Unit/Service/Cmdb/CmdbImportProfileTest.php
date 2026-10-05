@@ -131,7 +131,15 @@ class CmdbImportProfileTest extends TestCase {
 			['Applicatie Status' => 'status', 'Classificatie' => 'timeClassification', 'End-of-Life Functioneel' => 'startDateOutPhased', 'Beheer' => 'interneAnnotation'],
 			$targets('usage')
 		);
-		$this->assertSame(['Applicatie Eigenaar (Persoon)' => 'name', 'Applicatie Eigenaar (Functie)' => 'role'], $targets('businessOwner'));
+		$this->assertSame(
+			[
+				'Applicatie Eigenaar (Persoon)' => 'name',
+				'Applicatie Eigenaar (Functie)' => 'role',
+				'Eigenaar e-mail' => 'email',
+				'Eigenaar mobiel nummer' => 'telefoonnummer',
+			],
+			$targets('businessOwner')
+		);
 		$this->assertSame(['module', 'manufacturer', 'municipality', 'usage', 'businessOwner'], CmdbImportProfile::TARGETS, 'no technical owner');
 
 		$this->assertSame(['type' => 'Supplier', 'status' => 'Active', 'registeredBy' => 'Supplier'], $profile->pack(target: 'manufacturer')['defaults']);
@@ -217,7 +225,8 @@ class CmdbImportProfileTest extends TestCase {
 		foreach ([
 			'Personeelsnummer',
 			'Eigenaar',
-			'Eigenaar e-mail',
+			'Eigenaar afdeling',
+			'Eigenaar functie',
 			'FB contactpersoon 1',
 			'FB contactpersoon 2',
 			'Groepseigenaar mail⚡',
@@ -232,6 +241,15 @@ class CmdbImportProfileTest extends TestCase {
 		] as $never) {
 			$this->assertNotContains($never, $columns);
 		}
+
+		// Read only for the owner's Nextcloud contact, looked up on the Invoer sheets; no stackiq object holds them.
+		$this->assertContains('Eigenaar e-mail', $columns);
+		$this->assertContains('Eigenaar mobiel nummer', $columns);
+		$this->assertSame(
+			['sheet' => 'Invoer AIA data', 'on' => 'Applicatie Code', 'key' => 'Middel-ID', 'columns' => ['Eigenaar e-mail', 'Eigenaar mobiel nummer']],
+			$profile->lookup(sheetName: 'Onbeh Applicaties CMDB')
+		);
+		$this->assertSame('Invoer APP data', $profile->lookup(sheetName: 'Beheerde Applicaties CMDB')['sheet']);
 
 		$this->assertContains('Applicatie Eigenaar (Persoon)', $columns);
 		$this->assertContains('Applicatie Eigenaar (Functie)', $columns);

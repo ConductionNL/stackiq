@@ -96,6 +96,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 		$this->assertSame('Mailen', $rows[0]['cells']['Roepnaam']);
 		$this->assertSame('Webapplicatie', $rows[0]['cells']['Applicatiesoort']);
 		$this->assertSame('Achternaam, Voornaam', $rows[0]['cells']['Applicatie Eigenaar (Persoon)']);
+		$this->assertSame('letter.achternaam@gemeente.nl', $rows[0]['cells']['Eigenaar e-mail'], 'looked up on "Invoer AIA data" by Middel-ID');
 		$this->assertArrayNotHasKey('Nickname', $rows[0]['cells'], 'Onbeh has no Nickname column');
 		$this->assertSame('naamtest123', $rows[1]['cells']['Applicatie Naam']);
 		$this->assertSame(2, (int)$rows[1]['cells']['APPID']);
@@ -379,6 +380,66 @@ class CmdbWorkbookReaderTest extends TestCase {
 			CmdbTestSupport::removeDirectory(directory: $directory);
 		}
 	}//end testTheDataPassHoldsOnlyResolvedColumns()
+
+	/**
+	 * A lookup adds only its listed columns, from the Invoer row with the same Middel-ID, to the rows that have one.
+	 *
+	 * @return void
+	 */
+	public function testALookupAddsOnlyItsColumnsByKey(): void {
+		$this->requireSpreadsheet();
+		$path = CmdbTestSupport::buildWorkbook(
+			sheets: [
+				'Beheerde Applicaties CMDB' => [
+					['APPID', 'Applicatie Code', 'Applicatie Naam'],
+					[1, 'APP-een', 'Een'],
+					[2, 'APP-twee', 'Twee'],
+				],
+				'Invoer APP data' => [
+					['Personeelsnummer', 'Middel-ID', 'Eigenaar e-mail', 'Eigenaar mobiel nummer'],
+					['P-0002', ' app-TWEE ', 'twee@example.org', '0612345678'],
+					['P-0003', 'APP-drie', 'drie@example.org', ''],
+				],
+			]
+		);
+
+		try {
+			$result = (new CmdbWorkbookReader())->read(path: $path, profile: $this->profile());
+			$rows = array_column($result['rows'], 'cells', 'row');
+			$this->assertArrayNotHasKey('Eigenaar e-mail', array_filter($rows[2], static fn ($value): bool => $value !== null), 'APP-een has no Invoer row');
+			$this->assertSame('twee@example.org', $rows[3]['Eigenaar e-mail'], 'keys match whatever their case or surrounding space');
+			$this->assertSame('0612345678', (string)$rows[3]['Eigenaar mobiel nummer']);
+			$this->assertStringNotContainsString('P-000', (string)json_encode($result['rows']));
+			$this->assertCount(2, $result['rows'], 'a lookup sheet adds no rows of its own');
+			$this->assertSame([], array_filter($result['importWarnings'], static fn (array $warning): bool => isset($warning['lookupSheet']) || isset($warning['lookupKey'])));
+		} finally {
+			unlink($path);
+		}
+	}//end testALookupAddsOnlyItsColumnsByKey()
+
+	/**
+	 * A missing lookup sheet is an import warning, and the source rows are read without its columns.
+	 *
+	 * @return void
+	 */
+	public function testAMissingLookupSheetIsAWarning(): void {
+		$this->requireSpreadsheet();
+		$path = CmdbTestSupport::buildWorkbook(
+			sheets: ['Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Code', 'Applicatie Naam'], [1, 'APP-een', 'Een']]]
+		);
+
+		try {
+			$result = (new CmdbWorkbookReader())->read(path: $path, profile: $this->profile());
+			$this->assertCount(1, $result['rows']);
+			$lookupWarnings = array_values(array_filter($result['importWarnings'], static fn (array $warning): bool => isset($warning['lookupSheet'])));
+			$this->assertSame(
+				[['sheet' => 'Beheerde Applicaties CMDB', 'lookupSheet' => 'Invoer APP data', 'lookupColumns' => ['Eigenaar e-mail', 'Eigenaar mobiel nummer']]],
+				array_map(static fn (array $warning): array => array_diff_key($warning, ['message' => true]), $lookupWarnings)
+			);
+		} finally {
+			unlink($path);
+		}
+	}//end testAMissingLookupSheetIsAWarning()
 
 	/**
 	 * A sheet within the row span still stops at the limit on non-empty rows.

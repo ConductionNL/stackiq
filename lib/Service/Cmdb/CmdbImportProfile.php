@@ -212,10 +212,11 @@ class CmdbImportProfile {
 	}//end maxRowsPerSheet()
 
 	/**
-	 * The source sheets, each with the constants it adds to its rows and the
-	 * pack columns it is known not to have.
+	 * The source sheets, each with the constants it adds to its rows, the
+	 * pack columns it is known not to have, and the sheet it looks columns up in.
 	 *
-	 * @return array<int, array{name: string, constants: array<string, string>, absentColumns: array<int, string>}>
+	 * @return array<int, array{name: string, constants: array<string, string>, absentColumns: array<int, string>,
+	 *     lookup: array{sheet: string, on: string, key: string, columns: array<int, string>}|null}>
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
 	 */
@@ -240,11 +241,70 @@ class CmdbImportProfile {
 				$absent = array_values(array_map('strval', $sheet['absentColumns']));
 			}
 
-			$sheets[] = ['name' => $sheet['name'], 'constants' => $constants, 'absentColumns' => $absent];
+			$sheets[] = [
+				'name' => $sheet['name'],
+				'constants' => $constants,
+				'absentColumns' => $absent,
+				'lookup' => self::parseLookup(lookup: ($sheet['lookup'] ?? null)),
+			];
 		}//end foreach
 
 		return $sheets;
 	}//end sheets()
+
+	/**
+	 * A sheet's lookup, or null when it is incomplete.
+	 *
+	 * A lookup reads `columns` from the row of `sheet` whose `key` column
+	 * holds the value of the source row's `on` column. The TOPdesk CMDB sheets
+	 * are formulas over the "Invoer" sheets, which carry the owner's e-mail
+	 * address and phone number that the CMDB sheets leave out.
+	 *
+	 * @param mixed $lookup The profile's `lookup` of a sheet.
+	 *
+	 * @return array{sheet: string, on: string, key: string, columns: array<int, string>}|null
+	 */
+	private static function parseLookup(mixed $lookup): ?array {
+		if (is_array($lookup) === false) {
+			return null;
+		}
+
+		$columns = [];
+		if (is_array($lookup['columns'] ?? null) === true) {
+			$columns = array_values(array_filter(array_map('strval', $lookup['columns']), static fn (string $column): bool => $column !== ''));
+		}
+
+		foreach (['sheet', 'on', 'key'] as $field) {
+			if (is_string($lookup[$field] ?? null) === false || $lookup[$field] === '') {
+				return null;
+			}
+		}
+
+		if ($columns === []) {
+			return null;
+		}
+
+		return ['sheet' => $lookup['sheet'], 'on' => $lookup['on'], 'key' => $lookup['key'], 'columns' => $columns];
+	}//end parseLookup()
+
+	/**
+	 * The lookup of a source sheet, or null when it has none.
+	 *
+	 * @param string $sheetName The source sheet name.
+	 *
+	 * @return array{sheet: string, on: string, key: string, columns: array<int, string>}|null
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 */
+	public function lookup(string $sheetName): ?array {
+		foreach ($this->sheets() as $sheet) {
+			if ($sheet['name'] === $sheetName) {
+				return $sheet['lookup'];
+			}
+		}
+
+		return null;
+	}//end lookup()
 
 	/**
 	 * The names of the source sheets.
@@ -531,6 +591,12 @@ class CmdbImportProfile {
 			$this->dateColumns(),
 			$this->idColumns()
 		);
+
+		foreach ($this->sheets() as $sheet) {
+			if ($sheet['lookup'] !== null) {
+				$columns[] = $sheet['lookup']['on'];
+			}
+		}
 
 		foreach (self::TARGETS as $target) {
 			foreach (($this->pack(target: $target)['fieldMappings'] ?? []) as $mapping) {

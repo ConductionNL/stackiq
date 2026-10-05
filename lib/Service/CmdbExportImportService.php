@@ -22,8 +22,9 @@
  *
  * Rules stated once and enforced here:
  * - A module matches on `externalKey`; a usage on (consumer, module); a
- *   supplier on its normalised name and type Supplier; a contact person on
- *   (contactsUid, organization). An organisation that was merged away
+ *   manufacturer on its normalised name, a Municipality of that name before
+ *   a Supplier, so a municipality that builds its own applications stays one
+ *   organisation; a contact person on (contactsUid, organization). An organisation that was merged away
  *   (status `merged`) or is `Inactive` is never matched by name.
  * - `publicationDate` is set to the import's start on create and never
  *   written on update; neither is `depublicationDate`.
@@ -176,7 +177,7 @@ class CmdbExportImportService {
 	private ?array $coordinates = null;
 
 	/**
-	 * Suppliers by normalised name, loaded once per run.
+	 * Manufacturer organisations by normalised name, loaded once per run.
 	 *
 	 * @var array<string, string>|null
 	 */
@@ -653,7 +654,7 @@ class CmdbExportImportService {
 	/**
 	 * Translate the reader's import-level warnings.
 	 *
-	 * @param array<int, array{sheet: string, column?: string, message: string}> $warnings The reader warnings.
+	 * @param array<int, array<string, mixed>> $warnings The reader warnings: sheet, message, and column, or lookupSheet/lookupKey with lookupColumns.
 	 *
 	 * @return array<int, array{sheet: string, message: string}>
 	 *
@@ -663,8 +664,13 @@ class CmdbExportImportService {
 		$translated = [];
 		foreach ($warnings as $warning) {
 			$message = $warning['message'];
+			$columns = implode(', ', ($warning['lookupColumns'] ?? []));
 			if (isset($warning['column']) === true) {
 				$message = $this->l10n->t('Optional column "%s" not found', [$warning['column']]);
+			} else if (isset($warning['lookupSheet']) === true) {
+				$message = $this->l10n->t('Sheet "%1$s" not found; %2$s not read', [$warning['lookupSheet'], $columns]);
+			} else if (isset($warning['lookupKey']) === true) {
+				$message = $this->l10n->t('Column "%1$s" not found; %2$s not read', [$warning['lookupKey'], $columns]);
 			}
 
 			$translated[] = ['sheet' => $warning['sheet'], 'message' => $message];
@@ -909,12 +915,16 @@ class CmdbExportImportService {
 	}//end map()
 
 	/**
-	 * Find or create the Supplier organisation for the row's manufacturer.
+	 * Find or create the organisation of the row's manufacturer.
+	 *
+	 * A name matches one live organisation: a Municipality of that name (the
+	 * municipality builds its own applications, and its Vendor is then its
+	 * own name), else a Supplier. Only no match creates a Supplier.
 	 *
 	 * @param array<string, string> $values The normalised row.
 	 * @param int $rowNumber The sheet row number.
 	 *
-	 * @return string|null The supplier uuid, or null when the row names no manufacturer.
+	 * @return string|null The organisation uuid, or null when the row names no manufacturer.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 */
@@ -1142,14 +1152,16 @@ class CmdbExportImportService {
 	/**
 	 * Resolve the Nextcloud contact of an owner identity.
 	 *
-	 * With an e-mail address, StackiqContactSyncService matches on it or
-	 * creates the contact. A new contact goes into the importing admin's
-	 * dedicated "Stackiq CMDB owners" address book, never into the admin's
-	 * own address book. Without one, only a contact whose display name is
-	 * exactly the owner's name (case-insensitive) is reused, so an owner
-	 * known by name alone is not created again on every import.
+	 * The owner is found by e-mail address, else as the contact whose display
+	 * name is exactly the owner's name (case-insensitive); with an e-mail
+	 * address, only a contact without one matches by name, so a namesake with
+	 * another address is not taken. A found contact gets the e-mail address
+	 * and phone number it lacks, never a replacement for one it has. No match
+	 * creates the contact through StackiqContactSyncService, in the importing
+	 * admin's dedicated "Stackiq CMDB owners" address book, never in the
+	 * admin's own address book.
 	 *
-	 * @param array<string, mixed> $identity name, email and role from the owner pack.
+	 * @param array<string, mixed> $identity name, role, email and telefoonnummer from the owner pack.
 	 *
 	 * @return string|null The contact UID, or null.
 	 *
@@ -1159,6 +1171,7 @@ class CmdbExportImportService {
 		$parts = self::splitPersonName(name: (string)$identity['name']);
 		$displayName = trim($parts['voornaam'] . ' ' . $parts['achternaam']);
 		$email = trim((string)($identity['email'] ?? ''));
+		$phone = trim((string)($identity['telefoonnummer'] ?? ''));
 
 		$cacheKey = 'name:' . mb_strtolower($displayName);
 		if ($email !== '') {
@@ -1169,56 +1182,87 @@ class CmdbExportImportService {
 			return $this->contactUids[$cacheKey];
 		}
 
-		$uid = null;
-		if ($email === '') {
-			$uid = $this->contactByDisplayName(displayName: $displayName);
+		$contact = null;
+		if ($email !== '') {
+			$contact = $this->contactSync->findContactForRecord(objectType: 'contactPerson', record: ['email' => $email]);
 		}
 
-		if ($uid === null) {
-			$record = ['voornaam' => $parts['voornaam'], 'achternaam' => $parts['achternaam']];
-			if ($email !== '') {
-				$record['email'] = $email;
-			}
+		if ($contact === null) {
+			$contact = $this->contactByDisplayName(displayName: $displayName, email: $email);
+		}
 
-			$role = trim((string)($identity['role'] ?? ''));
-			if ($role !== '') {
-				$record['role'] = $role;
-			}
-
-			$uid = $this->contactSync->syncToNamedAddressBook(
-				objectType: 'contactPerson',
-				record: $record,
-				addressBookUri: self::OWNER_ADDRESS_BOOK_URI,
-				displayName: $this->l10n->t('Stackiq CMDB owners')
-			);
-			if ($uid === '') {
-				$uid = null;
+		$record = ['voornaam' => $parts['voornaam'], 'achternaam' => $parts['achternaam']];
+		foreach (['email' => $email, 'telefoonnummer' => $phone, 'role' => trim((string)($identity['role'] ?? ''))] as $field => $value) {
+			if ($value !== '') {
+				$record[$field] = $value;
 			}
 		}
 
+		$uid = $this->ownerContact(contact: $contact, record: $record);
 		$this->contactUids[$cacheKey] = $uid;
 		return $uid;
 	}//end resolveContactUid()
 
 	/**
-	 * The contact whose display name is exactly this one, case-insensitive.
+	 * The contact whose display name is exactly the owner's, case-insensitive.
 	 *
-	 * @param string $displayName The display name.
+	 * With an e-mail address, a contact that has another address is someone
+	 * else, so only a contact without one is taken.
 	 *
-	 * @return string|null The contact UID, or null.
+	 * @param string $displayName The owner's display name.
+	 * @param string $email The owner's e-mail address, or ''.
+	 *
+	 * @return array<string, mixed>|null The contact as IManager::search() returns it, or null.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-6
 	 */
-	private function contactByDisplayName(string $displayName): ?string {
-		$needle = mb_strtolower($displayName);
-		foreach ($this->contactSync->searchContacts(query: $displayName) as $contact) {
-			if (mb_strtolower(trim((string)($contact['name'] ?? ''))) === $needle) {
-				return (string)$contact['uid'];
+	private function contactByDisplayName(string $displayName, string $email): ?array {
+		foreach ($this->contactSync->findContactsByDisplayName(displayName: $displayName) as $contact) {
+			// IManager::search() gives a multi-valued property as a list.
+			$emails = (array)($contact['EMAIL'] ?? []);
+			if ($email === '' || trim((string)($emails[0] ?? '')) === '') {
+				return $contact;
 			}
 		}
 
 		return null;
 	}//end contactByDisplayName()
+
+	/**
+	 * Complete the found contact with the e-mail address and phone number it lacks, or create the owner's contact.
+	 *
+	 * @param array<string, mixed>|null $contact The found contact, or null.
+	 * @param array<string, string> $record voornaam, achternaam, and email, telefoonnummer and role when known.
+	 *
+	 * @return string|null The contact UID, or null.
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-6
+	 */
+	private function ownerContact(?array $contact, array $record): ?string {
+		$uid = '';
+		if ($contact !== null) {
+			$this->contactSync->completeContact(
+				contact: $contact,
+				channels: ['EMAIL' => ($record['email'] ?? ''), 'TEL' => ($record['telefoonnummer'] ?? '')]
+			);
+			$uid = (string)($contact['UID'] ?? '');
+		}
+
+		if ($contact === null) {
+			$uid = (string)$this->contactSync->syncToNamedAddressBook(
+				objectType: 'contactPerson',
+				record: $record,
+				addressBookUri: self::OWNER_ADDRESS_BOOK_URI,
+				displayName: $this->l10n->t('Stackiq CMDB owners')
+			);
+		}
+
+		if ($uid === '') {
+			return null;
+		}
+
+		return $uid;
+	}//end ownerContact()
 
 	/**
 	 * Find or create the contact person of a contact for the municipality.
@@ -1369,7 +1413,10 @@ class CmdbExportImportService {
 	}//end municipalityByUuid()
 
 	/**
-	 * Suppliers by normalised name, loaded once per run.
+	 * The organisations a manufacturer name matches, by normalised name, loaded once per run.
+	 *
+	 * Municipalities are loaded first, so a name both a Municipality and a
+	 * Supplier carry is the Municipality.
 	 *
 	 * @return array<string, string>
 	 *
@@ -1378,7 +1425,8 @@ class CmdbExportImportService {
 	private function suppliers(): array {
 		if ($this->suppliers === null) {
 			$this->suppliers = [];
-			foreach ($this->organisationsOfType(type: 'Supplier') as $organisation) {
+			$organisations = array_merge($this->organisationsOfType(type: 'Municipality'), $this->organisationsOfType(type: 'Supplier'));
+			foreach ($organisations as $organisation) {
 				$key = self::normaliseName(name: (string)($organisation['name'] ?? ''));
 				if ($key !== '' && isset($this->suppliers[$key]) === false) {
 					$this->suppliers[$key] = $organisation['uuid'];

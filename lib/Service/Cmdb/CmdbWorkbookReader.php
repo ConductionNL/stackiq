@@ -26,7 +26,12 @@
  *    to an empty cell, so it yields an empty cell too.
  * 5. Rows whose kept cells are all empty are dropped; more non-empty rows than
  *    the profile allows stops the import with `TOO_MANY_ROWS` (422).
- * 6. Memory is bounded before PhpSpreadsheet parses a sheet: a package that
+ * 6. A source sheet may name a lookup sheet (the profile's `lookup`): its
+ *    listed columns are added to every source row from the lookup row whose
+ *    key column holds the source row's `on` value. Only the key and the listed
+ *    columns of a lookup sheet are read. A lookup sheet or key column the
+ *    workbook lacks is an import warning, not an error.
+ * 7. Memory is bounded before PhpSpreadsheet parses a sheet: a package that
  *    unpacks to more than the profile's `maxUncompressedBytes` is
  *    `WORKBOOK_TOO_LARGE` (413), and a source sheet whose last used row lies
  *    beyond twice the row limit is `TOO_MANY_ROWS`. A read filter then
@@ -137,7 +142,9 @@ class CmdbWorkbookReader {
 	 * @param CmdbImportProfile $profile The import profile.
 	 *
 	 * @return array<string, mixed> `rows` (list of {sheet, row, cells, uncached}), `importWarnings`
-	 *                              (list of {sheet, message}) and `date1904` (bool).
+	 *                              (list of {sheet, message} with `column` for a missing optional
+	 *                              column, or `lookupSheet`/`lookupKey` and `lookupColumns` for a
+	 *                              lookup that could not be read) and `date1904` (bool).
 	 *
 	 * @throws CmdbImportException WORKBOOK_TOO_LARGE, READER_UNAVAILABLE, NOT_XLSX, NO_SOURCE_SHEET,
 	 *                             MISSING_COLUMN or TOO_MANY_ROWS.
@@ -175,30 +182,34 @@ class CmdbWorkbookReader {
 			);
 		}
 
+		['lookups' => $lookups, 'warnings' => $lookupWarnings] = self::presentLookups(profile: $profile, sourceSheets: $present, available: $available);
+		$loaded = array_values(array_unique(array_merge($present, array_column($lookups, 'sheet'))));
+
 		$limit = $profile->maxRowsPerSheet();
 		$lastRow = self::lastReadableRow(limit: $limit);
-		$this->assertRowSpan(path: $path, sheetNames: $present, lastRow: $lastRow, limit: $limit);
+		$this->assertRowSpan(path: $path, sheetNames: $loaded, lastRow: $lastRow, limit: $limit);
 
-		$headers = $this->load(path: $path, sheetNames: $present, filter: new CmdbReadFilter(lastRow: 1));
+		$headers = $this->load(path: $path, sheetNames: $loaded, filter: new CmdbReadFilter(lastRow: 1));
 		try {
 			$resolved = $this->resolveSheets(spreadsheet: $headers, sheetNames: $present, profile: $profile);
+			['lookups' => $lookups, 'columns' => $lookupColumns, 'warnings' => $keyWarnings] = $this->resolveLookups(spreadsheet: $headers, lookups: $lookups);
 		} finally {
 			$headers->disconnectWorksheets();
 		}
 
-		$letters = array_map(static fn (array $columns): array => array_keys($columns), $resolved['columns']);
-		$spreadsheet = $this->load(path: $path, sheetNames: $present, filter: new CmdbReadFilter(lastRow: $lastRow, columns: $letters));
+		$warnings = array_merge($resolved['warnings'], $lookupWarnings, $keyWarnings);
+		$letters = array_map(static fn (array $columns): array => array_keys($columns), array_merge($lookupColumns, $resolved['columns']));
+		$spreadsheet = $this->load(path: $path, sheetNames: $loaded, filter: new CmdbReadFilter(lastRow: $lastRow, columns: $letters));
 		try {
-			$rows = [];
-			foreach ($present as $sheetName) {
-				$sheetRows = $this->readRows(
-					worksheet: $spreadsheet->getSheetByName($sheetName),
-					columns: $resolved['columns'][$sheetName],
-					sheetName: $sheetName,
-					limit: $limit
+			$indexes = [];
+			foreach ($lookupColumns as $sheetName => $columns) {
+				$indexes[$sheetName] = self::indexRows(
+					rows: $this->readRows(worksheet: $spreadsheet->getSheetByName($sheetName), columns: $columns, sheetName: $sheetName, limit: $limit),
+					key: $lookups[$sheetName]['key']
 				);
-				array_push($rows, ...$sheetRows);
 			}
+
+			$rows = $this->readSourceRows(spreadsheet: $spreadsheet, columns: $resolved['columns'], profile: $profile, indexes: $indexes);
 
 			$date1904 = false;
 			if (method_exists($spreadsheet, 'getExcelCalendar') === true) {
@@ -208,8 +219,173 @@ class CmdbWorkbookReader {
 			$spreadsheet->disconnectWorksheets();
 		}
 
-		return ['rows' => $rows, 'importWarnings' => $resolved['warnings'], 'date1904' => $date1904];
+		return ['rows' => $rows, 'importWarnings' => $warnings, 'date1904' => $date1904];
 	}//end read()
+
+	/**
+	 * The rows of every source sheet, with the columns their lookup adds.
+	 *
+	 * @param object $spreadsheet The workbook, loaded through the data filter.
+	 * @param array<string, array<string, string>> $columns Per present source sheet, column letter => column name.
+	 * @param CmdbImportProfile $profile The import profile.
+	 * @param array<string, array<string, array<string, mixed>>> $indexes Per lookup sheet, its rows by normalised key.
+	 *
+	 * @return array<int, array{sheet: string, row: int, cells: array<string, mixed>, uncached: array<int, string>}>
+	 *
+	 * @throws CmdbImportException TOO_MANY_ROWS.
+	 */
+	private function readSourceRows(object $spreadsheet, array $columns, CmdbImportProfile $profile, array $indexes): array {
+		$rows = [];
+		foreach ($columns as $sheetName => $sheetColumns) {
+			$sheetRows = $this->readRows(
+				worksheet: $spreadsheet->getSheetByName($sheetName),
+				columns: $sheetColumns,
+				sheetName: $sheetName,
+				limit: $profile->maxRowsPerSheet()
+			);
+			$lookup = $profile->lookup(sheetName: $sheetName);
+			if ($lookup !== null && isset($indexes[$lookup['sheet']]) === true) {
+				$sheetRows = self::addLookedUp(rows: $sheetRows, lookup: $lookup, index: $indexes[$lookup['sheet']]);
+			}
+
+			array_push($rows, ...$sheetRows);
+		}
+
+		return $rows;
+	}//end readSourceRows()
+
+	/**
+	 * The lookups of the present source sheets whose lookup sheet the workbook holds, by lookup sheet.
+	 *
+	 * @param CmdbImportProfile $profile The import profile.
+	 * @param array<int, string> $sourceSheets The present source sheets.
+	 * @param array<int, string> $available Every sheet of the workbook.
+	 *
+	 * @return array{lookups: array<string, array<string, mixed>>, warnings: array<int, array<string, mixed>>}
+	 */
+	private static function presentLookups(CmdbImportProfile $profile, array $sourceSheets, array $available): array {
+		$lookups = [];
+		$warnings = [];
+		foreach ($sourceSheets as $sheetName) {
+			$lookup = $profile->lookup(sheetName: $sheetName);
+			if ($lookup === null) {
+				continue;
+			}
+
+			if (in_array($lookup['sheet'], $available, true) === false) {
+				$warnings[] = [
+					'sheet' => $sheetName,
+					'lookupSheet' => $lookup['sheet'],
+					'lookupColumns' => $lookup['columns'],
+					'message' => sprintf('Sheet "%s" not found; %s not read', $lookup['sheet'], implode(', ', $lookup['columns'])),
+				];
+				continue;
+			}
+
+			// Two source sheets that look up in one sheet read its columns once.
+			$columns = array_merge(($lookups[$lookup['sheet']]['columns'] ?? []), $lookup['columns']);
+			$lookups[$lookup['sheet']] = array_merge($lookup, ['columns' => array_values(array_unique($columns))]);
+		}
+
+		return ['lookups' => $lookups, 'warnings' => $warnings];
+	}//end presentLookups()
+
+	/**
+	 * Resolve the key and listed columns of every lookup sheet; a sheet without its key column is dropped.
+	 *
+	 * @param object $spreadsheet The workbook, loaded with the header row only.
+	 * @param array<string, array{sheet: string, on: string, key: string, columns: array<int, string>}> $lookups By lookup sheet.
+	 *
+	 * @return array{lookups: array<string, array<string, mixed>>, columns: array<string, array<string, string>>, warnings: array<int, array<string, mixed>>}
+	 */
+	private function resolveLookups(object $spreadsheet, array $lookups): array {
+		$columns = [];
+		$warnings = [];
+		foreach ($lookups as $sheetName => $lookup) {
+			$resolved = $this->resolveColumns(
+				worksheet: $spreadsheet->getSheetByName($sheetName),
+				referenced: array_merge([$lookup['key']], $lookup['columns'])
+			);
+			if (in_array($lookup['key'], $resolved, true) === false) {
+				$warnings[] = [
+					'sheet' => $sheetName,
+					'lookupKey' => $lookup['key'],
+					'lookupColumns' => $lookup['columns'],
+					'message' => sprintf('Column "%s" not found; %s not read', $lookup['key'], implode(', ', $lookup['columns'])),
+				];
+				unset($lookups[$sheetName]);
+				continue;
+			}
+
+			$columns[$sheetName] = $resolved;
+		}
+
+		return ['lookups' => $lookups, 'columns' => $columns, 'warnings' => $warnings];
+	}//end resolveLookups()
+
+	/**
+	 * The rows of a lookup sheet by their normalised key; the first row with a key wins.
+	 *
+	 * @param array<int, array{sheet: string, row: int, cells: array<string, mixed>, uncached: array<int, string>}> $rows The lookup rows.
+	 * @param string $key The key column.
+	 *
+	 * @return array<string, array<string, mixed>> Normalised key => cells.
+	 */
+	private static function indexRows(array $rows, string $key): array {
+		$index = [];
+		foreach ($rows as $row) {
+			$value = self::lookupKey(value: ($row['cells'][$key] ?? null));
+			if ($value !== '' && isset($index[$value]) === false) {
+				$index[$value] = $row['cells'];
+			}
+		}
+
+		return $index;
+	}//end indexRows()
+
+	/**
+	 * Add the looked-up columns to the rows whose `on` value a lookup row holds.
+	 *
+	 * A looked-up column fills only a cell the source row leaves empty.
+	 *
+	 * @param array<int, array{sheet: string, row: int, cells: array<string, mixed>, uncached: array<int, string>}> $rows The source rows.
+	 * @param array{sheet: string, on: string, key: string, columns: array<int, string>} $lookup The source sheet's lookup.
+	 * @param array<string, array<string, mixed>> $index The lookup rows by normalised key.
+	 *
+	 * @return array<int, array{sheet: string, row: int, cells: array<string, mixed>, uncached: array<int, string>}>
+	 */
+	private static function addLookedUp(array $rows, array $lookup, array $index): array {
+		foreach ($rows as $position => $row) {
+			$found = ($index[self::lookupKey(value: ($row['cells'][$lookup['on']] ?? null))] ?? null);
+			if ($found === null) {
+				continue;
+			}
+
+			foreach ($lookup['columns'] as $column) {
+				$current = ($row['cells'][$column] ?? null);
+				if (($current === null || trim((string)$current) === '') && array_key_exists($column, $found) === true) {
+					$rows[$position]['cells'][$column] = $found[$column];
+				}
+			}
+		}
+
+		return $rows;
+	}//end addLookedUp()
+
+	/**
+	 * A lookup key: trimmed, whitespace collapsed, lower case; '' for an empty or non-scalar value.
+	 *
+	 * @param mixed $value The cell value.
+	 *
+	 * @return string
+	 */
+	private static function lookupKey(mixed $value): string {
+		if (is_scalar($value) === false) {
+			return '';
+		}
+
+		return mb_strtolower(trim((string)preg_replace('/\s+/u', ' ', (string)$value)));
+	}//end lookupKey()
 
 	/**
 	 * The last row number the data pass reads.
@@ -409,7 +585,7 @@ class CmdbWorkbookReader {
 				}
 			}
 
-			$skip = array_merge($required, $profile->absentColumns(sheetName: $sheetName));
+			$skip = array_merge($required, $profile->absentColumns(sheetName: $sheetName), ($profile->lookup(sheetName: $sheetName)['columns'] ?? []));
 			array_push($warnings, ...self::missingOptionalColumns(sheetName: $sheetName, mapped: $mapped, columns: $columns, skip: $skip));
 			$columnsPerSheet[$sheetName] = $columns;
 		}

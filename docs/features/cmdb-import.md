@@ -86,8 +86,11 @@ the same organisation.
 
 ## The file
 
-The import reads the two CMDB sheets of the export and ignores all others,
-including the `Invoer` sheets they are derived from:
+The import reads the two CMDB sheets of the export. From the `Invoer` sheet
+each CMDB sheet is derived from (`Invoer AIA data` for Onbeh, `Invoer APP
+data` for Beheerde) it reads only the owner's e-mail address and phone number,
+found by `Middel-ID` = `Applicatie Code` (see [Owners](#owners)). All other
+sheets and columns are ignored:
 
 | Sheet | What it holds | Recorded on the usage |
 |---|---|---|
@@ -147,6 +150,7 @@ date stored there, including one set by hand.
 | End-of-Life Functioneel | usage phase-out date | Excel date, stored as is |
 | (the sheet), Cluster, Applicatie Eigenaar (Afdeling) | usage internal annotation | `Beheer geregeld: ja` or `nee`, the cluster and the department, joined with ` / `; written only when the usage is new or the note is empty |
 | Applicatie Eigenaar (Persoon), Applicatie Eigenaar (Functie) | usage business owner (contact person) | see [Owners](#owners) |
+| Eigenaar e-mail, Eigenaar mobiel nummer (on the `Invoer` sheet) | the owner's contact in Nextcloud Contacts only | see [Owners](#owners) |
 
 Columns not in this table are not read at all. That includes Hostingpartij
 and Leverancier (not mapped yet), the BIV and value columns (Beschikbaarheid,
@@ -156,8 +160,11 @@ Top5, COTS and Applicatie Nummer.
 
 **Vendors.** Names are compared after trimming, collapsing spaces and
 ignoring case, so `Fabfrikant`, `Fabfrikant ` and `FABFRIKANT` are one
-Supplier. An existing organisation of type Supplier with the same name is
-reused. A row without a vendor is imported without a provider.
+Supplier. An existing organisation with the same name is reused: a
+Municipality first, then a Supplier. A municipality that builds its own
+applications (Vendor `Gemeente Rotterdam`) is therefore its own provider,
+not a second organisation. Only a name no organisation has creates a
+Supplier. A row without a vendor is imported without a provider.
 
 ## Repeat imports
 
@@ -212,8 +219,13 @@ administrator (FB contactpersoon) is not read.
 
 The identity is kept in **Nextcloud Contacts**, in the first writable
 address book of the administrator who runs the import, the same as every
-other stackiq contact. The CMDB sheets have no e-mail address, so a contact
-is found by an exact match on the name, and created when there is none. The
+other stackiq contact. The e-mail address and phone number come from the
+owner's row on the `Invoer` sheet. A contact is found by e-mail address,
+else by an exact match on the name; with an e-mail address, a contact with
+the same name but another address is someone else and is not taken. A found
+contact gets the e-mail address and phone number it lacks; one it has is
+never replaced. No match creates the contact. The e-mail address and phone
+number are kept in Contacts only, never on a stackiq object. The
 stackiq contact person object only holds the link to that contact, the role
 and the municipality. The same owner on several rows is one contact person.
 
