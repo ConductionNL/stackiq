@@ -122,6 +122,11 @@ class CmdbExportImportService {
 	];
 
 	/**
+	 * Wall-clock seconds an import may run, below the default 3600 s lifetime of a Nextcloud lock.
+	 */
+	public const TIME_LIMIT_SECONDS = 3000;
+
+	/**
 	 * The lock an import holds for its register, so imports never interleave.
 	 */
 	private const LOCK_PREFIX = 'stackiq/cmdb-import/register-';
@@ -311,6 +316,7 @@ class CmdbExportImportService {
 	 */
 	public function import(string $path, array $options): array {
 		$this->resetRun();
+		$this->keepRunning();
 		$startedAt = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DATE_ATOM);
 
 		$this->profile->load();
@@ -324,6 +330,27 @@ class CmdbExportImportService {
 			$this->lockingProvider->releaseLock($lock, ILockingProvider::LOCK_EXCLUSIVE);
 		}
 	}//end import()
+
+	/**
+	 * Let the import finish when the browser goes away, within a bounded time.
+	 *
+	 * A closed tab or a proxy that gives up would otherwise stop PHP after
+	 * some rows, with no report and the operation left running. The time
+	 * limit is only ever raised to TIME_LIMIT_SECONDS, never lowered, and an
+	 * unlimited one (the CLI) stays unlimited.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 */
+	private function keepRunning(): void {
+		ignore_user_abort(true);
+
+		$current = (int)ini_get('max_execution_time');
+		if ($current > 0 && $current < self::TIME_LIMIT_SECONDS && function_exists('set_time_limit') === true) {
+			set_time_limit(self::TIME_LIMIT_SECONDS);
+		}
+	}//end keepRunning()
 
 	/**
 	 * Take the register's import lock, or refuse because another import holds it.

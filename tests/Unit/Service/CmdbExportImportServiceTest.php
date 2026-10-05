@@ -1582,6 +1582,23 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testProgressIsRecordedAndHoldsTheReport()
 
 	/**
+	 * A closed browser tab does not stop a running import.
+	 *
+	 * @return void
+	 */
+	public function testAnImportKeepsRunningWhenTheClientGoesAway(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$previous = ignore_user_abort(false);
+
+		try {
+			$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+			$this->assertSame(1, ignore_user_abort());
+		} finally {
+			ignore_user_abort((bool)$previous);
+		}
+	}//end testAnImportKeepsRunningWhenTheClientGoesAway()
+
+	/**
 	 * A second import of the same register while the first runs is refused with IMPORT_IN_PROGRESS and writes nothing.
 	 *
 	 * @return void
