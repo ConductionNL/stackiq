@@ -128,6 +128,11 @@ class CmdbExportImportService {
 	public const TIME_LIMIT_SECONDS = 3000;
 
 	/**
+	 * The URI of the importing admin's address book that new owner contacts go into.
+	 */
+	public const OWNER_ADDRESS_BOOK_URI = 'stackiq-cmdb-owners';
+
+	/**
 	 * The lock an import holds for its register, so imports never interleave.
 	 */
 	private const LOCK_PREFIX = 'stackiq/cmdb-import/register-';
@@ -1111,7 +1116,9 @@ class CmdbExportImportService {
 	 * Resolve the Nextcloud contact of an owner identity.
 	 *
 	 * With an e-mail address, StackiqContactSyncService matches on it or
-	 * creates the contact. Without one, only a contact whose display name is
+	 * creates the contact. A new contact goes into the importing admin's
+	 * dedicated "Stackiq CMDB owners" address book, never into the admin's
+	 * own address book. Without one, only a contact whose display name is
 	 * exactly the owner's name (case-insensitive) is reused, so an owner
 	 * known by name alone is not created again on every import.
 	 *
@@ -1151,7 +1158,12 @@ class CmdbExportImportService {
 				$record['role'] = $role;
 			}
 
-			$uid = $this->contactSync->syncToContacts(objectType: 'contactPerson', record: $record);
+			$uid = $this->contactSync->syncToNamedAddressBook(
+				objectType: 'contactPerson',
+				record: $record,
+				addressBookUri: self::OWNER_ADDRESS_BOOK_URI,
+				displayName: $this->l10n->t('Stackiq CMDB owners')
+			);
 			if ($uid === '') {
 				$uid = null;
 			}

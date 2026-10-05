@@ -97,6 +97,13 @@ class CmdbExportImportServiceTest extends TestCase {
 	private array $contacts = [];
 
 	/**
+	 * The address books new contacts went into: uri => display name.
+	 *
+	 * @var array<string, string>
+	 */
+	private array $addressBooks = [];
+
+	/**
 	 * Whether Contacts is enabled.
 	 *
 	 * @var bool
@@ -184,6 +191,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->saves = [];
 		$this->beforeSave = null;
 		$this->contacts = [];
+		$this->addressBooks = [];
 		$this->contactsEnabled = true;
 		$this->cache = [];
 		$this->cacheFailure = null;
@@ -507,8 +515,10 @@ class CmdbExportImportServiceTest extends TestCase {
 				return $found;
 			}
 		);
-		$sync->method('syncToContacts')->willReturnCallback(
-			function (string $objectType, array $record): ?string {
+		$sync->method('syncToContacts')->willThrowException(new \LogicException('owners go into the named address book, not the first writable one'));
+		$sync->method('syncToNamedAddressBook')->willReturnCallback(
+			function (string $objectType, array $record, string $addressBookUri, string $displayName): ?string {
+				$this->addressBooks[$addressBookUri] = $displayName;
 				$email = (string)($record['email'] ?? '');
 				foreach ($this->contacts as $uid => $contact) {
 					if ($email !== '' && strcasecmp($contact['email'], $email) === 0) {
@@ -1366,6 +1376,7 @@ class CmdbExportImportServiceTest extends TestCase {
 
 		$this->assertEqualsCanonicalizing(['Voornaam Achternaam', 'Teamleider Applicatiebeheer'], array_column($this->contacts, 'name'));
 		$this->assertSame(['', ''], array_column($this->contacts, 'email'), 'the CMDB sheets carry no e-mail address');
+		$this->assertSame(['stackiq-cmdb-owners' => 'Stackiq CMDB owners'], $this->addressBooks, 'new owner contacts go into the dedicated address book only');
 
 		$people = $this->objects(self::CONTACT_PERSON);
 		$this->assertCount(2, $people);
