@@ -641,7 +641,12 @@ class CmdbWorkbookReaderTest extends TestCase {
 					$this->fail('WORKBOOK_TOO_LARGE expected for ' . $part);
 				} catch (CmdbImportException $e) {
 					$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode(), $part);
-					$this->assertSame(['maxPartBytes' => 50000, 'part' => $part], $e->getDetails(), $part);
+					$expected = ['maxPartBytes' => 50000, 'part' => $part, 'size' => self::partSize(path: $path, part: $part)];
+					if ($part === 'xl/worksheets/sheet1.xml') {
+						$expected['sheet'] = 'Beheerde Applicaties CMDB';
+					}
+
+					$this->assertSame($expected, $e->getDetails(), $part);
 					$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded for ' . $part);
 				}
 			}
@@ -650,6 +655,123 @@ class CmdbWorkbookReaderTest extends TestCase {
 			CmdbTestSupport::removeDirectory(directory: $directory);
 		}
 	}//end testAPartBeyondThePartLimitIsRefusedBeforeLoading()
+
+	/**
+	 * A sheet the import does not read may unpack beyond maxPartBytes; the source sheets are still read.
+	 *
+	 * A TOPdesk export carries such sheets ("Relatie APP oplosgroepen", the
+	 * archive, the original data), and PhpSpreadsheet never parses them.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadSheetBeyondThePartLimitDoesNotStopTheImport(): void {
+		$this->requireSpreadsheet();
+		$path = CmdbTestSupport::buildWorkbook(
+			sheets: [
+				'Relatie APP oplosgroepen' => self::manyRows(count: 3000),
+				'Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een']],
+			]
+		);
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxPartBytes' => 50000, 'maxSharedStrings' => 1000000]);
+
+		try {
+			$this->assertGreaterThan(50000, self::partSize(path: $path, part: 'xl/worksheets/sheet1.xml'));
+			$result = (new CmdbWorkbookReader())->read(path: $path, profile: $this->profile(directory: $directory));
+			$this->assertCount(1, $result['rows']);
+			$this->assertSame('Beheerde Applicaties CMDB', $result['rows'][0]['sheet']);
+		} finally {
+			unlink($path);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testAnUnreadSheetBeyondThePartLimitDoesNotStopTheImport()
+
+	/**
+	 * An unread sheet's part beyond maxPartBytes keeps the limit when anything else may name it.
+	 *
+	 * Each package lets an unread sheet point at a large part, and then also
+	 * names that part another way: as the shared-strings table, as the part of
+	 * a source sheet, in another case or without its directory (PhpSpreadsheet
+	 * looks parts up case-insensitively and retries without the first
+	 * character), or from a worksheet relationship no sheet refers to.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadSheetPartThatMayBeParsedKeepsThePartLimit(): void {
+		$this->requireSpreadsheet();
+		require_once __DIR__ . '/../../Support/RecordingXlsxReader.php';
+		$rel = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+		$relationships = static fn (string $extra): string => '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+			. '<Relationship Id="rId1" Type="' . $rel . '/worksheet" Target="worksheets/sheet1.xml"/>'
+			. '<Relationship Id="rId2" Type="' . $rel . '/worksheet" Target="worksheets/sheet2.xml"/>' . $extra . '</Relationships>';
+		$cases = [
+			'shared strings' => ['xl/_rels/workbook.xml.rels' => $relationships('<Relationship Id="rId3" Type="' . $rel . '/sharedStrings" Target="worksheets/sheet1.xml"/>')],
+			'source sheet' => ['xl/_rels/workbook.xml.rels' => str_replace('worksheets/sheet2.xml', 'worksheets/sheet1.xml', $relationships(''))],
+			'other case' => ['xl/_rels/workbook.xml.rels' => $relationships('<Relationship Id="rId3" Type="' . $rel . '/styles" Target="/XL/Worksheets/SHEET1.XML"/>')],
+			'no first character' => ['xl/_rels/workbook.xml.rels' => $relationships('<Relationship Id="rId3" Type="' . $rel . '/theme" Target="xsheet1.xml"/>')],
+			'unreferenced worksheet' => ['xl/_rels/workbook.xml.rels' => $relationships('<Relationship Id="rId9" Type="' . $rel . '/worksheet" Target="worksheets/sheet1.xml"/>')],
+		];
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxPartBytes' => 50000, 'maxSharedStrings' => 1000000]);
+		$reader = new class extends CmdbWorkbookReader {
+			public const READER_CLASS = RecordingXlsxReader::class;
+		};
+
+		try {
+			foreach ($cases as $case => $extraParts) {
+				$path = CmdbTestSupport::buildWorkbook(
+					sheets: [
+						'Relatie APP oplosgroepen' => self::manyRows(count: 3000),
+						'Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een']],
+					],
+					extraParts: $extraParts
+				);
+				RecordingXlsxReader::$loads = 0;
+				try {
+					$reader->read(path: $path, profile: $this->profile(directory: $directory));
+					$this->fail('WORKBOOK_TOO_LARGE expected for ' . $case);
+				} catch (CmdbImportException $e) {
+					$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode(), $case);
+					$this->assertSame('xl/worksheets/sheet1.xml', $e->getDetails()['part'] ?? null, $case);
+					$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded for ' . $case);
+				} finally {
+					unlink($path);
+				}
+			}
+		} finally {
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testAnUnreadSheetPartThatMayBeParsedKeepsThePartLimit()
+
+	/**
+	 * A header row and the given number of data rows.
+	 *
+	 * @param int $count The number of data rows.
+	 *
+	 * @return array<int, array<int, mixed>>
+	 */
+	private static function manyRows(int $count): array {
+		$rows = [['APPID', 'Applicatie Naam']];
+		for ($index = 1; $index <= $count; $index++) {
+			$rows[] = [$index, 'Applicatie'];
+		}
+
+		return $rows;
+	}//end manyRows()
+
+	/**
+	 * The unpacked size of one part of a package.
+	 *
+	 * @param string $path The xlsx file.
+	 * @param string $part The part's name.
+	 *
+	 * @return int
+	 */
+	private static function partSize(string $path, string $part): int {
+		$zip = new \ZipArchive();
+		$zip->open($path);
+		$stat = $zip->statName($part);
+		$zip->close();
+		return (int)($stat['size'] ?? 0);
+	}//end partSize()
 
 	/**
 	 * A shared-strings part with the given number of entries, each the given number of characters long.

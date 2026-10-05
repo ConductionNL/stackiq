@@ -31,8 +31,9 @@
  *    whole XML tree of every sheet it loads, before a read filter runs, so
  *    the filter alone does not bound memory. The reader therefore refuses
  *    with `WORKBOOK_TOO_LARGE` (413) a package that unpacks to more than the
- *    profile's `maxUncompressedBytes`, a single part that unpacks to more
- *    than `maxPartBytes`, a shared-strings table with more entries than
+ *    profile's `maxUncompressedBytes`, a part it may parse that unpacks to
+ *    more than `maxPartBytes` (a sheet it does not load may be larger,
+ *    CmdbPartReferences), a shared-strings table with more entries than
  *    `maxSharedStrings` (each rich-text run counted as an entry, also in a
  *    cell's inline string), and cells that reference more shared-string
  *    text than `maxReferencedStringBytes` (CmdbWorkbookBounds, streamed
@@ -156,7 +157,7 @@ class CmdbWorkbookReader {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
 	 */
 	public function read(string $path, CmdbImportProfile $profile): array {
-		$this->assertUncompressedSize(path: $path, limit: $profile->maxUncompressedBytes(), partLimit: $profile->maxPartBytes());
+		$oversized = $this->assertUncompressedSize(path: $path, limit: $profile->maxUncompressedBytes(), partLimit: $profile->maxPartBytes());
 
 		if ($this->isAvailable() === false) {
 			throw new CmdbImportException(
@@ -166,6 +167,13 @@ class CmdbWorkbookReader {
 		}
 
 		$scanner = $this->newReader(sheetNames: null)->getSecurityScannerOrThrow();
+		(new CmdbPartReferences())->assertPartSizes(
+			path: $path,
+			oversized: $oversized,
+			sourceSheets: $profile->sheetNames(),
+			limit: $profile->maxPartBytes(),
+			scanner: $scanner
+		);
 		$bounds = new CmdbWorkbookBounds();
 		$bounds->assertSharedStringCount(path: $path, limit: $profile->maxSharedStrings(), scanner: $scanner);
 		$bounds->assertReferencedStringBytes(
@@ -250,20 +258,22 @@ class CmdbWorkbookReader {
 	}//end lastReadableRow()
 
 	/**
-	 * Refuse a package whose parts, or one of them, unpack to more than the limits, before any part is parsed.
+	 * Refuse a package whose parts together unpack to more than the limit, and list the parts beyond the part limit.
 	 *
 	 * The sizes are the uncompressed sizes the ZIP directory declares; libzip
-	 * never inflates a part beyond its declared size.
+	 * never inflates a part beyond its declared size. A part beyond the part
+	 * limit is refused later, by CmdbPartReferences, unless only sheets the
+	 * import does not read refer to it.
 	 *
 	 * @param string $path The xlsx file.
 	 * @param int $limit The maximum number of unpacked bytes of all parts together.
-	 * @param int $partLimit The maximum number of unpacked bytes of one part.
+	 * @param int $partLimit The maximum number of unpacked bytes of one part the import parses.
 	 *
-	 * @return void
+	 * @return array<string, int> Part name => unpacked size, for every part beyond the part limit.
 	 *
-	 * @throws CmdbImportException NOT_XLSX when the package cannot be opened, WORKBOOK_TOO_LARGE above a limit.
+	 * @throws CmdbImportException NOT_XLSX when the package cannot be opened, WORKBOOK_TOO_LARGE above the limit.
 	 */
-	private function assertUncompressedSize(string $path, int $limit, int $partLimit): void {
+	private function assertUncompressedSize(string $path, int $limit, int $partLimit): array {
 		$zip = new ZipArchive();
 		if ($zip->open($path, ZipArchive::RDONLY) !== true) {
 			throw new CmdbImportException(errorCode: CmdbImportException::NOT_XLSX, message: 'The ZIP package cannot be opened');
@@ -271,6 +281,7 @@ class CmdbWorkbookReader {
 
 		$total = 0;
 		$readable = true;
+		$oversized = [];
 		for ($index = 0; $index < $zip->numFiles && $total <= $limit; $index++) {
 			$stat = $zip->statIndex($index);
 			if ($stat === false) {
@@ -279,12 +290,7 @@ class CmdbWorkbookReader {
 			}
 
 			if ((int)$stat['size'] > $partLimit) {
-				$zip->close();
-				throw new CmdbImportException(
-					errorCode: CmdbImportException::WORKBOOK_TOO_LARGE,
-					message: 'A part of the workbook unpacks to more bytes than the profile allows',
-					details: ['maxPartBytes' => $partLimit, 'part' => (string)$stat['name']]
-				);
+				$oversized[(string)$stat['name']] = (int)$stat['size'];
 			}
 
 			$total += (int)$stat['size'];
@@ -303,6 +309,8 @@ class CmdbWorkbookReader {
 				details: ['maxUncompressedBytes' => $limit]
 			);
 		}
+
+		return $oversized;
 	}//end assertUncompressedSize()
 
 	/**
