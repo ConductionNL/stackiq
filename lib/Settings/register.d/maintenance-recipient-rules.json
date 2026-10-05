@@ -1,0 +1,26 @@
+{
+  "$comment": "maintenance-recipient-rules: the maintenance-announced rule fires when recipientsResolvedAt changes and notifies the user ids in notifyUserIds. Both fields are written by MaintenanceRecipientsJob (without RBAC), so over the API only the catalogue's system administrators may write them; a supplier that writes either one is refused. Who may READ notifyUserIds is tracked in stackiq#1216.",
+  "components": {
+    "schemas": {
+      "maintenanceWindow": {
+        "version": "0.1.1",
+        "properties": {
+          "notifyUserIds": {
+            "authorization": {
+              "update": [
+                "software-catalog-admins"
+              ]
+            }
+          },
+          "recipientsResolvedAt": {
+            "authorization": {
+              "update": [
+                "software-catalog-admins"
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}

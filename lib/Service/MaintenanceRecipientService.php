@@ -59,6 +59,7 @@ class MaintenanceRecipientService {
 	 * @param IUserManager              $userManager     The Nextcloud user manager.
 	 * @param ContainerInterface        $container       The DI container, for OpenRegister's ObjectService.
 	 * @param LoggerInterface           $logger          The logger.
+	 * @param MaintenanceAnnouncerCheck $announcers      Who may have a product's owners notified.
 	 */
 	public function __construct(
 		private readonly SettingsService $settingsService,
@@ -66,6 +67,7 @@ class MaintenanceRecipientService {
 		private readonly IUserManager $userManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
+		private readonly MaintenanceAnnouncerCheck $announcers,
 	) {
 	}//end __construct()
 
@@ -90,7 +92,11 @@ class MaintenanceRecipientService {
 	 * @param string|int|null $register The register it lives in.
 	 * @param string|int|null $schema   Its schema.
 	 *
-	 * @return array<int, string>|null The user ids written, or null when nothing was written.
+	 * @return array<int, string>|null The user ids recorded, or null when no owners were recorded.
+	 *
+	 * @throws \Throwable When the window or the product cannot be read (DoesNotExistException
+	 *                    for a window that is gone), or the window cannot be written; the job
+	 *                    decides whether to try again.
 	 *
 	 * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md#requirement-req-msr-003-the-owners-of-every-usage-are-notified
 	 */
@@ -100,16 +106,7 @@ class MaintenanceRecipientService {
 			return null;
 		}
 
-		try {
-			$window = $objectService->find(id: $uuid, register: $register, schema: $schema, _rbac: false, _multitenancy: false);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'MaintenanceRecipientService: could not read the maintenance window',
-				['uuid' => $uuid, 'error' => $e->getMessage()]
-			);
-			return null;
-		}
-
+		$window = $objectService->find(id: $uuid, register: $register, schema: $schema, _rbac: false, _multitenancy: false);
 		if ($window === null) {
 			return null;
 		}
@@ -125,22 +122,43 @@ class MaintenanceRecipientService {
 	 * already carries a resolved time is left alone, so the write this method
 	 * makes cannot start it again.
 	 *
+	 * Only the supplier of the product, or a catalogue administrator, may have
+	 * its owners notified. A window from any other organisation is refused,
+	 * whether or not it carries a resolved time: its `notifyUserIds` is
+	 * written back empty, so neither the announcement nor the reminder a day
+	 * before (`maintenance-starts-tomorrow`) reaches anyone it names.
+	 *
 	 * @param ObjectEntityInterface  $window The maintenance window.
 	 * @param DateTimeImmutable|null $now    The moment of resolution (defaults to now).
 	 *
-	 * @return array<int, string>|null The user ids written, or null when nothing was written.
+	 * @return array<int, string>|null The user ids written, or null when no owners were recorded.
+	 *
+	 * @throws \Throwable When the product or the owners cannot be read, or the window cannot be written.
 	 *
 	 * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md#requirement-req-msr-003-the-owners-of-every-usage-are-notified
 	 */
 	public function recordRecipients(ObjectEntityInterface $window, ?DateTimeImmutable $now=null): ?array {
-		$data = $window->getObject();
-		if (empty($data['recipientsResolvedAt']) === false) {
+		$data          = $window->getObject();
+		$moduleId      = self::referenceId(value: ($data['module'] ?? null));
+		$objectService = $this->getObjectService();
+		if ($moduleId === null || $objectService === null) {
 			return null;
 		}
 
-		$moduleId = self::referenceId(value: ($data['module'] ?? null));
-		$objectService = $this->getObjectService();
-		if ($moduleId === null || $objectService === null) {
+		if ($this->announcers->mayAnnounce(objectService: $objectService, window: $window, moduleId: $moduleId) === false) {
+			$this->logger->warning(
+				'MaintenanceRecipientService: the window is not from the supplier of the product; no owners are notified',
+				['uuid' => $window->getUuid(), 'module' => $moduleId, 'organisation' => $window->getOrganisation()]
+			);
+			if (empty($data['notifyUserIds']) === false) {
+				$data['notifyUserIds'] = [];
+				$this->saveWindow(objectService: $objectService, window: $window, data: $data);
+			}
+
+			return null;
+		}
+
+		if (empty($data['recipientsResolvedAt']) === false) {
 			return null;
 		}
 
@@ -148,27 +166,34 @@ class MaintenanceRecipientService {
 
 		$data['notifyUserIds']        = $userIds;
 		$data['recipientsResolvedAt'] = ($now ?? new DateTimeImmutable())->format(DateTimeInterface::ATOM);
-
-		try {
-			$objectService->saveObject(
-				object: $data,
-				extend: [],
-				register: $window->getRegister(),
-				schema: $window->getSchema(),
-				uuid: $window->getUuid(),
-				_rbac: false,
-				_multitenancy: false
-			);
-		} catch (\Throwable $e) {
-			$this->logger->error(
-				'MaintenanceRecipientService: could not record the owners to notify',
-				['uuid' => $window->getUuid(), 'error' => $e->getMessage()]
-			);
-			return null;
-		}
+		$this->saveWindow(objectService: $objectService, window: $window, data: $data);
 
 		return $userIds;
 	}//end recordRecipients()
+
+	/**
+	 * Write a maintenance window back, without RBAC: the two notification fields
+	 * are writable only by the catalogue's administrators over the API.
+	 *
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
+	 * @param ObjectEntityInterface  $window        The window.
+	 * @param array<string, mixed>   $data          Its data to store.
+	 *
+	 * @return void
+	 *
+	 * @throws \Throwable When OpenRegister refuses or fails the write.
+	 */
+	private function saveWindow(ObjectServiceInterface $objectService, ObjectEntityInterface $window, array $data): void {
+		$objectService->saveObject(
+			object: $data,
+			extend: [],
+			register: $window->getRegister(),
+			schema: $window->getSchema(),
+			uuid: $window->getUuid(),
+			_rbac: false,
+			_multitenancy: false
+		);
+	}//end saveWindow()
 
 	/**
 	 * The Nextcloud user ids of the owners of every usage of a product.
@@ -192,17 +217,14 @@ class MaintenanceRecipientService {
 			return [];
 		}
 
-		try {
-			$people = $objectService->searchObjects(
-				query: ['register' => $register, 'schema' => $schema, '_limit' => count($contactIds)],
-				_rbac: false,
-				_multitenancy: false,
-				ids: $contactIds
-			);
-		} catch (\Throwable $e) {
-			$this->logger->error('MaintenanceRecipientService: could not read the owners', ['error' => $e->getMessage()]);
-			return [];
-		}
+		// A failed read is thrown, not taken as "nobody to notify": the job tries
+		// again, while an empty list would be recorded as resolved for good.
+		$people = $objectService->searchObjects(
+			query: ['register' => $register, 'schema' => $schema, '_limit' => count($contactIds)],
+			_rbac: false,
+			_multitenancy: false,
+			ids: $contactIds
+		);
 
 		$userIds = [];
 		foreach ((array) $people as $person) {
@@ -230,16 +252,11 @@ class MaintenanceRecipientService {
 			return [];
 		}
 
-		try {
-			$usages = $objectService->searchObjects(
-				query: ['register' => $register, 'schema' => $schema, 'module' => $moduleId, '_limit' => self::USAGE_LIMIT],
-				_rbac: false,
-				_multitenancy: false
-			);
-		} catch (\Throwable $e) {
-			$this->logger->error('MaintenanceRecipientService: could not read the usages', ['error' => $e->getMessage()]);
-			return [];
-		}
+		$usages = $objectService->searchObjects(
+			query: ['register' => $register, 'schema' => $schema, 'module' => $moduleId, '_limit' => self::USAGE_LIMIT],
+			_rbac: false,
+			_multitenancy: false
+		);
 
 		$ids = [];
 		foreach ((array) $usages as $usage) {

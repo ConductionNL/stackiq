@@ -41,8 +41,10 @@ use OCA\Stackiq\Service\ProgressTracker;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\StackiqContactSyncService;
 use OCA\Stackiq\Tests\Unit\Support\CmdbTestSupport;
+use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
+use OCP\IConfig;
 use OCP\IL10N;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
@@ -325,7 +327,15 @@ class CmdbExportImportServiceTest extends TestCase {
 		$factory = $this->createMock(ICacheFactory::class);
 		$factory->method('createDistributed')->willReturn($cache);
 
-		return new ProgressTracker(cacheFactory: $factory, userSession: $this->createMock(IUserSession::class), logger: $this->logger());
+		$factory->method('isAvailable')->willReturn(true);
+
+		return new ProgressTracker(
+			cacheFactory: $factory,
+			userSession: $this->createMock(IUserSession::class),
+			logger: $this->logger(),
+			config: $this->createConfiguredMock(IConfig::class, ['getSystemValueString' => '\\OC\\Memcache\\Redis']),
+			appConfig: $this->createMock(IAppConfig::class)
+		);
 	}//end progressTracker()
 
 	/**

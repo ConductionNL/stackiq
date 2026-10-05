@@ -11,6 +11,12 @@
  * its module). It writes only when a value differs, so the writes it causes
  * end at the next event.
  *
+ * A module can have hundreds of versions, so the copy onto them does not run
+ * in the request that saved the module: it is queued as
+ * ModuleVersionPublicationJob, which reads the module as it is when the job
+ * runs and hands it to backfillModule() or, once deleted, to clearVersions().
+ * A version reads its one module inline.
+ *
  * @category  Service
  * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
@@ -30,6 +36,8 @@ namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\BackgroundJob\ModuleVersionPublicationJob;
+use OCP\BackgroundJob\IJobList;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -54,11 +62,13 @@ class ModuleVersionPublicationService {
 	 * @param SettingsService    $settingsService Resolves the module and moduleVersion schemas.
 	 * @param ContainerInterface $container       Resolves OpenRegister's object service.
 	 * @param LoggerInterface    $logger          The logger.
+	 * @param IJobList           $jobList         Queues the copy onto a module's versions.
 	 */
 	public function __construct(
 		private readonly SettingsService $settingsService,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
+		private readonly IJobList $jobList,
 	) {
 	}//end __construct()
 
@@ -94,15 +104,15 @@ class ModuleVersionPublicationService {
 	}//end text()
 
 	/**
-	 * React to a saved object: a module updates its versions, a version reads its module.
+	 * React to a saved object: a module queues the update of its versions, a version reads its module.
 	 *
 	 * A module update that leaves its publication date and registrant as they
-	 * were has nothing to copy, so its versions are not searched.
+	 * were has nothing to copy, so nothing is queued.
 	 *
 	 * @param ObjectEntityInterface      $object   The saved object.
 	 * @param ObjectEntityInterface|null $previous The object before an update, or null for a new one.
 	 *
-	 * @return integer The number of versions written.
+	 * @return integer The number of versions written in this request: 0 for a module, whose versions the job writes.
 	 *
 	 * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
 	 */
@@ -115,7 +125,8 @@ class ModuleVersionPublicationService {
 				return 0;
 			}
 
-			return $this->moduleSaved(module: $object);
+			$this->queueVersions(moduleUuid: (string) $object->getUuid(), deleted: false);
+			return 0;
 		}
 
 		if ($schema === (string) $this->settingsService->getSchemaIdForObjectType('moduleVersion')) {
@@ -130,7 +141,7 @@ class ModuleVersionPublicationService {
 	 *
 	 * @param ObjectEntityInterface $object The deleted object.
 	 *
-	 * @return integer The number of versions written.
+	 * @return integer The number of versions written in this request: always 0, the job writes them.
 	 *
 	 * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
 	 */
@@ -139,21 +150,37 @@ class ModuleVersionPublicationService {
 			return 0;
 		}
 
-		return $this->copyOntoVersions(moduleUuid: (string) $object->getUuid(), mirror: self::mirrorOf(module: []))['written'];
+		$this->queueVersions(moduleUuid: (string) $object->getUuid(), deleted: true);
+		return 0;
 	}//end objectDeleted()
 
 	/**
-	 * Copy a module's publication onto every version of it that differs.
+	 * Queue the copy of a module's publication onto its versions.
 	 *
-	 * @param ObjectEntityInterface $module The saved module.
+	 * The job list keeps one entry per argument, so a module saved twice
+	 * before cron runs is copied once.
 	 *
-	 * @return integer The number of versions written.
+	 * @param string  $moduleUuid The module.
+	 * @param boolean $deleted    Whether the module was deleted.
+	 *
+	 * @return void
+	 */
+	private function queueVersions(string $moduleUuid, bool $deleted): void {
+		$this->jobList->add(ModuleVersionPublicationJob::class, ['module' => $moduleUuid, 'deleted' => $deleted]);
+	}//end queueVersions()
+
+	/**
+	 * Take every version of a deleted module out of public view.
+	 *
+	 * @param string $moduleUuid The module.
+	 *
+	 * @return array{written: int, failed: int} The versions written, and the versions or searches that failed.
 	 *
 	 * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
 	 */
-	public function moduleSaved(ObjectEntityInterface $module): int {
-		return $this->backfillModule(module: $module)['written'];
-	}//end moduleSaved()
+	public function clearVersions(string $moduleUuid): array {
+		return $this->copyOntoVersions(moduleUuid: $moduleUuid, mirror: self::mirrorOf(module: []));
+	}//end clearVersions()
 
 	/**
 	 * Copy a module's publication onto its versions and say what could not be copied.
@@ -282,7 +309,7 @@ class ModuleVersionPublicationService {
 	 */
 	private function logFailure(string $message, array $context, bool $depublishes): void {
 		if ($depublishes === true) {
-			$this->logger->critical($message . '; the version stays public until it is saved again or the backfill runs', $context);
+			$this->logger->critical($message . '; the version stays public until a later copy onto it succeeds', $context);
 			return;
 		}
 

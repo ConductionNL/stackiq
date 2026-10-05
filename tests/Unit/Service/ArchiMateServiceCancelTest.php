@@ -25,6 +25,7 @@ use OCA\Stackiq\Service\SettingsService;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
+use OCP\IConfig;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -59,10 +60,14 @@ class ArchiMateServiceCancelTest extends TestCase {
 		$factory = $this->createMock(ICacheFactory::class);
 		$factory->method('createDistributed')->willReturn($cache);
 
+		$factory->method('isAvailable')->willReturn(true);
+
 		return new ProgressTracker(
 			cacheFactory: $factory,
 			userSession: $this->createMock(IUserSession::class),
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(LoggerInterface::class),
+			config: $this->createConfiguredMock(IConfig::class, ['getSystemValueString' => '\\OC\\Memcache\\Redis']),
+			appConfig: $this->createMock(IAppConfig::class)
 		);
 	}//end tracker()
 

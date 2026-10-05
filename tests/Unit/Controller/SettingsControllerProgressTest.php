@@ -3,7 +3,7 @@
 /**
  * Unit tests for who may read the progress of an operation.
  *
- * Progress now lives in the distributed cache, so an operation id no longer
+ * Progress now lives in a store every request reads, so an operation id no longer
  * stays inside one session. The read rule on GET /api/progress/{operationId}
  * and its stream is what keeps it private: the owner and Nextcloud admins
  * read it, anyone else gets 404, the same answer as an unknown id.

@@ -44,7 +44,10 @@ export default {
 	// (adopt-connection-registry). A FUNCTION, because it leaves the app for
 	// integriq's Connections overview and a header action's `navigate` only
 	// pushes a route inside this app. CnIndexPage resolves a handler name
-	// against this map.
+	// against this map. It navigates in JavaScript because the library renders
+	// every header action as a button; once a header action can carry an
+	// `href` (ConductionNL/nextcloud-vue#1314) this becomes a link in the
+	// manifest and the handler goes.
 	...createConnectionHandlers({
 		generateUrl,
 		assign: (url) => window.location.assign(url),

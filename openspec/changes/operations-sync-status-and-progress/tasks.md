@@ -2,7 +2,7 @@
 
 ## Implementation tasks
 
-### Task 1: Keep progress in the distributed cache and tighten who may read it
+### Task 1: Keep progress in a shared store (the distributed cache, or the app config without one) and tighten who may read it
 - **spec_ref**: openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 - **files**: `lib/Service/ProgressTracker.php`, `lib/AppInfo/Application.php`, `lib/Service/SyncAccessPolicy.php`, `lib/Controller/SettingsController.php`, `tests/Unit/Service/ProgressTrackerTest.php`, `tests/Unit/Controller/SettingsControllerProgressTest.php`
 - **acceptance_criteria**:

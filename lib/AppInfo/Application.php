@@ -599,7 +599,9 @@ class Application extends App implements IBootstrap {
 				return new ProgressTracker(
 					cacheFactory: $container->get(ICacheFactory::class),
 					userSession: $container->get('OCP\IUserSession'),
-					logger: $container->get('Psr\Log\LoggerInterface')
+					logger: $container->get('Psr\Log\LoggerInterface'),
+					config: $container->get(IConfig::class),
+					appConfig: $container->get(IAppConfig::class)
 				);
 			}
 		);

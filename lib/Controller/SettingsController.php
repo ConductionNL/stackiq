@@ -1341,7 +1341,8 @@ class SettingsController extends Controller {
 	/**
 	 * Whether a user may read the progress of an operation.
 	 *
-	 * Progress lives in the distributed cache, so any request can load an
+	 * Progress lives in a store every request reads (the distributed cache, or
+	 * the app config without a shared cache), so any request can load an
 	 * operation by its id. Its owner and Nextcloud admins may read it. An
 	 * operation without an owner, such as one a background job started, is
 	 * for admins only.

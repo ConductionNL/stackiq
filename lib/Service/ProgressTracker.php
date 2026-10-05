@@ -19,8 +19,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCP\ICache;
+use OCP\IAppConfig;
 use OCP\ICacheFactory;
+use OCP\IConfig;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -29,8 +30,10 @@ use Psr\Log\LoggerInterface;
  *
  * Progress lives in Nextcloud's distributed cache, not in the user's session,
  * so a background job can write it and any other request (another login, an
- * admin, the request after a cron run) can read it. Who may read an operation
- * is decided by SettingsController::getProgress(), not by where it is stored.
+ * admin, the request after a cron run) can read it. Without a cache every
+ * server and the CLI share, ProgressStore keeps it in the app config instead.
+ * Who may read an operation is decided by SettingsController::getProgress(),
+ * not by where it is stored.
  *
  * @SuppressWarnings(PHPMD.TooManyPublicMethods) Each public method is one step of an
  * operation's life (start, phase, progress, warning, error, statistics, complete, fail,
@@ -86,23 +89,20 @@ class ProgressTracker {
 	];
 
 	/**
-	 * How long a stored snapshot lives after its last write, in seconds.
-	 */
-	private const STORE_TTL = 3600;
-
-	/**
-	 * The shared store for progress snapshots.
+	 * The shared store for progress snapshots and cancel requests.
 	 *
-	 * @var ICache
+	 * @var ProgressStore
 	 */
-	private ICache $store;
+	private ProgressStore $store;
 
 	/**
 	 * Constructor for ProgressTracker
 	 *
-	 * @param ICacheFactory $cacheFactory Cache factory; progress goes into its distributed cache
+	 * @param ICacheFactory $cacheFactory Cache factory; progress goes into its distributed cache when that is shared
 	 * @param IUserSession $userSession The signed-in user, the default owner of a new operation
 	 * @param LoggerInterface $logger The logger interface
+	 * @param IConfig $config System config, which names the distributed cache class
+	 * @param IAppConfig $appConfig App config, the store when no shared cache is configured
 	 *
 	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
@@ -110,8 +110,10 @@ class ProgressTracker {
 		ICacheFactory $cacheFactory,
 		private readonly IUserSession $userSession,
 		private readonly LoggerInterface $logger,
+		IConfig $config,
+		IAppConfig $appConfig,
 	) {
-		$this->store = $cacheFactory->createDistributed(prefix: 'stackiq_progress');
+		$this->store = new ProgressStore(cacheFactory: $cacheFactory, config: $config, appConfig: $appConfig);
 	}//end __construct()
 
 	/**
@@ -162,6 +164,7 @@ class ProgressTracker {
 			'statistics' => $options['statistics'] ?? [],
 		];
 
+		$this->store->removeExpired();
 		$this->saveProgress();
 
 		$this->logger->info(
@@ -390,7 +393,7 @@ class ProgressTracker {
 		$this->saveProgress();
 
 		if ($this->progress['operation_id'] !== null) {
-			$this->store->remove(key: 'cancel_' . $this->progress['operation_id']);
+			$this->store->clearCancel(operationId: $this->progress['operation_id']);
 		}
 
 		$this->logger->error(
@@ -416,7 +419,7 @@ class ProgressTracker {
 	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
 	 */
 	public function setCancelRequested(string $operationId): void {
-		$this->store->set(key: 'cancel_' . $operationId, value: true, ttl: self::STORE_TTL);
+		$this->store->requestCancel(operationId: $operationId);
 	}//end setCancelRequested()
 
 	/**
@@ -429,7 +432,7 @@ class ProgressTracker {
 	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
 	 */
 	public function isCancelRequested(string $operationId): bool {
-		return $this->store->get(key: 'cancel_' . $operationId) === true;
+		return $this->store->isCancelRequested(operationId: $operationId);
 	}//end isCancelRequested()
 
 	/**
@@ -447,7 +450,7 @@ class ProgressTracker {
 		$this->saveProgress();
 
 		if ($this->progress['operation_id'] !== null) {
-			$this->store->remove(key: 'cancel_' . $this->progress['operation_id']);
+			$this->store->clearCancel(operationId: $this->progress['operation_id']);
 		}
 	}//end cancelOperation()
 
@@ -463,12 +466,7 @@ class ProgressTracker {
 	public function getProgress(?string $operationId = null): ?array {
 		if ($operationId !== null && $operationId !== $this->progress['operation_id']) {
 			// Load an operation another request or a background job wrote.
-			$storedProgress = $this->store->get(key: 'progress_' . $operationId);
-			if (is_array($storedProgress) === true) {
-				return $storedProgress;
-			}
-
-			return null;
+			return $this->store->getProgress(operationId: $operationId);
 		}
 
 		if ($this->progress['operation_id'] !== null) {
@@ -537,25 +535,22 @@ class ProgressTracker {
 	/**
 	 * Save progress to the shared store.
 	 *
-	 * Each write renews the entry for STORE_TTL seconds.
+	 * Each write renews the entry for ProgressStore::STORE_TTL seconds.
 	 *
 	 * @return void
 	 */
 	private function saveProgress(): void {
 		if ($this->progress['operation_id'] !== null) {
-			$this->store->set(
-				key: 'progress_' . $this->progress['operation_id'],
-				value: $this->progress,
-				ttl: self::STORE_TTL
-			);
+			$this->store->setProgress(operationId: $this->progress['operation_id'], progress: $this->progress);
 		}
 	}//end saveProgress()
 
 	/**
 	 * Clean up old progress entries.
 	 *
-	 * Nothing to do: every entry in the shared store expires STORE_TTL seconds
-	 * after its last write.
+	 * Nothing to do: every entry in the shared store expires
+	 * ProgressStore::STORE_TTL seconds after its last write, and app config
+	 * entries are removed when the next operation starts.
 	 *
 	 * @param int $maxAge Maximum age in seconds (default: 1 hour)
 	 *
