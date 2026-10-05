@@ -1179,6 +1179,16 @@
         "The workbook is too large to read once unpacked.": "Het werkboek is uitgepakt te groot om te lezen.",
         "The stackiq register is out of date; import its configuration again.": "Het stackiq-register is verouderd; importeer de configuratie ervan opnieuw.",
         "Another CMDB import is running; try again when it has finished.": "Er loopt al een andere CMDB-import; probeer het opnieuw wanneer die klaar is.",
-        "Several municipalities have this name; choose one from the list.": "Meerdere gemeenten hebben deze naam; kies er een uit de lijst."
+        "Several municipalities have this name; choose one from the list.": "Meerdere gemeenten hebben deze naam; kies er een uit de lijst.",
+        "Unpacked, the workbook is larger than {size}, the most the import reads.": "Uitgepakt is het werkboek groter dan {size}, het maximum dat de import leest.",
+        "Remove sheets the import does not read, such as the archive sheet, or split the export, and try again. Nothing was imported.": "Verwijder tabbladen die de import niet leest, zoals het archieftabblad, of splits de export, en probeer het opnieuw. Er is niets geïmporteerd.",
+        "The \"{schema}\" schema of the stackiq register is out of date.": "Het schema \"{schema}\" van het stackiq-register is verouderd.",
+        "The stackiq register is out of date.": "Het stackiq-register is verouderd.",
+        "It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.": "Het mist eigenschappen waarop de import records herkent. Klik bovenaan deze pagina op Force Update om de registerconfiguratie opnieuw te importeren en probeer het daarna opnieuw. Er is niets geïmporteerd.",
+        "Another CMDB import is running.": "Er loopt al een andere CMDB-import.",
+        "Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.": "Er loopt maar één import tegelijk. Wacht tot die klaar is en probeer het opnieuw. Er is niets geïmporteerd.",
+        "{count} municipalities have this name.": "{count} gemeenten hebben deze naam.",
+        "Several municipalities have this name.": "Meerdere gemeenten hebben deze naam.",
+        "Choose the municipality from the list instead of typing its name. Nothing was imported.": "Kies de gemeente uit de lijst in plaats van de naam te typen. Er is niets geïmporteerd."
     }
 }

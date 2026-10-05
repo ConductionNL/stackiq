@@ -1110,7 +1110,17 @@ OC.L10N.register(
         "The workbook is too large to read once unpacked.": "The workbook is too large to read once unpacked.",
         "The stackiq register is out of date; import its configuration again.": "The stackiq register is out of date; import its configuration again.",
         "Another CMDB import is running; try again when it has finished.": "Another CMDB import is running; try again when it has finished.",
-        "Several municipalities have this name; choose one from the list.": "Several municipalities have this name; choose one from the list."
+        "Several municipalities have this name; choose one from the list.": "Several municipalities have this name; choose one from the list.",
+        "Unpacked, the workbook is larger than {size}, the most the import reads.": "Unpacked, the workbook is larger than {size}, the most the import reads.",
+        "Remove sheets the import does not read, such as the archive sheet, or split the export, and try again. Nothing was imported.": "Remove sheets the import does not read, such as the archive sheet, or split the export, and try again. Nothing was imported.",
+        "The \"{schema}\" schema of the stackiq register is out of date.": "The \"{schema}\" schema of the stackiq register is out of date.",
+        "The stackiq register is out of date.": "The stackiq register is out of date.",
+        "It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.": "It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.",
+        "Another CMDB import is running.": "Another CMDB import is running.",
+        "Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.": "Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.",
+        "{count} municipalities have this name.": "{count} municipalities have this name.",
+        "Several municipalities have this name.": "Several municipalities have this name.",
+        "Choose the municipality from the list instead of typing its name. Nothing was imported.": "Choose the municipality from the list instead of typing its name. Nothing was imported."
     },
     "nplurals=2; plural=(n != 1);"
 )
