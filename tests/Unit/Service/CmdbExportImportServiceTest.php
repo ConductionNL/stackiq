@@ -1248,6 +1248,38 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testAModuleThisMunicipalityUsesOrNobodyUsesIsUpdated()
 
 	/**
+	 * A re-import sets usage status and TIME classification only when the usage is new or the field is empty.
+	 *
+	 * An administrator's edit of either stays; the phase-out date is still updated from the export.
+	 *
+	 * @return void
+	 */
+	public function testAReimportKeepsTheStatusAndTimeClassificationOfAUsage(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->store[self::MODULE]['mod-1'] = ['id' => 'mod-1', 'name' => 'Applicatie 1', 'externalKey' => 'topdesk:muni-1:1'];
+		$this->store[self::MODULE]['mod-2'] = ['id' => 'mod-2', 'name' => 'Applicatie 2', 'externalKey' => 'topdesk:muni-1:2'];
+		$this->store[self::USAGE]['usage-1'] = [
+			'id' => 'usage-1',
+			'consumer' => 'muni-1',
+			'module' => 'mod-1',
+			'status' => 'To be phased out',
+			'timeClassification' => 'Migrate',
+			'startDateOutPhased' => '2030-01-01',
+		];
+		$this->store[self::USAGE]['usage-2'] = ['id' => 'usage-2', 'consumer' => 'muni-1', 'module' => 'mod-2'];
+		$cells = ['Applicatie Status' => 'In productie', 'Classificatie' => 'Tolereren', 'End-of-Life Functioneel' => 53359];
+		$rows = [$this->row(appId: '1', cells: $cells, row: 2), $this->row(appId: '2', cells: $cells, row: 3)];
+
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame('To be phased out', $this->store[self::USAGE]['usage-1']['status'], 'an edited status stays');
+		$this->assertSame('Migrate', $this->store[self::USAGE]['usage-1']['timeClassification'], 'an edited TIME classification stays');
+		$this->assertSame('2046-02-01', $this->store[self::USAGE]['usage-1']['startDateOutPhased'], 'the phase-out date follows the export');
+		$this->assertSame('In production', $this->store[self::USAGE]['usage-2']['status'], 'an empty status is filled');
+		$this->assertSame('Tolerate', $this->store[self::USAGE]['usage-2']['timeClassification'], 'an empty TIME classification is filled');
+	}//end testAReimportKeepsTheStatusAndTimeClassificationOfAUsage()
+
+	/**
 	 * A municipality uuid must be an organisation of type Municipality.
 	 *
 	 * @return void

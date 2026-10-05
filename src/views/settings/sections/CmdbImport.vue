@@ -115,6 +115,14 @@
 						)
 					}}
 				</p>
+				<p class="cmdb-import__help" data-testid="cmdb-import-update-fields">
+					{{
+						t(
+							'stackiq',
+							'When on, a re-import overwrites the application\'s name, descriptions, application type, hosting model, BBN level, source fields and supplier, and the usage\'s phase-out date and business owner, with the values from the export. The usage\'s status, TIME classification and internal note are only set when the usage is created or the field is empty, so changes made in stackiq stay.',
+						)
+					}}
+				</p>
 			</div>
 			<div class="cmdb-import__field">
 				<NcCheckboxRadioSwitch
