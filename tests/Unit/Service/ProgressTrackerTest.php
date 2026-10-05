@@ -7,7 +7,7 @@
  * second login, another user's page or the request after a cron run. Each
  * test therefore builds one tracker per request, the way Nextcloud does:
  * every request gets its own session and user, and all requests share the
- * distributed cache.
+ * distributed cache, or, without a shared cache, the app config table.
  *
  * @category Tests
  * @package  OCA\Stackiq\Tests\Unit\Service

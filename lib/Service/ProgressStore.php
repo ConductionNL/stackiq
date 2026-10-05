@@ -38,6 +38,14 @@ use OCP\IConfig;
  * once a second, and every read goes to the database rather than to the
  * config cache of the reading request.
  *
+ * That read costs a reload of the whole app config, lazy values of every app
+ * included (a normal request loads only the non-lazy rows), and with APCu it
+ * drops the node's cached copy. A progress stream does it once a second; a
+ * running import about twice a second, as the write after a cancel read
+ * reloads it again. That is accepted as the price of a store every request
+ * sees, on instances that run without a shared cache; a dedicated table is
+ * the alternative if it ever shows up.
+ *
  * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
  */
 class ProgressStore {

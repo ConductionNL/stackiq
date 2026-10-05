@@ -15,7 +15,7 @@
 - **spec_ref**: openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
 - **files**: `lib/Service/ModuleVersionPublicationService.php`, `lib/EventListener/ModuleVersionPublicationListener.php`, `lib/Repair/BackfillModuleVersionPublication.php`, `lib/AppInfo/Application.php`, `appinfo/info.xml`, `tests/Unit/Service/ModuleVersionPublicationServiceTest.php`
 - **acceptance_criteria**:
-  - GIVEN a module saved with a publication date WHEN the listener runs THEN each version differing gets it; an equal one is not written
+  - GIVEN a module saved with a publication date WHEN the background job the listener queues has run THEN each version differing gets it; an equal one is not written
   - GIVEN an anonymous reader WHEN a version of an unpublished application is read THEN it is not returned
 - [x] Implement
 - [x] Test
