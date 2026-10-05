@@ -84,8 +84,11 @@ class CmdbExportImportService {
 
 	/**
 	 * Operation ids a client may choose; anything else gets a generated id.
+	 *
+	 * `\z`, not `$`: `$` also matches before a trailing newline, which would
+	 * let "cmdb-12345678\n" through as a cache key.
 	 */
-	public const OPERATION_ID_PATTERN = '/^cmdb-[A-Za-z0-9-]{8,64}$/';
+	public const OPERATION_ID_PATTERN = '/^cmdb-[A-Za-z0-9-]{8,64}\z/';
 
 	/**
 	 * OpenRegister's migration-pack mapping engine (not a public contract).
@@ -528,6 +531,8 @@ class CmdbExportImportService {
 		}
 
 		$this->progressTracker->completeOperation(finalStatistics: ['report' => $report]);
+		// A cancel that came in after the last row's check has nothing left to stop.
+		$this->progressTracker->clearCancelRequested(operationId: (string)$report['operationId']);
 	}//end finishOperation()
 
 	/**
@@ -1279,13 +1284,22 @@ class CmdbExportImportService {
 	/**
 	 * The operation id the client chose, or a new one.
 	 *
+	 * The client's id is replaced when it does not match the pattern. An id
+	 * that is taken drops any cancel request left over from an earlier run
+	 * with the same id, so the new run is not stopped before row 1.
+	 *
 	 * @param array<string, mixed> $options The import options.
 	 *
 	 * @return string
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
 	 */
 	private function operationIdFrom(array $options): string {
 		$operationId = $options['operationId'] ?? null;
-		if (is_string($operationId) === true && preg_match(self::OPERATION_ID_PATTERN, $operationId) === 1) {
+		if (is_string($operationId) === true
+			&& preg_match(self::OPERATION_ID_PATTERN, $operationId) === 1
+		) {
+			$this->progressTracker->clearCancelRequested(operationId: $operationId);
 			return $operationId;
 		}
 

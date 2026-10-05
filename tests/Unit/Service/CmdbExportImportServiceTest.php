@@ -1221,6 +1221,63 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testCancelNeedsARunningImport()
 
 	/**
+	 * A cancel that arrives after the last row's check leaves no flag that a later run with the same id would inherit.
+	 *
+	 * @return void
+	 */
+	public function testACancelAfterTheLastCheckLeavesNoFlag(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$service = null;
+		$this->beforeSave = function (int $schema) use (&$service): void {
+			if ($schema === self::USAGE) {
+				$this->assertTrue($service->requestCancel(operationId: 'cmdb-late-cancel-1'));
+			}
+		};
+		$service = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', row: 2)]));
+
+		$report = $service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-late-cancel-1']);
+
+		$this->assertFalse($report['cancelled'], 'the only row was already done');
+		$this->assertSame('completed', $this->cache['progress_cmdb-late-cancel-1']['status']);
+		$this->assertArrayNotHasKey('cancel_cmdb-late-cancel-1', $this->cache);
+	}//end testACancelAfterTheLastCheckLeavesNoFlag()
+
+	/**
+	 * A run that reuses an id is not stopped by a cancel flag an earlier run left behind.
+	 *
+	 * @return void
+	 */
+	public function testAReusedIdIgnoresALeftoverCancel(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->cache['cancel_cmdb-reused-0001'] = true;
+		$service = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', row: 2), $this->row(appId: '2', row: 3)]));
+
+		$report = $service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-reused-0001']);
+
+		$this->assertSame('cmdb-reused-0001', $report['operationId']);
+		$this->assertFalse($report['cancelled']);
+		$this->assertSame(2, $report['summary']['processed']);
+		$this->assertArrayNotHasKey('cancel_cmdb-reused-0001', $this->cache);
+	}//end testAReusedIdIgnoresALeftoverCancel()
+
+	/**
+	 * An id with a trailing newline does not match the pattern: it is replaced, and cancel refuses it.
+	 *
+	 * @return void
+	 */
+	public function testAnIdWithATrailingNewlineIsRefused(): void {
+		$this->assertSame(0, preg_match(CmdbExportImportService::OPERATION_ID_PATTERN, "cmdb-12345678\n"));
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$service = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', row: 2)]));
+
+		$report = $service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => "cmdb-12345678\n"]);
+
+		$this->assertNotSame("cmdb-12345678\n", $report['operationId']);
+		$this->assertFalse($service->requestCancel(operationId: "cmdb-12345678\n"));
+		$this->assertArrayNotHasKey("cancel_cmdb-12345678\n", $this->cache);
+	}//end testAnIdWithATrailingNewlineIsRefused()
+
+	/**
 	 * A failure outside a row stops the operation as failed instead of leaving it running.
 	 *
 	 * @return void
