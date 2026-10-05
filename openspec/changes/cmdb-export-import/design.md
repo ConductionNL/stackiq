@@ -136,7 +136,7 @@ The APPID is also stored as `externalNumber`, so it is visible on the module.
 
 ### D6. publicationDate
 
-- New module: `publicationDate` = the import's start time (ISO 8601 with offset). This makes it visible to OpenCatalogi, given a catalogue that covers the stackiq `module` schema.
+- New module: with `publish` on (the default, "Publish the applications this import creates"), `publicationDate` = the import's start time (ISO 8601 with offset). This makes it visible to OpenCatalogi, given a catalogue that covers the stackiq `module` schema. With `publish` off, the module is created without `publicationDate` and is not public; the report counts these modules as created unpublished.
 - Existing module: `publicationDate` and `depublicationDate` are never written, also when they are empty. An admin who depublished an imported module keeps it depublished.
 
 ### D7. Related objects and their order
@@ -229,8 +229,8 @@ Source columns of "Onbeh Applicaties CMDB" and "Beheerde Applicaties CMDB" and w
 
 The authoritative interface is in `contract.md`. In short:
 
-- `POST /api/cmdb-import`: multipart `cmdbFile`, plus `municipalityUuid` or `municipalityName`, `updateExisting` (default `true`), `missingRecords` (default `keep`) and `operationId`. Nextcloud admins only, not delegated groups; CSRF. Answers 200 with the report, or one of the errors in D10.
-- `POST /api/cmdb-import/{operationId}/cancel`: admin, CSRF. Answers 200 `{cancelRequested: true}`.
+- `POST /api/cmdb-import`: multipart `cmdbFile`, plus `municipalityUuid` or `municipalityName`, `updateExisting` (default `true`), `publish` (default `true`, D6), `missingRecords` (default `keep`) and `operationId`. Nextcloud admins only, not delegated groups; CSRF. Answers 200 with the report, or one of the errors in D10.
+- `POST /api/cmdb-import/{operationId}/cancel`: Nextcloud admins only, not delegated groups; CSRF. Answers 200 `{success: true, cancelRequested: true}`.
 - `GET /api/progress/{operationId}`: the existing route, unchanged.
 
 ## Database Changes
@@ -245,7 +245,7 @@ The change is `kind: code`. Its weight is the import service, controller, reader
 2. It follows the app's fragment convention (ADR-037), so it touches no other change's file.
 3. It is deployed by the existing register import in the repair step, without a migration class.
 
-The fragment bumps `module` to `0.3.5`. Fragments are merged in filename order and a scalar `version` is overwritten by the last fragment that sets it. `maintenance-and-roadmap.json` sets `module` to `0.3.4`, so a fragment that sorts before it would have its bump overwritten, and the new properties would never deploy. The file is therefore named `topdesk-cmdb-import.json`, which sorts after it, and a unit test asserts that the merged register declares `module` version `0.3.5` with the five properties.
+The fragment bumps `module` to `0.3.8` (it shipped as `0.3.5` in the first version of this change). Fragments are merged in filename order and a scalar `version` is overwritten by the last fragment that sets it. `maintenance-and-roadmap.json` sets `module` to `0.3.4`, so a fragment that sorts before it would have its bump overwritten, and the new properties would never deploy. The file is therefore named `topdesk-cmdb-import.json`, which sorts after it, and a unit test asserts that the merged register declares `module` version `0.3.8` with the six properties (`externalId`, `externalNumber`, `externalKey`, `externalCreatedAt`, `externalModifiedAt`, `applicationType`), `BBN2+` in the `bbnLevel` enum and the admin-only write rule on `externalKey`.
 
 ## Declarative-vs-imperative decision (ADR-031)
 
@@ -305,7 +305,7 @@ lib/
       topdesk-usage.json
       topdesk-business-owner.json
     register.d/
-      topdesk-cmdb-import.json                (module 0.3.5: five properties + seed modules)
+      topdesk-cmdb-import.json                (module 0.3.8: six properties, BBN2+, externalKey write rule + seed modules)
 src/views/settings/
   StackiqSettings.vue                         (registers the section)
   sections/CmdbImport.vue

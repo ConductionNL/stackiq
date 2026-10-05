@@ -19,7 +19,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
 - **spec_ref**: `SPEC#requirement-a-module-shall-be-matched-on-its-topdesk-appid-so-a-re-import-updates-instead-of-duplicating-req-cmdb-006` (cmdb-export-import#REQ-CMDB-006)
 - **files**: `lib/Settings/register.d/topdesk-cmdb-import.json`, `tests/Unit/Settings/TopdeskCmdbFragmentTest.php`
 - **acceptance_criteria**:
-  - GIVEN all `register.d` fragments WHEN they are merged in filename order the way `SettingsService` does THEN `module.version` is `0.3.5` and `externalId`, `externalNumber`, `externalKey`, `externalCreatedAt`, `externalModifiedAt` exist, none required, with titles (hydra gate schema-property-titles)
+  - GIVEN all `register.d` fragments WHEN they are merged in filename order the way `SettingsService` does THEN `module.version` is `0.3.8` and `externalId`, `externalNumber`, `externalKey`, `externalCreatedAt`, `externalModifiedAt`, `applicationType` exist, none required, with titles (hydra gate schema-property-titles), `bbnLevel` allows `BBN2+`, and `externalKey` carries `authorization.update: ["admin"]`
   - GIVEN the fragment WHEN the register is imported on the rig THEN existing modules load and save unchanged, and the seed modules `voorbeeld-zaaksysteem`, `voorbeeld-afsprakenplanner` and `voorbeeld-belastingapplicatie` exist without `publicationDate` or `externalKey` (design.md, Seed Data)
 - [x] Implement
 - [x] Test
@@ -138,7 +138,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
 - PHPUnit for all new business logic (`tests/Unit/`), at least 75% coverage of new code (ADR-009), using the sanitised xlsx fixtures (not mocked rows) for reader and service tests
 - Newman/Postman for both new endpoints (Task 8); Playwright for the settings flow (Task 9)
 - `composer test`, `newman run` and the Playwright spec pass on the local rig
-- Test against OpenRegister on the rig: the saved objects pass schema validation (module 0.3.5, organization, usage, contactPerson)
+- Test against OpenRegister on the rig: the saved objects pass schema validation (module 0.3.8, organization, usage, contactPerson)
 - Hydra gates run locally (`scripts/run-hydra-gates.sh`); read the COVERAGE line and name any SKIPPED gate
 - Dutch (`nl_NL`) and English (`en_US`) strings for every new user-facing string (ADR-005)
 - Docs in `docs/features/cmdb-import.md` with screenshots (ADR-010)

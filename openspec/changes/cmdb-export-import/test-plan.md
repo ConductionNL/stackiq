@@ -117,7 +117,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **type**: regression
 - **preconditions**: all `register.d` fragments present
 - **steps**: merge the register as `SettingsService` does; run the repair step on the rig
-- **expected result**: merged `module.version` is `0.3.5` with the five optional properties; existing modules still load and save; seed module `voorbeeld-zaaksysteem` present without `publicationDate`
+- **expected result**: merged `module.version` is `0.3.8` with the six optional properties, `BBN2+` in the `bbnLevel` enum and the admin-only write rule on `externalKey`; existing modules still load and save; seed module `voorbeeld-zaaksysteem` present without `publicationDate`
 - **test command**: PHPUnit `tests/Unit/Settings/TopdeskCmdbFragmentTest.php`, `/test-regression`
 
 ## Coverage Summary
