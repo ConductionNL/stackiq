@@ -11,14 +11,22 @@ TOPdesk export.
 Usage:
 
     python3 build-fixtures.py --source <anonymised export.xlsx>
-        Sanitise an already anonymised export into topdesk-export-anonymised.xlsx
-        (strip document metadata, custom properties, customXml, the workbook's
-        absolute path and xl/connections.xml), write the placeholder cached
-        values into the CMDB sheets, then derive the variants.
+        Sanitise an already anonymised export into topdesk-export-anonymised.xlsx,
+        write the placeholder cached values into the CMDB sheets, then derive
+        the variants.
 
     python3 build-fixtures.py
-        Write the placeholder cached values into the committed
-        topdesk-export-anonymised.xlsx (idempotent) and derive the variants.
+        Sanitise the committed topdesk-export-anonymised.xlsx again, write the
+        placeholder cached values into it (both idempotent) and derive the
+        variants.
+
+Sanitising removes document metadata and everything that describes the
+workbook's origin rather than its content: custom properties, customXml, the
+workbook's absolute save path, xl/connections.xml, the printer settings of
+every sheet (they name the printers of the machine the export was handled on),
+the author, company and other document properties, the creation and
+modification dates (set to FIXED_DATE), the revision and object GUIDs, and the
+filter ranges and sheet dimensions that record the size of the original data.
 
 The import reads the two CMDB sheets ("Onbeh Applicaties CMDB",
 "Beheerde Applicaties CMDB"). Their cells are formulas that read the "Invoer"
@@ -44,7 +52,16 @@ SANITISED = os.path.join(HERE, 'topdesk-export-anonymised.xlsx')
 
 # Parts that never belong in a fixture.
 DROP_PARTS = ('docProps/custom.xml', 'xl/connections.xml')
-DROP_PREFIXES = ('customXml/',)
+DROP_PREFIXES = ('customXml/', 'xl/printerSettings/')
+
+# The creation and modification date of every fixture: neutral, not the date of
+# any real export or save.
+FIXED_DATE = '2026-01-01T00:00:00Z'
+
+# Document properties that are emptied (core.xml and app.xml).
+EMPTIED_CORE = ('dc:title', 'dc:subject', 'dc:creator', 'cp:keywords', 'dc:description',
+                'cp:lastModifiedBy', 'cp:revision', 'cp:category', 'cp:contentStatus')
+EMPTIED_APP = ('Manager', 'Company', 'HyperlinkBase')
 
 ONBEH_SHEET = 'xl/worksheets/sheet2.xml'     # "Onbeh Applicaties CMDB" (from AIA)
 BEHEERDE_SHEET = 'xl/worksheets/sheet4.xml'  # "Beheerde Applicaties CMDB" (from APP)
@@ -93,37 +110,94 @@ def text(data):
     return data.decode('utf-8')
 
 
+def empty_element(xml, tag):
+    """Empty `<tag>` (any content, or self-closing) without dropping it."""
+    return re.sub(r'<%s(?: [^>]*)?(?:/>|>.*?</%s>)' % (tag, tag), '<%s></%s>' % (tag, tag), xml, flags=re.S)
+
+
+def drop_guids(xml):
+    """Remove the revision pointer and every revision/object GUID attribute (xr:uid, xr10:uidLastSave, ...)."""
+    xml = re.sub(r'<xr:revisionPtr [^>]*/>', '', xml)
+    return re.sub(r' xr\d*:uid(?:LastSave)?="\{[^"]*\}"', '', xml)
+
+
+def used_range(xml):
+    """The range the cells of a worksheet span ("A1:AP2"), or None for an empty sheet."""
+    refs = re.findall(r'<c r="([A-Z]+)(\d+)"', xml)
+    if not refs:
+        return None
+    width = max(col_to_index(col) for col, _ in refs)
+    height = max(int(row) for _, row in refs)
+    return 'A1:%s%d' % (index_to_col(width), height)
+
+
+def sanitise_sheet(xml):
+    """Printer settings link, GUIDs, and the dimension/filter ranges of the original data."""
+    xml = re.sub(r'(<pageSetup [^>]*?) r:id="[^"]*"', r'\1', xml)
+    xml = drop_guids(xml)
+    extent = used_range(xml)
+    if extent is not None:
+        xml = re.sub(r'<dimension ref="[^"]*"/>', '<dimension ref="%s"/>' % extent, xml)
+
+    # An auto filter covers the header row only; its original range recorded how many rows the real data had.
+    def header_only(match):
+        first, last_col = match.group(1), match.group(2)
+        row = re.match(r'[A-Z]+(\d+)$', first).group(1)
+        return '<autoFilter ref="%s:%s%s"' % (first, last_col, row)
+    xml = re.sub(r'<autoFilter ref="([A-Z]+\d+):([A-Z]+)\d+"', header_only, xml)
+    # A saved sort order names the ranges of the original data too.
+    return re.sub(r'<sortState[ >].*?</sortState>|<sortState [^>]*/>', '', xml, flags=re.S)
+
+
 def sanitise(parts):
-    """Remove metadata parts and every reference to them."""
+    """Remove metadata parts and every reference to them; idempotent."""
     kept = []
     for name, data in parts:
         if name in DROP_PARTS or name.startswith(DROP_PREFIXES):
             continue
         if name == 'docProps/core.xml':
             xml = text(data)
-            xml = re.sub(r'<dc:creator>.*?</dc:creator>', '<dc:creator></dc:creator>', xml)
-            xml = re.sub(r'<cp:lastModifiedBy>.*?</cp:lastModifiedBy>', '<cp:lastModifiedBy></cp:lastModifiedBy>', xml)
+            for tag in EMPTIED_CORE:
+                xml = empty_element(xml, tag)
+            for tag in ('dcterms:created', 'dcterms:modified'):
+                xml = re.sub(r'(<%s [^>]*>)[^<]*(</%s>)' % (tag, tag), r'\g<1>%s\g<2>' % FIXED_DATE, xml)
+            data = xml.encode('utf-8')
+        elif name == 'docProps/app.xml':
+            xml = text(data)
+            for tag in EMPTIED_APP:
+                xml = empty_element(xml, tag)
             data = xml.encode('utf-8')
         elif name == 'xl/workbook.xml':
             # The absolute path of the last save names a user profile directory.
             xml = re.sub(r'<mc:AlternateContent[^>]*>.*?x15ac:absPath.*?</mc:AlternateContent>', '', text(data))
+            xml = drop_guids(xml)
+            # Hidden filter ranges of the original data; Excel rebuilds them from the sheets' auto filters.
+            xml = re.sub(r'<definedName name="_xlnm\._FilterDatabase"[^>]*>[^<]*</definedName>', '', xml)
+            xml = xml.replace('<definedNames></definedNames>', '')
             data = xml.encode('utf-8')
-        elif name == '[Content_Types].xml':
-            xml = text(data)
-            xml = re.sub(r'<Override PartName="/docProps/custom\.xml"[^>]*/>', '', xml)
-            xml = re.sub(r'<Override PartName="/xl/connections\.xml"[^>]*/>', '', xml)
-            xml = re.sub(r'<Override PartName="/customXml/[^"]*"[^>]*/>', '', xml)
-            data = xml.encode('utf-8')
-        elif name == '_rels/.rels':
+        elif re.match(r'xl/worksheets/sheet\d+\.xml$', name):
+            data = sanitise_sheet(text(data)).encode('utf-8')
+        elif name.endswith('.rels'):
             xml = re.sub(r'<Relationship [^>]*Target="docProps/custom\.xml"[^>]*/>', '', text(data))
-            xml = re.sub(r'<Relationship [^>]*Target="\.\./customXml/[^"]*"[^>]*/>', '', xml)
-            data = xml.encode('utf-8')
-        elif name == 'xl/_rels/workbook.xml.rels':
-            xml = re.sub(r'<Relationship [^>]*Target="connections\.xml"[^>]*/>', '', text(data))
-            xml = re.sub(r'<Relationship [^>]*Target="\.\./customXml/[^"]*"[^>]*/>', '', xml)
+            xml = re.sub(r'<Relationship [^>]*Target="(?:\.\./)?customXml/[^"]*"[^>]*/>', '', xml)
+            xml = re.sub(r'<Relationship [^>]*Target="connections\.xml"[^>]*/>', '', xml)
+            xml = re.sub(r'<Relationship [^>]*Type="[^"]*/printerSettings"[^>]*/>', '', xml)
             data = xml.encode('utf-8')
         kept.append((name, data))
-    return kept
+
+    # Content types: no override for a dropped part, no default for an extension no part has left.
+    names = {name for name, _ in kept}
+
+    def content_types(data):
+        xml = text(data)
+        for part in re.findall(r'<Override PartName="/([^"]*)"[^>]*/>', xml):
+            if part not in names:
+                xml = re.sub(r'<Override PartName="/%s"[^>]*/>' % re.escape(part), '', xml)
+        for ext in re.findall(r'<Default Extension="([^"]*)"[^>]*/>', xml):
+            if ext not in ('rels', 'xml') and not any(n.endswith('.' + ext) for n in names):
+                xml = re.sub(r'<Default Extension="%s"[^>]*/>' % re.escape(ext), '', xml)
+        return xml.encode('utf-8')
+    return replace_part(kept, '[Content_Types].xml', content_types)
 
 
 def replace_part(parts, name, transform):
@@ -332,10 +406,7 @@ def main():
     parser.add_argument('--source', help='anonymised export to sanitise into topdesk-export-anonymised.xlsx')
     args = parser.parse_args()
 
-    source = args.source or SANITISED
-    parts = read_package(source)
-    if args.source:
-        parts = sanitise(parts)
+    parts = sanitise(read_package(args.source or SANITISED))
     write_package(SANITISED, cache_values(parts))
     print('wrote', os.path.relpath(SANITISED, HERE))
 
