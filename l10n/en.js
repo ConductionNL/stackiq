@@ -1050,8 +1050,6 @@ OC.L10N.register(
         "The workbook has neither of the sheets %s.": "The workbook has neither of the sheets %s.",
         "Column \"%1$s\": %2$s": "Column \"%1$s\": %2$s",
         "Optional column \"%s\" not found": "Optional column \"%s\" not found",
-        "Sheet \"%1$s\" not found; %2$s not read": "Sheet \"%1$s\" not found; %2$s not read",
-        "Column \"%1$s\" not found; %2$s not read": "Column \"%1$s\" not found; %2$s not read",
         "Owner from column \"%s\" could not be resolved": "Owner from column \"%s\" could not be resolved",
         "Owner from column \"%s\" could not be resolved in Nextcloud Contacts": "Owner from column \"%s\" could not be resolved in Nextcloud Contacts",
         "Owners skipped: Nextcloud Contacts is unavailable": "Owners skipped: Nextcloud Contacts is unavailable",

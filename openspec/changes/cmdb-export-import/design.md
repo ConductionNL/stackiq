@@ -2,7 +2,7 @@
 
 ## Context
 
-A municipality delivers its application landscape as a TOPdesk export (xlsx). The anonymised test export has ten sheets. The municipality's application manager exports AIA and APP from TOPdesk into the raw "Invoer AIA data" and "Invoer APP data" sheets; the CMDB sheets next to them are the overviews the municipality itself uses as "the CMDB", built from the raw sheets with formulas. Decided with the municipality on 2026-10-01: the import reads the two CMDB sheets, "Onbeh Applicaties CMDB" (35 columns, from AIA: applications **without** arranged maintenance) and "Beheerde Applicaties CMDB" (42 columns, from APP: **with** arranged maintenance). Of the "Invoer" sheets only the owner's "Eigenaar e-mail" and "Eigenaar mobiel nummer" are read (decided with the user on 2026-10-05, so owners in Contacts have an address and number; the CMDB sheets leave them out), looked up by "Middel-ID" = the CMDB sheet's "Applicatie Code"; "Gearchiveerde Applicaties" is a follow-up (missing records). Both CMDB sheets carry formatted but empty rows below the data, and "Beheerde" also formula rows that reference empty "Invoer" rows. Every cell is a formula; the reader uses the cached values. Dates are Excel serial numbers. The file also contains document metadata, a SharePoint sensitivity label, an embedded Power Query package and an external data connection (`xl/connections.xml`).
+A municipality delivers its application landscape as a TOPdesk export (xlsx). The anonymised test export has ten sheets. The municipality's application manager exports AIA and APP from TOPdesk into the raw "Invoer AIA data" and "Invoer APP data" sheets; the CMDB sheets next to them are the overviews the municipality itself uses as "the CMDB", built from the raw sheets with formulas. Decided with the municipality on 2026-10-01: the import reads the two CMDB sheets, "Onbeh Applicaties CMDB" (35 columns, from AIA: applications **without** arranged maintenance) and "Beheerde Applicaties CMDB" (42 columns, from APP: **with** arranged maintenance). The "Invoer" sheets are not read; "Gearchiveerde Applicaties" is a follow-up (missing records). Both CMDB sheets carry formatted but empty rows below the data, and "Beheerde" also formula rows that reference empty "Invoer" rows. Every cell is a formula; the reader uses the cached values. Dates are Excel serial numbers. The file also contains document metadata, a SharePoint sensitivity label, an embedded Power Query package and an external data connection (`xl/connections.xml`).
 
 The chain baseline on the local rig (OpenRegister 2.1.34-unstable, OpenCatalogi 2.1.17-unstable, Portaliq 0.2.8-unstable, stackiq 0.2.4-unstable) fixed what the import has to produce:
 
@@ -154,7 +154,7 @@ When step 3 succeeds and step 5 fails, the row is `failed` with the step named. 
 
 Stackiq keeps a person's identity in Nextcloud Contacts. A `contactPerson` object holds only `contactsUid`, `role`, `organization` and `roles`. The owner is "Applicatie Eigenaar (Persoon)"; when TOPdesk has no owner the CMDB sheet shows the owner's function there instead, and the import uses that as the display name too. "Applicatie Eigenaar (Functie)" is the role; "Applicatie Eigenaar (Afdeling)" goes into the usage note (D7), because a contact person has no department field. The functional administrator (FB contactpersoon) is not imported, so there is no `technicalOwner`.
 
-1. The e-mail address and phone number come from the "Invoer" sheet (profile `lookup`). The service finds the contact by e-mail address (`findContactForRecord`), else by an exact, case-insensitive display-name match (`findContactsByDisplayName`; with an e-mail address only a contact without one, so a namesake is not taken), and adds the e-mail address and phone number a found contact lacks (`completeContact`, which never replaces a value). Otherwise `syncToNamedAddressBook` creates the contact with name, role, e-mail address and phone number. This avoids creating a new contact on every import, and completes the contacts earlier imports made without an address.
+1. The CMDB sheets carry no e-mail address, so the service runs `searchContacts(name)` and accepts only an exact, case-insensitive display-name match; otherwise `StackiqContactSyncService::syncToContacts('contactPerson', ['voornaam' => …, 'achternaam' => …, 'role' => …])` creates the contact. This avoids creating a new contact on every import.
 2. Find the `contactPerson` with that `contactsUid` and `organization` = the municipality (run cache, then `searchObjects`). If none exists, create it with `role` = "Applicatie Eigenaar (Functie)" when given.
 3. Set `usage.businessOwner` to its uuid.
 
@@ -221,8 +221,7 @@ Source columns of "Onbeh Applicaties CMDB" and "Beheerde Applicaties CMDB" and w
 | Applicatiecomponent, Bron, Datum Interface, Referentie element externe ID, Cloud, Rappeldatum, Rappelreden, Locatie BIOToets | both | not mapped | Cloud is derived from Applicatiesoort; Datum Interface is the export date |
 | Beschikbaarheid, Integriteit, Vertrouwelijkheid, Applicatienut, Kwaliteit en betrouwbaarheid van leverancier, Flexibiliteit, Gebruikerstevredenheid, Reputatie risico | both | not mapped (no field on module or usage) | schema extension is out of scope |
 | Standaard, Behandelgroep, End-of-life Technisch, End-of-support Technisch, Top5, COTS, Applicatie Nummer | Beheerde | not mapped | Applicatie Nummer repeats the APPID |
-| "Invoer" sheets: Eigenaar e-mail, Eigenaar mobiel nummer (by Middel-ID) | owner's Nextcloud contact (EMAIL, TEL) | lookup; never on a stackiq object | |
-| every other column of the "Invoer" sheets | – | never read | |
+| every column of the "Invoer" sheets | – | never read | |
 
 ## API Design
 
@@ -271,7 +270,7 @@ The fragment bumps `module` to `0.3.5`. Fragments are merged in filename order a
 - **Resource bounds:** row cap per sheet, and only allowlisted columns are kept. Memory is bounded by loading only the two CMDB sheets.
 - **Injection:** every value is a string that goes through OpenRegister's schema validation on save, and is never used in SQL, file paths or templates. The UI renders values as text only.
 - **Isolation:** every row runs in its own try/catch. Errors are reported per row, and the import continues.
-- **Privacy:** the column allowlist keeps every person column except the owner out of memory; of the "Invoer" sheets, which hold personnel numbers, phones and group mailboxes, only the owner's e-mail address and mobile number are read, and only into Nextcloud Contacts. Owner identity goes only to Nextcloud Contacts, and `contactPerson` and `usage` are never publicly readable (D8). Reports and logs carry no person data.
+- **Privacy:** the column allowlist keeps every person column except the owner out of memory; the "Invoer" sheets, which hold personnel numbers, phones and group mailboxes, are not read at all. Owner identity goes only to Nextcloud Contacts, and `contactPerson` and `usage` are never publicly readable (D8). Reports and logs carry no person data.
 - **Fixture hygiene:** the test fixture is the anonymised export with document metadata, the custom properties (sensitivity label), `customXml/` (including the Power Query package) and `xl/connections.xml` removed. One small synthetic connection part is added back for the external-connection test.
 
 ## NL Design System
