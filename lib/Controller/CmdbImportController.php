@@ -132,6 +132,9 @@ class CmdbImportController extends Controller {
 	 *
 	 * @return array{exception: string, error: string, file: string, line: int}
 	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) logSafeMessage() is a pure function of the exception, shared with the service so
+	 * both logs sanitise the same way.
+	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
 	 */
 	private function failureContext(\Throwable $e): array {
