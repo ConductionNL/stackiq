@@ -549,13 +549,7 @@ class CmdbExportImportService {
 		CmdbImportReport $report,
 	): void {
 		$sheet = $row['sheet'];
-		$values = $this->normaliser->normalise(
-			cells: array_merge($row['cells'], $this->profile->sheetConstants(sheetName: $sheet)),
-			dateColumns: $this->profile->dateColumns(),
-			idColumns: $this->profile->idColumns(),
-			date1904: $date1904,
-			emptyValues: $this->profile->emptyValues()
-		);
+		$values = $this->normaliseRow(row: $row, date1904: $date1904);
 		$rowNumber = $row['row'];
 		$appId = ($values[$this->profile->keyColumn()] ?? '');
 		$name = ($values[$this->profile->nameColumn()] ?? '');
@@ -594,12 +588,7 @@ class CmdbExportImportService {
 			// ends as a conflict or `exists` creates no Supplier organisation.
 			$step = 'module';
 			$externalKey = $this->profile->externalKeyPrefix() . ':' . $municipalityUuid . ':' . $matchKey;
-			$match = $this->matchModule(
-				externalKey: $externalKey,
-				municipalityUuid: $municipalityUuid,
-				matchKey: $matchKey,
-				updateExisting: $options['updateExisting']
-			);
+			$match = $this->matchModule(externalKey: $externalKey, municipalityUuid: $municipalityUuid, matchKey: $matchKey, options: $options);
 			if ($match['skipReason'] !== null) {
 				$this->addRow(
 					report: $report,
@@ -647,6 +636,26 @@ class CmdbExportImportService {
 		$outcome = self::rowOutcome(module: $moduleResult['outcome'], usage: $usageResult['outcome']);
 		$this->addRow(report: $report, entry: $entry, outcome: $outcome, warnings: $warnings, moduleUuid: $moduleUuid, usageUuid: $usageUuid);
 	}//end processRow()
+
+	/**
+	 * The row's cells plus its sheet's constants, normalised the way the profile says.
+	 *
+	 * @param array{sheet: string, cells: array<string, mixed>} $row The reader row.
+	 * @param bool $date1904 The workbook's date system.
+	 *
+	 * @return array<string, string>
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 */
+	private function normaliseRow(array $row, bool $date1904): array {
+		return $this->normaliser->normalise(
+			cells: array_merge($row['cells'], $this->profile->sheetConstants(sheetName: $row['sheet'])),
+			dateColumns: $this->profile->dateColumns(),
+			idColumns: $this->profile->idColumns(),
+			date1904: $date1904,
+			emptyValues: $this->profile->emptyValues()
+		);
+	}//end normaliseRow()
 
 	/**
 	 * The warning for each formula cell of a row that had no cached value.
@@ -1012,7 +1021,7 @@ class CmdbExportImportService {
 	 * @param string $externalKey The module's import key.
 	 * @param string $municipalityUuid The consumer.
 	 * @param string $matchKey The APPID's match key.
-	 * @param bool $updateExisting Whether a match is updated.
+	 * @param array{updateExisting: bool} $options Whether a match is updated.
 	 *
 	 * @return array{existing: object|null, uuid: string|null, skipReason: string|null} The stored module, the uuid
 	 *                                                                                 to report for a skipped row,
@@ -1020,7 +1029,7 @@ class CmdbExportImportService {
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 */
-	private function matchModule(string $externalKey, string $municipalityUuid, string $matchKey, bool $updateExisting): array {
+	private function matchModule(string $externalKey, string $municipalityUuid, string $matchKey, array $options): array {
 		$existing = $this->findOne(schemaKey: 'module', filters: ['externalKey' => $externalKey]);
 		if ($existing === null) {
 			return ['existing' => null, 'uuid' => null, 'skipReason' => null];
@@ -1036,7 +1045,7 @@ class CmdbExportImportService {
 			return ['existing' => $existing, 'uuid' => null, 'skipReason' => $reason];
 		}
 
-		if ($updateExisting === false) {
+		if ($options['updateExisting'] === false) {
 			return ['existing' => $existing, 'uuid' => $uuid, 'skipReason' => $this->l10n->t('exists')];
 		}
 
