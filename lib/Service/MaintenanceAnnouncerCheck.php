@@ -24,8 +24,8 @@ namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IGroupManager;
-use Psr\Log\LoggerInterface;
 
 /**
  * Whether a maintenance window comes from someone allowed to reach the product's owners.
@@ -46,12 +46,10 @@ class MaintenanceAnnouncerCheck {
 	 *
 	 * @param SettingsService $settingsService The module register and schema lookups.
 	 * @param IGroupManager   $groupManager    The group manager, for the catalogue's administrators.
-	 * @param LoggerInterface $logger          The logger.
 	 */
 	public function __construct(
 		private readonly SettingsService $settingsService,
 		private readonly IGroupManager $groupManager,
-		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
 
@@ -59,14 +57,21 @@ class MaintenanceAnnouncerCheck {
 	 * Whether a window may notify the owners of its product.
 	 *
 	 * Yes when a catalogue administrator created it, or when the organisation
-	 * that owns the window is the product's supplier (`provider`) or owns the
-	 * product. A product that cannot be read refuses.
+	 * that owns the window is the product's supplier (`provider`). The
+	 * organisation that merely owns the product record does not count: a
+	 * product entered by an administrator or an import carries the importer's
+	 * organisation, often the default one, which says nothing about who supplies
+	 * it. A product that no longer exists refuses; a read that fails for any
+	 * other reason is thrown, so the caller writes nothing rather than treating
+	 * a real supplier's window as refused.
 	 *
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
 	 * @param ObjectEntityInterface  $window        The maintenance window.
 	 * @param string                 $moduleId      The product's id.
 	 *
 	 * @return boolean True when the owners may be notified.
+	 *
+	 * @throws \Throwable When the product cannot be read for a reason other than that it does not exist.
 	 *
 	 * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md#requirement-req-msr-003-the-owners-of-every-usage-are-notified
 	 */
@@ -88,8 +93,7 @@ class MaintenanceAnnouncerCheck {
 				_rbac: false,
 				_multitenancy: false
 			);
-		} catch (\Throwable $e) {
-			$this->logger->error('MaintenanceAnnouncerCheck: could not read the product', ['module' => $moduleId, 'error' => $e->getMessage()]);
+		} catch (DoesNotExistException $e) {
 			return false;
 		}
 
@@ -102,7 +106,7 @@ class MaintenanceAnnouncerCheck {
 			$provider = ($provider['id'] ?? ($provider['uuid'] ?? null));
 		}
 
-		return $organisation === $provider || $organisation === (string) $module->getOrganisation();
+		return $organisation === $provider;
 	}//end mayAnnounce()
 
 	/**

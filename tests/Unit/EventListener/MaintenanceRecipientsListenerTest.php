@@ -92,7 +92,7 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 	/**
 	 * The windows the object service can find, by id.
 	 *
-	 * @var array<string, ObjectEntity>
+	 * @var array<string, ObjectEntity|\Throwable>
 	 */
 	private array $windows = [];
 
@@ -199,7 +199,15 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 		);
 
 		$this->windows['x'] = $this->entity('x', self::SCHEMAS['module'], ['name' => 'Product X', 'provider' => ['id' => self::SUPPLIER]]);
-		$this->objectService->method('find')->willReturnCallback(fn (int|string $id): ?ObjectEntity => $this->windows[$id] ?? null);
+		$this->objectService->method('find')->willReturnCallback(
+			function (int|string $id): ?ObjectEntity {
+				if (($this->windows[$id] ?? null) instanceof \Throwable) {
+					throw $this->windows[$id];
+				}
+
+				return $this->windows[$id] ?? null;
+			}
+		);
 
 		$this->jobList = $this->createMock(IJobList::class);
 		$this->jobList->method('add')->willReturnCallback(
@@ -219,7 +227,7 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 				$this->warnings[] = $message;
 			}
 		);
-		$this->service = new MaintenanceRecipientService($settings, $contacts, $users, $container, $logger, new MaintenanceAnnouncerCheck($settings, $groups, $logger));
+		$this->service = new MaintenanceRecipientService($settings, $contacts, $users, $container, $logger, new MaintenanceAnnouncerCheck($settings, $groups));
 		return new MaintenanceRecipientsListener($this->service, $this->jobList, $logger);
 	}//end listener()
 
@@ -275,9 +283,31 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 		$listener->handle(new ObjectCreatedEvent($window));
 		$this->runQueuedJobs();
 
-		$this->assertSame([], $this->saved, 'neither the owners nor a resolved time are written');
+		$this->assertCount(1, $this->saved, 'the window is written back once');
+		$this->assertSame([], $this->saved[0]['notifyUserIds'], 'the ids it was created with are cleared');
+		$this->assertArrayNotHasKey('recipientsResolvedAt', $this->saved[0], 'no resolved time, so no announcement');
 		$this->assertCount(1, $this->warnings);
 	}//end testAnotherSuppliersWindowNotifiesNobody()
+
+	/**
+	 * A refused window that already carries a resolved time is cleared too, so the
+	 * reminder a day before the window reaches nobody it names.
+	 *
+	 * @return void
+	 */
+	public function testARefusedWindowWithAResolvedTimeIsClearedForTheReminder(): void {
+		$listener = $this->listener();
+		$window   = $this->entity('w7', self::SCHEMAS['maintenanceWindow'], ['module' => 'x', 'notifyUserIds' => ['victim'], 'recipientsResolvedAt' => '2026-09-29T10:00:00+00:00'], 'org-competitor', 'mallory');
+
+		$this->windows['w7'] = $window;
+
+		$listener->handle(new ObjectCreatedEvent($window));
+		$this->runQueuedJobs();
+
+		$this->assertCount(1, $this->saved);
+		$this->assertSame([], $this->saved[0]['notifyUserIds']);
+		$this->assertSame('2026-09-29T10:00:00+00:00', $this->saved[0]['recipientsResolvedAt'], 'the resolved time is unchanged, so the announcement does not fire');
+	}//end testARefusedWindowWithAResolvedTimeIsClearedForTheReminder()
 
 	/**
 	 * A window without an organisation is refused unless an administrator created it.
@@ -293,8 +323,27 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 		$listener->handle(new ObjectCreatedEvent($window));
 		$this->runQueuedJobs();
 
-		$this->assertSame([], $this->saved);
+		$this->assertSame([[]], array_column($this->saved, 'notifyUserIds'));
 	}//end testAWindowWithoutAnOrganisationIsRefused()
+
+	/**
+	 * A product that cannot be read is not a refusal: the supplier's window is left as it is.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableProductWritesNothing(): void {
+		$listener = $this->listener();
+		$this->windows['x'] = new \RuntimeException('database went away');
+		$window = $this->entity('w8', self::SCHEMAS['maintenanceWindow'], ['module' => 'x'], self::SUPPLIER, 'jan');
+
+		$this->windows['w8'] = $window;
+
+		$listener->handle(new ObjectCreatedEvent($window));
+		$this->runQueuedJobs();
+
+		$this->assertSame([], $this->saved);
+		$this->assertSame([], $this->warnings, 'not logged as a refusal');
+	}//end testAnUnreadableProductWritesNothing()
 
 	/**
 	 * A catalogue administrator may announce maintenance on any product.
@@ -315,22 +364,23 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 	}//end testACatalogAdministratorMayAnnounceForAnyProduct()
 
 	/**
-	 * An organisation that owns the product, but is not named as its supplier, may announce too.
+	 * The organisation that owns the product record, but is not its supplier, is refused:
+	 * an admin-entered product carries the importer's (often the default) organisation.
 	 *
 	 * @return void
 	 */
-	public function testTheOrganisationThatOwnsTheProductMayAnnounce(): void {
+	public function testTheOrganisationThatOnlyOwnsTheProductRecordIsRefused(): void {
 		$listener = $this->listener();
-		$this->windows['x'] = $this->entity('x', self::SCHEMAS['module'], ['name' => 'Product X'], 'org-owner');
-		$window = $this->entity('w6', self::SCHEMAS['maintenanceWindow'], ['module' => 'x'], 'org-owner', 'jan');
+		$this->windows['x'] = $this->entity('x', self::SCHEMAS['module'], ['name' => 'Product X', 'provider' => ['id' => self::SUPPLIER]], 'org-default');
+		$window = $this->entity('w6', self::SCHEMAS['maintenanceWindow'], ['module' => 'x'], 'org-default', 'jan');
 
 		$this->windows['w6'] = $window;
 
 		$listener->handle(new ObjectCreatedEvent($window));
 		$this->runQueuedJobs();
 
-		$this->assertCount(1, $this->saved);
-	}//end testTheOrganisationThatOwnsTheProductMayAnnounce()
+		$this->assertSame([[]], array_column($this->saved, 'notifyUserIds'));
+	}//end testTheOrganisationThatOnlyOwnsTheProductRecordIsRefused()
 
 	/**
 	 * An object of another schema is left alone.
@@ -351,7 +401,7 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 	 */
 	public function testAResolvedWindowIsNotWrittenAgain(): void {
 		$listener = $this->listener();
-		$window   = $this->entity('w2', self::SCHEMAS['maintenanceWindow'], ['module' => 'x', 'recipientsResolvedAt' => '2026-09-29T10:00:00+00:00']);
+		$window   = $this->entity('w2', self::SCHEMAS['maintenanceWindow'], ['module' => 'x', 'recipientsResolvedAt' => '2026-09-29T10:00:00+00:00'], self::SUPPLIER, 'jan');
 
 		$this->windows['w2'] = $window;
 

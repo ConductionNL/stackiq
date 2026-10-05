@@ -128,54 +128,49 @@ class MaintenanceRecipientService {
 	 * makes cannot start it again.
 	 *
 	 * Only the supplier of the product, or a catalogue administrator, may have
-	 * its owners notified: a window from any other organisation is refused and
-	 * nothing is written, so a supplier cannot reach a competitor's customers.
+	 * its owners notified. A window from any other organisation is refused,
+	 * whether or not it carries a resolved time: its `notifyUserIds` is
+	 * written back empty, so neither the announcement nor the reminder a day
+	 * before (`maintenance-starts-tomorrow`) reaches anyone it names.
 	 *
 	 * @param ObjectEntityInterface  $window The maintenance window.
 	 * @param DateTimeImmutable|null $now    The moment of resolution (defaults to now).
 	 *
-	 * @return array<int, string>|null The user ids written, or null when nothing was written.
+	 * @return array<int, string>|null The user ids written, or null when no owners were recorded.
 	 *
 	 * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md#requirement-req-msr-003-the-owners-of-every-usage-are-notified
 	 */
 	public function recordRecipients(ObjectEntityInterface $window, ?DateTimeImmutable $now=null): ?array {
-		$data = $window->getObject();
-		if (empty($data['recipientsResolvedAt']) === false) {
-			return null;
-		}
-
-		$moduleId = self::referenceId(value: ($data['module'] ?? null));
+		$data          = $window->getObject();
+		$moduleId      = self::referenceId(value: ($data['module'] ?? null));
 		$objectService = $this->getObjectService();
 		if ($moduleId === null || $objectService === null) {
 			return null;
 		}
 
-		if ($this->announcers->mayAnnounce(objectService: $objectService, window: $window, moduleId: $moduleId) === false) {
-			$this->logger->warning(
-				'MaintenanceRecipientService: the window is not from the supplier of the product; no owners are notified',
-				['uuid' => $window->getUuid(), 'module' => $moduleId, 'organisation' => $window->getOrganisation()]
-			);
-			return null;
-		}
-
-		$userIds = $this->ownerUserIds(objectService: $objectService, moduleId: $moduleId);
-
-		$data['notifyUserIds']        = $userIds;
-		$data['recipientsResolvedAt'] = ($now ?? new DateTimeImmutable())->format(DateTimeInterface::ATOM);
-
 		try {
-			$objectService->saveObject(
-				object: $data,
-				extend: [],
-				register: $window->getRegister(),
-				schema: $window->getSchema(),
-				uuid: $window->getUuid(),
-				_rbac: false,
-				_multitenancy: false
-			);
+			if ($this->announcers->mayAnnounce(objectService: $objectService, window: $window, moduleId: $moduleId) === false) {
+				$this->logger->warning(
+					'MaintenanceRecipientService: the window is not from the supplier of the product; no owners are notified',
+					['uuid' => $window->getUuid(), 'module' => $moduleId, 'organisation' => $window->getOrganisation()]
+				);
+				$data['notifyUserIds'] = [];
+				$this->saveWindow(objectService: $objectService, window: $window, data: $data);
+				return null;
+			}
+
+			if (empty($data['recipientsResolvedAt']) === false) {
+				return null;
+			}
+
+			$userIds = $this->ownerUserIds(objectService: $objectService, moduleId: $moduleId);
+
+			$data['notifyUserIds']        = $userIds;
+			$data['recipientsResolvedAt'] = ($now ?? new DateTimeImmutable())->format(DateTimeInterface::ATOM);
+			$this->saveWindow(objectService: $objectService, window: $window, data: $data);
 		} catch (\Throwable $e) {
 			$this->logger->error(
-				'MaintenanceRecipientService: could not record the owners to notify',
+				'MaintenanceRecipientService: could not check or record the owners to notify; nothing was written',
 				['uuid' => $window->getUuid(), 'error' => $e->getMessage()]
 			);
 			return null;
@@ -183,6 +178,30 @@ class MaintenanceRecipientService {
 
 		return $userIds;
 	}//end recordRecipients()
+
+	/**
+	 * Write a maintenance window back, without RBAC: the two notification fields
+	 * are writable only by the catalogue's administrators over the API.
+	 *
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
+	 * @param ObjectEntityInterface  $window        The window.
+	 * @param array<string, mixed>   $data          Its data to store.
+	 *
+	 * @return void
+	 *
+	 * @throws \Throwable When OpenRegister refuses or fails the write.
+	 */
+	private function saveWindow(ObjectServiceInterface $objectService, ObjectEntityInterface $window, array $data): void {
+		$objectService->saveObject(
+			object: $data,
+			extend: [],
+			register: $window->getRegister(),
+			schema: $window->getSchema(),
+			uuid: $window->getUuid(),
+			_rbac: false,
+			_multitenancy: false
+		);
+	}//end saveWindow()
 
 	/**
 	 * The Nextcloud user ids of the owners of every usage of a product.
