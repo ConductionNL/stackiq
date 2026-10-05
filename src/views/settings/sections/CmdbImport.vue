@@ -119,7 +119,7 @@
 					{{
 						t(
 							'stackiq',
-							'When on, a re-import overwrites the application\'s name, descriptions, application type, hosting model, BBN level, source fields and supplier, and the usage\'s status, phase-out date and business owner, with the values from the export. The usage\'s TIME classification and internal note are only set when the usage is created or the field is empty, so changes made in stackiq stay.',
+							"When on, a re-import overwrites the application's name, descriptions, application type, hosting model, BBN level, source fields and supplier, and the usage's status, phase-out date and business owner, with the values from the export. The usage's TIME classification and internal note are only set when the usage is created or the field is empty, so changes made in stackiq stay.",
 						)
 					}}
 				</p>
@@ -130,7 +130,9 @@
 					:disabled="importing"
 					aria-describedby="cmdb-import-publish-help"
 					data-testid="cmdb-import-publish">
-					{{ t('stackiq', 'Publish the applications this import creates') }}
+					{{
+						t('stackiq', 'Publish the applications this import creates')
+					}}
 				</NcCheckboxRadioSwitch>
 				<p id="cmdb-import-publish-help" class="cmdb-import__help">
 					{{
@@ -579,19 +581,27 @@ export default {
 		 */
 		summaryTiles() {
 			const summary = this.report?.summary || {}
-			return [
-				{ key: 'rowsRead', label: t('stackiq', 'Rows read') },
-				{ key: 'created', label: t('stackiq', 'Created') },
-				{ key: 'updated', label: t('stackiq', 'Updated') },
-				{ key: 'unchanged', label: t('stackiq', 'Unchanged') },
-				{ key: 'skipped', label: t('stackiq', 'Skipped') },
-				{ key: 'failed', label: t('stackiq', 'Failed') },
-				{ key: 'warnings', label: t('stackiq', 'Warnings') },
-				{ key: 'unpublished', label: t('stackiq', 'Created unpublished') },
-			]
-				.map((tile) => ({ ...tile, value: Number(summary[tile.key]) || 0 }))
-				// Only an import run with publishing off leaves modules unpublished.
-				.filter((tile) => tile.key !== 'unpublished' || tile.value > 0)
+			return (
+				[
+					{ key: 'rowsRead', label: t('stackiq', 'Rows read') },
+					{ key: 'created', label: t('stackiq', 'Created') },
+					{ key: 'updated', label: t('stackiq', 'Updated') },
+					{ key: 'unchanged', label: t('stackiq', 'Unchanged') },
+					{ key: 'skipped', label: t('stackiq', 'Skipped') },
+					{ key: 'failed', label: t('stackiq', 'Failed') },
+					{ key: 'warnings', label: t('stackiq', 'Warnings') },
+					{
+						key: 'unpublished',
+						label: t('stackiq', 'Created unpublished'),
+					},
+				]
+					.map((tile) => ({
+						...tile,
+						value: Number(summary[tile.key]) || 0,
+					}))
+					// Only an import run with publishing off leaves modules unpublished.
+					.filter((tile) => tile.key !== 'unpublished' || tile.value > 0)
+			)
 		},
 
 		/**

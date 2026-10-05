@@ -497,7 +497,10 @@ function workbookTooLargeTitle(details) {
 		return t(
 			'stackiq',
 			'Unpacked, the part {part} of the workbook is larger than {size}, the most the import reads of one part.',
-			{ part: String(details.part ?? ''), size: formatMegabytes(details.maxPartBytes) },
+			{
+				part: String(details.part ?? ''),
+				size: formatMegabytes(details.maxPartBytes),
+			},
 			AS_TEXT,
 		)
 	}

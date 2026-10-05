@@ -111,13 +111,42 @@ describe('checkFile', () => {
 
 describe('the municipality chooser', () => {
 	const organisations = [
-		{ id: 'aaaaaaaa-1111', name: 'Gemeente Bergen', type: 'Municipality', status: 'Active' },
-		{ id: 'bbbbbbbb-2222', name: 'gemeente  bergen', type: 'Municipality', status: 'Active' },
-		{ id: 'cccccccc-3333', name: 'Gemeente Oud', type: 'Municipality', status: 'merged' },
-		{ id: 'dddddddd-4444', name: 'Gemeente Slaap', type: 'Municipality', status: 'Inactive' },
+		{
+			id: 'aaaaaaaa-1111',
+			name: 'Gemeente Bergen',
+			type: 'Municipality',
+			status: 'Active',
+		},
+		{
+			id: 'bbbbbbbb-2222',
+			name: 'gemeente  bergen',
+			type: 'Municipality',
+			status: 'Active',
+		},
+		{
+			id: 'cccccccc-3333',
+			name: 'Gemeente Oud',
+			type: 'Municipality',
+			status: 'merged',
+		},
+		{
+			id: 'dddddddd-4444',
+			name: 'Gemeente Slaap',
+			type: 'Municipality',
+			status: 'Inactive',
+		},
 		{ id: 'eeeeeeee-5555', name: 'Zonder type' },
-		{ id: 'ffffffff-6666', name: 'Fabfrikant', type: 'Supplier', status: 'Active' },
-		{ id: '99999999-7777', name: 'Gemeente Voorbeeldstad', type: 'Municipality' },
+		{
+			id: 'ffffffff-6666',
+			name: 'Fabfrikant',
+			type: 'Supplier',
+			status: 'Active',
+		},
+		{
+			id: '99999999-7777',
+			name: 'Gemeente Voorbeeldstad',
+			type: 'Municipality',
+		},
 	]
 
 	it('offers only live municipalities, and tells same-named ones apart', () => {
@@ -356,7 +385,10 @@ describe('errorText', () => {
 		expect(
 			errorText({
 				error: 'WORKBOOK_TOO_LARGE',
-				details: { maxPartBytes: 10 * 1024 * 1024, part: 'xl/sharedStrings.xml' },
+				details: {
+					maxPartBytes: 10 * 1024 * 1024,
+					part: 'xl/sharedStrings.xml',
+				},
 			}).title,
 		).toBe(
 			'Unpacked, the part xl/sharedStrings.xml of the workbook is larger than 10 MB, the most the import reads of one part.',
@@ -386,9 +418,9 @@ describe('errorText', () => {
 	})
 
 	it('asks to wait for the import that is running', () => {
-		expect(errorText({ error: 'IMPORT_IN_PROGRESS', details: {} }).hint).toContain(
-			'Only one import runs at a time.',
-		)
+		expect(
+			errorText({ error: 'IMPORT_IN_PROGRESS', details: {} }).hint,
+		).toContain('Only one import runs at a time.')
 	})
 
 	it('counts the municipalities with the typed name and asks to pick one', () => {

@@ -49,15 +49,41 @@ jest.mock(
 )
 // The icon SFCs live in node_modules, which jest does not transform.
 jest.mock('vue-material-design-icons/Close.vue', () => ({ render: () => null }))
-jest.mock('vue-material-design-icons/DatabaseImport.vue', () => ({ render: () => null }))
-jest.mock('vue-material-design-icons/TrayArrowUp.vue', () => ({ render: () => null }))
-jest.mock('../../../components/AlwaysVisibleSection.vue', () => ({ render: () => null }))
+jest.mock('vue-material-design-icons/DatabaseImport.vue', () => ({
+	render: () => null,
+}))
+jest.mock('vue-material-design-icons/TrayArrowUp.vue', () => ({
+	render: () => null,
+}))
+jest.mock('../../../components/AlwaysVisibleSection.vue', () => ({
+	render: () => null,
+}))
 
 const ORGANISATIONS = [
-	{ id: 'aaaaaaaa-1111', name: 'Gemeente Bergen', type: 'Municipality', status: 'Active' },
-	{ id: 'bbbbbbbb-2222', name: 'Gemeente Bergen', type: 'Municipality', status: 'Active' },
-	{ id: 'cccccccc-3333', name: 'Gemeente Oud', type: 'Municipality', status: 'merged' },
-	{ id: 'dddddddd-4444', name: 'Gemeente Slaap', type: 'Municipality', status: 'Inactive' },
+	{
+		id: 'aaaaaaaa-1111',
+		name: 'Gemeente Bergen',
+		type: 'Municipality',
+		status: 'Active',
+	},
+	{
+		id: 'bbbbbbbb-2222',
+		name: 'Gemeente Bergen',
+		type: 'Municipality',
+		status: 'Active',
+	},
+	{
+		id: 'cccccccc-3333',
+		name: 'Gemeente Oud',
+		type: 'Municipality',
+		status: 'merged',
+	},
+	{
+		id: 'dddddddd-4444',
+		name: 'Gemeente Slaap',
+		type: 'Municipality',
+		status: 'Inactive',
+	},
 ]
 
 /**
@@ -88,7 +114,9 @@ describe('CmdbImport municipality chooser', () => {
 
 		const ids = wrapper.vm.municipalityOptions.map((option) => option.id)
 		expect(ids).toEqual(['aaaaaaaa-1111', 'bbbbbbbb-2222'])
-		expect(new Set(wrapper.vm.municipalityOptions.map((o) => o.label)).size).toBe(2)
+		expect(
+			new Set(wrapper.vm.municipalityOptions.map((o) => o.label)).size,
+		).toBe(2)
 	})
 
 	it('posts a typed name that two municipalities share as municipalityName and shows MUNICIPALITY_AMBIGUOUS', async () => {
@@ -99,13 +127,15 @@ describe('CmdbImport municipality chooser', () => {
 				data: {
 					success: false,
 					error: 'MUNICIPALITY_AMBIGUOUS',
-					message: 'Several municipalities have this name; choose one from the list.',
+					message:
+						'Several municipalities have this name; choose one from the list.',
 					details: { matches: ['aaaaaaaa-1111', 'bbbbbbbb-2222'] },
 				},
 			},
 		})
 
-		wrapper.vm.municipality = wrapper.vm.createMunicipalityOption('gemeente bergen')
+		wrapper.vm.municipality =
+			wrapper.vm.createMunicipalityOption('gemeente bergen')
 		wrapper.vm.selectedFile = new File(['x'], 'export.xlsx')
 		await wrapper.vm.startImport()
 
