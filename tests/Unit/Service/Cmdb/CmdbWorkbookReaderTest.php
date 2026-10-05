@@ -141,21 +141,62 @@ class CmdbWorkbookReaderTest extends TestCase {
 	}//end testAFormulaYieldsItsCachedValue()
 
 	/**
-	 * The reader source never calls the calculation engine nor an HTTP client.
+	 * A formula that would fetch a URL yields its cached value, and nothing connects to that URL.
+	 *
+	 * A local listener stands in for the remote host: had the reader evaluated
+	 * WEBSERVICE(), the listener would hold a pending connection.
 	 *
 	 * @return void
 	 */
 	public function testTheReaderNeverEvaluatesOrFetches(): void {
-		$source = (string)file_get_contents(CmdbTestSupport::appRoot() . '/lib/Service/Cmdb/CmdbWorkbookReader.php');
-		$code = (string)preg_replace('#/\*.*?\*/|//[^\n]*#s', '', $source);
+		$this->requireSpreadsheet();
+		$server = stream_socket_server('tcp://127.0.0.1:0', $errorCode, $errorMessage);
+		$this->assertNotFalse($server, 'a local listener: ' . $errorMessage);
+		$address = (string)stream_socket_get_name($server, false);
+		$path = CmdbTestSupport::buildWorkbook(
+			sheets: [
+				'Beheerde Applicaties CMDB' => [
+					['APPID', 'Applicatie Naam', 'Roepnaam'],
+					[1, ['f' => 'WEBSERVICE("http://' . $address . '/naam")', 'v' => 'Gecachte naam'], ['f' => '1+1', 'v' => 'Niet berekend']],
+				],
+			]
+		);
 
-		$this->assertStringNotContainsString('getCalculatedValue', $code);
-		$this->assertStringNotContainsString('toArray', $code);
-		$this->assertStringNotContainsString('Calculation', $code);
-		$this->assertDoesNotMatchRegularExpression('/Http|Guzzle|curl_|file_get_contents\(\s*\$url/i', $code);
-		$this->assertStringContainsString('getOldCalculatedValue', $code);
-		$this->assertStringContainsString('setReadDataOnly(true)', $code);
+		try {
+			$rows = (new CmdbWorkbookReader())->read(path: $path, profile: $this->profile())['rows'];
+			$this->assertSame('Gecachte naam', $rows[0]['cells']['Applicatie Naam']);
+			$this->assertSame('Niet berekend', $rows[0]['cells']['Roepnaam'], 'the cached value, not 2');
+
+			stream_set_blocking($server, false);
+			$this->assertFalse(@stream_socket_accept($server, 0), 'nothing connected to the formula\'s URL');
+		} finally {
+			fclose($server);
+			unlink($path);
+		}
 	}//end testTheReaderNeverEvaluatesOrFetches()
+
+	/**
+	 * A sheet with a DOCTYPE (the shape of an entity-expansion or XXE attack) is refused as NOT_XLSX.
+	 *
+	 * @return void
+	 */
+	public function testADoctypeIsRefused(): void {
+		$this->requireSpreadsheet();
+		$path = CmdbTestSupport::buildWorkbook(
+			sheets: ['Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een']]],
+			prologue: '<!DOCTYPE worksheet [<!ENTITY lol "lol"><!ENTITY lol2 "&lol;&lol;&lol;&lol;">]>'
+		);
+
+		try {
+			(new CmdbWorkbookReader())->read(path: $path, profile: $this->profile());
+			$this->fail('NOT_XLSX expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('NOT_XLSX', $e->getErrorCode());
+			$this->assertSame(400, $e->getHttpStatus());
+		} finally {
+			unlink($path);
+		}
+	}//end testADoctypeIsRefused()
 
 	/**
 	 * Shuffled columns and decorated headers map to the same rows.

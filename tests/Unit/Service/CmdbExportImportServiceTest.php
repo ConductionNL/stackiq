@@ -1508,12 +1508,44 @@ class CmdbExportImportServiceTest extends TestCase {
 			$this->assertSame([], array_diff(array_keys($person), ['id', 'contactsUid', 'organization', 'role']));
 		}
 
-		// OrganizationSyncService::performUserSync() selects contact persons with a username.
-		$sync = (string)file_get_contents(CmdbTestSupport::appRoot() . '/lib/Service/OrganizationSyncService.php');
-		$this->assertStringContainsString('o.username IS NOT NULL', $sync, 'the selection changed: re-check that imported contact persons stay out of it');
-		// ContactpersoonService::processContactpersoon() provisions only from an e-mail on the object.
-		$listener = (string)file_get_contents(CmdbTestSupport::appRoot() . '/lib/Service/ContactpersoonService.php');
-		$this->assertStringContainsString("\$email = (\$contactData['email'] ?? \$contactData['e-mailadres'] ?? '');", $listener);
+		// No username key, so OrganizationSyncService::performUserSync(), which selects contact persons
+		// with a username, never picks one up; the key list above pins that.
+		// ContactpersoonService provisions a user from the e-mail on the object; given exactly what the
+		// import stored, it stops before it ever looks up or creates a user.
+		$container = $this->createMock(ContainerInterface::class);
+		$container->expects($this->never())->method('get');
+		$listener = new \OCA\Stackiq\Service\ContactpersoonService(
+			contactPersonHandler: $this->createMock(\OCA\Stackiq\Service\Stackiq\ContactPersonHandler::class),
+			groupHandler: $this->createMock(\OCA\Stackiq\Service\Stackiq\GroupHandler::class),
+			hierarchyHandler: $this->createMock(\OCA\Stackiq\Service\Stackiq\HierarchyHandler::class),
+			logger: $this->logger(),
+			container: $container,
+			appManager: $this->createMock(\OCP\App\IAppManager::class),
+			config: $this->createMock(\OCP\IAppConfig::class),
+			settingsService: $this->createMock(SettingsService::class)
+		);
+		foreach ($people as $person) {
+			$object = new class($person) {
+				/**
+				 * Constructor.
+				 *
+				 * @param array<string, mixed> $data The stored contact person.
+				 */
+				public function __construct(
+					private array $data,
+				) {
+				}
+
+				public function getId(): string {
+					return (string)$this->data['id'];
+				}
+
+				public function getObject(): array {
+					return $this->data;
+				}
+			};
+			$this->assertFalse($listener->processContactpersoon(contactPersonObject: $object), 'no user is provisioned for an imported contact person');
+		}
 	}//end testAnImportedContactPersonIsNeverAUser()
 
 	/**
