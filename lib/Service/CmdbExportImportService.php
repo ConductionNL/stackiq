@@ -178,6 +178,13 @@ class CmdbExportImportService {
 	private array $seenKeys = [];
 
 	/**
+	 * Per APPID match key, the sheet that wins when the APPID is on more than one sheet.
+	 *
+	 * @var array<string, string>
+	 */
+	private array $winningSheets = [];
+
+	/**
 	 * Contact UIDs by e-mail or display name, per run.
 	 *
 	 * @var array<string, string|null>
@@ -395,7 +402,7 @@ class CmdbExportImportService {
 		$municipality = $this->resolveMunicipality(options: $options);
 
 		$operationId = $this->operationIdFrom(options: $options);
-		$rows = $workbook['rows'];
+		$rows = array_values($workbook['rows']);
 		$report = new CmdbImportReport(operationId: $operationId, rowsRead: count($rows));
 		$report->setMunicipality(uuid: $municipality['uuid'], name: $municipality['name'], created: $municipality['created']);
 		$report->addImportWarnings(warnings: $this->translateImportWarnings(warnings: $workbook['importWarnings']));
@@ -420,6 +427,7 @@ class CmdbExportImportService {
 		);
 		$this->progressTracker->setPhase(phase: 'processing_elements', data: ['total_items' => count($rows)]);
 
+		$this->winningSheets = $this->winningSheets(rows: $rows);
 		$updateExisting = (($options['updateExisting'] ?? true) !== false);
 		try {
 			foreach ($rows as $index => $row) {
@@ -498,6 +506,10 @@ class CmdbExportImportService {
 		}
 
 		$matchKey = self::matchKey(appId: $appId);
+		if ($this->skipForWinningSheet(report: $report, entry: $entry, matchKey: $matchKey, warnings: $warnings) === true) {
+			return;
+		}
+
 		$skipReason = $this->skipReason(appId: $appId, matchKey: $matchKey);
 		if ($skipReason !== null) {
 			$this->addRow(report: $report, entry: $entry, outcome: CmdbImportReport::SKIPPED, reasons: [$skipReason], warnings: $warnings);
@@ -710,10 +722,72 @@ class CmdbExportImportService {
 	}//end addRow()
 
 	/**
+	 * Skip a row whose APPID another sheet wins, with a warning naming the APPID and that sheet.
+	 *
+	 * @param CmdbImportReport $report The report.
+	 * @param array{sheet: string, row: int, appId: string, name: string} $entry Where the row is.
+	 * @param string $matchKey The APPID's match key.
+	 * @param array<int, string> $warnings Row warnings so far.
+	 *
+	 * @return bool Whether the row was skipped.
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 */
+	private function skipForWinningSheet(CmdbImportReport $report, array $entry, string $matchKey, array $warnings): bool {
+		$winner = ($this->winningSheets[$matchKey] ?? $entry['sheet']);
+		if ($entry['appId'] === '' || $winner === $entry['sheet']) {
+			return false;
+		}
+
+		$warnings[] = $this->l10n->t('APPID %1$s is also on sheet "%2$s", which wins; this row is not imported', [$entry['appId'], $winner]);
+		$this->addRow(
+			report: $report,
+			entry: $entry,
+			outcome: CmdbImportReport::SKIPPED,
+			reasons: [$this->l10n->t('duplicate %s in file', [$this->profile->keyColumn()])],
+			warnings: $warnings
+		);
+
+		return true;
+	}//end skipForWinningSheet()
+
+	/**
+	 * Per APPID, the sheet whose row is imported when the APPID is on more than one sheet.
+	 *
+	 * The profile ranks the sheets ("Beheerde Applicaties CMDB" before
+	 * "Onbeh Applicaties CMDB"): an application whose maintenance is arranged
+	 * is imported as such, whichever sheet the export lists first.
+	 *
+	 * @param array<int, array{sheet: string, row: int, cells: array<string, mixed>}> $rows The reader rows.
+	 *
+	 * @return array<string, string> APPID match key => sheet name.
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 */
+	private function winningSheets(array $rows): array {
+		$key = $this->profile->keyColumn();
+		$winners = [];
+		foreach ($rows as $row) {
+			$values = $this->normaliser->normalise(cells: [$key => ($row['cells'][$key] ?? null)], dateColumns: [], idColumns: $this->profile->idColumns());
+			$matchKey = self::matchKey(appId: ($values[$key] ?? ''));
+			if ($matchKey === '') {
+				continue;
+			}
+
+			$current = ($winners[$matchKey] ?? null);
+			if ($current === null || $this->profile->sheetRank(sheetName: $row['sheet']) < $this->profile->sheetRank(sheetName: $current)) {
+				$winners[$matchKey] = $row['sheet'];
+			}
+		}
+
+		return $winners;
+	}//end winningSheets()
+
+	/**
 	 * Why a row is skipped before mapping, or null when it is imported.
 	 *
-	 * An APPID an earlier row of the same upload imported, on either sheet,
-	 * is a duplicate. APPIDs compare by their match key, so `APP-1` and
+	 * An APPID an earlier row of the same sheet imported is a duplicate; across
+	 * sheets winningSheets() decides. APPIDs compare by their match key, so `APP-1` and
 	 * `app-1` are the same application.
 	 *
 	 * @param string $appId The APPID.
@@ -1557,6 +1631,7 @@ class CmdbExportImportService {
 		$this->coordinates = null;
 		$this->suppliers = null;
 		$this->seenKeys = [];
+		$this->winningSheets = [];
 		$this->contactUids = [];
 		$this->contactPersons = [];
 	}//end resetRun()

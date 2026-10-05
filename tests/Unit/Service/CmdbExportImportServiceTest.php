@@ -1579,6 +1579,27 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testAppIdsMatchWhateverTheirCaseOrTrailingSpace()
 
 	/**
+	 * An APPID on both CMDB sheets is imported from "Beheerde Applicaties CMDB", whichever sheet comes first.
+	 *
+	 * @return void
+	 */
+	public function testTheBeheerdeRowWinsOverTheOnbehRow(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$rows = [
+			$this->row(appId: '8', cells: ['Applicatie Naam' => 'Onbeheerd'], row: 2, sheet: 'Onbeh Applicaties CMDB'),
+			$this->row(appId: '8', cells: ['Applicatie Naam' => 'Beheerd'], row: 5, sheet: 'Beheerde Applicaties CMDB'),
+		];
+
+		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(['skipped', 'created'], array_column($report['rows'], 'outcome'));
+		$this->assertSame(['duplicate APPID in file'], $report['rows'][0]['reasons']);
+		$this->assertSame(['APPID 8 is also on sheet "Beheerde Applicaties CMDB", which wins; this row is not imported'], $report['rows'][0]['warnings']);
+		$this->assertSame('Beheerd', $this->objects(self::MODULE)[0]['name']);
+		$this->assertStringStartsWith('Beheer geregeld: ja', $this->objects(self::USAGE)[0]['interneAnnotation']);
+	}//end testTheBeheerdeRowWinsOverTheOnbehRow()
+
+	/**
 	 * A row skipped for a missing name does not take its APPID: a later row with that APPID is imported.
 	 *
 	 * @return void

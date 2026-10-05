@@ -17,6 +17,7 @@
       "constants": { "Beheer": "Beheer geregeld: ja" }
     }
   ],
+  "sheetPrecedence": ["Beheerde Applicaties CMDB", "Onbeh Applicaties CMDB"],
   "keyColumn": "APPID",
   "nameColumn": "Applicatie Naam",
   "requiredColumns": ["APPID", "Applicatie Naam"],

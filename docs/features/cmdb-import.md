@@ -184,9 +184,11 @@ colliding.
 
 Rows are **skipped** when the APPID is empty (`missing APPID`), when the
 Applicatie Naam is empty (`missing Applicatie Naam`), when an APPID appears a
-second time in the same upload, also across the two sheets (`duplicate APPID
-in file`; the first occurrence is imported), or, with **Update existing
-records** off, when the application already exists (`exists`).
+second time in the same upload (`duplicate APPID in file`), or, with **Update
+existing records** off, when the application already exists (`exists`). On
+one sheet the first occurrence is imported. When an APPID is on both sheets,
+the `Beheerde Applicaties CMDB` row is imported and the `Onbeh Applicaties
+CMDB` row is skipped, with a warning naming the APPID.
 
 An application that moves from `Onbeh Applicaties CMDB` to `Beheerde
 Applicaties CMDB` keeps its module and usage (same APPID); its internal note

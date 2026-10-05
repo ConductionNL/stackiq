@@ -258,6 +258,28 @@ class CmdbImportProfile {
 	}//end sheetNames()
 
 	/**
+	 * The rank of a sheet when an APPID is on more than one: lower wins.
+	 *
+	 * The profile's `sheetPrecedence` lists the sheets, the winner first; a
+	 * sheet it does not list ranks after every listed one, in profile order.
+	 *
+	 * @param string $sheetName The sheet name.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+	 */
+	public function sheetRank(string $sheetName): int {
+		$order = array_values(array_unique(array_merge($this->stringList(key: 'sheetPrecedence'), $this->sheetNames())));
+		$rank = array_search($sheetName, $order, true);
+		if ($rank === false) {
+			return count($order);
+		}
+
+		return (int)$rank;
+	}//end sheetRank()
+
+	/**
 	 * The constants a sheet adds to each of its rows, as column => value.
 	 *
 	 * A constant is mapped like a column (the usage pack reads "Beheer"), but
