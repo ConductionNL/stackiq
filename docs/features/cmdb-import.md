@@ -51,8 +51,6 @@ page in stackiq.
 
 ## Steps
 
-<!-- screenshot: empty CMDB import section in stackiq admin settings -->
-
 1. Open **Administration settings → Stackiq** and scroll to **CMDB import**.
 2. **Municipality.** Pick an existing organisation of type Municipality from
    the list, or type the name of a new one and press Enter. A typed name that
@@ -69,8 +67,6 @@ page in stackiq.
    **Cancel import** stops the import before the next row; rows that were
    already processed stay imported.
 
-<!-- screenshot: a running import with the progress bar and the Cancel import button -->
-
 When the import finishes, the section shows:
 
 - the **summary**: rows read, created, updated, unchanged, skipped, failed
@@ -80,8 +76,6 @@ When the import finishes, the section shows:
 - the **rows** table: sheet, row number, APPID, application, outcome,
   and the reasons and warnings for that row. Filter it with **Show rows with
   outcome**. The application name links to the module in stackiq.
-
-<!-- screenshot: a finished report with the summary and the rows table (sanitised fixture only) -->
 
 The municipality stays selected after an import, so a second import goes to
 the same organisation.

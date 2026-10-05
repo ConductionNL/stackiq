@@ -94,6 +94,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
   - GIVEN Newman WHEN run against the rig THEN 403 for a non-admin and for a `software-catalog-admins` member, 412 without requesttoken, 413 for an oversized file, 422 `MISSING_RECORDS_UNSUPPORTED`, and 200 with the report for the fixture
 - [x] Implement
 - [ ] Test
+  - Status: the PHPUnit controller tests pass. The Newman folder "12 - CMDB import" has not been run against the current revision, so the Newman criterion above is open.
 
 ### Task 9: CMDB import section in admin settings, l10n and Playwright e2e
 - **spec_ref**: `SPEC#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014` (cmdb-export-import#REQ-CMDB-014, #REQ-CMDB-003, #REQ-CMDB-011)
@@ -106,6 +107,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
   - The e2e file references every `@e2e tests/e2e/spec-coverage/cmdb-import.spec.ts` scenario in the spec (hydra gate e2e-coverage)
 - [x] Implement
 - [ ] Test
+  - Status: the jest tests of `src/utils/cmdbImport.js` pass. The Playwright file has not been run against the current revision (it now also covers the typed municipality, cancel and the refusal of a user without the stackiq admin settings).
 
 ### Task 10: Administrator documentation with screenshots
 - **spec_ref**: `SPEC#purpose`
@@ -115,6 +117,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
   - GIVEN the prerequisites section THEN it explains the OpenCatalogi catalogue (registers `stackiq`, schema `module`) and the Portaliq account claim `stackiq.organisationId`, needed to see the data there
   - GIVEN Playwright MCP on the rig WHEN screenshots are taken of the empty section, a running import and a finished report (sanitised fixture only) THEN they are committed under `docs/images/`
 - [ ] Implement
+  - Status: the page text (first two criteria) is written. The three screenshots are not taken yet, because they need a running instance; the page carries no placeholder for them until they exist.
 - [ ] Test (screenshots reviewed: no data other than the sanitised fixture visible)
 
 ### Task 11: Rework to the CMDB sheets (decisions of 2026-10-01)
