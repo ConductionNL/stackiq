@@ -51,7 +51,7 @@ Nextcloud OCP interfaces used: `OCP\IRequest` (multipart upload), `OCP\IUserSess
 
 ### Requirement: The workbook SHALL be read as stored data, without evaluating formulas or following links (REQ-CMDB-002)
 
-The reader SHALL open the workbook with PhpSpreadsheet's Xlsx reader in read-data-only mode, SHALL load only the sheets named in the import profile, and SHALL read each cell's stored value. For a formula cell it SHALL use the value cached in the file and SHALL NOT evaluate the formula. It SHALL NOT contact external data connections, linked workbooks or URLs found in the file. A formula cell without a cached value SHALL be read as empty and SHALL add a row warning naming the column; it SHALL NOT fail the row or the import. A formula whose cached value is the number 0 (Excel's result for a reference to an empty cell) SHALL be read as empty. It SHALL stop with 422 `TOO_MANY_ROWS` when a source sheet holds more data rows than the profile's limit (default 10,000).
+The reader SHALL open the workbook with PhpSpreadsheet's Xlsx reader in read-data-only mode, SHALL load only the sheets named in the import profile, and SHALL read each cell's stored value. For a formula cell it SHALL use the value cached in the file and SHALL NOT evaluate the formula. It SHALL NOT contact external data connections, linked workbooks or URLs found in the file. A formula cell without a cached value SHALL be read as empty and SHALL add a row warning naming the column; it SHALL NOT fail the row or the import. A formula whose cached value is the number 0 (Excel's result for a reference to an empty cell) SHALL be read as empty. It SHALL stop with 422 `TOO_MANY_ROWS` when a source sheet holds more data rows than the profile's limit (default 10,000). Before PhpSpreadsheet parses any sheet, the reader SHALL add up the unpacked sizes of the package's parts and SHALL stop with 413 `WORKBOOK_TOO_LARGE`, with `details.maxUncompressedBytes`, when they exceed the profile's `maxUncompressedBytes` (default 50 MB), so a small file that unpacks to far more cannot exhaust the server's memory.
 
 #### Scenario: A formula cell yields its cached value and is not evaluated
 @e2e exclude Reader behaviour; tests/Unit/Service/Cmdb/CmdbWorkbookReaderTest.php reads a fixture whose source sheet has a formula cell and asserts the cached value is returned and the calculation engine is never invoked.
@@ -76,6 +76,14 @@ The reader SHALL open the workbook with PhpSpreadsheet's Xlsx reader in read-dat
 - **WHEN** the workbook is read
 - **THEN** no network request SHALL be made
 - **AND** the source sheets SHALL be read normally
+
+#### Scenario: A workbook that unpacks beyond the limit is refused before it is parsed
+@e2e exclude A browser upload adds nothing over the reader test; tests/Unit/Service/Cmdb/CmdbWorkbookReaderTest.php testAWorkbookThatUnpacksBeyondTheLimitIsRefusedBeforeParsing builds a package under the limit whose sheet unpacks beyond it and asserts 413 WORKBOOK_TOO_LARGE with the limit, before PhpSpreadsheet is reached, and tests/Unit/Controller/CmdbImportControllerTest.php asserts the status and the translated message.
+
+- **GIVEN** an xlsx package of a few kilobytes whose sheet XML unpacks to more than `maxUncompressedBytes`
+- **WHEN** a Nextcloud admin uploads it
+- **THEN** the endpoint SHALL answer 413 with error `WORKBOOK_TOO_LARGE` and `details.maxUncompressedBytes` set to the limit
+- **AND** no sheet SHALL be parsed and no object SHALL be written
 
 ### Requirement: Columns SHALL be resolved by header name, and a missing required column SHALL stop the import with 422 (REQ-CMDB-003)
 
@@ -106,7 +114,7 @@ The source sheets SHALL be the CMDB sheets "Onbeh Applicaties CMDB" and "Beheerd
 
 ### Requirement: Every import SHALL have exactly one consuming municipality, chosen by the admin (REQ-CMDB-004)
 
-The request SHALL carry either `municipalityUuid`, the uuid of an existing stackiq `organization` of type `Municipality`, or `municipalityName`, a name for a new one. With a name, the service SHALL reuse an existing organisation of type `Municipality` with the same normalised name, or create one through the municipality pack (type `Municipality`, status `Active`). It SHALL answer 422 `MUNICIPALITY_REQUIRED` when neither is given, and 422 `MUNICIPALITY_INVALID` when the uuid does not resolve to an organisation of type `Municipality`. Every `usage` and `contactPerson` the import writes SHALL reference that organisation.
+The request SHALL carry either `municipalityUuid`, the uuid of an existing stackiq `organization` of type `Municipality`, or `municipalityName`, a name for a new one. With a name, the service SHALL reuse the one live organisation of type `Municipality` (not `merged`, not `Inactive`) with the same normalised name, or, when there is none, create one through the municipality pack (type `Municipality`, status `Active`) and add an import-level warning saying so. When more than one live organisation of type `Municipality` has that normalised name, it SHALL NOT guess: it SHALL answer 422 `MUNICIPALITY_AMBIGUOUS` with their uuids in `details.matches`, and SHALL write nothing. It SHALL answer 422 `MUNICIPALITY_REQUIRED` when neither is given, and 422 `MUNICIPALITY_INVALID` when the uuid does not resolve to an organisation of type `Municipality`. Every `usage` and `contactPerson` the import writes SHALL reference that organisation.
 
 #### Scenario: The admin picks an existing municipality
 @e2e tests/e2e/spec-coverage/cmdb-import.spec.ts
@@ -130,6 +138,15 @@ The request SHALL carry either `municipalityUuid`, the uuid of an existing stack
 - **WHEN** a Nextcloud admin posts it with neither `municipalityUuid` nor `municipalityName`
 - **THEN** the endpoint SHALL answer 422 with error `MUNICIPALITY_REQUIRED`
 - **AND** no object SHALL be written
+
+#### Scenario: A name that several municipalities share is refused
+@e2e exclude Needs two municipalities with the same name in the register; tests/Unit/Service/CmdbExportImportServiceTest.php testAnAmbiguousMunicipalityNameIsRefused seeds "Gemeente Bergen" and "gemeente  bergen" and asserts 422 MUNICIPALITY_AMBIGUOUS naming both uuids with no save, and tests/Unit/Controller/CmdbImportControllerTest.php asserts the status and the translated message.
+
+- **GIVEN** two live organisations of type `Municipality` named `Gemeente Bergen` and `gemeente  bergen`
+- **WHEN** a Nextcloud admin imports a valid export with `municipalityName` `Gemeente Bergen`
+- **THEN** the endpoint SHALL answer 422 with error `MUNICIPALITY_AMBIGUOUS` and `details.matches` holding both uuids
+- **AND** no object SHALL be written, and no third municipality SHALL be created
+- **AND** the section SHALL ask the admin to pick the municipality from the list
 
 ### Requirement: Field mapping SHALL be declarative and executed by OpenRegister's mapping engine (REQ-CMDB-005)
 
@@ -173,7 +190,7 @@ The service SHALL map each normalised row with OpenRegister's `MigrationPack\Map
 
 ### Requirement: A module SHALL be matched on its TOPdesk APPID, so a re-import updates instead of duplicating (REQ-CMDB-006)
 
-For each row the service SHALL compute `externalKey` = `topdesk:<municipality uuid>:<APPID>` (the APPID is TOPdesk's ICT Applicatienummer; the Applicatie Code, or Middel-ID, can change in TOPdesk and is stored as `externalId` for reference only) and look up a `module` with that `externalKey`. When none exists it SHALL create one. When one exists it SHALL update only the fields the module pack maps and SHALL leave every other field as it is. When the mapped fields equal the stored values it SHALL NOT save the module and SHALL report the row as `unchanged`. With `updateExisting=false` a matched row SHALL be reported as `skipped` with reason `exists`, without changes. A row without an APPID SHALL be skipped with reason `missing APPID`. When an APPID occurs more than once in one upload, across both sheets, the first occurrence SHALL be imported and every later one SHALL be skipped with reason `duplicate APPID in file`.
+For each row the service SHALL compute `externalKey` = `topdesk:<municipality uuid>:<APPID>` (the APPID is TOPdesk's ICT Applicatienummer; the Applicatie Code, or Middel-ID, can change in TOPdesk and is stored as `externalId` for reference only) and look up a `module` with that `externalKey`. When none exists it SHALL create one. When one exists it SHALL update only the fields the module pack maps and SHALL leave every other field as it is. When the mapped fields equal the stored values it SHALL NOT save the module and SHALL report the row as `unchanged`. With `updateExisting=false` a matched row SHALL be reported as `skipped` with reason `exists`, without changes. A row without an APPID SHALL be skipped with reason `missing APPID`. When an APPID occurs more than once on one sheet, the first occurrence SHALL be imported and every later one SHALL be skipped with reason `duplicate APPID in file`. When an APPID occurs on both sheets, the row of the sheet the profile's `sheetPrecedence` ranks first ("Beheerde Applicaties CMDB") SHALL be imported, whichever sheet the export lists first, and the other row SHALL be skipped with reason `duplicate APPID in file` and a warning naming the APPID and the winning sheet. Before the file is read, the service SHALL check that the `module`, `organization`, `usage` and `contactPerson` schemas declare every property it matches on (for `module`: `externalKey`, `externalId`, `externalNumber`); when one lacks any, it SHALL answer 503 `SCHEMA_OUTDATED` with `details.schema` and `details.missing`, and SHALL write nothing, because OpenRegister answers a filter on an undeclared property with no rows and every row would be created again.
 
 #### Scenario: Re-importing the same export creates no duplicates
 @e2e tests/e2e/spec-coverage/cmdb-import.spec.ts
@@ -206,6 +223,23 @@ For each row the service SHALL compute `externalKey` = `topdesk:<municipality uu
 - **GIVEN** the module with APPID `42` was imported with "Applicatie Code" `APP-Oud`
 - **WHEN** a newer export has APPID `42` with "Applicatie Code" `App-Nieuw`
 - **THEN** the same module SHALL be updated, with `externalId` = `App-Nieuw` and the same `externalKey`
+
+#### Scenario: An APPID on both sheets is imported from the Beheerde sheet
+@e2e exclude Needs a workbook with the same APPID on both sheets; tests/Unit/Service/CmdbExportImportServiceTest.php testTheBeheerdeRowWinsOverTheOnbehRow lists the "Onbeh" row first and asserts the "Beheerde" row is created, the other skipped with its reason and warning.
+
+- **GIVEN** an upload where APPID `8` is on row 2 of "Onbeh Applicaties CMDB" as `Onbeheerd` and on row 5 of "Beheerde Applicaties CMDB" as `Beheerd`
+- **WHEN** it is imported
+- **THEN** one module named `Beheerd` SHALL be created, whose usage note starts with `Beheer geregeld: ja`
+- **AND** the "Onbeh" row SHALL be `skipped` with reason `duplicate APPID in file` and the warning `APPID 8 is also on sheet "Beheerde Applicaties CMDB", which wins; this row is not imported`
+
+#### Scenario: An outdated register schema stops the import before it reads the file
+@e2e exclude Needs a register whose module schema predates the import's properties; tests/Unit/Service/CmdbExportImportServiceTest.php testAModuleSchemaWithoutTheMatchPropertiesStopsTheImport removes externalKey from the module schema and asserts 503 SCHEMA_OUTDATED naming the schema and the properties, before any search and with no save, and tests/Unit/Controller/CmdbImportControllerTest.php asserts the status and the translated message.
+
+- **GIVEN** an install whose `module` schema does not declare `externalKey`
+- **WHEN** a Nextcloud admin imports a valid export
+- **THEN** the endpoint SHALL answer 503 with error `SCHEMA_OUTDATED`, `details.schema` = `module` and `details.missing` containing `externalKey`
+- **AND** the workbook SHALL NOT be read and no object SHALL be written
+- **AND** the section SHALL point the admin to importing the register configuration again
 
 ### Requirement: A newly created module SHALL get a publicationDate, and an existing one SHALL keep its own (REQ-CMDB-007)
 
@@ -276,7 +310,7 @@ For each imported module the service SHALL keep exactly one `usage` with `consum
 
 ### Requirement: The owner SHALL become a contact person of the municipality through Nextcloud Contacts, never a user account, and SHALL never be publicly readable (REQ-CMDB-010)
 
-The business owner pack SHALL map "Applicatie Eigenaar (Persoon)" (the display name, which may be a function instead of a person's name) and "Applicatie Eigenaar (Functie)" (the role). No technical owner SHALL be imported; the functional administrator columns SHALL NOT be read. For the owner the service SHALL resolve a Nextcloud contact through `StackiqContactSyncService` by an exact match on the display name, and otherwise by creating one. It SHALL then reuse or create one `contactPerson` with that `contactsUid`, `organization` = the municipality and `role` = "Applicatie Eigenaar (Functie)" when given, and SHALL set `usage.businessOwner` to it. The import SHALL NOT create Nextcloud user accounts. When Nextcloud Contacts is unavailable, the row SHALL be imported without an owner and SHALL carry a warning. `contactPerson` and `usage` SHALL have no public read rule, so the owner is never readable by an anonymous visitor; a published module SHALL refer to them by relation only.
+The business owner pack SHALL map "Applicatie Eigenaar (Persoon)" (the display name, which may be a function instead of a person's name) and "Applicatie Eigenaar (Functie)" (the role). No technical owner SHALL be imported; the functional administrator columns SHALL NOT be read. For the owner the service SHALL resolve a Nextcloud contact through `StackiqContactSyncService` by an exact match on the display name, and otherwise by creating one in a dedicated address book "Stackiq CMDB owners" of the admin who runs the import (`StackiqContactSyncService::syncToNamedAddressBook()`), which is created on first use. It SHALL NOT add an owner to the admin's own address books. It SHALL then reuse or create one `contactPerson` with that `contactsUid`, `organization` = the municipality and `role` = "Applicatie Eigenaar (Functie)" when given, and SHALL set `usage.businessOwner` to it. The import SHALL NOT create Nextcloud user accounts. When Nextcloud Contacts is unavailable, the row SHALL be imported without an owner and SHALL carry a warning. `contactPerson` and `usage` SHALL have no public read rule, so the owner is never readable by an anonymous visitor; a published module SHALL refer to them by relation only.
 
 #### Scenario: The owner becomes the business owner
 @e2e exclude Needs a Contacts address book; tests/Unit/Service/CmdbExportImportServiceTest.php asserts the calls to a StackiqContactSyncService test double and the saved contactPerson.
@@ -301,6 +335,15 @@ The business owner pack SHALL map "Applicatie Eigenaar (Persoon)" (the display n
 - **GIVEN** two rows with the same "Applicatie Eigenaar (Persoon)"
 - **WHEN** they are imported
 - **THEN** exactly one `contactPerson` for that contact SHALL exist for the municipality, referenced by both usages
+
+#### Scenario: A new owner contact goes into the dedicated address book
+@e2e exclude Needs a CardDAV backend; tests/Unit/Service/StackiqContactSyncServiceTest.php testNewContactsGoIntoTheNamedAddressBook asserts the "Stackiq CMDB owners" address book is created once and holds every new card, with no other address book written, and tests/Unit/Service/CmdbExportImportServiceTest.php testTheOwnerBecomesTheBusinessOwner asserts the import asks for that address book.
+
+- **GIVEN** an admin with a personal address book and no "Stackiq CMDB owners" address book
+- **WHEN** they import a row whose owner has no Nextcloud contact yet
+- **THEN** an address book "Stackiq CMDB owners" SHALL be created for that admin and SHALL hold the new contact
+- **AND** the admin's personal address book SHALL NOT receive a contact
+- **AND** when the address book cannot be created, the row SHALL be imported without an owner and SHALL carry a warning
 
 #### Scenario: Contacts disabled does not block the import
 @e2e exclude Environment condition; tests/Unit/Service/CmdbExportImportServiceTest.php sets isAvailable() to false.
@@ -360,7 +403,7 @@ The import SHALL accept `missingRecords` with the value `keep`, which is also th
 
 ### Requirement: A running import SHALL report its progress and SHALL stop when cancelled (REQ-CMDB-013)
 
-The import SHALL run as a `ProgressTracker` operation of type `cmdb_import` under the `operationId` the client sends, and SHALL update the processed row count after every row, readable through the existing `GET /api/progress/{operationId}`. `POST /api/cmdb-import/{operationId}/cancel`, open to the same users as the import and CSRF-protected, SHALL request cancellation. The service SHALL check for cancellation between rows, SHALL keep the rows already processed, and SHALL return the report with `cancelled: true`. The final report SHALL also be stored with the operation, so it can be read again within the tracker's lifetime.
+The import SHALL run as a `ProgressTracker` operation of type `cmdb_import` under the `operationId` the client sends, and SHALL update the processed row count after every row, readable through the existing `GET /api/progress/{operationId}`. `POST /api/cmdb-import/{operationId}/cancel`, open to the same users as the import and CSRF-protected, SHALL request cancellation. The service SHALL check for cancellation between rows, SHALL keep the rows already processed, and SHALL return the report with `cancelled: true`. The final report SHALL also be stored with the operation, so it can be read again within the tracker's lifetime. One import SHALL run per register at a time: the import SHALL hold an exclusive lock on its register from before the file is read until it returns or fails, and a second import while the lock is held SHALL be refused with 409 `IMPORT_IN_PROGRESS` before it reads the file or writes anything, because every match is find-then-create and two interleaved runs would each create the same records.
 
 #### Scenario: The admin follows and cancels a running import
 @e2e tests/e2e/spec-coverage/cmdb-import.spec.ts covers the section: the progress, the cancel request for the page's operation and the cancelled report. A two-row import finishes before a cancel can land between rows, so the server's stop before the next row is asserted by tests/Unit/Service/CmdbExportImportServiceTest.php testACancelStopsBetweenRows (cancel after row 1 of three: one processed row, cancelled true).
@@ -370,6 +413,15 @@ The import SHALL run as a `ProgressTracker` operation of type `cmdb_import` unde
 - **THEN** the service SHALL stop before the second row
 - **AND** the report SHALL show 1 processed row and `cancelled: true`
 - **AND** the module created for the first row SHALL stay
+
+#### Scenario: A second import while one runs is refused
+@e2e exclude Two concurrent multipart requests cannot be timed reliably in the browser suite; tests/Unit/Service/CmdbExportImportServiceTest.php testASecondImportWhileOneRunsIsRefused starts a second import from inside the first and asserts 409 IMPORT_IN_PROGRESS with no save while the first runs on, testTheLockIsReleasedWhenTheImportThrows asserts the lock is released after a failure, and tests/Unit/Controller/CmdbImportControllerTest.php asserts the status and the translated message.
+
+- **GIVEN** an import for "Gemeente Voorbeeldstad" that is running
+- **WHEN** a second admin starts an import into the same register
+- **THEN** the endpoint SHALL answer 409 with error `IMPORT_IN_PROGRESS` to the second admin
+- **AND** the second import SHALL write nothing, and the first SHALL run to its end
+- **AND** once the first import has returned or failed, a new import SHALL be accepted
 
 ### Requirement: The admin settings SHALL offer a CMDB import section (REQ-CMDB-014)
 

@@ -95,11 +95,21 @@
                     "403": {
                         "description": "Not an admin of the stackiq settings"
                     },
+                    "409": {
+                        "description": "IMPORT_IN_PROGRESS: another CMDB import holds the register's lock; nothing is read or written",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportError"
+                                }
+                            }
+                        }
+                    },
                     "412": {
                         "description": "Missing or invalid CSRF token"
                     },
                     "413": {
-                        "description": "FILE_TOO_LARGE; details.maxBytes is the limit that fired: the profile's maximum, or PHP's upload_max_filesize or post_max_size when lower",
+                        "description": "FILE_TOO_LARGE; details.maxBytes is the limit that fired: the profile's maximum, or PHP's upload_max_filesize or post_max_size when lower. WORKBOOK_TOO_LARGE; the unpacked size of the workbook's parts is over the profile's limit, details.maxUncompressedBytes",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -109,7 +119,7 @@
                         }
                     },
                     "422": {
-                        "description": "MISSING_RECORDS_UNSUPPORTED, MUNICIPALITY_REQUIRED, MUNICIPALITY_INVALID, NO_SOURCE_SHEET, MISSING_COLUMN or TOO_MANY_ROWS",
+                        "description": "MISSING_RECORDS_UNSUPPORTED, MUNICIPALITY_REQUIRED, MUNICIPALITY_INVALID, MUNICIPALITY_AMBIGUOUS (more than one live Municipality has the typed name; details.matches lists their uuids), NO_SOURCE_SHEET, MISSING_COLUMN or TOO_MANY_ROWS",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -129,7 +139,7 @@
                         }
                     },
                     "503": {
-                        "description": "MAPPING_UNAVAILABLE, READER_UNAVAILABLE or NOT_CONFIGURED",
+                        "description": "MAPPING_UNAVAILABLE, READER_UNAVAILABLE, NOT_CONFIGURED, or SCHEMA_OUTDATED (a stackiq schema lacks a property the import matches on; details.schema names it and details.missing lists the properties)",
                         "content": {
                             "application/json": {
                                 "schema": {

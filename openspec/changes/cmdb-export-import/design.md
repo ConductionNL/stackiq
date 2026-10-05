@@ -121,7 +121,7 @@ The key is the TOPdesk APPID (the ICT Applicatienummer), scoped to the municipal
 
 Per row:
 
-1. A row without an APPID is skipped (`missing APPID`). An APPID already seen in this upload, on either sheet, is skipped (`duplicate APPID in file`). The CMDB sheets have no "Soort" column, so there is no row-kind filter.
+1. A row without an APPID is skipped (`missing APPID`). An APPID already seen on the same sheet is skipped (`duplicate APPID in file`). An APPID on both sheets is imported from the sheet the profile's `sheetPrecedence` ranks first ("Beheerde Applicaties CMDB"), whichever sheet the export lists first; the other row is skipped with that reason and a warning naming the APPID and the winning sheet. The CMDB sheets have no "Soort" column, so there is no row-kind filter.
 2. Look up the module with `searchObjects` on the configured register and module schema, filtered on `externalKey`, with `_rbac: false` and `_multitenancy: false` (as `SbomImportService` does; the caller is an admin). The result is cached for the run.
 3. No match: create the module from the mapped data, plus `externalKey`, the create-only defaults (`type: Application`), and `publicationDate` (D6).
 4. Match and `updateExisting=false`: skip with reason `exists`.
@@ -411,7 +411,7 @@ The seeds show the new properties in a fresh install. They carry no `publication
 ## Risks / Trade-offs
 
 - [The user sync might provision accounts for imported contact persons] → The import writes contact persons without e-mail or user fields on the OpenRegister object. A unit test runs `performUserSync`'s selection against an imported `contactPerson`. If the selection would pick it up, the implementation adds an explicit marker that excludes it before shipping, and does not ship otherwise.
-- [Owner contacts land in the importing admin's address book] → `StackiqContactSyncService` writes to the first writable address book of the acting user, the same as every other stackiq contact path. The docs say so. A dedicated system address book is a follow-up.
+- [Owner contacts land in the importing admin's address book] → A contact the import creates goes into a dedicated address book, "Stackiq CMDB owners" (URI stable across languages), of the acting user, created on first use (`StackiqContactSyncService::syncToNamedAddressBook()`), never into the user's own first writable address book. A system address book shared by every admin is a follow-up.
 - [Long synchronous request] → Per-row progress, cancel, and "unchanged" rows skip the save. About 1,100 rows is expected to fit. A background job is a follow-up if it does not.
 - [OpenRegister internals (`MappingEngine`, `PackDefinitionValidator`, PhpSpreadsheet) change shape] → Guarded resolution with 503, and a contract test that maps the fixture through the real engine in the dev environment.
 - [Lookups from the real export] → The maps hold the values the municipality's export of 2026-09-22 contains (2026-10-02 import report): "Applicatiesoort" is an application kind, kept as is in `applicationType`; "BNN Classificatie" holds `NB`, `1`, `2` and `2+`; "Applicatie Status" adds five Dutch statuses; "Classificatie" one numbered form. A new value is a warning, never a wrong value, and is added to the JSON map with no code change. A lookup `default` of `null` means "known, no value": the service leaves the field out.

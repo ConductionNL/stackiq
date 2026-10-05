@@ -56,7 +56,9 @@ page in stackiq.
    the list, or type the name of a new one and press Enter. A typed name that
    matches an existing municipality (ignoring case and extra spaces) uses that
    municipality; otherwise a new organisation of type Municipality with
-   status Active is created during the import.
+   status Active is created during the import, and the result warns about
+   it. When more than one municipality has the typed name, the import is
+   refused (`MUNICIPALITY_AMBIGUOUS`): pick the right one from the list.
 3. **File.** Choose the TOPdesk export (`.xlsx`, at most 10 MB by default; see
    [Limits](#limits)).
 4. **Update existing records.** On by default. Turn it off to import only
@@ -68,6 +70,11 @@ page in stackiq.
    already processed stay imported. The section says whether the server
    accepted the cancel; one pressed before the server has started on the
    rows cannot take effect yet, and the section says so.
+
+One import runs at a time. While an import is running, a second one, from
+another administrator or another browser tab, is refused with
+`IMPORT_IN_PROGRESS` and reads nothing; start it again when the first has
+finished.
 
 When the import finishes, the section shows:
 
@@ -210,10 +217,12 @@ owner's function in the person column; the import then uses that function as
 the contact's name. No technical owner is imported: the functional
 administrator (FB contactpersoon) is not read.
 
-The identity is kept in **Nextcloud Contacts**, in the first writable
-address book of the administrator who runs the import, the same as every
-other stackiq contact. The CMDB sheets have no e-mail address, so a contact
-is found by an exact match on the name, and created when there is none. The
+The identity is kept in **Nextcloud Contacts**. A contact the import
+creates goes into a dedicated address book, **Stackiq CMDB owners**, of the
+administrator who runs the import; the import creates that address book the
+first time it needs it. The import never adds owners to that administrator's
+own address books. The CMDB sheets have no e-mail address, so a contact is
+found by an exact match on the name, and created when there is none. The
 stackiq contact person object only holds the link to that contact, the role
 and the municipality. The same owner on several rows is one contact person.
 
@@ -240,12 +249,16 @@ and the section shows the reason and the error code.
 | `NO_SOURCE_SHEET` | Neither `Onbeh Applicaties CMDB` nor `Beheerde Applicaties CMDB` is in the workbook. | Check the sheet names; they must match exactly. |
 | `MISSING_COLUMN` | A present CMDB sheet has no `APPID` or `Applicatie Naam` column. The message names the sheet and the column. | Add the column to that sheet. |
 | `TOO_MANY_ROWS` | A CMDB sheet has more rows with data than the row limit (10,000 by default). The message names the sheet and the limit. | Split the export and import the parts one after the other. |
+| `WORKBOOK_TOO_LARGE` | Unpacked, the workbook is larger than the import reads (50 MB by default). An `.xlsx` is a compressed package, so a small file can unpack to far more. The message names the limit. | Remove sheets the import does not read, such as the archive sheet, or split the export. |
+| `MUNICIPALITY_AMBIGUOUS` | More than one municipality has the typed name. The import does not guess which one. | Pick the municipality from the list instead of typing its name. |
+| `IMPORT_IN_PROGRESS` | Another CMDB import is running. Only one import runs at a time. | Wait until it has finished and try again. |
 | `FIELD_INVALID` | A form field of the request has a value the import does not accept, for example an `updateExisting` that is neither `true` nor `false`. The message names the field. | Not reachable from the section; reported for API callers. |
 | `UPLOAD_FAILED` | The file reached the server but could not be stored there. | Try again; the Nextcloud log has the details. |
 | `MISSING_RECORDS_UNSUPPORTED` | The request asked to mark or remove records missing from the export. Only keeping them is supported. | Not reachable from the section; reported for API callers. |
 | `MAPPING_UNAVAILABLE` | OpenRegister's mapping engine is missing, or one of the mapping files is invalid. | Update OpenRegister. If you changed a mapping file, check it against the Nextcloud log. |
 | `READER_UNAVAILABLE` | The Excel reader that ships with OpenRegister cannot be loaded. | Make sure OpenRegister is installed and enabled. |
 | `NOT_CONFIGURED` | The stackiq register or its schemas cannot be found. | Run **Auto Configure** at the top of the stackiq admin settings. |
+| `SCHEMA_OUTDATED` | A stackiq schema lacks a property the import recognises records by, for example `externalKey` on the module schema. Importing anyway would create every application again. The message names the schema. | Press **Force Update** at the top of the stackiq admin settings to import the register configuration again. |
 | `IMPORT_FAILED` | Something unexpected went wrong. | The Nextcloud log has the details. |
 
 **The connection was cut off.** The import runs in one request. When that
@@ -264,13 +277,14 @@ page.
 
 ## Limits
 
-Two limits are read from `lib/Settings/cmdb-import/topdesk-profile.json` on
+Three limits are read from `lib/Settings/cmdb-import/topdesk-profile.json` on
 every import:
 
 | Setting | Default | What it limits |
 |---|---|---|
 | `maxFileBytes` | `10485760` (10 MB) | the size of the uploaded file |
 | `maxRowsPerSheet` | `10000` | the rows with data on one CMDB sheet |
+| `maxUncompressedBytes` | `52428800` (50 MB) | the size of the workbook once unpacked, checked before a sheet is parsed |
 
 The section's help text shows the defaults; when the server refuses a file,
 the message shows the limit the server applied. A larger file also has to

@@ -56,13 +56,14 @@ Paths are relative to `/index.php/apps/stackiq`.
 | 400  | `NO_FILE_UPLOADED`, `NOT_XLSX`, `FIELD_INVALID` |
 | 401  | not signed in (Nextcloud) |
 | 403  | neither a Nextcloud admin nor a delegated stackiq admin (Nextcloud) |
+| 409  | `IMPORT_IN_PROGRESS` |
 | 412  | missing or invalid CSRF token (Nextcloud) |
-| 413  | `FILE_TOO_LARGE` |
-| 422  | `MISSING_RECORDS_UNSUPPORTED`, `MUNICIPALITY_REQUIRED`, `MUNICIPALITY_INVALID`, `NO_SOURCE_SHEET`, `MISSING_COLUMN`, `TOO_MANY_ROWS` |
+| 413  | `FILE_TOO_LARGE`, `WORKBOOK_TOO_LARGE` |
+| 422  | `MISSING_RECORDS_UNSUPPORTED`, `MUNICIPALITY_REQUIRED`, `MUNICIPALITY_INVALID`, `MUNICIPALITY_AMBIGUOUS`, `NO_SOURCE_SHEET`, `MISSING_COLUMN`, `TOO_MANY_ROWS` |
 | 500  | `UPLOAD_FAILED` (PHP could not store the upload), `IMPORT_FAILED` (unexpected; generic message, details only in the log) |
-| 503  | `MAPPING_UNAVAILABLE`, `READER_UNAVAILABLE`, `NOT_CONFIGURED` |
+| 503  | `MAPPING_UNAVAILABLE`, `READER_UNAVAILABLE`, `NOT_CONFIGURED`, `SCHEMA_OUTDATED` |
 
-Error body: `{"success": false, "error": "<CODE>", "message": "<translated text>", "details": {...}}`. `details` is always an object, empty when the code has none. For `MISSING_COLUMN`, `details` is `{"sheet": "...", "column": "..."}`. For `NO_SOURCE_SHEET`, it is `{"expected": ["Onbeh Applicaties CMDB", "Beheerde Applicaties CMDB"]}`. For `TOO_MANY_ROWS`, it is `{"sheet": "...", "limit": 10000}`. For `FILE_TOO_LARGE`, it is `{"maxBytes": 10485760}`: the profile's maximum, or PHP's `upload_max_filesize` / `post_max_size` when that is the lower limit that stopped the upload. For `MISSING_RECORDS_UNSUPPORTED`, it is `{"accepted": ["keep"]}`. For `FIELD_INVALID`, it names the field, plus the accepted values when the field has a fixed set: `{"field": "updateExisting", "accepted": ["true", "false"]}`, or `{"field": "municipalityName"}`.
+Error body: `{"success": false, "error": "<CODE>", "message": "<translated text>", "details": {...}}`. `details` is always an object, empty when the code has none. For `MISSING_COLUMN`, `details` is `{"sheet": "...", "column": "..."}`. For `NO_SOURCE_SHEET`, it is `{"expected": ["Onbeh Applicaties CMDB", "Beheerde Applicaties CMDB"]}`. For `TOO_MANY_ROWS`, it is `{"sheet": "...", "limit": 10000}`. For `FILE_TOO_LARGE`, it is `{"maxBytes": 10485760}`: the profile's maximum, or PHP's `upload_max_filesize` / `post_max_size` when that is the lower limit that stopped the upload. For `WORKBOOK_TOO_LARGE`, it is `{"maxUncompressedBytes": 52428800}`, the profile's limit on the unpacked size. For `SCHEMA_OUTDATED`, it is `{"schema": "module", "missing": ["externalKey"]}`: the schema and the properties it lacks. For `MUNICIPALITY_AMBIGUOUS`, it is `{"matches": ["<uuid>", "<uuid>"]}`, the uuids of the municipalities with the typed name. `IMPORT_IN_PROGRESS` has no details. For `MISSING_RECORDS_UNSUPPORTED`, it is `{"accepted": ["keep"]}`. For `FIELD_INVALID`, it names the field, plus the accepted values when the field has a fixed set: `{"field": "updateExisting", "accepted": ["true", "false"]}`, or `{"field": "municipalityName"}`.
 
 ### `POST /api/cmdb-import/{operationId}/cancel`
 **Auth**: the same as the import: a Nextcloud admin or delegated stackiq admin session, plus CSRF token.
@@ -97,12 +98,16 @@ Returns the `ProgressTracker` snapshot for the `cmdb_import` operation: `progres
 | `FIELD_INVALID` | malformed field (400) | `updateExisting` is not `true`, `false`, `1` or `0`, or `missingRecords`, `municipalityUuid` or `municipalityName` is sent as an array (`name[]=…`) |
 | `MUNICIPALITY_REQUIRED` | no consumer | neither `municipalityUuid` nor `municipalityName` given |
 | `MUNICIPALITY_INVALID` | wrong consumer | uuid unknown, or the organisation is not of type Municipality |
+| `MUNICIPALITY_AMBIGUOUS` | consumer not unique (422) | more than one live organisation of type Municipality (not `merged`, not `Inactive`) has the typed name after normalisation; the import does not guess and writes nothing |
 | `NO_SOURCE_SHEET` | nothing to read | neither "Onbeh Applicaties CMDB" nor "Beheerde Applicaties CMDB" present |
 | `MISSING_COLUMN` | required column absent | a present source sheet lacks "APPID" or "Applicatie Naam" |
 | `TOO_MANY_ROWS` | file too large to process | a source sheet has more non-empty rows than `maxRowsPerSheet` (10,000) |
+| `WORKBOOK_TOO_LARGE` | unpacked too large (413) | the parts of the xlsx package add up to more than `maxUncompressedBytes` (50 MB) once unpacked; checked before PhpSpreadsheet parses a sheet |
 | `MAPPING_UNAVAILABLE` | mapping cannot run | OpenRegister's `MappingEngine`/`PackDefinitionValidator` missing, or a shipped pack is invalid |
 | `READER_UNAVAILABLE` | xlsx reader missing | PhpSpreadsheet's Xlsx reader cannot be loaded |
 | `NOT_CONFIGURED` | stackiq not configured (503) | OpenRegister's object service, the stackiq register, or the `module`, `organization`, `usage` or `contactPerson` schema cannot be resolved; checked before the file is read |
+| `SCHEMA_OUTDATED` | register out of date (503) | the `module`, `organization`, `usage` or `contactPerson` schema lacks a property the import matches on (for example `module.externalKey`); importing the register configuration again adds it. Checked before the file is read |
+| `IMPORT_IN_PROGRESS` | another import runs (409) | another CMDB import holds the register's lock; only one import runs per register at a time |
 | `OPERATION_NOT_FOUND` | unknown operation | cancel for an id without a running `cmdb_import` operation |
 | `IMPORT_FAILED` | unexpected error | anything not listed above |
 
