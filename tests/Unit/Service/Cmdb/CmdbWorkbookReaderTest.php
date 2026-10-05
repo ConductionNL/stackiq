@@ -26,6 +26,7 @@ use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\Cmdb\CmdbWorkbookReader;
 use OCA\Stackiq\Tests\Unit\Support\CmdbTestSupport;
+use OCA\Stackiq\Tests\Unit\Support\RecordingXlsxReader;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 
@@ -235,6 +236,131 @@ class CmdbWorkbookReaderTest extends TestCase {
 			rmdir($directory);
 		}
 	}//end testTooManyRowsIsRefused()
+
+	/**
+	 * A package that unpacks to more than maxUncompressedBytes is refused before PhpSpreadsheet is touched.
+	 *
+	 * The reader below has no PhpSpreadsheet at all: reaching it would answer READER_UNAVAILABLE.
+	 *
+	 * @return void
+	 */
+	public function testAWorkbookThatUnpacksBeyondTheLimitIsRefusedBeforeParsing(): void {
+		$rows = [['APPID', 'Applicatie Naam']];
+		for ($index = 1; $index <= 3000; $index++) {
+			$rows[] = [1, 'Applicatie'];
+		}
+
+		$path = CmdbTestSupport::buildWorkbook(sheets: ['Beheerde Applicaties CMDB' => $rows]);
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxUncompressedBytes' => 100000]);
+		$reader = new class extends CmdbWorkbookReader {
+			/**
+			 * PhpSpreadsheet is absent.
+			 *
+			 * @return bool
+			 */
+			public function isAvailable(): bool {
+				return false;
+			}//end isAvailable()
+		};
+
+		try {
+			$this->assertLessThan(100000, filesize($path), 'the package itself is under the limit; only its contents are not');
+			$reader->read(path: $path, profile: $this->profile(directory: $directory));
+			$this->fail('WORKBOOK_TOO_LARGE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode());
+			$this->assertSame(413, $e->getHttpStatus());
+			$this->assertSame(['maxUncompressedBytes' => 100000], $e->getDetails());
+		} finally {
+			unlink($path);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testAWorkbookThatUnpacksBeyondTheLimitIsRefusedBeforeParsing()
+
+	/**
+	 * A source sheet whose last used row lies beyond twice the row limit stops before any sheet is loaded.
+	 *
+	 * @return void
+	 */
+	public function testARowSpanBeyondTheLimitStopsBeforeLoading(): void {
+		$this->requireSpreadsheet();
+		require_once __DIR__ . '/../../Support/RecordingXlsxReader.php';
+		RecordingXlsxReader::$loads = 0;
+
+		// maxRowsPerSheet 1 reads up to row 3; the third data row sits on row 4.
+		$path = CmdbTestSupport::buildWorkbook(
+			sheets: ['Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een'], [2, 'Twee'], [3, 'Drie']]]
+		);
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxRowsPerSheet' => 1]);
+		$reader = new class extends CmdbWorkbookReader {
+			public const READER_CLASS = RecordingXlsxReader::class;
+		};
+
+		try {
+			$reader->read(path: $path, profile: $this->profile(directory: $directory));
+			$this->fail('TOO_MANY_ROWS expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('TOO_MANY_ROWS', $e->getErrorCode());
+			$this->assertSame(['sheet' => 'Beheerde Applicaties CMDB', 'limit' => 1], $e->getDetails());
+			$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded');
+		} finally {
+			unlink($path);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testARowSpanBeyondTheLimitStopsBeforeLoading()
+
+	/**
+	 * The data pass holds only the resolved columns, and drops an empty row between data rows.
+	 *
+	 * @return void
+	 */
+	public function testTheDataPassHoldsOnlyResolvedColumns(): void {
+		$this->requireSpreadsheet();
+		$path = CmdbTestSupport::buildWorkbook(
+			sheets: [
+				'Beheerde Applicaties CMDB' => [
+					['APPID', 'Personeelsnummer', 'Applicatie Naam'],
+					[1, 'P-0001', 'Een'],
+					[],
+					[2, 'P-0002', 'Twee'],
+				],
+			]
+		);
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxRowsPerSheet' => 2]);
+
+		try {
+			$rows = (new CmdbWorkbookReader())->read(path: $path, profile: $this->profile(directory: $directory))['rows'];
+			$this->assertSame([2, 4], array_column($rows, 'row'));
+			$this->assertSame(['APPID', 'Applicatie Naam'], array_keys(array_filter($rows[1]['cells'], static fn ($value): bool => $value !== null)));
+			$this->assertStringNotContainsString('P-000', (string)json_encode($rows));
+		} finally {
+			unlink($path);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testTheDataPassHoldsOnlyResolvedColumns()
+
+	/**
+	 * A sheet within the row span still stops at the limit on non-empty rows.
+	 *
+	 * @return void
+	 */
+	public function testOneRowOverTheLimitWithinTheSpanIsRefused(): void {
+		$this->requireSpreadsheet();
+		// maxRowsPerSheet 1 reads up to row 3, so both data rows are read, and the second is one too many.
+		$path = CmdbTestSupport::buildWorkbook(sheets: ['Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een'], [2, 'Twee']]]);
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxRowsPerSheet' => 1]);
+
+		try {
+			(new CmdbWorkbookReader())->read(path: $path, profile: $this->profile(directory: $directory));
+			$this->fail('TOO_MANY_ROWS expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('TOO_MANY_ROWS', $e->getErrorCode());
+			$this->assertSame(['sheet' => 'Beheerde Applicaties CMDB', 'limit' => 1], $e->getDetails());
+		} finally {
+			unlink($path);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testOneRowOverTheLimitWithinTheSpanIsRefused()
 
 	/**
 	 * A text file named .xlsx, a .xlsm and a CSV are refused before PhpSpreadsheet is touched.

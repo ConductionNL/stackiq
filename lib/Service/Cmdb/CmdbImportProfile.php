@@ -67,6 +67,11 @@ class CmdbImportProfile {
 	public const DEFAULT_MAX_FILE_BYTES = 10485760;
 
 	/**
+	 * Default limit on the unpacked size of a workbook (50 MB).
+	 */
+	public const DEFAULT_MAX_UNCOMPRESSED_BYTES = 52428800;
+
+	/**
 	 * Sources of the municipality pack that come from the request, not from a sheet.
 	 *
 	 * @var array<int, string>
@@ -170,6 +175,25 @@ class CmdbImportProfile {
 
 		return self::DEFAULT_MAX_FILE_BYTES;
 	}//end maxFileBytes()
+
+	/**
+	 * The limit on the unpacked size of a workbook, in bytes.
+	 *
+	 * The upload limit is on the compressed file; a sheet of identical rows
+	 * compresses a hundredfold, so the unpacked size is bounded too.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 */
+	public function maxUncompressedBytes(): int {
+		$limit = $this->profile()['maxUncompressedBytes'] ?? null;
+		if (is_int($limit) === true && $limit > 0) {
+			return $limit;
+		}
+
+		return self::DEFAULT_MAX_UNCOMPRESSED_BYTES;
+	}//end maxUncompressedBytes()
 
 	/**
 	 * The maximum number of non-empty rows per source sheet.

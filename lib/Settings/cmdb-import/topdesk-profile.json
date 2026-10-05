@@ -5,6 +5,7 @@
   "description": "How stackiq reads a TOPdesk CMDB export (xlsx): the two CMDB sheets, the key and required columns, date and id columns, values that mean empty, the pack per target and the limits. Columns that neither this profile nor a pack names are never read.",
   "maxFileBytes": 10485760,
   "maxRowsPerSheet": 10000,
+  "maxUncompressedBytes": 52428800,
   "sheets": [
     {
       "name": "Onbeh Applicaties CMDB",

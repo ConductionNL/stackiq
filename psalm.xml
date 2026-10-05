@@ -41,6 +41,10 @@
              dispatched event. Analysis-only; never loaded at runtime. -->
         <file name="tests/analysis-stubs/decidesk-events.stub.php" preloadClasses="true" />
         <file name="tests/analysis-stubs/decidiq-events.stub.php" preloadClasses="true" />
+        <!-- PhpSpreadsheet's IReadFilter. OpenRegister ships PhpSpreadsheet,
+             so it is absent from the analysis path; CmdbReadFilter implements
+             it. The stub mirrors the real 5.x signature. -->
+        <file name="tests/analysis-stubs/phpspreadsheet-read-filter.stub.php" preloadClasses="true" />
         <!-- OpenRegister RegisterResolverService. Same cross-app situation; this
              stub already existed for PHPUnit mock generation and mirrors the real
              signature in openregister/lib/Service/RegisterResolverService.php. -->
