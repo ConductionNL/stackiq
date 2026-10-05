@@ -703,8 +703,11 @@ class CmdbWorkbookReaderTest extends TestCase {
 		$relationships = static fn (string $extra): string => '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
 			. '<Relationship Id="rId1" Type="' . $rel . '/worksheet" Target="worksheets/sheet1.xml"/>'
 			. '<Relationship Id="rId2" Type="' . $rel . '/worksheet" Target="worksheets/sheet2.xml"/>' . $extra . '</Relationships>';
+		$sharedId = '<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="' . $rel . '"><sheets>'
+			. '<sheet name="Relatie APP oplosgroepen" sheetId="1" r:id="rId1"/><sheet name="Beheerde Applicaties CMDB" sheetId="2" r:id="rId1"/></sheets></workbook>';
 		$cases = [
 			'shared strings' => ['xl/_rels/workbook.xml.rels' => $relationships('<Relationship Id="rId3" Type="' . $rel . '/sharedStrings" Target="worksheets/sheet1.xml"/>')],
+			'shared r:id' => ['xl/workbook.xml' => $sharedId],
 			'source sheet' => ['xl/_rels/workbook.xml.rels' => str_replace('worksheets/sheet2.xml', 'worksheets/sheet1.xml', $relationships(''))],
 			'other case' => ['xl/_rels/workbook.xml.rels' => $relationships('<Relationship Id="rId3" Type="' . $rel . '/styles" Target="/XL/Worksheets/SHEET1.XML"/>')],
 			'no first character' => ['xl/_rels/workbook.xml.rels' => $relationships('<Relationship Id="rId3" Type="' . $rel . '/theme" Target="xsheet1.xml"/>')],
@@ -731,7 +734,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 				} catch (CmdbImportException $e) {
 					$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode(), $case);
 					$this->assertSame('xl/worksheets/sheet1.xml', $e->getDetails()['part'] ?? null, $case);
-					$this->assertSame(['source sheet' => 'Beheerde Applicaties CMDB'][$case] ?? null, $e->getDetails()['sheet'] ?? null, 'the refusal names the sheet that keeps the limit, if any: ' . $case);
+					$this->assertSame(['source sheet' => 'Beheerde Applicaties CMDB', 'shared r:id' => 'Beheerde Applicaties CMDB'][$case] ?? null, $e->getDetails()['sheet'] ?? null, 'the refusal names the sheet that keeps the limit, if any: ' . $case);
 					$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded for ' . $case);
 				} finally {
 					unlink($path);
@@ -804,6 +807,10 @@ class CmdbWorkbookReaderTest extends TestCase {
 					$this->assertStringNotContainsString('FROM-BIG-PART', json_encode($result['rows']), $case);
 				} catch (CmdbImportException $e) {
 					$this->assertContains($e->getErrorCode(), ['MISSING_COLUMN', 'WORKBOOK_TOO_LARGE', 'NOT_XLSX', 'NO_SOURCE_SHEET'], $case);
+					if ($case === 'padded package relationships') {
+						$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode(), 'a relationships part is refused, never blanked');
+						$this->assertSame('_rels/.rels', $e->getDetails()['part'] ?? null);
+					}
 				} finally {
 					unlink($path);
 				}

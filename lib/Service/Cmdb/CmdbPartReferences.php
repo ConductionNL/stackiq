@@ -106,7 +106,7 @@ class CmdbPartReferences {
 	 */
 	private static function verdict(string $part, array $references): array {
 		$key = self::lastSegment(path: $part);
-		if (str_ends_with($key, '.rels') === true || $key === '[content_types].xml') {
+		if (str_ends_with($key, '.rels') === true || str_ends_with($key, 'content_types].xml') === true) {
 			return ['unread' => false, 'sheet' => null];
 		}
 
@@ -160,15 +160,17 @@ class CmdbPartReferences {
 			}
 
 			$unread = ($names !== []);
+			$sheet = ($names[0] ?? null);
 			foreach ($names as $sheetName) {
 				if (in_array(mb_strtolower(trim($sheetName)), $read, true) === true) {
 					$unread = false;
+					$sheet = $sheetName;
 				}
 			}
 
 			$references[] = [
 				'keys'   => self::keys(target: $relationship['target']),
-				'sheet'  => ($names[0] ?? null),
+				'sheet'  => $sheet,
 				'unread' => $unread,
 			];
 		}

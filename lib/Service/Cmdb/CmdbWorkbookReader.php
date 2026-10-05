@@ -210,16 +210,7 @@ class CmdbWorkbookReader {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
 	 */
 	private static function blankedCopy(string $path, array $parts): string {
-		$base = tempnam(sys_get_temp_dir(), 'cmdb-read-');
-		if ($base === false) {
-			throw new CmdbImportException(errorCode: CmdbImportException::NOT_XLSX, message: 'The workbook cannot be copied for reading');
-		}
-
-		$copy = $base . '.xlsx';
-		if (rename($base, $copy) === false || copy($path, $copy) === false) {
-			throw new CmdbImportException(errorCode: CmdbImportException::NOT_XLSX, message: 'The workbook cannot be copied for reading');
-		}
-
+		$copy = self::temporaryCopy(path: $path);
 		$zip = new ZipArchive();
 		if ($zip->open($copy) !== true) {
 			unlink($copy);
@@ -243,6 +234,43 @@ class CmdbWorkbookReader {
 
 		return $copy;
 	}//end blankedCopy()
+
+	/**
+	 * A copy of the file in the temporary directory, removed at the end of the request at the latest.
+	 *
+	 * The copy holds the upload, so it is also removed when the request dies
+	 * (memory or time limit) before read() removes it.
+	 *
+	 * @param string $path The xlsx file.
+	 *
+	 * @return string The copy's path, ending in .xlsx.
+	 *
+	 * @throws CmdbImportException NOT_XLSX when the copy cannot be written.
+	 */
+	private static function temporaryCopy(string $path): string {
+		$base = tempnam(sys_get_temp_dir(), 'cmdb-read-');
+		if ($base === false) {
+			throw new CmdbImportException(errorCode: CmdbImportException::NOT_XLSX, message: 'The workbook cannot be copied for reading');
+		}
+
+		$copy = $base . '.xlsx';
+		if (rename($base, $copy) === false) {
+			unlink($base);
+			throw new CmdbImportException(errorCode: CmdbImportException::NOT_XLSX, message: 'The workbook cannot be copied for reading');
+		}
+
+		register_shutdown_function(static function () use ($copy): void {
+			if (is_file($copy) === true) {
+				unlink($copy);
+			}
+		});
+		if (copy($path, $copy) === false) {
+			unlink($copy);
+			throw new CmdbImportException(errorCode: CmdbImportException::NOT_XLSX, message: 'The workbook cannot be copied for reading');
+		}
+
+		return $copy;
+	}//end temporaryCopy()
 
 	/**
 	 * Read the source sheets of a package whose part sizes have been checked.
