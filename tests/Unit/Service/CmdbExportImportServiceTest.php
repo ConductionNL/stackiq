@@ -698,9 +698,23 @@ class CmdbExportImportServiceTest extends TestCase {
 			normaliser: new CmdbRowNormaliser(),
 			l10n: $this->l10n(),
 			logger: $this->logger(),
-			lockingProvider: $this->locks
+			lockingProvider: $this->locks,
+			userSession: $this->adminSession()
 		);
 	}//end service()
+
+	/**
+	 * A session signed in as "admin".
+	 *
+	 * @return IUserSession
+	 */
+	private function adminSession(): IUserSession {
+		$user = $this->createMock(\OCP\IUser::class);
+		$user->method('getUID')->willReturn('admin');
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+		return $session;
+	}//end adminSession()
 
 	/**
 	 * Skip unless the fixture can be read.
@@ -1487,6 +1501,27 @@ class CmdbExportImportServiceTest extends TestCase {
 		$listener = (string)file_get_contents(CmdbTestSupport::appRoot() . '/lib/Service/ContactpersoonService.php');
 		$this->assertStringContainsString("\$email = (\$contactData['email'] ?? \$contactData['e-mailadres'] ?? '');", $listener);
 	}//end testAnImportedContactPersonIsNeverAUser()
+
+	/**
+	 * An import logs who ran it, on which file and municipality, with which updateExisting, and the counts.
+	 *
+	 * @return void
+	 */
+	public function testAnImportLeavesAnAuditRecord(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(
+			path: '',
+			options: ['municipalityUuid' => 'muni-1', 'updateExisting' => false, 'operationId' => 'cmdb-audit-01', 'fileName' => 'C:\\Users\\beheer\\export.xlsx']
+		);
+
+		$audit = '"operationId":"cmdb-audit-01","uid":"admin","fileName":"export.xlsx","municipality":"muni-1","municipalityCreated":false,"updateExisting":false';
+		$started = array_values(array_filter($this->logLines, static fn (string $line): bool => str_starts_with($line, 'CmdbExportImportService: import started')));
+		$finished = array_values(array_filter($this->logLines, static fn (string $line): bool => str_starts_with($line, 'CmdbExportImportService: import finished')));
+		$this->assertCount(1, $started);
+		$this->assertCount(1, $finished);
+		$this->assertStringContainsString($audit . ',"rows":1}', $started[0]);
+		$this->assertStringContainsString($audit . ',"summary":{"rowsRead":1,"processed":1,"created":1,', $finished[0]);
+	}//end testAnImportLeavesAnAuditRecord()
 
 	/**
 	 * Neither the report nor any log line names an owner or repeats a cell value, even when an exception quotes them.

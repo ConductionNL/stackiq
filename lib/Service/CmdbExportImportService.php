@@ -59,6 +59,7 @@ use OCA\Stackiq\Service\Cmdb\CmdbImportReport;
 use OCA\Stackiq\Service\Cmdb\CmdbRowNormaliser;
 use OCA\Stackiq\Service\Cmdb\CmdbWorkbookReader;
 use OCP\IL10N;
+use OCP\IUserSession;
 use OCP\Lock\ILockingProvider;
 use OCP\Lock\LockedException;
 use Psr\Container\ContainerInterface;
@@ -216,6 +217,7 @@ class CmdbExportImportService {
 	 * @param IL10N $l10n Translates report reasons and warnings.
 	 * @param LoggerInterface $logger Logger; never handed person data.
 	 * @param ILockingProvider $lockingProvider Serialises imports per register.
+	 * @param IUserSession $userSession Names the admin who ran an import in its audit log lines.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Each collaborator is one concern of the
 	 * import (the file, the packs, OpenRegister, Contacts, progress, the lock); grouping them
@@ -234,6 +236,7 @@ class CmdbExportImportService {
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
 		private readonly ILockingProvider $lockingProvider,
+		private readonly IUserSession $userSession,
 	) {
 	}//end __construct()
 
@@ -313,7 +316,8 @@ class CmdbExportImportService {
 	 * before the file is read until it returns or throws.
 	 *
 	 * @param string $path The xlsx file, already checked by assertXlsx().
-	 * @param array<string, mixed> $options municipalityUuid, municipalityName, updateExisting, operationId.
+	 * @param array<string, mixed> $options municipalityUuid, municipalityName, updateExisting, operationId,
+	 *                                      and fileName (the upload's name, for the audit log line).
 	 *
 	 * @return array<string, mixed> The report (contract.md).
 	 *
@@ -394,6 +398,11 @@ class CmdbExportImportService {
 	/**
 	 * Read the workbook and import its rows, under the register's lock.
 	 *
+	 * An import is audited by two info log lines, "import started" and
+	 * "import finished", naming the operation, the admin's user id, the
+	 * file's base name, the municipality and updateExisting, and at the end
+	 * the counts. No owner name or e-mail address is logged.
+	 *
 	 * @param string $path The xlsx file.
 	 * @param array<string, mixed> $options The import options.
 	 * @param string $startedAt ISO start time of the import.
@@ -434,6 +443,15 @@ class CmdbExportImportService {
 
 		$this->winningSheets = $this->winningSheets(rows: $rows);
 		$updateExisting = (($options['updateExisting'] ?? true) !== false);
+		$audit = [
+			'operationId' => $operationId,
+			'uid' => $this->userSession->getUser()?->getUID(),
+			'fileName' => basename(str_replace('\\', '/', (string)($options['fileName'] ?? ''))),
+			'municipality' => $municipality['uuid'],
+			'municipalityCreated' => $municipality['created'],
+			'updateExisting' => $updateExisting,
+		];
+		$this->logger->info('CmdbExportImportService: import started', array_merge($audit, ['rows' => count($rows)]));
 		try {
 			foreach ($rows as $index => $row) {
 				if ($this->progressTracker->isCancelRequested(operationId: $operationId) === true) {
@@ -463,7 +481,7 @@ class CmdbExportImportService {
 
 		$this->logger->info(
 			'CmdbExportImportService: import finished',
-			['operationId' => $operationId, 'summary' => $result['summary'], 'cancelled' => $result['cancelled']]
+			array_merge($audit, ['summary' => $result['summary'], 'cancelled' => $result['cancelled']])
 		);
 
 		return $result;
