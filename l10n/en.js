@@ -1106,7 +1106,11 @@ OC.L10N.register(
         "No municipality named \"%s\" was found, so it was created. Check the name if you meant an existing one.": "No municipality named \"%s\" was found, so it was created. Check the name if you meant an existing one.",
         "APPID %1$s is also on sheet \"%2$s\", which wins; this row is not imported": "APPID %1$s is also on sheet \"%2$s\", which wins; this row is not imported",
         "Stackiq CMDB owners": "Stackiq CMDB owners",
-        "step \"%1$s\" failed (%2$s)": "step \"%1$s\" failed (%2$s)"
+        "step \"%1$s\" failed (%2$s)": "step \"%1$s\" failed (%2$s)",
+        "The workbook is too large to read once unpacked.": "The workbook is too large to read once unpacked.",
+        "The stackiq register is out of date; import its configuration again.": "The stackiq register is out of date; import its configuration again.",
+        "Another CMDB import is running; try again when it has finished.": "Another CMDB import is running; try again when it has finished.",
+        "Several municipalities have this name; choose one from the list.": "Several municipalities have this name; choose one from the list."
     },
     "nplurals=2; plural=(n != 1);"
 )
