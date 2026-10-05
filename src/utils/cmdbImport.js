@@ -10,7 +10,7 @@
  * authority: every check here is repeated there. The texts are rendered by
  * CmdbImport.vue as text, so translations with placeholders use AS_TEXT.
  *
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 
 import { translate as t } from '@nextcloud/l10n'
@@ -50,7 +50,7 @@ export const OUTCOMES = ['created', 'updated', 'unchanged', 'skipped', 'failed']
  *
  * @param {string} outcome The outcome key from the report
  * @return {string} The label
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-011-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome-req-cmdb-011
  */
 export function outcomeLabel(outcome) {
 	switch (outcome) {
@@ -78,7 +78,7 @@ export function outcomeLabel(outcome) {
  * `getRandomValues()`, which is available everywhere.
  *
  * @return {string} The id
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
  */
 export function makeCmdbOperationId() {
 	const bytes = new Uint8Array(16)
@@ -105,7 +105,7 @@ export function makeCmdbOperationId() {
  *
  * @param {number} bytes The size
  * @return {string} The size with its unit
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-001-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-user-with-the-stackiq-admin-settings-req-cmdb-001
  */
 export function formatMegabytes(bytes) {
 	const megabytes = Math.round((Number(bytes) / (1024 * 1024)) * 10) / 10
@@ -121,7 +121,7 @@ export function formatMegabytes(bytes) {
  *
  * @param {File|null} file The chosen file
  * @return {{error: string, details: object}|null} An error in the server's shape, or null when the file may be sent
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-001-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-user-with-the-stackiq-admin-settings-req-cmdb-001
  */
 export function checkFile(file) {
 	if (!file) {
@@ -142,7 +142,7 @@ export function checkFile(file) {
  * @param {boolean} options.updateExisting Whether matched rows are updated
  * @param {string} options.operationId The progress operation id
  * @return {FormData} The body
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-004-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin-req-cmdb-004
  */
 export function buildImportForm({
 	file,
@@ -167,7 +167,7 @@ export function buildImportForm({
  * The URL of the import endpoint.
  *
  * @return {string} The URL
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-001-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-user-with-the-stackiq-admin-settings-req-cmdb-001
  */
 export function importUrl() {
 	return generateUrl('/apps/stackiq/api/cmdb-import')
@@ -180,7 +180,7 @@ export function importUrl() {
  * @param {string} options.operationId The operation to cancel
  * @param {object} options.http An axios-like client with post
  * @return {Promise<object>} The server's answer
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
  */
 export async function cancelCmdbImport({ operationId, http }) {
 	const response = await http.post(
@@ -198,7 +198,7 @@ export async function cancelCmdbImport({ operationId, http }) {
  *
  * @param {string} uuid The module uuid
  * @return {string} The URL
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-011-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome-req-cmdb-011
  */
 export function moduleUrl(uuid) {
 	return generateUrl('/apps/stackiq/modules/{id}', { id: uuid })
@@ -222,7 +222,7 @@ const INTERRUPTED_STATUSES = new Set([0, 502, 503, 504])
  *
  * @param {object} error The axios error
  * @return {{error: string, message: string, details: object, status: number, interrupted: boolean}} The error
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-001-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-user-with-the-stackiq-admin-settings-req-cmdb-001
  */
 export function normaliseError(error) {
 	const status = error?.response?.status ?? 0
@@ -281,7 +281,7 @@ export function normaliseError(error) {
  * @param {number} [options.intervalMs] Time between two reads
  * @param {number} [options.timeoutMs] How long to wait for a running import
  * @return {Promise<{state: string, report?: object, status?: number}>} `finished` with the report, `failed`, `unknown` (not found, or still running when the page stopped waiting) or `unreachable` (the progress could not be read either)
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
  */
 export async function followInterruptedImport({
 	operationId,
@@ -336,7 +336,7 @@ export async function followInterruptedImport({
  * @param {{state: string}} outcome What followInterruptedImport() found
  * @param {{error: string, status: number}} error The normalised error of the cut-off request
  * @return {object|null} The error in the server's shape, or null
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
  */
 export function interruptedImportError(outcome, error) {
 	const base = {
@@ -390,7 +390,7 @@ const KNOWN_ERRORS = new Set([
  *
  * @param {string} code The error code
  * @return {boolean} True for a code with its own text
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-001-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-user-with-the-stackiq-admin-settings-req-cmdb-001
  */
 export function isKnownError(code) {
 	return KNOWN_ERRORS.has(code)
@@ -403,7 +403,7 @@ export function isKnownError(code) {
  *
  * @param {{error: string, message?: string, details?: object}} error The error in the server's shape
  * @return {{title: string, hint: string}} The words
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-003-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422-req-cmdb-003
  */
 export function errorText(error) {
 	const details = error?.details || {}
@@ -640,7 +640,7 @@ export function errorText(error) {
  *
  * @param {{error: string, details?: object}} error The normalised error of the cancel request
  * @return {string} The sentence
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
  */
 export function cancelFailureText(error) {
 	if (error?.error === 'OPERATION_NOT_FOUND') {
@@ -668,7 +668,7 @@ export function cancelFailureText(error) {
  *
  * @param {object|null} progress The snapshot from `GET /api/progress/{operationId}`
  * @return {{percentage: number, detail: string}|null} The view, or null before any progress
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
  */
 export function cmdbProgressView(progress) {
 	if (!progress) {
@@ -714,7 +714,7 @@ export const REPORT_PAGE_SIZE = 100
  * @param {string|null} key The column key
  * @param {string|null} order 'asc', 'desc', or null for the report's order
  * @return {Array<object>} The rows, sorted (a new array when sorted)
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 export function sortReportRows(rows, key, order) {
 	if (!key || (order !== 'asc' && order !== 'desc')) {
@@ -742,7 +742,7 @@ export function sortReportRows(rows, key, order) {
  *
  * @param {Array<object>} rows The report's `rows`
  * @return {Array<object>} The table rows
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-011-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome-req-cmdb-011
  */
 export function reportRows(rows) {
 	if (!Array.isArray(rows)) {

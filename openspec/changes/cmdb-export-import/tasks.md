@@ -5,7 +5,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
 ## Implementation Tasks
 
 ### Task 1: Sanitised test fixtures
-- **spec_ref**: `SPEC#requirement-req-cmdb-002-the-workbook-shall-be-read-as-stored-data-without-evaluating-formulas-or-following-links` (cmdb-export-import#REQ-CMDB-002, also used by every other task)
+- **spec_ref**: `SPEC#requirement-the-workbook-shall-be-read-as-stored-data-without-evaluating-formulas-or-following-links-req-cmdb-002` (cmdb-export-import#REQ-CMDB-002, also used by every other task)
 - **files**: `tests/fixtures/cmdb/topdesk-export-anonymised.xlsx`, `tests/fixtures/cmdb/topdesk-missing-appid.xlsx`, `tests/fixtures/cmdb/topdesk-shuffled-columns.xlsx`, `tests/fixtures/cmdb/topdesk-formula-and-connection.xlsx`, `tests/fixtures/cmdb/README.md`, `tests/fixtures/cmdb/build-fixtures.py`
 - **acceptance_criteria**:
   - GIVEN the anonymised test export from the WOO-586 plan folder WHEN it is copied to `topdesk-export-anonymised.xlsx` THEN `docProps/core.xml` has no creator or lastModifiedBy, and `docProps/custom.xml`, `customXml/` and `xl/connections.xml` are removed, with their entries in `[Content_Types].xml` and the rels files
@@ -16,7 +16,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
 - [x] Test (the scan is a PHPUnit test `tests/Unit/Fixtures/CmdbFixtureHygieneTest.php` that fails on metadata or non-placeholder person data)
 
 ### Task 2: Register fragment with external-id properties and seed modules
-- **spec_ref**: `SPEC#requirement-req-cmdb-006-a-module-shall-be-matched-on-its-topdesk-appid-so-a-re-import-updates-instead-of-duplicating` (cmdb-export-import#REQ-CMDB-006)
+- **spec_ref**: `SPEC#requirement-a-module-shall-be-matched-on-its-topdesk-appid-so-a-re-import-updates-instead-of-duplicating-req-cmdb-006` (cmdb-export-import#REQ-CMDB-006)
 - **files**: `lib/Settings/register.d/topdesk-cmdb-import.json`, `tests/Unit/Settings/TopdeskCmdbFragmentTest.php`
 - **acceptance_criteria**:
   - GIVEN all `register.d` fragments WHEN they are merged in filename order the way `SettingsService` does THEN `module.version` is `0.3.5` and `externalId`, `externalNumber`, `externalKey`, `externalCreatedAt`, `externalModifiedAt` exist, none required, with titles (hydra gate schema-property-titles)
@@ -25,7 +25,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
 - [x] Test
 
 ### Task 3: Import profile, mapping packs and their loader
-- **spec_ref**: `SPEC#requirement-req-cmdb-005-field-mapping-shall-be-declarative-and-executed-by-openregisters-mapping-engine` (cmdb-export-import#REQ-CMDB-005)
+- **spec_ref**: `SPEC#requirement-field-mapping-shall-be-declarative-and-executed-by-openregisters-mapping-engine-req-cmdb-005` (cmdb-export-import#REQ-CMDB-005)
 - **files**: `lib/Settings/cmdb-import/topdesk-profile.json`, `lib/Settings/cmdb-import/topdesk-module.json`, `lib/Settings/cmdb-import/topdesk-manufacturer.json`, `lib/Settings/cmdb-import/topdesk-municipality.json`, `lib/Settings/cmdb-import/topdesk-usage.json`, `lib/Settings/cmdb-import/topdesk-business-owner.json`, `lib/Service/Cmdb/CmdbImportProfile.php`, `lib/Exception/CmdbImportException.php`, `tests/Unit/Service/Cmdb/CmdbImportProfileTest.php`
 - **acceptance_criteria**:
   - GIVEN the five packs WHEN each is passed to OpenRegister's `PackDefinitionValidator` THEN all are valid with `sourceFormat: excel` and `idStrategy: generate`, and they implement the column table in design.md
@@ -35,7 +35,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
 - [x] Test
 
 ### Task 4: Workbook reader and row normaliser
-- **spec_ref**: `SPEC#requirement-req-cmdb-002-…` and `SPEC#requirement-req-cmdb-003-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422` (cmdb-export-import#REQ-CMDB-002, #REQ-CMDB-003, #REQ-CMDB-005)
+- **spec_ref**: `SPEC#requirement-the-workbook-shall-be-read-as-stored-data-without-evaluating-formulas-or-following-links-req-cmdb-002` and `SPEC#requirement-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422-req-cmdb-003` (cmdb-export-import#REQ-CMDB-002, #REQ-CMDB-003, #REQ-CMDB-005)
 - **files**: `lib/Service/Cmdb/CmdbWorkbookReader.php`, `lib/Service/Cmdb/CmdbRowNormaliser.php`, `tests/Unit/Service/Cmdb/CmdbWorkbookReaderTest.php`, `tests/Unit/Service/Cmdb/CmdbRowNormaliserTest.php`
 - **acceptance_criteria**:
   - GIVEN the sanitised fixture WHEN it is read THEN exactly one row per CMDB sheet is returned (empty formatted rows and formula rows that cached `0` dropped), keyed by profile column names, with only allowlisted columns
@@ -47,7 +47,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
 - [x] Test
 
 ### Task 5: Import service: municipality, manufacturer, module upsert, usage
-- **spec_ref**: `SPEC#requirement-req-cmdb-004-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin`, `SPEC#requirement-req-cmdb-006-…`, `SPEC#requirement-req-cmdb-007-a-newly-created-module-shall-get-a-publicationdate-and-an-existing-one-shall-keep-its-own`, `SPEC#requirement-req-cmdb-008-a-manufacturer-shall-become-one-supplier-organisation-however-many-rows-name-it`, `SPEC#requirement-req-cmdb-009-each-imported-application-shall-have-one-usage-that-links-it-to-the-municipality`, `SPEC#requirement-req-cmdb-012-records-missing-from-a-newer-export-shall-be-left-untouched`
+- **spec_ref**: `SPEC#requirement-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin-req-cmdb-004`, `SPEC#requirement-a-module-shall-be-matched-on-its-topdesk-appid-so-a-re-import-updates-instead-of-duplicating-req-cmdb-006`, `SPEC#requirement-a-newly-created-module-shall-get-a-publicationdate-and-an-existing-one-shall-keep-its-own-req-cmdb-007`, `SPEC#requirement-a-manufacturer-shall-become-one-supplier-organisation-however-many-rows-name-it-req-cmdb-008`, `SPEC#requirement-each-imported-application-shall-have-one-usage-that-links-it-to-the-municipality-req-cmdb-009`, `SPEC#requirement-records-missing-from-a-newer-export-shall-be-left-untouched-req-cmdb-012`
 - **files**: `lib/Service/CmdbExportImportService.php`, `tests/Unit/Service/CmdbExportImportServiceTest.php`
 - **acceptance_criteria**:
   - GIVEN the sanitised fixture and "Gemeente Voorbeeldstad" WHEN imported THEN two modules with `externalKey` `topdesk:<uuid>:<APPID>`, `publicationDate` = import start, `provider` set, and two usages with `consumer` = the municipality and `module` = the module
@@ -62,7 +62,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
 - [x] Test
 
 ### Task 6: Owners as contact persons through Nextcloud Contacts
-- **spec_ref**: `SPEC#requirement-req-cmdb-010-the-owner-shall-become-a-contact-person-of-the-municipality-through-nextcloud-contacts-never-a-user-account-and-shall-never-be-publicly-readable` (cmdb-export-import#REQ-CMDB-010)
+- **spec_ref**: `SPEC#requirement-the-owner-shall-become-a-contact-person-of-the-municipality-through-nextcloud-contacts-never-a-user-account-and-shall-never-be-publicly-readable-req-cmdb-010` (cmdb-export-import#REQ-CMDB-010)
 - **files**: `lib/Service/CmdbExportImportService.php`, `tests/Unit/Service/CmdbExportImportServiceTest.php`
 - **acceptance_criteria**:
   - GIVEN the fixture WHEN imported THEN each row's "Applicatie Eigenaar (Persoon)" (a name, or a function) resolves to a contact by display name, one `contactPerson` per owner exists with that `contactsUid`, `organization` = municipality and `role` = "Applicatie Eigenaar (Functie)", and it is the usage's `businessOwner`; no `technicalOwner` is written
@@ -75,7 +75,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
 - [x] Test
 
 ### Task 7: Row isolation, report, progress and cancel
-- **spec_ref**: `SPEC#requirement-req-cmdb-011-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome`, `SPEC#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled`
+- **spec_ref**: `SPEC#requirement-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome-req-cmdb-011`, `SPEC#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013`
 - **files**: `lib/Service/CmdbExportImportService.php`, `lib/Service/Cmdb/CmdbImportReport.php`, `tests/Unit/Service/CmdbExportImportServiceTest.php`
 - **acceptance_criteria**:
   - GIVEN three rows where saving the second module throws WHEN imported THEN rows 1 and 3 are `created`, row 2 is `failed` naming the step, and the summary matches contract.md
@@ -86,7 +86,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
 - [x] Test
 
 ### Task 8: Controller, routes and API tests
-- **spec_ref**: `SPEC#requirement-req-cmdb-001-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin` (cmdb-export-import#REQ-CMDB-001, #REQ-CMDB-012, #REQ-CMDB-013)
+- **spec_ref**: `SPEC#requirement-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-user-with-the-stackiq-admin-settings-req-cmdb-001` (cmdb-export-import#REQ-CMDB-001, #REQ-CMDB-012, #REQ-CMDB-013)
 - **files**: `lib/Controller/CmdbImportController.php`, `appinfo/routes.php`, `tests/Unit/Controller/CmdbImportControllerTest.php`, `postman/stackiq-tests.json`, `openapi.json`
 - **acceptance_criteria**:
   - GIVEN `cmdbImport#import` and `cmdbImport#cancel` WHEN their attributes are inspected THEN neither has `NoAdminRequired` or `NoCSRFRequired` (hydra gates route-auth, csrf-cochange, no-admin-idor)
@@ -96,7 +96,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
 - [ ] Test
 
 ### Task 9: CMDB import section in admin settings, l10n and Playwright e2e
-- **spec_ref**: `SPEC#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section` (cmdb-export-import#REQ-CMDB-014, #REQ-CMDB-003, #REQ-CMDB-011)
+- **spec_ref**: `SPEC#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014` (cmdb-export-import#REQ-CMDB-014, #REQ-CMDB-003, #REQ-CMDB-011)
 - **files**: `src/views/settings/sections/CmdbImport.vue`, `src/views/settings/StackiqSettings.vue`, `l10n/en.json`, `l10n/en.js`, `l10n/nl.json`, `l10n/nl.js`, `tests/e2e/spec-coverage/cmdb-import.spec.ts`
 - **acceptance_criteria**:
   - GIVEN a Nextcloud admin on stackiq's admin settings WHEN they choose "Gemeente Voorbeeldstad" and the sanitised fixture and press Import THEN a progress bar shows, then the summary (2 read, 2 created) and a `CnDataTable` report filterable by outcome with links to the modules
@@ -118,7 +118,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
 - [ ] Test (screenshots reviewed: no data other than the sanitised fixture visible)
 
 ### Task 11: Rework to the CMDB sheets (WOO-586 Stap 4b, decisions of 2026-10-01)
-- **spec_ref**: `SPEC#requirement-req-cmdb-003-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422`, `SPEC#requirement-req-cmdb-006-a-module-shall-be-matched-on-its-topdesk-appid-so-a-re-import-updates-instead-of-duplicating`, `SPEC#requirement-req-cmdb-010-the-owner-shall-become-a-contact-person-of-the-municipality-through-nextcloud-contacts-never-a-user-account-and-shall-never-be-publicly-readable`
+- **spec_ref**: `SPEC#requirement-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422-req-cmdb-003`, `SPEC#requirement-a-module-shall-be-matched-on-its-topdesk-appid-so-a-re-import-updates-instead-of-duplicating-req-cmdb-006`, `SPEC#requirement-the-owner-shall-become-a-contact-person-of-the-municipality-through-nextcloud-contacts-never-a-user-account-and-shall-never-be-publicly-readable-req-cmdb-010`
 - **files**: `lib/Settings/cmdb-import/*.json`, `lib/Service/Cmdb/*`, `lib/Service/CmdbExportImportService.php`, `lib/Settings/register.d/topdesk-cmdb-import.json`, `src/views/settings/sections/CmdbImport.vue`, `src/utils/cmdbImport.js`, `l10n/*`, `tests/fixtures/cmdb/*`, `tests/Unit/**/Cmdb*`, `tests/Unit/Settings/CmdbPersonDataVisibilityTest.php`, `tests/e2e/spec-coverage/cmdb-import.spec.ts`, `docs/features/cmdb-import.md`, `openapi.json`, `postman/stackiq-tests.json`
 - **acceptance_criteria**:
   - The source sheets are "Onbeh Applicaties CMDB" and "Beheerde Applicaties CMDB"; the "Invoer" sheets are not read; columns resolve by header name per sheet

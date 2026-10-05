@@ -13,7 +13,7 @@ Nextcloud OCP interfaces used: `OCP\IRequest` (multipart upload), `OCP\IUserSess
 
 ## ADDED Requirements
 
-### Requirement: REQ-CMDB-001 The import endpoint SHALL accept only a bounded xlsx upload from a Nextcloud admin
+### Requirement: The import endpoint SHALL accept only a bounded xlsx upload from a user with the stackiq admin settings (REQ-CMDB-001)
 
 `POST /api/cmdb-import` SHALL be reachable only by Nextcloud admins and by members of the groups an admin delegated stackiq's admin settings to (`#[AuthorizedAdminSetting(StackiqAdmin)]`), and SHALL require Nextcloud's CSRF token. The endpoint SHALL NOT carry `#[NoAdminRequired]` or `#[NoCSRFRequired]`. It SHALL reject the upload before any parsing when the file is larger than the configured maximum (default 10 MB), when its name does not end in `.xlsx`, or when its content is not a ZIP package containing `xl/workbook.xml`. Macro-enabled (`.xlsm`), legacy (`.xls`) and CSV files SHALL be rejected. No object SHALL be written in any of these cases.
 
@@ -49,7 +49,7 @@ Nextcloud OCP interfaces used: `OCP\IRequest` (multipart upload), `OCP\IUserSess
 - **THEN** Nextcloud SHALL refuse it with 412
 - **AND** no object SHALL be written
 
-### Requirement: REQ-CMDB-002 The workbook SHALL be read as stored data, without evaluating formulas or following links
+### Requirement: The workbook SHALL be read as stored data, without evaluating formulas or following links (REQ-CMDB-002)
 
 The reader SHALL open the workbook with PhpSpreadsheet's Xlsx reader in read-data-only mode, SHALL load only the sheets named in the import profile, and SHALL read each cell's stored value. For a formula cell it SHALL use the value cached in the file and SHALL NOT evaluate the formula. It SHALL NOT contact external data connections, linked workbooks or URLs found in the file. A formula cell without a cached value SHALL be read as empty and SHALL add a row warning naming the column; it SHALL NOT fail the row or the import. A formula whose cached value is the number 0 (Excel's result for a reference to an empty cell) SHALL be read as empty. It SHALL stop with 422 `TOO_MANY_ROWS` when a source sheet holds more data rows than the profile's limit (default 10,000).
 
@@ -77,7 +77,7 @@ The reader SHALL open the workbook with PhpSpreadsheet's Xlsx reader in read-dat
 - **THEN** no network request SHALL be made
 - **AND** the source sheets SHALL be read normally
 
-### Requirement: REQ-CMDB-003 Columns SHALL be resolved by header name, and a missing required column SHALL stop the import with 422
+### Requirement: Columns SHALL be resolved by header name, and a missing required column SHALL stop the import with 422 (REQ-CMDB-003)
 
 The source sheets SHALL be the CMDB sheets "Onbeh Applicaties CMDB" and "Beheerde Applicaties CMDB"; the "Invoer" sheets SHALL NOT be read. The reader SHALL take the first row of each source sheet as headers and SHALL match them to the profile's column names per sheet, case-insensitively, after trimming whitespace and dropping a trailing `:` or `⚡`. Column order SHALL NOT matter. When a present source sheet lacks a column the profile marks as required (`APPID`, `Applicatie Naam`), the endpoint SHALL answer 422 with error `MISSING_COLUMN`, naming the column and the sheet, before any object is written. When neither source sheet exists, the endpoint SHALL answer 422 with error `NO_SOURCE_SHEET`, naming both expected sheets. A missing optional column SHALL produce one import-level warning and no row error, except for a column the profile lists as absent on that sheet (`Nickname` on "Onbeh Applicaties CMDB").
 
@@ -104,7 +104,7 @@ The source sheets SHALL be the CMDB sheets "Onbeh Applicaties CMDB" and "Beheerd
 - **WHEN** a Nextcloud admin uploads it
 - **THEN** the endpoint SHALL answer 422 with error `NO_SOURCE_SHEET` naming "Onbeh Applicaties CMDB" and "Beheerde Applicaties CMDB"
 
-### Requirement: REQ-CMDB-004 Every import SHALL have exactly one consuming municipality, chosen by the admin
+### Requirement: Every import SHALL have exactly one consuming municipality, chosen by the admin (REQ-CMDB-004)
 
 The request SHALL carry either `municipalityUuid`, the uuid of an existing stackiq `organization` of type `Municipality`, or `municipalityName`, a name for a new one. With a name, the service SHALL reuse an existing organisation of type `Municipality` with the same normalised name, or create one through the municipality pack (type `Municipality`, status `Active`). It SHALL answer 422 `MUNICIPALITY_REQUIRED` when neither is given, and 422 `MUNICIPALITY_INVALID` when the uuid does not resolve to an organisation of type `Municipality`. Every `usage` and `contactPerson` the import writes SHALL reference that organisation.
 
@@ -131,7 +131,7 @@ The request SHALL carry either `municipalityUuid`, the uuid of an existing stack
 - **THEN** the endpoint SHALL answer 422 with error `MUNICIPALITY_REQUIRED`
 - **AND** no object SHALL be written
 
-### Requirement: REQ-CMDB-005 Field mapping SHALL be declarative and executed by OpenRegister's mapping engine
+### Requirement: Field mapping SHALL be declarative and executed by OpenRegister's mapping engine (REQ-CMDB-005)
 
 The service SHALL map each normalised row with OpenRegister's `MigrationPack\MappingEngine::mapRow()`, once per target pack: module, manufacturer, municipality, usage, business owner. The packs and the import profile SHALL ship as JSON under `lib/Settings/cmdb-import/`. Each pack SHALL pass OpenRegister's `PackDefinitionValidator` when the import starts; an invalid pack, or a missing `MappingEngine`, SHALL stop the import with 503 `MAPPING_UNAVAILABLE` before any row is read. Before mapping, the service SHALL convert the cells of the profile's date columns from Excel serial numbers to `Y-m-d`, SHALL turn numeric id cells into strings without a decimal part, SHALL read a value the profile lists as empty for its column (`NB` in "BNN Classificatie"; dates, "End-of-Life Functioneel" included, are kept as the file has them) as empty, and SHALL add the constants of the row's sheet (`Beheer` = `Beheer geregeld: nee` or `ja`). A mapping error on a mapping marked `required` in the module pack SHALL skip the row. In the manufacturer and owner packs it SHALL mean the row has no manufacturer or no such owner, without a warning. A mapping error on any other mapping SHALL drop only that field and add a row warning naming the column and the value. The reader SHALL keep only the columns that the profile or a pack references, and SHALL discard every other cell when it reads the row.
 
@@ -171,7 +171,7 @@ The service SHALL map each normalised row with OpenRegister's `MigrationPack\Map
 - **AND** the "Onbeh" row's "Applicatiesoort" `Webapplicatie`, which is not a hosting model, SHALL be stored as `applicationType` and SHALL leave `cloudDienstverleningsmodel` empty without a warning
 - **AND** "BNN Classificatie" `1`, `2`, `2+` SHALL be `BBN1`, `BBN2`, `BBN2+`
 
-### Requirement: REQ-CMDB-006 A module SHALL be matched on its TOPdesk APPID, so a re-import updates instead of duplicating
+### Requirement: A module SHALL be matched on its TOPdesk APPID, so a re-import updates instead of duplicating (REQ-CMDB-006)
 
 For each row the service SHALL compute `externalKey` = `topdesk:<municipality uuid>:<APPID>` (the APPID is TOPdesk's ICT Applicatienummer; the Applicatie Code, or Middel-ID, can change in TOPdesk and is stored as `externalId` for reference only) and look up a `module` with that `externalKey`. When none exists it SHALL create one. When one exists it SHALL update only the fields the module pack maps and SHALL leave every other field as it is. When the mapped fields equal the stored values it SHALL NOT save the module and SHALL report the row as `unchanged`. With `updateExisting=false` a matched row SHALL be reported as `skipped` with reason `exists`, without changes. A row without an APPID SHALL be skipped with reason `missing APPID`. When an APPID occurs more than once in one upload, across both sheets, the first occurrence SHALL be imported and every later one SHALL be skipped with reason `duplicate APPID in file`.
 
@@ -207,7 +207,7 @@ For each row the service SHALL compute `externalKey` = `topdesk:<municipality uu
 - **WHEN** a newer export has APPID `42` with "Applicatie Code" `App-Nieuw`
 - **THEN** the same module SHALL be updated, with `externalId` = `App-Nieuw` and the same `externalKey`
 
-### Requirement: REQ-CMDB-007 A newly created module SHALL get a publicationDate, and an existing one SHALL keep its own
+### Requirement: A newly created module SHALL get a publicationDate, and an existing one SHALL keep its own (REQ-CMDB-007)
 
 When the service creates a `module` it SHALL set `publicationDate` to the time the import started, as an ISO 8601 date-time, so OpenCatalogi lists the module. When it updates an existing `module` it SHALL NOT change `publicationDate` or `depublicationDate`, also when they are empty.
 
@@ -227,7 +227,7 @@ When the service creates a `module` it SHALL set `publicationDate` to the time t
 - **THEN** the module with APPID `1234` SHALL keep `publicationDate` 2026-10-01T09:00:00+00:00
 - **AND** the module with APPID `2` SHALL keep its `depublicationDate` and SHALL NOT get a new `publicationDate`
 
-### Requirement: REQ-CMDB-008 A manufacturer SHALL become one supplier organisation, however many rows name it
+### Requirement: A manufacturer SHALL become one supplier organisation, however many rows name it (REQ-CMDB-008)
 
 The service SHALL map "Vendor" (the maker of the software) through the manufacturer pack to an `organization` of type `Supplier`. It SHALL match names after trimming, collapsing whitespace and ignoring case, first against the organisations it has already resolved during this import, then against existing organisations of type `Supplier`, and SHALL create one only when neither matches. The imported module's `provider` and the usage's `provider` SHALL reference that organisation. A row with an empty "Vendor" SHALL be imported without a provider. "Leverancier" and "Hostingpartij" SHALL NOT be read.
 
@@ -247,7 +247,7 @@ The service SHALL map "Vendor" (the maker of the software) through the manufactu
 - **THEN** no new organisation SHALL be created
 - **AND** the module with APPID `1234` SHALL have `provider` = the existing organisation's uuid
 
-### Requirement: REQ-CMDB-009 Each imported application SHALL have one usage that links it to the municipality
+### Requirement: Each imported application SHALL have one usage that links it to the municipality (REQ-CMDB-009)
 
 For each imported module the service SHALL keep exactly one `usage` with `consumer` = the municipality and `module` = the module, found by those two references and created when missing. The usage pack SHALL map "Applicatie Status" to `status` and "Classificatie" to `timeClassification` through lookups, "End-of-Life Functioneel" to `startDateOutPhased`, and the sheet's `Beheer` constant, "Cluster" and "Applicatie Eigenaar (Afdeling)" to `interneAnnotation`, so the note records whether maintenance is arranged (`Beheer geregeld: nee` for "Onbeh Applicaties CMDB", `ja` for "Beheerde Applicaties CMDB"). Empty parts SHALL be left out of the note. `interneAnnotation` SHALL be written only when the usage is created or the field is empty, so a note an admin wrote is never overwritten.
 
@@ -274,7 +274,7 @@ For each imported module the service SHALL keep exactly one `usage` with `consum
 - **WHEN** a newer export is imported for the same municipality
 - **THEN** the module with APPID `2` SHALL still have exactly one usage for "Gemeente Voorbeeldstad"
 
-### Requirement: REQ-CMDB-010 The owner SHALL become a contact person of the municipality through Nextcloud Contacts, never a user account, and SHALL never be publicly readable
+### Requirement: The owner SHALL become a contact person of the municipality through Nextcloud Contacts, never a user account, and SHALL never be publicly readable (REQ-CMDB-010)
 
 The business owner pack SHALL map "Applicatie Eigenaar (Persoon)" (the display name, which may be a function instead of a person's name) and "Applicatie Eigenaar (Functie)" (the role). No technical owner SHALL be imported; the functional administrator columns SHALL NOT be read. For the owner the service SHALL resolve a Nextcloud contact through `StackiqContactSyncService` by an exact match on the display name, and otherwise by creating one. It SHALL then reuse or create one `contactPerson` with that `contactsUid`, `organization` = the municipality and `role` = "Applicatie Eigenaar (Functie)" when given, and SHALL set `usage.businessOwner` to it. The import SHALL NOT create Nextcloud user accounts. When Nextcloud Contacts is unavailable, the row SHALL be imported without an owner and SHALL carry a warning. `contactPerson` and `usage` SHALL have no public read rule, so the owner is never readable by an anonymous visitor; a published module SHALL refer to them by relation only.
 
@@ -310,7 +310,7 @@ The business owner pack SHALL map "Applicatie Eigenaar (Persoon)" (the display n
 - **THEN** both modules and usages SHALL be saved without owners
 - **AND** each row with an owner SHALL carry the warning that owners were skipped because Contacts is unavailable
 
-### Requirement: REQ-CMDB-011 Each row SHALL be processed in isolation and reported with its outcome
+### Requirement: Each row SHALL be processed in isolation and reported with its outcome (REQ-CMDB-011)
 
 The service SHALL process every non-empty row in its own error boundary. An exception in one row SHALL mark that row `failed` with the reason and SHALL NOT stop the import or change the outcome of other rows. Rows whose cells are all empty SHALL be ignored and not counted. The response SHALL contain a summary (rows read, created, updated, unchanged, skipped, failed, warnings) and one entry per counted row with sheet, row number, APPID, application name, outcome, reasons, warnings and the uuids of the module and usage. Report entries and log lines SHALL NOT contain owner names, e-mail addresses or other person data. The section SHALL render report values as text, never as HTML.
 
@@ -339,7 +339,7 @@ The service SHALL process every non-empty row in its own error boundary. An exce
 - **WHEN** it is imported
 - **THEN** it SHALL be `skipped` with reason `missing Applicatie Naam`
 
-### Requirement: REQ-CMDB-012 Records missing from a newer export SHALL be left untouched
+### Requirement: Records missing from a newer export SHALL be left untouched (REQ-CMDB-012)
 
 The import SHALL accept `missingRecords` with the value `keep`, which is also the default. It SHALL NOT change, depublish or delete a module, usage, organisation or contact person because its APPID is absent from the upload. Any other value, including the reserved `mark` and `remove`, SHALL be refused with 422 `MISSING_RECORDS_UNSUPPORTED`.
 
@@ -358,7 +358,7 @@ The import SHALL accept `missingRecords` with the value `keep`, which is also th
 - **THEN** the endpoint SHALL answer 422 with error `MISSING_RECORDS_UNSUPPORTED`
 - **AND** no object SHALL be written
 
-### Requirement: REQ-CMDB-013 A running import SHALL report its progress and SHALL stop when cancelled
+### Requirement: A running import SHALL report its progress and SHALL stop when cancelled (REQ-CMDB-013)
 
 The import SHALL run as a `ProgressTracker` operation of type `cmdb_import` under the `operationId` the client sends, and SHALL update the processed row count after every row, readable through the existing `GET /api/progress/{operationId}`. `POST /api/cmdb-import/{operationId}/cancel`, open to the same users as the import and CSRF-protected, SHALL request cancellation. The service SHALL check for cancellation between rows, SHALL keep the rows already processed, and SHALL return the report with `cancelled: true`. The final report SHALL also be stored with the operation, so it can be read again within the tracker's lifetime.
 
@@ -371,7 +371,7 @@ The import SHALL run as a `ProgressTracker` operation of type `cmdb_import` unde
 - **AND** the report SHALL show 1 processed row and `cancelled: true`
 - **AND** the module created for the first row SHALL stay
 
-### Requirement: REQ-CMDB-014 The admin settings SHALL offer a CMDB import section
+### Requirement: The admin settings SHALL offer a CMDB import section (REQ-CMDB-014)
 
 Stackiq's admin settings page SHALL show a section "CMDB import", rendered by the settings page and not registered as an in-app route. The section SHALL let the admin choose an existing municipality or type the name of a new one, choose an `.xlsx` file, and start the import. While the import runs it SHALL show a progress bar and a Cancel button. Afterwards it SHALL show the summary and a report table that can be filtered by outcome. Every control SHALL have a visible label, and every string SHALL be translatable.
 

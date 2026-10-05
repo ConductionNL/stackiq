@@ -442,7 +442,7 @@ import {
  * placeholders are built with AS_TEXT (no HTML escaping), because Vue escapes
  * the text it renders; none of them may go into v-html.
  *
- * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 export default {
 	name: 'CmdbImport',
@@ -501,7 +501,7 @@ export default {
 		 * Whether everything the import needs has been chosen.
 		 *
 		 * @return {boolean} True when the Import button may be pressed
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		canImport() {
 			return (
@@ -517,7 +517,7 @@ export default {
 		 * The progress bar's view of the running import.
 		 *
 		 * @return {object|null} The view
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
 		 */
 		progressView() {
 			return cmdbProgressView(this.progress)
@@ -527,7 +527,7 @@ export default {
 		 * The words for the current error, if any.
 		 *
 		 * @return {object|null} Title, hint, code and the server's message for an unknown code
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-003-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422-req-cmdb-003
 		 */
 		errorView() {
 			if (!this.error) {
@@ -547,7 +547,7 @@ export default {
 		 * The summary counts, in the order the contract lists them.
 		 *
 		 * @return {Array<object>} One tile per count
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-011-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome-req-cmdb-011
 		 */
 		summaryTiles() {
 			const summary = this.report?.summary || {}
@@ -566,7 +566,7 @@ export default {
 		 * The sentence that says the import finished, and for whom.
 		 *
 		 * @return {string} The sentence
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		finishedText() {
 			const summary = this.report?.summary || {}
@@ -605,7 +605,7 @@ export default {
 		 * Import-level warnings, such as a missing optional column.
 		 *
 		 * @return {Array<string>} One line per warning
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-003-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422-req-cmdb-003
 		 */
 		importWarnings() {
 			const warnings = this.report?.importWarnings
@@ -623,7 +623,7 @@ export default {
 		 * The choices of the outcome filter: all rows, or one outcome.
 		 *
 		 * @return {Array<object>} The options
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		outcomeFilterOptions() {
 			return [
@@ -639,7 +639,7 @@ export default {
 		 * The table rows that match the outcome filter.
 		 *
 		 * @return {Array<object>} The rows
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		filteredRows() {
 			const rows = reportRows(this.report?.rows)
@@ -654,7 +654,7 @@ export default {
 		 * The filtered rows in the order of the column the admin sorted on.
 		 *
 		 * @return {Array<object>} The rows
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		sortedRows() {
 			return sortReportRows(this.filteredRows, this.sortKey, this.sortOrder)
@@ -664,7 +664,7 @@ export default {
 		 * The rows the table renders: the first visibleRowCount sorted rows.
 		 *
 		 * @return {Array<object>} The rows
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		visibleRows() {
 			return this.sortedRows.slice(0, this.visibleRowCount)
@@ -674,7 +674,7 @@ export default {
 		 * The report table's columns.
 		 *
 		 * @return {Array<object>} The columns
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-011-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome-req-cmdb-011
 		 */
 		columns() {
 			return [
@@ -696,7 +696,7 @@ export default {
 		/**
 		 * Another outcome filter starts at the first page again.
 		 *
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		outcomeFilter() {
 			this.visibleRowCount = REPORT_PAGE_SIZE
@@ -706,7 +706,7 @@ export default {
 	/**
 	 * Load the municipalities for the chooser.
 	 *
-	 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-004-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin
+	 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin-req-cmdb-004
 	 */
 	created() {
 		this.outcomeFilter = this.outcomeFilterOptions[0]
@@ -716,7 +716,7 @@ export default {
 	/**
 	 * Stop polling when the page is left mid-import.
 	 *
-	 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
+	 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
 	 */
 	beforeUnmount() {
 		this.unmounted = true
@@ -733,7 +733,7 @@ export default {
 		 * Read the organisations of type Municipality from OpenRegister.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-004-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin-req-cmdb-004
 		 */
 		async loadMunicipalities() {
 			this.loadingMunicipalities = true
@@ -788,7 +788,7 @@ export default {
 		 *
 		 * @param {string|object} typed What the admin typed
 		 * @return {object} The option
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-004-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin-req-cmdb-004
 		 */
 		createMunicipalityOption(typed) {
 			const label = String(
@@ -807,7 +807,7 @@ export default {
 		 *
 		 * @param {Event} event The change event of the file input
 		 * @return {void}
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		handleFileSelect(event) {
 			const file = event?.target?.files?.[0] || null
@@ -827,7 +827,7 @@ export default {
 		 *
 		 * @param {number} bytes The size
 		 * @return {string} The size with its unit
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		formatFileSize(bytes) {
 			if (bytes < 1024 * 1024) {
@@ -854,7 +854,7 @@ export default {
 		 * Upload the export and show its report.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		async startImport() {
 			if (!this.canImport) {
@@ -915,7 +915,7 @@ export default {
 		 *
 		 * @param {object} report The report
 		 * @return {void}
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-011-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome-req-cmdb-011
 		 */
 		showReport(report) {
 			this.report = report
@@ -945,7 +945,7 @@ export default {
 		 *
 		 * @param {object} normalised The normalised error of the request
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
 		 */
 		async recoverInterruptedImport(normalised) {
 			this.stopPolling()
@@ -968,7 +968,7 @@ export default {
 		 * Ask the server to stop the running import before its next row.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
 		 */
 		async cancelImport() {
 			if (!this.operationId) {
@@ -997,7 +997,7 @@ export default {
 		 *
 		 * @param {{key: string|null, order: string|null}} sort The table's sort event
 		 * @return {void}
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		onSort({ key, order }) {
 			this.sortKey = key
@@ -1008,7 +1008,7 @@ export default {
 		 * Show the next page of report rows below the ones already shown.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		showMoreRows() {
 			this.visibleRowCount += REPORT_PAGE_SIZE
@@ -1018,7 +1018,7 @@ export default {
 		 * Stop following the progress of the import.
 		 *
 		 * @return {void}
-		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
 		 */
 		stopPolling() {
 			if (this.stopProgressPolling) {
