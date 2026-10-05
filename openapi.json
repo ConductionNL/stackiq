@@ -13,7 +13,7 @@
             "post": {
                 "operationId": "cmdbImport-import",
                 "summary": "Import a TOPdesk CMDB export (xlsx) for one municipality",
-                "description": "Admin-only, CSRF-protected (requesttoken header or OCS-APIRequest: true). Creates or updates modules, supplier organisations, usages and owner contact persons, matched on topdesk:<municipality uuid>:<APPID>. See openspec/changes/cmdb-export-import/contract.md.",
+                "description": "Nextcloud admins and users delegated the stackiq admin settings, CSRF-protected (requesttoken header or OCS-APIRequest: true). Creates or updates modules, supplier organisations, usages and owner contact persons, matched on topdesk:<municipality uuid>:<APPID>. See openspec/changes/cmdb-export-import/contract.md.",
                 "tags": [
                     "cmdb-import"
                 ],
@@ -48,7 +48,7 @@
                                             "false"
                                         ],
                                         "default": "true",
-                                        "description": "false reports matched rows as skipped (exists)"
+                                        "description": "false reports matched rows as skipped (exists). 1 and 0 are accepted too, trimmed and in any case; any other value is refused with 400 FIELD_INVALID"
                                     },
                                     "missingRecords": {
                                         "type": "string",
@@ -61,7 +61,7 @@
                                     "operationId": {
                                         "type": "string",
                                         "pattern": "^cmdb-[A-Za-z0-9-]{8,64}$",
-                                        "description": "Progress operation id, readable through GET /api/progress/{operationId}"
+                                        "description": "Progress operation id, readable through GET /api/progress/{operationId}. A value that does not match the pattern, or the id of a CMDB import that is still running, is replaced by a generated id; the response's operationId is the id the import used"
                                     }
                                 }
                             }
@@ -80,7 +80,7 @@
                         }
                     },
                     "400": {
-                        "description": "NO_FILE_UPLOADED or NOT_XLSX",
+                        "description": "NO_FILE_UPLOADED, NOT_XLSX, or FIELD_INVALID (updateExisting not true/false/1/0, or a text field sent as an array; details.field names it)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -93,13 +93,13 @@
                         "description": "Not signed in"
                     },
                     "403": {
-                        "description": "Not a Nextcloud admin"
+                        "description": "Not an admin of the stackiq settings"
                     },
                     "412": {
                         "description": "Missing or invalid CSRF token"
                     },
                     "413": {
-                        "description": "FILE_TOO_LARGE",
+                        "description": "FILE_TOO_LARGE; details.maxBytes is the limit that fired: the profile's maximum, or PHP's upload_max_filesize or post_max_size when lower",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -119,7 +119,7 @@
                         }
                     },
                     "500": {
-                        "description": "IMPORT_FAILED",
+                        "description": "UPLOAD_FAILED (PHP could not store the upload) or IMPORT_FAILED (unexpected; the detail is in the log)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -145,7 +145,7 @@
             "post": {
                 "operationId": "cmdbImport-cancel",
                 "summary": "Ask a running CMDB import to stop between rows",
-                "description": "Admin-only, CSRF-protected. No body.",
+                "description": "Nextcloud admins and users delegated the stackiq admin settings, CSRF-protected (requesttoken header or OCS-APIRequest: true). No body.",
                 "tags": [
                     "cmdb-import"
                 ],
@@ -155,8 +155,10 @@
                         "in": "path",
                         "required": true,
                         "schema": {
-                            "type": "string"
-                        }
+                            "type": "string",
+                            "pattern": "^cmdb-[A-Za-z0-9-]{8,64}$"
+                        },
+                        "description": "The operationId of the import; any other value answers 404 OPERATION_NOT_FOUND"
                     }
                 ],
                 "responses": {
@@ -182,11 +184,14 @@
                             }
                         }
                     },
+                    "401": {
+                        "description": "Not signed in"
+                    },
                     "403": {
-                        "description": "Not a Nextcloud admin"
+                        "description": "Not an admin of the stackiq settings"
                     },
                     "404": {
-                        "description": "OPERATION_NOT_FOUND",
+                        "description": "OPERATION_NOT_FOUND: no CMDB import with this id is running",
                         "content": {
                             "application/json": {
                                 "schema": {

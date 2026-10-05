@@ -77,8 +77,9 @@ Error body: `{"success": false, "error": "<CODE>", "message": "<translated text>
 **Errors:**
 | Code | Condition |
 |------|-----------|
+| 401  | not signed in |
 | 403  | neither a Nextcloud admin nor a delegated stackiq admin |
-| 404  | `OPERATION_NOT_FOUND`: no `cmdb_import` operation with this id |
+| 404  | `OPERATION_NOT_FOUND`: no running `cmdb_import` operation with this id |
 | 412  | missing or invalid CSRF token |
 
 ### `GET /api/progress/{operationId}` (existing, unchanged)
@@ -102,7 +103,7 @@ Returns the `ProgressTracker` snapshot for the `cmdb_import` operation: `progres
 | `MAPPING_UNAVAILABLE` | mapping cannot run | OpenRegister's `MappingEngine`/`PackDefinitionValidator` missing, or a shipped pack is invalid |
 | `READER_UNAVAILABLE` | xlsx reader missing | PhpSpreadsheet's Xlsx reader cannot be loaded |
 | `NOT_CONFIGURED` | stackiq not configured (503) | OpenRegister's object service, the stackiq register, or the `module`, `organization`, `usage` or `contactPerson` schema cannot be resolved; checked before the file is read |
-| `OPERATION_NOT_FOUND` | unknown operation | cancel for an id without a `cmdb_import` operation |
+| `OPERATION_NOT_FOUND` | unknown operation | cancel for an id without a running `cmdb_import` operation |
 | `IMPORT_FAILED` | unexpected error | anything not listed above |
 
 ## Versioning
