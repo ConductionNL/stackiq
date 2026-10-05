@@ -486,49 +486,87 @@ export function isKnownError(code) {
 }
 
 /**
- * The title of WORKBOOK_TOO_LARGE, naming the limit the server applied.
+ * What the page says for WORKBOOK_TOO_LARGE: which limit the server applied,
+ * to which sheet or part, and what to do about it.
  *
- * @param {object} details The error details: `maxPartBytes` and `part`, `maxSharedStrings`, `maxReferencedStringBytes`, or `maxUncompressedBytes`
- * @return {string} The title
+ * @param {object} details The error details: `maxPartBytes`, `part`, `size` and, for a sheet, `sheet`; `maxSharedStrings`; `maxReferencedStringBytes`; or `maxUncompressedBytes`
+ * @return {{title: string, hint: string}} The words
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-workbook-shall-be-read-as-stored-data-without-evaluating-formulas-or-following-links-req-cmdb-002
  */
-function workbookTooLargeTitle(details) {
+function workbookTooLarge(details) {
+	const compressed = t(
+		'stackiq',
+		'An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.',
+	)
+	const split = compressed + ' ' + t(
+		'stackiq',
+		'Split the rows over two copies of the export and import them one after the other.',
+	)
 	if (Number(details.maxPartBytes) > 0) {
-		return t(
-			'stackiq',
-			'Unpacked, the part {part} of the workbook is larger than {size}, the most the import reads of one part.',
-			{
-				part: String(details.part ?? ''),
-				size: formatMegabytes(details.maxPartBytes),
-			},
-			AS_TEXT,
-		)
+		const sizes = {
+			size: formatMegabytes(details.size),
+			limit: formatMegabytes(details.maxPartBytes),
+		}
+		return {
+			title: details.sheet
+				? t(
+						'stackiq',
+						'The sheet "{sheet}" is too large to import: unpacked it is {size}, and the import reads at most {limit} of one sheet.',
+						{ sheet: String(details.sheet), ...sizes },
+						AS_TEXT,
+					)
+				: t(
+						'stackiq',
+						'The part {part} of the workbook is too large to import: unpacked it is {size}, and the import reads at most {limit} of one part.',
+						{ part: String(details.part ?? ''), ...sizes },
+						AS_TEXT,
+					),
+			hint: split,
+		}
 	}
 	if (Number(details.maxSharedStrings) > 0) {
-		return t(
-			'stackiq',
-			'The workbook holds more than {count} different texts, the most the import reads.',
-			{ count: String(details.maxSharedStrings) },
-			AS_TEXT,
-		)
+		return {
+			title: t(
+				'stackiq',
+				'The workbook holds more than {count} different texts, the most the import reads.',
+				{ count: String(details.maxSharedStrings) },
+				AS_TEXT,
+			),
+			hint: split,
+		}
 	}
 	if (Number(details.maxReferencedStringBytes) > 0) {
-		return t(
-			'stackiq',
-			'Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.',
-			{ size: formatMegabytes(details.maxReferencedStringBytes) },
-			AS_TEXT,
-		)
+		return {
+			title: t(
+				'stackiq',
+				'Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.',
+				{ size: formatMegabytes(details.maxReferencedStringBytes) },
+				AS_TEXT,
+			),
+			hint: split,
+		}
 	}
+	const unread = compressed + ' ' + t(
+		'stackiq',
+		'Delete the sheets the import does not read from a copy of the export (it reads only "{first}" and "{second}"), and import that copy.',
+		{ first: PROFILE_DEFAULTS.sheets[0], second: PROFILE_DEFAULTS.sheets[1] },
+		AS_TEXT,
+	)
 	if (Number(details.maxUncompressedBytes) > 0) {
-		return t(
-			'stackiq',
-			'Unpacked, the workbook is larger than {size}, the most the import reads.',
-			{ size: formatMegabytes(details.maxUncompressedBytes) },
-			AS_TEXT,
-		)
+		return {
+			title: t(
+				'stackiq',
+				'Unpacked, the workbook is larger than {size}, the most the import reads.',
+				{ size: formatMegabytes(details.maxUncompressedBytes) },
+				AS_TEXT,
+			),
+			hint: unread,
+		}
 	}
-	return t('stackiq', 'The workbook is too large to read once unpacked.')
+	return {
+		title: t('stackiq', 'The workbook is too large to read once unpacked.'),
+		hint: unread,
+	}
 }
 
 /**
@@ -720,13 +758,7 @@ export function errorText(error) {
 				),
 			}
 		case 'WORKBOOK_TOO_LARGE':
-			return {
-				title: workbookTooLargeTitle(details),
-				hint: t(
-					'stackiq',
-					'Remove sheets the import does not read, such as the archive sheet, or split the export, and try again. Nothing was imported.',
-				),
-			}
+			return workbookTooLarge(details)
 		case 'SCHEMA_OUTDATED':
 			return {
 				title: details.schema

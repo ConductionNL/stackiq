@@ -381,6 +381,33 @@ describe('errorText', () => {
 		)
 	})
 
+	it('names the sheet, its unpacked size and the limit, and says what to do', () => {
+		const words = errorText({
+			error: 'WORKBOOK_TOO_LARGE',
+			details: {
+				maxPartBytes: 10 * 1024 * 1024,
+				part: 'xl/worksheets/sheet4.xml',
+				size: 14.3 * 1024 * 1024,
+				sheet: 'Beheerde Applicaties CMDB',
+			},
+		})
+		expect(words.title).toBe(
+			'The sheet "Beheerde Applicaties CMDB" is too large to import: unpacked it is 14.3 MB, and the import reads at most 10 MB of one sheet.',
+		)
+		expect(words.hint).toBe(
+			'An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported. Split the rows over two copies of the export and import them one after the other.',
+		)
+	})
+
+	it('tells to delete the unread sheets when the whole workbook is too large', () => {
+		expect(
+			errorText({
+				error: 'WORKBOOK_TOO_LARGE',
+				details: { maxUncompressedBytes: 50 * 1024 * 1024 },
+			}).hint,
+		).toContain('(it reads only "Onbeh Applicaties CMDB" and "Beheerde Applicaties CMDB")')
+	})
+
 	it('names the part limit and the part, the shared-strings limit or the referenced-text limit the server applied', () => {
 		expect(
 			errorText({
@@ -388,10 +415,11 @@ describe('errorText', () => {
 				details: {
 					maxPartBytes: 10 * 1024 * 1024,
 					part: 'xl/sharedStrings.xml',
+					size: 12 * 1024 * 1024,
 				},
 			}).title,
 		).toBe(
-			'Unpacked, the part xl/sharedStrings.xml of the workbook is larger than 10 MB, the most the import reads of one part.',
+			'The part xl/sharedStrings.xml of the workbook is too large to import: unpacked it is 12 MB, and the import reads at most 10 MB of one part.',
 		)
 		expect(
 			errorText({
