@@ -34,7 +34,12 @@
  *    profile's `maxUncompressedBytes`, a single part that unpacks to more
  *    than `maxPartBytes`, and a shared-strings table with more entries than
  *    `maxSharedStrings` (counted with a streaming XMLReader, without building
- *    the table). A source sheet whose last used row lies beyond twice the row
+ *    the table). PhpSpreadsheet also gives every cell that references a shared
+ *    string its own copy of the text, after cloning each run of a rich-text
+ *    string, so one long or many-run string referenced by many cells costs
+ *    memory and time per cell; the shared-string text the cells reference is
+ *    therefore bounded too (`maxReferencedStringBytes`, streamed as well).
+ *    A source sheet whose last used row lies beyond twice the row
  *    limit is `TOO_MANY_ROWS`. A read filter then materialises only the
  *    header row and the resolved columns of the rows up to that bound
  *    (CmdbReadFilter), which bounds the cell objects, not the parse.
@@ -136,7 +141,8 @@ class CmdbWorkbookReader {
 	 * What the workbook can make PhpSpreadsheet hold is bounded before any
 	 * part is parsed: the unpacked size of the package (the profile's
 	 * `maxUncompressedBytes`) and of each part (`maxPartBytes`), the number of
-	 * shared strings (`maxSharedStrings`), then the last used row of every
+	 * shared strings (`maxSharedStrings`), the shared-string text the cells
+	 * reference (`maxReferencedStringBytes`), then the last used row of every
 	 * source sheet.
 	 * The sheets are then read twice through a read filter: once for the
 	 * header row, once for the resolved columns of the data rows, so no other
@@ -156,6 +162,11 @@ class CmdbWorkbookReader {
 	public function read(string $path, CmdbImportProfile $profile): array {
 		$this->assertUncompressedSize(path: $path, limit: $profile->maxUncompressedBytes(), partLimit: $profile->maxPartBytes());
 		$this->assertSharedStringCount(path: $path, limit: $profile->maxSharedStrings());
+		$this->assertReferencedStringBytes(
+			path: $path,
+			limit: $profile->maxReferencedStringBytes(),
+			sheetCount: count($profile->sheetNames())
+		);
 
 		if ($this->isAvailable() === false) {
 			throw new CmdbImportException(
@@ -299,9 +310,11 @@ class CmdbWorkbookReader {
 	 *
 	 * The table's `count` and `uniqueCount` attributes are written by the
 	 * producer and can be wrong, so the `<si>` elements are counted, streamed
-	 * with XMLReader straight from the ZIP part. Network access and entity
-	 * substitution stay off. A part that does not parse is left to
-	 * PhpSpreadsheet, which refuses it as NOT_XLSX.
+	 * with XMLReader straight from the ZIP part. PhpSpreadsheet reads the `<si>`
+	 * children of whatever part the workbook's relationships name, whatever
+	 * that part's name or root element, so every XML part is counted. A part
+	 * that does not parse is left to PhpSpreadsheet, which refuses it as
+	 * NOT_XLSX.
 	 *
 	 * @param string $path The xlsx file.
 	 * @param int $limit The maximum number of shared strings.
@@ -311,35 +324,22 @@ class CmdbWorkbookReader {
 	 * @throws CmdbImportException WORKBOOK_TOO_LARGE above the limit.
 	 */
 	private function assertSharedStringCount(string $path, int $limit): void {
-		foreach (self::sharedStringParts(path: $path) as $part) {
-			$xml = new XMLReader();
-			$previous = libxml_use_internal_errors(true);
-			try {
-				if ($xml->open('zip://' . $path . '#' . $part, null, LIBXML_NONET) === false) {
-					continue;
+		self::streamParts(
+			path: $path,
+			consume: static function (XMLReader $xml) use ($limit): void {
+				if (self::countSharedStrings(xml: $xml, limit: $limit) > $limit) {
+					throw new CmdbImportException(
+						errorCode: CmdbImportException::WORKBOOK_TOO_LARGE,
+						message: 'The shared-strings table holds more entries than the profile allows',
+						details: ['maxSharedStrings' => $limit]
+					);
 				}
-
-				$count = self::countSharedStrings(xml: $xml, limit: $limit);
-				$xml->close();
-			} finally {
-				libxml_clear_errors();
-				libxml_use_internal_errors($previous);
 			}
-
-			if ($count > $limit) {
-				throw new CmdbImportException(
-					errorCode: CmdbImportException::WORKBOOK_TOO_LARGE,
-					message: 'The shared-strings table holds more entries than the profile allows',
-					details: ['maxSharedStrings' => $limit]
-				);
-			}
-		}//end foreach
+		);
 	}//end assertSharedStringCount()
 
 	/**
-	 * Count the `<si>` entries of a shared-strings part, stopping one past the limit.
-	 *
-	 * A part whose root element is not `sst` counts as 0.
+	 * Count the `<si>` children of a part's root element, stopping one past the limit.
 	 *
 	 * @param XMLReader $xml The reader, opened on one part.
 	 * @param int $limit The maximum number of shared strings.
@@ -349,13 +349,9 @@ class CmdbWorkbookReader {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
 	 */
 	private static function countSharedStrings(XMLReader $xml, int $limit): int {
-		if (self::rootIsSharedStrings(xml: $xml) === false) {
-			return 0;
-		}
-
 		$count = 0;
 		while ($count <= $limit && $xml->read() === true) {
-			if ($xml->nodeType === XMLReader::ELEMENT && $xml->depth === 1 && $xml->localName === 'si') {
+			if (self::isSharedString(xml: $xml) === true) {
 				$count++;
 			}
 		}
@@ -364,39 +360,188 @@ class CmdbWorkbookReader {
 	}//end countSharedStrings()
 
 	/**
-	 * Whether the part an XMLReader just opened is a shared-strings table (root element `sst`).
+	 * Refuse a workbook whose cells reference more shared-string text than the limit, before any sheet is parsed.
 	 *
-	 * Advances the reader to the root element.
+	 * PhpSpreadsheet gives every cell that references a shared string its own
+	 * copy of the text, and clones every run of a rich-text string first, so a
+	 * long or many-run string referenced by many cells costs memory and time
+	 * per cell however small the file is. Each entry weighs the bytes of its
+	 * text plus 16 per element in it (so a run weighs at least 32), and the
+	 * weights of the entries every `t="s"` cell references are added up,
+	 * streamed with XMLReader. Every XML part is read as a possible sheet and
+	 * every cell counts, read or not; the sum counts once per source sheet,
+	 * because two source sheets may point at the same part.
 	 *
-	 * @param XMLReader $xml The reader, opened on one part.
+	 * @param string $path The xlsx file.
+	 * @param int $limit The maximum weight of the referenced shared strings.
+	 * @param int $sheetCount The number of source sheets the profile reads.
 	 *
-	 * @return bool
+	 * @return void
+	 *
+	 * @throws CmdbImportException WORKBOOK_TOO_LARGE above the limit.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
 	 */
-	private static function rootIsSharedStrings(XMLReader $xml): bool {
+	private function assertReferencedStringBytes(string $path, int $limit, int $sheetCount): void {
+		$weights = [];
+		self::streamParts(
+			path: $path,
+			consume: static function (XMLReader $xml) use (&$weights): void {
+				foreach (self::sharedStringWeights(xml: $xml) as $index => $weight) {
+					$weights[$index] = max(($weights[$index] ?? 0), $weight);
+				}
+			}
+		);
+		if ($weights === []) {
+			return;
+		}
+
+		$budget = intdiv($limit, max(1, $sheetCount));
+		$total = 0;
+		self::streamParts(
+			path: $path,
+			consume: static function (XMLReader $xml) use ($weights, $budget, $limit, &$total): void {
+				$total = self::referencedWeight(xml: $xml, weights: $weights, total: $total, budget: $budget);
+				if ($total > $budget) {
+					throw new CmdbImportException(
+						errorCode: CmdbImportException::WORKBOOK_TOO_LARGE,
+						message: 'The cells of the workbook reference more shared-string text than the profile allows',
+						details: ['maxReferencedStringBytes' => $limit]
+					);
+				}
+			}
+		);
+	}//end assertReferencedStringBytes()
+
+	/**
+	 * The weight of each `<si>` child of a part's root element, by its position.
+	 *
+	 * @param XMLReader $xml The reader, opened on one part.
+	 *
+	 * @return array<int, int>
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 */
+	private static function sharedStringWeights(XMLReader $xml): array {
+		$weights = [];
+		$current = -1;
 		while ($xml->read() === true) {
-			if ($xml->nodeType === XMLReader::ELEMENT) {
-				return $xml->localName === 'sst';
+			if (self::isSharedString(xml: $xml) === true) {
+				$current++;
+				$weights[$current] = 0;
+			}
+
+			if ($current >= 0 && $xml->depth >= 1) {
+				$weights[$current] += self::nodeWeight(xml: $xml);
 			}
 		}
 
-		return false;
-	}//end rootIsSharedStrings()
+		return $weights;
+	}//end sharedStringWeights()
 
 	/**
-	 * The XML parts of a package that may hold a shared-strings table.
+	 * What one node inside a shared string adds to its weight: 16 for an element, the bytes of a text.
 	 *
-	 * The workbook's relationships may point the table at any part name, and
-	 * PhpSpreadsheet follows them, so every `.xml` part is a candidate; the
-	 * caller keeps the ones whose root element is `sst`. The package's total
-	 * unpacked size is already bounded, so streaming each part stays cheap.
+	 * @param XMLReader $xml The reader, on the node.
+	 *
+	 * @return int
+	 */
+	private static function nodeWeight(XMLReader $xml): int {
+		if ($xml->nodeType === XMLReader::ELEMENT) {
+			return 16;
+		}
+
+		if (in_array($xml->nodeType, [XMLReader::TEXT, XMLReader::CDATA, XMLReader::WHITESPACE, XMLReader::SIGNIFICANT_WHITESPACE], true) === true) {
+			return strlen($xml->value);
+		}
+
+		return 0;
+	}//end nodeWeight()
+
+	/**
+	 * Add the weights of the shared strings the `t="s"` cells of one part reference, stopping past the budget.
+	 *
+	 * @param XMLReader $xml The reader, opened on one part.
+	 * @param array<int, int> $weights The weight of each shared string, by index.
+	 * @param int $total The weight counted so far.
+	 * @param int $budget The weight above which the workbook is refused.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 */
+	private static function referencedWeight(XMLReader $xml, array $weights, int $total, int $budget): int {
+		$shared = false;
+		while ($total <= $budget && $xml->read() === true) {
+			if ($xml->nodeType !== XMLReader::ELEMENT) {
+				continue;
+			}
+
+			if ($xml->localName === 'c') {
+				$shared = ($xml->getAttribute('t') === 's');
+			} elseif ($shared === true && $xml->localName === 'v') {
+				// PhpSpreadsheet casts the value the same way: (int) of the element's text.
+				$total += ($weights[(int)$xml->readString()] ?? 0);
+				$shared = false;
+			}
+		}
+
+		return $total;
+	}//end referencedWeight()
+
+	/**
+	 * Whether the reader is on an `<si>` child of the part's root element.
+	 *
+	 * @param XMLReader $xml The reader.
+	 *
+	 * @return bool
+	 */
+	private static function isSharedString(XMLReader $xml): bool {
+		return $xml->nodeType === XMLReader::ELEMENT && $xml->depth === 1 && $xml->localName === 'si';
+	}//end isSharedString()
+
+	/**
+	 * Stream every XML part of the package through a callback, with network access and entity substitution off.
+	 *
+	 * A part that cannot be opened is skipped; libxml errors are kept from
+	 * the log and cleared, also when the callback throws.
+	 *
+	 * @param string $path The xlsx file.
+	 * @param callable(XMLReader): void $consume Reads one opened part.
+	 *
+	 * @return void
+	 */
+	private static function streamParts(string $path, callable $consume): void {
+		foreach (self::xmlParts(path: $path) as $part) {
+			$xml = new XMLReader();
+			$previous = libxml_use_internal_errors(true);
+			try {
+				if ($xml->open('zip://' . $path . '#' . $part, null, LIBXML_NONET) === false) {
+					continue;
+				}
+
+				$consume($xml);
+				$xml->close();
+			} finally {
+				libxml_clear_errors();
+				libxml_use_internal_errors($previous);
+			}
+		}
+	}//end streamParts()
+
+	/**
+	 * The XML parts of a package.
+	 *
+	 * The workbook's relationships may point the shared-strings table and the
+	 * sheets at any part name, and PhpSpreadsheet follows them, so every
+	 * `.xml` part is a candidate. The package's total unpacked size is already
+	 * bounded, so streaming each part stays cheap.
 	 *
 	 * @param string $path The xlsx file.
 	 *
 	 * @return array<int, string>
 	 */
-	private static function sharedStringParts(string $path): array {
+	private static function xmlParts(string $path): array {
 		$zip = new ZipArchive();
 		if ($zip->open($path, ZipArchive::RDONLY) !== true) {
 			return [];
@@ -413,7 +558,7 @@ class CmdbWorkbookReader {
 		$zip->close();
 
 		return $parts;
-	}//end sharedStringParts()
+	}//end xmlParts()
 
 	/**
 	 * Refuse a source sheet whose last used row lies beyond the rows that are read.

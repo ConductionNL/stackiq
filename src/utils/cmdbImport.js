@@ -488,7 +488,7 @@ export function isKnownError(code) {
 /**
  * The title of WORKBOOK_TOO_LARGE, naming the limit the server applied.
  *
- * @param {object} details The error details: `maxPartBytes` and `part`, `maxSharedStrings`, or `maxUncompressedBytes`
+ * @param {object} details The error details: `maxPartBytes` and `part`, `maxSharedStrings`, `maxReferencedStringBytes`, or `maxUncompressedBytes`
  * @return {string} The title
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-workbook-shall-be-read-as-stored-data-without-evaluating-formulas-or-following-links-req-cmdb-002
  */
@@ -509,6 +509,14 @@ function workbookTooLargeTitle(details) {
 			'stackiq',
 			'The workbook holds more than {count} different texts, the most the import reads.',
 			{ count: String(details.maxSharedStrings) },
+			AS_TEXT,
+		)
+	}
+	if (Number(details.maxReferencedStringBytes) > 0) {
+		return t(
+			'stackiq',
+			'Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.',
+			{ size: formatMegabytes(details.maxReferencedStringBytes) },
 			AS_TEXT,
 		)
 	}

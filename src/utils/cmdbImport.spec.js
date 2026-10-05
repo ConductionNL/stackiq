@@ -381,7 +381,7 @@ describe('errorText', () => {
 		)
 	})
 
-	it('names the part limit and the part, or the shared-strings limit, the server applied', () => {
+	it('names the part limit and the part, the shared-strings limit or the referenced-text limit the server applied', () => {
 		expect(
 			errorText({
 				error: 'WORKBOOK_TOO_LARGE',
@@ -400,6 +400,14 @@ describe('errorText', () => {
 			}).title,
 		).toBe(
 			'The workbook holds more than 200000 different texts, the most the import reads.',
+		)
+		expect(
+			errorText({
+				error: 'WORKBOOK_TOO_LARGE',
+				details: { maxReferencedStringBytes: 64 * 1024 * 1024 },
+			}).title,
+		).toBe(
+			'Together, the cells of the workbook reference more than 64 MB of shared text, the most the import reads.',
 		)
 	})
 

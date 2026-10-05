@@ -151,6 +151,7 @@ class CmdbImportProfileTest extends TestCase {
 		$this->assertSame(10000, $profile->maxRowsPerSheet());
 		$this->assertSame(10485760, $profile->maxPartBytes());
 		$this->assertSame(200000, $profile->maxSharedStrings());
+		$this->assertSame(67108864, $profile->maxReferencedStringBytes());
 	}//end testThePacksImplementTheColumnTable()
 
 	/**

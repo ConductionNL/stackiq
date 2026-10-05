@@ -118,7 +118,7 @@
                         "description": "Missing or invalid CSRF token"
                     },
                     "413": {
-                        "description": "FILE_TOO_LARGE; details.maxBytes is the limit that fired: the profile's maximum, or PHP's upload_max_filesize or post_max_size when lower. WORKBOOK_TOO_LARGE; over a profile limit checked before parsing: the unpacked size of all parts (details.maxUncompressedBytes), of one part (details.maxPartBytes and details.part), or the number of shared strings (details.maxSharedStrings)",
+                        "description": "FILE_TOO_LARGE; details.maxBytes is the limit that fired: the profile's maximum, or PHP's upload_max_filesize or post_max_size when lower. WORKBOOK_TOO_LARGE; over a profile limit checked before parsing: the unpacked size of all parts (details.maxUncompressedBytes), of one part (details.maxPartBytes and details.part), the number of shared strings (details.maxSharedStrings), or the shared-string text the cells reference together (details.maxReferencedStringBytes)",
                         "content": {
                             "application/json": {
                                 "schema": {

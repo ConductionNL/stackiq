@@ -419,6 +419,128 @@ class CmdbWorkbookReaderTest extends TestCase {
 	}//end testASharedStringsTableUnderAnotherNameIsCounted()
 
 	/**
+	 * A shared-strings table whose root element is not `sst` is counted too.
+	 *
+	 * PhpSpreadsheet reads the `<si>` children of the part the relationships name without checking the
+	 * root element, so the count does not check it either.
+	 *
+	 * @return void
+	 */
+	public function testASharedStringsTableUnderAnotherRootIsCounted(): void {
+		$this->requireSpreadsheet();
+		require_once __DIR__ . '/../../Support/RecordingXlsxReader.php';
+		$sheets = ['Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een']]];
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxSharedStrings' => 1000]);
+		$reader = new class extends CmdbWorkbookReader {
+			public const READER_CLASS = RecordingXlsxReader::class;
+		};
+
+		$table = str_replace(['<sst ', '</sst>'], ['<strings ', '</strings>'], self::sharedStrings(count: 1001));
+		$renamed = CmdbTestSupport::buildWorkbook(sheets: $sheets, extraParts: ['xl/sharedStrings.xml' => $table]);
+		try {
+			RecordingXlsxReader::$loads = 0;
+			$reader->read(path: $renamed, profile: $this->profile(directory: $directory));
+			$this->fail('WORKBOOK_TOO_LARGE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode());
+			$this->assertSame(['maxSharedStrings' => 1000], $e->getDetails());
+			$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded');
+		} finally {
+			unlink($renamed);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testASharedStringsTableUnderAnotherRootIsCounted()
+
+	/**
+	 * One shared string referenced by many cells is refused before loading, as rich text or as plain text.
+	 *
+	 * PhpSpreadsheet gives every referencing cell its own copy, cloning each run of a rich-text string first,
+	 * so a small file holds the string once but would make PhpSpreadsheet build it once per cell. Both
+	 * packages pass every other limit.
+	 *
+	 * @return void
+	 */
+	public function testOneSharedStringReferencedByManyCellsIsRefusedBeforeLoading(): void {
+		$this->requireSpreadsheet();
+		require_once __DIR__ . '/../../Support/RecordingXlsxReader.php';
+		$packages = [
+			'rich text' => self::sharedStringWorkbook(entry: '<si>' . str_repeat('<r><rPr><b/></rPr><t>ab</t></r>', 500) . '</si>', cells: 50),
+			'plain text' => self::sharedStringWorkbook(entry: '<si><t>' . str_repeat('x', 20000) . '</t></si>', cells: 50),
+		];
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxReferencedStringBytes' => 400000]);
+		$reader = new class extends CmdbWorkbookReader {
+			public const READER_CLASS = RecordingXlsxReader::class;
+		};
+
+		try {
+			foreach ($packages as $kind => $path) {
+				RecordingXlsxReader::$loads = 0;
+				try {
+					$reader->read(path: $path, profile: $this->profile(directory: $directory));
+					$this->fail('WORKBOOK_TOO_LARGE expected for ' . $kind);
+				} catch (CmdbImportException $e) {
+					$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode(), $kind);
+					$this->assertSame(['maxReferencedStringBytes' => 400000], $e->getDetails(), $kind);
+					$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded for ' . $kind);
+				}
+			}
+		} finally {
+			array_map('unlink', $packages);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testOneSharedStringReferencedByManyCellsIsRefusedBeforeLoading()
+
+	/**
+	 * Shared strings referenced within the limit are read as their text, rich text as plain text.
+	 *
+	 * @return void
+	 */
+	public function testSharedStringsWithinTheReferenceLimitAreRead(): void {
+		$this->requireSpreadsheet();
+		$path = self::sharedStringWorkbook(entry: '<si><r><rPr><b/></rPr><t>Ee</t></r><r><t>n</t></r></si>', cells: 1);
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxReferencedStringBytes' => 400000]);
+
+		try {
+			$rows = (new CmdbWorkbookReader())->read(path: $path, profile: $this->profile(directory: $directory))['rows'];
+			$this->assertCount(1, $rows);
+			$this->assertSame('Een', $rows[0]['cells']['Applicatie Naam']);
+		} finally {
+			unlink($path);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testSharedStringsWithinTheReferenceLimitAreRead()
+
+	/**
+	 * A workbook whose CMDB sheet holds an APPID and an application name per row, the name a reference to one shared string.
+	 *
+	 * The shared strings are the two headers and the given entry, linked from the workbook's relationships.
+	 *
+	 * @param string $entry The `<si>` element every name references.
+	 * @param int $cells The number of rows that reference it.
+	 *
+	 * @return string The path of the workbook.
+	 */
+	private static function sharedStringWorkbook(string $entry, int $cells): string {
+		$main = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main';
+		$rel = 'http://schemas.openxmlformats.org/officeDocument/2006/relationships';
+		$rows = '<row r="1"><c r="A1" t="s"><v>0</v></c><c r="B1" t="s"><v>1</v></c></row>';
+		for ($row = 2; $row <= $cells + 1; $row++) {
+			$rows .= '<row r="' . $row . '"><c r="A' . $row . '"><v>' . ($row - 1) . '</v></c><c r="B' . $row . '" t="s"><v>2</v></c></row>';
+		}
+
+		return CmdbTestSupport::buildWorkbook(
+			sheets: ['Beheerde Applicaties CMDB' => []],
+			extraParts: [
+				'xl/worksheets/sheet1.xml' => '<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="' . $main . '"><sheetData>' . $rows . '</sheetData></worksheet>',
+				'xl/sharedStrings.xml' => '<?xml version="1.0" encoding="UTF-8"?><sst xmlns="' . $main . '"><si><t>APPID</t></si><si><t>Applicatie Naam</t></si>' . $entry . '</sst>',
+				'xl/_rels/workbook.xml.rels' => '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">'
+					. '<Relationship Id="rId1" Type="' . $rel . '/worksheet" Target="worksheets/sheet1.xml"/>'
+					. '<Relationship Id="rId2" Type="' . $rel . '/sharedStrings" Target="sharedStrings.xml"/></Relationships>',
+			]
+		);
+	}//end sharedStringWorkbook()
+
+	/**
 	 * A shared-strings part or a sheet part that unpacks beyond maxPartBytes is refused before any sheet is loaded.
 	 *
 	 * Both packages stay under maxUncompressedBytes; only the one part is too large.

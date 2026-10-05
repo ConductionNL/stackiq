@@ -82,6 +82,11 @@ class CmdbImportProfile {
 	public const DEFAULT_MAX_SHARED_STRINGS = 200000;
 
 	/**
+	 * Default limit on the shared-string text a workbook's cells reference together (64 MB).
+	 */
+	public const DEFAULT_MAX_REFERENCED_STRING_BYTES = 67108864;
+
+	/**
 	 * Sources of the municipality pack that come from the request, not from a sheet.
 	 *
 	 * @var array<int, string>
@@ -243,6 +248,27 @@ class CmdbImportProfile {
 
 		return self::DEFAULT_MAX_SHARED_STRINGS;
 	}//end maxSharedStrings()
+
+	/**
+	 * The limit on the shared-string text a workbook's cells reference together, in bytes.
+	 *
+	 * PhpSpreadsheet gives every cell that references a shared string its own
+	 * copy of the text, so one long string referenced by many cells costs far
+	 * more memory than the file's size; the reader adds up what the cells
+	 * reference before it parses a sheet.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 */
+	public function maxReferencedStringBytes(): int {
+		$limit = $this->profile()['maxReferencedStringBytes'] ?? null;
+		if (is_int($limit) === true && $limit > 0) {
+			return $limit;
+		}
+
+		return self::DEFAULT_MAX_REFERENCED_STRING_BYTES;
+	}//end maxReferencedStringBytes()
 
 	/**
 	 * The maximum number of non-empty rows per source sheet.

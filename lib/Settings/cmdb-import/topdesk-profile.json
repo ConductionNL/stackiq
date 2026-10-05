@@ -8,6 +8,7 @@
   "maxUncompressedBytes": 52428800,
   "maxPartBytes": 10485760,
   "maxSharedStrings": 200000,
+  "maxReferencedStringBytes": 67108864,
   "sheets": [
     {
       "name": "Onbeh Applicaties CMDB",
