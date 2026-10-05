@@ -358,8 +358,10 @@ import {
 	checkFile,
 	cmdbProgressView,
 	errorText,
+	followInterruptedImport,
 	formatMegabytes,
 	importUrl,
+	interruptedImportError,
 	isKnownError,
 	makeCmdbOperationId,
 	moduleUrl,
@@ -409,6 +411,7 @@ export default {
 			operationId: null,
 			progress: null,
 			stopProgressPolling: null,
+			unmounted: false,
 			report: null,
 			error: null,
 			outcomeFilter: null,
@@ -612,6 +615,7 @@ export default {
 	 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
 	 */
 	beforeUnmount() {
+		this.unmounted = true
 		this.stopPolling()
 	},
 
@@ -774,31 +778,73 @@ export default {
 					operationId: this.operationId,
 				})
 				const response = await axios.post(importUrl(), form)
-				this.report = response.data
-				this.outcomeFilter = this.outcomeFilterOptions[0]
-				// A created municipality is an existing one from now on: select it,
-				// so a second import goes to the same organisation (WCAG 3.3.7).
-				const imported = response.data?.municipality
-				if (imported?.uuid && this.municipality.isNew) {
-					const option = {
-						id: imported.uuid,
-						label: String(imported.name || this.municipality.label),
-						isNew: false,
-					}
-					this.municipalityOptions = [
-						...this.municipalityOptions,
-						option,
-					].sort((a, b) => a.label.localeCompare(b.label))
-					this.municipality = option
-				}
+				this.showReport(response.data)
 			} catch (error) {
-				this.error = normaliseError(error)
+				const normalised = normaliseError(error)
+				if (normalised.interrupted) {
+					await this.recoverInterruptedImport(normalised)
+				} else {
+					this.error = normalised
+				}
 			} finally {
 				this.stopPolling()
 				this.importing = false
 				this.cancelling = false
 				this.operationId = null
 			}
+		},
+
+		/**
+		 * Show a finished import's report.
+		 *
+		 * @param {object} report The report
+		 * @return {void}
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-011-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome
+		 */
+		showReport(report) {
+			this.report = report
+			this.outcomeFilter = this.outcomeFilterOptions[0]
+			// A created municipality is an existing one from now on: select it,
+			// so a second import goes to the same organisation (WCAG 3.3.7).
+			const imported = report?.municipality
+			if (imported?.uuid && this.municipality?.isNew) {
+				const option = {
+					id: imported.uuid,
+					label: String(imported.name || this.municipality.label),
+					isNew: false,
+				}
+				this.municipalityOptions = [
+					...this.municipalityOptions,
+					option,
+				].sort((a, b) => a.label.localeCompare(b.label))
+				this.municipality = option
+			}
+		},
+
+		/**
+		 * The request was cut off (no answer, or a gateway error) while the
+		 * import may still be running: follow the operation on the server and
+		 * show its report when it has one, or say that the outcome is unknown.
+		 *
+		 * @param {object} normalised The normalised error of the request
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
+		 */
+		async recoverInterruptedImport(normalised) {
+			this.stopPolling()
+			const outcome = await followInterruptedImport({
+				operationId: this.operationId,
+				http: axios,
+				onProgress: (progress) => {
+					this.progress = progress
+				},
+				shouldStop: () => this.unmounted,
+			})
+			if (outcome.state === 'finished') {
+				this.showReport(outcome.report)
+				return
+			}
+			this.error = interruptedImportError(outcome, normalised)
 		},
 
 		/**

@@ -245,6 +245,15 @@ and the section shows the reason and the error code.
 | `NOT_CONFIGURED` | The stackiq register or its schemas cannot be found. | Run **Auto Configure** at the top of the stackiq admin settings. |
 | `IMPORT_FAILED` | Something unexpected went wrong. | The Nextcloud log has the details. |
 
+**The connection was cut off.** The import runs in one request. When that
+request ends without an answer from the import (the connection drops, or a
+proxy gives up waiting with a 502, 503 or 504), the import may still be
+running on the server. The section then keeps following the import's
+progress and shows its report when it finishes. When it cannot find out,
+it shows `IMPORT_INTERRUPTED`: wait a few minutes and check the
+municipality's applications before importing again. Importing the same file
+again creates no duplicates.
+
 A message that you are not signed in, not an administrator, or that your
 session expired comes from Nextcloud itself: sign in again, use an
 administrator account, or reload the page.

@@ -195,13 +195,23 @@ export function moduleUrl(uuid) {
 }
 
 /**
+ * HTTP statuses that mean the request was cut off before the import
+ * answered: no answer at all, or a proxy or gateway that gave up waiting.
+ * The import itself may still be running on the server.
+ */
+const INTERRUPTED_STATUSES = new Set([0, 502, 503, 504])
+
+/**
  * Turn a failed request into the server's error shape.
  *
  * Errors raised by Nextcloud itself (not signed in, not an admin, CSRF) come
  * without a CMDB error code, so they get one here from the HTTP status.
+ * `interrupted` is true when the request was cut off without an answer from
+ * the import (see INTERRUPTED_STATUSES); an answer with a CMDB error code,
+ * such as a 503 MAPPING_UNAVAILABLE, is the import's own and never counts.
  *
  * @param {object} error The axios error
- * @return {{error: string, message: string, details: object, status: number}} The error
+ * @return {{error: string, message: string, details: object, status: number, interrupted: boolean}} The error
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-001-the-import-endpoint-shall-accept-only-a-bounded-xlsx-upload-from-a-nextcloud-admin
  */
 export function normaliseError(error) {
@@ -241,6 +251,102 @@ export function normaliseError(error) {
 				? body.details
 				: {},
 		status,
+		interrupted: fromBody === '' && INTERRUPTED_STATUSES.has(status),
+	}
+}
+
+/**
+ * Find out what became of an import whose request was cut off.
+ *
+ * The server keeps the operation's progress, and the finished report in its
+ * `statistics.report`, for an hour. This reads the operation until it is no
+ * longer running, waiting `intervalMs` between reads.
+ *
+ * @param {object} options The options
+ * @param {string} options.operationId The operation of the import
+ * @param {object} options.http An axios-like client with get
+ * @param {(progress: object) => void} [options.onProgress] Called with each snapshot
+ * @param {() => boolean} [options.shouldStop] Returns true when the page no longer waits
+ * @param {(ms: number) => Promise<void>} [options.wait] Waits the given milliseconds, for tests
+ * @param {number} [options.intervalMs] Time between two reads
+ * @param {number} [options.timeoutMs] How long to wait for a running import
+ * @return {Promise<{state: string, report?: object, status?: number}>} `finished` with the report, `failed`, `unknown` (not found, or still running when the page stopped waiting) or `unreachable` (the progress could not be read either)
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
+ */
+export async function followInterruptedImport({
+	operationId,
+	http,
+	onProgress = () => {},
+	shouldStop = () => false,
+	wait = (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+	intervalMs = 2000,
+	timeoutMs = 30 * 60 * 1000,
+}) {
+	const url = generateUrl('/apps/stackiq/api/progress/{operationId}', {
+		operationId,
+	})
+	let waited = 0
+	for (;;) {
+		let progress = null
+		try {
+			const response = await http.get(url)
+			progress = response?.data?.progress ?? null
+		} catch (error) {
+			if (!error?.response) {
+				return { state: 'unreachable' }
+			}
+		}
+		if (!progress || typeof progress !== 'object') {
+			return { state: 'unknown' }
+		}
+		onProgress(progress)
+		const report = progress.statistics?.report
+		if (
+			(progress.status === 'completed' || progress.status === 'cancelled')
+			&& report
+			&& typeof report === 'object'
+		) {
+			return { state: 'finished', report }
+		}
+		if (progress.status === 'failed') {
+			return { state: 'failed' }
+		}
+		if (progress.status !== 'running' || waited >= timeoutMs || shouldStop()) {
+			return { state: 'unknown' }
+		}
+		await wait(intervalMs)
+		waited += intervalMs
+	}
+}
+
+/**
+ * The error the page shows for an interrupted import, once
+ * followInterruptedImport() has an outcome; null when the report was found.
+ *
+ * @param {{state: string}} outcome What followInterruptedImport() found
+ * @param {{error: string, status: number}} error The normalised error of the cut-off request
+ * @return {object|null} The error in the server's shape, or null
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-013-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled
+ */
+export function interruptedImportError(outcome, error) {
+	const base = {
+		message: '',
+		details: {},
+		status: error?.status ?? 0,
+		interrupted: true,
+	}
+	switch (outcome?.state) {
+		case 'finished':
+			return null
+		case 'failed':
+			return { ...base, error: 'IMPORT_FAILED' }
+		case 'unreachable':
+			if ((error?.status ?? 0) === 0) {
+				return { ...base, error: 'NETWORK_ERROR' }
+			}
+			return { ...base, error: 'IMPORT_INTERRUPTED' }
+		default:
+			return { ...base, error: 'IMPORT_INTERRUPTED' }
 	}
 }
 
@@ -259,6 +365,7 @@ const KNOWN_ERRORS = new Set([
 	'READER_UNAVAILABLE',
 	'NOT_CONFIGURED',
 	'OPERATION_NOT_FOUND',
+	'IMPORT_INTERRUPTED',
 	'NOT_SIGNED_IN',
 	'NOT_ADMIN',
 	'CSRF_FAILED',
@@ -457,6 +564,14 @@ export function errorText(error) {
 			return {
 				title: t('stackiq', 'The server could not be reached.'),
 				hint: t('stackiq', 'Check the connection and try again.'),
+			}
+		case 'IMPORT_INTERRUPTED':
+			return {
+				title: t('stackiq', 'The page got no answer from the import.'),
+				hint: t(
+					'stackiq',
+					'The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.',
+				),
 			}
 		case 'IMPORT_FAILED':
 		default:
