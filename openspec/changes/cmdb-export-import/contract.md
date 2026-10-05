@@ -83,6 +83,7 @@ Error body: `{"success": false, "error": "<CODE>", "message": "<translated text>
 | 403  | not a Nextcloud admin |
 | 404  | `OPERATION_NOT_FOUND`: no running `cmdb_import` operation with this id |
 | 412  | missing or invalid CSRF token |
+| 500  | `IMPORT_FAILED`: unexpected, for example the cache that holds the cancel request failed; generic message, the exception class and its sanitised first line only in the log |
 
 ### `GET /api/progress/{operationId}` (existing, unchanged)
 Returns the `ProgressTracker` snapshot for the `cmdb_import` operation: `progress.total_items` is the number of non-empty rows read and `progress.processed_items` the rows done so far, updated after every row. `progress.status` is `running`, `completed`, `cancelled` or `failed`. A run that fails outside a row is `failed`, and its `progress.errors[0].message` is the fixed text `IMPORT_FAILED: The import stopped unexpectedly. The details are in the Nextcloud log.`: never the exception's message, which can quote cell values. The exception's class and its first line, with e-mail addresses taken out, are logged. After completion, `progress.statistics.report` holds the report from the 200 response above, for as long as the tracker keeps the entry (one hour).

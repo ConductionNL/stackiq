@@ -599,14 +599,53 @@ class CmdbImportControllerTest extends TestCase {
 
 		$this->controller(file: $this->file(path: $this->upload()), params: ['municipalityName' => 'X'], service: $service, logger: $logger)->import();
 
-		$failure = new \TypeError('internal detail');
+		$failure = new RuntimeException("first owner@example.nl\nsecond", 0, new RuntimeException('previous jan@example.nl'));
 		$service = $this->service();
 		$service->method('import')->willThrowException($failure);
+		$logged = [];
 		$logger = $this->createMock(LoggerInterface::class);
-		$logger->expects($this->once())->method('error')->with($this->anything(), ['exception' => $failure]);
+		$logger->expects($this->once())->method('error')->willReturnCallback(
+			function (string $message, array $context) use (&$logged): void {
+				$logged = $context;
+			}
+		);
 
 		$this->controller(file: $this->file(path: $this->upload()), params: ['municipalityName' => 'X'], service: $service, logger: $logger)->import();
+
+		$this->assertSame(RuntimeException::class, $logged['exception'], 'the class is logged, not the exception object');
+		$this->assertSame('first <e-mail>', $logged['error'], 'only the first line, without the e-mail address');
+		$flat = json_encode($logged);
+		$this->assertStringNotContainsString('example.nl', $flat);
+		$this->assertStringNotContainsString('second', $flat);
+		$this->assertStringNotContainsString('previous', $flat);
 	}//end testRefusalsAndFailuresAreLogged()
+
+	/**
+	 * A failing cancel request answers with the contract envelope and logs no exception text.
+	 *
+	 * @return void
+	 */
+	public function testACancelThatFailsAnswersImportFailed(): void {
+		$service = $this->service();
+		$service->method('requestCancel')->willThrowException(new RuntimeException("cache down for owner@example.nl\nsecond"));
+		$logged = [];
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('error')->willReturnCallback(
+			function (string $message, array $context) use (&$logged): void {
+				$logged = $context;
+			}
+		);
+
+		$response = $this->controller(file: null, params: [], service: $service, logger: $logger)->cancel(operationId: 'cmdb-running-1');
+
+		$this->assertSame(500, $response->getStatus());
+		$this->assertFalse($response->getData()['success']);
+		$this->assertSame('IMPORT_FAILED', $response->getData()['error']);
+		$this->assertStringNotContainsString('cache down', $response->getData()['message']);
+		$this->assertSame(RuntimeException::class, $logged['exception']);
+		$this->assertStringNotContainsString('example.nl', json_encode($logged));
+		$this->assertStringNotContainsString('second', json_encode($logged));
+	}//end testACancelThatFailsAnswersImportFailed()
 
 	/**
 	 * The upload's base name reaches the service as fileName, without any directory part the client sent.

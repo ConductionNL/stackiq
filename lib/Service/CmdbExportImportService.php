@@ -1844,7 +1844,8 @@ class CmdbExportImportService {
 	 * Only the first line is kept, at most 300 characters. Every value of the
 	 * row of three characters or more is replaced by "…", longest first, and
 	 * every e-mail address by "<e-mail>". The owner step logs no message at
-	 * all, so no contact data can reach the log.
+	 * all, so no contact data can reach the log. Public so the controller logs
+	 * an unexpected failure the same way.
 	 *
 	 * @param string $step The step that failed.
 	 * @param Throwable $e The exception.
@@ -1852,7 +1853,7 @@ class CmdbExportImportService {
 	 *
 	 * @return string
 	 */
-	private static function logSafeMessage(string $step, Throwable $e, array $values): string {
+	public static function logSafeMessage(string $step, Throwable $e, array $values): string {
 		if ($step === 'owners') {
 			return '';
 		}

@@ -18,7 +18,8 @@
  * The upload is checked before it is parsed, in the order of design D10:
  * present, size, xlsx, `missingRecords`, municipality. Every expected service
  * exception is translated here to the status contract.md gives it; anything
- * else is 500 `IMPORT_FAILED` with a generic message and the detail in the log.
+ * else is 500 `IMPORT_FAILED` with a generic message, and the log gets the
+ * exception class and its sanitised first line, never the trace.
  *
  * @category  Controller
  * @package   OCA\Stackiq\Controller
@@ -111,12 +112,36 @@ class CmdbImportController extends Controller {
 			);
 			return $this->fromException(e: $e);
 		} catch (\Throwable $e) {
-			$this->logger->error('CmdbImportController: import failed', ['exception' => $e]);
+			$this->logger->error('CmdbImportController: import failed', $this->failureContext(e: $e));
 			return $this->error(code: 'IMPORT_FAILED', status: Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 
 		return new JSONResponse(data: $report, statusCode: Http::STATUS_OK);
 	}//end import()
+
+	/**
+	 * The log context of an unexpected failure: the class, the sanitised first line and where it was thrown.
+	 *
+	 * Deliberately not the exception object itself under the `exception` key,
+	 * as usual elsewhere: Nextcloud would then log the whole message, the previous exceptions and the stack trace with its
+	 * call arguments, and those can quote cell values of the export or an
+	 * owner's e-mail address (personal data). The service already logs the run's
+	 * failure the same way.
+	 *
+	 * @param \Throwable $e The exception.
+	 *
+	 * @return array{exception: string, error: string, file: string, line: int}
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
+	 */
+	private function failureContext(\Throwable $e): array {
+		return [
+			'exception' => get_class($e),
+			'error' => CmdbExportImportService::logSafeMessage(step: 'request', e: $e, values: []),
+			'file' => $e->getFile(),
+			'line' => $e->getLine(),
+		];
+	}//end failureContext()
 
 	/**
 	 * Check the request in the order of design D10, before anything is parsed.
@@ -277,14 +302,21 @@ class CmdbImportController extends Controller {
 	 *
 	 * @param string $operationId The operation id.
 	 *
-	 * @return JSONResponse `{success, cancelRequested}`, or 404 OPERATION_NOT_FOUND.
+	 * @return JSONResponse `{success, cancelRequested}`, 404 OPERATION_NOT_FOUND, or 500 IMPORT_FAILED.
 	 *
 	 * @auth admin-only cancelling is part of the import, which writes with RBAC and multitenancy off, so only a full Nextcloud admin may do it.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
 	 */
 	public function cancel(string $operationId): JSONResponse {
-		if ($this->importService->requestCancel(operationId: $operationId) === false) {
+		try {
+			$requested = $this->importService->requestCancel(operationId: $operationId);
+		} catch (\Throwable $e) {
+			$this->logger->error('CmdbImportController: cancel failed', $this->failureContext(e: $e));
+			return $this->error(code: 'IMPORT_FAILED', status: Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+
+		if ($requested === false) {
 			return $this->error(code: 'OPERATION_NOT_FOUND', status: Http::STATUS_NOT_FOUND);
 		}
 

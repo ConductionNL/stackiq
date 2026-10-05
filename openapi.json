@@ -221,6 +221,16 @@
                     },
                     "412": {
                         "description": "Missing or invalid CSRF token"
+                    },
+                    "500": {
+                        "description": "IMPORT_FAILED (unexpected; the exception class and its sanitised first line are in the log)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportError"
+                                }
+                            }
+                        }
                     }
                 }
             }
