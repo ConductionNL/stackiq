@@ -485,7 +485,7 @@ The import SHALL accept `missingRecords` with the value `keep`, which is also th
 
 ### Requirement: A running import SHALL report its progress and SHALL stop when cancelled (REQ-CMDB-013)
 
-The import SHALL run as a `ProgressTracker` operation of type `cmdb_import` under the `operationId` the client sends, and SHALL update the processed row count after every row, readable through the existing `GET /api/progress/{operationId}`. `POST /api/cmdb-import/{operationId}/cancel`, admin-only (like the import, not open to delegated groups) and CSRF-protected, SHALL request cancellation. The service SHALL check for cancellation between rows, SHALL keep the rows already processed, and SHALL return the report with `cancelled: true`. The final report SHALL also be stored with the operation, so it can be read again within the tracker's lifetime. One import SHALL run per register at a time: the import SHALL hold an exclusive lock on its register from before the file is read until it returns or fails, and a second import while the lock is held SHALL be refused with 409 `IMPORT_IN_PROGRESS` before it reads the file or writes anything, because every match is find-then-create and two interleaved runs would each create the same records.
+The import SHALL run as a `ProgressTracker` operation of type `cmdb_import` under the `operationId` the client sends, or under a generated one, returned as `operationId` in the report, when the client's id does not match `cmdb-` plus 8 to 64 letters, digits or hyphens, or belongs to a `cmdb_import` that is still running; it SHALL update the processed row count after every row, readable through the existing `GET /api/progress/{operationId}`. `POST /api/cmdb-import/{operationId}/cancel`, admin-only (like the import, not open to delegated groups) and CSRF-protected, SHALL request cancellation. The service SHALL check for cancellation between rows, SHALL keep the rows already processed, and SHALL return the report with `cancelled: true`. The final report SHALL also be stored with the operation, so it can be read again within the tracker's lifetime. One import SHALL run per register at a time: the import SHALL hold an exclusive lock on its register from before the file is read until it returns or fails, and a second import while the lock is held SHALL be refused with 409 `IMPORT_IN_PROGRESS` before it reads the file or writes anything, because every match is find-then-create and two interleaved runs would each create the same records.
 
 #### Scenario: The admin follows and cancels a running import
 @e2e tests/e2e/spec-coverage/cmdb-import.spec.ts covers the section: the progress, the cancel request for the page's operation and the cancelled report. A two-row import finishes before a cancel can land between rows, so the server's stop before the next row is asserted by tests/Unit/Service/CmdbExportImportServiceTest.php testACancelStopsBetweenRows (cancel after row 1 of three: one processed row, cancelled true).
@@ -495,6 +495,14 @@ The import SHALL run as a `ProgressTracker` operation of type `cmdb_import` unde
 - **THEN** the service SHALL stop before the second row
 - **AND** the report SHALL show 1 processed row and `cancelled: true`
 - **AND** the module created for the first row SHALL stay
+
+#### Scenario: A malformed or still-running operation id is replaced
+@e2e exclude The page always sends a fresh valid id; tests/Unit/Service/CmdbExportImportServiceTest.php testTheIdOfARunningOperationIsReplaced starts an operation under an id and imports with the same id, and testAnIdWithATrailingNewlineIsRefused imports with "cmdb-12345678\n"; both assert the report's operationId is a new id matching the pattern, and the first that the running operation keeps its owner and progress.
+
+- **GIVEN** a `cmdb_import` operation `cmdb-live-00001` that is still running for another admin
+- **WHEN** a Nextcloud admin imports with `operationId` `cmdb-live-00001`, or with `cmdb-12345678` followed by a newline
+- **THEN** the import SHALL run under a generated id, and the report's `operationId` SHALL be that id
+- **AND** the running operation SHALL keep its owner and its progress
 
 #### Scenario: A second import while one runs is refused
 @e2e exclude Two concurrent multipart requests cannot be timed reliably in the browser suite; tests/Unit/Service/CmdbExportImportServiceTest.php testASecondImportWhileOneRunsIsRefused starts a second import from inside the first and asserts 409 IMPORT_IN_PROGRESS with no save while the first runs on, testTheLockIsReleasedWhenTheImportThrows asserts the lock is released after a failure, and tests/Unit/Controller/CmdbImportControllerTest.php asserts the status and the translated message.
