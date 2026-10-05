@@ -19,7 +19,7 @@ Paths are relative to `/index.php/apps/stackiq`.
 | `cmdbFile` | file | yes | | the TOPdesk export, `.xlsx`, at most 10 MB |
 | `municipalityUuid` | string (uuid) | one of the two | | an existing `organization` of type Municipality |
 | `municipalityName` | string | one of the two | | name of a Municipality to reuse (same normalised name) or create |
-| `updateExisting` | `true`/`false` | no | `true` | `false` reports matched rows as skipped (`exists`) |
+| `updateExisting` | `true`/`false` | no | `true` | `false` reports matched rows as skipped (`exists`). `1`/`0` are accepted too, trimmed and in any case; any other value is refused with 400 `FIELD_INVALID` |
 | `missingRecords` | string | no | `keep` | only `keep` is accepted; `mark` and `remove` are reserved |
 | `operationId` | string | no | generated | progress operation id, readable through `GET /api/progress/{operationId}`; `cmdb-` followed by 8 to 64 letters, digits or hyphens (for example `cmdb-` plus a uuid v4). Any other value is replaced by a generated id, returned as `operationId` |
 
@@ -53,7 +53,7 @@ Paths are relative to `/index.php/apps/stackiq`.
 **Errors:**
 | Code | Condition |
 |------|-----------|
-| 400  | `NO_FILE_UPLOADED`, `NOT_XLSX` |
+| 400  | `NO_FILE_UPLOADED`, `NOT_XLSX`, `FIELD_INVALID` |
 | 401  | not signed in (Nextcloud) |
 | 403  | neither a Nextcloud admin nor a delegated stackiq admin (Nextcloud) |
 | 412  | missing or invalid CSRF token (Nextcloud) |
@@ -62,7 +62,7 @@ Paths are relative to `/index.php/apps/stackiq`.
 | 500  | `IMPORT_FAILED` (unexpected; generic message, details only in the log) |
 | 503  | `MAPPING_UNAVAILABLE`, `READER_UNAVAILABLE`, `NOT_CONFIGURED` |
 
-Error body: `{"success": false, "error": "<CODE>", "message": "<translated text>", "details": {...}}`. `details` is always an object, empty when the code has none. For `MISSING_COLUMN`, `details` is `{"sheet": "...", "column": "..."}`. For `NO_SOURCE_SHEET`, it is `{"expected": ["Onbeh Applicaties CMDB", "Beheerde Applicaties CMDB"]}`. For `TOO_MANY_ROWS`, it is `{"sheet": "...", "limit": 10000}`. For `FILE_TOO_LARGE`, it is `{"maxBytes": 10485760}`. For `MISSING_RECORDS_UNSUPPORTED`, it is `{"accepted": ["keep"]}`.
+Error body: `{"success": false, "error": "<CODE>", "message": "<translated text>", "details": {...}}`. `details` is always an object, empty when the code has none. For `MISSING_COLUMN`, `details` is `{"sheet": "...", "column": "..."}`. For `NO_SOURCE_SHEET`, it is `{"expected": ["Onbeh Applicaties CMDB", "Beheerde Applicaties CMDB"]}`. For `TOO_MANY_ROWS`, it is `{"sheet": "...", "limit": 10000}`. For `FILE_TOO_LARGE`, it is `{"maxBytes": 10485760}`. For `MISSING_RECORDS_UNSUPPORTED`, it is `{"accepted": ["keep"]}`. For `FIELD_INVALID`, it is `{"field": "updateExisting", "accepted": ["true", "false"]}`.
 
 ### `POST /api/cmdb-import/{operationId}/cancel`
 **Auth**: the same as the import: a Nextcloud admin or delegated stackiq admin session, plus CSRF token.
@@ -92,6 +92,7 @@ Returns the `ProgressTracker` snapshot for the `cmdb_import` operation: `progres
 | `NOT_XLSX` | not an xlsx workbook | extension is not `.xlsx`, no ZIP signature, or no `xl/workbook.xml` |
 | `FILE_TOO_LARGE` | too large | larger than the profile's `maxFileBytes` (10 MB) |
 | `MISSING_RECORDS_UNSUPPORTED` | option not supported | `missingRecords` is not `keep` |
+| `FIELD_INVALID` | malformed field (400) | `updateExisting` is not `true`, `false`, `1` or `0` |
 | `MUNICIPALITY_REQUIRED` | no consumer | neither `municipalityUuid` nor `municipalityName` given |
 | `MUNICIPALITY_INVALID` | wrong consumer | uuid unknown, or the organisation is not of type Municipality |
 | `NO_SOURCE_SHEET` | nothing to read | neither "Onbeh Applicaties CMDB" nor "Beheerde Applicaties CMDB" present |

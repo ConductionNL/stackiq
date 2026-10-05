@@ -150,6 +150,16 @@ class CmdbImportController extends Controller {
 			return $this->error(code: 'MISSING_RECORDS_UNSUPPORTED', status: Http::STATUS_UNPROCESSABLE_ENTITY, details: ['accepted' => ['keep']]);
 		}
 
+		// An unrecognised value is refused rather than read as true: true is the mode that overwrites.
+		$updateExisting = $this->booleanParam(name: 'updateExisting', default: true);
+		if ($updateExisting === null) {
+			return $this->error(
+				code: 'FIELD_INVALID',
+				status: Http::STATUS_BAD_REQUEST,
+				details: ['field' => 'updateExisting', 'accepted' => ['true', 'false']]
+			);
+		}
+
 		$municipalityUuid = trim((string)$this->request->getParam('municipalityUuid', ''));
 		$municipalityName = trim((string)$this->request->getParam('municipalityName', ''));
 		if ($municipalityUuid === '' && $municipalityName === '') {
@@ -161,7 +171,7 @@ class CmdbImportController extends Controller {
 			'options' => [
 				'municipalityUuid' => $municipalityUuid,
 				'municipalityName' => $municipalityName,
-				'updateExisting' => $this->booleanParam(name: 'updateExisting', default: true),
+				'updateExisting' => $updateExisting,
 				'operationId' => $this->request->getParam('operationId'),
 			],
 		];
@@ -234,12 +244,14 @@ class CmdbImportController extends Controller {
 	private function message(string $code, array $details): string {
 		$megabytes = (string)intdiv($this->importService->maxFileBytes(), 1048576);
 		$expected = implode(', ', array_map('strval', ($details['expected'] ?? [])));
+		$accepted = implode(', ', array_map('strval', ($details['accepted'] ?? [])));
 
 		return match ($code) {
 			'NO_FILE_UPLOADED' => $this->l10n->t('No file was uploaded.'),
 			'NOT_XLSX' => $this->l10n->t('The file is not an Excel workbook (.xlsx).'),
 			'FILE_TOO_LARGE' => $this->l10n->t('The file is larger than the maximum of %s MB.', [$megabytes]),
 			'MISSING_RECORDS_UNSUPPORTED' => $this->l10n->t('Only keeping records that are missing from the export is supported.'),
+			'FIELD_INVALID' => $this->l10n->t('Field "%1$s" must be one of: %2$s.', [(string)($details['field'] ?? ''), $accepted]),
 			'MUNICIPALITY_REQUIRED' => $this->l10n->t('Choose a municipality or enter the name of a new one.'),
 			'MUNICIPALITY_INVALID' => $this->l10n->t('The chosen organisation is not a municipality.'),
 			'NO_SOURCE_SHEET' => $this->l10n->t('The workbook has neither of the sheets %s.', [$expected]),
@@ -254,14 +266,14 @@ class CmdbImportController extends Controller {
 	}//end message()
 
 	/**
-	 * A boolean form field (`true`/`false`, `1`/`0`).
+	 * A boolean form field: `true`/`false` or `1`/`0`, trimmed and in any case.
 	 *
 	 * @param string $name The field.
-	 * @param bool $default The value when absent.
+	 * @param bool $default The value when absent or empty.
 	 *
-	 * @return bool
+	 * @return bool|null Null for any other value, which the caller refuses.
 	 */
-	private function booleanParam(string $name, bool $default): bool {
+	private function booleanParam(string $name, bool $default): ?bool {
 		$value = $this->request->getParam($name);
 		if ($value === null || $value === '') {
 			return $default;
@@ -271,7 +283,15 @@ class CmdbImportController extends Controller {
 			return $value;
 		}
 
-		return in_array(strtolower((string)$value), ['false', '0', 'no', 'off'], true) === false;
+		if (is_string($value) === false && is_int($value) === false) {
+			return null;
+		}
+
+		return match (strtolower(trim((string)$value))) {
+			'true', '1' => true,
+			'false', '0' => false,
+			default => null,
+		};
 	}//end booleanParam()
 
 	/**

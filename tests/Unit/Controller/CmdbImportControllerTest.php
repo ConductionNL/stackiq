@@ -395,6 +395,68 @@ class CmdbImportControllerTest extends TestCase {
 	}//end testAValidUploadReturnsTheReport()
 
 	/**
+	 * The spellings of updateExisting and what each one means; null is refused.
+	 *
+	 * @return array<string, array{mixed, bool|null}>
+	 */
+	public static function updateExistingValues(): array {
+		return [
+			'absent' => [null, true],
+			'empty' => ['', true],
+			'true' => ['true', true],
+			'TRUE' => ['TRUE', true],
+			'one' => ['1', true],
+			'false' => ['false', false],
+			'padded false' => [' false', false],
+			'False' => ['False ', false],
+			'zero' => ['0', false],
+			'typo' => ['flase', null],
+			'off' => ['off', null],
+			'no' => ['no', null],
+			'yes' => ['yes', null],
+			'blank' => ['  ', null],
+			'array' => [['false'], null],
+		];
+	}//end updateExistingValues()
+
+	/**
+	 * Only true/false and 1/0 select a mode; anything else is 400 FIELD_INVALID and nothing is imported.
+	 *
+	 * @param mixed $value The form value, or null for an absent field.
+	 * @param bool|null $expected The mode passed to the import, or null for a refusal.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('updateExistingValues')]
+	public function testUpdateExistingAcceptsOnlyExplicitValues(mixed $value, ?bool $expected): void {
+		$service = $this->service();
+		$params = ['municipalityName' => 'Gemeente Voorbeeldstad'];
+		if ($value !== null) {
+			$params['updateExisting'] = $value;
+		}
+
+		if ($expected === null) {
+			$service->expects($this->never())->method('import');
+		} else {
+			$service->expects($this->once())->method('import')
+				->with($this->anything(), $this->callback(fn (array $options): bool => $options['updateExisting'] === $expected))
+				->willReturn(['success' => true]);
+		}
+
+		$response = $this->controller(file: $this->file(path: $this->upload()), params: $params, service: $service)->import();
+
+		if ($expected === null) {
+			$this->assertSame(400, $response->getStatus());
+			$this->assertSame('FIELD_INVALID', $response->getData()['error']);
+			$this->assertEquals((object)['field' => 'updateExisting', 'accepted' => ['true', 'false']], $response->getData()['details']);
+			$this->assertSame('Field "updateExisting" must be one of: true, false.', $response->getData()['message']);
+			return;
+		}
+
+		$this->assertSame(200, $response->getStatus());
+	}//end testUpdateExistingAcceptsOnlyExplicitValues()
+
+	/**
 	 * Cancel answers 200 for a running import and 404 OPERATION_NOT_FOUND otherwise.
 	 *
 	 * @return void
