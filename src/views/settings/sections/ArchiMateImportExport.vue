@@ -775,6 +775,18 @@ export default {
 		await this.loadOrganizations()
 	},
 
+	/**
+	 * Stop polling when the page is left mid-import.
+	 *
+	 * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-003-the-settings-page-shall-show-the-progress-and-offer-a-cancel
+	 */
+	beforeUnmount() {
+		if (this.stopProgressPolling) {
+			this.stopProgressPolling()
+			this.stopProgressPolling = null
+		}
+	},
+
 	methods: {
 		/**
 		 * Handle file selection from file input

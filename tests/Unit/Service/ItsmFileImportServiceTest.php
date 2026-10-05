@@ -18,11 +18,16 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+require_once __DIR__ . '/../Support/CmdbTestSupport.php';
+
 use OCA\Stackiq\Service\Itsm\ItsmFlowGateway;
 use OCA\Stackiq\Service\ItsmFileImportService;
+use OCA\Stackiq\Tests\Unit\Support\CmdbTestSupport;
 use OCP\IAppConfig;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\LoggerInterface;
+use RuntimeException;
 
 /**
  * Asserts the reading, the refusals and the run.
@@ -82,7 +87,7 @@ class ItsmFileImportServiceTest extends TestCase {
 
 		$config->method('getValueString')->willReturn($setting);
 
-		return new ItsmFileImportService(gateway: $this->gateway, appConfig: $config);
+		return new ItsmFileImportService(gateway: $this->gateway, appConfig: $config, logger: $this->createMock(LoggerInterface::class));
 	}//end service()
 
 	/**
@@ -98,6 +103,28 @@ class ItsmFileImportServiceTest extends TestCase {
 		$this->files[] = $path;
 		return $path;
 	}//end csv()
+
+	/**
+	 * Write a one-sheet XLSX file by hand, so its formula cells carry exactly the cached value given.
+	 *
+	 * @param string $sheetRows The `row` elements of the sheet.
+	 *
+	 * @return string The path.
+	 */
+	private function xlsx(string $sheetRows): string {
+		$path = (string) tempnam(sys_get_temp_dir(), 'itsm');
+		$this->files[] = $path;
+		$zip = new \ZipArchive();
+		$zip->open($path, \ZipArchive::OVERWRITE);
+		$zip->addFromString('[Content_Types].xml', '<?xml version="1.0" encoding="UTF-8"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/><Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/></Types>');
+		$zip->addFromString('_rels/.rels', '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/></Relationships>');
+		$zip->addFromString('xl/workbook.xml', '<?xml version="1.0" encoding="UTF-8"?><workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets><sheet name="Sheet1" sheetId="1" r:id="rId1"/></sheets></workbook>');
+		$zip->addFromString('xl/_rels/workbook.xml.rels', '<?xml version="1.0" encoding="UTF-8"?><Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/></Relationships>');
+		$zip->addFromString('xl/worksheets/sheet1.xml', '<?xml version="1.0" encoding="UTF-8"?><worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData>' . $sheetRows . '</sheetData></worksheet>');
+		$zip->close();
+
+		return $path;
+	}//end xlsx()
 
 	/**
 	 * A semicolon CSV with a byte order mark reads as rows keyed by header, empty cells left out.
@@ -164,4 +191,74 @@ class ItsmFileImportServiceTest extends TestCase {
 		$this->assertStringContainsString('Set up the exchange first', $this->service(flow: null)->import(path: $path, name: 'a.csv')['message']);
 		$this->assertStringContainsString('only .csv and .xlsx', $this->service(flow: 'file-flow')->import(path: $path, name: 'a.ods')['message']);
 	}//end testNoSetUpAndAnotherTypeAreRefused()
+
+	/**
+	 * A file over the byte limit is refused before it is read.
+	 *
+	 * @return void
+	 */
+	public function testAFileOverTheSizeLimitIsRefused(): void {
+		$this->gateway->expects($this->never())->method('run');
+		$path = $this->csv("recordId\n" . str_repeat('A', ItsmFileImportService::MAX_FILE_BYTES) . "\n");
+
+		$result = $this->service(flow: 'file-flow')->import(path: $path, name: 'big.csv');
+
+		$this->assertFalse($result['started']);
+		$this->assertStringContainsString('larger than 10 MB', $result['message']);
+	}//end testAFileOverTheSizeLimitIsRefused()
+
+	/**
+	 * Reading stops one row past the row cap, and the file is refused.
+	 *
+	 * @return void
+	 */
+	public function testReadingStopsOneRowPastTheCap(): void {
+		$this->gateway->expects($this->never())->method('run');
+		$lines = ['recordId'];
+		for ($i = 1; $i <= (ItsmFileImportService::MAX_ROWS + 50); $i++) {
+			$lines[] = 'A-' . $i;
+		}
+
+		$path = $this->csv(implode("\n", $lines) . "\n");
+		$service = $this->service(flow: 'file-flow');
+
+		$this->assertCount(ItsmFileImportService::MAX_ROWS + 1, $service->readRows(path: $path, name: 'many.csv'));
+		$this->assertStringContainsString('more than ' . ItsmFileImportService::MAX_ROWS . ' rows', $service->import(path: $path, name: 'many.csv')['message']);
+	}//end testReadingStopsOneRowPastTheCap()
+
+	/**
+	 * A flow the engine refuses to run is the refusal envelope, not an error.
+	 *
+	 * @return void
+	 */
+	public function testAFlowThatCannotRunIsRefused(): void {
+		$path = $this->csv("recordId\nA-1\n");
+		$this->gateway->method('run')->willThrowException(new RuntimeException('flow is not runnable'));
+
+		$result = $this->service(flow: 'file-flow')->import(path: $path, name: 'a.csv');
+
+		$this->assertFalse($result['started']);
+		$this->assertStringContainsString('flow is not runnable', $result['message']);
+	}//end testAFlowThatCannotRunIsRefused()
+
+	/**
+	 * An XLSX file gives the value a formula cached, not a recalculated one, and a CSV named .xlsx is not read as CSV.
+	 *
+	 * @return void
+	 */
+	public function testAnXlsxGivesCachedFormulaValuesAndOnlyXlsxIsRead(): void {
+		if (CmdbTestSupport::loadPhpSpreadsheet() === false) {
+			$this->markTestSkipped('PhpSpreadsheet comes from an OpenRegister vendor directory, which is not available.');
+		}
+
+		$path = $this->xlsx(
+			'<row r="1"><c r="A1" t="inlineStr"><is><t>recordId</t></is></c><c r="B1" t="inlineStr"><is><t>name</t></is></c></row>'
+			. '<row r="2"><c r="A2" t="inlineStr"><is><t>A-1</t></is></c><c r="B2" t="str"><f>CONCATENATE("Zaak","systeem")</f><v>Cached name</v></c></row>'
+		);
+
+		$this->assertSame([['recordId' => 'A-1', 'name' => 'Cached name']], $this->service(flow: null)->readRows(path: $path, name: 'landscape.xlsx'));
+
+		$csv = $this->csv("recordId\nA-1\n");
+		$this->assertStringContainsString('could not be read', $this->service(flow: 'file-flow')->import(path: $csv, name: 'landscape.xlsx')['message']);
+	}//end testAnXlsxGivesCachedFormulaValuesAndOnlyXlsxIsRead()
 }//end class

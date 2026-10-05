@@ -14,6 +14,13 @@ on:
 
 jobs:
   deploy:
+    # Permission CEILING for the called workflow, not a grant: the callee's
+    # deploy job declares `contents: write` (gh-pages push) and its fallback
+    # image job `packages: write` (GHCR). A ceiling below what the callee
+    # declares makes the call fail to start.
+    permissions:
+      contents: write
+      packages: write
     uses: ConductionNL/.github/.github/workflows/documentation.yml@main
     # A reusable workflow receives NO secrets by default. Without this block the
     # callee's publish step finds CF_API_TOKEN empty, skips itself on its own

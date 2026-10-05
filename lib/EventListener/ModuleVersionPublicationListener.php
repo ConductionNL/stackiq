@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\EventListener;
 
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
+use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\Stackiq\Service\ModuleVersionPublicationService;
 use OCP\EventDispatcher\Event;
@@ -29,7 +30,7 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 
 /**
- * Hands every created or updated object to the publication mirror.
+ * Hands every created, updated or deleted object to the publication mirror.
  *
  * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
  *
@@ -59,21 +60,18 @@ class ModuleVersionPublicationListener implements IEventListener {
 	 * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
 	 */
 	public function handle(Event $event): void {
-		$object = null;
-		if ($event instanceof ObjectUpdatedEvent) {
-			$object = $event->getNewObject();
-		}
-
-		if ($event instanceof ObjectCreatedEvent) {
-			$object = $event->getObject();
-		}
-
-		if ($object === null) {
-			return;
-		}
-
 		try {
-			$this->publication->objectSaved(object: $object);
+			if ($event instanceof ObjectUpdatedEvent) {
+				$this->publication->objectSaved(object: $event->getNewObject(), previous: $event->getOldObject());
+			}
+
+			if ($event instanceof ObjectCreatedEvent) {
+				$this->publication->objectSaved(object: $event->getObject());
+			}
+
+			if ($event instanceof ObjectDeletedEvent) {
+				$this->publication->objectDeleted(object: $event->getObject());
+			}
 		} catch (Throwable $e) {
 			$this->logger->error('ModuleVersionPublicationListener: could not mirror the publication', ['error' => $e->getMessage()]);
 		}

@@ -32,6 +32,11 @@ use Psr\Log\LoggerInterface;
  * admin, the request after a cron run) can read it. Who may read an operation
  * is decided by SettingsController::getProgress(), not by where it is stored.
  *
+ * @SuppressWarnings(PHPMD.TooManyPublicMethods) Each public method is one step of an
+ * operation's life (start, phase, progress, warning, error, statistics, complete, fail,
+ * cancel) that an import calls on the same snapshot; splitting them would hand that
+ * snapshot from class to class.
+ *
  * @category  Service
  * @package   OCA\Stackiq\Service
  * @author    Conduction b.v. <info@conduction.nl>
@@ -360,6 +365,42 @@ class ProgressTracker {
 			]
 		);
 	}//end completeOperation()
+
+	/**
+	 * Mark the current operation as failed, keeping the percentage it reached.
+	 *
+	 * A page following the operation then sees it stop as failed rather than
+	 * as running until the snapshot expires, or as completed at 100%.
+	 *
+	 * @param string $message Why the operation failed
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/progress-tracking/spec.md
+	 */
+	public function failOperation(string $message): void {
+		$this->progress['errors'][] = [
+			'message' => $message,
+			'context' => [],
+			'timestamp' => time(),
+		];
+		$this->progress['phase_description'] = 'Failed';
+		$this->progress['status'] = 'failed';
+		$this->progress['estimated_completion'] = time();
+		$this->saveProgress();
+
+		if ($this->progress['operation_id'] !== null) {
+			$this->store->remove(key: 'cancel_' . $this->progress['operation_id']);
+		}
+
+		$this->logger->error(
+			'Operation failed',
+			[
+				'operation_id' => $this->progress['operation_id'],
+				'message' => $message,
+			]
+		);
+	}//end failOperation()
 
 	/**
 	 * Ask a running operation to stop.

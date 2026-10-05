@@ -1073,7 +1073,11 @@ OC.L10N.register(
         "Application published": "Application published",
         "The publication date of the application this version belongs to, copied from it. A version is public only while its application is.": "The publication date of the application this version belongs to, copied from it. A version is public only while its application is.",
         "Application registered by": "Application registered by",
-        "Who registered the application this version belongs to, copied from it. A supplier's application is public, and so are its versions.": "Who registered the application this version belongs to, copied from it. A supplier's application is public, and so are its versions."
+        "Who registered the application this version belongs to, copied from it. A supplier's application is public, and so are its versions.": "Who registered the application this version belongs to, copied from it. A supplier's application is public, and so are its versions.",
+        "The file could not be sent. Check your connection and try again.": "The file could not be sent. Check your connection and try again.",
+        "The organisation register is not configured, so there are no organisations to choose from.": "The organisation register is not configured, so there are no organisations to choose from.",
+        "The organisations could not be loaded. Reload the page to try again.": "The organisations could not be loaded. Reload the page to try again.",
+        "Whether a service desk is connected could not be loaded. Reload the page to try again.": "Whether a service desk is connected could not be loaded. Reload the page to try again."
     },
     "nplurals=2; plural=(n != 1);"
 )

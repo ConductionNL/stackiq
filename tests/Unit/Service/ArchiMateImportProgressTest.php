@@ -166,6 +166,26 @@ class ArchiMateImportProgressTest extends TestCase {
 	}//end testACancelDuringTheFirstGroupStopsBeforeTheSecond()
 
 	/**
+	 * An import that throws is stored as failed at the percentage it reached, not completed at 100%.
+	 *
+	 * @return void
+	 */
+	public function testAFailedImportIsStoredAsFailed(): void {
+		$service = $this->importService($this->tracker());
+		(new \ReflectionProperty(ArchiMateImportService::class, 'cachedConfig'))->setValue($service, ['userId' => 'admin']);
+
+		$result = $service->importArchiMateFileFromPathOptimized(
+			['operationId' => 'archimate_import_abc12345', 'filePath' => '/does/not/exist.xml']
+		);
+
+		$this->assertFalse($result['success']);
+		$stored = $this->tracker()->getProgress('archimate_import_abc12345');
+		$this->assertSame('failed', $stored['status']);
+		$this->assertLessThan(100, $stored['percentage']);
+		$this->assertStringContainsString('File not found', $stored['errors'][0]['message']);
+	}//end testAFailedImportIsStoredAsFailed()
+
+	/**
 	 * An id that does not match the pattern is ignored: no operation, no cancel checks.
 	 *
 	 * @return void

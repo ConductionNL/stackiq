@@ -498,8 +498,7 @@ class ArchiMateImportService {
 			);
 
 			if ($this->operationId !== null) {
-				$this->progressTracker->addError(message: $e->getMessage());
-				$this->progressTracker->completeOperation();
+				$this->progressTracker->failOperation(message: $e->getMessage());
 			}
 
 			return [

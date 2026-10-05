@@ -126,4 +126,27 @@ class ProgressTrackerCancelTest extends TestCase {
 		$this->assertSame('cancelled', $stored['status']);
 		$this->assertSame(4, $stored['processed_items']);
 	}//end testACancelledOperationIsStoredAsCancelled()
+
+	/**
+	 * A failed operation is stored as failed with its reason and the counts it reached, and its cancel flag is cleared.
+	 *
+	 * @return void
+	 */
+	public function testAFailedOperationIsStoredAsFailed(): void {
+		$importRequest = $this->tracker();
+		$importRequest->startOperation(operationType: 'archimate_import', operationId: 'archimate_import_abc12345');
+		$importRequest->setPhase('processing_elements', ['total_items' => 10]);
+		$importRequest->updateProgress(processedItems: 4);
+		$percentage = $importRequest->getProgress()['percentage'];
+		$this->tracker()->setCancelRequested('archimate_import_abc12345');
+
+		$importRequest->failOperation('Database went away');
+
+		$stored = $this->tracker()->getProgress('archimate_import_abc12345');
+		$this->assertSame('failed', $stored['status']);
+		$this->assertSame(4, $stored['processed_items']);
+		$this->assertSame($percentage, $stored['percentage']);
+		$this->assertSame('Database went away', $stored['errors'][0]['message']);
+		$this->assertFalse($importRequest->isCancelRequested('archimate_import_abc12345'));
+	}//end testAFailedOperationIsStoredAsFailed()
 }//end class

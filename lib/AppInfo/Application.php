@@ -22,6 +22,7 @@ namespace OCA\Stackiq\AppInfo;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
+use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\OpenRegister\Service\OrganisationService as OpenRegisterOrganisationService;
@@ -815,6 +816,7 @@ class Application extends App implements IBootstrap {
 		// A module version is public only while its application is (publication-field-rules).
 		$context->registerEventListener(ObjectCreatedEvent::class, ModuleVersionPublicationListener::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleVersionPublicationListener::class);
+		$context->registerEventListener(ObjectDeletedEvent::class, ModuleVersionPublicationListener::class);
 
 		// Sync user profile updates into the contactpersoon mirror.
 		$context->registerEventListener(UserProfileUpdatedEvent::class, UserProfileUpdatedEventListener::class);
