@@ -28,6 +28,8 @@
  * - Records missing from a newer export are left untouched.
  * - Owners become contact persons, never Nextcloud user accounts, and no
  *   report entry or log line carries an owner name or e-mail address.
+ * - One import runs per register at a time: every match is find-then-create,
+ *   so two interleaved runs would each create the same records.
  *
  * @category  Service
  * @package   OCA\Stackiq\Service
@@ -55,6 +57,8 @@ use OCA\Stackiq\Service\Cmdb\CmdbImportReport;
 use OCA\Stackiq\Service\Cmdb\CmdbRowNormaliser;
 use OCA\Stackiq\Service\Cmdb\CmdbWorkbookReader;
 use OCP\IL10N;
+use OCP\Lock\ILockingProvider;
+use OCP\Lock\LockedException;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -115,6 +119,11 @@ class CmdbExportImportService {
 		'usage' => ['consumer', 'module'],
 		'contactPerson' => ['contactsUid', 'organization'],
 	];
+
+	/**
+	 * The lock an import holds for its register, so imports never interleave.
+	 */
+	private const LOCK_PREFIX = 'stackiq/cmdb-import/register-';
 
 	/**
 	 * Page size for loading the organisations a name may match.
@@ -180,6 +189,11 @@ class CmdbExportImportService {
 	 * @param CmdbRowNormaliser $normaliser Dates and ids to strings.
 	 * @param IL10N $l10n Translates report reasons and warnings.
 	 * @param LoggerInterface $logger Logger; never handed person data.
+	 * @param ILockingProvider $lockingProvider Serialises imports per register.
+	 *
+	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Each collaborator is one concern of the
+	 * import (the file, the packs, OpenRegister, Contacts, progress, the lock); grouping them
+	 * into a parameter object would only move the same list one class further.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 */
@@ -193,6 +207,7 @@ class CmdbExportImportService {
 		private readonly CmdbRowNormaliser $normaliser,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
+		private readonly ILockingProvider $lockingProvider,
 	) {
 	}//end __construct()
 
@@ -268,16 +283,17 @@ class CmdbExportImportService {
 	 * Validation that can fail the whole import runs before any object is
 	 * written: the packs and the engine, the configuration, the workbook and
 	 * the municipality uuid. After that every row is processed in its own
-	 * error boundary.
+	 * error boundary. The import holds an exclusive lock on its register from
+	 * before the file is read until it returns or throws.
 	 *
 	 * @param string $path The xlsx file, already checked by assertXlsx().
 	 * @param array<string, mixed> $options municipalityUuid, municipalityName, updateExisting, operationId.
 	 *
 	 * @return array<string, mixed> The report (contract.md).
 	 *
-	 * @throws CmdbImportException MAPPING_UNAVAILABLE, NOT_CONFIGURED, SCHEMA_OUTDATED, WORKBOOK_TOO_LARGE,
-	 *                             READER_UNAVAILABLE, NOT_XLSX, NO_SOURCE_SHEET, MISSING_COLUMN,
-	 *                             TOO_MANY_ROWS, MUNICIPALITY_REQUIRED or MUNICIPALITY_INVALID.
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE, NOT_CONFIGURED, SCHEMA_OUTDATED, IMPORT_IN_PROGRESS,
+	 *                             WORKBOOK_TOO_LARGE, READER_UNAVAILABLE, NOT_XLSX, NO_SOURCE_SHEET,
+	 *                             MISSING_COLUMN, TOO_MANY_ROWS, MUNICIPALITY_REQUIRED or MUNICIPALITY_INVALID.
 	 * @throws \Exception         An unexpected OpenRegister error outside a row, such as
 	 *                             creating the municipality; rows catch their own.
 	 *
@@ -292,6 +308,52 @@ class CmdbExportImportService {
 		$this->engine = $this->resolveEngine();
 		$this->coordinates = $this->resolveCoordinates();
 
+		$lock = $this->acquireImportLock(register: $this->coordinates['register']);
+		try {
+			return $this->runImport(path: $path, options: $options, startedAt: $startedAt);
+		} finally {
+			$this->lockingProvider->releaseLock($lock, ILockingProvider::LOCK_EXCLUSIVE);
+		}
+	}//end import()
+
+	/**
+	 * Take the register's import lock, or refuse because another import holds it.
+	 *
+	 * @param int $register The register id.
+	 *
+	 * @return string The lock path, to release.
+	 *
+	 * @throws CmdbImportException IMPORT_IN_PROGRESS.
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+	 */
+	private function acquireImportLock(int $register): string {
+		$lock = self::LOCK_PREFIX . $register;
+		try {
+			$this->lockingProvider->acquireLock($lock, ILockingProvider::LOCK_EXCLUSIVE, 'CMDB import');
+		} catch (LockedException $e) {
+			throw new CmdbImportException(
+				errorCode: CmdbImportException::IMPORT_IN_PROGRESS,
+				message: 'Another CMDB import is running for this register',
+				previous: $e
+			);
+		}
+
+		return $lock;
+	}//end acquireImportLock()
+
+	/**
+	 * Read the workbook and import its rows, under the register's lock.
+	 *
+	 * @param string $path The xlsx file.
+	 * @param array<string, mixed> $options The import options.
+	 * @param string $startedAt ISO start time of the import.
+	 *
+	 * @return array<string, mixed> The report.
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 */
+	private function runImport(string $path, array $options, string $startedAt): array {
 		$workbook = $this->reader->read(path: $path, profile: $this->profile);
 		$municipality = $this->resolveMunicipality(options: $options);
 
@@ -342,7 +404,7 @@ class CmdbExportImportService {
 		);
 
 		return $result;
-	}//end import()
+	}//end runImport()
 
 	/**
 	 * Process one row in its own error boundary and add its outcome.

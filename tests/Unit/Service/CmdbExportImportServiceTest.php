@@ -48,6 +48,8 @@ use OCP\ICache;
 use OCP\ICacheFactory;
 use OCP\IL10N;
 use OCP\IUserSession;
+use OCP\Lock\ILockingProvider;
+use OCP\Lock\LockedException;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
@@ -165,6 +167,13 @@ class CmdbExportImportServiceTest extends TestCase {
 	private array $searches = [];
 
 	/**
+	 * The locking provider every service of a test shares, as the instance does.
+	 *
+	 * @var ILockingProvider|null
+	 */
+	private ?ILockingProvider $locks = null;
+
+	/**
 	 * Reset the doubles.
 	 *
 	 * @return void
@@ -183,7 +192,56 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->ignoredFilters = [];
 		$this->scopedCalls = [];
 		$this->searches = [];
+		$this->locks = $this->lockingProvider();
 	}//end setUp()
+
+	/**
+	 * An in-memory locking provider: an exclusive lock that is held cannot be taken again.
+	 *
+	 * @return ILockingProvider
+	 */
+	private function lockingProvider(): ILockingProvider {
+		return new class implements ILockingProvider {
+			/**
+			 * Held locks, path => type.
+			 *
+			 * @var array<string, int>
+			 */
+			public array $held = [];
+
+			/**
+			 * Every lock taken, in order.
+			 *
+			 * @var array<int, string>
+			 */
+			public array $taken = [];
+
+			public function isLocked(string $path, int $type): bool {
+				return isset($this->held[$path]);
+			}
+
+			public function acquireLock(string $path, int $type, ?string $readablePath = null): void {
+				if (isset($this->held[$path]) === true) {
+					throw new LockedException($path, null, null, $readablePath);
+				}
+
+				$this->held[$path] = $type;
+				$this->taken[] = $path;
+			}
+
+			public function releaseLock(string $path, int $type): void {
+				unset($this->held[$path]);
+			}
+
+			public function changeLock(string $path, int $targetType): void {
+				$this->held[$path] = $targetType;
+			}
+
+			public function releaseAll(): void {
+				$this->held = [];
+			}
+		};
+	}//end lockingProvider()
 
 	/**
 	 * Every OpenRegister call of every test reads and writes unscoped, as the import must.
@@ -629,7 +687,8 @@ class CmdbExportImportServiceTest extends TestCase {
 			reader: ($reader ?? new CmdbWorkbookReader()),
 			normaliser: new CmdbRowNormaliser(),
 			l10n: $this->l10n(),
-			logger: $this->logger()
+			logger: $this->logger(),
+			lockingProvider: $this->locks
 		);
 	}//end service()
 
@@ -1436,6 +1495,62 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame('completed', $stored['status']);
 		$this->assertSame($report, $stored['statistics']['report']);
 	}//end testProgressIsRecordedAndHoldsTheReport()
+
+	/**
+	 * A second import of the same register while the first runs is refused with IMPORT_IN_PROGRESS and writes nothing.
+	 *
+	 * @return void
+	 */
+	public function testASecondImportWhileOneRunsIsRefused(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$second = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '9', row: 2)]));
+		$refusal = null;
+		$savesDuringSecond = null;
+		$this->beforeSave = function (int $schema) use ($second, &$refusal, &$savesDuringSecond): void {
+			if ($schema !== self::MODULE || $refusal !== null) {
+				return;
+			}
+
+			$before = count($this->saves);
+			try {
+				$second->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+			} catch (CmdbImportException $e) {
+				$refusal = $e;
+			}
+
+			$savesDuringSecond = (count($this->saves) - $before);
+		};
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', row: 2), $this->row(appId: '2', row: 3)]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertInstanceOf(CmdbImportException::class, $refusal, 'the second import was refused');
+		$this->assertSame('IMPORT_IN_PROGRESS', $refusal->getErrorCode());
+		$this->assertSame(409, $refusal->getHttpStatus());
+		$this->assertSame(0, $savesDuringSecond);
+		$this->assertSame(2, $report['summary']['created'], 'the first import ran on');
+		$this->assertSame([], $this->locks->held, 'the lock is released when the import returns');
+		$this->assertSame(['stackiq/cmdb-import/register-' . self::REGISTER], array_unique($this->locks->taken));
+	}//end testASecondImportWhileOneRunsIsRefused()
+
+	/**
+	 * The lock is released when the import throws, so the next import runs.
+	 *
+	 * @return void
+	 */
+	public function testTheLockIsReleasedWhenTheImportThrows(): void {
+		try {
+			$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityUuid' => 'no-such-municipality']);
+			$this->fail('MUNICIPALITY_INVALID expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('MUNICIPALITY_INVALID', $e->getErrorCode());
+		}
+
+		$this->assertSame([], $this->locks->held);
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$this->assertSame(1, $report['summary']['created']);
+	}//end testTheLockIsReleasedWhenTheImportThrows()
 
 	/**
 	 * A cancel after row 1 of 3 keeps row 1 and reports cancelled with one processed row.
