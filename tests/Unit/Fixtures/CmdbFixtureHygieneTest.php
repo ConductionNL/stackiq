@@ -119,6 +119,21 @@ class CmdbFixtureHygieneTest extends TestCase {
 	];
 
 	/**
+	 * Owner columns: TOPdesk lets an asset's owner be a department, so these may
+	 * also hold a value the workbook lists in one of DEPARTMENT_COLUMNS.
+	 *
+	 * @var array<int, string>
+	 */
+	private const OWNER_COLUMNS = ['Eigenaar', '|Asset eigenaar'];
+
+	/**
+	 * Columns that hold a department.
+	 *
+	 * @var array<int, string>
+	 */
+	private const DEPARTMENT_COLUMNS = ['Afdeling', 'Eigenaar afdeling', 'Eigenaar cluster', 'Applicatie Eigenaar (Afdeling)'];
+
+	/**
 	 * The placeholder person names; a column that holds one is a name column.
 	 *
 	 * @var array<int, string>
@@ -305,7 +320,11 @@ class CmdbFixtureHygieneTest extends TestCase {
 	}//end testOnlyPlaceholderContactData()
 
 	/**
-	 * Every person-name cell of the raw TOPdesk sheets and the CMDB sheets holds a placeholder.
+	 * Every person-name cell of every sheet holds a placeholder.
+	 *
+	 * A name column is one whose header (row 1, or row 2 on sheets with a two-row
+	 * header) is one of NAME_COLUMNS, whatever the other headers are, or one that
+	 * holds a placeholder name anywhere (sheets without a header row, such as Blad3).
 	 *
 	 * @param string $path The fixture.
 	 *
@@ -315,39 +334,122 @@ class CmdbFixtureHygieneTest extends TestCase {
 	public function testPersonNameColumnsHoldPlaceholders(string $path): void {
 		$parts = $this->parts(path: $path);
 		$strings = $this->sharedStrings(xml: ($parts['xl/sharedStrings.xml'] ?? ''));
+		$allowed = array_merge(self::PLACEHOLDER_NAMES, self::PLACEHOLDER_EMAILS);
 
+		$sheets = [];
 		foreach ($parts as $part => $content) {
-			if (preg_match('#^xl/worksheets/sheet\d+\.xml$#', $part) !== 1) {
-				continue;
+			if (preg_match('#^xl/worksheets/sheet\d+\.xml$#', $part) === 1) {
+				$sheets[$part] = $this->sheetRows(content: $content, strings: $strings, part: $part);
+			}
+		}
+
+		$departments = $this->departments(sheets: $sheets);
+		foreach ($sheets as $part => $rows) {
+			$firstDataRow = 1;
+			$nameColumns = [];
+			foreach ([1, 2] as $headerRow) {
+				$names = array_intersect(($rows[$headerRow] ?? []), self::NAME_COLUMNS);
+				if ($names !== []) {
+					$firstDataRow = ($headerRow + 1);
+					$nameColumns = array_merge($nameColumns, $names);
+				}
 			}
 
-			$sheet = simplexml_load_string($content);
-			$this->assertNotFalse($sheet, $part);
-			$headers = [];
-			foreach ($sheet->sheetData->row as $row) {
-				foreach ($row->c as $cell) {
-					preg_match('/^([A-Z]+)(\d+)$/', (string)$cell['r'], $ref);
-					$value = $this->cellText(cell: $cell, strings: $strings);
-					if ($ref[2] === '1') {
-						$headers[$ref[1]] = $value;
-						continue;
+			foreach ($rows as $number => $cells) {
+				foreach ($cells as $column => $value) {
+					if ($number >= $firstDataRow && isset($nameColumns[$column]) === false && in_array(trim($value), self::PLACEHOLDER_PERSONS, true) === true) {
+						$nameColumns[$column] = '';
+					}
+				}
+			}
+
+			foreach ($rows as $number => $cells) {
+				if ($number < $firstDataRow) {
+					continue;
+				}
+
+				foreach (array_intersect_key($cells, $nameColumns) as $column => $value) {
+					$expected = $allowed;
+					if (in_array($nameColumns[$column], self::OWNER_COLUMNS, true) === true) {
+						$expected = array_merge($allowed, $departments);
 					}
 
-					// The raw TOPdesk sheets (Middel-ID) and the CMDB sheets (APPID)
-					// have their headers in row 1; the other sheets are covered by
-					// the e-mail and number scan.
-					if (in_array('Middel-ID', $headers, true) === false && in_array('APPID', $headers, true) === false) {
-						break 2;
-					}
-
-					$header = ($headers[$ref[1]] ?? '');
-					if (in_array($header, self::NAME_COLUMNS, true) === true) {
-						$this->assertContains(trim($value), array_merge(self::PLACEHOLDER_NAMES, self::PLACEHOLDER_EMAILS), basename($path) . ' ' . $part . ' ' . $cell['r']);
-					}
+					$this->assertContains(trim($value), $expected, basename($path) . ' ' . $part . ' ' . $column . $number);
 				}
 			}
 		}//end foreach
 	}//end testPersonNameColumnsHoldPlaceholders()
+
+	/**
+	 * No text anywhere in a fixture has the "Surname, Firstname" shape unless it is a placeholder.
+	 *
+	 * @param string $path The fixture.
+	 *
+	 * @return void
+	 */
+	#[DataProvider('fixtures')]
+	public function testNoSurnameFirstnameText(string $path): void {
+		$parts = $this->parts(path: $path);
+		$texts = $this->sharedStrings(xml: ($parts['xl/sharedStrings.xml'] ?? ''));
+		foreach ($parts as $part => $content) {
+			if (preg_match('#^xl/worksheets/sheet\d+\.xml$#', $part) === 1) {
+				preg_match_all('#<t(?: [^>]*)?>([^<]*)</t>#', $content, $inline);
+				$texts = array_merge($texts, $inline[1]);
+			}
+		}
+
+		$shape = "/^\\p{Lu}[\\p{L}'-]+(?: \\p{Ll}+)*(?: \\p{Lu}[\\p{L}'-]+)*, \\p{Lu}[\\p{L}.'-]*$/u";
+		foreach (array_unique($texts) as $text) {
+			$text = html_entity_decode(trim($text), ENT_QUOTES | ENT_XML1);
+			if (preg_match($shape, $text) === 1) {
+				$this->assertContains($text, self::PLACEHOLDER_PERSONS, basename($path) . ': a name that is not a placeholder');
+			}
+		}
+	}//end testNoSurnameFirstnameText()
+
+	/**
+	 * Every value of a department column (header in row 1) in the workbook.
+	 *
+	 * @param array<string, array<int, array<string, string>>> $sheets The rows of every sheet.
+	 *
+	 * @return array<int, string>
+	 */
+	private function departments(array $sheets): array {
+		$departments = [];
+		foreach ($sheets as $rows) {
+			$columns = array_intersect(($rows[1] ?? []), self::DEPARTMENT_COLUMNS);
+			foreach ($rows as $number => $cells) {
+				if ($number > 1) {
+					$departments = array_merge($departments, array_map('trim', array_values(array_intersect_key($cells, $columns))));
+				}
+			}
+		}
+
+		return array_values(array_diff(array_unique($departments), ['']));
+	}//end departments()
+
+	/**
+	 * The cell texts of a worksheet, by row number and column.
+	 *
+	 * @param string             $content The worksheet part.
+	 * @param array<int, string> $strings The shared strings.
+	 * @param string             $part    The part name, for the failure message.
+	 *
+	 * @return array<int, array<string, string>>
+	 */
+	private function sheetRows(string $content, array $strings, string $part): array {
+		$sheet = simplexml_load_string($content);
+		$this->assertNotFalse($sheet, $part);
+		$rows = [];
+		foreach ($sheet->sheetData->row as $row) {
+			foreach ($row->c as $cell) {
+				preg_match('/^([A-Z]+)(\d+)$/', (string)$cell['r'], $ref);
+				$rows[(int)$ref[2]][$ref[1]] = $this->cellText(cell: $cell, strings: $strings);
+			}
+		}
+
+		return $rows;
+	}//end sheetRows()
 
 	/**
 	 * The shared strings table as a list.
