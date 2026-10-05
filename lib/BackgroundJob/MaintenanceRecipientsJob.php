@@ -23,8 +23,12 @@ declare(strict_types=1);
 namespace OCA\Stackiq\BackgroundJob;
 
 use OCA\Stackiq\Service\MaintenanceRecipientService;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Utility\ITimeFactory;
+use OCP\BackgroundJob\IJobList;
 use OCP\BackgroundJob\QueuedJob;
+use Psr\Log\LoggerInterface;
+use Throwable;
 
 /**
  * One owner resolution for one maintenance window.
@@ -34,14 +38,28 @@ use OCP\BackgroundJob\QueuedJob;
 class MaintenanceRecipientsJob extends QueuedJob {
 
 	/**
+	 * How many times one resolution is tried before it is given up and logged as critical.
+	 */
+	public const MAX_ATTEMPTS = 3;
+
+	/**
+	 * Seconds between a failed resolution and the next try.
+	 */
+	public const RETRY_DELAY = 300;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ITimeFactory                $time       The time factory.
 	 * @param MaintenanceRecipientService $recipients The owner resolution.
+	 * @param IJobList                    $jobList    Queues the job again after a failure.
+	 * @param LoggerInterface             $logger     The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
 		private readonly MaintenanceRecipientService $recipients,
+		private readonly IJobList $jobList,
+		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $time);
 	}//end __construct()
@@ -49,7 +67,11 @@ class MaintenanceRecipientsJob extends QueuedJob {
 	/**
 	 * Resolve and record the owners for the window in the argument.
 	 *
-	 * @param mixed $argument `{uuid, register, schema}` of the window.
+	 * A queued job is removed before it runs, so a resolution that fails (the
+	 * window or the product cannot be read, or the window cannot be written)
+	 * is queued again a few minutes later, up to MAX_ATTEMPTS tries.
+	 *
+	 * @param mixed $argument `{uuid, register, schema, attempt?}` of the window.
 	 *
 	 * @return void
 	 *
@@ -60,10 +82,26 @@ class MaintenanceRecipientsJob extends QueuedJob {
 			return;
 		}
 
-		$this->recipients->recordRecipientsFor(
-			uuid: $argument['uuid'],
-			register: ($argument['register'] ?? null),
-			schema: ($argument['schema'] ?? null)
-		);
+		try {
+			$this->recipients->recordRecipientsFor(
+				uuid: $argument['uuid'],
+				register: ($argument['register'] ?? null),
+				schema: ($argument['schema'] ?? null)
+			);
+		} catch (DoesNotExistException $e) {
+			// The window was deleted before its owners were resolved: nothing to do.
+			return;
+		} catch (Throwable $e) {
+			$attempt = (int) ($argument['attempt'] ?? 1);
+			$context = ['uuid' => $argument['uuid'], 'attempt' => $attempt, 'error' => $e->getMessage()];
+			if ($attempt >= self::MAX_ATTEMPTS) {
+				$this->logger->critical('MaintenanceRecipientsJob: gave up recording the owners to notify; nothing was written', $context);
+				return;
+			}
+
+			$this->logger->error('MaintenanceRecipientsJob: could not record the owners to notify; tried again later', $context);
+			$argument['attempt'] = ($attempt + 1);
+			$this->jobList->scheduleAfter(self::class, $this->time->getTime() + self::RETRY_DELAY, $argument);
+		}
 	}//end run()
 }//end class

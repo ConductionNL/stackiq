@@ -222,9 +222,7 @@ describe('the seeded AI systems', () => {
 		expect(seeded.some((o) => o.aiActRiskCategory === 'limited risk')).toBe(true)
 	})
 
-	it('carry the schema copy the demo import validates against', () => {
-		expect(mock.components.schemas.aiSystem.properties).toEqual(
-			schema.properties,
-		)
+	it('carry no schema copy, so the demo import validates against the live schema', () => {
+		expect(mock.components.schemas).toBeUndefined()
 	})
 })

@@ -22,8 +22,10 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\ArchiMateImportService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
+use OCP\IConfig;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
@@ -70,10 +72,14 @@ class ArchiMateImportProgressTest extends TestCase {
 		$userSession = $this->createMock(IUserSession::class);
 		$userSession->method('getUser')->willReturn($user);
 
+		$factory->method('isAvailable')->willReturn(true);
+
 		return new ProgressTracker(
 			cacheFactory: $factory,
 			userSession: $userSession,
-			logger: $this->createMock(LoggerInterface::class)
+			logger: $this->createMock(LoggerInterface::class),
+			config: $this->createConfiguredMock(IConfig::class, ['getSystemValueString' => '\\OC\\Memcache\\Redis']),
+			appConfig: $this->createMock(IAppConfig::class)
 		);
 	}//end tracker()
 

@@ -25,7 +25,7 @@ The fields listed in the design SHALL be readable only by signed-in users. An an
 
 ### Requirement: REQ-PFR-002 A module version is public only while its application is
 
-A module version SHALL be readable by anonymous readers only when its application is: published by date, or registered by a supplier. Saving the application or the version SHALL keep the version in step.
+A module version SHALL be readable by anonymous readers only when its application is: published by date, or registered by a supplier. Saving the application or the version SHALL keep the version in step. When an application's publication changes or the application is deleted, the copy onto its versions SHALL run in a background job, not in the request that saved it.
 
 #### Scenario: A version of an unpublished application stays private
 @e2e exclude Verified by tests/Unit/Service/ModuleVersionPublicationServiceTest.php and an anonymous API read on the test instance recorded in the PR.
@@ -33,7 +33,7 @@ A module version SHALL be readable by anonymous readers only when its applicatio
 - **GIVEN** an application without a publication date, registered by a municipality, with one version
 - **WHEN** an anonymous reader lists module versions
 - **THEN** that version is not in the answer
-- **WHEN** the application gets a publication date in the past
+- **WHEN** the application gets a publication date in the past and the background job has run
 - **THEN** the version is in the answer
 
 ### Requirement: REQ-PFR-003 A fragment never lowers a schema version
