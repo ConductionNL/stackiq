@@ -42,7 +42,8 @@ const SERVER_CODES = [
 	'NOT_XLSX',
 	'FILE_TOO_LARGE',
 	'MISSING_RECORDS_UNSUPPORTED',
-	'UPDATE_EXISTING_INVALID',
+	'FIELD_INVALID',
+	'UPLOAD_FAILED',
 	'MUNICIPALITY_REQUIRED',
 	'MUNICIPALITY_INVALID',
 	'NO_SOURCE_SHEET',
@@ -218,6 +219,21 @@ describe('errorText', () => {
 		expect(isKnownError('IMPORT_FAILED')).toBe(false)
 		expect(isKnownError('SOMETHING_NEW')).toBe(false)
 		expect(errorText({ error: 'IMPORT_FAILED' }).title).toBe(GENERIC_TITLE)
+	})
+
+	it('names the field and the values it accepts', () => {
+		const words = errorText({
+			error: 'FIELD_INVALID',
+			details: { field: 'updateExisting', accepted: ['true', 'false'] },
+		})
+		expect(words.title).toContain('"updateExisting"')
+		expect(words.hint).toContain('Accepted values: true, false.')
+		expect(
+			errorText({
+				error: 'FIELD_INVALID',
+				details: { field: 'municipalityUuid' },
+			}).hint,
+		).toBe('Reload the page and try again.')
 	})
 
 	it('names the upload limit the server applied', () => {

@@ -366,7 +366,8 @@ const KNOWN_ERRORS = new Set([
 	'NOT_XLSX',
 	'FILE_TOO_LARGE',
 	'MISSING_RECORDS_UNSUPPORTED',
-	'UPDATE_EXISTING_INVALID',
+	'FIELD_INVALID',
+	'UPLOAD_FAILED',
 	'MUNICIPALITY_REQUIRED',
 	'MUNICIPALITY_INVALID',
 	'NO_SOURCE_SHEET',
@@ -447,15 +448,34 @@ export function errorText(error) {
 				),
 				hint: '',
 			}
-		case 'UPDATE_EXISTING_INVALID':
+		case 'FIELD_INVALID': {
+			const accepted = Array.isArray(details.accepted)
+				? details.accepted.map((value) => String(value))
+				: []
 			return {
 				title: t(
 					'stackiq',
-					'The choice for "Update existing records" was not understood.',
+					'The request field "{field}" has a value the import does not accept.',
+					{ field: String(details.field ?? '') },
+					AS_TEXT,
 				),
+				hint:
+					accepted.length > 0
+						? t(
+								'stackiq',
+								'Accepted values: {accepted}. Reload the page and try again.',
+								{ accepted: accepted.join(', ') },
+								AS_TEXT,
+							)
+						: t('stackiq', 'Reload the page and try again.'),
+			}
+		}
+		case 'UPLOAD_FAILED':
+			return {
+				title: t('stackiq', 'The server could not store the uploaded file.'),
 				hint: t(
 					'stackiq',
-					'It must be true or false. Reload the page and try again.',
+					'Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.',
 				),
 			}
 		case 'MUNICIPALITY_REQUIRED':
