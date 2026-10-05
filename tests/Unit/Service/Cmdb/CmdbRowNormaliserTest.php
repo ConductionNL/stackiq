@@ -131,4 +131,20 @@ class CmdbRowNormaliserTest extends TestCase {
 
 		$this->assertSame(['a' => 'TRUE', 'b' => 'FALSE', 'c' => '2', 'd' => '2.25'], $row);
 	}//end testOtherScalarsBecomeText()
+
+	/**
+	 * A non-breaking space, a zero-width space or a byte-order mark around a value is trimmed, as plain whitespace is.
+	 *
+	 * @return void
+	 */
+	public function testUnicodeWhitespaceIsTrimmed(): void {
+		$row = (new CmdbRowNormaliser())->normalise(
+			cells: ['APPID' => "APP-1\u{00A0}", 'Applicatie Naam' => "\u{FEFF}\u{200B} Naam\u{00A0}met spatie \u{00A0}"],
+			dateColumns: [],
+			idColumns: ['APPID']
+		);
+
+		$this->assertSame('APP-1', $row['APPID']);
+		$this->assertSame("Naam\u{00A0}met spatie", $row['Applicatie Naam'], 'only the ends are trimmed');
+	}//end testUnicodeWhitespaceIsTrimmed()
 }//end class

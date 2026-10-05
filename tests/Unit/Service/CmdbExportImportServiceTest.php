@@ -1558,6 +1558,42 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testRowsAreSkippedWithTheirReasons()
 
 	/**
+	 * APPIDs that differ only in case or a non-breaking space are one application, in one upload and across imports.
+	 *
+	 * @return void
+	 */
+	public function testAppIdsMatchWhateverTheirCaseOrTrailingSpace(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$first = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: 'APP-1', row: 2), $this->row(appId: "app-1\u{00A0}", row: 3)]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$this->assertSame(['created', 'skipped'], array_column($first['rows'], 'outcome'));
+		$this->assertSame(['duplicate APPID in file'], $first['rows'][1]['reasons']);
+
+		$second = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: "App-1\u{00A0}", row: 2)]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		// The next export spells it differently: the same module, its APPID and name as now written.
+		$this->assertSame('updated', $second['rows'][0]['outcome']);
+		$this->assertSame('App-1', $this->objects(self::MODULE)[0]['externalNumber']);
+		$this->assertCount(1, $this->store[self::MODULE]);
+		$this->assertSame('topdesk:muni-1:app-1', $this->objects(self::MODULE)[0]['externalKey']);
+	}//end testAppIdsMatchWhateverTheirCaseOrTrailingSpace()
+
+	/**
+	 * A row skipped for a missing name does not take its APPID: a later row with that APPID is imported.
+	 *
+	 * @return void
+	 */
+	public function testASkippedRowLeavesItsAppIdToALaterRow(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$rows = [$this->row(appId: '5', cells: ['Applicatie Naam' => ''], row: 2), $this->row(appId: '5', row: 3)];
+
+		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(['skipped', 'created'], array_column($report['rows'], 'outcome'));
+		$this->assertSame(['missing Applicatie Naam'], $report['rows'][0]['reasons']);
+	}//end testASkippedRowLeavesItsAppIdToALaterRow()
+
+	/**
 	 * The import runs as a cmdb_import operation with per-row progress; afterwards its statistics hold the report.
 	 *
 	 * @return void

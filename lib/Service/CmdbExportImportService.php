@@ -9,7 +9,8 @@
  * CMDB") becomes, or updates, a `module` with its vendor `organization`
  * (type Supplier), a `usage` that links it to the municipality, and a
  * `contactPerson` for its owner, resolved through Nextcloud Contacts. Rows
- * are matched on `externalKey` = `topdesk:<municipality uuid>:<APPID>`, so a
+ * are matched on `externalKey` = `topdesk:<municipality uuid>:<APPID>` (the
+ * APPID in lower case), so a
  * second import of a newer export updates the same records.
  *
  * What each column becomes is declarative: the migration packs under
@@ -496,7 +497,8 @@ class CmdbExportImportService {
 			$warnings[] = $this->l10n->t('Column "%s": formula without a cached value, read as empty', [(string)$column]);
 		}
 
-		$skipReason = $this->skipReason(appId: $appId);
+		$matchKey = self::matchKey(appId: $appId);
+		$skipReason = $this->skipReason(appId: $appId, matchKey: $matchKey);
 		if ($skipReason !== null) {
 			$this->addRow(report: $report, entry: $entry, outcome: CmdbImportReport::SKIPPED, reasons: [$skipReason], warnings: $warnings);
 			return;
@@ -514,11 +516,14 @@ class CmdbExportImportService {
 				return;
 			}
 
+			// Claimed only now: a row skipped for a missing value leaves its APPID to a later row.
+			$this->seenKeys[$matchKey] = true;
+
 			$step = 'manufacturer';
 			$providerUuid = $this->resolveManufacturer(values: $values, rowNumber: $rowNumber);
 
 			$step = 'module';
-			$externalKey = $this->profile->externalKeyPrefix() . ':' . $municipalityUuid . ':' . $appId;
+			$externalKey = $this->profile->externalKeyPrefix() . ':' . $municipalityUuid . ':' . $matchKey;
 			$moduleResult = $this->upsertModule(
 				data: $module['data'],
 				externalKey: $externalKey,
@@ -707,27 +712,44 @@ class CmdbExportImportService {
 	/**
 	 * Why a row is skipped before mapping, or null when it is imported.
 	 *
-	 * An APPID seen earlier in the same upload, on either sheet, is a duplicate.
+	 * An APPID an earlier row of the same upload imported, on either sheet,
+	 * is a duplicate. APPIDs compare by their match key, so `APP-1` and
+	 * `app-1` are the same application.
 	 *
 	 * @param string $appId The APPID.
+	 * @param string $matchKey The APPID's match key.
 	 *
 	 * @return string|null
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
 	 */
-	private function skipReason(string $appId): ?string {
+	private function skipReason(string $appId, string $matchKey): ?string {
 		if ($appId === '') {
 			return $this->l10n->t('missing %s', [$this->profile->keyColumn()]);
 		}
 
-		if (isset($this->seenKeys[$appId]) === true) {
+		if (isset($this->seenKeys[$matchKey]) === true) {
 			return $this->l10n->t('duplicate %s in file', [$this->profile->keyColumn()]);
 		}
 
-		$this->seenKeys[$appId] = true;
-
 		return null;
 	}//end skipReason()
+
+	/**
+	 * The key an APPID is matched on: lower case, so a change of case in the export is the same application.
+	 *
+	 * Surrounding whitespace, including a non-breaking space, is already
+	 * removed by the normaliser.
+	 *
+	 * @param string $appId The normalised APPID.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+	 */
+	public static function matchKey(string $appId): string {
+		return mb_strtolower($appId);
+	}//end matchKey()
 
 	/**
 	 * Map a row through a target's pack.
