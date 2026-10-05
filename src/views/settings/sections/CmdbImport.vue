@@ -252,11 +252,14 @@
 						data-testid="cmdb-import-outcome-filter" />
 				</div>
 				<CnDataTable
-					:rows="filteredRows"
+					:rows="visibleRows"
 					:columns="columns"
 					rowKey="key"
+					:sortKey="sortKey"
+					:sortOrder="sortOrder"
 					:emptyText="t('stackiq', 'No rows with this outcome')"
-					data-testid="cmdb-import-rows">
+					data-testid="cmdb-import-rows"
+					@sort="onSort">
 					<template #column-name="{ row }">
 						<a
 							v-if="row.moduleUuid"
@@ -279,6 +282,32 @@
 						<span>{{ row.notes || '—' }}</span>
 					</template>
 				</CnDataTable>
+				<div
+					v-if="sortedRows.length > visibleRows.length"
+					class="cmdb-import__more"
+					data-testid="cmdb-import-more">
+					<p class="cmdb-import__help">
+						{{
+							t('stackiq', 'Showing {shown} of {total} rows.', {
+								shown: visibleRows.length,
+								total: sortedRows.length,
+							})
+						}}
+					</p>
+					<NcButton
+						variant="secondary"
+						data-testid="cmdb-import-show-more"
+						@click="showMoreRows">
+						{{
+							t('stackiq', 'Show {count} more rows', {
+								count: Math.min(
+									reportPageSize,
+									sortedRows.length - visibleRows.length,
+								),
+							})
+						}}
+					</NcButton>
+				</div>
 			</div>
 		</div>
 
@@ -373,7 +402,9 @@ import {
 	outcomeLabel,
 	OUTCOMES,
 	PROFILE_DEFAULTS,
+	REPORT_PAGE_SIZE,
 	reportRows,
+	sortReportRows,
 } from '../../../utils/cmdbImport.js'
 
 /**
@@ -420,6 +451,10 @@ export default {
 			report: null,
 			error: null,
 			outcomeFilter: null,
+			sortKey: null,
+			sortOrder: null,
+			reportPageSize: REPORT_PAGE_SIZE,
+			visibleRowCount: REPORT_PAGE_SIZE,
 			profileDefaults: PROFILE_DEFAULTS,
 			outcomeColors: {
 				created: 'success',
@@ -583,6 +618,26 @@ export default {
 		},
 
 		/**
+		 * The filtered rows in the order of the column the admin sorted on.
+		 *
+		 * @return {Array<object>} The rows
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 */
+		sortedRows() {
+			return sortReportRows(this.filteredRows, this.sortKey, this.sortOrder)
+		},
+
+		/**
+		 * The rows the table renders: the first visibleRowCount sorted rows.
+		 *
+		 * @return {Array<object>} The rows
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 */
+		visibleRows() {
+			return this.sortedRows.slice(0, this.visibleRowCount)
+		},
+
+		/**
 		 * The report table's columns.
 		 *
 		 * @return {Array<object>} The columns
@@ -601,6 +656,17 @@ export default {
 				{ key: 'outcome', label: t('stackiq', 'Outcome'), sortable: true },
 				{ key: 'notes', label: t('stackiq', 'Reasons and warnings') },
 			]
+		},
+	},
+
+	watch: {
+		/**
+		 * Another outcome filter starts at the first page again.
+		 *
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 */
+		outcomeFilter() {
+			this.visibleRowCount = REPORT_PAGE_SIZE
 		},
 	},
 
@@ -811,6 +877,7 @@ export default {
 		showReport(report) {
 			this.report = report
 			this.outcomeFilter = this.outcomeFilterOptions[0]
+			this.visibleRowCount = REPORT_PAGE_SIZE
 			// A created municipality is an existing one from now on: select it,
 			// so a second import goes to the same organisation (WCAG 3.3.7).
 			const imported = report?.municipality
@@ -880,6 +947,28 @@ export default {
 				this.cancelling = false
 				this.cancelStatus = cancelFailureText(normaliseError(error))
 			}
+		},
+
+		/**
+		 * Keep the sort the admin chose on a column header.
+		 *
+		 * @param {{key: string|null, order: string|null}} sort The table's sort event
+		 * @return {void}
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 */
+		onSort({ key, order }) {
+			this.sortKey = key
+			this.sortOrder = order
+		},
+
+		/**
+		 * Show the next page of report rows below the ones already shown.
+		 *
+		 * @return {void}
+		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+		 */
+		showMoreRows() {
+			this.visibleRowCount += REPORT_PAGE_SIZE
 		},
 
 		/**
@@ -1054,6 +1143,14 @@ export default {
 .cmdb-import__filter {
 	max-width: 300px;
 	margin-bottom: 0.5rem;
+}
+
+.cmdb-import__more {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	gap: 0.5rem 1rem;
+	margin-top: 0.5rem;
 }
 
 .cmdb-import__module-link {

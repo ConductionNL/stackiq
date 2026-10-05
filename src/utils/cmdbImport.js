@@ -638,6 +638,46 @@ export function cmdbProgressView(progress) {
 }
 
 /**
+ * How many report rows the table shows at first, and how many more each
+ * "Show more" adds. A report can hold up to two full sheets of rows.
+ */
+export const REPORT_PAGE_SIZE = 100
+
+/**
+ * The report rows in the order of one column: numbers by value, text in the
+ * locale's order. Rows that tie keep their order in the report.
+ *
+ * The table emits the sort the admin asked for and leaves the sorting to the
+ * page, so the whole row set is sorted before it is cut into pages.
+ *
+ * @param {Array<object>} rows The table rows
+ * @param {string|null} key The column key
+ * @param {string|null} order 'asc', 'desc', or null for the report's order
+ * @return {Array<object>} The rows, sorted (a new array when sorted)
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-req-cmdb-014-the-admin-settings-shall-offer-a-cmdb-import-section
+ */
+export function sortReportRows(rows, key, order) {
+	if (!key || (order !== 'asc' && order !== 'desc')) {
+		return rows
+	}
+	const direction = order === 'desc' ? -1 : 1
+	const collator = new Intl.Collator(undefined, {
+		numeric: true,
+		sensitivity: 'base',
+	})
+	return rows
+		.map((row, index) => ({ row, index }))
+		.sort((a, b) => {
+			const compared = collator.compare(
+				String(a.row[key] ?? ''),
+				String(b.row[key] ?? ''),
+			)
+			return compared !== 0 ? compared * direction : a.index - b.index
+		})
+		.map((entry) => entry.row)
+}
+
+/**
  * The rows of the report as the table shows them.
  *
  * @param {Array<object>} rows The report's `rows`
