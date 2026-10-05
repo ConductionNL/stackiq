@@ -136,6 +136,14 @@ class CmdbExportImportService {
 	public const STORED_REPORT_ROWS = 500;
 
 	/**
+	 * What the progress entry of a failed run says: a code and a generic message.
+	 *
+	 * The entry is readable by everyone who may follow the operation, and an
+	 * exception message can quote cell values or person data, so it is never stored.
+	 */
+	public const FAILED_RUN_MESSAGE = 'IMPORT_FAILED: The import stopped unexpectedly. The details are in the Nextcloud log.';
+
+	/**
 	 * The URI of the importing admin's address book that new owner contacts go into.
 	 */
 	public const OWNER_ADDRESS_BOOK_URI = 'stackiq-cmdb-owners';
@@ -487,7 +495,11 @@ class CmdbExportImportService {
 		} catch (Throwable $e) {
 			// Rows catch their own errors; this is the run itself failing, so the
 			// operation stops as failed instead of staying running until it expires.
-			$this->progressTracker->failOperation(message: $e->getMessage());
+			$this->logger->error(
+				'CmdbExportImportService: import failed',
+				['operationId' => $operationId, 'exception' => get_class($e), 'error' => self::logSafeMessage(step: 'import', e: $e, values: [])]
+			);
+			$this->progressTracker->failOperation(message: self::FAILED_RUN_MESSAGE);
 			throw $e;
 		}//end try
 

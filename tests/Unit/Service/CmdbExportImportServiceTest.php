@@ -2031,7 +2031,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->beforeSave = function (int $schema): void {
 			if ($schema === self::USAGE) {
 				// The progress write after this row fails, outside every row boundary.
-				$this->cacheFailure = new \Error('cache went away');
+				$this->cacheFailure = new \Error("cache went away writing Applicatie 2 for owner jan.jansen@example.org\nsecond line");
 			}
 		};
 
@@ -2039,12 +2039,20 @@ class CmdbExportImportServiceTest extends TestCase {
 			$service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-failing-1']);
 			$this->fail('the import should have thrown');
 		} catch (\Error $e) {
-			$this->assertSame('cache went away', $e->getMessage());
+			$this->assertStringStartsWith('cache went away', $e->getMessage());
 		}
 
 		$stored = $this->cache['progress_cmdb-failing-1'];
 		$this->assertSame('failed', $stored['status']);
-		$this->assertSame('cache went away', $stored['errors'][0]['message']);
+		$this->assertSame(CmdbExportImportService::FAILED_RUN_MESSAGE, $stored['errors'][0]['message'], 'a code and a generic message, never the exception text');
+		$this->assertStringNotContainsString('jan.jansen', json_encode($stored));
+
+		$failed = array_values(array_filter($this->logLines, static fn (string $line): bool => str_starts_with($line, 'CmdbExportImportService: import failed')));
+		$this->assertCount(1, $failed);
+		$this->assertStringContainsString('"exception":"Error"', $failed[0]);
+		$this->assertStringContainsString('<e-mail>', $failed[0]);
+		$this->assertStringNotContainsString('jan.jansen', $failed[0]);
+		$this->assertStringNotContainsString('second line', $failed[0]);
 	}//end testAFailureOutsideARowMarksTheOperationFailed()
 
 	/**
