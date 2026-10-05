@@ -575,7 +575,7 @@ class CmdbExportImportService {
 			);
 			$usageUuid = $usageResult['uuid'];
 		} catch (Throwable $e) {
-			$this->failRow(report: $report, entry: $entry, step: $step, e: $e, warnings: $warnings, uuids: [$moduleUuid, $usageUuid]);
+			$this->failRow(report: $report, entry: $entry, step: $step, e: $e, warnings: $warnings, uuids: [$moduleUuid, $usageUuid], values: $values);
 			return;
 		}//end try
 
@@ -586,31 +586,34 @@ class CmdbExportImportService {
 	/**
 	 * Report a row as failed at a step, and log it without person data.
 	 *
+	 * The report names the step and the kind of exception, never its message:
+	 * OpenRegister messages can quote the object data. The log line keeps the
+	 * message for the administrator, with every cell value of the row and
+	 * every e-mail address taken out (logSafeMessage()).
+	 *
 	 * @param CmdbImportReport $report The report.
 	 * @param array{sheet: string, row: int, appId: string, name: string} $entry Where the row is.
 	 * @param string $step The step that failed.
 	 * @param Throwable $e The cause.
 	 * @param array<int, string> $warnings Row warnings so far.
 	 * @param array{0: string|null, 1: string|null} $uuids Module and usage, when saved.
+	 * @param array<string, string> $values The normalised row, whose values are taken out of the log line.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
 	 */
-	private function failRow(CmdbImportReport $report, array $entry, string $step, Throwable $e, array $warnings, array $uuids): void {
-		$detail = $this->safeMessage(step: $step, e: $e);
+	private function failRow(CmdbImportReport $report, array $entry, string $step, Throwable $e, array $warnings, array $uuids, array $values): void {
 		$this->logger->warning(
 			'CmdbExportImportService: row failed',
 			array_merge(
 				['sheet' => $entry['sheet'], 'row' => $entry['row'], 'appId' => $entry['appId']],
-				['step' => $step, 'exception' => get_class($e), 'error' => $detail]
+				['step' => $step, 'exception' => get_class($e), 'error' => self::logSafeMessage(step: $step, e: $e, values: $values)]
 			)
 		);
 
-		$reason = $this->l10n->t('step "%s" failed', [$step]);
-		if ($detail !== '') {
-			$reason = $this->l10n->t('step "%1$s" failed: %2$s', [$step, $detail]);
-		}
+		$kind = substr((string)strrchr('\\' . get_class($e), '\\'), 1);
+		$reason = $this->l10n->t('step "%1$s" failed (%2$s)', [$step, $kind]);
 
 		$this->addRow(
 			report: $report,
@@ -1666,22 +1669,35 @@ class CmdbExportImportService {
 	}//end ownerColumn()
 
 	/**
-	 * An exception message that is safe for the report.
+	 * An exception message that is safe for the log: no cell value and no e-mail address.
 	 *
-	 * Owner steps get no detail, so no contact data can leak into the report.
+	 * Only the first line is kept, at most 300 characters. Every value of the
+	 * row of three characters or more is replaced by "…", longest first, and
+	 * every e-mail address by "<e-mail>". The owner step logs no message at
+	 * all, so no contact data can reach the log.
 	 *
 	 * @param string $step The step that failed.
 	 * @param Throwable $e The exception.
+	 * @param array<string, string> $values The normalised row.
 	 *
 	 * @return string
 	 */
-	private function safeMessage(string $step, Throwable $e): string {
+	private static function logSafeMessage(string $step, Throwable $e, array $values): string {
 		if ($step === 'owners') {
 			return '';
 		}
 
-		return mb_substr(trim($e->getMessage()), 0, 300);
-	}//end safeMessage()
+		$lines = preg_split('/\R/u', $e->getMessage());
+		$message = mb_substr(trim((string)($lines[0] ?? '')), 0, 300);
+		$message = (string)preg_replace('/[^\s@<>"\'(),;:=]+@[^\s@<>"\'(),;:]+/u', '<e-mail>', $message);
+		$secrets = array_filter(array_unique(array_map('strval', $values)), static fn (string $value): bool => mb_strlen($value) >= 3);
+		usort($secrets, static fn (string $left, string $right): int => (mb_strlen($right) <=> mb_strlen($left)));
+		foreach ($secrets as $secret) {
+			$message = str_ireplace($secret, '…', $message);
+		}
+
+		return $message;
+	}//end logSafeMessage()
 
 	/**
 	 * Split a TOPdesk person name ("Achternaam, Voornaam").

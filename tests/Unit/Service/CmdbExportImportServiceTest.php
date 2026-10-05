@@ -1489,7 +1489,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testAnImportedContactPersonIsNeverAUser()
 
 	/**
-	 * Neither the report nor any log line names an owner.
+	 * Neither the report nor any log line names an owner or repeats a cell value, even when an exception quotes them.
 	 *
 	 * @return void
 	 */
@@ -1497,19 +1497,37 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
 		$owner = ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'Applicatie Eigenaar (Functie)' => 'Afdelingshoofd'];
 		$this->beforeSave = function (int $schema, array $data): void {
+			if ($schema === self::MODULE && ($data['externalNumber'] ?? '') === '2') {
+				throw new RuntimeException("Property email=letter.achternaam@gemeente.nl invalid for 'Geheime Applicatie' of Achternaam, Voornaam\nSQL: INSERT ...");
+			}
+
 			if ($schema === self::USAGE && ($data['module'] ?? '') !== '' && count($this->objects(self::USAGE)) === 1) {
-				throw new RuntimeException('usage refused');
+				throw new RuntimeException('usage refused for Achternaam, Voornaam');
 			}
 		};
-		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: $owner, row: 2), $this->row(appId: '2', cells: $owner, row: 3)]))
-			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$rows = [
+			$this->row(appId: '1', cells: $owner, row: 2),
+			$this->row(appId: '2', cells: array_merge($owner, ['Applicatie Naam' => 'Geheime Applicatie']), row: 3),
+			$this->row(appId: '3', cells: $owner, row: 4),
+		];
+		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
 
-		$text = json_encode($report, JSON_UNESCAPED_UNICODE) . "\n" . implode("\n", $this->logLines);
-		foreach (['Achternaam', 'Voornaam'] as $personData) {
-			$this->assertStringNotContainsString($personData, $text);
+		$this->assertSame(['created', 'failed', 'failed'], array_column($report['rows'], 'outcome'), 'both injected failures ran');
+		$this->assertSame(['step "module" failed (RuntimeException)'], $report['rows'][1]['reasons']);
+		$this->assertSame(['step "usage" failed (RuntimeException)'], $report['rows'][2]['reasons']);
+
+		// The row's own name is in the report by design; the log and the reasons must not repeat it.
+		$reasons = json_encode(array_column($report['rows'], 'reasons'), JSON_UNESCAPED_UNICODE);
+		$log = implode("\n", $this->logLines);
+		foreach (['Achternaam', 'Voornaam', 'letter.achternaam', 'gemeente.nl', 'Geheime Applicatie', 'INSERT'] as $secret) {
+			$this->assertStringNotContainsString($secret, $reasons . "\n" . $log);
 		}
 
-		$this->assertSame('failed', $report['rows'][1]['outcome'], 'the injected failure ran');
+		foreach (['Achternaam', 'Voornaam', 'letter.achternaam'] as $personData) {
+			$this->assertStringNotContainsString($personData, (string)json_encode($report, JSON_UNESCAPED_UNICODE));
+		}
+
+		$this->assertStringContainsString('Property email=<e-mail> invalid for', $log, 'the log keeps the message with the data taken out');
 	}//end testNoPersonDataInReportOrLog()
 
 	// ------------------------------------------------------------------
