@@ -19,7 +19,7 @@ updates:
 All of it is stored as OpenRegister objects in the stackiq register. Import a
 newer export later and the same applications are updated, not duplicated.
 
-Specification: [`openspec/changes/cmdb-export-import/`](https://github.com/ConductionNL/stackiq/tree/development/openspec/changes/cmdb-export-import).
+Specification: [`openspec/specs/cmdb-export-import/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/cmdb-export-import/spec.md) (change archived in [`openspec/changes/archive/2026-10-05-cmdb-export-import/`](https://github.com/ConductionNL/stackiq/tree/development/openspec/changes/archive/2026-10-05-cmdb-export-import)).
 
 ## Who can import
 
