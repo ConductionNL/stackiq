@@ -1079,6 +1079,9 @@
         "Whether a service desk is connected could not be loaded. Reload the page to try again.": "Whether a service desk is connected could not be loaded. Reload the page to try again.",
         "Application type": "Application type",
         "The kind of application as the source system records it, such as the TOPdesk Applicatiesoort (Webapplicatie, Client/server, Saas). Kept as the source has it.": "The kind of application as the source system records it, such as the TOPdesk Applicatiesoort (Webapplicatie, Client/server, Saas). Kept as the source has it.",
-        "The BBN level (Baseline Informatiebeveiliging Overheid) this application is classified at. BBN2+ is a level the TOPdesk CMDB export uses.": "The BBN level (Baseline Informatiebeveiliging Overheid) this application is classified at. BBN2+ is a level the TOPdesk CMDB export uses."
+        "The BBN level (Baseline Informatiebeveiliging Overheid) this application is classified at. BBN2+ is a level the TOPdesk CMDB export uses.": "The BBN level (Baseline Informatiebeveiliging Overheid) this application is classified at. BBN2+ is a level the TOPdesk CMDB export uses.",
+        "Field \"%1$s\" must be one of: %2$s.": "Field \"%1$s\" must be one of: %2$s.",
+        "Field \"%s\" has an invalid value.": "Field \"%s\" has an invalid value.",
+        "The server could not store the uploaded file. The details are in the Nextcloud log.": "The server could not store the uploaded file. The details are in the Nextcloud log."
     }
 }

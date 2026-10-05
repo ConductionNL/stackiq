@@ -1150,7 +1150,10 @@ OC.L10N.register(
         "Whether a service desk is connected could not be loaded. Reload the page to try again.": "Kon niet worden geladen of er een servicedesk is gekoppeld. Herlaad de pagina om het opnieuw te proberen.",
         "Application type": "Applicatiesoort",
         "The kind of application as the source system records it, such as the TOPdesk Applicatiesoort (Webapplicatie, Client/server, Saas). Kept as the source has it.": "Het soort applicatie zoals het bronsysteem het vastlegt, zoals de TOPdesk-Applicatiesoort (Webapplicatie, Client/server, Saas). Overgenomen zoals de bron het heeft.",
-        "The BBN level (Baseline Informatiebeveiliging Overheid) this application is classified at. BBN2+ is a level the TOPdesk CMDB export uses.": "Het BBN-niveau (Baseline Informatiebeveiliging Overheid) waarop deze applicatie is geclassificeerd. BBN2+ is een niveau dat de TOPdesk-CMDB-export gebruikt."
+        "The BBN level (Baseline Informatiebeveiliging Overheid) this application is classified at. BBN2+ is a level the TOPdesk CMDB export uses.": "Het BBN-niveau (Baseline Informatiebeveiliging Overheid) waarop deze applicatie is geclassificeerd. BBN2+ is een niveau dat de TOPdesk-CMDB-export gebruikt.",
+        "Field \"%1$s\" must be one of: %2$s.": "Veld \"%1$s\" moet een van deze waarden hebben: %2$s.",
+        "Field \"%s\" has an invalid value.": "Veld \"%s\" heeft een ongeldige waarde.",
+        "The server could not store the uploaded file. The details are in the Nextcloud log.": "De server kon het geüploade bestand niet opslaan. De details staan in het Nextcloud-logboek."
     },
     "nplurals=2; plural=(n != 1);"
 )
