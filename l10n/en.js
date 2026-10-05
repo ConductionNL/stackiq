@@ -1083,7 +1083,26 @@ OC.L10N.register(
         "The BBN level (Baseline Informatiebeveiliging Overheid) this application is classified at. BBN2+ is a level the TOPdesk CMDB export uses.": "The BBN level (Baseline Informatiebeveiliging Overheid) this application is classified at. BBN2+ is a level the TOPdesk CMDB export uses.",
         "Field \"%1$s\" must be one of: %2$s.": "Field \"%1$s\" must be one of: %2$s.",
         "Field \"%s\" has an invalid value.": "Field \"%s\" has an invalid value.",
-        "The server could not store the uploaded file. The details are in the Nextcloud log.": "The server could not store the uploaded file. The details are in the Nextcloud log."
+        "The server could not store the uploaded file. The details are in the Nextcloud log.": "The server could not store the uploaded file. The details are in the Nextcloud log.",
+        "The file is larger than {size}, the most the import accepts.": "The file is larger than {size}, the most the import accepts.",
+        "The file is larger than the server accepts.": "The file is larger than the server accepts.",
+        "A source sheet may hold at most {limit} rows. Split the export and import the parts one after the other.": "A source sheet may hold at most {limit} rows. Split the export and import the parts one after the other.",
+        "Split the export and import the parts one after the other.": "Split the export and import the parts one after the other.",
+        "Excel workbook (.xlsx) with the sheet \"{first}\" or \"{second}\". By default the file may be at most {size}.": "Excel workbook (.xlsx) with the sheet \"{first}\" or \"{second}\". By default the file may be at most {size}.",
+        "The sheets \"{first}\" (applications without arranged maintenance) and \"{second}\" (with arranged maintenance) are read; other sheets, including the \"Invoer\" sheets, are ignored.": "The sheets \"{first}\" (applications without arranged maintenance) and \"{second}\" (with arranged maintenance) are read; other sheets, including the \"Invoer\" sheets, are ignored.",
+        "The page got no answer from the import.": "The page got no answer from the import.",
+        "The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.": "The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.",
+        "The import cannot be cancelled now: the server has not started its rows yet, or has already finished them. If the import keeps running, press Cancel import again in a moment.": "The import cannot be cancelled now: the server has not started its rows yet, or has already finished them. If the import keeps running, press Cancel import again in a moment.",
+        "The import could not be cancelled: {reason}": "The import could not be cancelled: {reason}",
+        "Cancelling the import. It stops before the next row; the rows already processed stay imported.": "Cancelling the import. It stops before the next row; the rows already processed stay imported.",
+        "Showing {shown} of {total} rows.": "Showing {shown} of {total} rows.",
+        "Show {count} more rows": "Show {count} more rows",
+        "The request field \"{field}\" has a value the import does not accept.": "The request field \"{field}\" has a value the import does not accept.",
+        "Accepted values: {accepted}. Reload the page and try again.": "Accepted values: {accepted}. Reload the page and try again.",
+        "The server could not store the uploaded file.": "The server could not store the uploaded file.",
+        "Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.": "Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.",
+        "You may not use stackiq's admin settings, so you cannot import a CMDB export.": "You may not use stackiq's admin settings, so you cannot import a CMDB export.",
+        "Ask a Nextcloud administrator to run the import, or to delegate stackiq's admin settings to your group.": "Ask a Nextcloud administrator to run the import, or to delegate stackiq's admin settings to your group."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -1152,6 +1152,25 @@
         "The BBN level (Baseline Informatiebeveiliging Overheid) this application is classified at. BBN2+ is a level the TOPdesk CMDB export uses.": "Het BBN-niveau (Baseline Informatiebeveiliging Overheid) waarop deze applicatie is geclassificeerd. BBN2+ is een niveau dat de TOPdesk-CMDB-export gebruikt.",
         "Field \"%1$s\" must be one of: %2$s.": "Veld \"%1$s\" moet een van deze waarden hebben: %2$s.",
         "Field \"%s\" has an invalid value.": "Veld \"%s\" heeft een ongeldige waarde.",
-        "The server could not store the uploaded file. The details are in the Nextcloud log.": "De server kon het geüploade bestand niet opslaan. De details staan in het Nextcloud-logboek."
+        "The server could not store the uploaded file. The details are in the Nextcloud log.": "De server kon het geüploade bestand niet opslaan. De details staan in het Nextcloud-logboek.",
+        "The file is larger than {size}, the most the import accepts.": "Het bestand is groter dan {size}, het maximum dat de import accepteert.",
+        "The file is larger than the server accepts.": "Het bestand is groter dan de server accepteert.",
+        "A source sheet may hold at most {limit} rows. Split the export and import the parts one after the other.": "Een brontabblad mag hoogstens {limit} rijen bevatten. Splits de export en importeer de delen na elkaar.",
+        "Split the export and import the parts one after the other.": "Splits de export en importeer de delen na elkaar.",
+        "Excel workbook (.xlsx) with the sheet \"{first}\" or \"{second}\". By default the file may be at most {size}.": "Excel-werkmap (.xlsx) met het tabblad \"{first}\" of \"{second}\". Standaard mag het bestand hoogstens {size} zijn.",
+        "The sheets \"{first}\" (applications without arranged maintenance) and \"{second}\" (with arranged maintenance) are read; other sheets, including the \"Invoer\" sheets, are ignored.": "De tabbladen \"{first}\" (applicaties zonder geregeld beheer) en \"{second}\" (met geregeld beheer) worden gelezen; andere tabbladen, ook de \"Invoer\"-tabbladen, worden genegeerd.",
+        "The page got no answer from the import.": "De pagina kreeg geen antwoord van de import.",
+        "The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.": "De verbinding werd verbroken voordat de import antwoordde, dus de import kan nog bezig zijn of al klaar zijn. Wacht een paar minuten en controleer de applicaties van de gemeente voordat u opnieuw importeert. Hetzelfde bestand opnieuw importeren maakt geen dubbele records aan.",
+        "The import cannot be cancelled now: the server has not started its rows yet, or has already finished them. If the import keeps running, press Cancel import again in a moment.": "De import kan nu niet worden geannuleerd: de server is nog niet aan de rijen begonnen, of is er al mee klaar. Loopt de import door, druk dan zo dadelijk opnieuw op Import annuleren.",
+        "The import could not be cancelled: {reason}": "De import kon niet worden geannuleerd: {reason}",
+        "Cancelling the import. It stops before the next row; the rows already processed stay imported.": "De import wordt geannuleerd. Hij stopt voor de volgende rij; de rijen die al verwerkt zijn blijven geïmporteerd.",
+        "Showing {shown} of {total} rows.": "{shown} van {total} rijen weergegeven.",
+        "Show {count} more rows": "Toon nog {count} rijen",
+        "The request field \"{field}\" has a value the import does not accept.": "Het veld \"{field}\" van het verzoek heeft een waarde die de import niet accepteert.",
+        "Accepted values: {accepted}. Reload the page and try again.": "Toegestane waarden: {accepted}. Laad de pagina opnieuw en probeer het nog eens.",
+        "The server could not store the uploaded file.": "De server kon het geüploade bestand niet opslaan.",
+        "Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.": "Probeer het opnieuw. Blijft het mislukken, dan staan de details in het Nextcloud-logboek; controleer de vrije ruimte en de uploadinstellingen van de server.",
+        "You may not use stackiq's admin settings, so you cannot import a CMDB export.": "U mag de beheerinstellingen van stackiq niet gebruiken, dus u kunt geen CMDB-export importeren.",
+        "Ask a Nextcloud administrator to run the import, or to delegate stackiq's admin settings to your group.": "Vraag een Nextcloud-beheerder om de import uit te voeren, of om de beheerinstellingen van stackiq aan uw groep te delegeren."
     }
 }
