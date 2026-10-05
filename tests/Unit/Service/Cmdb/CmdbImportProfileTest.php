@@ -137,7 +137,7 @@ class CmdbImportProfileTest extends TestCase {
 		$this->assertSame(['type' => 'Supplier', 'status' => 'Active', 'registeredBy' => 'Supplier'], $profile->pack(target: 'manufacturer')['defaults']);
 		$this->assertSame(['type' => 'Municipality', 'status' => 'Active'], $profile->pack(target: 'municipality')['defaults']);
 		$this->assertSame(['type' => 'Application'], $profile->createOnlyDefaults(target: 'module'));
-		$this->assertSame(['interneAnnotation', 'status', 'timeClassification'], $profile->createOnlyFields(target: 'usage'));
+		$this->assertSame(['interneAnnotation', 'timeClassification'], $profile->createOnlyFields(target: 'usage'));
 		$this->assertSame(['publicationDate', 'depublicationDate'], $profile->neverWrittenOnUpdate(target: 'module'));
 		$this->assertSame(['APPID', 'Applicatie Naam'], $profile->requiredColumns());
 		$this->assertSame('APPID', $profile->keyColumn());

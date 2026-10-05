@@ -126,7 +126,7 @@ Per row:
 3. No match: create the module from the mapped data, plus `externalKey`, the create-only defaults (`type: Application`), and `publicationDate` (D6).
    A module found by `externalKey` counts as a match only when it has a usage whose consumer is this municipality, or no usage at all. `externalKey` is a module property, so on its own it is not proof of ownership: a module only another organisation uses is a conflict, reported as `skipped` and neither changed nor duplicated. The property also carries a write rule (`update: admin`), so only a Nextcloud admin can set it outside the import.
 4. Match and `updateExisting=false`: skip with reason `exists`.
-5. Match: merge the mapped fields onto the stored object. Every field the pack does not map stays as it is. Create-only fields (`module.type`; `usage.interneAnnotation`, `usage.status` and `usage.timeClassification`) stay as they are, unless the stored value is empty, so a status or classification set in stackiq survives a re-import. If the merged object equals the stored one, do not save, and report `unchanged`. Otherwise save, and report `updated`.
+5. Match: merge the mapped fields onto the stored object. Every field the pack does not map stays as it is. Create-only fields (`module.type`; `usage.interneAnnotation` and `usage.timeClassification`) stay as they are, unless the stored value is empty, so a TIME classification set in stackiq survives a re-import, while the usage status follows the export. If the merged object equals the stored one, do not save, and report `unchanged`. Otherwise save, and report `updated`.
 
 The APPID is also stored as `externalNumber`, so it is visible on the module.
 

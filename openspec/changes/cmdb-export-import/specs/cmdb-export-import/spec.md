@@ -317,7 +317,7 @@ The service SHALL map "Vendor" (the maker of the software) through the manufactu
 
 ### Requirement: Each imported application SHALL have one usage that links it to the municipality (REQ-CMDB-009)
 
-For each imported module the service SHALL keep exactly one `usage` with `consumer` = the municipality and `module` = the module, found by those two references and created when missing. The usage pack SHALL map "Applicatie Status" to `status` and "Classificatie" to `timeClassification` through lookups, "End-of-Life Functioneel" to `startDateOutPhased`, and the sheet's `Beheer` constant, "Cluster" and "Applicatie Eigenaar (Afdeling)" to `interneAnnotation`, so the note records whether maintenance is arranged (`Beheer geregeld: nee` for "Onbeh Applicaties CMDB", `ja` for "Beheerde Applicaties CMDB"). Empty parts SHALL be left out of the note. `interneAnnotation`, `status` and `timeClassification` SHALL be written only when the usage is created or the field is empty, so a note, status or TIME classification an admin set in stackiq is never overwritten by a re-import; `startDateOutPhased`, `provider` and `businessOwner` follow the export on every update. The section's help text for "Update existing records" SHALL say which fields a re-import overwrites and which it only sets on create.
+For each imported module the service SHALL keep exactly one `usage` with `consumer` = the municipality and `module` = the module, found by those two references and created when missing. The usage pack SHALL map "Applicatie Status" to `status` and "Classificatie" to `timeClassification` through lookups, "End-of-Life Functioneel" to `startDateOutPhased`, and the sheet's `Beheer` constant, "Cluster" and "Applicatie Eigenaar (Afdeling)" to `interneAnnotation`, so the note records whether maintenance is arranged (`Beheer geregeld: nee` for "Onbeh Applicaties CMDB", `ja` for "Beheerde Applicaties CMDB"). Empty parts SHALL be left out of the note. `interneAnnotation` and `timeClassification` SHALL be written only when the usage is created or the field is empty, so a note or TIME classification an admin set in stackiq is never overwritten by a re-import; `status`, `startDateOutPhased`, `provider` and `businessOwner` follow the export on every update, so a status change in TOPdesk comes through. The section's help text for "Update existing records" SHALL say which fields a re-import overwrites and which it only sets on create.
 
 #### Scenario: The usage records whether maintenance is arranged
 @e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php imports a row from each sheet.
@@ -335,12 +335,12 @@ For each imported module the service SHALL keep exactly one `usage` with `consum
 - **THEN** a usage SHALL exist for each imported module with `consumer` = that uuid and `module` = the module's uuid
 - **AND** that account SHALL see `Aangetekend Mailen` and `naamtest123` under "Software we use"
 
-#### Scenario: A re-import keeps the status and TIME classification set in stackiq
-@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php testAReimportKeepsTheStatusAndTimeClassificationOfAUsage re-imports two rows and asserts an edited status and TIME classification stay, empty ones are filled, and the phase-out date follows the export, and tests/Unit/Service/Cmdb/CmdbImportProfileTest.php asserts the three create-only usage fields.
+#### Scenario: A re-import keeps the TIME classification set in stackiq and takes the status from the export
+@e2e exclude Covered by the service test; tests/Unit/Service/CmdbExportImportServiceTest.php testAReimportKeepsTheTimeClassificationAndTakesTheStatusOfAUsage re-imports two rows and asserts an edited TIME classification stays, an empty one is filled, and the status and phase-out date follow the export, and tests/Unit/Service/Cmdb/CmdbImportProfileTest.php asserts the two create-only usage fields.
 
 - **GIVEN** the usage of APPID `1` for "Gemeente Voorbeeldstad" whose status an admin set to `To be phased out` and whose TIME classification to `Migrate`, and the usage of APPID `2` with neither
 - **WHEN** a newer export with "Applicatie Status" `In productie`, "Classificatie" `Tolereren` and "End-of-Life Functioneel" `53359` for both is imported
-- **THEN** the usage of APPID `1` SHALL keep `To be phased out` and `Migrate`, and SHALL get `startDateOutPhased` = `2046-02-01`
+- **THEN** the usage of APPID `1` SHALL keep `Migrate`, and SHALL get `In production` and `startDateOutPhased` = `2046-02-01`
 - **AND** the usage of APPID `2` SHALL get `In production` and `Tolerate`
 
 #### Scenario: A re-import does not add a second usage

@@ -158,7 +158,7 @@ date stored there, including one set by hand.
 | Datum | module external creation date | Excel date |
 | Referentie datum wijziging | module external modification date | Excel date |
 | Vendor | Supplier organisation, set as provider on the module and the usage | one organisation per name, see below |
-| Applicatie Status | usage status | set only when the usage is new or its status is empty; In productie → In production, In voorraad → Planned, In ontwikkeling → Acquisition, Uit te faseren and Moet verwijderd worden → To be phased out, Uitgefaseerd and Verwijderd → Phased out, Besteld and Wordt getest → Acquisition, Stand-by voor continuïteit → In production; another value is dropped with a warning |
+| Applicatie Status | usage status | In productie → In production, In voorraad → Planned, In ontwikkeling → Acquisition, Uit te faseren and Moet verwijderd worden → To be phased out, Uitgefaseerd and Verwijderd → Phased out, Besteld and Wordt getest → Acquisition, Stand-by voor continuïteit → In production; another value is dropped with a warning |
 | Classificatie | usage TIME classification | set only when the usage is new or its TIME classification is empty; Tolereren/Tolerate (also `1. Tolereren (wordt ingelezen)`), Investeren/Invest, Migreren/Migrate, Elimineren/Eliminate |
 | End-of-Life Functioneel | usage phase-out date | Excel date, stored as is |
 | (the sheet), Cluster, Applicatie Eigenaar (Afdeling) | usage internal annotation | `Beheer geregeld: ja` or `nee`, the cluster and the department, joined with ` / `; written only when the usage is new or the note is empty |
@@ -188,12 +188,12 @@ colliding.
   (the moment the import started), so OpenCatalogi lists it; with it off,
   the module has no publication date and is not public.
 - **Known APPID, values changed**: only the fields in the column table
-  are updated, and of those, the usage's status, TIME classification and
-  internal note only when they are empty: a status or classification set in
-  stackiq stays, whatever the export says. A re-import does overwrite the
-  application's name, descriptions, application type, hosting model, BBN
-  level, source fields and supplier, and the usage's phase-out date and
-  business owner. Everything else on the module stays as it is, for example a
+  are updated, and of those, the usage's TIME classification and internal
+  note only when they are empty: a classification set in stackiq stays,
+  whatever the export says. A re-import does overwrite the application's
+  name, descriptions, application type, hosting model, BBN level, source
+  fields and supplier, and the usage's status, phase-out date and business
+  owner, so a status change in TOPdesk comes through. Everything else on the module stays as it is, for example a
   website an administrator added. The publication date and the depublication
   date are never changed: a module an administrator depublished stays
   depublished. The row is reported as *updated*.
