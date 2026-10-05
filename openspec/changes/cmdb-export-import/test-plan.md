@@ -93,7 +93,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (ab
 - **preconditions**: OpenCatalogi catalogue with registers `[stackiq]`, schemas `[module]`, listed and published (docs, prerequisites); TC-1 done
 - **steps**: anonymous `GET /apps/opencatalogi/api/search?_search=Aangetekend`
 - **expected result**: one hit `Aangetekend Mailen`
-- **test command**: manual on the rig (USER MANUAL TEST, WOO-586 Stap 6b), `/test-functional`
+- **test command**: manual on a test instance with OpenCatalogi configured, `/test-functional`
 
 ### TC-12: Portaliq shows the applications to the municipality
 - **spec_ref**: `spec.md#requirement-each-imported-application-shall-have-one-usage-that-links-it-to-the-municipality-req-cmdb-009`

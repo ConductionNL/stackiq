@@ -8,7 +8,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
 - **spec_ref**: `SPEC#requirement-the-workbook-shall-be-read-as-stored-data-without-evaluating-formulas-or-following-links-req-cmdb-002` (cmdb-export-import#REQ-CMDB-002, also used by every other task)
 - **files**: `tests/fixtures/cmdb/topdesk-export-anonymised.xlsx`, `tests/fixtures/cmdb/topdesk-missing-appid.xlsx`, `tests/fixtures/cmdb/topdesk-shuffled-columns.xlsx`, `tests/fixtures/cmdb/topdesk-formula-and-connection.xlsx`, `tests/fixtures/cmdb/README.md`, `tests/fixtures/cmdb/build-fixtures.py`
 - **acceptance_criteria**:
-  - GIVEN the anonymised test export from the WOO-586 plan folder WHEN it is copied to `topdesk-export-anonymised.xlsx` THEN `docProps/core.xml` has no creator or lastModifiedBy, and `docProps/custom.xml`, `customXml/` and `xl/connections.xml` are removed, with their entries in `[Content_Types].xml` and the rels files
+  - GIVEN an export that is already anonymised WHEN `build-fixtures.py --source` sanitises it into `topdesk-export-anonymised.xlsx` THEN the document properties in `docProps/core.xml` and `docProps/app.xml` are empty, both dates are a fixed neutral date, the revision GUIDs and the filter ranges of the original data are gone, and `docProps/custom.xml`, `customXml/`, `xl/connections.xml` and `xl/printerSettings/` are removed, with their entries in `[Content_Types].xml` and the rels files
   - GIVEN the sanitised fixture WHEN every shared string and cell value is scanned THEN no real person name, municipality domain, personnel number or phone number remains, only the placeholder values (`Achternaam, Voornaam`, `letter.achternaam@gemeente.nl`, `123456`)
   - GIVEN `build-fixtures.py` WHEN it runs (Python stdlib zipfile only) THEN it writes placeholder cached values into the formula cells of the mapped CMDB columns (idempotent) and derives the variant fixtures: no "APPID" header on "Beheerde Applicaties CMDB"; both CMDB sheets with shuffled columns and header `Vendor⚡`; on "Beheerde" a formula in "Applicatie Naam" with cached value `Rekenmodel`, a "Roepnaam" formula without a cached value, plus a synthetic `xl/connections.xml`
   - The original export of the municipality is never used or committed
@@ -117,7 +117,7 @@ Spec: `openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md` (`S
 - [ ] Implement
 - [ ] Test (screenshots reviewed: no data other than the sanitised fixture visible)
 
-### Task 11: Rework to the CMDB sheets (WOO-586 Stap 4b, decisions of 2026-10-01)
+### Task 11: Rework to the CMDB sheets (decisions of 2026-10-01)
 - **spec_ref**: `SPEC#requirement-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422-req-cmdb-003`, `SPEC#requirement-a-module-shall-be-matched-on-its-topdesk-appid-so-a-re-import-updates-instead-of-duplicating-req-cmdb-006`, `SPEC#requirement-the-owner-shall-become-a-contact-person-of-the-municipality-through-nextcloud-contacts-never-a-user-account-and-shall-never-be-publicly-readable-req-cmdb-010`
 - **files**: `lib/Settings/cmdb-import/*.json`, `lib/Service/Cmdb/*`, `lib/Service/CmdbExportImportService.php`, `lib/Settings/register.d/topdesk-cmdb-import.json`, `src/views/settings/sections/CmdbImport.vue`, `src/utils/cmdbImport.js`, `l10n/*`, `tests/fixtures/cmdb/*`, `tests/Unit/**/Cmdb*`, `tests/Unit/Settings/CmdbPersonDataVisibilityTest.php`, `tests/e2e/spec-coverage/cmdb-import.spec.ts`, `docs/features/cmdb-import.md`, `openapi.json`, `postman/stackiq-tests.json`
 - **acceptance_criteria**:

@@ -61,7 +61,7 @@ OpenRegister, register `stackiq`: module, organization, usage, contactPerson
 
 ### D1. A stackiq service, not OpenRegister's import endpoint
 
-The import is a stackiq service plus controller (route A in the WOO-586 plan).
+The import is a stackiq service plus controller.
 
 - **Alternative: OpenRegister `/api/registers/{id}/import` with a migration pack.** Rejected. It does not accept a pack on xlsx, maps one sheet to one schema, and cannot link the objects it creates (usage.module, usage.consumer, module.provider).
 - **Alternative: stackiq splits the file into one CSV per schema and runs four OpenRegister imports.** Rejected. Stackiq still has to split and link the rows, so the four pack runs add moving parts without taking work away.
@@ -131,7 +131,7 @@ The APPID is also stored as `externalNumber`, so it is visible on the module.
 
 - **Alternative: the Middel-ID ("Applicatie Code") as the key**, as in the first version of this change. Rejected on 2026-10-01: it can change in the source.
 - **Alternative: OpenRegister's `idStrategy: sourceField` (APPID as the object id).** Rejected. Object ids are global uuids, and the APPID is neither a uuid nor unique across municipalities.
-- **Alternative: put the key on `usage` (per municipality by nature).** Rejected for this change: the key on `module` was decided in the plan (Q3), and the usage is found from the module anyway (D7).
+- **Alternative: put the key on `usage` (per municipality by nature).** Rejected for this change: the key was decided to live on `module`, and the usage is found from the module anyway (D7).
 
 ### D6. publicationDate
 
