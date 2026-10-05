@@ -1284,9 +1284,11 @@ class CmdbExportImportService {
 	/**
 	 * The operation id the client chose, or a new one.
 	 *
-	 * The client's id is replaced when it does not match the pattern. An id
-	 * that is taken drops any cancel request left over from an earlier run
-	 * with the same id, so the new run is not stopped before row 1.
+	 * The client's id is replaced when it does not match the pattern, and
+	 * also when an operation with that id is still running: reusing it would
+	 * overwrite that run's progress and owner, and a cancel would stop both.
+	 * An id that is taken drops any cancel request left over from an earlier
+	 * run with the same id, so the new run is not stopped before row 1.
 	 *
 	 * @param array<string, mixed> $options The import options.
 	 *
@@ -1298,6 +1300,7 @@ class CmdbExportImportService {
 		$operationId = $options['operationId'] ?? null;
 		if (is_string($operationId) === true
 			&& preg_match(self::OPERATION_ID_PATTERN, $operationId) === 1
+			&& ($this->progressTracker->getProgress(operationId: $operationId)['status'] ?? null) !== 'running'
 		) {
 			$this->progressTracker->clearCancelRequested(operationId: $operationId);
 			return $operationId;

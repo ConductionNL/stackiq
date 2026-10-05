@@ -21,7 +21,7 @@ Paths are relative to `/index.php/apps/stackiq`.
 | `municipalityName` | string | one of the two | | name of a Municipality to reuse (same normalised name) or create |
 | `updateExisting` | `true`/`false` | no | `true` | `false` reports matched rows as skipped (`exists`). `1`/`0` are accepted too, trimmed and in any case; any other value is refused with 400 `FIELD_INVALID` |
 | `missingRecords` | string | no | `keep` | only `keep` is accepted; `mark` and `remove` are reserved |
-| `operationId` | string | no | generated | progress operation id, readable through `GET /api/progress/{operationId}`; `cmdb-` followed by 8 to 64 letters, digits or hyphens (for example `cmdb-` plus a uuid v4). Any other value is replaced by a generated id, returned as `operationId` |
+| `operationId` | string | no | generated | progress operation id, readable through `GET /api/progress/{operationId}`; `cmdb-` followed by 8 to 64 letters, digits or hyphens (for example `cmdb-` plus a uuid v4). Any other value, and the id of a `cmdb_import` that is still running, is replaced by a generated id, returned as `operationId` |
 
 **Response (200):**
 ```json

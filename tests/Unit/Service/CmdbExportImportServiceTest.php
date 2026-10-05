@@ -1261,6 +1261,27 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testAReusedIdIgnoresALeftoverCancel()
 
 	/**
+	 * An id whose operation is still running is replaced, so the live run keeps its record and owner.
+	 *
+	 * @return void
+	 */
+	public function testTheIdOfARunningOperationIsReplaced(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$service = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', row: 2)]));
+		$this->tracker->startOperation(operationType: 'cmdb_import', options: ['total_items' => 7], ownerUid: 'other-admin', operationId: 'cmdb-live-00001');
+
+		$report = $service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-live-00001']);
+
+		$this->assertNotSame('cmdb-live-00001', $report['operationId']);
+		$this->assertMatchesRegularExpression(CmdbExportImportService::OPERATION_ID_PATTERN, $report['operationId']);
+		$live = $this->cache['progress_cmdb-live-00001'];
+		$this->assertSame('running', $live['status']);
+		$this->assertSame('other-admin', $live['owner_uid']);
+		$this->assertSame(7, $live['total_items']);
+		$this->assertSame('completed', $this->cache['progress_' . $report['operationId']]['status']);
+	}//end testTheIdOfARunningOperationIsReplaced()
+
+	/**
 	 * An id with a trailing newline does not match the pattern: it is replaced, and cancel refuses it.
 	 *
 	 * @return void
