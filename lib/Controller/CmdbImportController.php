@@ -96,12 +96,14 @@ class CmdbImportController extends Controller {
 	 */
 	#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]
 	public function import(): JSONResponse {
-		$validated = $this->validateRequest();
-		if ($validated instanceof JSONResponse) {
-			return $validated;
-		}
-
 		try {
+			// The upload checks run inside the same boundary, so an unexpected
+			// error from the ZIP check is IMPORT_FAILED too, not a bare 500.
+			$validated = $this->validateRequest();
+			if ($validated instanceof JSONResponse) {
+				return $validated;
+			}
+
 			$report = $this->importService->import(path: $validated['path'], options: $validated['options']);
 		} catch (CmdbImportException $e) {
 			$this->logger->info(
