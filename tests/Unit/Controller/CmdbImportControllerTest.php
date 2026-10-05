@@ -66,6 +66,8 @@ class CmdbImportControllerTest extends TestCase {
 				unlink($file);
 			}
 		}
+
+		parent::tearDown();
 	}//end tearDown()
 
 	/**
@@ -506,6 +508,63 @@ class CmdbImportControllerTest extends TestCase {
 	}//end testAValidUploadReturnsTheReport()
 
 	/**
+	 * Both municipality fields, trimmed, and an operationId outside the pattern reach the service unchanged.
+	 *
+	 * The service decides: the uuid wins over the name, and an id outside the
+	 * pattern is replaced by a generated one.
+	 *
+	 * @return void
+	 */
+	public function testTheFieldsReachTheServiceAsSent(): void {
+		$service = $this->service();
+		$service->expects($this->once())->method('import')
+			->with(
+				$this->anything(),
+				[
+					'municipalityUuid' => '00000000-0000-0000-0000-000000000001',
+					'municipalityName' => 'Gemeente Voorbeeldstad',
+					'updateExisting' => true,
+					'operationId' => 'not-a-cmdb-id',
+				]
+			)
+			->willReturn(['success' => true]);
+
+		$params = [
+			'municipalityUuid' => ' 00000000-0000-0000-0000-000000000001 ',
+			'municipalityName' => ' Gemeente Voorbeeldstad',
+			'operationId' => 'not-a-cmdb-id',
+		];
+		$response = $this->controller(file: $this->file(path: $this->upload()), params: $params, service: $service)->import();
+
+		$this->assertSame(200, $response->getStatus());
+	}//end testTheFieldsReachTheServiceAsSent()
+
+	/**
+	 * A refusal from the service is logged at info with its code; an unexpected error at error with the exception.
+	 *
+	 * @return void
+	 */
+	public function testRefusalsAndFailuresAreLogged(): void {
+		$refusal = new CmdbImportException(errorCode: CmdbImportException::MISSING_COLUMN, message: 'no APPID', details: ['sheet' => 'S', 'column' => 'APPID']);
+		$service = $this->service();
+		$service->method('import')->willThrowException($refusal);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->never())->method('error');
+		$logger->expects($this->once())->method('info')
+			->with($this->anything(), ['error' => 'MISSING_COLUMN', 'details' => ['sheet' => 'S', 'column' => 'APPID'], 'reason' => 'no APPID']);
+
+		$this->controller(file: $this->file(path: $this->upload()), params: ['municipalityName' => 'X'], service: $service, logger: $logger)->import();
+
+		$failure = new \TypeError('internal detail');
+		$service = $this->service();
+		$service->method('import')->willThrowException($failure);
+		$logger = $this->createMock(LoggerInterface::class);
+		$logger->expects($this->once())->method('error')->with($this->anything(), ['exception' => $failure]);
+
+		$this->controller(file: $this->file(path: $this->upload()), params: ['municipalityName' => 'X'], service: $service, logger: $logger)->import();
+	}//end testRefusalsAndFailuresAreLogged()
+
+	/**
 	 * The spellings of updateExisting and what each one means; null is refused.
 	 *
 	 * @return array<string, array{mixed, bool|null}>
@@ -635,4 +694,20 @@ class CmdbImportControllerTest extends TestCase {
 		$this->assertSame(404, $missing->getStatus());
 		$this->assertSame('OPERATION_NOT_FOUND', $missing->getData()['error']);
 	}//end testCancel()
+
+	/**
+	 * A malformed id is passed to the service as sent, which refuses it: 404 with the generic envelope.
+	 *
+	 * @return void
+	 */
+	public function testCancelWithAMalformedIdIsNotFound(): void {
+		$service = $this->service();
+		$service->expects($this->once())->method('requestCancel')->with("../cmdb-x\n")->willReturn(false);
+
+		$response = $this->controller(file: null, params: [], service: $service)->cancel(operationId: "../cmdb-x\n");
+
+		$this->assertSame(404, $response->getStatus());
+		$this->assertSame('OPERATION_NOT_FOUND', $response->getData()['error']);
+		$this->assertEquals((object)[], $response->getData()['details']);
+	}//end testCancelWithAMalformedIdIsNotFound()
 }//end class
