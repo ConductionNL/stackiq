@@ -52,6 +52,10 @@ use Psr\Log\LoggerInterface;
 /**
  * CMDB import and cancel, for (delegated) stackiq admins and CSRF-protected.
  *
+ * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The complexity is one branch per
+ * contract error code (message()) and per refused upload or field state, checked in
+ * the order of design D10; spreading those checks over classes would hide that order.
+ *
  * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
  */
 class CmdbImportController extends Controller {
@@ -456,7 +460,7 @@ class CmdbImportController extends Controller {
 			return null;
 		}
 
-		if ($error === UPLOAD_ERR_INI_SIZE || $error === UPLOAD_ERR_FORM_SIZE) {
+		if (in_array($error, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true) === true) {
 			return ['tmpName' => '', 'name' => '', 'size' => 0, 'tooLarge' => true, 'serverError' => null];
 		}
 
@@ -469,16 +473,45 @@ class CmdbImportController extends Controller {
 			return null;
 		}
 
+		return [
+			'tmpName' => $tmpName,
+			'name' => self::uploadName(file: $file),
+			'size' => self::uploadSize(file: $file, tmpName: $tmpName),
+			'tooLarge' => false,
+			'serverError' => null,
+		];
+	}//end uploadedFile()
+
+	/**
+	 * The client's file name of an upload, or '' when it is not a single name.
+	 *
+	 * @param array<string, mixed> $file The upload entry.
+	 *
+	 * @return string
+	 */
+	private static function uploadName(array $file): string {
+		$name = $file['name'] ?? '';
+		if (is_string($name) === false) {
+			return '';
+		}
+
+		return $name;
+	}//end uploadName()
+
+	/**
+	 * The size of an upload: the size PHP reported, or the stored file's when that is 0.
+	 *
+	 * @param array<string, mixed> $file The upload entry.
+	 * @param string $tmpName The stored file.
+	 *
+	 * @return int
+	 */
+	private static function uploadSize(array $file, string $tmpName): int {
 		$size = (int)($file['size'] ?? 0);
 		if ($size === 0 && is_file($tmpName) === true) {
 			$size = (int)filesize($tmpName);
 		}
 
-		$name = $file['name'] ?? '';
-		if (is_string($name) === false) {
-			$name = '';
-		}
-
-		return ['tmpName' => $tmpName, 'name' => $name, 'size' => $size, 'tooLarge' => false, 'serverError' => null];
-	}//end uploadedFile()
+		return $size;
+	}//end uploadSize()
 }//end class
