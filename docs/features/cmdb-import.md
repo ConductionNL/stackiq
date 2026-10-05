@@ -56,9 +56,11 @@ page in stackiq.
 
 1. Open **Administration settings → Stackiq** and scroll to **CMDB import**.
 2. **Municipality.** Pick an existing organisation of type Municipality from
-   the list, or type the name of a new one and press Enter. A typed name that
-   matches an existing municipality (ignoring case and extra spaces) uses that
-   municipality; otherwise a new organisation of type Municipality with
+   the list, or type the name of a new one and press Enter. The list shows
+   only active municipalities, not merged or inactive ones; municipalities
+   with the same name show the start of their id after the name. A typed name
+   is sent to the server as a name, and a name that matches one existing
+   municipality (ignoring case and extra spaces) uses that municipality; otherwise a new organisation of type Municipality with
    status Active is created during the import, and the result warns about
    it. When more than one municipality has the typed name, the import is
    refused (`MUNICIPALITY_AMBIGUOUS`): pick the right one from the list.

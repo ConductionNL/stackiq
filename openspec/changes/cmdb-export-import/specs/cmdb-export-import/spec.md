@@ -122,7 +122,7 @@ The source sheets SHALL be the CMDB sheets "Onbeh Applicaties CMDB" and "Beheerd
 
 ### Requirement: Every import SHALL have exactly one consuming municipality, chosen by the admin (REQ-CMDB-004)
 
-The request SHALL carry either `municipalityUuid`, the uuid of an existing stackiq `organization` of type `Municipality`, or `municipalityName`, a name for a new one. With a name, the service SHALL reuse the one live organisation of type `Municipality` (not `merged`, not `Inactive`) with the same normalised name, or, when there is none, create one through the municipality pack (type `Municipality`, status `Active`) and add an import-level warning saying so. When more than one live organisation of type `Municipality` has that normalised name, it SHALL NOT guess: it SHALL answer 422 `MUNICIPALITY_AMBIGUOUS` with their uuids in `details.matches`, and SHALL write nothing. It SHALL answer 422 `MUNICIPALITY_REQUIRED` when neither is given, and 422 `MUNICIPALITY_INVALID` when the uuid does not resolve to an organisation of type `Municipality`. Every `usage` and `contactPerson` the import writes SHALL reference that organisation.
+The request SHALL carry either `municipalityUuid`, the uuid of an existing stackiq `organization` of type `Municipality`, or `municipalityName`, a name for a new one. With a name, the service SHALL reuse the one live organisation of type `Municipality` (not `merged`, not `Inactive`) with the same normalised name, or, when there is none, create one through the municipality pack (type `Municipality`, status `Active`) and add an import-level warning saying so. When more than one live organisation of type `Municipality` has that normalised name, it SHALL NOT guess: it SHALL answer 422 `MUNICIPALITY_AMBIGUOUS` with their uuids in `details.matches`, and SHALL write nothing. It SHALL answer 422 `MUNICIPALITY_REQUIRED` when neither is given, and 422 `MUNICIPALITY_INVALID` when the uuid does not resolve to an organisation of type `Municipality`, or resolves to a merged one. The section SHALL offer only live organisations of type `Municipality` (not `merged`, not `Inactive`, not without a type), SHALL tell municipalities with the same name apart in the list, and SHALL send a typed name as `municipalityName`, so the server applies the rules above; only an option picked from the list SHALL be sent as `municipalityUuid`. Every `usage` and `contactPerson` the import writes SHALL reference that organisation.
 
 #### Scenario: The admin picks an existing municipality
 @e2e tests/e2e/spec-coverage/cmdb-import.spec.ts
@@ -155,6 +155,14 @@ The request SHALL carry either `municipalityUuid`, the uuid of an existing stack
 - **THEN** the endpoint SHALL answer 422 with error `MUNICIPALITY_AMBIGUOUS` and `details.matches` holding both uuids
 - **AND** no object SHALL be written, and no third municipality SHALL be created
 - **AND** the section SHALL ask the admin to pick the municipality from the list
+
+#### Scenario: The section sends a typed name to the server and lists only live municipalities
+@e2e exclude Needs two municipalities with the same name in the register; src/views/settings/sections/CmdbImport.spec.js mounts the section with two live "Gemeente Bergen", a merged and an inactive municipality, asserts only the two live ones are offered, and that a typed "gemeente bergen" is posted as municipalityName and shows MUNICIPALITY_AMBIGUOUS; src/utils/cmdbImport.spec.js covers the option list and the typed option.
+
+- **GIVEN** two live municipalities named `Gemeente Bergen`, a merged one and an inactive one
+- **WHEN** the admin opens the section and types `gemeente bergen`
+- **THEN** the list SHALL offer only the two live ones, with labels that differ
+- **AND** the request SHALL carry `municipalityName` and no `municipalityUuid`, and the section SHALL show the `MUNICIPALITY_AMBIGUOUS` message
 
 ### Requirement: Field mapping SHALL be declarative and executed by OpenRegister's mapping engine (REQ-CMDB-005)
 

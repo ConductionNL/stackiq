@@ -450,6 +450,7 @@ import {
 	isKnownError,
 	makeCmdbOperationId,
 	moduleUrl,
+	municipalityOptions,
 	normaliseError,
 	outcomeLabel,
 	OUTCOMES,
@@ -457,6 +458,7 @@ import {
 	REPORT_PAGE_SIZE,
 	reportRows,
 	sortReportRows,
+	typedMunicipalityOption,
 } from '../../../utils/cmdbImport.js'
 
 /**
@@ -791,16 +793,9 @@ export default {
 					),
 					{ params: { type: 'Municipality', _limit: 1000 } },
 				)
-				const objects = response?.data?.results || []
-				this.municipalityOptions = objects
-					.filter((org) => (org.type ?? 'Municipality') === 'Municipality')
-					.map((org) => ({
-						id: org.id || org['@self']?.id || '',
-						label: String(org.name || org['@self']?.name || ''),
-						isNew: false,
-					}))
-					.filter((option) => option.id !== '' && option.label !== '')
-					.sort((a, b) => a.label.localeCompare(b.label))
+				this.municipalityOptions = municipalityOptions(
+					response?.data?.results || [],
+				)
 			} catch {
 				this.municipalityLoadError = t(
 					'stackiq',
@@ -812,24 +807,18 @@ export default {
 		},
 
 		/**
-		 * Turn a typed name into the chooser's "new municipality" option.
+		 * Turn a typed name into the chooser's option for that name.
 		 *
-		 * A name that matches an existing municipality selects that one.
+		 * The page does not match the name to a listed municipality: it sends
+		 * the name, and the server reuses, creates or refuses (see
+		 * typedMunicipalityOption()).
 		 *
 		 * @param {string|object} typed What the admin typed
 		 * @return {object} The option
 		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin-req-cmdb-004
 		 */
 		createMunicipalityOption(typed) {
-			const label = String(
-				typeof typed === 'object' && typed !== null ? typed.label : typed,
-			)
-				.trim()
-				.replace(/\s+/g, ' ')
-			const existing = this.municipalityOptions.find(
-				(option) => option.label.toLowerCase() === label.toLowerCase(),
-			)
-			return existing || { id: null, label, isNew: true }
+			return typedMunicipalityOption(typed)
 		},
 
 		/**
@@ -917,7 +906,7 @@ export default {
 					file: this.selectedFile,
 					municipality: {
 						uuid: this.municipality.isNew ? null : this.municipality.id,
-						name: this.municipality.label,
+						name: this.municipality.name || this.municipality.label,
 					},
 					updateExisting: this.updateExisting,
 					publish: this.publish,
@@ -956,9 +945,18 @@ export default {
 			// so a second import goes to the same organisation (WCAG 3.3.7).
 			const imported = report?.municipality
 			if (imported?.uuid && this.municipality?.isNew) {
+				const listed = this.municipalityOptions.find(
+					(option) => option.id === imported.uuid,
+				)
+				if (listed) {
+					this.municipality = listed
+					return
+				}
+				const name = String(imported.name || this.municipality.name)
 				const option = {
 					id: imported.uuid,
-					label: String(imported.name || this.municipality.label),
+					label: name,
+					name,
 					isNew: false,
 				}
 				this.municipalityOptions = [

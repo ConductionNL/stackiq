@@ -22,12 +22,14 @@ import {
 	interruptedImportError,
 	isKnownError,
 	makeCmdbOperationId,
+	municipalityOptions,
 	normaliseError,
 	outcomeLabel,
 	OUTCOMES,
 	PROFILE_DEFAULTS,
 	reportRows,
 	sortReportRows,
+	typedMunicipalityOption,
 } from './cmdbImport.js'
 
 /** The operation ids CmdbImportController accepts. */
@@ -104,6 +106,52 @@ describe('checkFile', () => {
 				size: PROFILE_DEFAULTS.maxFileBytes * 3,
 			}),
 		).toBeNull()
+	})
+})
+
+describe('the municipality chooser', () => {
+	const organisations = [
+		{ id: 'aaaaaaaa-1111', name: 'Gemeente Bergen', type: 'Municipality', status: 'Active' },
+		{ id: 'bbbbbbbb-2222', name: 'gemeente  bergen', type: 'Municipality', status: 'Active' },
+		{ id: 'cccccccc-3333', name: 'Gemeente Oud', type: 'Municipality', status: 'merged' },
+		{ id: 'dddddddd-4444', name: 'Gemeente Slaap', type: 'Municipality', status: 'Inactive' },
+		{ id: 'eeeeeeee-5555', name: 'Zonder type' },
+		{ id: 'ffffffff-6666', name: 'Fabfrikant', type: 'Supplier', status: 'Active' },
+		{ id: '99999999-7777', name: 'Gemeente Voorbeeldstad', type: 'Municipality' },
+	]
+
+	it('offers only live municipalities, and tells same-named ones apart', () => {
+		const options = municipalityOptions(organisations)
+
+		expect(options.map((option) => option.id).sort()).toEqual([
+			'99999999-7777',
+			'aaaaaaaa-1111',
+			'bbbbbbbb-2222',
+		])
+		const byId = Object.fromEntries(options.map((option) => [option.id, option]))
+		expect(byId['aaaaaaaa-1111'].label).toBe('Gemeente Bergen (aaaaaaaa)')
+		expect(byId['bbbbbbbb-2222'].label).toBe('gemeente  bergen (bbbbbbbb)')
+		expect(byId['99999999-7777'].label).toBe('Gemeente Voorbeeldstad')
+		expect(byId['aaaaaaaa-1111'].name).toBe('Gemeente Bergen')
+	})
+
+	it('sends a typed name as municipalityName, also when it equals a listed name', () => {
+		const typed = typedMunicipalityOption('  Gemeente   Bergen ')
+		expect(typed).toEqual({
+			id: null,
+			label: 'Gemeente Bergen',
+			name: 'Gemeente Bergen',
+			isNew: true,
+		})
+
+		const form = buildImportForm({
+			file: new File(['x'], 'export.xlsx'),
+			municipality: { uuid: typed.id, name: typed.name },
+			updateExisting: true,
+			operationId: 'cmdb-abcdefgh',
+		})
+		expect(form.get('municipalityName')).toBe('Gemeente Bergen')
+		expect(form.has('municipalityUuid')).toBe(false)
 	})
 })
 

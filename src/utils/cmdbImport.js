@@ -168,6 +168,87 @@ export function buildImportForm({
 }
 
 /**
+ * The statuses of a municipality the import never matches a typed name to, as on the server.
+ */
+export const UNMATCHED_MUNICIPALITY_STATUSES = ['merged', 'Inactive']
+
+/**
+ * The chooser's options from the organisations OpenRegister returned.
+ *
+ * Only live organisations of type Municipality are offered: an organisation
+ * without a type, a merged one or an inactive one is left out, because the
+ * server refuses it or never matches a name to it. Municipalities that share
+ * a name get the start of their uuid in the label, so the admin can tell them
+ * apart; `name` keeps the plain name.
+ *
+ * @param {Array<object>} objects The organisations
+ * @return {Array<{id: string, label: string, name: string, isNew: boolean}>} The options, sorted by label
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin-req-cmdb-004
+ */
+export function municipalityOptions(objects) {
+	const options = (Array.isArray(objects) ? objects : [])
+		.filter(
+			(org) =>
+				org?.type === 'Municipality'
+				&& !UNMATCHED_MUNICIPALITY_STATUSES.includes(org?.status),
+		)
+		.map((org) => {
+			const name = String(org.name || org['@self']?.name || '')
+			return {
+				id: String(org.id || org['@self']?.id || ''),
+				label: name,
+				name,
+				isNew: false,
+			}
+		})
+		.filter((option) => option.id !== '' && option.name !== '')
+	const counts = {}
+	for (const option of options) {
+		const key = normaliseMunicipalityName(option.name)
+		counts[key] = (counts[key] || 0) + 1
+	}
+	return options
+		.map((option) =>
+			counts[normaliseMunicipalityName(option.name)] > 1
+				? { ...option, label: `${option.name} (${option.id.slice(0, 8)})` }
+				: option,
+		)
+		.sort((a, b) => a.label.localeCompare(b.label))
+}
+
+/**
+ * The chooser's option for a name the admin typed.
+ *
+ * A typed name is always sent as `municipalityName`, also when it equals the
+ * name of a listed municipality: the server then reuses the one live
+ * municipality with that name, creates one when there is none, and refuses
+ * the name with MUNICIPALITY_AMBIGUOUS when several share it. Only an option
+ * picked from the list sends its uuid.
+ *
+ * @param {string|object} typed What the admin typed
+ * @return {{id: null, label: string, name: string, isNew: boolean}} The option
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin-req-cmdb-004
+ */
+export function typedMunicipalityOption(typed) {
+	const name = String(
+		typeof typed === 'object' && typed !== null ? typed.label : typed,
+	)
+		.trim()
+		.replace(/\s+/g, ' ')
+	return { id: null, label: name, name, isNew: true }
+}
+
+/**
+ * A municipality name as the server compares it: trimmed, single spaces, lower case.
+ *
+ * @param {string} name The name
+ * @return {string} The normalised name
+ */
+function normaliseMunicipalityName(name) {
+	return String(name).trim().replace(/\s+/g, ' ').toLowerCase()
+}
+
+/**
  * The URL of the import endpoint.
  *
  * @return {string} The URL
