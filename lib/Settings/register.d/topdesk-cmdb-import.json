@@ -70,6 +70,80 @@
             "enum": ["BBN2+"]
           }
         }
+      },
+      "usage": {
+        "version": "1.5.6",
+        "configuration": {
+          "x-openregister-lifecycle": {
+            "transitions": {
+              "importAcquisition": {
+                "from": [
+                  "Planned",
+                  "In production",
+                  "To be phased out",
+                  "Phased out"
+                ],
+                "to": "Acquisition",
+                "authorization": [
+                  "admin"
+                ],
+                "description": "Set the usage to \"Acquisition\" as the service desk (TOPdesk CMDB import) records it, whatever the current state. Only administrators: the import follows the source, other users follow the transitions above."
+              },
+              "importPlanned": {
+                "from": [
+                  "Acquisition",
+                  "In production",
+                  "To be phased out",
+                  "Phased out"
+                ],
+                "to": "Planned",
+                "authorization": [
+                  "admin"
+                ],
+                "description": "Set the usage to \"Planned\" as the service desk (TOPdesk CMDB import) records it, whatever the current state. Only administrators: the import follows the source, other users follow the transitions above."
+              },
+              "importInProduction": {
+                "from": [
+                  "Acquisition",
+                  "Planned",
+                  "To be phased out",
+                  "Phased out"
+                ],
+                "to": "In production",
+                "authorization": [
+                  "admin"
+                ],
+                "description": "Set the usage to \"In production\" as the service desk (TOPdesk CMDB import) records it, whatever the current state. Only administrators: the import follows the source, other users follow the transitions above."
+              },
+              "importToBePhasedOut": {
+                "from": [
+                  "Acquisition",
+                  "Planned",
+                  "In production",
+                  "Phased out"
+                ],
+                "to": "To be phased out",
+                "authorization": [
+                  "admin"
+                ],
+                "description": "Set the usage to \"To be phased out\" as the service desk (TOPdesk CMDB import) records it, whatever the current state. Only administrators: the import follows the source, other users follow the transitions above."
+              },
+              "importPhasedOut": {
+                "from": [
+                  "Acquisition",
+                  "Planned",
+                  "In production",
+                  "To be phased out"
+                ],
+                "to": "Phased out",
+                "authorization": [
+                  "admin"
+                ],
+                "description": "Set the usage to \"Phased out\" as the service desk (TOPdesk CMDB import) records it, whatever the current state. Only administrators: the import follows the source, other users follow the transitions above."
+              }
+            }
+          }
+        }
       }
     },
     "objects": [

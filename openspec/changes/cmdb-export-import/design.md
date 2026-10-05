@@ -126,7 +126,7 @@ Per row:
 3. No match: create the module from the mapped data, plus `externalKey`, the create-only defaults (`type: Application`), and `publicationDate` (D6).
    A module found by `externalKey` counts as a match only when it has a usage whose consumer is this municipality, or no usage at all. `externalKey` is a module property, so on its own it is not proof of ownership: a module only another organisation uses is a conflict, reported as `skipped` and neither changed nor duplicated. The property also carries a write rule (`update: admin`), so only a Nextcloud admin can set it outside the import.
 4. Match and `updateExisting=false`: skip with reason `exists`.
-5. Match: merge the mapped fields onto the stored object. Every field the pack does not map stays as it is. Create-only fields (`module.type`; `usage.interneAnnotation` and `usage.timeClassification`) stay as they are, unless the stored value is empty, so a TIME classification set in stackiq survives a re-import, while the usage status follows the export. If the merged object equals the stored one, do not save, and report `unchanged`. Otherwise save, and report `updated`.
+5. Match: merge the mapped fields onto the stored object. Every field the pack does not map stays as it is. Create-only fields (`module.type`; `usage.interneAnnotation` and `usage.timeClassification`) stay as they are, unless the stored value is empty, so a classification set in stackiq survives a re-import. `usage.status` follows TOPdesk on every import (decided 2026-10-05); the usage lifecycle lets an administrator, and so the import, move it to any state. If the merged object equals the stored one, do not save, and report `unchanged`. Otherwise save, and report `updated`.
 
 The APPID is also stored as `externalNumber`, so it is visible on the module.
 
@@ -251,7 +251,7 @@ The fragment bumps `module` to `0.3.8` (it shipped as `0.3.5` in the first versi
 
 - **Imperative, because it is an external integration:** reading an uploaded third-party file, splitting a row into four linked objects, resolving contacts in Nextcloud Contacts, progress and cancel. These are not object lifecycle, aggregation, notification or relation rules that an `x-openregister-*` block can express. This is the external-integration exception: the service is imperative glue around the file.
 - **Declarative:** what each column becomes (target property, transform, lookup, required) is JSON in OpenRegister's migration-pack format, executed by OpenRegister's `MappingEngine`. Changing the mapping changes no PHP.
-- **Matching rule (stated once, enforced in code):** a module matches when its `externalKey` equals `topdesk:<municipality uuid>:<APPID>` and it has a usage of that municipality or no usage at all. A usage matches on (`consumer`, `module`). A supplier matches on its normalised name and type `Supplier`. A contact person matches on (`contactsUid`, `organization`).
+- **Matching rule (stated once, enforced in code):** a module matches when its `externalKey` equals `topdesk:<municipality uuid>:<APPID>` and it has a usage of that municipality or no usage at all. A usage matches on (`consumer`, `module`). A manufacturer matches on its normalised name, a `Municipality` before a `Supplier`. A contact person matches on (`contactsUid`, `organization`).
 - **publicationDate rule (stated once, enforced in code):** set to the import's start time on create; never written on update.
 - No `x-openregister-*` block is added or changed. The usage name keeps coming from the schema's existing name template.
 
