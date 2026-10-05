@@ -6,11 +6,14 @@
  * Upload endpoint for a TOPdesk CMDB export (xlsx) and the cancel endpoint
  * of a running import (openspec/changes/cmdb-export-import/contract.md).
  *
- * AUTH: both methods carry neither `NoAdminRequired` nor `NoCSRFRequired`, so
- * Nextcloud's middleware lets only a Nextcloud admin with a valid CSRF token
- * reach them (403 / 412 before the body runs). The import writes into the
+ * AUTH (ADR-005): both methods are `#[AuthorizedAdminSetting(StackiqAdmin::class)]`
+ * and carry neither `NoAdminRequired` nor `NoCSRFRequired`, so Nextcloud's
+ * middleware lets only a Nextcloud admin, or a member of a group an admin
+ * delegated the stackiq admin settings to, reach them, and only with a valid
+ * CSRF token (403 / 412 before the body runs). The import writes into the
  * catalogue for a whole municipality, which is an administrative action, so
- * a member of the app's own manager groups is refused as well.
+ * a member of the app's own manager groups is refused unless the stackiq
+ * settings were delegated to that group.
  *
  * The upload is checked before it is parsed, in the order of design D10:
  * present, size, xlsx, `missingRecords`, municipality. Every expected service
@@ -37,15 +40,17 @@ namespace OCA\Stackiq\Controller;
 use OCA\Stackiq\AppInfo\Application;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\CmdbExportImportService;
+use OCA\Stackiq\Settings\StackiqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
 use Psr\Log\LoggerInterface;
 
 /**
- * CMDB import and cancel, admin-only and CSRF-protected.
+ * CMDB import and cancel, for (delegated) stackiq admins and CSRF-protected.
  *
  * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
  */
@@ -81,12 +86,15 @@ class CmdbImportController extends Controller {
 	 * `updateExisting` (default true), `missingRecords` (only `keep`) and
 	 * `operationId` (pattern `cmdb-` plus 8 to 64 letters, digits or hyphens).
 	 *
+	 * @AuthorizedAdminSetting(settings=OCA\Stackiq\Settings\StackiqAdmin)
+	 *
 	 * @return JSONResponse The report (200), or an error envelope with the contract code.
 	 *
-	 * @auth admin-only importing a CMDB export rewrites the catalogue of a whole municipality, so only a Nextcloud admin runs it.
+	 * @auth admin-only importing a CMDB export rewrites the catalogue of a whole municipality, so only a (delegated) stackiq admin runs it.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
 	 */
+	#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]
 	public function import(): JSONResponse {
 		$validated = $this->validateRequest();
 		if ($validated instanceof JSONResponse) {
@@ -162,12 +170,15 @@ class CmdbImportController extends Controller {
 	 *
 	 * @param string $operationId The operation id.
 	 *
+	 * @AuthorizedAdminSetting(settings=OCA\Stackiq\Settings\StackiqAdmin)
+	 *
 	 * @return JSONResponse `{success, cancelRequested}`, or 404 OPERATION_NOT_FOUND.
 	 *
-	 * @auth admin-only cancelling an import is part of running it, so only a Nextcloud admin may do it (no NoAdminRequired, CSRF checked).
+	 * @auth admin-only cancelling an import is part of running it, so only a (delegated) stackiq admin may do it (CSRF checked).
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
 	 */
+	#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]
 	public function cancel(string $operationId): JSONResponse {
 		if ($this->importService->requestCancel(operationId: $operationId) === false) {
 			return $this->error(code: 'OPERATION_NOT_FOUND', status: Http::STATUS_NOT_FOUND);

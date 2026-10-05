@@ -24,12 +24,18 @@ namespace OCA\Stackiq\Tests\Unit\Controller;
 use OCA\Stackiq\Controller\CmdbImportController;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\CmdbExportImportService;
+use OCA\Stackiq\Settings\StackiqAdmin;
+use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
+use OCP\AppFramework\Http\Attribute\NoAdminRequired;
+use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\PublicPage;
 use OCP\IL10N;
 use OCP\IRequest;
 use PHPUnit\Framework\Attributes\DataProvider;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
+use ReflectionClass;
 use ReflectionMethod;
 use RuntimeException;
 
@@ -128,26 +134,62 @@ class CmdbImportControllerTest extends TestCase {
 	}//end file()
 
 	/**
-	 * Neither method declares NoAdminRequired or NoCSRFRequired, as attribute or annotation.
+	 * Both methods declare AuthorizedAdminSetting for StackiqAdmin, as attribute and annotation.
 	 *
 	 * @return void
 	 */
-	public function testBothRoutesAreAdminOnlyWithCsrf(): void {
+	public function testBothRoutesRequireTheStackiqAdminSetting(): void {
 		foreach (['import', 'cancel'] as $method) {
 			$reflection = new ReflectionMethod(CmdbImportController::class, $method);
-			$this->assertSame([], $reflection->getAttributes(), $method);
+
+			$attributes = $reflection->getAttributes(AuthorizedAdminSetting::class);
+			$this->assertCount(1, $attributes, $method);
+			$this->assertSame(['settings' => StackiqAdmin::class], $attributes[0]->getArguments(), $method);
 
 			preg_match_all(self::ANNOTATION, (string)$reflection->getDocComment(), $matches);
-			foreach (['NoAdminRequired', 'NoCSRFRequired', 'PublicPage'] as $annotation) {
-				$this->assertNotContains($annotation, $matches['annotation'], $method);
+			$byName = array_combine($matches['annotation'], array_map('trim', $matches['parameter']));
+			$this->assertArrayHasKey('AuthorizedAdminSetting', $byName, $method);
+			$this->assertSame('(settings=' . StackiqAdmin::class . ')', $byName['AuthorizedAdminSetting'], $method);
+		}
+	}//end testBothRoutesRequireTheStackiqAdminSetting()
+
+	/**
+	 * Neither method opens itself to every user, to anonymous users or to requests without CSRF.
+	 *
+	 * Checked as attribute and as the annotation Nextcloud's regex reads, so a
+	 * comment line that starts with one of these tokens fails too.
+	 *
+	 * @return void
+	 */
+	public function testNeitherRouteDeclaresAnExemption(): void {
+		$exemptions = [
+			'NoAdminRequired' => NoAdminRequired::class,
+			'NoCSRFRequired' => NoCSRFRequired::class,
+			'PublicPage' => PublicPage::class,
+		];
+
+		foreach ([CmdbImportController::class, 'import', 'cancel'] as $target) {
+			$reflection = $target === CmdbImportController::class ? new ReflectionClass($target) : new ReflectionMethod(CmdbImportController::class, $target);
+
+			preg_match_all(self::ANNOTATION, (string)$reflection->getDocComment(), $matches);
+			foreach ($exemptions as $annotation => $attribute) {
+				$this->assertSame([], $reflection->getAttributes($attribute), $target . ' ' . $annotation);
+				$this->assertNotContains($annotation, $matches['annotation'], $target . ' ' . $annotation);
 			}
 		}
+	}//end testNeitherRouteDeclaresAnExemption()
 
+	/**
+	 * The two routes keep their paths and verbs.
+	 *
+	 * @return void
+	 */
+	public function testTheRoutesAreRegistered(): void {
 		$routes = require __DIR__ . '/../../../appinfo/routes.php';
 		$byName = array_column($routes['routes'], null, 'name');
 		$this->assertSame(['name' => 'cmdbImport#import', 'url' => '/api/cmdb-import', 'verb' => 'POST'], $byName['cmdbImport#import']);
 		$this->assertSame(['name' => 'cmdbImport#cancel', 'url' => '/api/cmdb-import/{operationId}/cancel', 'verb' => 'POST'], $byName['cmdbImport#cancel']);
-	}//end testBothRoutesAreAdminOnlyWithCsrf()
+	}//end testTheRoutesAreRegistered()
 
 	/**
 	 * No file is 400 NO_FILE_UPLOADED; a failed upload too.

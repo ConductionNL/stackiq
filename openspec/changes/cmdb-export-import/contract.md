@@ -10,7 +10,7 @@ Paths are relative to `/index.php/apps/stackiq`.
 ## Endpoints
 
 ### `POST /api/cmdb-import`
-**Auth**: Nextcloud session of a Nextcloud admin, plus CSRF `requesttoken` (header or form field). No `NoAdminRequired`, no `NoCSRFRequired`.
+**Auth**: Nextcloud session of a Nextcloud admin, or of a member of a group an admin delegated the stackiq admin settings to (`#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]`), plus CSRF `requesttoken` (header or form field). No `NoAdminRequired`, no `NoCSRFRequired`.
 
 **Request:** `multipart/form-data`
 
@@ -55,7 +55,7 @@ Paths are relative to `/index.php/apps/stackiq`.
 |------|-----------|
 | 400  | `NO_FILE_UPLOADED`, `NOT_XLSX` |
 | 401  | not signed in (Nextcloud) |
-| 403  | not a Nextcloud admin (Nextcloud) |
+| 403  | neither a Nextcloud admin nor a delegated stackiq admin (Nextcloud) |
 | 412  | missing or invalid CSRF token (Nextcloud) |
 | 413  | `FILE_TOO_LARGE` |
 | 422  | `MISSING_RECORDS_UNSUPPORTED`, `MUNICIPALITY_REQUIRED`, `MUNICIPALITY_INVALID`, `NO_SOURCE_SHEET`, `MISSING_COLUMN`, `TOO_MANY_ROWS` |
@@ -65,7 +65,7 @@ Paths are relative to `/index.php/apps/stackiq`.
 Error body: `{"success": false, "error": "<CODE>", "message": "<translated text>", "details": {...}}`. `details` is always an object, empty when the code has none. For `MISSING_COLUMN`, `details` is `{"sheet": "...", "column": "..."}`. For `NO_SOURCE_SHEET`, it is `{"expected": ["Onbeh Applicaties CMDB", "Beheerde Applicaties CMDB"]}`. For `TOO_MANY_ROWS`, it is `{"sheet": "...", "limit": 10000}`. For `FILE_TOO_LARGE`, it is `{"maxBytes": 10485760}`. For `MISSING_RECORDS_UNSUPPORTED`, it is `{"accepted": ["keep"]}`.
 
 ### `POST /api/cmdb-import/{operationId}/cancel`
-**Auth**: Nextcloud admin session plus CSRF token.
+**Auth**: the same as the import: a Nextcloud admin or delegated stackiq admin session, plus CSRF token.
 
 **Request:** no body.
 
@@ -77,7 +77,7 @@ Error body: `{"success": false, "error": "<CODE>", "message": "<translated text>
 **Errors:**
 | Code | Condition |
 |------|-----------|
-| 403  | not a Nextcloud admin |
+| 403  | neither a Nextcloud admin nor a delegated stackiq admin |
 | 404  | `OPERATION_NOT_FOUND`: no `cmdb_import` operation with this id |
 | 412  | missing or invalid CSRF token |
 
