@@ -189,7 +189,7 @@ class CmdbWorkbookReader {
 		try {
 			return $this->readBounded(path: $copy, profile: $profile, scanner: $scanner);
 		} finally {
-			unlink($copy);
+			self::removeCopy(path: $copy);
 		}
 	}//end read()
 
@@ -260,9 +260,7 @@ class CmdbWorkbookReader {
 		}
 
 		register_shutdown_function(static function () use ($copy): void {
-			if (is_file($copy) === true) {
-				unlink($copy);
-			}
+			self::removeCopy(path: $copy);
 		});
 		if (copy($path, $copy) === false) {
 			unlink($copy);
@@ -271,6 +269,22 @@ class CmdbWorkbookReader {
 
 		return $copy;
 	}//end temporaryCopy()
+
+	/**
+	 * Remove a copy made by temporaryCopy(), if it is still there.
+	 *
+	 * Called by read() once the copy is read, and by the shutdown function
+	 * when the request dies first; after read(), the latter finds nothing.
+	 *
+	 * @param string $path The copy's path.
+	 *
+	 * @return void
+	 */
+	private static function removeCopy(string $path): void {
+		if (is_file($path) === true) {
+			unlink($path);
+		}
+	}//end removeCopy()
 
 	/**
 	 * Read the source sheets of a package whose part sizes have been checked.

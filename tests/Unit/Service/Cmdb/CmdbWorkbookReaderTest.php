@@ -947,6 +947,16 @@ class CmdbWorkbookReaderTest extends TestCase {
 				}
 			}
 
+			// The ZIP signature, but no package behind it.
+			file_put_contents($text, "PK\x03\x04" . str_repeat('x', 64));
+			try {
+				$reader->assertXlsx(path: $text, fileName: 'export.xlsx');
+				$this->fail('NOT_XLSX expected for a truncated zip');
+			} catch (CmdbImportException $e) {
+				$this->assertSame('NOT_XLSX', $e->getErrorCode());
+				$this->assertSame('The ZIP package cannot be opened', $e->getMessage());
+			}
+
 			// A ZIP without xl/workbook.xml.
 			$zipPath = tempnam(sys_get_temp_dir(), 'cmdb') . '.xlsx';
 			$zip = new \ZipArchive();
