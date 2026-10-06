@@ -369,6 +369,21 @@ class CmdbWorkbookBounds {
 	}//end isText()
 
 	/**
+	 * Stream every part of the package through a callback, with the part's name, as PhpSpreadsheet would parse it.
+	 *
+	 * @param string $path The xlsx file.
+	 * @param object $scanner PhpSpreadsheet's XmlScanner.
+	 * @param callable(XMLReader, string): void $consume Reads one opened part; gets the reader and the part's name.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 */
+	public function eachPart(string $path, object $scanner, callable $consume): void {
+		self::streamParts(path: $path, scanner: $scanner, consume: $consume);
+	}//end eachPart()
+
+	/**
 	 * Stream every part of the package through a callback, as PhpSpreadsheet would parse it.
 	 *
 	 * Parts are read by index, so a part counts whatever its name, and each
@@ -380,7 +395,7 @@ class CmdbWorkbookBounds {
 	 *
 	 * @param string $path The xlsx file.
 	 * @param object $scanner PhpSpreadsheet's XmlScanner.
-	 * @param callable(XMLReader): void $consume Reads one opened part.
+	 * @param callable(XMLReader, string): void $consume Reads one opened part; gets the reader and the part's name.
 	 *
 	 * @return void
 	 */
@@ -396,7 +411,7 @@ class CmdbWorkbookBounds {
 				try {
 					$xml = self::openPart(zip: $zip, index: $index, scanner: $scanner);
 					if ($xml !== null) {
-						$consume($xml);
+						$consume($xml, (string)$zip->getNameIndex($index));
 						$xml->close();
 					}
 				} finally {

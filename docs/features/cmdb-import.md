@@ -288,7 +288,7 @@ and the section shows the reason and the error code.
 | `NO_SOURCE_SHEET` | Neither `Onbeh Applicaties CMDB` nor `Beheerde Applicaties CMDB` is in the workbook. | Check the sheet names; they must match exactly. |
 | `MISSING_COLUMN` | A present CMDB sheet has no `APPID` or `Applicatie Naam` column. The message names the sheet and the column. | Add the column to that sheet. |
 | `TOO_MANY_ROWS` | A CMDB sheet has more rows with data than the row limit (10,000 by default). The message names the sheet and the limit. | Split the export and import the parts one after the other. |
-| `WORKBOOK_TOO_LARGE` | Unpacked, the workbook is larger than the import reads: 50 MB in all, 10 MB for any one part (such as a sheet or the table of texts the sheets share), or more than 200,000 different texts, by default. An `.xlsx` is a compressed package, so a small file can unpack to far more. The message names the limit, and for a part also the part. | Remove sheets the import does not read, such as the archive sheet, or split the export. |
+| `WORKBOOK_TOO_LARGE` | Unpacked, the workbook is larger than the import reads: 50 MB in all, 10 MB for one sheet the import reads or for the table of texts the sheets share, or more than 200,000 different texts, by default. Sheets the import does not read may be larger than 10 MB. An `.xlsx` is a compressed package, so a file of a few MB can unpack to far more. The message names the limit, and for a sheet the sheet and its unpacked size. | For a sheet that is too large: split its rows over two copies of the export and import them one after the other. For a workbook that is too large in all: delete the sheets the import does not read from a copy and import that copy. |
 | `MUNICIPALITY_AMBIGUOUS` | More than one municipality has the typed name. The import does not guess which one. | Pick the municipality from the list instead of typing its name. |
 | `IMPORT_IN_PROGRESS` | Another CMDB import is running. Only one import runs at a time. | Wait until it has finished and try again. |
 | `FIELD_INVALID` | A form field of the request has a value the import does not accept, for example an `updateExisting` or `publish` that is neither `true` nor `false`. The message names the field. | Not reachable from the section; reported for API callers. |
@@ -324,7 +324,7 @@ every import:
 | `maxFileBytes` | `10485760` (10 MB) | the size of the uploaded file |
 | `maxRowsPerSheet` | `10000` | the rows with data on one CMDB sheet |
 | `maxUncompressedBytes` | `52428800` (50 MB) | the size of the workbook once unpacked, checked before a sheet is parsed |
-| `maxPartBytes` | `10485760` (10 MB) | the size of any one part of the workbook once unpacked, such as a sheet or the shared-strings table, checked before a sheet is parsed |
+| `maxPartBytes` | `10485760` (10 MB) | the size of one part the import parses once unpacked, such as a source sheet or the shared-strings table, checked before a sheet is parsed; a sheet the import does not read may be larger, and is read as an empty sheet |
 | `maxSharedStrings` | `200000` | the number of different texts in the workbook's shared-strings table, each formatted piece of a text with mixed formatting counted as one more, also in text written in a cell itself, counted before a sheet is parsed |
 | `maxReferencedStringBytes` | `67108864` (64 MB) | the shared text all cells of the workbook reference together, counted once per cell and once per CMDB sheet before a sheet is parsed; a long text that many cells repeat counts as often as it is repeated |
 

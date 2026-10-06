@@ -31,8 +31,10 @@
  *    whole XML tree of every sheet it loads, before a read filter runs, so
  *    the filter alone does not bound memory. The reader therefore refuses
  *    with `WORKBOOK_TOO_LARGE` (413) a package that unpacks to more than the
- *    profile's `maxUncompressedBytes`, a single part that unpacks to more
- *    than `maxPartBytes`, a shared-strings table with more entries than
+ *    profile's `maxUncompressedBytes`, a part it may parse that unpacks to
+ *    more than `maxPartBytes` (a larger sheet it does not load is blanked in
+ *    a copy the reader reads instead, CmdbPartReferences), a shared-strings
+ *    table with more entries than
  *    `maxSharedStrings` (each rich-text run counted as an entry, also in a
  *    cell's inline string), and cells that reference more shared-string
  *    text than `maxReferencedStringBytes` (CmdbWorkbookBounds, streamed
@@ -75,6 +77,12 @@ class CmdbWorkbookReader {
 	 * PhpSpreadsheet's Xlsx reader, shipped in OpenRegister's vendor directory.
 	 */
 	public const READER_CLASS = 'PhpOffice\PhpSpreadsheet\Reader\Xlsx';
+
+	/**
+	 * What an oversized unread sheet becomes in the copy the reader reads.
+	 */
+	private const EMPTY_WORKSHEET = '<?xml version="1.0" encoding="UTF-8"?>'
+		. '<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData/></worksheet>';
 
 	/**
 	 * The ZIP local-file-header signature every xlsx package starts with.
@@ -156,7 +164,7 @@ class CmdbWorkbookReader {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
 	 */
 	public function read(string $path, CmdbImportProfile $profile): array {
-		$this->assertUncompressedSize(path: $path, limit: $profile->maxUncompressedBytes(), partLimit: $profile->maxPartBytes());
+		$oversized = $this->assertUncompressedSize(path: $path, limit: $profile->maxUncompressedBytes(), partLimit: $profile->maxPartBytes());
 
 		if ($this->isAvailable() === false) {
 			throw new CmdbImportException(
@@ -166,6 +174,130 @@ class CmdbWorkbookReader {
 		}
 
 		$scanner = $this->newReader(sheetNames: null)->getSecurityScannerOrThrow();
+		$blank = (new CmdbPartReferences())->assertPartSizes(
+			path: $path,
+			oversized: $oversized,
+			sourceSheets: $profile->sheetNames(),
+			limit: $profile->maxPartBytes(),
+			scanner: $scanner
+		);
+		if ($blank === []) {
+			return $this->readBounded(path: $path, profile: $profile, scanner: $scanner);
+		}
+
+		$copy = self::blankedCopy(path: $path, parts: $blank);
+		try {
+			return $this->readBounded(path: $copy, profile: $profile, scanner: $scanner);
+		} finally {
+			self::removeCopy(path: $copy);
+		}
+	}//end read()
+
+	/**
+	 * A copy of the package in which each named part is an empty worksheet; the caller removes it.
+	 *
+	 * Every entry under one of the names is replaced, so PhpSpreadsheet can
+	 * reach at most an empty sheet through it, whichever way it resolves a
+	 * target to that name.
+	 *
+	 * @param string $path The xlsx file.
+	 * @param array<int, string> $parts The names of the parts to blank.
+	 *
+	 * @return string The copy's path, ending in .xlsx.
+	 *
+	 * @throws CmdbImportException NOT_XLSX when the copy cannot be written.
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 */
+	private static function blankedCopy(string $path, array $parts): string {
+		$copy = self::temporaryCopy(path: $path);
+		$zip = new ZipArchive();
+		if ($zip->open($copy) !== true) {
+			unlink($copy);
+			throw new CmdbImportException(errorCode: CmdbImportException::NOT_XLSX, message: 'The ZIP package cannot be opened');
+		}
+
+		for ($index = ($zip->numFiles - 1); $index >= 0; $index--) {
+			if (in_array((string)$zip->getNameIndex($index), $parts, true) === true) {
+				$zip->deleteIndex($index);
+			}
+		}
+
+		foreach (array_unique($parts) as $part) {
+			$zip->addFromString($part, self::EMPTY_WORKSHEET);
+		}
+
+		if ($zip->close() === false) {
+			unlink($copy);
+			throw new CmdbImportException(errorCode: CmdbImportException::NOT_XLSX, message: 'The workbook cannot be copied for reading');
+		}
+
+		return $copy;
+	}//end blankedCopy()
+
+	/**
+	 * A copy of the file in the temporary directory, removed at the end of the request at the latest.
+	 *
+	 * The copy holds the upload, so it is also removed when the request dies
+	 * (memory or time limit) before read() removes it.
+	 *
+	 * @param string $path The xlsx file.
+	 *
+	 * @return string The copy's path, ending in .xlsx.
+	 *
+	 * @throws CmdbImportException NOT_XLSX when the copy cannot be written.
+	 */
+	private static function temporaryCopy(string $path): string {
+		$base = tempnam(sys_get_temp_dir(), 'cmdb-read-');
+		if ($base === false) {
+			throw new CmdbImportException(errorCode: CmdbImportException::NOT_XLSX, message: 'The workbook cannot be copied for reading');
+		}
+
+		$copy = $base . '.xlsx';
+		if (rename($base, $copy) === false) {
+			unlink($base);
+			throw new CmdbImportException(errorCode: CmdbImportException::NOT_XLSX, message: 'The workbook cannot be copied for reading');
+		}
+
+		register_shutdown_function(static function () use ($copy): void {
+			self::removeCopy(path: $copy);
+		});
+		if (copy($path, $copy) === false) {
+			unlink($copy);
+			throw new CmdbImportException(errorCode: CmdbImportException::NOT_XLSX, message: 'The workbook cannot be copied for reading');
+		}
+
+		return $copy;
+	}//end temporaryCopy()
+
+	/**
+	 * Remove a copy made by temporaryCopy(), if it is still there.
+	 *
+	 * Called by read() once the copy is read, and by the shutdown function
+	 * when the request dies first; after read(), the latter finds nothing.
+	 *
+	 * @param string $path The copy's path.
+	 *
+	 * @return void
+	 */
+	private static function removeCopy(string $path): void {
+		if (is_file($path) === true) {
+			unlink($path);
+		}
+	}//end removeCopy()
+
+	/**
+	 * Read the source sheets of a package whose part sizes have been checked.
+	 *
+	 * @param string $path The xlsx file, or its copy with the oversized unread sheets blanked.
+	 * @param CmdbImportProfile $profile The import profile.
+	 * @param object $scanner PhpSpreadsheet's XmlScanner.
+	 *
+	 * @return array<string, mixed> See read().
+	 *
+	 * @throws CmdbImportException WORKBOOK_TOO_LARGE, NOT_XLSX, NO_SOURCE_SHEET, MISSING_COLUMN or TOO_MANY_ROWS.
+	 */
+	private function readBounded(string $path, CmdbImportProfile $profile, object $scanner): array {
 		$bounds = new CmdbWorkbookBounds();
 		$bounds->assertSharedStringCount(path: $path, limit: $profile->maxSharedStrings(), scanner: $scanner);
 		$bounds->assertReferencedStringBytes(
@@ -230,7 +362,7 @@ class CmdbWorkbookReader {
 		}
 
 		return ['rows' => $rows, 'importWarnings' => $resolved['warnings'], 'date1904' => $date1904];
-	}//end read()
+	}//end readBounded()
 
 	/**
 	 * The last row number the data pass reads.
@@ -250,20 +382,22 @@ class CmdbWorkbookReader {
 	}//end lastReadableRow()
 
 	/**
-	 * Refuse a package whose parts, or one of them, unpack to more than the limits, before any part is parsed.
+	 * Refuse a package whose parts together unpack to more than the limit, and list the parts beyond the part limit.
 	 *
 	 * The sizes are the uncompressed sizes the ZIP directory declares; libzip
-	 * never inflates a part beyond its declared size.
+	 * never inflates a part beyond its declared size. A part beyond the part
+	 * limit is refused later, by CmdbPartReferences, unless only sheets the
+	 * import does not read refer to it.
 	 *
 	 * @param string $path The xlsx file.
 	 * @param int $limit The maximum number of unpacked bytes of all parts together.
-	 * @param int $partLimit The maximum number of unpacked bytes of one part.
+	 * @param int $partLimit The maximum number of unpacked bytes of one part the import parses.
 	 *
-	 * @return void
+	 * @return array<string, int> Part name => unpacked size, for every part beyond the part limit.
 	 *
-	 * @throws CmdbImportException NOT_XLSX when the package cannot be opened, WORKBOOK_TOO_LARGE above a limit.
+	 * @throws CmdbImportException NOT_XLSX when the package cannot be opened, WORKBOOK_TOO_LARGE above the limit.
 	 */
-	private function assertUncompressedSize(string $path, int $limit, int $partLimit): void {
+	private function assertUncompressedSize(string $path, int $limit, int $partLimit): array {
 		$zip = new ZipArchive();
 		if ($zip->open($path, ZipArchive::RDONLY) !== true) {
 			throw new CmdbImportException(errorCode: CmdbImportException::NOT_XLSX, message: 'The ZIP package cannot be opened');
@@ -271,6 +405,7 @@ class CmdbWorkbookReader {
 
 		$total = 0;
 		$readable = true;
+		$oversized = [];
 		for ($index = 0; $index < $zip->numFiles && $total <= $limit; $index++) {
 			$stat = $zip->statIndex($index);
 			if ($stat === false) {
@@ -279,12 +414,7 @@ class CmdbWorkbookReader {
 			}
 
 			if ((int)$stat['size'] > $partLimit) {
-				$zip->close();
-				throw new CmdbImportException(
-					errorCode: CmdbImportException::WORKBOOK_TOO_LARGE,
-					message: 'A part of the workbook unpacks to more bytes than the profile allows',
-					details: ['maxPartBytes' => $partLimit, 'part' => (string)$stat['name']]
-				);
+				$oversized[(string)$stat['name']] = (int)$stat['size'];
 			}
 
 			$total += (int)$stat['size'];
@@ -303,6 +433,8 @@ class CmdbWorkbookReader {
 				details: ['maxUncompressedBytes' => $limit]
 			);
 		}
+
+		return $oversized;
 	}//end assertUncompressedSize()
 
 	/**
