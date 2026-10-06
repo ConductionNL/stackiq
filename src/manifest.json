@@ -1105,5 +1105,39 @@
 			"sidebarComponent": "FlowDetailSidebar",
 			"_note": "The shared CnFlowDetail canvas over the same single engine. Controls render in the NC app sidebar (sidebarComponent) so the canvas keeps full width; canvas and sidebar share useFlowStore. The _note claimed this before the field existed, so #/flows/new -- and every #/flows/:id -- rendered a bare canvas with no way to name, describe, trigger or step-edit the flow. Mirrors pipelinq#1490."
 		}
-	]
+	],
+	"discovery": {
+		"public": true,
+		"standards": [
+			{
+				"id": "archimate",
+				"name": "ArchiMate Model Exchange File Format (import and export)",
+				"version": "3.1",
+				"role": "provides",
+				"access": "authenticated",
+				"specUrl": "https://www.opengroup.org/xsd/archimate/"
+			},
+			{
+				"id": "cyclonedx",
+				"name": "CycloneDX SBOM import",
+				"version": "1.6",
+				"role": "consumes",
+				"access": "authenticated",
+				"specUrl": "https://cyclonedx.org/specification/overview/"
+			},
+			{
+				"id": "spdx",
+				"name": "SPDX SBOM import",
+				"version": "2",
+				"role": "consumes",
+				"access": "authenticated",
+				"specUrl": "https://spdx.github.io/spdx-spec/"
+			},
+			{
+				"id": "opencatalogi-federation",
+				"name": "OpenCatalogi directory and federation protocol (peer catalogue pull, via OpenCatalogi)",
+				"role": "consumes"
+			}
+		]
+	}
 }

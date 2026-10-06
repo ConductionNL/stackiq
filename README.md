@@ -252,6 +252,19 @@ VNG did not begin filing issues for the Softwarecatalogus until October 2025, an
 
 The master file `issues.md` tracks all 137 IGS (In Review/Scoped) issues with their **1,026 acceptance criteria**, each tagged by test type (`[API]`, `[UI]`, or `[HYBRID]`). Of these, **316 criteria** are covered by the automated Newman/Postman suite, while the remainder are validated by the persona-based browser agents. This approach maintains full traceability back to the original VNG issues while giving our test automation the concrete, testable assertions it requires.
 
+<!-- discovery:start -->
+## Standards & federation
+
+| Standard | Role | Access |
+|---|---|---|
+| [ArchiMate Model Exchange File Format (import and export)](https://www.opengroup.org/xsd/archimate/) 3.1 | Provides | Nextcloud login |
+| [CycloneDX SBOM import](https://cyclonedx.org/specification/overview/) 1.6 | Uses | — |
+| [SPDX SBOM import](https://spdx.github.io/spdx-spec/) 2 | Uses | — |
+| OpenCatalogi directory and federation protocol (peer catalogue pull, via OpenCatalogi) | Uses | — |
+
+Other servers can read this list without logging in, from the Nextcloud capabilities endpoint (published by OpenRegister). Details, federation and admin switches: [docs/standards-and-federation.md](docs/standards-and-federation.md).
+<!-- discovery:end -->
+
 ## Standards & Compliance
 
 - **Data standard:** GEMMA Softwarecatalogus (VNG)
