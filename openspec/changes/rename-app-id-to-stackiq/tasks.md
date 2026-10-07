@@ -1,5 +1,7 @@
 # Tasks: Rename the app id from `stackiq` to `stackiq`
 
+> Archive pass 2026-10-07: code done (appinfo/info.xml id stackiq, lib/Repair/MigrateAppConfigKeys.php LEGACY_APP_ID softwarecatalog, MigrateUserPreferences.php, MigrateBackgroundJobClasses.php). Not archived: specs/app-id-rename/spec.md has no delta headers, and the rename sweep in the same PR (#708) turned every old id in the prose into the new one ("from stackiq to stackiq", "OCA\Stackiq to OCA\Stackiq"). The old id (`softwarecatalog`, `OCA\SoftwareCatalog`) must be put back by hand before it merges into a main spec.
+
 ## 1. App identity
 
 - [x] `appinfo/info.xml`: `<id>` -> `stackiq`, `<namespace>` -> `Stackiq`, display names -> "Stackiq", navigation id/name/route.

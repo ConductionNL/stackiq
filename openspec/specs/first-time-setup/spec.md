@@ -1,7 +1,7 @@
 # first-time-setup Specification
 
 ## Purpose
-An administrator opening stackiq for the first time gets a short setup wizard that offers example data, so a new installation can be tried out straight away and a production installation stays empty. The wizard follows the CnSetupWizard contract (ADR-042): the steps live in `src/manifest.json` under `setup`, and `lib/Controller/SetupController.php` answers `/api/setup/status`, `/api/setup/config` and `/api/setup/action/{actionId}`. `lib/Service/DemoDataService.php` imports the dataset through OpenRegister. Written after the fact (7 Oct 2026) to describe what the code does today. Matrix row `stackiq:land-demo-data`. The open change `wizard-dataset-card-load` adds the per-card load and the step-id contract on top of this spec.
+An administrator opening stackiq for the first time gets a short setup wizard that offers example data, so a new installation can be tried out straight away and a production installation stays empty. The wizard follows the CnSetupWizard contract (ADR-042): the steps live in `src/manifest.json` under `setup`, and `lib/Controller/SetupController.php` answers `/api/setup/status`, `/api/setup/config` and `/api/setup/action/{actionId}`. `lib/Service/DemoDataService.php` imports the dataset through OpenRegister. Written after the fact (7 Oct 2026) to describe what the code does today. Matrix row `stackiq:land-demo-data`. The change `wizard-dataset-card-load` (archived 2026-10-07) added the per-card load and the step-id contract on top of this spec.
 
 ## Requirements
 
@@ -78,3 +78,51 @@ Choosing `none`, or the `skip-demo-data` action, SHALL store `none` under the ap
 - **WHEN** the administrator loads it again
 - **THEN** the import succeeds again
 - @e2e exclude written after the fact; tests/e2e/spec-coverage/demo-data-setup-step.spec.ts drives this but carries no scenario marker yet, and this round adds no test code
+
+### Requirement: Each example data card loads itself
+
+The `demo-data` setup step MUST be a cards choice step with `loadAction: load-demo-data`. The setup wizard MUST NOT carry a separate run-action step that loads the picked dataset.
+
+#### Scenario: The operator loads a dataset from its card
+
+- GIVEN the setup wizard shows the example data cards
+- WHEN the operator presses Load on a card
+- THEN the wizard posts `{ "dataset": <card value> }` to `/api/setup/action/load-demo-data`
+- AND the server loads that dataset
+- AND the server records the dataset as the pick only after the load succeeds
+- @e2e exclude the card and its spinner are CnSetupWizard UI, tested in nextcloud-vue; the posted body is covered by tests/Unit/Controller/SetupControllerTest.php
+
+#### Scenario: An unknown dataset is refused
+
+- GIVEN a dataset id that no card offers
+- WHEN it is posted to `/api/setup/action/load-demo-data`
+- THEN the server answers 400 with `success: false`
+- AND nothing is loaded or stored
+- @e2e tests/e2e/spec-coverage/demo-data-setup-step.spec.ts
+
+#### Scenario: A call without a body keeps working
+
+- GIVEN a dataset was stored through `/api/setup/config`
+- WHEN `/api/setup/action/load-demo-data` is called without a body
+- THEN the stored dataset is loaded
+- @e2e tests/e2e/spec-coverage/demo-data-setup-step.spec.ts
+
+#### Scenario: A failed load leaves the step open
+
+- GIVEN the load of the posted dataset fails
+- WHEN the server answers
+- THEN the answer carries `success: false`
+- AND no pick or decision is stored
+- @e2e exclude needs a load that fails on a live instance; covered by tests/Unit/Controller/SetupControllerTest.php
+
+### Requirement: Setup status reports every manifest step
+
+`GET /api/setup/status` MUST report a `done` state for every step id in `manifest.setup.steps`.
+
+#### Scenario: The status ids match the manifest
+
+- GIVEN the Stackiq manifest
+- WHEN an administrator reads `/api/setup/status`
+- THEN `steps` holds an entry for every manifest step id
+- AND the retired load step is not reported
+- @e2e tests/e2e/spec-coverage/demo-data-setup-step.spec.ts

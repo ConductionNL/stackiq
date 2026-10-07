@@ -1,5 +1,7 @@
 # Tasks: sharing-itsm-exchange
 
+> Archive pass 2026-10-07: code done (src/views/cmdb/CmdbOverview.vue, src/views/settings/sections/ItsmExchange.vue, tests/e2e/workflows/itsm-exchange.spec.ts written, docs/features/service-desk-exchange.md); open: Task 5 Test (Playwright run on an instance), Task 6 third run (Ruben's ServiceNow developer instance) (live check).
+
 ## Implementation tasks
 
 ### Task 1: Fields, contract licence fields and the connection entry

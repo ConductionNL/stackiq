@@ -1,6 +1,6 @@
 # Software catalog
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: The catalogue contract points at the shillinq contract (REQ-SC-060)
 

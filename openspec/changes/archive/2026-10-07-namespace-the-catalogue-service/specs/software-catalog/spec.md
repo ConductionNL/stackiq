@@ -1,6 +1,6 @@
 # Software catalog
 
-## MODIFIED Requirements
+## ADDED Requirements
 
 ### Requirement: The catalogue service is namespaced (REQ-SC-061)
 
