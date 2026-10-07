@@ -6010,7 +6010,7 @@
 				"state": "specified",
 				"evidence": "lib/Service/ViewService.php:932-955 tags shared usage _type='deelnames' with _sourceOrganization, :1214 getDeelnamesGebruikData; lib/Service/ArchiMateExportService.php:3003 every nested application gets the same green fillColor, deelnames only get their own folder 'Deelnames (Stackiq)' (:3083); openspec/specs/module-overlay-rendering/spec.md:55-79 requires deelnames nodes to be styled differently, not implemented in stackiq",
 				"owner": "ConductionNL/stackiq",
-				"change": "2026-06-14-module-overlay-rendering",
+				"change": "architecture-shared-usage-on-views",
 				"readOn": "2026-10-07"
 			},
 			"reachedOn": "API only: GET /api/views/{viewId}?include_deelnames_gebruik=true; org ArchiMate export from admin settings section ArchiMate Import/Export (Deelnames checkbox)",
@@ -6018,7 +6018,7 @@
 			"providerHow": "read-from-code",
 			"feature": "shared-usage-on-gemma-views",
 			"featureConfidence": "high",
-			"note": "The API separates shared usage from own usage and names the source organisation, but nothing in stackiq draws it; in the ArchiMate export shared applications get the same style as own ones, so they are not drawn differently.",
+			"note": "The API separates shared usage from own usage and names the source organisation, but nothing in stackiq draws it; in the ArchiMate export shared applications get the same style as own ones, so they are not drawn differently. The delivered change 2026-06-14-module-overlay-rendering wrote the requirement and the API half; architecture-shared-usage-on-views specifies the drawing half (the read-only GEMMA view page and the organisation export).",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/30355: cooperation packages: \"kies bij Organisaties welke gemeenten ... de betreffende applicatie gebruiken ... Het pakket verschijnt dan ook alleen op de lijst en kaart van de samenwerking en niet bij de gemeenten\" (read 2026-09-26). Drawing shared apart from own is not described. Reached on: Samenwerking > Pakketten > Organisaties.",
 				"stackiq": "lib/Service/ViewService.php:932-955 tags shared usage _type='deelnames' with _sourceOrganization, :1214 getDeelnamesGebruikData; lib/Service/ArchiMateExportService.php:3003 every nested application gets the same green fillColor, deelnames only get their own folder 'Deelnames (Stackiq)' (:3083); openspec/specs/module-overlay-rendering/spec.md:55-79 requires deelnames nodes to be styled differently, not implemented in stackiq",
@@ -6496,7 +6496,7 @@
 				"evidence": "lib/Settings/softwarecatalogus_register.json:3253 x-openregister-notifications contract-expiry still filters status equals 'Actief' (:3254) while the status enum is Active/Expired/In negotiation (:3428), and the subject still uses {{contractNummer}}/{{eindDatum}} (:3262) while the fields are contractNumber/endDate; src/manifest.json:566 'Expiring / expired' quick filter selects status Expired only; lib/BackgroundJob/ContractStatusJob.php:78 expires past-end-date contracts daily without any warning beforehand",
 				"owner": "ConductionNL/openregister",
 				"ownerNote": "reader wrote: ConductionNL/stackiq (declaration), dispatch by ConductionNL/openregister",
-				"change": "2026-06-14-contract-administration",
+				"change": "contracts-expiry-warning-fires",
 				"readOn": "2026-10-07"
 			},
 			"reachedOn": "nothing reaches it",
@@ -6504,7 +6504,7 @@
 			"providerHow": "read-from-code",
 			"feature": "notifications",
 			"featureConfidence": "high",
-			"note": "The only expiry warning is a declared OpenRegister notification whose filter value 'Actief' never matches the English status 'Active', so even if OpenRegister dispatches it, no contract qualifies. No page shows contracts that are about to expire.",
+			"note": "The only expiry warning is a declared OpenRegister notification whose filter value 'Actief' never matches the English status 'Active', so even if OpenRegister dispatches it, no contract qualifies. No page shows contracts that are about to expire. The delivered change 2026-06-14-contract-administration declared the rule; contracts-expiry-warning-fires specifies the fix (OpenRegister does dispatch scheduled rules and compares strictly, so the gap is stackiq's alone).",
 			"evidence": {
 				"vng-softwarecatalogus": "unknown: contracts are not described in the public docs; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/step-2-set-up-contract-lifecycle-automations: 'Prevent missed renewals through proactive notification workflows ... Enable timely decisions with escalation alerts before notice periods' (read 2026-09-26). Reached on: Administration > Automations (contract lifecycle).",
