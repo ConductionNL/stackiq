@@ -1,5 +1,7 @@
 # Tasks: Beta Cross-Surface Alignment — Stackiq
 
+> Archive pass 2026-10-07: code done (appinfo/info.xml licence EUPL-1.2, docs/FEATURES.md, docs/GOVERNMENT-FEATURES.md). Not archived: specs/beta-alignment/spec.md has no delta headers, and its licence scenario still requires "Codeberg" while GitHub is now the only host. Needs a decision: rewrite as ADDED Requirements without the Codeberg line, or archive with --skip-specs as a release-copy change that gives no user a capability.
+
 ## 1. Derive canonical feature vocabulary
 
 - [x] 1.1 Read `appinfo/info.xml`, `src/manifest.json` (menu/pages), `src/registry.js` for the user-visible feature/page list
