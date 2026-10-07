@@ -803,9 +803,10 @@
 			"stackiq": "yes",
 			"built": {
 				"state": "built",
-				"evidence": "src/manifest.json:3 setup wizard step load-demo-data (:24); lib/Controller/SetupController.php:202 runAction load-demo-data (AuthorizedAdminSetting); lib/Service/DemoDataService.php:202 install() imports lib/Settings/stackiq_mock_register.json (120 objects, 6 per schema) through OpenRegister ConfigurationService::importFromApp",
+				"evidence": "src/manifest.json:3 setup wizard step load-demo-data (:24); lib/Controller/SetupController.php:202 runAction load-demo-data (AuthorizedAdminSetting); lib/Service/DemoDataService.php:202 install() imports lib/Settings/stackiq_mock_register.json (133 objects) through OpenRegister ConfigurationService::importFromApp",
 				"owner": "ConductionNL/stackiq",
-				"spec": "none"
+				"spec": "openspec/specs/first-time-setup",
+				"readOn": "2026-10-07"
 			},
 			"reachedOn": "First-run setup wizard (admin), step 'Load example data'",
 			"provider": "stackiq",
@@ -895,7 +896,7 @@
 				"state": "built",
 				"evidence": "register.json:6869 module.cloudDienstverleningsmodel enum On-premises, IaaS, PaaS, SaaS; register.json:6906 hostingLocation and hostingJurisdiction; usage.cloudDienstverleningsmodel (register.json:3050); on ModuleDetail md-data include (src/manifest.json:500)",
 				"owner": "ConductionNL/stackiq",
-				"spec": "none"
+				"spec": "openspec/specs/application-hosting-model"
 			},
 			"reachedOn": "Modules /modules create/edit form; ModuleDetail data widget",
 			"provider": "stackiq",
@@ -3887,7 +3888,7 @@
 				"state": "built",
 				"evidence": "src/manifest.json:1021 Reports page (type reports) with one card, Portfolio rationalization, routing to src/manifest.json PortfolioReport /portfolio-report (PortfolioReportView, GET /api/portfolio-report routes.php:303).",
 				"owner": "ConductionNL/stackiq",
-				"spec": "none"
+				"spec": "openspec/specs/portfolio-rationalization-time"
 			},
 			"reachedOn": "Reports /reports (footer menu), one card to Portfolio rationalization /portfolio-report",
 			"provider": "stackiq",
