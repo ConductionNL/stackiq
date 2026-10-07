@@ -6010,7 +6010,7 @@
 				"state": "specified",
 				"evidence": "lib/Service/ViewService.php:932-955 tags shared usage _type='deelnames' with _sourceOrganization, :1214 getDeelnamesGebruikData; lib/Service/ArchiMateExportService.php:3003 every nested application gets the same green fillColor, deelnames only get their own folder 'Deelnames (Stackiq)' (:3083); openspec/specs/module-overlay-rendering/spec.md:55-79 requires deelnames nodes to be styled differently, not implemented in stackiq",
 				"owner": "ConductionNL/stackiq",
-				"change": "2026-06-14-module-overlay-rendering",
+				"change": "architecture-shared-usage-on-views",
 				"readOn": "2026-10-07"
 			},
 			"reachedOn": "API only: GET /api/views/{viewId}?include_deelnames_gebruik=true; org ArchiMate export from admin settings section ArchiMate Import/Export (Deelnames checkbox)",
@@ -6018,7 +6018,7 @@
 			"providerHow": "read-from-code",
 			"feature": "shared-usage-on-gemma-views",
 			"featureConfidence": "high",
-			"note": "The API separates shared usage from own usage and names the source organisation, but nothing in stackiq draws it; in the ArchiMate export shared applications get the same style as own ones, so they are not drawn differently.",
+			"note": "The API separates shared usage from own usage and names the source organisation, but nothing in stackiq draws it; in the ArchiMate export shared applications get the same style as own ones, so they are not drawn differently. The delivered change 2026-06-14-module-overlay-rendering wrote the requirement and the API half; architecture-shared-usage-on-views specifies the drawing half (the read-only GEMMA view page and the organisation export).",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/30355: cooperation packages: \"kies bij Organisaties welke gemeenten ... de betreffende applicatie gebruiken ... Het pakket verschijnt dan ook alleen op de lijst en kaart van de samenwerking en niet bij de gemeenten\" (read 2026-09-26). Drawing shared apart from own is not described. Reached on: Samenwerking > Pakketten > Organisaties.",
 				"stackiq": "lib/Service/ViewService.php:932-955 tags shared usage _type='deelnames' with _sourceOrganization, :1214 getDeelnamesGebruikData; lib/Service/ArchiMateExportService.php:3003 every nested application gets the same green fillColor, deelnames only get their own folder 'Deelnames (Stackiq)' (:3083); openspec/specs/module-overlay-rendering/spec.md:55-79 requires deelnames nodes to be styled differently, not implemented in stackiq",
