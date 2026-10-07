@@ -432,7 +432,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json:915 Moduleversies type:index (columns version, module, dateInUse, status) + :937 ModuleversieDetail; register.json:7649 moduleVersion schema with dateInUse (register.json:7746), dateInDevelopment, dateEndSupport, dateWithdrawn",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-06-14-softwarecatalog-manifest-v1"
 			},
 			"reachedOn": "Module versions /moduleversies (menu), Add + detail /moduleversies/:id; also ModuleDetail md-versions list (src/manifest.json:504, allowCreate false)",
 			"provider": "stackiq",
@@ -463,7 +464,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/dialogs/SuiteWizardDialog.vue:183 onSubmit saves a suite via objectStore.saveObject('suite') with applications[] (src/utils/suiteWizard.js:44 requires at least one); mounted by src/views/suites/SuitesIndexView.vue:46 on manifest page Suites (src/manifest.json:666)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-24-suite-wizard"
 			},
 			"reachedOn": "Suites /suites (menu), New suite wizard",
 			"provider": "stackiq",
@@ -494,7 +496,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json:647 Diensten page (FacetedCatalogIndexView, schema catalogService) with the CnIndexPage create form; register.json:1324 catalogService with provider (required), modules[] (register.json:1419) and type enum Functional/Application/Technical management, Implementation support, Training, Licence reseller (register.json:1459)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-23-gemma-faceted-search"
 			},
 			"reachedOn": "Services /diensten (menu), Add button",
 			"provider": "stackiq",
@@ -617,7 +620,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "Library CnIndexPage (@conduction/nextcloud-vue 2.55.1, package-lock) showMassImport default true (CnIndexPage.vue:1599) and self-mode handleMassImport (selfModeActions.js:168) POSTs to /apps/openregister/api/registers/{register}/import with the schema for CSV (selfModeIO.js:82); rendered on the Modules page's CnIndexPage (src/views/FacetedCatalogIndexView.vue:108)",
-				"owner": "ConductionNL/openregister"
+				"owner": "ConductionNL/openregister",
+				"spec": "none"
 			},
 			"reachedOn": "Modules /modules, Import in the index actions (also every type:index page)",
 			"provider": "openregister",
@@ -678,7 +682,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "Library CnIndexPage mass delete/copy/export (showMassDelete default true, CnIndexPage.vue:1617; selfModeActions.js:63 handleMassDelete) on index pages; stackiq's MassPublishObjects/MassLockObjects dialogs (src/dialogs/Dialogs.vue:8-14) are only opened from src/modals/object/ViewObject.vue:4865, and ViewObject is only mounted for modals 'viewOrganisatie'/'viewContactpersoon' (src/modals/Modals.vue:7,19) which nothing in src/ sets",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"spec": "none"
 			},
 			"reachedOn": "Any index page (e.g. Module versions /moduleversies): select rows, mass delete; publish and lock: nothing reaches them",
 			"provider": "stackiq",
@@ -799,7 +804,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json:3 setup wizard step load-demo-data (:24); lib/Controller/SetupController.php:202 runAction load-demo-data (AuthorizedAdminSetting); lib/Service/DemoDataService.php:202 install() imports lib/Settings/stackiq_mock_register.json (120 objects, 6 per schema) through OpenRegister ConfigurationService::importFromApp",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"spec": "none"
 			},
 			"reachedOn": "First-run setup wizard (admin), step 'Load example data'",
 			"provider": "stackiq",
@@ -828,7 +834,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/dialogs/SuiteWizardDialog.vue (3 steps) is the only wizard, opened from src/views/suites/SuitesIndexView.vue:46; applications, services and connections use the bare CnIndexPage form (FacetedCatalogIndexView.vue:108) or nothing",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-24-suite-wizard"
 			},
 			"reachedOn": "Suites /suites, New suite wizard only",
 			"provider": "stackiq",
@@ -857,7 +864,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/components/sbom/SbomComponentsPanel.vue lists sbomComponent rows (name/version/purl/licenses) as the ModuleversieDetail 'Components' sidebar tab (src/manifest.json:961); register.json:7920 sbomComponent schema",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-23-sbom-import"
 			},
 			"reachedOn": "ModuleversieDetail /moduleversies/:id, sidebar tab Components",
 			"provider": "stackiq",
@@ -886,7 +894,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "register.json:6869 module.cloudDienstverleningsmodel enum On-premises, IaaS, PaaS, SaaS; register.json:6906 hostingLocation and hostingJurisdiction; usage.cloudDienstverleningsmodel (register.json:3050); on ModuleDetail md-data include (src/manifest.json:500)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"spec": "none"
 			},
 			"reachedOn": "Modules /modules create/edit form; ModuleDetail data widget",
 			"provider": "stackiq",
@@ -1197,7 +1206,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "appinfo/routes.php:96 POST /api/archimate/import -> lib/Controller/SettingsController.php:1490 importArchiMate (isAdmin check :1496) -> lib/Service/ArchiMateImportService.php (5961 lines); UI src/views/settings/sections/ArchiMateImportExport.vue:32 file input + :791 importArchiMateFile",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-05-31-retrofit-2026-05-26-archimate-import"
 			},
 			"reachedOn": "admin settings section ArchiMate Import/Export (Nextcloud admin settings, stackiq section)",
 			"provider": "stackiq",
@@ -1228,7 +1238,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "appinfo/routes.php:97 POST /api/archimate/export -> lib/Controller/SettingsController.php:1615 exportArchiMate (admin or org-admin via verifyOrgExportPermission :1735) -> lib/Service/ArchiMateService.php:232 exportToArchiMate (docblock: organization filter 'currently not implemented'); UI ArchiMateImportExport.vue:591 'Export Base' button",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-05-31-retrofit-2026-05-26-archimate-export"
 			},
 			"reachedOn": "admin settings section ArchiMate Import/Export, button Export Base",
 			"provider": "stackiq",
@@ -1259,7 +1270,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "appinfo/routes.php:98 GET /api/archimate/export/organization/{organizationUuid} -> lib/Controller/SettingsController.php:1685 exportOrgArchiMate -> lib/Service/ArchiMateService.php:302 -> lib/Service/ArchiMateExportService.php:2734 copyAndEnrichViews nests the org's applications in GEMMA view copies; UI ArchiMateImportExport.vue:602 'Organization Export' with Modules/Deelnames/Gebruik checkboxes",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"spec": "openspec/specs/org-archimate-export"
 			},
 			"reachedOn": "admin settings section ArchiMate Import/Export, organisation select + Organization Export",
 			"provider": "stackiq",
@@ -1354,7 +1366,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json StandaardDetail /standaarden/:id st-data widget shows all element fields (documentation, gemmaNotes) of a standard; FacetedCatalogIndexView.vue:150 shows reference components by name only",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-06-14-softwarecatalog-manifest-v1"
 			},
 			"reachedOn": "Standaarden /standaarden and StandaardDetail /standaarden/:id for standards; no page for reference components or other GEMMA terms, and no in-place definition while working",
 			"provider": "stackiq",
@@ -1567,7 +1580,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json page Standaarden /standaarden (index on @resolve:amef_register schema element, filter gemmaType=standaard, columns name/gemmaThema/gemmaStatus/url) and StandaardDetail /standaarden/:id with compliance claims per standard; menu entry Standards (order 50)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-06-14-module-compliance-assessment"
 			},
 			"reachedOn": "Standaarden /standaarden, menu Standards; detail StandaardDetail /standaarden/:id",
 			"provider": "stackiq",
@@ -1598,7 +1612,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Settings/softwarecatalogus_register.json compliancy.evidence (file, pdf/jpeg/png/doc, 10 MB), compliancy.url, compliancy.evidenceReference; src/manifest.json KompliantieDetail cm-files widget type integration integrationId files 'Evidence documents'",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-06-14-module-compliance-assessment"
 			},
 			"reachedOn": "KompliantieDetail /komplianties/:id, Evidence documents widget; evidence URL/file fields on the compliance form",
 			"provider": "stackiq",
@@ -1629,7 +1644,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/utils/complianceMatrix.js:9-17 cell state verified = compliancy record with evidence (hasEvidence :107 checks evidence/evidenceReference/url), claimed = link without evidence; rendered by src/views/ComplianceMatrixView.vue",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-06-14-module-compliance-assessment"
 			},
 			"reachedOn": "ComplianceMatrix /compliance-matrix (menu Reports & Compliance > Compliance matrix)",
 			"provider": "stackiq",
@@ -1660,7 +1676,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json ComplianceMatrix /compliance-matrix custom page -> src/customComponents.js ComplianceMatrixView -> src/views/ComplianceMatrixView.vue (modules x selected standard versions or BIO measures, src/utils/complianceMatrix.js:270 columns)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-06-14-module-compliance-assessment"
 			},
 			"reachedOn": "ComplianceMatrix /compliance-matrix, menu Reports & Compliance > Compliance matrix",
 			"provider": "stackiq",
@@ -1691,7 +1708,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "appinfo/routes.php:275 POST /api/bulk-sync-standards -> lib/Controller/SettingsController.php:3598 (isAdmin check) -> lib/Service/ModuleComplianceService.php:527 bulkSyncModuleStandards (reads up to 1000 compliancy records and updates module standards); UI src/views/settings/sections/StatisticsOverview.vue:79 button -> src/modals/BulkSyncDialog.vue:321",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-06-14-module-compliance-assessment"
 			},
 			"reachedOn": "admin settings, Statistics overview section, bulk sync button",
 			"provider": "stackiq",
@@ -1722,7 +1740,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json BioMaatregelen /bio-maatregelen index (columns code,name,thema,bioVersion,bbnNiveau) and BioMaatregelDetail; register property is bbnLevel (lib/Settings/softwarecatalogus_register.json bioMeasure), so the bbnNiveau column is empty; no BIO catalogue is seeded (only 6 demo objects in lib/Settings/stackiq_mock_register.json)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-23-bio-compliance-assessment"
 			},
 			"reachedOn": "BioMaatregelen /bio-maatregelen, menu BIO measures; detail BioMaatregelDetail /bio-maatregelen/:id",
 			"provider": "stackiq",
@@ -1753,7 +1772,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Settings/softwarecatalogus_register.json compliancy.bioMeasure links a module to a BIO measure; src/manifest.json ModuleDetail md-compliance lists claims incl. bioMaatregel column, BioMaatregelDetail bm-compliance lists modules per measure; compliancy has no status/met-not-met field",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-23-bio-compliance-assessment"
 			},
 			"reachedOn": "Komplianties /komplianties (create a claim with a BIO measure); ComplianceMatrix /compliance-matrix with BIO measures as columns",
 			"provider": "stackiq",
@@ -1784,7 +1804,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Settings/softwarecatalogus_register.json module.dpiaStatus (enum not required/required/executed), dpiaDate, dpiaNextAssessment, dpiaDocumentRef; src/manifest.json ModuleDetail md-data includes the DPIA fields; Modules /modules quick filter 'Without DPIA (BBN2+)'",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-23-bio-compliance-assessment"
 			},
 			"reachedOn": "ModuleDetail /modules/:id Application data widget; Modules /modules column dpiaStatus and 'Without DPIA' quick filter",
 			"provider": "stackiq",
@@ -1903,7 +1924,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json:592 Modules and :647 Diensten are FacetedCatalogIndexView over schema module/catalogService (CnIndexPage, showAdd default true); lib/Settings/softwarecatalogus_register.json:6779 module has provider + publicationDate (visible on form) and public read when publicationDate <= now or registeredBy Supplier",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-06-14-open-data-publishing"
 			},
 			"reachedOn": "Applications /modules and Services /diensten (main menu), create via the index Add form",
 			"provider": "stackiq",
@@ -1934,7 +1956,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/FacetService.php:109 DIMENSIONS referenceComponent, standard, applicationService, domain for schemas module and catalogService (:102); src/views/FacetedCatalogIndexView.vue:108 CnFacetSidebar narrows CnIndexPage; route GET /api/facets/{schema} called from src/services/facets.js Corrections round 8 (2026-09-28), stackiq#1141: the fourth dimension, domain, is always empty because lib/Service/FacetService.php:704 reads domain while GEMMA elements carry domein (lib/Settings/softwarecatalogus_register.json:4642), at d22033a.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-23-gemma-faceted-search"
 			},
 			"reachedOn": "Applications /modules and Services /diensten, GEMMA facet sidebar",
 			"provider": "stackiq",
@@ -1965,7 +1988,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json:386 Organisaties type:index over schema organization with status filter and OrganisatieCard; register :2022 organization.type is facetable (Municipality/Supplier/Collaboration/Community); public read of Active suppliers in organization authorization (:2467)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-05-31-retrofit-2026-05-26-fe-organizations"
 			},
 			"reachedOn": "Organisations /organisaties (main menu)",
 			"provider": "stackiq",
@@ -2055,7 +2079,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json:514 ModuleDetail bodyWidget ReviewsPanel; src/components/reviews/ReviewsPanel.vue:63 opens SubmitReviewModal; POST /api/reviews -> lib/Service/ReviewService.php:232 stamps author and forces status pending; rating 1..10 in software-review schema (:3961)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-24-catalog-ratings"
 			},
 			"reachedOn": "ModuleDetail /modules/:id, Reviews panel 'write a review'",
 			"provider": "stackiq",
@@ -2086,7 +2111,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/ReviewAggregateService.php:51 approved-only average + count; GET /api/reviews/aggregate (PublicPage) called from src/utils/reviewAggregate.js imported by src/components/reviews/ReviewsPanel.vue",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-24-catalog-ratings"
 			},
 			"reachedOn": "ModuleDetail /modules/:id, Reviews panel",
 			"provider": "stackiq",
@@ -2147,7 +2173,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "register :2022 organization (one record, type Supplier); module.provider (:6921) and catalogService.provider (:3762) are $ref organization; catalogContract points at service (+usage), register :3252; OrganisatieDetail src/manifest.json:403 lists the supplier's services and applications",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-07-vendor-product-master-data"
 			},
 			"reachedOn": "Organisations /organisaties and OrganisatieDetail /organisaties/:id (services and applications lists)",
 			"provider": "stackiq",
@@ -2176,7 +2203,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json LifecycleRoadmap /portfolio-roadmap custom page -> src/views/LifecycleRoadmapView.vue:55 groups the selected organisation's usages by phase, derived from usage dates by src/utils/lifecyclePhase.js derivePhase (:408); usage.status enum Acquisition/Planned/In production/To be phased out/Phased out in lib/Settings/softwarecatalogus_register.json",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-06-14-application-lifecycle-tracking"
 			},
 			"reachedOn": "LifecycleRoadmap /portfolio-roadmap, menu Portfolio roadmap",
 			"provider": "stackiq",
@@ -2207,7 +2235,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/views/LifecycleRoadmapView.vue:28 organisation select, :55 phase groups, :96-110 phase-out date, planned replacement and link to the replacing module (:400 plannedReplacement, :423 plannedReplacementDate), ordered by nearest urgency (:428)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-06-14-application-lifecycle-tracking"
 			},
 			"reachedOn": "LifecycleRoadmap /portfolio-roadmap, menu Portfolio roadmap",
 			"provider": "stackiq",
@@ -2486,7 +2515,8 @@
 				"state": "built",
 				"evidence": "src/components/contracts/ContractApprovalPanel.vue:183 canSubmitRenewal for status Expired; POST /api/contracts/{uuid}/approval/renewal -> ContractApprovalService.php:254 with decisionType contract-renewal; lib/EventListener/DecisionConcludedListener.php projects the outcome (approvalState, status Active) via DECISION_CONCLUDED_EVENTS registered in lib/AppInfo/Application.php:830",
 				"owner": "ConductionNL/decidiq",
-				"ownerNote": "reader wrote: ConductionNL/stackiq + ConductionNL/decidiq"
+				"ownerNote": "reader wrote: ConductionNL/stackiq + ConductionNL/decidiq",
+				"change": "2026-06-15-softwarecatalog-delegation-via-events"
 			},
 			"reachedOn": "ContractDetail /contracten/:id, Approval panel 'Submit renewal' and approval state",
 			"provider": "decidiq",
@@ -2549,7 +2579,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/PortfolioReportDerivation.php:163 annualisedCost (Monthly x12, Annually x1, One-off separate); lib/Service/PortfolioReportService.php:337 sumContractCost per quadrant; src/views/organisaties/PortfolioReport.vue:167 and :248 show annualised cost; src/utils/contractCost.js:111 totalAnnualisedCost used by src/views/LicensePostureView.vue per vendor",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-06-14-contract-administration"
 			},
 			"reachedOn": "Reports /reports -> Portfolio rationalization /portfolio-report; License posture /license-posture per-vendor rollup",
 			"provider": "stackiq",
@@ -2612,7 +2643,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/views/LicensePostureView.vue:11 open-source vs closed-source share weighted by in-production usage, :64 per-vendor rollup, per-organisation open-source-first report; derived in src/utils/licensePosture.js",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-07-software-license-posture"
 			},
 			"reachedOn": "License posture /license-posture (main menu)",
 			"provider": "stackiq",
@@ -2761,7 +2793,8 @@
 				"state": "built",
 				"evidence": "src/manifest.json:567 ContractDetail ct-files integration 'files' (Documents panel); catalogContract.documentReference text field (register :3252)",
 				"owner": "ConductionNL/openregister",
-				"ownerNote": "reader wrote: ConductionNL/stackiq (page), files via ConductionNL/openregister + Nextcloud Files"
+				"ownerNote": "reader wrote: ConductionNL/stackiq (page), files via ConductionNL/openregister + Nextcloud Files",
+				"change": "2026-06-14-contract-administration"
 			},
 			"reachedOn": "ContractDetail /contracten/:id, Documents panel",
 			"provider": "openregister",
@@ -2792,7 +2825,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "usage.cloudDienstverleningsmodel (register :3050) plus contract cost; lib/Service/PortfolioReportService.php:302 per-usage annualised cost and cloud-transition share; src/views/organisaties/PortfolioReport.vue:166 cloudTransitionLabel per row",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-23-portfolio-rationalization-time"
 			},
 			"reachedOn": "Reports /reports -> Portfolio rationalization /portfolio-report",
 			"provider": "stackiq",
@@ -2821,7 +2855,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/views/KwetsbaarhedenView.vue:378 reportVulnerability opens the generic ObjectModal for 'vulnerability'; register.json:1619 vulnerability schema with cveCode (pattern CVE-yyyy-n, :1679) and cvssScore 0-10",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-07-module-vulnerability-tracking"
 			},
 			"reachedOn": "Vulnerabilities /kwetsbaarheden (menu), Report vulnerability",
 			"provider": "stackiq",
@@ -2850,7 +2885,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "register.json:1701 vulnerability.modules links to module (applications), not moduleVersion; version level only via read-time SBOM match (src/utils/sbomVulnerabilityMatch.js, sbomComponent.vexCveIds register.json:8024) on the ModuleversieDetail Components tab",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-23-sbom-import"
 			},
 			"reachedOn": "Vulnerabilities /kwetsbaarheden form (Affected applications); ModuleversieDetail Components tab shows matches",
 			"provider": "stackiq",
@@ -2879,7 +2915,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/components/sbom/SbomComponentsPanel.vue:53-90 upload control (.json) -> POST /api/moduleversies/{uuid}/sbom (appinfo/routes.php:92) -> lib/Controller/SbomController.php:129 importSbom -> lib/Service/SbomParserService.php:77 parse (CycloneDX JSON) and :127 parseSpdx (SPDX 2.x JSON)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-23-sbom-import"
 			},
 			"reachedOn": "ModuleversieDetail /moduleversies/:id, sidebar tab Components, upload",
 			"provider": "stackiq",
@@ -2995,7 +3032,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json:969 Kwetsbaarheden custom page -> src/views/KwetsbaarhedenView.vue table with severity tabs; row click openDetail (:417) opens the record in the generic ObjectModal",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-07-module-vulnerability-tracking"
 			},
 			"reachedOn": "Vulnerabilities /kwetsbaarheden (menu)",
 			"provider": "stackiq",
@@ -3024,7 +3062,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json:386 Organisaties type:index over schema organization (Add form); register :2022 organization.type enum Municipality/Supplier/Collaboration/Community, required contactsUid + type",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-05-31-retrofit-2026-05-26-fe-organizations"
 			},
 			"reachedOn": "Organisations /organisaties (main menu), Add form; walkthrough step create-organisatie",
 			"provider": "stackiq",
@@ -3053,7 +3092,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/views/settings/StackiqSettings.vue:92 ModerationQueue (type organisation) -> src/utils/adminApi.js -> GET /api/moderation/pending, POST /api/moderation/{uuid}/approve|reject; lib/Controller/ModerationController.php:81 AuthorizedAdminSetting; lib/Service/ModerationService.php:230 approval sets registrationStatus active and stamps publicationDate (:173)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-06-14-open-data-publishing"
 			},
 			"reachedOn": "admin settings section 'Registration moderation' (Nextcloud admin settings, stackiq)",
 			"provider": "stackiq",
@@ -3113,7 +3153,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json:418 OrganisatieDetail org-contactpersonen object-list (role, roles) with rowRoute ContactpersoonDetail; register :1788 contactPerson (contactsUid, role, organization, roles enum of catalogue roles)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-05-31-retrofit-2026-05-26-fe-organizations"
 			},
 			"reachedOn": "OrganisatieDetail /organisaties/:id 'Contact persons' list -> ContactpersoonDetail /contactpersonen/:id",
 			"provider": "stackiq",
@@ -3143,7 +3184,8 @@
 				"state": "built",
 				"evidence": "src/components/organisations/OrganisationSwitcher.vue:48 'Manage members' (isBeheerder) opens src/modals/GrantOrganisationAccessModal.vue; POST /api/organisations/{uuid}/members -> lib/Controller/OrganisationMembersController.php:108 authorizeBeheerder then OpenRegister joinOrganisation (:123)",
 				"owner": "ConductionNL/openregister",
-				"ownerNote": "reader wrote: ConductionNL/stackiq + ConductionNL/openregister"
+				"ownerNote": "reader wrote: ConductionNL/stackiq + ConductionNL/openregister",
+				"change": "2026-07-24-multi-org-membership"
 			},
 			"reachedOn": "App header OrganisationSwitcher (src/App.vue:55) -> Manage members",
 			"provider": "openregister",
@@ -3173,7 +3215,8 @@
 				"state": "built",
 				"evidence": "src/components/organisations/OrganisationSwitcher.vue:197 POST /apps/openregister/api/organisations/{uuid}/set-active; mounted in src/App.vue:55",
 				"owner": "ConductionNL/openregister",
-				"ownerNote": "reader wrote: ConductionNL/stackiq + ConductionNL/openregister"
+				"ownerNote": "reader wrote: ConductionNL/stackiq + ConductionNL/openregister",
+				"change": "2026-07-24-multi-org-membership"
 			},
 			"reachedOn": "App header OrganisationSwitcher on every page",
 			"provider": "openregister",
@@ -3202,7 +3245,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json:430 OrganisationMergePanel on OrganisatieDetail; POST /api/organisaties/{uuid}/merge -> lib/Controller/MergeController.php:142 isAdmin; lib/Service/MergeOrganisatieService.php:111 re-points usage.consumer/participants, contactPerson.organization, connection.provider and @self.organisation of catalogContract/compliancy; module.provider and catalogService.provider are not re-pointed Corrections round 8 (2026-09-28), stackiq#1086 (comment of 2026-09-27): four more organisation references stay on the source, usage.provider (lib/Settings/softwarecatalogus_register.json:2693), organization.deelnames (:2200), organization.participants (:2236) and model.organizations (:6027), none of which is in lib/Service/MergeOrganisatieService.php:111 or :122, at d22033a.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-23-organisation-merge"
 			},
 			"reachedOn": "OrganisatieDetail /organisaties/:id, merge panel (admin only)",
 			"provider": "stackiq",
@@ -3231,7 +3275,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/components/organisations/OrganisationMergePanel.vue:324 organisatieStore.dryRunMerge shows dryRunCounts before execute; POST /api/organisaties/{uuid}/merge/dry-run -> lib/Service/MergeOrganisatieService.php:160 dryRun Corrections round 8 (2026-09-28), stackiq#1086: the dry run walks the same relation lists as the merge (lib/Service/MergeOrganisatieService.php:172 walkRelations with commit false, the merge at :256 with commit true), so the six references the merge leaves behind are not shown either, at d22033a.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-23-organisation-merge"
 			},
 			"reachedOn": "OrganisatieDetail /organisaties/:id, merge panel (admin only)",
 			"provider": "stackiq",
@@ -3377,7 +3422,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/SymfonyEmailService.php:466 registration, :553 activation, :641 user creation mails from templates; src/views/settings/sections/EmailConfiguration.vue:902 saveTemplate is a stub that logs 'not yet implemented in the backend' and still shows success; backend POST /api/email/templates/{templateName} (lib/Controller/SettingsController.php:2194) has no caller in src/; lib/Settings/connections.json email adapter reports the 'null' transport as simulated",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-06-14-retrofit-2026-05-26-email-delivery"
 			},
 			"reachedOn": "admin settings section 'Email configuration', Templates tab (save does not persist)",
 			"provider": "stackiq",
@@ -3406,7 +3452,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Controller/PublicationController.php:87 publish/depublish (routes.php:208-209, PUT/DELETE /api/publication/{objectType}/{uuid}) with an IDOR guard; lib/Service/PublicationService.php:51 publishable types catalogService, module, connection, organization. No src/ caller of /api/publication (only a comment in src/utils/openDataProjection.js). The publish buttons in src/modals/object/ViewObject.vue:4854 are unreachable: Modals.vue renders ViewObject only for modal 'viewOrganisatie'/'viewContactpersoon', which nothing sets. Workaround: publicationDate/depublicationDate are visible, editable fields on module/catalogService/organization/connection (lib/Settings/softwarecatalogus_register.json:6777 schema).",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-06-14-open-data-publishing"
 			},
 			"reachedOn": "API only for the publish action: PUT /api/publication/{objectType}/{uuid}/publish, no stackiq page calls it; a user can only set the publicationDate field by hand in the edit form on Applications /modules or Services /diensten",
 			"provider": "stackiq",
@@ -3468,7 +3515,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Federation/FederationService.php:215 announce() calls OpenCatalogi BroadcastService->broadcast(directory URL); only caller is lib/BackgroundJob/FederationSyncJob.php:73. Off by default: lib/Service/Federation/FederationConfig.php:56 federation_enabled=false; lib/Settings/connections.json lists federation as switch-only via occ. isAvailable() is class_exists('OCA\\\\OpenCatalogi\\\\Service\\\\DirectoryService') (FederationService.php:95).",
-				"owner": "ConductionNL/opencatalogi"
+				"owner": "ConductionNL/opencatalogi",
+				"change": "2026-06-14-federated-catalog-sync"
 			},
 			"reachedOn": "admin settings section Catalog federation shows status only; announce runs only from the background job after an admin sets federation_enabled with occ",
 			"provider": "opencatalogi",
@@ -3499,7 +3547,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Service/Federation/FederationService.php:434 fetchPeerCatalog() calls OpenCatalogi DirectoryService->getDirectory(['url' => $peerUrl]); OpenCatalogi's getDirectory (opencatalogi lib/Service/DirectoryService.php:2409, also on origin/development) reads only filters/limit/offset/include-federated and ignores 'url', so it returns this instance's own directory listings, not the peer's published entries. Provenance marking itself is built: lib/Service/Federation/FederationMerger.php:239 stamps _source.instance. Mirrors are written into the organization schema (FederationService.php:56 PEER_MIRROR_TYPE). No src/ code reads _source, so no page shows where an entry came from.",
-				"owner": "ConductionNL/opencatalogi"
+				"owner": "ConductionNL/opencatalogi",
+				"change": "2026-06-14-federated-catalog-sync"
 			},
 			"reachedOn": "admin settings section Catalog federation, Pull now button (src/views/settings/sections/FederationSettings.vue:332)",
 			"provider": "opencatalogi",
@@ -3530,7 +3579,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Controller/FederationController.php:86 addPeer / removePeer (routes.php:246-247), #[AuthorizedAdminSetting(StackiqAdmin)]; lib/Service/Federation/FederationService.php:157/191 with an SSRF host guard; UI src/views/settings/sections/FederationSettings.vue:283 (POST) and :307 (DELETE), mounted from src/views/settings/StackiqSettings.vue:114.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-06-14-federated-catalog-sync"
 			},
 			"reachedOn": "admin settings section Catalog federation (Nextcloud admin settings > Stackiq)",
 			"provider": "stackiq",
@@ -3561,7 +3611,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "Every catalogue entity is an OpenRegister object (src/manifest.json pages read register @resolve:voorzieningen_register), so OpenRegister's /apps/openregister/api/objects/{register}/{schema} CRUD applies, gated by the schema authorization rules (lib/Settings/softwarecatalogus_register.json:6777 module and others). Stackiq adds its own routed endpoints in appinfo/routes.php (e.g. :202 /api/aanbod, :255-261 /api/aangeboden-gebruik, :298 /api/gebruik, :303 /api/portfolio-report).",
-				"owner": "ConductionNL/openregister"
+				"owner": "ConductionNL/openregister",
+				"spec": "none"
 			},
 			"reachedOn": "API: /apps/openregister/api/objects plus stackiq /api/*; the stackiq pages themselves use the same API",
 			"provider": "openregister",
@@ -3683,7 +3734,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "appinfo/info.xml: a Nextcloud app (id stackiq, EUPL-1.2) installed on the customer's own Nextcloud with OpenRegister; stackiq-compose.yaml at repo root for a local stack.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"spec": "none"
 			},
 			"reachedOn": "the whole app runs on the customer's own Nextcloud",
 			"provider": "nextcloud",
@@ -3744,7 +3796,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/views/FacetedCatalogIndexView.vue:68 Saved views menu (save current filters, list, apply); src/store/modules/facets.js:404 saveCurrentAsView POSTs to OpenRegister /apps/openregister/api/views (:61), fetchSavedViews :361 reads them back.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-23-gemma-faceted-search"
 			},
 			"reachedOn": "Applications /modules and Services /diensten, Saved views menu",
 			"provider": "stackiq",
@@ -3773,7 +3826,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json:72 Dashboard page with stat widgets kpi-organisations, kpi-modules, kpi-services, kpi-contracts (source metric count on organization/module/catalogService/catalogContract) plus catalog-panels.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-05-31-retrofit-2026-05-26-fe-shell-navigation"
 			},
 			"reachedOn": "Dashboard / (first menu entry)",
 			"provider": "stackiq",
@@ -3802,7 +3856,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Dashboard/ConceptOrganisatiesWidget.php registered at lib/AppInfo/Application.php:760; src/views/widgets/ConceptOrganisatiesWidget.vue:100 filters organisations on status === 'concept', but the status enum is Draft/Active/Inactive/merged (lib/Settings/softwarecatalogus_register.json:2321) after lib/Repair/RenameDutchCatalogValues.php:76 renamed 'Concept' to 'Draft'. Accept writes status 'actief' (:129), which is not in the enum either.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-05-31-retrofit-2026-05-24-concept-organizations-widget"
 			},
 			"reachedOn": "Nextcloud dashboard widget 'Concept organisaties'",
 			"provider": "stackiq",
@@ -3831,7 +3886,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json:1021 Reports page (type reports) with one card, Portfolio rationalization, routing to src/manifest.json PortfolioReport /portfolio-report (PortfolioReportView, GET /api/portfolio-report routes.php:303).",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"spec": "none"
 			},
 			"reachedOn": "Reports /reports (footer menu), one card to Portfolio rationalization /portfolio-report",
 			"provider": "stackiq",
@@ -3953,7 +4009,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/views/LicensePostureView.vue:84 per-vendor rollup with annual cost from contracts (src/utils/licensePosture.js perVendorRollup); src/views/organisaties/PortfolioReport.vue:143 annualised and one-off cost per TIME quadrant for one selected organisation (lib/Service/PortfolioReportService.php via GET /api/portfolio-report).",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-07-software-license-posture"
 			},
 			"reachedOn": "License posture /license-posture (per vendor); Portfolio rationalization /portfolio-report (per selected organisation)",
 			"provider": "stackiq",
@@ -3984,7 +4041,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json:1048 FeaturesRoadmap page (type roadmap, line 1050), footer menu entry FeaturesRoadmapMenu; content from openspec/features.overlay.json statuses stable/beta/soon.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"spec": "none"
 			},
 			"reachedOn": "Features & roadmap /features-roadmap (footer menu)",
 			"provider": "stackiq",
@@ -4549,7 +4607,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "lib/Settings/softwarecatalogus_register.json:7287 module.verwerkingsregisterRef (a URL or identifier; the register itself is not modelled); shown in the ModuleDetail data widget, src/manifest.json:500 include list",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-07-23-bio-compliance-assessment"
 			},
 			"reachedOn": "ModuleDetail /modules/:id Application data widget (reached from OrganisatieDetail, see land-detail-page)",
 			"provider": "stackiq",
@@ -5281,7 +5340,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "stackiq styles use Nextcloud's theming variables (src/views/KwetsbaarhedenView.vue:478 var(--color-primary-element)), so the colours and logo an admin sets in Nextcloud theming apply to stackiq pages",
-				"owner": "nextcloud/server"
+				"owner": "nextcloud/server",
+				"spec": "none"
 			},
 			"reachedOn": "every stackiq page, through Nextcloud theming",
 			"provider": "nextcloud",
@@ -5529,7 +5589,8 @@
 			"built": {
 				"state": "built",
 				"evidence": "src/manifest.json:1057 Flows page (entitySource flows, app stackiq) and FlowDetail canvas over OpenRegister's flow store; openregister lib/Service/Flow/Nodes/TriggerObjectNode.php:82 object.updated trigger per register and schema; lib/Service/Flow/Nodes/FilterNode.php:10 and :186 per-item condition (for example the status); integriq lib/Flow/SourceCallNode.php (development) calls the outside source.",
-				"owner": "ConductionNL/openregister"
+				"owner": "ConductionNL/openregister",
+				"spec": "none"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "openregister",
