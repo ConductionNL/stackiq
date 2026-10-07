@@ -6496,7 +6496,7 @@
 				"evidence": "lib/Settings/softwarecatalogus_register.json:3253 x-openregister-notifications contract-expiry still filters status equals 'Actief' (:3254) while the status enum is Active/Expired/In negotiation (:3428), and the subject still uses {{contractNummer}}/{{eindDatum}} (:3262) while the fields are contractNumber/endDate; src/manifest.json:566 'Expiring / expired' quick filter selects status Expired only; lib/BackgroundJob/ContractStatusJob.php:78 expires past-end-date contracts daily without any warning beforehand",
 				"owner": "ConductionNL/openregister",
 				"ownerNote": "reader wrote: ConductionNL/stackiq (declaration), dispatch by ConductionNL/openregister",
-				"change": "2026-06-14-contract-administration",
+				"change": "contracts-expiry-warning-fires",
 				"readOn": "2026-10-07"
 			},
 			"reachedOn": "nothing reaches it",
@@ -6504,7 +6504,7 @@
 			"providerHow": "read-from-code",
 			"feature": "notifications",
 			"featureConfidence": "high",
-			"note": "The only expiry warning is a declared OpenRegister notification whose filter value 'Actief' never matches the English status 'Active', so even if OpenRegister dispatches it, no contract qualifies. No page shows contracts that are about to expire.",
+			"note": "The only expiry warning is a declared OpenRegister notification whose filter value 'Actief' never matches the English status 'Active', so even if OpenRegister dispatches it, no contract qualifies. No page shows contracts that are about to expire. The delivered change 2026-06-14-contract-administration declared the rule; contracts-expiry-warning-fires specifies the fix (OpenRegister does dispatch scheduled rules and compares strictly, so the gap is stackiq's alone).",
 			"evidence": {
 				"vng-softwarecatalogus": "unknown: contracts are not described in the public docs; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/step-2-set-up-contract-lifecycle-automations: 'Prevent missed renewals through proactive notification workflows ... Enable timely decisions with escalation alerts before notice periods' (read 2026-09-26). Reached on: Administration > Automations (contract lifecycle).",
