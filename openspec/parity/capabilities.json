@@ -5069,7 +5069,7 @@
 				"state": "specified",
 				"evidence": "stackiq has no AI or MCP integration of its own (see share-ai-assistant); the History tab (widget type audit, src/manifest.json:436) shows every change per object but does not single out actions an assistant took",
 				"owner": "ConductionNL/stackiq",
-				"change": "mcp-full-action-surface"
+				"change": "insight-assistant-answers-and-action-trail"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -5083,7 +5083,7 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; the MCP server is read only (https://help.bluedolphin.io/en/articles/15602927-add-bluedolphin-mcp-server-to-an-ai-assistant) and AI credit usage is reported, but a log of AI actions on records is not documented (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: there is no AI assistant in core (grep -rliw 'llm\\|mcp' over src/ returns nothing); the history log (src/Log.php:48) records changes per user or API client, without any AI actor."
 			},
-			"note": "Mined from topdesk (roadmap) on 2026-09-26. Specified in open change openspec/changes/mcp-full-action-surface (OpenSpec pass 2026-09-27).",
+			"note": "Mined from topdesk (roadmap) on 2026-09-26. The 27 Sep link to mcp-full-action-surface covered only the tool side; stackiq's own screen is specified in open change openspec/changes/insight-assistant-answers-and-action-trail (spec round 2026-10-07), which depends on mcp-full-action-surface.",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
@@ -5467,7 +5467,7 @@
 				"state": "specified",
 				"evidence": "no assistant in stackiq lib/ or src/ (see share-ai-assistant, where only OpenRegister's generic MCP endpoint exists outside the app)",
 				"owner": "ConductionNL/stackiq",
-				"change": "stackiq-mcp-adoption"
+				"change": "insight-assistant-answers-and-action-trail"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -5481,7 +5481,7 @@
 				"glpi": "source read at 11.0.9: grep -rli 'openai\\|llm\\|artificial intelligence' over src/ returns nothing; search is criteria based only (src/Glpi/Search/Input/QueryBuilder.php:72).",
 				"topdesk": "https://docs.topdesk.com/en/td-robin-for-operators.html: \"Chat: Ask TOPdesk Robin a question. TOPdesk Robin searches your organization's knowledge base for an answer\" (read 2026-09-26); https://docs.topdesk.com/en/ai-answer-assistant.html: \"The Knowledge Base is the only source for the AI\" (read 2026-09-26). Answers cite knowledge items, not asset or landscape entries. Reached on: Call card > TOPdesk Robin panel."
 			},
-			"note": "Mined from sap-leanix (changelog) on 2026-09-26. Also mined from bluedolphin (changelog, https://bluedolphin.io/product-news/). Specified in open change openspec/changes/stackiq-mcp-adoption (OpenSpec pass 2026-09-27).",
+			"note": "Mined from sap-leanix (changelog) on 2026-09-26. Also mined from bluedolphin (changelog, https://bluedolphin.io/product-news/). The 27 Sep link to stackiq-mcp-adoption covered only the tool side; stackiq's own screen is specified in open change openspec/changes/insight-assistant-answers-and-action-trail (spec round 2026-10-07), which depends on mcp-full-action-surface.",
 			"bluedolphin": "yes",
 			"vng-softwarecatalogus": "unknown",
 			"glpi": "no",
