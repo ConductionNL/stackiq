@@ -5672,6 +5672,24 @@
 			"topdesk": "unknown"
 		},
 		{
+			"id": "land-cmdb-import",
+			"area": "landscape",
+			"name": "Import a municipality's application list from a TOPdesk CMDB export, and import a newer export again without duplicates.",
+			"vng-softwarecatalogus": "unchecked",
+			"sap-leanix": "unchecked",
+			"bluedolphin": "unchecked",
+			"glpi": "unchecked",
+			"topdesk": "unchecked",
+			"stackiq": "yes",
+			"built": {
+				"state": "built",
+				"evidence": "POST /api/cmdb-import and /api/cmdb-import/{operationId}/cancel (appinfo/routes.php:110-111, Nextcloud admins only); main spec openspec/specs/cmdb-export-import (15 requirements: xlsx upload, one consuming municipality, APPID match on re-import, supplier organisations, usages, owner contact persons, progress and cancel, admin settings section)",
+				"owner": "ConductionNL/stackiq",
+				"change": "2026-10-05-cmdb-export-import"
+			},
+			"source": "spec-round-2026-10-07"
+		},
+		{
 			"id": "arch-process-step-fields",
 			"area": "architecture",
 			"name": "Record structured fields on individual process steps, such as risk level or a compliance check.",
