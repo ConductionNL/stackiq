@@ -1,6 +1,6 @@
 # Tasks: Beta Cross-Surface Alignment — Stackiq
 
-> Archive pass 2026-10-07: code done (appinfo/info.xml licence EUPL-1.2, docs/FEATURES.md, docs/GOVERNMENT-FEATURES.md). Not archived: specs/beta-alignment/spec.md has no delta headers, and its licence scenario still requires "Codeberg" while GitHub is now the only host. Needs a decision: rewrite as ADDED Requirements without the Codeberg line, or archive with --skip-specs as a release-copy change that gives no user a capability.
+> Delta fix-up 2026-10-07: the spec is now ADDED Requirements, and the licence scenario names GitHub, the only host. `docs/GOVERNMENT-FEATURES.md` row T-02 now reads "EUPL-1.2, GitHub".
 
 ## 1. Derive canonical feature vocabulary
 
@@ -30,7 +30,7 @@
 ## 4. Reconcile docs
 
 - [x] 4.1 `docs/FEATURES.md`: add Contract Administration, Standards/Compliance Matrix/ArchiMate, Application Lifecycle & Portfolio Roadmap, Reviews, Open Data Publishing & Moderated Self-Registration; reword Federated Synchronization to name OpenCatalogi
-- [x] 4.2 `docs/GOVERNMENT-FEATURES.md`: fix license (AGPL→EUPL-1.2) and open-source attribution (GitHub→Codeberg)
+- [x] 4.2 `docs/GOVERNMENT-FEATURES.md`: fix license (AGPL→EUPL-1.2); open-source row names GitHub
 - [x] 4.3 Read `docs/GOVERNMENT-FEATURES.md` F-06/F-08 in full; leave as-is, flag the possible staleness in the proposal (deferred, needs maintainer confirmation against `PublicationService`'s live `publicatiedatum` implementation)
 
 ## 5. Icon check
@@ -40,4 +40,4 @@
 ## 6. Deliverable
 
 - [x] 6.1 Write this openspec change (proposal.md, tasks.md, specs/beta-alignment/spec.md, `.openspec.yaml`)
-- [x] 6.2 No push/PR — local edits only per repo convention (VNG client repo)
+- [x] 6.2 Ship through a PR on GitHub
