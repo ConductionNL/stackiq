@@ -1,18 +1,13 @@
----
-status: proposed
----
-
-# Stackiq Beta Cross-Surface Alignment
+# beta-alignment Specification
 
 ## Purpose
-
-Stackiq's code metadata (`appinfo/info.xml`), product page (conduction.nl), and docs (stackiq.conduction.nl) SHALL describe the same, code-verified feature set and licence, so the app is beta-release-ready.
+Stackiq's code metadata (`appinfo/info.xml`), its product page on conduction.nl and its docs describe the same feature set and the same licence, checked against the code. A reader who compares them never finds a feature, an integration or a licence on one surface that the others or the code contradict.
 
 ## Requirements
 
-### Requirement: License Consistency
+### Requirement: Licence consistency
 
-The app SHALL declare EUPL-1.2 as its license consistently across `appinfo/info.xml`, the shipped `LICENSE` file, and docs referencing the license.
+The app SHALL declare EUPL-1.2 as its licence consistently across `appinfo/info.xml`, the shipped `LICENSE` file, and the docs that name the licence. Docs that name where the source lives SHALL name GitHub, the only host of this repository.
 
 #### Scenario: info.xml licence tag
 
@@ -21,16 +16,16 @@ The app SHALL declare EUPL-1.2 as its license consistently across `appinfo/info.
 - **THEN** it MUST read `EUPL-1.2`, matching the shipped `LICENSE` file (European Union Public Licence v1.2)
 - @e2e exclude metadata-only, no runtime surface
 
-#### Scenario: Government features doc license line
+#### Scenario: Government features doc licence line
 
 - **GIVEN** `docs/GOVERNMENT-FEATURES.md`
-- **WHEN** its licence/attribution line is read
-- **THEN** it MUST read "EUPL-1.2" and "Codeberg", not "AGPL" / "GitHub"
+- **WHEN** its licence line and its open-source row are read
+- **THEN** they MUST read "EUPL-1.2" and "GitHub", and MUST NOT read "AGPL" or name any other source host
 - @e2e exclude docs-only, no runtime surface
 
-### Requirement: Product Page Reflects Shipped Features Only
+### Requirement: Product page reflects shipped features only
 
-The conduction.nl product page (EN + NL) SHALL describe only features verifiable against `lib/` and `src/`, and SHALL NOT assert integrations, targets, or widgets that do not exist in code.
+The conduction.nl product page (EN and NL) SHALL describe only features verifiable against `lib/` and `src/`, and SHALL NOT assert integrations, targets, or widgets that do not exist in code.
 
 #### Scenario: No fabricated discovery-tool integration
 
@@ -53,7 +48,7 @@ The conduction.nl product page (EN + NL) SHALL describe only features verifiable
 - **THEN** version MUST derive from `appinfo/info.xml`'s `<version>` (0.2.x → "v0.2") and status MUST read "Beta"
 - @e2e exclude marketing-copy-only, no runtime surface
 
-### Requirement: Docs Cover All Shipped Feature Areas
+### Requirement: Docs cover all shipped feature areas
 
 `docs/FEATURES.md` SHALL enumerate every major shipped feature area: software/module/connection registration, contract administration with approval, GEMMA standards/compliance matrix/ArchiMate import-export, application lifecycle/portfolio roadmap, reviews, federated synchronization (via OpenCatalogi), automatic user provisioning, and open data publishing with moderated self-registration.
 
@@ -64,7 +59,7 @@ The conduction.nl product page (EN + NL) SHALL describe only features verifiable
 - **THEN** it MUST include a section describing contract tracking with an approval workflow (matching `ContractApprovalController`)
 - @e2e exclude docs-only, no runtime surface
 
-#### Scenario: Standards/compliance/ArchiMate documented
+#### Scenario: Standards, compliance and ArchiMate documented
 
 - **GIVEN** `docs/FEATURES.md`
 - **WHEN** its feature sections are read
