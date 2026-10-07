@@ -400,7 +400,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "register.json:1135 suite schema with applications[] (register.json:1231); src/manifest.json:674 SuiteDetail with suite-related panel; no schema breaks one application into sub-modules (module IS the application, register.json:6777 title 'Application')",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "landscape-application-components"
 			},
 			"reachedOn": "Suites /suites and SuiteDetail /suites/:id (Related panel); ModuleDetail Related panel shows suites that include it",
 			"provider": "stackiq",
@@ -586,7 +587,8 @@
 				"state": "specified",
 				"evidence": "Looked in src/manifest.json, src/views, lib/Controller: no field-definition or schema-extension UI in stackiq; the data model is fixed in lib/Settings/softwarecatalogus_register.json",
 				"owner": "ConductionNL/openregister",
-				"ownerNote": "reader wrote: ConductionNL/stackiq"
+				"ownerNote": "reader wrote: ConductionNL/stackiq",
+				"change": "openregister/fields-a-user-adds-and-choices-a-record-narrows"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "openregister",
@@ -707,7 +709,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "src/components/organisations/OrganisationMergePanel.vue:46 (admin-only controls) mounted as OrganisatieDetail bodyWidget org-merge (src/manifest.json:430); lib/Controller/MergeController.php:106 execute with isAdmin check at :142; generic src/modals/object/MergeObject.vue only mounted for modal 'mergeOrganisatie' which nothing sets",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "operations-record-reconciliation"
 			},
 			"reachedOn": "OrganisatieDetail /organisaties/:id, Merge panel (admins only)",
 			"provider": "stackiq",
@@ -736,7 +739,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "No survey, attestation or owner-confirmation code in lib/ or src/ (searched survey/enquete/confirm entry)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "landscape-owner-attestation"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -765,7 +769,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "No completeness or data-quality score in lib/ or src/ (searched completeness/volledigheid/score outside reviews)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "landscape-completeness-score"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -1008,7 +1013,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "No diagram rendering in src/ (no graph library; src/store/modules/view.js GET /api/views has no importer outside itself); lib/Service/ArchiMateExportService.php exports GEMMA views as ArchiMate XML without koppeling objects (no 'koppeling' in lib/Service/ArchiMate*)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "connections-diagram-and-graph-export"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -1039,7 +1045,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "src/manifest.json:502 ModuleDetail md-related (library CnRelatedObjectsWidget: /used lists every object that references this module: usages, connections, suites, services, vulnerabilities); no dependency or impact computation in lib/ or src/",
-				"owner": "ConductionNL/openregister"
+				"owner": "ConductionNL/openregister",
+				"change": "openregister/relations-that-travel-and-what-they-expose"
 			},
 			"reachedOn": "ModuleDetail /modules/:id, Related panel",
 			"provider": "openregister",
@@ -1098,7 +1105,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "No API/interface schema in register.json (schemas listed at register.json:1034-7920); connection.type 'api' is only a transport label",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "connections-api-catalogue"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -1127,7 +1135,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "src/views/settings/sections/ArchiMateImportExport.vue:571 org export options are Modules, Deelnames, Gebruik only; lib/Controller/SettingsController.php:1685 exportOrgArchiMate; no koppeling handling in lib/Service/ArchiMate*",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "connections-diagram-and-graph-export"
 			},
 			"reachedOn": "nothing reaches it (nearest: admin settings ArchiMate organisation export)",
 			"provider": "stackiq",
@@ -1158,7 +1167,8 @@
 			"built": {
 				"state": "building",
 				"evidence": "src/manifest.d/connection-registry.json:23 Integrations page (register integriq, schema app_connection) with visibleIf appInstalled 'integriq' (:17) and permission admin (:15,:27); Add integration handler leaves for integriq (src/services/connectionRegistry.js:43); rows synced from lib/Settings/connections.json (email, federation, eol-feed); status worked out by integriq",
-				"owner": "ConductionNL/integriq"
+				"owner": "ConductionNL/integriq",
+				"change": "adopt-connection-registry"
 			},
 			"reachedOn": "Integrations /settings/integrations (settings menu, admin, only when app id 'integriq' is installed)",
 			"provider": "integriq",
@@ -1280,7 +1290,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "appinfo/routes.php:107 POST /api/archimate/test-round-trip -> lib/Controller/SettingsController.php:2886 (@NoAdminRequired, any logged-in user) -> lib/Service/ArchiMateService.php:1496 testRoundTrip: reads $importResult['imported_count'] (:1528), a key no import path sets, and compares it to exportToArchiMate's 'exported_count' which is the literal string 'calculated_in_export_service' (:271), so it can never report success; it also imports a test model into the live register",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "architecture-round-trip-check"
 			},
 			"reachedOn": "nothing reaches it: src/store/modules/settings.js:1953 testRoundTrip action has no caller",
 			"provider": "stackiq",
@@ -1374,7 +1385,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "module.referenceComponents / usage.usedForReferenceComponents in lib/Settings/softwarecatalogus_register.json hold the application-to-reference-component mapping; lib/Service/ArchiMateExportService.php:2734 draws it only into exported view copies",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "architecture-reference-component-coverage"
 			},
 			"reachedOn": "Modules /modules facet by reference component (a list, not a map); the map itself only in Archi after the admin org export",
 			"provider": "stackiq",
@@ -1405,7 +1417,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "src/manifest.json has no page for the view or element schema beyond Standaarden; no diagram editor in src/views or src/components",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "architecture-views-editor"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -1434,7 +1447,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "no process schema in lib/Settings/softwarecatalogus_register.json (20 schemas listed under components.schemas); no process page in src/manifest.json",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "architecture-process-mapping"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -1463,7 +1477,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "searched src/manifest.json and the register for scenario/future-state/toekomst: nothing; usage.status 'Planned' and plannedReplacement (register) are per-usage fields, not a comparable landscape",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "architecture-future-state-scenarios"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -1492,7 +1507,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "grep for uncovered/gap/coverage in lib and src found nothing; lib/Service/FacetService.php counts modules per reference component but never lists components with zero coverage",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "architecture-reference-component-coverage"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -1521,7 +1537,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "no diagram generation in lib/Service or src; no AI integration for diagrams",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "architecture-assistant-drafted-views"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -1827,7 +1844,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "grep for completeness/health score/quality score in lib and src: no hits; lib/Command/ReferencesAuditCommand.php:34 (occ stackiq:references:audit) only audits cross-app uuid references, it is not a scored rule set",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "landscape-completeness-score"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -2220,7 +2238,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "grep for overlap/redundant in lib and src finds only code comments and the Reports card description (src/manifest.json:1031 'Overlapping and ageing software'); lib/Service/PortfolioReportService.php computes TIME quadrants, EOL exposure, cloud share and cost, no grouping by reference component; the /modules facet counts modules per reference component across the whole catalogue, not your landscape",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "architecture-reference-component-coverage"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -2249,7 +2268,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "appinfo/routes.php:303 GET /api/portfolio-report -> lib/Controller/PortfolioReportController.php -> lib/Service/PortfolioReportService.php + PortfolioReportDerivation.php; UI src/views/organisaties/PortfolioReport.vue (TIME chart :112, quadrant summary :126 with EOL exposure/cloud/cost, rows :176, CSV export :50)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "architecture-reference-component-coverage"
 			},
 			"reachedOn": "PortfolioReport /portfolio-report, from Reports /reports card 'Portfolio rationalization' (footer menu Reports)",
 			"provider": "stackiq",
@@ -2310,7 +2330,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "lib/Settings/softwarecatalogus_register.json moduleVersion x-openregister-notifications module-version-published (trigger created, recipients object-acl manage + group software-catalog-admins); no notification code in lib (no INotificationManager use)",
-				"owner": "ConductionNL/openregister"
+				"owner": "ConductionNL/openregister",
+				"change": "openregister/notifications-new-notes-and-referrers"
 			},
 			"reachedOn": "nothing reaches it for a using organisation",
 			"provider": "openregister",
@@ -2341,7 +2362,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "lib/Settings/softwarecatalogus_register.json sbomComponent has name/version/purl/licenses/type/hashes/bomRef/vexCveIds, no lifecycle or EOL field; the EOL feed (lib/Service/EolSyncService.php:290) only stamps versions of modules with eolProductSlug; no relation from an application to the platform it runs on",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "operations-technology-components"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -2431,7 +2453,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "lib/Service/ContractStatusService.php:77 shouldExpire and :114 expirePastContracts set Active -> Expired when endDate < now; lib/BackgroundJob/ContractStatusJob.php:57 daily, registered in appinfo/info.xml:99",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "contracts-expiry-and-owner"
 			},
 			"reachedOn": "Contracts /contracten status column and quick filters",
 			"provider": "stackiq",
@@ -3237,7 +3260,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "src/views/settings/StackiqSettings.vue:80 UserGroupsConfiguration -> GET/POST /api/user-groups/config (src/store/modules/settings.js:830); lib/Controller/SettingsController.php:3379; lib/Service/Stackiq/GroupHandler.php:103 generic groups, :167 fixed role groups (aanbod-beheerder, gebruik-beheerder, ...), group choice by organisation type (:471) Corrections round 8 (2026-09-28), stackiq#1137: the automatic role group by organisation type fires only for Community, because lib/Service/Stackiq/ContactPersonHandler.php:1625 maps the Dutch keys gemeente, leverancier and samenwerking while organization.type only allows Municipality, Supplier, Collaboration and Community (lib/Settings/softwarecatalogus_register.json:2309), so account creation (:669) and update (:901) assign no role group; lib/Service/Stackiq/GroupHandler.php:286 updateRoleBasedGroups has no caller, at d22033a.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "organisations-role-mapping-and-access-review"
 			},
 			"reachedOn": "admin settings section 'User groups'",
 			"provider": "stackiq",
@@ -3567,7 +3591,8 @@
 				"state": "specified",
 				"evidence": "openapi.json at repo root has an info block and 0 paths. Hand-written JSON docs: lib/Controller/ViewController.php:373 (GET /api/views/docs, routes.php:186) and lib/Controller/AangebodenGebruikController.php:866 (GET /api/aangeboden-gebruik/docs, routes.php:261). The views docs endpoint is login-only; the aangeboden-gebruik docs endpoint is @PublicPage (AangebodenGebruikController.php:860), so anyone can read it (corrected 2026-09-26). Hand-written markdown in docs/API_REFERENCE.md and docs/View_API.md on the docs site. No src/ caller of either docs endpoint.",
 				"owner": "ConductionNL/stackiq",
-				"readOn": "2026-09-26"
+				"readOn": "2026-09-26",
+				"change": "sharing-generated-api-docs"
 			},
 			"reachedOn": "API only: GET /api/views/docs and /api/aangeboden-gebruik/docs; docs site https://stackiq.conduction.nl (Documentation footer link)",
 			"provider": "stackiq",
@@ -3596,7 +3621,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "ArchiMate export lib/Controller/SettingsController.php:1615 (POST /api/archimate/export) and :1685 per-organisation export (GET /api/archimate/export/organization/{uuid}), called only from src/views/settings/sections/ArchiMateImportExport.vue (admin settings, StackiqSettings.vue:86). CSV export of the portfolio report: lib/Controller/PortfolioReportController.php:105, button src/views/organisaties/PortfolioReport.vue:567. No index page opts into the library's CSV/Excel export (no allowExport in src/manifest.json).",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "insight-exports-and-custom-reports"
 			},
 			"reachedOn": "admin settings section ArchiMate Import/Export; Portfolio rationalization /portfolio-report (Export CSV, one organisation at a time)",
 			"provider": "stackiq",
@@ -3627,7 +3653,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "No ITSM connector: lib/Settings/connections.json lists only email, federation and eol-feed; grep for topdesk/servicenow/itsm in lib/ and src/ finds nothing.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "sharing-itsm-exchange"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -3685,7 +3712,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "lib/Service/FacetService.php:109 DIMENSIONS = referenceComponent, standard, applicationService, domain (GET /api/facets/{schema}, routes.php:195); src/views/FacetedCatalogIndexView.vue renders CnFacetSidebar with these plus search, on the Applications and Services pages. Supplier is only a column (src/manifest.json Modules config columns 'provider'), not a facet, although the module schema marks provider facetable. Corrections round 8 (2026-09-28), stackiq#1141: the domain facet never offers a value, because lib/Service/FacetService.php:704 reads $element['domain'] while the element schema declares domein (lib/Settings/softwarecatalogus_register.json:4642) and the GEMMA import stores the Domein property as domein (lib/Service/ArchiMateImportService.php:1017, lower-cased by convertToCamelCase :2256), at d22033a.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "insight-supplier-facet"
 			},
 			"reachedOn": "Applications /modules and Services /diensten (FacetedCatalogIndexView)",
 			"provider": "stackiq",
@@ -3832,7 +3860,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "No report builder in src/ or lib/. The only report is the fixed Gartner TIME portfolio report (lib/Controller/PortfolioReportController.php, CSV at :105). The overlay lists portfolio-reporting as status 'soon'.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "insight-exports-and-custom-reports"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -3863,7 +3892,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "Portfolio report CSV: lib/Controller/PortfolioReportController.php:105 (DataDownloadResponse text/csv), button src/views/organisaties/PortfolioReport.vue:567. No index page sets the library's allowExport (grep allowExport/exportable in src/manifest.json and the register finds nothing), so Applications, Contracts and the other lists have no export.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "insight-exports-and-custom-reports"
 			},
 			"reachedOn": "Portfolio rationalization /portfolio-report, Export CSV",
 			"provider": "stackiq",
@@ -3983,7 +4013,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "lib/Controller/SettingsController.php:1289 getProgress and :1360 streamProgress (routes.php:119-120) serve lib/Service/ProgressTracker.php, used only by lib/Service/MergeOrganisatieService.php; no src/ caller of /api/progress. The admin ArchiMate import shows a spinner then the final objects-processed count (src/views/settings/sections/ArchiMateImportExport.vue:103). Organisation sync shows a status block with last sync time and organisations to process (src/views/settings/sections/OrganizationSynchronization.vue:211). Corrections round 8 (2026-09-28), stackiq#1138: the tracker's only store is the user's session (lib/Service/ProgressTracker.php:83 ISession, :412 saveProgress, :332 getProgress), so /api/progress answers only the browser session that started the work and a cron job cannot report progress at all; the tracker is also written by lib/Service/SbomImportService.php:144, not only by the merge, at d22033a.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "operations-sync-status-and-progress"
 			},
 			"reachedOn": "admin settings sections Organization Synchronization and ArchiMate Import/Export (status and result only); progress endpoints API only",
 			"provider": "stackiq",
@@ -4012,7 +4043,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "No knowledge-article schema among the register's schemas (sector, suite, catalogService, vulnerability, contactPerson, organization, usage, catalogContract, connection, software-review, element, view, model, property-definition, relation, module, compliancy, bioMeasure, moduleVersion, sbomComponent in lib/Settings/softwarecatalogus_register.json); ModuleDetail only has a Documentation files panel.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "insight-knowledge-base"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -4128,7 +4160,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "No hardware schema in lib/Settings/softwarecatalogus_register.json (schemas are software, organisation, contract and GEMMA model types only).",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "operations-technology-components"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -4157,7 +4190,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "Applications (module lib/Settings/softwarecatalogus_register.json:6777), versions (moduleVersion :7649), suites (suite :1135) and application-to-application connections (connection :3563) with relations; ModuleDetail and SuiteDetail show a Related panel. No manifest page has register+schema 'connection' or 'usage', so connections are not listed or created on their own page.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "operations-technology-components"
 			},
 			"reachedOn": "Applications /modules/:id and Suites /suites/:id Related panels; no page for connections",
 			"provider": "stackiq",
@@ -4186,7 +4220,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "Organisation merge: src/manifest.json:430 OrganisationMergePanel on OrganisatieDetail, calling /api/organisaties/{uuid}/merge/dry-run and /merge (src/store/modules/organisatie.js:486/524, lib/Controller/MergeController.php:106, admin-only body guard). Federation mirrors are reconciled per peer by lib/Service/Federation/FederationMerger.php.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "operations-record-reconciliation"
 			},
 			"reachedOn": "Organisation /organisaties/:id, Merge organisation panel (admin only)",
 			"provider": "stackiq",
@@ -4360,7 +4395,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "lib/BackgroundJob/OrganizationContactSyncJob.php:75 TimedJob every 300 s calling performScheduledSync; admin section src/views/settings/sections/CronjobConfiguration.vue:56 shows each job's interval and an enable switch; src/views/settings/sections/OrganizationSynchronization.vue:211 shows Last Sync from app config last_sync_time (lib/Service/OrganizationSyncService.php:1609, written by recordSyncTime :1674). Corrections round 8 (2026-09-28), stackiq#1139: the enable switch has no effect, because lib/BackgroundJob/OrganizationContactSyncJob.php:99 run() checks only that OpenRegister is installed before performScheduledSync, and nothing reads the enabled flag that lib/Service/SettingsService.php:6901 updateCronjobConfig stores, at d22033a.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "operations-sync-status-and-progress"
 			},
 			"reachedOn": "admin settings sections Cronjob configuration and Organization Synchronization",
 			"provider": "stackiq",
@@ -4387,7 +4423,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "lib/Settings/softwarecatalogus_register.json:5038 ggm-guid (and ggm-naam, ggm-definitie) are properties of the element schema (register.json:4130), filled by the AMEF import (lib/Repair/RenameDutchCatalogColumns.php:25-27); the module schema (register.json:6777) has no property that points to a GGM entity, and the only element page, Standaarden, is filtered to gemmaType standaard (src/manifest.json:708)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "architecture-data-model-and-ggm"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -4418,7 +4455,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "appinfo/routes.php:97-98 the only view exports are ArchiMate exchange files (POST /api/archimate/export, GET /api/archimate/export/organization/{organizationUuid}); no image, docx or pptx export of a view anywhere in lib/ or src/ (the docx/pptx strings in src/modals/object/MergeObject.vue are file-type labels)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "architecture-views-to-office-documents"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -4449,7 +4487,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "src/manifest.json has no page for the element, relation or view schema other than Standaarden (src/manifest.json:708, filtered to standards); no diagram editor under src/views or src/components (same finding as arch-modelling)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "architecture-data-model-and-ggm"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -4479,7 +4518,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "lib/Service/ContactpersoonService.php:889 returns a user's lastLogin and src/components/ContactpersonenList.vue:482 stores it, but nothing renders it; no review, recertification or expiry of access in lib/ or src/ (grep recertif, accessReview)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "organisations-role-mapping-and-access-review"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -4693,7 +4733,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "compliance records carry bewijsReferentie and a Documentation files panel (src/manifest.json:885 KompliantieDetail), and module.dpiaDocumentRef (lib/Settings/softwarecatalogus_register.json:7280) links a DPIA; these are published per record under the register read rules, but nothing shares a processing agreement or pentest report between organisations as such",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "sharing-compliance-documents"
 			},
 			"reachedOn": "KompliantieDetail /komplianties/:id Evidence documents; ModuleDetail DPIA document field",
 			"provider": "stackiq",
@@ -4723,7 +4764,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "lib/Settings/softwarecatalogus_register.json:7225 module.bbnLevel (BBN1 to BBN3), shown in the ModuleDetail data widget (src/manifest.json:500) and filterable on Modules (src/manifest.json:608); one level per application, not per organisation and not split into availability, integrity and confidentiality",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "security-baseline-classification"
 			},
 			"reachedOn": "ModuleDetail /modules/:id and Modules /modules BBN filter",
 			"provider": "stackiq",
@@ -4843,7 +4885,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "moduleVersion (lib/Settings/softwarecatalogus_register.json) is created on the Moduleversies index form; no copy of a version with its connections and no carry-over logic in lib/Service/ModuleVersionService.php",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "connections-derived-dependencies"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -4903,7 +4946,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "Relation pickers already follow another field on the form: module.contactPerson x-relation-filter {organization: @object.provider}, catalogService.modules and contactPerson on @object.provider, usage.moduleVersion on @object.module (lib/Settings/softwarecatalogus_register.json), honoured by the library form (@conduction/nextcloud-vue 2.57.1 src/components/CnFormDialog/CnFormDialog.vue:1183 relationFilterDecls). No enum property declares dependent values (x-openregister-dependent-values, openregister lib/Service/Rules/DependentValueTable.php), and the library form does not read that annotation.",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "landscape-dependent-field-options"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -4933,7 +4977,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "each entry lives in one schema (module, catalogService, suite) and no action moves an object to another schema",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "landscape-change-entry-type"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -4963,7 +5008,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "stackiq has no AI or MCP integration of its own (see share-ai-assistant); the History tab (widget type audit, src/manifest.json:436) shows every change per object but does not single out actions an assistant took",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "mcp-full-action-surface"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -5083,7 +5129,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "connections are registered one at a time or arrive through the ArchiMate import (lib/Service/ArchiMateImportService.php); nothing derives dependencies from known relations",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "connections-derived-dependencies"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -5143,7 +5190,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "catalogContract.contactPersonUser (lib/Settings/softwarecatalogus_register.json:3398) names the responsible person on the user side, shown on ContractDetail (src/manifest.json:563); expiry warnings do not reach them because the only expiry notification never matches (see ctr-expiry-alert)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "contracts-expiry-and-owner"
 			},
 			"reachedOn": "ContractDetail /contracten/:id contract details",
 			"provider": "stackiq",
@@ -5263,7 +5311,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "library CnIndexPage mass copy on stackiq index pages: @conduction/nextcloud-vue v2.55.1 src/components/CnIndexPage/CnIndexPage.vue:215 CnMassCopyDialog, showMassCopy default true at :1611 (package.json:45 pins ^2.55.1); whether relations are copied along was not traced",
-				"owner": "ConductionNL/nextcloud-vue"
+				"owner": "ConductionNL/nextcloud-vue",
+				"change": "nextcloud-vue/index-copy-with-relations"
 			},
 			"reachedOn": "index pages such as Module versions /moduleversies: select rows, Copy",
 			"provider": "stackiq",
@@ -5325,7 +5374,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "the only decisions are contract approval and renewal decisions delegated to decidiq (catalogContract.decisions, lib/Settings/softwarecatalogus_register.json, and lib/Service/ContractApprovalService.php); no architecture decision record",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "architecture-decision-register"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -5355,7 +5405,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "no assistant in stackiq lib/ or src/ (see share-ai-assistant, where only OpenRegister's generic MCP endpoint exists outside the app)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "stackiq-mcp-adoption"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -5447,7 +5498,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "stackiq renders no architecture view (see arch-gemma-views), so there is nothing to compare; ArchiMate files are imported and exported whole",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "architecture-views-editor"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -5537,7 +5589,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "entries belong to an organisation through OpenRegister multitenancy (see org-data-segregation); no stackiq page or action moves an entry to another organisation or register",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "landscape-move-between-organisations"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -5567,7 +5620,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "stackiq models no processes (see arch-process-mapping)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "architecture-process-mapping"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -5597,7 +5651,8 @@
 			"built": {
 				"state": "specified",
 				"evidence": "no page lists or tags views (src/store/modules/view.js defines a view store nothing imports, see arch-gemma-views)",
-				"owner": "ConductionNL/stackiq"
+				"owner": "ConductionNL/stackiq",
+				"change": "architecture-views-editor"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
