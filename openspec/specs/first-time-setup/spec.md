@@ -13,7 +13,7 @@ Stackiq SHALL NOT import example data when the app is installed or upgraded. Exa
 - **WHEN** stackiq is installed on a Nextcloud instance with OpenRegister
 - **THEN** no object from `lib/Settings/stackiq_mock_register.json` is imported
 - **AND** the setup wizard offers the example data step
-- @e2e tests/e2e/spec-coverage/demo-data-setup-step.spec.ts
+- @e2e exclude written after the fact; tests/e2e/spec-coverage/demo-data-setup-step.spec.ts drives this but carries no scenario marker yet, and this round adds no test code
 
 #### Scenario: A user who is not a stackiq administrator cannot load example data
 - **WHEN** a signed-in user without the stackiq admin setting posts to `/api/setup/action/load-demo-data`
@@ -30,7 +30,7 @@ Stackiq SHALL NOT import example data when the app is installed or upgraded. Exa
 - **WHEN** an administrator reads `/api/setup/status`
 - **THEN** `datasets` holds `none` and `demo`
 - **AND** the `demo` entry has `objectCount` 133
-- @e2e tests/e2e/spec-coverage/demo-data-setup-step.spec.ts
+- @e2e exclude written after the fact; tests/e2e/spec-coverage/demo-data-setup-step.spec.ts drives this but carries no scenario marker yet, and this round adds no test code
 
 #### Scenario: Without a usable descriptor only declining is offered
 - **GIVEN** the descriptor is missing or is not valid JSON
@@ -64,7 +64,7 @@ Choosing `none`, or the `skip-demo-data` action, SHALL store `none` under the ap
 - **WHEN** an administrator loads the `demo` dataset
 - **THEN** the answer is `success: true` with "Imported 133 demo object(s)."
 - **AND** `demo_dataset` holds `demo`
-- @e2e tests/e2e/spec-coverage/demo-data-setup-step.spec.ts
+- @e2e exclude written after the fact; tests/e2e/spec-coverage/demo-data-setup-step.spec.ts drives this but carries no scenario marker yet, and this round adds no test code
 
 #### Scenario: A failed import is reported, not hidden
 - **GIVEN** OpenRegister is not installed
@@ -77,4 +77,4 @@ Choosing `none`, or the `skip-demo-data` action, SHALL store `none` under the ap
 - **GIVEN** the example data was loaded once
 - **WHEN** the administrator loads it again
 - **THEN** the import succeeds again
-- @e2e tests/e2e/spec-coverage/demo-data-setup-step.spec.ts
+- @e2e exclude written after the fact; tests/e2e/spec-coverage/demo-data-setup-step.spec.ts drives this but carries no scenario marker yet, and this round adds no test code
