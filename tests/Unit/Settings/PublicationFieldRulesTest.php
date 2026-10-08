@@ -11,7 +11,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md
+ * @spec openspec/specs/publication-field-rules/spec.md
  */
 
 declare(strict_types=1);

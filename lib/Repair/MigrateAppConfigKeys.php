@@ -31,7 +31,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-app-config-survives-the-rename
+ * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-app-config-survives-the-rename
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -51,7 +51,7 @@ use Throwable;
 /**
  * Copies app config from the legacy `stackiq` app id to `stackiq`.
  *
- * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-app-config-survives-the-rename
+ * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-app-config-survives-the-rename
  */
 class MigrateAppConfigKeys implements IRepairStep {
 	/**
@@ -92,7 +92,7 @@ class MigrateAppConfigKeys implements IRepairStep {
 	 *
 	 * @return string The repair step name.
 	 *
-	 * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-app-config-survives-the-rename
+	 * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-app-config-survives-the-rename
 	 */
 	public function getName(): string {
 		return 'Migrate app config from the stackiq app id to stackiq';
@@ -111,7 +111,7 @@ class MigrateAppConfigKeys implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-app-config-survives-the-rename
+	 * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-app-config-survives-the-rename
 	 */
 	public function run(IOutput $output): void {
 		try {
@@ -192,7 +192,7 @@ class MigrateAppConfigKeys implements IRepairStep {
 	 *
 	 * @return bool True when a value was written.
 	 *
-	 * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-app-config-survives-the-rename
+	 * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-app-config-survives-the-rename
 	 */
 	protected function copyValue(string $key, mixed $value): bool {
 		if (is_bool($value) === true) {

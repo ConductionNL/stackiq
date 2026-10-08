@@ -50,7 +50,7 @@ Vrij en open source onder de EUPL-licentie.
 
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
-    <version>0.2.4-unstable.20261001120000</version>
+    <version>0.2.5-unstable.20261008120000</version>
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Stackiq</namespace>
@@ -122,6 +122,15 @@ Vrij en open source onder de EUPL-licentie.
 			-->
 			<step>OCA\Stackiq\Repair\MigrateAppConfigKeys</step>
 			<step>OCA\Stackiq\Repair\MigrateUserPreferences</step>
+			<!--
+				WIDGET-ID RESTORE (#1261). Stable 0.1.148 to 0.2.0 and beta shipped the
+				concept organisations widget under the renamed id; restoring the frozen
+				id dropped it from every dashboard that chose it in that window. The
+				Dashboard app keeps that choice in `oc_preferences` under its own app id,
+				so this rewrites the renamed id to the frozen one for every seen user.
+				Upgrade-only: a fresh install has no dashboards to repair.
+			-->
+			<step>OCA\Stackiq\Repair\RepointDashboardWidgetId</step>
 			<!--
 				`oc_jobs` stores the background job's CLASS NAME as a string. The
 				namespace rename orphans all four rows: the class no longer exists,

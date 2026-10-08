@@ -7363,7 +7363,7 @@ class SettingsService {
 	 *
 	 * @return array<string, mixed> The merged register with the highest version per schema.
 	 *
-	 * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-003-a-fragment-never-lowers-a-schema-version
+	 * @spec openspec/specs/publication-field-rules/spec.md#requirement-req-pfr-003-a-fragment-never-lowers-a-schema-version
 	 */
 	private static function keepHighestSchemaVersions(array $before, array $after): array {
 		foreach (($after['components']['schemas'] ?? []) as $key => $schema) {
