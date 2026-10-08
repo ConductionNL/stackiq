@@ -29,7 +29,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-background-job-classes-survive-the-rename
+ * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-background-job-classes-survive-the-rename
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -49,7 +49,7 @@ use Throwable;
 /**
  * Removes background job registrations left behind by the namespace rename.
  *
- * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-background-job-classes-survive-the-rename
+ * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-background-job-classes-survive-the-rename
  */
 class MigrateBackgroundJobClasses implements IRepairStep {
 	/**
@@ -84,7 +84,7 @@ class MigrateBackgroundJobClasses implements IRepairStep {
 	 *
 	 * @return string The repair step name.
 	 *
-	 * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-background-job-classes-survive-the-rename
+	 * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-background-job-classes-survive-the-rename
 	 */
 	public function getName(): string {
 		return 'Deregister background jobs orphaned by the OCA\\SoftwareCatalog namespace rename';
@@ -101,7 +101,7 @@ class MigrateBackgroundJobClasses implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-background-job-classes-survive-the-rename
+	 * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-background-job-classes-survive-the-rename
 	 */
 	public function run(IOutput $output): void {
 		try {
