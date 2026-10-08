@@ -316,6 +316,447 @@
 			"name_nl": "Discovery en IT-beheer"
 		}
 	],
+	"features": [
+		{
+			"slug": "software-landscape-register",
+			"title": "Software landscape register",
+			"title_nl": "Softwarelandschap-register",
+			"area": "landscape",
+			"overlay": "software-landscape-register",
+			"specs": [
+				"view-enrichment-api",
+				"landscape-application-components",
+				"suite-wizard",
+				"application-page",
+				"application-hosting-model",
+				"landscape-change-entry-type",
+				"landscape-move-between-organisations",
+				"landscape-dependent-field-options",
+				"insight-knowledge-base"
+			]
+		},
+		{
+			"slug": "landscape-import",
+			"title": "Importing an existing landscape",
+			"title_nl": "Een bestaand landschap importeren",
+			"area": "landscape",
+			"overlay": null,
+			"specs": [
+				"cmdb-export-import",
+				"first-time-setup"
+			]
+		},
+		{
+			"slug": "data-quality",
+			"title": "Data quality and completeness",
+			"title_nl": "Datakwaliteit en volledigheid",
+			"area": "landscape",
+			"overlay": null,
+			"specs": [
+				"operations-record-reconciliation",
+				"landscape-owner-attestation",
+				"landscape-completeness-score"
+			]
+		},
+		{
+			"slug": "ai-system-inventory",
+			"title": "AI system inventory and the AI Act",
+			"title_nl": "AI-systemen registreren en de AI-verordening",
+			"area": "landscape",
+			"overlay": null,
+			"specs": [
+				"ai-system-inventory"
+			]
+		},
+		{
+			"slug": "offering-and-usage-listings",
+			"title": "Offering and usage listings",
+			"title_nl": "Aanbod- en gebruikslijsten",
+			"area": "market",
+			"overlay": "offering-and-usage-listings",
+			"specs": [
+				"aanbod-listings",
+				"gemma-faceted-search",
+				"open-data-publishing",
+				"application-page"
+			]
+		},
+		{
+			"slug": "application-connections",
+			"title": "Connections between applications",
+			"title_nl": "Koppelingen tussen applicaties",
+			"area": "connections",
+			"overlay": null,
+			"specs": [
+				"connections-api-catalogue",
+				"adopt-connection-registry",
+				"connections-derived-dependencies",
+				"connections-diagram-and-graph-export"
+			]
+		},
+		{
+			"slug": "shared-usage-on-gemma-views",
+			"title": "Shared usage on GEMMA views",
+			"title_nl": "Gedeeld gebruik op GEMMA-views",
+			"area": "market",
+			"overlay": "shared-usage-on-gemma-views",
+			"specs": [
+				"deelnames-gebruik",
+				"architecture-shared-usage-on-views"
+			]
+		},
+		{
+			"slug": "archimate-import-and-export",
+			"title": "ArchiMate import and export",
+			"title_nl": "ArchiMate-import en -export",
+			"area": "architecture",
+			"overlay": "archimate-import-and-export",
+			"specs": [
+				"archimate-export",
+				"archimate-import",
+				"org-archimate-export",
+				"architecture-round-trip-check",
+				"architecture-views-to-office-documents"
+			]
+		},
+		{
+			"slug": "gemma-alignment",
+			"title": "GEMMA alignment",
+			"title_nl": "GEMMA-uitlijning",
+			"area": "architecture",
+			"overlay": "gemma-alignment",
+			"specs": [
+				"module-overlay-rendering",
+				"softwarecatalog-manifest-v1",
+				"architecture-reference-component-coverage",
+				"gemma-faceted-search",
+				"view-enrichment-api",
+				"architecture-data-model-and-ggm",
+				"insight-supplier-facet"
+			]
+		},
+		{
+			"slug": "architecture-modelling",
+			"title": "Modelling architecture views",
+			"title_nl": "Architectuurplaten modelleren",
+			"area": "architecture",
+			"overlay": null,
+			"specs": [
+				"architecture-views-editor",
+				"architecture-process-mapping",
+				"architecture-future-state-scenarios",
+				"architecture-assistant-drafted-views",
+				"architecture-data-model-and-ggm",
+				"architecture-decision-register"
+			]
+		},
+		{
+			"slug": "standards-compliance",
+			"title": "Standards compliance",
+			"title_nl": "Standaardencompliance",
+			"area": "compliance",
+			"overlay": "standards-compliance",
+			"specs": [
+				"module-compliance-assessment"
+			]
+		},
+		{
+			"slug": "security-and-privacy-assessment",
+			"title": "BIO and privacy assessments",
+			"title_nl": "BIO- en privacybeoordelingen",
+			"area": "compliance",
+			"overlay": null,
+			"specs": [
+				"bio-compliance-assessment",
+				"security-baseline-classification",
+				"sharing-compliance-documents"
+			]
+		},
+		{
+			"slug": "supplier-directory",
+			"title": "Supplier and product directory",
+			"title_nl": "Overzicht van leveranciers en producten",
+			"area": "market",
+			"overlay": null,
+			"specs": [
+				"fe-organizations",
+				"application-page",
+				"vendor-product-master-data"
+			]
+		},
+		{
+			"slug": "reviews",
+			"title": "Reviews",
+			"title_nl": "Reviews",
+			"area": "market",
+			"overlay": "reviews",
+			"specs": [
+				"catalog-ratings"
+			]
+		},
+		{
+			"slug": "maintenance-and-supplier-roadmap",
+			"title": "Maintenance and supplier roadmap",
+			"title_nl": "Onderhoud en leveranciersroadmap",
+			"area": "market",
+			"overlay": "maintenance-and-supplier-roadmap",
+			"specs": [
+				"maintenance-and-supplier-roadmap"
+			]
+		},
+		{
+			"slug": "portfolio-roadmap",
+			"title": "Portfolio roadmap",
+			"title_nl": "Portfolio-roadmap",
+			"area": "lifecycle",
+			"overlay": "portfolio-roadmap",
+			"specs": [
+				"application-lifecycle-tracking"
+			]
+		},
+		{
+			"slug": "lifecycle-and-end-of-support",
+			"title": "Lifecycle and end of support",
+			"title_nl": "Levenscyclus en einde-support",
+			"area": "lifecycle",
+			"overlay": "lifecycle-and-end-of-support",
+			"specs": [
+				"application-lifecycle-tracking",
+				"softwarecatalog-manifest-v1",
+				"eol-feed-integration",
+				"operations-technology-components"
+			]
+		},
+		{
+			"slug": "portfolio-rationalisation",
+			"title": "Portfolio rationalisation",
+			"title_nl": "Portfoliorationalisatie",
+			"area": "lifecycle",
+			"overlay": null,
+			"specs": [
+				"architecture-reference-component-coverage",
+				"application-value-assessment",
+				"portfolio-rationalization-time"
+			]
+		},
+		{
+			"slug": "contract-administration",
+			"title": "Contract administration",
+			"title_nl": "Contractadministratie",
+			"area": "contracts",
+			"overlay": "contract-administration",
+			"specs": [
+				"contract-administration",
+				"contracts-expiry-and-owner",
+				"application-page",
+				"portfolio-rationalization-time",
+				"software-license-posture"
+			]
+		},
+		{
+			"slug": "contract-renewal-approval",
+			"title": "Contract renewal with approval",
+			"title_nl": "Contractverlenging met goedkeuring",
+			"area": "contracts",
+			"overlay": "contract-renewal-approval",
+			"specs": [
+				"contract-decision-delegation"
+			]
+		},
+		{
+			"slug": "license-and-seat-tracking",
+			"title": "License and seat tracking",
+			"title_nl": "Licentie- en seatregistratie",
+			"area": "contracts",
+			"overlay": "license-and-seat-tracking",
+			"specs": [
+				"licence-seats",
+				"software-license-posture"
+			]
+		},
+		{
+			"slug": "vulnerability-management",
+			"title": "Vulnerabilities and SBOMs",
+			"title_nl": "Kwetsbaarheden en SBOM's",
+			"area": "security",
+			"overlay": null,
+			"specs": [
+				"module-vulnerability-tracking",
+				"sbom-import"
+			]
+		},
+		{
+			"slug": "sign-in-and-accounts",
+			"title": "Sign-in and accounts",
+			"title_nl": "Inloggen en accounts",
+			"area": "organisations",
+			"overlay": null,
+			"specs": [
+				"email-delivery"
+			]
+		},
+		{
+			"slug": "organisation-register",
+			"title": "Organisation register",
+			"title_nl": "Organisatieregister",
+			"area": "organisations",
+			"overlay": null,
+			"specs": [
+				"fe-organizations",
+				"organisation-merge"
+			]
+		},
+		{
+			"slug": "self-registration-with-moderation",
+			"title": "Self-registration with moderation",
+			"title_nl": "Zelfregistratie met moderatie",
+			"area": "organisations",
+			"overlay": "self-registration-with-moderation",
+			"specs": [
+				"open-data-publishing"
+			]
+		},
+		{
+			"slug": "automatic-user-provisioning",
+			"title": "Automatic user provisioning",
+			"title_nl": "Automatische gebruikersinrichting",
+			"area": "organisations",
+			"overlay": "automatic-user-provisioning",
+			"specs": [
+				"softwarecatalog-contacts-to-nc",
+				"contactpersoon-sync",
+				"sc-handlers",
+				"operations-sync-status-and-progress"
+			]
+		},
+		{
+			"slug": "roles-and-access",
+			"title": "Roles and access rights",
+			"title_nl": "Rollen en toegangsrechten",
+			"area": "organisations",
+			"overlay": null,
+			"specs": [
+				"multi-org-membership",
+				"organisations-role-mapping-and-access-review",
+				"publication-field-rules",
+				"vendor-visibility-rbac"
+			]
+		},
+		{
+			"slug": "open-data-publishing",
+			"title": "Publish as open data",
+			"title_nl": "Open data publiceren",
+			"area": "sharing",
+			"overlay": "open-data-publishing",
+			"specs": [
+				"open-data-publishing"
+			]
+		},
+		{
+			"slug": "federation-between-catalogues",
+			"title": "Federation between catalogues",
+			"title_nl": "Federatie tussen catalogi",
+			"area": "sharing",
+			"overlay": "federation-between-catalogues",
+			"specs": [
+				"federated-catalog-sync"
+			]
+		},
+		{
+			"slug": "api-and-integrations",
+			"title": "API and integrations",
+			"title_nl": "API en koppelingen",
+			"area": "sharing",
+			"overlay": null,
+			"specs": [
+				"sharing-generated-api-docs",
+				"sharing-itsm-exchange",
+				"portal-contribution"
+			]
+		},
+		{
+			"slug": "portfolio-reporting",
+			"title": "Configurable portfolio reporting",
+			"title_nl": "Instelbare portfoliorapportage",
+			"area": "insight",
+			"overlay": "portfolio-reporting",
+			"specs": [
+				"insight-exports-and-custom-reports",
+				"portfolio-rationalization-time"
+			]
+		},
+		{
+			"slug": "dashboard-and-overviews",
+			"title": "Dashboard and live overviews",
+			"title_nl": "Dashboard en actuele overzichten",
+			"area": "insight",
+			"overlay": null,
+			"specs": [
+				"fe-shell-navigation",
+				"concept-organizations-widget",
+				"operations-sync-status-and-progress"
+			]
+		},
+		{
+			"slug": "ai-assistant",
+			"title": "AI assistant for the catalogue",
+			"title_nl": "AI-assistent voor de catalogus",
+			"area": "insight",
+			"overlay": null,
+			"specs": [
+				"mcp-full-action-surface",
+				"insight-assistant-answers-and-action-trail"
+			]
+		},
+		{
+			"slug": "audit-trail-view",
+			"title": "Audit trail view",
+			"title_nl": "Auditspoor-overzicht",
+			"area": "insight",
+			"overlay": "audit-trail-view",
+			"specs": [
+				"softwarecatalog-manifest-v1"
+			]
+		},
+		{
+			"slug": "notifications",
+			"title": "Notifications",
+			"title_nl": "Meldingen",
+			"area": "lifecycle",
+			"overlay": "notifications",
+			"specs": [
+				"softwarecatalog-notifications",
+				"contracts-expiry-warning-fires",
+				"maintenance-and-supplier-roadmap"
+			]
+		},
+		{
+			"slug": "asset-discovery",
+			"title": "Discovering hardware and software",
+			"title_nl": "Hardware en software automatisch ontdekken",
+			"area": "operations",
+			"overlay": null,
+			"specs": [
+				"operations-technology-components"
+			]
+		},
+		{
+			"slug": "service-management",
+			"title": "Incidents, changes and service levels",
+			"title_nl": "Incidenten, wijzigingen en serviceniveaus",
+			"area": "operations",
+			"overlay": null,
+			"specs": []
+		},
+		{
+			"slug": "open-platform",
+			"title": "Self-hosted and adaptable",
+			"title_nl": "Zelf gehost en aanpasbaar",
+			"area": "operations",
+			"overlay": null,
+			"specs": []
+		}
+	],
 	"providers": [
 		{
 			"key": "stackiq",
@@ -407,7 +848,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "software-landscape-register",
-			"featureConfidence": "low",
+			"featureConfidence": "high",
 			"note": "Stackiq's 'module' is the whole application, so there is no breakdown of one application into modules. The nearest thing is a suite (product) listing its applications, which answers 'which module belongs to which product' but not the decomposition. Specified in openspec/changes/landscape-application-components (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/application-modeling-guidelines: 'Applications often consist of multiple entities or modules within a common ecosystem or platform', modeled as parent/child hierarchy, e.g. Adobe Photoshop as child of Adobe Creative Cloud (read 2026-09-26). Reached on: Application fact sheet > parent/child relations.",
@@ -439,7 +880,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "lifecycle-and-end-of-support",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "A version is created on the Module versions index with its module and date in use, and opens on its own detail page.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/SoftwareVersion.php:42 SoftwareVersion child of Software, table install/mysql/glpi-empty.sql:6900 glpi_softwareversions with name, states_id, operatingsystems_id but no release or in-use date; the only date is per installation, install/mysql/glpi-empty.sql:1074 glpi_items_softwareversions.date_install. Reached on: Assets > Software > Versions tab (front/softwareversion.form.php).",
@@ -471,7 +912,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "software-landscape-register",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "A three-step wizard bundles existing applications into one suite. Caveat: a row click on the Suites list only toggles selection (the library returns before emitting row-click when selectable, SuitesIndexView.vue:35), so SuiteDetail is not opened from the list, and its data widget includes stale field names (src/manifest.json:683 beschrijvingKort, contactpersoon).",
 			"evidence": {
 				"stackiq": "src/dialogs/SuiteWizardDialog.vue:183 onSubmit saves a suite via objectStore.saveObject('suite') with applications[] (src/utils/suiteWizard.js:44 requires at least one); mounted by src/views/suites/SuitesIndexView.vue:46 on manifest page Suites (src/manifest.json:666)",
@@ -503,7 +944,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "offering-and-usage-listings",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "A supplier's service over one or more applications is registered on the Services page. There is no 'hosting' service type (technical management is the nearest), and services have no detail page, so a row cannot be opened.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/pakketversies: facet \"Ondersteunde technologie: On-premise, Dienst - Software as a Service (SAAS)\" (read 2026-09-26); https://www.softwarecatalogus.nl/node/30355: \"Onder het tabblad Technologie selecteer je de onderliggende technieken van het pakket. Veelal Saas of on-premise\" (read 2026-09-26). Hosting as SaaS is a property of a package version, no separate service record (hosting, support) is documented. Reached on: Alle pakketversies > filter Ondersteunde technologie.",
@@ -533,6 +974,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "software-landscape-register",
 			"note": "A sector schema exists, but no application, service or organisation can be tagged with a sector and no page lists sectors. Decided no (OpenSpec pass 2026-09-27): Recorded non-goal: aanvullende-informatie.md:511 lists VNG issue #4 (classify packages on the reference architectures of the relevant sectors, so buyers from several sectors find them) with the analysis \"Classificeren op meerdere sectorale referentiearchitecturen, buiten scope\", and issues/4.md carries the label \"Buiten scope oplevering\" and is closed. Tagging applications with sectors is the entry to that out-of-scope classification. The unused sector schema (lib/Settings/softwarecatalogus_register.json:1036) is what the specified state pointed at; no change directory existed.",
 			"evidence": {
 				"stackiq": "register.json:1034 sector schema (name, description only); no schema property references #/components/schemas/sector (grep found none), no manifest page for sector; only the admin schema mapping in src/views/settings/sections/OpenRegisterIntegration.vue:395",
@@ -564,7 +1006,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "software-landscape-register",
-			"featureConfidence": "low",
+			"featureConfidence": "high",
 			"note": "One contact person per application can be set, but there is no separate business owner and technical owner. ModuleDetail's data widget includes 'contactpersoon', a key the schema no longer has, so the contact may not show there. Specified in openspec/changes/landscape-usage-registration (OpenSpec pass 2026-09-27). Built by openspec/changes/archive/2026-09-29-landscape-usage-registration.",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/subscription-roles: 'Define roles that map to your organization's positions, such as application owner', with subscription types 'Responsible, Accountable, Observer' per fact sheet (read 2026-09-26). Reached on: Fact sheet > Subscriptions; Administration > Subscription Roles.",
@@ -596,6 +1038,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
+			"feature": "software-landscape-register",
 			"note": "Stackiq offers no way to add fields. Editing the schema in OpenRegister's own admin UI is possible there, but that is an OpenRegister feature, not a stackiq page. Specified in ConductionNL/openregister openspec/changes/fields-a-user-adds-and-choices-a-record-narrows (openregister lane, OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/fact-sheet-fields: 'Adding a Custom Field ... To add a custom field, follow these steps'; https://help.sap.com/docs/leanix/ea/tags-and-custom-fields: custom fields as text, dates, numbers, set in the meta model configuration by an admin (read 2026-09-26). Reached on: Administration > Meta Model Configuration > Fact Sheet Fields.",
@@ -626,6 +1069,7 @@
 			"reachedOn": "Modules /modules, Import in the index actions (also every type:index page)",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
+			"feature": "landscape-import",
 			"note": "The generic index page offers a file import (CSV per schema, or a register-wide JSON/Excel) that OpenRegister executes. Nothing stackiq-specific maps a spreadsheet's supplier names to organisation references, so relation columns must already hold identifiers.",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/importing-fact-sheet-data-through-excel-file and https://help.sap.com/docs/leanix/ea/adding-and-editing-data-in-fact-sheets: 'using the import option, you can update multiple fact sheets in bulk' via Excel export and import (read 2026-09-26). Reached on: Inventory > Import (Excel).",
@@ -657,7 +1101,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "software-landscape-register",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "One page per application shows its data, versions, usages, compliance claims and the contracts behind it, and opens from the Applications list. Built by openspec/changes/archive/2026-09-29-landscape-application-page.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/pakket/archi: package page shows versions with status and start dates, \"Pakket geschikt voor (GEMMA 2) Ingevuld door (28)\", and per version the mandatory and recommended standards with support, compliancy and testrapport (read 2026-09-26). No contracts on the page. Reached on: Alle pakketten > package name.",
@@ -689,7 +1133,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "open-data-publishing",
-			"featureConfidence": "low",
+			"featureConfidence": "high",
 			"note": "Many entries can be selected and deleted together through the library index page. The mass publish and mass lock dialogs exist but hang off a view modal no page opens, and the publish endpoint (lib/Controller/PublicationController.php, PUT /api/publication/...) has no frontend caller.",
 			"evidence": {
 				"stackiq": "Library CnIndexPage mass delete/copy/export (showMassDelete default true, CnIndexPage.vue:1617; selfModeActions.js:63 handleMassDelete) on index pages; stackiq's MassPublishObjects/MassLockObjects dialogs (src/dialogs/Dialogs.vue:8-14) are only opened from src/modals/object/ViewObject.vue:4865, and ViewObject is only mounted for modals 'viewOrganisatie'/'viewContactpersoon' (src/modals/Modals.vue:7,19) which nothing in src/ sets",
@@ -720,6 +1164,7 @@
 			"reachedOn": "OrganisatieDetail /organisaties/:id, Merge panel (admins only)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "data-quality",
 			"note": "Only organisations can be merged, with a dry run first, and only by a Nextcloud admin. Applications, services and other entries have no merge. Specified in openspec/changes/operations-record-reconciliation (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "src/components/organisations/OrganisationMergePanel.vue:46 (admin-only controls) mounted as OrganisatieDetail bodyWidget org-merge (src/manifest.json:430); lib/Controller/MergeController.php:106 execute with isAdmin check at :142; generic src/modals/object/MergeObject.vue only mounted for modal 'mergeOrganisatie' which nothing sets",
@@ -750,6 +1195,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "data-quality",
 			"note": "Nothing asks owners to confirm or correct their entries. Specified in openspec/changes/landscape-owner-attestation (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/reviewing-responses: 'Review and approve survey responses before they are saved to fact sheets'; https://help.sap.com/docs/leanix/ea/application-modernization-collect-data: 'Create a new survey to get key information from application or business owners' (read 2026-09-26). Reached on: Surveys.",
@@ -780,6 +1226,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "data-quality",
 			"note": "No page scores how complete or current an entry is. Specified in openspec/changes/landscape-completeness-score (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "No completeness or data-quality score in lib/ or src/ (searched completeness/volledigheid/score outside reviews)",
@@ -811,6 +1258,7 @@
 			"reachedOn": "First-run setup wizard (admin), step 'Load example data'",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "landscape-import",
 			"note": "An admin picks the demo dataset in the setup wizard and it is imported through OpenRegister. Admin-only, which suits an installation task.",
 			"evidence": {
 				"stackiq": "src/manifest.json:3 setup wizard step load-demo-data (:24); lib/Controller/SetupController.php:202 runAction load-demo-data (AuthorizedAdminSetting); lib/Service/DemoDataService.php:202 install() imports lib/Settings/stackiq_mock_register.json (120 objects, 6 per schema) through OpenRegister ConfigurationService::importFromApp",
@@ -841,6 +1289,7 @@
 			"reachedOn": "Suites /suites, New suite wizard only",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "software-landscape-register",
 			"note": "Only suites get a step-by-step wizard. Applications and services are added through a plain form, and connections have no page at all.",
 			"evidence": {
 				"stackiq": "src/dialogs/SuiteWizardDialog.vue (3 steps) is the only wizard, opened from src/views/suites/SuitesIndexView.vue:46; applications, services and connections use the bare CnIndexPage form (FacetedCatalogIndexView.vue:108) or nothing",
@@ -871,6 +1320,7 @@
 			"reachedOn": "ModuleversieDetail /moduleversies/:id, sidebar tab Components",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "vulnerability-management",
 			"note": "A module version's page lists the third-party components imported from its SBOM.",
 			"evidence": {
 				"stackiq": "src/components/sbom/SbomComponentsPanel.vue lists sbomComponent rows (name/version/purl/licenses) as the ModuleversieDetail 'Components' sidebar tab (src/manifest.json:961); register.json:7920 sbomComponent schema",
@@ -902,7 +1352,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "software-landscape-register",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "The application form records on-premises, IaaS, PaaS or SaaS plus hosting location and jurisdiction. There is no field naming the hosting party itself.",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/applications-in-reference-catalog lists application fields 'Hosting Type' and 'Hosting Description'; https://help.sap.com/docs/leanix/ea/configuring-kpis filters applications on 'Hosting Type = \"Cloud\"'; IT component subtypes SaaS, IaaS, PaaS, Hardware (read 2026-09-26). Reached on: Application fact sheet > Hosting Type.",
@@ -933,8 +1383,8 @@
 			"reachedOn": "API only: OpenRegister objects API",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"feature": "software-landscape-register",
-			"featureConfidence": "low",
+			"feature": "application-connections",
+			"featureConfidence": "medium",
 			"note": "The field for a national provision exists on the connection schema, but with no connection page nobody can fill it in stackiq. Specified in openspec/changes/connections-catalogue-pages (OpenSpec pass 2026-09-27). The provision picker now finds the GEMMA provisions, and the connection page shows and edits the field (built by openspec/changes/archive/2026-09-29-connections-catalogue-pages).",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/Opvoeren%20koppeling%20iJw%20en%20iWmo: \"De richting van het berichtenverkeer, de landelijke voorziening waarmee gekoppeld is/wordt, in dit geval GGK\" (read 2026-09-26); https://www.softwarecatalogus.nl/hoe-werkt-de-catalogus: \"kunnen koppelingen tussen applicaties onderling en met Landelijke Voorzieningen vastgelegd worden\" (read 2026-09-26). Reached on: Mijn softwarecatalogus > Koppelingen > koppeling toevoegen.",
@@ -965,7 +1415,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"feature": "software-landscape-register",
+			"feature": "application-connections",
 			"featureConfidence": "medium",
 			"note": "Connections have a list under Applications, Connections, and a page per connection with its lifecycle actions. Built by openspec/changes/archive/2026-09-29-connections-catalogue-pages.",
 			"evidence": {
@@ -997,8 +1447,8 @@
 			"reachedOn": "ModuleDetail /modules/:id, Related panel (untyped); API /api/koppelingen-gebruik/{uuid}",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"feature": "software-landscape-register",
-			"featureConfidence": "low",
+			"feature": "application-connections",
+			"featureConfidence": "medium",
 			"note": "The application page lists the connections that start at the application and the ones that end there, each opening the connection. Built by openspec/changes/archive/2026-09-29-connections-catalogue-pages.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/13683: \"Mijn pakketoverzicht ... Onder het eerste tabblad zitten de pakketten en onder het tweede tabblad de koppelingen\" (read 2026-09-26); https://www.softwarecatalogus.nl/node/30890: \"Door op een applicatienaam in het Models venster te klikken, zie je in de Visualiser alle koppelingen tussen die applicatie met andere applicaties\" (in Archi after export) (read 2026-09-26). No per-application connection view inside the catalogue is described. Reached on: Mijn softwarecatalogus > Koppelingen.",
@@ -1029,8 +1479,8 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"feature": "archimate-import-and-export",
-			"featureConfidence": "low",
+			"feature": "application-connections",
+			"featureConfidence": "medium",
 			"note": "No page draws connections. The ArchiMate export can be opened in Archi, but it carries GEMMA views and usages, not the catalogue's connections. Specified in openspec/changes/connections-diagram-and-graph-export (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/data-flow: data flow diagrams help 'understand how applications are connected, identify dependencies, and trace data movement between systems' (read 2026-09-26). Reached on: Diagrams > Data Flow Diagram.",
@@ -1061,6 +1511,7 @@
 			"reachedOn": "ModuleDetail /modules/:id, Related panel",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
+			"feature": "application-connections",
 			"note": "The only way to see what depends on an application is the generic list of objects that reference it, which OpenRegister's relation index fills. There is no impact view or retirement check. Specified in ConductionNL/openregister openspec/changes/relations-that-travel-and-what-they-expose (openregister lane, OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967472-welcome-to-bluedolphin: 'overlapping application functions are quickly made visible, and their impact analyses are available in no time'; spider tool shows derived relationships (https://help.bluedolphin.io/en/articles/11967545-spider-tool) (read 2026-09-26). Reached on: Views > spider tool.",
@@ -1091,6 +1542,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "application-connections",
 			"note": "The connections list filters on type, status and direction from its filter menu, and on status from quick filters. Built by openspec/changes/archive/2026-09-29-connections-catalogue-pages.",
 			"evidence": {
 				"stackiq": "src/manifest.d/connections.json Koppelingen filterMenu: true over the enum columns; lib/Settings/softwarecatalogus_register.json connection type, status and dataExchangeDirection facetable (register 2.5.2, connection 0.3.3); tests/Unit/Settings/ConnectionSchemaTest.php",
@@ -1121,6 +1573,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "application-connections",
 			"note": "Stackiq has no record for an API an application exposes. Specified in openspec/changes/connections-api-catalogue (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/interface-modeling-guidelines: interface subtype 'API ... APIs provide functionalities accessible to external applications ... Examples: Metrics API, Import API', related to the providing application (read 2026-09-26). Reached on: Inventory > Interface fact sheet, subtype API.",
@@ -1151,8 +1604,8 @@
 			"reachedOn": "nothing reaches it (nearest: admin settings ArchiMate organisation export)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"feature": "archimate-import-and-export",
-			"featureConfidence": "low",
+			"feature": "application-connections",
+			"featureConfidence": "medium",
 			"note": "The organisation ArchiMate export carries modules and usages but not connections, so an application's link graph cannot be exported. Specified in openspec/changes/connections-diagram-and-graph-export (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: front/impactcsv.php streams Glpi\\Csv\\ImpactCsvExport for an item, linked from the impact list view at src/Impact.php:393; the graph Download button src/Impact.php:1165 calls js/impact.js:2528 download, which writes PNG (js/impact.js:2539) or JPEG (js/impact.js:2546). Reached on: Appliance > Impact analysis tab, Download and CSV export.",
@@ -1183,6 +1636,7 @@
 			"reachedOn": "Integrations /settings/integrations (settings menu, admin, only when app id 'integriq' is installed)",
 			"provider": "integriq",
 			"providerHow": "read-from-code",
+			"feature": "application-connections",
 			"note": "With integriq installed, an admin sees stackiq's three integrations and their checked status on one page, and Add integration opens integriq. Without integriq the page is hidden, and the checking is integriq's. Building: ConductionNL/integriq openspec/changes/connection-registry, an existing open change, covers it (integriq lane, OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "src/manifest.d/connection-registry.json:23 Integrations page (register integriq, schema app_connection) with visibleIf appInstalled 'integriq' (:17) and permission admin (:15,:27); Add integration handler leaves for integriq (src/services/connectionRegistry.js:43); rows synced from lib/Settings/connections.json (email, federation, eol-feed); status worked out by integriq",
@@ -1310,7 +1764,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "archimate-import-and-export",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "There is an endpoint, but its comparison is broken (a missing key against a placeholder string) and no page calls it. The compare_archimate.py/.php scripts in the repo root are developer tools, not a user capability. Specified in openspec/changes/architecture-round-trip-check (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "appinfo/routes.php:107 POST /api/archimate/test-round-trip -> lib/Controller/SettingsController.php:2886 (@NoAdminRequired, any logged-in user) -> lib/Service/ArchiMateService.php:1496 testRoundTrip: reads $importResult['imported_count'] (:1528), a key no import path sets, and compares it to exportToArchiMate's 'exported_count' which is the literal string 'calculated_in_export_service' (:271), so it can never report success; it also imports a test model into the live register",
@@ -1342,7 +1796,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "archimate-import-and-export",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "The import records its phase and the objects saved so far, the settings page follows it every two seconds, and a cancel stops it before its next save batch, keeping what was already saved. Built by openspec/changes/archive/2026-09-29-architecture-import-progress-and-cancel.",
 			"evidence": {
 				"stackiq": "lib/Service/ArchiMateImportService.php startTracking() and saveSchemaGroups() record the phase and saved count in ProgressTracker under the page-named operation id and stop before the next schema group on a cancel; lib/Service/ArchiMateService.php cancelArchiMateImport() sets the cancel flag (the method was missing); src/views/settings/sections/ArchiMateImportExport.vue polls /api/progress/{id} every two seconds and shows the phase, a progress bar and a Cancel import button (tests/Unit/Service/ArchiMateImportProgressTest.php, ArchiMateServiceCancelTest.php, src/utils/archiMateImportProgress.spec.js)",
@@ -1374,7 +1828,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "gemma-alignment",
-			"featureConfidence": "low",
+			"featureConfidence": "high",
 			"note": "You can open a standard's page and read its definition, but reference components and other GEMMA terms have no page and there is no inline definition where they appear.",
 			"evidence": {
 				"stackiq": "src/manifest.json StandaardDetail /standaarden/:id st-data widget shows all element fields (documentation, gemmaNotes) of a standard; FacetedCatalogIndexView.vue:150 shows reference components by name only",
@@ -1406,7 +1860,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "gemma-alignment",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "The mapping to GEMMA reference components exists, but there is no map view in stackiq; you only see it as a facet list or in Archi after an admin export. Specified in openspec/changes/architecture-reference-component-coverage (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/meta-model: 'A business capability is supported by an application'; https://help.sap.com/docs/leanix/ea/application-portfolio-assessment lists a 'Business capability map' (read 2026-09-26). Reached on: Reports > Landscape Report on Business Capabilities.",
@@ -1437,6 +1891,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "architecture-modelling",
 			"note": "Models are imported and exported as ArchiMate files; nothing lets a user draw or edit a model inside stackiq. Specified in openspec/changes/architecture-views-editor (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/importing-and-exporting-diagrams and https://help.sap.com/docs/leanix/ea/working-with-fact-sheets-in-diagrams: free draw and data flow diagrams edited in the diagram editor, with an ArchiMate 3.2 shape template (https://help.sap.com/docs/leanix/ea/styles-and-patterns) (read 2026-09-26). Reached on: Diagrams > New Diagram (diagram editor).",
@@ -1467,6 +1922,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "architecture-modelling",
 			"note": "Business processes are not modelled; the only link applications have is to GEMMA reference components. Specified in openspec/changes/architecture-process-mapping (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967673-process-linked-to-ea-perspectives: 'The Create BPMN diagram button allows you to create a diagram directly from a business process'; https://help.bluedolphin.io/en/articles/11967500-getting-started-with-process-publication-portal: 'For each application, you will find different processes in which the selected application is involved' (read 2026-09-26). Reached on: Processes > Process browser.",
@@ -1497,6 +1953,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "architecture-modelling",
 			"note": "Planned usage and planned replacements exist per record, but there is no future-state model and no comparison with today. Specified in openspec/changes/architecture-future-state-scenarios (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/sap-leanix-architecture-and-road-map-planning: 'plan your target architecture and monitor initiative progress', transformation templates and impacts; https://updates.leanix.net/announcements/plan-with-consistent-future-architecture-data-introducing-the-committed-future (2026-09-24): 'Understanding your architecture across the past, present, and future ... introducing the committed future'. In the Architecture and Road Map Planning add on (read 2026-09-26). Reached on: Architecture and Road Map Planning > Transformations, target architecture diagrams.",
@@ -1527,6 +1984,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "gemma-alignment",
 			"note": "No report or view lists reference components that no application in your landscape covers. Specified in openspec/changes/architecture-reference-component-coverage (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"bluedolphin": "https://bluedolphin.io/capability-based-planning/: 'Run gap analyses to define a clear roadmap' and 'Identify capability gaps'. Gaps are found on the customer's own capability map; no reference architecture such as GEMMA is documented (read 2026-09-26). Reached on: Capability maps.",
@@ -1557,6 +2015,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "architecture-modelling",
 			"note": "Nothing drafts diagrams. Specified in openspec/changes/architecture-assistant-drafted-views (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/12528662-ai-capabilities-of-bluedolphin: 'Modelling Assistant or BPMN Generator instantly creates BPMN 2.0-compliant process diagrams from a simple prompt or by uploading existing documentation' (read 2026-09-26). Reached on: Processes > Modeling Assistant.",
@@ -1716,7 +2175,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "standards-compliance",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "One action updates every module's standards from its compliance records, but only a Nextcloud admin can run it and it stops at 1000 compliance records.",
 			"evidence": {
 				"stackiq": "appinfo/routes.php:275 POST /api/bulk-sync-standards -> lib/Controller/SettingsController.php:3598 (isAdmin check) -> lib/Service/ModuleComplianceService.php:527 bulkSyncModuleStandards (reads up to 1000 compliancy records and updates module standards); UI src/views/settings/sections/StatisticsOverview.vue:79 button -> src/modals/BulkSyncDialog.vue:321",
@@ -1747,7 +2206,7 @@
 			"reachedOn": "BioMaatregelen /bio-maatregelen, menu BIO measures; detail BioMaatregelDetail /bio-maatregelen/:id",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"feature": "standards-compliance",
+			"feature": "security-and-privacy-assessment",
 			"featureConfidence": "medium",
 			"note": "The page exists and shows the theme, but the level column is wired to a key that does not exist (bbnNiveau vs bbnLevel; level only shows on the detail page), and the BIO measures are not shipped, so someone has to type them in.",
 			"evidence": {
@@ -1779,7 +2238,7 @@
 			"reachedOn": "Komplianties /komplianties (create a claim with a BIO measure); ComplianceMatrix /compliance-matrix with BIO measures as columns",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"feature": "standards-compliance",
+			"feature": "security-and-privacy-assessment",
 			"featureConfidence": "medium",
 			"note": "You can record that an application meets a BIO measure, but there is no way to record that it does not meet one: the absence of a claim is the only negative, which cannot be told apart from 'not assessed'. The md-compliance column key 'bioMaatregel' also differs from the property bioMeasure.",
 			"evidence": {
@@ -1811,8 +2270,8 @@
 			"reachedOn": "ModuleDetail /modules/:id Application data widget; Modules /modules column dpiaStatus and 'Without DPIA' quick filter",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"feature": "standards-compliance",
-			"featureConfidence": "low",
+			"feature": "security-and-privacy-assessment",
+			"featureConfidence": "medium",
 			"note": "DPIA status, date, next review and document link are fields on the application and shown and filterable on the Applications pages. The scheduled 'dpia-review-overdue' notification is only a register declaration.",
 			"evidence": {
 				"stackiq": "lib/Settings/softwarecatalogus_register.json module.dpiaStatus (enum not required/required/executed), dpiaDate, dpiaNextAssessment, dpiaDocumentRef; src/manifest.json ModuleDetail md-data includes the DPIA fields; Modules /modules quick filter 'Without DPIA (BBN2+)'",
@@ -1842,6 +2301,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "standards-compliance",
 			"note": "There is no list or check for the Forum Standaardisatie comply-or-explain list; only GEMMA standards imported with the model. Decided no on 2026-09-29 by the build-all lane, reversible: no competitor rates yes, no demand, outside the core areas (compliance).",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/inkoopondersteuning%20standaarden: \"De verplichte standaarden zijn: ... de open standaarden die onder het pas-toe-of-leg-uit regime van de overheid binnen het werkingsgebied vallen\" (read 2026-09-26); https://www.softwarecatalogus.nl/pakket/archi: package version shows \"Verplichte standaarden ... Ondersteuning Compliancy Testrapport\" (read 2026-09-26). Comply-or-explain standards are mixed into the mandatory set, not shown as their own list. Reached on: Package page > Standaarden; Inkoopondersteuning.",
@@ -1872,6 +2332,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "data-quality",
 			"note": "No rule-based score of register correctness or completeness exists on any page. Specified in openspec/changes/landscape-completeness-score (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "grep for completeness/health score/quality score in lib and src: no hits; lib/Command/ReferencesAuditCommand.php:34 (occ stackiq:references:audit) only audits cross-app uuid references, it is not a scored rule set",
@@ -1901,6 +2362,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "standards-compliance",
 			"note": "Nothing sends questionnaires to suppliers or stores their answers. Decided no on 2026-09-29 by the build-all lane, reversible: single competitor, no demand, outside the core areas (compliance).",
 			"evidence": {
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967524-create-a-survey: surveys 'allowing external stakeholders to contribute directly to the Enterprise Architecture repository', sent 'to multiple recipients simultaneously via email' from an object's questionnaire, answers kept on the object (read 2026-09-26). Reached on: Object > Questionnaire tab > Create survey.",
@@ -1932,7 +2394,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "offering-and-usage-listings",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "A supplier in aanbod-beheerder creates modules and services on the index pages and publishes them by setting publicationDate in the form. The dedicated publish endpoint (PUT /api/publication/...) is not called by any page (src/utils/openDataProjection.js has no importer).",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier: \"Deze handleiding is bedoeld voor de leveranciers en legt uit hoe de leveranciers hun productportfolio kunnen aanvullen en beheren ... voeg pakket toe\" (read 2026-09-26). Reached on: Supplier login > Productportfolio.",
@@ -1964,7 +2426,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "gemma-alignment",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "Live facet counts on reference component and standard narrow the module and service lists. Scope is whatever the RBAC read rules let the viewer see (published entries are public). Corrections round 8 (2026-09-28): the domain facet on the same sidebar is always empty, stackiq#1141; rating kept because this row filters on reference component and standard, which FacetService fills from other fields.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/13683: \"Ik ben op zoek naar een nieuw pakket voor referentiecomponent voor BAG-administratie\" and standards filters combine (read 2026-09-26); https://www.softwarecatalogus.nl/pakketten: facets Referentiecomponent and Standaard (read 2026-09-26). Reached on: Alle pakketten > filters.",
@@ -1995,6 +2457,7 @@
 			"reachedOn": "Organisations /organisaties (main menu)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "supplier-directory",
 			"note": "The Organisations index lists organisations with search, a type facet and a status filter. There is no filter for 'offers at least one product'; type Supplier is the proxy.",
 			"evidence": {
 				"stackiq": "src/manifest.json:386 Organisaties type:index over schema organization with status filter and OrganisatieCard; register :2022 organization.type is facetable (Municipality/Supplier/Collaboration/Community); public read of Active suppliers in organization authorization (:2467)",
@@ -2024,6 +2487,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "shared-usage-on-gemma-views",
 			"note": "Nothing lets an organisation find or contact other organisations using the same product. Decided no on 2026-09-29 by the build-all lane, reversible: single competitor, no demand, outside the core areas (market).",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/13683: \"Alle gemeenten ... inclusief contactgegevens van gemeenten ... U kunt contact onderhouden met deze gemeenten\" (read 2026-09-26). Reached on: Inlogmenu > Alle gemeenten.",
@@ -2055,7 +2519,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "maintenance-and-supplier-roadmap",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "A supplier can register a future version with status 'in development' and planned dates, which reads as a crude release plan. There is no roadmap view or declared roadmap; the overlay marks maintenance-and-supplier-roadmap as 'soon'. Specified in openspec/changes/lifecycle-maintenance-and-supplier-roadmap (OpenSpec pass 2026-09-27). Built by openspec/changes/archive/2026-09-29-lifecycle-maintenance-and-supplier-roadmap.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/13683: \"Alle pakketversies en planningen ... gelijk zichtbaar de planning van de diverse pakketversies\" (read 2026-09-26); https://www.softwarecatalogus.nl/pakketversies: facet \"Status planning ... Filter op in ontwikkeling en zie de distributie planningsdata\" (read 2026-09-26). Reached on: Wat is er te vinden > Alle pakketversies en planningen.",
@@ -2150,6 +2614,7 @@
 			"reachedOn": "Applications /modules create/edit form; not shown on ModuleDetail /modules/:id",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "supplier-directory",
 			"note": "Each product can point at its own contact person of the supplier through the form. The application page's data widget names the old Dutch keys, so the product's contact person (and its descriptions) do not show there; the same stale keys are on SuiteDetail (src/manifest.json:683). Specified in openspec/changes/landscape-application-page (OpenSpec pass 2026-09-27). The application page now shows the contact person under the current key contactPerson (built by openspec/changes/archive/2026-09-29-landscape-application-page).",
 			"evidence": {
 				"stackiq": "register :6856 module.contactPerson -> contactPerson with x-relation-filter organization = @object.provider; catalogService and suite also carry contactPerson; src/manifest.json:500 ModuleDetail md-data include lists 'contactpersoon', 'beschrijvingKort', 'beschrijvingLang', which are not module properties (renamed to contactPerson/shortDescription/longDescription)",
@@ -2180,6 +2645,7 @@
 			"reachedOn": "Organisations /organisaties and OrganisatieDetail /organisaties/:id (services and applications lists)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "supplier-directory",
 			"note": "One organisation record is the supplier; products reference it and the detail page lists them. A contract reaches the supplier only through its service, not by its own field.",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/provider-modeling-guidelines: 'Providers are companies or entities that supply IT solutions, services, or technologies'; one provider fact sheet linked from IT components and contracts (https://help.sap.com/docs/leanix/ea/contract-extension-to-meta-model) (read 2026-09-26). Reached on: Inventory > Provider fact sheet.",
@@ -2274,6 +2740,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "portfolio-rationalisation",
 			"note": "Nothing finds applications in your landscape that fulfil the same reference component; the Reports card promises 'overlapping' software but the report does not compute it. Specified in openspec/changes/architecture-reference-component-coverage (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/application-rationalization: 'Application rationalization reduces costs, eliminates redundancies', using applications mapped to business capabilities; overlap is found per customer capability, not per reference component (read 2026-09-26). Reached on: Reports > Landscape Report by Business Capability.",
@@ -2304,6 +2771,7 @@
 			"reachedOn": "PortfolioReport /portfolio-report, from Reports /reports card 'Portfolio rationalization' (footer menu Reports)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "portfolio-rationalisation",
 			"note": "The report covers ageing software (EOL exposure) with TIME quadrants, cost and a CSV export, but not overlap, even though its card says 'overlapping and ageing'. Specified in openspec/changes/architecture-reference-component-coverage (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/application-rationalization-evaluate-data: 'Leverage automated TIME classification, application portfolio and landscape reports ... to streamline application rationalization' (read 2026-09-26). Reached on: Use case Application Rationalization > reports.",
@@ -2335,7 +2803,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "lifecycle-and-end-of-support",
-			"featureConfidence": "low",
+			"featureConfidence": "high",
 			"note": "The version an organisation runs is a field on its usage and drives the EOL badges, but no stackiq page lets the organisation set or change it. Specified in openspec/changes/landscape-usage-registration (OpenSpec pass 2026-09-27). Built by openspec/changes/archive/2026-09-29-landscape-usage-registration.",
 			"evidence": {
 				"stackiq": "usage.moduleVersion (x-relation-filter module) set on the usage form from Add to our landscape and on GebruikDetail (src/manifest.d/usages.json); shown in the Applications in use list; tests/vitest/usages.spec.js",
@@ -2367,7 +2835,7 @@
 			"provider": "openregister",
 			"providerHow": "read-from-code",
 			"feature": "notifications",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "The only rule is a register declaration, and it addresses the version's own managers and catalogue admins, not the organisations that use the application, so even if OpenRegister dispatches it a user of the application is not told. Specified in ConductionNL/openregister openspec/changes/notifications-new-notes-and-referrers (openregister lane, OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "lib/Settings/softwarecatalogus_register.json moduleVersion x-openregister-notifications module-version-published (trigger created, recipients object-acl manage + group software-catalog-admins); no notification code in lib (no INotificationManager use)",
@@ -2398,6 +2866,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "lifecycle-and-end-of-support",
 			"note": "You could register a database as its own 'System software' module and feed its EOL, but nothing ties it to the applications that depend on it; SBOM components carry no lifecycle. Specified in openspec/changes/operations-technology-components (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/obsolescence-risk-management: 'SAP LeanIX helps you gain an overview of your application landscape's obsolescence risk exposure' over the technology layer; lifecycle dates of IT components from the catalog in Technology Risk and Compliance (read 2026-09-26). Reached on: Use case Obsolescence Risk Management; IT Component lifecycle.",
@@ -2427,6 +2896,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "portfolio-roadmap",
 			"note": "Strategic goals are not modelled. Decided no on 2026-09-29 by the build-all lane, reversible: single competitor, no demand, outside the core areas (lifecycle).",
 			"evidence": {
 				"bluedolphin": "https://bluedolphin.io/application-portfolio-management-application-rationalization/: 'Applications natively connected to BPMN, ERD, strategy, and initiatives' and 'Align applications with strategic initiatives and roadmaps'; https://bluedolphin.io/capability-based-planning/: 'Connect capabilities directly to business objectives' (read 2026-09-26). Reached on: Objects and relationships to strategy elements.",
@@ -2555,7 +3025,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "contract-administration",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "The application page lists the contracts behind the application, found through its usages and the services that offer it. Built by openspec/changes/archive/2026-09-29-landscape-application-page.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/Appliance.php:99 and src/Software.php:131 add the Contract_Item tab (src/Contract_Item.php:43, install/mysql/glpi-empty.sql:1536 glpi_contracts_items) listing every contract of the application. Reached on: Management > Appliances > Contracts tab. Driven on the lab at 11.0.9 (2026-09-26): after linking the contract, the appliance Contracts tab showed \"Lab contract, 2025-01-01, 12 months -> 2025-12-31\".",
@@ -2619,7 +3089,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "license-and-seat-tracking",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "An application records open versus closed source and which open-source licence. There is no licence metric such as per user, per organisation or per seat. Specified in openspec/changes/contracts-licence-seats (OpenSpec pass 2026-09-27). A licence contract now records its licence metric, per user, per device, per inhabitant or per organisation (built by openspec/changes/archive/2026-09-29-contracts-licence-seats).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: each licence has a type, install/mysql/glpi-empty.sql:6775 glpi_softwarelicenses.softwarelicensetypes_id, an admin editable dropdown seeded with types such as OEM (install/empty_data.php:9294). Reached on: Management > Licenses (front/softwarelicense.php), Type field.",
@@ -2650,6 +3120,7 @@
 			"reachedOn": "License posture /license-posture (main menu)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "license-and-seat-tracking",
 			"note": "The page shows the open-source share of the running portfolio with per-vendor and per-organisation breakdowns, computed at read time.",
 			"evidence": {
 				"stackiq": "src/views/LicensePostureView.vue:11 open-source vs closed-source share weighted by in-production usage, :64 per-vendor rollup, per-organisation open-source-first report; derived in src/utils/licensePosture.js",
@@ -2711,6 +3182,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "license-and-seat-tracking",
 			"note": "Without seat or consumption data there is nothing to compute an effective licence position from. Decided no on 2026-09-29 by the build-all lane, reversible: no competitor rates yes, no demand, outside the core areas (contracts).",
 			"evidence": {
 				"stackiq": "No entitlement or consumption fields exist (see ctr-seat-count); no service computes a licence position in lib/Service/",
@@ -2740,6 +3212,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "contract-administration",
 			"note": "Contracts carry a cost and a period, but there is no budget to charge them against. Decided no on 2026-09-29 by the build-all lane, reversible: single competitor, no demand, outside the core areas (contracts).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/Budget.php:46 Budget with a period and value (install/mysql/glpi-empty.sql:306 begin_date, :307 end_date, :308 value); contract costs (install/mysql/glpi-empty.sql:1466 budgets_id) and financial records (src/Infocom.php:599 budgets_id check) are charged to it. Reached on: Management > Budgets. Driven on the lab at 11.0.9 (2026-09-26): /front/budget.php lists budgets with type, start date, end date and value.",
@@ -2769,6 +3242,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "contract-administration",
 			"note": "No purchase value, useful life or depreciation is recorded or computed. Decided no on 2026-09-29 by the build-all lane, reversible: single competitor, no demand, outside the core areas (contracts).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: the financial record of any item, licences included (src/SoftwareLicense.php:245 Infocom tab), carries depreciation type, duration and coefficient (install/mysql/glpi-empty.sql:3269 sink_time, :3270 sink_type, :3271 sink_coeff); src/Infocom.php:872 Linear and degressive types and src/Infocom.php:1085 linearAmortise compute the table. Reached on: Management > Licenses > Management tab.",
@@ -2801,7 +3275,7 @@
 			"provider": "openregister",
 			"providerHow": "read-from-code",
 			"feature": "contract-administration",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "The contract page has a Documents files panel for the signed contract, plus a document reference field.",
 			"evidence": {
 				"stackiq": "src/manifest.json:567 ContractDetail ct-files integration 'files' (Documents panel); catalogContract.documentReference text field (register :3252)",
@@ -2832,6 +3306,7 @@
 			"reachedOn": "Reports /reports -> Portfolio rationalization /portfolio-report",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "contract-administration",
 			"note": "The portfolio report shows each application in use with its cloud model and annualised cost, which lets you pick out SaaS spend. There is no SaaS subscription list and nothing discovers purchases made outside IT.",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/saas-discovery: discovery helps 'Eliminate shadow IT and business-managed IT' but 'The SaaS discovery feature in SAP LeanIX does not provide insight into cost, adoptions, contracts, and other SaaS specifics'. Spend only through manually kept contract costs (read 2026-09-26). Reached on: SaaS Discovery inbox; Contract fact sheet costs.",
@@ -2862,6 +3337,7 @@
 			"reachedOn": "Vulnerabilities /kwetsbaarheden (menu), Report vulnerability",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "vulnerability-management",
 			"note": "A vulnerability is registered with CVE code and CVSS score, and a severity band is derived from the score.",
 			"evidence": {
 				"vng-softwarecatalogus": "unknown: no vulnerability register is described; the docs do not state its absence either (the IBD-foto export only hands CPE identifiers to the IBD); searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/Hoe%20maak%20je%20een%20ICT-foto%20voor%20de%20IBD%3F (read 2026-09-26)",
@@ -2892,6 +3368,7 @@
 			"reachedOn": "Vulnerabilities /kwetsbaarheden form (Affected applications); ModuleversieDetail Components tab shows matches",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "vulnerability-management",
 			"note": "A vulnerability links to applications, not to specific versions. Per-version affectedness only shows as a computed match against a version's imported SBOM.",
 			"evidence": {
 				"stackiq": "register.json:1701 vulnerability.modules links to module (applications), not moduleVersion; version level only via read-time SBOM match (src/utils/sbomVulnerabilityMatch.js, sbomComponent.vexCveIds register.json:8024) on the ModuleversieDetail Components tab",
@@ -2922,6 +3399,7 @@
 			"reachedOn": "ModuleversieDetail /moduleversies/:id, sidebar tab Components, upload",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "vulnerability-management",
 			"note": "An SBOM in CycloneDX JSON or SPDX 2.x JSON can be uploaded for a version. XML and tag-value formats are not accepted.",
 			"evidence": {
 				"stackiq": "src/components/sbom/SbomComponentsPanel.vue:53-90 upload control (.json) -> POST /api/moduleversies/{uuid}/sbom (appinfo/routes.php:92) -> lib/Controller/SbomController.php:129 importSbom -> lib/Service/SbomParserService.php:77 parse (CycloneDX JSON) and :127 parseSpdx (SPDX 2.x JSON)",
@@ -2951,6 +3429,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "vulnerability-management",
 			"note": "Matching is deliberately local, against vulnerabilities typed into the catalogue. No public CVE feed is read.",
 			"evidence": {
 				"stackiq": "src/utils/sbomVulnerabilityMatch.js header: 'no HTTP request to an external advisory feed is ever made'; lib/Service/EolSyncService.php syncs endoflife.date support dates, not CVEs",
@@ -2980,6 +3459,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "vulnerability-management",
 			"note": "Only individual vulnerabilities get a severity band. No application gets a combined score from its vulnerabilities and support status. Decided no on 2026-09-29 by the build-all lane, reversible: no competitor rates yes, no demand, outside the core areas (security).",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/technology-obsolescence-risk-statuses-and-views-in-reports: 'Learn how risk statuses are determined for IT components and applications', e.g. 'Unaddressed Risk ... when the internal end-of-life date or vendor-provided end-of-support date is in the past'. Based on support status, not vulnerabilities (read 2026-09-26). Reached on: Technology Risk and Compliance > obsolescence risk status on applications.",
@@ -3009,6 +3489,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "vulnerability-management",
 			"note": "The exposure row shows which version is deployed, but no record says which version fixes the vulnerability, so patch status cannot be seen. Decided no on 2026-09-29 by the build-all lane, reversible: no competitor rates yes, no demand, outside the core areas (security).",
 			"evidence": {
 				"stackiq": "register.json:1619 vulnerability has no fixed-in version field; src/utils/vulnerabilityExposure.js computeExposure carries the deployed moduleVersion per usage but nothing compares it to a fix",
@@ -3039,6 +3520,7 @@
 			"reachedOn": "Vulnerabilities /kwetsbaarheden (menu)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "vulnerability-management",
 			"note": "All vulnerabilities are listed with severity filters and each opens in the record form. The separate KwetsbaarheidDetail page is not what a row opens.",
 			"evidence": {
 				"stackiq": "src/manifest.json:969 Kwetsbaarheden custom page -> src/views/KwetsbaarhedenView.vue table with severity tabs; row click openDetail (:417) opens the record in the generic ObjectModal",
@@ -3069,6 +3551,7 @@
 			"reachedOn": "Organisations /organisaties (main menu), Add form; walkthrough step create-organisatie",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "organisation-register",
 			"note": "Organisations are created on the index with their type. The required contactsUid is a Nextcloud Contacts UID the form asks for as text, which is awkward but does not block the capability.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/hoe-kan-ik-me-als-leverancier-aanmelden: \"Als leverancier kunt u zich aanmelden door de volgende gegevens te sturen naar softwarecatalogus@vng.nl\" (read 2026-09-26); https://www.softwarecatalogus.nl/node/16564: C4 roles for gemeente and samenwerking accounts (read 2026-09-26); organisation types gemeente, samenwerking, leverancier. Reached on: Registration via VNG helpdesk.",
@@ -3130,6 +3613,7 @@
 			"reachedOn": "nothing reaches it (Organisations /organisaties can only filter by status)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "organisation-register",
 			"note": "No working path moves an organisation between Draft, Active and Inactive: the field is hidden on the form and locked on the detail page, the status dialog is orphaned, and the Nextcloud dashboard widget still uses the old Dutch values so it lists nothing and would write an invalid value. Missing half decided no on 2026-09-29 (defer retired 2026-09-28): only GLPI rates partial, no competitor rates yes, no demand, outside the core areas (organisations). The broken half stays: the organisation status field is hidden and locked, the status dialog is never opened, and the concept organisations dashboard widget filters and writes the old Dutch values concept and actief, which are not in the enum.",
 			"evidence": {
 				"stackiq": "register organization.status enum Draft/Active/Inactive is visible:false (:2022); src/manifest.json:403 OrganisatieDetail overrides status editable:false; src/modals/object/ChangeOrganisatieStatusDialog.vue:211 is never opened (no setDialog('changeOrganisatieStatus') in src); src/views/widgets/ConceptOrganisatiesWidget.vue:100 filters status 'concept' and :129 writes 'actief', neither an enum value",
@@ -3160,6 +3644,7 @@
 			"reachedOn": "OrganisatieDetail /organisaties/:id 'Contact persons' list -> ContactpersoonDetail /contactpersonen/:id",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "organisation-register",
 			"note": "Contact persons are listed on the organisation with their function and roles. The Contactpersonen index page exists but has no menu entry.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/30402: \"Bij elke leverancier is een contactpersoon opgevoerd. Deze persoon is verantwoordelijk voor de inhoud\" (read 2026-09-26); https://www.softwarecatalogus.nl/node/16564: E4 contact details of municipalities (read 2026-09-26). One contact, no roles. Reached on: Supplier page header.",
@@ -3191,6 +3676,7 @@
 			"reachedOn": "App header OrganisationSwitcher (src/App.vue:55) -> Manage members",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
+			"feature": "roles-and-access",
 			"note": "A beheerder of the organisation grants an existing Nextcloud user access to it from the header switcher; membership is stored by OpenRegister. It adds existing users; it does not send an invitation to a new person.",
 			"evidence": {
 				"stackiq": "src/components/organisations/OrganisationSwitcher.vue:48 'Manage members' (isBeheerder) opens src/modals/GrantOrganisationAccessModal.vue; POST /api/organisations/{uuid}/members -> lib/Controller/OrganisationMembersController.php:108 authorizeBeheerder then OpenRegister joinOrganisation (:123)",
@@ -3222,6 +3708,7 @@
 			"reachedOn": "App header OrganisationSwitcher on every page",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
+			"feature": "roles-and-access",
 			"note": "A user who belongs to several organisations switches the active one from the header; OpenRegister holds the memberships.",
 			"evidence": {
 				"stackiq": "src/components/organisations/OrganisationSwitcher.vue:197 POST /apps/openregister/api/organisations/{uuid}/set-active; mounted in src/App.vue:55",
@@ -3252,6 +3739,7 @@
 			"reachedOn": "OrganisatieDetail /organisaties/:id, merge panel (admin only)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "organisation-register",
 			"note": "An admin can merge a municipality into another and its usages, contacts and contracts follow. A supplier takeover leaves the source's applications and services pointing at the tombstoned supplier, because module and service provider fields are not in the relation map. Corrections round 8 (2026-09-28): besides module and service providers, a merge also leaves usage providers, collaboration memberships and GEMMA model organisations on the merged-away organisation, stackiq#1086; rating kept because usages, contacts, connections and contracts are still re-pointed.",
 			"evidence": {
 				"stackiq": "src/manifest.json:430 OrganisationMergePanel on OrganisatieDetail; POST /api/organisaties/{uuid}/merge -> lib/Controller/MergeController.php:142 isAdmin; lib/Service/MergeOrganisatieService.php:111 re-points usage.consumer/participants, contactPerson.organization, connection.provider and @self.organisation of catalogContract/compliancy; module.provider and catalogService.provider are not re-pointed",
@@ -3282,6 +3770,7 @@
 			"reachedOn": "OrganisatieDetail /organisaties/:id, merge panel (admin only)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "organisation-register",
 			"note": "The merge panel shows per-type counts of what would be re-pointed before the admin confirms. It inherits the merge's blind spot: module and service provider links are not counted because they are not moved. Corrections round 8 (2026-09-28): the preview omits the six organisation references the merge does not move, stackiq#1086; rating kept because the preview matches exactly what the merge will change.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: with no merge (src/Entity.php:202 forbids merge for Entity) there is nothing to preview; the transfer (src/Transfer.php:50) runs directly without a what would change report.",
@@ -3312,6 +3801,7 @@
 			"reachedOn": "admin settings section 'User groups'",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "roles-and-access",
 			"note": "An admin configures which groups count as generic users, organisation admins and super users. The catalogue roles themselves map to fixed, hard-coded group names and by organisation type, so an admin cannot map e.g. 'buyer' onto a group of their choice. Specified in openspec/changes/organisations-role-mapping-and-access-review (OpenSpec pass 2026-09-27). Corrections round 8 (2026-09-28): contacts of municipalities, suppliers and collaborations get no role group, only Community contacts do, stackiq#1137; rating kept because generic user groups are still configurable and an admin can still put a user in a catalogue group by hand (src/dialogs/ManageUserGroupsDialog.vue:175).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: roles are profiles with per right settings (src/Profile.php:55), mapped onto groups and directory attributes by authorisation rules, src/RuleRight.php:236 group criterion and src/RuleRight.php:297 profile action. Reached on: Administration > Profiles; Administration > Rules > Authorizations assignment rules.",
@@ -3341,6 +3831,7 @@
 			"reachedOn": "nothing reaches it in stackiq; Nextcloud's own user_oidc/user_saml apps would apply platform-wide",
 			"provider": "nextcloud",
 			"providerHow": "read-from-code",
+			"feature": "sign-in-and-accounts",
 			"note": "Stackiq does nothing for single sign-on. A Nextcloud admin can add an identity provider app, but that is the platform, not a stackiq page. Decided no (OpenSpec pass 2026-09-27): Platform capability: Nextcloud signs users in through its identity provider apps (user_oidc, user_saml) for every app, and stackiq users are Nextcloud users. built.owner corrected to nextcloud/server.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/Auth.php:106 EXTERNAL (web server provided identity, for example a SAML or OIDC module in front of GLPI), src/Auth.php:107 CAS with phpCAS::client at src/Auth.php:557, and src/Auth.php:108 X509 certificates, next to LDAP at src/Auth.php:105. Reached on: Setup > Authentication > Other authentication methods.",
@@ -3370,6 +3861,7 @@
 			"reachedOn": "nothing reaches it in stackiq; Nextcloud's user_ldap would apply platform-wide",
 			"provider": "nextcloud",
 			"providerHow": "read-from-code",
+			"feature": "sign-in-and-accounts",
 			"note": "Stackiq has no directory sync for users or groups. Nextcloud's LDAP app could do it platform-wide, outside stackiq. Decided no (OpenSpec pass 2026-09-27): Platform capability: Nextcloud user_ldap keeps users and groups in step with a directory for every app, and stackiq users and groups are Nextcloud users and groups. built.owner corrected to nextcloud/server.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/AuthLDAP.php:59 LDAP directories with user import and group import (src/AuthLDAP.php:2816 ldapImportGroup), and the CLI src/Glpi/Console/Ldap/SynchronizeUsersCommand.php:79 ldap:synchronize_users (alias ldap:sync at :80). Reached on: Administration > Users > LDAP directory link; Setup > Authentication > LDAP directories. Driven on the lab at 11.0.9 (2026-09-26): /front/ldap.php offers \"Bulk import users from a LDAP directory\" and \"Synchronizing already imported users\".",
@@ -3399,6 +3891,7 @@
 			"reachedOn": "Organisations /organisaties card -> contact persons view -> Change Password on your own row",
 			"provider": "nextcloud",
 			"providerHow": "read-from-code",
+			"feature": "sign-in-and-accounts",
 			"note": "A user can change their own password from their contact row in the organisation card, which is hard to find. There is no 'my account' page in stackiq; /api/me feeds only the organisation switcher. Nextcloud's personal settings do both natively. Decided no (OpenSpec pass 2026-09-27): Platform capability: Nextcloud personal settings let every user change their password and see their account details. The stackiq half (change password from your own contact row) stays as built evidence. built.owner corrected to nextcloud/server, provider nextcloud.",
 			"evidence": {
 				"stackiq": "src/components/ContactpersonenList.vue:115 'Change Password' opens src/dialogs/ChangePasswordDialog.vue -> POST /api/contactpersonen/change-password -> lib/Controller/ContactpersonenController.php:718, self-reset allowed at :753; GET /api/me (:1578) used only by src/App.vue and OrganisationSwitcher",
@@ -3429,6 +3922,7 @@
 			"reachedOn": "admin settings section 'Email configuration', Templates tab (save does not persist)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "sign-in-and-accounts",
 			"note": "The mails are sent from templates, but the admin template editor's Save button does not call the backend and reports success anyway, so an administrator cannot edit a template from the UI. The transport defaults to 'null', which sends nothing until configured.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/NotificationTargetUser.php:44 user events passwordexpires, passwordforget and passwordinit; their text lives in admin editable templates, src/NotificationTemplate.php:47 and translations src/NotificationTemplateTranslation.php:42, seeded at install/empty_data.php:3212 (passwordinit) and :5640. Reached on: Setup > Notifications > Notification templates.",
@@ -3618,6 +4112,7 @@
 			"reachedOn": "API: /apps/openregister/api/objects plus stackiq /api/*; the stackiq pages themselves use the same API",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
+			"feature": "api-and-integrations",
 			"note": "Read and write through a REST API is live through OpenRegister, with stackiq's own role-scoped endpoints on top.",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/sap-leanix-apis: 'These APIs are ideal for integration with systems that support RESTful interactions' and 'The GraphQL API enables you to retrieve and update fact sheets and related data' (read 2026-09-26). Reached on: Developer Guide > SAP LeanIX APIs.",
@@ -3649,6 +4144,7 @@
 			"reachedOn": "API only: GET /api/views/docs and /api/aangeboden-gebruik/docs; docs site https://stackiq.conduction.nl (Documentation footer link)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "api-and-integrations",
 			"note": "The generated OpenAPI file is empty. What exists is hand-written: two JSON doc endpoints and markdown pages. OpenRegister may generate an OAS per register, but stackiq does not surface it. Specified in openspec/changes/sharing-generated-api-docs (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/Glpi/Api/HL/Controller/CoreController.php:322 route /doc serves a Swagger UI 'GLPI API Documentation' (:329 to :331) over the spec built by src/Glpi/Api/HL/OpenAPIGenerator.php. Reached on: /api.php/doc. Driven on the lab at 11.0.9 (2026-09-26): on a fresh install /api.php/v2/doc answers 403 \"The High-Level API is disabled\"; after switching on enable_hlapi in Setup > General > API it serves the Swagger UI \"GLPI API Documentation\".",
@@ -3679,7 +4175,7 @@
 			"reachedOn": "admin settings section ArchiMate Import/Export; Portfolio rationalization /portfolio-report (Export CSV, one organisation at a time)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"feature": "archimate-import-and-export",
+			"feature": "portfolio-reporting",
 			"featureConfidence": "medium",
 			"note": "A full ArchiMate export exists but is only reached from admin settings. The one export on a user page is the portfolio report CSV, and the catalogue list pages offer no export. Specified in openspec/changes/insight-exports-and-custom-reports (OpenSpec pass 2026-09-27).",
 			"evidence": {
@@ -3711,6 +4207,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "api-and-integrations",
 			"note": "No integration with a service management tool exists. Specified in openspec/changes/sharing-itsm-exchange (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"sap-leanix": "https://www.leanix.net/hubfs/Legal/Metrics-and-Feature-List-EAM-SAP-LeanIX-v3.1.pdf: 'ServiceNow integration An integration that connects the subscription services to the customer's ServiceNow subscription to synchronize infrastructure and software asset information'; Jira Service Management integration at https://help.sap.com/docs/leanix/ea/jira-service-management-integration-faqs (read 2026-09-26). Reached on: Administration > Integrations > ServiceNow.",
@@ -3741,6 +4238,7 @@
 			"reachedOn": "the whole app runs on the customer's own Nextcloud",
 			"provider": "nextcloud",
 			"providerHow": "read-from-code",
+			"feature": "open-platform",
 			"note": "As a Nextcloud app it runs on whatever infrastructure hosts the Nextcloud instance.",
 			"evidence": {
 				"sap-leanix": "https://www.leanix.net/hubfs/Legal/Metrics-and-Feature-List-EAM-SAP-LeanIX-v3.1.pdf describes 'The SaaS services' and a customer 'workspace'; https://www.leanix.net/hubfs/Legal/Operational-Terms-Exhibit-v.2.0.pdf defines 'the data center utilized by LeanIX to host Customer's Data' with maintenance windows per hosting region. Only a vendor hosted subscription is offered (read 2026-09-26)",
@@ -3772,7 +4270,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "gemma-alignment",
-			"featureConfidence": "low",
+			"featureConfidence": "high",
 			"note": "Search plus reference-component, standard, application-service and domain facets work. Supplier is not offered as a facet, which is half of the row's example. Specified in openspec/changes/insight-supplier-facet (OpenSpec pass 2026-09-27). Corrections round 8 (2026-09-28): the domain facet is always empty, so of the four facets only reference component, standard and application service narrow the list, stackiq#1141; rating kept because search and the reference component facet work and supplier was already missing.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/13683: \"Aan de linkerkant staan zogenaamde filter mogelijkheden. Deze werken ook in combinatie ... Achter de te zetten filters staat een getal\" (read 2026-09-26); https://www.softwarecatalogus.nl/pakketversies: facets Leverancier, Standaard, Referentiecomponent, Status planning, Domein, Doelgroep, Bedrijfsfunctie (read 2026-09-26). Reached on: Alle pakketten / Alle pakketversies.",
@@ -3803,6 +4301,7 @@
 			"reachedOn": "Applications /modules and Services /diensten, Saved views menu",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "gemma-alignment",
 			"note": "A user can save the facet and search selection as a named view and reopen it. Storage is OpenRegister's views API. It covers only those two pages.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/SavedSearch.php:52 SavedSearch, private or shared, listed under Tools > Saved searches (src/Html.php:1309) with optional alerts (front/savedsearch_alert.form.php). Reached on: Tools > Saved searches (front/savedsearch.php). Driven on the lab at 11.0.9 (2026-09-26): Tools > Saved searches (/front/savedsearch.php) lists saved searches with private or shared scope and a default flag.",
@@ -3833,6 +4332,7 @@
 			"reachedOn": "Dashboard / (first menu entry)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "dashboard-and-overviews",
 			"note": "The dashboard shows counts of organisations, applications, services and contracts. The counts are computed by OpenRegister through the library stat widget.",
 			"evidence": {
 				"sap-leanix": "https://www.leanix.net/hubfs/Legal/Metrics-and-Feature-List-EAM-SAP-LeanIX-v3.1.pdf: 'Configurable dashboards visualize inventory content as charts, lists, and KPIs'; https://help.sap.com/docs/leanix/ea/application-portfolio-management-dashboard (read 2026-09-26). Reached on: Dashboards.",
@@ -3863,6 +4363,7 @@
 			"reachedOn": "Nextcloud dashboard widget 'Concept organisaties'",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "dashboard-and-overviews",
 			"note": "The widget is registered and loads, but it filters on a status value the data no longer holds, so it always lists nothing. Its accept button would write an invalid status.",
 			"evidence": {
 				"stackiq": "lib/Dashboard/ConceptOrganisatiesWidget.php registered at lib/AppInfo/Application.php:760; src/views/widgets/ConceptOrganisatiesWidget.vue:100 filters organisations on status === 'concept', but the status enum is Draft/Active/Inactive/merged (lib/Settings/softwarecatalogus_register.json:2321) after lib/Repair/RenameDutchCatalogValues.php:76 renamed 'Concept' to 'Draft'. Accept writes status 'actief' (:129), which is not in the enum either.",
@@ -3893,6 +4394,7 @@
 			"reachedOn": "Reports /reports (footer menu), one card to Portfolio rationalization /portfolio-report",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "portfolio-reporting",
 			"note": "The report picker exists and opens a working report. The list holds exactly one report.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/Report.php:52 Report builds a pick list of ready made reports, src/Report.php:77 default, :81 by contract, :85 by year, :87 financial information, :110 status, chosen from 'Select the report you want to generate' (src/Report.php:143). Reached on: Tools > Reports (front/report.php). Driven on the lab at 11.0.9 (2026-09-26): /front/report.php offers Default report, By contract, By year, Hardware financial and administrative information, Other financial and administrative information, Network report, Loan and Status.",
@@ -3956,7 +4458,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "portfolio-reporting",
-			"featureConfidence": "low",
+			"featureConfidence": "high",
 			"note": "One fixed report exports to CSV for a selected organisation. The filtered catalogue lists cannot be exported. Specified in openspec/changes/insight-exports-and-custom-reports (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/Glpi/Search/Output/Csv.php, Ods.php, Xlsx.php and Pdf.php export the filtered list; the output format selector is rendered by src/Html.php:4219 Dropdown::showOutputFormat. Reached on: any filtered list, Export. Driven on the lab at 11.0.9 (2026-09-26): the filtered Appliances list exported to CSV with the created record.",
@@ -3986,6 +4488,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "portfolio-reporting",
 			"note": "Reports cannot be scheduled or sent to people. Decided no on 2026-09-29 by the build-all lane, reversible: single competitor, no demand, outside the core areas (insight).",
 			"evidence": {
 				"stackiq": "No scheduled report or report mail job: lib/BackgroundJob/ holds only ContractStatusJob, EolSyncJob, FederationSyncJob and OrganizationContactSyncJob; grep for report scheduling in lib/ and src/ finds nothing.",
@@ -4017,7 +4520,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "contract-administration",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "Cost is reported per vendor and, within the portfolio report, for one organisation at a time. There is no cross-organisation or per-domain cost report.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/Budget.php:537 showValuesByEntity shows spend per entity and item type for a budget, and src/Report.php:89 'Other financial and administrative information (licenses, cartridges, consumables)' (front/report.infocom.conso.php); there is no cost per domain or reference component view. Reached on: Management > Budgets > budget tabs; Tools > Reports.",
@@ -4048,6 +4551,7 @@
 			"reachedOn": "Features & roadmap /features-roadmap (footer menu)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "open-platform",
 			"note": "The page lists features with their status. Note that the overlay feeding it is a self-description and may be stale in the app's favour.",
 			"evidence": {
 				"stackiq": "src/manifest.json:1048 FeaturesRoadmap page (type roadmap, line 1050), footer menu entry FeaturesRoadmapMenu; content from openspec/features.overlay.json statuses stable/beta/soon.",
@@ -4078,6 +4582,7 @@
 			"reachedOn": "admin settings sections Organization Synchronization and ArchiMate Import/Export (status and result only); progress endpoints API only",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "dashboard-and-overviews",
 			"note": "A progress API exists but no page reads it. Admins see a sync status and final import results, not the progress of a running job. Specified in openspec/changes/operations-sync-status-and-progress (OpenSpec pass 2026-09-27). Corrections round 8 (2026-09-28): progress lives in the starting user's PHP session, so no other login or background job can read it, stackiq#1138; rating kept because the partial rests on the sync status block and the final import result, which do not use the tracker.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: massive actions over many records show a progress bar, src/MassiveAction.php:1294 displayProgressBar; the LDAP synchronisation command shows one per user batch, src/Glpi/Console/Ldap/SynchronizeUsersCommand.php:382; long web operations report through src/Glpi/Controller/ProgressController.php:50 /progress/check/{key}. Inventory imports run per agent request without a progress view. Reached on: massive action screen; CLI ldap:sync.",
@@ -4108,6 +4613,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "software-landscape-register",
 			"note": "There is no knowledge base. Files can be attached to an application, but that is not searchable articles. Specified in openspec/changes/insight-knowledge-base (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/KnowbaseItem.php:57 knowledge base articles with categories and visibility, linked to items through src/KnowbaseItem_Item.php:45 and shown on the appliance Knowledge base tab (src/Appliance.php:104); menu src/Html.php:1307. Reached on: Tools > Knowledge base (front/knowbaseitem.php). Driven on the lab at 11.0.9 (2026-09-26): /front/knowbaseitem.php opens the knowledge base with Search and Browse.",
@@ -4137,6 +4643,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "asset-discovery",
 			"note": "Stackiq is a catalogue, and nothing discovers installed software. Decided no (OpenSpec pass 2026-09-27): Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" Agent-based discovery of installed software is a discovery agent.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: native inventory receives glpi-agent submissions at src/Glpi/Controller/InventoryController.php:61 /Inventory (legacy :62 /front/inventory.php), processed by src/Glpi/Inventory/Inventory.php:106 with src/Glpi/Inventory/Asset/Software.php creating software and installations. The agent is the separate glpi-project/glpi-agent repository. Reached on: Administration > Inventory; Assets > Software.",
@@ -4166,6 +4673,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "asset-discovery",
 			"note": "No device discovery. Decided no (OpenSpec pass 2026-09-27): Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" Network device discovery is a discovery agent.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/Glpi/Inventory/Request.php:97 NETDISCOVERY_ACTION calls src/Glpi/Inventory/Request.php:237 networkDiscovery, importing devices found by the agent's network discovery; scheduling discovery tasks from the server goes through the HANDLE_NETDISCOVERY_TASK hook (src/Glpi/Inventory/Request.php:448), which the separate glpiinventory plugin implements. Reached on: Administration > Inventory; Assets > Network devices.",
@@ -4195,6 +4703,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "asset-discovery",
 			"note": "No discovery of unregistered SaaS use. Decided no (OpenSpec pass 2026-09-27): Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" Discovering unregistered SaaS use is a discovery agent.",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/saas-discovery: 'SaaS discovery identifies your organization's SaaS applications through integrations with third-party systems like Single-Sign-on (SSO) ... Eliminate shadow IT and business-managed IT' (read 2026-09-26). Reached on: Discovery > SaaS discovery inbox.",
@@ -4225,6 +4734,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "asset-discovery",
 			"note": "Only software is registered, not hardware. Specified in openspec/changes/operations-technology-components (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/autoload/CFG_GLPI.php:208 asset_types lists Computer, Monitor, NetworkEquipment and the other hardware types managed next to software, under the Assets menu. Reached on: Assets > Computers, Monitors, Network devices.",
@@ -4255,6 +4765,7 @@
 			"reachedOn": "Applications /modules/:id and Suites /suites/:id Related panels; no page for connections",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "asset-discovery",
 			"note": "The landscape and its relations are recorded as catalogue objects, not as a CMDB with CI classes. Connections (koppelingen) have no index or detail page of their own. Specified in openspec/changes/operations-technology-components (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/16564: C19: \"Dubbel beheer (én in de Softwarecatalogus én in de CMDB) ... Een CMDB die separaat wordt bijgehouden\" (read 2026-09-26); https://www.softwarecatalogus.nl/node/19703: \"Zolang de CMDB niet gekoppeld is aan de Softwarecatalogus\" (read 2026-09-26). The docs treat the CMDB as a separate tool.",
@@ -4285,6 +4796,7 @@
 			"reachedOn": "Organisation /organisaties/:id, Merge organisation panel (admin only)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "data-quality",
 			"note": "An admin can merge duplicate organisations with a dry run. Nothing deduplicates applications or reconciles records arriving from several sources. Specified in openspec/changes/operations-record-reconciliation (OpenSpec pass 2026-09-27).",
 			"evidence": {
 				"stackiq": "Organisation merge: src/manifest.json:430 OrganisationMergePanel on OrganisatieDetail, calling /api/organisaties/{uuid}/merge/dry-run and /merge (src/store/modules/organisatie.js:486/524, lib/Controller/MergeController.php:106, admin-only body guard). Federation mirrors are reconciled per peer by lib/Service/Federation/FederationMerger.php.",
@@ -4314,6 +4826,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "service-management",
 			"note": "No ticketing. Decided no (OpenSpec pass 2026-09-27): Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" Logging incidents and requests is a service desk. Exchange with the organisation's service desk is specified under share-itsm-integration.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/autoload/CFG_GLPI.php:301 ticket_types includes Appliance (line 305), so tickets link to an application through src/Item_Ticket.php:41, shown on the appliance Tickets tab (src/Appliance.php:105). Reached on: Assistance > Tickets; Appliance > Tickets tab. Driven on the lab at 11.0.9 (2026-09-26): the default Super-Admin profile lists Computer, Monitor, NetworkEquipment, Peripheral, Phone, Printer, Software, DCRoom, Rack, Enclosure and Database as associable to tickets, not Appliance, so an appliance shows no Tickets tab until an administrator adds it in the profile; rating kept.",
@@ -4343,6 +4856,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "service-management",
 			"note": "Contracts go through an approval, but changes to an application do not. Decided no (OpenSpec pass 2026-09-27): Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" Change approval workflows are service desk change management.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: changes link to the appliance (src/Appliance.php:107 Change_Item tab) and go through approvals, src/ChangeValidation.php:39 ChangeValidation extends CommonITILValidation. Reached on: Assistance > Changes; Appliance > Changes tab.",
@@ -4372,6 +4886,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "service-management",
 			"note": "A contract can be typed as SLA, but no service level targets are recorded or tracked. Decided no (OpenSpec pass 2026-09-27): Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" The competitor evidence tracks service desk response and resolution targets on calls and tickets.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/SLM.php:42 service level management with src/SLA.php:44 SLA and OLA targets on tickets (install/mysql/glpi-empty.sql:7304 glpi_tickets.slas_id_ttr), assigned by business rules (src/RuleCommonITILObject.php:73) that can key on the linked appliance (src/RuleCommonITILObject.php:305 assign_appliance). Reached on: Setup > Service levels.",
@@ -4401,6 +4916,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "service-management",
 			"note": "End users cannot request software. Decided no (OpenSpec pass 2026-09-27): Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" A self-service portal where end users request software is a service desk.",
 			"evidence": {
 				"topdesk": "https://docs.topdesk.com/en/mobile-access-to-the-self-service-portal.html: \"The SSP layout is suited to be displayed in a mobile interface\" (read 2026-09-26); https://tip.topdesk.com/c/86-webshop-is-connected-with-asset-management: roadmap card in column \"Building\", \"End-user can order items which are in Asset Management\" (read 2026-09-26); pricing lists \"Self-Service Portal\" and \"Webshop\". Reached on: Self-Service Portal.",
@@ -4430,6 +4946,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "nextcloud",
 			"providerHow": "read-from-code",
+			"feature": "open-platform",
 			"note": "There is no native mobile app. Decided no on 2026-09-29 by the build-all lane, reversible: single competitor, no demand, outside the core areas (operations).",
 			"evidence": {
 				"topdesk": "https://docs.topdesk.com/en/installing-the-topdesk-mobile-store-application.html: \"Scan the QR code to download the app from the Play store\" (read 2026-09-26). Reached on: TOPdesk Mobile app.",
@@ -4461,7 +4978,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "automatic-user-provisioning",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "The sync runs on a schedule and its last run time is shown, but only an admin can see and configure it, which is the rule for partial. Specified in openspec/changes/operations-sync-status-and-progress (OpenSpec pass 2026-09-27). Corrections round 8 (2026-09-28): switching the job off in the settings does not stop it, stackiq#1139; rating kept because the schedule and the last run time, which this row rates, work.",
 			"evidence": {
 				"stackiq": "lib/BackgroundJob/OrganizationContactSyncJob.php:75 TimedJob every 300 s calling performScheduledSync; admin section src/views/settings/sections/CronjobConfiguration.vue:56 shows each job's interval and an enable switch; src/views/settings/sections/OrganizationSynchronization.vue:211 shows Last Sync from app config last_sync_time (lib/Service/OrganizationSyncService.php:1609, written by recordSyncTime :1674).",
@@ -4489,7 +5006,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "gemma-alignment",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "Helmond's architecture repository tender (REQ3, REQ61) asks to relate the repository to the GGM. GGM metadata survives an ArchiMate import on architecture elements, but no field or page links an application to a GGM entity. Specified in openspec/changes/architecture-data-model-and-ggm (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"evidence": {
@@ -4521,7 +5038,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "archimate-import-and-export",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "Helmond REQ19 asks for architecture views embedded in office documents. stackiq renders no view at all (see arch-gemma-views) and exports only ArchiMate files. Specified in openspec/changes/architecture-views-to-office-documents (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "partial",
 			"evidence": {
@@ -4552,7 +5069,8 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"featureConfidence": "high",
+			"feature": "architecture-modelling",
+			"featureConfidence": "medium",
 			"note": "Helmond REQ54 asks for entity relationship or UML data models. stackiq holds imported ArchiMate elements but models nothing itself. Specified in openspec/changes/architecture-data-model-and-ggm (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "unknown",
 			"evidence": {
@@ -4583,6 +5101,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "roles-and-access",
 			"featureConfidence": "medium",
 			"note": "Helmond REQ78 asks administrators to check periodically that every user still needs access. stackiq fetches the last login of each contact's account and never shows it. Specified in openspec/changes/organisations-role-mapping-and-access-review (OpenSpec pass 2026-09-27).",
 			"vng-softwarecatalogus": "partial",
@@ -4614,8 +5133,8 @@
 			"reachedOn": "ModuleDetail /modules/:id Application data widget (reached from OrganisatieDetail, see land-detail-page)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"feature": "standards-compliance",
-			"featureConfidence": "high",
+			"feature": "security-and-privacy-assessment",
+			"featureConfidence": "medium",
 			"note": "Helmond REQ4 wants the processing register kept apart from the repository but linked. stackiq stores and shows a reference per application; it does not hold the register.",
 			"vng-softwarecatalogus": "unknown",
 			"evidence": {
@@ -4646,7 +5165,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "offering-and-usage-listings",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "Standard municipal tender text (Noordwijk 418890, Reimerswaal 417169, FUMO 415897, HLT Samen 383984): a supplier inside the GEMMA scope can make its product information transparent through the Softwarecatalogus. stackiq publishes the data; the page a buyer opens lives in the external frontend. Decided no (OpenSpec pass 2026-09-27): Recorded design: README.md:266 says stackiq runs \"with a separate React-based public frontend\", and README.md:273 names it (ConductionNL/tilburg-woo-ui) as the public search and detail pages. The missing half is the public page a buyer opens, which that frontend serves; stackiq publishes the data (module read rule for group public after publicationDate).",
 			"vng-softwarecatalogus": "yes",
 			"evidence": {
@@ -4677,7 +5196,7 @@
 			"reachedOn": "usage page Value assessment and Risk signals; Reports > Portfolio rationalization value against fit chart and Recorded class differs from scores switch",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"feature": "portfolio-reporting",
+			"feature": "portfolio-rationalisation",
 			"featureConfidence": "medium",
 			"note": "Helmond REQ41 asks for analysis of application use, cost, risk and value. stackiq records a TIME classification (life-time-classification) without the scores that would justify it. Specified in openspec/changes/lifecycle-application-value-assessment (OpenSpec pass 2026-09-27). Built by openspec/changes/archive/2026-09-30-lifecycle-application-value-assessment.",
 			"vng-softwarecatalogus": "unknown",
@@ -4708,7 +5227,8 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"featureConfidence": "medium",
+			"feature": "security-and-privacy-assessment",
+			"featureConfidence": "low",
 			"vng-softwarecatalogus": "unknown",
 			"evidence": {
 				"vng-softwarecatalogus": "unknown: the live softwarecatalogus.nl does not describe this and does not state its absence; the open PvE wens on the successor repository is not evidence about the incumbent (ruling 2026-09-26). Live page searched: Open PvE wens #136 'Als CISO wil ik ons gemeentelijk pakketoverzicht kunnen controleren en vervolgens fiatteren'; no approval step for the landscape appears in the incumbent manuals (https://www.softwarecatalogus.nl/node/19703). (read 2026-09-26)",
@@ -4738,7 +5258,8 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"featureConfidence": "medium",
+			"feature": "security-and-privacy-assessment",
+			"featureConfidence": "low",
 			"vng-softwarecatalogus": "unknown",
 			"evidence": {
 				"vng-softwarecatalogus": "unknown: the live softwarecatalogus.nl does not describe this and does not state its absence; the open PvE wens on the successor repository is not evidence about the incumbent (ruling 2026-09-26). Live page searched: Open PvE wens #82 'Als gebruik-raadpleger wil ik een register van verwerkingen kunnen genereren'; the incumbent exports only package, connection and IBD-foto files (https://www.softwarecatalogus.nl/Beschikbare%20downloads). (read 2026-09-26)",
@@ -4768,7 +5289,8 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"featureConfidence": "medium",
+			"feature": "supplier-directory",
+			"featureConfidence": "low",
 			"vng-softwarecatalogus": "partial",
 			"evidence": {
 				"vng-softwarecatalogus": "Open PvE wens #50 (search) and #48 (register collective agreements incl. AVG and BIO terms); the incumbent lists signed addenda per supplier with a filter (https://www.softwarecatalogus.nl/addenda), which covers part of it. (read 2026-09-26)",
@@ -4799,6 +5321,7 @@
 			"reachedOn": "KompliantieDetail /komplianties/:id Evidence documents; ModuleDetail DPIA document field",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "security-and-privacy-assessment",
 			"featureConfidence": "medium",
 			"vng-softwarecatalogus": "unknown",
 			"evidence": {
@@ -4830,6 +5353,7 @@
 			"reachedOn": "ModuleDetail /modules/:id and Modules /modules BBN filter",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "security-and-privacy-assessment",
 			"featureConfidence": "medium",
 			"vng-softwarecatalogus": "unknown",
 			"evidence": {
@@ -4860,7 +5384,8 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"featureConfidence": "medium",
+			"feature": "supplier-directory",
+			"featureConfidence": "low",
 			"vng-softwarecatalogus": "unknown",
 			"evidence": {
 				"vng-softwarecatalogus": "unknown: the live softwarecatalogus.nl does not describe this and does not state its absence; the open PvE wens on the successor repository is not evidence about the incumbent (ruling 2026-09-26). Live page searched: Open PvE wens #31 'meerdere pakketten kunnen selecteren en deze in een overzichtelijke tabel naast elkaar vergelijken'; the incumbent offers filtered lists only (https://www.softwarecatalogus.nl/node/13683). (read 2026-09-26)",
@@ -4890,7 +5415,8 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "nextcloud",
 			"providerHow": "read-from-code",
-			"featureConfidence": "medium",
+			"feature": "roles-and-access",
+			"featureConfidence": "low",
 			"vng-softwarecatalogus": "unknown",
 			"evidence": {
 				"vng-softwarecatalogus": "unknown: the live softwarecatalogus.nl does not describe this and does not state its absence; the open PvE wens on the successor repository is not evidence about the incumbent (ruling 2026-09-26). Live page searched: Open PvE wens #104 'Als functioneel beheerder wil ik me kunnen voordoen als een ander account'; not in the incumbent FAQ (https://www.softwarecatalogus.nl/node/16564). (read 2026-09-26)",
@@ -4920,7 +5446,8 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"featureConfidence": "medium",
+			"feature": "standards-compliance",
+			"featureConfidence": "low",
 			"vng-softwarecatalogus": "partial",
 			"evidence": {
 				"vng-softwarecatalogus": "Open PvE wens #147; the incumbent shows whether a supplier signed the Groeipact Common Ground addendum (https://www.softwarecatalogus.nl/leveranciers), a supplier-level signal, not per product. (read 2026-09-26)",
@@ -4951,6 +5478,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "application-connections",
 			"featureConfidence": "medium",
 			"vng-softwarecatalogus": "partial",
 			"evidence": {
@@ -4981,7 +5509,8 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"featureConfidence": "medium",
+			"feature": "security-and-privacy-assessment",
+			"featureConfidence": "low",
 			"topdesk": "yes",
 			"evidence": {
 				"topdesk": "Card 'More control over card & file removal' in Launched (updated 2026-02-09); docs https://docs.topdesk.com/en/file-maintenance.html: 'you can set how many days after closing or archiving a card its uploaded files and linked emails should be removed'. (read 2026-09-26)",
@@ -5012,6 +5541,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "software-landscape-register",
 			"featureConfidence": "medium",
 			"topdesk": "no",
 			"evidence": {
@@ -5043,6 +5573,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "software-landscape-register",
 			"featureConfidence": "medium",
 			"topdesk": "no",
 			"evidence": {
@@ -5074,6 +5605,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "ai-assistant",
 			"featureConfidence": "medium",
 			"topdesk": "no",
 			"evidence": {
@@ -5104,7 +5636,8 @@
 			"reachedOn": "nothing reaches it in stackiq; Nextcloud two-factor apps apply platform-wide",
 			"provider": "nextcloud",
 			"providerHow": "read-from-code",
-			"featureConfidence": "medium",
+			"feature": "sign-in-and-accounts",
+			"featureConfidence": "low",
 			"topdesk": "partial",
 			"evidence": {
 				"topdesk": "Card 'Support Multi-Factor Authentication (MFA)' in Under consideration; today MFA only comes from the identity provider behind SAML SSO (https://docs.topdesk.com/en/topdesk-mobile.html: 'We test the store application with the Microsoft two-step authentication (2FA) for the SSO'). (read 2026-09-26)",
@@ -5134,7 +5667,8 @@
 			"reachedOn": "nothing reaches it in stackiq; the Nextcloud password policy applies platform-wide",
 			"provider": "nextcloud",
 			"providerHow": "read-from-code",
-			"featureConfidence": "medium",
+			"feature": "sign-in-and-accounts",
+			"featureConfidence": "low",
 			"topdesk": "no",
 			"evidence": {
 				"topdesk": "Card 'Enforce strong passwords' in Under consideration: 'By setting rules for things like minimum length, numbers, symbols, or uppercase letters, weak passwords are blocked'. (read 2026-09-26)",
@@ -5164,7 +5698,8 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"featureConfidence": "medium",
+			"feature": "service-management",
+			"featureConfidence": "low",
 			"topdesk": "no",
 			"evidence": {
 				"topdesk": "Card 'AI - Risk & prediction' in Under consideration: 'Change risk prediction helps change managers assess how risky a planned change is before it's approved'. (read 2026-09-26)",
@@ -5195,6 +5730,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "application-connections",
 			"featureConfidence": "medium",
 			"glpi": "no",
 			"evidence": {
@@ -5225,7 +5761,8 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"featureConfidence": "medium",
+			"feature": "contract-administration",
+			"featureConfidence": "low",
 			"glpi": "no",
 			"evidence": {
 				"glpi": "source read at 11.0.9: open request #182 (2026-03-27) states contracts cannot be linked in GLPI 11; install/mysql/glpi-empty.sql:1536 glpi_contracts_items links a contract to items, and Contract is not among the linkable item types there, with no parent contract column in install/mysql/glpi-empty.sql:1483 glpi_contracts.",
@@ -5256,6 +5793,7 @@
 			"reachedOn": "ContractDetail /contracten/:id contract details",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "contract-administration",
 			"featureConfidence": "medium",
 			"glpi": "no",
 			"evidence": {
@@ -5286,7 +5824,8 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"featureConfidence": "medium",
+			"feature": "portfolio-roadmap",
+			"featureConfidence": "low",
 			"glpi": "partial",
 			"evidence": {
 				"glpi": "source read at 11.0.9: request #457 (2026-07-27, open) asks to tie dates to status; core already lets an entity fill financial dates when an item enters a chosen status, install/mysql/glpi-empty.sql:2800 autofill_use_date and :2822 autofill_decommission_date on glpi_entities, applied by src/Infocom.php:505 autofillDates, but only for the financial record's dates.",
@@ -5316,7 +5855,8 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"featureConfidence": "medium",
+			"feature": "roles-and-access",
+			"featureConfidence": "low",
 			"glpi": "yes",
 			"evidence": {
 				"glpi": "source read at 11.0.9: CHANGELOG.md:281 11.0.0 added 'View assigned' and 'Update assigned' rights; src/Glpi/Features/AssignableItem.php:68 grants read when the user or group is assigned and src/Glpi/Features/AssignableItem.php:79 checks UPDATE_ASSIGNED; Appliance uses this trait (src/Appliance.php:46 implements AssignableItemInterface).",
@@ -5347,7 +5887,8 @@
 			"reachedOn": "every stackiq page, through Nextcloud theming",
 			"provider": "nextcloud",
 			"providerHow": "read-from-code",
-			"featureConfidence": "medium",
+			"feature": "open-platform",
+			"featureConfidence": "low",
 			"glpi": "yes",
 			"evidence": {
 				"glpi": "source read at 11.0.9: CHANGELOG.md:276 11.0.0 added custom palette and theme support; src/Glpi/UI/ThemeManager.php:103 getCustomThemesDirectory and :112 getCustomThemes load admin supplied themes, offered in src/Config.php:1612 getPalettes.",
@@ -5378,7 +5919,8 @@
 			"reachedOn": "index pages such as Module versions /moduleversies: select rows, Copy",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"featureConfidence": "medium",
+			"feature": "software-landscape-register",
+			"featureConfidence": "low",
 			"glpi": "yes",
 			"evidence": {
 				"glpi": "source read at 11.0.9: CHANGELOG.md:285 and :286 11.0.0 added cloning of templates and creating a template from an existing item; appliances are clonable (src/Appliance.php:49 use Clonable) together with their items, contracts, documents and financial record (src/Appliance.php:62 getCloneRelations).",
@@ -5409,6 +5951,7 @@
 			"reachedOn": "Applications > AI systems (/ai-systems), AI system page, and the AI systems section on the application page",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "ai-system-inventory",
 			"featureConfidence": "medium",
 			"sap-leanix": "yes",
 			"evidence": {
@@ -5441,6 +5984,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "architecture-modelling",
 			"featureConfidence": "medium",
 			"sap-leanix": "yes",
 			"evidence": {
@@ -5472,6 +6016,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "ai-assistant",
 			"featureConfidence": "medium",
 			"sap-leanix": "yes",
 			"evidence": {
@@ -5503,6 +6048,7 @@
 			"reachedOn": "Applications > AI systems (/ai-systems), AI system page, and the AI systems section on the application page",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "ai-system-inventory",
 			"featureConfidence": "medium",
 			"sap-leanix": "partial",
 			"evidence": {
@@ -5534,7 +6080,8 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"featureConfidence": "medium",
+			"feature": "lifecycle-and-end-of-support",
+			"featureConfidence": "low",
 			"sap-leanix": "no",
 			"evidence": {
 				"sap-leanix": "Roadmap card 'EA Assistant: Technology Successor Planning' is On roadmap; https://updates.leanix.net/announcements/work-with-complete-technology-version-coverage-without-raising-manual-requests (2026-09-17): 'version concurrency management, which we plan to implement in Q4. You will be able to define version tolerance windows' (read 2026-09-26)",
@@ -5565,6 +6112,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "architecture-modelling",
 			"featureConfidence": "medium",
 			"sap-leanix": "yes",
 			"evidence": {
@@ -5596,7 +6144,8 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
-			"featureConfidence": "medium",
+			"feature": "api-and-integrations",
+			"featureConfidence": "low",
 			"bluedolphin": "yes",
 			"evidence": {
 				"bluedolphin": "November 2025 update (2025-11-13): 'Conditional Syncing for Integrations and Webhooks' lets teams 'control exactly what data syncs to third-party systems based on lifecycle state' (read 2026-09-26)",
@@ -5626,7 +6175,8 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"featureConfidence": "medium",
+			"feature": "dashboard-and-overviews",
+			"featureConfidence": "low",
 			"bluedolphin": "yes",
 			"evidence": {
 				"bluedolphin": "February 2026 update (2026-02-10): new reports show 'which guest users have access to BlueDolphin' and 'which views are being used across the platform'; https://help.bluedolphin.io/en/articles/13868249-usage-insights (read 2026-09-26)",
@@ -5657,6 +6207,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "software-landscape-register",
 			"featureConfidence": "medium",
 			"bluedolphin": "yes",
 			"evidence": {
@@ -5688,6 +6239,7 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-10-05-cmdb-export-import"
 			},
+			"feature": "landscape-import",
 			"source": "spec-round-2026-10-07"
 		},
 		{
@@ -5706,6 +6258,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "architecture-modelling",
 			"featureConfidence": "medium",
 			"bluedolphin": "yes",
 			"evidence": {
@@ -5737,6 +6290,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "architecture-modelling",
 			"featureConfidence": "medium",
 			"bluedolphin": "yes",
 			"evidence": {
@@ -5808,6 +6362,7 @@
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "landscape-import",
 			"note": "There is still no importer for the previous VNG Softwarecatalogus's registrations. Stackiq can now import applications from a TOPdesk CMDB export or a CSV/XLSX file, which is a manual workaround at best, not a migration of the old catalogue's entries.",
 			"evidence": {
 				"stackiq": "lib/Repair/* still only rename stackiq's own data (MigrateRegisterSlug.php, RenameDutchCatalogValues.php); appinfo/routes.php:110 POST /api/cmdb-import (lib/Service/CmdbExportImportService.php) imports a TOPdesk CMDB xlsx; :307 POST /api/itsm/import with lib/Service/ItsmFileImportService.php imports applications from a CSV/XLSX through the service desk flow; neither reads the previous VNG Softwarecatalogus's registrations; no change or spec names this row",
@@ -5841,7 +6396,7 @@
 			"reachedOn": "Applications > Connections /koppelingen and /koppelingen/:id (generic create/edit form); read-only lists on the application page /modules/:id",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
-			"feature": "software-landscape-register",
+			"feature": "application-connections",
 			"featureConfidence": "medium",
 			"note": "Connections now have a list and a detail page where a connection is created and edited with both applications and its direction. The standard-version picker points at GEMMA elements in the AMEF register while the page works on the voorzieningen register, so picking a standard may not resolve, and a connection cannot be added from the application page.",
 			"evidence": {
@@ -5877,7 +6432,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "offering-and-usage-listings",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "A usage page now carries the connections the organisation runs within that usage, edited on the usage form and shown in its related panel; both usages and connections have their own pages.",
 			"evidence": {
 				"stackiq": "register.json:3019 usage.koppelingen (array of related connection, visible, not hideOnForm) editable on src/manifest.d/usages.json:37 GebruikDetail /gebruik/:id, whose gb-related widget (:51 'Connections and services') shows the linked connections; connections themselves have pages at src/manifest.d/connections.json:14,36; lib/Controller/AangebodenGebruikController.php /api/koppelingen-gebruik/{uuid} (appinfo/routes.php:273) still has no src caller",
@@ -5912,7 +6467,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "shared-usage-on-gemma-views",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "The owning organisation can now name participants on a usage page, but the participating organisations cannot see that shared usage or its connections in stackiq: the usage read rules ignore participants and only the API endpoint answers it.",
 			"evidence": {
 				"stackiq": "register.json:2717 usage.participants (visible, editable on /gebruik/:id via src/manifest.d/usages.json:37); register.json:3136-3172 usage read rules match only _organisation, consumer and provider, not participants, so a participating org does not see the shared usage on /gebruik; appinfo/routes.php:262 GET /api/aangeboden-gebruik/deelnemers and :273 /api/koppelingen-gebruik/{uuid} still have no caller in src/",
@@ -5982,7 +6537,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "gemma-alignment",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "No stackiq page renders a GEMMA view. The enriched view data is served for an external frontend, and the org export draws applications into view copies that open in Archi.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/Hoe%20print%20ik%20een%20kaart%3F: \"de pakketten die getoond worden in het pakketoverzicht te plotten op een GEMMA architectuurkaart ... [Toon kaart]\" (read 2026-09-26). Reached on: Mijn softwarecatalogus > Pakketten > Toon kaart.",
@@ -6052,7 +6607,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "gemma-alignment",
-			"featureConfidence": "low",
+			"featureConfidence": "high",
 			"note": "A pure API row: the views endpoint is routed, authorised for logged-in users and returns the imported GEMMA views; elements come through OpenRegister's generic objects API.",
 			"evidence": {
 				"stackiq": "appinfo/routes.php:189-191 GET /api/views, /api/views/docs, /api/views/{viewId} -> lib/Controller/ViewController.php:82,218 (@NoAdminRequired at :75,:211) -> lib/Service/ViewService.php:108,166 read views from the AMEF register; element schema at register.json:4127 in register vng-gemma, readable through the OpenRegister objects API",
@@ -6192,7 +6747,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "offering-and-usage-listings",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "The application page now has a Usages list naming the using organisation, version and status. RBAC narrows it: a supplier sees usages whose hidden provider field is its organisation, and a municipality sees only its own usages. Usages created through stackiq's own forms do not set provider, so a supplier only sees usages from imports or external data.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/Marktscans: \"kunnen ingelogde gemeenten of samenwerkingen zien bij welke collega-gemeenten betreffende pakketversie in het applicatielandschap staat (klik daarvoor op het getal boven Ingevuld door)\" (read 2026-09-26). Reached on: Package page > Ingevuld door.",
@@ -6262,6 +6817,7 @@
 			"reachedOn": "no page of its own: enforced by OpenRegister RBAC on every read, including /gebruik, /koppelingen and the /modules/:id Usages list",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
+			"feature": "roles-and-access",
 			"note": "The register declares organisation-scoped reads, so a supplier sees only usages of its own products (where provider is set) and published connections, including on the new usage, connection and application pages. This rests on the installed OpenRegister executing the declared match rules.",
 			"evidence": {
 				"stackiq": "lib/Settings/softwarecatalogus_register.json:3149-3172 usage read scoped to _organisation or consumer for gebruik-beheerder, and _organisation or provider = own organisation for aanbod-beheerder; usage.provider is hidden (:2690-2701) and set only by lib/Service/CmdbExportImportService.php:1193; connection read :3865-3891 public when publicationDate <= now, plus own organisation and provider for aanbod-beheerder; these rules now also govern the new pages /gebruik, /gebruik/:id (src/manifest.d/usages.json), /koppelingen (src/manifest.d/connections.json) and the application page Usages list (src/manifest.json:514); openspec/specs/vendor-visibility-rbac",
@@ -6295,6 +6851,7 @@
 			"reachedOn": "no page: a property of the app and its licence",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "open-data-publishing",
 			"note": "The software is free and published entries are publicly readable, but the repo ships no hosted public catalogue; the public-facing frontend is the external VNG one.",
 			"evidence": {
 				"vng-softwarecatalogus": "unknown: public browsing is open (\"Iedereen kan de softwarecatalogus raadplegen\", FAQ E6) but no page states the use is free of charge; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/hoe-kan-ik-me-als-leverancier-aanmelden (read 2026-09-26)",
@@ -6433,6 +6990,7 @@
 			"reachedOn": "Applications in use /gebruik (column) and /gebruik/:id (Value assessment section and edit form); PortfolioReport /portfolio-report",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "portfolio-rationalisation",
 			"note": "A user sets the TIME classification, rationale and review date on the usage edit form of Applications in use. The usage page shows it next to the class the value scores suggest, and the portfolio report groups usages per quadrant.",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/time: 'TIME stands for Tolerate, Invest, Migrate, and Eliminate. It categorizes applications based on their strategic value' (read 2026-09-26). Reached on: Application fact sheet > TIME classification.",
@@ -6573,6 +7131,7 @@
 			"reachedOn": "Vulnerabilities /kwetsbaarheden, Exposed usages column; Applications in use /gebruik/:id risk signals; KwetsbaarheidDetail /kwetsbaarheden/:id Exposure tab by URL only",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
+			"feature": "vulnerability-management",
 			"note": "The list shows how many in-production usages each vulnerability exposes, and each usage page now shows how many vulnerabilities touch its application. The per-organisation exposure list is still on a detail tab that no page opens, so a user cannot easily see who is exposed to a given vulnerability.",
 			"evidence": {
 				"stackiq": "src/utils/vulnerabilityExposure.js:54 in-production join vulnerability.modules -> usage.module -> usage.consumer; src/views/KwetsbaarhedenView.vue:111 Exposed usages count per row; src/manifest.json:1025 VulnerabilityExposurePanel (per-organisation rows) as Exposure sidebar tab of KwetsbaarheidDetail /kwetsbaarheden/:id, but a list row still opens the generic edit modal (KwetsbaarhedenView.vue:94 -> openDetail :419 navigationStore.setModal('vulnerability'), src/modals/Modals.vue:44) and nothing in src links to KwetsbaarheidDetail; new: src/manifest.d/usages.json:61 UsageRiskSignals on GebruikDetail shows the count of vulnerabilities linked to that usage's application (src/components/portfolio/UsageRiskSignals.vue:58)",
@@ -6712,7 +7271,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "shared-usage-on-gemma-views",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "A cooperation can be registered with its participants, and the usages it shares can now be recorded with participants on the Applications in use page. No page shows a participant the landscape it shares: the deelnemers API has no caller, and the usage read rules do not let participants see those usages.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/19703: \"Handleiding beheer gemeente-samenwerking ... Samenwerkingsverbanden die als doel hebben om de applicatielandschappen van de aangesloten gemeenten te harmoniseren\" (read 2026-09-26); https://www.softwarecatalogus.nl/node/30355: cooperation selects the member municipalities per package (read 2026-09-26). Reached on: Samenwerking account > Pakketten.",
@@ -6747,6 +7306,7 @@
 			"reachedOn": "no page: enforced by OpenRegister RBAC/multitenancy on every list and detail page",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
+			"feature": "roles-and-access",
 			"note": "Organisation-scoped reads are declared per schema, and OpenRegister applies the match rules on list and detail reads. Contact persons are still readable across organisations by gebruik-beheerder and gebruik-raadpleger, and every civil servant (ambtenaar) can read every organisation's contracts.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: every query on entity scoped items is restricted to the user's active entities, src/DbUtils.php:920 getEntitiesRestrictCriteria; records carry entities_id and is_recursive (install/mysql/glpi-empty.sql:8937 and :8938 on glpi_appliances), so an entity's records stay invisible to other entities unless shared down the tree. Reached on: entity selector in the header.",
@@ -6781,7 +7341,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "automatic-user-provisioning",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "On automatic provisioning, the first user of an organisation joins the maintainer (beheerder) group, which may manage the organisation's members, and later users get that user as manager. The first contact no longer gets the organisation admin groups (switched off on 28 Sep), the manual Convert to User does not run this step, and it all depends on the email field the contact schema lacks.",
 			"evidence": {
 				"stackiq": "lib/Service/Stackiq/HierarchyHandler.php:79 ensureOrganizationBeheerder: when the organisation has no beheerder (OrganizationHandler getOrganizationBeheerders = members of group 'maintainer'), the user gets assignBeheerderRole (ContactPersonHandler.php:1368, adds group 'maintainer' :1398), and :130 setupManagerRelationships makes later users report to the primary beheerder; called only on the automatic path (lib/Service/StackiqService.php:247, lib/Service/ContactpersoonService.php:323), not by the manual convertToUser; ContactPersonHandler.php:641 the first contact is no longer added to the organisation admin groups (cab7bc32, 28 Sep); 'maintainer' members manage the organisation's members via lib/Controller/OrganisationMembersController.php",
@@ -6816,7 +7376,7 @@
 			"provider": "openregister",
 			"providerHow": "read-from-code",
 			"feature": "open-data-publishing",
-			"featureConfidence": "medium",
+			"featureConfidence": "high",
 			"note": "Anonymous browsing rests on RBAC read rules in the register that OpenRegister executes, and since 1 Oct anonymous readers get published objects without their private fields. Stackiq ships no public page; the browsing surface is OpenCatalogi or the external VNG frontend. The module rule still exposes every registeredBy=Supplier module whatever its publication date.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/16564: E6: \"Iedereen kan de softwarecatalogus raadplegen ... De gegevens ingevoerd door de leveranciers zijn openbaar\" (read 2026-09-26); https://www.softwarecatalogus.nl/pakketten: package list readable without login (read 2026-09-26). Reached on: Alle pakketten.",
@@ -6850,6 +7410,7 @@
 			"reachedOn": "API only: OpenRegister objects API for anonymous reads; no stackiq page",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
+			"feature": "open-data-publishing",
 			"note": "There is no dedicated developer-facing public API. Public access to the offering is whatever OpenRegister serves from the declared read rules, which now leave out private fields. Stackiq's own offering endpoint needs a login, and generated API documentation is only specified (sharing-generated-api-docs).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: the v2 API routes without authentication are only the index, documentation and getting started pages, src/Glpi/Api/HL/Controller/CoreController.php:301, :322, :397, :407; all data routes require OAuth or session auth, and there is no supplier offering to expose.",
@@ -6883,6 +7444,7 @@
 			"reachedOn": "Portaliq external portal (not a stackiq page), only for signed-in portal subjects of a supplier or participant organisation",
 			"provider": "portaliq",
 			"providerHow": "read-from-code",
+			"feature": "api-and-integrations",
 			"note": "The contribution is declarative and read-only, and it covers only an organisation's own records for portal subjects. It shows nothing publicly, and the create/accept actions are deferred per its own docblock.",
 			"evidence": {
 				"stackiq": "lib/Portal/PortalContributionProvider.php:130 getContribution() declares read-only, organisation-scoped collections for audiences vendor-org (:167 catalogService, :184 usage, :204 catalogContract, :228 compliancy) and participant-org (:270 usage, :291 catalogContract); :97 audiences; docblock :24 says accept/deny actions are deferred. No change to lib/Portal since 26 Sep. Inert without portaliq.",
@@ -6916,6 +7478,7 @@
 			"reachedOn": "nothing in stackiq reaches it; only OpenRegister's generic MCP endpoint",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
+			"feature": "ai-assistant",
 			"note": "Stackiq has nothing of its own here. An AI client can reach catalogue objects only through OpenRegister's generic MCP 'objects' tool. A stackiq tool surface is specified in mcp-full-action-surface but not built.",
 			"evidence": {
 				"stackiq": "Still no MCP, tool-provider, TaskProcessing or ContextChat code in stackiq lib/, src/ or the register (grep 'mcp|ToolProvider|TaskProcessing|ContextChat|x-openregister-mcp' finds only an info.xml comment about OpenRegister's ContextChat). OpenRegister's generic MCP server (openregister appinfo/routes.php:2011 /api/mcp/v1/discover, :2018 POST /api/mcp; lib/Mcp/BuiltIn/ObjectsToolProvider.php:80-87 tool 'objects' with list/get/create/update/delete over any register) is the only path. Open changes mcp-full-action-surface (specs/mcp-tool-surface/spec.md: hand-written provider, read tools on 14 schemas, write tools behind existing guards; supersedes stackiq-mcp-adoption) and stackiq-mcp-adoption have no task ticked.",
@@ -6949,6 +7512,7 @@
 			"reachedOn": "Admin settings > Service desk exchange (sets up the outbound flow); Flows /flows; general webhooks only in OpenRegister's own admin UI",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
+			"feature": "api-and-integrations",
 			"note": "Stackiq now pushes changes to one kind of outside system: once an admin sets up the service desk exchange, a change to an application in use is sent to TOPdesk or ServiceNow. Notifying any other system still goes through OpenRegister machinery, either its webhooks UI or a flow authored on stackiq's Flows page.",
 			"evidence": {
 				"stackiq": "New since 1 Oct (#1205): lib/Settings/flows/itsm-outbound-applications.json:5-30 is a stackiq flow template triggered on object.created/object.updated of usage that sends stackiq-owned fields to TOPdesk or ServiceNow through integriq; lib/Service/ItsmExchangeService.php:134 maps the outbound template; an admin creates and publishes it from Admin settings > Service desk exchange (src/views/settings/sections/ItsmExchange.vue, lib/Controller/ItsmExchangeController.php:98/:116 AuthorizedAdminSetting, appinfo/routes.php:304-307). There is still no generic webhook in stackiq: the Flows page (src/manifest.json:1085, menu FlowsMenu :208) authors OpenRegister flows, and OpenRegister has its own webhooks admin.",
@@ -7018,6 +7582,7 @@
 			"reachedOn": "Vulnerabilities /kwetsbaarheden, License posture /license-posture, Portfolio roadmap /portfolio-roadmap, Compliance matrix /compliance-matrix, Portfolio rationalization /portfolio-report",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
+			"feature": "dashboard-and-overviews",
 			"note": "Five custom pages subscribe to collection events and refetch on a change. Whether the event ever arrives depends on OpenRegister and the push transport, which this repo cannot show.",
 			"evidence": {
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; views can be shared for collaboration (https://help.bluedolphin.io/en/articles/11967512-collaborate-on-an-architecture-view), but a list that refreshes by itself when another user changes an entry is not documented; the earlier intelligence citation alone is a claim (read 2026-09-26)",
@@ -7086,6 +7651,7 @@
 			"reachedOn": "Store /store (footer menu)",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
+			"feature": "open-platform",
 			"note": "The store installs configuration sets and flows, not code plugins, and it depends on a registry being configured.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: src/Glpi/Marketplace/View.php:53 marketplace view at front/marketplace.php (src/Glpi/Marketplace/View.php:103) and src/Glpi/Marketplace/Controller.php:64 download and install of plugins; src/Glpi/Marketplace/View.php:185 notes that a registration, at least a free one, is required. Reached on: Setup > Plugins > Marketplace. Driven on the lab at 11.0.9 (2026-09-26): Setup > Plugins > Marketplace, Discover tab: \"A registration, at least a free one, is required to use marketplace\"; plugins can still be installed by hand from their repositories.",
@@ -7115,6 +7681,7 @@
 			"reachedOn": "API: OpenRegister leaves the restricted fields out of anonymous reads; no page to configure the rules",
 			"provider": "openregister",
 			"providerHow": "read-from-code",
+			"feature": "roles-and-access",
 			"featureConfidence": "medium",
 			"topdesk": "no",
 			"evidence": {
