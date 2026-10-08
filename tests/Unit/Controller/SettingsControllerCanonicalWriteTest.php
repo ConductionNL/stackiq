@@ -159,6 +159,12 @@ class SettingsControllerCanonicalWriteTest extends TestCase {
 				'request' => $request,
 				'settingsService' => $settingsService,
 				'logger' => $this->createMock(LoggerInterface::class),
+				// A promoted `?ConnectionReportService $connectionReports = null`
+				// gets its null from the constructor, which
+				// newInstanceWithoutConstructor() never runs. Left unset, the
+				// readonly property stays uninitialised and `?->` does not save
+				// it: PHP throws on the read before the null-safe check.
+				'connectionReports' => null,
 			] as $name => $value
 		) {
 			$prop = $reflection->getProperty($name);

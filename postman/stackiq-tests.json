@@ -22547,6 +22547,1102 @@
 					]
 				}
 			]
+		},
+		{
+			"name": "12 - CMDB import",
+			"description": "openspec/changes/archive/2026-10-05-cmdb-export-import (contract.md). Run newman from the app root so the fixture path tests/fixtures/cmdb/ resolves.",
+			"item": [
+				{
+					"name": "CMDB import: 401 when not signed in",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/cmdb-import",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"cmdb-import"
+							]
+						},
+						"auth": {
+							"type": "noauth"
+						},
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "cmdbFile",
+									"type": "file",
+									"src": "tests/fixtures/cmdb/topdesk-export-anonymised.xlsx"
+								},
+								{
+									"key": "municipalityName",
+									"value": "Gemeente Voorbeeldstad",
+									"type": "text"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"An anonymous request cannot import\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "CMDB import: 403 for a user who is not a Nextcloud admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/cmdb-import",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"cmdb-import"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "mark.jansen@test.nl"
+								},
+								{
+									"key": "password",
+									"value": "{{test_password}}"
+								}
+							]
+						},
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "cmdbFile",
+									"type": "file",
+									"src": "tests/fixtures/cmdb/topdesk-export-anonymised.xlsx"
+								},
+								{
+									"key": "municipalityName",
+									"value": "Gemeente Voorbeeldstad",
+									"type": "text"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"A non-admin cannot import\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "CMDB import: 403 for a software-catalog-admins member",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/cmdb-import",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"cmdb-import"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "peter.vandijk@test.nl"
+								},
+								{
+									"key": "password",
+									"value": "{{test_password}}"
+								}
+							]
+						},
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "cmdbFile",
+									"type": "file",
+									"src": "tests/fixtures/cmdb/topdesk-export-anonymised.xlsx"
+								},
+								{
+									"key": "municipalityName",
+									"value": "Gemeente Voorbeeldstad",
+									"type": "text"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"The catalogue admin group is not enough\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "CMDB import: 412 without a CSRF token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/cmdb-import",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"cmdb-import"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{admin_user}}"
+								},
+								{
+									"key": "password",
+									"value": "{{admin_pass}}"
+								}
+							]
+						},
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "cmdbFile",
+									"type": "file",
+									"src": "tests/fixtures/cmdb/topdesk-export-anonymised.xlsx"
+								},
+								{
+									"key": "municipalityName",
+									"value": "Gemeente Voorbeeldstad",
+									"type": "text"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// The collection adds OCS-APIRequest, which satisfies the CSRF check; this request must go without it.",
+									"pm.request.headers.remove(\"OCS-APIRequest\");"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Nextcloud refuses the request without a CSRF token\", function () {",
+									"    pm.response.to.have.status(412);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "CMDB import: 400 NO_FILE_UPLOADED without cmdbFile",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/cmdb-import",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"cmdb-import"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{admin_user}}"
+								},
+								{
+									"key": "password",
+									"value": "{{admin_pass}}"
+								}
+							]
+						},
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "municipalityName",
+									"value": "Gemeente Voorbeeldstad",
+									"type": "text"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"A request without the file is refused\", function () {",
+									"    pm.response.to.have.status(400);",
+									"    pm.expect(pm.response.json().error).to.eql(\"NO_FILE_UPLOADED\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "CMDB import: 400 NOT_XLSX for a file that is not a workbook",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/cmdb-import",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"cmdb-import"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{admin_user}}"
+								},
+								{
+									"key": "password",
+									"value": "{{admin_pass}}"
+								}
+							]
+						},
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "cmdbFile",
+									"type": "file",
+									"src": "appinfo/info.xml"
+								},
+								{
+									"key": "municipalityName",
+									"value": "Gemeente Voorbeeldstad",
+									"type": "text"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"A file that is not .xlsx is refused before it is read\", function () {",
+									"    pm.response.to.have.status(400);",
+									"    pm.expect(pm.response.json().error).to.eql(\"NOT_XLSX\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "CMDB import: 413 for a file over 10 MB",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/cmdb-import",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"cmdb-import"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{admin_user}}"
+								},
+								{
+									"key": "password",
+									"value": "{{admin_pass}}"
+								}
+							]
+						},
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "cmdbFile",
+									"type": "file",
+									"src": "{{cmdb_oversized_file}}"
+								},
+								{
+									"key": "municipalityName",
+									"value": "Gemeente Voorbeeldstad",
+									"type": "text"
+								}
+							]
+						},
+						"description": "Set cmdb_oversized_file to a file of 10485761 bytes. When it is not set the request still runs and fails with that message, so a run without it cannot pass this check silently."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// Needs a file of 10 MB plus one byte, e.g. `head -c 10485761 /dev/zero > /tmp/cmdb-oversized.xlsx`,",
+									"// passed as --env-var cmdb_oversized_file=/tmp/cmdb-oversized.xlsx. Without it the request runs without a file",
+									"// and the first test below fails, naming the missing variable."
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"cmdb_oversized_file is set\", function () {",
+									"    pm.expect(pm.variables.get(\"cmdb_oversized_file\") || \"\", \"set --env-var cmdb_oversized_file to a file of 10485761 bytes\").to.not.eql(\"\");",
+									"});",
+									"pm.test(\"An oversized upload is refused before it is read\", function () {",
+									"    pm.response.to.have.status(413);",
+									"    pm.expect(pm.response.json().error).to.eql(\"FILE_TOO_LARGE\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "CMDB import: 422 MISSING_RECORDS_UNSUPPORTED for missingRecords=remove",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/cmdb-import",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"cmdb-import"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{admin_user}}"
+								},
+								{
+									"key": "password",
+									"value": "{{admin_pass}}"
+								}
+							]
+						},
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "cmdbFile",
+									"type": "file",
+									"src": "tests/fixtures/cmdb/topdesk-export-anonymised.xlsx"
+								},
+								{
+									"key": "municipalityName",
+									"value": "Gemeente Voorbeeldstad",
+									"type": "text"
+								},
+								{
+									"key": "missingRecords",
+									"value": "remove",
+									"type": "text"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Only missingRecords=keep is accepted\", function () {",
+									"    pm.response.to.have.status(422);",
+									"    pm.expect(pm.response.json().error).to.eql(\"MISSING_RECORDS_UNSUPPORTED\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "CMDB import: 400 FIELD_INVALID for updateExisting=flase",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/cmdb-import",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"cmdb-import"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{admin_user}}"
+								},
+								{
+									"key": "password",
+									"value": "{{admin_pass}}"
+								}
+							]
+						},
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "cmdbFile",
+									"type": "file",
+									"src": "tests/fixtures/cmdb/topdesk-export-anonymised.xlsx"
+								},
+								{
+									"key": "municipalityName",
+									"value": "Gemeente Voorbeeldstad",
+									"type": "text"
+								},
+								{
+									"key": "updateExisting",
+									"value": "flase",
+									"type": "text"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"An unrecognised updateExisting is refused, not read as true\", function () {",
+									"    pm.response.to.have.status(400);",
+									"    pm.expect(pm.response.json().error).to.eql(\"FIELD_INVALID\");",
+									"});",
+									"pm.test(\"The refusal names the field and the accepted values\", function () {",
+									"    var details = pm.response.json().details;",
+									"    pm.expect(details.field).to.eql(\"updateExisting\");",
+									"    pm.expect(details.accepted).to.eql([\"true\", \"false\"]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "CMDB import: 400 FIELD_INVALID for publish=maybe",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/cmdb-import",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"cmdb-import"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{admin_user}}"
+								},
+								{
+									"key": "password",
+									"value": "{{admin_pass}}"
+								}
+							]
+						},
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "cmdbFile",
+									"type": "file",
+									"src": "tests/fixtures/cmdb/topdesk-export-anonymised.xlsx"
+								},
+								{
+									"key": "municipalityName",
+									"value": "Gemeente Voorbeeldstad",
+									"type": "text"
+								},
+								{
+									"key": "publish",
+									"value": "maybe",
+									"type": "text"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"An unrecognised publish is refused, not read as true\", function () {",
+									"    pm.response.to.have.status(400);",
+									"    pm.expect(pm.response.json().error).to.eql(\"FIELD_INVALID\");",
+									"});",
+									"pm.test(\"The refusal names the field and the accepted values\", function () {",
+									"    var details = pm.response.json().details;",
+									"    pm.expect(details.field).to.eql(\"publish\");",
+									"    pm.expect(details.accepted).to.eql([\"true\", \"false\"]);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "CMDB import: 422 MUNICIPALITY_REQUIRED without a municipality",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/cmdb-import",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"cmdb-import"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{admin_user}}"
+								},
+								{
+									"key": "password",
+									"value": "{{admin_pass}}"
+								}
+							]
+						},
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "cmdbFile",
+									"type": "file",
+									"src": "tests/fixtures/cmdb/topdesk-export-anonymised.xlsx"
+								},
+								{
+									"key": "municipalityName",
+									"value": "  ",
+									"type": "text"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"A municipality is required\", function () {",
+									"    pm.response.to.have.status(422);",
+									"    pm.expect(pm.response.json().error).to.eql(\"MUNICIPALITY_REQUIRED\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "CMDB import: 200 with the report for the anonymised export",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/cmdb-import",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"cmdb-import"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{admin_user}}"
+								},
+								{
+									"key": "password",
+									"value": "{{admin_pass}}"
+								}
+							]
+						},
+						"body": {
+							"mode": "formdata",
+							"formdata": [
+								{
+									"key": "cmdbFile",
+									"type": "file",
+									"src": "tests/fixtures/cmdb/topdesk-export-anonymised.xlsx"
+								},
+								{
+									"key": "municipalityName",
+									"value": "Gemeente Voorbeeldstad",
+									"type": "text"
+								},
+								{
+									"key": "updateExisting",
+									"value": "true",
+									"type": "text"
+								},
+								{
+									"key": "missingRecords",
+									"value": "keep",
+									"type": "text"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"The export is imported with a per-row report\", function () {",
+									"    pm.response.to.have.status(200);",
+									"    var json = pm.response.json();",
+									"    pm.expect(json.success).to.eql(true);",
+									"    pm.expect(json.municipality.name).to.eql(\"Gemeente Voorbeeldstad\");",
+									"    pm.expect(json.summary.rowsRead).to.eql(2);",
+									"    pm.expect(json.summary.created + json.summary.unchanged + json.summary.updated).to.eql(2);",
+									"    pm.expect(json.summary.failed).to.eql(0);",
+									"    pm.expect(json.rows.map(function (r) { return r.appId; })).to.eql([\"1234\", \"2\"]);",
+									"    pm.expect(json.rows.map(function (r) { return r.sheet; })).to.eql([\"Onbeh Applicaties CMDB\", \"Beheerde Applicaties CMDB\"]);",
+									"    pm.environment.set(\"cmdb_operation_id\", json.operationId);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "CMDB import: cancel answers 401 when not signed in",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/cmdb-import/cmdb-00000000-0000-4000-8000-000000000000/cancel",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"cmdb-import",
+								"cmdb-00000000-0000-4000-8000-000000000000",
+								"cancel"
+							]
+						},
+						"auth": {
+							"type": "noauth"
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"An anonymous request cannot cancel\", function () {",
+									"    pm.response.to.have.status(401);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "CMDB import: cancel answers 403 for a user who is not a Nextcloud admin",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/cmdb-import/cmdb-00000000-0000-4000-8000-000000000000/cancel",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"cmdb-import",
+								"cmdb-00000000-0000-4000-8000-000000000000",
+								"cancel"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "mark.jansen@test.nl"
+								},
+								{
+									"key": "password",
+									"value": "{{test_password}}"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"A non-admin cannot cancel an import\", function () {",
+									"    pm.response.to.have.status(403);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "CMDB import: cancel answers 412 without a CSRF token",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/cmdb-import/cmdb-00000000-0000-4000-8000-000000000000/cancel",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"cmdb-import",
+								"cmdb-00000000-0000-4000-8000-000000000000",
+								"cancel"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{admin_user}}"
+								},
+								{
+									"key": "password",
+									"value": "{{admin_pass}}"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "prerequest",
+							"script": {
+								"exec": [
+									"// The collection adds OCS-APIRequest, which satisfies the CSRF check; this request must go without it.",
+									"pm.request.headers.remove(\"OCS-APIRequest\");"
+								],
+								"type": "text/javascript"
+							}
+						},
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Nextcloud refuses the cancel without a CSRF token\", function () {",
+									"    pm.response.to.have.status(412);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "CMDB import: cancel answers 404 for the import that already finished",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/cmdb-import/{{cmdb_operation_id}}/cancel",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"cmdb-import",
+								"{{cmdb_operation_id}}",
+								"cancel"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{admin_user}}"
+								},
+								{
+									"key": "password",
+									"value": "{{admin_pass}}"
+								}
+							]
+						},
+						"description": "Uses the operationId the 200 request stored. A sequential collection cannot hold an import running while it cancels, so the cancel 200 is covered by the unit tests (CmdbImportControllerTest::testCancel, CmdbExportImportServiceTest::testACancelStopsBetweenRows)."
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"The 200 request stored its operationId\", function () {",
+									"    pm.expect(pm.environment.get(\"cmdb_operation_id\"), \"cmdb_operation_id is unset: the 200 import request did not run or failed\").to.match(/^cmdb-[A-Za-z0-9-]{8,64}$/);",
+									"});",
+									"pm.test(\"A finished import cannot be cancelled\", function () {",
+									"    pm.response.to.have.status(404);",
+									"    pm.expect(pm.response.json().error).to.eql(\"OPERATION_NOT_FOUND\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				},
+				{
+					"name": "CMDB import: 404 OPERATION_NOT_FOUND when cancelling an unknown import",
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "OCS-APIRequest",
+								"value": "true",
+								"type": "text"
+							}
+						],
+						"url": {
+							"raw": "{{stackiq_api}}/cmdb-import/cmdb-00000000-0000-4000-8000-000000000000/cancel",
+							"host": [
+								"{{stackiq_api}}"
+							],
+							"path": [
+								"cmdb-import",
+								"cmdb-00000000-0000-4000-8000-000000000000",
+								"cancel"
+							]
+						},
+						"auth": {
+							"type": "basic",
+							"basic": [
+								{
+									"key": "username",
+									"value": "{{admin_user}}"
+								},
+								{
+									"key": "password",
+									"value": "{{admin_pass}}"
+								}
+							]
+						}
+					},
+					"response": [],
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Cancel needs a running cmdb_import operation\", function () {",
+									"    pm.response.to.have.status(404);",
+									"    pm.expect(pm.response.json().error).to.eql(\"OPERATION_NOT_FOUND\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					]
+				}
+			]
 		}
 	],
 	"auth": {

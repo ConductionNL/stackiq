@@ -21,6 +21,7 @@ import ArrowRight from 'vue-material-design-icons/ArrowRight.vue'
 import BookOpenVariant from 'vue-material-design-icons/BookOpenVariant.vue'
 import BookOpenVariantOutline from 'vue-material-design-icons/BookOpenVariantOutline.vue'
 import BriefcaseOutline from 'vue-material-design-icons/BriefcaseOutline.vue'
+import Calendar from 'vue-material-design-icons/Calendar.vue'
 import ChartBar from 'vue-material-design-icons/ChartBar.vue'
 import ChartBoxOutline from 'vue-material-design-icons/ChartBoxOutline.vue'
 import ChartLine from 'vue-material-design-icons/ChartLine.vue'
@@ -53,7 +54,10 @@ import OfficeBuildingOutline from 'vue-material-design-icons/OfficeBuildingOutli
 import Package from 'vue-material-design-icons/Package.vue'
 import PackageVariant from 'vue-material-design-icons/PackageVariant.vue'
 import PackageVariantClosed from 'vue-material-design-icons/PackageVariantClosed.vue'
+import PowerPlugOutline from 'vue-material-design-icons/PowerPlugOutline.vue'
 import PuzzleOutline from 'vue-material-design-icons/PuzzleOutline.vue'
+import RobotOutline from 'vue-material-design-icons/RobotOutline.vue'
+import ScaleBalance from 'vue-material-design-icons/ScaleBalance.vue'
 import ShieldAlert from 'vue-material-design-icons/ShieldAlert.vue'
 import ShieldAlertOutline from 'vue-material-design-icons/ShieldAlertOutline.vue'
 import ShieldCheckOutline from 'vue-material-design-icons/ShieldCheckOutline.vue'
@@ -79,6 +83,7 @@ export default {
 	BookOpenVariant,
 	BookOpenVariantOutline,
 	BriefcaseOutline,
+	Calendar,
 	ChartBar,
 	ChartBoxOutline,
 	ChartLine,
@@ -111,7 +116,10 @@ export default {
 	Package,
 	PackageVariant,
 	PackageVariantClosed,
+	PowerPlugOutline,
 	PuzzleOutline,
+	RobotOutline,
+	ScaleBalance,
 	ShieldAlert,
 	ShieldAlertOutline,
 	ShieldCheckOutline,

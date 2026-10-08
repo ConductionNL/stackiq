@@ -1,0 +1,1202 @@
+[
+ {
+  "row": "arch-ai-diagram",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, BlueDolphin); core area (architecture).",
+  "change": "architecture-assistant-drafted-views",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-capability-map",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, BlueDolphin); core area (architecture). Partial and built: the change builds the missing half, a map view of applications on reference components inside stackiq.",
+  "change": "architecture-reference-component-coverage",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-data-model",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: tender demand (https://www.tenderned.nl/aankondigingen/overzicht/398728); core area (architecture).",
+  "change": "architecture-data-model-and-ggm",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-decision-register",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: core area (architecture).",
+  "change": "architecture-decision-register",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-definitions",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "partial, built, no demand (0 competitor yes, no tender, feature request or roadmap row).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-diagram-version-compare",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: core area (architecture).",
+  "change": "architecture-views-editor",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-export-amef",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "partial, built, no demand (1 competitor yes, no tender, feature request or roadmap row).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-export-org",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "partial, built, no demand (1 competitor yes, no tender, feature request or roadmap row).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-gap-analysis",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: core area (architecture).",
+  "change": "architecture-reference-component-coverage",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-ggm-link",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: tender demand (https://www.tenderned.nl/aankondigingen/overzicht/398728); core area (architecture).",
+  "change": "architecture-data-model-and-ggm",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-import-amef",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "partial, built, no demand (1 competitor yes, no tender, feature request or roadmap row).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-modelling",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, BlueDolphin); core area (architecture).",
+  "change": "architecture-views-editor",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-process-mapping",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, BlueDolphin); core area (architecture).",
+  "change": "architecture-process-mapping",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-process-step-fields",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: core area (architecture).",
+  "change": "architecture-process-mapping",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-round-trip",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: core area (architecture). Built state but rated no: the code exists and does not work, so the change repairs it.",
+  "change": "architecture-round-trip-check",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-scenarios",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, BlueDolphin); core area (architecture).",
+  "change": "architecture-future-state-scenarios",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-view-tags",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: core area (architecture).",
+  "change": "architecture-views-editor",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "arch-views-office",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: tender demand (https://www.tenderned.nl/aankondigingen/overzicht/398728); core area (architecture).",
+  "change": "architecture-views-to-office-documents",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "comp-ai-act-classification",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Below the bar on its own (0 competitor yes, no tender, feature request or roadmap demand), and it rides with land-ai-agent-inventory: its whole capability is an AI Act risk category on the AI system record that change adds.",
+  "change": "landscape-ai-system-inventory",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "comp-audit-questionnaire",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: single competitor, no demand, outside the core areas (compliance).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "comp-bio-assessment",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "partial, built, no demand (0 competitor yes, no tender, feature request or roadmap row).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "comp-bio-measures",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "partial, built, no demand (0 competitor yes, no tender, feature request or roadmap row).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "comp-bulk-sync-standards",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "partial, built, no demand (0 competitor yes, no tender, feature request or roadmap row).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "comp-common-ground-fit",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (compliance).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "comp-forum-standaardisatie",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: no competitor rates yes, no demand, outside the core areas (compliance).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "comp-health-scoring",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, BlueDolphin).",
+  "change": "landscape-completeness-score",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "comp-processing-register-generate",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (compliance).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "comp-retention-cleanup",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: single competitor, changelog only, which counts as the competitor it names, outside the core areas (compliance).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "comp-security-officer-signoff",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (compliance).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "comp-verified-vs-claimed",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "partial, built, no demand (1 competitor yes, no tender, feature request or roadmap row).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "conn-api-catalogue",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: core area (connections).",
+  "change": "connections-api-catalogue",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "conn-auto-populate-dependencies",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, BlueDolphin); featureRequest demand; core area (connections).",
+  "change": "connections-derived-dependencies",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "conn-diagram",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 4 competitors rate yes (SAP LeanIX, BlueDolphin, GLPI, TOPdesk); core area (connections).",
+  "change": "connections-diagram-and-graph-export",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "conn-export-graph",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (GEMMA Softwarecatalogus, GLPI); core area (connections).",
+  "change": "connections-diagram-and-graph-export",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "conn-external-provision",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Below the bar on its own (1 competitor yes, no tender, feature request or roadmap demand), and it rides with conn-list-page: its missing half is a page to fill the field, and the connection form on the new connections page shows it.",
+  "change": "connections-catalogue-pages",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "conn-list-page",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (GEMMA Softwarecatalogus, SAP LeanIX); core area (connections). Marked specified with no change directory; this change is the missing change.",
+  "change": "connections-catalogue-pages",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "conn-per-application",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 3 competitors rate yes (SAP LeanIX, BlueDolphin, GLPI); core area (connections). Partial and built: the change builds the missing half, a connections section on the application page that opens each connection.",
+  "change": "connections-catalogue-pages",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "conn-type-filter",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: core area (connections). Marked specified with no change directory; this change is the missing change.",
+  "change": "connections-catalogue-pages",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ctr-budget",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: single competitor, no demand, outside the core areas (contracts).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ctr-collective-agreements",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (contracts).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ctr-contract-owner",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, TOPdesk); featureRequest demand. Partial and built: the change builds the missing half, expiry warnings that reach the named contact person.",
+  "change": "contracts-expiry-and-owner",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ctr-depreciation",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: single competitor, no demand, outside the core areas (contracts).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ctr-effective-licence-position",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: no competitor rates yes, no demand, outside the core areas (contracts).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ctr-licence-model",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Below the bar on its own (1 competitor yes, no tender, feature request or roadmap demand), and it rides with ctr-seat-count: its missing half is a licence metric such as per user or per seat, which seat counting needs.",
+  "change": "contracts-licence-seats",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ctr-linked-contracts",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (contracts).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ctr-per-application",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, GLPI).",
+  "change": "landscape-application-page",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ctr-saas-spend",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "partial, built, no demand (0 competitor yes, no tender, feature request or roadmap row).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ctr-seat-count",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (GLPI, TOPdesk).",
+  "change": "contracts-licence-seats",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ctr-status",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, TOPdesk). Partial and built: the change builds the missing half, the expiring state between active and expired.",
+  "change": "contracts-expiry-and-owner",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ins-ai-action-audit",
+  "matrix": "stackiq",
+  "decision": "existing",
+  "reason": "Open change mcp-full-action-surface, spec mcp-tool-surface, requires every agent tool invocation on stackiq to land in Hermiq's audit trail, which lists what an assistant did, when and on which record.",
+  "change": "mcp-full-action-surface",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ins-concept-orgs-widget",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: no competitor rates yes, no demand, outside the core areas (insight).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ins-cost-report",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "partial, built, no demand (1 competitor yes, no tender, feature request or roadmap row).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ins-custom-report",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, GLPI).",
+  "change": "insight-exports-and-custom-reports",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ins-export-list",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 4 competitors rate yes (GEMMA Softwarecatalogus, SAP LeanIX, GLPI, TOPdesk). Partial and built: the change builds the missing half, export on the filtered catalogue list pages.",
+  "change": "insight-exports-and-custom-reports",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ins-faceted-search",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 4 competitors rate yes (GEMMA Softwarecatalogus, SAP LeanIX, BlueDolphin, GLPI). Partial and built: the change builds the missing half, supplier as a facet.",
+  "change": "insight-supplier-facet",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ins-kb",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (GLPI, TOPdesk).",
+  "change": "insight-knowledge-base",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ins-natural-language-query",
+  "matrix": "stackiq",
+  "decision": "existing",
+  "reason": "Open change stackiq-mcp-adoption declares read-only search and get MCP tools on nine catalogue schemas so Hermiq answers questions about the landscape from the entries it read; mcp-full-action-surface design section 6 grounds the chat scenario. The chat, the answer and its citations are Hermiq's (ADR-034).",
+  "change": "stackiq-mcp-adoption",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ins-progress",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, GLPI). Partial and built: the change builds the missing half, a page that shows the progress of a running synchronisation or import.",
+  "change": "operations-sync-status-and-progress",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ins-scheduled-report",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: single competitor, no demand, outside the core areas (insight).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ins-usage-analytics",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: single competitor, changelog only, which counts as the competitor it names, outside the core areas (insight).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "land-ai-agent-inventory",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: core area (landscape).",
+  "change": "landscape-ai-system-inventory",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "land-application-modules",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, BlueDolphin); core area (landscape). Partial and built: the change builds the missing half, breaking one application into its components.",
+  "change": "landscape-application-components",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "land-application-owner",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, GLPI); core area (landscape). Partial and built: the change builds the missing half, a separate business owner and technical owner for the organisation that uses the application, on its usage.",
+  "change": "landscape-usage-registration",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "land-bulk-edit",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "partial, built, no demand (1 competitor yes, no tender, feature request or roadmap row).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "land-change-entry-type",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: roadmap demand; core area (landscape).",
+  "change": "landscape-change-entry-type",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "land-completeness-score",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, BlueDolphin); core area (landscape).",
+  "change": "landscape-completeness-score",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "land-data-quality-survey",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, BlueDolphin); core area (landscape).",
+  "change": "landscape-owner-attestation",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "land-dependent-fields",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: roadmap demand (https://tip.topdesk.com/c/87-field-dependencies-brand-type-model-); core area (landscape). Matrix corrected to partial while re-reading the code: relation pickers already follow another field (CnFormDialog relationFilterDecls, usage.moduleVersion on @object.module); the change builds the missing half, dependent enum options declared with OpenRegister x-openregister-dependent-values.",
+  "change": "landscape-dependent-field-options",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "land-detail-page",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, BlueDolphin); core area (landscape). Partial and built: the change builds the missing half, contracts on the application page, opening it from the Applications list, and the stale field keys.",
+  "change": "landscape-application-page",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "land-duplicate-merge",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Below the bar on its own (1 competitor yes, no tender, feature request or roadmap demand), and it rides with ops-reconciliation: its missing half is merging applications and services, which is the merge that change extends.",
+  "change": "operations-record-reconciliation",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "land-guided-wizard",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "partial, built, no demand (0 competitor yes, no tender, feature request or roadmap row).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "land-move-between-workspaces",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (BlueDolphin, GLPI); core area (landscape).",
+  "change": "landscape-move-between-organisations",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "land-register-application",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 4 competitors rate yes (GEMMA Softwarecatalogus, SAP LeanIX, BlueDolphin, GLPI); core area (landscape). Partial and built: the change builds the missing half, a lifecycle status for the application an organisation uses, set on a usage page.",
+  "change": "landscape-usage-registration",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "land-sectors",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Recorded non-goal: aanvullende-informatie.md:511 lists VNG issue #4 (classify packages on the reference architectures of the relevant sectors, so buyers from several sectors find them) with the analysis \"Classificeren op meerdere sectorale referentiearchitecturen, buiten scope\", and issues/4.md carries the label \"Buiten scope oplevering\" and is closed. Tagging applications with sectors is the entry to that out-of-scope classification. The unused sector schema (lib/Settings/softwarecatalogus_register.json:1036) is what the specified state pointed at; no change directory existed.",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "land-version-carry-connections",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: featureRequest demand; core area (landscape).",
+  "change": "connections-derived-dependencies",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "life-dates-follow-status",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (lifecycle).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "life-maintenance-window",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Marked specified with no change directory, a claim without a change (addendum), so the change is written; the feature overlay lists maintenance-and-supplier-roadmap as soon. TOPdesk rates yes.",
+  "change": "lifecycle-maintenance-and-supplier-roadmap",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "life-overlap",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (GEMMA Softwarecatalogus, BlueDolphin).",
+  "change": "architecture-reference-component-coverage",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "life-rationalisation-report",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Below the bar on its own (1 competitor yes, no tender, feature request or roadmap demand), and it rides with life-overlap: its missing half is overlap in the portfolio report, which is the overlap that change computes.",
+  "change": "architecture-reference-component-coverage",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "life-strategy-link",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: single competitor, no demand, outside the core areas (lifecycle).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "life-tech-obsolescence",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Below the bar on its own (1 competitor yes, no tender, feature request or roadmap demand), and it rides with ops-hardware-assets: its missing half is the relation from an application to the platform it runs on with that platform's lifecycle, which the technology components change records.",
+  "change": "operations-technology-components",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "life-value-assessment",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: tender demand (https://www.tenderned.nl/aankondigingen/overzicht/398728); 2 competitors rate yes (SAP LeanIX, BlueDolphin).",
+  "change": "lifecycle-application-value-assessment",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "life-version-in-use",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (GEMMA Softwarecatalogus, GLPI). Partial and built: the change builds the missing half, a usage page where the organisation sets the version it runs.",
+  "change": "landscape-usage-registration",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "life-version-tolerance",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: no competitor rates yes, roadmap demand without a competitor yes, outside the core areas (lifecycle).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "mkt-contact-peers",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: single competitor, no demand, outside the core areas (market).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "mkt-contacts-per-product",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Below the bar on its own (0 competitor yes, no tender, feature request or roadmap demand), and it rides with land-detail-page: its missing half is the stale contactpersoon key on the application page, which that change corrects.",
+  "change": "landscape-application-page",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "mkt-side-by-side-compare",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (market).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "mkt-supplier-roadmap",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Below the bar on its own (1 competitor yes, no tender, feature request or roadmap demand), and it rides with life-maintenance-window: the feature overlay pairs them as maintenance-and-supplier-roadmap, and its missing half is the roadmap view that change adds.",
+  "change": "lifecycle-maintenance-and-supplier-roadmap",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "mkt-tender-product-info",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Recorded design: README.md:266 says stackiq runs \"with a separate React-based public frontend\", and README.md:273 names it (ConductionNL/tilburg-woo-ui) as the public search and detail pages. The missing half is the public page a buyer opens, which that frontend serves; stackiq publishes the data (module read rule for group public after publicationDate).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ops-agent-inventory",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" Agent-based discovery of installed software is a discovery agent.",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ops-change",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" Change approval workflows are service desk change management.",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ops-change-risk-score",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" A risk score for a planned change belongs to service desk change management, which stackiq does not run.",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ops-ci-relations",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (GLPI, TOPdesk). Partial and built: the change builds the missing half, configuration item classes beyond applications, and their relations.",
+  "change": "operations-technology-components",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ops-hardware-assets",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (GLPI, TOPdesk).",
+  "change": "operations-technology-components",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ops-mobile",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: single competitor, no demand, outside the core areas (operations).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ops-network-discovery",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" Network device discovery is a discovery agent.",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ops-reconciliation",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 3 competitors rate yes (SAP LeanIX, BlueDolphin, GLPI). Partial and built: the change builds the missing half, deduplicating applications and reconciling records from several sources.",
+  "change": "operations-record-reconciliation",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ops-saas-discovery",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" Discovering unregistered SaaS use is a discovery agent.",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ops-scheduled-sync",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 2 competitors rate yes (SAP LeanIX, BlueDolphin). Partial and built: the change builds the missing half, the sync schedule and last run for the organisation administrator, not only the Nextcloud admin.",
+  "change": "operations-sync-status-and-progress",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ops-self-service",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" A self-service portal where end users request software is a service desk.",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ops-sla",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" The competitor evidence tracks service desk response and resolution targets on calls and tickets.",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "ops-tickets",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Recorded non-goal: openspec/parity/capabilities.json category: \"It is not a discovery agent, a service desk or a developer portal, and the operations area exists to record that on purpose.\" Logging incidents and requests is a service desk. Exchange with the organisation's service desk is specified under share-itsm-integration.",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "org-access-review",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: tender demand (https://www.tenderned.nl/aankondigingen/overzicht/398728).",
+  "change": "organisations-role-mapping-and-access-review",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "org-act-as-user",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Platform capability: the Nextcloud Impersonate app lets an administrator sign in as another account, and stackiq relies on Nextcloud users. built.owner corrected to nextcloud/server, provider nextcloud.",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "org-activation-mail",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "partial, built, no demand (1 competitor yes, no tender, feature request or roadmap row).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "org-assigned-only-rights",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: single competitor, changelog only, which counts as the competitor it names, outside the core areas (organisations).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "org-directory-sync",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Platform capability: Nextcloud user_ldap keeps users and groups in step with a directory for every app, and stackiq users and groups are Nextcloud users and groups. built.owner corrected to nextcloud/server.",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "org-merge",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "partial, built, no demand (0 competitor yes, no tender, feature request or roadmap row).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "org-password-change",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Platform capability: Nextcloud personal settings let every user change their password and see their account details. The stackiq half (change password from your own contact row) stays as built evidence. built.owner corrected to nextcloud/server, provider nextcloud.",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "org-roles",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 4 competitors rate yes (SAP LeanIX, BlueDolphin, GLPI, TOPdesk). Partial and built: the change builds the missing half, mapping each catalogue role onto a group the administrator chooses.",
+  "change": "organisations-role-mapping-and-access-review",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "org-sso",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Platform capability: Nextcloud signs users in through its identity provider apps (user_oidc, user_saml) for every app, and stackiq users are Nextcloud users. built.owner corrected to nextcloud/server.",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "sec-affected-versions",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "partial, built, no demand (0 competitor yes, no tender, feature request or roadmap row).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "sec-baseline-classification",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: featureRequest demand. Partial and built: the change builds the missing half, a classification split into availability, integrity and confidentiality.",
+  "change": "security-baseline-classification",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "sec-patch-status",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: no competitor rates yes, no demand, outside the core areas (security).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "sec-risk-score",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "Defer: no competitor rates yes, no demand, outside the core areas (security).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "share-api-docs",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 4 competitors rate yes (SAP LeanIX, BlueDolphin, GLPI, TOPdesk). Partial and built: the change builds the missing half, a generated OpenAPI description of the catalogue API.",
+  "change": "sharing-generated-api-docs",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "share-compliance-documents",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: featureRequest demand. Partial and built: the change builds the missing half, sharing processing agreements and pentest reports with other organisations.",
+  "change": "sharing-compliance-documents",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "share-export",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 5 competitors rate yes (GEMMA Softwarecatalogus, SAP LeanIX, BlueDolphin, GLPI, TOPdesk). Partial and built: the change builds the missing half, an export of your own data from a user page instead of admin settings.",
+  "change": "insight-exports-and-custom-reports",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "share-federation-peers",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "partial, built, no demand (0 competitor yes, no tender, feature request or roadmap row).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "share-itsm-integration",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: 4 competitors rate yes (SAP LeanIX, BlueDolphin, GLPI, TOPdesk).",
+  "change": "sharing-itsm-exchange",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "share-lifecycle-conditional-sync",
+  "matrix": "stackiq",
+  "decision": "existing",
+  "reason": "matrix corrected: stackiq's Flows page (src/manifest.json:1057, OpenRegister's flow store scoped to stackiq) composes an object trigger on object.updated (openregister lib/Service/Flow/Nodes/TriggerObjectNode.php:82), a per-item Filter on the lifecycle status (FilterNode.php:10, :186) and integriq's source call node (integriq lib/Flow/SourceCallNode.php on development). Rating set to yes, built.owner ConductionNL/openregister.",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "share-publish",
+  "matrix": "stackiq",
+  "decision": "defer",
+  "reason": "partial, built, no demand (0 competitor yes, no tender, feature request or roadmap row).",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "sec-multi-factor-sign-in",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Owed to nextcloud/server: Nextcloud two-factor apps require a second factor at sign-in for every app, and stackiq users are Nextcloud users.",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "sec-password-policy",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Owed to nextcloud/server: the Nextcloud password_policy app enforces password rules for every local account, including the ones stackiq creates.",
+  "change": null,
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "conn-integration-registry",
+  "matrix": "stackiq",
+  "decision": "existing",
+  "reason": "Owned by ConductionNL/integriq. Its open change connection-registry covers the integrations overview; stackiq's half is the open change adopt-connection-registry (19 of 20 tasks). Recorded as instructed by the coordinator; the matrix row is the integriq lane's to set.",
+  "change": "connection-registry (ConductionNL/integriq)",
+  "decidedOn": "2026-09-27"
+ },
+ {
+  "row": "comp-forum-standaardisatie",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, no demand, outside the core areas (compliance).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "comp-audit-questionnaire",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, no demand, outside the core areas (compliance).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "mkt-contact-peers",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, no demand, outside the core areas (market).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "life-strategy-link",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, no demand, outside the core areas (lifecycle).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "ctr-effective-licence-position",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, no demand, outside the core areas (contracts).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "ctr-budget",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, no demand, outside the core areas (contracts).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "ctr-depreciation",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, no demand, outside the core areas (contracts).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "sec-risk-score",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, no demand, outside the core areas (security).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "sec-patch-status",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, no demand, outside the core areas (security).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "ops-mobile",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, no demand, outside the core areas (operations).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "ins-scheduled-report",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, no demand, outside the core areas (insight).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "comp-security-officer-signoff",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (compliance).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "comp-processing-register-generate",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (compliance).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "ctr-collective-agreements",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (contracts).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "mkt-side-by-side-compare",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (market).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "comp-common-ground-fit",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (compliance).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "comp-retention-cleanup",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, changelog only, which counts as the competitor it names, outside the core areas (compliance).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "ctr-linked-contracts",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (contracts).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "life-dates-follow-status",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, featureRequest demand without a competitor yes, outside the core areas (lifecycle).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "org-assigned-only-rights",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, changelog only, which counts as the competitor it names, outside the core areas (organisations).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "life-version-tolerance",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): no competitor rates yes, roadmap demand without a competitor yes, outside the core areas (lifecycle).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "ins-usage-analytics",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Decided no (defer retired 2026-09-28): single competitor, changelog only, which counts as the competitor it names, outside the core areas (insight).",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "org-status",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Missing half decided no (defer retired 2026-09-28): only GLPI rates partial, no competitor rates yes, no demand, outside the core areas (organisations). The broken half stays: the organisation status field is hidden and locked, the status dialog is never opened, and the concept organisations dashboard widget filters and writes the old Dutch values concept and actief, which are not in the enum.",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "share-open-data-privacy",
+  "matrix": "stackiq",
+  "decision": "decided-no",
+  "reason": "Missing half decided no (defer retired 2026-09-28): only the GEMMA Softwarecatalogus rates partial, no competitor rates yes, no demand, outside the core areas (sharing). The unused PII projection util stays unwired.",
+  "change": null,
+  "decidedOn": "2026-09-28"
+ },
+ {
+  "row": "arch-import-progress",
+  "matrix": "stackiq",
+  "decision": "build",
+  "reason": "Build: core area (architecture). Building with no change for its missing half; the cancel endpoint calls a method that does not exist and the import never records progress, so the change repairs and finishes it.",
+  "change": "architecture-import-progress-and-cancel",
+  "decidedOn": "2026-09-28"
+ }
+]

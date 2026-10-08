@@ -225,7 +225,10 @@ class DemoDataService {
 			$objects = count($components['objects']);
 		}
 
-		$result = $this->configurationService()->importFromApp(
+		$importer = $this->configurationService();
+		$data     = $this->pinSchemasToTheirRegisters(data: $data);
+
+		$result = $importer->importFromApp(
 			appId: self::CONFIG_APP_ID,
 			data: $data,
 			version: $this->appManager->getAppVersion(Application::APP_ID),
@@ -248,6 +251,74 @@ class DemoDataService {
 
 		return $imported;
 	}//end install()
+
+	/**
+	 * Point every demo object at its schema in its own register, by id.
+	 *
+	 * The descriptor carries no schema definitions (the live register's are the
+	 * ones the objects must satisfy), so each object names its schema by slug.
+	 * OpenRegister resolves a slug it has no definition for across the whole
+	 * instance, and a slug such as `organization` is also another app's
+	 * (OpenCatalogi's), whose schema the importer then skips as foreign. The
+	 * register the object names lists the right schema, so the slug is
+	 * resolved there and replaced by that schema's id. A slug the register does
+	 * not list, or a register that cannot be read, is left for the importer.
+	 *
+	 * @param array<string, mixed> $data The descriptor.
+	 *
+	 * @return array<string, mixed> The descriptor with resolved schema ids.
+	 *
+	 * @spec exclude Demo-data import; ADR-111 rule 1 has no per-app behavioural spec.
+	 */
+	private function pinSchemasToTheirRegisters(array $data): array {
+		$objects = ($data['components']['objects'] ?? null);
+		if (is_array($objects) === false) {
+			return $data;
+		}
+
+		$bySlug = [];
+		foreach ($objects as $index => $object) {
+			$register = (string) ($object['@self']['register'] ?? '');
+			$schema   = (string) ($object['@self']['schema'] ?? '');
+			if ($register === '' || $schema === '') {
+				continue;
+			}
+
+			$bySlug[$register] ??= $this->schemaIdsOfRegister(registerSlug: $register);
+			if (isset($bySlug[$register][$schema]) === true) {
+				$data['components']['objects'][$index]['@self']['schema'] = (string) $bySlug[$register][$schema];
+			}
+		}
+
+		return $data;
+	}//end pinSchemasToTheirRegisters()
+
+	/**
+	 * The schemas a register lists, as slug => id.
+	 *
+	 * @param string $registerSlug The register.
+	 *
+	 * @return array<string, int> The schema ids by slug; empty when the register cannot be read.
+	 */
+	private function schemaIdsOfRegister(string $registerSlug): array {
+		try {
+			$register = $this->container->get('OCA\OpenRegister\Db\RegisterMapper')->find($registerSlug, _rbac: false, _multitenancy: false);
+			$schemas  = $this->container->get('OCA\OpenRegister\Db\SchemaMapper')->findMultiple($register->getSchemas(), _rbac: false, _multitenancy: false);
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'[DemoDataService] could not read the schemas of a demo register; its objects are resolved by slug',
+				['register' => $registerSlug, 'error' => $e->getMessage()]
+			);
+			return [];
+		}
+
+		$ids = [];
+		foreach ($schemas as $schema) {
+			$ids[(string) $schema->getSlug()] = (int) $schema->getId();
+		}
+
+		return $ids;
+	}//end schemaIdsOfRegister()
 
 	/**
 	 * Absolute path to the shipped descriptor.

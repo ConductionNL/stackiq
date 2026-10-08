@@ -22,6 +22,7 @@ namespace OCA\Stackiq\AppInfo;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
+use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\OpenRegister\Service\OrganisationService as OpenRegisterOrganisationService;
@@ -32,6 +33,8 @@ use OCA\Stackiq\BackgroundJob\OrganizationContactSyncJob;
 use OCA\Stackiq\Controller\ContactpersonenController;
 use OCA\Stackiq\Dashboard\ConceptOrganisatiesWidget;
 use OCA\Stackiq\EventListener\DecisionConcludedListener;
+use OCA\Stackiq\EventListener\MaintenanceRecipientsListener;
+use OCA\Stackiq\EventListener\ModuleVersionPublicationListener;
 use OCA\Stackiq\EventListener\ModuleComplianceSubscriber;
 use OCA\Stackiq\EventListener\ModuleRegistrationSubscriber;
 use OCA\Stackiq\EventListener\TestEventListener;
@@ -39,6 +42,7 @@ use OCA\Stackiq\EventListener\UserProfileUpdatedEventListener;
 use OCA\Stackiq\Service\ArchiMateExportService;
 use OCA\Stackiq\Service\ArchiMateImportService;
 use OCA\Stackiq\Service\ArchiMateService;
+use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\ContactpersoonService;
 use OCA\Stackiq\Service\ContractApprovalService;
 use OCA\Stackiq\Service\ContractStatusService;
@@ -364,7 +368,9 @@ class Application extends App implements IBootstrap {
 			function ($container) {
 				return new StackiqContactSyncService(
 					contactsManager: $container->get('OCP\Contacts\IManager'),
-					logger: $container->get('Psr\Log\LoggerInterface')
+					logger: $container->get('Psr\Log\LoggerInterface'),
+					container: $container,
+					userSession: $container->get('OCP\IUserSession')
 				);
 			}
 		);
@@ -515,14 +521,14 @@ class Application extends App implements IBootstrap {
 			function ($container) {
 				return new ArchiMateImportService(
 					config: $container->get(IAppConfig::class),
-					rootFolder: $container->get('OCP\Files\IRootFolder'),
 					userSession: $container->get('OCP\IUserSession'),
 					appManager: $container->get('OCP\App\IAppManager'),
 					container: $container,
 					logger: $container->get('Psr\Log\LoggerInterface'),
 					settingsService: $container->get(SettingsService::class),
 					organisationService: $container->get(OpenRegisterOrganisationService::class),
-					dbConnection: $container->get(IDBConnection::class)
+					dbConnection: $container->get(IDBConnection::class),
+					progressTracker: $container->get(ProgressTracker::class)
 				);
 			}
 		);
@@ -543,14 +549,14 @@ class Application extends App implements IBootstrap {
 			function ($container) {
 				return new ArchiMateService(
 					config: $container->get(IAppConfig::class),
-					rootFolder: $container->get('OCP\Files\IRootFolder'),
 					userSession: $container->get('OCP\IUserSession'),
 					appManager: $container->get('OCP\App\IAppManager'),
 					container: $container,
 					logger: $container->get('Psr\Log\LoggerInterface'),
 					settingsService: $container->get(SettingsService::class),
 					importService: $container->get(ArchiMateImportService::class),
-					exportService: $container->get(ArchiMateExportService::class)
+					exportService: $container->get(ArchiMateExportService::class),
+					progressTracker: $container->get(ProgressTracker::class)
 				);
 			}
 		);
@@ -593,8 +599,11 @@ class Application extends App implements IBootstrap {
 			ProgressTracker::class,
 			function ($container) {
 				return new ProgressTracker(
-					session: $container->get('OCP\ISession'),
-					logger: $container->get('Psr\Log\LoggerInterface')
+					cacheFactory: $container->get(ICacheFactory::class),
+					userSession: $container->get('OCP\IUserSession'),
+					logger: $container->get('Psr\Log\LoggerInterface'),
+					config: $container->get(IConfig::class),
+					appConfig: $container->get(IAppConfig::class)
 				);
 			}
 		);
@@ -674,7 +683,11 @@ class Application extends App implements IBootstrap {
 					config: $container->get(FederationConfig::class),
 					merger: $container->get(FederationMerger::class),
 					settingsService: $container->get(SettingsService::class),
-					logger: $container->get(LoggerInterface::class)
+					logger: $container->get(LoggerInterface::class),
+					// The integriq connection report (adopt-connection-registry). Passed by
+					// name: this factory is hand-built, so the constructor default of null
+					// would otherwise switch every federation report off without a sound.
+					connectionReports: $container->get(ConnectionReportService::class)
 				);
 			}
 		);
@@ -706,7 +719,9 @@ class Application extends App implements IBootstrap {
 					settingsService: $container->get(SettingsService::class),
 					matcher: $container->get(EolMatcherService::class),
 					timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
-					logger: $container->get(LoggerInterface::class)
+					logger: $container->get(LoggerInterface::class),
+					// Same reason as the FederationService factory above.
+					connectionReports: $container->get(ConnectionReportService::class)
 				);
 			}
 		);
@@ -798,6 +813,14 @@ class Application extends App implements IBootstrap {
 		// Module registration — sets registeredBy on each save.
 		$context->registerEventListener(ObjectCreatedEvent::class, ModuleRegistrationSubscriber::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleRegistrationSubscriber::class);
+
+		// Queue the owner resolution when a supplier announces maintenance (lifecycle-maintenance-and-supplier-roadmap).
+		$context->registerEventListener(ObjectCreatedEvent::class, MaintenanceRecipientsListener::class);
+
+		// A module version is public only while its application is (publication-field-rules).
+		$context->registerEventListener(ObjectCreatedEvent::class, ModuleVersionPublicationListener::class);
+		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleVersionPublicationListener::class);
+		$context->registerEventListener(ObjectDeletedEvent::class, ModuleVersionPublicationListener::class);
 
 		// Sync user profile updates into the contactpersoon mirror.
 		$context->registerEventListener(UserProfileUpdatedEvent::class, UserProfileUpdatedEventListener::class);

@@ -286,8 +286,8 @@ class FacetServiceTest extends TestCase {
 		$archiMateService = $this->createMock(ArchiMateService::class);
 		$archiMateService->method('getElementObjects')->willReturn(
 			[
-				['identifier' => 'rc-1', 'name' => 'Zaakregistratiecomponent', 'domain' => 'Bedrijfsvoering'],
-				['identifier' => 'rc-2', 'name' => 'Klantcontactcomponent', 'domain' => 'Dienstverlening'],
+				['identifier' => 'rc-1', 'name' => 'Zaakregistratiecomponent', 'domein' => 'Bedrijfsvoering'],
+				['identifier' => 'rc-2', 'name' => 'Klantcontactcomponent', 'domein' => 'Dienstverlening'],
 			]
 		);
 		$archiMateService->method('getRelationshipObjects')->willReturn([]);
@@ -357,8 +357,8 @@ class FacetServiceTest extends TestCase {
 		$archiMateService = $this->createMock(ArchiMateService::class);
 		$archiMateService->method('getElementObjects')->willReturn(
 			[
-				['identifier' => 'rc-1', 'name' => 'Zaakregistratiecomponent', 'domain' => 'Bedrijfsvoering'],
-				['identifier' => 'rc-2', 'name' => 'Klantcontactcomponent', 'domain' => 'Dienstverlening'],
+				['identifier' => 'rc-1', 'name' => 'Zaakregistratiecomponent', 'domein' => 'Bedrijfsvoering'],
+				['identifier' => 'rc-2', 'name' => 'Klantcontactcomponent', 'domein' => 'Dienstverlening'],
 			]
 		);
 		$archiMateService->method('getRelationshipObjects')->willReturn([]);
@@ -403,7 +403,7 @@ class FacetServiceTest extends TestCase {
 			function (array $query) {
 				$ids = $query['identifier'] ?? [];
 				$all = [
-					'rc-1' => ['identifier' => 'rc-1', 'name' => 'Zaakregistratiecomponent', 'domain' => 'Bedrijfsvoering'],
+					'rc-1' => ['identifier' => 'rc-1', 'name' => 'Zaakregistratiecomponent', 'domein' => 'Bedrijfsvoering'],
 					'as-1' => ['identifier' => 'as-1', 'name' => 'Zaakservice', 'gemmaType' => 'Applicatieservice'],
 				];
 				return array_values(array_intersect_key($all, array_flip($ids)));

@@ -2,10 +2,868 @@
     "openapi": "3.0.3",
     "info": {
         "title": "stackiq",
-        "version": "0.2.2-unstable.20260910105110",
+        "version": "0.2.3-unstable.20260912202721",
         "description": "Stackiq",
         "license": {
             "name": "agpl"
+        }
+    },
+    "paths": {
+        "/index.php/apps/stackiq/api/cmdb-import": {
+            "post": {
+                "operationId": "cmdbImport-import",
+                "summary": "Import a TOPdesk CMDB export (xlsx) for one municipality",
+                "description": "Nextcloud admins only (not the groups delegated the stackiq admin settings), CSRF-protected (requesttoken header or OCS-APIRequest: true). Creates or updates modules, supplier organisations, usages and owner contact persons, matched on topdesk:<municipality uuid>:<APPID>. See openspec/changes/archive/2026-10-05-cmdb-export-import/contract.md.",
+                "tags": [
+                    "cmdb-import"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "cmdbFile"
+                                ],
+                                "properties": {
+                                    "cmdbFile": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "The TOPdesk export, .xlsx, at most 10 MB"
+                                    },
+                                    "municipalityUuid": {
+                                        "type": "string",
+                                        "format": "uuid",
+                                        "description": "An existing organization of type Municipality; wins over municipalityName"
+                                    },
+                                    "municipalityName": {
+                                        "type": "string",
+                                        "description": "Name of a Municipality to reuse (same normalised name) or create"
+                                    },
+                                    "updateExisting": {
+                                        "type": "string",
+                                        "enum": [
+                                            "true",
+                                            "false"
+                                        ],
+                                        "default": "true",
+                                        "description": "false reports matched rows as skipped (exists). 1 and 0 are accepted too, trimmed and in any case; any other value is refused with 400 FIELD_INVALID"
+                                    },
+                                    "publish": {
+                                        "type": "string",
+                                        "enum": [
+                                            "true",
+                                            "false"
+                                        ],
+                                        "default": "true",
+                                        "description": "true gives every module the import creates a publicationDate (the import's start), so it is public, also to anonymous visitors; false creates them without one, for publication by hand. An update never changes publicationDate either way. 1 and 0 are accepted too, trimmed and in any case; any other value is refused with 400 FIELD_INVALID"
+                                    },
+                                    "missingRecords": {
+                                        "type": "string",
+                                        "enum": [
+                                            "keep"
+                                        ],
+                                        "default": "keep",
+                                        "description": "Only keep is accepted; mark and remove are reserved"
+                                    },
+                                    "operationId": {
+                                        "type": "string",
+                                        "pattern": "^cmdb-[A-Za-z0-9-]{8,64}$",
+                                        "description": "Progress operation id, readable through GET /api/progress/{operationId}. A value that does not match the pattern, or the id of a CMDB import that is still running, is replaced by a generated id; the response's operationId is the id the import used"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The import report",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportReport"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "NO_FILE_UPLOADED, NOT_XLSX, or FIELD_INVALID (updateExisting or publish not true/false/1/0, or a text field sent as an array; details.field names it)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportError"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Not signed in"
+                    },
+                    "403": {
+                        "description": "Not a Nextcloud admin (delegated stackiq admin settings are not enough)"
+                    },
+                    "409": {
+                        "description": "IMPORT_IN_PROGRESS: another CMDB import holds the register's lock; nothing is read or written",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportError"
+                                }
+                            }
+                        }
+                    },
+                    "412": {
+                        "description": "Missing or invalid CSRF token"
+                    },
+                    "413": {
+                        "description": "FILE_TOO_LARGE; details.maxBytes is the limit that fired: the profile's maximum, or PHP's upload_max_filesize or post_max_size when lower. WORKBOOK_TOO_LARGE; over a profile limit checked before parsing: the unpacked size of all parts (details.maxUncompressedBytes), of one part the import may parse (details.maxPartBytes, details.part, details.size and, for a sheet, details.sheet; a sheet the import does not read may be larger), the number of shared strings (details.maxSharedStrings), or the shared-string text the cells reference together (details.maxReferencedStringBytes)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportError"
+                                }
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "MISSING_RECORDS_UNSUPPORTED, MUNICIPALITY_REQUIRED, MUNICIPALITY_INVALID, MUNICIPALITY_AMBIGUOUS (more than one live Municipality has the typed name; details.matches lists their uuids), NO_SOURCE_SHEET, MISSING_COLUMN or TOO_MANY_ROWS",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportError"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "UPLOAD_FAILED (PHP could not store the upload) or IMPORT_FAILED (unexpected; the detail is in the log)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportError"
+                                }
+                            }
+                        }
+                    },
+                    "503": {
+                        "description": "MAPPING_UNAVAILABLE, READER_UNAVAILABLE, NOT_CONFIGURED, or SCHEMA_OUTDATED (a stackiq schema lacks a property the import matches on, or the module schema predates 0.3.8; details.schema names it and details.missing lists the properties, and externalKey.authorization.update for a missing admin-only write rule)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/index.php/apps/stackiq/api/cmdb-import/{operationId}/cancel": {
+            "post": {
+                "operationId": "cmdbImport-cancel",
+                "summary": "Ask a running CMDB import to stop between rows",
+                "description": "Nextcloud admins only (not the groups delegated the stackiq admin settings), CSRF-protected (requesttoken header or OCS-APIRequest: true). No body.",
+                "tags": [
+                    "cmdb-import"
+                ],
+                "parameters": [
+                    {
+                        "name": "operationId",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "pattern": "^cmdb-[A-Za-z0-9-]{8,64}$"
+                        },
+                        "description": "The operationId of the import; any other value answers 404 OPERATION_NOT_FOUND"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Cancel requested",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "required": [
+                                        "success",
+                                        "cancelRequested"
+                                    ],
+                                    "properties": {
+                                        "success": {
+                                            "type": "boolean"
+                                        },
+                                        "cancelRequested": {
+                                            "type": "boolean"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Not signed in"
+                    },
+                    "403": {
+                        "description": "Not a Nextcloud admin (delegated stackiq admin settings are not enough)"
+                    },
+                    "404": {
+                        "description": "OPERATION_NOT_FOUND: no CMDB import with this id is running",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportError"
+                                }
+                            }
+                        }
+                    },
+                    "412": {
+                        "description": "Missing or invalid CSRF token"
+                    },
+                    "500": {
+                        "description": "IMPORT_FAILED (unexpected; the exception class and its sanitised first line are in the log)",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/CmdbImportError"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/index.php/apps/stackiq/api/itsm/status": {
+            "get": {
+                "operationId": "itsmExchange-status",
+                "summary": "Whether the service desk exchange runs, and with which desk",
+                "description": "Any signed-in user, CSRF-protected (requesttoken header or OCS-APIRequest: true). The CMDB page reads it. See openspec/changes/sharing-itsm-exchange.",
+                "tags": [
+                    "itsm-exchange"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The exchange summary",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ItsmStatus"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Not signed in"
+                    },
+                    "412": {
+                        "description": "Missing or invalid CSRF token"
+                    }
+                }
+            }
+        },
+        "/index.php/apps/stackiq/api/itsm/config": {
+            "get": {
+                "operationId": "itsmExchange-config",
+                "summary": "The full service desk exchange set-up, for the admin section",
+                "description": "Nextcloud admins and users delegated the stackiq admin settings, CSRF-protected (requesttoken header or OCS-APIRequest: true).",
+                "tags": [
+                    "itsm-exchange"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The set-up",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ItsmConfig"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Not signed in"
+                    },
+                    "403": {
+                        "description": "Not an admin of the stackiq settings"
+                    },
+                    "412": {
+                        "description": "Missing or invalid CSRF token"
+                    }
+                }
+            }
+        },
+        "/index.php/apps/stackiq/api/itsm/setup": {
+            "post": {
+                "operationId": "itsmExchange-setUp",
+                "summary": "Set up, or set up again, the service desk exchange flows",
+                "description": "Nextcloud admins and users delegated the stackiq admin settings, CSRF-protected (requesttoken header or OCS-APIRequest: true). Every flow is checked by OpenRegister's preflight first; nothing is saved unless all pass. The scheduled imports run as the signed-in user. The source and its credential live in integriq.",
+                "tags": [
+                    "itsm-exchange"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "desk",
+                                    "organisation"
+                                ],
+                                "properties": {
+                                    "desk": {
+                                        "type": "string",
+                                        "enum": [
+                                            "topdesk",
+                                            "servicenow"
+                                        ],
+                                        "description": "The service desk"
+                                    },
+                                    "organisation": {
+                                        "type": "string",
+                                        "description": "Id, uuid or slug of the stackiq organization whose applications are exchanged; stored as its uuid"
+                                    },
+                                    "templateId": {
+                                        "type": "string",
+                                        "default": "",
+                                        "description": "The TOPdesk asset template a new record is created from; empty for ServiceNow"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Every flow was created or updated",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ItsmSetUpResult"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Not signed in",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ItsmSetUpRefusal"
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "Not an admin of the stackiq settings"
+                    },
+                    "412": {
+                        "description": "Missing or invalid CSRF token"
+                    },
+                    "422": {
+                        "description": "Nothing was set up: the flow engine, the desk, the organisation or integriq's source is missing, a flow failed preflight, a template could not be read, or saving the flows failed",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ItsmSetUpRefusal"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/index.php/apps/stackiq/api/itsm/import": {
+            "post": {
+                "operationId": "itsmExchange-import",
+                "summary": "Import a CSV or XLSX file through the file import flow",
+                "description": "Nextcloud admins and users delegated the stackiq admin settings, CSRF-protected (requesttoken header or OCS-APIRequest: true). Needs a set-up exchange: the rows are handed, as one run, to the file flow the set-up created.",
+                "tags": [
+                    "itsm-exchange"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary",
+                                        "description": "A .csv (comma or semicolon) or .xlsx file, at most 10 MB, with a header row and at most 5000 rows; every row needs a recordId. Columns: recordId, name, supplierName, installedVersion, status"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The run started",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ItsmImportStarted"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "No file was uploaded",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ItsmImportRefusal"
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "description": "Not signed in"
+                    },
+                    "403": {
+                        "description": "Not an admin of the stackiq settings"
+                    },
+                    "412": {
+                        "description": "Missing or invalid CSRF token"
+                    },
+                    "422": {
+                        "description": "Nothing started: no exchange is set up, the file is too large, not CSV or XLSX, unreadable, empty, over 5000 rows or has a row without recordId, or the flow could not be started",
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "$ref": "#/components/schemas/ItsmImportRefusal"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "CmdbImportReport": {
+                "type": "object",
+                "required": [
+                    "success",
+                    "operationId",
+                    "cancelled",
+                    "municipality",
+                    "summary",
+                    "importWarnings",
+                    "rows"
+                ],
+                "properties": {
+                    "success": {
+                        "type": "boolean"
+                    },
+                    "operationId": {
+                        "type": "string"
+                    },
+                    "cancelled": {
+                        "type": "boolean"
+                    },
+                    "municipality": {
+                        "type": "object",
+                        "required": [
+                            "uuid",
+                            "name",
+                            "created"
+                        ],
+                        "properties": {
+                            "uuid": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "created": {
+                                "type": "boolean"
+                            }
+                        }
+                    },
+                    "summary": {
+                        "type": "object",
+                        "required": [
+                            "rowsRead",
+                            "processed",
+                            "created",
+                            "updated",
+                            "unchanged",
+                            "skipped",
+                            "failed",
+                            "warnings",
+                            "unpublished"
+                        ],
+                        "properties": {
+                            "rowsRead": {
+                                "type": "integer"
+                            },
+                            "processed": {
+                                "type": "integer"
+                            },
+                            "created": {
+                                "type": "integer"
+                            },
+                            "updated": {
+                                "type": "integer"
+                            },
+                            "unchanged": {
+                                "type": "integer"
+                            },
+                            "skipped": {
+                                "type": "integer"
+                            },
+                            "failed": {
+                                "type": "integer"
+                            },
+                            "warnings": {
+                                "type": "integer"
+                            },
+                            "unpublished": {
+                                "type": "integer",
+                                "description": "Modules this import created without a publicationDate (publish=false); 0 when publish is true"
+                            }
+                        }
+                    },
+                    "importWarnings": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "sheet",
+                                "message"
+                            ],
+                            "properties": {
+                                "sheet": {
+                                    "type": "string"
+                                },
+                                "message": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    },
+                    "rows": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "sheet",
+                                "row",
+                                "appId",
+                                "name",
+                                "outcome",
+                                "reasons",
+                                "warnings",
+                                "moduleUuid",
+                                "usageUuid"
+                            ],
+                            "properties": {
+                                "sheet": {
+                                    "type": "string"
+                                },
+                                "row": {
+                                    "type": "integer"
+                                },
+                                "appId": {
+                                    "type": "string"
+                                },
+                                "name": {
+                                    "type": "string"
+                                },
+                                "outcome": {
+                                    "type": "string",
+                                    "enum": [
+                                        "created",
+                                        "updated",
+                                        "unchanged",
+                                        "skipped",
+                                        "failed"
+                                    ]
+                                },
+                                "reasons": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "warnings": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                "moduleUuid": {
+                                    "type": "string",
+                                    "nullable": true
+                                },
+                                "usageUuid": {
+                                    "type": "string",
+                                    "nullable": true
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "CmdbImportError": {
+                "type": "object",
+                "required": [
+                    "success",
+                    "error",
+                    "message",
+                    "details"
+                ],
+                "properties": {
+                    "success": {
+                        "type": "boolean",
+                        "enum": [
+                            false
+                        ]
+                    },
+                    "error": {
+                        "type": "string"
+                    },
+                    "message": {
+                        "type": "string"
+                    },
+                    "details": {
+                        "type": "object",
+                        "additionalProperties": true
+                    }
+                }
+            },
+            "ItsmStatus": {
+                "type": "object",
+                "required": [
+                    "available",
+                    "enabled",
+                    "desk",
+                    "setUpAt",
+                    "desks"
+                ],
+                "properties": {
+                    "available": {
+                        "type": "boolean",
+                        "description": "Whether OpenRegister's flow engine is there"
+                    },
+                    "enabled": {
+                        "type": "boolean",
+                        "description": "Whether the exchange is switched on"
+                    },
+                    "desk": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The desk key, or null before a set-up"
+                    },
+                    "setUpAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "desks": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "id",
+                                "label"
+                            ],
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "label": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "ItsmConfig": {
+                "type": "object",
+                "required": [
+                    "available",
+                    "enabled",
+                    "desk",
+                    "organisation",
+                    "flows",
+                    "setUpAt",
+                    "desks"
+                ],
+                "properties": {
+                    "available": {
+                        "type": "boolean"
+                    },
+                    "enabled": {
+                        "type": "boolean"
+                    },
+                    "desk": {
+                        "type": "string",
+                        "nullable": true
+                    },
+                    "organisation": {
+                        "type": "string",
+                        "nullable": true,
+                        "description": "The organisation uuid"
+                    },
+                    "flows": {
+                        "type": "object",
+                        "description": "Flow uuids by flow key (applications, relations, licences, contracts, outbound, file)",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    },
+                    "setUpAt": {
+                        "type": "string",
+                        "format": "date-time",
+                        "nullable": true
+                    },
+                    "desks": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "required": [
+                                "id",
+                                "label"
+                            ],
+                            "properties": {
+                                "id": {
+                                    "type": "string"
+                                },
+                                "label": {
+                                    "type": "string"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "ItsmSetUpResult": {
+                "type": "object",
+                "required": [
+                    "created",
+                    "desk",
+                    "flows"
+                ],
+                "properties": {
+                    "created": {
+                        "type": "boolean",
+                        "enum": [
+                            true
+                        ]
+                    },
+                    "desk": {
+                        "type": "string"
+                    },
+                    "flows": {
+                        "type": "object",
+                        "description": "Flow uuids by flow key",
+                        "additionalProperties": {
+                            "type": "string"
+                        }
+                    }
+                }
+            },
+            "ItsmSetUpRefusal": {
+                "type": "object",
+                "required": [
+                    "created",
+                    "message"
+                ],
+                "properties": {
+                    "created": {
+                        "type": "boolean",
+                        "enum": [
+                            false
+                        ]
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "What stopped the set-up, to show as it is"
+                    },
+                    "blocking": {
+                        "description": "OpenRegister's blocking preflight findings by flow key; an empty list when the refusal is not a preflight finding",
+                        "oneOf": [
+                            {
+                                "type": "object",
+                                "additionalProperties": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "step": {
+                                                "type": "string"
+                                            },
+                                            "reason": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "additionalProperties": true
+                                    }
+                                }
+                            },
+                            {
+                                "type": "array",
+                                "maxItems": 0,
+                                "items": {}
+                            }
+                        ]
+                    }
+                }
+            },
+            "ItsmImportStarted": {
+                "type": "object",
+                "required": [
+                    "started",
+                    "run",
+                    "rows"
+                ],
+                "properties": {
+                    "started": {
+                        "type": "boolean",
+                        "enum": [
+                            true
+                        ]
+                    },
+                    "run": {
+                        "type": "string",
+                        "description": "The uuid of the flow run"
+                    },
+                    "rows": {
+                        "type": "integer",
+                        "description": "The rows handed to the run"
+                    }
+                }
+            },
+            "ItsmImportRefusal": {
+                "type": "object",
+                "required": [
+                    "started",
+                    "message"
+                ],
+                "properties": {
+                    "started": {
+                        "type": "boolean",
+                        "enum": [
+                            false
+                        ]
+                    },
+                    "message": {
+                        "type": "string",
+                        "description": "Why nothing started, to show as it is"
+                    }
+                }
+            }
         }
     }
 }

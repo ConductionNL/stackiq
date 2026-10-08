@@ -26,7 +26,9 @@ namespace OCA\Stackiq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ConfigurationService;
+use OCA\Stackiq\Service\ArchiMateImportService;
 use OCA\Stackiq\Service\ArchiMateService;
+use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
@@ -38,6 +40,7 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
 use OCP\AppFramework\Http\StreamResponse;
 use OCP\IAppConfig;
+use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -84,8 +87,11 @@ class SettingsController extends Controller {
 	 * @param ProgressTracker $progressTracker The progress tracking service.
 	 * @param EolSyncService $eolSyncService The EOL feed sync orchestration service.
 	 * @param LoggerInterface $logger The logger instance.
+	 * @param ConnectionReportService|null $connectionReports Asks integriq to look again after an email settings save.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
+	 *
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	public function __construct(
 		$appName,
@@ -101,6 +107,7 @@ class SettingsController extends Controller {
 		private readonly ProgressTracker $progressTracker,
 		private readonly EolSyncService $eolSyncService,
 		private readonly LoggerInterface $logger,
+		private readonly ?ConnectionReportService $connectionReports = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -431,9 +438,14 @@ class SettingsController extends Controller {
 	 * @param array<string,mixed> $data The raw request params.
 	 * @param array<string,mixed> $result The result accumulator (passed by reference).
 	 *
+	 * After the write it asks integriq to resolve the email connection again
+	 * (adopt-connection-registry). That never throws, does nothing without
+	 * integriq, and never changes the response.
+	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-3
+	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	private function applyEmailSettingsUpdate(array $data, array &$result): void {
 		if (isset($data['emailSettings']) === false) {
@@ -441,6 +453,7 @@ class SettingsController extends Controller {
 		}
 
 		$result['emailSettings'] = $this->settingsService->updateEmailSettings($data['emailSettings']);
+		$this->connectionReports?->emailSettingsSaved();
 
 	}//end applyEmailSettingsUpdate()
 
@@ -1273,7 +1286,7 @@ class SettingsController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 *
-	 * @spec openspec/specs/method-decomposition/spec.md
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function getProgress(string $operationId): JSONResponse {
 		$currentUser = $this->userSession->getUser();
@@ -1284,19 +1297,11 @@ class SettingsController extends Controller {
 		try {
 			$progress = $this->progressTracker->getProgress($operationId);
 
-			if ($progress === null) {
-				return new JSONResponse(
-					[
-						'success' => false,
-						'message' => 'Operation not found',
-						'error' => 'OPERATION_NOT_FOUND',
-					],
-					404
-				);
-			}
-
-			// Verify the caller owns this operation.
-			if (isset($progress['owner_uid']) === true && $progress['owner_uid'] !== $currentUser->getUID()) {
+			// An operation the caller may not read answers like an unknown
+			// one, so an operation id alone reveals nothing.
+			if ($progress === null
+				|| $this->mayReadProgress(progress: $progress, uid: $currentUser->getUID()) === false
+			) {
 				return new JSONResponse(
 					[
 						'success' => false,
@@ -1334,6 +1339,31 @@ class SettingsController extends Controller {
 	}//end getProgress()
 
 	/**
+	 * Whether a user may read the progress of an operation.
+	 *
+	 * Progress lives in a store every request reads (the distributed cache, or
+	 * the app config without a shared cache), so any request can load an
+	 * operation by its id. Its owner and Nextcloud admins may read it. An
+	 * operation without an owner, such as one a background job started, is
+	 * for admins only.
+	 *
+	 * @param array  $progress The stored progress snapshot.
+	 * @param string $uid      The signed-in caller.
+	 *
+	 * @return bool True when the caller may read the operation.
+	 *
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 */
+	private function mayReadProgress(array $progress, string $uid): bool {
+		$ownerUid = $progress['owner_uid'] ?? null;
+		if ($ownerUid !== null && $ownerUid === $uid) {
+			return true;
+		}
+
+		return $this->groupManager->isAdmin($uid) === true;
+	}//end mayReadProgress()
+
+	/**
 	 * Stream progress updates using Server-Sent Events.
 	 *
 	 * @param string $operationId The operation ID to stream progress for.
@@ -1352,9 +1382,12 @@ class SettingsController extends Controller {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		// Verify the caller owns this operation before streaming.
+		// Verify the caller may read this operation before streaming. An
+		// unknown operation streams one error event and closes.
 		$progress = $this->progressTracker->getProgress($operationId);
-		if ($progress !== null && isset($progress['owner_uid']) === true && $progress['owner_uid'] !== $currentUser->getUID()) {
+		if ($progress !== null
+			&& $this->mayReadProgress(progress: $progress, uid: $currentUser->getUID()) === false
+		) {
 			return new JSONResponse(['message' => 'Operation not found', 'error' => 'OPERATION_NOT_FOUND'], 404);
 		}
 
@@ -1563,6 +1596,7 @@ class SettingsController extends Controller {
 			'fileName' => $fileData['name'],
 			'fileSize' => $fileData['size'] ?? filesize($fileData['tmp_name']),
 			'mimeType' => $fileData['type'] ?? 'text/xml',
+			'operationId' => $this->request->getParam('operationId'),
 		];
 
 	}//end parseArchiMateFileUpload()
@@ -1610,10 +1644,12 @@ class SettingsController extends Controller {
 		// Same guard as the sibling exportOrgArchiMate(), which has carried it
 		// all along. This endpoint exports the WHOLE register while the sibling
 		// exports one organisation, so it was the broader of the two and the
-		// only one unguarded. @NoAdminRequired is kept deliberately: the helper
-		// grants organisation-admins as well as admins, which is the tier the
-		// admin UI relies on and which the annotation's removal would drop.
-		$permissionError = $this->verifyOrgExportPermission(currentUser: $currentUser);
+		// only one unguarded. It passes no organisation, so only a Nextcloud
+		// admin gets through: a member of an organisation admin group may
+		// export their own organisation only, through the sibling route
+		// (stackiq#1136). The `organization` body value is not a filter the
+		// export applies, so it cannot scope this route.
+		$permissionError = $this->verifyOrgExportPermission(currentUser: $currentUser, organizationUuid: null);
 		if ($permissionError !== null) {
 			return $permissionError;
 		}
@@ -1677,7 +1713,7 @@ class SettingsController extends Controller {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$permissionError = $this->verifyOrgExportPermission(currentUser: $currentUser);
+		$permissionError = $this->verifyOrgExportPermission(currentUser: $currentUser, organizationUuid: $organizationUuid);
 		if ($permissionError !== null) {
 			return $permissionError;
 		}
@@ -1715,27 +1751,58 @@ class SettingsController extends Controller {
 	}//end exportOrgArchiMate()
 
 	/**
-	 * Verify that the current user has permission to export organisation ArchiMate files.
+	 * Verify that the current user has permission to export an organisation's ArchiMate file.
+	 *
+	 * A Nextcloud admin may export anything. A member of one of the saved
+	 * organisation admin groups may export only their own active organisation
+	 * (user value `core`/`organisation`, the rule
+	 * PortfolioReportController::isAuthorisedForOrganisation() applies), so a
+	 * call without an organisation is admin-only. Before stackiq#1136 the group
+	 * list always read empty and only admins got through; restoring the read
+	 * without this scope would have let a group member export any
+	 * organisation by uuid.
 	 *
 	 * @param \OCP\IUser $currentUser The currently authenticated user.
+	 * @param string|null $organizationUuid The organisation asked for, or null for the whole register.
 	 *
 	 * @return JSONResponse|null Forbidden response, or null when permitted.
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-3
 	 */
-	private function verifyOrgExportPermission(\OCP\IUser $currentUser): ?JSONResponse {
+	private function verifyOrgExportPermission(\OCP\IUser $currentUser, ?string $organizationUuid): ?JSONResponse {
 		if ($this->groupManager->isAdmin($currentUser->getUID()) === true) {
 			return null;
 		}
 
-		$orgAdminGroups = $this->settingsService->getOrganizationAdminGroups();
-		foreach ($orgAdminGroups as $groupName) {
+		$forbidden = new JSONResponse(['message' => 'Admin or organisation-admin privileges required'], Http::STATUS_FORBIDDEN);
+		if ($organizationUuid === null || $organizationUuid === '') {
+			return $forbidden;
+		}
+
+		$isOrgAdmin = false;
+		foreach ($this->settingsService->getOrganizationAdminGroups() as $groupName) {
 			if ($this->groupManager->isInGroup($currentUser->getUID(), $groupName) === true) {
-				return null;
+				$isOrgAdmin = true;
+				break;
 			}
 		}
 
-		return new JSONResponse(['message' => 'Admin or organisation-admin privileges required'], Http::STATUS_FORBIDDEN);
+		if ($isOrgAdmin === false) {
+			return $forbidden;
+		}
+
+		$ownOrganisation = (string)$this->container->get(IConfig::class)->getUserValue(
+			userId: $currentUser->getUID(),
+			appName: 'core',
+			key: 'organisation',
+			default: ''
+		);
+
+		if ($ownOrganisation !== $organizationUuid) {
+			return $forbidden;
+		}
+
+		return null;
 	}//end verifyOrgExportPermission()
 
 	/**
@@ -2025,6 +2092,7 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 * @spec   openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	public function updateEmailSettings(): JSONResponse {
 		$currentUser = $this->userSession->getUser();
@@ -2041,6 +2109,7 @@ class SettingsController extends Controller {
 			$emailSettings = $data['emailSettings'] ?? $data;
 
 			$updatedSettings = $this->settingsService->updateEmailSettings($emailSettings);
+			$this->connectionReports?->emailSettingsSaved();
 
 			return new JSONResponse(
 				[
@@ -2786,8 +2855,16 @@ class SettingsController extends Controller {
 			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
 		}
 
+		$operationId = $this->request->getParam('operationId');
+		if ($operationId !== null
+			&& (is_string($operationId) === false
+			|| preg_match(ArchiMateImportService::OPERATION_ID_PATTERN, $operationId) !== 1)
+		) {
+			return new JSONResponse(['success' => false, 'message' => 'Invalid operation id'], Http::STATUS_BAD_REQUEST);
+		}
+
 		try {
-			$result = $this->settingsService->cancelArchiMateImport();
+			$result = $this->settingsService->cancelArchiMateImport(operationId: $operationId);
 			$message = 'ArchiMate import cancellation failed';
 			if ($result['cancelled'] === true) {
 				$message = 'ArchiMate import cancellation succeeded';
@@ -2856,64 +2933,6 @@ class SettingsController extends Controller {
 			);
 		}//end try
 	}//end clearArchiMateExportStatus()
-
-	// ===.
-	// ARCHIMATE TESTING METHODS.
-	// ===.
-
-	/**
-	 * Test ArchiMate round-trip functionality
-	 *
-	 * @NoAdminRequired
-	 * @NoCSRFRequired
-	 *
-	 * @return JSONResponse Round-trip test result
-	 * @spec   openspec/specs/settings-admin-controller/spec.md
-	 */
-	public function testArchiMateRoundTrip(): JSONResponse {
-		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		try {
-			$this->logger->info('Stackiq: ArchiMate round-trip test started');
-
-			// Call the ArchiMate service to perform round-trip test.
-			$result = $this->archiMateService->testRoundTrip();
-
-			$this->logger->info(
-				'Stackiq: ArchiMate round-trip test completed',
-				[
-					'success' => $result['success'],
-					'message' => $result['message'] ?? 'no message',
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'success' => $result['success'],
-					'message' => $result['message'],
-					'details' => $result['details'] ?? null,
-					'statistics' => $result['statistics'] ?? null,
-				]
-			);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Stackiq: ArchiMate round-trip test failed',
-				[
-					'exception_class' => get_class($e),
-					'exception_message' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Round-trip test failed: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
-	}//end testArchiMateRoundTrip()
 
 	/**
 	 * Get ArchiMate settings and status (without object counts for performance)

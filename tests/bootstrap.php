@@ -170,3 +170,36 @@ if (!defined('OC_CONSOLE')) {
 
 	unset($stackiqNcRoot);
 }
+
+// Integriq's connection-registry events (adopt-connection-registry).
+// ConnectionReportService sends them by string class name behind class_exists
+// (ADR-041), so stackiq stays installable without integriq. The stubs mirror
+// hydra connection-registry design D6 and integriq's own classes, and load only
+// when the real classes are absent. They sit two directories deep on purpose:
+// the tests/Stubs glob in tests/bootstrap.php loads one level and would shadow
+// a real integriq before Nextcloud boots.
+// Without a booted Nextcloud or OCP on the autoload path the stubs' parent
+// class is missing, so they are skipped rather than fatal.
+foreach (['ConnectionStatusReportedEvent', 'ConnectionRefreshRequestedEvent'] as $integriqStubEvent) {
+	if (class_exists('\\OCP\\EventDispatcher\\Event') === true
+		&& class_exists('\\OCA\\Integriq\\Event\\' . $integriqStubEvent) === false
+	) {
+		require_once __DIR__ . '/Stubs/Integriq/Event/' . $integriqStubEvent . '.php';
+	}
+}
+
+unset($integriqStubEvent);
+
+// OpenRegister's ObjectCreatedEvent, deferred for the same reason. It extends
+// OCP\EventDispatcher\Event, and nextcloud/ocp ships no autoload section, so
+// OCP only becomes resolvable once lib/base.php has run above. Loading it in
+// the early tests/Stubs glob killed every CI PHPUnit leg in this bootstrap
+// with `Class "OCP\EventDispatcher\Event" not found` before a single test ran.
+// It sits two directories deep so that glob cannot reach it. When the real
+// OpenRegister is enabled, class_exists() loads the real event and the stub
+// stays out of the way.
+if (class_exists('\\OCP\\EventDispatcher\\Event') === true
+	&& class_exists('\\OCA\\OpenRegister\\Event\\ObjectCreatedEvent') === false
+) {
+	require_once __DIR__ . '/Stubs/OpenRegister/Event/ObjectCreatedEvent.php';
+}

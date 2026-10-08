@@ -26,6 +26,7 @@
 import type { APIRequestContext } from '@playwright/test'
 
 import { request as playwrightRequest } from '@playwright/test'
+import { randomUUID } from 'node:crypto'
 import { resolveBaseUrl } from '../base-url.ts'
 
 // Re-exported from the single central resolver (tests/e2e/base-url.ts). These
@@ -36,7 +37,7 @@ export const NC_ADMIN_USER = process.env.NC_ADMIN_USER ?? 'admin'
 export const NC_ADMIN_PASS = process.env.NC_ADMIN_PASS ?? 'admin'
 
 /** Unique per Node process so parallel-ish runs never collide. */
-export const RUN_ID = `e2e-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`
+export const RUN_ID = `e2e-${Date.now().toString(36)}-${randomUUID().slice(0, 4)}`
 
 export interface VoorzieningenConfig {
 	register: string

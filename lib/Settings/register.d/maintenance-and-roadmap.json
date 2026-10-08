@@ -1,0 +1,20 @@
+{
+  "components": {
+    "schemas": {
+      "module": {
+        "version": "0.3.4",
+        "properties": {
+          "roadmapStatement": {
+            "type": "string",
+            "format": "markdown",
+            "title": "Roadmap",
+            "description": "The direction the supplier takes with this application: what the next versions bring and when.",
+            "maxLength": 5000,
+            "facetable": false,
+            "order": 4
+          }
+        }
+      }
+    }
+  }
+}

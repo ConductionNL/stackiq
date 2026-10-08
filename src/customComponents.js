@@ -17,10 +17,16 @@
 //   - openspec/changes/stackiq-manifest-v1/design.md
 //   - @conduction/nextcloud-vue → docs/migrating-to-manifest.md
 
+import { generateUrl } from '@nextcloud/router'
+import AiActChecklist from './components/ai/AiActChecklist.vue'
 import OrganisatieCard from './components/cards/OrganisatieCard.vue'
+import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
+import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
+import UsageRiskSignals from './components/portfolio/UsageRiskSignals.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
+import ProductRoadmap from './components/roadmap/ProductRoadmap.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
@@ -31,8 +37,22 @@ import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
 import PortfolioReportView from './views/organisaties/PortfolioReport.vue'
 import StackiqSettingsPage from './views/settings/StackiqSettings.vue'
 import SuitesIndexView from './views/suites/SuitesIndexView.vue'
+import { createConnectionHandlers } from './services/connectionRegistry.js'
 
 export default {
+	// Header-action handler: the Integrations page's Add integration
+	// (adopt-connection-registry). A FUNCTION, because it leaves the app for
+	// integriq's Connections overview and a header action's `navigate` only
+	// pushes a route inside this app. CnIndexPage resolves a handler name
+	// against this map. It navigates in JavaScript because the library renders
+	// every header action as a button; once a header action can carry an
+	// `href` (ConductionNL/nextcloud-vue#1314) this becomes a link in the
+	// manifest and the handler goes.
+	...createConnectionHandlers({
+		generateUrl,
+		assign: (url) => window.location.assign(url),
+	}),
+
 	// OrganisatieCard — the bespoke card (inline contactpersoon toggle) used as
 	// the `cardComponent` of the now-decomposed Organisaties type='index' page
 	// (Phase 8). CnIndexPage's cardComponent config closed the prior lib gap.
@@ -67,7 +87,29 @@ export default {
 	// integration registry and projected back onto the contract; stackiq
 	// owns no approval workflow. Stays a custom tab component because it surfaces
 	// a cross-app outcome no built-in detail widget expresses.
+	// The contracts behind an application, a bodyWidgets section on ModuleDetail
+	// (landscape-application-page): two hops, so not an object-list widget.
+	ApplicationContractsPanel,
+
 	ContractApprovalPanel,
+
+	// Licences in use against licences bought (contracts-licence-seats).
+	ContractSeatsPanel,
+
+	// The supplier's roadmap statement and the product's versions on a timeline,
+	// a bodyWidgets section on ModuleDetail (lifecycle-maintenance-and-supplier-roadmap):
+	// it reads the module and its versions, which no built-in widget combines.
+	ProductRoadmap,
+
+	// End of support of the version a usage runs and the vulnerabilities of its
+	// application, next to the risk score on the usage page
+	// (lifecycle-application-value-assessment): it joins the usage, its version
+	// and the vulnerabilities, which no built-in widget does.
+	UsageRiskSignals,
+
+	// AI Act evidence per tag on the AI system page (landscape-ai-system-inventory):
+	// it reads the object's files and their tags, which no built-in widget lists per tag.
+	AiActChecklist,
 
 	// --- Admin-triggered organisation-merge (VNG Softwarecatalogus #141). ---
 	// Dry-run preview + confirm dialog + execute for folding a source

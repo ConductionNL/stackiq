@@ -18,6 +18,7 @@
 
 <template>
 	<AlwaysVisibleSection
+		id="section-email"
 		name="Email Configuration"
 		description="Configure email settings for notifications and user management"
 		:loading="loading"

@@ -10,7 +10,8 @@ import pinia from './pinia.js'
 import '@conduction/nextcloud-vue/css/index.css'
 
 OCA.Dashboard.register(
-	'stackiq_concept_organisaties_widget',
+	// FROZEN: must equal ConceptOrganisatiesWidget::getId(), which kept its pre-rename value.
+	'softwarecatalog_concept_organisaties_widget',
 	async (el, { widget }) => {
 		const app = createApp({
 			render: () => h(ConceptOrganisatiesWidget, { title: widget.title }),

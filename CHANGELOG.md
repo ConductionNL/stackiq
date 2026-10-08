@@ -1,6 +1,13 @@
 # Changelog
 
 ## [Unreleased]
+### Added
+- CMDB import: a Nextcloud admin imports a TOPdesk CMDB export (xlsx) for one
+  municipality from the admin settings. Every application row of the two CMDB
+  sheets becomes or updates a module, its vendor, a usage for the municipality
+  and a contact person for its owner; a repeat import matches on APPID, so it
+  updates instead of duplicating. See `docs/features/cmdb-import.md`.
+
 ### Changed
 - EOL feed: the register and schema slugs the feature reads from are corrected.
   `EOL_DEFAULT_REGISTER` still said `openconnector`, a register renamed to

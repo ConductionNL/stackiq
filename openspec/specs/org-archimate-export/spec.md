@@ -427,14 +427,6 @@ The ArchiMate settings section MUST include checkboxes for selecting which data 
 - THEN the export button MUST show a loading indicator (spinner or disabled state)
 - AND the button MUST return to normal state when the download completes or fails
 
-## MODIFIED Requirements
-
-_None._
-
-## REMOVED Requirements
-
-_None._
-
 ## Current Implementation Status
 - **Partially implemented**: The stackiq app has an ArchiMate export controller, but deelnames and data layer toggles are not yet implemented.
 - **Key gaps**:

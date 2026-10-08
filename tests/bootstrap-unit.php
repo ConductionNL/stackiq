@@ -57,6 +57,8 @@ spl_autoload_register(function (string $class): void {
 		// OpenRegister stubs — Db entities and Services used by tests.
 		'OCA\\OpenRegister\\Db\\' => __DIR__ . '/Stubs/Db/',
 		'OCA\\OpenRegister\\Service\\' => __DIR__ . '/Stubs/Service/',
+		// A copy of OpenRegister's ObjectCreatedEvent, so listener tests construct the real shape.
+		'OCA\\OpenRegister\\Event\\' => __DIR__ . '/Stubs/OpenRegister/Event/',
 	];
 
 	foreach ($prefixMap as $prefix => $dir) {
@@ -73,3 +75,18 @@ spl_autoload_register(function (string $class): void {
 		break;
 	}//end foreach
 });
+
+// Integriq's connection-registry events (adopt-connection-registry).
+// ConnectionReportService sends them by string class name behind class_exists
+// (ADR-041), so stackiq stays installable without integriq. The stubs mirror
+// hydra connection-registry design D6 and integriq's own classes, and load only
+// when the real classes are absent. They sit two directories deep on purpose:
+// the tests/Stubs glob in tests/bootstrap.php loads one level and would shadow
+// a real integriq before Nextcloud boots.
+foreach (['ConnectionStatusReportedEvent', 'ConnectionRefreshRequestedEvent'] as $integriqStubEvent) {
+	if (class_exists('\\OCA\\Integriq\\Event\\' . $integriqStubEvent) === false) {
+		require_once __DIR__ . '/Stubs/Integriq/Event/' . $integriqStubEvent . '.php';
+	}
+}
+
+unset($integriqStubEvent);

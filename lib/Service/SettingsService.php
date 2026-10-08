@@ -912,6 +912,8 @@ class SettingsService {
 			'suite' => 'suite_schema',
 			'vulnerability' => 'kwetsbaarheid_schema',
 			'sector' => 'sector_schema',
+			// Planned maintenance on a product (lifecycle-maintenance-and-supplier-roadmap).
+			'maintenanceWindow' => 'maintenanceWindow_schema',
 		];
 
 		// Only check voorzieningen config if object type exists in the key map.
@@ -1675,7 +1677,10 @@ class SettingsService {
 								continue;
 							}
 
-							$softwareCatalogSettings = self::deepMergeConfig(base: $softwareCatalogSettings, overlay: $fragmentData);
+							$softwareCatalogSettings = self::keepHighestSchemaVersions(
+								before: $softwareCatalogSettings,
+								after: self::deepMergeConfig(base: $softwareCatalogSettings, overlay: $fragmentData)
+							);
 							$fragmentSig .= basename($fragmentFile) . ':' . md5($fragmentContent) . ';';
 						}
 					}//end if
@@ -2099,13 +2104,29 @@ class SettingsService {
 	/**
 	 * Gets the list of organization admin groups from configuration
 	 *
+	 * Returns the list an admin saved under `organization_admin_groups`, or an
+	 * empty list when nothing is saved. There is no default list: commit
+	 * bc4dc9ea dropped the old default (organisaties-beheerder) on purpose,
+	 * and first contacts are not added to these groups automatically (see
+	 * ContactPersonHandler::assignUserGroups()). Until stackiq#1136 this getter
+	 * returned an empty list unconditionally, which discarded the saved
+	 * setting as well.
+	 *
 	 * @return array Array of organization admin groups
 	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function getOrganizationAdminGroups(): array {
-		// DISABLED: No automatic group assignment for organization admins.
-		// Users should be assigned groups explicitly via the admin UI.
-		// Previously this returned ['organisaties-beheerder', 'organisatie-beheerder'] by default.
+		$groupsJson = $this->config->getValueString($this->appName, 'organization_admin_groups', '');
+
+		if (empty($groupsJson) === true) {
+			return [];
+		}
+
+		$groups = json_decode($groupsJson, true);
+		if (is_array($groups) === true) {
+			return $groups;
+		}
+
 		return [];
 	}//end getOrganizationAdminGroups()
 
@@ -4208,6 +4229,7 @@ class SettingsService {
 				'moduleVersion' => 'moduleVersie_schema',
 				'sector' => 'sector_schema',
 				'sbomComponent' => 'sbomComponent_schema',
+				'maintenanceWindow' => 'maintenanceWindow_schema',
 			];
 
 			$config = [ 'register' => (string)($targetRegister['id'] ?? '') ];
@@ -4641,6 +4663,7 @@ class SettingsService {
 			'moduleVersie_schema',
 			'sector_schema',
 			'sbomComponent_schema',
+			'maintenanceWindow_schema',
 		];
 
 		// Copy any present schema keys; ignore sources/registers.
@@ -5189,15 +5212,18 @@ class SettingsService {
 	 * This method combines force clearing and process killing for a complete
 	 * import cancellation. It delegates to ArchiMateService for the actual work.
 	 *
+	 * @param string|null $operationId The running import's operation id, when the page knows it
+	 *
 	 * @return array Cancellation result with detailed status
 	 * @spec   openspec/specs/settings-service/spec.md
+	 * @spec   openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
 	 */
-	public function cancelArchiMateImport(): array {
+	public function cancelArchiMateImport(?string $operationId = null): array {
 		try {
 			// Get ArchiMateService from container to avoid circular dependency.
 			$archiMateService = $this->container->get(\OCA\Stackiq\Service\ArchiMateService::class);
 
-			return $archiMateService->cancelArchiMateImport();
+			return $archiMateService->cancelArchiMateImport(operationId: $operationId);
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'SettingsService: Failed to cancel ArchiMate import via ArchiMateService',
@@ -6869,6 +6895,30 @@ class SettingsService {
 	}//end getCronjobConfig()
 
 	/**
+	 * Whether an admin left a cronjob switched on in the cronjob settings.
+	 *
+	 * Reads the `enabled` flag `updateCronjobConfig()` stores under
+	 * `cronjob_config`. A job that was never saved is on, as the settings
+	 * screen shows it (`getCronjobConfig()` defaults `enabled` to true).
+	 *
+	 * @param string $jobId The cronjob identifier, e.g. `organization_contact_sync`.
+	 *
+	 * @return bool False only when the admin switched the job off.
+	 *
+	 * @spec openspec/changes/operations-sync-status-and-progress/tasks.md#task-3
+	 */
+	public function isCronjobEnabled(string $jobId): bool {
+		$config = json_decode($this->config->getValueString($this->appName, 'cronjob_config', '{}'), true);
+		if (is_array($config) === false || is_array($config[$jobId] ?? null) === false) {
+			return true;
+		}
+
+		$enabled = ($config[$jobId]['enabled'] ?? true);
+
+		return in_array($enabled, [false, 0, '0', 'false'], true) === false;
+	}//end isCronjobEnabled()
+
+	/**
 	 * Get list of available cronjobs with their metadata.
 	 *
 	 * @deprecated Cronjob context is no longer needed since sync operations use _rbac: false.
@@ -7297,6 +7347,35 @@ class SettingsService {
 	public function setEolSyncStatus(array $status): void {
 		$this->config->setValueString($this->appName, self::EOL_SYNC_STATUS_KEY, json_encode($status));
 	}//end setEolSyncStatus()
+
+	/**
+	 * After a fragment merge, give every schema the highest version any file declared.
+	 *
+	 * A fragment's scalar `version` overwrites the one before it, so with plain
+	 * merging the fragment that sorts LAST decides a schema's version. A later
+	 * fragment that raised a version lost it to an earlier-named one that set a
+	 * lower number, and OpenRegister skips a schema whose version did not go up,
+	 * so the later fragment's properties never deployed. The highest number wins
+	 * instead, whatever the file names.
+	 *
+	 * @param array<string, mixed> $before The register before this fragment.
+	 * @param array<string, mixed> $after  The register after merging it.
+	 *
+	 * @return array<string, mixed> The merged register with the highest version per schema.
+	 *
+	 * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-003-a-fragment-never-lowers-a-schema-version
+	 */
+	private static function keepHighestSchemaVersions(array $before, array $after): array {
+		foreach (($after['components']['schemas'] ?? []) as $key => $schema) {
+			$previous = (string) ($before['components']['schemas'][$key]['version'] ?? '');
+			$current  = (string) ($schema['version'] ?? '');
+			if ($previous !== '' && ($current === '' || version_compare($previous, $current, '>') === true)) {
+				$after['components']['schemas'][$key]['version'] = $previous;
+			}
+		}
+
+		return $after;
+	}//end keepHighestSchemaVersions()
 
 	/**
 	 * Deep-merge a register fragment onto the base config (ADR-037).
