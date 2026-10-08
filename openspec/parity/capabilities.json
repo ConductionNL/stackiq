@@ -8567,5 +8567,346 @@
 			}
 		}
 	],
-	"pending": []
+	"pending": [],
+	"specScreens": {
+		"aanbod-listings": {
+			"board": [
+				"SkApplicaties",
+				"SkOrganisatie"
+			]
+		},
+		"aangeboden-gebruik-api": {
+			"board": [
+				"SkOrganisatie",
+				"SkGebruikDetail"
+			]
+		},
+		"app-id-rename": {
+			"board": null,
+			"reason": "Interne migratie van de app-id, geen scherm."
+		},
+		"application-hosting-model": {
+			"board": [
+				"SkApplicatie"
+			]
+		},
+		"application-lifecycle-tracking": {
+			"board": [
+				"SkRoadmap",
+				"SkGebruikDetail"
+			]
+		},
+		"application-page": {
+			"board": [
+				"SkApplicatie"
+			]
+		},
+		"application-usage-pages": {
+			"board": [
+				"SkInGebruik",
+				"SkGebruikDetail"
+			]
+		},
+		"application-value-assessment": {
+			"board": [
+				"SkGebruikDetail",
+				"SkRapportages"
+			]
+		},
+		"archimate-export": {
+			"board": [
+				"SkInstellingenGegevens"
+			]
+		},
+		"archimate-import": {
+			"board": [
+				"SkInstellingenGegevens"
+			]
+		},
+		"archimate-import-progress": {
+			"board": [
+				"SkInstellingenGegevens"
+			]
+		},
+		"beta-alignment": {
+			"board": null,
+			"reason": "Afstemming van metadata, productpagina en docs, geen scherm."
+		},
+		"bio-compliance-assessment": {
+			"board": [
+				"SkStandaarden",
+				"SkComplianceMatrix"
+			]
+		},
+		"catalog-ratings": {
+			"board": [
+				"SkApplicatie"
+			]
+		},
+		"catalogue-connection-pages": {
+			"board": [
+				"SkKoppelingen",
+				"SkApplicatie"
+			]
+		},
+		"cmdb-export-import": {
+			"board": [
+				"SkCmdb",
+				"SkApplicaties"
+			]
+		},
+		"concept-organizations-widget": {
+			"board": [
+				"SkDashboard"
+			]
+		},
+		"contactpersonen-api": {
+			"board": [
+				"SkOrganisatie"
+			]
+		},
+		"contactpersoon-sync": {
+			"board": [
+				"SkOrganisatie",
+				"SkInstellingenGegevens"
+			]
+		},
+		"contract-decision-delegation": {
+			"board": [
+				"SkContract"
+			]
+		},
+		"cronjob-context": {
+			"board": null,
+			"reason": "Achtergrondtaak voor de synchronisatie, geen scherm."
+		},
+		"dashboard-views-api": {
+			"board": [
+				"SkDashboard",
+				"SkApplicaties"
+			]
+		},
+		"deelnames-gebruik": {
+			"board": [
+				"SkGebruikDetail",
+				"SkGemmaPlaat"
+			]
+		},
+		"email-delivery": {
+			"board": [
+				"SkBeheerToegang"
+			]
+		},
+		"english-vocabulary-migration": {
+			"board": null,
+			"reason": "Datamigratie naar Engelse termen, geen scherm."
+		},
+		"eol-feed-integration": {
+			"board": [
+				"SkInstellingenGegevens",
+				"SkRoadmap"
+			]
+		},
+		"fe-object-modals": {
+			"board": [
+				"SkApplicaties",
+				"SkKwetsbaarheden"
+			]
+		},
+		"fe-organizations": {
+			"board": [
+				"SkOrganisaties",
+				"SkOrganisatie"
+			]
+		},
+		"fe-settings-ui": {
+			"board": [
+				"SkInstellingenGegevens",
+				"SkInstellingenUitwisseling",
+				"SkBeheerToegang"
+			]
+		},
+		"fe-shell-navigation": {
+			"board": [
+				"SkDashboard"
+			]
+		},
+		"fe-stores": {
+			"board": null,
+			"reason": "Frontend-statelaag, geen eigen scherm."
+		},
+		"federated-catalog-sync": {
+			"board": [
+				"SkInstellingenUitwisseling"
+			]
+		},
+		"first-time-setup": {
+			"board": [
+				"SkInstellingenGegevens"
+			]
+		},
+		"gebruik-services": {
+			"board": null,
+			"reason": "Backendservice voor gebruiksrecords, geen scherm."
+		},
+		"gemma-faceted-search": {
+			"board": [
+				"SkApplicaties"
+			]
+		},
+		"licence-declaration": {
+			"board": null,
+			"reason": "Licentieverklaring in metadata, geen scherm."
+		},
+		"licence-seats": {
+			"board": [
+				"SkContract",
+				"SkLicenties"
+			]
+		},
+		"method-decomposition": {
+			"board": null,
+			"reason": "Refactoring van controllers en services, geen scherm."
+		},
+		"module-compliance-assessment": {
+			"board": [
+				"SkComplianceMatrix"
+			]
+		},
+		"module-overlay-rendering": {
+			"board": [
+				"SkGemmaPlaat"
+			]
+		},
+		"module-vulnerability-tracking": {
+			"board": [
+				"SkKwetsbaarheden",
+				"SkModuleversie"
+			]
+		},
+		"multi-org-membership": {
+			"board": [
+				"SkOrganisatie"
+			]
+		},
+		"org-archimate-export": {
+			"board": [
+				"SkInstellingenGegevens"
+			]
+		},
+		"organisatie-service": {
+			"board": null,
+			"reason": "Backendservice voor organisaties, geen scherm."
+		},
+		"organisation-merge": {
+			"board": [
+				"SkOrganisatie"
+			]
+		},
+		"organization-sync": {
+			"board": [
+				"SkInstellingenGegevens"
+			]
+		},
+		"portal-contribution": {
+			"board": null,
+			"reason": "Catalogusinhoud verschijnt op het portaal van portaliq, niet op een stackiq-scherm."
+		},
+		"portfolio-rationalization-time": {
+			"board": [
+				"SkRapportages",
+				"SkInGebruik"
+			]
+		},
+		"progress-tracking": {
+			"board": null,
+			"reason": "Backendservice voor voortgang, geen eigen scherm."
+		},
+		"publication-field-rules": {
+			"board": null,
+			"reason": "Regels die OpenRegister bij elke publieke lezing toepast, zonder scherm."
+		},
+		"realtime-updates-ui": {
+			"board": [
+				"SkKwetsbaarheden",
+				"SkRoadmap"
+			]
+		},
+		"repair-init": {
+			"board": null,
+			"reason": "Installatiestap die standaardinstellingen zet, geen scherm."
+		},
+		"sbom-import": {
+			"board": [
+				"SkModuleversie"
+			]
+		},
+		"sc-handlers": {
+			"board": null,
+			"reason": "Event-handlers die op de achtergrond accounts en groepen bijwerken, zonder scherm."
+		},
+		"settings-admin-controller": {
+			"board": null,
+			"reason": "REST-endpoints voor instellingen, geen scherm."
+		},
+		"settings-service": {
+			"board": null,
+			"reason": "Backendservice voor instellingen, geen scherm."
+		},
+		"software-catalog": {
+			"board": null,
+			"reason": "Schemanamen in OpenRegister, geen scherm."
+		},
+		"software-license-posture": {
+			"board": [
+				"SkLicenties"
+			]
+		},
+		"softwarecatalog-adopt-or-abstractions": {
+			"board": null,
+			"reason": "Gebruik van gedeelde OpenRegister-abstracties, geen scherm."
+		},
+		"softwarecatalog-contacts-to-nc": {
+			"board": [
+				"SkOrganisatie"
+			]
+		},
+		"softwarecatalog-manifest-v1": {
+			"board": null,
+			"reason": "Het manifest dat de pagina's beschrijft; het levert alle schermen, geen eigen scherm."
+		},
+		"softwarecatalog-notifications": {
+			"board": [
+				"SkDashboard"
+			]
+		},
+		"softwarecatalog-store-migration": {
+			"board": null,
+			"reason": "Migratie van Pinia-stores, geen scherm."
+		},
+		"softwarecatalogue-orchestration": {
+			"board": null,
+			"reason": "Reacties op gebeurtenissen die op de achtergrond draaien, zonder scherm."
+		},
+		"suite-wizard": {
+			"board": [
+				"SkSuiteWizard"
+			]
+		},
+		"vendor-product-master-data": {
+			"board": [
+				"SkOrganisaties",
+				"SkOrganisatie"
+			]
+		},
+		"vendor-visibility-rbac": {
+			"board": null,
+			"reason": "Afgedwongen door OpenRegister-RBAC bij elke lezing, zonder scherm."
+		},
+		"view-enrichment-api": {
+			"board": [
+				"SkGemmaPlaat"
+			]
+		}
+	}
 }
