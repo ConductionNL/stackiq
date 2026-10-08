@@ -1,6 +1,6 @@
 # Tasks: Rename the app id from `softwarecatalog` to `stackiq`
 
-> Delta fix-up 2026-10-07: the spec is now ADDED Requirements, and the old id (`softwarecatalog`, `OCA\SoftwareCatalog`) is back in the prose where #708's sweep had turned it into the new one. The OpenRegister importer appId and the docs host scenarios now describe the code (both moved on purpose, in #722/#723 and 95f4c99a). LEFT OPEN, needs a product choice: the spec says the dashboard widget id stays `softwarecatalog_concept_organisaties_widget`, but `lib/Dashboard/ConceptOrganisatiesWidget.php` returns `stackiq_concept_organisaties_widget` under a comment that still says FROZEN, so the widget has dropped off every dashboard that had it. Either restore the old id in code (spec holds as written), or keep the new id and add a repair step that rewrites the Dashboard app's stored layout (spec scenario changes).
+> Delta fix-up 2026-10-07: the spec is now ADDED Requirements, and the old id (`softwarecatalog`, `OCA\SoftwareCatalog`) is back in the prose where #708's sweep had turned it into the new one. The OpenRegister importer appId and the docs host scenarios now describe the code (both moved on purpose, in #722/#723 and 95f4c99a). The dashboard widget id was left open for a product choice; Ruben chose to restore the old id in code (decision 90, 7 Oct), so the spec holds as written.
 
 ## 1. App identity
 
@@ -27,7 +27,7 @@
 ## 3. Freezes
 
 - [x] Group ids `software-catalog-users` / `software-catalog-admins` — left, commented.
-- [ ] Dashboard widget id `softwarecatalog_concept_organisaties_widget` left, commented. NOT done: #708's sweep renamed it to `stackiq_concept_organisaties_widget` under a comment that still says FROZEN.
+- [x] Dashboard widget id `softwarecatalog_concept_organisaties_widget` left, commented. #708's sweep had renamed it to `stackiq_concept_organisaties_widget`; restored on 2026-10-07 in `ConceptOrganisatiesWidget::getId()` and the `OCA.Dashboard.register()` call in `src/conceptOrganisatiesWidget.js`, pinned by `tests/Unit/Dashboard/ConceptOrganisatiesWidgetTest.php`.
 - [x] `lib/Settings/softwarecatalogus_register.json` left. The OpenRegister importer appId moved to `stackiq`; #722 (MigrateRegisterSlug) and #723 (MigrateSchemaApplicationId) move the register and schemas onto it.
 - [x] Live hosts + Cloudflare Pages project — left, commented, both names probed.
 - [x] VNG `softwarecatalogus.nl` identifiers, `issues/`, `reacties/` — left.
