@@ -322,7 +322,9 @@ export default {
 				return {}
 			}
 
-			return facetNarrowingFilter(this.facetStore.matchedObjectIdsFor(this.schema))
+			return facetNarrowingFilter(
+				this.facetStore.matchedObjectIdsFor(this.schema),
+			)
 		},
 
 		/**
