@@ -327,6 +327,7 @@
 				"view-enrichment-api",
 				"landscape-application-components",
 				"suite-wizard",
+				"application-page",
 				"application-hosting-model",
 				"landscape-change-entry-type",
 				"landscape-move-between-organisations",
@@ -363,7 +364,9 @@
 			"title_nl": "AI-systemen registreren en de AI-verordening",
 			"area": "landscape",
 			"overlay": null,
-			"specs": []
+			"specs": [
+				"ai-system-inventory"
+			]
 		},
 		{
 			"slug": "offering-and-usage-listings",
@@ -374,7 +377,8 @@
 			"specs": [
 				"aanbod-listings",
 				"gemma-faceted-search",
-				"open-data-publishing"
+				"open-data-publishing",
+				"application-page"
 			]
 		},
 		{
@@ -476,6 +480,7 @@
 			"overlay": null,
 			"specs": [
 				"fe-organizations",
+				"application-page",
 				"vendor-product-master-data"
 			]
 		},
@@ -495,7 +500,9 @@
 			"title_nl": "Onderhoud en leveranciersroadmap",
 			"area": "market",
 			"overlay": "maintenance-and-supplier-roadmap",
-			"specs": []
+			"specs": [
+				"maintenance-and-supplier-roadmap"
+			]
 		},
 		{
 			"slug": "portfolio-roadmap",
@@ -528,6 +535,7 @@
 			"overlay": null,
 			"specs": [
 				"architecture-reference-component-coverage",
+				"application-value-assessment",
 				"portfolio-rationalization-time"
 			]
 		},
@@ -540,6 +548,7 @@
 			"specs": [
 				"contract-administration",
 				"contracts-expiry-and-owner",
+				"application-page",
 				"portfolio-rationalization-time",
 				"software-license-posture"
 			]
@@ -561,6 +570,7 @@
 			"area": "contracts",
 			"overlay": "license-and-seat-tracking",
 			"specs": [
+				"licence-seats",
 				"software-license-posture"
 			]
 		},
@@ -716,7 +726,8 @@
 			"overlay": "notifications",
 			"specs": [
 				"softwarecatalog-notifications",
-				"contracts-expiry-warning-fires"
+				"contracts-expiry-warning-fires",
+				"maintenance-and-supplier-roadmap"
 			]
 		},
 		{
@@ -5941,7 +5952,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "ai-system-inventory",
-			"featureConfidence": "low",
+			"featureConfidence": "medium",
 			"sap-leanix": "yes",
 			"evidence": {
 				"sap-leanix": "Announcement of 2026-05-12: 'We have expanded the AI Agent Hub ... New discovery sources: ServiceNow and SAP AI Core ... automatically populate your workspace with AI assets'; AI agent is an application subtype and AI model an IT component subtype (https://help.sap.com/docs/leanix/ea/application-modeling-guidelines) (read 2026-09-26)",
@@ -6038,7 +6049,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "ai-system-inventory",
-			"featureConfidence": "low",
+			"featureConfidence": "medium",
 			"sap-leanix": "partial",
 			"evidence": {
 				"sap-leanix": "Roadmap card 'Meta model: EU AI Act extension' is In progress (read from the portal data on 2026-09-26); today the legacy AI agent extension already has an 'AI Risk ... according to the EU AI Act' single select (https://help.sap.com/docs/leanix/ea/ai-agent-extension-to-meta-model), so a basic risk field exists but the full extension is not shipped (read 2026-09-26)",
