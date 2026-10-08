@@ -21,7 +21,7 @@ display NAME, not the `referentieComponenten`/`standaardVersies` identifiers
 the schema actually stores. Feeding GEMMA facet keys through that path would
 apply an incorrect direct-field filter (near-guaranteed empty results)
 alongside this feature's own narrowing. This view instead narrows the
-self-fetch list via the bounded, RBAC-scoped `{ id: matchedObjectIds }` list
+self-fetch list via the bounded, RBAC-scoped `{ _ids: matchedObjectIds }` list
 `FacetService` already computes (`_meta.matchedObjectIds` — see
 `lib/Service/FacetService.php::computeFacetsForRequest()`), and keeps GEMMA
 facet state in the URL under `_gf_`-prefixed query keys so CnIndexPage's own
@@ -147,6 +147,7 @@ import FolderStarOutline from 'vue-material-design-icons/FolderStarOutline.vue'
 import SaveFacetViewModal from '../modals/SaveFacetViewModal.vue'
 import { useFacetStore } from '../store/modules/facets.js'
 import { rowDetailLocation } from '../utils/applicationContracts.js'
+import { facetNarrowingFilter } from '../utils/facetNarrowing.js'
 import { buildFacetDimensionSchema } from '../utils/facetSchema.js'
 
 /** Dimension key -> translated label, matching `FacetController`'s query params. */
@@ -226,10 +227,10 @@ export default {
 		 * with the GEMMA facet narrowing below: `CnIndexPage`'s self-fetch
 		 * merges `{ ...base(filter prop), ...activeTab.filter }` (see
 		 * `useSelfFetchList.js#fixedFilters`), and this view's own `filter`
-		 * prop only ever carries the single `id` key
-		 * (`{ id: matchedObjectIds }`, see `listFilter` below). A quick
+		 * prop only ever carries the single `_ids` key
+		 * (`{ _ids: matchedObjectIds }`, see `listFilter` below). A quick
 		 * filter's keys (`bbnLevel`, `dpiaStatus`, …) never collide with
-		 * `id`, so the merge is additive — both the facet-matched id set AND
+		 * `_ids`, so the merge is additive — both the facet-matched id set AND
 		 * the active quick filter's field constraints apply together
 		 * (logical AND), never clobbering one another.
 		 */
@@ -307,10 +308,11 @@ export default {
 		},
 
 		/**
-		 * Bounded `{ id: [...] }` narrowing filter for `CnIndexPage`'s
+		 * Bounded `{ _ids: [...] }` narrowing filter for `CnIndexPage`'s
 		 * self-fetch object list, sourced from the last facets response's
 		 * `_meta.matchedObjectIds`. Empty object (no narrowing) when no facet
-		 * filter or search term is active.
+		 * filter or search term is active. `facetNarrowingFilter` says why the
+		 * key is `_ids` and what is sent when nothing matched.
 		 *
 		 * @return {object} The `CnIndexPage` `filter` prop value.
 		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-counts-reflect-the-currently-filtered-set-not-the-unfiltered-universe
@@ -320,11 +322,9 @@ export default {
 				return {}
 			}
 
-			const ids = this.facetStore.matchedObjectIdsFor(this.schema)
-			// A real (if unlikely) id can never collide with this sentinel —
-			// forces a correct EMPTY list rather than `CnIndexPage` treating
-			// an empty `id` array as "no filter" (showing everything).
-			return { id: ids.length > 0 ? ids : ['__gemma_facet_no_match__'] }
+			return facetNarrowingFilter(
+				this.facetStore.matchedObjectIdsFor(this.schema),
+			)
 		},
 
 		/**
