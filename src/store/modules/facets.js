@@ -35,7 +35,7 @@ import {
  * `standaardVersies`, … — see design.md). Letting the bare dimension name
  * leak into `$route.query` would make CnIndexPage attempt an incorrect
  * direct-field filter (near-guaranteed zero results) IN ADDITION to this
- * feature's own `{ id: matchedObjectIds }` narrowing. The `_gf_` prefix
+ * feature's own `{ _ids: matchedObjectIds }` narrowing. The `_gf_` prefix
  * keeps GEMMA facet state in the URL (deep-linkable, per spec) while staying
  * invisible to that generic passthrough (`_`-prefixed keys are reserved/
  * skipped there).
@@ -158,7 +158,7 @@ export const useFacetStore = defineStore('facets', {
 		/**
 		 * The RBAC/filter/search-scoped object id set the last-fetched facet
 		 * response describes (`_meta.matchedObjectIds`) — used to narrow the
-		 * schema's own object-list query via `{ id: [...] }` (see
+		 * schema's own object-list query via `{ _ids: [...] }` (see
 		 * `FacetService::computeFacetsForRequest()`'s docblock for why an
 		 * id-based filter is used instead of re-deriving one from the facet
 		 * selection: `domain`/`applicationService` are not module/catalogService
