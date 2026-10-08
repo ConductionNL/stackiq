@@ -1198,7 +1198,9 @@ OC.L10N.register(
         "The part {part} of the workbook is too large to import: unpacked it is {size}, and the import reads at most {limit} of one part.": "Het onderdeel {part} van de werkmap is te groot om te importeren: uitgepakt is het {size}, en de import leest van één onderdeel hooguit {limit}.",
         "Delete the sheets the import does not read from a copy of the export (it reads only \"{first}\" and \"{second}\"), and import that copy.": "Verwijder in een kopie van de export de tabbladen die de import niet leest (hij leest alleen \"{first}\" en \"{second}\"), en importeer die kopie.",
         "The workbook holds more than {count} different texts, the most the import reads.": "De werkmap bevat meer dan {count} verschillende teksten, het maximum dat de import leest.",
-        "Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.": "Samen verwijzen de cellen van de werkmap naar meer dan {size} gedeelde tekst, het maximum dat de import leest."
+        "Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.": "Samen verwijzen de cellen van de werkmap naar meer dan {size} gedeelde tekst, het maximum dat de import leest.",
+        "In development since": "In ontwikkeling sinds",
+        "In use since": "In gebruik sinds"
     },
     "nplurals=2; plural=(n != 1);"
 )
