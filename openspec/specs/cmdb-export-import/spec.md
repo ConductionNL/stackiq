@@ -1,15 +1,16 @@
 ---
 capability: cmdb-export-import
-status: done
+status: in-progress
 built_by: openspec/changes/archive/2026-10-05-cmdb-export-import
 ---
 
 # cmdb-export-import Specification
 
-**Status**: done
+**Status**: in-progress
 **Scope**: stackiq
 **OpenSpec changes**:
 - [cmdb-export-import](../../changes/archive/2026-10-05-cmdb-export-import/) _(archived 2026-10-05)_ — admin uploads a TOPdesk CMDB export (xlsx); stackiq upserts modules, vendor organisations, usages and owner contact persons for one municipality from the two CMDB sheets, matched on APPID, mapped by OpenRegister migration packs (kind: code)
+- [cmdb-import-mapping-view](../../changes/cmdb-import-mapping-view/) — the "CMDB import" section shows, read-only, the mapping the import uses, served by `GET /api/settings/cmdb-import/mapping` through the import's own loader; editing stays file-based (kind: code)
 
 ## Purpose
 
