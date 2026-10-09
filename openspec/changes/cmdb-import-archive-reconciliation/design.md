@@ -6,9 +6,9 @@ The CMDB import (archived change `2026-10-05-cmdb-export-import`) matches rows o
 
 What OpenRegister offers (origin/beta `ff4dad5c`, identical to development for `lib/`):
 
-- **Soft delete.** `ObjectServiceInterface::deleteObject(uuid, register, schema, ...)` writes `@self.deleted` (`deletedBy`, `deletedAt`, `purgeDate` 30 days on). Lists exclude deleted objects unless `_includeDeleted=true`. `MagicMapper::restoreObject(uuid)` clears the marker; `DeletedController::restore()` uses it.
+- **Soft delete.** `ObjectServiceInterface::deleteObject(uuid, register, schema, ...)` writes `@self.deleted` (`deletedBy`, `deletedAt`, `purgeDate` 30 days on). Lists exclude deleted objects unless `_includeDeleted=true`, but the list search cannot return one even then (D9). `MagicMapper::findDeletedAcrossAllMagicTables()` lists the trash; `MagicMapper::restoreObject(uuid)` clears the marker. `DeletedController` uses both.
 - **Archive.** `ObjectEntity::archive()` / `unarchive()` write and clear `@self.archived` (`by`, `at`, `reason`). `Service\Object\ArchiveHandler::archive()` / `unarchive()` is the service path behind `POST` / `DELETE /api/objects/{register}/{schema}/{id}/archive`: it resolves the object, refuses a schema without `x-openregister-archive: {enabled: true}` (`ArchiveNotOfferedException`), checks `update` on the object for the session user, persists the marker and writes an audit entry. Lists exclude archived objects unless `_archived=true` (only the archive) or `_archived=any`. A read by identifier is unaffected. `SaveObject` refuses a data write to an archived object (`ObjectStateWriteException`).
-- **Search lenses** combine: `_ids`, `_includeDeleted` and `_archived` apply together in `MagicSearchHandler`.
+- **Search lenses** combine in SQL: `_ids`, `_includeDeleted` and `_archived` apply together in `MagicSearchHandler`. Its row conversion, however, drops a soft-deleted row and hydrates no archive marker (D9).
 
 OpenCatalogi (beta `df25ff75`) passes list parameters through to OpenRegister and forces `_includeDeleted=false`; it has no archive filter of its own, so `_archived=true` reaches OpenRegister unchanged. Portaliq (beta `8287e390`) lists usages with neither lens. Both hide archived and deleted records as they are (decided 2026-10-09).
 
@@ -34,11 +34,11 @@ CmdbExportImportService::import()
   ├─ resolve ArchiveHandler + MagicMapper   (archive mode only; missing → 503 ARCHIVE_UNAVAILABLE)
   ├─ lock the register
   ├─ CmdbWorkbookReader::read()             CMDB sheets as before + the archive sheet's APPID column
-  ├─ rows, each in its own boundary          match module and usage with _archived=any, _includeDeleted=true
-  │     archived match → unarchive, deleted match → restore, then the usual update
+  ├─ rows, each in its own boundary          match module and usage: working, then _archived=true, then the trash (D9)
+  │     archived match → unarchive, deleted match → restore (and unarchive), then the usual update
   └─ reconcile()  (archive mode, not cancelled)   phase `reconciling`, same lock
-        page usages (consumer = municipality, both lenses)
-        load their modules in batches (_ids, both lenses)
+        page usages (consumer = municipality): working, then _archived=true; deleted ones from the trash
+        load their modules in batches (_ids: working, then _archived=true; the rest from the trash)
         per application: key on CMDB sheets → nothing
                          key on archive sheet → archive module + usage (restore first when deleted)
                          key nowhere          → soft-delete module + usage, or archive when the sheet is absent
@@ -75,13 +75,13 @@ The profile names the sheet (`archiveSheet.name`: "Gearchiveerde Applicaties"). 
 
 ### D4. Matching widens to archived and deleted objects, and revives what it matches
 
-`matchModule()` searches the module by `externalKey` with `_archived=any` and `_includeDeleted=true`; `moduleBelongsTo()` checks this municipality's usage with the same lenses (a module whose usage is archived still belongs to the municipality), and keeps the working lens for "does any other organisation use it". `upsertUsage()` finds the usage with both lenses. Whatever is matched is revived before it is written: a soft-deleted object is restored (`MagicMapper::restoreObject()`), an archived one unarchived (`ArchiveHandler::unarchive()`), because `SaveObject` refuses a write to an archived object. The row outcome is `restored` when anything was restored, else `unarchived` when anything was unarchived, else the usual `created | updated | unchanged`. When more than one object matches, `findOne()` takes a working one before an archived one, and an archived one before one in the trash: before this change a module deleted by hand was invisible to the match, so the next import created a second one with the same `externalKey`, and reviving the deleted one would make two live modules. Organisations and contact persons keep the working lens: a deleted supplier is never matched.
+`matchModule()` looks the module up by `externalKey` in every state, as D9 reads it; `moduleBelongsTo()` looks up this municipality's usage the same way (a module whose usage is archived still belongs to the municipality), and keeps the working lens for "does any other organisation use it". `upsertUsage()` finds the usage in every state. Whatever is matched is revived before it is written: a soft-deleted object is restored (`MagicMapper::restoreObject()`), and unarchived as well when the restored object says it was archived; an archived one is unarchived (`ArchiveHandler::unarchive()`), because `SaveObject` refuses a write to an archived object. The update starts from the object `restoreObject()` answers, not from the trash listing's copy. The row outcome is `restored` when anything was restored, else `unarchived` when anything was unarchived, else the usual `created | updated | unchanged`. When more than one object matches, `findInAnyState()` takes a working one before an archived one, and an archived one before one in the trash: before this change a module deleted by hand was invisible to the match, so the next import created a second one with the same `externalKey`, and reviving the deleted one would make two live modules. Organisations and contact persons keep the working lens: a deleted supplier is never matched.
 
 ### D5. The reconciliation step
 
 Runs inside `runImport()` after the row loop, only when the loop finished (not cancelled) and `missingRecords` is `archive`, under the register lock the import already holds. It checks for a cancel once before it loads the scope (a cancel that came in during the last row) and again before each application; a cancel stops it there, keeps what was already archived or deleted, and marks the report cancelled. An exception outside an object's boundary fails the run like any other (`IMPORT_FAILED`, operation `failed`), so a half-done reconciliation is visible.
 
-Scope: the usages whose `consumer` is the municipality, paged with `PAGE_SIZE` and both lenses. Their modules are loaded per page in one search with `_ids`, both lenses. Only a module whose `externalKey` starts with `topdesk:<municipality uuid>:` is an imported application; the key after the last `:` is the APPID's match key. A usage without such a module (a hand-made usage, or a module another organisation imported) is left alone.
+Scope: the usages whose `consumer` is the municipality, in every state as D9 reads it: paged with `PAGE_SIZE` without a lens and with `_archived=true`, plus the deleted ones from the trash. Their modules are loaded in chunks of `PAGE_SIZE` with `_ids`, without a lens and with `_archived=true`, and the rest from the trash. Every usage and module keeps the state D9 gave it; the table below decides on that state. Only a module whose `externalKey` starts with `topdesk:<municipality uuid>:` is an imported application; the key after the last `:` is the APPID's match key. A usage without such a module (a hand-made usage, or a module another organisation imported) is left alone.
 
 Per application, with `processed` = every APPID match key on the CMDB sheets (whatever the row's outcome: a row that failed or was skipped is still in the export) and `archived` = the match keys on the archive sheet:
 
@@ -108,13 +108,28 @@ Progress: the operation gets the phase `reconciling` (added to `ProgressTracker:
 
 ### D7. Failure modes
 
-- `ArchiveHandler` or `MagicMapper` missing, or without the method the import calls: 503 `ARCHIVE_UNAVAILABLE` before the lock is taken, only in archive mode. `keep` needs neither.
+- `ArchiveHandler` or `MagicMapper` missing, or without a method the import calls (`archive`, `unarchive`, `restoreObject`, `findDeletedAcrossAllMagicTables`): 503 `ARCHIVE_UNAVAILABLE` before the lock is taken, only in archive mode. `keep` needs neither: without them the trash cannot be read, so a soft-deleted module or usage is not matched (the log says so) and a row whose match must be unarchived fails at step `module` or `usage`.
 - A schema without `x-openregister-archive`: `ArchiveNotOfferedException` from OpenRegister per object → a failed row with the exception class; the docs say to run Force Update.
 - A failure while reviving a matched row: the row fails at step `module` or `usage` like any other row failure.
 
 ### D8. Stackiq UI
 
 The Applications (`Modules`, a `FacetedCatalogIndexView` that forwards `quickFilters` to `CnIndexPage`) and Applications in use (`Gebruik`) pages get the quick filter `{"label": "Archived", "filter": {"_archived": "true"}}`. `useSelfFetchList` spreads the active tab's filter into the fetch parameters as they are, so `_archived=true` reaches OpenRegister and the list shows the archive alone; the facet narrowing's `_ids` composes with it (AND). The icon `ArchiveOutline` is registered in `src/icons.js`. `@conduction/nextcloud-vue` 2.65 renders no `@self.archived` on a detail page or in the sidebar metadata, so the detail pages show no archive state yet; that is a library follow-up, not a stackiq widget.
+
+### D9. How the import reads the state of a stored object
+
+Found on a Nextcloud 35 rig with OpenRegister 2.1.37-beta (origin/beta `ff4dad5c`): the second import of the original export left APPID 1234 archived (`unchanged`) and created a second module for APPID 2. `ObjectService::searchObjects()` (via `QueryHandler::searchObjects()` → `MagicMapper::searchObjects()` → `MagicSearchHandler::searchObjects()`) applies the lenses in SQL (`buildFilteredQuery()` → `applyBasicFilters()`, `MagicSearchHandler.php` 2135–2153), but converts each row with `MagicSearchHandler::convertRowToObjectEntity()` (3780), which:
+
+- reads no `_archived` column, so every result keeps `ObjectEntity::$archived = []` (`ObjectEntity.php` 334) and looks working;
+- turns the `_deleted` marker into `new DateTime(...)` (3896–3898), but `DeleteObject` writes it as a JSON object (`DeleteObject.php` 361), so the conversion throws, the row becomes null (4035) and `executeSearchQuery()` skips it (3714): `_includeDeleted=true` returns no soft-deleted object.
+
+So the import never reads the state from a search result:
+
+- **Working**: found by a search without a lens. **Archived**: found by a search with `_archived=true` (the archive alone, not deleted). An object is looked up working first, then archived.
+- **Deleted**: from `MagicMapper::findDeletedAcrossAllMagicTables(_rbac: false, _multitenancy: false)`, the listing behind the Deleted page, which reads the rows itself (`MagicMapper.php` 7001). It scans every magic table of the instance and pages only after merging them, so the import reads it once per run, lazily, and keeps this register's modules and usages. Its objects carry data but no markers (`MagicMapper::rowToObjectEntity()`, 9131), and that data has every string that parses as JSON decoded ("2" becomes 2), so it is never written back.
+- **Deleted and archived**: the trash does not say. `MagicMapper::restoreObject()` clears `_deleted` (10078) and answers the object as the mapper reads it by uuid, through `MagicStatisticsHandler::convertRowToObjectEntity()`, which does decode `_archived` (`MagicStatisticsHandler.php` 631–652). A returning row unarchives it when that object is archived, and updates from it. The reconciliation does not need to know: an object in the trash is either left there or restored and archived, and `ArchiveHandler::archive()` leaves an archived object as it is (`ArchiveHandler.php` 111).
+
+`ArchiveHandler::unarchive()` clears the marker to SQL NULL, so the object is back in the working lists, and does nothing for an object that is not archived (161). A lookup costs one search for a working match and two for an archived one or none, plus the one trash read per run. When OpenRegister hydrates both markers on search results, this can go back to one search with both lenses; the lens-based reading stays correct either way.
 
 ## API Design
 
@@ -138,7 +153,7 @@ The change is `kind: code`. Its only schema delta is the annotation `x-openregis
 
 - Controller: `CmdbImportController::import()` (unchanged auth: Nextcloud admins only, CSRF).
 - Services: `CmdbExportImportService` (lenses, revival, reconciliation), `Cmdb\CmdbWorkbookReader` and `Cmdb\CmdbImportProfile` (archive sheet), `Cmdb\CmdbImportReport` (outcomes), `ProgressTracker` (phase).
-- OpenRegister: `ObjectServiceInterface::searchObjects()` with `_archived`, `_includeDeleted` and `_ids`, `::deleteObject()` (contract); `Service\Object\ArchiveHandler::archive()` / `unarchive()` and `Db\MagicMapper::restoreObject()` (container, guarded, like the mapping engine). The handler checks `update` for the session user with RBAC on; the import is admin-only, so the check passes, and the audit entry names the admin.
+- OpenRegister: `ObjectServiceInterface::searchObjects()` with `_archived` and `_ids`, `::deleteObject()` (contract); `Service\Object\ArchiveHandler::archive()` / `unarchive()` and `Db\MagicMapper::restoreObject()` / `findDeletedAcrossAllMagicTables()` (container, guarded, like the mapping engine). The handler checks `update` for the session user with RBAC on; the import is admin-only, so the check passes, and the audit entry names the admin.
 
 ## Security Considerations
 
@@ -178,7 +193,8 @@ No seed objects change. The fragment's three seed modules stay as they are; the 
 - [The default archives on the first re-import after the upgrade] → The section shows the choice with help text; the report lists every archived and deleted application; nothing is hard-deleted.
 - [A workbook saved without the archive sheet] → archive only, never delete, plus a warning (D3).
 - [A failure between the usage and the module] → the usage is written first, so the municipality's view is right and the module is at worst still visible (D5).
-- [Reviving before writing adds calls per returning row] → only for rows whose match is archived or deleted; an ordinary row costs the same searches as before.
+- [Reviving before writing adds calls per returning row] → only for rows whose match is archived or deleted; a row whose module is working costs the same searches as before, a new row one more search (the archive lens).
+- [The trash listing scans every magic table of the instance] → read once per import, not per row (D9).
 - [OpenRegister internals change shape] → guarded resolution, 503 before the file is read (D7).
 
 ## Migration Plan

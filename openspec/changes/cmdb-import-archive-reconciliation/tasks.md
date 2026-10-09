@@ -29,6 +29,9 @@ Spec: `openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-imp
 - **acceptance_criteria**:
   - GIVEN an archived module and usage for an APPID WHEN a row with that APPID is imported THEN both are unarchived before the update, no second module or usage exists, and the row's outcome is `unarchived`
   - GIVEN a soft-deleted module and usage WHEN the row returns THEN both are restored from the trash and the outcome is `restored`
+  - GIVEN only the usage archived or soft-deleted THEN the usage alone is unarchived or restored, with that outcome, and no second usage exists
+  - GIVEN a module and usage soft-deleted while archived THEN both are restored and unarchived, the outcome is `restored`, and the update starts from the restored object (design D9)
+  - GIVEN OpenRegister's search results (no archive marker; no soft-deleted row, `_includeDeleted` or not) THEN the state comes from the lens that found the object and from the trash listing, read once per import (design D9)
   - GIVEN `updateExisting` false THEN the row is skipped as `exists` and nothing is revived
   - GIVEN a deleted and a working module (and usage) sharing one import key THEN the working one is updated and nothing is restored
 - [x] Implement
@@ -40,6 +43,7 @@ Spec: `openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-imp
 - **acceptance_criteria**:
   - GIVEN APPIDs 1 and 7 imported WHEN an export with row 1 and 7 on the archive sheet is imported THEN module and usage of 7 are archived with a reason, the report row is `archived`, and the owner contact person is untouched
   - GIVEN APPID 7 on no sheet THEN module and usage are soft-deleted and the row is `deleted`; GIVEN the archive sheet absent THEN they are archived instead and the report warns
+  - GIVEN APPID 7 soft-deleted and listed on the archive sheet THEN module and usage are restored and archived; GIVEN it already archived or, when on no sheet, already deleted THEN nothing is written
   - GIVEN `missingRecords` `keep`, a cancelled import, or a usage of another municipality THEN nothing is archived or deleted
   - GIVEN a cancel during the last row THEN nothing is archived or deleted; GIVEN a cancel during the reconciliation THEN it stops before the next application and the report is cancelled
   - GIVEN the archive of one application throws THEN that application is a `failed` row and the others are reconciled; GIVEN no ArchiveHandler THEN 503 `ARCHIVE_UNAVAILABLE` before reading
