@@ -41,6 +41,7 @@ Spec: `openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-imp
   - GIVEN APPID 7 on no sheet THEN module and usage are soft-deleted and the row is `deleted`; GIVEN the archive sheet absent THEN they are archived instead and the report warns
   - GIVEN `missingRecords` `keep`, a cancelled import, or a usage of another municipality THEN nothing is archived or deleted
   - GIVEN the archive of one application throws THEN that application is a `failed` row and the others are reconciled; GIVEN no ArchiveHandler THEN 503 `ARCHIVE_UNAVAILABLE` before reading
+  - GIVEN a cancel during the last row THEN nothing is archived or deleted; GIVEN a cancel during the reconciliation THEN it stops before the next application and the report is cancelled
   - GIVEN the step runs THEN the operation is in phase `reconciling` and its progress advances per application
 - [x] Implement
 - [x] Test

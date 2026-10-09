@@ -85,8 +85,9 @@ page in stackiq.
    [Repeat imports](#repeat-imports)). Choose **Keep them as they are** to
    leave such applications untouched.
 7. Press **Import**. A progress bar shows how many rows have been processed.
-   **Cancel import** stops the import before the next row; rows that were
-   already processed stay imported. The section says whether the server
+   **Cancel import** stops the import before the next row, or, while the
+   missing applications are compared, before the next application; what
+   was already processed stays imported. The section says whether the server
    accepted the cancel; one pressed before the server has started on the
    rows cannot take effect yet, and the section says so.
 
@@ -286,8 +287,11 @@ and then updated as usual. No second application is created. With **Update
 existing records** off, it is skipped as `exists` and stays archived or in
 the trash.
 
-The comparison runs only when the import went through all rows: a cancelled
-or failed import archives or deletes nothing. The progress bar shows the
+The comparison runs only when the import went through all rows: an import
+cancelled or failed before the comparison archives or deletes nothing.
+**Cancel import** during the comparison stops it before the next
+application; what was archived or deleted until then stays so, and the
+result lists it. The progress bar shows the
 step as *Checking the applications missing from the export*. Each
 application is handled on its own; one that cannot be archived is reported
 as *failed* with the step (`archive`, `restore` or `delete`) and the others

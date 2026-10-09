@@ -872,7 +872,7 @@ class CmdbExportImportService {
 		}
 
 		$this->progressTracker->completeOperation(finalStatistics: ['report' => $report]);
-		// A cancel that came in after the last row's check has nothing left to stop.
+		// A cancel that came in after the last check has nothing left to stop.
 		$this->progressTracker->clearCancelRequested(operationId: (string)$report['operationId']);
 	}//end finishOperation()
 
@@ -1977,7 +1977,9 @@ class CmdbExportImportService {
 	 * Runs after the last row of an import that was not cancelled, under the
 	 * same register lock. The whole scope is loaded before anything is
 	 * written, so the paging is not shifted by the writes. Every application
-	 * has its own error boundary.
+	 * has its own error boundary. A cancel is honoured before the scope is
+	 * loaded and before each application: what was archived or deleted so far
+	 * stays, and the report says the run was cancelled.
 	 *
 	 * @param string $municipalityUuid The consumer of this import.
 	 * @param array{sheet: string, present: bool, keyColumnMissing: bool, keys: array<string, true>} $archive The archive sheet.
@@ -2008,10 +2010,21 @@ class CmdbExportImportService {
 	 *
 	 * A usage of a hand-made module, or of a module another organisation
 	 * imported, is left out: only what this municipality's import created is
+		// A cancel that came in during the last row stops the import before anything is archived or deleted.
+		if ($this->progressTracker->isCancelRequested(operationId: $operationId) === true) {
+			$report->markCancelled();
+			return;
+		}
+
 	 * reconciled.
 	 *
 	 * @param string $municipalityUuid The consumer of this import.
 	 *
+			if ($this->progressTracker->isCancelRequested(operationId: $operationId) === true) {
+				$report->markCancelled();
+				return;
+			}
+
 	 * @return array<int, array{key: string, usage: object, module: object}> Per application, the APPID's match key,
 	 *                                                                      the usage and the module.
 	 *

@@ -79,7 +79,7 @@ The profile names the sheet (`archiveSheet.name`: "Gearchiveerde Applicaties"). 
 
 ### D5. The reconciliation step
 
-Runs inside `runImport()` after the row loop, only when the loop finished (not cancelled) and `missingRecords` is `archive`, under the register lock the import already holds. An exception outside an object's boundary fails the run like any other (`IMPORT_FAILED`, operation `failed`), so a half-done reconciliation is visible.
+Runs inside `runImport()` after the row loop, only when the loop finished (not cancelled) and `missingRecords` is `archive`, under the register lock the import already holds. It checks for a cancel once before it loads the scope (a cancel that came in during the last row) and again before each application; a cancel stops it there, keeps what was already archived or deleted, and marks the report cancelled. An exception outside an object's boundary fails the run like any other (`IMPORT_FAILED`, operation `failed`), so a half-done reconciliation is visible.
 
 Scope: the usages whose `consumer` is the municipality, paged with `PAGE_SIZE` and both lenses. Their modules are loaded per page in one search with `_ids`, both lenses. Only a module whose `externalKey` starts with `topdesk:<municipality uuid>:` is an imported application; the key after the last `:` is the APPID's match key. A usage without such a module (a hand-made usage, or a module another organisation imported) is left alone.
 

@@ -1863,6 +1863,61 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testACancelledImportDoesNotReconcile()
 
 	/**
+	 * A cancel that comes in while the last row is processed stops the import before anything is archived or deleted.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testACancelDuringTheLastRowArchivesNothing(): void {
+		$this->importOneSevenAndEight();
+		$service = null;
+		$this->beforeSave = function (int $schema) use (&$service): void {
+			if ($schema === self::MODULE) {
+				$this->assertTrue($service->requestCancel(operationId: 'cmdb-cancel-03'));
+			}
+		};
+		$service = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Applicatie Naam' => 'Nieuw'])], archived: ['7', '8']));
+
+		$report = $service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-cancel-03']);
+
+		$this->assertTrue($report['cancelled']);
+		$this->assertSame([], $this->transitions);
+		$this->assertSame(['updated'], array_column($report['rows'], 'outcome'));
+		$this->assertSame('cancelled', $this->cache['progress_cmdb-cancel-03']['status']);
+		$this->assertArrayNotHasKey('cancel_cmdb-cancel-03', $this->cache);
+	}//end testACancelDuringTheLastRowArchivesNothing()
+
+	/**
+	 * A cancel during the reconciliation stops it before the next application and keeps what was archived.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testACancelDuringTheReconciliationStopsBeforeTheNextApplication(): void {
+		$this->importOneSevenAndEight();
+		[$seven, $eight] = [$this->moduleOf(appId: '7'), $this->moduleOf(appId: '8')];
+		$service = null;
+		$this->beforeTransition = function (string $verb, string $uuid) use (&$service, $seven): void {
+			if ($uuid === $seven) {
+				$this->assertTrue($service->requestCancel(operationId: 'cmdb-cancel-04'));
+			}
+		};
+		$service = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7', '8']));
+
+		$report = $service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-cancel-04']);
+
+		$this->assertTrue($report['cancelled']);
+		$this->assertSame([['archive', $this->usageOf(moduleUuid: $seven)], ['archive', $seven]], array_map(static fn (array $step): array => [$step[0], $step[2]], $this->transitions));
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $seven), 'what was archived stays archived');
+		$this->assertSame([false, false], $this->stateOf(schema: self::MODULE, uuid: $eight));
+		$this->assertSame([false, false], $this->stateOf(schema: self::USAGE, uuid: $this->usageOf(moduleUuid: $eight)));
+		$this->assertSame(['unchanged', 'archived'], array_column($report['rows'], 'outcome'));
+		$this->assertSame('cancelled', $this->cache['progress_cmdb-cancel-04']['status']);
+	}//end testACancelDuringTheReconciliationStopsBeforeTheNextApplication()
+
+	/**
 	 * Only this municipality's usages and the modules its import created are reconciled.
 	 *
 	 * @return void
@@ -2754,7 +2809,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testCancelNeedsARunningImport()
 
 	/**
-	 * A cancel that arrives after the last row's check leaves no flag that a later run with the same id would inherit.
+	 * A cancel that arrives after the last row's check, with records kept, leaves no flag that a later run with the same id would inherit.
 	 *
 	 * @return void
 	 */
@@ -2768,7 +2823,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		};
 		$service = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', row: 2)]));
 
-		$report = $service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-late-cancel-1']);
+		$report = $service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-late-cancel-1', 'missingRecords' => 'keep']);
 
 		$this->assertFalse($report['cancelled'], 'the only row was already done');
 		$this->assertSame('completed', $this->cache['progress_cmdb-late-cancel-1']['status']);
