@@ -23,7 +23,7 @@ OpenCatalogi (beta `df25ff75`) passes list parameters through to OpenRegister an
 
 **Non-Goals**
 
-- Hard deletion, the trash's retention, contact persons, suppliers, modules other organisations use, changes to OpenCatalogi or Portaliq, an archive widget on the detail pages.
+- Hard deletion, the trash's retention, contact persons, suppliers, modules another organisation imported (a module carrying this municipality's import key is this municipality's record, also when another organisation uses it; D5), changes to OpenCatalogi or Portaliq, an archive widget on the detail pages.
 
 ## Architecture Overview
 
