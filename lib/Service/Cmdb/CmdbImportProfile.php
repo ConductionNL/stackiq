@@ -333,6 +333,42 @@ class CmdbImportProfile {
 	}//end sheetNames()
 
 	/**
+	 * The name of the archive sheet, or null when the profile names none.
+	 *
+	 * The archive sheet lists the applications the municipality archived; the
+	 * import reads only its key column (`archiveSheet.name` in the profile).
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function archiveSheetName(): ?string {
+		$name = $this->profile()['archiveSheet']['name'] ?? null;
+		if (is_string($name) === false || $name === '' || in_array($name, $this->sheetNames(), true) === true) {
+			return null;
+		}
+
+		return $name;
+	}//end archiveSheetName()
+
+	/**
+	 * Every sheet the reader may parse: the source sheets, then the archive sheet.
+	 *
+	 * @return array<int, string>
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function readSheetNames(): array {
+		$names = $this->sheetNames();
+		$archive = $this->archiveSheetName();
+		if ($archive !== null) {
+			$names[] = $archive;
+		}
+
+		return $names;
+	}//end readSheetNames()
+
+	/**
 	 * The rank of a sheet when an APPID is on more than one: lower wins.
 	 *
 	 * The profile's `sheetPrecedence` lists the sheets, the winner first; a
@@ -574,19 +610,28 @@ class CmdbImportProfile {
 	}//end neverWrittenOnUpdate()
 
 	/**
-	 * The accepted values of the missingRecords option.
+	 * The accepted values of the missingRecords option, readable without validating the packs.
+	 *
+	 * The controller checks the option before the import runs, so, like
+	 * maxFileBytes(), this must not depend on OpenRegister being available.
 	 *
 	 * @return array<int, string>
 	 *
-	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
 	 */
 	public function missingRecordsModes(): array {
-		$modes = $this->stringList(key: 'missingRecords');
-		if ($modes === []) {
+		try {
+			$profile = $this->profile ?? $this->decodeFile(fileName: $this->profileFile);
+		} catch (CmdbImportException $e) {
 			return ['keep'];
 		}
 
-		return $modes;
+		$modes = $profile['missingRecords'] ?? [];
+		if (is_array($modes) === false || $modes === []) {
+			return ['keep'];
+		}
+
+		return array_values(array_map('strval', $modes));
 	}//end missingRecordsModes()
 
 	/**
