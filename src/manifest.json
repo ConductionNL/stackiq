@@ -662,6 +662,13 @@
 							"dpiaStatus": ["not required", "required"]
 						},
 						"icon": "AlertCircle"
+					},
+					{
+						"label": "Archived",
+						"filter": {
+							"_archived": "true"
+						},
+						"icon": "ArchiveOutline"
 					}
 				]
 			}
