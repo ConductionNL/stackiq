@@ -26,8 +26,10 @@ namespace OCA\Stackiq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ConfigurationService;
+use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\ArchiMateImportService;
 use OCA\Stackiq\Service\ArchiMateService;
+use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
@@ -42,6 +44,7 @@ use OCP\AppFramework\Http\StreamResponse;
 use OCP\IAppConfig;
 use OCP\IConfig;
 use OCP\IGroupManager;
+use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -88,10 +91,13 @@ class SettingsController extends Controller {
 	 * @param EolSyncService $eolSyncService The EOL feed sync orchestration service.
 	 * @param LoggerInterface $logger The logger instance.
 	 * @param ConnectionReportService|null $connectionReports Asks integriq to look again after an email settings save.
+	 * @param CmdbImportProfile|null $cmdbImportProfile The CMDB import profile and packs; null builds the shipped one.
+	 * @param IL10N|null $l10n Translations of the CMDB mapping messages.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 *
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
+	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 	 */
 	public function __construct(
 		$appName,
@@ -108,6 +114,8 @@ class SettingsController extends Controller {
 		private readonly EolSyncService $eolSyncService,
 		private readonly LoggerInterface $logger,
 		private readonly ?ConnectionReportService $connectionReports = null,
+		private readonly ?CmdbImportProfile $cmdbImportProfile = null,
+		private readonly ?IL10N $l10n = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -3883,4 +3891,76 @@ class SettingsController extends Controller {
 			return $this->buildConfigReadErrorResponse(operationLabel: 'get EOL sync status', exception: $e);
 		}
 	}//end getEolSyncStatus()
+
+	/**
+	 * The column mapping the CMDB import uses, read-only.
+	 *
+	 * Loads the import profile and its packs through the loader the import
+	 * uses (CmdbImportProfile), so the answer is what the next import runs.
+	 * Success is the flat `{profile, packs}`; a failure uses the import's
+	 * error envelope, so the section shows it like an import error, with the
+	 * loader's reason in `details.reason` because the admin who edited a file
+	 * needs to know which file and why. That reason names files and validator
+	 * rules only, never a cell value or a person.
+	 *
+	 * @return JSONResponse `{profile, packs}` (200), 503 MAPPING_UNAVAILABLE, or 500 IMPORT_FAILED.
+	 *
+	 * @auth admin-only the import's configuration; the import writes with RBAC and multitenancy off, so its view keeps that posture.
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 */
+	public function getCmdbImportMapping(): JSONResponse {
+		$profile = ($this->cmdbImportProfile ?? new CmdbImportProfile(container: $this->container));
+
+		try {
+			$overview = $profile->mappingOverview();
+		} catch (CmdbImportException $e) {
+			$this->logger->info(
+				'SettingsController: CMDB import mapping unavailable',
+				['error' => $e->getErrorCode(), 'reason' => $e->getMessage()]
+			);
+			return new JSONResponse(
+				[
+					'success' => false,
+					'error' => $e->getErrorCode(),
+					'message' => $this->translate(text: 'The import mapping cannot be shown: OpenRegister is missing or a mapping file is invalid.'),
+					'details' => (object)['reason' => $e->getMessage()],
+				],
+				$e->getHttpStatus()
+			);
+		} catch (\Throwable $e) {
+			$this->logger->error('SettingsController: CMDB import mapping failed', ['exception' => $e]);
+			return new JSONResponse(
+				[
+					'success' => false,
+					'error' => 'IMPORT_FAILED',
+					'message' => $this->translate(text: 'The import mapping could not be read. The details are in the Nextcloud log.'),
+					'details' => (object)[],
+				],
+				Http::STATUS_INTERNAL_SERVER_ERROR
+			);
+		}//end try
+
+		return new JSONResponse($overview, Http::STATUS_OK);
+	}//end getCmdbImportMapping()
+
+	/**
+	 * Translate a message, or hand it back as it is when no translator was injected.
+	 *
+	 * IL10N is an optional constructor argument (cmdb-import-mapping-view, design D1),
+	 * so a test that builds the controller without it gets the English text.
+	 *
+	 * @param string $text The English text.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 */
+	private function translate(string $text): string {
+		if ($this->l10n === null) {
+			return $text;
+		}
+
+		return $this->l10n->t($text);
+	}//end translate()
 }//end class

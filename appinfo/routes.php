@@ -109,6 +109,9 @@ return [
         // @spec openspec/changes/cmdb-export-import/tasks.md#task-8
         ['name' => 'cmdbImport#import', 'url' => '/api/cmdb-import', 'verb' => 'POST'],
         ['name' => 'cmdbImport#cancel', 'url' => '/api/cmdb-import/{operationId}/cancel', 'verb' => 'POST'],
+        // The mapping the CMDB import uses, read-only — same posture as the import (Nextcloud admins only, CSRF).
+        // @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+        ['name' => 'settings#getCmdbImportMapping', 'url' => '/api/settings/cmdb-import/mapping', 'verb' => 'GET'],
 
         // User Groups management routes
         ['name' => 'settings#getGenericUserGroups', 'url' => '/api/settings/user-groups/generic', 'verb' => 'GET'],

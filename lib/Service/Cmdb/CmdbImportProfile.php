@@ -626,6 +626,77 @@ class CmdbImportProfile {
 	}//end referencedColumns()
 
 	/**
+	 * The profile and the packs as the admin settings show them: what the next import runs.
+	 *
+	 * Loads and validates everything first, so a broken pack throws here as
+	 * it does when an import starts. The transform of each field mapping is
+	 * passed through as the pack stores it, so no key the engine reads is
+	 * hidden from the admin; `required` is normalised to a boolean.
+	 *
+	 * @return array{profile: array<string, mixed>, packs: array<int, array<string, mixed>>}
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the validator is missing,
+	 *                             or the profile or a pack is unreadable or invalid.
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 */
+	public function mappingOverview(): array {
+		$profile = $this->profile();
+
+		$packs = [];
+		foreach (self::TARGETS as $target) {
+			$pack = $this->pack(target: $target);
+			$mappings = [];
+			foreach (($pack['fieldMappings'] ?? []) as $mapping) {
+				if (is_array($mapping) === false) {
+					continue;
+				}
+
+				$transform = $mapping['transform'] ?? null;
+				if (is_array($transform) === false) {
+					$transform = null;
+				}
+
+				$mappings[] = [
+					'source' => (string)($mapping['source'] ?? ''),
+					'target' => (string)($mapping['target'] ?? ''),
+					'required' => (bool)($mapping['required'] ?? false),
+					'transform' => $transform,
+				];
+			}
+
+			$packs[] = [
+				'target' => $target,
+				'file' => (string)($profile['packs'][$target] ?? ''),
+				'id' => (string)($pack['id'] ?? ''),
+				'name' => (string)($pack['name'] ?? ''),
+				'version' => (string)($pack['version'] ?? ''),
+				'description' => (string)($pack['description'] ?? ''),
+				'fieldMappings' => $mappings,
+			];
+		}//end foreach
+
+		return [
+			'profile' => [
+				'id' => (string)($profile['id'] ?? ''),
+				'name' => (string)($profile['name'] ?? ''),
+				'version' => (string)($profile['version'] ?? ''),
+				'profileFile' => $this->profileFile,
+				'sheets' => $this->sheets(),
+				'sheetPrecedence' => $this->stringList(key: 'sheetPrecedence'),
+				'keyColumn' => $this->keyColumn(),
+				'nameColumn' => $this->nameColumn(),
+				'requiredColumns' => $this->requiredColumns(),
+				'dateColumns' => $this->dateColumns(),
+				'idColumns' => $this->idColumns(),
+				'emptyValues' => $this->emptyValues(),
+				'missingRecords' => $this->missingRecordsModes(),
+			],
+			'packs' => $packs,
+		];
+	}//end mappingOverview()
+
+	/**
 	 * The loaded profile.
 	 *
 	 * @return array<string, mixed>
