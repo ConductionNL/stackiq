@@ -418,7 +418,9 @@ class CmdbImportController extends Controller {
 			'SCHEMA_OUTDATED' => $this->l10n->t('The stackiq register is out of date; import its configuration again.'),
 			'IMPORT_IN_PROGRESS' => $this->l10n->t('Another CMDB import is running; try again when it has finished.'),
 			'MUNICIPALITY_AMBIGUOUS' => $this->l10n->t('Several municipalities have this name; choose one from the list.'),
-			'ARCHIVE_UNAVAILABLE' => $this->l10n->t('Applications missing from the export cannot be archived: OpenRegister is missing or too old. Choose to keep them, or update OpenRegister.'),
+			'ARCHIVE_UNAVAILABLE' => $this->l10n->t(
+				'Applications missing from the export cannot be archived: OpenRegister is missing or too old. Choose to keep them, or update OpenRegister.'
+			),
 			default => $this->l10n->t('The import failed. The details are in the Nextcloud log.'),
 		};
 	}//end message()
