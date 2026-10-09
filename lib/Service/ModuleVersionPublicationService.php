@@ -24,7 +24,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
+ * @spec openspec/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -45,7 +45,7 @@ use Throwable;
 /**
  * Copies a module's publication onto its versions.
  *
- * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
+ * @spec openspec/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
  */
 class ModuleVersionPublicationService {
 
@@ -79,7 +79,7 @@ class ModuleVersionPublicationService {
 	 *
 	 * @return array{modulePublicationDate: string|null, moduleRegisteredBy: string|null}
 	 *
-	 * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
+	 * @spec openspec/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
 	 */
 	public static function mirrorOf(array $module): array {
 		return [
@@ -114,7 +114,7 @@ class ModuleVersionPublicationService {
 	 *
 	 * @return integer The number of versions written in this request: 0 for a module, whose versions the job writes.
 	 *
-	 * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
+	 * @spec openspec/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
 	 */
 	public function objectSaved(ObjectEntityInterface $object, ?ObjectEntityInterface $previous = null): int {
 		$schema = (string) $object->getSchema();
@@ -143,7 +143,7 @@ class ModuleVersionPublicationService {
 	 *
 	 * @return integer The number of versions written in this request: always 0, the job writes them.
 	 *
-	 * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
+	 * @spec openspec/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
 	 */
 	public function objectDeleted(ObjectEntityInterface $object): int {
 		if ((string) $object->getSchema() !== (string) $this->settingsService->getSchemaIdForObjectType('module')) {
@@ -176,7 +176,7 @@ class ModuleVersionPublicationService {
 	 *
 	 * @return array{written: int, failed: int} The versions written, and the versions or searches that failed.
 	 *
-	 * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
+	 * @spec openspec/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
 	 */
 	public function clearVersions(string $moduleUuid): array {
 		return $this->copyOntoVersions(moduleUuid: $moduleUuid, mirror: self::mirrorOf(module: []));
@@ -189,7 +189,7 @@ class ModuleVersionPublicationService {
 	 *
 	 * @return array{written: int, failed: int} The versions written, and the versions or searches that failed.
 	 *
-	 * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
+	 * @spec openspec/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
 	 */
 	public function backfillModule(ObjectEntityInterface $module): array {
 		return $this->copyOntoVersions(moduleUuid: (string) $module->getUuid(), mirror: self::mirrorOf(module: (array) $module->getObject()));
@@ -323,7 +323,7 @@ class ModuleVersionPublicationService {
 	 *
 	 * @return integer 1 when the version was written, else 0.
 	 *
-	 * @spec openspec/changes/publication-field-rules/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
+	 * @spec openspec/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
 	 */
 	public function versionSaved(ObjectEntityInterface $version): int {
 		$objects  = $this->objectService();

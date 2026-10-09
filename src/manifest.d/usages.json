@@ -19,7 +19,15 @@
 				"register": "@resolve:voorzieningen_register",
 				"schema": "usage",
 				"description": "The applications your organisation uses, with the version it runs, where it stands and who owns it.",
-				"columns": ["module", "moduleVersion", "status", "businessOwner", "technicalOwner", "timeClassification", "serviceDeskRecordId"],
+				"columns": [
+					{ "key": "module", "label": "Application", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "module", "labelField": "name" } },
+					{ "key": "moduleVersion", "label": "Version", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "moduleVersion", "labelField": "version" } },
+					"status",
+					"businessOwner",
+					"technicalOwner",
+					"timeClassification",
+					"serviceDeskRecordId"
+				],
 				"filterMenu": true,
 				"quickFilters": [
 					{ "label": "All", "filter": {}, "default": true },

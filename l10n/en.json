@@ -1129,6 +1129,8 @@
         "The part {part} of the workbook is too large to import: unpacked it is {size}, and the import reads at most {limit} of one part.": "The part {part} of the workbook is too large to import: unpacked it is {size}, and the import reads at most {limit} of one part.",
         "Delete the sheets the import does not read from a copy of the export (it reads only \"{first}\" and \"{second}\"), and import that copy.": "Delete the sheets the import does not read from a copy of the export (it reads only \"{first}\" and \"{second}\"), and import that copy.",
         "The workbook holds more than {count} different texts, the most the import reads.": "The workbook holds more than {count} different texts, the most the import reads.",
-        "Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.": "Together, the cells of the workbook reference more than {size} of shared text, the most the import reads."
+        "Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.": "Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.",
+        "In development since": "In development since",
+        "In use since": "In use since"
     }
 }

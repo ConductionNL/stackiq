@@ -151,7 +151,7 @@ export default {
 	// object) and `referentiecomponent`/`standaard` are exposed here by display
 	// NAME, not the identifiers the schema stores — feeding them through that
 	// path would break the list. Stays a custom page (wrapping `CnFacetSidebar`
-	// + a standalone `CnIndexPage` narrowed via `{ id: matchedObjectIds }`) until
+	// + a standalone `CnIndexPage` narrowed via `{ _ids: matchedObjectIds }`) until
 	// the lib grows a facet-sidebar mode whose counts/narrowing are computed by
 	// an external, non-schema-field aggregation (see FacetedCatalogIndexView.vue).
 	FacetedCatalogIndexView,
