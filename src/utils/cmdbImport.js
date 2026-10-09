@@ -1010,7 +1010,8 @@ export async function loadCmdbMapping({ http }) {
 
 /**
  * The names of the source sheets: the profile's when the mapping has loaded,
- * the shipped defaults until then or when it could not be loaded.
+ * the shipped defaults until then, when it could not be loaded, or when it
+ * names fewer than the two sheets the help texts name.
  *
  * @param {object|null} mapping The mapping endpoint's answer, or null
  * @return {Array<string>} At least the two default names
@@ -1023,7 +1024,7 @@ export function mappingSheetNames(mapping) {
 			typeof sheet === 'string' ? sheet : String(sheet?.name ?? ''),
 		)
 		.filter((name) => name !== '')
-	return names.length > 0 ? names : [...PROFILE_DEFAULTS.sheets]
+	return names.length >= 2 ? names : [...PROFILE_DEFAULTS.sheets]
 }
 
 /**

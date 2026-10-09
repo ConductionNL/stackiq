@@ -227,6 +227,12 @@ describe('cmdbImport mapping helpers', () => {
 		)
 	})
 
+	it('keeps the shipped sheet names when the answer names only one sheet', () => {
+		expect(
+			mappingSheetNames({ profile: { sheets: [{ name: 'Sheet A' }] } }),
+		).toEqual(PROFILE_DEFAULTS.sheets)
+	})
+
 	it('describes every transformation the packs use', () => {
 		expect(transformLabel(undefined)).toBe('As is')
 		expect(transformLabel('bool-map')).toBe('Yes/no lookup')
