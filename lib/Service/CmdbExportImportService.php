@@ -30,7 +30,14 @@
  * - `publicationDate` is set to the import's start on create, unless the
  *   admin chose not to publish (`publish` false), and never written on
  *   update; neither is `depublicationDate`.
- * - Records missing from a newer export are left untouched.
+ * - Records missing from a newer export are left untouched with
+ *   `missingRecords` `keep`. With `archive` (the default) the municipality's
+ *   usages and their modules are reconciled after the last row: archived
+ *   when the APPID is on the archive sheet, soft-deleted when it is on no
+ *   sheet, archived only when the workbook has no archive sheet
+ *   (openspec/changes/cmdb-import-archive-reconciliation, design D5). A
+ *   module or usage matched among archived or soft-deleted objects is
+ *   unarchived or restored before it is updated, never duplicated.
  * - Owners become contact persons, never Nextcloud user accounts, and no
  *   report entry or log line carries an owner name or e-mail address.
  * - One import runs per register at a time: every match is find-then-create,
@@ -55,6 +62,7 @@ namespace OCA\Stackiq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use JsonSerializable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
@@ -68,6 +76,7 @@ use OCP\Lock\ILockingProvider;
 use OCP\Lock\LockedException;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use RuntimeException;
 use Throwable;
 
 /**
@@ -110,6 +119,36 @@ class CmdbExportImportService {
 	 * OpenRegister's schema mapper (not a public contract).
 	 */
 	public const SCHEMA_MAPPER_CLASS = 'OCA\OpenRegister\Db\SchemaMapper';
+
+	/**
+	 * OpenRegister's archive handler, behind POST and DELETE .../archive (not a public contract).
+	 */
+	public const ARCHIVE_HANDLER_CLASS = 'OCA\OpenRegister\Service\Object\ArchiveHandler';
+
+	/**
+	 * OpenRegister's object mapper, whose restoreObject() empties the trash of one object (not a public contract).
+	 */
+	public const OBJECT_MAPPER_CLASS = 'OCA\OpenRegister\Db\MagicMapper';
+
+	/**
+	 * What happens to records missing from the export when the request does not say.
+	 */
+	public const DEFAULT_MISSING_RECORDS = 'archive';
+
+	/**
+	 * The start of every archive reason the import writes, so the audit trail says who archived and why.
+	 */
+	private const REASON_PREFIX = 'cmdb-import: ';
+
+	/**
+	 * The search lenses that make archived and soft-deleted objects matchable too.
+	 *
+	 * Without them OpenRegister leaves both out of every list, so a returning
+	 * application would be created a second time instead of revived.
+	 *
+	 * @var array<string, string|bool>
+	 */
+	private const EVERY_STATE = ['_archived' => 'any', '_includeDeleted' => true];
 
 	/**
 	 * The properties every match search and the module key rely on, per schema.
@@ -223,6 +262,13 @@ class CmdbExportImportService {
 	private array $winningSheets = [];
 
 	/**
+	 * OpenRegister's archive handler and object mapper, once resolved.
+	 *
+	 * @var array{handler: object, mapper: object}|null
+	 */
+	private ?array $archiveServices = null;
+
+	/**
 	 * Contact UIDs by e-mail or display name, per run.
 	 *
 	 * @var array<string, string|null>
@@ -300,17 +346,29 @@ class CmdbExportImportService {
 	}//end assertXlsx()
 
 	/**
-	 * Whether a `missingRecords` value is supported (only `keep`).
+	 * Whether a `missingRecords` value is supported: one of the profile's modes (`keep`, `archive`).
 	 *
 	 * @param string $mode The requested value.
 	 *
 	 * @return bool
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
 	 */
 	public function supportsMissingRecords(string $mode): bool {
-		return $mode === 'keep';
+		return in_array($mode, $this->missingRecordsModes(), true);
 	}//end supportsMissingRecords()
+
+	/**
+	 * The accepted `missingRecords` values, for the refusal of any other.
+	 *
+	 * @return array<int, string>
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
+	 */
+	public function missingRecordsModes(): array {
+		return $this->profile->missingRecordsModes();
+	}//end missingRecordsModes()
 
 	/**
 	 * Ask a running import to stop between rows.
@@ -349,19 +407,21 @@ class CmdbExportImportService {
 	 *
 	 * @param string $path The xlsx file, already checked by assertXlsx().
 	 * @param array<string, mixed> $options municipalityUuid, municipalityName, updateExisting, publish,
-	 *                                      operationId, and fileName (the upload's name, for the audit log line).
+	 *                                      missingRecords (keep or archive, default archive), operationId,
+	 *                                      and fileName (the upload's name, for the audit log line).
 	 *
 	 * @return array<string, mixed> The report (contract.md).
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE, NOT_CONFIGURED, SCHEMA_OUTDATED, IMPORT_IN_PROGRESS,
 	 *                             WORKBOOK_TOO_LARGE, READER_UNAVAILABLE, NOT_XLSX, NO_SOURCE_SHEET,
 	 *                             MISSING_COLUMN, TOO_MANY_ROWS, MUNICIPALITY_REQUIRED,
-	 *                             MUNICIPALITY_INVALID or MUNICIPALITY_AMBIGUOUS.
+	 *                             MUNICIPALITY_INVALID, MUNICIPALITY_AMBIGUOUS or ARCHIVE_UNAVAILABLE.
 	 * @throws \Exception         An unexpected OpenRegister error outside a row, such as
 	 *                             creating the municipality; rows catch their own.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	public function import(string $path, array $options): array {
 		$this->resetRun();
@@ -371,6 +431,10 @@ class CmdbExportImportService {
 		$this->profile->load();
 		$this->engine = $this->resolveEngine();
 		$this->coordinates = $this->resolveCoordinates();
+		if (self::missingRecordsFrom(options: $options) === 'archive') {
+			// Refused before the lock and the file: an import that cannot reconcile must not half-run.
+			$this->archiveServices();
+		}
 
 		$lock = $this->acquireImportLock(register: $this->coordinates['register']);
 		try {
@@ -442,16 +506,23 @@ class CmdbExportImportService {
 	 * @return array<string, mixed> The report.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function runImport(string $path, array $options, string $startedAt): array {
 		$workbook = $this->reader->read(path: $path, profile: $this->profile);
 		$municipality = $this->resolveMunicipality(options: $options);
 
 		$operationId = $this->operationIdFrom(options: $options);
+		$missingRecords = self::missingRecordsFrom(options: $options);
 		$rows = array_values($workbook['rows']);
 		$report = new CmdbImportReport(operationId: $operationId, rowsRead: count($rows));
 		$report->setMunicipality(uuid: $municipality['uuid'], name: $municipality['name'], created: $municipality['created']);
 		$report->addImportWarnings(warnings: $this->translateImportWarnings(warnings: $workbook['importWarnings']));
+		$archive = $this->archiveSheet(workbook: $workbook);
+		if ($missingRecords === 'archive' && $archive['present'] === false) {
+			$report->addImportWarnings(warnings: [['sheet' => $archive['sheet'], 'message' => $this->archiveSheetWarning(archive: $archive)]]);
+		}
+
 		if ($municipality['created'] === true) {
 			$report->addImportWarnings(
 				warnings: [
@@ -488,6 +559,7 @@ class CmdbExportImportService {
 			'municipalityCreated' => $municipality['created'],
 			'updateExisting' => $updateExisting,
 			'publish' => $publish,
+			'missingRecords' => $missingRecords,
 		];
 		$this->logger->info('CmdbExportImportService: import started', array_merge($audit, ['rows' => count($rows)]));
 		try {
@@ -505,6 +577,16 @@ class CmdbExportImportService {
 					report: $report
 				);
 				$this->progressTracker->updateProgress(processedItems: ($index + 1));
+			}
+
+			if ($missingRecords === 'archive' && $report->isCancelled() === false) {
+				$this->reconcile(
+					municipalityUuid: $municipality['uuid'],
+					archive: $archive,
+					operationId: $operationId,
+					processedItems: count($rows),
+					report: $report
+				);
 			}
 
 			$result = $report->toArray();
@@ -748,11 +830,20 @@ class CmdbExportImportService {
 	 * @param string $module The module outcome.
 	 * @param string $usage The usage outcome.
 	 *
-	 * @return string created when the module was created, updated when anything was saved, else unchanged.
+	 * @return string restored when either was restored from the trash, else unarchived when either was
+	 *                unarchived, else created when the module was created, updated when anything was saved,
+	 *                else unchanged.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private static function rowOutcome(string $module, string $usage): string {
+		foreach ([CmdbImportReport::RESTORED, CmdbImportReport::UNARCHIVED] as $revived) {
+			if ($module === $revived || $usage === $revived) {
+				return $revived;
+			}
+		}
+
 		if ($module === CmdbImportReport::CREATED) {
 			return CmdbImportReport::CREATED;
 		}
@@ -1033,9 +1124,10 @@ class CmdbExportImportService {
 	 *                                                                                 and why the row is skipped.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private function matchModule(string $externalKey, string $municipalityUuid, string $matchKey, array $options): array {
-		$existing = $this->findOne(schemaKey: 'module', filters: ['externalKey' => $externalKey]);
+		$existing = $this->findOne(schemaKey: 'module', filters: ['externalKey' => $externalKey], everyState: true);
 		if ($existing === null) {
 			return ['existing' => null, 'uuid' => null, 'skipReason' => null];
 		}
@@ -1102,6 +1194,8 @@ class CmdbExportImportService {
 	 * together with the usages: the module must already have a usage whose
 	 * consumer is this municipality, or, before the first import, no usage
 	 * at all. A module only another organisation uses is never taken over.
+	 * This municipality's usage counts in every state: an archived or
+	 * soft-deleted usage still says the module is the municipality's.
 	 *
 	 * @param string $moduleUuid The module found by its import key.
 	 * @param string $municipalityUuid The consumer of this import.
@@ -1109,9 +1203,10 @@ class CmdbExportImportService {
 	 * @return bool
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private function moduleBelongsTo(string $moduleUuid, string $municipalityUuid): bool {
-		if ($this->findOne(schemaKey: 'usage', filters: ['consumer' => $municipalityUuid, 'module' => $moduleUuid]) !== null) {
+		if ($this->findOne(schemaKey: 'usage', filters: ['consumer' => $municipalityUuid, 'module' => $moduleUuid], everyState: true) !== null) {
 			return true;
 		}
 
@@ -1128,9 +1223,11 @@ class CmdbExportImportService {
 	 * @param string|null $publicationDate ISO start time of the import for a module that is published
 	 *                                     when created, or null to create it unpublished.
 	 *
-	 * @return array{uuid: string, outcome: string} Outcome created, updated or unchanged.
+	 * @return array{uuid: string, outcome: string} Outcome created, updated or unchanged, or restored or
+	 *                                            unarchived when the stored module was revived first.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private function upsertModule(
 		array $data,
@@ -1155,13 +1252,14 @@ class CmdbExportImportService {
 		}
 
 		$uuid = (string)$existing->getUuid();
+		$revived = $this->revive(entity: $existing);
 		$merged = $this->merge(target: 'module', stored: $existing->getObject(), mapped: $data);
 		if ($merged === null) {
-			return ['uuid' => $uuid, 'outcome' => CmdbImportReport::UNCHANGED];
+			return ['uuid' => $uuid, 'outcome' => ($revived ?? CmdbImportReport::UNCHANGED)];
 		}
 
 		$this->save(schemaKey: 'module', data: $merged, uuid: $uuid);
-		return ['uuid' => $uuid, 'outcome' => CmdbImportReport::UPDATED];
+		return ['uuid' => $uuid, 'outcome' => ($revived ?? CmdbImportReport::UPDATED)];
 	}//end upsertModule()
 
 	/**
@@ -1173,9 +1271,11 @@ class CmdbExportImportService {
 	 * @param string|null $providerUuid The supplier, when there is one.
 	 * @param array{businessOwner: string|null} $owners The owner contact person.
 	 *
-	 * @return array{uuid: string, outcome: string}
+	 * @return array{uuid: string, outcome: string} Outcome created, updated or unchanged, or restored or
+	 *                                            unarchived when the stored usage was revived first.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private function upsertUsage(array $data, string $municipalityUuid, string $moduleUuid, ?string $providerUuid, array $owners): array {
 		if (isset($data['interneAnnotation']) === true && is_string($data['interneAnnotation']) === true) {
@@ -1199,19 +1299,20 @@ class CmdbExportImportService {
 			}
 		}
 
-		$existing = $this->findOne(schemaKey: 'usage', filters: ['consumer' => $municipalityUuid, 'module' => $moduleUuid]);
+		$existing = $this->findOne(schemaKey: 'usage', filters: ['consumer' => $municipalityUuid, 'module' => $moduleUuid], everyState: true);
 		if ($existing === null) {
 			return ['uuid' => $this->save(schemaKey: 'usage', data: $data, uuid: null), 'outcome' => CmdbImportReport::CREATED];
 		}
 
 		$uuid = (string)$existing->getUuid();
+		$revived = $this->revive(entity: $existing);
 		$merged = $this->merge(target: 'usage', stored: $existing->getObject(), mapped: $data);
 		if ($merged === null) {
-			return ['uuid' => $uuid, 'outcome' => CmdbImportReport::UNCHANGED];
+			return ['uuid' => $uuid, 'outcome' => ($revived ?? CmdbImportReport::UNCHANGED)];
 		}
 
 		$this->save(schemaKey: 'usage', data: $merged, uuid: $uuid);
-		return ['uuid' => $uuid, 'outcome' => CmdbImportReport::UPDATED];
+		return ['uuid' => $uuid, 'outcome' => ($revived ?? CmdbImportReport::UPDATED)];
 	}//end upsertUsage()
 
 	/**
@@ -1637,16 +1738,24 @@ class CmdbExportImportService {
 	 *
 	 * @param string $schemaKey The coordinates key of the schema.
 	 * @param array<string, string> $filters Field => exact value.
+	 * @param bool $everyState Also match archived and soft-deleted objects.
 	 *
 	 * @return object|null The entity (ObjectEntityInterface).
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
-	private function findOne(string $schemaKey, array $filters): ?object {
+	private function findOne(string $schemaKey, array $filters, bool $everyState = false): ?object {
 		$coordinates = $this->coordinates();
+		$lenses = [];
+		if ($everyState === true) {
+			$lenses = self::EVERY_STATE;
+		}
+
 		$results = $coordinates['objectService']->searchObjects(
 			query: array_merge(
 				['@self' => ['register' => $coordinates['register'], 'schema' => $coordinates[$schemaKey]], '_limit' => 10],
+				$lenses,
 				$filters
 			),
 			_rbac: false,
@@ -1698,6 +1807,444 @@ class CmdbExportImportService {
 
 		return (string)$entity->getUuid();
 	}//end save()
+
+	/**
+	 * The `missingRecords` mode of an import: the option, or DEFAULT_MISSING_RECORDS.
+	 *
+	 * @param array<string, mixed> $options The import options.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
+	 */
+	private static function missingRecordsFrom(array $options): string {
+		$mode = ($options['missingRecords'] ?? null);
+		if (is_string($mode) === false || $mode === '') {
+			return self::DEFAULT_MISSING_RECORDS;
+		}
+
+		return $mode;
+	}//end missingRecordsFrom()
+
+	/**
+	 * The archive sheet as the reader found it, with its APPIDs as match keys.
+	 *
+	 * @param array<string, mixed> $workbook What the reader returned.
+	 *
+	 * @return array{sheet: string, present: bool, keyColumnMissing: bool, keys: array<string, true>}
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	private function archiveSheet(array $workbook): array {
+		$archive = ($workbook['archive'] ?? []);
+		$key = $this->profile->keyColumn();
+		$keys = [];
+		foreach (($archive['appIds'] ?? []) as $appId) {
+			$values = $this->normaliser->normalise(cells: [$key => $appId], dateColumns: [], idColumns: $this->profile->idColumns());
+			$matchKey = self::matchKey(appId: ($values[$key] ?? ''));
+			if ($matchKey !== '') {
+				$keys[$matchKey] = true;
+			}
+		}
+
+		return [
+			'sheet' => (string)($archive['sheet'] ?? ($this->profile->archiveSheetName() ?? '')),
+			'present' => (($archive['present'] ?? false) === true),
+			'keyColumnMissing' => (($archive['keyColumnMissing'] ?? false) === true),
+			'keys' => $keys,
+		];
+	}//end archiveSheet()
+
+	/**
+	 * The report warning of an archiving import whose workbook lacks the archive sheet or its key column.
+	 *
+	 * @param array{sheet: string, keyColumnMissing: bool} $archive The archive sheet.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	private function archiveSheetWarning(array $archive): string {
+		if ($archive['keyColumnMissing'] === true) {
+			return $this->l10n->t(
+				'Sheet "%1$s" has no column "%2$s", so applications missing from the export are archived, not deleted.',
+				[$archive['sheet'], $this->profile->keyColumn()]
+			);
+		}
+
+		return $this->l10n->t('Sheet "%s" was not found, so applications missing from the export are archived, not deleted.', [$archive['sheet']]);
+	}//end archiveSheetWarning()
+
+	/**
+	 * Resolve OpenRegister's archive handler and object mapper, failing closed.
+	 *
+	 * @return array{handler: object, mapper: object} The handler, with `archive()` and `unarchive()`, and the
+	 *                                                mapper, with `restoreObject()`.
+	 *
+	 * @throws CmdbImportException ARCHIVE_UNAVAILABLE.
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	private function archiveServices(): array {
+		if ($this->archiveServices !== null) {
+			return $this->archiveServices;
+		}
+
+		try {
+			$handler = $this->container->get(static::ARCHIVE_HANDLER_CLASS);
+			$mapper = $this->container->get(static::OBJECT_MAPPER_CLASS);
+		} catch (Throwable $e) {
+			$handler = null;
+			$mapper = null;
+		}
+
+		if (is_object($handler) === false || method_exists($handler, 'archive') === false || method_exists($handler, 'unarchive') === false
+			|| is_object($mapper) === false || method_exists($mapper, 'restoreObject') === false
+		) {
+			throw new CmdbImportException(
+				errorCode: CmdbImportException::ARCHIVE_UNAVAILABLE,
+				message: 'OpenRegister ArchiveHandler or MagicMapper is not available'
+			);
+		}
+
+		$this->archiveServices = ['handler' => $handler, 'mapper' => $mapper];
+		return $this->archiveServices;
+	}//end archiveServices()
+
+	/**
+	 * Whether a stored object is archived and whether it is in the trash, from its `@self` metadata.
+	 *
+	 * @param object $entity The entity (ObjectEntityInterface).
+	 *
+	 * @return array{archived: bool, deleted: bool}
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 */
+	private static function objectState(object $entity): array {
+		$self = [];
+		if ($entity instanceof JsonSerializable) {
+			$serialised = $entity->jsonSerialize();
+			if (is_array($serialised) === true && is_array($serialised['@self'] ?? null) === true) {
+				$self = $serialised['@self'];
+			}
+		}
+
+		return [
+			'archived' => (self::isEmptyValue(value: ($self['archived'] ?? null)) === false),
+			'deleted' => (self::isEmptyValue(value: ($self['deleted'] ?? null)) === false),
+		];
+	}//end objectState()
+
+	/**
+	 * Bring a matched module or usage back before it is written: out of the trash, then out of the archive.
+	 *
+	 * OpenRegister refuses a data write to an archived object, and the
+	 * archive handler cannot reach one in the trash, hence the order.
+	 *
+	 * @param object $entity The matched entity (ObjectEntityInterface).
+	 *
+	 * @return string|null restored, unarchived, or null when it was neither archived nor deleted.
+	 *
+	 * @throws CmdbImportException ARCHIVE_UNAVAILABLE when the archive services are missing.
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 */
+	private function revive(object $entity): ?string {
+		$state = self::objectState(entity: $entity);
+		if ($state['deleted'] === false && $state['archived'] === false) {
+			return null;
+		}
+
+		$uuid = (string)$entity->getUuid();
+		$services = $this->archiveServices();
+		$outcome = null;
+		if ($state['deleted'] === true) {
+			$services['mapper']->restoreObject(uuid: $uuid);
+			$outcome = CmdbImportReport::RESTORED;
+		}
+
+		if ($state['archived'] === true) {
+			$services['handler']->unarchive(identifier: $uuid, reason: self::REASON_PREFIX . 'back in the export');
+			$outcome = ($outcome ?? CmdbImportReport::UNARCHIVED);
+		}
+
+		return $outcome;
+	}//end revive()
+
+	/**
+	 * Archive or soft-delete every application of the municipality whose APPID left the CMDB sheets.
+	 *
+	 * Runs after the last row of an import that was not cancelled, under the
+	 * same register lock. The whole scope is loaded before anything is
+	 * written, so the paging is not shifted by the writes. Every application
+	 * has its own error boundary.
+	 *
+	 * @param string $municipalityUuid The consumer of this import.
+	 * @param array{sheet: string, present: bool, keyColumnMissing: bool, keys: array<string, true>} $archive The archive sheet.
+	 * @param string $operationId The operation id, for the archive reason.
+	 * @param int $processedItems The rows already counted as processed.
+	 * @param CmdbImportReport $report The report.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	private function reconcile(string $municipalityUuid, array $archive, string $operationId, int $processedItems, CmdbImportReport $report): void {
+		$scope = $this->reconciliationScope(municipalityUuid: $municipalityUuid);
+		$this->progressTracker->setPhase(phase: 'reconciling', data: ['total_items' => ($processedItems + count($scope))]);
+
+		foreach ($scope as $index => $application) {
+			// Every APPID on a CMDB sheet was handled by its row, whatever the row's outcome.
+			if (isset($this->winningSheets[$application['key']]) === false) {
+				$this->reconcileApplication(application: $application, archive: $archive, operationId: $operationId, report: $report);
+			}
+
+			$this->progressTracker->updateProgress(processedItems: ($processedItems + $index + 1));
+		}
+	}//end reconcile()
+
+	/**
+	 * The municipality's usages, in every state, each with its module when that module carries this municipality's import key.
+	 *
+	 * A usage of a hand-made module, or of a module another organisation
+	 * imported, is left out: only what this municipality's import created is
+	 * reconciled.
+	 *
+	 * @param string $municipalityUuid The consumer of this import.
+	 *
+	 * @return array<int, array{key: string, usage: object, module: object}> Per application, the APPID's match key,
+	 *                                                                      the usage and the module.
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	private function reconciliationScope(string $municipalityUuid): array {
+		$coordinates = $this->coordinates();
+		$prefix = $this->profile->externalKeyPrefix() . ':' . $municipalityUuid . ':';
+		$scope = [];
+		$offset = 0;
+		do {
+			$page = $coordinates['objectService']->searchObjects(
+				query: array_merge(
+					[
+						'@self' => ['register' => $coordinates['register'], 'schema' => $coordinates['usage']],
+						'consumer' => $municipalityUuid,
+						'_limit' => self::PAGE_SIZE,
+						'_offset' => $offset,
+					],
+					self::EVERY_STATE
+				),
+				_rbac: false,
+				_multitenancy: false
+			);
+			if (is_array($page) === false) {
+				$page = [];
+			}
+
+			$usages = [];
+			foreach ($page as $usage) {
+				$data = $usage->getObject();
+				$moduleUuid = self::relationUuid(value: ($data['module'] ?? null));
+				// The filter is checked again: a filter OpenRegister cannot apply must not widen the scope.
+				if (self::relationUuid(value: ($data['consumer'] ?? null)) === $municipalityUuid && $moduleUuid !== null && $usage->getUuid() !== null) {
+					$usages[] = ['usage' => $usage, 'module' => $moduleUuid];
+				}
+			}
+
+			$modules = $this->modulesByUuid(uuids: array_values(array_unique(array_column($usages, 'module'))));
+			foreach ($usages as $usage) {
+				$module = ($modules[$usage['module']] ?? null);
+				$externalKey = '';
+				if ($module !== null) {
+					$externalKey = (string)($module->getObject()['externalKey'] ?? '');
+				}
+
+				if (str_starts_with($externalKey, $prefix) === true && strlen($externalKey) > strlen($prefix)) {
+					$scope[] = ['key' => substr($externalKey, strlen($prefix)), 'usage' => $usage['usage'], 'module' => $module];
+				}
+			}
+
+			$offset += self::PAGE_SIZE;
+			$pageSize = count($page);
+		} while ($pageSize === self::PAGE_SIZE);
+
+		return $scope;
+	}//end reconciliationScope()
+
+	/**
+	 * The modules with these uuids, in every state, in one search.
+	 *
+	 * @param array<int, string> $uuids The module uuids.
+	 *
+	 * @return array<string, object> Uuid => entity.
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	private function modulesByUuid(array $uuids): array {
+		if ($uuids === []) {
+			return [];
+		}
+
+		$coordinates = $this->coordinates();
+		$results = $coordinates['objectService']->searchObjects(
+			query: array_merge(
+				['@self' => ['register' => $coordinates['register'], 'schema' => $coordinates['module']], '_ids' => $uuids, '_limit' => count($uuids)],
+				self::EVERY_STATE
+			),
+			_rbac: false,
+			_multitenancy: false
+		);
+		if (is_array($results) === false) {
+			return [];
+		}
+
+		$modules = [];
+		foreach ($results as $entity) {
+			$uuid = (string)$entity->getUuid();
+			if (in_array($uuid, $uuids, true) === true) {
+				$modules[$uuid] = $entity;
+			}
+		}
+
+		return $modules;
+	}//end modulesByUuid()
+
+	/**
+	 * Archive or soft-delete one application that left the CMDB sheets, usage first, in its own error boundary.
+	 *
+	 * The usage is written before the module, so a failure between the two
+	 * leaves the municipality's view right and the module at worst visible.
+	 * An application already in the state the export asks for is not reported.
+	 *
+	 * @param array{key: string, usage: object, module: object} $application The application.
+	 * @param array{sheet: string, present: bool, keyColumnMissing: bool, keys: array<string, true>} $archive The archive sheet.
+	 * @param string $operationId The operation id, for the archive reason.
+	 * @param CmdbImportReport $report The report.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	private function reconcileApplication(array $application, array $archive, string $operationId, CmdbImportReport $report): void {
+		$moduleData = $application['module']->getObject();
+		$onArchiveSheet = ($archive['present'] === true && isset($archive['keys'][$application['key']]) === true);
+		$entry = [
+			'sheet' => '',
+			'row' => 0,
+			'appId' => (string)($moduleData['externalNumber'] ?? $application['key']),
+			'name' => (string)($moduleData['name'] ?? ''),
+		];
+
+		$target = CmdbImportReport::ARCHIVED;
+		$reason = self::REASON_PREFIX . 'not in the export (' . $operationId . ')';
+		if ($onArchiveSheet === true) {
+			$entry['sheet'] = $archive['sheet'];
+			$reason = self::REASON_PREFIX . 'on sheet "' . $archive['sheet'] . '" (' . $operationId . ')';
+		} elseif ($archive['present'] === true) {
+			$target = CmdbImportReport::DELETED;
+		}
+
+		$uuids = ['module' => (string)$application['module']->getUuid(), 'usage' => (string)$application['usage']->getUuid()];
+		$step = 'archive';
+		$changed = false;
+		try {
+			foreach (['usage', 'module'] as $schemaKey) {
+				$state = self::objectState(entity: $application[$schemaKey]);
+				foreach (self::transitions(state: $state, target: $target, restoreDeleted: $onArchiveSheet) as $step) {
+					$this->transition(step: $step, schemaKey: $schemaKey, uuid: $uuids[$schemaKey], reason: $reason);
+					$changed = true;
+				}
+			}
+		} catch (Throwable $e) {
+			// The module's stored values are taken out of the log line, as a row's cells are.
+			$values = array_map('strval', array_filter($moduleData, static fn (mixed $value): bool => is_scalar($value)));
+			$this->failRow(report: $report, entry: $entry, step: $step, e: $e, warnings: [], uuids: [$uuids['module'], $uuids['usage']], values: $values);
+			return;
+		}
+
+		if ($changed === true) {
+			$this->addRow(report: $report, entry: $entry, outcome: $target, moduleUuid: $uuids['module'], usageUuid: $uuids['usage']);
+		}
+	}//end reconcileApplication()
+
+	/**
+	 * The steps that bring one module or usage to the state the export asks for (design D5).
+	 *
+	 * Deleted: soft-delete what is not in the trash yet. Archived: archive
+	 * what is working; an object in the trash is restored first only when the
+	 * archive sheet lists it, so a workbook without the sheet never takes
+	 * anything out of the trash.
+	 *
+	 * @param array{archived: bool, deleted: bool} $state The object's state.
+	 * @param string $target archived or deleted.
+	 * @param bool $restoreDeleted Whether an object in the trash is restored to be archived.
+	 *
+	 * @return array<int, string> delete, restore and archive, in order; empty when nothing changes.
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	private static function transitions(array $state, string $target, bool $restoreDeleted): array {
+		if ($target === CmdbImportReport::DELETED) {
+			if ($state['deleted'] === true) {
+				return [];
+			}
+
+			return ['delete'];
+		}
+
+		if ($state['deleted'] === true) {
+			if ($restoreDeleted === true) {
+				return ['restore', 'archive'];
+			}
+
+			return [];
+		}
+
+		if ($state['archived'] === true) {
+			return [];
+		}
+
+		return ['archive'];
+	}//end transitions()
+
+	/**
+	 * Run one step through OpenRegister: soft delete, restore from the trash, or archive.
+	 *
+	 * @param string $step delete, restore or archive.
+	 * @param string $schemaKey The coordinates key of the schema.
+	 * @param string $uuid The object.
+	 * @param string $reason The archive reason.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When OpenRegister does not delete the object.
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	private function transition(string $step, string $schemaKey, string $uuid, string $reason): void {
+		if ($step === 'delete') {
+			$coordinates = $this->coordinates();
+			$deleted = $coordinates['objectService']->deleteObject(
+				uuid: $uuid,
+				register: $coordinates['register'],
+				schema: $coordinates[$schemaKey],
+				_rbac: false,
+				_multitenancy: false
+			);
+			if ($deleted !== true) {
+				throw new RuntimeException('OpenRegister did not delete the object');
+			}
+
+			return;
+		}
+
+		$services = $this->archiveServices();
+		if ($step === 'restore') {
+			$services['mapper']->restoreObject(uuid: $uuid);
+			return;
+		}
+
+		$services['handler']->archive(identifier: $uuid, reason: $reason);
+	}//end transition()
 
 	/**
 	 * Resolve OpenRegister's mapping engine.
@@ -1915,6 +2462,7 @@ class CmdbExportImportService {
 		$this->winningSheets = [];
 		$this->contactUids = [];
 		$this->contactPersons = [];
+		$this->archiveServices = null;
 	}//end resetRun()
 
 	/**
