@@ -204,7 +204,10 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 		$this->assertSame('Applicatie Naam', $data['profile']['nameColumn']);
 		$this->assertSame(['APPID', 'Applicatie Naam'], $data['profile']['requiredColumns']);
 		$this->assertSame(['Datum', 'Referentie datum wijziging', 'End-of-Life Functioneel'], $data['profile']['dateColumns']);
-		$this->assertSame(['keep'], $data['profile']['missingRecords']);
+		// The modes the shipped profile declares, read from the file so the
+		// assertion follows the profile instead of pinning one release's list.
+		$shipped = json_decode((string)file_get_contents(__DIR__ . '/../../../lib/Settings/cmdb-import/topdesk-profile.json'), true);
+		$this->assertSame($shipped['missingRecords'], $data['profile']['missingRecords']);
 		$this->assertSame('topdesk-profile.json', $data['profile']['profileFile']);
 
 		$this->assertSame(CmdbImportProfile::TARGETS, array_column($data['packs'], 'target'));
