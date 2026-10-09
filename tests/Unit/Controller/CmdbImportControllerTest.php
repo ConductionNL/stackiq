@@ -114,7 +114,8 @@ class CmdbImportControllerTest extends TestCase {
 		if ($service === null) {
 			$service = $this->createMock(CmdbExportImportService::class);
 			$service->method('maxFileBytes')->willReturn(10485760);
-			$service->method('supportsMissingRecords')->willReturnCallback(fn (string $mode): bool => $mode === 'keep');
+			$service->method('supportsMissingRecords')->willReturnCallback(fn (string $mode): bool => in_array($mode, ['keep', 'archive'], true));
+			$service->method('missingRecordsModes')->willReturn(['keep', 'archive']);
 		}
 
 		$logger = ($logger ?? $this->createMock(LoggerInterface::class));
@@ -157,7 +158,8 @@ class CmdbImportControllerTest extends TestCase {
 	private function service(): CmdbExportImportService|MockObject {
 		$service = $this->createMock(CmdbExportImportService::class);
 		$service->method('maxFileBytes')->willReturn(10485760);
-		$service->method('supportsMissingRecords')->willReturnCallback(fn (string $mode): bool => $mode === 'keep');
+		$service->method('supportsMissingRecords')->willReturnCallback(fn (string $mode): bool => in_array($mode, ['keep', 'archive'], true));
+		$service->method('missingRecordsModes')->willReturn(['keep', 'archive']);
 		return $service;
 	}//end service()
 
@@ -371,8 +373,29 @@ class CmdbImportControllerTest extends TestCase {
 			$response = $this->controller(file: $this->file(path: $this->upload()), params: ['missingRecords' => $mode], service: $service)->import();
 			$this->assertSame(422, $response->getStatus(), $mode);
 			$this->assertSame('MISSING_RECORDS_UNSUPPORTED', $response->getData()['error'], $mode);
+			$this->assertEquals((object)['accepted' => ['keep', 'archive']], $response->getData()['details'], $mode);
+			$this->assertSame('Applications missing from the export can only be archived or kept.', $response->getData()['message'], $mode);
 		}
 	}//end testAReservedMissingRecordsValueIsRefused()
+
+	/**
+	 * Without missingRecords the import archives; keep and archive are passed through as sent.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
+	 */
+	public function testMissingRecordsDefaultsToArchive(): void {
+		foreach ([[[], 'archive'], [['missingRecords' => 'keep'], 'keep'], [['missingRecords' => 'archive'], 'archive']] as [$params, $expected]) {
+			$service = $this->service();
+			$service->expects($this->once())->method('import')
+				->with($this->anything(), $this->callback(static fn (array $options): bool => $options['missingRecords'] === $expected))
+				->willReturn(['success' => true]);
+
+			$response = $this->controller(file: $this->file(path: $this->upload()), params: array_merge(['municipalityName' => 'Gemeente Voorbeeldstad'], $params), service: $service)->import();
+			$this->assertSame(200, $response->getStatus(), $expected);
+		}
+	}//end testMissingRecordsDefaultsToArchive()
 
 	/**
 	 * Without a municipality the answer is 422 MUNICIPALITY_REQUIRED and nothing is imported.
@@ -407,6 +430,7 @@ class CmdbImportControllerTest extends TestCase {
 			'schema' => [CmdbImportException::SCHEMA_OUTDATED, 503, ['schema' => 'module', 'missing' => ['externalKey']]],
 			'running' => [CmdbImportException::IMPORT_IN_PROGRESS, 409, []],
 			'ambiguous' => [CmdbImportException::MUNICIPALITY_AMBIGUOUS, 422, ['matches' => ['00000000-0000-0000-0000-000000000001', '00000000-0000-0000-0000-000000000002']]],
+			'archive' => [CmdbImportException::ARCHIVE_UNAVAILABLE, 503, []],
 		];
 	}//end serviceErrors()
 
@@ -421,6 +445,10 @@ class CmdbImportControllerTest extends TestCase {
 			'schema' => [CmdbImportException::SCHEMA_OUTDATED, 'The stackiq register is out of date; import its configuration again.'],
 			'running' => [CmdbImportException::IMPORT_IN_PROGRESS, 'Another CMDB import is running; try again when it has finished.'],
 			'ambiguous' => [CmdbImportException::MUNICIPALITY_AMBIGUOUS, 'Several municipalities have this name; choose one from the list.'],
+			'archive' => [
+				CmdbImportException::ARCHIVE_UNAVAILABLE,
+				'Applications missing from the export cannot be archived: OpenRegister is missing or too old. Choose to keep them, or update OpenRegister.',
+			],
 		];
 	}//end engineMessages()
 
@@ -533,6 +561,7 @@ class CmdbImportControllerTest extends TestCase {
 					'municipalityName' => 'Gemeente Voorbeeldstad',
 					'updateExisting' => false,
 					'publish' => true,
+					'missingRecords' => 'keep',
 					'operationId' => 'cmdb-00000000-0000-0000-0000-000000000000',
 					'fileName' => 'export.xlsx',
 				]
@@ -567,6 +596,7 @@ class CmdbImportControllerTest extends TestCase {
 					'municipalityName' => 'Gemeente Voorbeeldstad',
 					'updateExisting' => true,
 					'publish' => true,
+					'missingRecords' => 'archive',
 					'operationId' => 'not-a-cmdb-id',
 					'fileName' => 'export.xlsx',
 				]

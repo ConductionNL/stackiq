@@ -86,7 +86,8 @@ class CmdbImportController extends Controller {
 	 * Import a TOPdesk CMDB export for one municipality.
 	 *
 	 * Multipart fields: `cmdbFile`, `municipalityUuid` or `municipalityName`,
-	 * `updateExisting` (default true), `publish` (default true), `missingRecords` (only `keep`) and
+	 * `updateExisting` (default true), `publish` (default true), `missingRecords` (`keep` or `archive`,
+	 * default `archive`) and
 	 * `operationId` (pattern `cmdb-` plus 8 to 64 letters, digits or hyphens).
 	 *
 	 * @return JSONResponse The report (200), or an error envelope with the contract code.
@@ -94,6 +95,7 @@ class CmdbImportController extends Controller {
 	 * @auth admin-only the import writes with RBAC and multitenancy off, across tenants, so only a full Nextcloud admin may run it.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
 	 */
 	public function import(): JSONResponse {
 		try {
@@ -247,15 +249,20 @@ class CmdbImportController extends Controller {
 	 * @return array{path: string, options: array<string, mixed>}|JSONResponse The import input, or the first error.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
 	 */
 	private function readOptions(string $path, string $fileName): array|JSONResponse {
-		$missingRecords = $this->stringParam(name: 'missingRecords', default: 'keep');
+		$missingRecords = $this->stringParam(name: 'missingRecords', default: CmdbExportImportService::DEFAULT_MISSING_RECORDS);
 		if ($missingRecords === null) {
 			return $this->invalidField(field: 'missingRecords');
 		}
 
 		if ($this->importService->supportsMissingRecords(mode: $missingRecords) === false) {
-			return $this->error(code: 'MISSING_RECORDS_UNSUPPORTED', status: Http::STATUS_UNPROCESSABLE_ENTITY, details: ['accepted' => ['keep']]);
+			return $this->error(
+				code: 'MISSING_RECORDS_UNSUPPORTED',
+				status: Http::STATUS_UNPROCESSABLE_ENTITY,
+				details: ['accepted' => $this->importService->missingRecordsModes()]
+			);
 		}
 
 		// An unrecognised value is refused rather than read as true: true is the mode that overwrites.
@@ -293,6 +300,7 @@ class CmdbImportController extends Controller {
 				'municipalityName' => $municipalityName,
 				'updateExisting' => $updateExisting,
 				'publish' => $publish,
+				'missingRecords' => $missingRecords,
 				'operationId' => $this->request->getParam('operationId'),
 				'fileName' => basename(str_replace('\\', '/', $fileName)),
 			],
@@ -394,7 +402,7 @@ class CmdbImportController extends Controller {
 			'NO_FILE_UPLOADED' => $this->l10n->t('No file was uploaded.'),
 			'NOT_XLSX' => $this->l10n->t('The file is not an Excel workbook (.xlsx).'),
 			'FILE_TOO_LARGE' => $this->l10n->t('The file is larger than the maximum of %s MB.', [$megabytes]),
-			'MISSING_RECORDS_UNSUPPORTED' => $this->l10n->t('Only keeping records that are missing from the export is supported.'),
+			'MISSING_RECORDS_UNSUPPORTED' => $this->l10n->t('Applications missing from the export can only be archived or kept.'),
 			'FIELD_INVALID' => $this->fieldMessage(field: (string)($details['field'] ?? ''), accepted: $accepted),
 			'MUNICIPALITY_REQUIRED' => $this->l10n->t('Choose a municipality or enter the name of a new one.'),
 			'MUNICIPALITY_INVALID' => $this->l10n->t('The chosen organisation is not a municipality.'),
@@ -410,6 +418,7 @@ class CmdbImportController extends Controller {
 			'SCHEMA_OUTDATED' => $this->l10n->t('The stackiq register is out of date; import its configuration again.'),
 			'IMPORT_IN_PROGRESS' => $this->l10n->t('Another CMDB import is running; try again when it has finished.'),
 			'MUNICIPALITY_AMBIGUOUS' => $this->l10n->t('Several municipalities have this name; choose one from the list.'),
+			'ARCHIVE_UNAVAILABLE' => $this->l10n->t('Applications missing from the export cannot be archived: OpenRegister is missing or too old. Choose to keep them, or update OpenRegister.'),
 			default => $this->l10n->t('The import failed. The details are in the Nextcloud log.'),
 		};
 	}//end message()
