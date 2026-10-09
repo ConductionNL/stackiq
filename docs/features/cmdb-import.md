@@ -285,6 +285,8 @@ When an archived or deleted application **returns** in a later export, it is
 taken out of the archive (*unarchived*) or out of the trash (*restored*),
 and then updated as usual. No second application is created. With **Update
 existing records** off, it is skipped as `exists` and stays archived or in
+the trash. When an application was deleted by hand and a later import
+created it again, the working one is updated and the deleted one stays in
 the trash.
 
 The comparison runs only when the import went through all rows: an import

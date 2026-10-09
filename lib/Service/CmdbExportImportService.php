@@ -1736,6 +1736,11 @@ class CmdbExportImportService {
 	/**
 	 * The one object matching every filter, or null.
 	 *
+	 * Across every state a working object wins over an archived one, and an
+	 * archived one over one in the trash: an object deleted by hand may share
+	 * its import key with the one a later import created, and bringing the
+	 * deleted one back would duplicate it.
+	 *
 	 * @param string $schemaKey The coordinates key of the schema.
 	 * @param array<string, string> $filters Field => exact value.
 	 * @param bool $everyState Also match archived and soft-deleted objects.
@@ -1765,6 +1770,8 @@ class CmdbExportImportService {
 			return null;
 		}
 
+		$found = null;
+		$foundRank = PHP_INT_MAX;
 		foreach ($results as $entity) {
 			$data = $entity->getObject();
 			$matches = true;
@@ -1775,12 +1782,23 @@ class CmdbExportImportService {
 				}
 			}
 
-			if ($matches === true) {
+			if ($matches === false) {
+				continue;
+			}
+
+			$state = self::objectState(entity: $entity);
+			$rank = ((int)$state['archived'] + (2 * (int)$state['deleted']));
+			if ($rank === 0) {
 				return $entity;
 			}
-		}
 
-		return null;
+			if ($rank < $foundRank) {
+				$found = $entity;
+				$foundRank = $rank;
+			}
+		}//end foreach
+
+		return $found;
 	}//end findOne()
 
 	/**
@@ -1992,10 +2010,21 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function reconcile(string $municipalityUuid, array $archive, string $operationId, int $processedItems, CmdbImportReport $report): void {
+		// A cancel that came in during the last row stops the import before anything is archived or deleted.
+		if ($this->progressTracker->isCancelRequested(operationId: $operationId) === true) {
+			$report->markCancelled();
+			return;
+		}
+
 		$scope = $this->reconciliationScope(municipalityUuid: $municipalityUuid);
 		$this->progressTracker->setPhase(phase: 'reconciling', data: ['total_items' => ($processedItems + count($scope))]);
 
 		foreach ($scope as $index => $application) {
+			if ($this->progressTracker->isCancelRequested(operationId: $operationId) === true) {
+				$report->markCancelled();
+				return;
+			}
+
 			// Every APPID on a CMDB sheet was handled by its row, whatever the row's outcome.
 			if (isset($this->winningSheets[$application['key']]) === false) {
 				$this->reconcileApplication(application: $application, archive: $archive, operationId: $operationId, report: $report);
@@ -2010,21 +2039,10 @@ class CmdbExportImportService {
 	 *
 	 * A usage of a hand-made module, or of a module another organisation
 	 * imported, is left out: only what this municipality's import created is
-		// A cancel that came in during the last row stops the import before anything is archived or deleted.
-		if ($this->progressTracker->isCancelRequested(operationId: $operationId) === true) {
-			$report->markCancelled();
-			return;
-		}
-
 	 * reconciled.
 	 *
 	 * @param string $municipalityUuid The consumer of this import.
 	 *
-			if ($this->progressTracker->isCancelRequested(operationId: $operationId) === true) {
-				$report->markCancelled();
-				return;
-			}
-
 	 * @return array<int, array{key: string, usage: object, module: object}> Per application, the APPID's match key,
 	 *                                                                      the usage and the module.
 	 *

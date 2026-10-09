@@ -70,7 +70,7 @@ With `missingRecords` `archive`, after every row of an import that was not cance
 
 ### Requirement: An application that returns to the export SHALL be unarchived or restored, never duplicated (REQ-CMDB-016)
 
-The import SHALL match a module by its import key, and a usage by consumer and module, among archived and soft-deleted objects as well as working ones. Before it updates a matched module or usage that is archived, it SHALL unarchive it through OpenRegister's archive state; before it updates one that is soft-deleted, it SHALL restore it from the trash. It SHALL then update the row as REQ-CMDB-006 and REQ-CMDB-009 describe, and SHALL NOT create a second module or usage. The row's outcome SHALL be `restored` when a module or usage was restored, else `unarchived` when one was unarchived, else the usual outcome; the summary SHALL count both. With `updateExisting` false the row SHALL be skipped as `exists` and nothing SHALL be revived. Organisations and contact persons SHALL keep matching among working objects only.
+The import SHALL match a module by its import key, and a usage by consumer and module, among archived and soft-deleted objects as well as working ones. Before it updates a matched module or usage that is archived, it SHALL unarchive it through OpenRegister's archive state; before it updates one that is soft-deleted, it SHALL restore it from the trash. It SHALL then update the row as REQ-CMDB-006 and REQ-CMDB-009 describe, and SHALL NOT create a second module or usage. The row's outcome SHALL be `restored` when a module or usage was restored, else `unarchived` when one was unarchived, else the usual outcome; the summary SHALL count both. With `updateExisting` false the row SHALL be skipped as `exists` and nothing SHALL be revived. When more than one module or usage matches, the import SHALL take a working one before an archived one, and an archived one before one in the trash, so a module deleted by hand next to the one a later import created SHALL NOT be restored. Organisations and contact persons SHALL keep matching among working objects only.
 
 #### Scenario: An archived application returns to the export
 @e2e tests/e2e/spec-coverage/cmdb-import.spec.ts
@@ -88,6 +88,14 @@ The import SHALL match a module by its import key, and a usage by consumer and m
 - **WHEN** a row with APPID `7` is imported with `updateExisting` false
 - **THEN** the row SHALL be skipped with reason `exists`
 - **AND** both SHALL stay archived, and no module or usage SHALL be created
+
+#### Scenario: A working match wins over a deleted one with the same import key
+@e2e exclude Data condition from earlier imports; tests/Unit/Service/CmdbExportImportServiceTest.php testAWorkingMatchWinsOverADeletedOneWithTheSameKey stores a deleted module and usage ahead of the working ones and asserts the working ones are updated and nothing is restored.
+
+- **GIVEN** a module with APPID `7` in the trash and a working module with the same import key, each with a usage of "Gemeente Voorbeeldstad"
+- **WHEN** a row with APPID `7` is imported
+- **THEN** the working module and its usage SHALL be updated
+- **AND** the module and the usage in the trash SHALL stay there, and nothing SHALL be restored
 
 ### Requirement: Archived applications and usages SHALL be listable in stackiq and SHALL stay out of OpenCatalogi and Portaliq by default (REQ-CMDB-017)
 

@@ -2076,6 +2076,36 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testUpdateExistingFalseLeavesAnArchivedMatchArchived()
 
 	/**
+	 * A module and usage deleted by hand next to the working ones with the same import key stay in the trash.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 */
+	public function testAWorkingMatchWinsOverADeletedOneWithTheSameKey(): void {
+		$this->importOneSevenAndEight();
+		$seven = $this->moduleOf(appId: '7');
+		$usage = $this->usageOf(moduleUuid: $seven);
+		// Stored ahead of the working ones, so a first-hit match would find them first.
+		$this->store[self::MODULE] = ['module-deleted' => array_merge($this->store[self::MODULE][$seven], ['id' => 'module-deleted'])] + $this->store[self::MODULE];
+		$this->store[self::USAGE] = ['usage-deleted' => array_merge($this->store[self::USAGE][$usage], ['id' => 'usage-deleted'])] + $this->store[self::USAGE];
+		$this->states[self::MODULE]['module-deleted'] = ['deleted' => ['deletedBy' => 'admin', 'deletedAt' => '2026-10-01T00:00:00+00:00']];
+		$this->states[self::USAGE]['usage-deleted'] = ['deleted' => ['deletedBy' => 'admin', 'deletedAt' => '2026-10-01T00:00:00+00:00']];
+		$counts = [count($this->store[self::MODULE]), count($this->store[self::USAGE])];
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '7', sheet: 'Onbeh Applicaties CMDB', cells: ['Applicatie Naam' => 'Terug'])]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+
+		$this->assertSame(['updated'], array_column($report['rows'], 'outcome'));
+		$this->assertSame($seven, $report['rows'][0]['moduleUuid']);
+		$this->assertSame('Terug', $this->store[self::MODULE][$seven]['name']);
+		$this->assertSame([], $this->transitions, 'nothing is restored');
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: 'module-deleted'));
+		$this->assertSame([false, true], $this->stateOf(schema: self::USAGE, uuid: 'usage-deleted'));
+		$this->assertSame($counts, [count($this->store[self::MODULE]), count($this->store[self::USAGE])], 'no module or usage is created');
+	}//end testAWorkingMatchWinsOverADeletedOneWithTheSameKey()
+
+	/**
 	 * The fixture round trip of the e2e test: the later export archives 1234 and deletes 2, the original brings both back.
 	 *
 	 * @return void
