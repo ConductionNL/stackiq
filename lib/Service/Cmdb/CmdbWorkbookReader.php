@@ -42,6 +42,9 @@
  *    beyond twice the row limit is `TOO_MANY_ROWS`. A read filter then materialises only the
  *    header row and the resolved columns of the rows up to that bound
  *    (CmdbReadFilter), which bounds the cell objects, not the parse.
+ * 7. The archive sheet ("Gearchiveerde Applicaties"), when the workbook has
+ *    it, counts as a read sheet for every bound above, and only its key
+ *    column is resolved and read (openspec/changes/cmdb-import-archive-reconciliation).
  *
  * @category  Service
  * @package   OCA\Stackiq\Service\Cmdb
@@ -151,17 +154,21 @@ class CmdbWorkbookReader {
 	 * The sheets are then read twice through a read filter: once for the
 	 * header row, once for the resolved columns of the data rows, so no other
 	 * cell is ever materialised.
+	 * The archive sheet, when the workbook has it, is read under the same
+	 * bounds as a source sheet, for its key column only.
 	 *
 	 * @param string $path The xlsx file, already checked by assertXlsx().
 	 * @param CmdbImportProfile $profile The import profile.
 	 *
 	 * @return array<string, mixed> `rows` (list of {sheet, row, cells, uncached}), `importWarnings`
-	 *                              (list of {sheet, message}) and `date1904` (bool).
+	 *                              (list of {sheet, message}), `date1904` (bool) and `archive`
+	 *                              ({sheet, present, keyColumnMissing, appIds}).
 	 *
 	 * @throws CmdbImportException WORKBOOK_TOO_LARGE, READER_UNAVAILABLE, NOT_XLSX, NO_SOURCE_SHEET,
 	 *                             MISSING_COLUMN or TOO_MANY_ROWS.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	public function read(string $path, CmdbImportProfile $profile): array {
 		$oversized = $this->assertUncompressedSize(path: $path, limit: $profile->maxUncompressedBytes(), partLimit: $profile->maxPartBytes());
@@ -177,7 +184,7 @@ class CmdbWorkbookReader {
 		$blank = (new CmdbPartReferences())->assertPartSizes(
 			path: $path,
 			oversized: $oversized,
-			sourceSheets: $profile->sheetNames(),
+			sourceSheets: $profile->readSheetNames(),
 			limit: $profile->maxPartBytes(),
 			scanner: $scanner
 		);
@@ -303,7 +310,7 @@ class CmdbWorkbookReader {
 		$bounds->assertReferencedStringBytes(
 			path: $path,
 			limit: $profile->maxReferencedStringBytes(),
-			sheetCount: count($profile->sheetNames()),
+			sheetCount: count($profile->readSheetNames()),
 			scanner: $scanner
 		);
 
@@ -328,19 +335,38 @@ class CmdbWorkbookReader {
 			);
 		}
 
+		$archiveSheet = $profile->archiveSheetName();
+		$loaded = $present;
+		if ($archiveSheet !== null && in_array($archiveSheet, $available, true) === true) {
+			$loaded[] = $archiveSheet;
+		}
+
 		$limit = $profile->maxRowsPerSheet();
 		$lastRow = self::lastReadableRow(limit: $limit);
-		$this->assertRowSpan(path: $path, sheetNames: $present, lastRow: $lastRow, limit: $limit);
+		$this->assertRowSpan(path: $path, sheetNames: $loaded, lastRow: $lastRow, limit: $limit);
 
-		$headers = $this->load(path: $path, sheetNames: $present, filter: new CmdbReadFilter(lastRow: 1));
+		$headers = $this->load(path: $path, sheetNames: $loaded, filter: new CmdbReadFilter(lastRow: 1));
 		try {
 			$resolved = $this->resolveSheets(spreadsheet: $headers, sheetNames: $present, profile: $profile);
+			$archiveColumns = [];
+			if ($loaded !== $present) {
+				// Only the key column of the archive sheet is read; the allowlist does not grow.
+				$archiveColumns = $this->resolveColumns(worksheet: $headers->getSheetByName($archiveSheet), referenced: [$profile->keyColumn()]);
+			}
 		} finally {
 			$headers->disconnectWorksheets();
 		}
 
+		$archive = ['sheet' => (string)$archiveSheet, 'present' => false, 'keyColumnMissing' => ($loaded !== $present), 'appIds' => []];
 		$letters = array_map(static fn (array $columns): array => array_keys($columns), $resolved['columns']);
-		$spreadsheet = $this->load(path: $path, sheetNames: $present, filter: new CmdbReadFilter(lastRow: $lastRow, columns: $letters));
+		if ($archiveColumns !== []) {
+			$letters[$archiveSheet] = array_keys($archiveColumns);
+			$archive['keyColumnMissing'] = false;
+		} else {
+			$loaded = $present;
+		}
+
+		$spreadsheet = $this->load(path: $path, sheetNames: $loaded, filter: new CmdbReadFilter(lastRow: $lastRow, columns: $letters));
 		try {
 			$rows = [];
 			foreach ($present as $sheetName) {
@@ -353,6 +379,17 @@ class CmdbWorkbookReader {
 				array_push($rows, ...$sheetRows);
 			}
 
+			if ($archiveColumns !== []) {
+				$archiveRows = $this->readRows(
+					worksheet: $spreadsheet->getSheetByName($archiveSheet),
+					columns: $archiveColumns,
+					sheetName: (string)$archiveSheet,
+					limit: $limit
+				);
+				$archive['present'] = true;
+				$archive['appIds'] = array_column(array_column($archiveRows, 'cells'), $profile->keyColumn());
+			}
+
 			$date1904 = false;
 			if (method_exists($spreadsheet, 'getExcelCalendar') === true) {
 				$date1904 = ((int)$spreadsheet->getExcelCalendar() === 1904);
@@ -361,7 +398,7 @@ class CmdbWorkbookReader {
 			$spreadsheet->disconnectWorksheets();
 		}
 
-		return ['rows' => $rows, 'importWarnings' => $resolved['warnings'], 'date1904' => $date1904];
+		return ['rows' => $rows, 'importWarnings' => $resolved['warnings'], 'date1904' => $date1904, 'archive' => $archive];
 	}//end readBounded()
 
 	/**

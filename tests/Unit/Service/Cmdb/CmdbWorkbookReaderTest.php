@@ -921,6 +921,95 @@ class CmdbWorkbookReaderTest extends TestCase {
 	}//end testOneRowOverTheLimitWithinTheSpanIsRefused()
 
 	/**
+	 * The archive sheet of the anonymised export yields its APPIDs; the CMDB rows are unchanged.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testTheArchiveSheetYieldsItsAppIds(): void {
+		$result = $this->read(name: 'topdesk-export-anonymised.xlsx');
+
+		$this->assertSame('Gearchiveerde Applicaties', $result['archive']['sheet']);
+		$this->assertTrue($result['archive']['present']);
+		$this->assertFalse($result['archive']['keyColumnMissing']);
+		$this->assertSame(['1198'], array_map('strval', $result['archive']['appIds']));
+		$this->assertSame(['Onbeh Applicaties CMDB', 'Beheerde Applicaties CMDB'], array_column($result['rows'], 'sheet'), 'the archive sheet adds no rows to import');
+	}//end testTheArchiveSheetYieldsItsAppIds()
+
+	/**
+	 * Only the APPID column of the archive sheet is read; without the sheet or its APPID column it is absent.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testTheArchiveSheetIsOptionalAndReadForItsKeyOnly(): void {
+		$this->requireSpreadsheet();
+		$cmdb = [['APPID', 'Applicatie Naam'], [1, 'Een']];
+		$cases = [
+			'with the sheet' => [
+				['Beheerde Applicaties CMDB' => $cmdb, 'Gearchiveerde Applicaties' => [['APPID', 'Applicatie Naam', 'Bron'], [7, 'Zeven', 'P-0007'], [], [8, 'Acht', 'P-0008']]],
+				['present' => true, 'keyColumnMissing' => false, 'appIds' => ['7', '8']],
+			],
+			'without the sheet' => [
+				['Beheerde Applicaties CMDB' => $cmdb],
+				['present' => false, 'keyColumnMissing' => false, 'appIds' => []],
+			],
+			'without its APPID column' => [
+				['Beheerde Applicaties CMDB' => $cmdb, 'Gearchiveerde Applicaties' => [['Applicatie Code', 'Applicatie Naam'], ['APP-7', 'Zeven']]],
+				['present' => false, 'keyColumnMissing' => true, 'appIds' => []],
+			],
+		];
+
+		foreach ($cases as $case => [$sheets, $expected]) {
+			$path = CmdbTestSupport::buildWorkbook(sheets: $sheets);
+			try {
+				$result = (new CmdbWorkbookReader())->read(path: $path, profile: $this->profile());
+			} finally {
+				unlink($path);
+			}
+
+			$archive = $result['archive'];
+			$archive['appIds'] = array_map('strval', $archive['appIds']);
+			unset($archive['sheet']);
+			$this->assertSame($expected, $archive, $case);
+			$this->assertSame([2], array_column($result['rows'], 'row'), $case);
+			$this->assertStringNotContainsString('P-000', (string)json_encode($result), $case);
+			$this->assertStringNotContainsString('Zeven', (string)json_encode($result), $case . ': only the key column is read');
+		}
+	}//end testTheArchiveSheetIsOptionalAndReadForItsKeyOnly()
+
+	/**
+	 * An archive sheet with more rows than the profile allows is refused and named, like a source sheet.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAnArchiveSheetOverTheRowLimitIsRefused(): void {
+		$this->requireSpreadsheet();
+		$path = CmdbTestSupport::buildWorkbook(
+			sheets: [
+				'Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een']],
+				'Gearchiveerde Applicaties' => [['APPID'], [7], [8]],
+			]
+		);
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxRowsPerSheet' => 1]);
+
+		try {
+			(new CmdbWorkbookReader())->read(path: $path, profile: $this->profile(directory: $directory));
+			$this->fail('TOO_MANY_ROWS expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('TOO_MANY_ROWS', $e->getErrorCode());
+			$this->assertSame(['sheet' => 'Gearchiveerde Applicaties', 'limit' => 1], $e->getDetails());
+		} finally {
+			unlink($path);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testAnArchiveSheetOverTheRowLimitIsRefused()
+
+	/**
 	 * A text file named .xlsx, a .xlsm and a CSV are refused before PhpSpreadsheet is touched.
 	 *
 	 * @return void
