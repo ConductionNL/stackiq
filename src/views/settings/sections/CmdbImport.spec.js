@@ -147,3 +147,61 @@ describe('CmdbImport municipality chooser', () => {
 		expect(wrapper.vm.report).toBe(null)
 	})
 })
+
+/**
+ * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ */
+describe('CmdbImport applications missing from the export', () => {
+	afterEach(() => {
+		jest.clearAllMocks()
+	})
+
+	it('archives by default and posts the choice the admin made', async () => {
+		const wrapper = await mountSection()
+		axios.post.mockResolvedValue({
+			data: { success: true, summary: {}, rows: [] },
+		})
+		wrapper.vm.municipality = wrapper.vm.municipalityOptions[0]
+		wrapper.vm.selectedFile = new File(['x'], 'export.xlsx')
+
+		expect(wrapper.vm.missingRecords).toBe('archive')
+		await wrapper.vm.startImport()
+		wrapper.vm.missingRecords = 'keep'
+		await wrapper.vm.startImport()
+
+		expect(
+			axios.post.mock.calls.map(([, form]) => form.get('missingRecords')),
+		).toEqual(['archive', 'keep'])
+	})
+
+	it('shows the archived, unarchived, deleted and restored counts only when there are any', async () => {
+		const wrapper = await mountSection()
+		const tileKeys = () => wrapper.vm.summaryTiles.map((tile) => tile.key)
+
+		wrapper.vm.report = { summary: { rowsRead: 2, created: 2 }, rows: [] }
+		expect(tileKeys()).not.toContain('archived')
+
+		wrapper.vm.report = {
+			summary: {
+				rowsRead: 1,
+				archived: 1,
+				deleted: 1,
+				unarchived: 0,
+				restored: 2,
+			},
+			rows: [],
+		}
+		expect(tileKeys()).toEqual(
+			expect.arrayContaining(['archived', 'deleted', 'restored']),
+		)
+		expect(tileKeys()).not.toContain('unarchived')
+		expect(wrapper.vm.outcomeFilterOptions.map((option) => option.id)).toEqual(
+			expect.arrayContaining([
+				'archived',
+				'unarchived',
+				'deleted',
+				'restored',
+			]),
+		)
+	})
+})

@@ -35,7 +35,8 @@
 					{ "label": "Planned", "filter": { "status": "Planned" } },
 					{ "label": "In production", "filter": { "status": "In production" }, "icon": "CheckCircle" },
 					{ "label": "To be phased out", "filter": { "status": "To be phased out" }, "icon": "AlertCircle" },
-					{ "label": "Phased out", "filter": { "status": "Phased out" } }
+					{ "label": "Phased out", "filter": { "status": "Phased out" } },
+					{ "label": "Archived", "filter": { "_archived": "true" }, "icon": "ArchiveOutline" }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true },
 				"documentationUrl": "https://stackiq.conduction.nl"
