@@ -53,7 +53,7 @@ None.
 
 ## Approach
 
-`CmdbWorkbookReader` loads the archive sheet next to the two CMDB sheets when the workbook has it, under the same size and row bounds, and hands the import service the APPIDs it holds. `CmdbExportImportService` widens the match of a module (by import key) and of a usage (by consumer and module) to archived and soft-deleted objects, and revives what it matches before the usual update. After the last row, when the import was not cancelled and `missingRecords` is `archive`, a reconciliation step pages through the municipality's usages with OpenRegister's `_archived=any` and `_includeDeleted=true` lenses, loads their modules in batches, and archives, unarchives, soft-deletes or restores module and usage through OpenRegister's `ArchiveHandler`, `ObjectServiceInterface::deleteObject()` and `MagicMapper::restoreObject()`, each object in its own error boundary. The step runs under the import's register lock, reports its progress in a phase of its own, and adds its outcomes to the report. Details are in design.md.
+`CmdbWorkbookReader` loads the archive sheet next to the two CMDB sheets when the workbook has it, under the same size and row bounds, and hands the import service the APPIDs it holds. `CmdbExportImportService` widens the match of a module (by import key) and of a usage (by consumer and module) to archived and soft-deleted objects, and revives what it matches before the usual update. After the last row, when the import was not cancelled and `missingRecords` is `archive`, a reconciliation step pages through the municipality's usages with no lens and with OpenRegister's `_archived=true` lens, reads the trash once through `MagicMapper::findDeletedAcrossAllMagicTables()` (a search with `_includeDeleted=true` returns no deleted rows on the current OpenRegister beta; design.md D9), loads their modules in batches, and archives, unarchives, soft-deletes or restores module and usage through OpenRegister's `ArchiveHandler`, `ObjectServiceInterface::deleteObject()` and `MagicMapper::restoreObject()`, each object in its own error boundary. The step runs under the import's register lock, reports its progress in a phase of its own, and adds its outcomes to the report. Details are in design.md.
 
 ## New Dependencies
 
@@ -69,7 +69,7 @@ None. `ArchiveHandler` and `MagicMapper` come from OpenRegister, which stackiq a
 
 ## Cross-Project Dependencies
 
-- **openregister** (consumed, not changed): `ObjectServiceInterface::deleteObject()` (contract), `Service\Object\ArchiveHandler` and `Db\MagicMapper::restoreObject()` (not public contracts, guarded), the `_archived` and `_includeDeleted` list lenses, and the schema annotation `x-openregister-archive`.
+- **openregister** (consumed, not changed): `ObjectServiceInterface::deleteObject()` (contract), `Service\Object\ArchiveHandler` and `Db\MagicMapper::restoreObject()` and `findDeletedAcrossAllMagicTables()` (not public contracts, guarded), the `_archived` list lens, and the schema annotation `x-openregister-archive`.
 - **opencatalogi** and **portaliq** (consumers, not changed): both list through OpenRegister's default lens, so archived and deleted applications disappear from them without a change; an OpenCatalogi caller finds archived applications with `_archived=true` on the existing public routes.
 
 ## Risks

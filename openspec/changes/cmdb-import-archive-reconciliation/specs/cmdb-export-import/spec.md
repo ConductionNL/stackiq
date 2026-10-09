@@ -10,7 +10,7 @@
 
 A repeated CMDB import reconciles the applications a municipality uses with the newer export. An application whose APPID left the two CMDB sheets is archived in OpenRegister's archive state when the export's sheet "Gearchiveerde Applicaties" lists it, and soft-deleted into OpenRegister's trash when no sheet lists it any more; one that returns is unarchived or restored and updated as usual, never duplicated. Archived and deleted applications disappear from OpenCatalogi and Portaliq without a change there, and stackiq lists the archive on request (Jira WOO-587).
 
-OpenRegister: `OCA\OpenRegister\Contract\ObjectServiceInterface` (`searchObjects()` with the `_archived`, `_includeDeleted` and `_ids` lenses, `deleteObject()`), `Service\Object\ArchiveHandler` (`archive()`, `unarchive()`) and `Db\MagicMapper::restoreObject()` (both resolved through the container behind a guard), and the schema annotation `x-openregister-archive`.
+OpenRegister: `OCA\OpenRegister\Contract\ObjectServiceInterface` (`searchObjects()` with no lens and with the `_archived=true` and `_ids` lenses, `deleteObject()`), `Service\Object\ArchiveHandler` (`archive()`, `unarchive()`) and `Db\MagicMapper` (`findDeletedAcrossAllMagicTables()` for the trash, `restoreObject()`) (both resolved through the container behind a guard; why the trash is read that way: design.md D9), and the schema annotation `x-openregister-archive`.
 
 ## ADDED Requirements
 
