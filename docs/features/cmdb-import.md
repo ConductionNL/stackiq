@@ -17,9 +17,11 @@ updates:
   in Nextcloud Contacts. Owners are never readable by the public.
 
 All of it is stored as OpenRegister objects in the stackiq register. Import a
-newer export later and the same applications are updated, not duplicated.
+newer export later and the same applications are updated, not duplicated;
+applications that left the export are archived or moved to the trash (see
+[Repeat imports](#repeat-imports)).
 
-Specification: [`openspec/specs/cmdb-export-import/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/cmdb-export-import/spec.md) (change archived in [`openspec/changes/archive/2026-10-05-cmdb-export-import/`](https://github.com/ConductionNL/stackiq/tree/development/openspec/changes/archive/2026-10-05-cmdb-export-import)).
+Specification: [`openspec/specs/cmdb-export-import/spec.md`](https://github.com/ConductionNL/stackiq/blob/development/openspec/specs/cmdb-export-import/spec.md) (change archived in [`openspec/changes/archive/2026-10-05-cmdb-export-import/`](https://github.com/ConductionNL/stackiq/tree/development/openspec/changes/archive/2026-10-05-cmdb-export-import); archiving and deleting on a repeat import in [`openspec/changes/cmdb-import-archive-reconciliation/`](https://github.com/ConductionNL/stackiq/tree/development/openspec/changes/cmdb-import-archive-reconciliation)).
 
 ## Who can import
 
@@ -77,7 +79,12 @@ page in stackiq.
    and the summary counts them as *created unpublished*. Applications that
    were imported before keep their publication as it is, whichever you
    choose.
-6. Press **Import**. A progress bar shows how many rows have been processed.
+6. **Applications missing from the export.** **Archive or delete them** is
+   the default: an application of this municipality that is on neither CMDB
+   sheet any more is archived or moved to the trash after the last row (see
+   [Repeat imports](#repeat-imports)). Choose **Keep them as they are** to
+   leave such applications untouched.
+7. Press **Import**. A progress bar shows how many rows have been processed.
    **Cancel import** stops the import before the next row; rows that were
    already processed stay imported. The section says whether the server
    accepted the cancel; one pressed before the server has started on the
@@ -92,11 +99,15 @@ When the import finishes, the section shows:
 
 - the **summary**: rows read, created, updated, unchanged, skipped, failed
   and warnings, and, when publishing was off, how many applications were
-  created unpublished;
+  created unpublished; after a repeat import also how many applications
+  were archived, unarchived, deleted (moved to the trash) or restored, when
+  there are any;
 - **warnings for the whole file**, for example an optional column that is
   missing;
 - the **rows** table: sheet, row number, APPID, application, outcome,
-  and the reasons and warnings for that row. Filter it with **Show rows with
+  and the reasons and warnings for that row. An application archived or
+  deleted because it left the export has no row number; its sheet is
+  `Gearchiveerde Applicaties` when that sheet listed it. Filter it with **Show rows with
   outcome**, and sort it by clicking a column header. It shows 100 rows at a
   time; **Show 100 more rows** adds the next ones. The application name links
   to the module in stackiq.
@@ -106,8 +117,10 @@ the same organisation.
 
 ## The file
 
-The import reads the two CMDB sheets of the export and ignores all others,
-including the `Invoer` sheets they are derived from:
+The import reads the two CMDB sheets of the export, and of the sheet
+`Gearchiveerde Applicaties` only the `APPID` column (see
+[Repeat imports](#repeat-imports)). It ignores all other sheets, including
+the `Invoer` sheets they are derived from:
 
 | Sheet | What it holds | Recorded on the usage |
 |---|---|---|
@@ -213,9 +226,9 @@ colliding.
 - **Known APPID, nothing changed**: nothing is saved; the row is reported
   as *unchanged*. Importing the same export twice creates nothing the second
   time.
-- **APPID missing from a newer export**: the application, its usage and
-  its contact persons are left as they are. They are not changed, depublished
-  or deleted.
+- **APPID missing from a newer export**: see
+  [Applications that left the export](#applications-that-left-the-export)
+  below.
 - Each application keeps exactly one usage for the municipality.
 - **Known APPID, but the application belongs to another organisation**: an
   application found by its match key is only updated when the municipality
@@ -242,6 +255,50 @@ Every row is processed on its own. When one row fails, for example because
 OpenRegister refuses to save it, that row is reported as *failed* with the
 step that failed, and the other rows are imported. Importing again completes
 the failed row.
+
+### Applications that left the export
+
+With **Archive or delete them** (the default; `missingRecords=archive` in
+the API), the import compares the municipality's applications with the
+export after the last row. It looks only at the municipality's own usages
+and the applications its import created, never at an application only
+another organisation uses or one added by hand. For an application whose
+APPID is on neither CMDB sheet:
+
+| The APPID is | The application and its usage |
+|---|---|
+| on the sheet `Gearchiveerde Applicaties` | are **archived**: OpenRegister's archive state, with the reason `cmdb-import: on sheet "Gearchiveerde Applicaties"`. Reported as *archived*. |
+| on no sheet at all | are **deleted**: moved to OpenRegister's trash, where they stay restorable for 30 days. Reported as *deleted*. |
+| on no sheet, and the workbook has no sheet `Gearchiveerde Applicaties` (or it has no `APPID` column) | are **archived**, never deleted, and the result warns that the sheet was not found. A workbook saved without that sheet therefore never moves anything to the trash. |
+
+An archived or deleted application disappears from the stackiq lists, from
+OpenCatalogi and from Portaliq's **Software we use**. In stackiq, the quick
+filter **Archived** on the **Applications** and **Applications in use** pages
+lists the archive. An OpenCatalogi caller finds archived applications by
+adding `_archived=true` to its request. Contact persons are never archived
+or deleted: an owner is shared with the municipality's other applications.
+An application that is already in the state the export asks for is left
+alone and not reported again.
+
+When an archived or deleted application **returns** in a later export, it is
+taken out of the archive (*unarchived*) or out of the trash (*restored*),
+and then updated as usual. No second application is created. With **Update
+existing records** off, it is skipped as `exists` and stays archived or in
+the trash.
+
+The comparison runs only when the import went through all rows: a cancelled
+or failed import archives or deletes nothing. The progress bar shows the
+step as *Checking the applications missing from the export*. Each
+application is handled on its own; one that cannot be archived is reported
+as *failed* with the step (`archive`, `restore` or `delete`) and the others
+continue. Archiving needs module schema 0.3.9 and usage schema 1.5.7 or
+later, which declare that their objects can be archived; on an older register configuration each application fails
+with the step `archive`, and **Force Update** at the top of the stackiq admin
+settings fixes it.
+
+With **Keep them as they are** (`missingRecords=keep`), the application, its
+usage and its contact persons are left as they are: not changed, archived,
+depublished or deleted.
 
 ## Owners
 
@@ -293,7 +350,8 @@ and the section shows the reason and the error code.
 | `IMPORT_IN_PROGRESS` | Another CMDB import is running. Only one import runs at a time. | Wait until it has finished and try again. |
 | `FIELD_INVALID` | A form field of the request has a value the import does not accept, for example an `updateExisting` or `publish` that is neither `true` nor `false`. The message names the field. | Not reachable from the section; reported for API callers. |
 | `UPLOAD_FAILED` | The file reached the server but could not be stored there. | Try again; the Nextcloud log has the details. |
-| `MISSING_RECORDS_UNSUPPORTED` | The request asked to mark or remove records missing from the export. Only keeping them is supported. | Not reachable from the section; reported for API callers. |
+| `MISSING_RECORDS_UNSUPPORTED` | The request asked for something other than `keep` or `archive` for records missing from the export, for example `mark` or `remove`. The details list the accepted values. | Not reachable from the section; reported for API callers. |
+| `ARCHIVE_UNAVAILABLE` | **Archive or delete them** was chosen, but the OpenRegister on this server cannot archive or restore objects (it is missing or too old). Nothing was read or written. | Choose **Keep them as they are** and import again, or update OpenRegister. |
 | `MAPPING_UNAVAILABLE` | OpenRegister's mapping engine is missing, or one of the mapping files is invalid. | Update OpenRegister. If you changed a mapping file, check it against the Nextcloud log. |
 | `READER_UNAVAILABLE` | The Excel reader that ships with OpenRegister cannot be loaded. | Make sure OpenRegister is installed and enabled. |
 | `NOT_CONFIGURED` | The stackiq register or its schemas cannot be found. | Run **Auto Configure** at the top of the stackiq admin settings. |
