@@ -334,10 +334,37 @@ pass PHP's `upload_max_filesize` and `post_max_size` and the web server's
 request size limit. Like the mapping files, the profile is part of the app:
 a change made on the server is overwritten by the next app update.
 
+## Viewing the mapping
+
+The section shows the mapping the next import runs, read-only. Open
+**Administration settings → Stackiq → CMDB import** and press **Mapping
+(read-only)** under the import form. The block shows:
+
+- the sheets the import reads, the match column (`APPID`), the name column,
+  the required columns and the date columns;
+- one table per pack (application, Supplier organisation, municipality,
+  usage, business owner), with the pack's file, name and version;
+- per row of a table: the column in the export, the field it goes to,
+  whether the column is required, the transformation (as is, trim, date,
+  lookup, yes/no lookup, join, constant) and its details, such as the export
+  values a lookup recognises and what each becomes.
+
+The block reads the files through the same loader the import uses, so what
+it shows is what the import does. When a file is invalid, the block shows
+`MAPPING_UNAVAILABLE` with the file and the reason instead of the tables, and
+the import refuses to run with the same code. The sheet names in the
+section's help text come from the same answer.
+
+The block is only for viewing: nothing in it changes the mapping. The data
+behind it is also available to Nextcloud administrators as
+`GET /apps/stackiq/api/settings/cmdb-import/mapping`.
+
 ## Adjusting the mapping
 
 The mapping from columns to fields is not in code. It is a set of JSON files
-in `lib/Settings/cmdb-import/`, executed by OpenRegister's mapping engine:
+in `lib/Settings/cmdb-import/`, executed by OpenRegister's mapping engine.
+It cannot be changed in the section; **Mapping (read-only)** shows which
+file and which entry hold a column, so you know what to change:
 
 | File | What it maps |
 |---|---|
@@ -361,5 +388,7 @@ it to the `map` of the hosting-model lookup in `topdesk-module.json`:
 To accept a new "Applicatie Status" value, add it to the `map` of the status
 lookup in `topdesk-usage.json`. The packs are checked by OpenRegister when an import
 starts; an invalid pack stops the import with `MAPPING_UNAVAILABLE` before
-any row is read. A mapping file changed on the server is overwritten by the
-next app update, so propose lasting changes to the app itself.
+any row is read. After saving a file, reload the settings page: **Mapping
+(read-only)** then shows the new mapping, or the reason the file is
+refused. A mapping file changed on the server is overwritten by the next app
+update, so propose lasting changes to the app itself.
