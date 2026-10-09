@@ -984,3 +984,224 @@ export function reportRows(rows) {
 		moduleUuid: row.moduleUuid ? String(row.moduleUuid) : '',
 	}))
 }
+
+/**
+ * The URL of the mapping overview endpoint.
+ *
+ * @return {string} The URL
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export function mappingUrl() {
+	return generateUrl('/apps/stackiq/api/settings/cmdb-import/mapping')
+}
+
+/**
+ * Read the mapping the import uses: the profile and one entry per pack.
+ *
+ * @param {object} options The options
+ * @param {object} options.http An axios-like client with get
+ * @return {Promise<{profile: object, packs: Array<object>}>} The server's answer
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export async function loadCmdbMapping({ http }) {
+	const response = await http.get(mappingUrl())
+	return response.data
+}
+
+/**
+ * The names of the source sheets: the profile's when the mapping has loaded,
+ * the shipped defaults until then or when it could not be loaded.
+ *
+ * @param {object|null} mapping The mapping endpoint's answer, or null
+ * @return {Array<string>} At least the two default names
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ */
+export function mappingSheetNames(mapping) {
+	const sheets = mapping?.profile?.sheets
+	const names = (Array.isArray(sheets) ? sheets : [])
+		.map((sheet) =>
+			typeof sheet === 'string' ? sheet : String(sheet?.name ?? ''),
+		)
+		.filter((name) => name !== '')
+	return names.length > 0 ? names : [...PROFILE_DEFAULTS.sheets]
+}
+
+/**
+ * The words for a pack's target: what the pack's rows become.
+ *
+ * @param {string} target The target as the profile names it (module, manufacturer, …)
+ * @return {string} The translated name, or the target itself when it is unknown
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export function packTargetLabel(target) {
+	switch (target) {
+		case 'module':
+			return t('stackiq', 'Application (module)')
+		case 'manufacturer':
+			return t('stackiq', 'Supplier organisation (Vendor)')
+		case 'municipality':
+			return t('stackiq', 'Municipality (from the import options)')
+		case 'usage':
+			return t('stackiq', 'Usage')
+		case 'businessOwner':
+			return t('stackiq', 'Business owner (contact person)')
+		default:
+			return String(target ?? '')
+	}
+}
+
+/**
+ * The words for a transformation type of OpenRegister's mapping engine.
+ *
+ * @param {string|null|undefined} type The transform type, or nothing when the value is copied as is
+ * @return {string} The translated name, or the type itself when it is unknown
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export function transformLabel(type) {
+	switch (type) {
+		case undefined:
+		case null:
+		case '':
+			return t('stackiq', 'As is')
+		case 'trim':
+			return t('stackiq', 'Trim')
+		case 'date':
+			return t('stackiq', 'Date')
+		case 'lookup':
+			return t('stackiq', 'Lookup')
+		case 'bool-map':
+			return t('stackiq', 'Yes/no lookup')
+		case 'concat':
+			return t('stackiq', 'Join')
+		case 'const':
+			return t('stackiq', 'Constant')
+		default:
+			return String(type)
+	}
+}
+
+/**
+ * One text per value, for the details column: a JSON array is shown as its
+ * members, a null as a dash, anything else as a string.
+ *
+ * @param {unknown} value The stored value
+ * @return {string} The text
+ */
+function valueText(value) {
+	if (value === null || value === undefined) {
+		return '—'
+	}
+	if (Array.isArray(value)) {
+		return value.map((member) => valueText(member)).join(', ')
+	}
+	if (typeof value === 'object') {
+		return JSON.stringify(value)
+	}
+	return String(value)
+}
+
+/**
+ * The details of a transformation, as lines: the pairs of a lookup, the
+ * extra columns of a join, the value of a constant, the formats of a date.
+ * A key the page does not know is listed as it is, so nothing the engine
+ * reads is hidden.
+ *
+ * @param {object|null} transform The transform as the pack stores it
+ * @return {Array<string>} The lines, empty for a plain trim
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export function transformDetails(transform) {
+	if (!transform || typeof transform !== 'object') {
+		return []
+	}
+	const lines = []
+	const known = new Set(['type'])
+	if (transform.map && typeof transform.map === 'object') {
+		known.add('map')
+		for (const [from, to] of Object.entries(transform.map)) {
+			lines.push(`${from} → ${valueText(to)}`)
+		}
+	}
+	if (Object.hasOwn(transform, 'default')) {
+		known.add('default')
+		lines.push(
+			t(
+				'stackiq',
+				'Any other value: {value}',
+				{ value: valueText(transform.default) },
+				AS_TEXT,
+			),
+		)
+	}
+	if (Array.isArray(transform.fields)) {
+		known.add('fields')
+		known.add('separator')
+		lines.push(
+			t(
+				'stackiq',
+				'Joined with the columns {columns}, separated by "{separator}"',
+				{
+					columns: transform.fields
+						.map((field) => String(field))
+						.join(', '),
+					separator: String(transform.separator ?? ''),
+				},
+				AS_TEXT,
+			),
+		)
+	}
+	if (Object.hasOwn(transform, 'value')) {
+		known.add('value')
+		lines.push(
+			t(
+				'stackiq',
+				'Value: {value}',
+				{ value: valueText(transform.value) },
+				AS_TEXT,
+			),
+		)
+	}
+	if (transform.sourceFormat || transform.targetFormat) {
+		known.add('sourceFormat')
+		known.add('targetFormat')
+		lines.push(
+			t(
+				'stackiq',
+				'Read as {source}, stored as {target}',
+				{
+					source: String(transform.sourceFormat ?? '—'),
+					target: String(transform.targetFormat ?? 'Y-m-d'),
+				},
+				AS_TEXT,
+			),
+		)
+	}
+	for (const [key, value] of Object.entries(transform)) {
+		if (!known.has(key)) {
+			lines.push(`${key}: ${valueText(value)}`)
+		}
+	}
+	return lines
+}
+
+/**
+ * The rows of one pack's table: one per field mapping, in the pack's order.
+ *
+ * @param {object} pack One entry of the endpoint's `packs`
+ * @return {Array<{key: string, source: string, target: string, required: boolean, transform: string, details: Array<string>}>} The rows
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export function mappingRows(pack) {
+	const mappings = pack?.fieldMappings
+	if (!Array.isArray(mappings)) {
+		return []
+	}
+	return mappings.map((mapping, index) => ({
+		key: `${mapping?.source ?? ''}:${mapping?.target ?? ''}:${index}`,
+		source: String(mapping?.source ?? ''),
+		target: String(mapping?.target ?? ''),
+		required: Boolean(mapping?.required),
+		transform: transformLabel(mapping?.transform?.type),
+		details: transformDetails(mapping?.transform),
+	}))
+}
