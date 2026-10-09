@@ -65,6 +65,7 @@ EMPTIED_APP = ('Manager', 'Company', 'HyperlinkBase')
 
 ONBEH_SHEET = 'xl/worksheets/sheet2.xml'     # "Onbeh Applicaties CMDB" (from AIA)
 BEHEERDE_SHEET = 'xl/worksheets/sheet4.xml'  # "Beheerde Applicaties CMDB" (from APP)
+ARCHIVE_SHEET_NAME = 'Gearchiveerde Applicaties'
 
 # Placeholder cached values for formula cells of the CMDB sheets, per sheet and
 # cell. A cell that does not exist yet is appended to its row (columns are in
@@ -367,6 +368,50 @@ def formula_and_connection(parts):
     return parts + [('xl/connections.xml', SYNTHETIC_CONNECTION.encode('utf-8'))]
 
 
+def sheet_part(parts, sheet_name):
+    """The worksheet part of a named sheet, through xl/workbook.xml and its relationships."""
+    parts_by_name = dict(parts)
+    workbook = text(parts_by_name['xl/workbook.xml'])
+    sheet = re.search(r'<sheet [^>]*name="%s"[^>]*r:id="([^"]+)"' % re.escape(sheet_name), workbook)
+    if sheet is None:
+        sys.exit('sheet "%s" not found' % sheet_name)
+    rels = text(parts_by_name['xl/_rels/workbook.xml.rels'])
+    target = re.search(r'<Relationship [^>]*Id="%s"[^>]*Target="([^"]+)"' % sheet.group(1), rels)
+    if target is None:
+        target = re.search(r'<Relationship [^>]*Target="([^"]+)"[^>]*Id="%s"' % sheet.group(1), rels)
+    return 'xl/' + target.group(1).lstrip('/').replace('xl/', '', 1)
+
+
+def archived_applications(parts):
+    """A later export of the same municipality (cmdb-import-archive-reconciliation):
+    APPID 1234 moved from "Onbeh Applicaties CMDB" to "Gearchiveerde Applicaties",
+    and APPID 2 is on no sheet any more. Both CMDB sheets keep their header and
+    their empty rows but lose their data row; the archive sheet's one row gets
+    APPID 1234 as its cached value."""
+    def drop_data_row(data):
+        xml = text(data)
+        new, count = re.subn(r'<row r="2"[^>]*?(?:/>|>.*?</row>)', '', xml, count=1, flags=re.S)
+        if count != 1:
+            sys.exit('archived-applications: data row 2 not found')
+        return new.encode('utf-8')
+
+    def archive_appid(data):
+        xml = text(data)
+        new, count = re.subn(
+            r'(<c r="B2"[^>]*>(?:<f>[^<]*</f>)?<v>)[^<]*(</v>)',
+            r'\g<1>1234\g<2>',
+            xml,
+            count=1,
+        )
+        if count != 1:
+            sys.exit('archived-applications: APPID cell B2 not found on %s' % ARCHIVE_SHEET_NAME)
+        return new.encode('utf-8')
+
+    parts = replace_part(parts, ONBEH_SHEET, drop_data_row)
+    parts = replace_part(parts, BEHEERDE_SHEET, drop_data_row)
+    return replace_part(parts, sheet_part(parts, ARCHIVE_SHEET_NAME), archive_appid)
+
+
 def no_source_sheet():
     """A minimal workbook with one sheet "Blad1" and neither CMDB sheet."""
     main = 'http://schemas.openxmlformats.org/spreadsheetml/2006/main'
@@ -416,6 +461,7 @@ def main():
         'topdesk-shuffled-columns.xlsx': shuffled_columns(base),
         'topdesk-formula-and-connection.xlsx': formula_and_connection(base),
         'topdesk-no-source-sheet.xlsx': no_source_sheet(),
+        'topdesk-archived-applications.xlsx': archived_applications(base),
     }
     for name, parts in variants.items():
         write_package(os.path.join(HERE, name), parts)

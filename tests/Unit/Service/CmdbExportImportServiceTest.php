@@ -2021,6 +2021,37 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testUpdateExistingFalseLeavesAnArchivedMatchArchived()
 
 	/**
+	 * The fixture round trip of the e2e test: the later export archives 1234 and deletes 2, the original brings both back.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 */
+	public function testTheArchivedApplicationsFixtureArchivesDeletesAndBringsBack(): void {
+		$path = $this->fixture();
+		$options = ['municipalityName' => 'Gemeente Voorbeeldstad'];
+		$this->service()->import(path: $path, options: $options);
+		$counts = [count($this->store[self::MODULE]), count($this->store[self::USAGE]), count($this->store[self::CONTACT_PERSON])];
+		[$archived, $deleted] = [$this->moduleOf(appId: '1234'), $this->moduleOf(appId: '2')];
+
+		$report = $this->service()->import(path: CmdbTestSupport::fixtures() . '/topdesk-archived-applications.xlsx', options: $options);
+
+		$this->assertSame(['archived', 'deleted'], array_column($report['rows'], 'outcome'));
+		$this->assertSame(['1234', '2'], array_column($report['rows'], 'appId'));
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $archived));
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: $deleted));
+		$this->assertSame([], $report['importWarnings']);
+
+		$back = $this->service()->import(path: $path, options: $options);
+
+		$this->assertSame(['unarchived', 'restored'], array_column($back['rows'], 'outcome'));
+		$this->assertSame($counts, [count($this->store[self::MODULE]), count($this->store[self::USAGE]), count($this->store[self::CONTACT_PERSON])]);
+		$this->assertSame([false, false], $this->stateOf(schema: self::MODULE, uuid: $archived));
+		$this->assertSame([false, false], $this->stateOf(schema: self::MODULE, uuid: $deleted));
+	}//end testTheArchivedApplicationsFixtureArchivesDeletesAndBringsBack()
+
+	/**
 	 * The reconciliation reports its own progress phase and advances per application.
 	 *
 	 * @return void

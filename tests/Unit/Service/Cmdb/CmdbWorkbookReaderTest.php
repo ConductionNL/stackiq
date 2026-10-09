@@ -938,6 +938,21 @@ class CmdbWorkbookReaderTest extends TestCase {
 	}//end testTheArchiveSheetYieldsItsAppIds()
 
 	/**
+	 * The later export moves APPID 1234 to the archive sheet and drops APPID 2 from every sheet.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testTheArchivedApplicationsVariantListsOnlyTheArchive(): void {
+		$result = $this->read(name: 'topdesk-archived-applications.xlsx');
+
+		$this->assertSame([], $result['rows']);
+		$this->assertTrue($result['archive']['present']);
+		$this->assertSame(['1234'], array_map('strval', $result['archive']['appIds']));
+	}//end testTheArchivedApplicationsVariantListsOnlyTheArchive()
+
+	/**
 	 * Only the APPID column of the archive sheet is read; without the sheet or its APPID column it is absent.
 	 *
 	 * @return void
