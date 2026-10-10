@@ -1,3 +1,3 @@
 # Screens
 
-- No board found yet (decision 150)
+- No screen: Schema declares OpenRegister integration leaves, whose surface OpenRegister provides.
