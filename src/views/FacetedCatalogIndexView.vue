@@ -232,7 +232,8 @@ export default {
 		 * filter's keys (`bbnLevel`, `dpiaStatus`, …) never collide with
 		 * `_ids`, so the merge is additive — both the facet-matched id set AND
 		 * the active quick filter's field constraints apply together
-		 * (logical AND), never clobbering one another.
+		 * (logical AND), never clobbering one another. The one exception is
+		 * the Archived tab of the Applications page, below.
 		 *
 		 * The exception is the Archived tab of the Applications page
 		 * (cmdb-import-archive-reconciliation): the facet id set is built from

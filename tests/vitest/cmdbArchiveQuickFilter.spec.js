@@ -111,6 +111,14 @@ describe('the archive quick filter', () => {
 		)
 	})
 
+	it('the Modules page note names the Archived tab as the exception to the additive merge', () => {
+		const page = pages().find((candidate) => candidate.id === 'Modules')
+
+		expect(page._note).toContain('additive AND')
+		expect(page._note).toMatch(/exception is the Archived tab/)
+		expect(page._note).toMatch(/ignores the GEMMA facets and the search term/)
+	})
+
 	it('uses an icon the app registers', () => {
 		const icons = fs.readFileSync(path.join(repoRoot, 'src/icons.js'), 'utf8')
 		expect(icons).toMatch(/^\tArchiveOutline,$/m)
