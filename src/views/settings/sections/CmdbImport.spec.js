@@ -435,6 +435,17 @@ describe('CmdbImport the choice for missing applications, as the admin makes it'
 		expect(wrapper.vm.missingRecords).toBe('archive')
 	})
 
+	it('says in the help when applications are only archived, never deleted', async () => {
+		const wrapper = await mountFull()
+
+		const help = wrapper.get('#cmdb-import-missing-records-help').text()
+
+		expect(help).toContain('is missing')
+		expect(help).toContain('has no APPID column')
+		expect(help).toContain('an APPID without a cached value')
+		expect(help).toContain('only archived')
+	})
+
 	it('disables both radios while an import runs', async () => {
 		const wrapper = await mountFull()
 

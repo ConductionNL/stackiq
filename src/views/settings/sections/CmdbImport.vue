@@ -172,7 +172,7 @@
 					{{
 						t(
 							'stackiq',
-							'An application of this municipality that is on neither CMDB sheet any more is archived when the sheet "Gearchiveerde Applicaties" lists it, and moved to the trash when no sheet does. Both disappear from the lists, from OpenCatalogi and from Portaliq; one that returns in a later export is brought back. Without that sheet in the file, applications are only archived. Choose Keep to leave them as they are.',
+							'An application of this municipality that is on neither CMDB sheet any more is archived when the sheet "Gearchiveerde Applicaties" lists it, and moved to the trash when no sheet does. Both disappear from the lists, from OpenCatalogi and from Portaliq; one that returns in a later export is brought back. When that sheet is missing, has no APPID column, or has an APPID without a cached value, applications are only archived and the result says so. Choose Keep to leave them as they are.',
 						)
 					}}
 				</p>
