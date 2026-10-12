@@ -631,7 +631,12 @@ class CmdbImportProfile {
 	 * Loads and validates everything first, so a broken pack throws here as
 	 * it does when an import starts. The transform of each field mapping is
 	 * passed through as the pack stores it, so no key the engine reads is
-	 * hidden from the admin; `required` is normalised to a boolean.
+	 * hidden from the admin; `required` is normalised to a boolean. Each pack
+	 * also carries the write rules the import applies on top of the mapping:
+	 * `defaults` (pack values set on every write), `createOnlyDefaults`
+	 * (values set on create only), `createOnlyFields` (mapped fields written on
+	 * create or when the stored value is empty) and `neverWritten` (fields the
+	 * import never writes on an existing object).
 	 *
 	 * @return array{profile: array<string, mixed>, packs: array<int, array<string, mixed>>}
 	 *
@@ -665,6 +670,11 @@ class CmdbImportProfile {
 				];
 			}
 
+			$defaults = $pack['defaults'] ?? [];
+			if (is_array($defaults) === false) {
+				$defaults = [];
+			}
+
 			$packs[] = [
 				'target' => $target,
 				'file' => (string)($profile['packs'][$target] ?? ''),
@@ -673,6 +683,10 @@ class CmdbImportProfile {
 				'version' => (string)($pack['version'] ?? ''),
 				'description' => (string)($pack['description'] ?? ''),
 				'fieldMappings' => $mappings,
+				'defaults' => $defaults,
+				'createOnlyDefaults' => $this->createOnlyDefaults(target: $target),
+				'createOnlyFields' => $this->createOnlyFields(target: $target),
+				'neverWritten' => $this->neverWrittenOnUpdate(target: $target),
 			];
 		}//end foreach
 
@@ -690,6 +704,7 @@ class CmdbImportProfile {
 				'dateColumns' => $this->dateColumns(),
 				'idColumns' => $this->idColumns(),
 				'emptyValues' => $this->emptyValues(),
+				'externalKeyPrefix' => $this->externalKeyPrefix(),
 				'missingRecords' => $this->missingRecordsModes(),
 			],
 			'packs' => $packs,
