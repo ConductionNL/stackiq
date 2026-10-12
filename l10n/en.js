@@ -1041,6 +1041,7 @@ OC.L10N.register(
         "Applications missing from the export can only be archived or kept.": "Applications missing from the export can only be archived or kept.",
         "Applications missing from the export cannot be archived: OpenRegister is missing or too old. Choose to keep them, or update OpenRegister.": "Applications missing from the export cannot be archived: OpenRegister is missing or too old. Choose to keep them, or update OpenRegister.",
         "Sheet \"%1$s\" has no column \"%2$s\", so applications missing from the export are archived, not deleted.": "Sheet \"%1$s\" has no column \"%2$s\", so applications missing from the export are archived, not deleted.",
+        "Sheet \"%1$s\" has an APPID without a cached value in row %2$s, which was read as empty, so applications missing from the export are archived, not deleted.": "Sheet \"%1$s\" has an APPID without a cached value in row %2$s, which was read as empty, so applications missing from the export are archived, not deleted.",
         "Sheet \"%s\" was not found, so applications missing from the export are archived, not deleted.": "Sheet \"%s\" was not found, so applications missing from the export are archived, not deleted.",
         "Unarchived": "Unarchived",
         "Restored": "Restored",

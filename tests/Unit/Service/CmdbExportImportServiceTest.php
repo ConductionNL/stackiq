@@ -978,20 +978,23 @@ class CmdbExportImportServiceTest extends TestCase {
 	 *
 	 * @param array<int, array{sheet: string, row: int, cells: array<string, mixed>}> $rows The rows.
 	 * @param array<int, string>|null $archived The APPIDs on the archive sheet, or null when there is no such sheet.
+	 * @param array<int, int> $uncachedRows The archive sheet's rows whose APPID formula has no cached value.
 	 *
 	 * @return CmdbWorkbookReader
 	 */
-	private function rowsReader(array $rows, ?array $archived = []): CmdbWorkbookReader {
-		return new class($rows, $archived) extends CmdbWorkbookReader {
+	private function rowsReader(array $rows, ?array $archived = [], array $uncachedRows = []): CmdbWorkbookReader {
+		return new class($rows, $archived, $uncachedRows) extends CmdbWorkbookReader {
 			/**
 			 * Constructor.
 			 *
 			 * @param array<int, array<string, mixed>> $rows The rows.
 			 * @param array<int, string>|null $archived The archive sheet's APPIDs, or null.
+			 * @param array<int, int> $uncachedRows The archive sheet's rows without a cached APPID.
 			 */
 			public function __construct(
 				private array $rows,
 				private ?array $archived,
+				private array $uncachedRows,
 			) {
 			}
 
@@ -1004,7 +1007,7 @@ class CmdbExportImportServiceTest extends TestCase {
 			 * @return array<string, mixed>
 			 */
 			public function read(string $path, CmdbImportProfile $profile): array {
-				$archive = ['sheet' => 'Gearchiveerde Applicaties', 'present' => ($this->archived !== null), 'keyColumnMissing' => false, 'appIds' => ($this->archived ?? [])];
+				$archive = ['sheet' => 'Gearchiveerde Applicaties', 'present' => ($this->archived !== null), 'keyColumnMissing' => false, 'appIds' => ($this->archived ?? []), 'uncachedRows' => $this->uncachedRows];
 				return ['rows' => $this->rows, 'importWarnings' => [], 'date1904' => false, 'archive' => $archive];
 			}
 		};
@@ -1937,6 +1940,45 @@ class CmdbExportImportServiceTest extends TestCase {
 			$report['importWarnings']
 		);
 	}//end testWithoutTheArchiveSheetMissingApplicationsAreArchivedNotDeleted()
+
+	/**
+	 * An archive sheet with an APPID the reader could not see is not authoritative for a deletion: the import
+	 * archives what it would have deleted, and warns naming the sheet and the row.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAnUncachedArchiveRowArchivesInsteadOfDeleting(): void {
+		$this->importOneSevenAndEight();
+		[$seven, $eight] = [$this->moduleOf(appId: '7'), $this->moduleOf(appId: '8')];
+
+		// APPID 7 is listed on the archive sheet; APPID 8 is on no sheet, and row 4 of the sheet holds a formula without a cached value.
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7'], uncachedRows: [4]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertNotContains('delete', array_column($this->transitions, 0), 'nothing is soft-deleted');
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $seven));
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $eight), 'APPID 8 may be the unreadable row, so it is archived');
+		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $this->usageOf(moduleUuid: $eight)));
+		$this->assertSame('cmdb-import: not in the export (' . $report['operationId'] . ')', $this->transitions[2][3]);
+		$this->assertSame(
+			[['sheet' => 'Gearchiveerde Applicaties', 'message' => 'Sheet "Gearchiveerde Applicaties" has an APPID without a cached value in row 4, which was read as empty, so applications missing from the export are archived, not deleted.']],
+			$report['importWarnings']
+		);
+		$this->assertSame([2, 0], [$report['summary']['archived'], $report['summary']['deleted']]);
+
+		// A long list of rows is cut.
+		$this->transitions = [];
+		$long = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7'], uncachedRows: range(2, 13)))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'archive']);
+		$this->assertStringContainsString('in row 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, …,', $long['importWarnings'][0]['message']);
+
+		// Keeping missing records needs no sheet and gives no warning.
+		$kept = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7'], uncachedRows: [4]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+		$this->assertSame([], $kept['importWarnings']);
+	}//end testAnUncachedArchiveRowArchivesInsteadOfDeleting()
 
 	/**
 	 * A cancelled import reconciles nothing.

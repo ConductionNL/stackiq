@@ -239,6 +239,13 @@ class CmdbExportImportService {
 	private const UNMATCHED_STATUSES = ['merged', 'Inactive'];
 
 	/**
+	 * How many row numbers an archive-sheet warning names before it cuts the list.
+	 *
+	 * @var int
+	 */
+	private const WARNED_ROWS = 10;
+
+	/**
 	 * Page size for loading the organisations a name may match.
 	 */
 	private const PAGE_SIZE = 500;
@@ -615,7 +622,7 @@ class CmdbExportImportService {
 	 *
 	 * @param CmdbImportReport $report The report.
 	 * @param array{uuid: string, name: string, created: bool} $municipality The consumer, as resolveMunicipality() found it.
-	 * @param array{sheet: string, present: bool, keyColumnMissing: bool, keys: array<string, true>} $archive The archive sheet.
+	 * @param array{sheet: string, present: bool, keyColumnMissing: bool, uncachedRows: array<int, int>, keys: array<string, true>} $archive The archive sheet.
 	 * @param string $missingRecords The import's `missingRecords` mode.
 	 *
 	 * @return void
@@ -624,7 +631,7 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function addRunWarnings(CmdbImportReport $report, array $municipality, array $archive, string $missingRecords): void {
-		if ($missingRecords === 'archive' && $archive['present'] === false) {
+		if ($missingRecords === 'archive' && ($archive['present'] === false || $archive['uncachedRows'] !== [])) {
 			$report->addImportWarnings(warnings: [['sheet' => $archive['sheet'], 'message' => $this->archiveSheetWarning(archive: $archive)]]);
 		}
 
@@ -1926,7 +1933,7 @@ class CmdbExportImportService {
 	 *
 	 * @param array<string, mixed> $workbook What the reader returned.
 	 *
-	 * @return array{sheet: string, present: bool, keyColumnMissing: bool, keys: array<string, true>}
+	 * @return array{sheet: string, present: bool, keyColumnMissing: bool, uncachedRows: array<int, int>, keys: array<string, true>}
 	 *
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
@@ -1946,20 +1953,34 @@ class CmdbExportImportService {
 			'sheet' => (string)($archive['sheet'] ?? ($this->profile->archiveSheetName() ?? '')),
 			'present' => (($archive['present'] ?? false) === true),
 			'keyColumnMissing' => (($archive['keyColumnMissing'] ?? false) === true),
+			'uncachedRows' => array_values(array_map('intval', (array)($archive['uncachedRows'] ?? []))),
 			'keys' => $keys,
 		];
 	}//end archiveSheet()
 
 	/**
-	 * The report warning of an archiving import whose workbook lacks the archive sheet or its key column.
+	 * The report warning of an archiving import whose workbook lacks the archive sheet or its key column, or whose archive sheet has keys that could not be read.
 	 *
-	 * @param array{sheet: string, keyColumnMissing: bool} $archive The archive sheet.
+	 * @param array{sheet: string, keyColumnMissing: bool, uncachedRows: array<int, int>} $archive The archive sheet.
 	 *
 	 * @return string
 	 *
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function archiveSheetWarning(array $archive): string {
+		if ($archive['uncachedRows'] !== []) {
+			// A long list is cut: the warning names where to look, not every row.
+			$rows = implode(', ', array_slice($archive['uncachedRows'], 0, self::WARNED_ROWS));
+			if (count($archive['uncachedRows']) > self::WARNED_ROWS) {
+				$rows .= ', …';
+			}
+
+			return $this->l10n->t(
+				'Sheet "%1$s" has an APPID without a cached value in row %2$s, which was read as empty, so applications missing from the export are archived, not deleted.',
+				[$archive['sheet'], $rows]
+			);
+		}
+
 		if ($archive['keyColumnMissing'] === true) {
 			return $this->l10n->t(
 				'Sheet "%1$s" has no column "%2$s", so applications missing from the export are archived, not deleted.',
@@ -2181,7 +2202,7 @@ class CmdbExportImportService {
 	 * stays, and the report says the run was cancelled.
 	 *
 	 * @param string $municipalityUuid The consumer of this import.
-	 * @param array{sheet: string, present: bool, keyColumnMissing: bool, keys: array<string, true>} $archive The archive sheet.
+	 * @param array{sheet: string, present: bool, keyColumnMissing: bool, uncachedRows: array<int, int>, keys: array<string, true>} $archive The archive sheet.
 	 * @param string $operationId The operation id, for the archive reason.
 	 * @param int $processedItems The rows already counted as processed.
 	 * @param CmdbImportReport $report The report.
@@ -2393,7 +2414,7 @@ class CmdbExportImportService {
 	 * An application already in the state the export asks for is not reported.
 	 *
 	 * @param array{key: string, usage: object, module: object, states: array<string, array{archived: bool, deleted: bool}>} $application Application.
-	 * @param array{sheet: string, present: bool, keyColumnMissing: bool, keys: array<string, true>} $archive The archive sheet.
+	 * @param array{sheet: string, present: bool, keyColumnMissing: bool, uncachedRows: array<int, int>, keys: array<string, true>} $archive The archive sheet.
 	 * @param string $operationId The operation id, for the archive reason.
 	 * @param CmdbImportReport $report The report.
 	 *
@@ -2416,7 +2437,8 @@ class CmdbExportImportService {
 		if ($onArchiveSheet === true) {
 			$entry['sheet'] = $archive['sheet'];
 			$reason = self::REASON_PREFIX . 'on sheet "' . $archive['sheet'] . '" (' . $operationId . ')';
-		} elseif ($archive['present'] === true) {
+		} elseif ($archive['present'] === true && $archive['uncachedRows'] === []) {
+			// A sheet with an unreadable key may list this application, so it is not authoritative for a deletion.
 			$target = CmdbImportReport::DELETED;
 		}
 

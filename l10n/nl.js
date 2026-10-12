@@ -1109,6 +1109,7 @@ OC.L10N.register(
         "Applications missing from the export can only be archived or kept.": "Applicaties die in de export ontbreken, kunnen alleen worden gearchiveerd of behouden.",
         "Applications missing from the export cannot be archived: OpenRegister is missing or too old. Choose to keep them, or update OpenRegister.": "Applicaties die in de export ontbreken, kunnen niet worden gearchiveerd: OpenRegister ontbreekt of is te oud. Kies ervoor ze te behouden, of werk OpenRegister bij.",
         "Sheet \"%1$s\" has no column \"%2$s\", so applications missing from the export are archived, not deleted.": "Tabblad \"%1$s\" heeft geen kolom \"%2$s\", dus applicaties die in de export ontbreken, worden gearchiveerd en niet verwijderd.",
+        "Sheet \"%1$s\" has an APPID without a cached value in row %2$s, which was read as empty, so applications missing from the export are archived, not deleted.": "Tabblad \"%1$s\" heeft een APPID zonder opgeslagen waarde in rij %2$s, die als leeg is gelezen, dus applicaties die in de export ontbreken, worden gearchiveerd en niet verwijderd.",
         "Sheet \"%s\" was not found, so applications missing from the export are archived, not deleted.": "Tabblad \"%s\" is niet gevonden, dus applicaties die in de export ontbreken, worden gearchiveerd en niet verwijderd.",
         "Unarchived": "Uit archief gehaald",
         "Restored": "Hersteld",
