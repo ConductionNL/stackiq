@@ -257,11 +257,12 @@ class CmdbImportController extends Controller {
 			return $this->invalidField(field: 'missingRecords');
 		}
 
-		if ($this->importService->supportsMissingRecords(mode: $missingRecords) === false) {
+		$accepted = $this->importService->missingRecordsModes();
+		if (in_array($missingRecords, $accepted, true) === false) {
 			return $this->error(
 				code: 'MISSING_RECORDS_UNSUPPORTED',
 				status: Http::STATUS_UNPROCESSABLE_ENTITY,
-				details: ['accepted' => $this->importService->missingRecordsModes()]
+				details: ['accepted' => $accepted]
 			);
 		}
 

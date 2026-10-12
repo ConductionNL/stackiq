@@ -375,24 +375,11 @@ class CmdbExportImportService {
 	}//end assertXlsx()
 
 	/**
-	 * Whether a `missingRecords` value is supported: one of the profile's modes (`keep`, `archive`).
-	 *
-	 * @param string $mode The requested value.
-	 *
-	 * @return bool
-	 *
-	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
-	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
-	 */
-	public function supportsMissingRecords(string $mode): bool {
-		return in_array($mode, $this->missingRecordsModes(), true);
-	}//end supportsMissingRecords()
-
-	/**
-	 * The accepted `missingRecords` values, for the refusal of any other.
+	 * The accepted `missingRecords` values: the profile's modes (`keep`, `archive`); any other is refused.
 	 *
 	 * @return array<int, string>
 	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
 	 */
 	public function missingRecordsModes(): array {
@@ -548,23 +535,7 @@ class CmdbExportImportService {
 		$report->setMunicipality(uuid: $municipality['uuid'], name: $municipality['name'], created: $municipality['created']);
 		$report->addImportWarnings(warnings: $this->translateImportWarnings(warnings: $workbook['importWarnings']));
 		$archive = $this->archiveSheet(workbook: $workbook);
-		if ($missingRecords === 'archive' && $archive['present'] === false) {
-			$report->addImportWarnings(warnings: [['sheet' => $archive['sheet'], 'message' => $this->archiveSheetWarning(archive: $archive)]]);
-		}
-
-		if ($municipality['created'] === true) {
-			$report->addImportWarnings(
-				warnings: [
-					[
-						'sheet' => '',
-						'message' => $this->l10n->t(
-							'No municipality named "%s" was found, so it was created. Check the name if you meant an existing one.',
-							[$municipality['name']]
-						),
-					],
-				]
-			);
-		}
+		$this->addRunWarnings(report: $report, municipality: $municipality, archive: $archive, missingRecords: $missingRecords);
 
 		$this->progressTracker->startOperation(
 			operationType: self::OPERATION_TYPE,
@@ -638,6 +609,39 @@ class CmdbExportImportService {
 
 		return $result;
 	}//end runImport()
+
+	/**
+	 * Add the run's own warnings: a missing archive sheet on an archiving import, and a created municipality.
+	 *
+	 * @param CmdbImportReport $report The report.
+	 * @param array{uuid: string, name: string, created: bool} $municipality The consumer, as resolveMunicipality() found it.
+	 * @param array{sheet: string, present: bool, keyColumnMissing: bool, keys: array<string, true>} $archive The archive sheet.
+	 * @param string $missingRecords The import's `missingRecords` mode.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	private function addRunWarnings(CmdbImportReport $report, array $municipality, array $archive, string $missingRecords): void {
+		if ($missingRecords === 'archive' && $archive['present'] === false) {
+			$report->addImportWarnings(warnings: [['sheet' => $archive['sheet'], 'message' => $this->archiveSheetWarning(archive: $archive)]]);
+		}
+
+		if ($municipality['created'] === true) {
+			$report->addImportWarnings(
+				warnings: [
+					[
+						'sheet' => '',
+						'message' => $this->l10n->t(
+							'No municipality named "%s" was found, so it was created. Check the name if you meant an existing one.',
+							[$municipality['name']]
+						),
+					],
+				]
+			);
+		}
+	}//end addRunWarnings()
 
 	/**
 	 * Process one row in its own error boundary and add its outcome.
@@ -2127,8 +2131,25 @@ class CmdbExportImportService {
 
 		$coordinates = $this->coordinates();
 		$deleted = $services['mapper']->findDeletedAcrossAllMagicTables(limit: null, offset: null, _rbac: false, _multitenancy: false);
+		$this->trash = self::registerTrash(deleted: $deleted, coordinates: $coordinates);
+
+		return $this->trash;
+	}//end trash()
+
+	/**
+	 * The modules and usages of this register among the instance's soft-deleted objects.
+	 *
+	 * @param mixed $deleted What MagicMapper::findDeletedAcrossAllMagicTables() answered.
+	 * @param array<string, mixed> $coordinates The register and schema ids, from coordinates().
+	 *
+	 * @return array{module: array<string, object>, usage: array<string, object>} Schema key => uuid => entity.
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 */
+	private static function registerTrash(mixed $deleted, array $coordinates): array {
+		$trash = ['module' => [], 'usage' => []];
 		if (is_array($deleted) === false) {
-			$deleted = [];
+			return $trash;
 		}
 
 		foreach ($deleted as $entity) {
@@ -2138,13 +2159,13 @@ class CmdbExportImportService {
 
 			foreach (['module', 'usage'] as $schemaKey) {
 				if ((string)$entity->getSchema() === (string)$coordinates[$schemaKey]) {
-					$this->trash[$schemaKey][(string)$entity->getUuid()] = $entity;
+					$trash[$schemaKey][(string)$entity->getUuid()] = $entity;
 				}
 			}
 		}
 
-		return $this->trash;
-	}//end trash()
+		return $trash;
+	}//end registerTrash()
 
 	/**
 	 * Archive or soft-delete every application of the municipality whose APPID left the CMDB sheets.
@@ -2208,40 +2229,7 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function reconciliationScope(string $municipalityUuid): array {
-		$coordinates = $this->coordinates();
-		$usages = [];
-		foreach ([[[], self::STATE_WORKING], [self::ARCHIVED_LENS, self::STATE_ARCHIVED]] as [$lens, $state]) {
-			$offset = 0;
-			do {
-				$page = $coordinates['objectService']->searchObjects(
-					query: array_merge(
-						[
-							'@self' => ['register' => $coordinates['register'], 'schema' => $coordinates['usage']],
-							'consumer' => $municipalityUuid,
-							'_limit' => self::PAGE_SIZE,
-							'_offset' => $offset,
-						],
-						$lens
-					),
-					_rbac: false,
-					_multitenancy: false
-				);
-				if (is_array($page) === false) {
-					$page = [];
-				}
-
-				foreach ($page as $usage) {
-					$usages[] = ['entity' => $usage, 'state' => $state];
-				}
-
-				$offset += self::PAGE_SIZE;
-				$pageSize = count($page);
-			} while ($pageSize === self::PAGE_SIZE);
-		}//end foreach
-
-		foreach ($this->trash()['usage'] as $usage) {
-			$usages[] = ['entity' => $usage, 'state' => self::STATE_DELETED];
-		}
+		$usages = $this->usagesInEveryState(municipalityUuid: $municipalityUuid);
 
 		$owned = [];
 		foreach ($usages as $usage) {
@@ -2277,6 +2265,58 @@ class CmdbExportImportService {
 	}//end reconciliationScope()
 
 	/**
+	 * The usages that name this municipality as consumer, in every state, each with that state.
+	 *
+	 * Working and archived usages are paged with one lens each; soft-deleted
+	 * ones come from the trash, which is not filtered by consumer, so the
+	 * caller checks the consumer of every usage.
+	 *
+	 * @param string $municipalityUuid The consumer of this import.
+	 *
+	 * @return array<int, array{entity: object, state: array{archived: bool, deleted: bool}}>
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	private function usagesInEveryState(string $municipalityUuid): array {
+		$coordinates = $this->coordinates();
+		$usages = [];
+		foreach ([[[], self::STATE_WORKING], [self::ARCHIVED_LENS, self::STATE_ARCHIVED]] as [$lens, $state]) {
+			$offset = 0;
+			do {
+				$page = $coordinates['objectService']->searchObjects(
+					query: array_merge(
+						[
+							'@self' => ['register' => $coordinates['register'], 'schema' => $coordinates['usage']],
+							'consumer' => $municipalityUuid,
+							'_limit' => self::PAGE_SIZE,
+							'_offset' => $offset,
+						],
+						$lens
+					),
+					_rbac: false,
+					_multitenancy: false
+				);
+				if (is_array($page) === false) {
+					$page = [];
+				}
+
+				foreach ($page as $usage) {
+					$usages[] = ['entity' => $usage, 'state' => $state];
+				}
+
+				$offset += self::PAGE_SIZE;
+				$pageSize = count($page);
+			} while ($pageSize === self::PAGE_SIZE);
+		}//end foreach
+
+		foreach ($this->trash()['usage'] as $usage) {
+			$usages[] = ['entity' => $usage, 'state' => self::STATE_DELETED];
+		}
+
+		return $usages;
+	}//end usagesInEveryState()
+
+	/**
 	 * The modules with these uuids, in every state, each with its state.
 	 *
 	 * Per chunk of PAGE_SIZE uuids one search without a lens and one with
@@ -2292,27 +2332,9 @@ class CmdbExportImportService {
 		$coordinates = $this->coordinates();
 		$modules = [];
 		foreach (array_chunk($uuids, self::PAGE_SIZE) as $chunk) {
-			foreach ([[[], self::STATE_WORKING], [self::ARCHIVED_LENS, self::STATE_ARCHIVED]] as [$lens, $state]) {
-				$results = $coordinates['objectService']->searchObjects(
-					query: array_merge(
-						['@self' => ['register' => $coordinates['register'], 'schema' => $coordinates['module']], '_ids' => $chunk, '_limit' => count($chunk)],
-						$lens
-					),
-					_rbac: false,
-					_multitenancy: false
-				);
-				if (is_array($results) === false) {
-					continue;
-				}
-
-				foreach ($results as $entity) {
-					$uuid = (string)$entity->getUuid();
-					if (in_array($uuid, $chunk, true) === true && isset($modules[$uuid]) === false) {
-						$modules[$uuid] = ['entity' => $entity, 'state' => $state];
-					}
-				}
-			}//end foreach
-		}//end foreach
+			// The chunks are disjoint, so a uuid found in an earlier chunk is never overwritten.
+			$modules += $this->modulesInChunk(chunk: $chunk, coordinates: $coordinates);
+		}
 
 		foreach ($uuids as $uuid) {
 			$trashed = ($this->trash()['module'][$uuid] ?? null);
@@ -2323,6 +2345,42 @@ class CmdbExportImportService {
 
 		return $modules;
 	}//end modulesByUuid()
+
+	/**
+	 * The working and archived modules of one chunk of uuids; a module both lenses return keeps the first state.
+	 *
+	 * @param array<int, string> $chunk At most PAGE_SIZE module uuids.
+	 * @param array<string, mixed> $coordinates The object service and register and schema ids, from coordinates().
+	 *
+	 * @return array<string, array{entity: object, state: array{archived: bool, deleted: bool}}> Uuid => entity and state.
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	private function modulesInChunk(array $chunk, array $coordinates): array {
+		$modules = [];
+		foreach ([[[], self::STATE_WORKING], [self::ARCHIVED_LENS, self::STATE_ARCHIVED]] as [$lens, $state]) {
+			$results = $coordinates['objectService']->searchObjects(
+				query: array_merge(
+					['@self' => ['register' => $coordinates['register'], 'schema' => $coordinates['module']], '_ids' => $chunk, '_limit' => count($chunk)],
+					$lens
+				),
+				_rbac: false,
+				_multitenancy: false
+			);
+			if (is_array($results) === false) {
+				continue;
+			}
+
+			foreach ($results as $entity) {
+				$uuid = (string)$entity->getUuid();
+				if (in_array($uuid, $chunk, true) === true && isset($modules[$uuid]) === false) {
+					$modules[$uuid] = ['entity' => $entity, 'state' => $state];
+				}
+			}
+		}
+
+		return $modules;
+	}//end modulesInChunk()
 
 	/**
 	 * Archive or soft-delete one application that left the CMDB sheets, usage first, in its own error boundary.

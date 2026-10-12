@@ -314,26 +314,7 @@ class CmdbWorkbookReader {
 			scanner: $scanner
 		);
 
-		$reader = $this->newReader(sheetNames: null);
-		try {
-			$available = $reader->listWorksheetNames($path);
-		} catch (Throwable $e) {
-			throw new CmdbImportException(
-				errorCode: CmdbImportException::NOT_XLSX,
-				message: 'The workbook cannot be read: ' . get_class($e),
-				previous: $e
-			);
-		}
-
-		$expected = $profile->sheetNames();
-		$present = array_values(array_intersect($expected, $available));
-		if ($present === []) {
-			throw new CmdbImportException(
-				errorCode: CmdbImportException::NO_SOURCE_SHEET,
-				message: 'The workbook holds none of the source sheets',
-				details: ['expected' => $expected]
-			);
-		}
+		['present' => $present, 'available' => $available] = $this->sourceSheets(path: $path, profile: $profile);
 
 		$archiveSheet = $profile->archiveSheetName();
 		$loaded = $present;
@@ -357,28 +338,23 @@ class CmdbWorkbookReader {
 			$headers->disconnectWorksheets();
 		}
 
-		$archive = ['sheet' => (string)$archiveSheet, 'present' => false, 'keyColumnMissing' => ($loaded !== $present), 'appIds' => []];
+		// A sheet without the key column is not read; the import reports it as missing its key column.
+		$archive = [
+			'sheet' => (string)$archiveSheet,
+			'present' => false,
+			'keyColumnMissing' => ($loaded !== $present && $archiveColumns === []),
+			'appIds' => [],
+		];
 		$letters = array_map(static fn (array $columns): array => array_keys($columns), $resolved['columns']);
+		$loaded = $present;
 		if ($archiveColumns !== []) {
 			$letters[$archiveSheet] = array_keys($archiveColumns);
-			$archive['keyColumnMissing'] = false;
-		} else {
-			$loaded = $present;
+			$loaded[] = $archiveSheet;
 		}
 
 		$spreadsheet = $this->load(path: $path, sheetNames: $loaded, filter: new CmdbReadFilter(lastRow: $lastRow, columns: $letters));
 		try {
-			$rows = [];
-			foreach ($present as $sheetName) {
-				$sheetRows = $this->readRows(
-					worksheet: $spreadsheet->getSheetByName($sheetName),
-					columns: $resolved['columns'][$sheetName],
-					sheetName: $sheetName,
-					limit: $limit
-				);
-				array_push($rows, ...$sheetRows);
-			}
-
+			$rows = $this->readSourceRows(spreadsheet: $spreadsheet, sheetNames: $present, columnsPerSheet: $resolved['columns'], limit: $limit);
 			if ($archiveColumns !== []) {
 				$archiveRows = $this->readRows(
 					worksheet: $spreadsheet->getSheetByName($archiveSheet),
@@ -390,16 +366,90 @@ class CmdbWorkbookReader {
 				$archive['appIds'] = array_column(array_column($archiveRows, 'cells'), $profile->keyColumn());
 			}
 
-			$date1904 = false;
-			if (method_exists($spreadsheet, 'getExcelCalendar') === true) {
-				$date1904 = ((int)$spreadsheet->getExcelCalendar() === 1904);
-			}
+			$date1904 = self::usesDate1904(spreadsheet: $spreadsheet);
 		} finally {
 			$spreadsheet->disconnectWorksheets();
 		}
 
 		return ['rows' => $rows, 'importWarnings' => $resolved['warnings'], 'date1904' => $date1904, 'archive' => $archive];
 	}//end readBounded()
+
+	/**
+	 * The profile's source sheets that the workbook has, and every sheet it has.
+	 *
+	 * @param string $path The xlsx file.
+	 * @param CmdbImportProfile $profile The import profile.
+	 *
+	 * @return array{present: array<int, string>, available: array<int, string>}
+	 *
+	 * @throws CmdbImportException NOT_XLSX when the sheet list cannot be read, NO_SOURCE_SHEET when no source sheet is there.
+	 */
+	private function sourceSheets(string $path, CmdbImportProfile $profile): array {
+		$reader = $this->newReader(sheetNames: null);
+		try {
+			$available = $reader->listWorksheetNames($path);
+		} catch (Throwable $e) {
+			throw new CmdbImportException(
+				errorCode: CmdbImportException::NOT_XLSX,
+				message: 'The workbook cannot be read: ' . get_class($e),
+				previous: $e
+			);
+		}
+
+		$expected = $profile->sheetNames();
+		$present = array_values(array_intersect($expected, $available));
+		if ($present === []) {
+			throw new CmdbImportException(
+				errorCode: CmdbImportException::NO_SOURCE_SHEET,
+				message: 'The workbook holds none of the source sheets',
+				details: ['expected' => $expected]
+			);
+		}
+
+		return ['present' => $present, 'available' => $available];
+	}//end sourceSheets()
+
+	/**
+	 * The data rows of the source sheets, in sheet order.
+	 *
+	 * @param object $spreadsheet The spreadsheet, loaded through the data-pass read filter.
+	 * @param array<int, string> $sheetNames The source sheets the workbook has.
+	 * @param array<string, array<string, string>> $columnsPerSheet Sheet name => column letter => column name.
+	 * @param int $limit The row limit per sheet.
+	 *
+	 * @return array<int, array<string, mixed>> See read().
+	 *
+	 * @throws CmdbImportException TOO_MANY_ROWS.
+	 */
+	private function readSourceRows(object $spreadsheet, array $sheetNames, array $columnsPerSheet, int $limit): array {
+		$rows = [];
+		foreach ($sheetNames as $sheetName) {
+			$sheetRows = $this->readRows(
+				worksheet: $spreadsheet->getSheetByName($sheetName),
+				columns: $columnsPerSheet[$sheetName],
+				sheetName: $sheetName,
+				limit: $limit
+			);
+			array_push($rows, ...$sheetRows);
+		}
+
+		return $rows;
+	}//end readSourceRows()
+
+	/**
+	 * Whether the workbook uses the 1904 date system.
+	 *
+	 * @param object $spreadsheet The spreadsheet.
+	 *
+	 * @return bool
+	 */
+	private static function usesDate1904(object $spreadsheet): bool {
+		if (method_exists($spreadsheet, 'getExcelCalendar') === false) {
+			return false;
+		}
+
+		return ((int)$spreadsheet->getExcelCalendar() === 1904);
+	}//end usesDate1904()
 
 	/**
 	 * The last row number the data pass reads.

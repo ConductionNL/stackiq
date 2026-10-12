@@ -114,7 +114,6 @@ class CmdbImportControllerTest extends TestCase {
 		if ($service === null) {
 			$service = $this->createMock(CmdbExportImportService::class);
 			$service->method('maxFileBytes')->willReturn(10485760);
-			$service->method('supportsMissingRecords')->willReturnCallback(fn (string $mode): bool => in_array($mode, ['keep', 'archive'], true));
 			$service->method('missingRecordsModes')->willReturn(['keep', 'archive']);
 		}
 
@@ -158,7 +157,6 @@ class CmdbImportControllerTest extends TestCase {
 	private function service(): CmdbExportImportService|MockObject {
 		$service = $this->createMock(CmdbExportImportService::class);
 		$service->method('maxFileBytes')->willReturn(10485760);
-		$service->method('supportsMissingRecords')->willReturnCallback(fn (string $mode): bool => in_array($mode, ['keep', 'archive'], true));
 		$service->method('missingRecordsModes')->willReturn(['keep', 'archive']);
 		return $service;
 	}//end service()
