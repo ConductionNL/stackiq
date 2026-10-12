@@ -50,7 +50,7 @@ The write rules the import applies besides the mapping are answered per pack, bu
 
 ### D4. The section takes the sheet names from the endpoint, with the constant as fallback
 
-`CmdbImportMapping.vue` fetches once on creation and emits `loaded` with the answer; `CmdbImport.vue` computes `sheetNames` from it, or from `PROFILE_DEFAULTS.sheets` until it arrives or when it fails. The constant stays, as the design of cmdb-export-import intended: a fallback, never the source.
+`CmdbImportMapping.vue` fetches once on creation and emits `loaded` with the answer; `CmdbImport.vue` computes `sheetNames` from it, or from `PROFILE_DEFAULTS.sheets` until it arrives or when it fails. The constant stays, as the design of cmdb-export-import intended: a fallback, never the source. The help text and the info text name every sheet the profile lists, whatever their number: they are built from the list (`quotedSheetList`), not from its first two entries, and say nothing that depends on a sheet's position.
 
 ### D5. One component, fetched once, collapsed by default
 

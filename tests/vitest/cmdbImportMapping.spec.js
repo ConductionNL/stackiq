@@ -68,11 +68,13 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 }))
 
 const {
+	fileHelpText,
 	mappingRows,
 	mappingSheetNames,
 	packRules,
 	packTargetLabel,
 	PROFILE_DEFAULTS,
+	sheetsReadText,
 	transformDetails,
 	transformLabel,
 } = await import('../../src/utils/cmdbImport.js')
@@ -269,11 +271,41 @@ describe('cmdbImport mapping helpers', () => {
 		)
 	})
 
-	it('keeps the shipped sheet names when the answer names only one sheet', () => {
-		expect(
-			mappingSheetNames({ profile: { sheets: [{ name: 'Sheet A' }] } }),
-		).toEqual(PROFILE_DEFAULTS.sheets)
-	})
+	it.each([
+		[0, PROFILE_DEFAULTS.sheets],
+		[1, ['Sheet A']],
+		[2, ['Sheet A', 'Sheet B']],
+		[3, ['Sheet A', 'Sheet B', 'Sheet C']],
+	])(
+		'names every sheet of a profile with %i sheets in both help texts, in its order',
+		(count, expected) => {
+			const names = ['Sheet A', 'Sheet B', 'Sheet C'].slice(0, count)
+			const mapping = {
+				profile: { sheets: names.map((name) => ({ name })) },
+			}
+			const sheets = mappingSheetNames(mapping)
+			expect(sheets).toEqual(expected)
+
+			const quoted = expected.map((name) => `"${name}"`).join(', ')
+			const help = fileHelpText(sheets, 10 * 1024 * 1024)
+			expect(help).toContain(quoted)
+			expect(help).toContain('at most 10 MB')
+			expect(help).toContain(
+				expected.length === 1 ? 'with the sheet ' : 'with one of the sheets ',
+			)
+			const info = sheetsReadText(sheets)
+			expect(info).toContain(quoted)
+			expect(info).toContain(expected.length === 1 ? 'is read' : 'are read')
+			// No sheet the profile does not name, and no position-bound description.
+			for (const shipped of PROFILE_DEFAULTS.sheets) {
+				if (!expected.includes(shipped)) {
+					expect(help).not.toContain(shipped)
+					expect(info).not.toContain(shipped)
+				}
+			}
+			expect(info).not.toContain('maintenance')
+		},
+	)
 
 	it('words the write rules of a pack, and tolerates an answer without them', () => {
 		expect(packRules({})).toEqual([])

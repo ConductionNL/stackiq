@@ -1155,8 +1155,6 @@
         "The file is larger than the server accepts.": "Het bestand is groter dan de server accepteert.",
         "A source sheet may hold at most {limit} rows. Split the export and import the parts one after the other.": "Een brontabblad mag hoogstens {limit} rijen bevatten. Splits de export en importeer de delen na elkaar.",
         "Split the export and import the parts one after the other.": "Splits de export en importeer de delen na elkaar.",
-        "Excel workbook (.xlsx) with the sheet \"{first}\" or \"{second}\". By default the file may be at most {size}.": "Excel-werkmap (.xlsx) met het tabblad \"{first}\" of \"{second}\". Standaard mag het bestand hoogstens {size} zijn.",
-        "The sheets \"{first}\" (applications without arranged maintenance) and \"{second}\" (with arranged maintenance) are read; other sheets, including the \"Invoer\" sheets, are ignored.": "De tabbladen \"{first}\" (applicaties zonder geregeld beheer) en \"{second}\" (met geregeld beheer) worden gelezen; andere tabbladen, ook de \"Invoer\"-tabbladen, worden genegeerd.",
         "The page got no answer from the import.": "De pagina kreeg geen antwoord van de import.",
         "The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.": "De verbinding werd verbroken voordat de import antwoordde, dus de import kan nog bezig zijn of al klaar zijn. Wacht een paar minuten en controleer de applicaties van de gemeente voordat u opnieuw importeert. Hetzelfde bestand opnieuw importeren maakt geen dubbele records aan.",
         "The import cannot be cancelled now: the server has not started its rows yet, or has already finished them. If the import keeps running, press Cancel import again in a moment.": "De import kan nu niet worden geannuleerd: de server is nog niet aan de rijen begonnen, of is er al mee klaar. Loopt de import door, druk dan zo dadelijk opnieuw op Import annuleren.",
@@ -1240,6 +1238,10 @@
         "Pack defaults: {values}": "Standaardwaarden van het pack: {values}",
         "Set only when the record is created: {values}": "Alleen ingesteld bij het aanmaken van het record: {values}",
         "Written on create, or on update only when the stored value is empty: {fields}": "Geschreven bij aanmaken, of bij bijwerken alleen als de opgeslagen waarde leeg is: {fields}",
-        "Never written on an existing record: {fields}": "Nooit geschreven op een bestaand record: {fields}"
+        "Never written on an existing record: {fields}": "Nooit geschreven op een bestaand record: {fields}",
+        "Excel workbook (.xlsx) with the sheet {sheets}. By default the file may be at most {size}.": "Excel-werkmap (.xlsx) met het tabblad {sheets}. Standaard mag het bestand hoogstens {size} zijn.",
+        "Excel workbook (.xlsx) with one of the sheets {sheets}. By default the file may be at most {size}.": "Excel-werkmap (.xlsx) met een van de tabbladen {sheets}. Standaard mag het bestand hoogstens {size} zijn.",
+        "The sheet {sheets} is read; other sheets, including the \"Invoer\" sheets, are ignored.": "Het tabblad {sheets} wordt gelezen; andere tabbladen, ook de \"Invoer\"-tabbladen, worden genegeerd.",
+        "The sheets {sheets} are read; other sheets, including the \"Invoer\" sheets, are ignored.": "De tabbladen {sheets} worden gelezen; andere tabbladen, ook de \"Invoer\"-tabbladen, worden genegeerd."
     }
 }

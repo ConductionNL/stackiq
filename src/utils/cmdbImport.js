@@ -1009,12 +1009,13 @@ export async function loadCmdbMapping({ http }) {
 }
 
 /**
- * The names of the source sheets: the profile's when the mapping has loaded,
- * the shipped defaults until then, when it could not be loaded, or when it
- * names fewer than the two sheets the help texts name.
+ * The names of the source sheets: the profile's when the mapping has loaded
+ * and names at least one sheet, the shipped defaults until then or when it
+ * could not be loaded. Every sheet the profile names is returned, in the
+ * profile's order, so the help texts and the block show the same list.
  *
  * @param {object|null} mapping The mapping endpoint's answer, or null
- * @return {Array<string>} At least the two default names
+ * @return {Array<string>} The sheet names, never empty
  * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 export function mappingSheetNames(mapping) {
@@ -1024,7 +1025,74 @@ export function mappingSheetNames(mapping) {
 			typeof sheet === 'string' ? sheet : String(sheet?.name ?? ''),
 		)
 		.filter((name) => name !== '')
-	return names.length >= 2 ? names : [...PROFILE_DEFAULTS.sheets]
+	return names.length >= 1 ? names : [...PROFILE_DEFAULTS.sheets]
+}
+
+/**
+ * The sheet names as one quoted list: "A", "B", "C".
+ *
+ * @param {Array<string>} names The sheet names
+ * @return {string} The list
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ */
+export function quotedSheetList(names) {
+	return names.map((name) => `"${name}"`).join(', ')
+}
+
+/**
+ * The help text under the file chooser: which sheets the workbook needs and
+ * the default size limit. It names every sheet the profile reads, whatever
+ * their number, and does not depend on their order.
+ *
+ * @param {Array<string>} names The sheet names, from mappingSheetNames()
+ * @param {number} maxFileBytes The default size limit in bytes
+ * @return {string} The text
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ */
+export function fileHelpText(names, maxFileBytes) {
+	const values = {
+		sheets: quotedSheetList(names),
+		size: formatMegabytes(maxFileBytes),
+	}
+	if (names.length === 1) {
+		return t(
+			'stackiq',
+			'Excel workbook (.xlsx) with the sheet {sheets}. By default the file may be at most {size}.',
+			values,
+			AS_TEXT,
+		)
+	}
+	return t(
+		'stackiq',
+		'Excel workbook (.xlsx) with one of the sheets {sheets}. By default the file may be at most {size}.',
+		values,
+		AS_TEXT,
+	)
+}
+
+/**
+ * The sentence of the info panel that says which sheets are read.
+ *
+ * @param {Array<string>} names The sheet names, from mappingSheetNames()
+ * @return {string} The text
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ */
+export function sheetsReadText(names) {
+	const values = { sheets: quotedSheetList(names) }
+	if (names.length === 1) {
+		return t(
+			'stackiq',
+			'The sheet {sheets} is read; other sheets, including the "Invoer" sheets, are ignored.',
+			values,
+			AS_TEXT,
+		)
+	}
+	return t(
+		'stackiq',
+		'The sheets {sheets} are read; other sheets, including the "Invoer" sheets, are ignored.',
+		values,
+		AS_TEXT,
+	)
 }
 
 /**

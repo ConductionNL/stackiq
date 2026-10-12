@@ -31,6 +31,7 @@ Spec: `openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.m
   - GIVEN the endpoint's answer WHEN the block is expanded THEN one table per pack renders with `data-testid="cmdb-import-mapping-<target>"`, the usage table holding "Applicatie Status" → `status` with the lookup pairs
   - GIVEN a 503 WHEN the block loads THEN it shows the error and the code and no table
   - GIVEN the answer WHEN the section renders its help text THEN the sheet names are the endpoint's; before and on failure they are `PROFILE_DEFAULTS.sheets`
+  - GIVEN a profile with one, two or three sheets WHEN the section renders its help text and its info text THEN both name exactly those sheets in the profile's order
 - [x] Implement
 - [x] Test
 

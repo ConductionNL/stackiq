@@ -59,7 +59,7 @@ Nextcloud OCP interfaces used: `OCP\IL10N` (messages). OpenRegister: `Service\Mi
 
 ### Requirement: The admin settings SHALL offer a CMDB import section (REQ-CMDB-014)
 
-Stackiq's admin settings page SHALL show a section "CMDB import", rendered by the settings page and not registered as an in-app route. The section SHALL let the admin choose an existing municipality or type the name of a new one, choose an `.xlsx` file, and start the import. While the import runs it SHALL show a progress bar and a Cancel button. Afterwards it SHALL show the summary and a report table that can be filtered by outcome. The section SHALL also show the mapping the import uses in a collapsible block "Mapping (read-only)" (REQ-CMDB-020), and the sheet names in its help text SHALL come from that mapping, with the shipped names as the fallback until the mapping has loaded or when it cannot be loaded. Every control SHALL have a visible label, and every string SHALL be translatable.
+Stackiq's admin settings page SHALL show a section "CMDB import", rendered by the settings page and not registered as an in-app route. The section SHALL let the admin choose an existing municipality or type the name of a new one, choose an `.xlsx` file, and start the import. While the import runs it SHALL show a progress bar and a Cancel button. Afterwards it SHALL show the summary and a report table that can be filtered by outcome. The section SHALL also show the mapping the import uses in a collapsible block "Mapping (read-only)" (REQ-CMDB-020), and the sheet names in its help text SHALL come from that mapping, every sheet it names and in its order, whatever their number, with the shipped names as the fallback until the mapping has loaded or when it cannot be loaded. Every control SHALL have a visible label, and every string SHALL be translatable.
 
 (Previously: the section had no mapping block, and the sheet names in its help text were a constant in the page, which could drift from the profile on the server.)
 
@@ -78,6 +78,7 @@ Stackiq's admin settings page SHALL show a section "CMDB import", rendered by th
 - **GIVEN** a Nextcloud admin on stackiq's admin settings page
 - **WHEN** the mapping endpoint has answered
 - **THEN** the help text under the file control SHALL name the sheets the endpoint returned
+- **AND** a profile with one, two or three sheets SHALL give a help text and an info text that name exactly those sheets, with no sheet the profile does not name and no description tied to a sheet's position
 - **AND** when the endpoint fails, it SHALL name the shipped sheets and the mapping block SHALL show the error
 
 ## Non-Functional Requirements

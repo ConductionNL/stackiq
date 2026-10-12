@@ -1088,8 +1088,6 @@ OC.L10N.register(
         "The file is larger than the server accepts.": "The file is larger than the server accepts.",
         "A source sheet may hold at most {limit} rows. Split the export and import the parts one after the other.": "A source sheet may hold at most {limit} rows. Split the export and import the parts one after the other.",
         "Split the export and import the parts one after the other.": "Split the export and import the parts one after the other.",
-        "Excel workbook (.xlsx) with the sheet \"{first}\" or \"{second}\". By default the file may be at most {size}.": "Excel workbook (.xlsx) with the sheet \"{first}\" or \"{second}\". By default the file may be at most {size}.",
-        "The sheets \"{first}\" (applications without arranged maintenance) and \"{second}\" (with arranged maintenance) are read; other sheets, including the \"Invoer\" sheets, are ignored.": "The sheets \"{first}\" (applications without arranged maintenance) and \"{second}\" (with arranged maintenance) are read; other sheets, including the \"Invoer\" sheets, are ignored.",
         "The page got no answer from the import.": "The page got no answer from the import.",
         "The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.": "The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.",
         "The import cannot be cancelled now: the server has not started its rows yet, or has already finished them. If the import keeps running, press Cancel import again in a moment.": "The import cannot be cancelled now: the server has not started its rows yet, or has already finished them. If the import keeps running, press Cancel import again in a moment.",
@@ -1173,7 +1171,11 @@ OC.L10N.register(
         "Pack defaults: {values}": "Pack defaults: {values}",
         "Set only when the record is created: {values}": "Set only when the record is created: {values}",
         "Written on create, or on update only when the stored value is empty: {fields}": "Written on create, or on update only when the stored value is empty: {fields}",
-        "Never written on an existing record: {fields}": "Never written on an existing record: {fields}"
+        "Never written on an existing record: {fields}": "Never written on an existing record: {fields}",
+        "Excel workbook (.xlsx) with the sheet {sheets}. By default the file may be at most {size}.": "Excel workbook (.xlsx) with the sheet {sheets}. By default the file may be at most {size}.",
+        "Excel workbook (.xlsx) with one of the sheets {sheets}. By default the file may be at most {size}.": "Excel workbook (.xlsx) with one of the sheets {sheets}. By default the file may be at most {size}.",
+        "The sheet {sheets} is read; other sheets, including the \"Invoer\" sheets, are ignored.": "The sheet {sheets} is read; other sheets, including the \"Invoer\" sheets, are ignored.",
+        "The sheets {sheets} are read; other sheets, including the \"Invoer\" sheets, are ignored.": "The sheets {sheets} are read; other sheets, including the \"Invoer\" sheets, are ignored."
     },
     "nplurals=2; plural=(n != 1);"
 )
