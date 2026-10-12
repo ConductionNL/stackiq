@@ -34,7 +34,8 @@
  *   `missingRecords` `keep`. With `archive` (the default) the municipality's
  *   usages and their modules are reconciled after the last row: archived
  *   when the APPID is on the archive sheet, soft-deleted when it is on no
- *   sheet, archived only when the workbook has no archive sheet
+ *   sheet, archived only when the workbook has no archive sheet, the sheet
+ *   has no APPID column or an APPID in it has no cached value
  *   (openspec/changes/cmdb-import-archive-reconciliation, design D5). A
  *   module or usage matched among archived or soft-deleted objects is
  *   unarchived or restored before it is updated, never duplicated.
@@ -622,7 +623,7 @@ class CmdbExportImportService {
 	}//end runImport()
 
 	/**
-	 * Add the run's own warnings: a missing archive sheet on an archiving import, and a created municipality.
+	 * Add the run's own warnings: an archive sheet that is missing, has no key column or has unreadable keys, and a created municipality.
 	 *
 	 * @param CmdbImportReport $report The report.
 	 * @param array{uuid: string, name: string, created: bool} $municipality The consumer, as resolveMunicipality() found it.
