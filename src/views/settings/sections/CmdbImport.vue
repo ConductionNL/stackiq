@@ -362,7 +362,7 @@
 				</div>
 			</div>
 
-			<!-- The mapping the import uses, read-only; its sheet names feed the help text -->
+			<!-- The mapping the import uses, with links to its editor in OpenRegister; its sheet names feed the help text -->
 			<CmdbImportMapping @loaded="onMappingLoaded" />
 		</div>
 

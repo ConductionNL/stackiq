@@ -1052,157 +1052,66 @@ export function packTargetLabel(target) {
 }
 
 /**
- * The words for a transformation type of OpenRegister's mapping engine.
+ * The words for where the import takes a pack from: OpenRegister's pack
+ * store, or the file shipped with stackiq.
  *
- * @param {string|null|undefined} type The transform type, or nothing when the value is copied as is
- * @return {string} The translated name, or the type itself when it is unknown
+ * @param {string} source The pack's `source` from the endpoint (`openregister` or `file`)
+ * @return {string} The translated name, or the source itself when it is unknown
  * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
-export function transformLabel(type) {
-	switch (type) {
-		case undefined:
-		case null:
-		case '':
-			return t('stackiq', 'As is')
-		case 'trim':
-			return t('stackiq', 'Trim')
-		case 'date':
-			return t('stackiq', 'Date')
-		case 'lookup':
-			return t('stackiq', 'Lookup')
-		case 'bool-map':
-			return t('stackiq', 'Yes/no lookup')
-		case 'concat':
-			return t('stackiq', 'Join')
-		case 'const':
-			return t('stackiq', 'Constant')
+export function packSourceLabel(source) {
+	switch (source) {
+		case 'openregister':
+			return t('stackiq', 'OpenRegister')
+		case 'file':
+			return t('stackiq', 'Shipped file')
 		default:
-			return String(type)
+			return String(source ?? '')
 	}
 }
 
 /**
- * One text per value, for the details column: a JSON array is shown as its
- * members, a null as a dash, anything else as a string.
- *
- * @param {unknown} value The stored value
- * @return {string} The text
- */
-function valueText(value) {
-	if (value === null || value === undefined) {
-		return '—'
-	}
-	if (Array.isArray(value)) {
-		return value.map((member) => valueText(member)).join(', ')
-	}
-	if (typeof value === 'object') {
-		return JSON.stringify(value)
-	}
-	return String(value)
-}
-
-/**
- * The details of a transformation, as lines: the pairs of a lookup, the
- * extra columns of a join, the value of a constant, the formats of a date.
- * A key the page does not know is listed as it is, so nothing the engine
- * reads is hidden.
- *
- * @param {object|null} transform The transform as the pack stores it
- * @return {Array<string>} The lines, empty for a plain trim
- * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
- */
-export function transformDetails(transform) {
-	if (!transform || typeof transform !== 'object') {
-		return []
-	}
-	const lines = []
-	const known = new Set(['type'])
-	if (transform.map && typeof transform.map === 'object') {
-		known.add('map')
-		for (const [from, to] of Object.entries(transform.map)) {
-			lines.push(`${from} → ${valueText(to)}`)
-		}
-	}
-	if (Object.hasOwn(transform, 'default')) {
-		known.add('default')
-		lines.push(
-			t(
-				'stackiq',
-				'Any other value: {value}',
-				{ value: valueText(transform.default) },
-				AS_TEXT,
-			),
-		)
-	}
-	if (Array.isArray(transform.fields)) {
-		known.add('fields')
-		known.add('separator')
-		lines.push(
-			t(
-				'stackiq',
-				'Joined with the columns {columns}, separated by "{separator}"',
-				{
-					columns: transform.fields
-						.map((field) => String(field))
-						.join(', '),
-					separator: String(transform.separator ?? ''),
-				},
-				AS_TEXT,
-			),
-		)
-	}
-	if (Object.hasOwn(transform, 'value')) {
-		known.add('value')
-		lines.push(
-			t(
-				'stackiq',
-				'Value: {value}',
-				{ value: valueText(transform.value) },
-				AS_TEXT,
-			),
-		)
-	}
-	if (transform.sourceFormat || transform.targetFormat) {
-		known.add('sourceFormat')
-		known.add('targetFormat')
-		lines.push(
-			t(
-				'stackiq',
-				'Read as {source}, stored as {target}',
-				{
-					source: String(transform.sourceFormat ?? '—'),
-					target: String(transform.targetFormat ?? 'Y-m-d'),
-				},
-				AS_TEXT,
-			),
-		)
-	}
-	for (const [key, value] of Object.entries(transform)) {
-		if (!known.has(key)) {
-			lines.push(`${key}: ${valueText(value)}`)
-		}
-	}
-	return lines
-}
-
-/**
- * The rows of one pack's table: one per field mapping, in the pack's order.
+ * The version of a pack as the import runs it: the stored version for a
+ * pack from OpenRegister, with the shipped version next to it when the two
+ * differ, and the shipped version for a pack read from the file.
  *
  * @param {object} pack One entry of the endpoint's `packs`
- * @return {Array<{key: string, source: string, target: string, required: boolean, transform: string, details: Array<string>}>} The rows
+ * @return {string} The text, empty when the pack names no version
  * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
-export function mappingRows(pack) {
-	const mappings = pack?.fieldMappings
-	if (!Array.isArray(mappings)) {
-		return []
+export function packVersionText(pack) {
+	const shipped = String(pack?.shippedVersion ?? pack?.version ?? '')
+	const stored = String(pack?.storedVersion ?? '')
+	if (pack?.source === 'openregister' && stored !== '') {
+		if (shipped !== '' && shipped !== stored) {
+			return t(
+				'stackiq',
+				'Version {version} (shipped: {shipped})',
+				{ version: stored, shipped },
+				AS_TEXT,
+			)
+		}
+		return t('stackiq', 'Version {version}', { version: stored }, AS_TEXT)
 	}
-	return mappings.map((mapping, index) => ({
-		key: `${mapping?.source ?? ''}:${mapping?.target ?? ''}:${index}`,
-		source: String(mapping?.source ?? ''),
-		target: String(mapping?.target ?? ''),
-		required: Boolean(mapping?.required),
-		transform: transformLabel(mapping?.transform?.type),
-		details: transformDetails(mapping?.transform),
-	}))
+	if (shipped === '') {
+		return ''
+	}
+	return t('stackiq', 'Version {version}', { version: shipped }, AS_TEXT)
+}
+
+/**
+ * The address of OpenRegister's editor for a pack, when the page may link
+ * to it: the pack is editable and the server gave an http(s) or
+ * server-relative address. Anything else (a `javascript:` address, a
+ * protocol-relative one, no address at all) gives no link.
+ *
+ * @param {object} pack One entry of the endpoint's `packs`
+ * @return {string|null} The address, or null for no link
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export function packEditUrl(pack) {
+	if (pack?.editable !== true || typeof pack.editUrl !== 'string') {
+		return null
+	}
+	return /^(https?:\/\/|\/(?!\/))/i.test(pack.editUrl) ? pack.editUrl : null
 }

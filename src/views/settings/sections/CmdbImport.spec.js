@@ -61,6 +61,9 @@ jest.mock('vue-material-design-icons/ChevronDown.vue', () => ({
 jest.mock('vue-material-design-icons/ChevronUp.vue', () => ({
 	render: () => null,
 }))
+jest.mock('vue-material-design-icons/OpenInNew.vue', () => ({
+	render: () => null,
+}))
 jest.mock('../../../components/AlwaysVisibleSection.vue', () => ({
 	render: () => null,
 }))
