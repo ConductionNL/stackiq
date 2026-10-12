@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Controller;
 
 require_once __DIR__ . '/../Support/CmdbTestSupport.php';
+require_once __DIR__ . '/../Support/FakeMigrationPackService.php';
 
 use OCA\Stackiq\Controller\SettingsController;
 use OCA\Stackiq\Exception\CmdbImportException;
@@ -33,6 +34,7 @@ use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Tests\Unit\Support\CmdbTestSupport;
+use OCA\Stackiq\Tests\Unit\Support\FakeMigrationPackService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\Attribute\AuthorizedAdminSetting;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -42,6 +44,7 @@ use OCP\IAppConfig;
 use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IURLGenerator;
 use OCP\IUserSession;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -113,10 +116,16 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 	 * @param CmdbImportProfile|null $profile The profile; null lets the controller build the shipped one.
 	 * @param LoggerInterface|MockObject|null $logger The logger.
 	 * @param IL10N|null $l10n The translator; null answers the English text.
+	 * @param IURLGenerator|null $urlGenerator The URL generator; null builds no edit links.
 	 *
 	 * @return SettingsController
 	 */
-	private function controller(?CmdbImportProfile $profile, LoggerInterface|MockObject|null $logger = null, ?IL10N $l10n = null): SettingsController {
+	private function controller(
+		?CmdbImportProfile $profile,
+		LoggerInterface|MockObject|null $logger = null,
+		?IL10N $l10n = null,
+		?IURLGenerator $urlGenerator = null
+	): SettingsController {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParams')->willReturn([]);
 
@@ -136,7 +145,8 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 			($logger ?? $this->createMock(LoggerInterface::class)),
 			null,
 			$profile,
-			$l10n
+			$l10n,
+			$urlGenerator
 		);
 	}//end controller()
 
@@ -197,7 +207,8 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 		$data = $response->getData();
 
 		$this->assertSame(200, $response->getStatus());
-		$this->assertSame(['profile', 'packs'], array_keys($data), 'flat envelope, no success or message key');
+		$this->assertSame(['profile', 'packs', 'openRegisterPacks'], array_keys($data), 'flat envelope, no success or message key');
+		$this->assertFalse($data['openRegisterPacks']);
 
 		$this->assertSame(['Onbeh Applicaties CMDB', 'Beheerde Applicaties CMDB'], array_column($data['profile']['sheets'], 'name'));
 		$this->assertSame(['Beheer' => 'Beheer geregeld: nee'], $data['profile']['sheets'][0]['constants']);
@@ -210,6 +221,7 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 		$shipped = json_decode((string)file_get_contents(__DIR__ . '/../../../lib/Settings/cmdb-import/topdesk-profile.json'), true);
 		$this->assertSame($shipped['missingRecords'], $data['profile']['missingRecords']);
 		$this->assertSame('topdesk-profile.json', $data['profile']['profileFile']);
+		$this->assertSame('topdesk', $data['profile']['externalKeyPrefix']);
 
 		$this->assertSame(CmdbImportProfile::TARGETS, array_column($data['packs'], 'target'));
 		$this->assertCount(5, $data['packs']);
@@ -224,9 +236,32 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 
 		// What is shown is what runs: every pack lists as many mappings as the loader hands the engine.
 		foreach ($data['packs'] as $pack) {
+			$this->assertSame('file', $pack['source'], $pack['target']);
+			$this->assertNull($pack['editUrl'], $pack['target'] . ': a file is not edited in OpenRegister');
 			$this->assertNotSame('', $pack['name'], $pack['target']);
 			$this->assertNotSame('', $pack['version'], $pack['target']);
 			$this->assertCount(count($profile->pack(target: $pack['target'])['fieldMappings']), $pack['fieldMappings'], $pack['target']);
+		}
+
+		// The write rules the import applies besides the mapping (Review #1288 f2).
+		$byTarget = array_column($data['packs'], null, 'target');
+		$this->assertSame(['type' => 'Application'], $byTarget['module']['createOnlyDefaults']);
+		$this->assertSame([], $byTarget['module']['createOnlyFields'], 'type is a create-only default, not a mapped field');
+		$this->assertSame(['publicationDate', 'depublicationDate'], $byTarget['module']['neverWritten']);
+		$this->assertSame(['interneAnnotation', 'timeClassification'], $byTarget['usage']['createOnlyFields']);
+		$this->assertSame([], $byTarget['usage']['createOnlyDefaults']);
+		$this->assertSame([], $byTarget['usage']['neverWritten']);
+		$this->assertSame(['type' => 'Supplier', 'status' => 'Active', 'registeredBy' => 'Supplier'], $byTarget['manufacturer']['defaults']);
+		$this->assertSame(['type' => 'Municipality', 'status' => 'Active'], $byTarget['municipality']['defaults']);
+		$this->assertSame([], $byTarget['module']['defaults']);
+		foreach ($data['packs'] as $pack) {
+			$this->assertSame(
+				array_values(array_diff($profile->createOnlyFields(target: $pack['target']), array_diff(array_keys($pack['createOnlyDefaults']), array_column($pack['fieldMappings'], 'target')))),
+				$pack['createOnlyFields'],
+				$pack['target']
+			);
+			$this->assertSame([], array_intersect($pack['createOnlyFields'], array_diff(array_keys($pack['createOnlyDefaults']), array_column($pack['fieldMappings'], 'target'))), $pack['target']);
+			$this->assertSame($profile->neverWrittenOnUpdate(target: $pack['target']), $pack['neverWritten'], $pack['target']);
 		}
 
 		$module = $data['packs'][0]['fieldMappings'][0];
@@ -271,7 +306,7 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 		$this->assertSame(503, $response->getStatus());
 		$this->assertFalse($data['success']);
 		$this->assertSame('MAPPING_UNAVAILABLE', $data['error']);
-		$this->assertSame('NL The import mapping cannot be shown: OpenRegister is missing or a mapping file is invalid.', $data['message']);
+		$this->assertSame('NL The import mapping cannot be shown: OpenRegister is missing, or a mapping pack is invalid or unavailable.', $data['message']);
 		$this->assertStringContainsString('topdesk-usage.json', $data['details']->reason);
 		$this->assertStringContainsString('uppercase', $data['details']->reason, 'the validator names the unknown transform');
 	}//end testABrokenPackIs503WithTheReason()
@@ -291,7 +326,7 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 
 		$this->assertSame(503, $response->getStatus());
 		$this->assertSame('MAPPING_UNAVAILABLE', $data['error']);
-		$this->assertSame('The import mapping cannot be shown: OpenRegister is missing or a mapping file is invalid.', $data['message']);
+		$this->assertSame('The import mapping cannot be shown: OpenRegister is missing, or a mapping pack is invalid or unavailable.', $data['message']);
 		$this->assertSame('OpenRegister PackDefinitionValidator is not available', $data['details']->reason);
 	}//end testAMissingValidatorIs503()
 
@@ -325,6 +360,114 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 		$this->assertStringNotContainsString('second line', $reason);
 		$this->assertSame(500, mb_strlen($reason));
 	}//end testTheReasonIsOneBoundedLine()
+
+	/**
+	 * A pack stored in OpenRegister answers its source, versions and the absolute link to its editor.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-3
+	 */
+	public function testAStoredPackLinksToItsEditorInOpenRegister(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$service = new FakeMigrationPackService();
+		$config = [];
+		$profile = new CmdbImportProfile(
+			container: $service->container(test: $this, appConfig: FakeMigrationPackService::appConfig(test: $this, values: $config))
+		);
+		$routes = [];
+		$urls = $this->createMock(IURLGenerator::class);
+		$urls->method('linkToRouteAbsolute')->willReturnCallback(
+			function (string $route, array $parameters) use (&$routes): string {
+				$routes[] = $route;
+				return 'https://cloud.example/index.php/apps/openregister/' . $parameters['path'];
+			}
+		);
+
+		$data = $this->controller(profile: $profile, urlGenerator: $urls)->getCmdbImportMapping()->getData();
+		$byTarget = array_column($data['packs'], null, 'target');
+
+		$this->assertTrue($data['openRegisterPacks']);
+		foreach (CmdbImportProfile::EDITABLE_TARGETS as $target) {
+			$pack = $byTarget[$target];
+			$this->assertSame('openregister', $pack['source'], $target);
+			$this->assertIsInt($pack['packId'], $target);
+			$this->assertSame(
+				'https://cloud.example/index.php/apps/openregister/migration-packs/' . $pack['packId'],
+				$pack['editUrl'],
+				$target
+			);
+			$this->assertTrue($pack['editable'], $target);
+			$this->assertFalse($pack['edited'], $target . ' is as seeded');
+			$this->assertFalse($pack['newerShipped'], $target);
+			$this->assertSame($pack['shippedVersion'], $pack['storedVersion'], $target);
+		}
+
+		$this->assertSame(['openregister.dashboard.catchAll'], array_values(array_unique($routes)), "OpenRegister's page route");
+		$this->assertSame('file', $byTarget['municipality']['source']);
+		$this->assertNull($byTarget['municipality']['editUrl']);
+		$this->assertFalse($byTarget['municipality']['editable']);
+		$this->assertSame(
+			['target', 'file', 'id', 'name', 'version', 'description', 'fieldMappings', 'defaults', 'createOnlyDefaults', 'createOnlyFields', 'neverWritten', 'source', 'packId', 'storedVersion', 'shippedVersion', 'edited', 'newerShipped', 'editable', 'editUrl'],
+			array_keys($byTarget['module']),
+			'the keys the settings section reads'
+		);
+	}//end testAStoredPackLinksToItsEditorInOpenRegister()
+
+	/**
+	 * When OpenRegister's route cannot be built the link is null, never the instance's front page.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-3
+	 */
+	public function testAnUnknownRouteGivesNoLink(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$service = new FakeMigrationPackService();
+		$config = [];
+		$profile = new CmdbImportProfile(
+			container: $service->container(test: $this, appConfig: FakeMigrationPackService::appConfig(test: $this, values: $config))
+		);
+		$urls = $this->createMock(IURLGenerator::class);
+		$urls->method('linkToRouteAbsolute')->willReturn('https://cloud.example/');
+
+		$data = $this->controller(profile: $profile, urlGenerator: $urls)->getCmdbImportMapping()->getData();
+
+		$this->assertSame([null], array_values(array_unique(array_column($data['packs'], 'editUrl'))));
+
+		$throwing = $this->createMock(IURLGenerator::class);
+		$throwing->method('linkToRouteAbsolute')->willThrowException(new RuntimeException('no router'));
+		$data = $this->controller(profile: $profile, urlGenerator: $throwing)->getCmdbImportMapping()->getData();
+		$this->assertSame([null], array_values(array_unique(array_column($data['packs'], 'editUrl'))));
+	}//end testAnUnknownRouteGivesNoLink()
+
+	/**
+	 * A stored pack that breaks a rule answers 503 naming the OpenRegister pack and its id.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-3
+	 */
+	public function testABrokenStoredPackIs503NamingThePack(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$service = new FakeMigrationPackService();
+		$usage = json_decode((string)file_get_contents(CmdbTestSupport::appRoot() . '/lib/Settings/cmdb-import/topdesk-usage.json'), true);
+		$usage['fieldMappings'][0]['target'] = 'provider';
+		$id = $service->put(definition: $usage);
+		$config = [];
+		$profile = new CmdbImportProfile(
+			container: $service->container(test: $this, appConfig: FakeMigrationPackService::appConfig(test: $this, values: $config))
+		);
+
+		$response = $this->controller(profile: $profile)->getCmdbImportMapping();
+
+		$this->assertSame(503, $response->getStatus());
+		$this->assertSame('MAPPING_UNAVAILABLE', $response->getData()['error']);
+		$this->assertStringStartsWith('OpenRegister migration pack stackiq-topdesk-usage (id ' . $id . ')', $response->getData()['details']->reason);
+		$this->assertStringContainsString('"provider" is set by the import', $response->getData()['details']->reason);
+		$this->assertSame('stackiq-topdesk-usage', $response->getData()['details']->pack);
+		$this->assertSame($id, $response->getData()['details']->packId);
+	}//end testABrokenStoredPackIs503NamingThePack()
 
 	/**
 	 * An unexpected error is 500 IMPORT_FAILED with a static message, and the exception is logged.

@@ -7,11 +7,11 @@ depends_on: []
 
 ## Summary
 
-The "CMDB import" section of stackiq's admin settings gets a collapsible, read-only block "Mapping (read-only)" that shows the column mapping the import really uses: the sheets, the key and required columns, and one table per migration pack with the source column, the target field, whether it is required, and the transformation with its lookup values. A new admin endpoint `GET /api/settings/cmdb-import/mapping` loads the import profile and the five packs through the same loader and validator the import uses, so what the administrator sees is what the next import runs. Editing stays in the JSON files on the server; the documentation says where they are and what an administrator can change.
+A Nextcloud administrator can view and edit the column mapping of the CMDB import in OpenRegister. The four sheet packs of the import (module, manufacturer, usage and business owner) move into OpenRegister's existing migration-pack store, where OpenRegister's pack editor shows and changes them. The import reads each pack from that store first and runs exactly what the administrator saved. The packs that ship under `lib/Settings/cmdb-import/` become the seed and the fallback: a repair step stores them in OpenRegister as built-in packs, and replaces a stored pack nobody edited when a later release ships a newer one. An edited pack is never overwritten. A stored pack that is invalid, or that breaks a rule of the import, stops the import with 503 `MAPPING_UNAVAILABLE` naming the pack; it never falls back to the files silently. `GET /api/settings/cmdb-import/mapping` says per pack where it comes from, which versions are stored and shipped, whether it was edited, and links to its editor in OpenRegister. The "CMDB import" section of stackiq's admin settings shows that per pack, with the sheet names the import reads.
 
 ## Motivation
 
-The municipality's application manager (Jira WOO-588, sub-task of WOO-586) wants to see which TOPdesk column lands in which stackiq field, and which export values the import recognises, without reading JSON on the server. The mapping is declarative (REQ-CMDB-005) and OpenRegister has APIs for migration packs, but no screen for them, and stackiq offered no view of its profile or packs either: the section's help text even carried the sheet names as a constant in the page, which could drift from the profile. Options weighed on 2026-10-09: (A) an existing OpenRegister screen, which does not exist; (B) a read-only view in the section; (C) documentation only; (B+) editing through OpenRegister's packs. B was chosen: the question was "make it visible", the change stays in stackiq, and editing a mapping stays a rare, file-based act.
+The municipality's application manager (Jira WOO-588, sub-task of WOO-586) must be able to see and change which TOPdesk column lands in which stackiq field, and which export values the import recognises, without editing JSON on the server. The first version of this change (2026-10-09) only showed the mapping read-only and left editing in the files, which an app update overwrites. On 2026-10-12 it was decided that mapping lives in OpenRegister: the packs are already OpenRegister migration packs, executed by OpenRegister's `MappingEngine` and validated by its `PackDefinitionValidator`, and OpenRegister already stores and serves such packs (`/api/migration-packs`). Storing the import's packs there makes the edited object exactly the object the import runs, and gives the administrator one place for mappings. Integriq is not changed; its mapping screens are the pattern for OpenRegister's editor.
 
 ## Capabilities
 
@@ -21,31 +21,38 @@ None.
 
 ### Modified Capabilities
 
-- `cmdb-export-import`: ADDED REQ-CMDB-020 (the mapping overview endpoint and the read-only block); MODIFIED REQ-CMDB-014 (the section shows the mapping, and its help text takes the sheet names from the endpoint).
+- `cmdb-export-import`: ADDED REQ-CMDB-020 (the mapping endpoint and section, now with source, versions and the editor link), REQ-CMDB-021 (the import takes the sheet packs from OpenRegister's store, with the import's rules and fail-closed answers) and REQ-CMDB-022 (seeding and updating the packs in OpenRegister); MODIFIED REQ-CMDB-005 (where the packs come from, the date columns a pack adds, the pack's own concat separator) and REQ-CMDB-014 (the section shows the mapping summary).
 
 ## Affected Projects
 
-- [ ] Project: `stackiq`: one endpoint in `SettingsController`, one accessor on `CmdbImportProfile`, a `CmdbImportMapping.vue` block in the "CMDB import" section, helpers in `src/utils/cmdbImport.js`, documentation, translations, tests.
+- [ ] Project: `stackiq`: the pack resolution and rules in `lib/Service/Cmdb/`, a repair step, the extended endpoint, the slimmed mapping block in the "CMDB import" section, documentation, translations, tests.
+- [ ] Project: `openregister` (separate change and PR): the migration-pack list and editor pages that the `editUrl` opens, the envelope body on `PUT /api/migration-packs/{id}`, and a builtin pack keeping its slug.
 
 ## Scope
 
 ### In Scope
 
-- `GET /api/settings/cmdb-import/mapping`, for Nextcloud admins only and CSRF-protected, answering the profile and the packs as loaded by `CmdbImportProfile`, or 503 `MAPPING_UNAVAILABLE` with the loader's reason when a pack is broken.
-- The collapsible block in `CmdbImport.vue`, with loading and error states, one table per pack and a `data-testid` per table.
-- The sheet names in the section's help text come from the endpoint; the shipped names stay as the fallback.
-- `docs/features/cmdb-import.md`: "Viewing the mapping", and "Adjusting the mapping" updated.
-- PHPUnit, vitest and a Playwright spec.
+- Reading the module, manufacturer, usage and business-owner packs from OpenRegister's migration-pack store by slug, with the shipped file as the seed and, while nothing was ever stored, as the fallback with one import warning.
+- The import's own rules on every pack, stored or shipped: the required mappings, and an allowlist of the fields a pack may write.
+- Failing closed with 503 `MAPPING_UNAVAILABLE` when a stored pack is invalid or breaks a rule, when it was renamed, or when the store is gone after the packs were stored there.
+- The repair step `SeedCmdbImportPacks` on install and upgrade: seeds missing packs as built-in, replaces unedited packs with the shipped pack of the release, keeps edited ones and reports them; the row ids are kept in stackiq's app config.
+- The `x-stackiq` marker in a stored definition: the shipped version and the hash of the shipped pack it was seeded from.
+- Excel date conversion for every column a pack maps with a date transform; the note cleanup on the pack's own concat separator.
+- `GET /api/settings/cmdb-import/mapping` extended per pack with `source`, `packId`, `storedVersion`, `shippedVersion`, `edited`, `newerShipped`, `editable` and `editUrl`, and `openRegisterPacks` at the top level.
+- The section's mapping block: per pack its source, version, a hint when a newer shipped pack was not applied, and an "Edit in OpenRegister" link; the sheet names in the help text come from the endpoint.
+- `docs/features/cmdb-import.md`: viewing and editing the mapping in OpenRegister.
 
 ### Out of Scope
 
-- Editing the mapping in the UI, or through OpenRegister's migration-pack store (B+, rejected for now).
-- New transformations in OpenRegister's mapping engine, or promoting `MappingEngine` to an OpenRegister contract.
-- A sixth pack (technical owner): the functional administrator is not imported (cmdb-export-import, design D2).
+- The editor itself: OpenRegister's change for its migration-pack pages.
+- The municipality pack: it maps the import options, not a sheet, and stays a shipped file that is not editable.
+- The import profile (`topdesk-profile.json`): sheets, key and required columns, limits and write rules stay a shipped file, shown read-only.
+- More than one mapping per instance: OpenRegister's pack store has no organisation scope, so an instance has one TOPdesk mapping for every municipality it imports.
+- Promoting `MappingEngine`, `PackDefinitionValidator` or `MigrationPackService` to an OpenRegister contract.
 
 ## Approach
 
-`CmdbImportProfile::mappingOverview()` builds the answer from the loaded profile and packs through the existing accessors, after `load()` validated every pack. `SettingsController::getCmdbImportMapping()` returns it as a flat 200, or translates `CmdbImportException` into the import's error envelope with the reason in `details.reason`. The section mounts a `CmdbImportMapping` component that fetches the endpoint once, renders the tables with `CnDataTable`, and emits the loaded mapping so the parent can take the sheet names from it. The transform is shown as the pack stores it: type, map or fields or value, and the formats of a date.
+`CmdbImportProfile::load()` reads each shipped pack, validates it, and for the four sheet targets asks `CmdbImportPackStore` for the stored pack. The store resolves OpenRegister's `MigrationPackService` defensively from the container, finds the pack by slug, seeds it when it is missing, and replaces it when its `x-stackiq` marker shows it was not edited and the shipped pack has changed. `CmdbImportPackRules` checks every pack against the import's rules; `CmdbImportPackMarker` computes the canonical hash. The repair step calls the same store. `SettingsController` adds `editUrl` from OpenRegister's page route through `IURLGenerator`.
 
 ## New Dependencies
 
@@ -53,26 +60,33 @@ None.
 
 ## Impact
 
-- **Backend**: `lib/Controller/SettingsController.php` (one method, two optional constructor arguments), `lib/Service/Cmdb/CmdbImportProfile.php` (one method), one route in `appinfo/routes.php`.
-- **Frontend**: `src/views/settings/sections/CmdbImportMapping.vue` (new), `src/views/settings/sections/CmdbImport.vue` (mounts it, takes the sheet names from it), `src/utils/cmdbImport.js` (URL, request, row and label helpers).
-- **Data**: none. The endpoint reads six files that ship with the app and writes nothing.
+- **Backend**: `lib/Service/Cmdb/CmdbImportProfile.php` (resolution, sources, date columns, concat separator), new `CmdbImportPackStore.php`, `CmdbImportPackMarker.php`, `CmdbImportPackRules.php`, new `lib/Repair/SeedCmdbImportPacks.php` and its registration in `appinfo/info.xml`, `lib/Controller/SettingsController.php` (`editUrl`, details), `lib/Controller/CmdbImportController.php` (the message names the pack), `lib/Service/CmdbExportImportService.php` (fallback warning, separator).
+- **Frontend**: the mapping block in the "CMDB import" section.
+- **Data**: four rows in OpenRegister's `openregister_migration_packs`, created by the repair step or the first import; one app config key, `cmdb_import_pack_ids`.
 
 ## Cross-Project Dependencies
 
-- **openregister** (consumed, not changed): `MigrationPack\PackDefinitionValidator`, through the existing guard in `CmdbImportProfile`.
+- **openregister** (consumed): `Service\MigrationPackService` (`findByPackSlug`, `find`, `create`, `update`), `Db\MigrationPack::getDefinitionArray()`, `Service\MigrationPack\PackDefinitionValidator`, `Service\MigrationPack\MappingEngine`, and the page route `dashboard#catchAll` for `/migration-packs/{id}`.
+- **openregister** (needed for editing): the migration-pack pages and the envelope body of OpenRegister's change for WOO-588. Without them stackiq still seeds and reads the packs, and the link opens a page OpenRegister does not have yet.
 
 ## Risks
 
-### Risk 1: The view shows a mapping the import does not use
-**Severity:** Low — **Mitigation:** the endpoint and the import share one loader (`CmdbImportProfile`), one directory and one validator; the unit test reads the shipped directory through the controller and compares it with the profile's own accessors.
+### Risk 1: An edit in OpenRegister writes fields the import must not write
+**Severity:** High — **Mitigation:** the import writes with OpenRegister's RBAC and multitenancy off, so every pack must follow the import's rules (REQ-CMDB-021): only the fields of its target schema, never object metadata, match keys or the relations the import sets, and the required mappings kept. A pack that breaks a rule stops the import with 503 naming the pack.
 
-### Risk 2: The loader's reason leaks something it should not
-**Severity:** Low — **Mitigation:** the reason is composed by stackiq (file name plus the validator's messages about the pack's structure) or is the fixed text that the validator is missing; it never holds a cell value or a person. The `message` stays static and translated (ADR-050).
+### Risk 2: An administrator's edit is lost or silently ignored
+**Severity:** High — **Mitigation:** the repair step never overwrites an edited pack; a renamed pack, or a store that is gone after the packs were stored, fails closed instead of falling back to the files.
+
+### Risk 3: An edit widens what the import reads
+**Severity:** Medium — **Mitigation:** the read allowlist is every column the profile or a pack names, so an administrator who maps a new column makes the import read it. Only Nextcloud admins can edit packs and run the import; the documentation says that a mapped column is read.
+
+### Risk 4: OpenRegister's internal classes change
+**Severity:** Medium — **Mitigation:** resolved defensively and checked for the methods called; a missing service before any seed falls back to the files with a warning, afterwards fails closed.
 
 ## Rollback Strategy
 
-Additive. Revert the PR to remove the route, the method, the component and the strings; the section then shows its constant sheet names again, as before.
+Revert the PR. The import then reads the shipped files again; the four rows in OpenRegister's pack store stay and are ignored, and can be deleted there. The app config key `cmdb_import_pack_ids` can be deleted with `occ config:app:delete stackiq cmdb_import_pack_ids`.
 
 ## Open Questions
 
-- Should a later change let an administrator override a pack through OpenRegister's migration-pack store (`POST /api/migration-packs/import`), as cmdb-export-import design D2 noted? Not for this change.
+- Does any instance import for more than one municipality? The store holds one mapping per instance; per-municipality packs would need a slug per municipality or a pack chosen in the import options.

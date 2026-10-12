@@ -150,6 +150,9 @@ date stored there, including one set by hand.
 
 ### Columns and where they go
 
+This is the mapping as it ships; an administrator can change it in
+OpenRegister (see [Viewing and editing the mapping](#viewing-and-editing-the-mapping)).
+
 | Column | Goes to | Rule |
 |---|---|---|
 | APPID | module external number, and the match key | required, see [Repeat imports](#repeat-imports) |
@@ -294,7 +297,7 @@ and the section shows the reason and the error code.
 | `FIELD_INVALID` | A form field of the request has a value the import does not accept, for example an `updateExisting` or `publish` that is neither `true` nor `false`. The message names the field. | Not reachable from the section; reported for API callers. |
 | `UPLOAD_FAILED` | The file reached the server but could not be stored there. | Try again; the Nextcloud log has the details. |
 | `MISSING_RECORDS_UNSUPPORTED` | The request asked to mark or remove records missing from the export. Only keeping them is supported. | Not reachable from the section; reported for API callers. |
-| `MAPPING_UNAVAILABLE` | OpenRegister's mapping engine is missing, or one of the mapping files is invalid. | Update OpenRegister. If you changed a mapping file, check it against the Nextcloud log. |
+| `MAPPING_UNAVAILABLE` | OpenRegister's mapping engine or pack store is missing, or a mapping pack is invalid or breaks a rule of the import. The message names the pack when one is at fault. | Update or enable OpenRegister. If you changed a pack, correct it in OpenRegister; see [Viewing and editing the mapping](#viewing-and-editing-the-mapping). |
 | `READER_UNAVAILABLE` | The Excel reader that ships with OpenRegister cannot be loaded. | Make sure OpenRegister is installed and enabled. |
 | `NOT_CONFIGURED` | The stackiq register or its schemas cannot be found. | Run **Auto Configure** at the top of the stackiq admin settings. |
 | `SCHEMA_OUTDATED` | A stackiq schema lacks a property the import recognises records by, for example `externalKey` on the module schema, or the module schema is older than version 0.3.8: it has no `applicationType`, or `externalKey` lacks the rule that only an administrator may change it. Importing anyway would create every application again, or leave the import key open to every editor. The message names the schema. | Press **Force Update** at the top of the stackiq admin settings to import the register configuration again. |
@@ -331,64 +334,100 @@ every import:
 The section's help text shows the defaults; when the server refuses a file,
 the message shows the limit the server applied. A larger file also has to
 pass PHP's `upload_max_filesize` and `post_max_size` and the web server's
-request size limit. Like the mapping files, the profile is part of the app:
-a change made on the server is overwritten by the next app update.
+request size limit. The profile is part of the app: a change made on the
+server is overwritten by the next app update.
 
-## Viewing the mapping
+## Viewing and editing the mapping
 
-The section shows the mapping the next import runs, read-only. Open
-**Administration settings → Stackiq → CMDB import** and press **Mapping
-(read-only)** under the import form. The block shows:
+Open **Administration settings → Stackiq → CMDB import** and press
+**Mapping** under the import form. The block shows:
 
 - the sheets the import reads, the match column (`APPID`), the name column,
-  the required columns and the date columns;
-- one table per pack (application, Supplier organisation, municipality,
-  usage, business owner), with the pack's file, name and version;
-- per row of a table: the column in the export, the field it goes to,
-  whether the column is required, the transformation (as is, trim, date,
-  lookup, yes/no lookup, join, constant) and its details, such as the export
-  values a lookup recognises and what each becomes.
+  the required columns and the date columns the profile names;
+- one line per pack (application, Supplier organisation, municipality,
+  usage, business owner): where the import takes it from, its version, and
+  for a pack kept in OpenRegister an **Edit in OpenRegister** link.
 
-The block reads the files through the same loader the import uses, so what
-it shows is what the import does. When a file is invalid, the block shows
-`MAPPING_UNAVAILABLE` with the file and the reason instead of the tables, and
-the import refuses to run with the same code. The sheet names in the
-section's help text come from the same answer.
+The block reads the packs through the same loader the import uses, so what
+it shows is what the import runs. When a pack is invalid, the block shows
+`MAPPING_UNAVAILABLE` with the pack and the reason, and the import refuses to
+run with the same code. The sheet names in the section's help text come from
+the same answer. The data behind the block is also available to Nextcloud
+administrators as `GET /apps/stackiq/api/settings/cmdb-import/mapping`.
 
-The block is only for viewing: nothing in it changes the mapping. The data
-behind it is also available to Nextcloud administrators as
-`GET /apps/stackiq/api/settings/cmdb-import/mapping`.
+The mapping from export columns to stackiq fields is not in code. It is a
+set of mapping packs that OpenRegister's mapping engine runs, one per kind of
+record the import writes. Four of them are kept in OpenRegister, where you
+can view and change them:
 
-## Adjusting the mapping
-
-The mapping from columns to fields is not in code. It is a set of JSON files
-in `lib/Settings/cmdb-import/`, executed by OpenRegister's mapping engine.
-It cannot be changed in the section; **Mapping (read-only)** shows which
-file and which entry hold a column, so you know what to change:
-
-| File | What it maps |
+| Pack (in OpenRegister) | What it maps |
 |---|---|
-| `topdesk-profile.json` | the sheets, the constant each sheet adds to its rows (`Beheer`) and the columns it is known to lack, the match column, the required, date and id columns, the placeholder values that mean empty, the limits, and which pack is used for which target |
-| `topdesk-module.json` | a row to the module (hosting model and BBN lookups) |
-| `topdesk-manufacturer.json` | "Vendor" to the Supplier organisation |
-| `topdesk-municipality.json` | a typed municipality name to a new organisation |
-| `topdesk-usage.json` | a row to the usage (status and TIME lookups, dates, annotation) |
-| `topdesk-business-owner.json` | the owner columns |
+| `stackiq-topdesk-module` | a row to the application (hosting model and BBN lookups, dates) |
+| `stackiq-topdesk-manufacturer` | "Vendor" to the Supplier organisation |
+| `stackiq-topdesk-usage` | a row to the usage (status and TIME lookups, phase-out date, internal note) |
+| `stackiq-topdesk-business-owner` | the owner columns |
 
-Each pack has a list of `fieldMappings`, one per column: `source` (the column
-name in the export), `target` (the field), optionally `required`, and a
-`transform` such as `trim`, `date` or a `lookup` with a `map` of export values
-to stored values. For example, to accept a new "Applicatiesoort" value, add
-it to the `map` of the hosting-model lookup in `topdesk-module.json`:
+Stackiq puts these four packs into OpenRegister when it is installed or
+updated. The **CMDB import** section shows, per pack, where the import takes
+it from (OpenRegister, or the copy that ships with stackiq), its version, and
+an **Edit in OpenRegister** link that opens the pack. The import always runs
+what is saved in OpenRegister.
 
-```json
-"Cloud": ["SaaS"]
-```
+Each pack has a list of field mappings, one per column: the column name in
+the export, the field it goes to, whether it is required, and a
+transformation such as trim, a date, or a lookup table of export values to
+stored values. For example, to accept a new "Applicatie Status" value, add it
+to the lookup table of the status mapping in `stackiq-topdesk-usage`. To
+accept a new "Applicatiesoort" value as a hosting model, add it to the lookup
+table of the hosting-model mapping in `stackiq-topdesk-module`, for example
+`Cloud` → `SaaS`. When a pack maps a column with a date transformation, the
+import reads that column as an Excel date.
 
-To accept a new "Applicatie Status" value, add it to the `map` of the status
-lookup in `topdesk-usage.json`. The packs are checked by OpenRegister when an import
-starts; an invalid pack stops the import with `MAPPING_UNAVAILABLE` before
-any row is read. After saving a file, reload the settings page: **Mapping
-(read-only)** then shows the new mapping, or the reason the file is
-refused. A mapping file changed on the server is overwritten by the next app
-update, so propose lasting changes to the app itself.
+**What the import refuses.** The import writes past OpenRegister's access
+rules, so it checks every pack before it reads a row. It refuses a pack, with
+`MAPPING_UNAVAILABLE` and the name and id of the pack, when:
+
+- OpenRegister finds the pack invalid;
+- the application name, the APPID (to the source number), the vendor name or
+  the owner name is no longer mapped, or no longer marked required;
+- a mapping writes a field the import sets itself or that the record does not
+  have: the import key, the provider, the consumer, the application of a
+  usage, the business owner, the publication dates of an application, or
+  the type of an organisation (a Supplier stays a Supplier).
+
+The section shows the same reason, so you can correct the pack in
+OpenRegister and try again. After saving a pack in OpenRegister, reload the
+settings page: **Mapping** then shows the new version, or the reason the
+pack is refused.
+
+**What a pack does not change.** Which sheets are read, the APPID and
+"Applicatie Naam" columns, the values that mean empty (`NB`), the constant
+each sheet adds (`Beheer geregeld: ja` or `nee`), the limits, and which fields
+are written only on create or never on an existing record are part of the app
+(`lib/Settings/cmdb-import/topdesk-profile.json`), and the section shows them
+read-only. The municipality is mapped from the name you type in the section,
+not from the export; that pack is not edited in OpenRegister either.
+
+**Reading more columns.** The import reads only the columns the mapping
+names. When you map a new column in a pack, the import reads that column from
+then on.
+
+**One mapping per Nextcloud.** The packs in OpenRegister apply to every
+import on this Nextcloud, whatever the municipality.
+
+**App updates.** A pack you have not changed follows the app: when an update
+ships a newer version, the stored pack is replaced by it. A pack you changed
+is never overwritten. When an update ships a newer version of a pack you
+changed, the section says so; compare the two and copy what you need into
+your pack in OpenRegister.
+
+**Back to the shipped pack.** Delete the pack in OpenRegister. The next
+import, or the next app update, puts the shipped pack back. Do not rename a
+pack: the import finds it by its id (such as `stackiq-topdesk-usage`), and
+refuses to run while a pack it stored has another id.
+
+**Without OpenRegister's pack store.** On an OpenRegister version without
+migration packs, the import uses the packs that ship with stackiq and the
+result says so. Once the packs have been stored in OpenRegister, the import
+does not fall back to those copies: when OpenRegister's pack store is gone,
+it refuses with `MAPPING_UNAVAILABLE` until OpenRegister is back.

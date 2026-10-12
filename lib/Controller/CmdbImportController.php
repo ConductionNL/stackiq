@@ -384,6 +384,8 @@ class CmdbImportController extends Controller {
 	 * @return string
 	 *
 	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) One branch per contract error code.
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function message(string $code, array $details): string {
 		$megabytes = (string)round((int)($details['maxBytes'] ?? $this->importService->maxFileBytes()) / 1048576, 1);
@@ -401,7 +403,7 @@ class CmdbImportController extends Controller {
 			'NO_SOURCE_SHEET' => $this->l10n->t('The workbook has neither of the sheets %s.', [$expected]),
 			'MISSING_COLUMN' => $this->l10n->t('Sheet "%1$s" has no column "%2$s".', [(string)($details['sheet'] ?? ''), (string)($details['column'] ?? '')]),
 			'TOO_MANY_ROWS' => $this->l10n->t('Sheet "%1$s" has more than %2$s rows.', [(string)($details['sheet'] ?? ''), (string)($details['limit'] ?? '')]),
-			'MAPPING_UNAVAILABLE' => $this->l10n->t('The import mapping cannot run: OpenRegister is missing or a mapping file is invalid.'),
+			'MAPPING_UNAVAILABLE' => $this->mappingMessage(details: $details),
 			'READER_UNAVAILABLE' => $this->l10n->t('The Excel reader is not available: OpenRegister is missing or incomplete.'),
 			'NOT_CONFIGURED' => $this->l10n->t('Stackiq is not configured: the register or its schemas cannot be found.'),
 			'OPERATION_NOT_FOUND' => $this->l10n->t('No running CMDB import has this id.'),
@@ -413,6 +415,31 @@ class CmdbImportController extends Controller {
 			default => $this->l10n->t('The import failed. The details are in the Nextcloud log.'),
 		};
 	}//end message()
+
+	/**
+	 * The message of MAPPING_UNAVAILABLE, naming the OpenRegister migration pack when one is at fault.
+	 *
+	 * @param array<string, mixed> $details The details: `pack` and `packId` for a pack stored in OpenRegister.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	private function mappingMessage(array $details): string {
+		$pack = ($details['pack'] ?? null);
+		if (is_string($pack) === false || $pack === '') {
+			return $this->l10n->t('The import mapping cannot run: OpenRegister is missing, or a mapping pack is invalid or unavailable.');
+		}
+
+		if (is_int($details['packId'] ?? null) === true) {
+			$pack .= ' (id ' . $details['packId'] . ')';
+		}
+
+		return $this->l10n->t(
+			'The import mapping cannot run: the OpenRegister migration pack %s is invalid or cannot be read. The details are in the Nextcloud log.',
+			[$pack]
+		);
+	}//end mappingMessage()
 
 	/**
 	 * The message of FIELD_INVALID, naming the accepted values when the field has a fixed set.

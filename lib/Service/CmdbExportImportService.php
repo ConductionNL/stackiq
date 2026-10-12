@@ -183,11 +183,6 @@ class CmdbExportImportService {
 	private const PAGE_SIZE = 500;
 
 	/**
-	 * Separator of the concat mapping for the internal note.
-	 */
-	private const NOTE_SEPARATOR = ' / ';
-
-	/**
 	 * The mapping engine of the current run.
 	 *
 	 * @var object|null
@@ -442,6 +437,7 @@ class CmdbExportImportService {
 	 * @return array<string, mixed> The report.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function runImport(string $path, array $options, string $startedAt): array {
 		$workbook = $this->reader->read(path: $path, profile: $this->profile);
@@ -452,6 +448,17 @@ class CmdbExportImportService {
 		$report = new CmdbImportReport(operationId: $operationId, rowsRead: count($rows));
 		$report->setMunicipality(uuid: $municipality['uuid'], name: $municipality['name'], created: $municipality['created']);
 		$report->addImportWarnings(warnings: $this->translateImportWarnings(warnings: $workbook['importWarnings']));
+		if ($this->profile->usesShippedFallback() === true) {
+			$report->addImportWarnings(
+				warnings: [
+					[
+						'sheet' => '',
+						'message' => $this->l10n->t('OpenRegister\'s migration pack store is not available, so this import used the mapping that ships with stackiq.'),
+					],
+				]
+			);
+		}
+
 		if ($municipality['created'] === true) {
 			$report->addImportWarnings(
 				warnings: [
@@ -1176,15 +1183,17 @@ class CmdbExportImportService {
 	 * @return array{uuid: string, outcome: string}
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function upsertUsage(array $data, string $municipalityUuid, string $moduleUuid, ?string $providerUuid, array $owners): array {
-		if (isset($data['interneAnnotation']) === true && is_string($data['interneAnnotation']) === true) {
+		$separator = $this->profile->concatSeparator(target: 'usage', field: 'interneAnnotation');
+		if ($separator !== null && isset($data['interneAnnotation']) === true && is_string($data['interneAnnotation']) === true) {
 			// The concat mapping leaves an empty part for every empty column; drop those.
 			$parts = array_filter(
-				array_map('trim', explode(self::NOTE_SEPARATOR, $data['interneAnnotation'])),
+				array_map('trim', explode($separator, $data['interneAnnotation'])),
 				fn (string $part): bool => $part !== ''
 			);
-			$data['interneAnnotation'] = implode(self::NOTE_SEPARATOR, $parts);
+			$data['interneAnnotation'] = implode($separator, $parts);
 		}
 
 		$data['consumer'] = $municipalityUuid;

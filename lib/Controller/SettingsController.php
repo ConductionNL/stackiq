@@ -46,6 +46,7 @@ use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
+use OCP\IURLGenerator;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -75,6 +76,13 @@ class SettingsController extends Controller {
 	private const REASON_MAX_LENGTH = 500;
 
 	/**
+	 * OpenRegister's single-page catch-all route, which serves its migration-pack editor.
+	 *
+	 * @var string
+	 */
+	private const OPENREGISTER_PAGE_ROUTE = 'openregister.dashboard.catchAll';
+
+	/**
 	 * The OpenRegister object service.
 	 *
 	 * @var ObjectServiceInterface|null The OpenRegister object service.
@@ -100,6 +108,7 @@ class SettingsController extends Controller {
 	 * @param ConnectionReportService|null $connectionReports Asks integriq to look again after an email settings save.
 	 * @param CmdbImportProfile|null $cmdbImportProfile The CMDB import profile and packs; null builds the shipped one.
 	 * @param IL10N|null $l10n Translations of the CMDB mapping messages.
+	 * @param IURLGenerator|null $urlGenerator Builds the link to a CMDB mapping pack's editor in OpenRegister.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 *
@@ -123,6 +132,7 @@ class SettingsController extends Controller {
 		private readonly ?ConnectionReportService $connectionReports = null,
 		private readonly ?CmdbImportProfile $cmdbImportProfile = null,
 		private readonly ?IL10N $l10n = null,
+		private readonly ?IURLGenerator $urlGenerator = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -3900,23 +3910,29 @@ class SettingsController extends Controller {
 	}//end getEolSyncStatus()
 
 	/**
-	 * The column mapping the CMDB import uses, read-only.
+	 * The column mapping the CMDB import uses, read-only, with where each pack is edited.
 	 *
 	 * Loads the import profile and its packs through the loader the import
-	 * uses (CmdbImportProfile), so the answer is what the next import runs.
-	 * Success is the flat `{profile, packs}`; a failure uses the import's
-	 * error envelope, so the section shows it like an import error, with the
-	 * loader's reason in `details.reason` because the admin who edited a file
-	 * needs to know which file and why. That reason is the loader's message cut
-	 * to its first line and REASON_MAX_LENGTH characters: the file, the
-	 * validator's rule and the configuration value it refused, never a
-	 * workbook cell or a person.
+	 * uses (CmdbImportProfile), so the answer is what the next import runs:
+	 * each sheet pack from OpenRegister's migration-pack store when it holds
+	 * it, otherwise the shipped file. Success is the flat
+	 * `{profile, packs, openRegisterPacks}`; every pack carries its source and
+	 * versions and an `editUrl`, the absolute link to its editor in
+	 * OpenRegister, or null when it is not stored there. A failure uses the
+	 * import's error envelope, so the section shows it like an import error,
+	 * with the loader's reason in `details.reason` because the admin who
+	 * edited a pack needs to know which pack and why; a pack stored in
+	 * OpenRegister is also named in `details.pack` and `details.packId`. That reason is the
+	 * loader's message cut to its first line and REASON_MAX_LENGTH characters:
+	 * the file or the OpenRegister pack and its id, the broken rule and the
+	 * configuration value it refused, never a workbook cell or a person.
 	 *
-	 * @return JSONResponse `{profile, packs}` (200), 503 MAPPING_UNAVAILABLE, or 500 IMPORT_FAILED.
+	 * @return JSONResponse `{profile, packs, openRegisterPacks}` (200), 503 MAPPING_UNAVAILABLE, or 500 IMPORT_FAILED.
 	 *
 	 * @auth admin-only the import's configuration; the import writes with RBAC and multitenancy off, so its view keeps that posture.
 	 *
 	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-3
 	 */
 	public function getCmdbImportMapping(): JSONResponse {
 		$profile = ($this->cmdbImportProfile ?? new CmdbImportProfile(container: $this->container));
@@ -3932,8 +3948,8 @@ class SettingsController extends Controller {
 				[
 					'success' => false,
 					'error' => $e->getErrorCode(),
-					'message' => $this->translate(text: 'The import mapping cannot be shown: OpenRegister is missing or a mapping file is invalid.'),
-					'details' => (object)['reason' => self::boundedReason(message: $e->getMessage())],
+					'message' => $this->translate(text: 'The import mapping cannot be shown: OpenRegister is missing, or a mapping pack is invalid or unavailable.'),
+					'details' => (object)array_merge($e->getDetails(), ['reason' => self::boundedReason(message: $e->getMessage())]),
 				],
 				$e->getHttpStatus()
 			);
@@ -3950,8 +3966,45 @@ class SettingsController extends Controller {
 			);
 		}//end try
 
+		foreach ($overview['packs'] as $index => $pack) {
+			$overview['packs'][$index]['editUrl'] = $this->packEditUrl(packId: ($pack['packId'] ?? null));
+		}
+
 		return new JSONResponse($overview, Http::STATUS_OK);
 	}//end getCmdbImportMapping()
+
+	/**
+	 * The absolute link to a migration pack's editor in OpenRegister.
+	 *
+	 * Built from OpenRegister's catch-all page route, so an instance that
+	 * needs `/index.php` in its URLs gets it.
+	 *
+	 * @param int|null $packId The OpenRegister row id, or null for a pack that is not stored there.
+	 *
+	 * @return string|null Null when the pack is not stored in OpenRegister or the link cannot be built.
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-3
+	 */
+	private function packEditUrl(?int $packId): ?string {
+		if ($packId === null || $this->urlGenerator === null) {
+			return null;
+		}
+
+		$path = 'migration-packs/' . $packId;
+		try {
+			$url = $this->urlGenerator->linkToRouteAbsolute(self::OPENREGISTER_PAGE_ROUTE, ['path' => $path]);
+		} catch (\Throwable $e) {
+			$this->logger->info('SettingsController: no link to the OpenRegister pack editor', ['exception' => get_class($e)]);
+			return null;
+		}
+
+		// Nextcloud's router answers an unknown route with an empty path, which would link to the instance's front page.
+		if (str_ends_with($url, '/' . $path) === false) {
+			return null;
+		}
+
+		return $url;
+	}//end packEditUrl()
 
 	/**
 	 * A loader message as the mapping endpoint answers it: its first line, at most REASON_MAX_LENGTH characters.

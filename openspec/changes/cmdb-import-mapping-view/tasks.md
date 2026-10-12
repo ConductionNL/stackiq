@@ -4,50 +4,65 @@ Spec: `openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.m
 
 ## Implementation Tasks
 
-### Task 1: Mapping overview on the profile loader
-- **spec_ref**: `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020)
-- **files**: `lib/Service/Cmdb/CmdbImportProfile.php`, `tests/Unit/Service/Cmdb/CmdbImportProfileTest.php`
+### Task 1: The import reads the sheet packs from OpenRegister's migration-pack store
+- **spec_ref**: `SPEC#requirement-the-import-shall-run-the-mapping-packs-stored-in-openregister-req-cmdb-021` (cmdb-export-import#REQ-CMDB-021) and `SPEC#requirement-field-mapping-shall-be-declarative-and-executed-by-openregisters-mapping-engine-req-cmdb-005` (cmdb-export-import#REQ-CMDB-005)
+- **files**: `lib/Service/Cmdb/CmdbImportProfile.php`, `lib/Service/Cmdb/CmdbImportPackStore.php`, `lib/Service/Cmdb/CmdbImportPackMarker.php`, `lib/Service/Cmdb/CmdbImportPackRules.php`, `lib/Service/CmdbExportImportService.php`, `lib/Controller/CmdbImportController.php`, `tests/Unit/Service/Cmdb/CmdbImportPackStoreTest.php`, `tests/Unit/Service/Cmdb/CmdbImportPackRulesTest.php`, `tests/Unit/Service/Cmdb/CmdbImportProfileTest.php`, `tests/Unit/Service/CmdbExportImportServiceTest.php`, `tests/Unit/Controller/CmdbImportControllerTest.php`, `tests/Unit/Support/FakeMigrationPackService.php`
 - **acceptance_criteria**:
-  - GIVEN the shipped directory WHEN `mappingOverview()` is called THEN it loads and validates every pack first and answers `profile` and `packs` with five entries in TARGETS order, each with target, file, id, name, version, description and fieldMappings
-  - GIVEN a field mapping WHEN it is shaped THEN `required` is a boolean and `transform` is the stored array
-  - GIVEN a broken pack WHEN `mappingOverview()` is called THEN it throws `CmdbImportException` MAPPING_UNAVAILABLE with the file in its message
+  - GIVEN OpenRegister's store holds an edited module pack WHEN the profile loads THEN the module pack is the stored one without its marker, and the missing sheet packs are seeded; the municipality pack is the shipped file
+  - GIVEN an unedited stored pack seeded from an older release WHEN the profile loads THEN it is replaced by the shipped pack; GIVEN an edited one THEN it is kept and reported `newerShipped`
+  - GIVEN a stored pack the validator refuses, or that breaks a rule of the import WHEN the profile loads THEN 503 `MAPPING_UNAVAILABLE` names the pack and its id in the message and the details
+  - GIVEN no store and no recorded pack ids THEN the shipped files are used and the import report carries one warning; GIVEN no store and recorded ids THEN 503 naming the packs
+  - GIVEN a renamed stored pack THEN 503 naming the row and both slugs; GIVEN a deleted one THEN it is seeded again
+  - GIVEN a stored pack that maps a new column with a date transform WHEN a row is imported THEN that column is converted from an Excel date; the note cleanup uses the pack's concat separator
 - [x] Implement
 - [x] Test
 
-### Task 2: Endpoint `GET /api/settings/cmdb-import/mapping`
-- **spec_ref**: `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020)
-- **files**: `lib/Controller/SettingsController.php`, `appinfo/routes.php`, `tests/Unit/Controller/SettingsControllerCmdbImportMappingTest.php`
+### Task 2: Seed and update the packs in OpenRegister on install and upgrade
+- **spec_ref**: `SPEC#requirement-stackiq-shall-seed-its-mapping-packs-into-openregister-and-keep-unedited-ones-current-req-cmdb-022` (cmdb-export-import#REQ-CMDB-022)
+- **files**: `lib/Repair/SeedCmdbImportPacks.php`, `appinfo/info.xml`, `tests/Unit/Repair/SeedCmdbImportPacksTest.php`
 - **acceptance_criteria**:
-  - GIVEN the route WHEN its method is reflected THEN it carries no attribute, declares `@auth admin-only` with a reason and no `AuthorizedAdminSetting`, `NoAdminRequired`, `NoCSRFRequired` or `PublicPage` annotation
-  - GIVEN the shipped directory WHEN an admin calls it THEN 200 with the flat `{profile, packs}` and five packs
-  - GIVEN a broken pack THEN 503 `MAPPING_UNAVAILABLE` with the reason in `details.reason`; GIVEN an unexpected error THEN 500 `IMPORT_FAILED`, logged, with a static message
+  - GIVEN an empty store WHEN the step runs THEN the four sheet packs are created as built-in packs with the `x-stackiq` marker and their ids are recorded; a second run writes nothing
+  - GIVEN an unedited pack from an older release THEN it is updated; GIVEN an edited one THEN it is kept and the step warns that the shipped version was not applied
+  - GIVEN no store, or a failing store THEN the step reports and never throws
+  - GIVEN `appinfo/info.xml` THEN the step runs after `InitializeSettings` in `<install>` and `<post-migration>`
 - [x] Implement
 - [x] Test
 
-### Task 3: The "Mapping (read-only)" block and the sheet names
-- **spec_ref**: `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020) and `SPEC#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014` (cmdb-export-import#REQ-CMDB-014)
+### Task 3: The mapping endpoint says where each pack comes from and links to its editor
+- **spec_ref**: `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020)
+- **files**: `lib/Service/Cmdb/CmdbImportProfile.php`, `lib/Controller/SettingsController.php`, `appinfo/routes.php`, `tests/Unit/Controller/SettingsControllerCmdbImportMappingTest.php`, `tests/Unit/Service/Cmdb/CmdbImportProfileTest.php`
+- **acceptance_criteria**:
+  - GIVEN the route WHEN its method is reflected THEN it carries no attribute, declares `@auth admin-only` with a reason and no exemption annotation
+  - GIVEN the shipped files and no store THEN 200 with `{profile, packs, openRegisterPacks: false}`, every pack `source: file`, `editUrl: null`
+  - GIVEN the store THEN the four sheet packs answer `source: openregister`, `packId`, `storedVersion`, `shippedVersion`, `edited`, `newerShipped`, `editable: true` and `editUrl` built from OpenRegister's page route; the municipality pack answers `editable: false`
+  - GIVEN a broken stored pack THEN 503 with `details.reason`, `details.pack` and `details.packId`
+- [x] Implement
+- [x] Test
+
+### Task 4: The section's mapping block shows the source and the editor link per pack
+- **spec_ref**: `SPEC#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014` (cmdb-export-import#REQ-CMDB-014) and `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020)
 - **files**: `src/views/settings/sections/CmdbImportMapping.vue`, `src/views/settings/sections/CmdbImport.vue`, `src/utils/cmdbImport.js`, `tests/vitest/cmdbImportMapping.spec.js`
 - **acceptance_criteria**:
-  - GIVEN the endpoint's answer WHEN the block is expanded THEN one table per pack renders with `data-testid="cmdb-import-mapping-<target>"`, the usage table holding "Applicatie Status" → `status` with the lookup pairs
-  - GIVEN a 503 WHEN the block loads THEN it shows the error and the code and no table
-  - GIVEN the answer WHEN the section renders its help text THEN the sheet names are the endpoint's; before and on failure they are `PROFILE_DEFAULTS.sheets`
-- [x] Implement
-- [x] Test
+  - GIVEN the endpoint's answer WHEN the block renders THEN each pack shows its source, its version, a hint when `newerShipped`, and an "Edit in OpenRegister" link to `editUrl` when there is one
+  - GIVEN a 503 THEN the block shows the error, the code and the reason
+  - GIVEN the answer THEN the help text names the endpoint's sheets; before and on failure `PROFILE_DEFAULTS.sheets`
+- [ ] Implement
+- [ ] Test
 
-### Task 4: Translations and documentation
+### Task 5: Translations and documentation
 - **spec_ref**: `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020)
 - **files**: `l10n/en.json`, `l10n/nl.json`, `l10n/en.js`, `l10n/nl.js`, `docs/features/cmdb-import.md`
 - **acceptance_criteria**:
   - GIVEN the new strings WHEN `npm run test:l10n` and `npm run check:l10n-js` run THEN both pass, with Dutch for every string
-  - GIVEN the docs WHEN an administrator reads "Viewing the mapping" and "Adjusting the mapping" THEN they know where the block is, what it shows, which file to change for which column and that an app update overwrites a changed file
-- [x] Implement
+  - GIVEN the docs WHEN an administrator reads "Viewing and editing the mapping" THEN they know where to edit a pack, what the import refuses, what happens on an app update and how to go back to the shipped pack
+- [x] Implement (backend strings and documentation; the section's strings come with Task 4)
 - [x] Test
 
-### Task 5: End-to-end coverage
+### Task 6: End-to-end coverage
 - **spec_ref**: `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020)
 - **files**: `tests/e2e/spec-coverage/cmdb-import-mapping.spec.ts`
 - **acceptance_criteria**:
-  - GIVEN an admin on the settings page WHEN they expand the block THEN five tables are visible and the usage row for "Applicatie Status" is shown
-  - GIVEN a signed-in non-admin WHEN they call the endpoint THEN 403, and the admin settings page is not shown to them
-- [x] Implement
-- [ ] Test (written, not run: no Nextcloud was reachable in this build)
+  - GIVEN an admin on the settings page WHEN the mapping has loaded THEN every sheet pack shows its source and an "Edit in OpenRegister" link
+  - GIVEN a signed-in non-admin WHEN they call the endpoint THEN 403
+- [ ] Implement
+- [ ] Test
