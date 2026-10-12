@@ -42,8 +42,27 @@ export const PROFILE_DEFAULTS = Object.freeze({
  */
 export const AS_TEXT = Object.freeze({ escape: false, sanitize: false })
 
-/** Every row outcome the report can carry, in display order. */
-export const OUTCOMES = ['created', 'updated', 'unchanged', 'skipped', 'failed']
+/**
+ * Every row outcome the report can carry, in display order: the outcomes of a
+ * sheet row, then those of an application that left the export or came back.
+ */
+export const OUTCOMES = [
+	'created',
+	'updated',
+	'unchanged',
+	'skipped',
+	'failed',
+	'unarchived',
+	'restored',
+	'archived',
+	'deleted',
+]
+
+/**
+ * What the import may do with applications missing from the export (the
+ * profile's `missingRecords`), the default first.
+ */
+export const MISSING_RECORDS_MODES = Object.freeze(['archive', 'keep'])
 
 /**
  * The words for one row outcome.
@@ -51,6 +70,7 @@ export const OUTCOMES = ['created', 'updated', 'unchanged', 'skipped', 'failed']
  * @param {string} outcome The outcome key from the report
  * @return {string} The label
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome-req-cmdb-011
+ * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 export function outcomeLabel(outcome) {
 	switch (outcome) {
@@ -64,6 +84,14 @@ export function outcomeLabel(outcome) {
 			return t('stackiq', 'Skipped')
 		case 'failed':
 			return t('stackiq', 'Failed')
+		case 'unarchived':
+			return t('stackiq', 'Unarchived')
+		case 'restored':
+			return t('stackiq', 'Restored')
+		case 'archived':
+			return t('stackiq', 'Archived')
+		case 'deleted':
+			return t('stackiq', 'Deleted')
 		default:
 			return String(outcome ?? '')
 	}
@@ -141,16 +169,19 @@ export function checkFile(file) {
  * @param {{uuid: string|null, name: string}} options.municipality The chosen municipality: an existing one has a uuid, a new one only a name
  * @param {boolean} options.updateExisting Whether matched rows are updated
  * @param {boolean} [options.publish] Whether the modules the import creates are published; true when left out
+ * @param {string} [options.missingRecords] What happens to applications missing from the export: 'archive' (when left out) or 'keep'
  * @param {string} options.operationId The progress operation id
  * @return {FormData} The body
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-every-import-shall-have-exactly-one-consuming-municipality-chosen-by-the-admin-req-cmdb-004
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-newly-created-module-shall-get-a-publicationdate-when-the-admin-publishes-and-an-existing-one-shall-keep-its-own-req-cmdb-007
+ * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
  */
 export function buildImportForm({
 	file,
 	municipality,
 	updateExisting,
 	publish = true,
+	missingRecords = MISSING_RECORDS_MODES[0],
 	operationId,
 }) {
 	const form = new FormData()
@@ -162,7 +193,7 @@ export function buildImportForm({
 	}
 	form.append('updateExisting', updateExisting ? 'true' : 'false')
 	form.append('publish', publish ? 'true' : 'false')
-	form.append('missingRecords', 'keep')
+	form.append('missingRecords', missingRecords)
 	form.append('operationId', operationId)
 	return form
 }
@@ -465,6 +496,7 @@ const KNOWN_ERRORS = new Set([
 	'SCHEMA_OUTDATED',
 	'IMPORT_IN_PROGRESS',
 	'MUNICIPALITY_AMBIGUOUS',
+	'ARCHIVE_UNAVAILABLE',
 	'OPERATION_NOT_FOUND',
 	'IMPORT_INTERRUPTED',
 	'NOT_SIGNED_IN',
@@ -626,7 +658,7 @@ export function errorText(error) {
 			return {
 				title: t(
 					'stackiq',
-					'Records missing from the export can only be kept.',
+					'Applications missing from the export can only be archived or kept.',
 				),
 				hint: '',
 			}
@@ -807,6 +839,17 @@ export function errorText(error) {
 					'Choose the municipality from the list instead of typing its name. Nothing was imported.',
 				),
 			}
+		case 'ARCHIVE_UNAVAILABLE':
+			return {
+				title: t(
+					'stackiq',
+					'Applications missing from the export cannot be archived.',
+				),
+				hint: t(
+					'stackiq',
+					'OpenRegister is missing or too old to archive objects. Choose "Keep them as they are" and import again, or update OpenRegister. Nothing was imported.',
+				),
+			}
 		case 'OPERATION_NOT_FOUND':
 			return {
 				title: t('stackiq', 'This import is no longer running.'),
@@ -886,9 +929,13 @@ export function cancelFailureText(error) {
  * server has set them, because the tracker's own percentage is weighted by
  * the phases of the ArchiMate import.
  *
+ * In the phase `reconciling` the counts also hold the applications the
+ * import checks against the export after its rows.
+ *
  * @param {object|null} progress The snapshot from `GET /api/progress/{operationId}`
  * @return {{percentage: number, detail: string}|null} The view, or null before any progress
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
+ * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
  */
 export function cmdbProgressView(progress) {
 	if (!progress) {
@@ -900,6 +947,17 @@ export function cmdbProgressView(progress) {
 		total > 0
 			? Math.min(100, Math.round((processed / total) * 100))
 			: Number(progress.percentage) || 0
+	if (total > 0 && progress.phase === 'reconciling') {
+		return {
+			percentage,
+			detail: t(
+				'stackiq',
+				'Checking the applications missing from the export: {processed} of {total}',
+				{ processed, total },
+				AS_TEXT,
+			),
+		}
+	}
 	return {
 		percentage,
 		detail:
@@ -960,9 +1018,13 @@ export function sortReportRows(rows, key, order) {
 /**
  * The rows of the report as the table shows them.
  *
+ * An application the import archived or deleted after its rows has row 0
+ * in the report and no row number in the table.
+ *
  * @param {Array<object>} rows The report's `rows`
  * @return {Array<object>} The table rows
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome-req-cmdb-011
+ * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 export function reportRows(rows) {
 	if (!Array.isArray(rows)) {
@@ -971,7 +1033,7 @@ export function reportRows(rows) {
 	return rows.map((row, index) => ({
 		key: `${row.sheet ?? ''}:${row.row ?? index}:${index}`,
 		sheet: String(row.sheet ?? ''),
-		row: row.row ?? '',
+		row: Number(row.row) > 0 ? row.row : '',
 		appId: String(row.appId ?? ''),
 		name: String(row.name ?? ''),
 		outcome: String(row.outcome ?? ''),

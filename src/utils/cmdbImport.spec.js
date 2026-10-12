@@ -22,6 +22,7 @@ import {
 	interruptedImportError,
 	isKnownError,
 	makeCmdbOperationId,
+	MISSING_RECORDS_MODES,
 	municipalityOptions,
 	normaliseError,
 	outcomeLabel,
@@ -58,6 +59,7 @@ const SERVER_CODES = [
 	'SCHEMA_OUTDATED',
 	'IMPORT_IN_PROGRESS',
 	'MUNICIPALITY_AMBIGUOUS',
+	'ARCHIVE_UNAVAILABLE',
 	'OPERATION_NOT_FOUND',
 	'IMPORT_INTERRUPTED',
 	'NOT_SIGNED_IN',
@@ -198,8 +200,24 @@ describe('buildImportForm', () => {
 		expect(form.get('municipalityUuid')).toBe('uuid-1')
 		expect(form.has('municipalityName')).toBe(false)
 		expect(form.get('updateExisting')).toBe('true')
-		expect(form.get('missingRecords')).toBe('keep')
+		expect(form.get('missingRecords')).toBe('archive')
 		expect(form.get('operationId')).toBe('cmdb-abcdefgh')
+	})
+
+	it('sends the choice for applications missing from the export, archive by default', () => {
+		const options = {
+			file,
+			municipality: { uuid: 'uuid-1', name: 'Tilburg' },
+			updateExisting: true,
+			operationId: 'cmdb-abcdefgh',
+		}
+		expect(MISSING_RECORDS_MODES).toEqual(['archive', 'keep'])
+		expect(buildImportForm(options).get('missingRecords')).toBe('archive')
+		expect(
+			buildImportForm({ ...options, missingRecords: 'keep' }).get(
+				'missingRecords',
+			),
+		).toBe('keep')
 	})
 
 	it('sends a typed new municipality by name, and updateExisting as an explicit false', () => {
@@ -642,6 +660,19 @@ describe('cmdbProgressView', () => {
 		).toEqual({ percentage: 25, detail: '1 of 4 rows processed' })
 	})
 
+	it('says when the import checks the applications missing from the export', () => {
+		expect(
+			cmdbProgressView({
+				phase: 'reconciling',
+				processed_items: 3,
+				total_items: 4,
+			}),
+		).toEqual({
+			percentage: 75,
+			detail: 'Checking the applications missing from the export: 3 of 4',
+		})
+	})
+
 	it('shows nothing before any progress', () => {
 		expect(cmdbProgressView(null)).toBeNull()
 	})
@@ -681,6 +712,31 @@ describe('the report table', () => {
 			},
 		])
 		expect(reportRows(null)).toEqual([])
+	})
+
+	it('shows no row number for an application archived or deleted after the rows', () => {
+		const [row] = reportRows([
+			{
+				sheet: 'Gearchiveerde Applicaties',
+				row: 0,
+				appId: '7',
+				name: 'Zeven',
+				outcome: 'archived',
+				reasons: [],
+				warnings: [],
+				moduleUuid: 'm-7',
+			},
+		])
+		expect(row.row).toBe('')
+		expect(outcomeLabel('archived')).toBe('Archived')
+		expect(OUTCOMES).toEqual(
+			expect.arrayContaining([
+				'archived',
+				'unarchived',
+				'deleted',
+				'restored',
+			]),
+		)
 	})
 
 	it('sorts numbers by value and keeps the report order for ties', () => {

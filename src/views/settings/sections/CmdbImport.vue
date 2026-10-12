@@ -143,6 +143,40 @@
 					}}
 				</p>
 			</div>
+			<fieldset
+				class="cmdb-import__field cmdb-import__choice"
+				aria-describedby="cmdb-import-missing-records-help"
+				data-testid="cmdb-import-missing-records">
+				<legend class="cmdb-import__legend">
+					{{ t('stackiq', 'Applications missing from the export') }}
+				</legend>
+				<NcCheckboxRadioSwitch
+					v-model="missingRecords"
+					value="archive"
+					name="cmdb-import-missing-records"
+					type="radio"
+					:disabled="importing"
+					data-testid="cmdb-import-missing-records-archive">
+					{{ t('stackiq', 'Archive or delete them') }}
+				</NcCheckboxRadioSwitch>
+				<NcCheckboxRadioSwitch
+					v-model="missingRecords"
+					value="keep"
+					name="cmdb-import-missing-records"
+					type="radio"
+					:disabled="importing"
+					data-testid="cmdb-import-missing-records-keep">
+					{{ t('stackiq', 'Keep them as they are') }}
+				</NcCheckboxRadioSwitch>
+				<p id="cmdb-import-missing-records-help" class="cmdb-import__help">
+					{{
+						t(
+							'stackiq',
+							'An application of this municipality that is on neither CMDB sheet any more is archived when the sheet "Gearchiveerde Applicaties" lists it, and moved to the trash when no sheet does. Both disappear from the lists, from OpenCatalogi and from Portaliq; one that returns in a later export is brought back. Without that sheet in the file, applications are only archived. Choose Keep to leave them as they are.',
+						)
+					}}
+				</p>
+			</fieldset>
 
 			<!-- 4. Actions -->
 			<div class="cmdb-import__actions">
@@ -304,7 +338,7 @@
 					</template>
 					<template #column-name="{ row }">
 						<a
-							v-if="row.moduleUuid"
+							v-if="row.moduleUuid && row.outcome !== 'deleted'"
 							:href="moduleUrl(row.moduleUuid)"
 							class="cmdb-import__module-link"
 							data-testid="cmdb-import-module-link">
@@ -451,6 +485,7 @@ import {
 	interruptedImportError,
 	isKnownError,
 	makeCmdbOperationId,
+	MISSING_RECORDS_MODES,
 	moduleUrl,
 	municipalityOptions,
 	normaliseError,
@@ -463,6 +498,15 @@ import {
 	typedMunicipalityOption,
 } from '../../../utils/cmdbImport.js'
 
+/** The summary tiles shown only when their count is not zero. */
+const COUNTED_ONLY_TILES = [
+	'unpublished',
+	'unarchived',
+	'restored',
+	'archived',
+	'deleted',
+]
+
 /**
  * The "CMDB import" section of stackiq's admin settings.
  *
@@ -472,6 +516,7 @@ import {
  * the text it renders; none of them may go into v-html.
  *
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 export default {
 	name: 'CmdbImport',
@@ -500,6 +545,7 @@ export default {
 			selectedFile: null,
 			updateExisting: true,
 			publish: true,
+			missingRecords: MISSING_RECORDS_MODES[0],
 			importing: false,
 			cancelling: false,
 			cancelStatus: '',
@@ -522,6 +568,10 @@ export default {
 				unchanged: 'default',
 				skipped: 'warning',
 				failed: 'error',
+				unarchived: 'info',
+				restored: 'info',
+				archived: 'default',
+				deleted: 'warning',
 			},
 		}
 	},
@@ -578,6 +628,7 @@ export default {
 		 *
 		 * @return {Array<object>} One tile per count
 		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome-req-cmdb-011
+		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		summaryTiles() {
 			const summary = this.report?.summary || {}
@@ -594,13 +645,21 @@ export default {
 						key: 'unpublished',
 						label: t('stackiq', 'Created unpublished'),
 					},
+					{ key: 'unarchived', label: t('stackiq', 'Unarchived') },
+					{ key: 'restored', label: t('stackiq', 'Restored') },
+					{ key: 'archived', label: t('stackiq', 'Archived') },
+					{ key: 'deleted', label: t('stackiq', 'Deleted') },
 				]
 					.map((tile) => ({
 						...tile,
 						value: Number(summary[tile.key]) || 0,
 					}))
-					// Only an import run with publishing off leaves modules unpublished.
-					.filter((tile) => tile.key !== 'unpublished' || tile.value > 0)
+					// Only an import run with publishing off leaves modules unpublished, and
+					// only a re-import archives, deletes or brings back applications.
+					.filter(
+						(tile) =>
+							!COUNTED_ONLY_TILES.includes(tile.key) || tile.value > 0,
+					)
 			)
 		},
 
@@ -920,6 +979,7 @@ export default {
 					},
 					updateExisting: this.updateExisting,
 					publish: this.publish,
+					missingRecords: this.missingRecords,
 					operationId: this.operationId,
 				})
 				const response = await axios.post(importUrl(), form)
@@ -1089,6 +1149,17 @@ export default {
 	margin: 0.25rem 0 0;
 	font-size: 0.875rem;
 	color: var(--color-text-maxcontrast);
+}
+
+.cmdb-import__choice {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.cmdb-import__legend {
+	padding: 0;
+	font-weight: bold;
 }
 
 .cmdb-import__help--warning {
