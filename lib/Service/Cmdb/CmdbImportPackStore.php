@@ -13,6 +13,10 @@
  *
  * `MigrationPackService` is not part of OpenRegister's `Contract` namespace,
  * so it is resolved defensively, like the validator in CmdbImportProfile.
+ * The store counts as available only on an OpenRegister whose pack writes
+ * require a CSRF token and lock a built-in pack's slug: an edited pack drives
+ * writes with RBAC off, so packs behind write routes without those guards
+ * are not run. Older OpenRegister versions keep the shipped files.
  * The row ids this store resolved are kept in stackiq's app config, so a
  * store that disappears after a seed, or a pack that was renamed, fails
  * closed instead of quietly running the shipped files.
@@ -80,6 +84,14 @@ class CmdbImportPackStore {
 	private const SERVICE_METHODS = ['findByPackSlug', 'find', 'create', 'update'];
 
 	/**
+	 * A class only an OpenRegister with the hardened pack store has.
+	 *
+	 * It ships with the CSRF-protected, admin-only pack writes and the lock on
+	 * a built-in pack's slug.
+	 */
+	public const HARDENED_CLASS = 'OCA\OpenRegister\Exception\BuiltinPackSlugLockedException';
+
+	/**
 	 * OpenRegister's service, once resolved; false when it is not available.
 	 *
 	 * @var object|false|null
@@ -98,18 +110,22 @@ class CmdbImportPackStore {
 	 *
 	 * @param ContainerInterface $container Resolves OpenRegister's service, and the app config when none is given.
 	 * @param IAppConfig|null $appConfig Keeps the row ids; null resolves it from the container.
+	 * @param string $hardenedClass The class that marks an OpenRegister with the hardened pack store.
 	 *
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private ?IAppConfig $appConfig = null,
+		private readonly string $hardenedClass = self::HARDENED_CLASS,
 	) {
 		$this->marker = new CmdbImportPackMarker();
 	}//end __construct()
 
 	/**
 	 * Whether OpenRegister's migration-pack store can be used.
+	 *
+	 * Only an OpenRegister with the hardened pack store counts (HARDENED_CLASS).
 	 *
 	 * @return bool
 	 *
@@ -194,7 +210,9 @@ class CmdbImportPackStore {
 	 *                              pack (without it), edited (bool|null), newerShipped (bool) and outcome.
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the store is missing or fails,
-	 *                             or when the pack was renamed in OpenRegister.
+	 *                             or when the pack was renamed in OpenRegister. A create
+	 *                             that fails because another request seeded the pack
+	 *                             first is no failure: that pack is used.
 	 *
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
@@ -212,12 +230,20 @@ class CmdbImportPackStore {
 		$entity = $this->findBySlug(service: $service, slug: $slug);
 		if ($entity === null) {
 			$this->assertNotRenamed(service: $service, slug: $slug);
-			$entity = $this->write(
-				slug: $slug,
-				action: 'seeded',
-				call: fn (): object => $service->create(definition: $this->marker->seed(shipped: $shipped), ownerUid: null, builtin: true)
-			);
-			$outcome = self::SEEDED;
+			try {
+				$entity = $this->write(
+					slug: $slug,
+					action: 'seeded',
+					call: fn (): object => $service->create(definition: $this->marker->seed(shipped: $shipped), ownerUid: null, builtin: true)
+				);
+				$outcome = self::SEEDED;
+			} catch (CmdbImportException $e) {
+				// Another request can seed the pack between the lookup and the create; the row it stored is the pack.
+				$entity = $this->findBySlug(service: $service, slug: $slug);
+				if ($entity === null) {
+					throw $e;
+				}
+			}
 		} elseif ($this->marker->isOutdated(definition: self::definitionOf(entity: $entity), shipped: $shipped) === true) {
 			$id = (int)$entity->getId();
 			$entity = $this->write(
@@ -385,7 +411,7 @@ class CmdbImportPackStore {
 	}//end record()
 
 	/**
-	 * OpenRegister's service, resolved once.
+	 * OpenRegister's service, resolved once; null on an OpenRegister without the hardened pack store.
 	 *
 	 * @return object|null
 	 *
@@ -395,7 +421,7 @@ class CmdbImportPackStore {
 		if ($this->service === null) {
 			$this->service = false;
 			try {
-				if ($this->container->has(self::SERVICE_CLASS) === true) {
+				if (class_exists($this->hardenedClass) === true && $this->container->has(self::SERVICE_CLASS) === true) {
 					$service = $this->container->get(self::SERVICE_CLASS);
 					if (is_object($service) === true && self::hasMethods(service: $service) === true) {
 						$this->service = $service;

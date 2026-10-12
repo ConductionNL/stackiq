@@ -5,10 +5,12 @@
  *
  * OpenRegister's validator checks a pack's structure only. The import writes
  * with OpenRegister's RBAC and multitenancy off, so a pack an administrator
- * edits in OpenRegister may only map the fields of its target schema, never
- * the object's metadata or the keys and relations the import sets itself,
- * and must keep the mappings the import matches records on (REQ-CMDB-021).
- * The fields of a schema are read from the register stackiq ships,
+ * edits in OpenRegister may only map the vetted plain fields listed per
+ * target, never the object's metadata, the keys and relations the import
+ * sets itself, any other relation, the publication dates or the fields only
+ * an administrator or the catalogue sets, and must keep the mappings the
+ * import matches records on (REQ-CMDB-021). A listed field must still be a
+ * plain property of its target schema in the register stackiq ships,
  * fragments included (ADR-037).
  *
  * @category  Service
@@ -53,7 +55,7 @@ class CmdbImportPackRules {
 	];
 
 	/**
-	 * The register schema a target writes into; its properties are the fields a pack may map.
+	 * The register schema a target writes into; a field a pack maps must be a plain property of it.
 	 *
 	 * @var array<string, string>
 	 */
@@ -65,13 +67,42 @@ class CmdbImportPackRules {
 	];
 
 	/**
-	 * Targets that are no schema: the fields such a pack may map.
+	 * The fields a pack may map or default, per target: the vetted plain fields, nothing else.
 	 *
-	 * The business owner is resolved in Nextcloud Contacts by name, with the role on the contact person.
+	 * The fields the shipped packs map, the module's licence type, and the usage's
+	 * lifecycle dates next to the one they map. The business owner is resolved in Nextcloud Contacts by name,
+	 * with the role on the contact person, so it is no schema.
 	 *
 	 * @var array<string, array<int, string>>
 	 */
-	private const FIXED_FIELDS = ['businessOwner' => ['name', 'role']];
+	private const ALLOWED_FIELDS = [
+		'module' => [
+			'name',
+			'externalNumber',
+			'externalId',
+			'shortDescription',
+			'longDescription',
+			'applicationType',
+			'cloudDienstverleningsmodel',
+			'bbnLevel',
+			'licentietype',
+			'externalCreatedAt',
+			'externalModifiedAt',
+		],
+		'manufacturer' => ['name'],
+		'municipality' => ['name'],
+		'usage' => [
+			'status',
+			'timeClassification',
+			'startDateAcquisition',
+			'startDatePlanned',
+			'startDateInProduction',
+			'startDateOutPhasing',
+			'startDateOutPhased',
+			'interneAnnotation',
+		],
+		'businessOwner' => ['name', 'role'],
+	];
 
 	/**
 	 * Fields no pack may write: object metadata, and the keys and relations the import sets itself.
@@ -79,6 +110,35 @@ class CmdbImportPackRules {
 	 * @var array<int, string>
 	 */
 	private const MANAGED_FIELDS = ['@self', 'id', 'provider', 'consumer', 'module', 'externalKey', 'businessOwner'];
+
+	/**
+	 * Fields only the catalogue or an administrator sets: the publication dates and the admin fields.
+	 *
+	 * The pinned defaults below may still set some of them, as shipped.
+	 *
+	 * @var array<int, string>
+	 */
+	private const PROTECTED_FIELDS = [
+		'publicationDate',
+		'depublicationDate',
+		'registeredBy',
+		'registrationStatus',
+		'mergedInto',
+		'contactsUid',
+		'pki',
+		'xml',
+	];
+
+	/**
+	 * Further protected fields per target: an organisation's approval status and a module's type.
+	 *
+	 * @var array<string, array<int, string>>
+	 */
+	private const PROTECTED_TARGET_FIELDS = [
+		'module' => ['type'],
+		'manufacturer' => ['status'],
+		'municipality' => ['status'],
+	];
 
 	/**
 	 * Further match keys per target: the import finds an organisation by name and type.
@@ -90,17 +150,20 @@ class CmdbImportPackRules {
 	/**
 	 * Defaults a pack must keep as shipped, per target.
 	 *
+	 * The organisation type is a match key; the status and who registered it
+	 * are admin fields that a pack may set only to these values.
+	 *
 	 * @var array<string, array<string, string>>
 	 */
 	private const PINNED_DEFAULTS = [
-		'manufacturer' => ['type' => 'Supplier'],
-		'municipality' => ['type' => 'Municipality'],
+		'manufacturer' => ['type' => 'Supplier', 'status' => 'Active', 'registeredBy' => 'Supplier'],
+		'municipality' => ['type' => 'Municipality', 'status' => 'Active'],
 	];
 
 	/**
-	 * Property names per schema of the shipped register, once read.
+	 * Per schema of the shipped register, once read: each property name and whether it is a relation.
 	 *
-	 * @var array<string, array<int, string>>|null
+	 * @var array<string, array<string, bool>>|null
 	 */
 	private ?array $schemaFields = null;
 
@@ -138,15 +201,19 @@ class CmdbImportPackRules {
 			$never = [];
 		}
 
-		$forbidden = array_merge(self::MANAGED_FIELDS, (self::MATCH_FIELDS[$target] ?? []), array_map('strval', $never));
-		$allowed = array_values(array_diff($this->targetFields(target: $target), $forbidden));
+		$refused = [
+			'managed' => array_merge(self::MANAGED_FIELDS, (self::MATCH_FIELDS[$target] ?? []), array_map('strval', $never)),
+			'protected' => array_merge(self::PROTECTED_FIELDS, (self::PROTECTED_TARGET_FIELDS[$target] ?? [])),
+			'relation' => $this->relationFields(target: $target),
+		];
+		$allowed = array_values(array_diff($this->targetFields(target: $target), ...array_values($refused)));
 
 		return array_values(
 			array_unique(
 				array_merge(
 					$this->requiredViolations(target: $target, pack: $pack, keyColumn: (string)($profile['keyColumn'] ?? 'APPID')),
-					$this->mappingViolations(target: $target, pack: $pack, allowed: $allowed, forbidden: $forbidden),
-					$this->defaultViolations(target: $target, pack: $pack, allowed: $allowed, forbidden: $forbidden)
+					$this->mappingViolations(target: $target, pack: $pack, allowed: $allowed, refused: $refused),
+					$this->defaultViolations(target: $target, pack: $pack, allowed: $allowed, refused: $refused)
 				)
 			)
 		);
@@ -212,18 +279,18 @@ class CmdbImportPackRules {
 	 * @param string $target The target.
 	 * @param array<string, mixed> $pack The pack.
 	 * @param array<int, string> $allowed The fields it may write.
-	 * @param array<int, string> $forbidden The fields the import manages.
+	 * @param array<string, array<int, string>> $refused The refused fields, per reason.
 	 *
 	 * @return array<int, string>
 	 *
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
-	private function mappingViolations(string $target, array $pack, array $allowed, array $forbidden): array {
+	private function mappingViolations(string $target, array $pack, array $allowed, array $refused): array {
 		$violations = [];
 		foreach (($pack['fieldMappings'] ?? []) as $mapping) {
 			$field = (string)($mapping['target'] ?? '');
 			if (in_array($field, $allowed, true) === false) {
-				$violations[] = self::fieldViolation(field: $field, forbidden: in_array($field, $forbidden, true), target: $target);
+				$violations[] = self::fieldViolation(field: $field, refused: $refused, target: $target);
 			}
 		}
 
@@ -236,13 +303,13 @@ class CmdbImportPackRules {
 	 * @param string $target The target.
 	 * @param array<string, mixed> $pack The pack.
 	 * @param array<int, string> $allowed The fields it may write.
-	 * @param array<int, string> $forbidden The fields the import manages.
+	 * @param array<string, array<int, string>> $refused The refused fields, per reason.
 	 *
 	 * @return array<int, string>
 	 *
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
-	private function defaultViolations(string $target, array $pack, array $allowed, array $forbidden): array {
+	private function defaultViolations(string $target, array $pack, array $allowed, array $refused): array {
 		$defaults = $pack['defaults'] ?? [];
 		if (is_array($defaults) === false) {
 			$defaults = [];
@@ -253,7 +320,7 @@ class CmdbImportPackRules {
 		foreach (array_keys($defaults) as $field) {
 			$field = (string)$field;
 			if (array_key_exists($field, $pinned) === false && in_array($field, $allowed, true) === false) {
-				$violations[] = 'default ' . self::fieldViolation(field: $field, forbidden: in_array($field, $forbidden, true), target: $target);
+				$violations[] = 'default ' . self::fieldViolation(field: $field, refused: $refused, target: $target);
 			}
 		}
 
@@ -270,23 +337,31 @@ class CmdbImportPackRules {
 	 * Why a field may not be written.
 	 *
 	 * @param string $field The field.
-	 * @param bool $forbidden Whether the import manages it.
+	 * @param array<string, array<int, string>> $refused The refused fields, per reason.
 	 * @param string $target The target.
 	 *
 	 * @return string
 	 *
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
-	private static function fieldViolation(string $field, bool $forbidden, string $target): string {
-		if ($forbidden === true) {
+	private static function fieldViolation(string $field, array $refused, string $target): string {
+		if (in_array($field, $refused['managed'], true) === true) {
 			return '"' . $field . '" is set by the import and cannot be mapped';
+		}
+
+		if (in_array($field, $refused['protected'], true) === true) {
+			return '"' . $field . '" is set outside the import and cannot be mapped';
+		}
+
+		if (in_array($field, $refused['relation'], true) === true) {
+			return '"' . $field . '" is a relation and cannot be mapped';
 		}
 
 		return '"' . $field . '" is not a field the ' . $target . ' pack may map';
 	}//end fieldViolation()
 
 	/**
-	 * The fields a target's pack may map before the forbidden ones are taken out.
+	 * The vetted fields of a target that its schema holds as properties.
 	 *
 	 * @param string $target The target.
 	 *
@@ -297,22 +372,82 @@ class CmdbImportPackRules {
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function targetFields(string $target): array {
-		if (isset(self::FIXED_FIELDS[$target]) === true) {
-			return self::FIXED_FIELDS[$target];
+		$vetted = (self::ALLOWED_FIELDS[$target] ?? []);
+		$schema = (self::TARGET_SCHEMAS[$target] ?? null);
+		if ($schema === null) {
+			return $vetted;
 		}
 
+		$properties = ($this->schemaFields()[$schema] ?? []);
+		return array_values(array_filter($vetted, static fn (string $field): bool => array_key_exists($field, $properties)));
+	}//end targetFields()
+
+	/**
+	 * The properties of a target's schema that point at other objects.
+	 *
+	 * @param string $target The target.
+	 *
+	 * @return array<int, string>
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the register cannot be read.
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	private function relationFields(string $target): array {
 		$schema = (self::TARGET_SCHEMAS[$target] ?? null);
 		if ($schema === null) {
 			return [];
 		}
 
-		return ($this->schemaFields()[$schema] ?? []);
-	}//end targetFields()
+		return array_map('strval', array_keys(array_filter(($this->schemaFields()[$schema] ?? []))));
+	}//end relationFields()
 
 	/**
-	 * The property names per schema of the register stackiq ships, fragments included.
+	 * Whether a property definition, or that of its items, points at another object.
 	 *
-	 * @return array<string, array<int, string>>
+	 * A reference, an inverse or write-back relation, a uuid, or an object
+	 * configuration that relates or names a schema; a nested object with no
+	 * schema is a plain value.
+	 *
+	 * @param mixed $definition The property definition.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	private static function isRelation(mixed $definition): bool {
+		if (is_array($definition) === false) {
+			return false;
+		}
+
+		$configuration = $definition['objectConfiguration'] ?? [];
+		if (is_array($configuration) === false) {
+			$configuration = [];
+		}
+
+		$markers = array_filter(
+			[
+				($definition['$ref'] ?? null),
+				($definition['inversedBy'] ?? null),
+				($definition['writeBack'] ?? null),
+				($configuration['schema'] ?? null),
+				($definition['format'] ?? null) === 'uuid',
+				($configuration['handling'] ?? null) === 'related-object',
+			]
+		);
+		if ($markers !== []) {
+			return true;
+		}
+
+		return self::isRelation(definition: ($definition['items'] ?? null));
+	}//end isRelation()
+
+	/**
+	 * The properties per schema of the register stackiq ships, fragments included, each with whether it is a relation.
+	 *
+	 * A property is a relation when any of its definitions says so.
+	 *
+	 * @return array<string, array<string, bool>>
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the register file cannot be read.
 	 *
@@ -339,8 +474,10 @@ class CmdbImportPackRules {
 		$fields = [];
 		foreach (array_merge([$register], array_map(fn (string $file): ?array => $this->decodeJson(file: $file), $fragments)) as $decoded) {
 			foreach (($decoded['components']['schemas'] ?? []) as $schema => $definition) {
-				$properties = array_keys((array)($definition['properties'] ?? []));
-				$fields[(string)$schema] = array_values(array_unique(array_merge(($fields[(string)$schema] ?? []), array_map('strval', $properties))));
+				foreach ((array)($definition['properties'] ?? []) as $property => $propertyDefinition) {
+					$isRelation = self::isRelation(definition: $propertyDefinition);
+					$fields[(string)$schema][(string)$property] = (($fields[(string)$schema][(string)$property] ?? false) || $isRelation);
+				}
 			}
 		}
 

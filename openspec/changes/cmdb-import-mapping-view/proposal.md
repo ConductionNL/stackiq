@@ -33,7 +33,7 @@ None.
 ### In Scope
 
 - Reading the module, manufacturer, usage and business-owner packs from OpenRegister's migration-pack store by slug, with the shipped file as the seed and, while nothing was ever stored, as the fallback with one import warning.
-- The import's own rules on every pack, stored or shipped: the required mappings, and an allowlist of the fields a pack may write.
+- The import's own rules on every pack, stored or shipped: the required mappings, and an explicit allowlist of the plain fields a pack may write.
 - Failing closed with 503 `MAPPING_UNAVAILABLE` when a stored pack is invalid or breaks a rule, when it was renamed, or when the store is gone after the packs were stored there.
 - The repair step `SeedCmdbImportPacks` on install and upgrade: seeds missing packs as built-in, replaces unedited packs with the shipped pack of the release, keeps edited ones and reports them; the row ids are kept in stackiq's app config.
 - The `x-stackiq` marker in a stored definition: the shipped version and the hash of the shipped pack it was seeded from.
@@ -67,12 +67,12 @@ None.
 ## Cross-Project Dependencies
 
 - **openregister** (consumed): `Service\MigrationPackService` (`findByPackSlug`, `find`, `create`, `update`), `Db\MigrationPack::getDefinitionArray()`, `Service\MigrationPack\PackDefinitionValidator`, `Service\MigrationPack\MappingEngine`, and the page route `dashboard#catchAll` for `/migration-packs/{id}`.
-- **openregister** (needed for editing): the migration-pack pages and the envelope body of OpenRegister's change for WOO-588. Without them stackiq still seeds and reads the packs, and the link opens a page OpenRegister does not have yet.
+- **openregister** (required before the store is used): OpenRegister's change for WOO-588 (`feat/woo588-migration-pack-editor`): the pack writes require a CSRF token and are admin-only through `#[AuthorizedAdminSetting]`, a built-in pack's slug is locked (`Exception\BuiltinPackSlugLockedException`), and it adds the migration-pack pages and the envelope body. Released OpenRegister versions write packs without a CSRF check, and the packs drive writes with RBAC off, so stackiq uses the store only when `BuiltinPackSlugLockedException` exists; on an older OpenRegister the import keeps the shipped files with a warning. Do not promote this change to beta before that OpenRegister change is released.
 
 ## Risks
 
 ### Risk 1: An edit in OpenRegister writes fields the import must not write
-**Severity:** High — **Mitigation:** the import writes with OpenRegister's RBAC and multitenancy off, so every pack must follow the import's rules (REQ-CMDB-021): only the fields of its target schema, never object metadata, match keys or the relations the import sets, and the required mappings kept. A pack that breaks a rule stops the import with 503 naming the pack.
+**Severity:** High — **Mitigation:** the import writes with OpenRegister's RBAC and multitenancy off, so every pack must follow the import's rules (REQ-CMDB-021): only a vetted list of plain fields per target, never object metadata, match keys, relations, publication dates or admin fields, and the required mappings kept. A pack that breaks a rule stops the import with 503 naming the pack.
 
 ### Risk 2: An administrator's edit is lost or silently ignored
 **Severity:** High — **Mitigation:** the repair step never overwrites an edited pack; a renamed pack, or a store that is gone after the packs were stored, fails closed instead of falling back to the files.
@@ -81,7 +81,7 @@ None.
 **Severity:** Medium — **Mitigation:** the read allowlist is every column the profile or a pack names, so an administrator who maps a new column makes the import read it. Only Nextcloud admins can edit packs and run the import; the documentation says that a mapped column is read.
 
 ### Risk 4: OpenRegister's internal classes change
-**Severity:** Medium — **Mitigation:** resolved defensively and checked for the methods called; a missing service before any seed falls back to the files with a warning, afterwards fails closed.
+**Severity:** Medium — **Mitigation:** resolved defensively and checked for the methods called and for the hardened store's `BuiltinPackSlugLockedException`; a missing or older store before any seed falls back to the files with a warning, afterwards fails closed.
 
 ## Rollback Strategy
 

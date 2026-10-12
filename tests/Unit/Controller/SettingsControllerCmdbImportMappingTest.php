@@ -309,6 +309,7 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 		$this->assertSame('NL The import mapping cannot be shown: OpenRegister is missing, or a mapping pack is invalid or unavailable.', $data['message']);
 		$this->assertStringContainsString('topdesk-usage.json', $data['details']->reason);
 		$this->assertStringContainsString('uppercase', $data['details']->reason, 'the validator names the unknown transform');
+		$this->assertObjectNotHasProperty('editUrl', $data['details'], 'a shipped file has no editor');
 	}//end testABrokenPackIs503WithTheReason()
 
 	/**
@@ -459,10 +460,20 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 			container: $service->container(test: $this, appConfig: FakeMigrationPackService::appConfig(test: $this, values: $config))
 		);
 
-		$response = $this->controller(profile: $profile)->getCmdbImportMapping();
+		$urls = $this->createMock(IURLGenerator::class);
+		$urls->method('linkToRouteAbsolute')->willReturnCallback(
+			fn (string $route, array $parameters): string => 'https://cloud.example/index.php/apps/openregister/' . $parameters['path']
+		);
+
+		$response = $this->controller(profile: $profile, urlGenerator: $urls)->getCmdbImportMapping();
 
 		$this->assertSame(503, $response->getStatus());
 		$this->assertSame('MAPPING_UNAVAILABLE', $response->getData()['error']);
+		$this->assertSame(
+			'https://cloud.example/index.php/apps/openregister/migration-packs/' . $id,
+			$response->getData()['details']->editUrl,
+			'the admin can open the broken pack to correct it'
+		);
 		$this->assertStringStartsWith('OpenRegister migration pack stackiq-topdesk-usage (id ' . $id . ')', $response->getData()['details']->reason);
 		$this->assertStringContainsString('"provider" is set by the import', $response->getData()['details']->reason);
 		$this->assertSame('stackiq-topdesk-usage', $response->getData()['details']->pack);

@@ -3922,7 +3922,8 @@ class SettingsController extends Controller {
 	 * import's error envelope, so the section shows it like an import error,
 	 * with the loader's reason in `details.reason` because the admin who
 	 * edited a pack needs to know which pack and why; a pack stored in
-	 * OpenRegister is also named in `details.pack` and `details.packId`. That reason is the
+	 * OpenRegister is also named in `details.pack` and `details.packId`, with
+	 * `details.editUrl` linking to its editor so the admin can correct it. That reason is the
 	 * loader's message cut to its first line and REASON_MAX_LENGTH characters:
 	 * the file or the OpenRegister pack and its id, the broken rule and the
 	 * configuration value it refused, never a workbook cell or a person.
@@ -3944,12 +3945,17 @@ class SettingsController extends Controller {
 				'SettingsController: CMDB import mapping unavailable',
 				['error' => $e->getErrorCode(), 'reason' => $e->getMessage()]
 			);
+			$details = array_merge($e->getDetails(), ['reason' => self::boundedReason(message: $e->getMessage())]);
+			if (is_int($details['packId'] ?? null) === true) {
+				$details['editUrl'] = $this->packEditUrl(packId: $details['packId']);
+			}
+
 			return new JSONResponse(
 				[
 					'success' => false,
 					'error' => $e->getErrorCode(),
 					'message' => $this->translate(text: 'The import mapping cannot be shown: OpenRegister is missing, or a mapping pack is invalid or unavailable.'),
-					'details' => (object)array_merge($e->getDetails(), ['reason' => self::boundedReason(message: $e->getMessage())]),
+					'details' => (object)$details,
 				],
 				$e->getHttpStatus()
 			);

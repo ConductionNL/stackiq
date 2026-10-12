@@ -729,6 +729,24 @@ class CmdbImportProfileTest extends TestCase {
 	}//end testTheConcatSeparatorIsThePacks()
 
 	/**
+	 * A plain mapping after the concat one keeps the separator: on an empty column the engine keeps the concatenated value.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testALaterPlainMappingKeepsTheConcatSeparator(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$service = new FakeMigrationPackService();
+		$usage = (new CmdbImportPackMarker())->seed(shipped: $this->shipped(file: 'topdesk-usage.json'));
+		$usage['fieldMappings'][] = ['source' => 'Opmerking', 'target' => 'interneAnnotation', 'transform' => ['type' => 'trim']];
+		$service->put(definition: $usage);
+		$config = [];
+
+		$this->assertSame(' / ', $this->storedProfile(service: $service, config: $config)->concatSeparator(target: 'usage', field: 'interneAnnotation'));
+	}//end testALaterPlainMappingKeepsTheConcatSeparator()
+
+	/**
 	 * The upload limit is readable without OpenRegister.
 	 *
 	 * @return void

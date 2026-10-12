@@ -728,7 +728,11 @@ class CmdbImportProfile {
 	 * The separator of the concat mapping that writes a field, or null when no concat mapping writes it.
 	 *
 	 * The import drops the empty parts of a concatenated note; it splits on
-	 * the separator the pack uses, which an administrator can change.
+	 * the separator the pack uses, which an administrator can change. A later
+	 * plain mapping of the same field does not cancel it: the engine skips a
+	 * mapping whose column is empty, so the concatenated value can still be
+	 * the one kept, and the cleanup does no harm to a plain value. With several
+	 * concat mappings, the last one's separator counts.
 	 *
 	 * @param string $target The profile target.
 	 * @param string $field The target field.
@@ -744,13 +748,13 @@ class CmdbImportProfile {
 				continue;
 			}
 
-			// The last mapping of a field is the one whose value the engine keeps.
-			$separator = null;
-			if (($mapping['transform']['type'] ?? null) === 'concat') {
-				$separator = ($mapping['transform']['separator'] ?? self::DEFAULT_CONCAT_SEPARATOR);
-				if (is_string($separator) === false || $separator === '') {
-					$separator = self::DEFAULT_CONCAT_SEPARATOR;
-				}
+			if (($mapping['transform']['type'] ?? null) !== 'concat') {
+				continue;
+			}
+
+			$separator = ($mapping['transform']['separator'] ?? self::DEFAULT_CONCAT_SEPARATOR);
+			if (is_string($separator) === false || $separator === '') {
+				$separator = self::DEFAULT_CONCAT_SEPARATOR;
 			}
 		}
 

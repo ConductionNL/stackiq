@@ -59,10 +59,15 @@ Spec: `openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.m
 - [x] Test
 
 ### Task 6: End-to-end coverage
-- **spec_ref**: `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020)
-- **files**: `tests/e2e/spec-coverage/cmdb-import-mapping.spec.ts`
+- **spec_ref**: `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020), `SPEC#requirement-the-import-shall-run-the-mapping-packs-stored-in-openregister-req-cmdb-021` (cmdb-export-import#REQ-CMDB-021) and `SPEC#requirement-stackiq-shall-seed-its-mapping-packs-into-openregister-and-keep-unedited-ones-current-req-cmdb-022` (cmdb-export-import#REQ-CMDB-022)
+- **files**: `tests/e2e/spec-coverage/cmdb-import-packs.spec.ts`, `tests/e2e/spec-coverage/cmdb-import-mapping.spec.ts`
 - **acceptance_criteria**:
-  - GIVEN an admin on the settings page WHEN the mapping has loaded THEN every sheet pack shows its source and an "Edit in OpenRegister" link
+  - GIVEN the rig with the hardened OpenRegister WHEN an admin lists OpenRegister's packs THEN the four sheet packs are built-in packs with the marker, and no municipality pack is stored
+  - GIVEN an admin WHEN they read the mapping THEN every sheet pack answers `source: openregister`, its `packId` and an `editUrl` to its editor; the municipality pack `source: file` and no link
+  - GIVEN the usage pack edited to map a column to `provider` THEN the mapping and the import answer 503 naming the pack, and nothing is written; GIVEN the module pack's name no longer required THEN the same with the rule named
+  - GIVEN an edited lookup in the usage pack WHEN the export is imported THEN the usages carry the edited value
+  - GIVEN the business-owner pack deleted in OpenRegister WHEN the mapping is read THEN it is seeded again
   - GIVEN a signed-in non-admin WHEN they call the endpoint THEN 403
+  - GIVEN an admin on the settings page WHEN the mapping has loaded THEN every sheet pack shows its source and an "Edit in OpenRegister" link
 - [ ] Implement
 - [ ] Test
