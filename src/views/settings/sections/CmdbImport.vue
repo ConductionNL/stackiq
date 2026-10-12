@@ -582,7 +582,7 @@ export default {
 			if (!this.error) {
 				return null
 			}
-			const words = errorText(this.error)
+			const words = errorText(this.error, this.sheetNames)
 			return {
 				...words,
 				code: this.error.error,

@@ -1041,7 +1041,6 @@
         "Error code: {code}": "Foutcode: {code}",
         "Excel workbook (.xlsx), at most 10 MB, with the sheet \"Onbeh Applicaties CMDB\" or \"Beheerde Applicaties CMDB\".": "Excel-werkmap (.xlsx), hoogstens 10 MB, met het tabblad \"Onbeh Applicaties CMDB\" of \"Beheerde Applicaties CMDB\".",
         "Existing municipalities could not be loaded. You can still type the name of a municipality.": "Bestaande gemeenten konden niet worden geladen. U kunt nog steeds de naam van een gemeente typen.",
-        "Expected a sheet named \"{first}\" or \"{second}\". Sheet names must match exactly.": "Verwacht werd een tabblad met de naam \"{first}\" of \"{second}\". De naam van het tabblad moet precies overeenkomen.",
         "Failed": "Mislukt",
         "Import": "Importeren",
         "Import a TOPdesk CMDB export (.xlsx) as the applications one municipality uses": "Importeer een TOPdesk CMDB-export (.xlsx) als de applicaties die één gemeente gebruikt",
@@ -1193,7 +1192,6 @@
         "Split the rows over two copies of the export and import them one after the other.": "Verdeel de rijen over twee kopieën van de export en importeer die na elkaar.",
         "The sheet \"{sheet}\" is too large to import: unpacked it is {size}, and the import reads at most {limit} of one sheet.": "Het tabblad \"{sheet}\" is te groot om te importeren: uitgepakt is het {size}, en de import leest van één tabblad hooguit {limit}.",
         "The part {part} of the workbook is too large to import: unpacked it is {size}, and the import reads at most {limit} of one part.": "Het onderdeel {part} van de werkmap is te groot om te importeren: uitgepakt is het {size}, en de import leest van één onderdeel hooguit {limit}.",
-        "Delete the sheets the import does not read from a copy of the export (it reads only \"{first}\" and \"{second}\"), and import that copy.": "Verwijder in een kopie van de export de tabbladen die de import niet leest (hij leest alleen \"{first}\" en \"{second}\"), en importeer die kopie.",
         "The workbook holds more than {count} different texts, the most the import reads.": "De werkmap bevat meer dan {count} verschillende teksten, het maximum dat de import leest.",
         "Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.": "Samen verwijzen de cellen van de werkmap naar meer dan {size} gedeelde tekst, het maximum dat de import leest.",
         "In development since": "In ontwikkeling sinds",
@@ -1242,6 +1240,9 @@
         "Excel workbook (.xlsx) with the sheet {sheets}. By default the file may be at most {size}.": "Excel-werkmap (.xlsx) met het tabblad {sheets}. Standaard mag het bestand hoogstens {size} zijn.",
         "Excel workbook (.xlsx) with one of the sheets {sheets}. By default the file may be at most {size}.": "Excel-werkmap (.xlsx) met een van de tabbladen {sheets}. Standaard mag het bestand hoogstens {size} zijn.",
         "The sheet {sheets} is read; other sheets, including the \"Invoer\" sheets, are ignored.": "Het tabblad {sheets} wordt gelezen; andere tabbladen, ook de \"Invoer\"-tabbladen, worden genegeerd.",
-        "The sheets {sheets} are read; other sheets, including the \"Invoer\" sheets, are ignored.": "De tabbladen {sheets} worden gelezen; andere tabbladen, ook de \"Invoer\"-tabbladen, worden genegeerd."
+        "The sheets {sheets} are read; other sheets, including the \"Invoer\" sheets, are ignored.": "De tabbladen {sheets} worden gelezen; andere tabbladen, ook de \"Invoer\"-tabbladen, worden genegeerd.",
+        "Expected the sheet {sheets}. Sheet names must match exactly.": "Verwacht werd het tabblad {sheets}. De naam van het tabblad moet precies overeenkomen.",
+        "Expected one of the sheets {sheets}. Sheet names must match exactly.": "Verwacht werd een van de tabbladen {sheets}. De namen van de tabbladen moeten precies overeenkomen.",
+        "Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy.": "Verwijder in een kopie van de export de tabbladen die de import niet leest (hij leest alleen {sheets}), en importeer die kopie."
     }
 }

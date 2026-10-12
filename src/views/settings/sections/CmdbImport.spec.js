@@ -253,4 +253,23 @@ describe('CmdbImport sheet names in the help texts', () => {
 			expect(help).not.toContain(shipped)
 		}
 	})
+
+	it('names the profile\'s sheets in the section\'s missing-sheet and too-large errors', async () => {
+		const wrapper = await mountWithSlots()
+		wrapper
+			.findComponent(CmdbImportMapping)
+			.vm.$emit('loaded', mappingOf(['Alpha', 'Beta', 'Gamma']))
+		await flushPromises()
+
+		await wrapper.setData({ error: { error: 'NO_SOURCE_SHEET', details: {} } })
+		expect(wrapper.vm.errorView.hint).toContain('"Alpha", "Beta", "Gamma"')
+
+		await wrapper.setData({
+			error: {
+				error: 'WORKBOOK_TOO_LARGE',
+				details: { maxUncompressedBytes: 50 * 1024 * 1024 },
+			},
+		})
+		expect(wrapper.vm.errorView.hint).toContain('(it reads only "Alpha", "Beta", "Gamma")')
+	})
 })

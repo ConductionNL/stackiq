@@ -363,11 +363,36 @@ describe('errorText', () => {
 				error: 'NO_SOURCE_SHEET',
 				details: { expected: ['Blad A', 'Blad B'] },
 			}).hint,
-		).toContain('"Blad A" or "Blad B"')
+		).toContain('one of the sheets "Blad A", "Blad B"')
 		expect(errorText({ error: 'NO_SOURCE_SHEET', details: {} }).hint).toContain(
-			PROFILE_DEFAULTS.sheets[1],
+			'"' + PROFILE_DEFAULTS.sheets.join('", "') + '"',
 		)
 	})
+
+	it.each([
+		[1, ['Blad A'], 'Expected the sheet "Blad A".'],
+		[3, ['Blad A', 'Blad B', 'Blad C'], 'one of the sheets "Blad A", "Blad B", "Blad C".'],
+	])(
+		'names all %i sheets of the profile in the missing-sheet and too-large hints',
+		(count, names, expected) => {
+			const quoted = names.map((name) => '"' + name + '"').join(', ')
+
+			const missing = errorText({ error: 'NO_SOURCE_SHEET', details: {} }, names)
+			expect(missing.hint).toContain(expected)
+			for (const shipped of PROFILE_DEFAULTS.sheets) {
+				expect(missing.hint).not.toContain(shipped)
+			}
+
+			const tooLarge = errorText(
+				{ error: 'WORKBOOK_TOO_LARGE', details: { maxSharedStrings: 200000 } },
+				names,
+			)
+			expect(tooLarge.hint).toContain('(it reads only ' + quoted + ')')
+			for (const shipped of PROFILE_DEFAULTS.sheets) {
+				expect(tooLarge.hint).not.toContain(shipped)
+			}
+		},
+	)
 
 	it('names the unpacked size limit the server applied', () => {
 		expect(
@@ -408,7 +433,7 @@ describe('errorText', () => {
 			expect(
 				errorText({ error: 'WORKBOOK_TOO_LARGE', details }).hint,
 			).toContain(
-				'(it reads only "Onbeh Applicaties CMDB" and "Beheerde Applicaties CMDB")',
+				'(it reads only "Onbeh Applicaties CMDB", "Beheerde Applicaties CMDB")',
 			)
 		}
 	})
