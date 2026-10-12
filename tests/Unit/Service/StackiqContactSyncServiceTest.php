@@ -114,6 +114,37 @@ class StackiqContactSyncServiceTest extends TestCase {
 	}//end service()
 
 	/**
+	 * A name lookup skips the system address book and matches the UID exactly.
+	 *
+	 * With enumeration and fullmatch both off, Nextcloud's contacts manager
+	 * skips the system address book (one card per local user, UID = user id),
+	 * so a contactsUid set to a user id names nobody.
+	 *
+	 * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
+	 *
+	 * @return void
+	 */
+	public function testANameLookupSkipsTheSystemAddressBookAndMatchesExactly(): void {
+		$manager = $this->createMock(IManager::class);
+		$manager->method('isEnabled')->willReturn(true);
+		$manager->expects($this->exactly(2))
+			->method('search')
+			->with(
+				$this->anything(),
+				['UID'],
+				['limit' => 5, 'strict_search' => true, 'enumeration' => false, 'fullmatch' => false]
+			)
+			->willReturnCallback(
+				static fn (string $uid): array => ($uid === 'uid-a' ? [['UID' => 'uid-a-longer', 'FN' => 'Other'], ['UID' => 'uid-a', 'FN' => 'Owner']] : [])
+			);
+		$service = new StackiqContactSyncService(contactsManager: $manager, logger: new NullLogger());
+
+		$this->assertSame('Owner', $service->findOwnContactByUid(uid: 'uid-a')['FN']);
+		$this->assertNull($service->findOwnContactByUid(uid: 'admin'));
+		$this->assertNull($service->findOwnContactByUid(uid: ''));
+	}//end testANameLookupSkipsTheSystemAddressBookAndMatchesExactly()
+
+	/**
 	 * The first contact creates the address book; the second reuses it; neither touches another address book.
 	 *
 	 * @return void

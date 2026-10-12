@@ -41,6 +41,7 @@ export default {
 	computed: {
 		/**
 		 * @return {string} The contact person uuid, or ''.
+		 * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
 		 */
 		id() {
 			return contactPersonId(this.value)
@@ -55,6 +56,7 @@ export default {
 			 *
 			 * @param {string} id The contact person uuid.
 			 * @return {Promise<void>}
+			 * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
 			 */
 			async handler(id) {
 				this.name = null

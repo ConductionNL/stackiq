@@ -46,6 +46,15 @@ A usage SHALL carry a business owner and a technical owner, each picked from the
 - **WHEN** the supplier opens that usage
 - **THEN** the owner contact persons do not open for the supplier
 
+#### Scenario: The usage list names an owner only for who can read the contact
+@e2e exclude Needs a Contacts address book per user; tests/Unit/Controller/ContactNamesControllerTest.php asserts the read with the caller's rights and the 401, and tests/Unit/Service/StackiqContactSyncServiceTest.php testANameLookupSkipsTheSystemAddressBookAndMatchesExactly asserts the lookup skips the system address book.
+
+- **GIVEN** a usage whose business owner is a contact person linked to a contact in the information manager's own address book
+- **WHEN** the information manager opens Applications in use
+- **THEN** the Business owner column shows the contact's name
+- **AND** a user without that contact in their own or shared address books sees the contact person's id, as before
+- **AND** a request that is not signed in gets 401 and no name, and a contactsUid that is a user id names nobody
+
 ### Requirement: REQ-UAP-004 A usage moves through its lifecycle from its page
 
 The usage schema SHALL declare its lifecycle on the status values its rows hold, so the detail page offers Plan, Go live, Phase out and Retire from the matching status.

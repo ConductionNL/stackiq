@@ -471,6 +471,38 @@ class StackiqContactSyncService {
 	}//end findContactByUid()
 
 	/**
+	 * Find a contact by its exact UID in the signed-in user's own and shared address books only.
+	 *
+	 * The system address book (one card per local user) is skipped, and the
+	 * UID is matched exactly, not as a substring. This is the lookup for a
+	 * name shown to a user: a contactsUid is free text on a contactPerson,
+	 * so a lookup that included the system address book would name any
+	 * local user for whoever may write a contactPerson.
+	 *
+	 * @param string $uid The contact UID.
+	 *
+	 * @return ?array<string, mixed> The contact, or null when not found there.
+	 *
+	 * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
+	 */
+	public function findOwnContactByUid(string $uid): ?array {
+		if ($uid === '' || $this->isAvailable() === false) {
+			return null;
+		}
+
+		// With enumeration and fullmatch both off, the contacts manager skips the
+		// system address book; strict_search turns the substring match off.
+		$options = ['limit' => 5, 'strict_search' => true, 'enumeration' => false, 'fullmatch' => false];
+		foreach ($this->contactsManager->search($uid, ['UID'], $options) as $result) {
+			if (($result['UID'] ?? '') === $uid) {
+				return $result;
+			}
+		}
+
+		return null;
+	}//end findOwnContactByUid()
+
+	/**
 	 * Find a Nextcloud contact matching a relationship record's identity, by
 	 * e-mail first and — for organisations — by CBS/KvK code as a fallback.
 	 *

@@ -72,9 +72,13 @@ describe('contactNames', () => {
 		expect(http.get.mock.calls[1][1].params.ids).toHaveLength(1)
 	})
 
-	it('gives no name when the request fails', async () => {
-		http.get.mockRejectedValue(new Error('offline'))
+	it('gives no name when the request fails, and asks again next time', async () => {
+		http.get.mockRejectedValueOnce(new Error('offline'))
 		expect(await contactName(A)).toBeNull()
+
+		http.get.mockResolvedValueOnce({ data: { names: { [A]: 'Teamleider' } } })
+		expect(await contactName(A)).toBe('Teamleider')
+		expect(http.get).toHaveBeenCalledTimes(2)
 	})
 
 	it('reads the uuid from a string or a related object', () => {

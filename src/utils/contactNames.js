@@ -30,6 +30,7 @@ let pending = new Map()
  *
  * @param {string|object|null} value A uuid, or a related object with `id` or `uuid`.
  * @return {string} The uuid, or ''.
+ * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
  */
 export function contactPersonId(value) {
 	if (typeof value === 'string') {
@@ -44,7 +45,11 @@ export function contactPersonId(value) {
 /**
  * Ask the endpoint for the names of the collected ids, in chunks it accepts.
  *
+ * A chunk whose request fails answers "no name" for now and is forgotten,
+ * so the next cell that asks for one of its ids asks the endpoint again.
+ *
  * @return {Promise<void>}
+ * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
  */
 async function flush() {
 	const batch = pending
@@ -53,6 +58,7 @@ async function flush() {
 	for (let start = 0; start < ids.length; start += MAX_IDS_PER_REQUEST) {
 		const chunk = ids.slice(start, start + MAX_IDS_PER_REQUEST)
 		let names = {}
+		let failed = false
 		try {
 			const { data } = await axios.get(
 				generateUrl('/apps/stackiq/api/contact-names'),
@@ -61,9 +67,13 @@ async function flush() {
 			names = data?.names ?? {}
 		} catch {
 			names = {}
+			failed = true
 		}
 		chunk.forEach((id) => {
 			const name = typeof names[id] === 'string' ? names[id] : ''
+			if (failed) {
+				cache.delete(id)
+			}
 			batch.get(id).resolve(name !== '' ? name : null)
 		})
 	}
@@ -75,6 +85,7 @@ async function flush() {
  *
  * @param {string} id The contact person uuid.
  * @return {Promise<string|null>} The name.
+ * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
  */
 export function contactName(id) {
 	const key = String(id ?? '').toLowerCase()
@@ -99,6 +110,7 @@ export function contactName(id) {
  * Forget every name read so far (tests).
  *
  * @return {void}
+ * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
  */
 export function clearContactNames() {
 	cache.clear()

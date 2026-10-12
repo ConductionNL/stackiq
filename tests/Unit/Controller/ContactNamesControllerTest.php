@@ -109,12 +109,17 @@ class ContactNamesControllerTest extends TestCase {
 		$this->objectService->expects($this->once())
 			->method('searchObjectsPaginated')
 			->with(
-				$this->callback(static fn (array $query): bool => $query['@self'] === ['register' => 20, 'schema' => 7]),
+				// The ids go in the query as `_ids`: OpenRegister's single
+				// register+schema path ignores the `ids` argument.
+				$this->callback(
+					static fn (array $query): bool => $query['@self'] === ['register' => 20, 'schema' => 7]
+						&& $query['_ids'] === [self::A, self::B]
+				),
 				// The caller's own RBAC and organisation scope.
 				true,
 				true,
 				false,
-				[self::A, self::B]
+				null
 			)
 			->willReturn(
 				[
@@ -124,7 +129,7 @@ class ContactNamesControllerTest extends TestCase {
 					],
 				]
 			);
-		$this->contactSync->method('findContactByUid')->willReturnMap(
+		$this->contactSync->method('findOwnContactByUid')->willReturnMap(
 			[
 				['uid-a', ['UID' => 'uid-a', 'FN' => 'Teamleider Applicatiebeheer']],
 				['uid-b', null],
@@ -146,7 +151,7 @@ class ContactNamesControllerTest extends TestCase {
 		$this->objectService->method('searchObjectsPaginated')->willReturn(
 			['results' => [['id' => self::C, 'contactsUid' => 'uid-c']]]
 		);
-		$this->contactSync->expects($this->never())->method('findContactByUid');
+		$this->contactSync->expects($this->never())->method('findOwnContactByUid');
 
 		$response = $this->controller(ids: [self::A])->index();
 

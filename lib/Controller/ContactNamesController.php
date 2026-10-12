@@ -30,6 +30,7 @@ use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
+use OCP\AppFramework\Http\Attribute\UserRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -44,10 +45,11 @@ use Throwable;
  * lives in Nextcloud Contacts (the CMDB import puts its owners in the
  * importing admin's "Stackiq CMDB owners" address book). This endpoint reads
  * the contact persons with the caller's own OpenRegister rights, then looks
- * each `contactsUid` up in the address books Nextcloud gives the caller. A
- * name is therefore returned only to someone who can already read both the
- * contact person and the contact. Nothing is stored, and there is no public
- * route.
+ * each `contactsUid` up, by exact UID, in the caller's own and shared address
+ * books; the system address book is never searched, so a contactsUid set to a
+ * user id names nobody. A name is therefore returned only to someone who can
+ * already read both the contact person and the contact. Nothing is stored,
+ * and there is no public route.
  *
  * @category Controller
  * @package  OCA\Stackiq\Controller
@@ -94,7 +96,8 @@ class ContactNamesController extends Controller {
 	 * Answers `{"names": {"<uuid>": "<display name>"}}`. The per-object
 	 * check is OpenRegister's: the contact persons are read with the caller's
 	 * RBAC and organisation scope, so one the caller may not read is left out,
-	 * as is one whose contact is not in the caller's address books.
+	 * as is one whose contact is not in the caller's own or shared address
+	 * books. At most 120 requests a minute per user (one per list page).
 	 *
 	 * @return JSONResponse 200 with the names, 400 for more than MAX_IDS ids, 401 when not signed in.
 	 *
@@ -102,6 +105,7 @@ class ContactNamesController extends Controller {
 	 */
 	#[NoAdminRequired]
 	#[NoCSRFRequired]
+	#[UserRateLimit(limit: 120, period: 60)]
 	public function index(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
 			return new JSONResponse(
@@ -124,7 +128,7 @@ class ContactNamesController extends Controller {
 
 		$names = [];
 		foreach ($this->contactsUidsOf(ids: $ids) as $uuid => $contactsUid) {
-			$contact = $this->contactSync->findContactByUid(uid: $contactsUid);
+			$contact = $this->contactSync->findOwnContactByUid(uid: $contactsUid);
 			$name = self::firstValue(value: ($contact['FN'] ?? ''));
 			if ($name !== '') {
 				$names[$uuid] = $name;
@@ -180,12 +184,14 @@ class ContactNamesController extends Controller {
 
 		try {
 			// RBAC and multitenancy stay at their defaults: the caller's own rights.
+			// The ids go in the query as `_ids`: OpenRegister's single
+			// register+schema path reads that key and ignores the `ids` argument.
 			$result = $this->objectService->searchObjectsPaginated(
 				query: [
 					'@self' => ['register' => (int)$register, 'schema' => (int)$schema],
+					'_ids' => $ids,
 					'_limit' => self::MAX_IDS,
-				],
-				ids: $ids
+				]
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning('[ContactNames] The contact persons could not be read', ['exception' => $e]);
