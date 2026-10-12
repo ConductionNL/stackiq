@@ -42,7 +42,7 @@ Nextcloud OCP interfaces used: `OCP\IL10N` (messages). OpenRegister: `Service\Mi
 - **GIVEN** a pack file on the server that OpenRegister's validator refuses
 - **WHEN** a Nextcloud admin requests the mapping
 - **THEN** the endpoint SHALL answer 503 with error `MAPPING_UNAVAILABLE`
-- **AND** `details.reason` SHALL name the pack file and the validator's reason
+- **AND** `details.reason` SHALL name the pack file and the validator's reason, on one line of at most 500 characters
 - **AND** the section SHALL show the error and the code `MAPPING_UNAVAILABLE` instead of the tables
 
 #### Scenario: A user who is not a Nextcloud admin cannot read the mapping
@@ -81,7 +81,7 @@ Stackiq's admin settings page SHALL show a section "CMDB import", rendered by th
 ## Non-Functional Requirements
 
 - **Performance:** the endpoint reads six small JSON files and validates five packs; it SHALL answer within the time an admin settings page loads and SHALL be called once per page view.
-- **Security:** admin-only with CSRF, as the import routes. The answer holds column names, field names and lookup tables from files that ship with the app; no object data and no person data. The loader's reason in `details.reason` names a file and a validator message, never a cell value.
+- **Security:** admin-only with CSRF, as the import routes. The answer holds column names, field names and lookup tables from files that ship with the app; no object data and no person data. The loader's reason in `details.reason` is its message's first line, at most 500 characters: the file, the validator's rule and the configuration value it refused, never a cell value.
 - **Accessibility:** Target WCAG 2.2 AA. The block's toggle is an `NcButton` with a visible label and `aria-expanded` (SC 4.1.2; gate `button-name`), the content it controls is referenced with `aria-controls`, and each table has header cells (SC 1.3.1; gate `table-headers`). New in 2.2: 2.4.11 Focus Not Obscured applies (the tables are in the page flow, nothing sticky covers them); 2.5.7 Dragging Movements does not apply; 2.5.8 Target Size applies to the toggle (Nextcloud default); 3.2.6 Consistent Help does not apply (no help mechanism added); 3.3.7 Redundant Entry does not apply (nothing is entered); 3.3.8 Accessible Authentication does not apply.
 - **Internationalization:** Dutch and English MUST be supported (ADR-005) for the block, the table headers, the target and transformation names and the error.
 
