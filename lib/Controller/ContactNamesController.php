@@ -46,8 +46,9 @@ use Throwable;
  * importing admin's "Stackiq CMDB owners" address book). This endpoint reads
  * the contact persons with the caller's own OpenRegister rights, then looks
  * each `contactsUid` up, by exact UID, in the caller's own and shared address
- * books; the system address book is never searched, so a contactsUid set to a
- * user id names nobody. A name is therefore returned only to someone who can
+ * books only; the system principal's books (the local system address book
+ * and the books synced from trusted servers) never count, so a contactsUid
+ * set to a local or remote user id names nobody. A name is therefore returned only to someone who can
  * already read both the contact person and the contact. Nothing is stored,
  * and there is no public route.
  *

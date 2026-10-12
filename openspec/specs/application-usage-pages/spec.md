@@ -53,7 +53,7 @@ A usage SHALL carry a business owner and a technical owner, each picked from the
 - **WHEN** the information manager opens Applications in use
 - **THEN** the Business owner column shows the contact's name
 - **AND** a user without that contact in their own or shared address books sees the contact person's id, as before
-- **AND** a request that is not signed in gets 401 and no name, and a contactsUid that is a user id names nobody
+- **AND** a request that is not signed in gets 401 and no name, and a contactsUid that is a local or remote user id names nobody
 
 ### Requirement: REQ-UAP-004 A usage moves through its lifecycle from its page
 

@@ -117,8 +117,10 @@ class StackiqContactSyncServiceTest extends TestCase {
 	 * A name lookup skips the system address book and matches the UID exactly.
 	 *
 	 * With enumeration and fullmatch both off, Nextcloud's contacts manager
-	 * skips the system address book (one card per local user, UID = user id),
-	 * so a contactsUid set to a user id names nobody.
+	 * skips the local system address book (one card per local user, UID =
+	 * user id); a result from any book outside the user's own and shared
+	 * ones (such as a book synced from a trusted server) is dropped, so a
+	 * contactsUid set to a local or remote user id names nobody.
 	 *
 	 * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
 	 *
@@ -127,7 +129,7 @@ class StackiqContactSyncServiceTest extends TestCase {
 	public function testANameLookupSkipsTheSystemAddressBookAndMatchesExactly(): void {
 		$manager = $this->createMock(IManager::class);
 		$manager->method('isEnabled')->willReturn(true);
-		$manager->expects($this->exactly(2))
+		$manager->expects($this->exactly(3))
 			->method('search')
 			->with(
 				$this->anything(),
@@ -135,13 +137,36 @@ class StackiqContactSyncServiceTest extends TestCase {
 				['limit' => 5, 'strict_search' => true, 'enumeration' => false, 'fullmatch' => false]
 			)
 			->willReturnCallback(
-				static fn (string $uid): array => ($uid === 'uid-a' ? [['UID' => 'uid-a-longer', 'FN' => 'Other'], ['UID' => 'uid-a', 'FN' => 'Owner']] : [])
+				static fn (string $uid): array => match ($uid) {
+					// Book 7 is the user's own; 99 is a book synced from a trusted server.
+					'uid-a' => [
+						['UID' => 'uid-a-longer', 'FN' => 'Other', 'addressbook-key' => '7'],
+						['UID' => 'uid-a', 'FN' => 'Owner', 'addressbook-key' => '7'],
+					],
+					'remote-user' => [['UID' => 'remote-user', 'FN' => 'Remote User', 'addressbook-key' => '99']],
+					default => [],
+				}
 			);
-		$service = new StackiqContactSyncService(contactsManager: $manager, logger: new NullLogger());
+		$backend = new class {
+			public function getAddressBooksForUser(string $principal): array {
+				return $principal === 'principals/users/admin' ? [['id' => 7, 'uri' => 'contacts'], ['id' => 8, 'uri' => 'shared_by_bob']] : [];
+			}
+		};
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($backend);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('admin');
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+		$service = new StackiqContactSyncService(contactsManager: $manager, logger: new NullLogger(), container: $container, userSession: $session);
 
 		$this->assertSame('Owner', $service->findOwnContactByUid(uid: 'uid-a')['FN']);
+		$this->assertNull($service->findOwnContactByUid(uid: 'remote-user'));
 		$this->assertNull($service->findOwnContactByUid(uid: 'admin'));
 		$this->assertNull($service->findOwnContactByUid(uid: ''));
+
+		$noUser = new StackiqContactSyncService(contactsManager: $manager, logger: new NullLogger(), container: $container);
+		$this->assertNull($noUser->findOwnContactByUid(uid: 'uid-a'));
 	}//end testANameLookupSkipsTheSystemAddressBookAndMatchesExactly()
 
 	/**
