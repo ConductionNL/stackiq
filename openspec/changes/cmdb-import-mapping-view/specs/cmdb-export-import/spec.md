@@ -212,6 +212,7 @@ Stackiq's admin settings page SHALL show a section "CMDB import", rendered by th
 - **GIVEN** a Nextcloud admin on stackiq's admin settings page
 - **WHEN** the mapping endpoint has answered
 - **THEN** the help text under the file control SHALL name the sheets the endpoint returned
+- **AND** a profile with one, two or three sheets SHALL give a help text and an info text that name exactly those sheets, with no sheet the profile does not name and no description tied to a sheet's position
 - **AND** when the endpoint fails, it SHALL name the shipped sheets and the mapping block SHALL show the error
 
 ## Non-Functional Requirements

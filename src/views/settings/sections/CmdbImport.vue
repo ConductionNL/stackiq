@@ -84,18 +84,7 @@
 					}}</span>
 				</label>
 				<p id="cmdb-import-file-help" class="cmdb-import__help">
-					{{
-						t(
-							'stackiq',
-							'Excel workbook (.xlsx) with the sheet "{first}" or "{second}". By default the file may be at most {size}.',
-							{
-								first: sheetNames[0],
-								second: sheetNames[1],
-								size: formatMegabytes(profileDefaults.maxFileBytes),
-							},
-							asText,
-						)
-					}}
+					{{ fileHelp }}
 				</p>
 			</div>
 
@@ -380,17 +369,7 @@
 				<h4>{{ t('stackiq', 'The file') }}</h4>
 				<ul>
 					<li>
-						{{
-							t(
-								'stackiq',
-								'The sheets "{first}" (applications without arranged maintenance) and "{second}" (with arranged maintenance) are read; other sheets, including the "Invoer" sheets, are ignored.',
-								{
-									first: sheetNames[0],
-									second: sheetNames[1],
-								},
-								asText,
-							)
-						}}
+						{{ sheetsReadInfo }}
 					</li>
 					<li>
 						{{
@@ -449,8 +428,8 @@ import {
 	checkFile,
 	cmdbProgressView,
 	errorText,
+	fileHelpText,
 	followInterruptedImport,
-	formatMegabytes,
 	importUrl,
 	interruptedImportError,
 	isKnownError,
@@ -464,6 +443,7 @@ import {
 	PROFILE_DEFAULTS,
 	REPORT_PAGE_SIZE,
 	reportRows,
+	sheetsReadText,
 	sortReportRows,
 	typedMunicipalityOption,
 } from '../../../utils/cmdbImport.js'
@@ -539,11 +519,31 @@ export default {
 		 * profile's once the mapping block has loaded it, the shipped names
 		 * until then or when it could not be loaded.
 		 *
-		 * @return {Array<string>} At least two names
+		 * @return {Array<string>} Every sheet the profile names, at least one
 		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		sheetNames() {
 			return mappingSheetNames(this.mapping)
+		},
+
+		/**
+		 * The help text under the file chooser, naming every sheet the import reads.
+		 *
+		 * @return {string} The text
+		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		fileHelp() {
+			return fileHelpText(this.sheetNames, this.profileDefaults.maxFileBytes)
+		},
+
+		/**
+		 * The info-panel sentence naming the sheets the import reads.
+		 *
+		 * @return {string} The text
+		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		sheetsReadInfo() {
+			return sheetsReadText(this.sheetNames)
 		},
 
 		/**
@@ -582,7 +582,7 @@ export default {
 			if (!this.error) {
 				return null
 			}
-			const words = errorText(this.error)
+			const words = errorText(this.error, this.sheetNames)
 			return {
 				...words,
 				code: this.error.error,
@@ -786,7 +786,6 @@ export default {
 
 	methods: {
 		t,
-		formatMegabytes,
 		moduleUrl,
 		outcomeLabel,
 

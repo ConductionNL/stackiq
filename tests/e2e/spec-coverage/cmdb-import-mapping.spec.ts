@@ -109,6 +109,20 @@ test.describe('CMDB import mapping (read-only)', () => {
 			expect(status.target).toBe('status')
 			expect(status.transform.type).toBe('lookup')
 			expect(status.transform.map['In productie']).toBe('In production')
+
+			// The write rules the import applies besides the mapping.
+			expect(usage.createOnlyFields).toEqual([
+				'interneAnnotation',
+				'timeClassification',
+			])
+			const moduleRules = body.packs.find(
+				(pack: { target: string }) => pack.target === 'module',
+			)
+			expect(moduleRules.createOnlyDefaults).toEqual({ type: 'Application' })
+			expect(moduleRules.neverWritten).toEqual([
+				'publicationDate',
+				'depublicationDate',
+			])
 		} finally {
 			await ctx.dispose()
 		}

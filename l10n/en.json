@@ -973,7 +973,6 @@
         "Error code: {code}": "Error code: {code}",
         "Excel workbook (.xlsx), at most 10 MB, with the sheet \"Onbeh Applicaties CMDB\" or \"Beheerde Applicaties CMDB\".": "Excel workbook (.xlsx), at most 10 MB, with the sheet \"Onbeh Applicaties CMDB\" or \"Beheerde Applicaties CMDB\".",
         "Existing municipalities could not be loaded. You can still type the name of a municipality.": "Existing municipalities could not be loaded. You can still type the name of a municipality.",
-        "Expected a sheet named \"{first}\" or \"{second}\". Sheet names must match exactly.": "Expected a sheet named \"{first}\" or \"{second}\". Sheet names must match exactly.",
         "Failed": "Failed",
         "Import": "Import",
         "Import a TOPdesk CMDB export (.xlsx) as the applications one municipality uses": "Import a TOPdesk CMDB export (.xlsx) as the applications one municipality uses",
@@ -1090,8 +1089,6 @@
         "The file is larger than the server accepts.": "The file is larger than the server accepts.",
         "A source sheet may hold at most {limit} rows. Split the export and import the parts one after the other.": "A source sheet may hold at most {limit} rows. Split the export and import the parts one after the other.",
         "Split the export and import the parts one after the other.": "Split the export and import the parts one after the other.",
-        "Excel workbook (.xlsx) with the sheet \"{first}\" or \"{second}\". By default the file may be at most {size}.": "Excel workbook (.xlsx) with the sheet \"{first}\" or \"{second}\". By default the file may be at most {size}.",
-        "The sheets \"{first}\" (applications without arranged maintenance) and \"{second}\" (with arranged maintenance) are read; other sheets, including the \"Invoer\" sheets, are ignored.": "The sheets \"{first}\" (applications without arranged maintenance) and \"{second}\" (with arranged maintenance) are read; other sheets, including the \"Invoer\" sheets, are ignored.",
         "The page got no answer from the import.": "The page got no answer from the import.",
         "The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.": "The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.",
         "The import cannot be cancelled now: the server has not started its rows yet, or has already finished them. If the import keeps running, press Cancel import again in a moment.": "The import cannot be cancelled now: the server has not started its rows yet, or has already finished them. If the import keeps running, press Cancel import again in a moment.",
@@ -1130,7 +1127,6 @@
         "Split the rows over two copies of the export and import them one after the other.": "Split the rows over two copies of the export and import them one after the other.",
         "The sheet \"{sheet}\" is too large to import: unpacked it is {size}, and the import reads at most {limit} of one sheet.": "The sheet \"{sheet}\" is too large to import: unpacked it is {size}, and the import reads at most {limit} of one sheet.",
         "The part {part} of the workbook is too large to import: unpacked it is {size}, and the import reads at most {limit} of one part.": "The part {part} of the workbook is too large to import: unpacked it is {size}, and the import reads at most {limit} of one part.",
-        "Delete the sheets the import does not read from a copy of the export (it reads only \"{first}\" and \"{second}\"), and import that copy.": "Delete the sheets the import does not read from a copy of the export (it reads only \"{first}\" and \"{second}\"), and import that copy.",
         "The workbook holds more than {count} different texts, the most the import reads.": "The workbook holds more than {count} different texts, the most the import reads.",
         "Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.": "Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.",
         "In development since": "In development since",
@@ -1160,6 +1156,13 @@
         "Edit in OpenRegister": "Edit in OpenRegister",
         "Edit in OpenRegister: {target} (opens in a new tab)": "Edit in OpenRegister: {target} (opens in a new tab)",
         "This pack maps the import options, not a column of the export, so it is not edited in OpenRegister.": "This pack maps the import options, not a column of the export, so it is not edited in OpenRegister.",
-        "Stackiq ships a newer version of this pack ({version}). It was not applied, because the pack was edited in OpenRegister. Delete the pack there to use the shipped version from the next import on; your edits are then lost.": "Stackiq ships a newer version of this pack ({version}). It was not applied, because the pack was edited in OpenRegister. Delete the pack there to use the shipped version from the next import on; your edits are then lost."
+        "Stackiq ships a newer version of this pack ({version}). It was not applied, because the pack was edited in OpenRegister. Delete the pack there to use the shipped version from the next import on; your edits are then lost.": "Stackiq ships a newer version of this pack ({version}). It was not applied, because the pack was edited in OpenRegister. Delete the pack there to use the shipped version from the next import on; your edits are then lost.",
+        "Excel workbook (.xlsx) with the sheet {sheets}. By default the file may be at most {size}.": "Excel workbook (.xlsx) with the sheet {sheets}. By default the file may be at most {size}.",
+        "Excel workbook (.xlsx) with one of the sheets {sheets}. By default the file may be at most {size}.": "Excel workbook (.xlsx) with one of the sheets {sheets}. By default the file may be at most {size}.",
+        "The sheet {sheets} is read; other sheets, including the \"Invoer\" sheets, are ignored.": "The sheet {sheets} is read; other sheets, including the \"Invoer\" sheets, are ignored.",
+        "The sheets {sheets} are read; other sheets, including the \"Invoer\" sheets, are ignored.": "The sheets {sheets} are read; other sheets, including the \"Invoer\" sheets, are ignored.",
+        "Expected the sheet {sheets}. Sheet names must match exactly.": "Expected the sheet {sheets}. Sheet names must match exactly.",
+        "Expected one of the sheets {sheets}. Sheet names must match exactly.": "Expected one of the sheets {sheets}. Sheet names must match exactly.",
+        "Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy.": "Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy."
     }
 }
