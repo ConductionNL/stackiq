@@ -413,7 +413,7 @@ describe('errorText', () => {
 			'The sheet "Beheerde Applicaties CMDB" is too large to import: unpacked it is 14.3 MB, and the import reads at most 10 MB of one sheet.',
 		)
 		expect(words.hint).toBe(
-			'An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported. Split the rows over two copies of the export and import them one after the other.',
+			'An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported. Split the rows over two copies of the export and import both with "Keep them as they are": an import that archives treats the applications of the other copy as missing.',
 		)
 	})
 

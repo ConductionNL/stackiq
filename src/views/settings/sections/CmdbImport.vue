@@ -443,7 +443,7 @@
 						{{
 							t(
 								'stackiq',
-								'Importing a newer export again updates the same applications, matched on APPID per municipality. Applications missing from it are left as they are.',
+								'Importing a newer export again updates the same applications, matched on APPID per municipality. Applications missing from it are archived or deleted, unless you choose to keep them.',
 							)
 						}}
 					</li>

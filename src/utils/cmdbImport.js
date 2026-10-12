@@ -535,7 +535,7 @@ function workbookTooLarge(details) {
 		+ ' '
 		+ t(
 			'stackiq',
-			'Split the rows over two copies of the export and import them one after the other.',
+			'Split the rows over two copies of the export and import both with "Keep them as they are": an import that archives treats the applications of the other copy as missing.',
 		)
 	if (Number(details.maxPartBytes) > 0) {
 		const sizes = {
@@ -651,7 +651,7 @@ export function errorText(error) {
 							),
 				hint: t(
 					'stackiq',
-					'Remove sheets the import does not read, or split the export, and try again.',
+					'Remove sheets the import does not read and try again. Or split the export and import every part with "Keep them as they are".',
 				),
 			}
 		case 'MISSING_RECORDS_UNSUPPORTED':
@@ -765,13 +765,13 @@ export function errorText(error) {
 					Number(details.limit) > 0
 						? t(
 								'stackiq',
-								'A source sheet may hold at most {limit} rows. Split the export and import the parts one after the other.',
+								'A source sheet may hold at most {limit} rows. Split the export and import the parts one after the other with "Keep them as they are".',
 								{ limit: Number(details.limit).toLocaleString() },
 								AS_TEXT,
 							)
 						: t(
 								'stackiq',
-								'Split the export and import the parts one after the other.',
+								'Split the export and import the parts one after the other with "Keep them as they are".',
 							),
 			}
 		case 'MAPPING_UNAVAILABLE':
