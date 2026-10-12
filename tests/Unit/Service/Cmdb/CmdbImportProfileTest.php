@@ -298,6 +298,52 @@ class CmdbImportProfileTest extends TestCase {
 	}//end testAMissingPackOrValidatorIsMappingUnavailable()
 
 	/**
+	 * The overview the admin settings show is built from the validated packs, and a broken pack breaks it too.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 */
+	public function testTheOverviewShowsWhatTheImportRuns(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$profile = new CmdbImportProfile(container: $this->emptyContainer());
+
+		$overview = $profile->mappingOverview();
+
+		$this->assertSame(['profile', 'packs'], array_keys($overview));
+		$this->assertSame('topdesk-cmdb', $overview['profile']['id']);
+		$this->assertSame($profile->sheets(), $overview['profile']['sheets']);
+		$this->assertSame(['Beheerde Applicaties CMDB', 'Onbeh Applicaties CMDB'], $overview['profile']['sheetPrecedence']);
+		$this->assertSame($profile->keyColumn(), $overview['profile']['keyColumn']);
+		$this->assertSame($profile->requiredColumns(), $overview['profile']['requiredColumns']);
+		$this->assertSame($profile->idColumns(), $overview['profile']['idColumns']);
+		$this->assertSame($profile->emptyValues(), $overview['profile']['emptyValues']);
+		$this->assertSame(CmdbImportProfile::TARGETS, array_column($overview['packs'], 'target'));
+		foreach ($overview['packs'] as $pack) {
+			$shipped = $profile->pack(target: $pack['target']);
+			$this->assertSame($shipped['id'], $pack['id']);
+			$this->assertSame($shipped['version'], $pack['version']);
+			$this->assertSame(array_column($shipped['fieldMappings'], 'source'), array_column($pack['fieldMappings'], 'source'), $pack['target']);
+			$this->assertSame(array_column($shipped['fieldMappings'], 'transform'), array_column($pack['fieldMappings'], 'transform'), $pack['target'] . ' transforms as stored');
+			foreach ($pack['fieldMappings'] as $mapping) {
+				$this->assertIsBool($mapping['required'], $pack['target']);
+			}
+		}
+
+		$directory = $this->copyOfShippedDirectory();
+		unlink($directory . '/topdesk-module.json');
+		try {
+			(new CmdbImportProfile(container: $this->emptyContainer(), directory: $directory))->mappingOverview();
+			$this->fail('MAPPING_UNAVAILABLE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('MAPPING_UNAVAILABLE', $e->getErrorCode());
+			$this->assertStringContainsString('topdesk-module.json', $e->getMessage());
+		} finally {
+			$this->remove(directory: $directory);
+		}
+	}//end testTheOverviewShowsWhatTheImportRuns()
+
+	/**
 	 * The upload limit is readable without OpenRegister.
 	 *
 	 * @return void
