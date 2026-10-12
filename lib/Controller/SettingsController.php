@@ -68,6 +68,13 @@ use RuntimeException;
 class SettingsController extends Controller {
 
 	/**
+	 * The longest loader reason the CMDB mapping endpoint answers, in characters.
+	 *
+	 * @var int
+	 */
+	private const REASON_MAX_LENGTH = 500;
+
+	/**
 	 * The OpenRegister object service.
 	 *
 	 * @var ObjectServiceInterface|null The OpenRegister object service.
@@ -3900,8 +3907,10 @@ class SettingsController extends Controller {
 	 * Success is the flat `{profile, packs}`; a failure uses the import's
 	 * error envelope, so the section shows it like an import error, with the
 	 * loader's reason in `details.reason` because the admin who edited a file
-	 * needs to know which file and why. That reason names files and validator
-	 * rules only, never a cell value or a person.
+	 * needs to know which file and why. That reason is the loader's message cut
+	 * to its first line and REASON_MAX_LENGTH characters: the file, the
+	 * validator's rule and the configuration value it refused, never a
+	 * workbook cell or a person.
 	 *
 	 * @return JSONResponse `{profile, packs}` (200), 503 MAPPING_UNAVAILABLE, or 500 IMPORT_FAILED.
 	 *
@@ -3924,7 +3933,7 @@ class SettingsController extends Controller {
 					'success' => false,
 					'error' => $e->getErrorCode(),
 					'message' => $this->translate(text: 'The import mapping cannot be shown: OpenRegister is missing or a mapping file is invalid.'),
-					'details' => (object)['reason' => $e->getMessage()],
+					'details' => (object)['reason' => self::boundedReason(message: $e->getMessage())],
 				],
 				$e->getHttpStatus()
 			);
@@ -3943,6 +3952,24 @@ class SettingsController extends Controller {
 
 		return new JSONResponse($overview, Http::STATUS_OK);
 	}//end getCmdbImportMapping()
+
+	/**
+	 * A loader message as the mapping endpoint answers it: its first line, at most REASON_MAX_LENGTH characters.
+	 *
+	 * @param string $message The CmdbImportException message.
+	 *
+	 * @return string
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 */
+	private static function boundedReason(string $message): string {
+		$firstLine = strtok($message, "\r\n");
+		if ($firstLine === false) {
+			return '';
+		}
+
+		return mb_substr($firstLine, 0, self::REASON_MAX_LENGTH);
+	}//end boundedReason()
 
 	/**
 	 * Translate a message, or hand it back as it is when no translator was injected.

@@ -25,6 +25,7 @@ namespace OCA\Stackiq\Tests\Unit\Controller;
 require_once __DIR__ . '/../Support/CmdbTestSupport.php';
 
 use OCA\Stackiq\Controller\SettingsController;
+use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\EolSyncService;
@@ -293,6 +294,37 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 		$this->assertSame('The import mapping cannot be shown: OpenRegister is missing or a mapping file is invalid.', $data['message']);
 		$this->assertSame('OpenRegister PackDefinitionValidator is not available', $data['details']->reason);
 	}//end testAMissingValidatorIs503()
+
+	/**
+	 * The loader's reason is answered as its first line, cut to 500 characters.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 */
+	public function testTheReasonIsOneBoundedLine(): void {
+		$profile = new class(container: $this->emptyContainer()) extends CmdbImportProfile {
+			/**
+			 * A loader failure with a long first line and a second line.
+			 *
+			 * @return array<string, mixed>
+			 *
+			 * @throws CmdbImportException Always.
+			 */
+			public function mappingOverview(): array {
+				throw new CmdbImportException(
+					errorCode: CmdbImportException::MAPPING_UNAVAILABLE,
+					message: 'topdesk-usage.json: ' . str_repeat('x', 600) . "\nsecond line"
+				);
+			}
+		};
+
+		$reason = $this->controller(profile: $profile)->getCmdbImportMapping()->getData()['details']->reason;
+
+		$this->assertStringStartsWith('topdesk-usage.json: ', $reason);
+		$this->assertStringNotContainsString('second line', $reason);
+		$this->assertSame(500, mb_strlen($reason));
+	}//end testTheReasonIsOneBoundedLine()
 
 	/**
 	 * An unexpected error is 500 IMPORT_FAILED with a static message, and the exception is logged.

@@ -40,7 +40,7 @@ The route sits with the other `/api/settings/*` reads, and `SettingsController` 
 
 ### D2. Admin-only, CSRF, the import's error envelope
 
-The method carries no auth attribute (Nextcloud's default: admins with a CSRF token), with `@auth admin-only` and its reason, as `CmdbImportController` does. The settings page is admin-only anyway, so a delegated group never sees the section; the endpoint follows the import's posture so an API caller gets the same answer from both. Success is the flat `{profile, packs}` (ADR-050). Failure is the import's envelope `{success: false, error, message, details}`, so `cmdbImport.js`'s `normaliseError()` and `errorText()` handle it unchanged; `details.reason` carries the loader's message, because an administrator who edited a file needs to know which file and why, and that message names files and validator rules only.
+The method carries no auth attribute (Nextcloud's default: admins with a CSRF token), with `@auth admin-only` and its reason, as `CmdbImportController` does. The settings page is admin-only anyway, so a delegated group never sees the section; the endpoint follows the import's posture so an API caller gets the same answer from both. Success is the flat `{profile, packs}` (ADR-050). Failure is the import's envelope `{success: false, error, message, details}`, so `cmdbImport.js`'s `normaliseError()` and `errorText()` handle it unchanged; `details.reason` carries the loader's message, because an administrator who edited a file needs to know which file and why. The message is cut to its first line and 500 characters; it names the file, the validator's rule and the configuration value it refused, never a workbook cell or a person.
 
 ### D3. The transform is shown as stored
 
