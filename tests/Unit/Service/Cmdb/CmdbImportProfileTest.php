@@ -330,7 +330,7 @@ class CmdbImportProfileTest extends TestCase {
 			}
 
 			$this->assertSame($profile->createOnlyDefaults(target: $pack['target']), $pack['createOnlyDefaults'], $pack['target']);
-			$this->assertSame($profile->createOnlyFields(target: $pack['target']), $pack['createOnlyFields'], $pack['target']);
+			$this->assertSame([], array_intersect($pack['createOnlyFields'], array_keys($pack['createOnlyDefaults'])), $pack['target']);
 			$this->assertSame($profile->neverWrittenOnUpdate(target: $pack['target']), $pack['neverWritten'], $pack['target']);
 		}
 

@@ -233,7 +233,7 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 		// The write rules the import applies besides the mapping (Review #1288 f2).
 		$byTarget = array_column($data['packs'], null, 'target');
 		$this->assertSame(['type' => 'Application'], $byTarget['module']['createOnlyDefaults']);
-		$this->assertSame(['type'], $byTarget['module']['createOnlyFields']);
+		$this->assertSame([], $byTarget['module']['createOnlyFields'], 'type is a create-only default, not a mapped field');
 		$this->assertSame(['publicationDate', 'depublicationDate'], $byTarget['module']['neverWritten']);
 		$this->assertSame(['interneAnnotation', 'timeClassification'], $byTarget['usage']['createOnlyFields']);
 		$this->assertSame([], $byTarget['usage']['createOnlyDefaults']);
@@ -242,7 +242,12 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 		$this->assertSame(['type' => 'Municipality', 'status' => 'Active'], $byTarget['municipality']['defaults']);
 		$this->assertSame([], $byTarget['module']['defaults']);
 		foreach ($data['packs'] as $pack) {
-			$this->assertSame($profile->createOnlyFields(target: $pack['target']), $pack['createOnlyFields'], $pack['target']);
+			$this->assertSame(
+				array_values(array_diff($profile->createOnlyFields(target: $pack['target']), array_keys($pack['createOnlyDefaults']))),
+				$pack['createOnlyFields'],
+				$pack['target']
+			);
+			$this->assertSame([], array_intersect($pack['createOnlyFields'], array_keys($pack['createOnlyDefaults'])), $pack['target']);
 			$this->assertSame($profile->neverWrittenOnUpdate(target: $pack['target']), $pack['neverWritten'], $pack['target']);
 		}
 

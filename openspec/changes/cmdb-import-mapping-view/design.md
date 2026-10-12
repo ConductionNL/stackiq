@@ -46,7 +46,7 @@ The method carries no auth attribute (Nextcloud's default: admins with a CSRF to
 
 `fieldMappings[].transform` is passed through as the pack stores it (`type` plus `map`/`default`, `fields`/`separator`, `value`, `sourceFormat`/`targetFormat`). Re-shaping per type would hide a key the engine reads. The page renders the known keys and lists any other scalar key as it is. `required` is normalised to a boolean.
 
-The write rules the import applies besides the mapping are answered per pack, built from the accessors the import uses (`createOnlyDefaults()`, `createOnlyFields()`, `neverWrittenOnUpdate()`) and the pack's own `defaults`, so the view does not overclaim for a field the import writes only on create or never.
+The write rules the import applies besides the mapping are answered per pack, built from the accessors the import uses (`createOnlyDefaults()`, `createOnlyFields()`, `neverWrittenOnUpdate()`) and the pack's own `defaults`, so the view does not overclaim for a field the import writes only on create or never. A create-only default such as the module `type` is answered in `createOnlyDefaults` only: it is not a mapped field and `merge()` never reads it on update, so `createOnlyFields` leaves it out.
 
 ### D4. The section takes the sheet names from the endpoint, with the constant as fallback
 
