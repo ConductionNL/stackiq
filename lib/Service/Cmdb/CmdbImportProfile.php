@@ -1020,9 +1020,10 @@ class CmdbImportProfile {
 	 * Refuse a pack that breaks a rule of the import, which the validator does not know.
 	 *
 	 * The import writes with OpenRegister's RBAC and multitenancy off, so a
-	 * pack may only map the fields of its target schema, never the object's
-	 * metadata or the keys and relations the import sets itself, and must keep
-	 * the mappings the import matches records on (REQ-CMDB-021).
+	 * pack may only map the vetted plain fields of its target, never the
+	 * object's metadata, the keys the import sets itself, a relation, the
+	 * publication dates or an admin field, and must keep the mappings the
+	 * import matches records on (REQ-CMDB-021, CmdbImportPackRules).
 	 *
 	 * @param string $target The target.
 	 * @param array<string, mixed> $pack The validated pack.
