@@ -965,15 +965,15 @@ class CmdbWorkbookReaderTest extends TestCase {
 		$cases = [
 			'with the sheet' => [
 				['Beheerde Applicaties CMDB' => $cmdb, 'Gearchiveerde Applicaties' => [['APPID', 'Applicatie Naam', 'Bron'], [7, 'Zeven', 'P-0007'], [], [8, 'Acht', 'P-0008']]],
-				['present' => true, 'keyColumnMissing' => false, 'appIds' => ['7', '8']],
+				['present' => true, 'keyColumnMissing' => false, 'appIds' => ['7', '8'], 'uncachedRows' => []],
 			],
 			'without the sheet' => [
 				['Beheerde Applicaties CMDB' => $cmdb],
-				['present' => false, 'keyColumnMissing' => false, 'appIds' => []],
+				['present' => false, 'keyColumnMissing' => false, 'appIds' => [], 'uncachedRows' => []],
 			],
 			'without its APPID column' => [
 				['Beheerde Applicaties CMDB' => $cmdb, 'Gearchiveerde Applicaties' => [['Applicatie Code', 'Applicatie Naam'], ['APP-7', 'Zeven']]],
-				['present' => false, 'keyColumnMissing' => true, 'appIds' => []],
+				['present' => false, 'keyColumnMissing' => true, 'appIds' => [], 'uncachedRows' => []],
 			],
 		];
 
@@ -1023,6 +1023,37 @@ class CmdbWorkbookReaderTest extends TestCase {
 			CmdbTestSupport::removeDirectory(directory: $directory);
 		}
 	}//end testAnArchiveSheetOverTheRowLimitIsRefused()
+
+	/**
+	 * An archive APPID that is a formula without a cached value is listed by its row, not dropped without trace.
+	 *
+	 * The cell reads as empty, as on a CMDB sheet (REQ-CMDB-002); a caller that
+	 * took the sheet for complete would soft-delete an application that is archived.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAnUncachedArchiveKeyIsListedNotDropped(): void {
+		$this->requireSpreadsheet();
+		$path = CmdbTestSupport::buildWorkbook(
+			sheets: [
+				'Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een']],
+				'Gearchiveerde Applicaties' => [['APPID'], [['f' => 'Invoer!A2']], [8], [], [['f' => 'Invoer!A9']]],
+			]
+		);
+
+		try {
+			$archive = (new CmdbWorkbookReader())->read(path: $path, profile: $this->profile())['archive'];
+		} finally {
+			unlink($path);
+		}
+
+		$this->assertSame('Gearchiveerde Applicaties', $archive['sheet']);
+		$this->assertTrue($archive['present']);
+		$this->assertSame(['8'], array_map('strval', $archive['appIds']));
+		$this->assertSame([2, 5], $archive['uncachedRows'], 'the rows whose APPID formula has no cached value');
+	}//end testAnUncachedArchiveKeyIsListedNotDropped()
 
 	/**
 	 * A text file named .xlsx, a .xlsm and a CSV are refused before PhpSpreadsheet is touched.

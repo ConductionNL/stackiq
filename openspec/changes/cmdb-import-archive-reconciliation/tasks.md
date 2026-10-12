@@ -19,6 +19,7 @@ Spec: `openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-imp
 - **acceptance_criteria**:
   - GIVEN the anonymised fixture THEN `read()` returns `archive.present` true and `archive.appIds` `["1198"]`, and the rows of the CMDB sheets are unchanged
   - GIVEN a workbook without the sheet, or with the sheet but without an APPID column THEN `archive.present` is false (and `keyColumnMissing` says which), and the CMDB rows are still read
+  - GIVEN an archive sheet whose APPID cell is a formula without a cached value THEN `archive.uncachedRows` lists its row and `appIds` does not, so the service can refuse to soft-delete (task 4)
   - GIVEN an archive sheet beyond the row limit THEN `TOO_MANY_ROWS` names it; only its APPID column is materialised
 - [x] Implement
 - [x] Test
