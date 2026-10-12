@@ -118,6 +118,11 @@
 									: t('stackiq', 'No')
 							}}
 						</template>
+						<template #column-written="{ row }">
+							<span data-testid="cmdb-import-mapping-written">{{
+								row.written
+							}}</span>
+						</template>
 						<template #column-details="{ row }">
 							<ul
 								v-if="row.details.length > 0"
@@ -131,6 +136,14 @@
 							<span v-else>—</span>
 						</template>
 					</CnDataTable>
+					<ul
+						v-if="packRules(pack).length > 0"
+						class="cmdb-import-mapping__rules"
+						data-testid="cmdb-import-mapping-rules">
+						<li v-for="(line, index) in packRules(pack)" :key="index">
+							{{ line }}
+						</li>
+					</ul>
 				</section>
 			</template>
 		</div>
@@ -149,6 +162,7 @@ import {
 	loadCmdbMapping,
 	mappingRows,
 	normaliseError,
+	packRules,
 	packTargetLabel,
 } from '../../../utils/cmdbImport.js'
 
@@ -260,6 +274,7 @@ export default {
 				{ key: 'required', label: t('stackiq', 'Required') },
 				{ key: 'transform', label: t('stackiq', 'Transformation') },
 				{ key: 'details', label: t('stackiq', 'Details') },
+				{ key: 'written', label: t('stackiq', 'Written') },
 			]
 		},
 	},
@@ -277,6 +292,7 @@ export default {
 	methods: {
 		t,
 		mappingRows,
+		packRules,
 		packTargetLabel,
 
 		/**
@@ -348,6 +364,13 @@ export default {
 	margin: 0;
 	font-weight: 500;
 	overflow-wrap: anywhere;
+}
+
+.cmdb-import-mapping__rules {
+	margin: 0.5rem 0 0;
+	padding-inline-start: 1.25rem;
+	list-style: disc;
+	font-size: 0.875rem;
 }
 
 .cmdb-import-mapping__details {

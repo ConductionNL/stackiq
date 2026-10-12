@@ -1233,7 +1233,15 @@ OC.L10N.register(
         "Field": "Veld",
         "Transformation": "Transformatie",
         "The import mapping cannot be shown: OpenRegister is missing or a mapping file is invalid.": "De mapping van de import kan niet worden getoond: OpenRegister ontbreekt of een mappingbestand is ongeldig.",
-        "The import mapping could not be read. The details are in the Nextcloud log.": "De mapping van de import kon niet worden gelezen. De details staan in het Nextcloud-logboek."
+        "The import mapping could not be read. The details are in the Nextcloud log.": "De mapping van de import kon niet worden gelezen. De details staan in het Nextcloud-logboek.",
+        "Written": "Geschreven",
+        "On create and update": "Bij aanmaken en bijwerken",
+        "Only on create, or when empty": "Alleen bij aanmaken, of als leeg",
+        "Never on an existing record": "Nooit op een bestaand record",
+        "Pack defaults: {values}": "Standaardwaarden van het pack: {values}",
+        "Set only when the record is created: {values}": "Alleen ingesteld bij het aanmaken van het record: {values}",
+        "Written on create, or on update only when the stored value is empty: {fields}": "Geschreven bij aanmaken, of bij bijwerken alleen als de opgeslagen waarde leeg is: {fields}",
+        "Never written on an existing record: {fields}": "Nooit geschreven op een bestaand record: {fields}"
     },
     "nplurals=2; plural=(n != 1);"
 )

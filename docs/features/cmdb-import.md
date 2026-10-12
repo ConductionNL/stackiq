@@ -348,6 +348,13 @@ The section shows the mapping the next import runs, read-only. Open
   whether the column is required, the transformation (as is, trim, date,
   lookup, yes/no lookup, join, constant) and its details, such as the export
   values a lookup recognises and what each becomes.
+- per row, when the import writes the field: on create and update, only on
+  create or when the stored value is empty (such as the usage's TIME
+  classification and internal annotation), or never on an existing record;
+- under each table, the pack's write rules that are not columns: the pack's
+  defaults, the values set only when a record is created (such as the module
+  type `Application`) and the fields never written on an existing record
+  (the module's publication and depublication dates).
 
 The block reads the files through the same loader the import uses, so what
 it shows is what the import does. When a file is invalid, the block shows

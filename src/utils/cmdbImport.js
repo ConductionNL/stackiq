@@ -1186,10 +1186,113 @@ export function transformDetails(transform) {
 }
 
 /**
+ * A list of names from the endpoint, as strings.
+ *
+ * @param {unknown} values A list, or anything else
+ * @return {Array<string>} The names, empty when it is not a list
+ */
+function nameList(values) {
+	return Array.isArray(values) ? values.map((value) => String(value)) : []
+}
+
+/**
+ * A field => value object of the endpoint as "field = value" pairs.
+ *
+ * @param {unknown} values The object, or anything else
+ * @return {string} The pairs, joined with commas; empty when there are none
+ */
+function pairsText(values) {
+	if (!values || typeof values !== 'object' || Array.isArray(values)) {
+		return ''
+	}
+	return Object.entries(values)
+		.map(([field, value]) => `${field} = ${valueText(value)}`)
+		.join(', ')
+}
+
+/**
+ * When the import writes a mapped field: on create and update, only on
+ * create or when the stored value is empty, or never on an existing record.
+ * Never wins when a profile lists the field in both.
+ *
+ * @param {object} pack One entry of the endpoint's `packs`
+ * @param {string} target The field a mapping writes to
+ * @return {string} The translated words
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export function writtenLabel(pack, target) {
+	if (nameList(pack?.neverWritten).includes(target)) {
+		return t('stackiq', 'Never on an existing record')
+	}
+	if (nameList(pack?.createOnlyFields).includes(target)) {
+		return t('stackiq', 'Only on create, or when empty')
+	}
+	return t('stackiq', 'On create and update')
+}
+
+/**
+ * The write rules of a pack that its table rows cannot show, as lines: the
+ * pack's defaults, the values set on create only, and the fields the import
+ * leaves alone on an existing record (which need not be mapped columns).
+ *
+ * @param {object} pack One entry of the endpoint's `packs`
+ * @return {Array<string>} The lines, empty when the pack has no such rule
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export function packRules(pack) {
+	const lines = []
+	const defaults = pairsText(pack?.defaults)
+	if (defaults !== '') {
+		lines.push(t('stackiq', 'Pack defaults: {values}', { values: defaults }, AS_TEXT))
+	}
+	const createOnly = pairsText(pack?.createOnlyDefaults)
+	if (createOnly !== '') {
+		lines.push(
+			t(
+				'stackiq',
+				'Set only when the record is created: {values}',
+				{ values: createOnly },
+				AS_TEXT,
+			),
+		)
+	}
+	const setOnCreate = Object.keys(
+		pack?.createOnlyDefaults && !Array.isArray(pack.createOnlyDefaults)
+			? pack.createOnlyDefaults
+			: {},
+	)
+	const createOnlyFields = nameList(pack?.createOnlyFields).filter(
+		(field) => !setOnCreate.includes(field),
+	)
+	if (createOnlyFields.length > 0) {
+		lines.push(
+			t(
+				'stackiq',
+				'Written on create, or on update only when the stored value is empty: {fields}',
+				{ fields: createOnlyFields.join(', ') },
+				AS_TEXT,
+			),
+		)
+	}
+	const never = nameList(pack?.neverWritten)
+	if (never.length > 0) {
+		lines.push(
+			t(
+				'stackiq',
+				'Never written on an existing record: {fields}',
+				{ fields: never.join(', ') },
+				AS_TEXT,
+			),
+		)
+	}
+	return lines
+}
+
+/**
  * The rows of one pack's table: one per field mapping, in the pack's order.
  *
  * @param {object} pack One entry of the endpoint's `packs`
- * @return {Array<{key: string, source: string, target: string, required: boolean, transform: string, details: Array<string>}>} The rows
+ * @return {Array<{key: string, source: string, target: string, required: boolean, transform: string, details: Array<string>, written: string}>} The rows
  * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
 export function mappingRows(pack) {
@@ -1204,5 +1307,6 @@ export function mappingRows(pack) {
 		required: Boolean(mapping?.required),
 		transform: transformLabel(mapping?.transform?.type),
 		details: transformDetails(mapping?.transform),
+		written: writtenLabel(pack, String(mapping?.target ?? '')),
 	}))
 }

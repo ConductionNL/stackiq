@@ -1164,6 +1164,14 @@
         "Field": "Field",
         "Transformation": "Transformation",
         "The import mapping cannot be shown: OpenRegister is missing or a mapping file is invalid.": "The import mapping cannot be shown: OpenRegister is missing or a mapping file is invalid.",
-        "The import mapping could not be read. The details are in the Nextcloud log.": "The import mapping could not be read. The details are in the Nextcloud log."
+        "The import mapping could not be read. The details are in the Nextcloud log.": "The import mapping could not be read. The details are in the Nextcloud log.",
+        "Written": "Written",
+        "On create and update": "On create and update",
+        "Only on create, or when empty": "Only on create, or when empty",
+        "Never on an existing record": "Never on an existing record",
+        "Pack defaults: {values}": "Pack defaults: {values}",
+        "Set only when the record is created: {values}": "Set only when the record is created: {values}",
+        "Written on create, or on update only when the stored value is empty: {fields}": "Written on create, or on update only when the stored value is empty: {fields}",
+        "Never written on an existing record: {fields}": "Never written on an existing record: {fields}"
     }
 }

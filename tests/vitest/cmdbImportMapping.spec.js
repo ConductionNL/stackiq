@@ -70,6 +70,7 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 const {
 	mappingRows,
 	mappingSheetNames,
+	packRules,
 	packTargetLabel,
 	PROFILE_DEFAULTS,
 	transformDetails,
@@ -85,7 +86,7 @@ const CmdbImportMapping = (
  * @return {{profile: object, packs: Array<object>}} The answer
  */
 function answer() {
-	const pack = (target, fieldMappings = []) => ({
+	const pack = (target, fieldMappings = [], rules = {}) => ({
 		target,
 		file: `topdesk-${target}.json`,
 		id: `stackiq-topdesk-${target}`,
@@ -93,6 +94,11 @@ function answer() {
 		version: '1.0.0',
 		description: '',
 		fieldMappings,
+		defaults: {},
+		createOnlyDefaults: {},
+		createOnlyFields: [],
+		neverWritten: [],
+		...rules,
 	})
 	return {
 		profile: {
@@ -115,8 +121,14 @@ function answer() {
 					required: true,
 					transform: { type: 'trim' },
 				},
-			]),
-			pack('manufacturer'),
+			], {
+				createOnlyDefaults: { type: 'Application' },
+				createOnlyFields: ['type'],
+				neverWritten: ['publicationDate', 'depublicationDate'],
+			}),
+			pack('manufacturer', [], {
+				defaults: { type: 'Supplier', status: 'Active' },
+			}),
 			pack('municipality'),
 			pack('usage', [
 				{
@@ -129,7 +141,13 @@ function answer() {
 						default: null,
 					},
 				},
-			]),
+				{
+					source: 'Classificatie',
+					target: 'timeClassification',
+					required: false,
+					transform: { type: 'trim' },
+				},
+			], { createOnlyFields: ['timeClassification'] }),
 			pack('businessOwner'),
 		],
 	}
@@ -178,6 +196,30 @@ describe('CmdbImportMapping', () => {
 		expect(usage.text()).toContain('status')
 		expect(usage.text()).toContain('Lookup')
 		expect(usage.text()).toContain('In productie → In production')
+		// The write rules the import applies besides the mapping (Review #1288 f2).
+		const writtenOf = (table) =>
+			table
+				.findAll('[data-testid="cmdb-import-mapping-written"]')
+				.map((cell) => cell.text())
+		expect(writtenOf(usage)).toEqual([
+			'On create and update',
+			'Only on create, or when empty',
+		])
+		const rules = (target) =>
+			wrapper
+				.find(`[data-testid="cmdb-import-mapping-${target}"]`)
+				.element.parentElement.querySelectorAll(
+					'[data-testid="cmdb-import-mapping-rules"] li',
+				)
+		expect(Array.from(rules('module'), (li) => li.textContent.trim())).toEqual([
+			'Set only when the record is created: type = Application',
+			'Never written on an existing record: publicationDate, depublicationDate',
+		])
+		expect(Array.from(rules('manufacturer'), (li) => li.textContent.trim())).toEqual([
+			'Pack defaults: type = Supplier, status = Active',
+		])
+		expect(rules('usage')).toHaveLength(1)
+		expect(rules('municipality')).toHaveLength(0)
 		expect(
 			wrapper.find('[data-testid="cmdb-import-mapping-profile"]').text(),
 		).toContain('Sheet A, Sheet B')
@@ -233,6 +275,23 @@ describe('cmdbImport mapping helpers', () => {
 		).toEqual(PROFILE_DEFAULTS.sheets)
 	})
 
+	it('words the write rules of a pack, and tolerates an answer without them', () => {
+		expect(packRules({})).toEqual([])
+		expect(packRules({ defaults: [], createOnlyDefaults: [], createOnlyFields: [] })).toEqual([])
+		expect(
+			packRules({
+				createOnlyDefaults: { type: 'Application' },
+				createOnlyFields: ['type', 'note'],
+			}),
+		).toEqual([
+			'Set only when the record is created: type = Application',
+			'Written on create, or on update only when the stored value is empty: note',
+		])
+		expect(mappingRows({ fieldMappings: [{ source: 'A', target: 'x' }], neverWritten: ['x'] })[0].written).toBe(
+			'Never on an existing record',
+		)
+	})
+
 	it('describes every transformation the packs use', () => {
 		expect(transformLabel(undefined)).toBe('As is')
 		expect(transformLabel('bool-map')).toBe('Yes/no lookup')
@@ -262,7 +321,7 @@ describe('cmdbImport mapping helpers', () => {
 
 	it('builds one row per field mapping and names each target', () => {
 		const rows = mappingRows(answer().packs[3])
-		expect(rows).toHaveLength(1)
+		expect(rows).toHaveLength(2)
 		expect(rows[0]).toMatchObject({
 			source: 'Applicatie Status',
 			target: 'status',
@@ -273,6 +332,8 @@ describe('cmdbImport mapping helpers', () => {
 			'In productie → In production',
 			'Any other value: —',
 		])
+		expect(rows[0].written).toBe('On create and update')
+		expect(rows[1].written).toBe('Only on create, or when empty')
 		expect(mappingRows({})).toEqual([])
 		expect(packTargetLabel('businessOwner')).toBe(
 			'Business owner (contact person)',
