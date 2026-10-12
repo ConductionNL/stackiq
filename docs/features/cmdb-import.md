@@ -86,8 +86,9 @@ page in stackiq.
    leave such applications untouched.
 7. Press **Import**. A progress bar shows how many rows have been processed.
    **Cancel import** stops the import before the next row, or, while the
-   missing applications are compared, before the next application; what
-   was already processed stays imported. The section says whether the server
+   applications are compared with the export, before the next application;
+   what was already processed stays: the rows imported, and the applications
+   archived or deleted so far. The section says whether the server
    accepted the cancel; one pressed before the server has started on the
    rows cannot take effect yet, and the section says so.
 

@@ -272,7 +272,7 @@
 					{{
 						t(
 							'stackiq',
-							'The import was cancelled. The rows processed before it stopped are kept.',
+							'The import was cancelled. The rows and applications processed before it stopped are kept.',
 						)
 					}}
 				</NcNoteCard>
@@ -1082,7 +1082,7 @@ export default {
 				})
 				this.cancelStatus = t(
 					'stackiq',
-					'Cancelling the import. It stops before the next row; the rows already processed stay imported.',
+					'Cancelling the import. It stops before the next row or, while the applications are compared with the export, before the next application; what was already processed stays.',
 				)
 			} catch (error) {
 				// The import keeps running; say why, and let the admin press Cancel again.

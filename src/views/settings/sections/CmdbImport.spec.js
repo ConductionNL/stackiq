@@ -9,7 +9,7 @@
  */
 
 import axios from '@nextcloud/axios'
-import { flushPromises, shallowMount } from '@vue/test-utils'
+import { flushPromises, mount, shallowMount } from '@vue/test-utils'
 import CmdbImport from './CmdbImport.vue'
 
 // Virtual: the package's `exports` field declares only the `import` condition, which jest does not resolve.
@@ -26,25 +26,85 @@ jest.mock('@nextcloud/router', () => ({
 		url.replace(/{(\w+)}/g, (match, key) => String(params[key] ?? match)),
 	generateOcsUrl: (url) => url,
 }))
-// The component libraries are stubbed by shallowMount; virtual for the same `exports` reason.
+// The component libraries are stubbed; virtual for the same `exports` reason.
+// shallowMount replaces them with empty stubs. The ones below also render what
+// the tests that mount the section for real (`mountFull`) need to see: the
+// slots, the radio's value and the table's cell slots.
 jest.mock(
 	'@nextcloud/vue',
-	() => ({
-		NcButton: { render: () => null },
-		NcCheckboxRadioSwitch: { render: () => null },
-		NcLoadingIcon: { render: () => null },
-		NcNoteCard: { render: () => null },
-		NcProgressBar: { render: () => null },
-		NcSelect: { render: () => null },
-	}),
+	() => {
+		const { h } = require('vue')
+		const withSlot = {
+			render() {
+				return h('div', this.$slots.default?.())
+			},
+		}
+		return {
+			NcButton: {
+				render() {
+					return h('button', this.$slots.default?.())
+				},
+			},
+			NcCheckboxRadioSwitch: {
+				props: {
+					modelValue: { default: null },
+					value: { default: null },
+					name: { default: '' },
+					type: { default: 'checkbox' },
+					disabled: { default: false },
+				},
+				emits: ['update:modelValue'],
+				render() {
+					const radio = this.type === 'radio'
+					return h('label', [
+						h('input', {
+							type: radio ? 'radio' : 'checkbox',
+							name: this.name,
+							value: this.value,
+							disabled: this.disabled,
+							checked: radio
+								? this.modelValue === this.value
+								: Boolean(this.modelValue),
+							onChange: (event) =>
+								this.$emit(
+									'update:modelValue',
+									radio ? this.value : event.target.checked,
+								),
+						}),
+						this.$slots.default?.(),
+					])
+				},
+			},
+			NcLoadingIcon: { render: () => null },
+			NcNoteCard: withSlot,
+			NcProgressBar: { render: () => null },
+			NcSelect: { render: () => null },
+		}
+	},
 	{ virtual: true },
 )
 jest.mock(
 	'@conduction/nextcloud-vue',
-	() => ({
-		CnDataTable: { render: () => null },
-		CnStatusBadge: { render: () => null },
-	}),
+	() => {
+		const { h } = require('vue')
+		return {
+			// One element per row, with the cell slots the section fills.
+			CnDataTable: {
+				props: { rows: { default: () => [] } },
+				render() {
+					return h(
+						'div',
+						this.rows.map((row) =>
+							h('div', { 'data-testid': 'table-row' }, [
+								h('span', this.$slots['column-name']?.({ row })),
+							]),
+						),
+					)
+				},
+			},
+			CnStatusBadge: { render: () => null },
+		}
+	},
 	{ virtual: true },
 )
 // The icon SFCs live in node_modules, which jest does not transform.
@@ -55,9 +115,14 @@ jest.mock('vue-material-design-icons/DatabaseImport.vue', () => ({
 jest.mock('vue-material-design-icons/TrayArrowUp.vue', () => ({
 	render: () => null,
 }))
-jest.mock('../../../components/AlwaysVisibleSection.vue', () => ({
-	render: () => null,
-}))
+jest.mock('../../../components/AlwaysVisibleSection.vue', () => {
+	const { h } = require('vue')
+	return {
+		render() {
+			return h('div', this.$slots.default?.())
+		},
+	}
+})
 
 const ORGANISATIONS = [
 	{
@@ -100,6 +165,24 @@ async function mountSection() {
 		),
 	)
 	const wrapper = shallowMount(CmdbImport)
+	await flushPromises()
+	return wrapper
+}
+
+/**
+ * Mount the section with its child components rendering what the tests read.
+ *
+ * @return {Promise<object>} The wrapper, after the municipalities loaded
+ */
+async function mountFull() {
+	axios.get.mockImplementation((url) =>
+		Promise.resolve(
+			url.includes('/voorzieningen/config')
+				? { data: { config: { register: 7, organisatie_schema: 33 } } }
+				: { data: { results: ORGANISATIONS } },
+		),
+	)
+	const wrapper = mount(CmdbImport)
 	await flushPromises()
 	return wrapper
 }
@@ -202,6 +285,44 @@ describe('CmdbImport applications missing from the export', () => {
 				'deleted',
 				'restored',
 			]),
+		)
+	})
+})
+
+/**
+ * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
+ */
+describe('CmdbImport cancelling', () => {
+	afterEach(() => {
+		jest.clearAllMocks()
+	})
+
+	it('says after Cancel that the comparison of the applications stops before the next application', async () => {
+		const wrapper = await mountFull()
+		axios.post.mockResolvedValue({ data: { success: true } })
+		await wrapper.setData({
+			importing: true,
+			operationId: 'cmdb-12345678',
+			progress: { phase: 'reconciling', processed_items: 400, total_items: 810 },
+		})
+
+		await wrapper.vm.cancelImport()
+		await flushPromises()
+
+		const status = wrapper.find('[data-testid="cmdb-import-cancel-status"]').text()
+		expect(status).toContain('before the next row')
+		expect(status).toContain('before the next application')
+	})
+
+	it('says that the applications processed before the stop are kept, not only rows', async () => {
+		const wrapper = await mountFull()
+
+		await wrapper.setData({
+			report: { cancelled: true, summary: { rowsRead: 400, archived: 3 }, rows: [] },
+		})
+
+		expect(wrapper.find('[data-testid="cmdb-import-cancelled"]').text()).toMatch(
+			/applications/,
 		)
 	})
 })
