@@ -678,28 +678,75 @@ export default {
 				updated: Number(summary.updated) || 0,
 				unchanged: Number(summary.unchanged) || 0,
 			}
+			let sentence
 			if (this.report?.cancelled) {
-				return t(
+				sentence = t(
 					'stackiq',
 					'Import for {name} cancelled after {read} rows.',
 					counts,
 					AS_TEXT,
 				)
-			}
-			if (this.report?.municipality?.created) {
-				return t(
+			} else if (this.report?.municipality?.created) {
+				sentence = t(
 					'stackiq',
 					'Import finished. The municipality {name} was created. {read} rows read: {created} created, {updated} updated, {unchanged} unchanged.',
 					counts,
 					AS_TEXT,
 				)
+			} else {
+				sentence = t(
+					'stackiq',
+					'Import for {name} finished. {read} rows read: {created} created, {updated} updated, {unchanged} unchanged.',
+					counts,
+					AS_TEXT,
+				)
 			}
-			return t(
-				'stackiq',
-				'Import for {name} finished. {read} rows read: {created} created, {updated} updated, {unchanged} unchanged.',
-				counts,
-				AS_TEXT,
-			)
+			const applications = this.applicationChangesText
+			return applications === '' ? sentence : `${sentence} ${applications}`
+		},
+
+		/**
+		 * What the import did to applications that are not on the sheets: the
+		 * non-zero counts, for the sentence the live region announces.
+		 *
+		 * @return {string} A sentence, or '' when no application was touched
+		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		applicationChangesText() {
+			const summary = this.report?.summary || {}
+			const parts = [
+				[
+					'archived',
+					(count) =>
+						t('stackiq', '{count} archived', { count }, AS_TEXT),
+				],
+				[
+					'unarchived',
+					(count) =>
+						t('stackiq', '{count} unarchived', { count }, AS_TEXT),
+				],
+				[
+					'deleted',
+					(count) =>
+						t('stackiq', '{count} deleted', { count }, AS_TEXT),
+				],
+				[
+					'restored',
+					(count) =>
+						t('stackiq', '{count} restored', { count }, AS_TEXT),
+				],
+			]
+				.map(([key, text]) => [Number(summary[key]) || 0, text])
+				.filter(([count]) => count > 0)
+				.map(([count, text]) => text(count))
+			return parts.length === 0
+				? ''
+				: t(
+						'stackiq',
+						'Applications: {changes}.',
+						{ changes: parts.join(', ') },
+						AS_TEXT,
+					)
 		},
 
 		/**

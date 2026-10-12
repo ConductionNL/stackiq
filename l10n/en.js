@@ -1146,7 +1146,12 @@ OC.L10N.register(
         "The workbook holds more than {count} different texts, the most the import reads.": "The workbook holds more than {count} different texts, the most the import reads.",
         "Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.": "Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.",
         "In development since": "In development since",
-        "In use since": "In use since"
+        "In use since": "In use since",
+        "{count} archived": "{count} archived",
+        "{count} unarchived": "{count} unarchived",
+        "{count} deleted": "{count} deleted",
+        "{count} restored": "{count} restored",
+        "Applications: {changes}.": "Applications: {changes}."
     },
     "nplurals=2; plural=(n != 1);"
 )

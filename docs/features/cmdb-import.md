@@ -103,7 +103,8 @@ When the import finishes, the section shows:
   and warnings, and, when publishing was off, how many applications were
   created unpublished; after a repeat import also how many applications
   were archived, unarchived, deleted (moved to the trash) or restored, when
-  there are any;
+  there are any. The sentence above it, which a screen reader announces,
+  names those counts too, for example *Applications: 1 archived, 1 deleted.*;
 - **warnings for the whole file**, for example an optional column that is
   missing;
 - the **rows** table: sheet, row number, APPID, application, outcome,

@@ -326,3 +326,57 @@ describe('CmdbImport cancelling', () => {
 		)
 	})
 })
+
+/**
+ * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ */
+describe('CmdbImport finished announcement', () => {
+	afterEach(() => {
+		jest.clearAllMocks()
+	})
+
+	it('names the archived and deleted applications in the sentence the live region announces', async () => {
+		const wrapper = await mountFull()
+
+		await wrapper.setData({
+			report: {
+				municipality: { name: 'Gemeente Bergen' },
+				summary: { rowsRead: 0, archived: 1, deleted: 1 },
+				rows: [],
+			},
+		})
+
+		const announced = wrapper.find('[data-testid="cmdb-import-finished"]').text()
+		expect(announced).toContain('0 rows read')
+		expect(announced).toContain('1 archived')
+		expect(announced).toContain('1 deleted')
+		expect(announced).not.toContain('unarchived')
+		expect(announced).not.toContain('restored')
+	})
+
+	it('names every kind of change after a cancel too, and adds nothing when no application was touched', async () => {
+		const wrapper = await mountFull()
+
+		await wrapper.setData({
+			report: {
+				cancelled: true,
+				municipality: { name: 'Gemeente Bergen' },
+				summary: { rowsRead: 5, archived: 2, unarchived: 3, deleted: 4, restored: 5 },
+				rows: [],
+			},
+		})
+		expect(wrapper.vm.finishedText).toBe(
+			'Import for Gemeente Bergen cancelled after 5 rows. Applications: 2 archived, 3 unarchived, 4 deleted, 5 restored.',
+		)
+
+		// setData merges into the report; a new report replaces it.
+		wrapper.vm.report = {
+			municipality: { name: 'Gemeente Bergen' },
+			summary: { rowsRead: 2, created: 2 },
+			rows: [],
+		}
+		expect(wrapper.vm.finishedText).toBe(
+			'Import for Gemeente Bergen finished. 2 rows read: 2 created, 0 updated, 0 unchanged.',
+		)
+	})
+})
