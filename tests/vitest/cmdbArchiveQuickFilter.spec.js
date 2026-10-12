@@ -17,7 +17,14 @@
 import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
-import { describe, expect, it } from 'vitest'
+import { describe, expect, it, vi } from 'vitest'
+// resolveFilterTokens reads the current user at import time, which needs a
+// browser; the tokens this spec merges (`_archived`, `_ids`) resolve no user.
+vi.mock('@nextcloud/auth', () => ({ getCurrentUser: () => null }))
+// The REAL implementations from the installed package — not a local restatement.
+import { buildQueryString } from '../../node_modules/@conduction/nextcloud-vue/src/utils/headers.js'
+import { resolveFilterMap } from '../../node_modules/@conduction/nextcloud-vue/src/utils/routeFilters.js'
+import { facetNarrowingFilter } from '../../src/utils/facetNarrowing.js'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const repoRoot = path.resolve(here, '../..')
@@ -41,19 +48,68 @@ function pages() {
 }
 
 describe('the archive quick filter', () => {
-	it.each(['Modules', 'Gebruik'])(
-		'the %s page lists the archive alone under "Archived"',
-		(pageId) => {
-			const page = pages().find((candidate) => candidate.id === pageId)
-			const archived = (page?.config?.quickFilters ?? []).filter(
-				(tab) => tab.label === 'Archived',
-			)
+	it('the Gebruik page lists the archive alone under "Archived"', () => {
+		const page = pages().find((candidate) => candidate.id === 'Gebruik')
+		const archived = (page?.config?.quickFilters ?? []).filter(
+			(tab) => tab.label === 'Archived',
+		)
 
-			expect(archived).toHaveLength(1)
-			expect(archived[0].filter).toEqual({ _archived: 'true' })
-			expect(archived[0].default).not.toBe(true)
-		},
-	)
+		expect(archived).toHaveLength(1)
+		expect(archived[0].filter).toEqual({ _archived: 'true' })
+		expect(archived[0].default).not.toBe(true)
+	})
+
+	it('the Modules page lists the archive under "Archived" without the facet id set', () => {
+		const page = pages().find((candidate) => candidate.id === 'Modules')
+		const archived = (page?.config?.quickFilters ?? []).filter(
+			(tab) => tab.label === 'Archived',
+		)
+
+		expect(archived).toHaveLength(1)
+		expect(archived[0].filter).toEqual({ _archived: 'true', _ids: '' })
+		expect(archived[0].default).not.toBe(true)
+	})
+
+	// The Applications page sends `_ids` (the working set a facet or search
+	// matched) and merges the active tab's filter over it. OpenRegister leaves
+	// archived objects out of that id set, so `_ids` AND `_archived=true` lists
+	// nothing: with a facet selected, the Archived tab must not send `_ids`.
+	it('sends no _ids with the Archived tab when a facet narrowed the list', () => {
+		const page = pages().find((candidate) => candidate.id === 'Modules')
+		const archived = page.config.quickFilters.find(
+			(tab) => tab.label === 'Archived',
+		)
+		const facetFilter = facetNarrowingFilter(['live-1', 'live-2'])
+
+		// The merge useSelfFetchList#fixedFilters does in single-tab mode:
+		// the page's filter, then the active tab's filter spread last.
+		const archivedQuery = buildQueryString({
+			...facetFilter,
+			...resolveFilterMap(archived.filter, {}, {}),
+		})
+		const allQuery = buildQueryString({
+			...facetFilter,
+			...resolveFilterMap({}, {}, {}),
+		})
+
+		expect(new URLSearchParams(archivedQuery).get('_archived')).toBe('true')
+		expect(archivedQuery).not.toContain('_ids')
+		// A tab without the override keeps the facet narrowing.
+		expect(allQuery).toContain('_ids')
+	})
+
+	it('still merges the active tab last, which the override above relies on', () => {
+		const source = fs.readFileSync(
+			path.join(
+				repoRoot,
+				'node_modules/@conduction/nextcloud-vue/src/components/CnIndexPage/useSelfFetchList.js',
+			),
+			'utf8',
+		)
+		expect(source).toMatch(
+			/\.\.\.base, \.\.\.resolveFilterMap\(tabFilter, params, ctx\)/,
+		)
+	})
 
 	it('uses an icon the app registers', () => {
 		const icons = fs.readFileSync(path.join(repoRoot, 'src/icons.js'), 'utf8')

@@ -233,6 +233,18 @@ export default {
 		 * `_ids`, so the merge is additive — both the facet-matched id set AND
 		 * the active quick filter's field constraints apply together
 		 * (logical AND), never clobbering one another.
+		 *
+		 * The exception is the Archived tab of the Applications page
+		 * (cmdb-import-archive-reconciliation): the facet id set is built from
+		 * the working set, which OpenRegister's default lens limits to objects
+		 * that are not archived, so ANDing `_ids` with `_archived=true` could
+		 * never match an archived application. That tab's filter therefore
+		 * carries an empty-string `_ids` (not an empty array, which the filter
+		 * resolver drops before the merge), which wins over this view's `_ids`
+		 * and which the request leaves out: the tab lists the whole archive
+		 * and ignores the GEMMA selection and the search term. The tab's
+		 * filter, not this view, owns that, so it holds however the page's
+		 * tab state is restored.
 		 */
 		quickFilters: {
 			type: Array,
