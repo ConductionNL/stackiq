@@ -192,7 +192,7 @@ No seed objects change. The fragment's three seed modules stay as they are; the 
 ## Risks / Trade-offs
 
 - [The default archives on the first re-import after the upgrade] → The section shows the choice with help text; the report lists every archived and deleted application; nothing is hard-deleted.
-- [A workbook saved without the archive sheet] → archive only, never delete, plus a warning (D3).
+- [A workbook saved without the archive sheet, or whose archive sheet has no APPID column or an APPID without a cached value] → archive only, never delete, plus a warning (D3).
 - [A failure between the usage and the module] → the usage is written first, so the municipality's view is right and the module is at worst still visible (D5).
 - [Reviving before writing adds calls per returning row] → only for rows whose match is archived or deleted; a row whose module is working costs the same searches as before, a new row one more search (the archive lens).
 - [The trash listing scans every magic table of the instance] → read once per import, not per row (D9).

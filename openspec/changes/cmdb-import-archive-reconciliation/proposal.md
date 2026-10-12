@@ -34,7 +34,7 @@ None.
 ### In Scope
 
 - The sheet "Gearchiveerde Applicaties" (columns Applicatiecomponent, APPID, Applicatie Code, Applicatie Naam, Roepnaam, Applicatie Status, Bron, Datum Interface, Datum wijziging) is read for its APPID column only, when it is present.
-- After every row of a completed import: the municipality's usages, with their modules, are compared with the APPIDs on the CMDB sheets and on the archive sheet. Missing and on the archive sheet: module and usage archived. Missing everywhere: module and usage soft-deleted. Without the archive sheet: archived only, with a warning in the report.
+- After every row of a completed import: the municipality's usages, with their modules, are compared with the APPIDs on the CMDB sheets and on the archive sheet. Missing and on the archive sheet: module and usage archived. Missing everywhere: module and usage soft-deleted. Without the archive sheet, or when it has no APPID column or an APPID the reader cannot see (a formula without a cached value): archived only, with a warning in the report.
 - A returning APPID: an archived module or usage is unarchived, a soft-deleted one is restored from the trash, and the row is then updated as before.
 - `missingRecords`: `keep` leaves everything as it is (the behaviour so far), `archive` reconciles and is the default; `remove` stays reserved and is refused.
 - The settings section offers the choice with help text; the report shows the new outcomes in its summary and rows.
@@ -77,8 +77,8 @@ None. `ArchiveHandler` and `MagicMapper` come from OpenRegister, which stackiq a
 ### Risk 1: A re-import with the new default archives what an admin did not expect
 **Severity:** Medium — **Mitigation:** only the municipality's own usages and the modules they point at are in scope, never a supplier's or another municipality's module; nothing is hard-deleted; the choice is visible in the section with help text, and the report lists every archived and deleted application. A cancelled or failed import never reconciles.
 
-### Risk 2: A workbook without the archive sheet soft-deletes everything that moved there
-**Severity:** Medium — **Mitigation:** without the sheet, missing applications are archived, never soft-deleted, and the report warns that the sheet was not found.
+### Risk 2: A workbook without a usable archive sheet soft-deletes everything that moved there
+**Severity:** Medium — **Mitigation:** without the sheet, without its APPID column, or with an APPID the reader cannot see (a formula without a cached value), missing applications are archived, never soft-deleted, and the report warns, naming the sheet (and the rows).
 
 ### Risk 3: The archive services are OpenRegister internals
 **Severity:** Low — **Mitigation:** resolved through the container behind a guard; when missing, an import with `missingRecords=archive` is refused with 503 `ARCHIVE_UNAVAILABLE` before the file is read, and `keep` still works.

@@ -43,7 +43,7 @@ Spec: `openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-imp
 - **files**: `lib/Service/CmdbExportImportService.php`, `lib/Service/ProgressTracker.php`, `lib/Exception/CmdbImportException.php`, `tests/Unit/Service/CmdbExportImportServiceTest.php`
 - **acceptance_criteria**:
   - GIVEN APPIDs 1 and 7 imported WHEN an export with row 1 and 7 on the archive sheet is imported THEN module and usage of 7 are archived with a reason, the report row is `archived`, and the owner contact person is untouched
-  - GIVEN APPID 7 on no sheet THEN module and usage are soft-deleted and the row is `deleted`; GIVEN the archive sheet absent THEN they are archived instead and the report warns
+  - GIVEN APPID 7 on no sheet THEN module and usage are soft-deleted and the row is `deleted`; GIVEN the archive sheet absent, without an APPID column, or with an APPID that has no cached value THEN they are archived instead and the report warns
   - GIVEN APPID 7 soft-deleted and listed on the archive sheet THEN module and usage are restored and archived; GIVEN it already archived or, when on no sheet, already deleted THEN nothing is written
   - GIVEN `missingRecords` `keep`, a cancelled import, or a usage of another municipality THEN nothing is archived or deleted
   - GIVEN a cancel during the last row THEN nothing is archived or deleted; GIVEN a cancel during the reconciliation THEN it stops before the next application and the report is cancelled
