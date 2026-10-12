@@ -49,22 +49,6 @@ generic route-query-to-filter passthrough never sees it (see the
 		</div>
 
 		<div class="faceted-catalog-index__toolbar">
-			<NcTextField
-				:modelValue="searchValue"
-				class="faceted-catalog-index__search"
-				:label="t('stackiq', 'Search')"
-				:placeholder="t('stackiq', 'Search applications and services…')"
-				@update:modelValue="onSearchInput" />
-			<NcButton
-				v-if="searchValue !== ''"
-				variant="tertiary"
-				:aria-label="t('stackiq', 'Clear search')"
-				@click="onSearchInput('')">
-				<template #icon>
-					<CloseIcon :size="18" />
-				</template>
-			</NcButton>
-
 			<NcActions :aria-label="t('stackiq', 'Saved views')">
 				<template #icon>
 					<FolderStarOutline :size="20" />
@@ -115,7 +99,9 @@ generic route-query-to-filter passthrough never sees it (see the
 					:quickFilters="quickFilters"
 					:quickFilterMode="quickFilterMode"
 					:quickFilterMultiple="quickFilterMultiple"
+					:sidebar="sidebar"
 					:rowClickToView="Boolean(detailRoute)"
+					@search="onListSearch"
 					@rowClick="openDetail"
 					@view="openDetail" />
 			</div>
@@ -133,21 +119,14 @@ generic route-query-to-filter passthrough never sees it (see the
 import { CnFacetSidebar, CnIndexPage } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
-import {
-	NcActionButton,
-	NcActionCaption,
-	NcActions,
-	NcButton,
-	NcTextField,
-} from '@nextcloud/vue'
-import CloseIcon from 'vue-material-design-icons/Close.vue'
+import { NcActionButton, NcActionCaption, NcActions } from '@nextcloud/vue'
 import ContentSaveOutline from 'vue-material-design-icons/ContentSaveOutline.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FolderStarOutline from 'vue-material-design-icons/FolderStarOutline.vue'
 import SaveFacetViewModal from '../modals/SaveFacetViewModal.vue'
 import { useFacetStore } from '../store/modules/facets.js'
 import { rowDetailLocation } from '../utils/applicationContracts.js'
-import { facetNarrowingFilter } from '../utils/facetNarrowing.js'
+import { listNarrowingFilter } from '../utils/facetNarrowing.js'
 import { buildFacetDimensionSchema } from '../utils/facetSchema.js'
 
 /** Dimension key -> translated label, matching `FacetController`'s query params. */
@@ -158,22 +137,29 @@ const DIMENSION_LABELS = {
 	domain: () => t('stackiq', 'Domain'),
 }
 
-/** Debounce delay (ms) between search keystrokes and the facets/list refetch. */
+/** Debounce delay (ms) between search keystrokes and the facets refetch. */
 const SEARCH_DEBOUNCE_MS = 400
+
+/**
+ * The list's search term in a route query (`CnIndexPage` keeps it in `_search`).
+ *
+ * @param {object} query `$route.query`.
+ * @return {string} The term, or ''.
+ */
+function routeSearch(query) {
+	return typeof query?._search === 'string' ? query._search : ''
+}
 
 export default {
 	name: 'FacetedCatalogIndexView',
 
 	components: {
-		NcTextField,
-		NcButton,
 		NcActions,
 		NcActionButton,
 		NcActionCaption,
 		CnFacetSidebar,
 		CnIndexPage,
 		SaveFacetViewModal,
-		CloseIcon,
 		ContentSaveOutline,
 		FolderOutline,
 		FolderStarOutline,
@@ -250,6 +236,17 @@ export default {
 			type: Boolean,
 			default: false,
 		},
+
+		/**
+		 * Search and Columns sidebar, forwarded to `CnIndexPage` (manifest
+		 * `config.sidebar`), as on the other index pages. Its search is the
+		 * page's free-text search: the list sends it as `_search`, and
+		 * `onListSearch` hands it to the facet counts.
+		 */
+		sidebar: {
+			type: Object,
+			default: null,
+		},
 	},
 
 	/**
@@ -268,6 +265,7 @@ export default {
 			showSaveViewModal: false,
 			savingView: false,
 			searchDebounceTimer: null,
+			listRemount: 0,
 		}
 	},
 
@@ -300,29 +298,18 @@ export default {
 		},
 
 		/**
-		 * @return {string} The current free-text search term for this schema.
-		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facets-combine-with-free-text-search
-		 */
-		searchValue() {
-			return this.facetStore[this.schema].search
-		},
-
-		/**
 		 * Bounded `{ _ids: [...] }` narrowing filter for `CnIndexPage`'s
 		 * self-fetch object list, sourced from the last facets response's
-		 * `_meta.matchedObjectIds`. Empty object (no narrowing) when no facet
-		 * filter or search term is active. `facetNarrowingFilter` says why the
-		 * key is `_ids` and what is sent when nothing matched.
+		 * `_meta.matchedObjectIds`, while a GEMMA facet has a value. A search
+		 * alone does not narrow by id: the list searches itself (`_search`).
+		 * `listNarrowingFilter` says why.
 		 *
 		 * @return {object} The `CnIndexPage` `filter` prop value.
 		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-counts-reflect-the-currently-filtered-set-not-the-unfiltered-universe
 		 */
 		listFilter() {
-			if (!this.facetStore.hasActiveFilterOrSearchFor(this.schema)) {
-				return {}
-			}
-
-			return facetNarrowingFilter(
+			return listNarrowingFilter(
+				this.facetStore[this.schema].activeFilters,
 				this.facetStore.matchedObjectIdsFor(this.schema),
 			)
 		},
@@ -332,18 +319,22 @@ export default {
 		 * watcher on the `filter` prop (only route/quick-filter/tab changes
 		 * trigger an internal refetch), so this view forces a clean remount —
 		 * and therefore a fresh `onMounted()` fetch with the current
-		 * `listFilter` — whenever the narrowing id set changes.
+		 * `listFilter` — whenever the narrowing id set changes, and when a
+		 * saved view put its search term in the route (`listRemount`).
 		 *
-		 * @return {string} A key that changes exactly when `listFilter` does.
+		 * @return {string} A key that changes when `listFilter` or `listRemount` does.
 		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-sidebar-ui-on-the-module-and-dienst-index-pages
 		 */
 		indexPageKey() {
-			return `${this.schema}-${JSON.stringify(this.listFilter)}`
+			return `${this.schema}-${this.listRemount}-${JSON.stringify(this.listFilter)}`
 		},
 	},
 
 	created() {
 		this.facetStore.setFiltersFromQuery(this.schema, this.$route.query)
+		// The list restores its search from `_search` in the route; the facet
+		// counts follow the same term.
+		this.facetStore.setSearch(this.schema, routeSearch(this.$route.query))
 	},
 
 	/**
@@ -403,11 +394,15 @@ export default {
 				}
 			})
 
+			// The search term lives in the list's own `_search`, not in `_gf_search`.
+			const facetQuery = this.facetStore.filtersToQuery(this.schema)
+			delete facetQuery._gf_search
+
 			const nextQuery = {
 				...currentQuery,
-				...this.facetStore.filtersToQuery(this.schema),
+				...facetQuery,
 			}
-			this.$router.replace({ query: nextQuery }).catch(() => {
+			return this.$router.replace({ query: nextQuery }).catch(() => {
 				// NavigationDuplicated — same query, no-op.
 			})
 		},
@@ -438,18 +433,18 @@ export default {
 		},
 
 		/**
-		 * Debounced search-box handler.
+		 * The list's search changed (sidebar Search tab): the list has
+		 * already searched itself; the facet counts follow, debounced.
 		 *
 		 * @param {string} value The new search term.
 		 * @return {void}
 		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facets-combine-with-free-text-search
 		 */
-		onSearchInput(value) {
+		onListSearch(value) {
 			this.facetStore.setSearch(this.schema, value)
 			clearTimeout(this.searchDebounceTimer)
 			this.searchDebounceTimer = setTimeout(
 				() => {
-					this.syncUrl()
 					this.refetch()
 				},
 				value === '' ? 0 : SEARCH_DEBOUNCE_MS,
@@ -464,9 +459,21 @@ export default {
 		 *
 		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-a-facet-selection-can-be-saved-as-a-view
 		 */
-		applySavedView(view) {
+		async applySavedView(view) {
 			this.facetStore.applyView(this.schema, view)
-			this.syncUrl()
+			const search = this.facetStore[this.schema].search.trim()
+			const query = { ...this.$route.query }
+			if (search === '') {
+				delete query._search
+			} else {
+				query._search = search
+			}
+			await this.$router.replace({ query }).catch(() => {
+				// NavigationDuplicated — same query, no-op.
+			})
+			await this.syncUrl()
+			// Remount the list so it reads the view's search from the route.
+			this.listRemount++
 			this.refetch()
 		},
 
@@ -518,11 +525,6 @@ export default {
 	align-items: flex-end;
 	gap: calc(var(--default-grid-baseline, 8px) * 2);
 	padding: calc(var(--default-grid-baseline, 8px) * 2);
-}
-
-.faceted-catalog-index__search {
-	max-width: 400px;
-	flex: 1;
 }
 
 .faceted-catalog-index__body {
