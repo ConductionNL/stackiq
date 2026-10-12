@@ -2087,6 +2087,72 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testAnotherMunicipalitysUsagesAreNeverReconciled()
 
 	/**
+	 * A working pair and a stale pair in the trash under the same import key: the reconciliation acts on the
+	 * working one, as the import's own match does, and never restores the stale one into the archive.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAStaleDuplicateIsNeverRestoredByTheReconciliation(): void {
+		$this->importOneSevenAndEight();
+		$seven = $this->moduleOf(appId: '7');
+		$usage = $this->usageOf(moduleUuid: $seven);
+		// A stale module deleted by hand, with its own usage, carries the same import key as the working one.
+		$this->store[self::MODULE] = ['module-stale' => array_merge($this->store[self::MODULE][$seven], ['id' => 'module-stale'])] + $this->store[self::MODULE];
+		$this->store[self::USAGE] = ['usage-stale' => array_merge($this->store[self::USAGE][$usage], ['id' => 'usage-stale', 'module' => 'module-stale'])] + $this->store[self::USAGE];
+		$this->states[self::MODULE]['module-stale'] = ['deleted' => ['deletedBy' => 'admin', 'deletedAt' => '2026-10-01T00:00:00+00:00']];
+		$this->states[self::USAGE]['usage-stale'] = ['deleted' => ['deletedBy' => 'admin', 'deletedAt' => '2026-10-01T00:00:00+00:00']];
+
+		// APPID 7 is on the archive sheet; APPID 8 is on no sheet.
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertNotContains('restore', array_column($this->transitions, 0), 'the stale duplicate is not restored');
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: 'module-stale'));
+		$this->assertSame([false, true], $this->stateOf(schema: self::USAGE, uuid: 'usage-stale'));
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $seven));
+		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $usage));
+		$reconciled = array_values(array_filter($report['rows'], static fn (array $row): bool => $row['row'] === 0));
+		$this->assertSame([['7', 'archived', $seven], ['8', 'deleted', $this->moduleOf(appId: '8')]], array_map(static fn (array $row): array => [$row['appId'], $row['outcome'], $row['moduleUuid']], $reconciled));
+
+		// A second run finds the working pair archived and the stale pair in the trash: nothing to do.
+		$this->transitions = [];
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$this->assertSame([], $this->transitions, 'the archived pair is in the state the export asks for, and the stale one is left alone');
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: 'module-stale'));
+	}//end testAStaleDuplicateIsNeverRestoredByTheReconciliation()
+
+	/**
+	 * Of two usages under one import key, the one of the module the import would match is reconciled, whatever
+	 * state the usage is in: the module's state ranks first, the usage's second.
+	 *
+	 * The working usage is listed before the one in the trash but belongs to the duplicate module in the trash.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testTheModulesStateDecidesWhichDuplicateIsReconciled(): void {
+		$this->importOneSevenAndEight();
+		$seven = $this->moduleOf(appId: '7');
+		$usage = $this->usageOf(moduleUuid: $seven);
+		$this->store[self::MODULE]['module-stale'] = array_merge($this->store[self::MODULE][$seven], ['id' => 'module-stale']);
+		$this->store[self::USAGE]['usage-stale'] = array_merge($this->store[self::USAGE][$usage], ['id' => 'usage-stale', 'module' => 'module-stale']);
+		$this->states[self::MODULE]['module-stale'] = ['deleted' => ['deletedBy' => 'admin']];
+		$this->states[self::USAGE][$usage] = ['deleted' => ['deletedBy' => 'admin']];
+
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1'), $this->row(appId: '8', row: 3)], archived: ['7']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $seven), 'the working module is archived');
+		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $usage), 'its usage is restored from the trash and archived');
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: 'module-stale'));
+		$this->assertSame([false, false], $this->stateOf(schema: self::USAGE, uuid: 'usage-stale'), 'the working usage of the stale module is not touched');
+	}//end testTheModulesStateDecidesWhichDuplicateIsReconciled()
+
+	/**
 	 * One application that cannot be archived is a failed row; the others are still reconciled.
 	 *
 	 * @return void

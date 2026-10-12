@@ -2243,7 +2243,8 @@ class CmdbExportImportService {
 	 * imported, is left out: only what this municipality's import created is
 	 * reconciled. Working and archived usages are paged with one lens each,
 	 * soft-deleted ones come from the trash (design D9); each object keeps the
-	 * state its lens or the trash gave it.
+	 * state its lens or the trash gave it. When an import key occurs more than
+	 * once, only the entry the import would match is kept (onePerKey()).
 	 *
 	 * @param string $municipalityUuid The consumer of this import.
 	 *
@@ -2285,8 +2286,56 @@ class CmdbExportImportService {
 			}
 		}
 
-		return $scope;
+		return self::onePerKey(scope: $scope);
 	}//end reconciliationScope()
+
+	/**
+	 * Keep one application per import key: the one the import itself would match.
+	 *
+	 * The import takes a working module before an archived one, and an archived
+	 * one before one in the trash (design D4), so a module deleted by hand next
+	 * to the one a later import created is never revived. The reconciliation
+	 * follows the same order: the entry with the best module state wins, the
+	 * best usage state breaks a tie, and the first one listed breaks the rest.
+	 * A stale duplicate is left as it is, never restored into the archive.
+	 *
+	 * @param array<int, array{key: string, usage: object, module: object, states: array<string, array{archived: bool, deleted: bool}>}> $scope The entries.
+	 *
+	 * @return array<int, array{key: string, usage: object, module: object, states: array<string, array{archived: bool, deleted: bool}>}>
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	private static function onePerKey(array $scope): array {
+		$preferred = [];
+		$ranks = [];
+		foreach ($scope as $application) {
+			$rank = ((self::stateRank(state: $application['states']['module']) * 3) + self::stateRank(state: $application['states']['usage']));
+			$key = $application['key'];
+			if (isset($ranks[$key]) === false || $rank < $ranks[$key]) {
+				$ranks[$key] = $rank;
+				$preferred[$key] = $application;
+			}
+		}
+
+		return array_values($preferred);
+	}//end onePerKey()
+
+	/**
+	 * How far down the preference order a state is: working 0, archived 1, deleted 2.
+	 *
+	 * @param array{archived: bool, deleted: bool} $state The state.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	private static function stateRank(array $state): int {
+		if ($state['deleted'] === true) {
+			return 2;
+		}
+
+		return ($state['archived'] === true) ? 1 : 0;
+	}//end stateRank()
 
 	/**
 	 * The usages that name this municipality as consumer, in every state, each with that state.
