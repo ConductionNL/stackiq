@@ -96,6 +96,11 @@ jest.mock(
 						'div',
 						this.rows.map((row) =>
 							h('div', { 'data-testid': 'table-row' }, [
+								h(
+									'span',
+									{ 'data-testid': 'table-row-number' },
+									this.$slots['column-row']?.({ row }),
+								),
 								h('span', this.$slots['column-name']?.({ row })),
 							]),
 						),
@@ -378,5 +383,144 @@ describe('CmdbImport finished announcement', () => {
 		expect(wrapper.vm.finishedText).toBe(
 			'Import for Gemeente Bergen finished. 2 rows read: 2 created, 0 updated, 0 unchanged.',
 		)
+	})
+})
+
+/**
+ * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ */
+describe('CmdbImport the choice for missing applications, as the admin makes it', () => {
+	afterEach(() => {
+		jest.clearAllMocks()
+	})
+
+	const radio = (wrapper, which) =>
+		wrapper.find(`[data-testid="cmdb-import-missing-records-${which}"] input`)
+
+	it('starts on "Archive or delete them" and the radios share one name', async () => {
+		const wrapper = await mountFull()
+
+		expect(radio(wrapper, 'archive').element.checked).toBe(true)
+		expect(radio(wrapper, 'keep').element.checked).toBe(false)
+		expect(radio(wrapper, 'archive').attributes('name')).toBe(
+			radio(wrapper, 'keep').attributes('name'),
+		)
+		expect(radio(wrapper, 'archive').attributes('value')).toBe('archive')
+		expect(radio(wrapper, 'keep').attributes('value')).toBe('keep')
+	})
+
+	it('posts missingRecords=keep after the admin clicks "Keep them as they are", and only that field changes', async () => {
+		const wrapper = await mountFull()
+		axios.post.mockResolvedValue({
+			data: { success: true, summary: {}, rows: [] },
+		})
+		wrapper.vm.municipality = wrapper.vm.municipalityOptions[0]
+		wrapper.vm.selectedFile = new File(['x'], 'export.xlsx')
+
+		await radio(wrapper, 'keep').setValue(true)
+		await flushPromises()
+
+		expect(wrapper.vm.missingRecords).toBe('keep')
+		expect(radio(wrapper, 'keep').element.checked).toBe(true)
+		expect(radio(wrapper, 'archive').element.checked).toBe(false)
+		// The choice is not wired to another option: they keep their defaults.
+		expect(wrapper.vm.publish).toBe(true)
+		expect(wrapper.vm.updateExisting).toBe(true)
+
+		await wrapper.vm.startImport()
+		const form = axios.post.mock.calls[0][1]
+		expect(form.get('missingRecords')).toBe('keep')
+
+		await radio(wrapper, 'archive').setValue(true)
+		expect(wrapper.vm.missingRecords).toBe('archive')
+	})
+
+	it('disables both radios while an import runs', async () => {
+		const wrapper = await mountFull()
+
+		await wrapper.setData({ importing: true })
+
+		expect(radio(wrapper, 'archive').attributes('disabled')).toBeDefined()
+		expect(radio(wrapper, 'keep').attributes('disabled')).toBeDefined()
+	})
+})
+
+/**
+ * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ */
+describe('CmdbImport report rows of archived and deleted applications', () => {
+	afterEach(() => {
+		jest.clearAllMocks()
+	})
+
+	const reconciliationRow = (outcome, extra = {}) => ({
+		sheet: 'Gearchiveerde Applicaties',
+		row: 0,
+		appId: outcome === 'deleted' ? '2' : '1234',
+		name: outcome === 'deleted' ? 'Naamtest' : 'Mailen',
+		outcome,
+		moduleUuid: 'module-uuid-' + outcome,
+		...extra,
+	})
+
+	it('links an archived application to its module, and a deleted one to nothing', async () => {
+		const wrapper = await mountFull()
+
+		await wrapper.setData({
+			report: {
+				summary: { rowsRead: 0, archived: 1, deleted: 1 },
+				rows: [
+					reconciliationRow('archived'),
+					reconciliationRow('deleted'),
+				],
+			},
+		})
+
+		const rows = wrapper.findAll('[data-testid="table-row"]')
+		expect(rows).toHaveLength(2)
+		const [archived, deleted] = rows
+		expect(
+			archived.find('[data-testid="cmdb-import-module-link"]').attributes('href'),
+		).toBe('/apps/stackiq/modules/module-uuid-archived')
+		expect(deleted.find('[data-testid="cmdb-import-module-link"]').exists()).toBe(
+			false,
+		)
+		// The name of the deleted application is still shown, as text.
+		expect(deleted.text()).toContain('Naamtest')
+	})
+
+	it('shows no row number for a reconciliation row, and links one that failed', async () => {
+		const wrapper = await mountFull()
+
+		await wrapper.setData({
+			report: {
+				summary: { rowsRead: 1, failed: 1, archived: 1 },
+				rows: [
+					reconciliationRow('failed', {
+						reasons: ['archive: RuntimeException'],
+					}),
+					reconciliationRow('archived'),
+					{
+						sheet: 'Beheerde Applicaties CMDB',
+						row: 2,
+						appId: '5',
+						name: 'Gewoon',
+						outcome: 'created',
+						moduleUuid: 'module-uuid-created',
+					},
+				],
+			},
+		})
+
+		const rows = wrapper.findAll('[data-testid="table-row"]')
+		expect(rows.map((row) => row.get('[data-testid="table-row-number"]').text())).toEqual(
+			['', '', '2'],
+		)
+		expect(
+			rows[0].find('[data-testid="cmdb-import-module-link"]').exists(),
+		).toBe(true)
+		expect(
+			rows[2].find('[data-testid="cmdb-import-module-link"]').exists(),
+		).toBe(true)
 	})
 })

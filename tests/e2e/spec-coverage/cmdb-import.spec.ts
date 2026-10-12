@@ -560,6 +560,9 @@ test.describe.serial('CMDB import section', () => {
 		// 2. The Applications page lists 1234 only under the quick filter "Archived".
 		await gotoAppRoute(page, '/modules')
 		await dismissSupportDialog(page)
+		// Not under the default tab: wait for the list to settle, then look.
+		await page.waitForLoadState('networkidle')
+		await expect(page.getByText(ARCHIVED_APPLICATION_NAME)).toHaveCount(0)
 		await page.getByRole('tab', { name: 'Archived', exact: true }).click()
 		await expect(page.getByText(ARCHIVED_APPLICATION_NAME).first()).toBeVisible({
 			timeout: 30000,
@@ -578,6 +581,65 @@ test.describe.serial('CMDB import section', () => {
 		).toHaveCount(0)
 		expect(await archivedModules()).toEqual([])
 		expect(await countWritten(ctx)).toEqual(before)
+		await ctx.dispose()
+	})
+
+	// @e2e cmdb-export-import::the-admin-chooses-to-keep-missing-applications
+	test('choosing "Keep them as they are" leaves the applications a later export no longer lists as they are', async ({
+		page,
+	}) => {
+		requireFixture(EXPORT_FIXTURE)
+		requireFixture(ARCHIVED_FIXTURE)
+		const ctx = await newApiContext()
+		const before = await countWritten(ctx)
+		expect(
+			before.modules,
+			'the first import must have written the modules this test keeps',
+		).toBeGreaterThan(0)
+
+		// The same later export as the archive test, which archives 1234 and deletes 2.
+		const section = await gotoCmdbSection(page)
+		await chooseMunicipality(page)
+		const keep = section.locator(
+			'[data-testid="cmdb-import-missing-records-keep"] input',
+		)
+		await keep.check()
+		await expect(keep).toBeChecked()
+		await expect(
+			section.locator(
+				'[data-testid="cmdb-import-missing-records-archive"] input',
+			),
+		).not.toBeChecked()
+		const response = await runImport(page, ARCHIVED_FIXTURE)
+		expect(response.status()).toBe(200)
+		// The request carries the choice, not the default.
+		expect(response.request().postData() ?? '').toMatch(
+			/name="missingRecords"\s+keep/,
+		)
+
+		await expect(summaryValue(page, 'rowsRead')).toHaveText('0')
+		// The archived and deleted tiles only exist when the import did either.
+		await expect(
+			section.locator('[data-testid="cmdb-import-summary-archived"]'),
+		).toHaveCount(0)
+		await expect(
+			section.locator('[data-testid="cmdb-import-summary-deleted"]'),
+		).toHaveCount(0)
+		await expect(
+			reportRows(page).locator('[data-outcome="archived"]'),
+		).toHaveCount(0)
+		await expect(
+			reportRows(page).locator('[data-outcome="deleted"]'),
+		).toHaveCount(0)
+
+		// Both applications are still in the working set; nothing is archived.
+		expect(await countWritten(ctx)).toEqual(before)
+		expect(
+			await objectsInLens(ctx, config.module_schema, {
+				archived: 'true',
+				includeDeleted: false,
+			}),
+		).toEqual([])
 		await ctx.dispose()
 	})
 

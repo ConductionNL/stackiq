@@ -162,7 +162,7 @@ Stackiq's admin settings page SHALL show a section "CMDB import", rendered by th
 - **AND** filtering the table on `created` SHALL show the two imported rows
 
 #### Scenario: The admin chooses to keep missing applications
-@e2e exclude Covered by the Jest test; src/utils/cmdbImport.spec.js asserts buildImportForm() sends `archive` by default and `keep` when chosen, and src/views/settings/sections/CmdbImport.spec.js asserts the section's default.
+@e2e tests/e2e/spec-coverage/cmdb-import.spec.ts
 
 - **GIVEN** the section
 - **WHEN** the admin selects "Keep them as they are" and starts the import
