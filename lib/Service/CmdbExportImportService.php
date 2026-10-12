@@ -620,7 +620,7 @@ class CmdbExportImportService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 * @spec openspec/changes/archive/2026-10-05-cmdb-export-import/tasks.md#task-7
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function addRunWarnings(CmdbImportReport $report, array $municipality, array $archive, string $missingRecords): void {
@@ -1865,7 +1865,7 @@ class CmdbExportImportService {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+	 * @spec openspec/changes/archive/2026-10-05-cmdb-export-import/tasks.md#task-5
 	 */
 	private static function matchesFilters(object $entity, array $filters): bool {
 		$data = $entity->getObject();
