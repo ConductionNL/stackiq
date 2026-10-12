@@ -1984,7 +1984,15 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->transitions = [];
 		$long = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7'], uncachedRows: range(2, 13)))
 			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'archive']);
-		$this->assertStringContainsString('in row 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, …,', $long['importWarnings'][0]['message']);
+		$this->assertSame(
+			'Sheet "Gearchiveerde Applicaties" has an APPID without a cached value in 12 rows (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, …), so applications missing from the export are archived, not deleted.',
+			$long['importWarnings'][0]['message'],
+			'the warning counts the rows and cuts the list'
+		);
+
+		$few = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7'], uncachedRows: [3, 9]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'archive']);
+		$this->assertStringContainsString('in 2 rows (3, 9), so', $few['importWarnings'][0]['message']);
 
 		// Keeping missing records needs no sheet and gives no warning.
 		$kept = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7'], uncachedRows: [4]))

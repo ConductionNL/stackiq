@@ -1974,15 +1974,23 @@ class CmdbExportImportService {
 	 */
 	private function archiveSheetWarning(array $archive): string {
 		if ($archive['uncachedRows'] !== []) {
-			// A long list is cut: the warning names where to look, not every row.
+			// A long list is cut: the warning counts the rows and names where to look, not every one.
+			$count = count($archive['uncachedRows']);
 			$rows = implode(', ', array_slice($archive['uncachedRows'], 0, self::WARNED_ROWS));
-			if (count($archive['uncachedRows']) > self::WARNED_ROWS) {
+			if ($count > self::WARNED_ROWS) {
 				$rows .= ', …';
 			}
 
+			if ($count === 1) {
+				return $this->l10n->t(
+					'Sheet "%1$s" has an APPID without a cached value in row %2$s, so applications missing from the export are archived, not deleted.',
+					[$archive['sheet'], $rows]
+				);
+			}
+
 			return $this->l10n->t(
-				'Sheet "%1$s" has an APPID without a cached value in row %2$s, so applications missing from the export are archived, not deleted.',
-				[$archive['sheet'], $rows]
+				'Sheet "%1$s" has an APPID without a cached value in %2$s rows (%3$s), so applications missing from the export are archived, not deleted.',
+				[$archive['sheet'], $count, $rows]
 			);
 		}
 
