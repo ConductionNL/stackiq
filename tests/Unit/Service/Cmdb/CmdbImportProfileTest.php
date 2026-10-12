@@ -298,6 +298,52 @@ class CmdbImportProfileTest extends TestCase {
 	}//end testAMissingPackOrValidatorIsMappingUnavailable()
 
 	/**
+	 * A create-only default keeps its mapped field in createOnlyFields; only an unmapped default leaves it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 */
+	public function testAMappedCreateOnlyDefaultStaysACreateOnlyField(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$profile = new class(container: $this->emptyContainer()) extends CmdbImportProfile {
+			/**
+			 * The usage pack's create-only fields with a create default on one mapped field and one unmapped one.
+			 *
+			 * @param string $target The pack target.
+			 *
+			 * @return array<string, mixed>
+			 */
+			public function createOnlyDefaults(string $target): array {
+				if ($target !== 'usage') {
+					return parent::createOnlyDefaults(target: $target);
+				}
+
+				return ['timeClassification' => 'Tolerate', 'unmappedFlag' => true];
+			}
+
+			/**
+			 * The usage pack's create-only fields plus the unmapped default's key.
+			 *
+			 * @param string $target The pack target.
+			 *
+			 * @return array<int, string>
+			 */
+			public function createOnlyFields(string $target): array {
+				if ($target !== 'usage') {
+					return parent::createOnlyFields(target: $target);
+				}
+
+				return [...parent::createOnlyFields(target: $target), 'unmappedFlag'];
+			}
+		};
+
+		$usage = array_values(array_filter($profile->mappingOverview()['packs'], static fn (array $pack): bool => $pack['target'] === 'usage'))[0];
+
+		$this->assertSame(['interneAnnotation', 'timeClassification'], $usage['createOnlyFields'], 'the mapped field stays, the unmapped default leaves');
+	}//end testAMappedCreateOnlyDefaultStaysACreateOnlyField()
+
+	/**
 	 * The overview the admin settings show is built from the validated packs, and a broken pack breaks it too.
 	 *
 	 * @return void
@@ -330,7 +376,7 @@ class CmdbImportProfileTest extends TestCase {
 			}
 
 			$this->assertSame($profile->createOnlyDefaults(target: $pack['target']), $pack['createOnlyDefaults'], $pack['target']);
-			$this->assertSame([], array_intersect($pack['createOnlyFields'], array_keys($pack['createOnlyDefaults'])), $pack['target']);
+			$this->assertSame([], array_intersect($pack['createOnlyFields'], array_diff(array_keys($pack['createOnlyDefaults']), array_column($pack['fieldMappings'], 'target'))), $pack['target']);
 			$this->assertSame($profile->neverWrittenOnUpdate(target: $pack['target']), $pack['neverWritten'], $pack['target']);
 		}
 

@@ -636,7 +636,7 @@ class CmdbImportProfile {
 	 * `defaults` (pack values set on every write), `createOnlyDefaults`
 	 * (values set on create only, not mapped columns), `createOnlyFields` (mapped
 	 * fields written on create or, on update, only when the stored value is
-	 * empty; never a key of `createOnlyDefaults`) and `neverWritten` (fields the
+	 * empty; a key of `createOnlyDefaults` only when it is also mapped) and `neverWritten` (fields the
 	 * import never writes on an existing object).
 	 *
 	 * @return array{profile: array<string, mixed>, packs: array<int, array<string, mixed>>}
@@ -671,16 +671,13 @@ class CmdbImportProfile {
 				];
 			}
 
-			// A create-only default (the module type) is a value the import sets on
-			// create, not a mapped field: merge() never reads it on update, so it is
-			// listed under createOnlyDefaults only.
+			// A create-only default that is not a mapped field (the module type) is a
+			// value the import sets on create; merge() never reads it on update, so it
+			// is listed under createOnlyDefaults only. A mapped field keeps its place
+			// in createOnlyFields, since merge() guards it on update.
 			$createOnlyDefaults = $this->createOnlyDefaults(target: $target);
-			$createOnlyFields = array_values(
-				array_diff(
-					$this->createOnlyFields(target: $target),
-					array_map('strval', array_keys($createOnlyDefaults))
-				)
-			);
+			$unmappedDefaults = array_diff(array_map('strval', array_keys($createOnlyDefaults)), array_column($mappings, 'target'));
+			$createOnlyFields = array_values(array_diff($this->createOnlyFields(target: $target), $unmappedDefaults));
 
 			$defaults = $pack['defaults'] ?? [];
 			if (is_array($defaults) === false) {

@@ -243,11 +243,11 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 		$this->assertSame([], $byTarget['module']['defaults']);
 		foreach ($data['packs'] as $pack) {
 			$this->assertSame(
-				array_values(array_diff($profile->createOnlyFields(target: $pack['target']), array_keys($pack['createOnlyDefaults']))),
+				array_values(array_diff($profile->createOnlyFields(target: $pack['target']), array_diff(array_keys($pack['createOnlyDefaults']), array_column($pack['fieldMappings'], 'target')))),
 				$pack['createOnlyFields'],
 				$pack['target']
 			);
-			$this->assertSame([], array_intersect($pack['createOnlyFields'], array_keys($pack['createOnlyDefaults'])), $pack['target']);
+			$this->assertSame([], array_intersect($pack['createOnlyFields'], array_diff(array_keys($pack['createOnlyDefaults']), array_column($pack['fieldMappings'], 'target'))), $pack['target']);
 			$this->assertSame($profile->neverWrittenOnUpdate(target: $pack['target']), $pack['neverWritten'], $pack['target']);
 		}
 
