@@ -7,7 +7,7 @@ depends_on: []
 
 ## Summary
 
-The "CMDB import" section of stackiq's admin settings gets a collapsible, read-only block "Mapping (read-only)" that shows the column mapping the import really uses: the sheets, the key and required columns, and one table per migration pack with the source column, the target field, whether it is required, and the transformation with its lookup values. A new admin endpoint `GET /api/settings/cmdb-import/mapping` loads the import profile and the five packs through the same loader and validator the import uses, so what the administrator sees is what the next import runs. Editing stays in the JSON files on the server; the documentation says where they are and what an administrator can change.
+The "CMDB import" section of stackiq's admin settings gets a collapsible, read-only block "Mapping (read-only)" that shows the column mapping the import really uses: the sheets, the key and required columns, and one table per migration pack with the source column, the target field, whether it is required, the transformation with its lookup values and when the import writes the field, plus each pack's defaults, create-only values and never-written fields. A new admin endpoint `GET /api/settings/cmdb-import/mapping` loads the import profile and the five packs through the same loader and validator the import uses, so the column mapping and write rules the administrator sees are the ones the next import applies (the profile's sheet constants, empty-value placeholders and similar settings are in the answer but not in the block). Editing stays in the JSON files on the server; the documentation says where they are and what an administrator can change.
 
 ## Motivation
 

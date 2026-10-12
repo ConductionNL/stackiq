@@ -8,7 +8,7 @@
 
 ## Purpose
 
-The CMDB import maps the columns of a TOPdesk export to stackiq fields through an import profile and five migration packs, JSON files under `lib/Settings/cmdb-import/` that OpenRegister's mapping engine executes (REQ-CMDB-005). Until now an administrator could only learn that mapping by reading the JSON on the server. This delta adds a read-only view of it to the "CMDB import" section of the admin settings, served by an endpoint that loads the files through the same loader the import uses, so what the administrator sees is what the next import runs (Jira WOO-588, sub-task of WOO-586).
+The CMDB import maps the columns of a TOPdesk export to stackiq fields through an import profile and five migration packs, JSON files under `lib/Settings/cmdb-import/` that OpenRegister's mapping engine executes (REQ-CMDB-005). Until now an administrator could only learn that mapping by reading the JSON on the server. This delta adds a read-only view of it to the "CMDB import" section of the admin settings, served by an endpoint that loads the files through the same loader the import uses, so the column mapping and the write rules the administrator sees are the ones the next import applies; the profile's other settings (sheet constants, absent columns, sheet precedence, id columns, empty-value placeholders, missing-records modes) are in the answer but not in the block (Jira WOO-588, sub-task of WOO-586).
 
 Nextcloud OCP interfaces used: `OCP\IL10N` (messages). OpenRegister: `Service\MigrationPack\PackDefinitionValidator` (through the existing `CmdbImportProfile`, guarded).
 

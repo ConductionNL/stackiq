@@ -8,7 +8,7 @@ The CMDB import (archived change `2026-10-05-cmdb-export-import`) maps a TOPdesk
 
 **Goals**
 
-- An administrator sees, in the section, exactly the mapping the next import runs.
+- An administrator sees, in the section, the column mapping and the write rules the next import applies, read from the files the import loads. The profile's other settings (sheet constants, absent columns, sheet precedence, id columns, empty-value placeholders, missing-records modes, limits) are returned by the endpoint but not shown; the user documentation says so.
 - The section's sheet names cannot drift from the profile.
 - Nothing is written; nothing new is parsed.
 

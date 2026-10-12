@@ -356,11 +356,18 @@ The section shows the mapping the next import runs, read-only. Open
   type `Application`) and the fields never written on an existing record
   (the module's publication and depublication dates).
 
-The block reads the files through the same loader the import uses, so what
-it shows is what the import does. When a file is invalid, the block shows
-`MAPPING_UNAVAILABLE` with the file and the reason instead of the tables, and
-the import refuses to run with the same code. The sheet names in the
-section's help text come from the same answer.
+The block reads the files through the same loader the import uses, so the
+column-to-field mappings and the write rules it shows are the ones the next
+import applies. It does not show everything in the files: the constant each
+sheet adds to its rows (`Beheer`) and the columns a sheet is known to lack,
+the order in which sheets win a duplicate `APPID`, the id columns, the
+placeholder values that mean empty (such as `NB` in `BNN Classificatie`), the
+`missingRecords` modes and the limits are in the files and in the
+endpoint's answer, and a pack's `idStrategy` only in the file; none of them
+is in the block. When a file is
+invalid, the block shows `MAPPING_UNAVAILABLE` with the file and the reason
+instead of the tables, and the import refuses to run with the same code. The
+sheet names in the section's help text come from the same answer.
 
 The block is only for viewing: nothing in it changes the mapping. The data
 behind it is also available to Nextcloud administrators as
@@ -370,8 +377,9 @@ behind it is also available to Nextcloud administrators as
 
 The mapping from columns to fields is not in code. It is a set of JSON files
 in `lib/Settings/cmdb-import/`, executed by OpenRegister's mapping engine.
-It cannot be changed in the section; **Mapping (read-only)** shows which
-file and which entry hold a column, so you know what to change:
+It cannot be changed in the section; **Mapping (read-only)** shows the pack
+file and the column mapping that hold a column, and the files below hold the
+settings the block does not show, so you know what to change:
 
 | File | What it maps |
 |---|---|
