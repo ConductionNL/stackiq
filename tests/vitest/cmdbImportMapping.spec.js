@@ -125,7 +125,7 @@ function answer() {
 				},
 			], {
 				createOnlyDefaults: { type: 'Application' },
-				createOnlyFields: ['type'],
+				createOnlyFields: [],
 				neverWritten: ['publicationDate', 'depublicationDate'],
 			}),
 			pack('manufacturer', [], {
