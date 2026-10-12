@@ -41,13 +41,14 @@ Spec: `openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.m
 
 ### Task 4: The section's mapping block shows the source and the editor link per pack
 - **spec_ref**: `SPEC#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014` (cmdb-export-import#REQ-CMDB-014) and `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020)
-- **files**: `src/views/settings/sections/CmdbImportMapping.vue`, `src/views/settings/sections/CmdbImport.vue`, `src/utils/cmdbImport.js`, `tests/vitest/cmdbImportMapping.spec.js`
+- **files**: `src/views/settings/sections/CmdbImportMapping.vue`, `src/views/settings/sections/CmdbImport.vue`, `src/utils/cmdbImport.js`, `tests/vitest/cmdbImportMapping.spec.js`, `src/views/settings/sections/CmdbImport.spec.js`, `src/utils/cmdbImport.spec.js`
 - **acceptance_criteria**:
   - GIVEN the endpoint's answer WHEN the block renders THEN each pack shows its source, its version, a hint when `newerShipped`, and an "Edit in OpenRegister" link to `editUrl` when there is one
-  - GIVEN a 503 THEN the block shows the error, the code and the reason
+  - GIVEN a 503 THEN the block shows the error, the code and the reason, and for a stored pack an "Edit in OpenRegister" link to `details.editUrl`
   - GIVEN the answer THEN the help text names the endpoint's sheets; before and on failure `PROFILE_DEFAULTS.sheets`
-- [ ] Implement
-- [ ] Test
+  - GIVEN a profile with one, two or three sheets WHEN the section renders its help text and its info text THEN both name exactly those sheets in the profile's order
+- [x] Implement
+- [x] Test
 
 ### Task 5: Translations and documentation
 - **spec_ref**: `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020)
@@ -55,7 +56,7 @@ Spec: `openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.m
 - **acceptance_criteria**:
   - GIVEN the new strings WHEN `npm run test:l10n` and `npm run check:l10n-js` run THEN both pass, with Dutch for every string
   - GIVEN the docs WHEN an administrator reads "Viewing and editing the mapping" THEN they know where to edit a pack, what the import refuses, what happens on an app update and how to go back to the shipped pack
-- [x] Implement (backend strings and documentation; the section's strings come with Task 4)
+- [x] Implement (backend strings, the section's strings and documentation)
 - [x] Test
 
 ### Task 6: End-to-end coverage
@@ -68,6 +69,6 @@ Spec: `openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.m
   - GIVEN an edited lookup in the usage pack WHEN the export is imported THEN the usages carry the edited value
   - GIVEN the business-owner pack deleted in OpenRegister WHEN the mapping is read THEN it is seeded again
   - GIVEN a signed-in non-admin WHEN they call the endpoint THEN 403
-  - GIVEN an admin on the settings page WHEN the mapping has loaded THEN every sheet pack shows its source and an "Edit in OpenRegister" link
-- [ ] Implement
+  - GIVEN an admin on the settings page WHEN the mapping has loaded THEN every sheet pack shows its source and an "Edit in OpenRegister" link, and the error of a broken stored pack links to its editor
+- [x] Implement
 - [ ] Test

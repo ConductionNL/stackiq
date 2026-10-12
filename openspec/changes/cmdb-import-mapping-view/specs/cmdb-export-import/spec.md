@@ -43,6 +43,15 @@ Each field mapping SHALL carry `source`, `target`, `required` (a boolean) and `t
 - **THEN** the endpoint SHALL answer 503 with error `MAPPING_UNAVAILABLE`
 - **AND** `details.pack` SHALL be `stackiq-topdesk-usage`, `details.packId` its row id, `details.editUrl` the link to its editor ending in `/apps/openregister/migration-packs/<packId>`, and `details.reason` SHALL name the pack, its id and the broken rule on one line of at most 500 characters
 
+#### Scenario: The section links each pack to its editor
+@e2e tests/e2e/spec-coverage/cmdb-import-mapping.spec.ts
+
+- **GIVEN** a Nextcloud admin on stackiq's admin settings page
+- **WHEN** the mapping block of the "CMDB import" section has loaded
+- **THEN** each of the four sheet packs SHALL show its source and version and a link "Edit in OpenRegister" to its `editUrl`
+- **AND** the municipality pack SHALL show no such link
+- **AND** when the endpoint answers 503 for a stored pack, the error SHALL show a link "Edit in OpenRegister" to its `details.editUrl`
+
 #### Scenario: A user who is not a Nextcloud admin cannot read the mapping
 @e2e tests/e2e/spec-coverage/cmdb-import-packs.spec.ts
 
@@ -154,7 +163,7 @@ The service SHALL map each normalised row with OpenRegister's `MigrationPack\Map
 
 ### Requirement: The admin settings SHALL offer a CMDB import section (REQ-CMDB-014)
 
-Stackiq's admin settings page SHALL show a section "CMDB import", rendered by the settings page and not registered as an in-app route. The section SHALL let the admin choose an existing municipality or type the name of a new one, choose an `.xlsx` file, and start the import. While the import runs it SHALL show a progress bar and a Cancel button. Afterwards it SHALL show the summary and a report table that can be filtered by outcome. The section SHALL also show the mapping the import uses (REQ-CMDB-020): per pack its source, its version and a link to its editor in OpenRegister. The sheet names in its help text SHALL come from that mapping, with the shipped names as the fallback until the mapping has loaded or when it cannot be loaded. Every control SHALL have a visible label, and every string SHALL be translatable.
+Stackiq's admin settings page SHALL show a section "CMDB import", rendered by the settings page and not registered as an in-app route. The section SHALL let the admin choose an existing municipality or type the name of a new one, choose an `.xlsx` file, and start the import. While the import runs it SHALL show a progress bar and a Cancel button. Afterwards it SHALL show the summary and a report table that can be filtered by outcome. The section SHALL also show the mapping the import uses (REQ-CMDB-020): per pack its source, its version and a link to its editor in OpenRegister. The sheet names in its help text SHALL come from that mapping, every sheet it names and in its order, whatever their number, with the shipped names as the fallback until the mapping has loaded or when it cannot be loaded. Every control SHALL have a visible label, and every string SHALL be translatable.
 
 (Previously: the section had no mapping block, and the sheet names in its help text were a constant in the page, which could drift from the profile on the server.)
 

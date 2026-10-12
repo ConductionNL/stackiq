@@ -42,6 +42,7 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 }))
 
 const {
+	editorUrl,
 	fileHelpText,
 	mappingSheetNames,
 	packEditUrl,
@@ -303,6 +304,54 @@ describe('CmdbImportMapping', () => {
 			wrapper.find('[data-testid="cmdb-import-mapping-usage"]').exists(),
 		).toBe(false)
 		expect(wrapper.emitted('loaded')).toBeUndefined()
+		expect(
+			wrapper.find('[data-testid="cmdb-import-mapping-error-edit"]').exists(),
+		).toBe(false)
+	})
+
+	it('links a broken stored pack to its editor from the error', async () => {
+		const failure = (editUrl) => ({
+			response: {
+				status: 503,
+				data: {
+					success: false,
+					error: 'MAPPING_UNAVAILABLE',
+					message: 'The import mapping cannot be shown.',
+					details: {
+						pack: 'stackiq-topdesk-usage',
+						packId: 13,
+						editUrl,
+						reason: 'OpenRegister migration pack stackiq-topdesk-usage (id 13) breaks a rule of the CMDB import',
+					},
+				},
+			},
+		})
+
+		http.get.mockRejectedValue(
+			failure('https://cloud.example/index.php/apps/openregister/migration-packs/13'),
+		)
+		let wrapper = mount(CmdbImportMapping)
+		await flushPromises()
+		const edit = wrapper.find('[data-testid="cmdb-import-mapping-error-edit"]')
+		expect(edit.exists()).toBe(true)
+		expect(edit.text()).toContain('Edit in OpenRegister')
+		expect(edit.attributes('href')).toBe(
+			'https://cloud.example/index.php/apps/openregister/migration-packs/13',
+		)
+		expect(edit.attributes('target')).toBe('_blank')
+		expect(edit.attributes('aria-label')).toBe(
+			'Edit in OpenRegister: stackiq-topdesk-usage (opens in a new tab)',
+		)
+
+		http.get.mockRejectedValue(failure('javascript:alert(1)'))
+		wrapper = mount(CmdbImportMapping)
+		await flushPromises()
+		expect(
+			wrapper.find('[data-testid="cmdb-import-mapping-error"]').exists(),
+		).toBe(true)
+		expect(
+			wrapper.find('[data-testid="cmdb-import-mapping-error-edit"]').exists(),
+		).toBe(false)
 	})
 })
 
@@ -461,5 +510,16 @@ describe('cmdbImport mapping helpers', () => {
 			packEditUrl({ editable: true, editUrl: '//evil.example/x' }),
 		).toBeNull()
 		expect(packEditUrl(null)).toBeNull()
+	})
+
+	it('accepts only an http(s) or server-relative editor address', () => {
+		expect(editorUrl('https://cloud.example/x')).toBe('https://cloud.example/x')
+		expect(editorUrl('/apps/openregister/migration-packs/7')).toBe(
+			'/apps/openregister/migration-packs/7',
+		)
+		expect(editorUrl('javascript:alert(1)')).toBeNull()
+		expect(editorUrl('//evil.example/x')).toBeNull()
+		expect(editorUrl(null)).toBeNull()
+		expect(editorUrl(7)).toBeNull()
 	})
 })

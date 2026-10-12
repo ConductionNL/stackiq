@@ -61,6 +61,25 @@
 				<p v-else-if="errorView.message">
 					{{ errorView.message }}
 				</p>
+				<NcButton
+					v-if="errorView.editUrl"
+					variant="secondary"
+					:href="errorView.editUrl"
+					target="_blank"
+					:aria-label="
+						t(
+							'stackiq',
+							'Edit in OpenRegister: {target} (opens in a new tab)',
+							{ target: errorView.pack },
+							asText,
+						)
+					"
+					data-testid="cmdb-import-mapping-error-edit">
+					<template #icon>
+						<OpenInNew :size="20" />
+					</template>
+					{{ t('stackiq', 'Edit in OpenRegister') }}
+				</NcButton>
 				<p class="cmdb-import__code">
 					{{
 						t(
@@ -189,6 +208,7 @@ import ChevronUp from 'vue-material-design-icons/ChevronUp.vue'
 import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import {
 	AS_TEXT,
+	editorUrl,
 	loadCmdbMapping,
 	normaliseError,
 	packEditUrl,
@@ -281,9 +301,9 @@ export default {
 		},
 
 		/**
-		 * The words for the current error, if any.
+		 * The words for the current error, if any, and the link to the editor of the stored pack at fault.
 		 *
-		 * @return {{code: string, reason: string, message: string}|null} The code, the loader's reason and the server's message
+		 * @return {{code: string, reason: string, message: string, pack: string, editUrl: string|null}|null} The code, the loader's reason, the server's message, the pack and its editor
 		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 		 */
 		errorView() {
@@ -294,6 +314,8 @@ export default {
 				code: this.error.error,
 				reason: String(this.error.details?.reason ?? ''),
 				message: this.error.message || '',
+				pack: String(this.error.details?.pack ?? ''),
+				editUrl: editorUrl(this.error.details?.editUrl),
 			}
 		},
 	},

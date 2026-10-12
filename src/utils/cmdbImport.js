@@ -1173,18 +1173,32 @@ export function packVersionText(pack) {
 }
 
 /**
+ * An editor address from the server, when the page may link to it: an
+ * http(s) or server-relative address. Anything else (a `javascript:`
+ * address, a protocol-relative one, no address at all) gives no link.
+ *
+ * @param {unknown} url The address the server gave
+ * @return {string|null} The address, or null for no link
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export function editorUrl(url) {
+	if (typeof url !== 'string') {
+		return null
+	}
+	return /^(https?:\/\/|\/(?!\/))/i.test(url) ? url : null
+}
+
+/**
  * The address of OpenRegister's editor for a pack, when the page may link
- * to it: the pack is editable and the server gave an http(s) or
- * server-relative address. Anything else (a `javascript:` address, a
- * protocol-relative one, no address at all) gives no link.
+ * to it: the pack is editable and its address passes editorUrl().
  *
  * @param {object} pack One entry of the endpoint's `packs`
  * @return {string|null} The address, or null for no link
  * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
 export function packEditUrl(pack) {
-	if (pack?.editable !== true || typeof pack.editUrl !== 'string') {
+	if (pack?.editable !== true) {
 		return null
 	}
-	return /^(https?:\/\/|\/(?!\/))/i.test(pack.editUrl) ? pack.editUrl : null
+	return editorUrl(pack.editUrl)
 }

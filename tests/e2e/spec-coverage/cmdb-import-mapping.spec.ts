@@ -1,29 +1,31 @@
 // SPDX-License-Identifier: EUPL-1.2
 // SPDX-FileCopyrightText: 2026 Conduction B.V.
 /**
- * E2e coverage for openspec/changes/cmdb-import-mapping-view (the read-only
- * "Mapping (read-only)" block of the "CMDB import" settings section).
+ * E2e coverage for openspec/changes/cmdb-import-mapping-view: the "Mapping"
+ * block of the "CMDB import" settings section.
  *
  * Every scenario the delta spec tags
- * `@e2e tests/e2e/spec-coverage/cmdb-import-mapping.spec.ts` is driven here:
- * the endpoint as an admin, the block on the real settings page, the sheet
- * names in the help text (also with the endpoint answering 503, through a
- * route intercept, so no shipped file is broken on a shared instance), and
- * the refusal for a signed-in user who is not a Nextcloud admin.
+ * `@e2e tests/e2e/spec-coverage/cmdb-import-mapping.spec.ts` is driven here
+ * on the real settings page: one line per pack with its source, its version
+ * and the link to its editor in OpenRegister, the link on the error of a
+ * broken stored pack, and the sheet names in the help text. The error states
+ * come from a route intercept, so no pack is broken on a shared instance.
+ * The endpoint itself, the import and the 403 for a non-admin are driven
+ * through the API in cmdb-import-packs.spec.ts.
  *
- * The shipped profile and packs are the expected values; nothing is written.
+ * Nothing is written.
  */
 
 import type { Page } from '@playwright/test'
 
-import { expect, request as playwrightRequest, test } from '@playwright/test'
-import { BASE_URL, newApiContext, RUN_ID } from '../workflows/_fixtures.ts'
+import { expect, test } from '@playwright/test'
+import { newApiContext, RUN_ID } from '../workflows/_fixtures.ts'
 
 const MAPPING_PATH = '/index.php/apps/stackiq/api/settings/cmdb-import/mapping'
 // The page builds its URL with generateUrl(), which drops `/index.php` on an
 // instance with pretty URLs, so the browser-side matcher uses the path tail.
 const MAPPING_ROUTE = '**/apps/stackiq/api/settings/cmdb-import/mapping'
-const TARGETS = ['module', 'manufacturer', 'municipality', 'usage', 'businessOwner']
+const SHEET_PACKS = ['module', 'manufacturer', 'usage', 'businessOwner']
 const SHIPPED_SHEETS = ['Onbeh Applicaties CMDB', 'Beheerde Applicaties CMDB']
 
 /**
@@ -71,93 +73,96 @@ async function gotoCmdbSection(page: Page) {
 	return section
 }
 
-test.describe('CMDB import mapping (read-only)', () => {
-	// @e2e cmdb-export-import::an-admin-reads-the-mapping-the-import-uses
-	test('an admin reads the mapping the import uses', async () => {
+test.describe('CMDB import mapping block', () => {
+	// @e2e cmdb-export-import::the-section-links-each-pack-to-its-editor
+	test('the section links each pack to its editor in OpenRegister', async ({
+		page,
+	}) => {
 		const ctx = await newApiContext()
+		let packIds: Record<string, number> = {}
 		try {
 			const res = await ctx.get(MAPPING_PATH)
 			expect(res.status(), await res.text()).toBe(200)
-			const body = await res.json()
-
-			expect(Object.keys(body).sort()).toEqual(['packs', 'profile'])
-			expect(
-				body.profile.sheets.map((sheet: { name: string }) => sheet.name),
-			).toEqual(SHIPPED_SHEETS)
-			expect(body.profile.keyColumn).toBe('APPID')
-			expect(body.profile.requiredColumns).toEqual([
-				'APPID',
-				'Applicatie Naam',
-			])
-
-			expect(
-				body.packs.map((pack: { target: string }) => pack.target),
-			).toEqual(TARGETS)
-			for (const pack of body.packs) {
-				expect(pack.id, pack.target).not.toBe('')
-				expect(pack.name, pack.target).not.toBe('')
-				expect(pack.version, pack.target).not.toBe('')
-			}
-
-			const usage = body.packs.find(
-				(pack: { target: string }) => pack.target === 'usage',
+			packIds = Object.fromEntries(
+				(
+					(await res.json()).packs as Array<{
+						target: string
+						packId: number | null
+					}>
+				).map((pack) => [pack.target, pack.packId ?? 0]),
 			)
-			const status = usage.fieldMappings.find(
-				(mapping: { source: string }) =>
-					mapping.source === 'Applicatie Status',
-			)
-			expect(status.target).toBe('status')
-			expect(status.transform.type).toBe('lookup')
-			expect(status.transform.map['In productie']).toBe('In production')
-
-			// The write rules the import applies besides the mapping.
-			expect(usage.createOnlyFields).toEqual([
-				'interneAnnotation',
-				'timeClassification',
-			])
-			const moduleRules = body.packs.find(
-				(pack: { target: string }) => pack.target === 'module',
-			)
-			expect(moduleRules.createOnlyDefaults).toEqual({ type: 'Application' })
-			expect(moduleRules.neverWritten).toEqual([
-				'publicationDate',
-				'depublicationDate',
-			])
 		} finally {
 			await ctx.dispose()
 		}
-	})
 
-	// @e2e cmdb-export-import::the-section-shows-one-table-per-pack
-	test('the section shows one table per pack, without editing', async ({
-		page,
-	}) => {
 		const section = await gotoCmdbSection(page)
 		const block = section.locator('[data-testid="cmdb-import-mapping"]')
 		const toggle = block.locator('[data-testid="cmdb-import-mapping-toggle"]')
-
 		await expect(toggle).toHaveAttribute('aria-expanded', 'false')
 		await toggle.click()
 		await expect(toggle).toHaveAttribute('aria-expanded', 'true')
 
-		for (const target of TARGETS) {
+		for (const target of SHEET_PACKS) {
+			const line = block.locator(`[data-testid="cmdb-import-mapping-${target}"]`)
+			await expect(line, target).toBeVisible({ timeout: 30000 })
 			await expect(
-				block.locator(`[data-testid="cmdb-import-mapping-${target}"]`),
+				line.locator('[data-testid="cmdb-import-mapping-source"]'),
 				target,
-			).toBeVisible({ timeout: 30000 })
+			).toHaveText('OpenRegister')
+			await expect(
+				line.locator('[data-testid="cmdb-import-mapping-version"]'),
+				target,
+			).toContainText(/Version|Versie/)
+			const edit = line.locator('[data-testid="cmdb-import-mapping-edit"]')
+			await expect(edit, target).toBeVisible()
+			await expect(edit, target).toHaveAttribute(
+				'href',
+				new RegExp(`/apps/openregister/migration-packs/${packIds[target]}$`),
+			)
 		}
 
-		const statusRow = block
-			.locator('[data-testid="cmdb-import-mapping-usage"]')
-			.getByRole('row')
-			.filter({ hasText: 'Applicatie Status' })
-		await expect(statusRow).toContainText('status')
-		await expect(statusRow).toContainText(/Lookup|Opzoektabel/)
-		await expect(statusRow).toContainText('In productie → In production')
-
-		// Read-only: the toggle is the block's only control.
-		await expect(block.getByRole('button')).toHaveCount(1)
+		const municipality = block.locator(
+			'[data-testid="cmdb-import-mapping-municipality"]',
+		)
+		await expect(municipality).toBeVisible()
+		await expect(
+			municipality.locator('[data-testid="cmdb-import-mapping-not-editable"]'),
+		).toBeVisible()
+		await expect(
+			municipality.locator('[data-testid="cmdb-import-mapping-edit"]'),
+		).toHaveCount(0)
+		// The columns are edited in OpenRegister: the block has no table and no field.
+		await expect(block.locator('table')).toHaveCount(0)
 		await expect(block.locator('input, textarea, select')).toHaveCount(0)
+
+		// A broken stored pack: the error links to that pack's editor.
+		await page.route(MAPPING_ROUTE, (route) =>
+			route.fulfill({
+				status: 503,
+				json: {
+					success: false,
+					error: 'MAPPING_UNAVAILABLE',
+					message: 'The import mapping cannot be shown.',
+					details: {
+						pack: 'stackiq-topdesk-usage',
+						packId: packIds.usage,
+						editUrl: `/index.php/apps/openregister/migration-packs/${packIds.usage}`,
+						reason: `OpenRegister migration pack stackiq-topdesk-usage (id ${packIds.usage}) breaks a rule of the CMDB import: refused in this test`,
+					},
+				},
+			}),
+		)
+		const broken = await gotoCmdbSection(page)
+		await broken.locator('[data-testid="cmdb-import-mapping-toggle"]').click()
+		const error = broken.locator('[data-testid="cmdb-import-mapping-error"]')
+		await expect(error).toBeVisible()
+		await expect(error).toContainText('refused in this test')
+		await expect(
+			error.locator('[data-testid="cmdb-import-mapping-error-edit"]'),
+		).toHaveAttribute(
+			'href',
+			new RegExp(`/apps/openregister/migration-packs/${packIds.usage}$`),
+		)
 	})
 
 	// @e2e cmdb-export-import::the-sheet-names-in-the-help-come-from-the-server
@@ -204,42 +209,5 @@ test.describe('CMDB import mapping (read-only)', () => {
 		await expect(
 			section.locator('[data-testid="cmdb-import-mapping-usage"]'),
 		).toHaveCount(0)
-	})
-
-	// @e2e cmdb-export-import::a-user-who-is-not-a-nextcloud-admin-cannot-read-the-mapping
-	test('a signed-in user who is not a Nextcloud admin is refused', async () => {
-		const ctx = await newApiContext()
-		const userId = `cmdbmap-${RUN_ID}`
-		const password = `Cmdbmap-${RUN_ID}-Pw!9`
-		const created = await ctx.post('/ocs/v2.php/cloud/users?format=json', {
-			form: { userid: userId, password },
-		})
-		expect(created.ok(), await created.text()).toBe(true)
-		const user = await playwrightRequest.newContext({
-			baseURL: BASE_URL,
-			storageState: { cookies: [], origins: [] },
-			httpCredentials: { username: userId, password, send: 'always' },
-			extraHTTPHeaders: { 'OCS-APIREQUEST': 'true' },
-		})
-		try {
-			// Prove the context is that user, so a 403 is the rule and not a failed login.
-			const whoami = await user.get('/ocs/v2.php/cloud/user?format=json')
-			expect(whoami.status()).toBe(200)
-			expect((await whoami.json()).ocs.data.id).toBe(userId)
-
-			const res = await user.get(MAPPING_PATH)
-			expect(res.status()).toBe(403)
-
-			// The admin settings page that holds the section is not theirs either:
-			// Nextcloud refuses or redirects it, it never renders it (2xx).
-			const settings = await user.get('/index.php/settings/admin/stackiq', {
-				maxRedirects: 0,
-			})
-			expect(settings.ok(), `status ${settings.status()}`).toBe(false)
-		} finally {
-			await user.dispose()
-			await ctx.delete(`/ocs/v2.php/cloud/users/${userId}?format=json`)
-			await ctx.dispose()
-		}
 	})
 })
