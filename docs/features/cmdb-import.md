@@ -293,8 +293,11 @@ The comparison runs only when the import went through all rows: an import
 cancelled or failed before the comparison archives or deletes nothing.
 **Cancel import** during the comparison stops it before the next
 application; what was archived or deleted until then stays so, and the
-result lists it. The progress bar shows the
-step as *Checking the applications missing from the export*. Each
+result lists it. During the comparison the progress line reads
+*Checking the applications of this municipality against the export* without
+a count, and the bar stays full: the comparison covers every application of
+the municipality, not only the ones missing from the export, so its length
+is not known in rows. Each
 application is handled on its own; one that cannot be archived is reported
 as *failed* with the step (`archive`, `restore` or `delete`) and the others
 continue. Archiving needs module schema 0.3.9 and usage schema 1.5.7 or

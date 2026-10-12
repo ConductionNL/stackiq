@@ -660,17 +660,42 @@ describe('cmdbProgressView', () => {
 		).toEqual({ percentage: 25, detail: '1 of 4 rows processed' })
 	})
 
-	it('says when the import checks the applications missing from the export', () => {
-		expect(
-			cmdbProgressView({
-				phase: 'reconciling',
-				processed_items: 3,
-				total_items: 4,
-			}),
-		).toEqual({
-			percentage: 75,
-			detail: 'Checking the applications missing from the export: 3 of 4',
+	it('says the import checks the applications, without counting them as rows', () => {
+		// The service reports rows + the municipality's applications as the total.
+		const view = cmdbProgressView({
+			phase: 'reconciling',
+			processed_items: 400,
+			total_items: 810,
 		})
+		expect(view.detail).toBe(
+			'Checking the applications of this municipality against the export',
+		)
+		expect(view.detail).not.toMatch(/\d/)
+	})
+
+	it('does not let the bar fall when the phase changes from the rows to the comparison', () => {
+		const lastOfTheRows = cmdbProgressView({
+			phase: 'importing',
+			processed_items: 400,
+			total_items: 400,
+		})
+		const firstOfTheComparison = cmdbProgressView({
+			phase: 'reconciling',
+			processed_items: 400,
+			total_items: 810,
+		})
+		const midComparison = cmdbProgressView({
+			phase: 'reconciling',
+			processed_items: 600,
+			total_items: 810,
+		})
+		expect(lastOfTheRows.percentage).toBe(100)
+		expect(firstOfTheComparison.percentage).toBeGreaterThanOrEqual(
+			lastOfTheRows.percentage,
+		)
+		expect(midComparison.percentage).toBeGreaterThanOrEqual(
+			lastOfTheRows.percentage,
+		)
 	})
 
 	it('shows nothing before any progress', () => {

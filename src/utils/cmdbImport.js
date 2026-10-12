@@ -929,8 +929,12 @@ export function cancelFailureText(error) {
  * server has set them, because the tracker's own percentage is weighted by
  * the phases of the ArchiMate import.
  *
- * In the phase `reconciling` the counts also hold the applications the
- * import checks against the export after its rows.
+ * In the phase `reconciling` the server's counts add the applications of the
+ * municipality to the rows, and those applications include ones that are on
+ * the sheets and need no change. They are neither rows nor applications
+ * missing from the export, so the view shows no "N of M" for this phase and
+ * keeps the bar where the rows left it (full) instead of letting it fall
+ * back when the total grows.
  *
  * @param {object|null} progress The snapshot from `GET /api/progress/{operationId}`
  * @return {{percentage: number, detail: string}|null} The view, or null before any progress
@@ -947,13 +951,13 @@ export function cmdbProgressView(progress) {
 		total > 0
 			? Math.min(100, Math.round((processed / total) * 100))
 			: Number(progress.percentage) || 0
-	if (total > 0 && progress.phase === 'reconciling') {
+	if (progress.phase === 'reconciling') {
 		return {
-			percentage,
+			percentage: 100,
 			detail: t(
 				'stackiq',
-				'Checking the applications missing from the export: {processed} of {total}',
-				{ processed, total },
+				'Checking the applications of this municipality against the export',
+				{},
 				AS_TEXT,
 			),
 		}
