@@ -1200,7 +1200,9 @@ OC.L10N.register(
         "The workbook holds more than {count} different texts, the most the import reads.": "De werkmap bevat meer dan {count} verschillende teksten, het maximum dat de import leest.",
         "Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.": "Samen verwijzen de cellen van de werkmap naar meer dan {size} gedeelde tekst, het maximum dat de import leest.",
         "In development since": "In ontwikkeling sinds",
-        "In use since": "In gebruik sinds"
+        "In use since": "In gebruik sinds",
+        "Not signed in": "Niet aangemeld",
+        "At most %s contact persons per request": "Ten hoogste %s contactpersonen per verzoek"
     },
     "nplurals=2; plural=(n != 1);"
 )
