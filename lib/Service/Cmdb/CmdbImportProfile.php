@@ -634,8 +634,9 @@ class CmdbImportProfile {
 	 * hidden from the admin; `required` is normalised to a boolean. Each pack
 	 * also carries the write rules the import applies on top of the mapping:
 	 * `defaults` (pack values set on every write), `createOnlyDefaults`
-	 * (values set on create only), `createOnlyFields` (mapped fields written on
-	 * create or when the stored value is empty) and `neverWritten` (fields the
+	 * (values set on create only, not mapped columns), `createOnlyFields` (mapped
+	 * fields written on create or, on update, only when the stored value is
+	 * empty; never a key of `createOnlyDefaults`) and `neverWritten` (fields the
 	 * import never writes on an existing object).
 	 *
 	 * @return array{profile: array<string, mixed>, packs: array<int, array<string, mixed>>}
@@ -670,6 +671,17 @@ class CmdbImportProfile {
 				];
 			}
 
+			// A create-only default (the module type) is a value the import sets on
+			// create, not a mapped field: merge() never reads it on update, so it is
+			// listed under createOnlyDefaults only.
+			$createOnlyDefaults = $this->createOnlyDefaults(target: $target);
+			$createOnlyFields = array_values(
+				array_diff(
+					$this->createOnlyFields(target: $target),
+					array_map('strval', array_keys($createOnlyDefaults))
+				)
+			);
+
 			$defaults = $pack['defaults'] ?? [];
 			if (is_array($defaults) === false) {
 				$defaults = [];
@@ -684,8 +696,8 @@ class CmdbImportProfile {
 				'description' => (string)($pack['description'] ?? ''),
 				'fieldMappings' => $mappings,
 				'defaults' => $defaults,
-				'createOnlyDefaults' => $this->createOnlyDefaults(target: $target),
-				'createOnlyFields' => $this->createOnlyFields(target: $target),
+				'createOnlyDefaults' => $createOnlyDefaults,
+				'createOnlyFields' => $createOnlyFields,
 				'neverWritten' => $this->neverWrittenOnUpdate(target: $target),
 			];
 		}//end foreach
