@@ -1984,7 +1984,15 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->transitions = [];
 		$long = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7'], uncachedRows: range(2, 13)))
 			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'archive']);
-		$this->assertStringContainsString('in row 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, …,', $long['importWarnings'][0]['message']);
+		$this->assertSame(
+			'Sheet "Gearchiveerde Applicaties" has an APPID without a cached value in 12 rows (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, …), so applications missing from the export are archived, not deleted.',
+			$long['importWarnings'][0]['message'],
+			'the warning counts the rows and cuts the list'
+		);
+
+		$few = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7'], uncachedRows: [3, 9]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'archive']);
+		$this->assertStringContainsString('in 2 rows (3, 9), so', $few['importWarnings'][0]['message']);
 
 		// Keeping missing records needs no sheet and gives no warning.
 		$kept = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7'], uncachedRows: [4]))
@@ -2145,7 +2153,8 @@ class CmdbExportImportServiceTest extends TestCase {
 	 * Of two usages under one import key, the one of the module the import would match is reconciled, whatever
 	 * state the usage is in: the module's state ranks first, the usage's second.
 	 *
-	 * The working usage is listed before the one in the trash but belongs to the duplicate module in the trash.
+	 * The working usage is listed before the one in the trash but belongs to the duplicate module in the trash;
+	 * it is archived as well (a stray usage stays visible otherwise), and the module in the trash is not restored.
 	 *
 	 * @return void
 	 *
@@ -2166,7 +2175,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $seven), 'the working module is archived');
 		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $usage), 'its usage is restored from the trash and archived');
 		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: 'module-stale'));
-		$this->assertSame([false, false], $this->stateOf(schema: self::USAGE, uuid: 'usage-stale'), 'the working usage of the stale module is not touched');
+		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: 'usage-stale'), 'the working usage of the stale module is archived with the key');
 	}//end testTheModulesStateDecidesWhichDuplicateIsReconciled()
 
 	/**
@@ -2358,6 +2367,61 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame([], $this->transitions);
 		$this->assertSame(0, $report['summary']['archived'] + $report['summary']['deleted']);
 	}//end testKeepWithoutTheArchiveServicesFailsARowWhoseMatchIsArchived()
+
+	/**
+	 * Every other usage of a key leaving the export follows the application: a working usage of a module deleted
+	 * by hand, and a second usage of the same module. A stale module in the trash is neither restored nor touched.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testEveryOtherUsageOfAKeyFollowsTheApplication(): void {
+		$this->importOneSevenAndEight();
+		[$seven, $eight] = [$this->moduleOf(appId: '7'), $this->moduleOf(appId: '8')];
+		$sevenUsage = $this->usageOf(moduleUuid: $seven);
+		// APPID 7: a module deleted by hand whose usage stayed working, and a second usage of the working module.
+		$this->store[self::MODULE]['module-stale'] = array_merge($this->store[self::MODULE][$seven], ['id' => 'module-stale']);
+		$this->states[self::MODULE]['module-stale'] = ['deleted' => ['deletedBy' => 'admin']];
+		$this->store[self::USAGE]['usage-stray'] = array_merge($this->store[self::USAGE][$sevenUsage], ['id' => 'usage-stray', 'module' => 'module-stale']);
+		$this->store[self::USAGE]['usage-second'] = array_merge($this->store[self::USAGE][$sevenUsage], ['id' => 'usage-second']);
+		// APPID 8 also has a stale pair in the trash: nothing to follow.
+		$this->store[self::MODULE]['module-stale-8'] = array_merge($this->store[self::MODULE][$eight], ['id' => 'module-stale-8']);
+		$this->store[self::USAGE]['usage-stale-8'] = array_merge($this->store[self::USAGE][$this->usageOf(moduleUuid: $eight)], ['id' => 'usage-stale-8', 'module' => 'module-stale-8']);
+		$this->states[self::MODULE]['module-stale-8'] = ['deleted' => ['deletedBy' => 'admin']];
+		$this->states[self::USAGE]['usage-stale-8'] = ['deleted' => ['deletedBy' => 'admin']];
+
+		// APPID 8 also has a second working module with its own usage, which a first-hit match never reaches.
+		$this->store[self::MODULE]['module-dup-8'] = array_merge($this->store[self::MODULE][$eight], ['id' => 'module-dup-8']);
+		$this->store[self::USAGE]['usage-dup-8'] = array_merge($this->store[self::USAGE][$this->usageOf(moduleUuid: $eight)], ['id' => 'usage-dup-8', 'module' => 'module-dup-8']);
+
+		// 7 is on the archive sheet, 8 on no sheet.
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$this->assertSame([[false, true], [false, true]], [$this->stateOf(schema: self::MODULE, uuid: 'module-dup-8'), $this->stateOf(schema: self::USAGE, uuid: 'usage-dup-8')], 'a working duplicate of 8 is deleted with it');
+
+		foreach ([$sevenUsage, 'usage-stray', 'usage-second'] as $usage) {
+			$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $usage), $usage . ' is archived');
+		}
+
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $seven));
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: 'module-stale'), 'the stale module stays in the trash');
+		$this->assertSame([false, true], $this->stateOf(schema: self::USAGE, uuid: 'usage-stale-8'), 'a usage in the trash is never restored');
+		$this->assertNotContains('restore', array_column($this->transitions, 0));
+		$this->assertSame([1, 1], [$report['summary']['archived'], $report['summary']['deleted']], 'one report row per application');
+
+		// The same key on no sheet: every usage is soft-deleted, once.
+		$this->transitions = [];
+		$this->states = array_replace_recursive($this->states, [self::USAGE => [$sevenUsage => ['archived' => null], 'usage-stray' => ['archived' => null], 'usage-second' => ['archived' => null]], self::MODULE => [$seven => ['archived' => null]]]);
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: []))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		foreach ([$sevenUsage, 'usage-stray', 'usage-second'] as $usage) {
+			$this->assertSame([false, true], $this->stateOf(schema: self::USAGE, uuid: $usage), $usage . ' is soft-deleted');
+		}
+
+		$deletes = array_column(array_filter($this->transitions, static fn (array $t): bool => $t[0] === 'delete'), 2);
+		$this->assertSame(count($deletes), count(array_unique($deletes)), 'nothing is deleted twice');
+	}//end testEveryOtherUsageOfAKeyFollowsTheApplication()
 
 	/**
 	 * One application that cannot be archived is a failed row; the others are still reconciled.
