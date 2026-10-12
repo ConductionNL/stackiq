@@ -262,6 +262,62 @@ describe('CmdbImportMapping', () => {
 	})
 })
 
+describe('CmdbImportMapping errors without a reason', () => {
+	beforeEach(() => {
+		http.get.mockReset()
+	})
+
+	/**
+	 * Load the block against a failing endpoint and return its error card.
+	 *
+	 * @param {object} failure The rejection the endpoint produces
+	 * @return {Promise<object>} The error card
+	 */
+	async function errorCard(failure) {
+		http.get.mockRejectedValue(failure)
+		const wrapper = mount(CmdbImportMapping)
+		await flushPromises()
+		await wrapper
+			.find('[data-testid="cmdb-import-mapping-toggle"]')
+			.trigger('click')
+		expect(wrapper.emitted('loaded')).toBeUndefined()
+		return wrapper.find('[data-testid="cmdb-import-mapping-error"]')
+	}
+
+	it('shows the server message and the code on a 403 without a reason', async () => {
+		const error = await errorCard({
+			response: {
+				status: 403,
+				data: { success: false, error: 'NOT_ADMIN', message: 'Admins only.' },
+			},
+		})
+
+		expect(error.exists()).toBe(true)
+		expect(error.text()).toContain('Admins only.')
+		expect(error.text()).toContain('NOT_ADMIN')
+	})
+
+	it('shows only the code when the request never got an answer', async () => {
+		const error = await errorCard(new Error('Network Error'))
+
+		expect(error.exists()).toBe(true)
+		expect(error.text()).toContain('NETWORK_ERROR')
+		expect(error.findAll('p')).toHaveLength(1)
+	})
+
+	it('shows the code of a 500 whose body carries no reason', async () => {
+		const error = await errorCard({
+			response: {
+				status: 500,
+				data: { success: false, error: 'IMPORT_FAILED', details: {} },
+			},
+		})
+
+		expect(error.text()).toContain('IMPORT_FAILED')
+		expect(error.findAll('p')).toHaveLength(1)
+	})
+})
+
 describe('cmdbImport mapping helpers', () => {
 	it('takes the sheet names from the answer, and the shipped ones without it', () => {
 		expect(mappingSheetNames(answer())).toEqual(['Sheet A', 'Sheet B'])

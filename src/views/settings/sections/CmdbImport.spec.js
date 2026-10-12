@@ -10,7 +10,9 @@
 
 import axios from '@nextcloud/axios'
 import { flushPromises, shallowMount } from '@vue/test-utils'
+import { h } from 'vue'
 import CmdbImport from './CmdbImport.vue'
+import CmdbImportMapping from './CmdbImportMapping.vue'
 
 // Virtual: the package's `exports` field declares only the `import` condition, which jest does not resolve.
 jest.mock(
@@ -97,7 +99,7 @@ const ORGANISATIONS = [
  *
  * @return {Promise<object>} The wrapper, after the municipalities loaded
  */
-async function mountSection() {
+async function mountSection(options = {}) {
 	axios.get.mockImplementation((url) =>
 		Promise.resolve(
 			url.includes('/voorzieningen/config')
@@ -105,7 +107,7 @@ async function mountSection() {
 				: { data: { results: ORGANISATIONS } },
 		),
 	)
-	const wrapper = shallowMount(CmdbImport)
+	const wrapper = shallowMount(CmdbImport, options)
 	await flushPromises()
 	return wrapper
 }
@@ -151,5 +153,104 @@ describe('CmdbImport municipality chooser', () => {
 		expect(form.has('municipalityUuid')).toBe(false)
 		expect(wrapper.vm.error.error).toBe('MUNICIPALITY_AMBIGUOUS')
 		expect(wrapper.vm.report).toBe(null)
+	})
+})
+
+// shallowMount stubs the section's wrapper without its slots; this one renders them, so the help text and the info panel are in the DOM.
+const SLOT_RENDERING_SECTION = {
+	render() {
+		return h('div', [
+			this.$slots.default?.(),
+			this.$slots['info-content']?.(),
+		])
+	},
+}
+
+/**
+ * Mount the section with the wrapper rendering its slots.
+ *
+ * @return {Promise<object>} The wrapper
+ */
+function mountWithSlots() {
+	return mountSection({
+		global: { stubs: { AlwaysVisibleSection: SLOT_RENDERING_SECTION } },
+	})
+}
+
+describe('CmdbImport sheet names in the help texts', () => {
+	afterEach(() => {
+		jest.clearAllMocks()
+	})
+
+	const SHIPPED = ['Onbeh Applicaties CMDB', 'Beheerde Applicaties CMDB']
+
+	/**
+	 * The mapping endpoint's answer for a profile with the given sheets.
+	 *
+	 * @param {Array<string>} names The sheet names
+	 * @return {object} The answer, reduced to what the section reads
+	 */
+	function mappingOf(names) {
+		return {
+			profile: { sheets: names.map((name) => ({ name })) },
+			packs: [],
+		}
+	}
+
+	/**
+	 * The help text under the file chooser and the info panel's sheet sentence.
+	 *
+	 * @param {object} wrapper The mounted section
+	 * @return {{help: string, info: string}} Both texts, as rendered
+	 */
+	function renderedTexts(wrapper) {
+		return {
+			help: wrapper.find('#cmdb-import-file-help').text(),
+			info: wrapper
+				.findAll('.cmdb-import-info li')
+				.map((li) => li.text())
+				.find((text) => /sheets? .* (is|are) read/.test(text)),
+		}
+	}
+
+	it('names the shipped sheets until the mapping block has loaded', async () => {
+		const wrapper = await mountWithSlots()
+
+		const { help, info } = renderedTexts(wrapper)
+		expect(help).toContain('"' + SHIPPED[0] + '", "' + SHIPPED[1] + '"')
+		expect(info).toContain('"' + SHIPPED[0] + '", "' + SHIPPED[1] + '"')
+	})
+
+	it('names the sheets the mapping block emits, in the help text and the info panel', async () => {
+		const wrapper = await mountWithSlots()
+
+		wrapper
+			.findComponent(CmdbImportMapping)
+			.vm.$emit('loaded', mappingOf(['Alpha', 'Beta', 'Gamma']))
+		await flushPromises()
+
+		const { help, info } = renderedTexts(wrapper)
+		expect(help).toContain('"Alpha", "Beta", "Gamma"')
+		expect(info).toContain('"Alpha", "Beta", "Gamma"')
+		for (const shipped of SHIPPED) {
+			expect(help).not.toContain(shipped)
+			expect(info).not.toContain(shipped)
+		}
+	})
+
+	it('names only the one sheet of a profile with one sheet', async () => {
+		const wrapper = await mountWithSlots()
+
+		wrapper
+			.findComponent(CmdbImportMapping)
+			.vm.$emit('loaded', mappingOf(['Alpha']))
+		await flushPromises()
+
+		const { help, info } = renderedTexts(wrapper)
+		expect(help).toContain('with the sheet "Alpha".')
+		expect(info).toContain('The sheet "Alpha" is read')
+		for (const shipped of SHIPPED) {
+			expect(help).not.toContain(shipped)
+		}
 	})
 })
