@@ -1975,7 +1975,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $this->usageOf(moduleUuid: $eight)));
 		$this->assertSame('cmdb-import: not in the export (' . $report['operationId'] . ')', $this->transitions[2][3]);
 		$this->assertSame(
-			[['sheet' => 'Gearchiveerde Applicaties', 'message' => 'Sheet "Gearchiveerde Applicaties" has an APPID without a cached value in row 4, which was read as empty, so applications missing from the export are archived, not deleted.']],
+			[['sheet' => 'Gearchiveerde Applicaties', 'message' => 'Sheet "Gearchiveerde Applicaties" has an APPID without a cached value in row 4, so applications missing from the export are archived, not deleted.']],
 			$report['importWarnings']
 		);
 		$this->assertSame([2, 0], [$report['summary']['archived'], $report['summary']['deleted']]);

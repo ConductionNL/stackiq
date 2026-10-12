@@ -84,6 +84,10 @@ use Throwable;
  *
  * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
  *
+ * @phpstan-type ArchiveSheet array{sheet: string, present: bool, keyColumnMissing: bool, uncachedRows: array<int, int>, keys: array<string, true>}
+ *
+ * @phpstan-type ScopeEntry array{key: string, usage: object, module: object, states: array<string, array{archived: bool, deleted: bool}>}
+ *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) One import run resolves four linked
  * object kinds per row (supplier, module, owners, usage), each with its own match rule,
  * create-only fields and run cache. Splitting them over several classes would hand the
@@ -622,7 +626,7 @@ class CmdbExportImportService {
 	 *
 	 * @param CmdbImportReport $report The report.
 	 * @param array{uuid: string, name: string, created: bool} $municipality The consumer, as resolveMunicipality() found it.
-	 * @param array{sheet: string, present: bool, keyColumnMissing: bool, uncachedRows: array<int, int>, keys: array<string, true>} $archive The archive sheet.
+	 * @param ArchiveSheet $archive The archive sheet.
 	 * @param string $missingRecords The import's `missingRecords` mode.
 	 *
 	 * @return void
@@ -1933,7 +1937,7 @@ class CmdbExportImportService {
 	 *
 	 * @param array<string, mixed> $workbook What the reader returned.
 	 *
-	 * @return array{sheet: string, present: bool, keyColumnMissing: bool, uncachedRows: array<int, int>, keys: array<string, true>}
+	 * @return ArchiveSheet
 	 *
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
@@ -1959,7 +1963,7 @@ class CmdbExportImportService {
 	}//end archiveSheet()
 
 	/**
-	 * The report warning of an archiving import whose workbook lacks the archive sheet or its key column, or whose archive sheet has keys that could not be read.
+	 * The report warning of an archiving import whose archive sheet is absent or has no key column, or has unreadable keys.
 	 *
 	 * @param array{sheet: string, keyColumnMissing: bool, uncachedRows: array<int, int>} $archive The archive sheet.
 	 *
@@ -1976,7 +1980,7 @@ class CmdbExportImportService {
 			}
 
 			return $this->l10n->t(
-				'Sheet "%1$s" has an APPID without a cached value in row %2$s, which was read as empty, so applications missing from the export are archived, not deleted.',
+				'Sheet "%1$s" has an APPID without a cached value in row %2$s, so applications missing from the export are archived, not deleted.',
 				[$archive['sheet'], $rows]
 			);
 		}
@@ -2202,7 +2206,7 @@ class CmdbExportImportService {
 	 * stays, and the report says the run was cancelled.
 	 *
 	 * @param string $municipalityUuid The consumer of this import.
-	 * @param array{sheet: string, present: bool, keyColumnMissing: bool, uncachedRows: array<int, int>, keys: array<string, true>} $archive The archive sheet.
+	 * @param ArchiveSheet $archive The archive sheet.
 	 * @param string $operationId The operation id, for the archive reason.
 	 * @param int $processedItems The rows already counted as processed.
 	 * @param CmdbImportReport $report The report.
@@ -2299,9 +2303,9 @@ class CmdbExportImportService {
 	 * best usage state breaks a tie, and the first one listed breaks the rest.
 	 * A stale duplicate is left as it is, never restored into the archive.
 	 *
-	 * @param array<int, array{key: string, usage: object, module: object, states: array<string, array{archived: bool, deleted: bool}>}> $scope The entries.
+	 * @param array<int, ScopeEntry> $scope The entries.
 	 *
-	 * @return array<int, array{key: string, usage: object, module: object, states: array<string, array{archived: bool, deleted: bool}>}>
+	 * @return array<int, ScopeEntry>
 	 *
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
@@ -2334,7 +2338,11 @@ class CmdbExportImportService {
 			return 2;
 		}
 
-		return ($state['archived'] === true) ? 1 : 0;
+		if ($state['archived'] === true) {
+			return 1;
+		}
+
+		return 0;
 	}//end stateRank()
 
 	/**
@@ -2463,7 +2471,7 @@ class CmdbExportImportService {
 	 * An application already in the state the export asks for is not reported.
 	 *
 	 * @param array{key: string, usage: object, module: object, states: array<string, array{archived: bool, deleted: bool}>} $application Application.
-	 * @param array{sheet: string, present: bool, keyColumnMissing: bool, uncachedRows: array<int, int>, keys: array<string, true>} $archive The archive sheet.
+	 * @param ArchiveSheet $archive The archive sheet.
 	 * @param string $operationId The operation id, for the archive reason.
 	 * @param CmdbImportReport $report The report.
 	 *
