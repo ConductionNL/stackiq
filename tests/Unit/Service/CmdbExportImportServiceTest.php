@@ -120,6 +120,13 @@ class CmdbExportImportServiceTest extends TestCase {
 	private int $trashReads = 0;
 
 	/**
+	 * How many of the next trash reads throw.
+	 *
+	 * @var int
+	 */
+	private int $trashFailures = 0;
+
+	/**
 	 * Whether the container knows OpenRegister's archive handler and object mapper.
 	 *
 	 * @var bool
@@ -254,6 +261,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->transitions = [];
 		$this->beforeTransition = null;
 		$this->trashReads = 0;
+		$this->trashFailures = 0;
 		$this->archiveServicesAvailable = true;
 		$this->contacts = [];
 		$this->addressBooks = [];
@@ -719,6 +727,11 @@ class CmdbExportImportServiceTest extends TestCase {
 	public function trashListing(bool $rbac, bool $multitenancy): array {
 		$this->noteScope(method: 'findDeletedAcrossAllMagicTables', rbac: $rbac, multitenancy: $multitenancy);
 		$this->trashReads++;
+		if ($this->trashFailures > 0) {
+			$this->trashFailures--;
+			throw new RuntimeException('trash listing failed');
+		}
+
 		$listed = [];
 		foreach ($this->states as $schema => $states) {
 			foreach ($states as $uuid => $state) {
@@ -2226,6 +2239,34 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame([['7', 'archived']], array_map(static fn (array $row): array => [$row['appId'], $row['outcome']], $reconciled));
 		$this->assertSame(1, $this->trashReads, 'the trash is read once per import, not per row');
 	}//end testADeletedApplicationOnTheArchiveSheetIsRestoredAndArchived()
+
+	/**
+	 * A trash listing that throws fails its row and is read again by the next row, which restores instead of duplicating.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 */
+	public function testAFailedTrashReadIsNotCachedForTheNextRow(): void {
+		$this->importOneSevenAndEight();
+		$deleted = ['deleted' => ['deletedBy' => 'admin', 'deletedAt' => '2026-10-02T00:00:00+00:00']];
+		foreach (['7', '8'] as $appId) {
+			$module = $this->moduleOf(appId: $appId);
+			$this->states[self::MODULE][$module] = $deleted;
+			$this->states[self::USAGE][$this->usageOf(moduleUuid: $module)] = $deleted;
+		}
+
+		$counts = [count($this->store[self::MODULE]), count($this->store[self::USAGE])];
+		$this->trashReads = 0;
+		$this->trashFailures = 1;
+
+		$rows = [$this->row(appId: '8', row: 2), $this->row(appId: '7', row: 3, sheet: 'Onbeh Applicaties CMDB')];
+		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+
+		$this->assertSame(['failed', 'restored'], array_column($report['rows'], 'outcome'));
+		$this->assertSame(2, $this->trashReads, 'the failed read is not cached');
+		$this->assertSame($counts, [count($this->store[self::MODULE]), count($this->store[self::USAGE])], 'no second module or usage');
+	}//end testAFailedTrashReadIsNotCachedForTheNextRow()
 
 	/**
 	 * With updateExisting false a returning application is skipped as `exists` and stays archived.
