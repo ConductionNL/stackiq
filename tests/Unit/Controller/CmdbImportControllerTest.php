@@ -396,6 +396,7 @@ class CmdbImportControllerTest extends TestCase {
 	public static function serviceErrors(): array {
 		return [
 			'mapping' => [CmdbImportException::MAPPING_UNAVAILABLE, 503, []],
+			'stored mapping pack' => [CmdbImportException::MAPPING_UNAVAILABLE, 503, ['pack' => 'stackiq-topdesk-usage', 'packId' => 43]],
 			'reader' => [CmdbImportException::READER_UNAVAILABLE, 503, []],
 			'config' => [CmdbImportException::NOT_CONFIGURED, 503, []],
 			'no sheet' => [CmdbImportException::NO_SOURCE_SHEET, 422, ['expected' => ['Onbeh Applicaties CMDB', 'Beheerde Applicaties CMDB']]],
@@ -441,6 +442,48 @@ class CmdbImportControllerTest extends TestCase {
 
 		$this->assertSame($message, $response->getData()['message']);
 	}//end testEngineCodesHaveTheirOwnMessage()
+
+	/**
+	 * MAPPING_UNAVAILABLE names the OpenRegister migration pack at fault, with its id when known.
+	 *
+	 * @return array<string, array{array<string, mixed>, string}>
+	 */
+	public static function mappingMessages(): array {
+		return [
+			'no pack' => [[], 'The import mapping cannot run: OpenRegister is missing, or a mapping pack is invalid or unavailable.'],
+			'stored pack' => [
+				['pack' => 'stackiq-topdesk-usage', 'packId' => 43],
+				'The import mapping cannot run: the OpenRegister migration pack stackiq-topdesk-usage (id 43) is invalid or cannot be read. The details are in the Nextcloud log.',
+			],
+			'pack without id' => [
+				['pack' => 'stackiq-topdesk-usage'],
+				'The import mapping cannot run: the OpenRegister migration pack stackiq-topdesk-usage is invalid or cannot be read. The details are in the Nextcloud log.',
+			],
+		];
+	}//end mappingMessages()
+
+	/**
+	 * The MAPPING_UNAVAILABLE message names the pack from the details.
+	 *
+	 * @param array<string, mixed> $details The exception details.
+	 * @param string $message The expected message.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	#[DataProvider('mappingMessages')]
+	public function testTheMappingMessageNamesThePack(array $details, string $message): void {
+		$service = $this->service();
+		$service->method('import')->willThrowException(
+			new CmdbImportException(errorCode: CmdbImportException::MAPPING_UNAVAILABLE, message: 'internal', details: $details)
+		);
+
+		$response = $this->controller(file: $this->file(path: $this->upload()), params: ['municipalityName' => 'Gemeente Voorbeeldstad'], service: $service)->import();
+
+		$this->assertSame(503, $response->getStatus());
+		$this->assertSame($message, $response->getData()['message']);
+	}//end testTheMappingMessageNamesThePack()
 
 	/**
 	 * A service exception becomes its contract response.
