@@ -31,6 +31,8 @@ export const PROFILE_DEFAULTS = Object.freeze({
 	maxFileBytes: 10 * 1024 * 1024,
 	maxRowsPerSheet: 10000,
 	sheets: Object.freeze(['Onbeh Applicaties CMDB', 'Beheerde Applicaties CMDB']),
+	// Read for its APPID column only, in every import.
+	archiveSheet: 'Gearchiveerde Applicaties',
 })
 
 /**
@@ -564,10 +566,11 @@ function workbookTooLarge(details) {
 		+ ' '
 		+ t(
 			'stackiq',
-			'Delete the sheets the import does not read from a copy of the export (it reads only "{first}" and "{second}"), and import that copy.',
+			'Delete the sheets the import does not read from a copy of the export (it reads "{first}" and "{second}", and the APPID column of "{archive}"), and import that copy.',
 			{
 				first: PROFILE_DEFAULTS.sheets[0],
 				second: PROFILE_DEFAULTS.sheets[1],
+				archive: PROFILE_DEFAULTS.archiveSheet,
 			},
 			AS_TEXT,
 		)

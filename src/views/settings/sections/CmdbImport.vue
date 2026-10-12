@@ -414,10 +414,11 @@
 						{{
 							t(
 								'stackiq',
-								'The sheets "{first}" (applications without arranged maintenance) and "{second}" (with arranged maintenance) are read; other sheets, including the "Invoer" sheets, are ignored.',
+								'The sheets "{first}" (applications without arranged maintenance) and "{second}" (with arranged maintenance) are read, and of the sheet "{archive}" only the APPID column; other sheets, including the "Invoer" sheets, are ignored.',
 								{
 									first: profileDefaults.sheets[0],
 									second: profileDefaults.sheets[1],
+									archive: profileDefaults.archiveSheet,
 								},
 								asText,
 							)

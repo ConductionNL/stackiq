@@ -426,7 +426,7 @@ describe('errorText', () => {
 			expect(
 				errorText({ error: 'WORKBOOK_TOO_LARGE', details }).hint,
 			).toContain(
-				'(it reads only "Onbeh Applicaties CMDB" and "Beheerde Applicaties CMDB")',
+				'(it reads "Onbeh Applicaties CMDB" and "Beheerde Applicaties CMDB", and the APPID column of "Gearchiveerde Applicaties")',
 			)
 		}
 	})
