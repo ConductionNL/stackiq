@@ -114,6 +114,89 @@ class CmdbImportPackStoreTest extends TestCase {
 	}//end testWithoutTheServiceTheStoreIsNotAvailable()
 
 	/**
+	 * An OpenRegister whose service has every method but whose pack writes lack the CSRF and slug guards is not used.
+	 *
+	 * Released OpenRegister versions have the service, so the methods alone do
+	 * not show that the packs are safe to run. Nothing is read or written there,
+	 * and once ids were recorded the shipped files are refused too.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testAnOpenRegisterWithoutTheHardenedStoreIsNotAvailable(): void {
+		$this->service->failure = new \RuntimeException('an unhardened store must not be asked');
+		$store = new CmdbImportPackStore(
+			container: $this->service->container(test: $this, appConfig: FakeMigrationPackService::appConfig(test: $this, values: $this->config)),
+			hardenedClass: 'OCA\\OpenRegister\\Exception\\NotInThisOpenRegister'
+		);
+
+		$this->assertFalse($store->isAvailable());
+		$this->assertSame([], $this->service->writes);
+		$store->assertShippedFallbackAllowed();
+
+		$this->config[CmdbImportPackStore::CONFIG_KEY] = '{"stackiq-topdesk-usage":43}';
+		$this->expectException(CmdbImportException::class);
+		$this->expectExceptionMessage('holds the CMDB import packs stackiq-topdesk-usage (id 43)');
+		$store->assertShippedFallbackAllowed();
+	}//end testAnOpenRegisterWithoutTheHardenedStoreIsNotAvailable()
+
+	/**
+	 * The hardened store is the one OpenRegister ships with the CSRF-protected pack writes.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testTheHardenedStoreIsMarkedByTheSlugLock(): void {
+		$this->assertSame('OCA\\OpenRegister\\Exception\\BuiltinPackSlugLockedException', CmdbImportPackStore::HARDENED_CLASS);
+		$this->assertTrue($this->store()->isAvailable());
+	}//end testTheHardenedStoreIsMarkedByTheSlugLock()
+
+	/**
+	 * Two first loads at once: the one whose create loses to the other's seed uses the pack the other stored.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testASeedThatLosesARaceUsesThePackTheOtherRequestStored(): void {
+		$this->service->beforeCreate = function (array $definition): void {
+			$this->service->beforeCreate = null;
+			$this->service->put(definition: $definition, id: 77);
+		};
+
+		$resolved = $this->store()->resolve(shipped: $this->shippedUsage());
+
+		$this->assertSame(77, $resolved['id']);
+		$this->assertSame(CmdbImportPackStore::FOUND, $resolved['outcome']);
+		$this->assertSame(false, $resolved['edited']);
+		$this->assertSame([], $this->service->writes, 'this request wrote nothing');
+		$this->assertSame('{"stackiq-topdesk-usage":77}', $this->config[CmdbImportPackStore::CONFIG_KEY]);
+	}//end testASeedThatLosesARaceUsesThePackTheOtherRequestStored()
+
+	/**
+	 * A create that fails while no pack has the slug is still MAPPING_UNAVAILABLE naming the pack.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testAFailingSeedWithNoPackStoredIsMappingUnavailable(): void {
+		$this->service->beforeCreate = static function (array $definition): void {
+			throw new \RuntimeException('database is gone');
+		};
+
+		try {
+			$this->store()->resolve(shipped: $this->shippedUsage());
+			$this->fail('MAPPING_UNAVAILABLE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('MAPPING_UNAVAILABLE', $e->getErrorCode());
+			$this->assertSame('OpenRegister migration pack stackiq-topdesk-usage could not be seeded: RuntimeException', $e->getMessage());
+		}
+	}//end testAFailingSeedWithNoPackStoredIsMappingUnavailable()
+
+	/**
 	 * A missing pack is created as a built-in pack with the marker, and its row id is recorded.
 	 *
 	 * @return void

@@ -58,11 +58,25 @@ final class FakeMigrationPackService {
 	public ?Throwable $failure = null;
 
 	/**
+	 * When set, called at the start of every create, as a concurrent request would act.
+	 *
+	 * @var \Closure|null
+	 */
+	public ?\Closure $beforeCreate = null;
+
+	/**
 	 * The next row id.
 	 *
 	 * @var int
 	 */
 	private int $nextId = 40;
+
+	/**
+	 * A fake store stands for the hardened one, so its marker class exists.
+	 */
+	public function __construct() {
+		self::loadHardenedOpenRegister();
+	}//end __construct()
 
 	/**
 	 * Store a row directly, as an administrator's edit or an older seed would have.
@@ -139,6 +153,10 @@ final class FakeMigrationPackService {
 	 * @throws RuntimeException When the slug exists.
 	 */
 	public function create(array $definition, ?string $ownerUid = null, bool $builtin = false): object {
+		if ($this->beforeCreate !== null) {
+			($this->beforeCreate)($definition);
+		}
+
 		foreach ($this->rows as $row) {
 			if ($row['slug'] === $definition['id']) {
 				throw new RuntimeException('A migration pack with id "' . $definition['id'] . '" already exists');
@@ -195,6 +213,17 @@ final class FakeMigrationPackService {
 
 		return $container;
 	}//end container()
+
+	/**
+	 * Make the class that marks OpenRegister's hardened pack store exist, as on such an OpenRegister.
+	 *
+	 * @return void
+	 */
+	public static function loadHardenedOpenRegister(): void {
+		if (class_exists('OCA\OpenRegister\Exception\BuiltinPackSlugLockedException') === false) {
+			require_once __DIR__ . '/OpenRegister/BuiltinPackSlugLockedException.php';
+		}
+	}//end loadHardenedOpenRegister()
 
 	/**
 	 * An app config backed by an array, for the store's row ids.

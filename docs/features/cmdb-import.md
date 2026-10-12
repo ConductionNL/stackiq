@@ -390,13 +390,19 @@ rules, so it checks every pack before it reads a row. It refuses a pack, with
 - OpenRegister finds the pack invalid;
 - the application name, the APPID (to the source number), the vendor name or
   the owner name is no longer mapped, or no longer marked required;
-- a mapping writes a field the import sets itself or that the record does not
-  have: the import key, the provider, the consumer, the application of a
-  usage, the business owner, the publication dates of an application, or
-  the type of an organisation (a Supplier stays a Supplier).
+- a mapping or a default writes a field the pack may not write. Each pack
+  may write only a fixed list of plain fields: the fields the shipped pack
+  maps, the licence type of an application, and the start dates of a usage's
+  phases. Refused are the fields the import sets itself (the import key, the
+  provider, the consumer, the application of a usage, the business owner, the
+  type of an organisation: a Supplier stays a Supplier), every link to
+  another record, the publication dates, and the fields only an
+  administrator or the catalogue sets, such as an organisation's status and
+  who registered it. The status and registration defaults of the vendor and
+  municipality packs stay as shipped.
 
-The section shows the same reason, so you can correct the pack in
-OpenRegister and try again. After saving a pack in OpenRegister, reload the
+The section shows the same reason with an **Edit in OpenRegister** link to
+the pack, so you can correct it there and try again. After saving a pack in OpenRegister, reload the
 settings page: **Mapping** then shows the new version, or the reason the
 pack is refused.
 
@@ -427,7 +433,8 @@ pack: the import finds it by its id (such as `stackiq-topdesk-usage`), and
 refuses to run while a pack it stored has another id.
 
 **Without OpenRegister's pack store.** On an OpenRegister version without
-migration packs, the import uses the packs that ship with stackiq and the
-result says so. Once the packs have been stored in OpenRegister, the import
+migration packs, or one whose pack store does not yet protect its writes
+with a CSRF token and lock the id of a built-in pack, the import uses the
+packs that ship with stackiq and the result says so. Once the packs have been stored in OpenRegister, the import
 does not fall back to those copies: when OpenRegister's pack store is gone,
 it refuses with `MAPPING_UNAVAILABLE` until OpenRegister is back.

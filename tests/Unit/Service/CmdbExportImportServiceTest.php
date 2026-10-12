@@ -1050,6 +1050,33 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testAPackEditedInOpenRegisterIsWhatTheImportRuns()
 
 	/**
+	 * A plain mapping of the note after the concat one, from an empty column, leaves the concatenated note clean.
+	 *
+	 * The engine skips a mapping whose column is empty, so the concatenated
+	 * value is the one kept and its empty parts are still dropped.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testAPlainNoteMappingFromAnEmptyColumnKeepsTheNoteClean(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Rotterdam', type: 'Municipality');
+		$packs = new FakeMigrationPackService();
+		$usage = (new CmdbImportPackMarker())->seed(
+			shipped: json_decode((string)file_get_contents(CmdbTestSupport::appRoot() . '/lib/Settings/cmdb-import/topdesk-usage.json'), true)
+		);
+		$usage['fieldMappings'][] = ['source' => 'Opmerking', 'target' => 'interneAnnotation', 'transform' => ['type' => 'trim']];
+		$packs->put(definition: $usage);
+
+		$this->service(
+			reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Cluster' => 'B10', 'Opmerking' => ''])]),
+			packs: $packs
+		)->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame('Beheer geregeld: ja / B10', $this->objects(self::USAGE)[0]['interneAnnotation']);
+	}//end testAPlainNoteMappingFromAnEmptyColumnKeepsTheNoteClean()
+
+	/**
 	 * A name that matches no municipality creates it, and the report warns about that.
 	 *
 	 * @return void

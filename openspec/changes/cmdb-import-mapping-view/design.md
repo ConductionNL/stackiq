@@ -80,6 +80,8 @@ Version numbers alone cannot tell an edit from a release: OpenRegister's editor 
 
 ### D7. Fail closed once the packs were stored
 
+The store counts as available only on an OpenRegister whose pack writes require a CSRF token and lock a built-in pack's slug, recognised by the class `OCA\OpenRegister\Exception\BuiltinPackSlugLockedException` that ships with them. Released OpenRegister versions have `MigrationPackService` but write packs without a CSRF check; since a pack drives writes with RBAC off, stackiq does not run packs stored behind those routes and treats such a store as not available.
+
 The store keeps the row id it resolved per slug in stackiq's app config (`cmdb_import_pack_ids`). Without OpenRegister's store and with no recorded ids, the import uses the shipped files and adds one import warning saying so. With recorded ids, a missing store is 503 `MAPPING_UNAVAILABLE` naming the packs: falling back would silently drop an edit. A slug lookup that misses while the recorded row still exists under another slug is a rename, and is 503 naming the row and both slugs, not a second seeded pack the import would read while the administrator edits the renamed one. A recorded row that was deleted is seeded again. Any other failure of the store is 503 naming the pack and the exception class, never its message.
 
 ### D8. The import's rules on every pack
@@ -87,8 +89,9 @@ The store keeps the row id it resolved per slug in stackiq's app config (`cmdb_i
 OpenRegister's validator checks structure only, and the import writes with OpenRegister's RBAC and multitenancy off. `CmdbImportPackRules` therefore checks every pack, stored or shipped:
 
 - required mappings with `required: true`: module `name` and `externalNumber` (from the profile's key column), manufacturer, municipality and business-owner `name`;
-- an allowlist per target: the properties of the target schema in the register stackiq ships (fragments included, ADR-037), minus `@self`, `id`, the match keys and the relations the import sets (`externalKey`, `provider`, `consumer`, `module`, `businessOwner`, the organisation `type`) and the profile's `neverWritten`; the business owner may map `name` and `role` only, because it is resolved in Nextcloud Contacts;
-- the same allowlist for `defaults`, and the organisation `type` default pinned (`Supplier`, `Municipality`), because the import finds organisations by name and type.
+- an explicit allowlist of vetted plain fields per target: the fields the shipped packs map, the module's `licentietype`, and the usage's phase start dates (`startDateAcquisition`, `startDatePlanned`, `startDateInProduction`, `startDateOutPhasing`); the business owner may map `name` and `role` only, because it is resolved in Nextcloud Contacts. A listed field must also be a property of the target schema in the register stackiq ships (fragments included, ADR-037);
+- refused whatever the allowlist says: `@self`, `id`, the match keys and the relations the import sets (`externalKey`, `provider`, `consumer`, `module`, `businessOwner`, the organisation `type`), the profile's `neverWritten`, every property whose definition or items carry a `$ref`, an `inversedBy`, a `writeBack`, `format: uuid` or an object configuration that relates or names a schema, `publicationDate` and `depublicationDate` on every target, and the admin fields `registeredBy`, `registrationStatus`, `mergedInto`, `contactsUid`, `pki`, `xml`, the organisation `status` and the module `type`;
+- the same rules for `defaults`, and the organisation defaults pinned as shipped: `type` (`Supplier`, `Municipality`), because the import finds organisations by name and type, and `status` `Active` and the manufacturer's `registeredBy` `Supplier`, the only way a pack sets those admin fields.
 
 A broken rule is 503 `MAPPING_UNAVAILABLE` naming the pack, its id and every rule it breaks.
 
@@ -119,8 +122,8 @@ No schema changes and no register fragment. The repair step stores four migratio
 
 ## Security Considerations
 
-- Admin-only with CSRF (D2). OpenRegister's pack writes are admin-only too.
-- The import's rules (D8) keep an edited pack from writing object metadata, match keys or relations, or fields outside its schema.
+- Admin-only with CSRF (D2). OpenRegister's pack writes are admin-only with CSRF too; stackiq uses only a store that has those guards (D7).
+- The import's rules (D8) let an edited pack write only a vetted list of plain fields per target: never object metadata, match keys, relations, publication dates or admin fields.
 - An edit can add a column to what the import reads: the read allowlist is every column the profile or a pack names. Only Nextcloud admins can edit packs and run the import.
 - Fail closed (D7): no silent fallback that would drop an administrator's edit.
 - Messages name packs, rules and configuration values, never a workbook cell or a person; a store failure is named by its exception class.
@@ -147,14 +150,18 @@ tests/Unit/Repair/SeedCmdbImportPacksTest.php
 tests/Unit/Support/FakeMigrationPackService.php
 tests/Unit/Controller/SettingsControllerCmdbImportMappingTest.php, CmdbImportControllerTest.php
 tests/Unit/Service/CmdbExportImportServiceTest.php
+tests/e2e/spec-coverage/cmdb-import-packs.spec.ts    (new)
 docs/features/cmdb-import.md
 l10n/en.json, en.js, nl.json, nl.js
 ```
 
 ## Testing
 
-- PHPUnit against an in-memory `MigrationPackService`: seeding with the marker, an unedited pack following a newer release, an edited pack kept with `newerShipped`, a pack without marker never replaced, a renamed pack and a failing store failing closed, a deleted pack seeded again, the canonical hash.
-- PHPUnit on the loader: a stored pack is what runs, an invalid stored pack and thirteen broken rules are 503 naming the pack and id, no store before a seed uses the files, no store after a seed fails closed, a stored date column is converted, the concat separator is the pack's.
+- PHPUnit against an in-memory `MigrationPackService`: seeding with the marker, an unedited pack following a newer release, an edited pack kept with `newerShipped`, a pack without marker never replaced, a renamed pack and a failing store failing closed, a deleted pack seeded again, a seed that loses a race to another request, an OpenRegister without the hardened store, the canonical hash.
+- PHPUnit on the rules: the shipped packs pass, every vetted field can be mapped, relations, publication dates and admin fields are refused as mappings and as defaults, a vetted field the register turns into a relation is refused.
+- PHPUnit on the loader: a stored pack is what runs, an invalid stored pack and thirteen broken rules are 503 naming the pack and id, no store before a seed uses the files, no store after a seed fails closed, a stored date column is converted, the concat separator is the pack's, also with a later plain mapping of the note.
 - PHPUnit on the import: an edit in OpenRegister changes the mapped usage, the separator and a new date column; without a store the report carries the fallback warning.
-- PHPUnit on the endpoint and the repair step: the extended answer, `editUrl` from the page route and null when it cannot be built, 503 naming the pack; seeding four packs, updating and keeping, no store, a failing store, the registration order.
-- Playwright: the section shows the source and the editor link per pack (UI).
+- PHPUnit on the endpoint and the repair step: the extended answer, `editUrl` from the page route and null when it cannot be built, 503 naming the pack with the link to its editor; seeding four packs, updating and keeping, no store, a failing store, the registration order.
+- Playwright, through the API (`cmdb-import-packs.spec.ts`): the four packs stored as built-in packs with the marker, the mapping with source, `packId` and `editUrl`, a broken stored pack refused by the mapping and by the import, a module pack without its required name refused, an edit in OpenRegister run by the import, a deleted pack seeded again, the 403 for a non-admin. Each test that edits a pack puts back the definition it read.
+- Playwright, on the settings page: the section shows the source and the editor link per pack (UI).
+- Install, upgrade and a missing or older store are not driven in e2e: they need another OpenRegister or a reinstall. The requirements state them, and the PHPUnit tests above prove them.
