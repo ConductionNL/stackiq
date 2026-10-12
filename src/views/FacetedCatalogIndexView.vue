@@ -9,8 +9,13 @@ Layout: a `CnFacetSidebar` (from `@conduction/nextcloud-vue`, ADR-012) driven
 by the `facets` Pinia store on the left, and a self-fetching `CnIndexPage`
 (register+schema self-fetch mode) on the right.
 
-Why the facet sidebar is NOT `CnIndexPage`'s own embedded
-`sidebar.enabled`/`activeFilters` facet machinery: that machinery treats
+The free-text search and the column choice are `CnIndexPage`'s own Search
+and Columns sidebar (manifest `config.sidebar`): the list sends the term as
+`_search` and keeps it in the route, and `onListSearch` hands it to the facet
+counts.
+
+Why the GEMMA facets do NOT go through that sidebar's
+`activeFilters` facet machinery: that machinery treats
 every active-filter key as a LITERAL, directly-filterable schema field and
 applies it straight to the object-list fetch (`useListView`'s
 `onFilterChange` → `activeFilters.value[key] = values`, merged verbatim into
@@ -315,26 +320,51 @@ export default {
 		},
 
 		/**
-		 * Remount key for `CnIndexPage`: its self-fetch mode has no reactive
-		 * watcher on the `filter` prop (only route/quick-filter/tab changes
-		 * trigger an internal refetch), so this view forces a clean remount —
-		 * and therefore a fresh `onMounted()` fetch with the current
-		 * `listFilter` — whenever the narrowing id set changes, and when a
-		 * saved view put its search term in the route (`listRemount`).
+		 * Remount key for `CnIndexPage`. A change of the `filter` prop needs
+		 * no remount: the self-fetch list watches it and refetches (2.65.0 and
+		 * later), so the sidebar search keeps its focus while the facet counts
+		 * follow the term. The list reads its search term from the route only
+		 * when it mounts, so a saved view or a legacy `_gf_search` link that
+		 * puts a term in the route bumps `listRemount`.
 		 *
-		 * @return {string} A key that changes when `listFilter` or `listRemount` does.
+		 * @return {string} A key that changes when `listRemount` does.
 		 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-sidebar-ui-on-the-module-and-dienst-index-pages
 		 */
 		indexPageKey() {
-			return `${this.schema}-${this.listRemount}-${JSON.stringify(this.listFilter)}`
+			return `${this.schema}-${this.listRemount}`
 		},
 	},
 
+	/**
+	 * Restore the facet selection and the search term from the route.
+	 *
+	 * The list restores its search from `_search`; the facet counts follow
+	 * the same term. A link from before the sidebar search carries the term
+	 * as `_gf_search`: it moves to `_search` and the list remounts to read it.
+	 *
+	 * @return {void}
+	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-filter-state-is-url-encoded-and-deep-linkable
+	 */
 	created() {
-		this.facetStore.setFiltersFromQuery(this.schema, this.$route.query)
-		// The list restores its search from `_search` in the route; the facet
-		// counts follow the same term.
-		this.facetStore.setSearch(this.schema, routeSearch(this.$route.query))
+		const query = this.$route.query
+		this.facetStore.setFiltersFromQuery(this.schema, query)
+		const legacy =
+			routeSearch(query) === '' && typeof query._gf_search === 'string'
+				? query._gf_search
+				: ''
+		this.facetStore.setSearch(this.schema, legacy || routeSearch(query))
+		if (legacy !== '') {
+			const next = { ...query, _search: legacy }
+			delete next._gf_search
+			this.$router
+				.replace({ query: next })
+				.catch(() => {
+					// NavigationDuplicated — same query, no-op.
+				})
+				.then(() => {
+					this.listRemount++
+				})
+		}
 	},
 
 	/**

@@ -545,8 +545,6 @@ OC.L10N.register(
         "Group members": "Groepsleden",
         "Merge organisations": "Organisaties samenvoegen",
         "Search": "Zoeken",
-        "Search applications and services…": "Zoek applicaties en diensten…",
-        "Clear search": "Zoekopdracht wissen",
         "Saved views": "Opgeslagen weergaven",
         "Save current filters as view": "Huidige filters opslaan als weergave",
         "GEMMA filters": "GEMMA-filters",
