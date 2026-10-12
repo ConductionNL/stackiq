@@ -620,7 +620,7 @@ class CmdbExportImportService {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 * @spec openspec/changes/archive/2026-10-05-cmdb-export-import/tasks.md#task-7
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function addRunWarnings(CmdbImportReport $report, array $municipality, array $archive, string $missingRecords): void {
@@ -1865,7 +1865,7 @@ class CmdbExportImportService {
 	 *
 	 * @return bool
 	 *
-	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+	 * @spec openspec/changes/archive/2026-10-05-cmdb-export-import/tasks.md#task-5
 	 */
 	private static function matchesFilters(object $entity, array $filters): bool {
 		$data = $entity->getObject();
@@ -2110,7 +2110,8 @@ class CmdbExportImportService {
 	 * modules and usages are kept. Its objects carry no archive or trash
 	 * marker; everything in it is deleted. Without the archive services (a
 	 * `keep` import on an OpenRegister without them) the trash cannot be read:
-	 * nothing in it is matched, and the log says so.
+	 * nothing in it is matched, and the log says so. A listing that throws is
+	 * not cached, so the next row reads it again.
 	 *
 	 * @return array{module: array<string, object>, usage: array<string, object>} Schema key => uuid => entity.
 	 *
@@ -2121,14 +2122,16 @@ class CmdbExportImportService {
 			return $this->trash;
 		}
 
-		$this->trash = ['module' => [], 'usage' => []];
 		try {
 			$services = $this->archiveServices();
 		} catch (CmdbImportException $e) {
 			$this->logger->warning('CmdbExportImportService: OpenRegister trash is not readable; soft-deleted modules and usages are not matched');
+			$this->trash = ['module' => [], 'usage' => []];
 			return $this->trash;
 		}
 
+		// Cached only once the listing was read: a listing that fails fails its row, and the
+		// next row reads it again instead of matching against an empty trash and duplicating.
 		$coordinates = $this->coordinates();
 		$deleted = $services['mapper']->findDeletedAcrossAllMagicTables(limit: null, offset: null, _rbac: false, _multitenancy: false);
 		$this->trash = self::registerTrash(deleted: $deleted, coordinates: $coordinates);
