@@ -295,7 +295,7 @@ For each row the service SHALL compute `externalKey` = `topdesk:<municipality uu
 - **AND** a module with that key that "Gemeente Voorbeeldstad" uses, or that no organisation uses yet, SHALL be updated as before
 
 #### Scenario: Only an admin can change the import key
-@e2e exclude Property-level write rules are enforced by OpenRegister's PropertyRbacHandler; tests/Unit/Settings/TopdeskCmdbFragmentTest.php testTheMergedModuleIsVersion038WithTheExternalIds asserts the merged module schema gives externalKey the update rule `admin` next to its read rule.
+@e2e exclude Property-level write rules are enforced by OpenRegister's PropertyRbacHandler; tests/Unit/Settings/TopdeskCmdbFragmentTest.php testTheMergedModuleIsVersion039WithTheExternalIds asserts the merged module schema gives externalKey the update rule `admin` next to its read rule.
 
 - **GIVEN** a signed-in member of `software-catalog-admins` who is not a Nextcloud admin
 - **WHEN** they save a module with a changed `externalKey`
