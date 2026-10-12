@@ -62,10 +62,11 @@
                                     "missingRecords": {
                                         "type": "string",
                                         "enum": [
-                                            "keep"
+                                            "keep",
+                                            "archive"
                                         ],
-                                        "default": "keep",
-                                        "description": "Only keep is accepted; mark and remove are reserved"
+                                        "default": "archive",
+                                        "description": "What happens to the municipality's applications whose APPID is no longer on either CMDB sheet. archive: after the last row, archive module and usage when the sheet \"Gearchiveerde Applicaties\" lists the APPID, soft-delete them when no sheet does, and archive only when the workbook has no archive sheet; an archived or deleted application that returns is unarchived or restored. keep: leave them as they are. mark and remove are reserved and refused with 422 MISSING_RECORDS_UNSUPPORTED"
                                     },
                                     "operationId": {
                                         "type": "string",
@@ -128,7 +129,7 @@
                         }
                     },
                     "422": {
-                        "description": "MISSING_RECORDS_UNSUPPORTED, MUNICIPALITY_REQUIRED, MUNICIPALITY_INVALID, MUNICIPALITY_AMBIGUOUS (more than one live Municipality has the typed name; details.matches lists their uuids), NO_SOURCE_SHEET, MISSING_COLUMN or TOO_MANY_ROWS",
+                        "description": "MISSING_RECORDS_UNSUPPORTED (details.accepted lists keep and archive), MUNICIPALITY_REQUIRED, MUNICIPALITY_INVALID, MUNICIPALITY_AMBIGUOUS (more than one live Municipality has the typed name; details.matches lists their uuids), NO_SOURCE_SHEET, MISSING_COLUMN or TOO_MANY_ROWS",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -148,7 +149,7 @@
                         }
                     },
                     "503": {
-                        "description": "MAPPING_UNAVAILABLE, READER_UNAVAILABLE, NOT_CONFIGURED, or SCHEMA_OUTDATED (a stackiq schema lacks a property the import matches on, or the module schema predates 0.3.8; details.schema names it and details.missing lists the properties, and externalKey.authorization.update for a missing admin-only write rule)",
+                        "description": "MAPPING_UNAVAILABLE, READER_UNAVAILABLE, NOT_CONFIGURED, or SCHEMA_OUTDATED (a stackiq schema lacks a property the import matches on, or the module schema predates 0.3.8; details.schema names it and details.missing lists the properties, and externalKey.authorization.update for a missing admin-only write rule), or ARCHIVE_UNAVAILABLE (missingRecords=archive, but OpenRegister's archive handler or object mapper is missing; nothing is read or written)",
                         "content": {
                             "application/json": {
                                 "schema": {
@@ -499,6 +500,10 @@
                             "unchanged",
                             "skipped",
                             "failed",
+                            "archived",
+                            "unarchived",
+                            "deleted",
+                            "restored",
                             "warnings",
                             "unpublished"
                         ],
@@ -523,6 +528,22 @@
                             },
                             "failed": {
                                 "type": "integer"
+                            },
+                            "archived": {
+                                "type": "integer",
+                                "description": "Applications whose module and usage this import archived because they left the CMDB sheets"
+                            },
+                            "unarchived": {
+                                "type": "integer",
+                                "description": "Rows whose archived module or usage this import unarchived before updating it"
+                            },
+                            "deleted": {
+                                "type": "integer",
+                                "description": "Applications whose module and usage this import soft-deleted because no sheet lists them any more"
+                            },
+                            "restored": {
+                                "type": "integer",
+                                "description": "Rows whose soft-deleted module or usage this import restored from the trash before updating it"
                             },
                             "warnings": {
                                 "type": "integer"
@@ -571,7 +592,8 @@
                                     "type": "string"
                                 },
                                 "row": {
-                                    "type": "integer"
+                                    "type": "integer",
+                                    "description": "The sheet row, or 0 for an application the reconciliation archived or deleted"
                                 },
                                 "appId": {
                                     "type": "string"
@@ -586,7 +608,11 @@
                                         "updated",
                                         "unchanged",
                                         "skipped",
-                                        "failed"
+                                        "failed",
+                                        "archived",
+                                        "unarchived",
+                                        "deleted",
+                                        "restored"
                                     ]
                                 },
                                 "reasons": {
