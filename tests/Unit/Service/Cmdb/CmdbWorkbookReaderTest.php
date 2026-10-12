@@ -965,15 +965,15 @@ class CmdbWorkbookReaderTest extends TestCase {
 		$cases = [
 			'with the sheet' => [
 				['Beheerde Applicaties CMDB' => $cmdb, 'Gearchiveerde Applicaties' => [['APPID', 'Applicatie Naam', 'Bron'], [7, 'Zeven', 'P-0007'], [], [8, 'Acht', 'P-0008']]],
-				['present' => true, 'keyColumnMissing' => false, 'appIds' => ['7', '8']],
+				['present' => true, 'keyColumnMissing' => false, 'appIds' => ['7', '8'], 'uncachedRows' => []],
 			],
 			'without the sheet' => [
 				['Beheerde Applicaties CMDB' => $cmdb],
-				['present' => false, 'keyColumnMissing' => false, 'appIds' => []],
+				['present' => false, 'keyColumnMissing' => false, 'appIds' => [], 'uncachedRows' => []],
 			],
 			'without its APPID column' => [
 				['Beheerde Applicaties CMDB' => $cmdb, 'Gearchiveerde Applicaties' => [['Applicatie Code', 'Applicatie Naam'], ['APP-7', 'Zeven']]],
-				['present' => false, 'keyColumnMissing' => true, 'appIds' => []],
+				['present' => false, 'keyColumnMissing' => true, 'appIds' => [], 'uncachedRows' => []],
 			],
 		];
 
@@ -1023,6 +1023,215 @@ class CmdbWorkbookReaderTest extends TestCase {
 			CmdbTestSupport::removeDirectory(directory: $directory);
 		}
 	}//end testAnArchiveSheetOverTheRowLimitIsRefused()
+
+	/**
+	 * An archive APPID that is a formula without a cached value is listed by its row, not dropped without trace.
+	 *
+	 * The cell reads as empty, as on a CMDB sheet (REQ-CMDB-002); a caller that
+	 * took the sheet for complete would soft-delete an application that is archived.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAnUncachedArchiveKeyIsListedNotDropped(): void {
+		$this->requireSpreadsheet();
+		$path = CmdbTestSupport::buildWorkbook(
+			sheets: [
+				'Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een']],
+				'Gearchiveerde Applicaties' => [['APPID'], [['f' => 'Invoer!A2']], [8], [], [['f' => 'Invoer!A9']]],
+			]
+		);
+
+		try {
+			$archive = (new CmdbWorkbookReader())->read(path: $path, profile: $this->profile())['archive'];
+		} finally {
+			unlink($path);
+		}
+
+		$this->assertSame('Gearchiveerde Applicaties', $archive['sheet']);
+		$this->assertTrue($archive['present']);
+		$this->assertSame(['8'], array_map('strval', $archive['appIds']));
+		$this->assertSame([2, 5], $archive['uncachedRows'], 'the rows whose APPID formula has no cached value');
+	}//end testAnUncachedArchiveKeyIsListedNotDropped()
+
+	/**
+	 * An archive sheet whose last used row lies beyond twice the row limit stops before any sheet is loaded.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAnArchiveSheetRowSpanBeyondTheLimitStopsBeforeLoading(): void {
+		$this->requireSpreadsheet();
+		require_once __DIR__ . '/../../Support/RecordingXlsxReader.php';
+		RecordingXlsxReader::$loads = 0;
+
+		// maxRowsPerSheet 1 reads up to row 3; the third data row of the archive sheet sits on row 4.
+		$path = CmdbTestSupport::buildWorkbook(
+			sheets: [
+				'Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een']],
+				'Gearchiveerde Applicaties' => [['APPID'], [7], [8], [9]],
+			]
+		);
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxRowsPerSheet' => 1]);
+		$reader = new class extends CmdbWorkbookReader {
+			public const READER_CLASS = RecordingXlsxReader::class;
+		};
+
+		try {
+			$reader->read(path: $path, profile: $this->profile(directory: $directory));
+			$this->fail('TOO_MANY_ROWS expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('TOO_MANY_ROWS', $e->getErrorCode());
+			$this->assertSame(['sheet' => 'Gearchiveerde Applicaties', 'limit' => 1], $e->getDetails());
+			$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded');
+		} finally {
+			unlink($path);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testAnArchiveSheetRowSpanBeyondTheLimitStopsBeforeLoading()
+
+	/**
+	 * An archive sheet part beyond maxPartBytes is refused and named, not blanked into an empty sheet.
+	 *
+	 * A blanked archive sheet would read as present with no APPIDs, and every
+	 * missing application would then be soft-deleted.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAnArchiveSheetPartBeyondThePartLimitIsRefusedNotBlanked(): void {
+		$this->requireSpreadsheet();
+		require_once __DIR__ . '/../../Support/RecordingXlsxReader.php';
+		RecordingXlsxReader::$loads = 0;
+		$path = CmdbTestSupport::buildWorkbook(
+			sheets: [
+				'Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een']],
+				'Gearchiveerde Applicaties' => self::manyRows(count: 3000),
+			]
+		);
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxPartBytes' => 50000, 'maxSharedStrings' => 1000000]);
+		$reader = new class extends CmdbWorkbookReader {
+			public const READER_CLASS = RecordingXlsxReader::class;
+		};
+
+		try {
+			$reader->read(path: $path, profile: $this->profile(directory: $directory));
+			$this->fail('WORKBOOK_TOO_LARGE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode());
+			$this->assertSame(
+				['maxPartBytes' => 50000, 'part' => 'xl/worksheets/sheet2.xml', 'size' => self::partSize(path: $path, part: 'xl/worksheets/sheet2.xml'), 'sheet' => 'Gearchiveerde Applicaties'],
+				$e->getDetails()
+			);
+			$this->assertSame(0, RecordingXlsxReader::$loads, 'no sheet was loaded');
+		} finally {
+			unlink($path);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testAnArchiveSheetPartBeyondThePartLimitIsRefusedNotBlanked()
+
+	/**
+	 * The referenced-string budget is shared by the source sheets and the archive sheet.
+	 *
+	 * The workbook has no archive sheet, so the budget is the profile's limit
+	 * divided by the sheets the profile reads: the two source sheets and the
+	 * archive sheet. Text that fits a budget of half the limit but not of a third
+	 * is refused; the same workbook with less text is read.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testTheReferencedStringBudgetIsDividedOverTheArchiveSheetToo(): void {
+		$this->requireSpreadsheet();
+		// 50 cells of 32 + 2400 bytes = 121,600 bytes; the limit 300,000 gives 100,000 over three sheets, 150,000 over two.
+		$heavy = self::sharedStringWorkbook(entry: '<si><t>' . str_repeat('x', 2400) . '</t></si>', cells: 50);
+		$light = self::sharedStringWorkbook(entry: '<si><t>' . str_repeat('x', 1600) . '</t></si>', cells: 50);
+		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxReferencedStringBytes' => 300000]);
+
+		try {
+			$this->assertCount(50, (new CmdbWorkbookReader())->read(path: $light, profile: $this->profile(directory: $directory))['rows'], 'under a third of the limit');
+			try {
+				(new CmdbWorkbookReader())->read(path: $heavy, profile: $this->profile(directory: $directory));
+				$this->fail('WORKBOOK_TOO_LARGE expected');
+			} catch (CmdbImportException $e) {
+				$this->assertSame('WORKBOOK_TOO_LARGE', $e->getErrorCode());
+				$this->assertSame(['maxReferencedStringBytes' => 300000], $e->getDetails());
+			}
+		} finally {
+			unlink($heavy);
+			unlink($light);
+			CmdbTestSupport::removeDirectory(directory: $directory);
+		}
+	}//end testTheReferencedStringBudgetIsDividedOverTheArchiveSheetToo()
+
+	/**
+	 * The data pass admits the APPID column of the archive sheet and no other cell of it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testTheDataPassAdmitsOnlyTheKeyColumnOfTheArchiveSheet(): void {
+		$this->requireSpreadsheet();
+		require_once __DIR__ . '/../../Support/RecordingXlsxReader.php';
+		RecordingXlsxReader::$loads = 0;
+		RecordingXlsxReader::$filters = [];
+		$path = CmdbTestSupport::buildWorkbook(
+			sheets: [
+				'Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een']],
+				'Gearchiveerde Applicaties' => [['APPID', 'Applicatie Naam', 'Bron'], [7, 'Zeven', 'P-0007']],
+			]
+		);
+		$reader = new class extends CmdbWorkbookReader {
+			public const READER_CLASS = RecordingXlsxReader::class;
+		};
+
+		try {
+			$reader->read(path: $path, profile: $this->profile());
+		} finally {
+			unlink($path);
+		}
+
+		$this->assertCount(2, RecordingXlsxReader::$filters, 'a header pass and a data pass');
+		$data = RecordingXlsxReader::$filters[1];
+		$sheet = 'Gearchiveerde Applicaties';
+		$this->assertTrue($data->readCell('A', 2, $sheet), 'the APPID column is read');
+		$this->assertFalse($data->readCell('B', 2, $sheet), 'the name column is not');
+		$this->assertFalse($data->readCell('C', 2, $sheet), 'the column outside the allowlist is not');
+		$this->assertTrue($data->readCell('B', 2, 'Beheerde Applicaties CMDB'), 'the CMDB sheet keeps its allowlisted columns');
+	}//end testTheDataPassAdmitsOnlyTheKeyColumnOfTheArchiveSheet()
+
+	/**
+	 * The archive sheet is none when the profile names none, names a non-string, or names a source sheet.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testTheArchiveSheetNameIsNullWhenTheProfileCannotNameOne(): void {
+		$this->requireSpreadsheet();
+		$cases = [
+			'an empty name' => '',
+			'a non-string name' => 42,
+			'the name of a source sheet' => 'Beheerde Applicaties CMDB',
+		];
+
+		$this->assertSame('Gearchiveerde Applicaties', $this->profile()->archiveSheetName(), 'the shipped profile names it');
+		foreach ($cases as $case => $name) {
+			$directory = CmdbTestSupport::profileDirectory(overrides: ['archiveSheet' => ['name' => $name]]);
+			try {
+				$profile = $this->profile(directory: $directory);
+				$this->assertNull($profile->archiveSheetName(), $case);
+				$this->assertSame($profile->sheetNames(), $profile->readSheetNames(), $case);
+			} finally {
+				CmdbTestSupport::removeDirectory(directory: $directory);
+			}
+		}
+	}//end testTheArchiveSheetNameIsNullWhenTheProfileCannotNameOne()
 
 	/**
 	 * A text file named .xlsx, a .xlsm and a CSV are refused before PhpSpreadsheet is touched.

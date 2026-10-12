@@ -155,14 +155,18 @@ class CmdbWorkbookReader {
 	 * header row, once for the resolved columns of the data rows, so no other
 	 * cell is ever materialised.
 	 * The archive sheet, when the workbook has it, is read under the same
-	 * bounds as a source sheet, for its key column only.
+	 * bounds as a source sheet, for its key column only. A row whose key is a
+	 * formula without a cached value is read as empty, as on a source sheet,
+	 * and its row number is listed in `archive.uncachedRows`: the sheet then
+	 * lists an application the reader could not see, so a caller must not
+	 * treat the sheet as complete.
 	 *
 	 * @param string $path The xlsx file, already checked by assertXlsx().
 	 * @param CmdbImportProfile $profile The import profile.
 	 *
 	 * @return array<string, mixed> `rows` (list of {sheet, row, cells, uncached}), `importWarnings`
 	 *                              (list of {sheet, message}), `date1904` (bool) and `archive`
-	 *                              ({sheet, present, keyColumnMissing, appIds}).
+	 *                              ({sheet, present, keyColumnMissing, appIds, uncachedRows}).
 	 *
 	 * @throws CmdbImportException WORKBOOK_TOO_LARGE, READER_UNAVAILABLE, NOT_XLSX, NO_SOURCE_SHEET,
 	 *                             MISSING_COLUMN or TOO_MANY_ROWS.
@@ -344,6 +348,7 @@ class CmdbWorkbookReader {
 			'present' => false,
 			'keyColumnMissing' => ($loaded !== $present && $archiveColumns === []),
 			'appIds' => [],
+			'uncachedRows' => [],
 		];
 		$letters = array_map(static fn (array $columns): array => array_keys($columns), $resolved['columns']);
 		$loaded = $present;
@@ -356,13 +361,16 @@ class CmdbWorkbookReader {
 		try {
 			$rows = $this->readSourceRows(spreadsheet: $spreadsheet, sheetNames: $present, columnsPerSheet: $resolved['columns'], limit: $limit);
 			if ($archiveColumns !== []) {
+				$unseen = [];
 				$archiveRows = $this->readRows(
 					worksheet: $spreadsheet->getSheetByName($archiveSheet),
 					columns: $archiveColumns,
 					sheetName: (string)$archiveSheet,
-					limit: $limit
+					limit: $limit,
+					unseen: $unseen
 				);
 				$archive['present'] = true;
+				$archive['uncachedRows'] = $unseen;
 				$archive['appIds'] = array_column(array_column($archiveRows, 'cells'), $profile->keyColumn());
 			}
 
@@ -712,12 +720,14 @@ class CmdbWorkbookReader {
 	 * @param array<string, string> $columns Column letter => column name.
 	 * @param string $sheetName The sheet name.
 	 * @param int $limit The maximum number of non-empty rows.
+	 * @param array<int, int>|null $unseen Filled with the number of each row that read as empty only because
+	 *                                     a formula in it has no cached value; null to not collect them.
 	 *
 	 * @return array<int, array{sheet: string, row: int, cells: array<string, mixed>, uncached: array<int, string>}>
 	 *
 	 * @throws CmdbImportException TOO_MANY_ROWS.
 	 */
-	private function readRows(object $worksheet, array $columns, string $sheetName, int $limit): array {
+	private function readRows(object $worksheet, array $columns, string $sheetName, int $limit, ?array &$unseen = null): array {
 		$rows = [];
 		$lastRow = (int)$worksheet->getHighestDataRow();
 		for ($rowNumber = 2; $rowNumber <= $lastRow; $rowNumber++) {
@@ -727,6 +737,10 @@ class CmdbWorkbookReader {
 				rowNumber: $rowNumber
 			);
 			if ($empty === true) {
+				if ($uncached !== [] && $unseen !== null) {
+					$unseen[] = $rowNumber;
+				}
+
 				continue;
 			}
 

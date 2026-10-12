@@ -41,7 +41,7 @@ CmdbExportImportService::import()
         load their modules in batches (_ids: working, then _archived=true; the rest from the trash)
         per application: key on CMDB sheets → nothing
                          key on archive sheet → archive module + usage (restore first when deleted)
-                         key nowhere          → soft-delete module + usage, or archive when the sheet is absent
+                         key nowhere          → soft-delete module + usage, or archive when the sheet is absent or incomplete (D3)
         each in its own boundary → report rows archived | deleted | failed
   ▼
 OpenRegister: module, usage (archived / deleted markers); contactPerson, organization untouched
@@ -68,9 +68,10 @@ With `updateExisting=false`, a matched row is skipped as `exists` before anythin
 
 ### D3. Reading the archive sheet
 
-The profile names the sheet (`archiveSheet.name`: "Gearchiveerde Applicaties"). The reader lists the workbook's sheets, and when the archive sheet is present it is loaded with the CMDB sheets under the same bounds: it counts as a read sheet for `CmdbPartReferences` (an oversized archive sheet is refused, not blanked) and for the referenced-string budget, its row span is bounded like a source sheet, and `TOO_MANY_ROWS` names it. Only its APPID column is resolved and read; the allowlist does not grow. The reader returns `archive: {present, keyColumnMissing, appIds}` next to `rows`.
+The profile names the sheet (`archiveSheet.name`: "Gearchiveerde Applicaties"). The reader lists the workbook's sheets, and when the archive sheet is present it is loaded with the CMDB sheets under the same bounds: it counts as a read sheet for `CmdbPartReferences` (an oversized archive sheet is refused, not blanked) and for the referenced-string budget, its row span is bounded like a source sheet, and `TOO_MANY_ROWS` names it. Only its APPID column is resolved and read; the allowlist does not grow. The reader returns `archive: {present, keyColumnMissing, appIds, uncachedRows}` next to `rows`.
 
 - Sheet absent, or present without an APPID column: `present` false (with `keyColumnMissing`), and the service adds a report warning. The reconciliation then archives every missing application and soft-deletes nothing: a workbook saved without the sheet must not empty the trash-bound set by accident.
+- A row whose APPID is a formula without a cached value reads as empty, as on the CMDB sheets (REQ-CMDB-002), so the sheet would silently list one application fewer. The reader therefore lists such rows (their numbers) in `uncachedRows`, and the service treats the sheet like an absent one for the decision between archive and delete: it adds a warning naming the sheet and the rows, archives every missing application and soft-deletes nothing. A tool that saves formulas without cached values must not turn archived applications into trash.
 - The archive sheet's other columns are not read; `Applicatie Status` there is always `Verwijderd` in the municipality's export and adds nothing.
 
 ### D4. Matching widens to archived and deleted objects, and revives what it matches
@@ -93,8 +94,10 @@ Per application, with `processed` = every APPID match key on the CMDB sheets (wh
 | on the archive sheet | deleted | restore, then archive | `archived` |
 | nowhere, sheet present | working or archived | soft-delete usage, then module | `deleted` |
 | nowhere, sheet present | deleted | nothing | — |
-| nowhere, sheet absent | working | archive usage, then module | `archived` |
-| nowhere, sheet absent | archived or deleted | nothing | — |
+| nowhere, sheet absent or incomplete (no key column, or `uncachedRows` not empty) | working | archive usage, then module | `archived` |
+| nowhere, sheet absent or incomplete | archived or deleted | nothing | — |
+
+The table decides on one entry per key. When a municipality has several usages and modules under the same import key (D4 says earlier imports created exactly such duplicates, a module deleted by hand next to the one a later import created), the scope keeps the entry the import would match: the best module state wins (working, then archived, then deleted), the best usage state breaks a tie, the first listed breaks the rest. The other entries are left as they are: a stale trashed duplicate is not restored into the archive when the key is on the archive sheet, and is not touched when it is on no sheet.
 
 The usage is written before the module, so a failure between the two leaves the municipality's usage in the new state and the module visible, never the reverse. A module another municipality still uses is archived or deleted all the same when this municipality's usage says so: the module carries this municipality's import key, so it is this municipality's record (REQ-CMDB-006 allows a shared module only when the other organisation's usage was added by hand). The archive reason is `cmdb-import: on sheet "Gearchiveerde Applicaties"` or `cmdb-import: not in the export`, plus the operation id, so the audit trail says why.
 

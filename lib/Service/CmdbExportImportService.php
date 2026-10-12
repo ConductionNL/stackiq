@@ -84,6 +84,10 @@ use Throwable;
  *
  * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
  *
+ * @phpstan-type ArchiveSheet array{sheet: string, present: bool, keyColumnMissing: bool, uncachedRows: array<int, int>, keys: array<string, true>}
+ *
+ * @phpstan-type ScopeEntry array{key: string, usage: object, module: object, states: array<string, array{archived: bool, deleted: bool}>}
+ *
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) One import run resolves four linked
  * object kinds per row (supplier, module, owners, usage), each with its own match rule,
  * create-only fields and run cache. Splitting them over several classes would hand the
@@ -237,6 +241,13 @@ class CmdbExportImportService {
 	 * @var array<int, string>
 	 */
 	private const UNMATCHED_STATUSES = ['merged', 'Inactive'];
+
+	/**
+	 * How many row numbers an archive-sheet warning names before it cuts the list.
+	 *
+	 * @var int
+	 */
+	private const WARNED_ROWS = 10;
 
 	/**
 	 * Page size for loading the organisations a name may match.
@@ -615,7 +626,7 @@ class CmdbExportImportService {
 	 *
 	 * @param CmdbImportReport $report The report.
 	 * @param array{uuid: string, name: string, created: bool} $municipality The consumer, as resolveMunicipality() found it.
-	 * @param array{sheet: string, present: bool, keyColumnMissing: bool, keys: array<string, true>} $archive The archive sheet.
+	 * @param ArchiveSheet $archive The archive sheet.
 	 * @param string $missingRecords The import's `missingRecords` mode.
 	 *
 	 * @return void
@@ -624,7 +635,7 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function addRunWarnings(CmdbImportReport $report, array $municipality, array $archive, string $missingRecords): void {
-		if ($missingRecords === 'archive' && $archive['present'] === false) {
+		if ($missingRecords === 'archive' && ($archive['present'] === false || $archive['uncachedRows'] !== [])) {
 			$report->addImportWarnings(warnings: [['sheet' => $archive['sheet'], 'message' => $this->archiveSheetWarning(archive: $archive)]]);
 		}
 
@@ -1926,7 +1937,7 @@ class CmdbExportImportService {
 	 *
 	 * @param array<string, mixed> $workbook What the reader returned.
 	 *
-	 * @return array{sheet: string, present: bool, keyColumnMissing: bool, keys: array<string, true>}
+	 * @return ArchiveSheet
 	 *
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
@@ -1946,20 +1957,34 @@ class CmdbExportImportService {
 			'sheet' => (string)($archive['sheet'] ?? ($this->profile->archiveSheetName() ?? '')),
 			'present' => (($archive['present'] ?? false) === true),
 			'keyColumnMissing' => (($archive['keyColumnMissing'] ?? false) === true),
+			'uncachedRows' => array_values(array_map('intval', (array)($archive['uncachedRows'] ?? []))),
 			'keys' => $keys,
 		];
 	}//end archiveSheet()
 
 	/**
-	 * The report warning of an archiving import whose workbook lacks the archive sheet or its key column.
+	 * The report warning of an archiving import whose archive sheet is absent or has no key column, or has unreadable keys.
 	 *
-	 * @param array{sheet: string, keyColumnMissing: bool} $archive The archive sheet.
+	 * @param array{sheet: string, keyColumnMissing: bool, uncachedRows: array<int, int>} $archive The archive sheet.
 	 *
 	 * @return string
 	 *
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function archiveSheetWarning(array $archive): string {
+		if ($archive['uncachedRows'] !== []) {
+			// A long list is cut: the warning names where to look, not every row.
+			$rows = implode(', ', array_slice($archive['uncachedRows'], 0, self::WARNED_ROWS));
+			if (count($archive['uncachedRows']) > self::WARNED_ROWS) {
+				$rows .= ', …';
+			}
+
+			return $this->l10n->t(
+				'Sheet "%1$s" has an APPID without a cached value in row %2$s, so applications missing from the export are archived, not deleted.',
+				[$archive['sheet'], $rows]
+			);
+		}
+
 		if ($archive['keyColumnMissing'] === true) {
 			return $this->l10n->t(
 				'Sheet "%1$s" has no column "%2$s", so applications missing from the export are archived, not deleted.',
@@ -2181,7 +2206,7 @@ class CmdbExportImportService {
 	 * stays, and the report says the run was cancelled.
 	 *
 	 * @param string $municipalityUuid The consumer of this import.
-	 * @param array{sheet: string, present: bool, keyColumnMissing: bool, keys: array<string, true>} $archive The archive sheet.
+	 * @param ArchiveSheet $archive The archive sheet.
 	 * @param string $operationId The operation id, for the archive reason.
 	 * @param int $processedItems The rows already counted as processed.
 	 * @param CmdbImportReport $report The report.
@@ -2222,7 +2247,8 @@ class CmdbExportImportService {
 	 * imported, is left out: only what this municipality's import created is
 	 * reconciled. Working and archived usages are paged with one lens each,
 	 * soft-deleted ones come from the trash (design D9); each object keeps the
-	 * state its lens or the trash gave it.
+	 * state its lens or the trash gave it. When an import key occurs more than
+	 * once, only the entry the import would match is kept (onePerKey()).
 	 *
 	 * @param string $municipalityUuid The consumer of this import.
 	 *
@@ -2264,8 +2290,60 @@ class CmdbExportImportService {
 			}
 		}
 
-		return $scope;
+		return self::onePerKey(scope: $scope);
 	}//end reconciliationScope()
+
+	/**
+	 * Keep one application per import key: the one the import itself would match.
+	 *
+	 * The import takes a working module before an archived one, and an archived
+	 * one before one in the trash (design D4), so a module deleted by hand next
+	 * to the one a later import created is never revived. The reconciliation
+	 * follows the same order: the entry with the best module state wins, the
+	 * best usage state breaks a tie, and the first one listed breaks the rest.
+	 * A stale duplicate is left as it is, never restored into the archive.
+	 *
+	 * @param array<int, ScopeEntry> $scope The entries.
+	 *
+	 * @return array<int, ScopeEntry>
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	private static function onePerKey(array $scope): array {
+		$preferred = [];
+		$ranks = [];
+		foreach ($scope as $application) {
+			$rank = ((self::stateRank(state: $application['states']['module']) * 3) + self::stateRank(state: $application['states']['usage']));
+			$key = $application['key'];
+			if (isset($ranks[$key]) === false || $rank < $ranks[$key]) {
+				$ranks[$key] = $rank;
+				$preferred[$key] = $application;
+			}
+		}
+
+		return array_values($preferred);
+	}//end onePerKey()
+
+	/**
+	 * How far down the preference order a state is: working 0, archived 1, deleted 2.
+	 *
+	 * @param array{archived: bool, deleted: bool} $state The state.
+	 *
+	 * @return int
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	private static function stateRank(array $state): int {
+		if ($state['deleted'] === true) {
+			return 2;
+		}
+
+		if ($state['archived'] === true) {
+			return 1;
+		}
+
+		return 0;
+	}//end stateRank()
 
 	/**
 	 * The usages that name this municipality as consumer, in every state, each with that state.
@@ -2393,7 +2471,7 @@ class CmdbExportImportService {
 	 * An application already in the state the export asks for is not reported.
 	 *
 	 * @param array{key: string, usage: object, module: object, states: array<string, array{archived: bool, deleted: bool}>} $application Application.
-	 * @param array{sheet: string, present: bool, keyColumnMissing: bool, keys: array<string, true>} $archive The archive sheet.
+	 * @param ArchiveSheet $archive The archive sheet.
 	 * @param string $operationId The operation id, for the archive reason.
 	 * @param CmdbImportReport $report The report.
 	 *
@@ -2416,7 +2494,8 @@ class CmdbExportImportService {
 		if ($onArchiveSheet === true) {
 			$entry['sheet'] = $archive['sheet'];
 			$reason = self::REASON_PREFIX . 'on sheet "' . $archive['sheet'] . '" (' . $operationId . ')';
-		} elseif ($archive['present'] === true) {
+		} elseif ($archive['present'] === true && $archive['uncachedRows'] === []) {
+			// A sheet with an unreadable key may list this application, so it is not authoritative for a deletion.
 			$target = CmdbImportReport::DELETED;
 		}
 
