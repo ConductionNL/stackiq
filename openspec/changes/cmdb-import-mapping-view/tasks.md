@@ -8,7 +8,7 @@ Spec: `openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.m
 - **spec_ref**: `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020)
 - **files**: `lib/Service/Cmdb/CmdbImportProfile.php`, `tests/Unit/Service/Cmdb/CmdbImportProfileTest.php`
 - **acceptance_criteria**:
-  - GIVEN the shipped directory WHEN `mappingOverview()` is called THEN it loads and validates every pack first and answers `profile` and `packs` with five entries in TARGETS order, each with target, file, id, name, version, description and fieldMappings
+  - GIVEN the shipped directory WHEN `mappingOverview()` is called THEN it loads and validates every pack first and answers `profile` and `packs` with five entries in TARGETS order, each with target, file, id, name, version, description, fieldMappings and the write rules (defaults, createOnlyDefaults, createOnlyFields, neverWritten)
   - GIVEN a field mapping WHEN it is shaped THEN `required` is a boolean and `transform` is the stored array
   - GIVEN a broken pack WHEN `mappingOverview()` is called THEN it throws `CmdbImportException` MAPPING_UNAVAILABLE with the file in its message
 - [x] Implement

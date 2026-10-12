@@ -328,6 +328,10 @@ class CmdbImportProfileTest extends TestCase {
 			foreach ($pack['fieldMappings'] as $mapping) {
 				$this->assertIsBool($mapping['required'], $pack['target']);
 			}
+
+			$this->assertSame($profile->createOnlyDefaults(target: $pack['target']), $pack['createOnlyDefaults'], $pack['target']);
+			$this->assertSame($profile->createOnlyFields(target: $pack['target']), $pack['createOnlyFields'], $pack['target']);
+			$this->assertSame($profile->neverWrittenOnUpdate(target: $pack['target']), $pack['neverWritten'], $pack['target']);
 		}
 
 		$directory = $this->copyOfShippedDirectory();

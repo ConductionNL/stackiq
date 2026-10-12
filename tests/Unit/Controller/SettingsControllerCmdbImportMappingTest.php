@@ -210,6 +210,7 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 		$shipped = json_decode((string)file_get_contents(__DIR__ . '/../../../lib/Settings/cmdb-import/topdesk-profile.json'), true);
 		$this->assertSame($shipped['missingRecords'], $data['profile']['missingRecords']);
 		$this->assertSame('topdesk-profile.json', $data['profile']['profileFile']);
+		$this->assertSame('topdesk', $data['profile']['externalKeyPrefix']);
 
 		$this->assertSame(CmdbImportProfile::TARGETS, array_column($data['packs'], 'target'));
 		$this->assertCount(5, $data['packs']);
@@ -227,6 +228,22 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 			$this->assertNotSame('', $pack['name'], $pack['target']);
 			$this->assertNotSame('', $pack['version'], $pack['target']);
 			$this->assertCount(count($profile->pack(target: $pack['target'])['fieldMappings']), $pack['fieldMappings'], $pack['target']);
+		}
+
+		// The write rules the import applies besides the mapping (Review #1288 f2).
+		$byTarget = array_column($data['packs'], null, 'target');
+		$this->assertSame(['type' => 'Application'], $byTarget['module']['createOnlyDefaults']);
+		$this->assertSame(['type'], $byTarget['module']['createOnlyFields']);
+		$this->assertSame(['publicationDate', 'depublicationDate'], $byTarget['module']['neverWritten']);
+		$this->assertSame(['interneAnnotation', 'timeClassification'], $byTarget['usage']['createOnlyFields']);
+		$this->assertSame([], $byTarget['usage']['createOnlyDefaults']);
+		$this->assertSame([], $byTarget['usage']['neverWritten']);
+		$this->assertSame(['type' => 'Supplier', 'status' => 'Active', 'registeredBy' => 'Supplier'], $byTarget['manufacturer']['defaults']);
+		$this->assertSame(['type' => 'Municipality', 'status' => 'Active'], $byTarget['municipality']['defaults']);
+		$this->assertSame([], $byTarget['module']['defaults']);
+		foreach ($data['packs'] as $pack) {
+			$this->assertSame($profile->createOnlyFields(target: $pack['target']), $pack['createOnlyFields'], $pack['target']);
+			$this->assertSame($profile->neverWrittenOnUpdate(target: $pack['target']), $pack['neverWritten'], $pack['target']);
 		}
 
 		$module = $data['packs'][0]['fieldMappings'][0];

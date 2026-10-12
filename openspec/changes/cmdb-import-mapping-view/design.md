@@ -46,6 +46,8 @@ The method carries no auth attribute (Nextcloud's default: admins with a CSRF to
 
 `fieldMappings[].transform` is passed through as the pack stores it (`type` plus `map`/`default`, `fields`/`separator`, `value`, `sourceFormat`/`targetFormat`). Re-shaping per type would hide a key the engine reads. The page renders the known keys and lists any other scalar key as it is. `required` is normalised to a boolean.
 
+The write rules the import applies besides the mapping are answered per pack, built from the accessors the import uses (`createOnlyDefaults()`, `createOnlyFields()`, `neverWrittenOnUpdate()`) and the pack's own `defaults`, so the view does not overclaim for a field the import writes only on create or never.
+
 ### D4. The section takes the sheet names from the endpoint, with the constant as fallback
 
 `CmdbImportMapping.vue` fetches once on creation and emits `loaded` with the answer; `CmdbImport.vue` computes `sheetNames` from it, or from `PROFILE_DEFAULTS.sheets` until it arrives or when it fails. The constant stays, as the design of cmdb-export-import intended: a fallback, never the source.
