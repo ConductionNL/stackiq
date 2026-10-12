@@ -1,8 +1,8 @@
 {
   "id": "topdesk-cmdb",
   "name": "TOPdesk CMDB export",
-  "version": "2.0.0",
-  "description": "How stackiq reads a TOPdesk CMDB export (xlsx): the two CMDB sheets, the key and required columns, date and id columns, values that mean empty, the pack per target and the limits. Columns that neither this profile nor a pack names are never read.",
+  "version": "2.1.0",
+  "description": "How stackiq reads a TOPdesk CMDB export (xlsx): the two CMDB sheets, the archive sheet (APPID column only), the key and required columns, date and id columns, values that mean empty, the pack per target, the accepted missingRecords modes and the limits. Columns that neither this profile nor a pack names are never read.",
   "maxFileBytes": 10485760,
   "maxRowsPerSheet": 10000,
   "maxUncompressedBytes": 52428800,
@@ -21,6 +21,7 @@
     }
   ],
   "sheetPrecedence": ["Beheerde Applicaties CMDB", "Onbeh Applicaties CMDB"],
+  "archiveSheet": { "name": "Gearchiveerde Applicaties" },
   "keyColumn": "APPID",
   "nameColumn": "Applicatie Naam",
   "requiredColumns": ["APPID", "Applicatie Naam"],
@@ -44,5 +45,5 @@
   "neverWritten": {
     "module": ["publicationDate", "depublicationDate"]
   },
-  "missingRecords": ["keep"]
+  "missingRecords": ["keep", "archive"]
 }

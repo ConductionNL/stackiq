@@ -1,15 +1,16 @@
 ---
 capability: cmdb-export-import
-status: done
+status: in-progress
 built_by: openspec/changes/archive/2026-10-05-cmdb-export-import
 ---
 
 # cmdb-export-import Specification
 
-**Status**: done
+**Status**: in-progress
 **Scope**: stackiq
 **OpenSpec changes**:
 - [cmdb-export-import](../../changes/archive/2026-10-05-cmdb-export-import/) _(archived 2026-10-05)_ — admin uploads a TOPdesk CMDB export (xlsx); stackiq upserts modules, vendor organisations, usages and owner contact persons for one municipality from the two CMDB sheets, matched on APPID, mapped by OpenRegister migration packs (kind: code)
+- [cmdb-import-archive-reconciliation](../../changes/cmdb-import-archive-reconciliation/) — a re-import archives the applications that moved to the sheet "Gearchiveerde Applicaties" and soft-deletes the ones on no sheet, revives the ones that return, with `missingRecords: keep | archive` (default archive) and an "Archived" quick filter (kind: code)
 
 ## Purpose
 
