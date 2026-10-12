@@ -117,7 +117,7 @@ Progress: the operation gets the phase `reconciling` (added to `ProgressTracker:
 
 ### D8. Stackiq UI
 
-The Applications (`Modules`, a `FacetedCatalogIndexView` that forwards `quickFilters` to `CnIndexPage`) and Applications in use (`Gebruik`) pages get the quick filter `{"label": "Archived", "filter": {"_archived": "true"}}`. `useSelfFetchList` spreads the active tab's filter into the fetch parameters as they are, so `_archived=true` reaches OpenRegister and the list shows the archive alone; the facet narrowing's `_ids` composes with it (AND). The icon `ArchiveOutline` is registered in `src/icons.js`. `@conduction/nextcloud-vue` 2.65 renders no `@self.archived` on a detail page or in the sidebar metadata, so the detail pages show no archive state yet; that is a library follow-up, not a stackiq widget.
+The Applications (`Modules`, a `FacetedCatalogIndexView` that forwards `quickFilters` to `CnIndexPage`) and Applications in use (`Gebruik`) pages get the quick filter `{"label": "Archived", "filter": {"_archived": "true"}}`. `useSelfFetchList` spreads the active tab's filter into the fetch parameters as they are, so `_archived=true` reaches OpenRegister and the list shows the archive alone. The facet narrowing's `_ids` would compose with it (AND) and hide archived applications the facets do not know; the Archived tab of the Applications page therefore overrides `_ids` with an empty value, so it lists the whole archive and ignores the facets and the search. The icon `ArchiveOutline` is registered in `src/icons.js`. `@conduction/nextcloud-vue` 2.65 renders no `@self.archived` on a detail page or in the sidebar metadata, so the detail pages show no archive state yet; that is a library follow-up, not a stackiq widget.
 
 ### D9. How the import reads the state of a stored object
 
@@ -194,7 +194,7 @@ No seed objects change. The fragment's three seed modules stay as they are; the 
 ## Risks / Trade-offs
 
 - [The default archives on the first re-import after the upgrade] → The section shows the choice with help text; the report lists every archived and deleted application; nothing is hard-deleted.
-- [A workbook saved without the archive sheet] → archive only, never delete, plus a warning (D3).
+- [A workbook saved without the archive sheet, or whose archive sheet has no APPID column or an APPID without a cached value] → archive only, never delete, plus a warning (D3).
 - [A failure between the usage and the module] → the usage is written first, so the municipality's view is right and the module is at worst still visible (D5).
 - [Reviving before writing adds calls per returning row] → only for rows whose match is archived or deleted; a row whose module is working costs the same searches as before, a new row one more search (the archive lens).
 - [The trash listing scans every magic table of the instance] → read once per import, not per row (D9).
