@@ -55,6 +55,12 @@ jest.mock('vue-material-design-icons/DatabaseImport.vue', () => ({
 jest.mock('vue-material-design-icons/TrayArrowUp.vue', () => ({
 	render: () => null,
 }))
+jest.mock('vue-material-design-icons/ChevronDown.vue', () => ({
+	render: () => null,
+}))
+jest.mock('vue-material-design-icons/ChevronUp.vue', () => ({
+	render: () => null,
+}))
 jest.mock('../../../components/AlwaysVisibleSection.vue', () => ({
 	render: () => null,
 }))

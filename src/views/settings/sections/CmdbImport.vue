@@ -89,8 +89,8 @@
 							'stackiq',
 							'Excel workbook (.xlsx) with the sheet "{first}" or "{second}". By default the file may be at most {size}.',
 							{
-								first: profileDefaults.sheets[0],
-								second: profileDefaults.sheets[1],
+								first: sheetNames[0],
+								second: sheetNames[1],
 								size: formatMegabytes(profileDefaults.maxFileBytes),
 							},
 							asText,
@@ -361,6 +361,9 @@
 					</NcButton>
 				</div>
 			</div>
+
+			<!-- The mapping the import uses, read-only; its sheet names feed the help text -->
+			<CmdbImportMapping @loaded="onMappingLoaded" />
 		</div>
 
 		<template #info-content>
@@ -382,8 +385,8 @@
 								'stackiq',
 								'The sheets "{first}" (applications without arranged maintenance) and "{second}" (with arranged maintenance) are read; other sheets, including the "Invoer" sheets, are ignored.',
 								{
-									first: profileDefaults.sheets[0],
-									second: profileDefaults.sheets[1],
+									first: sheetNames[0],
+									second: sheetNames[1],
 								},
 								asText,
 							)
@@ -436,6 +439,7 @@ import Close from 'vue-material-design-icons/Close.vue'
 import DatabaseImport from 'vue-material-design-icons/DatabaseImport.vue'
 import TrayArrowUp from 'vue-material-design-icons/TrayArrowUp.vue'
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
+import CmdbImportMapping from './CmdbImportMapping.vue'
 import { startProgressPolling } from '../../../utils/archiMateImportProgress.js'
 import {
 	AS_TEXT,
@@ -451,6 +455,7 @@ import {
 	interruptedImportError,
 	isKnownError,
 	makeCmdbOperationId,
+	mappingSheetNames,
 	moduleUrl,
 	municipalityOptions,
 	normaliseError,
@@ -478,6 +483,7 @@ export default {
 
 	components: {
 		AlwaysVisibleSection,
+		CmdbImportMapping,
 		CnDataTable,
 		CnStatusBadge,
 		NcButton,
@@ -515,6 +521,7 @@ export default {
 			reportPageSize: REPORT_PAGE_SIZE,
 			visibleRowCount: REPORT_PAGE_SIZE,
 			profileDefaults: PROFILE_DEFAULTS,
+			mapping: null,
 			asText: AS_TEXT,
 			outcomeColors: {
 				created: 'success',
@@ -527,6 +534,18 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * The names of the sheets the import reads, for the help texts: the
+		 * profile's once the mapping block has loaded it, the shipped names
+		 * until then or when it could not be loaded.
+		 *
+		 * @return {Array<string>} At least two names
+		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		sheetNames() {
+			return mappingSheetNames(this.mapping)
+		},
+
 		/**
 		 * Whether everything the import needs has been chosen.
 		 *
@@ -770,6 +789,17 @@ export default {
 		formatMegabytes,
 		moduleUrl,
 		outcomeLabel,
+
+		/**
+		 * Keep the mapping the block loaded, so the help text names its sheets.
+		 *
+		 * @param {object} mapping The mapping endpoint's answer
+		 * @return {void}
+		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		onMappingLoaded(mapping) {
+			this.mapping = mapping
+		},
 
 		/**
 		 * Read the organisations of type Municipality from OpenRegister.
