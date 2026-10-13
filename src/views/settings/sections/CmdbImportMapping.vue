@@ -22,7 +22,7 @@
 			v-show="expanded"
 			id="cmdb-import-mapping-content"
 			class="cmdb-import-mapping__content">
-			<p class="cmdb-import__help">
+			<p class="cmdb-import-mapping__help">
 				{{
 					t(
 						'stackiq',
@@ -34,6 +34,7 @@
 			<div
 				v-if="loading"
 				class="cmdb-import-mapping__loading"
+				role="status"
 				data-testid="cmdb-import-mapping-loading">
 				<NcLoadingIcon :size="20" />
 				<span>{{ t('stackiq', 'Loading the mapping…') }}</span>
@@ -70,7 +71,7 @@
 					</template>
 					{{ t('stackiq', 'Edit in OpenRegister') }}
 				</NcButton>
-				<p class="cmdb-import__code">
+				<p class="cmdb-import-mapping__code">
 					{{
 						t(
 							'stackiq',
@@ -183,7 +184,7 @@
 									data-testid="cmdb-import-mapping-edited" />
 								<p
 									v-if="pack.newerShipped === true"
-									class="cmdb-import__help"
+									class="cmdb-import-mapping__help"
 									data-testid="cmdb-import-mapping-newer">
 									{{
 										t(
@@ -225,7 +226,7 @@
 				</table>
 				<p
 					v-if="mapping.openRegisterPacks === true"
-					class="cmdb-import__help">
+					class="cmdb-import-mapping__help">
 					{{
 						t(
 							'stackiq',
@@ -425,13 +426,13 @@ export default {
 	margin-top: 0.5rem;
 }
 
-.cmdb-import__help {
+.cmdb-import-mapping__help {
 	margin: 0.25rem 0 0;
 	font-size: 0.875rem;
 	color: var(--color-text-maxcontrast);
 }
 
-.cmdb-import__code {
+.cmdb-import-mapping__code {
 	font-size: 0.875rem;
 	color: var(--color-text-maxcontrast);
 }

@@ -6,20 +6,23 @@
  *
  * Every scenario the delta spec tags
  * `@e2e tests/e2e/spec-coverage/cmdb-import-mapping.spec.ts` is driven here
- * on the real settings page: one line per pack with its source, its version
- * and the link to its editor in OpenRegister, the link on the error of a
- * broken stored pack, and the sheet names in the help text. The error states
+ * on the real settings page: the tables of the export and of the packs, each
+ * pack with its source, its version and the link to its editor in
+ * OpenRegister, the link on the error of a broken stored pack, and the sheet
+ * names in the help text. The error states
  * come from a route intercept, so no pack is broken on a shared instance.
  * The endpoint itself, the import and the 403 for a non-admin are driven
  * through the API in cmdb-import-packs.spec.ts.
  *
- * Nothing is written.
+ * Nothing is written: the page reads the mapping, and reading it does not
+ * seed or update a pack (cmdb-import-packs.spec.ts checks that).
  */
 
 import type { Page } from '@playwright/test'
 
 import { expect, test } from '@playwright/test'
 import { newApiContext, RUN_ID } from '../workflows/_fixtures.ts'
+import { dismissFirstRunWizard } from './_helpers.ts'
 
 const MAPPING_PATH = '/index.php/apps/stackiq/api/settings/cmdb-import/mapping'
 // The page builds its URL with generateUrl(), which drops `/index.php` on an
@@ -27,35 +30,6 @@ const MAPPING_PATH = '/index.php/apps/stackiq/api/settings/cmdb-import/mapping'
 const MAPPING_ROUTE = '**/apps/stackiq/api/settings/cmdb-import/mapping'
 const SHEET_PACKS = ['module', 'manufacturer', 'usage', 'businessOwner']
 const SHIPPED_SHEETS = ['Onbeh Applicaties CMDB', 'Beheerde Applicaties CMDB']
-
-/**
- * Close Nextcloud's first-run wizard when it shows, the way
- * cmdb-import.spec.ts does: mark it as seen and load the page again.
- *
- * @param page The page
- * @return True when the page was reloaded
- */
-async function dismissFirstRunWizard(page: Page): Promise<boolean> {
-	const wizard = page.locator('.first-run-wizard[role="dialog"]')
-	try {
-		await wizard.waitFor({ state: 'visible', timeout: 3000 })
-	} catch {
-		return false
-	}
-	await page.evaluate(async () => {
-		const oc = (
-			window as unknown as {
-				OC: { requestToken: string; generateUrl: (u: string) => string }
-			}
-		).OC
-		await fetch(oc.generateUrl('/apps/firstrunwizard/wizard'), {
-			method: 'DELETE',
-			headers: { requesttoken: oc.requestToken },
-		})
-	})
-	await page.reload({ waitUntil: 'domcontentloaded' })
-	return true
-}
 
 /**
  * Open stackiq's admin settings and return the CMDB import section.
@@ -193,12 +167,13 @@ test.describe('CMDB import mapping block', () => {
 			}),
 		)
 		const section = await gotoCmdbSection(page)
-		for (const sheet of SHIPPED_SHEETS) {
-			await expect(help).toContainText(sheet)
-		}
 		await section.locator('[data-testid="cmdb-import-mapping-toggle"]').click()
 		const error = section.locator('[data-testid="cmdb-import-mapping-error"]')
 		await expect(error).toBeVisible()
+		// Only now: the shipped names also show while the request is in flight.
+		for (const sheet of SHIPPED_SHEETS) {
+			await expect(help).toContainText(sheet)
+		}
 		await expect(error).toContainText('MAPPING_UNAVAILABLE')
 		await expect(error).toContainText('topdesk-usage.json: refused in this test')
 		await expect(
