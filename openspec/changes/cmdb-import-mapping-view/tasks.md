@@ -43,7 +43,7 @@ Spec: `openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.m
 - **spec_ref**: `SPEC#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014` (cmdb-export-import#REQ-CMDB-014) and `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020)
 - **files**: `src/views/settings/sections/CmdbImportMapping.vue`, `src/views/settings/sections/CmdbImport.vue`, `src/utils/cmdbImport.js`, `tests/vitest/cmdbImportMapping.spec.js`
 - **acceptance_criteria**:
-  - GIVEN the endpoint's answer WHEN the block renders THEN each pack shows its source, its version, a hint when `newerShipped`, and an "Edit in OpenRegister" link to `editUrl` when there is one
+  - GIVEN the endpoint's answer WHEN the block renders THEN each pack shows its source, its version, a hint when `newerShipped`, and a link to its editor (`editUrl`) when there is one
   - GIVEN a 503 THEN the block shows the error, the code and the reason
   - GIVEN the answer THEN the help text names the endpoint's sheets; before and on failure `PROFILE_DEFAULTS.sheets`
 - [ ] Implement
@@ -58,16 +58,31 @@ Spec: `openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.m
 - [x] Implement (backend strings and documentation; the section's strings come with Task 4)
 - [x] Test
 
-### Task 6: End-to-end coverage
+### Task 6: End-to-end coverage of the endpoint, the import and the seed
 - **spec_ref**: `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020), `SPEC#requirement-the-import-shall-run-the-mapping-packs-stored-in-openregister-req-cmdb-021` (cmdb-export-import#REQ-CMDB-021) and `SPEC#requirement-stackiq-shall-seed-its-mapping-packs-into-openregister-and-keep-unedited-ones-current-req-cmdb-022` (cmdb-export-import#REQ-CMDB-022)
-- **files**: `tests/e2e/spec-coverage/cmdb-import-packs.spec.ts`, `tests/e2e/spec-coverage/cmdb-import-mapping.spec.ts`
+- **files**: `tests/e2e/spec-coverage/cmdb-import-packs.spec.ts`
 - **acceptance_criteria**:
   - GIVEN the rig with the hardened OpenRegister WHEN an admin lists OpenRegister's packs THEN the four sheet packs are built-in packs with the marker, and no municipality pack is stored
   - GIVEN an admin WHEN they read the mapping THEN every sheet pack answers `source: openregister`, its `packId` and an `editUrl` to its editor; the municipality pack `source: file` and no link
   - GIVEN the usage pack edited to map a column to `provider` THEN the mapping and the import answer 503 naming the pack, and nothing is written; GIVEN the module pack's name no longer required THEN the same with the rule named
   - GIVEN an edited lookup in the usage pack WHEN the export is imported THEN the usages carry the edited value
-  - GIVEN the business-owner pack deleted in OpenRegister WHEN the mapping is read THEN it is seeded again
+  - GIVEN the business-owner pack deleted in OpenRegister WHEN the mapping is read THEN it is shown from the shipped file and not stored; WHEN the next import runs THEN it is seeded again
   - GIVEN a signed-in non-admin WHEN they call the endpoint THEN 403
-  - GIVEN an admin on the settings page WHEN the mapping has loaded THEN every sheet pack shows its source and an "Edit in OpenRegister" link
+- [x] Implement
+- [x] Test
+
+### Task 7: End-to-end coverage of the section
+- **spec_ref**: `SPEC#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014` (cmdb-export-import#REQ-CMDB-014)
+- **files**: `tests/e2e/spec-coverage/cmdb-import-mapping.spec.ts`
+- **acceptance_criteria**:
+  - GIVEN an admin on the settings page WHEN the mapping has loaded THEN every sheet pack shows its source and a link to its editor
+- [ ] Implement
+- [ ] Test
+
+### Task 8: Archive
+- **spec_ref**: `SPEC#requirement-the-import-shall-run-the-mapping-packs-stored-in-openregister-req-cmdb-021` (cmdb-export-import#REQ-CMDB-021)
+- **files**: `openspec/specs/cmdb-export-import/spec.md`
+- **acceptance_criteria**:
+  - GIVEN the change is archived WHEN this was the last open change of `cmdb-export-import` THEN the canonical spec's front matter `status:` and its `**Status**` line read `done` again, and the change's entry links the archive
 - [ ] Implement
 - [ ] Test

@@ -22,7 +22,7 @@ Nextcloud OCP interfaces used: `OCP\IL10N` (messages), `OCP\IURLGenerator` (the 
 - `packs`: one entry per target in the order module, manufacturer, municipality, usage, businessOwner, each with `target`, `file`, `id`, `name`, `version`, `description`, `fieldMappings`, the write rules `defaults`, `createOnlyDefaults`, `createOnlyFields` and `neverWritten`, and where the pack comes from: `source` (`openregister` or `file`), `packId` (the OpenRegister row id, or null), `storedVersion` (or null), `shippedVersion`, `edited` (whether the stored pack differs from what stackiq seeded; null when unknown or for a file), `newerShipped` (an edited pack kept a newer shipped pack out), `editable` (false for the municipality pack) and `editUrl` (the absolute link to the pack's editor in OpenRegister, built by Nextcloud's URL generator so an instance that needs `/index.php` gets it, or null when the pack is not stored there or the link cannot be built);
 - `openRegisterPacks`: whether OpenRegister's migration-pack store is available.
 
-Each field mapping SHALL carry `source`, `target`, `required` (a boolean) and `transform` as the pack stores it. `createOnlyDefaults` holds values the import sets on create only, `createOnlyFields` the mapped fields written on create or, on an existing object, only when the stored value is empty (a key of `createOnlyDefaults` only when it is also a mapped field), and `neverWritten` the fields the import never writes on an existing object. When the validator is missing, a pack is unreadable, invalid or breaks a rule of the import, or the store that holds the packs is gone, the endpoint SHALL answer 503 `MAPPING_UNAVAILABLE` in the import's error envelope (`success`, `error`, `message`, `details`) with the loader's reason in `details.reason` (its first line, at most 500 characters), and for a pack stored in OpenRegister its slug in `details.pack`, its row id in `details.packId` and the link to its editor in `details.editUrl` (null when the link cannot be built). The "CMDB import" section SHALL show, per pack, its source, its version, a hint when a newer shipped pack was not applied, and a link "Edit in OpenRegister" when the pack has an `editUrl`; when the endpoint answers 503 for a stored pack, the error SHALL carry the same link from `details.editUrl`. It SHALL offer no editing itself.
+Each field mapping SHALL carry `source`, `target`, `required` (a boolean) and `transform` as the pack stores it. `createOnlyDefaults` holds values the import sets on create only, `createOnlyFields` the mapped fields written on create or, on an existing object, only when the stored value is empty (a key of `createOnlyDefaults` only when it is also a mapped field), and `neverWritten` the fields the import never writes on an existing object. When the validator is missing, a pack is unreadable, invalid or breaks a rule of the import, or the store that holds the packs is gone, the endpoint SHALL answer 503 `MAPPING_UNAVAILABLE` in the import's error envelope (`success`, `error`, `message`, `details`) with the loader's reason in `details.reason` (its first line, at most 500 characters), and for a pack stored in OpenRegister its slug in `details.pack`, its row id in `details.packId` and the link to its editor in `details.editUrl` (null when the link cannot be built). Reading the mapping SHALL change nothing: it SHALL NOT seed, update or delete a pack in OpenRegister and SHALL NOT write stackiq's app config; a pack the store does not hold yet SHALL be answered from its shipped file (`source` `file`), and an unedited stored pack that a newer shipped pack would replace SHALL be answered as stored until the next import run or upgrade replaces it.
 
 #### Scenario: An admin reads the mapping the import uses
 @e2e tests/e2e/spec-coverage/cmdb-import-packs.spec.ts
@@ -92,8 +92,10 @@ OpenRegister's store SHALL count as available only when its pack writes require 
 
 - **GIVEN** an administrator deleted the business-owner pack in OpenRegister
 - **WHEN** a Nextcloud admin requests the mapping
-- **THEN** the business-owner pack SHALL have `source` `openregister`, a new `packId` and `edited` `false`
-- **AND** OpenRegister SHALL hold `stackiq-topdesk-business-owner` again as a built-in pack
+- **THEN** the business-owner pack SHALL have `source` `file`, and OpenRegister SHALL still hold no `stackiq-topdesk-business-owner`
+- **WHEN** the next import runs
+- **THEN** OpenRegister SHALL hold `stackiq-topdesk-business-owner` again as a built-in pack
+- **AND** the mapping SHALL show it with `source` `openregister`, a new `packId` and `edited` `false`
 
 ### Requirement: Stackiq SHALL seed its mapping packs into OpenRegister and keep unedited ones current (REQ-CMDB-022)
 
@@ -152,27 +154,12 @@ The service SHALL map each normalised row with OpenRegister's `MigrationPack\Map
 - **AND** the "Onbeh" row's "Applicatiesoort" `Webapplicatie`, which is not a hosting model, SHALL be stored as `applicationType` and SHALL leave `cloudDienstverleningsmodel` empty without a warning
 - **AND** "BNN Classificatie" `1`, `2`, `2+` SHALL be `BBN1`, `BBN2`, `BBN2+`
 
-### Requirement: The admin settings SHALL offer a CMDB import section (REQ-CMDB-014)
-
-Stackiq's admin settings page SHALL show a section "CMDB import", rendered by the settings page and not registered as an in-app route. The section SHALL let the admin choose an existing municipality or type the name of a new one, choose an `.xlsx` file, and start the import. While the import runs it SHALL show a progress bar and a Cancel button. Afterwards it SHALL show the summary and a report table that can be filtered by outcome. The section SHALL also show the mapping the import uses (REQ-CMDB-020): per pack its source, its version and a link to its editor in OpenRegister. The sheet names in its help text SHALL come from that mapping, with the shipped names as the fallback until the mapping has loaded or when it cannot be loaded. Every control SHALL have a visible label, and every string SHALL be translatable.
-
-(Previously: the section had no mapping block, and the sheet names in its help text were a constant in the page, which could drift from the profile on the server.)
-
-#### Scenario: The admin runs an import from the settings page
-@e2e tests/e2e/spec-coverage/cmdb-import.spec.ts
-
-- **GIVEN** a Nextcloud admin on stackiq's admin settings page
-- **WHEN** they choose "Gemeente Voorbeeldstad", choose the anonymised export and press "Import"
-- **THEN** a progress bar SHALL appear while the import runs
-- **AND** afterwards the summary and the report table SHALL be shown
-- **AND** filtering the table on `created` SHALL show the two imported rows
-
 ## Non-Functional Requirements
 
-- **Performance:** loading the mapping reads seven small JSON files and the register definition, and makes at most one OpenRegister lookup per sheet pack; it SHALL answer within the time an admin settings page loads. Writes happen only to seed or update a pack.
+- **Performance:** loading the mapping reads seven small JSON files and the register definition, and makes at most one OpenRegister lookup per sheet pack; it SHALL answer within the time an admin settings page loads. Reading the mapping writes nothing; only the import run and the seed step seed or update a pack.
 - **Security:** admin-only with CSRF, as the import routes; OpenRegister's pack writes are admin-only with CSRF, and stackiq uses no store without those guards. The import writes with OpenRegister's RBAC and multitenancy off, so every pack SHALL follow the import's rules (REQ-CMDB-021). An edit that maps a new column makes the import read that column. The answer and the reasons hold column names, field names, lookup tables, pack names and ids; no object data and no person data. A store failure is named by its exception class, never its message.
 - **Reliability:** an edit is never overwritten by an upgrade and never silently replaced by the shipped files (REQ-CMDB-021, REQ-CMDB-022).
-- **Accessibility:** Target WCAG 2.2 AA. The mapping block's link has a visible, descriptive label (SC 2.4.4, 4.1.2; gate `link-name`); a status hint is text, not colour alone (SC 1.4.1). New in 2.2: 2.4.11 Focus Not Obscured applies (the block is in the page flow); 2.5.7 Dragging Movements does not apply; 2.5.8 Target Size applies to the link (Nextcloud default); 3.2.6 Consistent Help does not apply; 3.3.7 Redundant Entry does not apply (nothing is entered); 3.3.8 Accessible Authentication does not apply.
+- **Accessibility:** not applicable to this part: the endpoint, the import rules and the seed step have no user interface. The section that shows the mapping is part of Task 4 and targets WCAG 2.2 AA.
 - **Internationalization:** Dutch and English MUST be supported (ADR-005) for the block, the messages and the import warning.
 
 ## Acceptance Criteria
@@ -181,7 +168,7 @@ Stackiq's admin settings page SHALL show a section "CMDB import", rendered by th
 - [ ] A Nextcloud admin edits a lookup value of the usage pack in OpenRegister, and the next CMDB import uses it.
 - [ ] A pack edited to map a field the import manages makes the import answer 503 naming the pack; the mapping block shows the same.
 - [ ] Deleting the stored pack in OpenRegister makes the next import seed the shipped pack again.
-- [ ] The "CMDB import" section shows per pack its source and an "Edit in OpenRegister" link that opens the pack's editor.
+- [ ] The "CMDB import" section shows per pack its source and a link that opens the pack's editor (Task 4).
 - [ ] A signed-in user who is not a Nextcloud admin gets 403 from the endpoint.
 
 ## Notes
