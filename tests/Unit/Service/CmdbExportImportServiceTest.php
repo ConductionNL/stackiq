@@ -2001,6 +2001,82 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testAnUncachedArchiveRowArchivesInsteadOfDeleting()
 
 	/**
+	 * A CMDB-sheet row whose APPID the reader could not see is skipped as empty, so its application looks absent:
+	 * the import archives what it would have deleted, and warns naming the CMDB sheet and the row.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAnUncachedCmdbRowArchivesInsteadOfDeleting(): void {
+		$this->importOneSevenAndEight();
+		[$seven, $eight] = [$this->moduleOf(appId: '7'), $this->moduleOf(appId: '8')];
+
+		// APPID 7 is on the readable archive sheet; APPID 8 is on no readable sheet, and row 5 of a CMDB sheet has an APPID formula without a cached value.
+		$report = $this->service(
+			reader: $this->rowsReader(
+				rows: [$this->row(appId: '1'), $this->row(appId: '', cells: ['APPID' => null], row: 5, uncached: ['APPID'])],
+				archived: ['7']
+			)
+		)->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertNotContains('delete', array_column($this->transitions, 0), 'nothing is soft-deleted');
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $seven));
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $eight), 'APPID 8 may be the unreadable row, so it is archived');
+		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $this->usageOf(moduleUuid: $eight)));
+		$this->assertSame([2, 0], [$report['summary']['archived'], $report['summary']['deleted']]);
+		$this->assertSame(
+			[['sheet' => 'Beheerde Applicaties CMDB', 'message' => 'Sheet "Beheerde Applicaties CMDB" has an APPID without a cached value in row 5, so applications missing from the export are archived, not deleted.']],
+			$report['importWarnings']
+		);
+
+		// Keeping missing records needs no warning, and without the unreadable row the same workbook deletes.
+		$this->transitions = [];
+		$this->states = array_replace_recursive($this->states, [self::MODULE => [$eight => ['archived' => null]], self::USAGE => [$this->usageOf(moduleUuid: $eight) => ['archived' => null]]]);
+		$kept = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1'), $this->row(appId: '', cells: ['APPID' => null], row: 5, uncached: ['APPID'])], archived: ['7']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+		$this->assertSame([], $kept['importWarnings']);
+		$this->assertSame([], $this->transitions);
+
+		$readable = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: $eight), 'a readable workbook still soft-deletes what is on no sheet');
+		$this->assertSame([], $readable['importWarnings']);
+	}//end testAnUncachedCmdbRowArchivesInsteadOfDeleting()
+
+	/**
+	 * An extra usage of a key that cannot be archived fails the application's row; its module, written after every usage, stays
+	 * as it was, and the other applications are still reconciled.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAFailingExtraUsageFailsTheApplicationBeforeItsModule(): void {
+		$this->importOneSevenAndEight();
+		[$seven, $eight] = [$this->moduleOf(appId: '7'), $this->moduleOf(appId: '8')];
+		$sevenUsage = $this->usageOf(moduleUuid: $seven);
+		$this->store[self::USAGE]['usage-second'] = array_merge($this->store[self::USAGE][$sevenUsage], ['id' => 'usage-second']);
+		$this->beforeTransition = static function (string $verb, string $uuid): void {
+			if ($uuid === 'usage-second') {
+				throw new RuntimeException('the extra usage cannot be archived');
+			}
+		};
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$rows = array_values(array_filter($report['rows'], static fn (array $row): bool => $row['row'] === 0));
+		$this->assertSame(['failed', 'deleted'], array_column($rows, 'outcome'));
+		$this->assertSame(['step "archive" failed (RuntimeException)'], $rows[0]['reasons']);
+		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $sevenUsage), 'the application\'s own usage went first');
+		$this->assertSame([false, false], $this->stateOf(schema: self::USAGE, uuid: 'usage-second'), 'the failing extra is unchanged');
+		$this->assertSame([false, false], $this->stateOf(schema: self::MODULE, uuid: $seven), 'the module comes after every usage, so it was not reached');
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: $eight), 'the next application is still reconciled');
+		$this->assertSame(1, $report['summary']['failed']);
+	}//end testAFailingExtraUsageFailsTheApplicationBeforeItsModule()
+
+	/**
 	 * A cancelled import reconciles nothing.
 	 *
 	 * @return void

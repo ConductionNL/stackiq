@@ -298,6 +298,13 @@ class CmdbExportImportService {
 	private array $winningSheets = [];
 
 	/**
+	 * The CMDB-sheet rows of this run whose key column the reader could not see (a formula without a cached value).
+	 *
+	 * @var array<string, array<int, int>> Sheet name => row numbers.
+	 */
+	private array $unreadableKeyRows = [];
+
+	/**
 	 * OpenRegister's archive handler and object mapper, once resolved.
 	 *
 	 * @var array{handler: object, mapper: object}|null
@@ -549,6 +556,7 @@ class CmdbExportImportService {
 		$report->setMunicipality(uuid: $municipality['uuid'], name: $municipality['name'], created: $municipality['created']);
 		$report->addImportWarnings(warnings: $this->translateImportWarnings(warnings: $workbook['importWarnings']));
 		$archive = $this->archiveSheet(workbook: $workbook);
+		$this->unreadableKeyRows = $this->unreadableKeyRows(rows: $rows);
 		$this->addRunWarnings(report: $report, municipality: $municipality, archive: $archive, missingRecords: $missingRecords);
 
 		$this->progressTracker->startOperation(
@@ -625,7 +633,10 @@ class CmdbExportImportService {
 	}//end runImport()
 
 	/**
-	 * Add the run's own warnings: an archive sheet that is missing, has no key column or has unreadable keys, and a created municipality.
+	 * Add the run's own warnings.
+	 *
+	 * An archive sheet that is missing, has no key column or has unreadable keys, a CMDB sheet with
+	 * unreadable keys, and a created municipality.
 	 *
 	 * @param CmdbImportReport $report The report.
 	 * @param array{uuid: string, name: string, created: bool} $municipality The consumer, as resolveMunicipality() found it.
@@ -642,6 +653,13 @@ class CmdbExportImportService {
 			$report->addImportWarnings(warnings: [['sheet' => $archive['sheet'], 'message' => $this->archiveSheetWarning(archive: $archive)]]);
 		}
 
+		if ($missingRecords === 'archive') {
+			foreach ($this->unreadableKeyRows as $sheet => $rowNumbers) {
+				$cmdbSheet = ['sheet' => $sheet, 'keyColumnMissing' => false, 'uncachedRows' => $rowNumbers];
+				$report->addImportWarnings(warnings: [['sheet' => $sheet, 'message' => $this->archiveSheetWarning(archive: $cmdbSheet)]]);
+			}
+		}
+
 		if ($municipality['created'] === true) {
 			$report->addImportWarnings(
 				warnings: [
@@ -656,6 +674,32 @@ class CmdbExportImportService {
 			);
 		}
 	}//end addRunWarnings()
+
+	/**
+	 * The CMDB-sheet rows whose key column is a formula without a cached value, per sheet.
+	 *
+	 * Such a row reads as empty and is skipped, so its application may be
+	 * missing from `winningSheets` although it is on a CMDB sheet. A run with
+	 * one is not authoritative for a deletion, as with an archive sheet that
+	 * has an unreadable key.
+	 *
+	 * @param array<int, array{sheet: string, row: int, uncached?: array<int, string>}> $rows The reader rows.
+	 *
+	 * @return array<string, array<int, int>> Sheet name => row numbers.
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	private function unreadableKeyRows(array $rows): array {
+		$key = $this->profile->keyColumn();
+		$found = [];
+		foreach ($rows as $row) {
+			if (in_array($key, ($row['uncached'] ?? []), true) === true) {
+				$found[$row['sheet']][] = $row['row'];
+			}
+		}
+
+		return $found;
+	}//end unreadableKeyRows()
 
 	/**
 	 * Process one row in its own error boundary and add its outcome.
@@ -1968,7 +2012,9 @@ class CmdbExportImportService {
 	/**
 	 * The report warning of an archiving import whose archive sheet is absent or has no key column, or has unreadable keys.
 	 *
-	 * @param array{sheet: string, keyColumnMissing: bool, uncachedRows: array<int, int>} $archive The archive sheet.
+	 * Also the warning of a CMDB sheet with unreadable keys: it is handed the sheet's name and rows in the archive sheet's shape.
+	 *
+	 * @param array{sheet: string, keyColumnMissing: bool, uncachedRows: array<int, int>} $archive The archive sheet, or a CMDB sheet.
 	 *
 	 * @return string
 	 *
@@ -2021,10 +2067,13 @@ class CmdbExportImportService {
 			return $this->archiveServices;
 		}
 
+		$previous = null;
 		try {
 			$handler = $this->container->get(static::ARCHIVE_HANDLER_CLASS);
 			$mapper = $this->container->get(static::OBJECT_MAPPER_CLASS);
 		} catch (Throwable $e) {
+			$this->logger->warning('CmdbExportImportService: OpenRegister archive services could not be resolved', ['exception' => get_class($e)]);
+			$previous = $e;
 			$handler = null;
 			$mapper = null;
 		}
@@ -2035,7 +2084,8 @@ class CmdbExportImportService {
 		) {
 			throw new CmdbImportException(
 				errorCode: CmdbImportException::ARCHIVE_UNAVAILABLE,
-				message: 'OpenRegister ArchiveHandler or MagicMapper is not available'
+				message: 'OpenRegister ArchiveHandler or MagicMapper is not available',
+				previous: $previous
 			);
 		}
 
@@ -2148,6 +2198,11 @@ class CmdbExportImportService {
 	 * `keep` import on an OpenRegister without them) the trash cannot be read:
 	 * nothing in it is matched, and the log says so. A listing that throws is
 	 * not cached, so the next row reads it again.
+	 *
+	 * It is read for `keep` as well: matching is not tied to the mode (REQ-CMDB-016),
+	 * and an application a person soft-deleted by hand must be restored, not
+	 * created a second time. The listing cannot be narrowed, so the cost is one
+	 * scan per run, paid on the first row no working or archived object matches.
 	 *
 	 * @return array{module: array<string, object>, usage: array<string, object>} Schema key => uuid => entity.
 	 *
@@ -2545,8 +2600,9 @@ class CmdbExportImportService {
 		if ($onArchiveSheet === true) {
 			$entry['sheet'] = $archive['sheet'];
 			$reason = self::REASON_PREFIX . 'on sheet "' . $archive['sheet'] . '" (' . $operationId . ')';
-		} elseif ($archive['present'] === true && $archive['uncachedRows'] === []) {
-			// A sheet with an unreadable key may list this application, so it is not authoritative for a deletion.
+		} elseif ($archive['present'] === true && $archive['uncachedRows'] === [] && $this->unreadableKeyRows === []) {
+			// A sheet with an unreadable key (the archive sheet or a CMDB sheet) may list this application, so the
+			// workbook is not authoritative for a deletion.
 			$target = CmdbImportReport::DELETED;
 		}
 
@@ -2573,7 +2629,10 @@ class CmdbExportImportService {
 	}//end reconcileApplication()
 
 	/**
-	 * What one application brings to the state the export asks for: its usage and module, then the other usages and modules of its key.
+	 * What one application brings to the state the export asks for: its usage and the other usages of its key, then its module and the other modules.
+	 *
+	 * Usages come before modules, so a failure part way leaves the
+	 * municipality's view right and a module at worst visible.
 	 *
 	 * Only the application's own objects are restored from the trash, and only
 	 * when `restoreDeleted` says so; the extras never are.
@@ -2588,16 +2647,18 @@ class CmdbExportImportService {
 	private static function itemsOf(array $application, bool $restoreDeleted): array {
 		$items = [];
 		foreach (['usage', 'module'] as $schemaKey) {
+			// Every usage is written before any module, whoever holds it.
 			$items[] = [
 				'schemaKey' => $schemaKey,
 				'uuid' => (string)$application[$schemaKey]->getUuid(),
 				'state' => $application['states'][$schemaKey],
 				'restore' => $restoreDeleted,
 			];
-		}
-
-		foreach (($application['extras'] ?? []) as $extra) {
-			$items[] = $extra + ['restore' => false];
+			foreach (($application['extras'] ?? []) as $extra) {
+				if ($extra['schemaKey'] === $schemaKey) {
+					$items[] = $extra + ['restore' => false];
+				}
+			}
 		}
 
 		return $items;
