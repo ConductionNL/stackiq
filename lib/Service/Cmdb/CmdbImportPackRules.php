@@ -458,7 +458,7 @@ class CmdbImportPackRules {
 	 *
 	 * @return array<string, array<string, string>>
 	 *
-	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the register file cannot be read.
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the register file or one of its fragments cannot be read.
 	 *
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
@@ -477,11 +477,27 @@ class CmdbImportPackRules {
 
 		$fragments = glob($this->settingsDirectory . '/register.d/*.json');
 		if ($fragments === false) {
-			$fragments = [];
+			throw new CmdbImportException(
+				errorCode: CmdbImportException::MAPPING_UNAVAILABLE,
+				message: 'The stackiq register fragments cannot be listed, so the CMDB import packs cannot be checked'
+			);
+		}
+
+		$decodedFiles = [$register];
+		foreach ($fragments as $file) {
+			$fragment = $this->decodeJson(file: $file);
+			if ($fragment === null) {
+				throw new CmdbImportException(
+					errorCode: CmdbImportException::MAPPING_UNAVAILABLE,
+					message: 'The stackiq register fragment ' . basename($file) . ' cannot be read, so the CMDB import packs cannot be checked'
+				);
+			}
+
+			$decodedFiles[] = $fragment;
 		}
 
 		$fields = [];
-		foreach (array_merge([$register], array_map(fn (string $file): ?array => $this->decodeJson(file: $file), $fragments)) as $decoded) {
+		foreach ($decodedFiles as $decoded) {
 			foreach (($decoded['components']['schemas'] ?? []) as $schema => $definition) {
 				$calculations = (array)($definition['configuration']['x-openregister-calculations'] ?? []);
 				foreach ((array)($definition['properties'] ?? []) as $property => $propertyDefinition) {
