@@ -222,7 +222,9 @@ test.describe.serial('CMDB import packs in OpenRegister', () => {
 						continue
 					}
 					const id = String(
-						row.id ?? (row['@self'] as { id?: string } | undefined)?.id ?? '',
+						row.id
+							?? (row['@self'] as { id?: string } | undefined)?.id
+							?? '',
 					)
 					if (id !== '') {
 						await deleteObject(ctx, config.register, schema, id)
@@ -301,7 +303,9 @@ test.describe.serial('CMDB import packs in OpenRegister', () => {
 				)
 			}
 
-			const usage = packs.find((pack) => pack.target === 'usage') as MappingPack
+			const usage = packs.find(
+				(pack) => pack.target === 'usage',
+			) as MappingPack
 			const status = usage.fieldMappings.find(
 				(mapping) => mapping.source === 'Applicatie Status',
 			)
@@ -383,7 +387,9 @@ test.describe.serial('CMDB import packs in OpenRegister', () => {
 					expect(body.details.packId).toBe(id)
 
 					const mapping = await (await readMapping(ctx)).json()
-					expect(mapping.details.reason).toContain('stackiq-topdesk-module')
+					expect(mapping.details.reason).toContain(
+						'stackiq-topdesk-module',
+					)
 					expect(mapping.details.reason).toContain(
 						'"name" must be mapped as required',
 					)
