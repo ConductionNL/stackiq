@@ -160,6 +160,16 @@ class CmdbWorkbookReader {
 	 * and its row number is listed in `archive.uncachedRows`: the sheet then
 	 * lists an application the reader could not see, so a caller must not
 	 * treat the sheet as complete.
+	 * The `appIds` are the raw key-column values as read, in sheet order:
+	 * not trimmed, not normalised and not de-duplicated, and an empty cell
+	 * is an empty entry. Matching them to the stored applications, and any
+	 * normalisation that needs, is the consumer's job.
+	 * The referenced-string budget (`maxReferencedStringBytes`) is divided
+	 * over every sheet in the profile's `readSheetNames()`, so the archive
+	 * sheet always counts as one of them, also in a workbook that has no
+	 * archive sheet: each sheet's share is limit / sheet count (limit / 3 for
+	 * the Topdesk profile). This is deliberate: the bound does not depend on
+	 * what the workbook contains.
 	 *
 	 * @param string $path The xlsx file, already checked by assertXlsx().
 	 * @param CmdbImportProfile $profile The import profile.

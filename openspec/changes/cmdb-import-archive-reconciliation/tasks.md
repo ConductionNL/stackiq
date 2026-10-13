@@ -4,6 +4,8 @@ Spec: `openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-imp
 
 ## Implementation Tasks
 
+Status in this PR (the reconciliation slice, on top of the reader slice): Tasks 1-5 are implemented here (the reader's tasks 1-2 come from the base PR). Tasks 6-7 stay unticked: the UI lands in #1287, and the docs and the e2e run of task 7 are not done yet.
+
 ### Task 1: Schema opt-in and the import profile
 - **spec_ref**: `SPEC#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017`, `SPEC#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012`
 - **files**: `lib/Settings/register.d/topdesk-cmdb-import.json`, `lib/Settings/cmdb-import/topdesk-profile.json`, `lib/Service/Cmdb/CmdbImportProfile.php`, `tests/Unit/Settings/TopdeskCmdbFragmentTest.php`, `tests/Unit/Settings/PublicationFieldRulesTest.php`, `tests/Unit/Service/Cmdb/CmdbImportProfileTest.php`
@@ -43,7 +45,7 @@ Spec: `openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-imp
 - **files**: `lib/Service/CmdbExportImportService.php`, `lib/Service/ProgressTracker.php`, `lib/Exception/CmdbImportException.php`, `tests/Unit/Service/CmdbExportImportServiceTest.php`
 - **acceptance_criteria**:
   - GIVEN APPIDs 1 and 7 imported WHEN an export with row 1 and 7 on the archive sheet is imported THEN module and usage of 7 are archived with a reason, the report row is `archived`, and the owner contact person is untouched
-  - GIVEN APPID 7 on no sheet THEN module and usage are soft-deleted and the row is `deleted`; GIVEN the archive sheet absent, without an APPID column, or with an APPID that has no cached value THEN they are archived instead and the report warns
+  - GIVEN APPID 7 on no sheet THEN module and usage are soft-deleted and the row is `deleted`; GIVEN the archive sheet absent, without an APPID column, or with an APPID that has no cached value, or a CMDB-sheet row whose APPID has no cached value THEN they are archived instead and the report warns
   - GIVEN APPID 7 soft-deleted and listed on the archive sheet THEN module and usage are restored and archived; GIVEN it already archived or, when on no sheet, already deleted THEN nothing is written
   - GIVEN a working pair and a trashed pair under the same import key and the key on the archive sheet THEN the working pair is archived, nothing is restored and the trashed pair stays deleted; GIVEN a further working usage of the key (of the trashed module, or a second one of the working module) THEN it is archived or deleted with the application
   - GIVEN `missingRecords` `keep`, a cancelled import, or a usage of another municipality THEN nothing is archived or deleted
@@ -70,8 +72,8 @@ Spec: `openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-imp
   - GIVEN a report with the new outcomes THEN the summary shows their tiles, the outcome filter offers them, and a reconciliation row shows no row number
   - GIVEN the Applications and Applications in use pages THEN a quick filter "Archived" sends `_archived=true`
   - Every new string is in `l10n/en.json` and `l10n/nl.json`, and the generated `l10n/*.js` are current
-- [x] Implement
-- [x] Test
+- [ ] Implement
+- [ ] Test
 
 ### Task 7: Fixture, docs and e2e
 - **spec_ref**: `SPEC#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015`
@@ -80,7 +82,7 @@ Spec: `openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-imp
   - GIVEN `build-fixtures.py` THEN it derives `topdesk-archived-applications.xlsx`: APPID 1234 on the archive sheet only, APPID 2 on no sheet, both CMDB sheets present and empty; the hygiene test passes on it
   - GIVEN the e2e THEN after the first import, importing the variant archives 1234 and soft-deletes 2, the Applications page lists 1234 under "Archived", and importing the original again reports 1234 `unarchived` and 2 `restored` with the object counts back to the first import's
   - GIVEN the docs THEN "Repeat imports" describes archive, soft delete, the archive sheet, the option and the return of an application, and the error table has `ARCHIVE_UNAVAILABLE` and the new meaning of `MISSING_RECORDS_UNSUPPORTED`
-- [x] Implement
+- [ ] Implement
 - [ ] Test
   - Status: PHPUnit covers the fixture round trip (testTheArchivedApplicationsFixtureArchivesDeletesAndBringsBack); the Playwright test is written and not run yet, because no Nextcloud was reachable from the worktree.
 

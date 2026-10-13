@@ -66,7 +66,7 @@
                                             "archive"
                                         ],
                                         "default": "archive",
-                                        "description": "What happens to the municipality's applications whose APPID is no longer on either CMDB sheet. archive: after the last row, archive module and usage when the sheet \"Gearchiveerde Applicaties\" lists the APPID, soft-delete them when no sheet does, and archive only when the workbook has no archive sheet, the sheet has no APPID column, or an APPID in it has no cached value; an archived or deleted application that returns is unarchived or restored. keep: leave them as they are. mark and remove are reserved and refused with 422 MISSING_RECORDS_UNSUPPORTED"
+                                        "description": "What happens to the municipality's applications whose APPID is no longer on either CMDB sheet. archive: after the last row, archive module and usage when the sheet \"Gearchiveerde Applicaties\" lists the APPID, soft-delete them when no sheet does, and archive only when the workbook has no archive sheet, the sheet has no APPID column, an APPID in it has no cached value, or an APPID on a CMDB sheet has no cached value (that application may be the one the reader could not see); an archived or deleted application that returns is unarchived or restored. keep: leave them as they are. mark and remove are reserved and refused with 422 MISSING_RECORDS_UNSUPPORTED"
                                     },
                                     "operationId": {
                                         "type": "string",
