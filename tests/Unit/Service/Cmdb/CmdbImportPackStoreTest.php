@@ -258,6 +258,53 @@ class CmdbImportPackStoreTest extends TestCase {
 	}//end testAnUneditedPackFollowsANewerShippedPack()
 
 	/**
+	 * A stored pack without an `updatedAt` cannot be updated under the race guard, so it is kept as stored.
+	 *
+	 * @return void
+	 */
+	public function testAnUneditedPackWithoutAnUpdatedAtIsKept(): void {
+		$id = $this->service->put(definition: (new CmdbImportPackMarker())->seed(shipped: $this->shippedUsage()));
+		$this->service->withoutUpdatedAt[] = $id;
+
+		$stored = $this->store()->resolve(shipped: $this->newerUsage());
+		$this->assertSame(CmdbImportPackStore::FOUND, $stored['outcome']);
+		$this->assertSame([], $this->service->writes, 'no unguarded update');
+		$this->assertSame('1.0.0', $stored['version']);
+
+		$view = $this->store()->find(shipped: $this->newerUsage());
+		$this->assertFalse($view['updatePending'], 'the import does not replace it, so the view does not say so');
+		$this->assertSame('1.0.0', $view['version']);
+	}//end testAnUneditedPackWithoutAnUpdatedAtIsKept()
+
+	/**
+	 * Reading a pack for the view answers what the next import runs, and writes nothing.
+	 *
+	 * @return void
+	 */
+	public function testFindAnswersTheShippedPackWhenTheNextImportReplacesTheStoredOne(): void {
+		$id = $this->service->put(definition: (new CmdbImportPackMarker())->seed(shipped: $this->shippedUsage()));
+		$newer = $this->newerUsage();
+
+		$view = $this->store()->find(shipped: $newer);
+
+		$this->assertTrue($view['updatePending']);
+		$this->assertSame('1.1.0', $view['version']);
+		$this->assertSame($newer, $view['pack']);
+		$this->assertSame('1.0.0', $view['storedVersion']);
+		$this->assertSame(CmdbImportPackStore::FOUND, $view['outcome']);
+		$this->assertSame([], $this->service->writes);
+
+		$current = $this->store()->find(shipped: $this->shippedUsage());
+		$this->assertFalse($current['updatePending'], 'an unedited current pack is as stored');
+
+		$this->service->edit(id: $id, definition: array_merge($this->service->definition(id: $id), ['description' => 'edited']));
+		$edited = $this->store()->find(shipped: $newer);
+		$this->assertFalse($edited['updatePending'], 'an edited pack is never replaced');
+		$this->assertSame('edited', $edited['pack']['description']);
+		$this->assertTrue($edited['newerShipped']);
+	}//end testFindAnswersTheShippedPackWhenTheNextImportReplacesTheStoredOne()
+
+	/**
 	 * An edited pack is kept when a newer pack ships, and reported as such.
 	 *
 	 * @return void

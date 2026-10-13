@@ -215,7 +215,9 @@ class CmdbImportPackStore {
 	 * The stored pack for a shipped pack, read only: nothing is created, updated or recorded.
 	 *
 	 * For a view of the mapping. The import run and the seed step use resolve(),
-	 * which writes.
+	 * which writes. An unedited stored pack that the next import run replaces
+	 * is answered as that run will see it: the shipped pack and its version,
+	 * with `updatePending` true; nothing is written.
 	 *
 	 * @param array<string, mixed> $shipped The shipped pack, already validated.
 	 *
@@ -235,8 +237,34 @@ class CmdbImportPackStore {
 			return null;
 		}
 
-		return $this->describe(entity: $entity, slug: $slug, shipped: $shipped, outcome: self::FOUND);
+		$answer = $this->describe(entity: $entity, slug: $slug, shipped: $shipped, outcome: self::FOUND);
+		if ($this->updateWouldRun(entity: $entity, shipped: $shipped) === true) {
+			$answer['pack'] = $shipped;
+			$answer['version'] = (string)($shipped['version'] ?? '');
+			$answer['updatePending'] = true;
+		}
+
+		return $answer;
 	}//end find()
+
+	/**
+	 * Whether the next import run replaces this stored pack with the shipped one.
+	 *
+	 * Only an unedited, outdated pack whose last save is known: without an
+	 * `updatedAt` the update cannot be guarded against an edit in between, so
+	 * the stored pack is kept.
+	 *
+	 * @param object $entity The stored pack as read.
+	 * @param array<string, mixed> $shipped The shipped pack.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	private function updateWouldRun(object $entity, array $shipped): bool {
+		return $entity->getUpdatedAt() !== null
+			&& $this->marker->isOutdated(definition: self::definitionOf(entity: $entity), shipped: $shipped) === true;
+	}//end updateWouldRun()
 
 	/**
 	 * The stored pack for a shipped pack: found, seeded when missing, or updated when unedited and outdated.
@@ -278,7 +306,7 @@ class CmdbImportPackStore {
 					throw $e;
 				}
 			}
-		} elseif ($this->marker->isOutdated(definition: self::definitionOf(entity: $entity), shipped: $shipped) === true) {
+		} elseif ($this->updateWouldRun(entity: $entity, shipped: $shipped) === true) {
 			[$entity, $outcome] = $this->updateUnedited(service: $service, entity: $entity, slug: $slug, shipped: $shipped);
 		}
 
@@ -291,7 +319,8 @@ class CmdbImportPackStore {
 	 *
 	 * The update carries the read pack's `updatedAt`, so an administrator's
 	 * edit saved in between is refused by OpenRegister instead of overwritten;
-	 * that edit is then read back and kept.
+	 * that edit is then read back and kept. resolve() calls this
+	 * only for a pack with an `updatedAt` (see updateWouldRun()).
 	 *
 	 * @param object $service OpenRegister's service.
 	 * @param object $entity The stored pack as read.
@@ -346,11 +375,13 @@ class CmdbImportPackStore {
 			'id' => (int)$entity->getId(),
 			'slug' => $slug,
 			'version' => (string)($definition['version'] ?? ''),
+			'storedVersion' => (string)($definition['version'] ?? ''),
 			'definition' => $definition,
 			'pack' => $this->marker->strip(definition: $definition),
 			'edited' => $this->marker->isEdited(definition: $definition),
 			'newerShipped' => $this->marker->isNewerShipped(definition: $definition, shipped: $shipped),
 			'outcome' => $outcome,
+			'updatePending' => false,
 		];
 	}//end describe()
 

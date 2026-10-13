@@ -80,6 +80,13 @@ final class FakeMigrationPackService {
 	public ?\Closure $beforeUpdate = null;
 
 	/**
+	 * Row ids whose entity answers no `updatedAt`, as a row written by something else would.
+	 *
+	 * @var array<int, int>
+	 */
+	public array $withoutUpdatedAt = [];
+
+	/**
 	 * The clock: the Unix time the next write records.
 	 *
 	 * @var int
@@ -338,7 +345,7 @@ final class FakeMigrationPackService {
 	 */
 	private function entity(int $id): object {
 		$row = $this->rows[$id];
-		return new class($id, $row['slug'], $row['definition'], $row['builtin'], $row['updatedAt']) {
+		return new class($id, $row['slug'], $row['definition'], $row['builtin'], (in_array($id, $this->withoutUpdatedAt, true) === true) ? null : $row['updatedAt']) {
 			/**
 			 * Constructor.
 			 *
@@ -346,14 +353,14 @@ final class FakeMigrationPackService {
 			 * @param string $slug The slug.
 			 * @param string $definition The definition JSON.
 			 * @param bool $builtin Whether the pack is built in.
-			 * @param int $updatedAt The Unix time of the last write.
+			 * @param int|null $updatedAt The Unix time of the last write; null when the row has none.
 			 */
 			public function __construct(
 				private int $id,
 				private string $slug,
 				private string $definition,
 				private bool $builtin,
-				private int $updatedAt,
+				private ?int $updatedAt,
 			) {
 			}
 
@@ -369,9 +376,13 @@ final class FakeMigrationPackService {
 			/**
 			 * When the pack was last written.
 			 *
-			 * @return DateTime
+			 * @return DateTime|null
 			 */
-			public function getUpdatedAt(): DateTime {
+			public function getUpdatedAt(): ?DateTime {
+				if ($this->updatedAt === null) {
+					return null;
+				}
+
 				return (new DateTime())->setTimestamp($this->updatedAt);
 			}
 

@@ -547,7 +547,7 @@ class CmdbImportProfileTest extends TestCase {
 	}//end testUneditedPacksFollowTheReleaseAndEditedOnesAreReported()
 
 	/**
-	 * Viewing the mapping writes nothing: an outdated unedited pack is shown as stored, a missing one from its file.
+	 * Viewing the mapping writes nothing: an outdated unedited pack is shown as the import will run it (shipped, update pending), a missing one from its file.
 	 *
 	 * @return void
 	 *
@@ -569,7 +569,13 @@ class CmdbImportProfileTest extends TestCase {
 		$this->assertSame([], $config, 'no row id is recorded');
 		$this->assertSame('openregister', $byTarget['usage']['source']);
 		$this->assertSame($usageId, $byTarget['usage']['packId']);
-		$this->assertSame('0.9.0', $byTarget['usage']['storedVersion'], 'the stored pack, not yet updated');
+		$shipped = $this->shipped(file: 'topdesk-usage.json');
+		$this->assertSame('0.9.0', $byTarget['usage']['storedVersion'], 'what OpenRegister holds');
+		$this->assertSame($shipped['version'], $byTarget['usage']['version'], 'the shipped version, which the next import runs');
+		$this->assertSame($shipped['fieldMappings'][0]['transform']['map'], $byTarget['usage']['fieldMappings'][0]['transform']['map'], 'the shipped mapping, with Besteld');
+		$this->assertTrue($byTarget['usage']['updatePending']);
+		$this->assertFalse($byTarget['usage']['edited']);
+		$this->assertFalse($byTarget['module']['updatePending']);
 		$this->assertSame('file', $byTarget['module']['source'], 'not stored yet: shown from the shipped file');
 		$this->assertNull($byTarget['module']['packId']);
 
