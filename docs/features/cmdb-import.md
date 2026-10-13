@@ -277,13 +277,13 @@ APPID is on neither CMDB sheet:
 |---|---|
 | on the sheet `Gearchiveerde Applicaties` | are **archived**: OpenRegister's archive state, with the reason `cmdb-import: on sheet "Gearchiveerde Applicaties"`. Reported as *archived*. |
 | on no sheet at all | are **deleted**: moved to OpenRegister's trash, where they stay restorable for 30 days. Reported as *deleted*. |
-| on no sheet, but the archive sheet cannot be relied on: the workbook has no sheet `Gearchiveerde Applicaties`, the sheet has no `APPID` column, or an `APPID` in it has no cached value (a formula whose result the file does not store) | are **archived**, never deleted. Each case has its own warning in the result: *sheet not found*, *no column APPID*, or *an APPID without a cached value in row …* (for more rows: *in N rows (…)*, naming the first ten). Such a workbook therefore never moves anything to the trash. |
+| on no sheet, but the archive sheet cannot be relied on: the workbook has no sheet `Gearchiveerde Applicaties`, the sheet has no `APPID` column, or an `APPID` in it has no cached value (a formula whose result the file does not store), or an `APPID` on one of the two CMDB sheets has no cached value (the import cannot tell which application that row stands for) | are **archived**, never deleted. Each case has its own warning in the result: *sheet not found*, *no column APPID*, or *an APPID without a cached value in row …* (for more rows: *in N rows (…)*, naming the first ten; for a CMDB sheet the warning names that sheet). Such a workbook therefore never moves anything to the trash. |
 
 An archived or deleted application disappears from the stackiq lists, from
 OpenCatalogi and from Portaliq's **Software we use**. In stackiq, the quick
 filter **Archived** on the **Applications** and **Applications in use** pages
 lists the archive. On the **Applications** page the **Archived** tab lists
-the whole archive: it ignores the GEMMA filters and the search box, because
+the whole archive: it ignores the GEMMA filters and the search box (the page says so in a note under the search box while that tab is active), because
 their counts and matches describe the working set, which leaves archived
 applications out. An OpenCatalogi caller finds archived applications by
 adding `_archived=true` to its request. Contact persons are never archived
