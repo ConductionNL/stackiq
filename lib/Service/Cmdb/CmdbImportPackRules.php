@@ -8,9 +8,11 @@
  * edits in OpenRegister may map any plain property of its target schema in
  * the register stackiq ships, fragments included (ADR-037), but never the
  * object's metadata, the keys and relations the import sets itself, any
- * other relation, a file, the publication dates or the fields only an
- * administrator or the catalogue sets, and must keep the mappings the import
- * matches records on (REQ-CMDB-021).
+ * other relation, a file, a field the register hides from forms or calculates
+ * (other subsystems own those: the service desk exchange, the derivations),
+ * the publication dates or the fields only an administrator or the catalogue
+ * sets, and must keep the mappings the import matches records on
+ * (REQ-CMDB-021).
  *
  * @category  Service
  * @package   OCA\Stackiq\Service\Cmdb
@@ -103,7 +105,7 @@ class CmdbImportPackRules {
 	];
 
 	/**
-	 * Further protected fields per target: an organisation's approval status and a module's type.
+	 * Further protected fields per target: an organisation's approval status, a module's type and the version the service desk records as installed.
 	 *
 	 * @var array<string, array<int, string>>
 	 */
@@ -111,6 +113,7 @@ class CmdbImportPackRules {
 		'module' => ['type'],
 		'manufacturer' => ['status'],
 		'municipality' => ['status'],
+		'usage' => ['installedVersion'],
 	];
 
 	/**
@@ -134,11 +137,13 @@ class CmdbImportPackRules {
 	];
 
 	/**
-	 * Per schema of the shipped register, once read: each property name and whether no pack may write it.
+	 * Per schema of the shipped register, once read: each property name and why no pack may write it.
 	 *
-	 * A property is not writable when it is a relation or a file.
+	 * The reason is `relation` (a relation or a file), `system` (hidden from
+	 * forms or calculated: another subsystem owns it) or an empty string
+	 * (a plain, writable property).
 	 *
-	 * @var array<string, array<string, bool>>|null
+	 * @var array<string, array<string, string>>|null
 	 */
 	private ?array $schemaFields = null;
 
@@ -179,7 +184,8 @@ class CmdbImportPackRules {
 		$refused = [
 			'managed' => array_merge(self::MANAGED_FIELDS, (self::MATCH_FIELDS[$target] ?? []), array_map('strval', $never)),
 			'protected' => array_merge(self::PROTECTED_FIELDS, (self::PROTECTED_TARGET_FIELDS[$target] ?? [])),
-			'relation' => $this->relationFields(target: $target),
+			'relation' => $this->fieldsWithReason(target: $target, reason: 'relation'),
+			'system' => $this->fieldsWithReason(target: $target, reason: 'system'),
 		];
 		$allowed = array_values(array_diff($this->targetFields(target: $target), ...array_values($refused)));
 
@@ -328,6 +334,10 @@ class CmdbImportPackRules {
 			return '"' . $field . '" is set outside the import and cannot be mapped';
 		}
 
+		if (in_array($field, $refused['system'], true) === true) {
+			return '"' . $field . '" is set outside the import and cannot be mapped';
+		}
+
 		if (in_array($field, $refused['relation'], true) === true) {
 			return '"' . $field . '" is a relation or a file and cannot be mapped';
 		}
@@ -356,9 +366,10 @@ class CmdbImportPackRules {
 	}//end targetFields()
 
 	/**
-	 * The properties of a target's schema that point at other objects or hold a file.
+	 * The properties of a target's schema that no pack may write for one reason.
 	 *
 	 * @param string $target The target.
+	 * @param string $reason `relation` or `system`.
 	 *
 	 * @return array<int, string>
 	 *
@@ -366,14 +377,15 @@ class CmdbImportPackRules {
 	 *
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
-	private function relationFields(string $target): array {
+	private function fieldsWithReason(string $target, string $reason): array {
 		$schema = (self::TARGET_SCHEMAS[$target] ?? null);
 		if ($schema === null) {
 			return [];
 		}
 
-		return array_map('strval', array_keys(array_filter(($this->schemaFields()[$schema] ?? []))));
-	}//end relationFields()
+		$fields = array_filter(($this->schemaFields()[$schema] ?? []), static fn (string $why): bool => $why === $reason);
+		return array_map('strval', array_keys($fields));
+	}//end fieldsWithReason()
 
 	/**
 	 * Whether a property definition, or that of its items, points at another object or holds a file.
@@ -417,11 +429,34 @@ class CmdbImportPackRules {
 	}//end isRelationOrFile()
 
 	/**
-	 * The properties per schema of the register stackiq ships, fragments included, each with whether no pack may write it.
+	 * Whether a property definition is hidden from forms or calculated.
 	 *
-	 * A property is not writable when any of its definitions makes it a relation or a file.
+	 * Such a field is written by another subsystem (the service desk
+	 * exchange stamps, the calculated suggestions), not edited by people.
 	 *
-	 * @return array<string, array<string, bool>>
+	 * @param mixed $definition The property definition.
+	 * @param bool $calculated Whether the schema calculates the property.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	private static function isSystemOwned(mixed $definition, bool $calculated): bool {
+		if ($calculated === true) {
+			return true;
+		}
+
+		return is_array($definition) === true && ($definition['hideOnForm'] ?? false) === true;
+	}//end isSystemOwned()
+
+	/**
+	 * The properties per schema of the register stackiq ships, fragments included, each with why no pack may write it.
+	 *
+	 * A property is refused when any of its definitions makes it a relation
+	 * or a file (`relation`), or hides it from forms or calculates it (`system`);
+	 * a relation wins.
+	 *
+	 * @return array<string, array<string, string>>
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the register file cannot be read.
 	 *
@@ -448,9 +483,22 @@ class CmdbImportPackRules {
 		$fields = [];
 		foreach (array_merge([$register], array_map(fn (string $file): ?array => $this->decodeJson(file: $file), $fragments)) as $decoded) {
 			foreach (($decoded['components']['schemas'] ?? []) as $schema => $definition) {
+				$calculations = (array)($definition['configuration']['x-openregister-calculations'] ?? []);
 				foreach ((array)($definition['properties'] ?? []) as $property => $propertyDefinition) {
-					$notWritable = self::isRelationOrFile(definition: $propertyDefinition);
-					$fields[(string)$schema][(string)$property] = (($fields[(string)$schema][(string)$property] ?? false) || $notWritable);
+					$reason = '';
+					if (self::isRelationOrFile(definition: $propertyDefinition) === true) {
+						$reason = 'relation';
+					} elseif (self::isSystemOwned(definition: $propertyDefinition, calculated: array_key_exists((string)$property, $calculations)) === true) {
+						$reason = 'system';
+					}
+
+					$before = ($fields[(string)$schema][(string)$property] ?? '');
+					if ($before !== 'relation' && $reason !== '') {
+						$fields[(string)$schema][(string)$property] = $reason;
+						continue;
+					}
+
+					$fields[(string)$schema][(string)$property] = $before;
 				}
 			}
 		}
