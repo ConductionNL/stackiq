@@ -92,6 +92,18 @@ generic route-query-to-filter passthrough never sees it (see the
 			</NcActions>
 		</div>
 
+		<p
+			v-if="archivedTabIgnoresFilters"
+			class="faceted-catalog-index__archive-note"
+			role="note">
+			{{
+				t(
+					'stackiq',
+					'This tab lists the whole archive. It ignores the GEMMA filters and the search term.',
+				)
+			}}
+		</p>
+
 		<div class="faceted-catalog-index__body">
 			<CnFacetSidebar
 				:title="t('stackiq', 'GEMMA filters')"
@@ -117,7 +129,8 @@ generic route-query-to-filter passthrough never sees it (see the
 					:quickFilterMultiple="quickFilterMultiple"
 					:rowClickToView="Boolean(detailRoute)"
 					@rowClick="openDetail"
-					@view="openDetail" />
+					@view="openDetail"
+					@quickFilterChange="onQuickFilterChange" />
 			</div>
 		</div>
 
@@ -281,6 +294,7 @@ export default {
 			showSaveViewModal: false,
 			savingView: false,
 			searchDebounceTimer: null,
+			activeQuickFilterIndex: null,
 		}
 	},
 
@@ -341,6 +355,20 @@ export default {
 		},
 
 		/**
+		 * Whether the active quick-filter tab drops the facet id set and the
+		 * search term: a tab whose filter carries the empty-string `_ids`
+		 * override (the Archived tab, see the `quickFilters` prop). The facet
+		 * sidebar and the search box stay on screen, so the page says so.
+		 *
+		 * @return {boolean} True while such a tab is active.
+		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017
+		 */
+		archivedTabIgnoresFilters() {
+			const tab = (this.quickFilters ?? [])[this.activeQuickFilterIndex]
+			return tab?.filter?._ids === ''
+		},
+
+		/**
 		 * Remount key for `CnIndexPage`: its self-fetch mode has no reactive
 		 * watcher on the `filter` prop (only route/quick-filter/tab changes
 		 * trigger an internal refetch), so this view forces a clean remount —
@@ -375,6 +403,18 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Remember which quick-filter tab is active (single-select mode emits the
+		 * tab index; multi-select emits an array, which never selects the
+		 * Archived tab here).
+		 *
+		 * @param {number|number[]} index The tab index, or the selected indices
+		 * @return {void}
+		 */
+		onQuickFilterChange(index) {
+			this.activeQuickFilterIndex = Number.isInteger(index) ? index : null
+		},
+
 		/**
 		 * Open the detail page of a clicked row, or of the row whose View action was used.
 		 *
@@ -536,6 +576,13 @@ export default {
 .faceted-catalog-index__search {
 	max-width: 400px;
 	flex: 1;
+}
+
+.faceted-catalog-index__archive-note {
+	color: var(--color-text-maxcontrast);
+	margin: 0;
+	padding: 0 calc(var(--default-grid-baseline, 8px) * 2)
+		calc(var(--default-grid-baseline, 8px) * 2);
 }
 
 .faceted-catalog-index__body {

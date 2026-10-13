@@ -1153,7 +1153,8 @@ OC.L10N.register(
         "{count} unarchived": "{count} unarchived",
         "{count} deleted": "{count} deleted",
         "{count} restored": "{count} restored",
-        "Applications: {changes}.": "Applications: {changes}."
+        "Applications: {changes}.": "Applications: {changes}.",
+        "This tab lists the whole archive. It ignores the GEMMA filters and the search term.": "This tab lists the whole archive. It ignores the GEMMA filters and the search term."
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -1221,7 +1221,8 @@ OC.L10N.register(
         "{count} unarchived": "{count} uit het archief gehaald",
         "{count} deleted": "{count} verwijderd",
         "{count} restored": "{count} teruggezet",
-        "Applications: {changes}.": "Applicaties: {changes}."
+        "Applications: {changes}.": "Applicaties: {changes}.",
+        "This tab lists the whole archive. It ignores the GEMMA filters and the search term.": "Dit tabblad toont het hele archief. De GEMMA-filters en de zoekterm worden genegeerd."
     },
     "nplurals=2; plural=(n != 1);"
 )

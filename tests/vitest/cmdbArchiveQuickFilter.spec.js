@@ -18,12 +18,34 @@ import fs from 'fs'
 import path from 'path'
 import { fileURLToPath } from 'url'
 import { describe, expect, it, vi } from 'vitest'
+import { effectScope } from 'vue'
 // resolveFilterTokens reads the current user at import time, which needs a
 // browser; the tokens this spec merges (`_archived`, `_ids`) resolve no user.
 vi.mock('@nextcloud/auth', () => ({ getCurrentUser: () => null }))
+// useSelfFetchList is the real function; only the list composable it feeds its
+// `fixedFilters` getter to is replaced, so the test can read the options it got.
+const captured = vi.hoisted(() => ({ options: null }))
+vi.mock(
+	'../../node_modules/@conduction/nextcloud-vue/src/composables/index.js',
+	() => ({
+		useListView: (objectType, options) => {
+			captured.options = options
+			return { refresh: () => {}, searchTerm: { value: '' } }
+		},
+	}),
+)
+vi.mock(
+	'../../node_modules/@conduction/nextcloud-vue/src/composables/useObjectSubscription.js',
+	() => ({
+		useObjectSubscription: () => ({}),
+	}),
+)
+vi.mock('../../node_modules/@conduction/nextcloud-vue/src/store/index.js', () => ({
+	useObjectStore: () => ({ registerObjectType: () => {} }),
+}))
+import { useSelfFetchList } from '../../node_modules/@conduction/nextcloud-vue/src/components/CnIndexPage/useSelfFetchList.js'
 // The REAL implementations from the installed package — not a local restatement.
 import { buildQueryString } from '../../node_modules/@conduction/nextcloud-vue/src/utils/headers.js'
-import { resolveFilterMap } from '../../node_modules/@conduction/nextcloud-vue/src/utils/routeFilters.js'
 import { facetNarrowingFilter } from '../../src/utils/facetNarrowing.js'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
@@ -74,41 +96,53 @@ describe('the archive quick filter', () => {
 	// matched) and merges the active tab's filter over it. OpenRegister leaves
 	// archived objects out of that id set, so `_ids` AND `_archived=true` lists
 	// nothing: with a facet selected, the Archived tab must not send `_ids`.
+	// The merge is the library's own: useSelfFetchList hands useListView a
+	// `fixedFilters` getter, which is called here exactly as a fetch calls it.
 	it('sends no _ids with the Archived tab when a facet narrowed the list', () => {
 		const page = pages().find((candidate) => candidate.id === 'Modules')
-		const archived = page.config.quickFilters.find(
+		const quickFilters = page.config.quickFilters
+		const archivedIndex = quickFilters.findIndex(
 			(tab) => tab.label === 'Archived',
 		)
 		const facetFilter = facetNarrowingFilter(['live-1', 'live-2'])
 
-		// The merge useSelfFetchList#fixedFilters does in single-tab mode:
-		// the page's filter, then the active tab's filter spread last.
-		const archivedQuery = buildQueryString({
-			...facetFilter,
-			...resolveFilterMap(archived.filter, {}, {}),
-		})
-		const allQuery = buildQueryString({
-			...facetFilter,
-			...resolveFilterMap({}, {}, {}),
-		})
+		/**
+		 * The query string the library builds for the list with one tab active.
+		 *
+		 * @param {number|null} tabIndex The active quick-filter tab
+		 * @return {string} The query string
+		 */
+		function queryWithTab(tabIndex) {
+			const scope = effectScope()
+			let fixedFilters
+			captured.options = null
+			scope.run(() => {
+				const result = useSelfFetchList(
+					{
+						register: 'voorzieningen',
+						schema: 'module',
+						filter: facetFilter,
+						quickFilters,
+						columns: [],
+					},
+					null,
+					() => null,
+				)
+				result.activeQuickFilterIndex.value = tabIndex
+				fixedFilters = captured.options.fixedFilters
+			})
+			const query = buildQueryString(fixedFilters())
+			scope.stop()
+			return query
+		}
+
+		const archivedQuery = queryWithTab(archivedIndex)
+		const otherQuery = queryWithTab(archivedIndex === 0 ? 1 : 0)
 
 		expect(new URLSearchParams(archivedQuery).get('_archived')).toBe('true')
 		expect(archivedQuery).not.toContain('_ids')
 		// A tab without the override keeps the facet narrowing.
-		expect(allQuery).toContain('_ids')
-	})
-
-	it('still merges the active tab last, which the override above relies on', () => {
-		const source = fs.readFileSync(
-			path.join(
-				repoRoot,
-				'node_modules/@conduction/nextcloud-vue/src/components/CnIndexPage/useSelfFetchList.js',
-			),
-			'utf8',
-		)
-		expect(source).toMatch(
-			/\.\.\.base, \.\.\.resolveFilterMap\(tabFilter, params, ctx\)/,
-		)
+		expect(otherQuery).toContain('_ids')
 	})
 
 	it('the Modules page note names the Archived tab as the exception to the additive merge', () => {
