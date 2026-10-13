@@ -363,6 +363,53 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 	}//end testTheReasonIsOneBoundedLine()
 
 	/**
+	 * Without an injected profile the endpoint builds the loader the import uses: the shipped profile and packs.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 */
+	public function testWithoutAProfileTheEndpointUsesTheImportsLoader(): void {
+		CmdbTestSupport::loadMigrationPack();
+
+		$data = $this->controller(profile: null)->getCmdbImportMapping()->getData();
+		$expected = (new CmdbImportProfile(container: $this->emptyContainer()))->mappingOverview();
+
+		$this->assertSame($expected['profile'], $data['profile']);
+		$this->assertSame($expected['openRegisterPacks'], $data['openRegisterPacks']);
+		foreach ($data['packs'] as $index => $pack) {
+			unset($pack['editUrl']);
+			$this->assertSame($expected['packs'][$index], $pack, $pack['target']);
+		}
+	}//end testWithoutAProfileTheEndpointUsesTheImportsLoader()
+
+	/**
+	 * The read-only endpoint writes nothing: on an empty store no pack is seeded and no row id is recorded.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 */
+	public function testTheEndpointWritesNothingToOpenRegisterOrTheAppConfig(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$service = new FakeMigrationPackService();
+		$appConfig = $this->createMock(IAppConfig::class);
+		$appConfig->method('getValueString')->willReturn('');
+		$appConfig->expects($this->never())->method('setValueString');
+
+		$data = $this->controller(profile: new CmdbImportProfile(container: $service->container(test: $this, appConfig: $appConfig)))
+			->getCmdbImportMapping()
+			->getData();
+
+		$this->assertSame([], $service->writes);
+		$this->assertTrue($data['openRegisterPacks']);
+		foreach ($data['packs'] as $pack) {
+			$this->assertSame('file', $pack['source'], $pack['target']);
+			$this->assertNull($pack['editUrl'], $pack['target']);
+		}
+	}//end testTheEndpointWritesNothingToOpenRegisterOrTheAppConfig()
+
+	/**
 	 * A pack stored in OpenRegister answers its source, versions and the absolute link to its editor.
 	 *
 	 * @return void
@@ -373,9 +420,10 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 		CmdbTestSupport::loadMigrationPack();
 		$service = new FakeMigrationPackService();
 		$config = [];
-		$profile = new CmdbImportProfile(
-			container: $service->container(test: $this, appConfig: FakeMigrationPackService::appConfig(test: $this, values: $config))
-		);
+		$container = $service->container(test: $this, appConfig: FakeMigrationPackService::appConfig(test: $this, values: $config));
+		// The seed step (or an import run) stores the packs; the page then reads them.
+		(new CmdbImportProfile(container: $container))->load();
+		$profile = new CmdbImportProfile(container: $container);
 		$routes = [];
 		$urls = $this->createMock(IURLGenerator::class);
 		$urls->method('linkToRouteAbsolute')->willReturnCallback(

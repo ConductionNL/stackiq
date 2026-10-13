@@ -77,13 +77,6 @@ class CmdbImportPackStore {
 	public const UPDATED = 'updated';
 
 	/**
-	 * The methods this store calls on OpenRegister's service.
-	 *
-	 * @var array<int, string>
-	 */
-	private const SERVICE_METHODS = ['findByPackSlug', 'find', 'create', 'update'];
-
-	/**
 	 * A class only an OpenRegister with the hardened pack store has.
 	 *
 	 * It ships with the CSRF-protected, admin-only pack writes and the lock on
@@ -92,11 +85,22 @@ class CmdbImportPackStore {
 	public const HARDENED_CLASS = 'OCA\OpenRegister\Exception\BuiltinPackSlugLockedException';
 
 	/**
-	 * OpenRegister's service, once resolved; false when it is not available.
-	 *
-	 * @var object|false|null
+	 * OpenRegister's controller for the pack routes; its write methods must be admin-only and CSRF-protected.
 	 */
-	private object|false|null $service = null;
+	public const CONTROLLER_CLASS = 'OCA\OpenRegister\Controller\MigrationPacksController';
+
+	/**
+	 * The exception OpenRegister throws when a pack was saved after the caller read it.
+	 */
+	public const PACK_CHANGED_CLASS = 'OCA\OpenRegister\Exception\PackChangedException';
+
+
+	/**
+	 * Decides whether OpenRegister's store may be used, and hands out its service.
+	 *
+	 * @var CmdbImportPackStoreProbe
+	 */
+	private readonly CmdbImportPackStoreProbe $probe;
 
 	/**
 	 * Reads and writes the seed marker.
@@ -111,6 +115,7 @@ class CmdbImportPackStore {
 	 * @param ContainerInterface $container Resolves OpenRegister's service, and the app config when none is given.
 	 * @param IAppConfig|null $appConfig Keeps the row ids; null resolves it from the container.
 	 * @param string $hardenedClass The class that marks an OpenRegister with the hardened pack store.
+	 * @param string $controllerClass The controller whose write methods must be guarded.
 	 *
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
@@ -118,14 +123,23 @@ class CmdbImportPackStore {
 		private readonly ContainerInterface $container,
 		private ?IAppConfig $appConfig = null,
 		private readonly string $hardenedClass = self::HARDENED_CLASS,
+		private readonly string $controllerClass = self::CONTROLLER_CLASS,
 	) {
 		$this->marker = new CmdbImportPackMarker();
+		$this->probe = new CmdbImportPackStoreProbe(
+			container: $this->container,
+			serviceClass: self::SERVICE_CLASS,
+			hardenedClass: $this->hardenedClass,
+			controllerClass: $this->controllerClass
+		);
 	}//end __construct()
 
 	/**
 	 * Whether OpenRegister's migration-pack store can be used.
 	 *
-	 * Only an OpenRegister with the hardened pack store counts (HARDENED_CLASS).
+	 * Only an OpenRegister with the hardened pack store counts: it has
+	 * HARDENED_CLASS, and no write method of its pack controller carries an
+	 * attribute or annotation that skips the CSRF check or admits non-admins.
 	 *
 	 * @return bool
 	 *
@@ -198,6 +212,33 @@ class CmdbImportPackStore {
 	}//end assertShippedFallbackAllowed()
 
 	/**
+	 * The stored pack for a shipped pack, read only: nothing is created, updated or recorded.
+	 *
+	 * For a view of the mapping. The import run and the seed step use resolve(),
+	 * which writes.
+	 *
+	 * @param array<string, mixed> $shipped The shipped pack, already validated.
+	 *
+	 * @return array<string, mixed>|null As resolve(), with outcome found; null when the store holds no such pack.
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the store is missing or fails,
+	 *                             or when the pack was renamed in OpenRegister.
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function find(array $shipped): ?array {
+		$service = $this->requireService();
+		$slug = (string)($shipped['id'] ?? '');
+		$entity = $this->findBySlug(service: $service, slug: $slug);
+		if ($entity === null) {
+			$this->assertNotRenamed(service: $service, slug: $slug);
+			return null;
+		}
+
+		return $this->describe(entity: $entity, slug: $slug, shipped: $shipped, outcome: self::FOUND);
+	}//end find()
+
+	/**
 	 * The stored pack for a shipped pack: found, seeded when missing, or updated when unedited and outdated.
 	 *
 	 * The answer holds the stored definition, the pack the engine runs (the
@@ -217,14 +258,7 @@ class CmdbImportPackStore {
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function resolve(array $shipped): array {
-		$service = $this->service();
-		if ($service === null) {
-			throw new CmdbImportException(
-				errorCode: CmdbImportException::MAPPING_UNAVAILABLE,
-				message: 'OpenRegister MigrationPackService is not available'
-			);
-		}
-
+		$service = $this->requireService();
 		$slug = (string)($shipped['id'] ?? '');
 		$outcome = self::FOUND;
 		$entity = $this->findBySlug(service: $service, slug: $slug);
@@ -245,21 +279,71 @@ class CmdbImportPackStore {
 				}
 			}
 		} elseif ($this->marker->isOutdated(definition: self::definitionOf(entity: $entity), shipped: $shipped) === true) {
-			$id = (int)$entity->getId();
-			$entity = $this->write(
-				slug: $slug,
-				action: 'updated',
-				call: fn (): object => $service->update(id: $id, definition: $this->marker->seed(shipped: $shipped))
-			);
-			$outcome = self::UPDATED;
+			[$entity, $outcome] = $this->updateUnedited(service: $service, entity: $entity, slug: $slug, shipped: $shipped);
 		}
 
-		$id = (int)$entity->getId();
-		$this->record(slug: $slug, id: $id);
+		$this->record(slug: $slug, id: (int)$entity->getId());
+		return $this->describe(entity: $entity, slug: $slug, shipped: $shipped, outcome: $outcome);
+	}//end resolve()
 
+	/**
+	 * Replace an unedited stored pack with the newer shipped one, unless someone saved it since it was read.
+	 *
+	 * The update carries the read pack's `updatedAt`, so an administrator's
+	 * edit saved in between is refused by OpenRegister instead of overwritten;
+	 * that edit is then read back and kept.
+	 *
+	 * @param object $service OpenRegister's service.
+	 * @param object $entity The stored pack as read.
+	 * @param string $slug The pack slug.
+	 * @param array<string, mixed> $shipped The shipped pack.
+	 *
+	 * @return array{0: object, 1: string} The stored entity and the outcome (updated, or found when an edit came in between).
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the update fails otherwise.
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	private function updateUnedited(object $service, object $entity, string $slug, array $shipped): array {
+		$id = (int)$entity->getId();
+		$readAt = $entity->getUpdatedAt()?->getTimestamp();
+		try {
+			$updated = $this->write(
+				slug: $slug,
+				action: 'updated',
+				call: fn (): object => $service->update(id: $id, definition: $this->marker->seed(shipped: $shipped), expectedUpdatedAt: $readAt)
+			);
+			return [$updated, self::UPDATED];
+		} catch (CmdbImportException $e) {
+			$current = null;
+			if (is_a($e->getPrevious(), self::PACK_CHANGED_CLASS) === true) {
+				$current = $this->findBySlug(service: $service, slug: $slug);
+			}
+
+			if ($current === null) {
+				throw $e;
+			}
+
+			return [$current, self::FOUND];
+		}
+	}//end updateUnedited()
+
+	/**
+	 * What resolve() and find() answer for a stored pack.
+	 *
+	 * @param object $entity The MigrationPack entity.
+	 * @param string $slug The pack slug.
+	 * @param array<string, mixed> $shipped The shipped pack.
+	 * @param string $outcome found, seeded or updated.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	private function describe(object $entity, string $slug, array $shipped, string $outcome): array {
 		$definition = self::definitionOf(entity: $entity);
 		return [
-			'id' => $id,
+			'id' => (int)$entity->getId(),
 			'slug' => $slug,
 			'version' => (string)($definition['version'] ?? ''),
 			'definition' => $definition,
@@ -268,7 +352,28 @@ class CmdbImportPackStore {
 			'newerShipped' => $this->marker->isNewerShipped(definition: $definition, shipped: $shipped),
 			'outcome' => $outcome,
 		];
-	}//end resolve()
+	}//end describe()
+
+	/**
+	 * OpenRegister's service, or a refusal when the store is not available.
+	 *
+	 * @return object
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the store is not available.
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	private function requireService(): object {
+		$service = $this->service();
+		if ($service === null) {
+			throw new CmdbImportException(
+				errorCode: CmdbImportException::MAPPING_UNAVAILABLE,
+				message: 'OpenRegister MigrationPackService is not available'
+			);
+		}
+
+		return $service;
+	}//end requireService()
 
 	/**
 	 * The decoded definition of a stored pack.
@@ -411,53 +516,15 @@ class CmdbImportPackStore {
 	}//end record()
 
 	/**
-	 * OpenRegister's service, resolved once; null on an OpenRegister without the hardened pack store.
+	 * OpenRegister's service; null on an OpenRegister without the hardened pack store.
 	 *
 	 * @return object|null
 	 *
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function service(): ?object {
-		if ($this->service === null) {
-			$this->service = false;
-			try {
-				if (class_exists($this->hardenedClass) === true && $this->container->has(self::SERVICE_CLASS) === true) {
-					$service = $this->container->get(self::SERVICE_CLASS);
-					if (is_object($service) === true && self::hasMethods(service: $service) === true) {
-						$this->service = $service;
-					}
-				}
-			} catch (Throwable $e) {
-				// OpenRegister is missing or its service cannot be built: the store is not available.
-				$this->service = false;
-			}
-		}
-
-		if ($this->service === false) {
-			return null;
-		}
-
-		return $this->service;
+		return $this->probe->service();
 	}//end service()
-
-	/**
-	 * Whether a resolved service has every method this store calls.
-	 *
-	 * @param object $service The service.
-	 *
-	 * @return bool
-	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
-	 */
-	private static function hasMethods(object $service): bool {
-		foreach (self::SERVICE_METHODS as $method) {
-			if (method_exists($service, $method) === false) {
-				return false;
-			}
-		}
-
-		return true;
-	}//end hasMethods()
 
 	/**
 	 * The app config, resolved from the container when it was not given.

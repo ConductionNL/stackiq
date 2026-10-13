@@ -407,6 +407,29 @@ class CmdbImportProfileTest extends TestCase {
 	}//end testTheOverviewShowsWhatTheImportRuns()
 
 	/**
+	 * A profile that names no pack for a target cannot be run, so the mapping is unavailable.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 */
+	public function testAProfileWithoutAUsagePackIsMappingUnavailable(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$directory = $this->copyOfShippedDirectory();
+		$profile = json_decode((string)file_get_contents($directory . '/topdesk-profile.json'), true);
+		unset($profile['packs']['usage']);
+		file_put_contents($directory . '/topdesk-profile.json', json_encode($profile));
+		try {
+			(new CmdbImportProfile(container: $this->emptyContainer(), directory: $directory))->mappingOverview();
+			$this->fail('MAPPING_UNAVAILABLE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('MAPPING_UNAVAILABLE', $e->getErrorCode());
+		} finally {
+			$this->remove(directory: $directory);
+		}
+	}//end testAProfileWithoutAUsagePackIsMappingUnavailable()
+
+	/**
 	 * A shipped pack, decoded.
 	 *
 	 * @param string $file The file name.
@@ -448,6 +471,8 @@ class CmdbImportProfileTest extends TestCase {
 		$config = [];
 
 		$profile = $this->storedProfile(service: $service, config: $config);
+		// The import run loads the packs with writes; the overview then shows what it ran.
+		$profile->load();
 		$overview = $profile->mappingOverview();
 
 		$this->assertSame(['SaaS'], $profile->pack(target: 'module')['fieldMappings'][7]['transform']['map']['Cloud']);
@@ -504,6 +529,7 @@ class CmdbImportProfileTest extends TestCase {
 		$config = [];
 
 		$profile = $this->storedProfile(service: $service, config: $config);
+		$profile->load();
 		$byTarget = array_column($profile->mappingOverview()['packs'], null, 'target');
 
 		$this->assertContains('update ' . $usageId, $service->writes);
@@ -519,6 +545,38 @@ class CmdbImportProfileTest extends TestCase {
 		$this->assertSame('1.9.0', $byTarget['module']['storedVersion']);
 		$this->assertSame('1.0.0', $byTarget['module']['shippedVersion']);
 	}//end testUneditedPacksFollowTheReleaseAndEditedOnesAreReported()
+
+	/**
+	 * Viewing the mapping writes nothing: an outdated unedited pack is shown as stored, a missing one from its file.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 */
+	public function testTheMappingOverviewOnlyReadsTheStore(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$service = new FakeMigrationPackService();
+		$olderUsage = $this->shipped(file: 'topdesk-usage.json');
+		$olderUsage['version'] = '0.9.0';
+		unset($olderUsage['fieldMappings'][0]['transform']['map']['Besteld']);
+		$usageId = $service->put(definition: (new CmdbImportPackMarker())->seed(shipped: $olderUsage));
+		$config = [];
+
+		$profile = $this->storedProfile(service: $service, config: $config);
+		$byTarget = array_column($profile->mappingOverview()['packs'], null, 'target');
+
+		$this->assertSame([], $service->writes, 'nothing is seeded or updated');
+		$this->assertSame([], $config, 'no row id is recorded');
+		$this->assertSame('openregister', $byTarget['usage']['source']);
+		$this->assertSame($usageId, $byTarget['usage']['packId']);
+		$this->assertSame('0.9.0', $byTarget['usage']['storedVersion'], 'the stored pack, not yet updated');
+		$this->assertSame('file', $byTarget['module']['source'], 'not stored yet: shown from the shipped file');
+		$this->assertNull($byTarget['module']['packId']);
+
+		$profile->load();
+		$this->assertContains('update ' . $usageId, $service->writes, 'the import run still updates it');
+		$this->assertContains('create stackiq-topdesk-module', $service->writes, 'and seeds the missing pack');
+	}//end testTheMappingOverviewOnlyReadsTheStore()
 
 	/**
 	 * A stored pack OpenRegister's validator refuses stops the import, naming the pack and its id.

@@ -361,6 +361,101 @@ class CmdbImportPackStoreTest extends TestCase {
 	}//end testAFailingStoreIsMappingUnavailable()
 
 	/**
+	 * An administrator who saves the pack between the store's read and its update keeps the edit.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testAnEditSavedBetweenTheReadAndTheUpdateIsKept(): void {
+		$seeded = (new CmdbImportPackMarker())->seed(shipped: $this->shippedUsage());
+		$id = $this->service->put(definition: $seeded);
+		$edited = $seeded;
+		$edited['description'] = 'Edited by the administrator';
+		$this->service->beforeUpdate = function (int $updateId) use ($edited): void {
+			$this->service->beforeUpdate = null;
+			$this->service->edit(id: $updateId, definition: $edited);
+		};
+
+		$stored = $this->store()->resolve(shipped: $this->newerUsage());
+
+		$this->assertSame(CmdbImportPackStore::FOUND, $stored['outcome']);
+		$this->assertSame([], $this->service->writes, 'the update was refused, not applied');
+		$this->assertSame('Edited by the administrator', $this->service->definition(id: $id)['description']);
+		$this->assertSame('Edited by the administrator', $stored['pack']['description']);
+		$this->assertTrue($stored['edited']);
+		$this->assertTrue($stored['newerShipped']);
+	}//end testAnEditSavedBetweenTheReadAndTheUpdateIsKept()
+
+	/**
+	 * A pack deleted between the read and the update cannot be re-read, so the import stops with MAPPING_UNAVAILABLE.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testAPackDeletedBetweenTheReadAndTheUpdateIsMappingUnavailable(): void {
+		$this->service->put(definition: (new CmdbImportPackMarker())->seed(shipped: $this->shippedUsage()));
+		$this->service->beforeUpdate = function (int $updateId): void {
+			unset($this->service->rows[$updateId]);
+		};
+
+		try {
+			$this->store()->resolve(shipped: $this->newerUsage());
+			$this->fail('MAPPING_UNAVAILABLE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('MAPPING_UNAVAILABLE', $e->getErrorCode());
+			$this->assertStringContainsString('could not be updated: OCP\\AppFramework\\Db\\DoesNotExistException', $e->getMessage());
+		}
+	}//end testAPackDeletedBetweenTheReadAndTheUpdateIsMappingUnavailable()
+
+	/**
+	 * The fake refuses an update read at another time, as OpenRegister does; without a time it overwrites.
+	 *
+	 * @return void
+	 */
+	public function testTheFakeRefusesAStaleUpdateAsOpenRegisterDoes(): void {
+		$id = $this->service->put(definition: $this->shippedUsage());
+		$readAt = $this->service->find(id: $id)->getUpdatedAt()->getTimestamp();
+		$this->service->edit(id: $id, definition: $this->newerUsage());
+
+		try {
+			$this->service->update(id: $id, definition: $this->shippedUsage(), expectedUpdatedAt: $readAt);
+			$this->fail('PackChangedException expected');
+		} catch (\OCA\OpenRegister\Exception\PackChangedException $e) {
+			$this->assertInstanceOf(\InvalidArgumentException::class, $e, 'the same parent as OpenRegister\'s');
+		}
+
+		$this->service->update(id: $id, definition: $this->shippedUsage());
+		$this->assertSame(['update ' . $id], $this->service->writes);
+	}//end testTheFakeRefusesAStaleUpdateAsOpenRegisterDoes()
+
+	/**
+	 * An OpenRegister whose pack controller opens a write route is not the hardened store.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testAnOpenedWriteRouteMakesTheStoreUnavailable(): void {
+		$support = __DIR__ . '/../../Support/OpenRegister/';
+		require_once $support . 'CsrfOpenedMigrationPacksController.php';
+		require_once $support . 'AdminOpenedMigrationPacksController.php';
+		$container = $this->service->container(test: $this, appConfig: FakeMigrationPackService::appConfig(test: $this, values: $this->config));
+
+		foreach (['CsrfOpenedMigrationPacksController', 'AdminOpenedMigrationPacksController', 'NoSuchController'] as $class) {
+			$store = new CmdbImportPackStore(
+				container: $container,
+				controllerClass: 'OCA\\Stackiq\\Tests\\Unit\\Support\\OpenRegister\\' . $class
+			);
+			$this->assertFalse($store->isAvailable(), $class);
+		}
+
+		$this->assertSame('OCA\\OpenRegister\\Controller\\MigrationPacksController', CmdbImportPackStore::CONTROLLER_CLASS);
+		$this->assertTrue($this->store()->isAvailable(), 'the guarded controller');
+	}//end testAnOpenedWriteRouteMakesTheStoreUnavailable()
+
+	/**
 	 * The hash ignores the order of an object's keys but not the order of the field mappings.
 	 *
 	 * @return void

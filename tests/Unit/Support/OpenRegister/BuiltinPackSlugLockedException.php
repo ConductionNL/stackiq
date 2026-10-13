@@ -25,10 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\OpenRegister\Exception;
 
-use RuntimeException;
-
 /**
- * Thrown by OpenRegister when a built-in pack would be renamed.
+ * A built-in pack's slug cannot change.
  */
-class BuiltinPackSlugLockedException extends RuntimeException {
+class BuiltinPackSlugLockedException extends InvalidPackDefinitionException {
 }//end class
