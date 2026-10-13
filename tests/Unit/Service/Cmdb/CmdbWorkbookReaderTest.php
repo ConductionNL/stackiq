@@ -1056,6 +1056,34 @@ class CmdbWorkbookReaderTest extends TestCase {
 	}//end testAnUncachedArchiveKeyIsListedNotDropped()
 
 	/**
+	 * A CMDB row whose only content is an APPID formula without a cached value is dropped as empty, but its row
+	 * number is listed per sheet, so a caller knows the sheet holds an application it could not see.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAnEmptyCmdbRowWithAnUncachedKeyIsListed(): void {
+		$this->requireSpreadsheet();
+		$path = CmdbTestSupport::buildWorkbook(
+			sheets: [
+				'Beheerde Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [1, 'Een'], [['f' => 'Invoer!A2']], [2, 'Twee']],
+				'Onbeh Applicaties CMDB' => [['APPID', 'Applicatie Naam'], [3, 'Drie']],
+			]
+		);
+
+		try {
+			$result = (new CmdbWorkbookReader())->read(path: $path, profile: $this->profile());
+		} finally {
+			unlink($path);
+		}
+
+		$beheerd = array_filter($result['rows'], static fn (array $row): bool => $row['sheet'] === 'Beheerde Applicaties CMDB');
+		$this->assertSame([2, 4], array_column($beheerd, 'row'), 'the empty row is not a row');
+		$this->assertSame(['Beheerde Applicaties CMDB' => [3]], $result['uncachedKeyRows'], 'the dropped row is listed, only on its sheet');
+	}//end testAnEmptyCmdbRowWithAnUncachedKeyIsListed()
+
+	/**
 	 * An archive sheet whose last used row lies beyond twice the row limit stops before any sheet is loaded.
 	 *
 	 * @return void

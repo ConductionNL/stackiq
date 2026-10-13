@@ -994,19 +994,21 @@ class CmdbExportImportServiceTest extends TestCase {
 	 *
 	 * @return CmdbWorkbookReader
 	 */
-	private function rowsReader(array $rows, ?array $archived = [], array $uncachedRows = []): CmdbWorkbookReader {
-		return new class($rows, $archived, $uncachedRows) extends CmdbWorkbookReader {
+	private function rowsReader(array $rows, ?array $archived = [], array $uncachedRows = [], array $uncachedKeyRows = []): CmdbWorkbookReader {
+		return new class($rows, $archived, $uncachedRows, $uncachedKeyRows) extends CmdbWorkbookReader {
 			/**
 			 * Constructor.
 			 *
 			 * @param array<int, array<string, mixed>> $rows The rows.
 			 * @param array<int, string>|null $archived The archive sheet's APPIDs, or null.
 			 * @param array<int, int> $uncachedRows The archive sheet's rows without a cached APPID.
+			 * @param array<string, array<int, int>> $uncachedKeyRows The CMDB rows dropped as empty, per sheet.
 			 */
 			public function __construct(
 				private array $rows,
 				private ?array $archived,
 				private array $uncachedRows,
+				private array $uncachedKeyRows = [],
 			) {
 			}
 
@@ -1020,7 +1022,7 @@ class CmdbExportImportServiceTest extends TestCase {
 			 */
 			public function read(string $path, CmdbImportProfile $profile): array {
 				$archive = ['sheet' => 'Gearchiveerde Applicaties', 'present' => ($this->archived !== null), 'keyColumnMissing' => false, 'appIds' => ($this->archived ?? []), 'uncachedRows' => $this->uncachedRows];
-				return ['rows' => $this->rows, 'importWarnings' => [], 'date1904' => false, 'archive' => $archive];
+				return ['rows' => $this->rows, 'importWarnings' => [], 'date1904' => false, 'archive' => $archive, 'uncachedKeyRows' => $this->uncachedKeyRows];
 			}
 		};
 	}//end rowsReader()
@@ -2043,6 +2045,30 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: $eight), 'a readable workbook still soft-deletes what is on no sheet');
 		$this->assertSame([], $readable['importWarnings']);
 	}//end testAnUncachedCmdbRowArchivesInsteadOfDeleting()
+
+	/**
+	 * A CMDB row whose only content is an uncached APPID is dropped by the reader before the service sees a row, and
+	 * is handed over as a list of rows: the import still archives instead of deleting, and warns.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAFullyEmptyCmdbRowWithAnUncachedKeyArchivesInsteadOfDeleting(): void {
+		$this->importOneSevenAndEight();
+		$eight = $this->moduleOf(appId: '8');
+
+		$report = $this->service(
+			reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7'], uncachedKeyRows: ['Beheerde Applicaties CMDB' => [6]])
+		)->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertNotContains('delete', array_column($this->transitions, 0));
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $eight));
+		$this->assertSame(
+			[['sheet' => 'Beheerde Applicaties CMDB', 'message' => 'Sheet "Beheerde Applicaties CMDB" has an APPID without a cached value in row 6, so applications missing from the export are archived, not deleted.']],
+			$report['importWarnings']
+		);
+	}//end testAFullyEmptyCmdbRowWithAnUncachedKeyArchivesInsteadOfDeleting()
 
 	/**
 	 * An extra usage of a key that cannot be archived fails the application's row; its module, written after every usage, stays
