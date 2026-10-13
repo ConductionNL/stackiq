@@ -1222,7 +1222,8 @@ OC.L10N.register(
         "{count} deleted": "{count} verwijderd",
         "{count} restored": "{count} teruggezet",
         "Applications: {changes}.": "Applicaties: {changes}.",
-        "This tab lists the whole archive. It ignores the GEMMA filters and the search term.": "Dit tabblad toont het hele archief. De GEMMA-filters en de zoekterm worden genegeerd."
+        "This tab lists the whole archive. It ignores the GEMMA filters and the search term.": "Dit tabblad toont het hele archief. De GEMMA-filters en de zoekterm worden genegeerd.",
+        "Applications no longer in the export are archived or moved to the trash. The (i) button above explains when.": "Applicaties die niet meer in de export staan, worden gearchiveerd of naar de prullenbak verplaatst. De (i)-knop bovenaan legt uit wanneer."
     },
     "nplurals=2; plural=(n != 1);"
 )

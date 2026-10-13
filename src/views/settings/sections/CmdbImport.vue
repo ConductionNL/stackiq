@@ -172,7 +172,7 @@
 					{{
 						t(
 							'stackiq',
-							'An application of this municipality that is on neither CMDB sheet any more is archived when the sheet "Gearchiveerde Applicaties" lists it, and moved to the trash when no sheet does. Both disappear from the lists, from OpenCatalogi and from Portaliq; one that returns in a later export is brought back. When that sheet is missing, has no APPID column, or has an APPID without a cached value, applications are only archived and the result says so. Choose Keep to leave them as they are.',
+							'Applications no longer in the export are archived or moved to the trash. The (i) button above explains when.',
 						)
 					}}
 				</p>
@@ -449,6 +449,15 @@
 						}}
 					</li>
 				</ul>
+				<h4>{{ t('stackiq', 'Applications missing from the export') }}</h4>
+				<p>
+					{{
+						t(
+							'stackiq',
+							'An application of this municipality that is on neither CMDB sheet any more is archived when the sheet "Gearchiveerde Applicaties" lists it, and moved to the trash when no sheet does. Both disappear from the lists, from OpenCatalogi and from Portaliq; one that returns in a later export is brought back. When that sheet is missing, has no APPID column, or has an APPID without a cached value, applications are only archived and the result says so. Choose Keep to leave them as they are.',
+						)
+					}}
+				</p>
 			</div>
 		</template>
 	</AlwaysVisibleSection>
@@ -718,8 +727,7 @@ export default {
 			const parts = [
 				[
 					'archived',
-					(count) =>
-						t('stackiq', '{count} archived', { count }, AS_TEXT),
+					(count) => t('stackiq', '{count} archived', { count }, AS_TEXT),
 				],
 				[
 					'unarchived',
@@ -728,13 +736,11 @@ export default {
 				],
 				[
 					'deleted',
-					(count) =>
-						t('stackiq', '{count} deleted', { count }, AS_TEXT),
+					(count) => t('stackiq', '{count} deleted', { count }, AS_TEXT),
 				],
 				[
 					'restored',
-					(count) =>
-						t('stackiq', '{count} restored', { count }, AS_TEXT),
+					(count) => t('stackiq', '{count} restored', { count }, AS_TEXT),
 				],
 			]
 				.map(([key, text]) => [Number(summary[key]) || 0, text])

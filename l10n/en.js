@@ -1154,7 +1154,8 @@ OC.L10N.register(
         "{count} deleted": "{count} deleted",
         "{count} restored": "{count} restored",
         "Applications: {changes}.": "Applications: {changes}.",
-        "This tab lists the whole archive. It ignores the GEMMA filters and the search term.": "This tab lists the whole archive. It ignores the GEMMA filters and the search term."
+        "This tab lists the whole archive. It ignores the GEMMA filters and the search term.": "This tab lists the whole archive. It ignores the GEMMA filters and the search term.",
+        "Applications no longer in the export are archived or moved to the trash. The (i) button above explains when.": "Applications no longer in the export are archived or moved to the trash. The (i) button above explains when."
     },
     "nplurals=2; plural=(n != 1);"
 )
