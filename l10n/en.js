@@ -1134,7 +1134,9 @@ OC.L10N.register(
         "In development since": "In development since",
         "In use since": "In use since",
         "Not signed in": "Not signed in",
-        "At most %s contact persons per request": "At most %s contact persons per request"
+        "At most %s contact persons per request": "At most %s contact persons per request",
+        "Loading the name": "Loading the name",
+        "The name is kept in Nextcloud Contacts, in an address book you cannot read.": "The name is kept in Nextcloud Contacts, in an address book you cannot read."
     },
     "nplurals=2; plural=(n != 1);"
 )

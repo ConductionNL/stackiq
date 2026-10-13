@@ -1202,7 +1202,9 @@ OC.L10N.register(
         "In development since": "In ontwikkeling sinds",
         "In use since": "In gebruik sinds",
         "Not signed in": "Niet aangemeld",
-        "At most %s contact persons per request": "Ten hoogste %s contactpersonen per verzoek"
+        "At most %s contact persons per request": "Ten hoogste %s contactpersonen per verzoek",
+        "Loading the name": "De naam wordt geladen",
+        "The name is kept in Nextcloud Contacts, in an address book you cannot read.": "De naam staat in Nextcloud Contacten, in een adresboek dat je niet kunt lezen."
     },
     "nplurals=2; plural=(n != 1);"
 )
