@@ -465,7 +465,7 @@ class CmdbImportProfileTest extends TestCase {
 		$this->assertSame($moduleId, $byTarget['module']['packId']);
 		$this->assertSame('2.0.1', $byTarget['module']['storedVersion']);
 		$this->assertSame('2.0.1', $byTarget['module']['version']);
-		$this->assertSame('2.0.0', $byTarget['module']['shippedVersion']);
+		$this->assertSame('1.0.0', $byTarget['module']['shippedVersion']);
 		$this->assertTrue($byTarget['module']['edited']);
 		$this->assertFalse($byTarget['module']['newerShipped'], 'seeded from the pack that still ships');
 		$this->assertTrue($byTarget['module']['editable']);
@@ -511,13 +511,13 @@ class CmdbImportProfileTest extends TestCase {
 		$this->assertSame('Acquisition', $profile->pack(target: 'usage')['fieldMappings'][0]['transform']['map']['Besteld']);
 		$this->assertFalse($byTarget['usage']['edited']);
 		$this->assertFalse($byTarget['usage']['newerShipped']);
-		$this->assertSame('2.0.0', $byTarget['usage']['storedVersion']);
+		$this->assertSame('1.0.0', $byTarget['usage']['storedVersion']);
 
 		$this->assertSame('Edited by the administrator', $profile->pack(target: 'module')['description']);
 		$this->assertTrue($byTarget['module']['edited']);
 		$this->assertTrue($byTarget['module']['newerShipped']);
 		$this->assertSame('1.9.0', $byTarget['module']['storedVersion']);
-		$this->assertSame('2.0.0', $byTarget['module']['shippedVersion']);
+		$this->assertSame('1.0.0', $byTarget['module']['shippedVersion']);
 	}//end testUneditedPacksFollowTheReleaseAndEditedOnesAreReported()
 
 	/**

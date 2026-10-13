@@ -5,13 +5,12 @@
  *
  * OpenRegister's validator checks a pack's structure only. The import writes
  * with OpenRegister's RBAC and multitenancy off, so a pack an administrator
- * edits in OpenRegister may only map the vetted plain fields listed per
- * target, never the object's metadata, the keys and relations the import
- * sets itself, any other relation, the publication dates or the fields only
- * an administrator or the catalogue sets, and must keep the mappings the
- * import matches records on (REQ-CMDB-021). A listed field must still be a
- * plain property of its target schema in the register stackiq ships,
- * fragments included (ADR-037).
+ * edits in OpenRegister may map any plain property of its target schema in
+ * the register stackiq ships, fragments included (ADR-037), but never the
+ * object's metadata, the keys and relations the import sets itself, any
+ * other relation, a file, the publication dates or the fields only an
+ * administrator or the catalogue sets, and must keep the mappings the import
+ * matches records on (REQ-CMDB-021).
  *
  * @category  Service
  * @package   OCA\Stackiq\Service\Cmdb
@@ -67,40 +66,14 @@ class CmdbImportPackRules {
 	];
 
 	/**
-	 * The fields a pack may map or default, per target: the vetted plain fields, nothing else.
+	 * The fields a pack may map or default for a target that writes into no schema.
 	 *
-	 * The fields the shipped packs map, the module's licence type, and the usage's
-	 * lifecycle dates next to the one they map. The business owner is resolved in Nextcloud Contacts by name,
-	 * with the role on the contact person, so it is no schema.
+	 * The business owner is resolved in Nextcloud Contacts by name, with the
+	 * role on the contact person, so it has no schema to read its fields from.
 	 *
 	 * @var array<string, array<int, string>>
 	 */
-	private const ALLOWED_FIELDS = [
-		'module' => [
-			'name',
-			'externalNumber',
-			'externalId',
-			'shortDescription',
-			'longDescription',
-			'applicationType',
-			'cloudDienstverleningsmodel',
-			'bbnLevel',
-			'licentietype',
-			'externalCreatedAt',
-			'externalModifiedAt',
-		],
-		'manufacturer' => ['name'],
-		'municipality' => ['name'],
-		'usage' => [
-			'status',
-			'timeClassification',
-			'startDateAcquisition',
-			'startDatePlanned',
-			'startDateInProduction',
-			'startDateOutPhasing',
-			'startDateOutPhased',
-			'interneAnnotation',
-		],
+	private const FIELDS_WITHOUT_SCHEMA = [
 		'businessOwner' => ['name', 'role'],
 	];
 
@@ -161,7 +134,9 @@ class CmdbImportPackRules {
 	];
 
 	/**
-	 * Per schema of the shipped register, once read: each property name and whether it is a relation.
+	 * Per schema of the shipped register, once read: each property name and whether no pack may write it.
+	 *
+	 * A property is not writable when it is a relation or a file.
 	 *
 	 * @var array<string, array<string, bool>>|null
 	 */
@@ -354,14 +329,14 @@ class CmdbImportPackRules {
 		}
 
 		if (in_array($field, $refused['relation'], true) === true) {
-			return '"' . $field . '" is a relation and cannot be mapped';
+			return '"' . $field . '" is a relation or a file and cannot be mapped';
 		}
 
 		return '"' . $field . '" is not a field the ' . $target . ' pack may map';
 	}//end fieldViolation()
 
 	/**
-	 * The vetted fields of a target that its schema holds as properties.
+	 * The properties of a target's schema, or the fixed fields of a target without one.
 	 *
 	 * @param string $target The target.
 	 *
@@ -372,18 +347,16 @@ class CmdbImportPackRules {
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function targetFields(string $target): array {
-		$vetted = (self::ALLOWED_FIELDS[$target] ?? []);
 		$schema = (self::TARGET_SCHEMAS[$target] ?? null);
 		if ($schema === null) {
-			return $vetted;
+			return (self::FIELDS_WITHOUT_SCHEMA[$target] ?? []);
 		}
 
-		$properties = ($this->schemaFields()[$schema] ?? []);
-		return array_values(array_filter($vetted, static fn (string $field): bool => array_key_exists($field, $properties)));
+		return array_map('strval', array_keys(($this->schemaFields()[$schema] ?? [])));
 	}//end targetFields()
 
 	/**
-	 * The properties of a target's schema that point at other objects.
+	 * The properties of a target's schema that point at other objects or hold a file.
 	 *
 	 * @param string $target The target.
 	 *
@@ -403,11 +376,11 @@ class CmdbImportPackRules {
 	}//end relationFields()
 
 	/**
-	 * Whether a property definition, or that of its items, points at another object.
+	 * Whether a property definition, or that of its items, points at another object or holds a file.
 	 *
-	 * A reference, an inverse or write-back relation, a uuid, or an object
-	 * configuration that relates or names a schema; a nested object with no
-	 * schema is a plain value.
+	 * A reference, an inverse or write-back relation, a uuid, an object
+	 * configuration that relates or names a schema, or a file; a nested
+	 * object with no schema is a plain value.
 	 *
 	 * @param mixed $definition The property definition.
 	 *
@@ -415,7 +388,7 @@ class CmdbImportPackRules {
 	 *
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
-	private static function isRelation(mixed $definition): bool {
+	private static function isRelationOrFile(mixed $definition): bool {
 		if (is_array($definition) === false) {
 			return false;
 		}
@@ -433,19 +406,20 @@ class CmdbImportPackRules {
 				($configuration['schema'] ?? null),
 				($definition['format'] ?? null) === 'uuid',
 				($configuration['handling'] ?? null) === 'related-object',
+				($definition['type'] ?? null) === 'file',
 			]
 		);
 		if ($markers !== []) {
 			return true;
 		}
 
-		return self::isRelation(definition: ($definition['items'] ?? null));
-	}//end isRelation()
+		return self::isRelationOrFile(definition: ($definition['items'] ?? null));
+	}//end isRelationOrFile()
 
 	/**
-	 * The properties per schema of the register stackiq ships, fragments included, each with whether it is a relation.
+	 * The properties per schema of the register stackiq ships, fragments included, each with whether no pack may write it.
 	 *
-	 * A property is a relation when any of its definitions says so.
+	 * A property is not writable when any of its definitions makes it a relation or a file.
 	 *
 	 * @return array<string, array<string, bool>>
 	 *
@@ -475,8 +449,8 @@ class CmdbImportPackRules {
 		foreach (array_merge([$register], array_map(fn (string $file): ?array => $this->decodeJson(file: $file), $fragments)) as $decoded) {
 			foreach (($decoded['components']['schemas'] ?? []) as $schema => $definition) {
 				foreach ((array)($definition['properties'] ?? []) as $property => $propertyDefinition) {
-					$isRelation = self::isRelation(definition: $propertyDefinition);
-					$fields[(string)$schema][(string)$property] = (($fields[(string)$schema][(string)$property] ?? false) || $isRelation);
+					$notWritable = self::isRelationOrFile(definition: $propertyDefinition);
+					$fields[(string)$schema][(string)$property] = (($fields[(string)$schema][(string)$property] ?? false) || $notWritable);
 				}
 			}
 		}

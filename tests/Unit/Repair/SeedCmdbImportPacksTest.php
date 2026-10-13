@@ -147,12 +147,12 @@ class SeedCmdbImportPacksTest extends TestCase {
 		$this->assertNotContains('update ' . $ownerId, $service->writes);
 		$this->assertSame('Functie eigenaar', $service->definition(id: $ownerId)['fieldMappings'][1]['source']);
 		$this->assertContains(
-			'info: Updated unedited CMDB import pack stackiq-topdesk-usage (id ' . $usageId . ') to version 2.0.0',
+			'info: Updated unedited CMDB import pack stackiq-topdesk-usage (id ' . $usageId . ') to version 1.0.0',
 			$this->lines
 		);
 		$this->assertContains(
 			'warning: CMDB import pack stackiq-topdesk-business-owner (id ' . $ownerId . ') was edited in OpenRegister and is kept; '
-			. 'this release ships version 2.0.0, which is not applied',
+			. 'this release ships version 1.0.0, which is not applied',
 			$this->lines
 		);
 	}//end testUneditedPacksAreUpdatedAndEditedOnesKept()

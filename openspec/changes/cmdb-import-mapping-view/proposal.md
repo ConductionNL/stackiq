@@ -33,7 +33,7 @@ None.
 ### In Scope
 
 - Reading the module, manufacturer, usage and business-owner packs from OpenRegister's migration-pack store by slug, with the shipped file as the seed and, while nothing was ever stored, as the fallback with one import warning.
-- The import's own rules on every pack, stored or shipped: the required mappings, and an explicit allowlist of the plain fields a pack may write.
+- The import's own rules on every pack, stored or shipped: the required mappings, and the fields a pack may write: every plain property of its target schema, read from the register stackiq ships.
 - Failing closed with 503 `MAPPING_UNAVAILABLE` when a stored pack is invalid or breaks a rule, when it was renamed, or when the store is gone after the packs were stored there.
 - The repair step `SeedCmdbImportPacks` on install and upgrade: seeds missing packs as built-in, replaces unedited packs with the shipped pack of the release, keeps edited ones and reports them; the row ids are kept in stackiq's app config.
 - The `x-stackiq` marker in a stored definition: the shipped version and the hash of the shipped pack it was seeded from.
@@ -72,7 +72,7 @@ None.
 ## Risks
 
 ### Risk 1: An edit in OpenRegister writes fields the import must not write
-**Severity:** High — **Mitigation:** the import writes with OpenRegister's RBAC and multitenancy off, so every pack must follow the import's rules (REQ-CMDB-021): only a vetted list of plain fields per target, never object metadata, match keys, relations, publication dates or admin fields, and the required mappings kept. A pack that breaks a rule stops the import with 503 naming the pack.
+**Severity:** High — **Mitigation:** the import writes with OpenRegister's RBAC and multitenancy off, so every pack must follow the import's rules (REQ-CMDB-021): only plain properties of the target schema, never object metadata, match keys, relations, publication dates or admin fields, and the required mappings kept. A pack that breaks a rule stops the import with 503 naming the pack.
 
 ### Risk 2: An administrator's edit is lost or silently ignored
 **Severity:** High — **Mitigation:** the repair step never overwrites an edited pack; a renamed pack, or a store that is gone after the packs were stored, fails closed instead of falling back to the files.
