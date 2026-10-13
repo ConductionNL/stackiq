@@ -187,6 +187,9 @@ class CmdbImportProfile {
 	 * OpenRegister, a store that is gone fails closed: the import never falls
 	 * back to the files and silently drops an administrator's edit.
 	 *
+	 * The import run and the seed step load this way; viewing the mapping
+	 * uses loadForView(), which writes nothing.
+	 *
 	 * @return void
 	 *
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the validator is missing, the profile
@@ -197,6 +200,39 @@ class CmdbImportProfile {
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function load(): void {
+		$this->loadPacks(storedPack: fn (CmdbImportPackStore $store, array $shipped): ?array => $store->resolve(shipped: $shipped));
+	}//end load()
+
+	/**
+	 * Load the profile and validate every pack it names, reading the store only.
+	 *
+	 * A pack the store does not hold yet is taken from its shipped file, and
+	 * nothing is seeded, updated or recorded: viewing the mapping changes
+	 * neither OpenRegister nor stackiq's app config. The next import run
+	 * seeds and updates as load() does.
+	 *
+	 * @return void
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE as load().
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 */
+	public function loadForView(): void {
+		$this->loadPacks(storedPack: fn (CmdbImportPackStore $store, array $shipped): ?array => $store->find(shipped: $shipped));
+	}//end loadForView()
+
+	/**
+	 * Load the profile and the packs, taking each editable pack from the store as the callback answers it.
+	 *
+	 * @param callable $storedPack (store, shipped pack) => the stored pack, or null to use the shipped file.
+	 *
+	 * @return void
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE as load().
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	private function loadPacks(callable $storedPack): void {
 		$validator = $this->resolveValidator();
 		$profile = $this->decodeFile(fileName: $this->profileFile);
 		$store = $this->packStore();
@@ -222,8 +258,12 @@ class CmdbImportProfile {
 				'newerShipped' => false,
 			];
 
+			$stored = null;
 			if ($storeAvailable === true && in_array($target, self::EDITABLE_TARGETS, true) === true) {
-				$stored = $store->resolve(shipped: $shipped);
+				$stored = $storedPack($store, $shipped);
+			}
+
+			if ($stored !== null) {
 				$pack = $stored['pack'];
 				$label = 'OpenRegister migration pack ' . $stored['slug'] . ' (id ' . $stored['id'] . ')';
 				$details = ['pack' => $stored['slug'], 'packId' => $stored['id']];
@@ -249,7 +289,7 @@ class CmdbImportProfile {
 		$this->packs = $packs;
 		$this->sources = $sources;
 		$this->storeAvailable = $storeAvailable;
-	}//end load()
+	}//end loadPacks()
 
 	/**
 	 * The shipped packs an administrator edits in OpenRegister, validated, per target.
@@ -918,7 +958,10 @@ class CmdbImportProfile {
 	}//end mappingOverview()
 
 	/**
-	 * The loaded profile.
+	 * The loaded profile; loaded read only when nothing loaded it yet.
+	 *
+	 * The import run calls load() itself before it reads a row, so a lazy
+	 * load is a read: the limits, the sheet names or the mapping view.
 	 *
 	 * @return array<string, mixed>
 	 *
@@ -926,7 +969,7 @@ class CmdbImportProfile {
 	 */
 	private function profile(): array {
 		if ($this->profile === null) {
-			$this->load();
+			$this->loadForView();
 		}
 
 		return ($this->profile ?? []);

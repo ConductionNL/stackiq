@@ -39,7 +39,7 @@ None.
 - The `x-stackiq` marker in a stored definition: the shipped version and the hash of the shipped pack it was seeded from.
 - Excel date conversion for every column a pack maps with a date transform; the note cleanup on the pack's own concat separator.
 - `GET /api/settings/cmdb-import/mapping` extended per pack with `source`, `packId`, `storedVersion`, `shippedVersion`, `edited`, `newerShipped`, `editable` and `editUrl`, and `openRegisterPacks` at the top level.
-- The section's mapping block: per pack its source, version, a hint when a newer shipped pack was not applied, and an "Edit in OpenRegister" link; the sheet names in the help text come from the endpoint.
+- The section's mapping block: per pack its source, version, a hint when a newer shipped pack was not applied, and a link to its editor in OpenRegister (Task 4); the sheet names in the help text come from the endpoint.
 - `docs/features/cmdb-import.md`: viewing and editing the mapping in OpenRegister.
 
 ### Out of Scope

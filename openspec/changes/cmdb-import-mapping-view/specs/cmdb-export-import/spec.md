@@ -43,15 +43,6 @@ Each field mapping SHALL carry `source`, `target`, `required` (a boolean) and `t
 - **THEN** the endpoint SHALL answer 503 with error `MAPPING_UNAVAILABLE`
 - **AND** `details.pack` SHALL be `stackiq-topdesk-usage`, `details.packId` its row id, `details.editUrl` the link to its editor ending in `/apps/openregister/migration-packs/<packId>`, and `details.reason` SHALL name the pack, its id and the broken rule on one line of at most 500 characters
 
-#### Scenario: The section links each pack to its editor
-@e2e tests/e2e/spec-coverage/cmdb-import-mapping.spec.ts
-
-- **GIVEN** a Nextcloud admin on stackiq's admin settings page
-- **WHEN** the mapping block of the "CMDB import" section has loaded
-- **THEN** a table of the export SHALL list the sheets read and the match, name, required and date columns, and a table of the packs SHALL show each of the four sheet packs with its source and version and a link "Edit in OpenRegister" to its `editUrl`
-- **AND** the municipality pack, which maps the import options and no column, SHALL NOT be listed
-- **AND** when the endpoint answers 503 for a stored pack, the error SHALL show a link "Edit in OpenRegister" to its `details.editUrl`
-
 #### Scenario: A user who is not a Nextcloud admin cannot read the mapping
 @e2e tests/e2e/spec-coverage/cmdb-import-packs.spec.ts
 
@@ -163,7 +154,7 @@ The service SHALL map each normalised row with OpenRegister's `MigrationPack\Map
 
 ### Requirement: The admin settings SHALL offer a CMDB import section (REQ-CMDB-014)
 
-Stackiq's admin settings page SHALL show a section "CMDB import", rendered by the settings page and not registered as an in-app route. The section SHALL let the admin choose an existing municipality or type the name of a new one, choose an `.xlsx` file, and start the import. While the import runs it SHALL show a progress bar and a Cancel button. Afterwards it SHALL show the summary and a report table that can be filtered by outcome. The section SHALL also show the mapping the import uses (REQ-CMDB-020), as tables: the export's sheets and columns, and per sheet pack its source, its version and a link to its editor in OpenRegister. The help under each option SHALL be one short sentence; the details SHALL be in the section's information panel. The sheet names in its help text SHALL come from that mapping, every sheet it names and in its order, whatever their number, with the shipped names as the fallback until the mapping has loaded or when it cannot be loaded. Every control SHALL have a visible label, and every string SHALL be translatable.
+Stackiq's admin settings page SHALL show a section "CMDB import", rendered by the settings page and not registered as an in-app route. The section SHALL let the admin choose an existing municipality or type the name of a new one, choose an `.xlsx` file, and start the import. While the import runs it SHALL show a progress bar and a Cancel button. Afterwards it SHALL show the summary and a report table that can be filtered by outcome. The section SHALL also show the mapping the import uses (REQ-CMDB-020), as tables: the export's sheets and columns, and per sheet pack its source, its version, a hint when a newer shipped pack was not applied, and a link "Edit in OpenRegister" when the pack has an `editUrl`; the municipality pack, which maps the import options and no column, SHALL NOT be listed. When the endpoint answers 503 for a stored pack, the error SHALL carry the same link from `details.editUrl`. The section SHALL offer no editing of the mapping itself. The sheet names in its help text SHALL come from that mapping, every sheet it names and in its order, whatever their number, with the shipped names as the fallback until the mapping has loaded or when it cannot be loaded. Every control SHALL have a visible label, and every string SHALL be translatable.
 
 (Previously: the section had no mapping block, and the sheet names in its help text were a constant in the page, which could drift from the profile on the server.)
 
@@ -184,6 +175,24 @@ Stackiq's admin settings page SHALL show a section "CMDB import", rendered by th
 - **THEN** the help text under the file control SHALL name the sheets the endpoint returned
 - **AND** a profile with one, two or three sheets SHALL give a help text and an info text that name exactly those sheets, with no sheet the profile does not name and no description tied to a sheet's position
 - **AND** when the endpoint fails, it SHALL name the shipped sheets and the mapping block SHALL show the error
+
+#### Scenario: The section lists the mapping and links each pack to its editor
+@e2e tests/e2e/spec-coverage/cmdb-import-mapping.spec.ts
+
+- **GIVEN** a Nextcloud admin on stackiq's admin settings page
+- **WHEN** the mapping block of the "CMDB import" section has loaded
+- **THEN** a table of the export SHALL list the sheets read and the match, name, required and date columns, and a table of the packs SHALL show each of the four sheet packs with its source and version and a link "Edit in OpenRegister" to its `editUrl`
+- **AND** the municipality pack, which maps the import options and no column, SHALL NOT be listed
+- **AND** when the endpoint answers 503 for a stored pack, the error SHALL show a link "Edit in OpenRegister" to its `details.editUrl`
+- **AND** the block SHALL hold no input field
+
+#### Scenario: An edited pack whose newer shipped version was not applied says so
+@e2e exclude Needs a stackiq release that ships a newer pack than the one installed; tests/vitest/cmdbImportMapping.spec.js mounts the block with an edited usage pack whose `newerShipped` is true and asserts the hint, and its absence for the unedited module pack.
+
+- **GIVEN** the mapping endpoint answers an edited usage pack with `newerShipped` `true` and `shippedVersion` `1.1.0`
+- **WHEN** the mapping block renders
+- **THEN** the usage row SHALL say that stackiq ships version `1.1.0`, that it was not applied because the pack was edited, and how to use the shipped version
+- **AND** a row whose `newerShipped` is `false` SHALL show no such hint
 
 ## Non-Functional Requirements
 

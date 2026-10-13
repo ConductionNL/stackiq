@@ -7,6 +7,13 @@
   sheets becomes or updates a module, its vendor, a usage for the municipality
   and a contact person for its owner; a repeat import matches on APPID, so it
   updates instead of duplicating. See `docs/features/cmdb-import.md`.
+- CMDB import: on an OpenRegister with the migration-pack editor
+  (openregister#4602), the import runs the mapping packs kept in
+  OpenRegister's migration pack store, where an administrator edits them.
+  The `SeedCmdbImportPacks` repair step stores them on install and upgrade;
+  a pack nobody edited follows newer releases, an edited one is kept.
+  Viewing the mapping writes nothing. An older OpenRegister keeps the packs
+  that ship with stackiq.
 
 ### Changed
 - EOL feed: the register and schema slugs the feature reads from are corrected.

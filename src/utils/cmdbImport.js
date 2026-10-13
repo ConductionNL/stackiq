@@ -752,7 +752,7 @@ export function errorText(error, sheetNames = PROFILE_DEFAULTS.sheets) {
 				title: t('stackiq', 'The import mapping cannot run.'),
 				hint: t(
 					'stackiq',
-					"OpenRegister's mapping engine is missing or a mapping file is invalid. Update OpenRegister and check the Nextcloud log.",
+					"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.",
 				),
 			}
 		case 'READER_UNAVAILABLE':

@@ -246,8 +246,18 @@ test.describe.serial('CMDB import packs in OpenRegister', () => {
 	test('the four sheet packs are stored in OpenRegister as built-in packs', async () => {
 		const ctx = await newApiContext()
 		try {
-			// The mapping endpoint seeds a pack that is still missing.
+			// Reading the mapping stores nothing; the seed step (install or
+			// upgrade) or an import run stores a pack that is still missing.
+			const before = await storedPacks(ctx)
 			expect((await readMapping(ctx)).status()).toBe(200)
+			expect(
+				await storedPacks(ctx),
+				'reading the mapping writes nothing',
+			).toEqual(before)
+			if (Object.keys(before).length < STORED_SLUGS.length) {
+				const answer = await importExport(ctx)
+				expect(answer.status(), await answer.text()).toBe(200)
+			}
 
 			const packs = await storedPacks(ctx)
 			expect(Object.keys(packs).sort()).toEqual([...STORED_SLUGS].sort())
@@ -427,10 +437,24 @@ test.describe.serial('CMDB import packs in OpenRegister', () => {
 
 					const usages = await usagesOfMunicipality(ctx)
 					expect(usages).toHaveLength(2)
-					// The "Beheerde" row is "In productie" in the export.
-					for (const written of usages) {
-						expect(written.status).toBe('Planned')
-					}
+					const fromSheet = (constant: string) =>
+						usages.find((usage) =>
+							String(usage.interneAnnotation ?? '').startsWith(
+								constant,
+							),
+						)
+					// The "Beheerde" row is "In productie" in the export: only the
+					// edit makes it Planned. This is the evidence.
+					expect(
+						fromSheet('Beheer geregeld: ja')?.status,
+						'the usage of the "Beheerde" row',
+					).toBe('Planned')
+					// The "Onbeh" row is "In voorraad", which the shipped lookup
+					// already maps to Planned: unchanged by the edit, no evidence.
+					expect(
+						fromSheet('Beheer geregeld: nee')?.status,
+						'the usage of the "Onbeh" row',
+					).toBe('Planned')
 				},
 			)
 
@@ -447,7 +471,7 @@ test.describe.serial('CMDB import packs in OpenRegister', () => {
 	})
 
 	// @e2e cmdb-export-import::a-deleted-pack-is-seeded-again
-	test('a pack deleted in OpenRegister is seeded again', async () => {
+	test('a pack deleted in OpenRegister is seeded again by the next import', async () => {
 		const ctx = await newApiContext()
 		try {
 			const before = (await storedPacks(ctx))['stackiq-topdesk-business-owner']
@@ -455,11 +479,24 @@ test.describe.serial('CMDB import packs in OpenRegister', () => {
 			const deleted = await ctx.delete(`${PACKS_PATH}/${before.id}`)
 			expect(deleted.status(), await deleted.text()).toBe(204)
 
-			const res = await readMapping(ctx)
-			expect(res.status(), await res.text()).toBe(200)
-			const owner = ((await res.json()).packs as MappingPack[]).find(
-				(pack) => pack.target === 'businessOwner',
-			) as MappingPack
+			const ownerIn = async () =>
+				(
+					(await (await readMapping(ctx)).json()).packs as MappingPack[]
+				).find((pack) => pack.target === 'businessOwner') as MappingPack
+			const shown = await ownerIn()
+			expect(
+				shown.source,
+				'until the next import, from the shipped file',
+			).toBe('file')
+			expect(
+				(await storedPacks(ctx))['stackiq-topdesk-business-owner'],
+				'reading the mapping does not seed it',
+			).toBeUndefined()
+
+			const answer = await importExport(ctx)
+			expect(answer.status(), await answer.text()).toBe(200)
+
+			const owner = await ownerIn()
 			expect(owner.source).toBe('openregister')
 			expect(owner.packId).not.toBe(before.id)
 			expect(owner.edited).toBe(false)

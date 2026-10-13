@@ -150,8 +150,9 @@ date stored there, including one set by hand.
 
 ### Columns and where they go
 
-This is the mapping as it ships; an administrator can change it in
-OpenRegister (see [Viewing and editing the mapping](#viewing-and-editing-the-mapping)).
+This is the mapping as it ships. On an OpenRegister with the migration-pack
+editor an administrator can change it there (see
+[Viewing and editing the mapping](#viewing-and-editing-the-mapping)).
 
 | Column | Goes to | Rule |
 |---|---|---|
@@ -339,26 +340,22 @@ server is overwritten by the next app update.
 
 ## Viewing and editing the mapping
 
-Open **Administration settings → Stackiq → CMDB import** and press
-**Mapping** under the import form. The block shows:
-
-- the sheets the import reads, the match column (`APPID`), the name column,
-  the required columns and the date columns the profile names;
-- one line per pack (application, Supplier organisation, municipality,
-  usage, business owner): where the import takes it from, its version, and
-  for a pack kept in OpenRegister an **Edit in OpenRegister** link.
-
-The block reads the packs through the same loader the import uses, so what
-it shows is what the import runs. When a pack is invalid, the block shows
-`MAPPING_UNAVAILABLE` with the pack and the reason, and the import refuses to
-run with the same code. The sheet names in the section's help text come from
-the same answer. The data behind the block is also available to Nextcloud
-administrators as `GET /apps/stackiq/api/settings/cmdb-import/mapping`.
+**What you need.** Editing the mapping needs an OpenRegister with the
+migration-pack editor, whose pack writes are admin-only and need a CSRF
+token (added in [openregister#4602](https://github.com/ConductionNL/openregister/pull/4602);
+the first OpenRegister release that contains it). On an older OpenRegister
+nothing is stored in OpenRegister and there is nothing to edit: the import
+runs the packs that ship with stackiq, and the import result says so.
+Changing those shipped files on the server does not last, because the next
+app update replaces them. Once the packs have been stored in OpenRegister,
+the import does not fall back to the shipped copies: when OpenRegister's
+pack store is gone, it refuses with `MAPPING_UNAVAILABLE` until OpenRegister
+is back.
 
 The mapping from export columns to stackiq fields is not in code. It is a
 set of mapping packs that OpenRegister's mapping engine runs, one per kind of
-record the import writes. Four of them are kept in OpenRegister, where you
-can view and change them:
+record the import writes. With the editor, four of them are kept in
+OpenRegister, where you can view and change them:
 
 | Pack (in OpenRegister) | What it maps |
 |---|---|
@@ -367,11 +364,22 @@ can view and change them:
 | `stackiq-topdesk-usage` | a row to the usage (status and TIME lookups, phase-out date, internal note) |
 | `stackiq-topdesk-business-owner` | the owner columns |
 
-Stackiq puts these four packs into OpenRegister when it is installed or
-updated. The **CMDB import** section shows, per pack, where the import takes
-it from (OpenRegister, or the copy that ships with stackiq), its version, and
-an **Edit in OpenRegister** link that opens the pack. The import always runs
-what is saved in OpenRegister.
+When OpenRegister has the editor, stackiq puts these four packs into
+OpenRegister when it is installed or updated, and an import stores any that
+is missing. From then on the import runs what is saved in OpenRegister. The
+mapping endpoint (`GET /index.php/apps/stackiq/api/settings/cmdb-import/mapping`,
+Nextcloud admins only) answers, per pack, where the import takes it from
+(OpenRegister, or the copy that ships with stackiq), its version and the
+link to its editor in OpenRegister. Reading it changes nothing: it does not
+store or update a pack.
+
+**In the settings.** Open **Administration settings → Stackiq → CMDB import**
+and press **Mapping** under the import form. One table lists the sheets the
+import reads and its match, name, required and date columns; a second table
+lists the four packs, each with where the import takes it from, its version
+and, for a pack kept in OpenRegister, an **Edit in OpenRegister** link. The
+municipality pack is not listed: it maps the municipality you choose for the
+import, not a column. Opening the page changes nothing.
 
 Each pack has a list of field mappings, one per column: the column name in
 the export, the field it goes to, whether it is required, and a
@@ -390,29 +398,31 @@ rules, so it checks every pack before it reads a row. It refuses a pack, with
 - OpenRegister finds the pack invalid;
 - the application name, the APPID (to the source number), the vendor name or
   the owner name is no longer mapped, or no longer marked required;
-- a mapping or a default writes a field the pack may not write. Each pack
-  may write only a fixed list of plain fields: the fields the shipped pack
-  maps, the licence type of an application, and the start dates of a usage's
-  phases. Refused are the fields the import sets itself (the import key, the
-  provider, the consumer, the application of a usage, the business owner, the
-  type of an organisation: a Supplier stays a Supplier), every link to
-  another record, the publication dates, and the fields only an
-  administrator or the catalogue sets, such as an organisation's status and
-  who registered it. The status and registration defaults of the vendor and
-  municipality packs stay as shipped.
+- a mapping or a default writes a field the pack may not write. A pack may
+  write any plain field of the record it writes (the application, the
+  organisation or the usage), as the register defines it; the owner pack
+  writes the name and the role only. Refused are the fields the import sets
+  itself (the import key, the provider, the consumer, the application of a
+  usage, the business owner, the type of an organisation: a Supplier stays a
+  Supplier), every link to another record, files, the publication dates, and
+  the fields only an administrator or the catalogue sets, such as an
+  organisation's status and who registered it. The status and registration
+  defaults of the vendor and municipality packs stay as shipped.
 
-The section shows the same reason with an **Edit in OpenRegister** link to
-the pack, so you can correct it there and try again. After saving a pack in OpenRegister, reload the
-settings page: **Mapping** then shows the new version, or the reason the
-pack is refused.
+The mapping endpoint answers the same reason, with the link to the pack's
+editor in `details.editUrl`, and the **Mapping** block shows it with an
+**Edit in OpenRegister** link, so you can correct the pack there. After saving
+it, reload the settings page: **Mapping** then shows the new version, or the
+reason the pack is still refused.
 
 **What a pack does not change.** Which sheets are read, the APPID and
 "Applicatie Naam" columns, the values that mean empty (`NB`), the constant
 each sheet adds (`Beheer geregeld: ja` or `nee`), the limits, and which fields
 are written only on create or never on an existing record are part of the app
-(`lib/Settings/cmdb-import/topdesk-profile.json`), and the section shows them
-read-only. The municipality is mapped from the name you type in the section,
-not from the export; that pack is not edited in OpenRegister either.
+(`lib/Settings/cmdb-import/topdesk-profile.json`) and cannot be changed; the
+**Mapping** block shows them. The
+municipality is mapped from the name you choose for the import, not from the
+export; that pack is not stored in OpenRegister.
 
 **Reading more columns.** The import reads only the columns the mapping
 names. When you map a new column in a pack, the import reads that column from
@@ -423,18 +433,12 @@ import on this Nextcloud, whatever the municipality.
 
 **App updates.** A pack you have not changed follows the app: when an update
 ships a newer version, the stored pack is replaced by it. A pack you changed
-is never overwritten. When an update ships a newer version of a pack you
-changed, the section says so; compare the two and copy what you need into
-your pack in OpenRegister.
+is never overwritten, also not when you save it while an import is updating
+it. When an update ships a newer version of a pack you changed, the mapping
+endpoint reports it (`newerShipped`) and the **Mapping** block says so; compare the two and copy what you need
+into your pack in OpenRegister.
 
 **Back to the shipped pack.** Delete the pack in OpenRegister. The next
 import, or the next app update, puts the shipped pack back. Do not rename a
 pack: the import finds it by its id (such as `stackiq-topdesk-usage`), and
 refuses to run while a pack it stored has another id.
-
-**Without OpenRegister's pack store.** On an OpenRegister version without
-migration packs, or one whose pack store does not yet protect its writes
-with a CSRF token and lock the id of a built-in pack, the import uses the
-packs that ship with stackiq and the result says so. Once the packs have been stored in OpenRegister, the import
-does not fall back to those copies: when OpenRegister's pack store is gone,
-it refuses with `MAPPING_UNAVAILABLE` until OpenRegister is back.
