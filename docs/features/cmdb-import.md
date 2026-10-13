@@ -396,9 +396,12 @@ rules, so it checks every pack before it reads a row. It refuses a pack, with
   writes the name and the role only. Refused are the fields the import sets
   itself (the import key, the provider, the consumer, the application of a
   usage, the business owner, the type of an organisation: a Supplier stays a
-  Supplier), every link to another record, files, the publication dates, and
-  the fields only an administrator or the catalogue sets, such as an
-  organisation's status and who registered it. The status and registration
+  Supplier), every link to another record, files, the publication dates, the
+  fields the register hides from forms or calculates (the service desk
+  exchange's keys and stamps, the suggested TIME classification) and the
+  installed version the service desk owns, and the fields only an
+  administrator or the catalogue sets, such as an organisation's status and
+  who registered it. The status and registration
   defaults of the vendor and municipality packs stay as shipped.
 
 The mapping endpoint answers the same reason, with the link to the pack's
@@ -420,7 +423,9 @@ then on.
 import on this Nextcloud, whatever the municipality.
 
 **App updates.** A pack you have not changed follows the app: when an update
-ships a newer version, the stored pack is replaced by it. A pack you changed
+ships a newer version, the stored pack is replaced by it (the mapping
+endpoint already shows the new pack, with `updatePending` true, before the
+next import runs). A pack you changed
 is never overwritten, also not when you save it while an import is updating
 it. When an update ships a newer version of a pack you changed, the mapping
 endpoint reports it (`newerShipped`); compare the two and copy what you need

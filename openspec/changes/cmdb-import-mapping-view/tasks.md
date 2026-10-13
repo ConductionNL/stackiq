@@ -34,13 +34,13 @@ Spec: `openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.m
 - **acceptance_criteria**:
   - GIVEN the route WHEN its method is reflected THEN it carries no attribute, declares `@auth admin-only` with a reason and no exemption annotation
   - GIVEN the shipped files and no store THEN 200 with `{profile, packs, openRegisterPacks: false}`, every pack `source: file`, `editUrl: null`
-  - GIVEN the store THEN the four sheet packs answer `source: openregister`, `packId`, `storedVersion`, `shippedVersion`, `edited`, `newerShipped`, `editable: true` and `editUrl` built from OpenRegister's page route; the municipality pack answers `editable: false`
+  - GIVEN the store THEN the four sheet packs answer `source: openregister`, `packId`, `storedVersion`, `shippedVersion`, `edited`, `newerShipped`, `updatePending`, `editable: true` and `editUrl` built from OpenRegister's page route; the municipality pack answers `editable: false`
   - GIVEN a broken stored pack THEN 503 with `details.reason`, `details.pack` and `details.packId`
 - [x] Implement
 - [x] Test
 
-### Task 4: The section's mapping block shows the source and the editor link per pack
-- **spec_ref**: `SPEC#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014` (cmdb-export-import#REQ-CMDB-014) and `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020)
+### Task 4 (#1289): The section's mapping block shows the source and the editor link per pack
+- **spec_ref**: `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020); the section requirement is changed in #1289
 - **files**: `src/views/settings/sections/CmdbImportMapping.vue`, `src/views/settings/sections/CmdbImport.vue`, `src/utils/cmdbImport.js`, `tests/vitest/cmdbImportMapping.spec.js`
 - **acceptance_criteria**:
   - GIVEN the endpoint's answer WHEN the block renders THEN each pack shows its source, its version, a hint when `newerShipped`, and a link to its editor (`editUrl`) when there is one
@@ -71,8 +71,8 @@ Spec: `openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.m
 - [x] Implement
 - [x] Test
 
-### Task 7: End-to-end coverage of the section
-- **spec_ref**: `SPEC#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014` (cmdb-export-import#REQ-CMDB-014)
+### Task 7 (#1289): End-to-end coverage of the section
+- **spec_ref**: `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020); the section itself is specified in #1289
 - **files**: `tests/e2e/spec-coverage/cmdb-import-mapping.spec.ts`
 - **acceptance_criteria**:
   - GIVEN an admin on the settings page WHEN the mapping has loaded THEN every sheet pack shows its source and a link to its editor
