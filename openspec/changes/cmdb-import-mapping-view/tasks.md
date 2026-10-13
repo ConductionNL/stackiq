@@ -44,6 +44,9 @@ Spec: `openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.m
 - **files**: `src/views/settings/sections/CmdbImportMapping.vue`, `src/views/settings/sections/CmdbImport.vue`, `src/utils/cmdbImport.js`, `tests/vitest/cmdbImportMapping.spec.js`, `src/views/settings/sections/CmdbImport.spec.js`, `src/utils/cmdbImport.spec.js`
 - **acceptance_criteria**:
   - GIVEN the endpoint's answer WHEN the block renders THEN each pack shows its source, its version, a hint when `newerShipped`, and an "Edit in OpenRegister" link to `editUrl` when there is one
+  - GIVEN a pack with `updatePending` THEN the block says the shipped version replaces the stored one at the next import
+  - GIVEN a sheet pack THEN a collapsible block lists its field mappings (column, field, required, transform) and the write rules that have values, as text in tables with captions and `th` scopes
+  - GIVEN the block is collapsed while the answer loads THEN the loading announcement is in a live region outside the hidden block
   - GIVEN a 503 THEN the block shows the error, the code and the reason, and for a stored pack an "Edit in OpenRegister" link to `details.editUrl`
   - GIVEN the answer THEN the help text names the endpoint's sheets; before and on failure `PROFILE_DEFAULTS.sheets`
   - GIVEN a profile with one, two or three sheets WHEN the section renders its help text and its info text THEN both name exactly those sheets in the profile's order

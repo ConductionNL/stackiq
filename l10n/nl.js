@@ -1201,7 +1201,6 @@ OC.L10N.register(
         "In use since": "In gebruik sinds",
         "Application (module)": "Applicatie (module)",
         "Supplier organisation (Vendor)": "Leveranciersorganisatie (Vendor)",
-        "Municipality (from the import options)": "Gemeente (uit de importopties)",
         "Business owner (contact person)": "Business owner (contactpersoon)",
         "Loading the mapping…": "Mapping laden…",
         "The mapping could not be loaded.": "De mapping kon niet worden geladen.",
@@ -1233,10 +1232,23 @@ OC.L10N.register(
         "Kind of record": "Soort gegeven",
         "New applications become visible to everyone, also without logging in.": "Nieuwe applicaties worden voor iedereen zichtbaar, ook zonder in te loggen.",
         "Overwrites applications imported before with the values from the export. The (i) button above lists the fields.": "Overschrijft eerder geïmporteerde applicaties met de waarden uit de export. De (i)-knop bovenaan noemt de velden.",
-        "Packs: which column goes to which field": "Packs: welke kolom naar welk veld gaat",
         "Stored in": "Opgeslagen in",
         "The export": "De export",
-        "Which columns of the export the next import reads, and where each column goes.": "Welke kolommen van de export de volgende import leest, en waar elke kolom heen gaat."
+        "Which columns of the export the next import reads, and where each column goes.": "Welke kolommen van de export de volgende import leest, en waar elke kolom heen gaat.",
+        "Packs": "Packs",
+        "Update pending: shipped {version} replaces stored {storedVersion} at the next import.": "Update in afwachting: de meegeleverde versie {version} vervangt de opgeslagen versie {storedVersion} bij de volgende import.",
+        "Columns and fields: {target}": "Kolommen en velden: {target}",
+        "Which column of the export goes to which field": "Welke kolom van de export naar welk veld gaat",
+        "Column of the export": "Kolom van de export",
+        "Field": "Veld",
+        "Transform": "Omzetting",
+        "Yes": "Ja",
+        "No": "Nee",
+        "What the import writes": "Wat de import schrijft",
+        "Set on every record": "Op elk record gezet",
+        "Set on a new record only": "Alleen op een nieuw record gezet",
+        "Written on a new record, or on an existing one only when empty": "Op een nieuw record geschreven, of op een bestaand record alleen als de waarde leeg is",
+        "Never written on an existing record": "Nooit geschreven op een bestaand record"
     },
     "nplurals=2; plural=(n != 1);"
 )

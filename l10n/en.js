@@ -1133,7 +1133,6 @@ OC.L10N.register(
         "In use since": "In use since",
         "Application (module)": "Application (module)",
         "Supplier organisation (Vendor)": "Supplier organisation (Vendor)",
-        "Municipality (from the import options)": "Municipality (from the import options)",
         "Business owner (contact person)": "Business owner (contact person)",
         "Loading the mapping…": "Loading the mapping…",
         "The mapping could not be loaded.": "The mapping could not be loaded.",
@@ -1165,10 +1164,23 @@ OC.L10N.register(
         "Kind of record": "Kind of record",
         "New applications become visible to everyone, also without logging in.": "New applications become visible to everyone, also without logging in.",
         "Overwrites applications imported before with the values from the export. The (i) button above lists the fields.": "Overwrites applications imported before with the values from the export. The (i) button above lists the fields.",
-        "Packs: which column goes to which field": "Packs: which column goes to which field",
         "Stored in": "Stored in",
         "The export": "The export",
-        "Which columns of the export the next import reads, and where each column goes.": "Which columns of the export the next import reads, and where each column goes."
+        "Which columns of the export the next import reads, and where each column goes.": "Which columns of the export the next import reads, and where each column goes.",
+        "Packs": "Packs",
+        "Update pending: shipped {version} replaces stored {storedVersion} at the next import.": "Update pending: shipped {version} replaces stored {storedVersion} at the next import.",
+        "Columns and fields: {target}": "Columns and fields: {target}",
+        "Which column of the export goes to which field": "Which column of the export goes to which field",
+        "Column of the export": "Column of the export",
+        "Field": "Field",
+        "Transform": "Transform",
+        "Yes": "Yes",
+        "No": "No",
+        "What the import writes": "What the import writes",
+        "Set on every record": "Set on every record",
+        "Set on a new record only": "Set on a new record only",
+        "Written on a new record, or on an existing one only when empty": "Written on a new record, or on an existing one only when empty",
+        "Never written on an existing record": "Never written on an existing record"
     },
     "nplurals=2; plural=(n != 1);"
 )

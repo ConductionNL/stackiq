@@ -18,6 +18,14 @@
 			{{ t('stackiq', 'Mapping') }}
 		</NcButton>
 
+		<!-- The live region stays outside the block that is hidden while collapsed: the load starts before the block is opened -->
+		<p
+			class="hidden-visually"
+			role="status"
+			data-testid="cmdb-import-mapping-status">
+			{{ loading ? t('stackiq', 'Loading the mapping…') : '' }}
+		</p>
+
 		<div
 			v-show="expanded"
 			id="cmdb-import-mapping-content"
@@ -34,10 +42,11 @@
 			<div
 				v-if="loading"
 				class="cmdb-import-mapping__loading"
-				role="status"
 				data-testid="cmdb-import-mapping-loading">
 				<NcLoadingIcon :size="20" />
-				<span>{{ t('stackiq', 'Loading the mapping…') }}</span>
+				<span aria-hidden="true">{{
+					t('stackiq', 'Loading the mapping…')
+				}}</span>
 			</div>
 
 			<!-- The error, never as HTML; the reason names a file or an OpenRegister pack and the rule it breaks -->
@@ -132,7 +141,7 @@
 					data-testid="cmdb-import-mapping-packs">
 					<caption>
 						{{
-							t('stackiq', 'Packs: which column goes to which field')
+							t('stackiq', 'Packs')
 						}}
 					</caption>
 					<thead>
@@ -183,6 +192,28 @@
 									size="small"
 									data-testid="cmdb-import-mapping-edited" />
 								<p
+									v-if="pack.updatePending === true"
+									class="cmdb-import-mapping__help"
+									data-testid="cmdb-import-mapping-update-pending">
+									{{
+										t(
+											'stackiq',
+											'Update pending: shipped {version} replaces stored {storedVersion} at the next import.',
+											{
+												version: String(
+													pack.shippedVersion
+														?? pack.version
+														?? '',
+												),
+												storedVersion: String(
+													pack.storedVersion ?? '',
+												),
+											},
+											asText,
+										)
+									}}
+								</p>
+								<p
 									v-if="pack.newerShipped === true"
 									class="cmdb-import-mapping__help"
 									data-testid="cmdb-import-mapping-newer">
@@ -224,6 +255,94 @@
 						</tr>
 					</tbody>
 				</table>
+				<details
+					v-for="pack in sheetPacks"
+					:key="pack.target"
+					class="cmdb-import-mapping__details"
+					:data-testid="'cmdb-import-mapping-details-' + pack.target">
+					<summary>
+						{{
+							t(
+								'stackiq',
+								'Columns and fields: {target}',
+								{ target: packTargetLabel(pack.target) },
+								asText,
+							)
+						}}
+					</summary>
+					<table
+						class="cmdb-import-mapping__table"
+						data-testid="cmdb-import-mapping-fields">
+						<caption>
+							{{
+								t(
+									'stackiq',
+									'Which column of the export goes to which field',
+								)
+							}}
+						</caption>
+						<thead>
+							<tr>
+								<th scope="col">
+									{{ t('stackiq', 'Column of the export') }}
+								</th>
+								<th scope="col">
+									{{ t('stackiq', 'Field') }}
+								</th>
+								<th scope="col">
+									{{ t('stackiq', 'Required') }}
+								</th>
+								<th scope="col">
+									{{ t('stackiq', 'Transform') }}
+								</th>
+							</tr>
+						</thead>
+						<tbody>
+							<tr
+								v-for="(row, index) in packFieldRows(pack)"
+								:key="index">
+								<th scope="row">
+									{{ row.source }}
+								</th>
+								<td>{{ row.target }}</td>
+								<td>
+									{{
+										row.required
+											? t('stackiq', 'Yes')
+											: t('stackiq', 'No')
+									}}
+								</td>
+								<td>{{ row.transform || '—' }}</td>
+							</tr>
+						</tbody>
+					</table>
+					<table
+						v-if="packWriteRules(pack).length > 0"
+						class="cmdb-import-mapping__table"
+						data-testid="cmdb-import-mapping-rules">
+						<caption>
+							{{
+								t('stackiq', 'What the import writes')
+							}}
+						</caption>
+						<tbody>
+							<tr v-for="rule in packWriteRules(pack)" :key="rule.key">
+								<th scope="row">
+									{{ rule.label }}
+								</th>
+								<td>
+									<ul class="cmdb-import-mapping__values">
+										<li
+											v-for="value in rule.values"
+											:key="value">
+											{{ value }}
+										</li>
+									</ul>
+								</td>
+							</tr>
+						</tbody>
+					</table>
+				</details>
 				<p
 					v-if="mapping.openRegisterPacks === true"
 					class="cmdb-import-mapping__help">
@@ -253,9 +372,11 @@ import {
 	loadCmdbMapping,
 	normaliseError,
 	packEditUrl,
+	packFieldRows,
 	packSourceLabel,
 	packTargetLabel,
 	packVersionText,
+	packWriteRules,
 } from '../../../utils/cmdbImport.js'
 
 /**
@@ -265,7 +386,9 @@ import {
  * hands it to the section (`loaded`) so the help text can name the sheets
  * from it. Per pack it shows one line: where the import takes the pack from
  * (OpenRegister's pack store or the shipped file), its version, whether it
- * was edited or a newer version ships, and a link to OpenRegister's editor.
+ * was edited, a newer version ships or an update is pending, and a link to
+ * OpenRegister's editor. Below the table, one collapsible block per pack lists
+ * its column-to-field mappings and the rules for what the import writes.
  * Nothing here edits a mapping; that happens in OpenRegister. Every value is
  * rendered as text; the error's reason names a file or a pack and the rule
  * it breaks, never a cell value.
@@ -391,9 +514,11 @@ export default {
 	methods: {
 		t,
 		packEditUrl,
+		packFieldRows,
 		packSourceLabel,
 		packTargetLabel,
 		packVersionText,
+		packWriteRules,
 
 		/**
 		 * Read the mapping from the server and tell the section about it.
@@ -477,6 +602,15 @@ export default {
 	margin: 0;
 	padding: 0;
 	list-style: none;
+}
+
+.cmdb-import-mapping__details summary {
+	cursor: pointer;
+	font-weight: 600;
+}
+
+.cmdb-import-mapping__details .cmdb-import-mapping__table th {
+	font-weight: normal;
 }
 
 .cmdb-import-mapping__target {

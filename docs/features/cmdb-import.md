@@ -418,14 +418,22 @@ editor in `details.editUrl`, and the **Mapping** block shows it with an
 it, reload the settings page: **Mapping** then shows the new version, or the
 reason the pack is still refused.
 
+**What the Mapping block shows.** Below the table of packs, each pack has a
+collapsible block "Columns and fields": which column of the export goes to
+which field, whether the mapping is required and which transform it uses, and
+the rules for what the import writes (the values it sets, the fields written
+only on a new record, the fields it never writes on an existing record). When
+an unedited pack in OpenRegister is older than the shipped one, the row says
+"Update pending": the next import replaces it with the shipped version.
+
 **What a pack does not change.** Which sheets are read, the APPID and
 "Applicatie Naam" columns, the values that mean empty (`NB`), the constant
-each sheet adds (`Beheer geregeld: ja` or `nee`), the limits, and which fields
-are written only on create or never on an existing record are part of the app
-(`lib/Settings/cmdb-import/topdesk-profile.json`) and cannot be changed; the
-**Mapping** block shows them. The
+each sheet adds (`Beheer geregeld: ja` or `nee`) and the limits are part of
+the app (`lib/Settings/cmdb-import/topdesk-profile.json`) and cannot be
+changed; the **Mapping** block shows the sheets and the match, name, required
+and date columns, not the empty values, the constants or the limits. The
 municipality is mapped from the name you choose for the import, not from the
-export; that pack is not stored in OpenRegister.
+export; that pack is not stored in OpenRegister and the block does not list it.
 
 **Reading more columns.** The import reads only the columns the mapping
 names. When you map a new column in a pack, the import reads that column from

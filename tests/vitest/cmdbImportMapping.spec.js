@@ -46,8 +46,10 @@ const {
 	fileHelpText,
 	mappingSheetNames,
 	packEditUrl,
+	packFieldRows,
 	packSourceLabel,
 	packTargetLabel,
+	packWriteRules,
 	packVersionText,
 	PROFILE_DEFAULTS,
 	sheetsReadText,
@@ -77,7 +79,28 @@ function answer(store = true) {
 			name: `TOPdesk ${target}`,
 			version: '1.0.0',
 			description: '',
-			fieldMappings: [],
+			fieldMappings: [
+				{
+					source: 'APPID',
+					target: 'externalNumber',
+					required: true,
+					transform: { type: 'trim' },
+				},
+				{
+					source: 'Soort',
+					target: 'kind',
+					required: false,
+					transform: { type: 'lookup', map: { a: 'A', b: 'B' } },
+				},
+			],
+			defaults:
+				target === 'manufacturer'
+					? { type: 'Supplier', status: 'Active' }
+					: [],
+			createOnlyDefaults: target === 'module' ? { type: 'Application' } : [],
+			createOnlyFields: target === 'usage' ? ['interneAnnotation'] : [],
+			neverWritten: target === 'module' ? ['publicationDate'] : [],
+			updatePending: false,
 			source: fromStore ? 'openregister' : 'file',
 			packId,
 			storedVersion: fromStore ? '1.0.0' : null,
@@ -239,6 +262,116 @@ describe('CmdbImportMapping', () => {
 		const newer = usage.find('[data-testid="cmdb-import-mapping-newer"]')
 		expect(newer.text()).toContain('a newer version of this pack (1.1.0)')
 		expect(newer.text()).toContain('It was not applied')
+	})
+
+	it('lists the column-to-field mappings and the write rules of each sheet pack as text', async () => {
+		const wrapper = await mountOpen(answer())
+
+		const module = wrapper.find(
+			'[data-testid="cmdb-import-mapping-details-module"]',
+		)
+		expect(module.element.tagName).toBe('DETAILS')
+		expect(module.find('summary').text()).toBe(
+			'Columns and fields: Application (module)',
+		)
+		const fields = module.find('[data-testid="cmdb-import-mapping-fields"]')
+		expect(fields.find('caption').text()).toBe(
+			'Which column of the export goes to which field',
+		)
+		expect(fields.findAll('thead th[scope="col"]')).toHaveLength(4)
+		const rows = fields
+			.findAll('tbody tr')
+			.map((row) => row.findAll('th, td').map((cell) => cell.text()))
+		expect(rows).toEqual([
+			['APPID', 'externalNumber', 'Yes', 'trim'],
+			['Soort', 'kind', 'No', 'lookup (2)'],
+		])
+		expect(fields.findAll('tbody th[scope="row"]')).toHaveLength(2)
+		const rules = module.find('[data-testid="cmdb-import-mapping-rules"]')
+		expect(rules.text()).toContain('Set on a new record only')
+		expect(rules.text()).toContain('type: Application')
+		expect(rules.text()).toContain('Never written on an existing record')
+		expect(rules.text()).toContain('publicationDate')
+		expect(rules.text()).not.toContain('Set on every record')
+		const manufacturer = wrapper.find(
+			'[data-testid="cmdb-import-mapping-details-manufacturer"]',
+		)
+		expect(manufacturer.text()).toContain('type: Supplier')
+		expect(manufacturer.text()).toContain('status: Active')
+		expect(
+			wrapper
+				.find('[data-testid="cmdb-import-mapping-details-municipality"]')
+				.exists(),
+		).toBe(false)
+		expect(
+			wrapper.find('[data-testid="cmdb-import-mapping-packs"] caption').text(),
+		).toBe('Packs')
+		expect(wrapper.html()).not.toContain('which column goes to which field')
+	})
+
+	it('shapes field mappings and write rules without throwing on odd input', () => {
+		expect(packFieldRows(undefined)).toEqual([])
+		expect(
+			packFieldRows({
+				fieldMappings: [{ source: 'A', target: 'b', transform: 'x' }],
+			}),
+		).toEqual([{ source: 'A', target: 'b', required: false, transform: 'x' }])
+		expect(packWriteRules({ defaults: [], neverWritten: [] })).toEqual([])
+		expect(packWriteRules({ defaults: { n: 1 } })[0].values).toEqual(['n: 1'])
+	})
+
+	it('says an update is pending for an unedited stored pack the next import replaces', async () => {
+		const data = answer()
+		Object.assign(data.packs[0], {
+			version: '1.1.0',
+			storedVersion: '1.0.0',
+			shippedVersion: '1.1.0',
+			updatePending: true,
+		})
+		const wrapper = await mountOpen(data)
+
+		const module = wrapper.find('[data-testid="cmdb-import-mapping-module"]')
+		expect(
+			module.find('[data-testid="cmdb-import-mapping-update-pending"]').text(),
+		).toBe(
+			'Update pending: shipped 1.1.0 replaces stored 1.0.0 at the next import.',
+		)
+		expect(
+			wrapper
+				.find('[data-testid="cmdb-import-mapping-manufacturer"]')
+				.find('[data-testid="cmdb-import-mapping-update-pending"]')
+				.exists(),
+		).toBe(false)
+	})
+
+	it('announces the loading in a live region outside the block hidden while collapsed', async () => {
+		let resolve
+		http.get.mockReturnValue(
+			new Promise((done) => {
+				resolve = done
+			}),
+		)
+		const wrapper = mount(CmdbImportMapping)
+		await flushPromises()
+
+		const status = wrapper.find('[data-testid="cmdb-import-mapping-status"]')
+		expect(status.attributes('role')).toBe('status')
+		expect(status.text()).toBe('Loading the mapping…')
+		expect(
+			wrapper
+				.find('#cmdb-import-mapping-content')
+				.find('[role="status"]')
+				.exists(),
+		).toBe(false)
+		expect(
+			wrapper.find('#cmdb-import-mapping-content').attributes('style'),
+		).toContain('display: none')
+
+		resolve({ data: answer() })
+		await flushPromises()
+		expect(
+			wrapper.find('[data-testid="cmdb-import-mapping-status"]').text(),
+		).toBe('')
 	})
 
 	it('leaves out the municipality pack, which maps the import options and no column', async () => {
@@ -473,6 +606,8 @@ describe('cmdbImport mapping helpers', () => {
 			'Business owner (contact person)',
 		)
 		expect(packTargetLabel('something-new')).toBe('something-new')
+		// The municipality pack is never listed, so it has no words of its own.
+		expect(packTargetLabel('municipality')).toBe('municipality')
 		expect(packSourceLabel('openregister')).toBe('OpenRegister')
 		expect(packSourceLabel('file')).toBe('Shipped file')
 		expect(packSourceLabel('elsewhere')).toBe('elsewhere')

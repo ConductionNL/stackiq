@@ -1113,8 +1113,6 @@ export function packTargetLabel(target) {
 			return t('stackiq', 'Application (module)')
 		case 'manufacturer':
 			return t('stackiq', 'Supplier organisation (Vendor)')
-		case 'municipality':
-			return t('stackiq', 'Municipality (from the import options)')
 		case 'usage':
 			return t('stackiq', 'Usage')
 		case 'businessOwner':
@@ -1122,6 +1120,88 @@ export function packTargetLabel(target) {
 		default:
 			return String(target ?? '')
 	}
+}
+
+/**
+ * The field mappings of a pack as rows of text: the column of the export, the
+ * field it goes to, whether a failing row is skipped without it, and what the
+ * pack does with the value (the transform's type; a lookup also its size).
+ *
+ * @param {object} pack One entry of the endpoint's `packs`
+ * @return {Array<{source: string, target: string, required: boolean, transform: string}>} One row per mapping, in the pack's order
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export function packFieldRows(pack) {
+	const mappings = Array.isArray(pack?.fieldMappings) ? pack.fieldMappings : []
+	return mappings.map((mapping) => {
+		const transform = mapping?.transform
+		let text = ''
+		if (typeof transform === 'string') {
+			text = transform
+		} else if (transform && typeof transform === 'object') {
+			text = String(transform.type ?? '')
+			if (
+				text === 'lookup'
+				&& transform.map
+				&& typeof transform.map === 'object'
+			) {
+				text += ' (' + Object.keys(transform.map).length + ')'
+			}
+		}
+		return {
+			source: String(mapping?.source ?? ''),
+			target: String(mapping?.target ?? ''),
+			required: mapping?.required === true,
+			transform: text,
+		}
+	})
+}
+
+/**
+ * The write rules of a pack as rows of text: the values it sets, and the
+ * fields written only on create or never on an existing record. A rule the
+ * pack does not have gives no row.
+ *
+ * @param {object} pack One entry of the endpoint's `packs`
+ * @return {Array<{key: string, label: string, values: Array<string>}>} One row per rule that has values
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export function packWriteRules(pack) {
+	const pairs = (value) =>
+		value && typeof value === 'object' && !Array.isArray(value)
+			? Object.entries(value).map(
+					([key, val]) =>
+						key
+						+ ': '
+						+ (typeof val === 'string' ? val : JSON.stringify(val)),
+				)
+			: []
+	const list = (value) => (Array.isArray(value) ? value.map(String) : [])
+	return [
+		{
+			key: 'defaults',
+			label: t('stackiq', 'Set on every record'),
+			values: pairs(pack?.defaults),
+		},
+		{
+			key: 'createOnlyDefaults',
+			label: t('stackiq', 'Set on a new record only'),
+			values: pairs(pack?.createOnlyDefaults),
+		},
+		{
+			key: 'createOnlyFields',
+			label: t(
+				'stackiq',
+				'Written on a new record, or on an existing one only when empty',
+			),
+			values: list(pack?.createOnlyFields),
+		},
+		{
+			key: 'neverWritten',
+			label: t('stackiq', 'Never written on an existing record'),
+			values: list(pack?.neverWritten),
+		},
+	].filter((rule) => rule.values.length > 0)
 }
 
 /**
