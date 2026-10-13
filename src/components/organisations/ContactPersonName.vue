@@ -13,7 +13,7 @@
 		</template>
 		<div class="contact-person-name" data-testid="contact-person-name">
 			<NcLoadingIcon
-				v-if="loading"
+				v-if="waiting"
 				:size="20"
 				:name="t('stackiq', 'Loading the name')" />
 			<template v-else>
@@ -68,6 +68,15 @@ export default {
 			type: String,
 			default: '',
 		},
+
+		/**
+		 * The id of the loaded object (`@object.id`); absent while the page is
+		 * still reading it, when `contactsUid` is empty for that reason too.
+		 */
+		loadedId: {
+			type: String,
+			default: '',
+		},
 	},
 
 	data() {
@@ -79,6 +88,17 @@ export default {
 	},
 
 	computed: {
+		/**
+		 * Whether to show the spinner: the name is being read, or the object is
+		 * not loaded yet, so "not linked" cannot be told from "not known yet".
+		 *
+		 * @return {boolean} True while waiting.
+		 * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-005-a-contact-persons-name-shows-only-to-who-can-read-the-contact
+		 */
+		waiting() {
+			return this.loading || !this.loadedId
+		},
+
 		/**
 		 * Why there is no name to show.
 		 *

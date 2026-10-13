@@ -33,7 +33,9 @@ const ContactPersonName = (
 
 const A = '00000000-0000-0000-0000-00000000000a'
 async function mountIt(props) {
-	const wrapper = mount(ContactPersonName, { props: { objectId: A, ...props } })
+	const wrapper = mount(ContactPersonName, {
+		props: { objectId: A, loadedId: A, ...props },
+	})
 	await flushPromises()
 	return wrapper
 }
@@ -75,5 +77,19 @@ describe('ContactPersonName', () => {
 		const hint = wrapper.get('[data-testid="contact-person-name-hint"]').text()
 		expect(hint).toContain('could not be loaded')
 		expect(hint).not.toContain('address book')
+	})
+
+	it('shows no hint while the object is not loaded yet', async () => {
+		http.get.mockResolvedValue({ data: { names: {} } })
+		const wrapper = await mountIt({ loadedId: '' })
+		expect(
+			wrapper.find('[data-testid="contact-person-name-hint"]').exists(),
+		).toBe(false)
+		expect(wrapper.find('.loading').exists()).toBe(true)
+
+		await wrapper.setProps({ loadedId: A })
+		expect(
+			wrapper.get('[data-testid="contact-person-name-hint"]').text(),
+		).toContain('not linked')
 	})
 })

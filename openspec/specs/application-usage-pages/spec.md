@@ -71,7 +71,7 @@ The usage schema SHALL declare its lifecycle on the status values its rows hold,
 The contact person page and the Name column of an organisation's contact person list SHALL show the name of the linked Nextcloud contact only to a user who can read that contact in their own or shared address books, and SHALL say why there is no name when there is none.
 
 #### Scenario: A reader of the contact sees the name
-@e2e exclude Needs a Contacts address book per user; tests/vitest/contactNames.spec.js asserts the name on the contact person page and in the list column.
+@e2e exclude Needs a Contacts address book per user; tests/vitest/contactPersonName.spec.js asserts the name on the contact person page and tests/vitest/contactNames.spec.js the list column cell.
 
 - **GIVEN** a contact person linked to a contact in the information manager's own address book
 - **WHEN** the information manager opens the contact person, or the organisation it belongs to
@@ -79,7 +79,7 @@ The contact person page and the Name column of an organisation's contact person 
 - **AND** the Name column of the organisation's contact person list shows it
 
 #### Scenario: Without a name the page says why
-@e2e exclude Needs a Contacts address book per user; tests/vitest/contactNames.spec.js asserts each empty state.
+@e2e exclude Needs a Contacts address book per user; tests/vitest/contactPersonName.spec.js asserts each empty state, and that none shows before the object has loaded; tests/vitest/contactNames.spec.js asserts a failed request apart from an empty answer.
 
 - **GIVEN** a contact person whose name the signed-in user does not get
 - **WHEN** the user opens the contact person page
