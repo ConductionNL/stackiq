@@ -26,17 +26,7 @@
 				{{
 					t(
 						'stackiq',
-						'The mapping the next import runs: the sheets it reads and, for each kind of record, the pack that says which column of the export goes to which field.',
-					)
-				}}
-			</p>
-			<p
-				v-if="mapping && mapping.openRegisterPacks === true"
-				class="cmdb-import__help">
-				{{
-					t(
-						'stackiq',
-						'The packs are kept in OpenRegister, where you can view and edit them. A pack deleted there is restored from the shipped file at the next import.',
+						'Which columns of the export the next import reads, and where each column goes.',
 					)
 				}}
 			</p>
@@ -107,92 +97,142 @@
 					</p>
 				</NcNoteCard>
 
-				<dl
-					class="cmdb-import-mapping__profile"
+				<table
+					class="cmdb-import-mapping__table cmdb-import-mapping__profile"
 					data-testid="cmdb-import-mapping-profile">
-					<div v-for="fact in profileFacts" :key="fact.key">
-						<dt>{{ fact.label }}</dt>
-						<dd>{{ fact.value }}</dd>
-					</div>
-				</dl>
-
-				<ul class="cmdb-import-mapping__packs">
-					<li
-						v-for="pack in mapping.packs"
-						:key="pack.target"
-						class="cmdb-import-mapping__pack"
-						:data-testid="'cmdb-import-mapping-' + pack.target">
-						<div class="cmdb-import-mapping__line">
-							<span class="cmdb-import-mapping__target">
-								{{ packTargetLabel(pack.target) }}
-							</span>
-							<CnStatusBadge
-								:label="packSourceLabel(pack.source)"
-								:variant="
-									pack.source === 'openregister'
-										? 'primary'
-										: 'default'
-								"
-								size="small"
-								data-testid="cmdb-import-mapping-source" />
-							<span
-								v-if="packVersionText(pack)"
-								class="cmdb-import__help"
-								data-testid="cmdb-import-mapping-version">
-								{{ packVersionText(pack) }}
-							</span>
-							<CnStatusBadge
-								v-if="pack.edited === true"
-								:label="t('stackiq', 'Edited')"
-								variant="info"
-								size="small"
-								data-testid="cmdb-import-mapping-edited" />
-							<NcButton
-								v-if="packEditUrl(pack)"
-								variant="secondary"
-								:href="packEditUrl(pack)"
-								target="_blank"
-								:aria-label="
-									t(
-										'stackiq',
-										'Edit in OpenRegister: {target} (opens in a new tab)',
-										{ target: packTargetLabel(pack.target) },
-										asText,
-									)
-								"
-								data-testid="cmdb-import-mapping-edit">
-								<template #icon>
-									<OpenInNew :size="20" />
+					<caption>
+						{{
+							t('stackiq', 'The export')
+						}}
+					</caption>
+					<tbody>
+						<tr v-for="fact in profileFacts" :key="fact.key">
+							<th scope="row">
+								{{ fact.label }}
+							</th>
+							<td>
+								<ul
+									v-if="fact.values.length > 1"
+									class="cmdb-import-mapping__values">
+									<li v-for="value in fact.values" :key="value">
+										{{ value }}
+									</li>
+								</ul>
+								<template v-else>
+									{{ fact.values[0] || '—' }}
 								</template>
-								{{ t('stackiq', 'Edit in OpenRegister') }}
-							</NcButton>
-						</div>
-						<p
-							v-if="pack.target === 'municipality'"
-							class="cmdb-import__help"
-							data-testid="cmdb-import-mapping-not-editable">
-							{{
-								t(
-									'stackiq',
-									'This pack maps the import options, not a column of the export, so it is not edited in OpenRegister.',
-								)
-							}}
-						</p>
-						<p
-							v-if="pack.newerShipped === true"
-							class="cmdb-import__help"
-							data-testid="cmdb-import-mapping-newer">
-							{{
-								t(
-									'stackiq',
-									'Stackiq ships a newer version of this pack ({version}). It was not applied, because the pack was edited in OpenRegister. Delete the pack there to use the shipped version from the next import on; your edits are then lost.',
-									{ version: String(pack.shippedVersion ?? '') },
-									asText,
-								)
-							}}
-						</p>
-					</li>
-				</ul>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+
+				<table
+					class="cmdb-import-mapping__table cmdb-import-mapping__packs"
+					data-testid="cmdb-import-mapping-packs">
+					<caption>
+						{{
+							t('stackiq', 'Packs: which column goes to which field')
+						}}
+					</caption>
+					<thead>
+						<tr>
+							<th scope="col">
+								{{ t('stackiq', 'Kind of record') }}
+							</th>
+							<th scope="col">
+								{{ t('stackiq', 'Stored in') }}
+							</th>
+							<th scope="col">
+								{{ t('stackiq', 'Status') }}
+							</th>
+							<th scope="col">
+								<span class="hidden-visually">{{
+									t('stackiq', 'Actions')
+								}}</span>
+							</th>
+						</tr>
+					</thead>
+					<tbody>
+						<tr
+							v-for="pack in sheetPacks"
+							:key="pack.target"
+							:data-testid="'cmdb-import-mapping-' + pack.target">
+							<th scope="row" class="cmdb-import-mapping__target">
+								{{ packTargetLabel(pack.target) }}
+							</th>
+							<td>
+								<CnStatusBadge
+									:label="packSourceLabel(pack.source)"
+									:variant="
+										pack.source === 'openregister'
+											? 'primary'
+											: 'default'
+									"
+									size="small"
+									data-testid="cmdb-import-mapping-source" />
+							</td>
+							<td>
+								<span data-testid="cmdb-import-mapping-version">{{
+									packVersionText(pack)
+								}}</span>
+								<CnStatusBadge
+									v-if="pack.edited === true"
+									:label="t('stackiq', 'Edited')"
+									variant="info"
+									size="small"
+									data-testid="cmdb-import-mapping-edited" />
+								<p
+									v-if="pack.newerShipped === true"
+									class="cmdb-import__help"
+									data-testid="cmdb-import-mapping-newer">
+									{{
+										t(
+											'stackiq',
+											'Stackiq ships a newer version of this pack ({version}). It was not applied, because the pack was edited in OpenRegister. Delete the pack there to use the shipped version from the next import on; your edits are then lost.',
+											{
+												version: String(
+													pack.shippedVersion ?? '',
+												),
+											},
+											asText,
+										)
+									}}
+								</p>
+							</td>
+							<td>
+								<NcButton
+									v-if="packEditUrl(pack)"
+									variant="secondary"
+									:href="packEditUrl(pack)"
+									target="_blank"
+									:aria-label="
+										t(
+											'stackiq',
+											'Edit in OpenRegister: {target} (opens in a new tab)',
+											{ target: packTargetLabel(pack.target) },
+											asText,
+										)
+									"
+									data-testid="cmdb-import-mapping-edit">
+									<template #icon>
+										<OpenInNew :size="20" />
+									</template>
+									{{ t('stackiq', 'Edit in OpenRegister') }}
+								</NcButton>
+							</td>
+						</tr>
+					</tbody>
+				</table>
+				<p
+					v-if="mapping.openRegisterPacks === true"
+					class="cmdb-import__help">
+					{{
+						t(
+							'stackiq',
+							'A pack deleted in OpenRegister is restored from the shipped file at the next import.',
+						)
+					}}
+				</p>
 			</template>
 		</div>
 	</div>
@@ -261,13 +301,16 @@ export default {
 		 * The profile's settings an admin reads before the packs: the sheets
 		 * and the key, name, required and date columns.
 		 *
-		 * @return {Array<{key: string, label: string, value: string}>} One line per setting
+		 * @return {Array<{key: string, label: string, values: Array<string>}>} One row per setting
 		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 		 */
 		profileFacts() {
 			const profile = this.mapping?.profile || {}
 			const list = (values) =>
-				(Array.isArray(values) ? values : []).map(String).join(', ') || '—'
+				(Array.isArray(values) ? values : [])
+					.map(String)
+					.filter((value) => value !== '')
+			const one = (value) => list([value ?? ''])
 			const sheets = (Array.isArray(profile.sheets) ? profile.sheets : [])
 				.map((sheet) => String(sheet?.name ?? sheet ?? ''))
 				.filter((name) => name !== '')
@@ -275,29 +318,43 @@ export default {
 				{
 					key: 'sheets',
 					label: t('stackiq', 'Sheets read'),
-					value: list(sheets),
+					values: sheets,
 				},
 				{
 					key: 'keyColumn',
 					label: t('stackiq', 'Match column'),
-					value: String(profile.keyColumn ?? '—'),
+					values: one(profile.keyColumn),
 				},
 				{
 					key: 'nameColumn',
 					label: t('stackiq', 'Name column'),
-					value: String(profile.nameColumn ?? '—'),
+					values: one(profile.nameColumn),
 				},
 				{
 					key: 'requiredColumns',
 					label: t('stackiq', 'Required columns'),
-					value: list(profile.requiredColumns),
+					values: list(profile.requiredColumns),
 				},
 				{
 					key: 'dateColumns',
 					label: t('stackiq', 'Date columns'),
-					value: list(profile.dateColumns),
+					values: list(profile.dateColumns),
 				},
 			]
+		},
+
+		/**
+		 * The packs that map a sheet of the export. The municipality pack maps
+		 * the municipality chosen in the import options, not a column, so it
+		 * has nothing to show or edit here.
+		 *
+		 * @return {Array<object>} The packs, in the endpoint's order
+		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+		 */
+		sheetPacks() {
+			return (this.mapping?.packs || []).filter(
+				(pack) => pack.target !== 'municipality',
+			)
 		},
 
 		/**
@@ -385,42 +442,40 @@ export default {
 	gap: 0.5rem;
 }
 
-.cmdb-import-mapping__profile {
-	display: grid;
-	grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-	gap: 0.5rem 1rem;
-	margin: 0;
+.cmdb-import-mapping__table {
+	width: 100%;
+	border-collapse: collapse;
 }
 
-.cmdb-import-mapping__profile dt {
-	font-size: 0.875rem;
+.cmdb-import-mapping__table caption {
+	text-align: start;
+	font-weight: 600;
+	padding-bottom: 0.25rem;
+}
+
+.cmdb-import-mapping__table th,
+.cmdb-import-mapping__table td {
+	padding: 0.4rem 0.75rem 0.4rem 0;
+	text-align: start;
+	vertical-align: top;
+	border-bottom: 1px solid var(--color-border);
+}
+
+.cmdb-import-mapping__profile th {
+	width: 12rem;
+	font-weight: normal;
 	color: var(--color-text-maxcontrast);
 }
 
-.cmdb-import-mapping__profile dd {
-	margin: 0;
-	font-weight: 500;
-	overflow-wrap: anywhere;
+.cmdb-import-mapping__packs thead th {
+	font-weight: normal;
+	color: var(--color-text-maxcontrast);
 }
 
-.cmdb-import-mapping__packs {
-	display: flex;
-	flex-direction: column;
-	gap: 0.75rem;
+.cmdb-import-mapping__values {
 	margin: 0;
 	padding: 0;
 	list-style: none;
-}
-
-.cmdb-import-mapping__line {
-	display: flex;
-	flex-wrap: wrap;
-	align-items: center;
-	gap: 0.5rem;
-}
-
-.cmdb-import-mapping__line .cmdb-import__help {
-	margin: 0;
 }
 
 .cmdb-import-mapping__target {

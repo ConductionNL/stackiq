@@ -1061,7 +1061,6 @@ OC.L10N.register(
         "OpenRegister's mapping engine is missing or a mapping file is invalid. Update OpenRegister and check the Nextcloud log.": "De mapping-engine van OpenRegister ontbreekt of een mappingbestand is ongeldig. Werk OpenRegister bij en bekijk het Nextcloud-logboek.",
         "Outcome": "Resultaat",
         "Pick an existing municipality or type the name of a new one.": "Kies een bestaande gemeente of typ de naam van een nieuwe.",
-        "Pick an existing organisation of type Municipality, or type a new name and press Enter.": "Kies een bestaande organisatie van het type Gemeente, of typ een nieuwe naam en druk op Enter.",
         "Pick an organisation of type Municipality, or type the name of a new one.": "Kies een organisatie van het type Gemeente, of typ de naam van een nieuwe.",
         "Reasons and warnings": "Redenen en waarschuwingen",
         "Records missing from the export can only be kept.": "Records die in de export ontbreken, kunnen alleen worden behouden.",
@@ -1214,8 +1213,6 @@ OC.L10N.register(
         "The import mapping cannot be shown: OpenRegister is missing or a mapping file is invalid.": "De mapping van de import kan niet worden getoond: OpenRegister ontbreekt of een mappingbestand is ongeldig.",
         "The import mapping could not be read. The details are in the Nextcloud log.": "De mapping van de import kon niet worden gelezen. De details staan in het Nextcloud-logboek.",
         "Mapping": "Mapping",
-        "The mapping the next import runs: the sheets it reads and, for each kind of record, the pack that says which column of the export goes to which field.": "De mapping die de volgende import uitvoert: de tabbladen die hij leest en, per soort gegeven, het pack dat bepaalt welke kolom van de export naar welk veld gaat.",
-        "The packs are kept in OpenRegister, where you can view and edit them. A pack deleted there is restored from the shipped file at the next import.": "De packs staan in OpenRegister, waar ze kunnen worden bekeken en bewerkt. Een pack dat daar is verwijderd, wordt bij de volgende import hersteld uit het meegeleverde bestand.",
         "OpenRegister's pack store is not available, so the import uses the mapping shipped with stackiq. Update or enable OpenRegister to view and edit the mapping there.": "De packopslag van OpenRegister is niet beschikbaar, dus de import gebruikt de mapping die met stackiq wordt meegeleverd. Werk OpenRegister bij of schakel het in om de mapping daar te bekijken en te bewerken.",
         "OpenRegister": "OpenRegister",
         "Shipped file": "Meegeleverd bestand",
@@ -1224,7 +1221,6 @@ OC.L10N.register(
         "Edited": "Bewerkt",
         "Edit in OpenRegister": "Bewerken in OpenRegister",
         "Edit in OpenRegister: {target} (opens in a new tab)": "Bewerken in OpenRegister: {target} (opent in een nieuw tabblad)",
-        "This pack maps the import options, not a column of the export, so it is not edited in OpenRegister.": "Dit pack koppelt de importopties, geen kolom van de export, en wordt daarom niet in OpenRegister bewerkt.",
         "Stackiq ships a newer version of this pack ({version}). It was not applied, because the pack was edited in OpenRegister. Delete the pack there to use the shipped version from the next import on; your edits are then lost.": "Stackiq levert een nieuwere versie van dit pack mee ({version}). Die is niet toegepast, omdat het pack in OpenRegister is bewerkt. Verwijder het pack daar om vanaf de volgende import de meegeleverde versie te gebruiken; de wijzigingen gaan dan verloren.",
         "Excel workbook (.xlsx) with the sheet {sheets}. By default the file may be at most {size}.": "Excel-werkmap (.xlsx) met het tabblad {sheets}. Standaard mag het bestand hoogstens {size} zijn.",
         "Excel workbook (.xlsx) with one of the sheets {sheets}. By default the file may be at most {size}.": "Excel-werkmap (.xlsx) met een van de tabbladen {sheets}. Standaard mag het bestand hoogstens {size} zijn.",
@@ -1232,7 +1228,16 @@ OC.L10N.register(
         "The sheets {sheets} are read; other sheets, including the \"Invoer\" sheets, are ignored.": "De tabbladen {sheets} worden gelezen; andere tabbladen, ook de \"Invoer\"-tabbladen, worden genegeerd.",
         "Expected the sheet {sheets}. Sheet names must match exactly.": "Verwacht werd het tabblad {sheets}. De naam van het tabblad moet precies overeenkomen.",
         "Expected one of the sheets {sheets}. Sheet names must match exactly.": "Verwacht werd een van de tabbladen {sheets}. De namen van de tabbladen moeten precies overeenkomen.",
-        "Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy.": "Verwijder in een kopie van de export de tabbladen die de import niet leest (hij leest alleen {sheets}), en importeer die kopie."
+        "Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy.": "Verwijder in een kopie van de export de tabbladen die de import niet leest (hij leest alleen {sheets}), en importeer die kopie.",
+        "A pack deleted in OpenRegister is restored from the shipped file at the next import.": "Een pack dat in OpenRegister is verwijderd, wordt bij de volgende import hersteld uit het meegeleverde bestand.",
+        "Choose a municipality, or type a new name and press Enter.": "Kies een gemeente, of typ een nieuwe naam en druk op Enter.",
+        "Kind of record": "Soort gegeven",
+        "New applications become visible to everyone, also without logging in.": "Nieuwe applicaties worden voor iedereen zichtbaar, ook zonder in te loggen.",
+        "Overwrites applications imported before with the values from the export. The (i) button above lists the fields.": "Overschrijft eerder geïmporteerde applicaties met de waarden uit de export. De (i)-knop bovenaan noemt de velden.",
+        "Packs: which column goes to which field": "Packs: welke kolom naar welk veld gaat",
+        "Stored in": "Opgeslagen in",
+        "The export": "De export",
+        "Which columns of the export the next import reads, and where each column goes.": "Welke kolommen van de export de volgende import leest, en waar elke kolom heen gaat."
     },
     "nplurals=2; plural=(n != 1);"
 )

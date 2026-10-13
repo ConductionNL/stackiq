@@ -103,7 +103,9 @@ test.describe('CMDB import mapping block', () => {
 		await expect(toggle).toHaveAttribute('aria-expanded', 'true')
 
 		for (const target of SHEET_PACKS) {
-			const line = block.locator(`[data-testid="cmdb-import-mapping-${target}"]`)
+			const line = block.locator(
+				`[data-testid="cmdb-import-mapping-${target}"]`,
+			)
 			await expect(line, target).toBeVisible({ timeout: 30000 })
 			await expect(
 				line.locator('[data-testid="cmdb-import-mapping-source"]'),
@@ -121,18 +123,11 @@ test.describe('CMDB import mapping block', () => {
 			)
 		}
 
-		const municipality = block.locator(
-			'[data-testid="cmdb-import-mapping-municipality"]',
-		)
-		await expect(municipality).toBeVisible()
+		// The municipality pack maps the import options, not a column: not listed.
 		await expect(
-			municipality.locator('[data-testid="cmdb-import-mapping-not-editable"]'),
-		).toBeVisible()
-		await expect(
-			municipality.locator('[data-testid="cmdb-import-mapping-edit"]'),
+			block.locator('[data-testid="cmdb-import-mapping-municipality"]'),
 		).toHaveCount(0)
-		// The columns are edited in OpenRegister: the block has no table and no field.
-		await expect(block.locator('table')).toHaveCount(0)
+		// The columns are edited in OpenRegister: the block has no field.
 		await expect(block.locator('input, textarea, select')).toHaveCount(0)
 
 		// A broken stored pack: the error links to that pack's editor.

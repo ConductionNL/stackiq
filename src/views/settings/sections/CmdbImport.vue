@@ -47,7 +47,7 @@
 					{{
 						t(
 							'stackiq',
-							'Pick an existing organisation of type Municipality, or type a new name and press Enter.',
+							'Choose a municipality, or type a new name and press Enter.',
 						)
 					}}
 				</p>
@@ -100,15 +100,7 @@
 					{{
 						t(
 							'stackiq',
-							'When off, applications imported before are left as they are and reported as skipped.',
-						)
-					}}
-				</p>
-				<p class="cmdb-import__help" data-testid="cmdb-import-update-fields">
-					{{
-						t(
-							'stackiq',
-							"When on, a re-import overwrites the application's name, descriptions, application type, hosting model, BBN level, source fields and supplier, and the usage's status, phase-out date and business owner, with the values from the export. The usage's TIME classification and internal note are only set when the usage is created or the field is empty, so changes made in stackiq stay.",
+							'Overwrites applications imported before with the values from the export. The (i) button above lists the fields.',
 						)
 					}}
 				</p>
@@ -127,7 +119,7 @@
 					{{
 						t(
 							'stackiq',
-							'A published application is visible to anyone, including anonymous visitors of OpenCatalogi. When off, the applications this import creates stay unpublished until you publish them by hand. Applications imported before keep their publication as it is.',
+							'New applications become visible to everyone, also without logging in.',
 						)
 					}}
 				</p>
@@ -392,6 +384,40 @@
 							t(
 								'stackiq',
 								'Importing a newer export again updates the same applications, matched on APPID per municipality. Applications missing from it are left as they are.',
+							)
+						}}
+					</li>
+				</ul>
+				<h4>{{ t('stackiq', 'Update existing records') }}</h4>
+				<ul>
+					<li data-testid="cmdb-import-update-fields">
+						{{
+							t(
+								'stackiq',
+								"When on, a re-import overwrites the application's name, descriptions, application type, hosting model, BBN level, source fields and supplier, and the usage's status, phase-out date and business owner, with the values from the export. The usage's TIME classification and internal note are only set when the usage is created or the field is empty, so changes made in stackiq stay.",
+							)
+						}}
+					</li>
+					<li>
+						{{
+							t(
+								'stackiq',
+								'When off, applications imported before are left as they are and reported as skipped.',
+							)
+						}}
+					</li>
+				</ul>
+				<h4>
+					{{
+						t('stackiq', 'Publish the applications this import creates')
+					}}
+				</h4>
+				<ul>
+					<li>
+						{{
+							t(
+								'stackiq',
+								'A published application is visible to anyone, including anonymous visitors of OpenCatalogi. When off, the applications this import creates stay unpublished until you publish them by hand. Applications imported before keep their publication as it is.',
 							)
 						}}
 					</li>

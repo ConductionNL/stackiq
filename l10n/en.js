@@ -993,7 +993,6 @@ OC.L10N.register(
         "OpenRegister's mapping engine is missing or a mapping file is invalid. Update OpenRegister and check the Nextcloud log.": "OpenRegister's mapping engine is missing or a mapping file is invalid. Update OpenRegister and check the Nextcloud log.",
         "Outcome": "Outcome",
         "Pick an existing municipality or type the name of a new one.": "Pick an existing municipality or type the name of a new one.",
-        "Pick an existing organisation of type Municipality, or type a new name and press Enter.": "Pick an existing organisation of type Municipality, or type a new name and press Enter.",
         "Pick an organisation of type Municipality, or type the name of a new one.": "Pick an organisation of type Municipality, or type the name of a new one.",
         "Reasons and warnings": "Reasons and warnings",
         "Records missing from the export can only be kept.": "Records missing from the export can only be kept.",
@@ -1146,8 +1145,6 @@ OC.L10N.register(
         "The import mapping cannot be shown: OpenRegister is missing or a mapping file is invalid.": "The import mapping cannot be shown: OpenRegister is missing or a mapping file is invalid.",
         "The import mapping could not be read. The details are in the Nextcloud log.": "The import mapping could not be read. The details are in the Nextcloud log.",
         "Mapping": "Mapping",
-        "The mapping the next import runs: the sheets it reads and, for each kind of record, the pack that says which column of the export goes to which field.": "The mapping the next import runs: the sheets it reads and, for each kind of record, the pack that says which column of the export goes to which field.",
-        "The packs are kept in OpenRegister, where you can view and edit them. A pack deleted there is restored from the shipped file at the next import.": "The packs are kept in OpenRegister, where you can view and edit them. A pack deleted there is restored from the shipped file at the next import.",
         "OpenRegister's pack store is not available, so the import uses the mapping shipped with stackiq. Update or enable OpenRegister to view and edit the mapping there.": "OpenRegister's pack store is not available, so the import uses the mapping shipped with stackiq. Update or enable OpenRegister to view and edit the mapping there.",
         "OpenRegister": "OpenRegister",
         "Shipped file": "Shipped file",
@@ -1156,7 +1153,6 @@ OC.L10N.register(
         "Edited": "Edited",
         "Edit in OpenRegister": "Edit in OpenRegister",
         "Edit in OpenRegister: {target} (opens in a new tab)": "Edit in OpenRegister: {target} (opens in a new tab)",
-        "This pack maps the import options, not a column of the export, so it is not edited in OpenRegister.": "This pack maps the import options, not a column of the export, so it is not edited in OpenRegister.",
         "Stackiq ships a newer version of this pack ({version}). It was not applied, because the pack was edited in OpenRegister. Delete the pack there to use the shipped version from the next import on; your edits are then lost.": "Stackiq ships a newer version of this pack ({version}). It was not applied, because the pack was edited in OpenRegister. Delete the pack there to use the shipped version from the next import on; your edits are then lost.",
         "Excel workbook (.xlsx) with the sheet {sheets}. By default the file may be at most {size}.": "Excel workbook (.xlsx) with the sheet {sheets}. By default the file may be at most {size}.",
         "Excel workbook (.xlsx) with one of the sheets {sheets}. By default the file may be at most {size}.": "Excel workbook (.xlsx) with one of the sheets {sheets}. By default the file may be at most {size}.",
@@ -1164,7 +1160,16 @@ OC.L10N.register(
         "The sheets {sheets} are read; other sheets, including the \"Invoer\" sheets, are ignored.": "The sheets {sheets} are read; other sheets, including the \"Invoer\" sheets, are ignored.",
         "Expected the sheet {sheets}. Sheet names must match exactly.": "Expected the sheet {sheets}. Sheet names must match exactly.",
         "Expected one of the sheets {sheets}. Sheet names must match exactly.": "Expected one of the sheets {sheets}. Sheet names must match exactly.",
-        "Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy.": "Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy."
+        "Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy.": "Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy.",
+        "A pack deleted in OpenRegister is restored from the shipped file at the next import.": "A pack deleted in OpenRegister is restored from the shipped file at the next import.",
+        "Choose a municipality, or type a new name and press Enter.": "Choose a municipality, or type a new name and press Enter.",
+        "Kind of record": "Kind of record",
+        "New applications become visible to everyone, also without logging in.": "New applications become visible to everyone, also without logging in.",
+        "Overwrites applications imported before with the values from the export. The (i) button above lists the fields.": "Overwrites applications imported before with the values from the export. The (i) button above lists the fields.",
+        "Packs: which column goes to which field": "Packs: which column goes to which field",
+        "Stored in": "Stored in",
+        "The export": "The export",
+        "Which columns of the export the next import reads, and where each column goes.": "Which columns of the export the next import reads, and where each column goes."
     },
     "nplurals=2; plural=(n != 1);"
 )

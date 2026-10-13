@@ -144,7 +144,7 @@ describe('CmdbImportMapping', () => {
 		http.get.mockReset()
 	})
 
-	it('shows one line per pack from the endpoint and emits the answer', async () => {
+	it('shows one row per sheet pack from the endpoint and emits the answer', async () => {
 		http.get.mockResolvedValue({ data: answer() })
 
 		const wrapper = mount(CmdbImportMapping)
@@ -169,16 +169,26 @@ describe('CmdbImportMapping', () => {
 					.find(`[data-testid="cmdb-import-mapping-${target}"]`)
 					.exists(),
 				target,
-			).toBe(true)
+			).toBe(target !== 'municipality')
 		}
+		const profile = wrapper.find('[data-testid="cmdb-import-mapping-profile"]')
+		expect(profile.element.tagName).toBe('TABLE')
 		expect(
-			wrapper.find('[data-testid="cmdb-import-mapping-profile"]').text(),
-		).toContain('Sheet A, Sheet B')
-		// The column-by-column tables moved to OpenRegister's editor.
-		expect(wrapper.find('table').exists()).toBe(false)
+			profile
+				.findAll('tr')[0]
+				.findAll('li')
+				.map((item) => item.text()),
+		).toEqual(['Sheet A', 'Sheet B'])
+		expect(
+			wrapper.find('[data-testid="cmdb-import-mapping-packs"]').element
+				.tagName,
+		).toBe('TABLE')
+		// The columns are edited in OpenRegister's editor: nothing here is a field.
 		expect(wrapper.find('input, textarea, select').exists()).toBe(false)
 		expect(wrapper.text()).not.toContain('lib/Settings/cmdb-import')
-		expect(wrapper.text()).toContain('The packs are kept in OpenRegister')
+		expect(wrapper.text()).toContain(
+			'A pack deleted in OpenRegister is restored',
+		)
 		expect(
 			wrapper.find('[data-testid="cmdb-import-mapping-no-store"]').exists(),
 		).toBe(false)
@@ -231,26 +241,20 @@ describe('CmdbImportMapping', () => {
 		expect(newer.text()).toContain('It was not applied')
 	})
 
-	it('offers no editor for the municipality pack and says why', async () => {
+	it('leaves out the municipality pack, which maps the import options and no column', async () => {
 		const wrapper = await mountOpen(answer())
 
-		const municipality = wrapper.find(
-			'[data-testid="cmdb-import-mapping-municipality"]',
+		expect(
+			wrapper
+				.find('[data-testid="cmdb-import-mapping-municipality"]')
+				.exists(),
+		).toBe(false)
+		expect(wrapper.text()).not.toContain(
+			'Municipality (from the import options)',
 		)
 		expect(
-			municipality.find('[data-testid="cmdb-import-mapping-source"]').text(),
-		).toBe('Shipped file')
-		expect(
-			municipality.find('[data-testid="cmdb-import-mapping-edit"]').exists(),
-		).toBe(false)
-		expect(
-			municipality
-				.find('[data-testid="cmdb-import-mapping-not-editable"]')
-				.text(),
-		).toContain('maps the import options')
-		expect(
-			wrapper.find('[data-testid="cmdb-import-mapping-module"]').text(),
-		).not.toContain('maps the import options')
+			wrapper.findAll('[data-testid="cmdb-import-mapping-edit"]'),
+		).toHaveLength(4)
 	})
 
 	it('says the shipped mapping is used when the pack store is not available', async () => {
@@ -328,7 +332,9 @@ describe('CmdbImportMapping', () => {
 		})
 
 		http.get.mockRejectedValue(
-			failure('https://cloud.example/index.php/apps/openregister/migration-packs/13'),
+			failure(
+				'https://cloud.example/index.php/apps/openregister/migration-packs/13',
+			),
 		)
 		let wrapper = mount(CmdbImportMapping)
 		await flushPromises()
@@ -381,7 +387,11 @@ describe('CmdbImportMapping errors without a reason', () => {
 		const error = await errorCard({
 			response: {
 				status: 403,
-				data: { success: false, error: 'NOT_ADMIN', message: 'Admins only.' },
+				data: {
+					success: false,
+					error: 'NOT_ADMIN',
+					message: 'Admins only.',
+				},
 			},
 		})
 
@@ -440,7 +450,9 @@ describe('cmdbImport mapping helpers', () => {
 			expect(help).toContain(quoted)
 			expect(help).toContain('at most 10 MB')
 			expect(help).toContain(
-				expected.length === 1 ? 'with the sheet ' : 'with one of the sheets ',
+				expected.length === 1
+					? 'with the sheet '
+					: 'with one of the sheets ',
 			)
 			const info = sheetsReadText(sheets)
 			expect(info).toContain(quoted)
