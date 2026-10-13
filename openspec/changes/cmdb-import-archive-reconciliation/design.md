@@ -117,6 +117,8 @@ Progress: the operation gets the phase `reconciling` (added to `ProgressTracker:
 
 ### D8. Stackiq UI
 
+> This section records the decision. The UI code it describes (the quick filters, the `_ids` override and the `src/icons.js` entry) is not part of the reader slice in this PR; it lands in the UI follow-up PR (#1287).
+
 The Applications (`Modules`, a `FacetedCatalogIndexView` that forwards `quickFilters` to `CnIndexPage`) and Applications in use (`Gebruik`) pages get the quick filter `{"label": "Archived", "filter": {"_archived": "true"}}`. `useSelfFetchList` spreads the active tab's filter into the fetch parameters as they are, so `_archived=true` reaches OpenRegister and the list shows the archive alone. The facet narrowing's `_ids` would compose with it (AND) and hide archived applications the facets do not know; the Archived tab of the Applications page therefore overrides `_ids` with an empty value, so it lists the whole archive and ignores the facets and the search. The icon `ArchiveOutline` is registered in `src/icons.js`. `@conduction/nextcloud-vue` 2.65 renders no `@self.archived` on a detail page or in the sidebar metadata, so the detail pages show no archive state yet; that is a library follow-up, not a stackiq widget.
 
 ### D9. How the import reads the state of a stored object

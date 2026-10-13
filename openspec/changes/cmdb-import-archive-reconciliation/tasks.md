@@ -4,6 +4,8 @@ Spec: `openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-imp
 
 ## Implementation Tasks
 
+Status in this PR (the archive-sheet reader slice): Tasks 1 and 2 are implemented here. Tasks 3-7 are unticked because their code lands in the follow-up PRs (reconciliation in #1286, UI in #1287).
+
 ### Task 1: Schema opt-in and the import profile
 - **spec_ref**: `SPEC#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017`, `SPEC#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012`
 - **files**: `lib/Settings/register.d/topdesk-cmdb-import.json`, `lib/Settings/cmdb-import/topdesk-profile.json`, `lib/Service/Cmdb/CmdbImportProfile.php`, `tests/Unit/Settings/TopdeskCmdbFragmentTest.php`, `tests/Unit/Settings/PublicationFieldRulesTest.php`, `tests/Unit/Service/Cmdb/CmdbImportProfileTest.php`
@@ -35,8 +37,8 @@ Spec: `openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-imp
   - GIVEN OpenRegister's search results (no archive marker; no soft-deleted row, `_includeDeleted` or not) THEN the state comes from the lens that found the object and from the trash listing, read once per import (design D9)
   - GIVEN `updateExisting` false THEN the row is skipped as `exists` and nothing is revived
   - GIVEN a deleted and a working module (and usage) sharing one import key THEN the working one is updated and nothing is restored
-- [x] Implement
-- [x] Test
+- [ ] Implement
+- [ ] Test
 
 ### Task 4: Reconciliation after the rows
 - **spec_ref**: `SPEC#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015`
@@ -50,8 +52,8 @@ Spec: `openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-imp
   - GIVEN a cancel during the last row THEN nothing is archived or deleted; GIVEN a cancel during the reconciliation THEN it stops before the next application and the report is cancelled
   - GIVEN the archive of one application throws THEN that application is a `failed` row and the others are reconciled; GIVEN no ArchiveHandler THEN 503 `ARCHIVE_UNAVAILABLE` before reading
   - GIVEN the step runs THEN the operation is in phase `reconciling` and its progress advances per application
-- [x] Implement
-- [x] Test
+- [ ] Implement
+- [ ] Test
 
 ### Task 5: Controller option
 - **spec_ref**: `SPEC#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012`
@@ -59,8 +61,8 @@ Spec: `openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-imp
 - **acceptance_criteria**:
   - GIVEN no `missingRecords` THEN the service receives `archive`; GIVEN `keep` or `archive` THEN it is passed through; GIVEN `remove` or `mark` THEN 422 `MISSING_RECORDS_UNSUPPORTED` with `details.accepted` `["keep", "archive"]` and no import
   - GIVEN `ARCHIVE_UNAVAILABLE` from the service THEN 503 with its own translated message
-- [x] Implement
-- [x] Test
+- [ ] Implement
+- [ ] Test
 
 ### Task 6: Settings section, report words and the archive quick filter
 - **spec_ref**: `SPEC#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014`, `SPEC#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017`
@@ -70,8 +72,8 @@ Spec: `openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-imp
   - GIVEN a report with the new outcomes THEN the summary shows their tiles, the outcome filter offers them, and a reconciliation row shows no row number
   - GIVEN the Applications and Applications in use pages THEN a quick filter "Archived" sends `_archived=true`
   - Every new string is in `l10n/en.json` and `l10n/nl.json`, and the generated `l10n/*.js` are current
-- [x] Implement
-- [x] Test
+- [ ] Implement
+- [ ] Test
 
 ### Task 7: Fixture, docs and e2e
 - **spec_ref**: `SPEC#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015`
@@ -80,7 +82,7 @@ Spec: `openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-imp
   - GIVEN `build-fixtures.py` THEN it derives `topdesk-archived-applications.xlsx`: APPID 1234 on the archive sheet only, APPID 2 on no sheet, both CMDB sheets present and empty; the hygiene test passes on it
   - GIVEN the e2e THEN after the first import, importing the variant archives 1234 and soft-deletes 2, the Applications page lists 1234 under "Archived", and importing the original again reports 1234 `unarchived` and 2 `restored` with the object counts back to the first import's
   - GIVEN the docs THEN "Repeat imports" describes archive, soft delete, the archive sheet, the option and the return of an application, and the error table has `ARCHIVE_UNAVAILABLE` and the new meaning of `MISSING_RECORDS_UNSUPPORTED`
-- [x] Implement
+- [ ] Implement
 - [ ] Test
   - Status: PHPUnit covers the fixture round trip (testTheArchivedApplicationsFixtureArchivesDeletesAndBringsBack); the Playwright test is written and not run yet, because no Nextcloud was reachable from the worktree.
 
