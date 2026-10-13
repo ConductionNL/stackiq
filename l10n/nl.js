@@ -1221,7 +1221,8 @@ OC.L10N.register(
         "{count} unarchived": "{count} uit het archief gehaald",
         "{count} deleted": "{count} verwijderd",
         "{count} restored": "{count} teruggezet",
-        "Applications: {changes}.": "Applicaties: {changes}."
+        "Applications: {changes}.": "Applicaties: {changes}.",
+        "Applications no longer in the export are archived or moved to the trash. The (i) button above explains when.": "Applicaties die niet meer in de export staan, worden gearchiveerd of naar de prullenbak verplaatst. De (i)-knop bovenaan legt uit wanneer."
     },
     "nplurals=2; plural=(n != 1);"
 )

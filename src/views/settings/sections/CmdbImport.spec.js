@@ -10,6 +10,7 @@
 
 import axios from '@nextcloud/axios'
 import { flushPromises, mount, shallowMount } from '@vue/test-utils'
+import { h } from 'vue'
 import CmdbImport from './CmdbImport.vue'
 
 // Virtual: the package's `exports` field declares only the `import` condition, which jest does not resolve.
@@ -308,13 +309,19 @@ describe('CmdbImport cancelling', () => {
 		await wrapper.setData({
 			importing: true,
 			operationId: 'cmdb-12345678',
-			progress: { phase: 'reconciling', processed_items: 400, total_items: 810 },
+			progress: {
+				phase: 'reconciling',
+				processed_items: 400,
+				total_items: 810,
+			},
 		})
 
 		await wrapper.vm.cancelImport()
 		await flushPromises()
 
-		const status = wrapper.find('[data-testid="cmdb-import-cancel-status"]').text()
+		const status = wrapper
+			.find('[data-testid="cmdb-import-cancel-status"]')
+			.text()
 		expect(status).toContain('before the next row')
 		expect(status).toContain('before the next application')
 	})
@@ -323,7 +330,11 @@ describe('CmdbImport cancelling', () => {
 		const wrapper = await mountFull()
 
 		await wrapper.setData({
-			report: { cancelled: true, summary: { rowsRead: 400, archived: 3 }, rows: [] },
+			report: {
+				cancelled: true,
+				summary: { rowsRead: 400, archived: 3 },
+				rows: [],
+			},
 		})
 
 		expect(wrapper.find('[data-testid="cmdb-import-cancelled"]').text()).toMatch(
@@ -366,7 +377,13 @@ describe('CmdbImport finished announcement', () => {
 			report: {
 				cancelled: true,
 				municipality: { name: 'Gemeente Bergen' },
-				summary: { rowsRead: 5, archived: 2, unarchived: 3, deleted: 4, restored: 5 },
+				summary: {
+					rowsRead: 5,
+					archived: 2,
+					unarchived: 3,
+					deleted: 4,
+					restored: 5,
+				},
 				rows: [],
 			},
 		})
@@ -435,15 +452,30 @@ describe('CmdbImport the choice for missing applications, as the admin makes it'
 		expect(wrapper.vm.missingRecords).toBe('archive')
 	})
 
-	it('says in the help when applications are only archived, never deleted', async () => {
+	it('says in short what happens, and in the info panel when applications are only archived', async () => {
 		const wrapper = await mountFull()
 
 		const help = wrapper.get('#cmdb-import-missing-records-help').text()
+		expect(help).toContain('archived or moved to the trash')
 
-		expect(help).toContain('is missing')
-		expect(help).toContain('has no APPID column')
-		expect(help).toContain('an APPID without a cached value')
-		expect(help).toContain('only archived')
+		// The info panel is the section's `info-content` slot; render it.
+		const panel = mount(CmdbImport, {
+			global: {
+				stubs: {
+					AlwaysVisibleSection: {
+						render() {
+							return h('div', [this.$slots['info-content']?.()])
+						},
+					},
+				},
+			},
+		})
+		await flushPromises()
+		const text = panel.text()
+		expect(text).toContain('is missing')
+		expect(text).toContain('has no APPID column')
+		expect(text).toContain('an APPID without a cached value')
+		expect(text).toContain('only archived')
 	})
 
 	it('disables both radios while an import runs', async () => {
@@ -480,10 +512,7 @@ describe('CmdbImport report rows of archived and deleted applications', () => {
 		await wrapper.setData({
 			report: {
 				summary: { rowsRead: 0, archived: 1, deleted: 1 },
-				rows: [
-					reconciliationRow('archived'),
-					reconciliationRow('deleted'),
-				],
+				rows: [reconciliationRow('archived'), reconciliationRow('deleted')],
 			},
 		})
 
@@ -491,11 +520,13 @@ describe('CmdbImport report rows of archived and deleted applications', () => {
 		expect(rows).toHaveLength(2)
 		const [archived, deleted] = rows
 		expect(
-			archived.find('[data-testid="cmdb-import-module-link"]').attributes('href'),
+			archived
+				.find('[data-testid="cmdb-import-module-link"]')
+				.attributes('href'),
 		).toBe('/apps/stackiq/modules/module-uuid-archived')
-		expect(deleted.find('[data-testid="cmdb-import-module-link"]').exists()).toBe(
-			false,
-		)
+		expect(
+			deleted.find('[data-testid="cmdb-import-module-link"]').exists(),
+		).toBe(false)
 		// The name of the deleted application is still shown, as text.
 		expect(deleted.text()).toContain('Naamtest')
 	})
@@ -524,9 +555,9 @@ describe('CmdbImport report rows of archived and deleted applications', () => {
 		})
 
 		const rows = wrapper.findAll('[data-testid="table-row"]')
-		expect(rows.map((row) => row.get('[data-testid="table-row-number"]').text())).toEqual(
-			['', '', '2'],
-		)
+		expect(
+			rows.map((row) => row.get('[data-testid="table-row-number"]').text()),
+		).toEqual(['', '', '2'])
 		expect(
 			rows[0].find('[data-testid="cmdb-import-module-link"]').exists(),
 		).toBe(true)
