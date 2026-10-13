@@ -91,12 +91,12 @@ class CmdbImportPackRulesTest extends TestCase {
 	 */
 	public static function refusedMappings(): array {
 		return [
-			'an organisation relation that writes back into others' => ['manufacturer', 'participants', '"participants" is a relation and cannot be mapped'],
-			'the organisation contacts' => ['manufacturer', 'contactpersonen', '"contactpersonen" is a relation and cannot be mapped'],
-			'a module relation with an inverse' => ['module', 'koppelingen', '"koppelingen" is a relation and cannot be mapped'],
-			'a module version' => ['module', 'moduleVersions', '"moduleVersions" is a relation and cannot be mapped'],
-			'the usage technical owner' => ['usage', 'technicalOwner', '"technicalOwner" is a relation and cannot be mapped'],
-			'the usage participants' => ['usage', 'participants', '"participants" is a relation and cannot be mapped'],
+			'an organisation relation that writes back into others' => ['manufacturer', 'participants', '"participants" is a relation or a file and cannot be mapped'],
+			'the organisation contacts' => ['manufacturer', 'contactpersonen', '"contactpersonen" is a relation or a file and cannot be mapped'],
+			'a module relation with an inverse' => ['module', 'koppelingen', '"koppelingen" is a relation or a file and cannot be mapped'],
+			'a module version' => ['module', 'moduleVersions', '"moduleVersions" is a relation or a file and cannot be mapped'],
+			'the usage technical owner' => ['usage', 'technicalOwner', '"technicalOwner" is a relation or a file and cannot be mapped'],
+			'the usage participants' => ['usage', 'participants', '"participants" is a relation or a file and cannot be mapped'],
 			'the usage publication date' => ['usage', 'publicationDate', '"publicationDate" is set outside the import and cannot be mapped'],
 			'the organisation publication date' => ['manufacturer', 'publicationDate', '"publicationDate" is set outside the import and cannot be mapped'],
 			'the organisation depublication date' => ['municipality', 'depublicationDate', '"depublicationDate" is set outside the import and cannot be mapped'],
@@ -108,8 +108,11 @@ class CmdbImportPackRulesTest extends TestCase {
 			'the certificate' => ['manufacturer', 'pki', '"pki" is set outside the import and cannot be mapped'],
 			'the module type' => ['module', 'type', '"type" is set outside the import and cannot be mapped'],
 			'who registered the module' => ['module', 'registeredBy', '"registeredBy" is set outside the import and cannot be mapped'],
-			'a plain field nobody vetted' => ['module', 'website', '"website" is not a field the module pack may map'],
-			'a plain usage field nobody vetted' => ['usage', 'serviceDeskUrl', '"serviceDeskUrl" is not a field the usage pack may map'],
+			'the module logo, a file' => ['module', 'logo', '"logo" is a relation or a file and cannot be mapped'],
+			'the organisation image, a file' => ['manufacturer', 'image', '"image" is a relation or a file and cannot be mapped'],
+			'a field the module schema does not have' => ['module', 'noSuchField', '"noSuchField" is not a field the module pack may map'],
+			'a field the usage schema does not have' => ['usage', 'noSuchField', '"noSuchField" is not a field the usage pack may map'],
+			'a contact field the business owner does not have' => ['businessOwner', 'email', '"email" is not a field the businessOwner pack may map'],
 		];
 	}//end refusedMappings()
 
@@ -148,7 +151,7 @@ class CmdbImportPackRulesTest extends TestCase {
 		$this->assertSame(
 			[
 				'default "publicationDate" is set outside the import and cannot be mapped',
-				'default "participants" is a relation and cannot be mapped',
+				'default "participants" is a relation or a file and cannot be mapped',
 				'default "status" must stay "Active"',
 			],
 			$rules->violations(target: 'manufacturer', pack: $manufacturer, profile: $profile)
@@ -163,30 +166,42 @@ class CmdbImportPackRulesTest extends TestCase {
 	}//end testARefusedFieldCannotBeADefault()
 
 	/**
-	 * Every vetted field is a plain property of its target schema, so a pack may map each one.
+	 * Any plain property of the target schema may be mapped, not only the fields the shipped packs map.
 	 *
 	 * @return void
 	 */
-	public function testEveryVettedFieldCanBeMapped(): void {
+	public function testAnyPlainSchemaFieldCanBeMapped(): void {
 		$profile = $this->shipped(file: 'topdesk-profile.json');
 		$rules = new CmdbImportPackRules();
-		$vetted = (new \ReflectionClassConstant(CmdbImportPackRules::class, 'ALLOWED_FIELDS'))->getValue();
+		$fields = [
+			'module' => ['licentietype', 'website', 'licence', 'hostingLocation', 'dpiaStatus', 'standards'],
+			'manufacturer' => ['name', 'oin', 'website', 'summary'],
+			'municipality' => ['name', 'tooi', 'description'],
+			'usage' => ['status', 'interneAnnotation', 'serviceDeskUrl', 'riskScore', 'startDatePlanned'],
+			'businessOwner' => ['name', 'role'],
+		];
 
-		foreach ($vetted as $target => $fields) {
-			foreach ($fields as $field) {
+		foreach ($fields as $target => $names) {
+			foreach ($names as $field) {
 				$pack = $this->shipped(file: $profile['packs'][$target]);
 				$pack['fieldMappings'][] = ['source' => 'Opmerking', 'target' => $field];
-				$this->assertSame([], $rules->violations(target: $target, pack: $pack, profile: $profile), $target . '.' . $field);
+				$violations = $rules->violations(target: $target, pack: $pack, profile: $profile);
+				if ($target === 'manufacturer' && $field === 'website') {
+					$this->assertSame(['"website" is not a field the manufacturer pack may map'], $violations, 'organization has no website');
+					continue;
+				}
+
+				$this->assertSame([], $violations, $target . '.' . $field);
 			}
 		}
-	}//end testEveryVettedFieldCanBeMapped()
+	}//end testAnyPlainSchemaFieldCanBeMapped()
 
 	/**
-	 * A vetted field that the register turns into a relation is refused: the schema has the last word.
+	 * A plain field that the register turns into a relation is refused: the schema has the last word.
 	 *
 	 * @return void
 	 */
-	public function testAVettedFieldThatBecameARelationIsRefused(): void {
+	public function testAPlainFieldThatBecameARelationIsRefused(): void {
 		$directory = sys_get_temp_dir() . '/stackiq-pack-rules-' . bin2hex(random_bytes(4));
 		mkdir($directory . '/register.d', 0700, true);
 		$register = ['components' => ['schemas' => ['usage' => ['properties' => ['status' => ['type' => 'string'], 'interneAnnotation' => ['type' => 'string']]]]]];
@@ -205,8 +220,8 @@ class CmdbImportPackRulesTest extends TestCase {
 			rmdir($directory);
 		}
 
-		$this->assertSame(['"interneAnnotation" is a relation and cannot be mapped'], $violations);
-	}//end testAVettedFieldThatBecameARelationIsRefused()
+		$this->assertSame(['"interneAnnotation" is a relation or a file and cannot be mapped'], $violations);
+	}//end testAPlainFieldThatBecameARelationIsRefused()
 
 	/**
 	 * Without the register definition no pack can be checked, so the import fails closed.
