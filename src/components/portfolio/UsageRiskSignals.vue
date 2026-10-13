@@ -224,6 +224,10 @@ export default {
 }
 
 .usage-risk-signals__list dt {
+	/* Undo the page-wide fixed width and right alignment of a dt, which made
+	   a long label run into its value. */
+	width: auto;
+	text-align: start;
 	font-weight: bold;
 }
 
