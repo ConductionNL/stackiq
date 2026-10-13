@@ -139,7 +139,7 @@
         }
       },
       "catalogService": {
-        "version": "0.2.2",
+        "version": "0.2.3",
         "properties": {
           "contactPerson": {
             "authorization": {
@@ -477,7 +477,7 @@
         }
       },
       "organization": {
-        "version": "0.5.3",
+        "version": "0.5.4",
         "properties": {
           "contactsUid": {
             "authorization": {
