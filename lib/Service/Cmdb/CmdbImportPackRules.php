@@ -137,15 +137,11 @@ class CmdbImportPackRules {
 	];
 
 	/**
-	 * Per schema of the shipped register, once read: each property name and why no pack may write it.
+	 * The register's properties per schema with why no pack may write them, read once.
 	 *
-	 * The reason is `relation` (a relation or a file), `system` (hidden from
-	 * forms or calculated: another subsystem owns it) or an empty string
-	 * (a plain, writable property).
-	 *
-	 * @var array<string, array<string, string>>|null
+	 * @var CmdbRegisterSchemaFields|null
 	 */
-	private ?array $schemaFields = null;
+	private ?CmdbRegisterSchemaFields $registerSchema = null;
 
 	/**
 	 * Constructor.
@@ -346,6 +342,23 @@ class CmdbImportPackRules {
 	}//end fieldViolation()
 
 	/**
+	 * The properties per schema of the register stackiq ships, fragments included, each with why no pack may write it.
+	 *
+	 * @return array<string, array<string, string>>
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the register file or one of its fragments cannot be read.
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	private function schemaFields(): array {
+		if ($this->registerSchema === null) {
+			$this->registerSchema = new CmdbRegisterSchemaFields(settingsDirectory: (string)$this->settingsDirectory);
+		}
+
+		return $this->registerSchema->fields();
+	}//end schemaFields()
+
+	/**
 	 * The properties of a target's schema, or the fixed fields of a target without one.
 	 *
 	 * @param string $target The target.
@@ -387,166 +400,4 @@ class CmdbImportPackRules {
 		return array_map('strval', array_keys($fields));
 	}//end fieldsWithReason()
 
-	/**
-	 * Whether a property definition, or that of its items, points at another object or holds a file.
-	 *
-	 * A reference, an inverse or write-back relation, a uuid, an object
-	 * configuration that relates or names a schema, or a file; a nested
-	 * object with no schema is a plain value.
-	 *
-	 * @param mixed $definition The property definition.
-	 *
-	 * @return bool
-	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
-	 */
-	private static function isRelationOrFile(mixed $definition): bool {
-		if (is_array($definition) === false) {
-			return false;
-		}
-
-		$configuration = $definition['objectConfiguration'] ?? [];
-		if (is_array($configuration) === false) {
-			$configuration = [];
-		}
-
-		$markers = array_filter(
-			[
-				($definition['$ref'] ?? null),
-				($definition['inversedBy'] ?? null),
-				($definition['writeBack'] ?? null),
-				($configuration['schema'] ?? null),
-				($definition['format'] ?? null) === 'uuid',
-				($configuration['handling'] ?? null) === 'related-object',
-				($definition['type'] ?? null) === 'file',
-			]
-		);
-		if ($markers !== []) {
-			return true;
-		}
-
-		return self::isRelationOrFile(definition: ($definition['items'] ?? null));
-	}//end isRelationOrFile()
-
-	/**
-	 * Whether a property definition is hidden from forms or calculated.
-	 *
-	 * Such a field is written by another subsystem (the service desk
-	 * exchange stamps, the calculated suggestions), not edited by people.
-	 *
-	 * @param mixed $definition The property definition.
-	 * @param bool $calculated Whether the schema calculates the property.
-	 *
-	 * @return bool
-	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
-	 */
-	private static function isSystemOwned(mixed $definition, bool $calculated): bool {
-		if ($calculated === true) {
-			return true;
-		}
-
-		return is_array($definition) === true && ($definition['hideOnForm'] ?? false) === true;
-	}//end isSystemOwned()
-
-	/**
-	 * The properties per schema of the register stackiq ships, fragments included, each with why no pack may write it.
-	 *
-	 * A property is refused when any of its definitions makes it a relation
-	 * or a file (`relation`), or hides it from forms or calculates it (`system`);
-	 * a relation wins.
-	 *
-	 * @return array<string, array<string, string>>
-	 *
-	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the register file or one of its fragments cannot be read.
-	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
-	 */
-	private function schemaFields(): array {
-		if ($this->schemaFields !== null) {
-			return $this->schemaFields;
-		}
-
-		$register = $this->decodeJson(file: $this->settingsDirectory . '/softwarecatalogus_register.json');
-		if ($register === null) {
-			throw new CmdbImportException(
-				errorCode: CmdbImportException::MAPPING_UNAVAILABLE,
-				message: 'The stackiq register definition cannot be read, so the CMDB import packs cannot be checked'
-			);
-		}
-
-		$fragments = glob($this->settingsDirectory . '/register.d/*.json');
-		if ($fragments === false) {
-			throw new CmdbImportException(
-				errorCode: CmdbImportException::MAPPING_UNAVAILABLE,
-				message: 'The stackiq register fragments cannot be listed, so the CMDB import packs cannot be checked'
-			);
-		}
-
-		$decodedFiles = [$register];
-		foreach ($fragments as $file) {
-			$fragment = $this->decodeJson(file: $file);
-			if ($fragment === null) {
-				throw new CmdbImportException(
-					errorCode: CmdbImportException::MAPPING_UNAVAILABLE,
-					message: 'The stackiq register fragment ' . basename($file) . ' cannot be read, so the CMDB import packs cannot be checked'
-				);
-			}
-
-			$decodedFiles[] = $fragment;
-		}
-
-		$fields = [];
-		foreach ($decodedFiles as $decoded) {
-			foreach (($decoded['components']['schemas'] ?? []) as $schema => $definition) {
-				$calculations = (array)($definition['configuration']['x-openregister-calculations'] ?? []);
-				foreach ((array)($definition['properties'] ?? []) as $property => $propertyDefinition) {
-					$reason = '';
-					if (self::isRelationOrFile(definition: $propertyDefinition) === true) {
-						$reason = 'relation';
-					} elseif (self::isSystemOwned(definition: $propertyDefinition, calculated: array_key_exists((string)$property, $calculations)) === true) {
-						$reason = 'system';
-					}
-
-					$before = ($fields[(string)$schema][(string)$property] ?? '');
-					if ($before !== 'relation' && $reason !== '') {
-						$fields[(string)$schema][(string)$property] = $reason;
-						continue;
-					}
-
-					$fields[(string)$schema][(string)$property] = $before;
-				}
-			}
-		}
-
-		$this->schemaFields = $fields;
-		return $fields;
-	}//end schemaFields()
-
-	/**
-	 * A JSON file decoded to an array, or null when it cannot be read.
-	 *
-	 * @param string $file The file.
-	 *
-	 * @return array<string, mixed>|null
-	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
-	 */
-	private function decodeJson(string $file): ?array {
-		$content = false;
-		if (is_readable($file) === true) {
-			$content = file_get_contents($file);
-		}
-
-		if (is_string($content) === false) {
-			return null;
-		}
-
-		$decoded = json_decode($content, true);
-		if (is_array($decoded) === false) {
-			return null;
-		}
-
-		return $decoded;
-	}//end decodeJson()
 }//end class
