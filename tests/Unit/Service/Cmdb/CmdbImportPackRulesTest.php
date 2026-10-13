@@ -287,6 +287,33 @@ class CmdbImportPackRulesTest extends TestCase {
 	}//end testAPlainFieldThatBecameARelationIsRefused()
 
 	/**
+	 * An unreadable or invalid register fragment fails closed: the fields it protects must not become mappable.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableFragmentIsMappingUnavailable(): void {
+		foreach (['{ not json', ''] as $content) {
+			$directory = sys_get_temp_dir() . '/stackiq-pack-rules-' . bin2hex(random_bytes(4));
+			mkdir($directory . '/register.d', 0700, true);
+			file_put_contents($directory . '/softwarecatalogus_register.json', json_encode(['components' => ['schemas' => ['usage' => ['properties' => ['status' => ['type' => 'string']]]]]]));
+			file_put_contents($directory . '/register.d/broken-fragment.json', $content);
+
+			try {
+				(new CmdbImportPackRules(settingsDirectory: $directory))->violations(target: 'usage', pack: ['fieldMappings' => []], profile: []);
+				$this->fail('MAPPING_UNAVAILABLE expected');
+			} catch (CmdbImportException $e) {
+				$this->assertSame('MAPPING_UNAVAILABLE', $e->getErrorCode());
+				$this->assertSame('The stackiq register fragment broken-fragment.json cannot be read, so the CMDB import packs cannot be checked', $e->getMessage());
+			} finally {
+				unlink($directory . '/register.d/broken-fragment.json');
+				rmdir($directory . '/register.d');
+				unlink($directory . '/softwarecatalogus_register.json');
+				rmdir($directory);
+			}
+		}
+	}//end testAnUnreadableFragmentIsMappingUnavailable()
+
+	/**
 	 * Without the register definition no pack can be checked, so the import fails closed.
 	 *
 	 * @return void
