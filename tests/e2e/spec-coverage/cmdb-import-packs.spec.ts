@@ -505,6 +505,13 @@ test.describe.serial('CMDB import packs in OpenRegister', () => {
 			expect(after.id).toBe(owner.packId)
 			expect(after.builtin).toBe(true)
 		} finally {
+			// A failed assertion above must not leave the pack deleted: the import puts it back.
+			if (
+				(await storedPacks(ctx))['stackiq-topdesk-business-owner']
+				=== undefined
+			) {
+				await importExport(ctx)
+			}
 			await ctx.dispose()
 		}
 	})
