@@ -174,10 +174,10 @@ class CmdbImportPackRulesTest extends TestCase {
 		$profile = $this->shipped(file: 'topdesk-profile.json');
 		$rules = new CmdbImportPackRules();
 		$fields = [
-			'module' => ['licentietype', 'website', 'licence', 'hostingLocation', 'dpiaStatus', 'standards'],
+			'module' => ['licentietype', 'website', 'licence', 'hostingLocation', 'dpiaStatus'],
 			'manufacturer' => ['name', 'oin', 'website', 'summary'],
 			'municipality' => ['name', 'tooi', 'description'],
-			'usage' => ['status', 'interneAnnotation', 'serviceDeskUrl', 'riskScore', 'startDatePlanned'],
+			'usage' => ['status', 'interneAnnotation', 'riskScore', 'startDatePlanned'],
 			'businessOwner' => ['name', 'role'],
 		];
 
@@ -195,6 +195,69 @@ class CmdbImportPackRulesTest extends TestCase {
 			}
 		}
 	}//end testAnyPlainSchemaFieldCanBeMapped()
+
+	/**
+	 * A field another subsystem owns is refused: the service desk exchange's keys and stamps, the calculated suggestion and the installed version.
+	 *
+	 * @return void
+	 */
+	public function testAFieldAnotherSubsystemOwnsIsRefused(): void {
+		$profile = $this->shipped(file: 'topdesk-profile.json');
+		$rules = new CmdbImportPackRules();
+		$owned = ['serviceDeskSystem', 'serviceDeskRecordId', 'serviceDeskUrl', 'serviceDeskSyncedAt', 'installedVersion', 'suggestedTimeClassification'];
+
+		foreach ($owned as $field) {
+			$pack = $this->shipped(file: 'topdesk-usage.json');
+			$pack['fieldMappings'][] = ['source' => 'Opmerking', 'target' => $field];
+			$this->assertSame(['"' . $field . '" is set outside the import and cannot be mapped'], $rules->violations(target: 'usage', pack: $pack, profile: $profile), $field);
+
+			$pack = $this->shipped(file: 'topdesk-usage.json');
+			$pack['defaults'][$field] = 'x';
+			$this->assertSame(['default "' . $field . '" is set outside the import and cannot be mapped'], $rules->violations(target: 'usage', pack: $pack, profile: $profile), 'default ' . $field);
+		}
+	}//end testAFieldAnotherSubsystemOwnsIsRefused()
+
+	/**
+	 * A property the schema hides from forms or calculates is refused, and a file property is refused as a file.
+	 *
+	 * @return void
+	 */
+	public function testAHiddenCalculatedOrFilePropertyIsRefused(): void {
+		$directory = sys_get_temp_dir() . '/stackiq-pack-rules-' . bin2hex(random_bytes(4));
+		mkdir($directory . '/register.d', 0700, true);
+		$properties = [
+			'status' => ['type' => 'string'],
+			'hidden' => ['type' => 'string', 'hideOnForm' => true],
+			'derived' => ['type' => 'string'],
+			'attachment' => ['type' => 'file'],
+		];
+		$register = ['components' => ['schemas' => ['usage' => ['properties' => $properties, 'configuration' => ['x-openregister-calculations' => ['derived' => ['type' => 'string']]]]]]];
+		file_put_contents($directory . '/softwarecatalogus_register.json', json_encode($register));
+
+		$pack = ['fieldMappings' => [
+			['source' => 'A', 'target' => 'status'],
+			['source' => 'B', 'target' => 'hidden'],
+			['source' => 'C', 'target' => 'derived'],
+			['source' => 'D', 'target' => 'attachment'],
+		]];
+
+		try {
+			$violations = (new CmdbImportPackRules(settingsDirectory: $directory))->violations(target: 'usage', pack: $pack, profile: []);
+		} finally {
+			rmdir($directory . '/register.d');
+			unlink($directory . '/softwarecatalogus_register.json');
+			rmdir($directory);
+		}
+
+		$this->assertSame(
+			[
+				'"hidden" is set outside the import and cannot be mapped',
+				'"derived" is set outside the import and cannot be mapped',
+				'"attachment" is a relation or a file and cannot be mapped',
+			],
+			$violations
+		);
+	}//end testAHiddenCalculatedOrFilePropertyIsRefused()
 
 	/**
 	 * A plain field that the register turns into a relation is refused: the schema has the last word.

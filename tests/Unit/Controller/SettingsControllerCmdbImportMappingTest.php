@@ -449,6 +449,7 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 			$this->assertTrue($pack['editable'], $target);
 			$this->assertFalse($pack['edited'], $target . ' is as seeded');
 			$this->assertFalse($pack['newerShipped'], $target);
+			$this->assertFalse($pack['updatePending'], $target);
 			$this->assertSame($pack['shippedVersion'], $pack['storedVersion'], $target);
 		}
 
@@ -457,7 +458,7 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 		$this->assertNull($byTarget['municipality']['editUrl']);
 		$this->assertFalse($byTarget['municipality']['editable']);
 		$this->assertSame(
-			['target', 'file', 'id', 'name', 'version', 'description', 'fieldMappings', 'defaults', 'createOnlyDefaults', 'createOnlyFields', 'neverWritten', 'source', 'packId', 'storedVersion', 'shippedVersion', 'edited', 'newerShipped', 'editable', 'editUrl'],
+			['target', 'file', 'id', 'name', 'version', 'description', 'fieldMappings', 'defaults', 'createOnlyDefaults', 'createOnlyFields', 'neverWritten', 'source', 'packId', 'storedVersion', 'shippedVersion', 'edited', 'newerShipped', 'updatePending', 'editable', 'editUrl'],
 			array_keys($byTarget['module']),
 			'the keys the settings section reads'
 		);

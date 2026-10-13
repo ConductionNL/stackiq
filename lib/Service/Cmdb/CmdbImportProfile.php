@@ -136,7 +136,7 @@ class CmdbImportProfile {
 	/**
 	 * Where each loaded pack came from, per target.
 	 *
-	 * @var array<string, array<string, mixed>> Per target: source, packId, storedVersion, shippedVersion, edited, newerShipped.
+	 * @var array<string, array<string, mixed>> Per target: source, packId, storedVersion, shippedVersion, edited, newerShipped, updatePending.
 	 */
 	private array $sources = [];
 
@@ -256,6 +256,7 @@ class CmdbImportProfile {
 				'shippedVersion' => (string)($shipped['version'] ?? ''),
 				'edited' => null,
 				'newerShipped' => false,
+				'updatePending' => false,
 			];
 
 			$stored = null;
@@ -273,9 +274,10 @@ class CmdbImportProfile {
 					[
 						'source' => 'openregister',
 						'packId' => $stored['id'],
-						'storedVersion' => $stored['version'],
+						'storedVersion' => $stored['storedVersion'],
 						'edited' => $stored['edited'],
 						'newerShipped' => $stored['newerShipped'],
+						'updatePending' => $stored['updatePending'],
 					]
 				);
 			}
@@ -1065,7 +1067,8 @@ class CmdbImportProfile {
 	 * The import writes with OpenRegister's RBAC and multitenancy off, so a
 	 * pack may map any plain property of its target schema, never the
 	 * object's metadata, the keys the import sets itself, a relation, a file,
-	 * the publication dates or an admin field, and must keep the mappings the
+	 * a field the register hides from forms or calculates, the publication
+	 * dates or an admin field, and must keep the mappings the
 	 * import matches records on (REQ-CMDB-021, CmdbImportPackRules).
 	 *
 	 * @param string $target The target.
