@@ -20,13 +20,11 @@
 				<p v-if="name" class="contact-person-name__name">
 					{{ name }}
 				</p>
-				<p v-else class="contact-person-name__hint">
-					{{
-						t(
-							'stackiq',
-							'The name is kept in Nextcloud Contacts, in an address book you cannot read.',
-						)
-					}}
+				<p
+					v-else
+					class="contact-person-name__hint"
+					data-testid="contact-person-name-hint">
+					{{ hint }}
 				</p>
 			</template>
 		</div>
@@ -37,7 +35,7 @@
 import { CnIcon, CnWidgetWrapper } from '@conduction/nextcloud-vue'
 import { translate as t } from '@nextcloud/l10n'
 import { NcLoadingIcon } from '@nextcloud/vue'
-import { contactName } from '../../utils/contactNames.js'
+import { contactNameResult } from '../../utils/contactNames.js'
 
 /**
  * The name of a contact person, on its detail page.
@@ -47,7 +45,7 @@ import { contactName } from '../../utils/contactNames.js'
  * signed-in user's own and shared address books, so the name is shown to whoever
  * can already read the contact, and to nobody else.
  *
- * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
+ * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-005-a-contact-persons-name-shows-only-to-who-can-read-the-contact
  */
 export default {
 	name: 'ContactPersonName',
@@ -64,13 +62,47 @@ export default {
 			type: String,
 			required: true,
 		},
+
+		/** The Nextcloud contact the person is linked to; empty when not linked. */
+		contactsUid: {
+			type: String,
+			default: '',
+		},
 	},
 
 	data() {
 		return {
 			loading: true,
 			name: null,
+			failed: false,
 		}
+	},
+
+	computed: {
+		/**
+		 * Why there is no name to show.
+		 *
+		 * @return {string} The hint.
+		 * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-005-a-contact-persons-name-shows-only-to-who-can-read-the-contact
+		 */
+		hint() {
+			if (this.failed) {
+				return t(
+					'stackiq',
+					'The name could not be loaded. Reload the page to try again.',
+				)
+			}
+			if (!this.contactsUid) {
+				return t(
+					'stackiq',
+					'This contact person is not linked to a Nextcloud contact.',
+				)
+			}
+			return t(
+				'stackiq',
+				'The name is kept in Nextcloud Contacts, in an address book you cannot read.',
+			)
+		},
 	},
 
 	watch: {
@@ -81,14 +113,16 @@ export default {
 			 *
 			 * @param {string} id The contact person uuid.
 			 * @return {Promise<void>}
-			 * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
+			 * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-005-a-contact-persons-name-shows-only-to-who-can-read-the-contact
 			 */
 			async handler(id) {
 				this.loading = true
 				this.name = null
-				const name = await contactName(id)
+				this.failed = false
+				const result = await contactNameResult(id)
 				if (id === this.objectId) {
-					this.name = name
+					this.name = result.name
+					this.failed = result.failed
 					this.loading = false
 				}
 			},

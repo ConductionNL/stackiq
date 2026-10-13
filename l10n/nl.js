@@ -1204,6 +1204,8 @@ OC.L10N.register(
         "Not signed in": "Niet aangemeld",
         "At most %s contact persons per request": "Ten hoogste %s contactpersonen per verzoek",
         "Loading the name": "De naam wordt geladen",
+        "The name could not be loaded. Reload the page to try again.": "De naam kon niet worden geladen. Laad de pagina opnieuw om het nog eens te proberen.",
+        "This contact person is not linked to a Nextcloud contact.": "Deze contactpersoon is niet gekoppeld aan een Nextcloud-contact.",
         "The name is kept in Nextcloud Contacts, in an address book you cannot read.": "De naam staat in Nextcloud Contacten, in een adresboek dat je niet kunt lezen."
     },
     "nplurals=2; plural=(n != 1);"

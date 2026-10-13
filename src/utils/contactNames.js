@@ -19,7 +19,7 @@ import { generateUrl } from '@nextcloud/router'
 /** The endpoint's own limit (`ContactNamesController::MAX_IDS`). */
 export const MAX_IDS_PER_REQUEST = 100
 
-/** uuid -> Promise<string|null>; null when no name could be read. */
+/** uuid -> Promise<{name: string|null, failed: boolean}>. */
 const cache = new Map()
 
 /** uuid -> { resolve } for the ids of the batch being collected. */
@@ -74,23 +74,24 @@ async function flush() {
 			if (failed) {
 				cache.delete(id)
 			}
-			batch.get(id).resolve(name !== '' ? name : null)
+			batch.get(id).resolve({ name: name !== '' ? name : null, failed })
 		})
 	}
 }
 
 /**
- * The display name of a contact person, or null when the signed-in user
- * cannot read one.
+ * What the endpoint made of a contact person: its name, and whether the
+ * request failed (rate limit, network, server error) as opposed to answering
+ * without a name.
  *
  * @param {string} id The contact person uuid.
- * @return {Promise<string|null>} The name.
- * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
+ * @return {Promise<{name: string|null, failed: boolean}>} The name, or why there is none.
+ * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-005-a-contact-persons-name-shows-only-to-who-can-read-the-contact
  */
-export function contactName(id) {
+export function contactNameResult(id) {
 	const key = String(id ?? '').toLowerCase()
 	if (key === '') {
-		return Promise.resolve(null)
+		return Promise.resolve({ name: null, failed: false })
 	}
 	if (!cache.has(key)) {
 		cache.set(
@@ -104,6 +105,18 @@ export function contactName(id) {
 		)
 	}
 	return cache.get(key)
+}
+
+/**
+ * The display name of a contact person, or null when the signed-in user
+ * cannot read one (or the request failed; see contactNameResult).
+ *
+ * @param {string} id The contact person uuid.
+ * @return {Promise<string|null>} The name.
+ * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
+ */
+export async function contactName(id) {
+	return (await contactNameResult(id)).name
 }
 
 /**

@@ -487,7 +487,7 @@
 					{ "id": "2", "widgetId": "cp-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 }
 				],
 				"bodyWidgets": [
-					{ "id": "cp-name", "component": "ContactPersonName", "props": { "objectId": "@objectId" }, "placement": "before-body", "colSpan": 12 }
+					{ "id": "cp-name", "component": "ContactPersonName", "props": { "objectId": "@objectId", "contactsUid": "@object.contactsUid" }, "placement": "before-body", "colSpan": 12 }
 				],
 				"sidebar": {
 					"enabled": true,
