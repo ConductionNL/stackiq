@@ -201,7 +201,10 @@ class SeedCmdbImportPacksTest extends TestCase {
 	 * @return void
 	 */
 	public function testItIsRegisteredOnInstallAndUpgrade(): void {
-		$info = simplexml_load_file(__DIR__ . '/../../../appinfo/info.xml');
+		// Read the bytes, not the path: Nextcloud's external entity loader makes
+		// simplexml_load_file() return false for a valid file in CI.
+		$info = simplexml_load_string((string) file_get_contents(__DIR__ . '/../../../appinfo/info.xml'));
+		$this->assertNotFalse($info);
 		foreach (['install', 'post-migration'] as $block) {
 			$steps = array_map('strval', iterator_to_array($info->{'repair-steps'}->{$block}->step, false));
 			$seed = array_search(SeedCmdbImportPacks::class, $steps, true);
