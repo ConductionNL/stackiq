@@ -1203,7 +1203,8 @@ OC.L10N.register(
         "The workbook holds more than {count} different texts, the most the import reads.": "De werkmap bevat meer dan {count} verschillende teksten, het maximum dat de import leest.",
         "Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.": "Samen verwijzen de cellen van de werkmap naar meer dan {size} gedeelde tekst, het maximum dat de import leest.",
         "In development since": "In ontwikkeling sinds",
-        "In use since": "In gebruik sinds"
+        "In use since": "In gebruik sinds",
+        "The import mapping could not be read. The details are in the Nextcloud log.": "De mapping van de import kon niet worden gelezen. De details staan in het Nextcloud-logboek."
     },
     "nplurals=2; plural=(n != 1);"
 )

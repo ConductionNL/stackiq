@@ -1135,7 +1135,8 @@ OC.L10N.register(
         "The workbook holds more than {count} different texts, the most the import reads.": "The workbook holds more than {count} different texts, the most the import reads.",
         "Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.": "Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.",
         "In development since": "In development since",
-        "In use since": "In use since"
+        "In use since": "In use since",
+        "The import mapping could not be read. The details are in the Nextcloud log.": "The import mapping could not be read. The details are in the Nextcloud log."
     },
     "nplurals=2; plural=(n != 1);"
 )

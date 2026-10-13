@@ -3954,7 +3954,10 @@ class SettingsController extends Controller {
 				[
 					'success' => false,
 					'error' => $e->getErrorCode(),
-					'message' => $this->translate(text: 'The import mapping cannot be shown: OpenRegister is missing, or a mapping pack is invalid or unavailable.'),
+					'message' => (
+						$this->l10n?->t('The import mapping cannot be shown: OpenRegister is missing, or a mapping pack is invalid or unavailable.')
+						?? 'The import mapping cannot be shown: OpenRegister is missing, or a mapping pack is invalid or unavailable.'
+					),
 					'details' => (object)$details,
 				],
 				$e->getHttpStatus()
@@ -3965,7 +3968,10 @@ class SettingsController extends Controller {
 				[
 					'success' => false,
 					'error' => 'IMPORT_FAILED',
-					'message' => $this->translate(text: 'The import mapping could not be read. The details are in the Nextcloud log.'),
+					'message' => (
+						$this->l10n?->t('The import mapping could not be read. The details are in the Nextcloud log.')
+						?? 'The import mapping could not be read. The details are in the Nextcloud log.'
+					),
 					'details' => (object)[],
 				],
 				Http::STATUS_INTERNAL_SERVER_ERROR
@@ -4029,24 +4035,4 @@ class SettingsController extends Controller {
 
 		return mb_substr($firstLine, 0, self::REASON_MAX_LENGTH);
 	}//end boundedReason()
-
-	/**
-	 * Translate a message, or hand it back as it is when no translator was injected.
-	 *
-	 * IL10N is an optional constructor argument (cmdb-import-mapping-view, design D1),
-	 * so a test that builds the controller without it gets the English text.
-	 *
-	 * @param string $text The English text.
-	 *
-	 * @return string
-	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
-	 */
-	private function translate(string $text): string {
-		if ($this->l10n === null) {
-			return $text;
-		}
-
-		return $this->l10n->t($text);
-	}//end translate()
 }//end class
