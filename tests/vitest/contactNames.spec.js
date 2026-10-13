@@ -19,8 +19,13 @@ const http = vi.hoisted(() => ({ get: vi.fn() }))
 vi.mock('@nextcloud/axios', () => ({ default: http }))
 vi.mock('@nextcloud/router', () => ({ generateUrl: (url) => url }))
 
-const { clearContactNames, contactName, contactPersonId, MAX_IDS_PER_REQUEST } =
-	await import('../../src/utils/contactNames.js')
+const {
+	clearContactNames,
+	contactName,
+	contactNameResult,
+	contactPersonId,
+	MAX_IDS_PER_REQUEST,
+} = await import('../../src/utils/contactNames.js')
 const ContactNameCell = (
 	await import('../../src/components/cells/ContactNameCell.vue')
 ).default
@@ -79,6 +84,14 @@ describe('contactNames', () => {
 		http.get.mockResolvedValueOnce({ data: { names: { [A]: 'Teamleider' } } })
 		expect(await contactName(A)).toBe('Teamleider')
 		expect(http.get).toHaveBeenCalledTimes(2)
+	})
+
+	it('tells a failed request from an answer without a name', async () => {
+		http.get.mockRejectedValueOnce(new Error('429'))
+		expect(await contactNameResult(A)).toEqual({ name: null, failed: true })
+
+		http.get.mockResolvedValueOnce({ data: { names: {} } })
+		expect(await contactNameResult(B)).toEqual({ name: null, failed: false })
 	})
 
 	it('reads the uuid from a string or a related object', () => {
