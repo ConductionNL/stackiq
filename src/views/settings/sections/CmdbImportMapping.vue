@@ -23,7 +23,7 @@
 			class="hidden-visually"
 			role="status"
 			data-testid="cmdb-import-mapping-status">
-			{{ loading ? t('stackiq', 'Loading the mapping…') : '' }}
+			{{ announcement }}
 		</p>
 
 		<div
@@ -414,6 +414,7 @@ export default {
 		return {
 			expanded: false,
 			loading: false,
+			announcement: '',
 			mapping: null,
 			error: null,
 			asText: AS_TEXT,
@@ -502,13 +503,15 @@ export default {
 	},
 
 	/**
-	 * Read the mapping as soon as the section exists: the help text needs the
-	 * sheet names before the block is opened.
+	 * Read the mapping as soon as the section is on the page: the help text
+	 * needs the sheet names before the block is opened. The live region has
+	 * rendered empty by then, so the loading text and a failure are changes to
+	 * it and assistive technology announces them.
 	 *
 	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 	 */
-	created() {
-		this.loadMapping()
+	mounted() {
+		this.$nextTick(() => this.loadMapping())
 	},
 
 	methods: {
@@ -529,12 +532,18 @@ export default {
 		async loadMapping() {
 			this.loading = true
 			this.error = null
+			this.announcement = t('stackiq', 'Loading the mapping…')
 			try {
 				this.mapping = await loadCmdbMapping({ http: axios })
+				this.announcement = ''
 				this.$emit('loaded', this.mapping)
 			} catch (error) {
 				this.mapping = null
 				this.error = normaliseError(error)
+				this.announcement = t(
+					'stackiq',
+					'The mapping could not be loaded. Open Mapping for the reason.',
+				)
 			} finally {
 				this.loading = false
 			}

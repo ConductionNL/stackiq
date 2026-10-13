@@ -1180,7 +1180,8 @@ OC.L10N.register(
         "Set on every record": "Set on every record",
         "Set on a new record only": "Set on a new record only",
         "Written on a new record, or on an existing one only when empty": "Written on a new record, or on an existing one only when empty",
-        "Never written on an existing record": "Never written on an existing record"
+        "Never written on an existing record": "Never written on an existing record",
+        "The mapping could not be loaded. Open Mapping for the reason.": "The mapping could not be loaded. Open Mapping for the reason."
     },
     "nplurals=2; plural=(n != 1);"
 )

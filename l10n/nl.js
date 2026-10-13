@@ -1248,7 +1248,8 @@ OC.L10N.register(
         "Set on every record": "Op elk record gezet",
         "Set on a new record only": "Alleen op een nieuw record gezet",
         "Written on a new record, or on an existing one only when empty": "Op een nieuw record geschreven, of op een bestaand record alleen als de waarde leeg is",
-        "Never written on an existing record": "Nooit geschreven op een bestaand record"
+        "Never written on an existing record": "Nooit geschreven op een bestaand record",
+        "The mapping could not be loaded. Open Mapping for the reason.": "De mapping kon niet worden geladen. Open Mapping voor de reden."
     },
     "nplurals=2; plural=(n != 1);"
 )

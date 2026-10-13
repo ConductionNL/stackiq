@@ -352,7 +352,12 @@ describe('CmdbImportMapping', () => {
 			}),
 		)
 		const wrapper = mount(CmdbImportMapping)
-		await flushPromises()
+		// First render: the live region exists and is empty, so what follows is a change to it.
+		expect(
+			wrapper.find('[data-testid="cmdb-import-mapping-status"]').text(),
+		).toBe('')
+		await wrapper.vm.$nextTick()
+		await wrapper.vm.$nextTick()
 
 		const status = wrapper.find('[data-testid="cmdb-import-mapping-status"]')
 		expect(status.attributes('role')).toBe('status')
@@ -372,6 +377,25 @@ describe('CmdbImportMapping', () => {
 		expect(
 			wrapper.find('[data-testid="cmdb-import-mapping-status"]').text(),
 		).toBe('')
+	})
+
+	it('announces a load failure in the live region while the block is collapsed', async () => {
+		http.get.mockRejectedValue({
+			response: {
+				status: 503,
+				data: { error: 'MAPPING_UNAVAILABLE', message: 'x' },
+			},
+		})
+		const wrapper = mount(CmdbImportMapping)
+		await flushPromises()
+
+		const status = wrapper.find('[data-testid="cmdb-import-mapping-status"]')
+		expect(status.text()).toBe(
+			'The mapping could not be loaded. Open Mapping for the reason.',
+		)
+		expect(
+			wrapper.find('#cmdb-import-mapping-content').attributes('style'),
+		).toContain('display: none')
 	})
 
 	it('leaves out the municipality pack, which maps the import options and no column', async () => {
