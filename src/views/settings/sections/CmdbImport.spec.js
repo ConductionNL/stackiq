@@ -162,10 +162,7 @@ describe('CmdbImport municipality chooser', () => {
 // shallowMount stubs the section's wrapper without its slots; this one renders them, so the help text and the info panel are in the DOM.
 const SLOT_RENDERING_SECTION = {
 	render() {
-		return h('div', [
-			this.$slots.default?.(),
-			this.$slots['info-content']?.(),
-		])
+		return h('div', [this.$slots.default?.(), this.$slots['info-content']?.()])
 	},
 }
 
@@ -257,7 +254,7 @@ describe('CmdbImport sheet names in the help texts', () => {
 		}
 	})
 
-	it('names the profile\'s sheets in the section\'s missing-sheet and too-large errors', async () => {
+	it("names the profile's sheets in the section's missing-sheet and too-large errors", async () => {
 		const wrapper = await mountWithSlots()
 		wrapper
 			.findComponent(CmdbImportMapping)
@@ -273,6 +270,8 @@ describe('CmdbImport sheet names in the help texts', () => {
 				details: { maxUncompressedBytes: 50 * 1024 * 1024 },
 			},
 		})
-		expect(wrapper.vm.errorView.hint).toContain('(it reads only "Alpha", "Beta", "Gamma")')
+		expect(wrapper.vm.errorView.hint).toContain(
+			'(it reads only "Alpha", "Beta", "Gamma")',
+		)
 	})
 })
