@@ -33,8 +33,10 @@
  * moved APPID 1234 to "Gearchiveerde Applicaties" and dropped APPID 2 archives
  * the one and moves the other to the trash, the Applications page lists 1234
  * under "Archived", and the original export brings both back. The cleanup
- * looks through OpenRegister's archive and trash lenses too, so an
- * interrupted run leaves nothing archived behind.
+ * looks through OpenRegister's archive lens too, so an interrupted run
+ * leaves no archived application of the run's municipality behind; a
+ * soft-deleted one cannot be listed and stays in the trash until its purge
+ * date (design.md, D9).
  */
 
 import type { APIRequestContext, Locator, Page, Response } from '@playwright/test'
@@ -140,7 +142,8 @@ async function objectsOfMunicipality(
 /**
  * The objects of a schema that mention a municipality, through OpenRegister's
  * archive and trash lenses: `_archived` `true` lists the archive alone, `any`
- * the archive and the working set; `_includeDeleted` adds the trash.
+ * the archive and the working set. `_includeDeleted` is sent for completeness:
+ * the list cannot return a soft-deleted row even then (design.md, D9).
  *
  * @param ctx The API context
  * @param schema The schema id
@@ -158,9 +161,10 @@ async function objectsInLens(
 	const res = await ctx.get(
 		`/index.php/apps/openregister/api/objects/${config.register}/${schema}?_limit=5000&_archived=${lens.archived}&_includeDeleted=${lens.includeDeleted}`,
 	)
-	if (!res.ok()) {
-		return []
-	}
+	expect(
+		res.ok(),
+		`Listing ${schema} with _archived=${lens.archived} failed with ${res.status()}`,
+	).toBe(true)
 	const body = await res.json()
 	const list = body?.results ?? body ?? []
 	return (Array.isArray(list) ? list : []).filter((row) =>
@@ -358,7 +362,8 @@ test.describe.serial('CMDB import section', () => {
 					config.contactpersoon_schema,
 					config.module_schema,
 				]) {
-					// Archived and deleted objects too: the archive test may have stopped half-way.
+					// Archived objects too: the archive test may have stopped half-way. A
+					// soft-deleted one is not listable and stays in the trash until it is purged.
 					for (const row of await objectsInLens(
 						ctx,
 						schema,
@@ -560,8 +565,16 @@ test.describe.serial('CMDB import section', () => {
 		// 2. The Applications page lists 1234 only under the quick filter "Archived".
 		await gotoAppRoute(page, '/modules')
 		await dismissSupportDialog(page)
-		// Not under the default tab: wait for the list to settle, then look.
-		await page.waitForLoadState('networkidle')
+		// Not under the default tab. Nextcloud keeps polls open, so no network
+		// idle wait: wait until the list shows a working application (the
+		// export brought more than the two this test took out), then look.
+		expect(
+			working.modules,
+			'the working set must still hold an application the list can show',
+		).toBeGreaterThan(0)
+		await expect(page.locator('tbody tr').first()).toBeVisible({
+			timeout: 30000,
+		})
 		await expect(page.getByText(ARCHIVED_APPLICATION_NAME)).toHaveCount(0)
 		await page.getByRole('tab', { name: 'Archived', exact: true }).click()
 		await expect(page.getByText(ARCHIVED_APPLICATION_NAME).first()).toBeVisible({
