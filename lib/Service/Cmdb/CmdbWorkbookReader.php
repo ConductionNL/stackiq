@@ -175,8 +175,11 @@ class CmdbWorkbookReader {
 	 * @param CmdbImportProfile $profile The import profile.
 	 *
 	 * @return array<string, mixed> `rows` (list of {sheet, row, cells, uncached}), `importWarnings`
-	 *                              (list of {sheet, message}), `date1904` (bool) and `archive`
-	 *                              ({sheet, present, keyColumnMissing, appIds, uncachedRows}).
+	 *                              (list of {sheet, message}), `date1904` (bool), `archive`
+	 *                              ({sheet, present, keyColumnMissing, appIds, uncachedRows}) and `uncachedKeyRows`
+	 *                              (source sheet => numbers of the rows dropped as empty because their key is a
+	 *                              formula without a cached value; a row with other content is in `rows`, its
+	 *                              `uncached` lists the key).
 	 *
 	 * @throws CmdbImportException WORKBOOK_TOO_LARGE, READER_UNAVAILABLE, NOT_XLSX, NO_SOURCE_SHEET,
 	 *                             MISSING_COLUMN or TOO_MANY_ROWS.
@@ -369,7 +372,15 @@ class CmdbWorkbookReader {
 
 		$spreadsheet = $this->load(path: $path, sheetNames: $loaded, filter: new CmdbReadFilter(lastRow: $lastRow, columns: $letters));
 		try {
-			$rows = $this->readSourceRows(spreadsheet: $spreadsheet, sheetNames: $present, columnsPerSheet: $resolved['columns'], limit: $limit);
+			$uncachedKeyRows = [];
+			$rows = $this->readSourceRows(
+				spreadsheet: $spreadsheet,
+				sheetNames: $present,
+				columnsPerSheet: $resolved['columns'],
+				limit: $limit,
+				keyColumn: $profile->keyColumn(),
+				uncachedKeyRows: $uncachedKeyRows
+			);
 			if ($archiveColumns !== []) {
 				$unseen = [];
 				$archiveRows = $this->readRows(
@@ -389,7 +400,13 @@ class CmdbWorkbookReader {
 			$spreadsheet->disconnectWorksheets();
 		}
 
-		return ['rows' => $rows, 'importWarnings' => $resolved['warnings'], 'date1904' => $date1904, 'archive' => $archive];
+		return [
+			'rows' => $rows,
+			'importWarnings' => $resolved['warnings'],
+			'date1904' => $date1904,
+			'archive' => $archive,
+			'uncachedKeyRows' => $uncachedKeyRows,
+		];
 	}//end readBounded()
 
 	/**
@@ -434,20 +451,38 @@ class CmdbWorkbookReader {
 	 * @param array<int, string> $sheetNames The source sheets the workbook has.
 	 * @param array<string, array<string, string>> $columnsPerSheet Sheet name => column letter => column name.
 	 * @param int $limit The row limit per sheet.
+	 * @param string $keyColumn The key column's name.
+	 * @param array<string, array<int, int>> $uncachedKeyRows Filled, per sheet, with the number of each row that was
+	 *                                                        dropped as empty only because its key is a formula
+	 *                                                        without a cached value.
 	 *
 	 * @return array<int, array<string, mixed>> See read().
 	 *
 	 * @throws CmdbImportException TOO_MANY_ROWS.
 	 */
-	private function readSourceRows(object $spreadsheet, array $sheetNames, array $columnsPerSheet, int $limit): array {
+	private function readSourceRows(
+		object $spreadsheet,
+		array $sheetNames,
+		array $columnsPerSheet,
+		int $limit,
+		string $keyColumn,
+		array &$uncachedKeyRows,
+	): array {
 		$rows = [];
 		foreach ($sheetNames as $sheetName) {
+			$unseen = [];
 			$sheetRows = $this->readRows(
 				worksheet: $spreadsheet->getSheetByName($sheetName),
 				columns: $columnsPerSheet[$sheetName],
 				sheetName: $sheetName,
-				limit: $limit
+				limit: $limit,
+				unseen: $unseen,
+				keyColumn: $keyColumn
 			);
+			if ($unseen !== []) {
+				$uncachedKeyRows[$sheetName] = array_values((array)$unseen);
+			}
+
 			array_push($rows, ...$sheetRows);
 		}
 
@@ -732,12 +767,20 @@ class CmdbWorkbookReader {
 	 * @param int $limit The maximum number of non-empty rows.
 	 * @param array<int, int>|null $unseen Filled with the number of each row that read as empty only because
 	 *                                     a formula in it has no cached value; null to not collect them.
+	 * @param string|null $keyColumn When set, only a row whose uncached columns include this one is collected.
 	 *
 	 * @return array<int, array{sheet: string, row: int, cells: array<string, mixed>, uncached: array<int, string>}>
 	 *
 	 * @throws CmdbImportException TOO_MANY_ROWS.
 	 */
-	private function readRows(object $worksheet, array $columns, string $sheetName, int $limit, ?array &$unseen = null): array {
+	private function readRows(
+		object $worksheet,
+		array $columns,
+		string $sheetName,
+		int $limit,
+		?array &$unseen = null,
+		?string $keyColumn = null,
+	): array {
 		$rows = [];
 		$lastRow = (int)$worksheet->getHighestDataRow();
 		for ($rowNumber = 2; $rowNumber <= $lastRow; $rowNumber++) {
@@ -747,7 +790,7 @@ class CmdbWorkbookReader {
 				rowNumber: $rowNumber
 			);
 			if ($empty === true) {
-				if ($uncached !== [] && $unseen !== null) {
+				if ($uncached !== [] && $unseen !== null && ($keyColumn === null || in_array($keyColumn, $uncached, true) === true)) {
 					$unseen[] = $rowNumber;
 				}
 

@@ -556,7 +556,7 @@ class CmdbExportImportService {
 		$report->setMunicipality(uuid: $municipality['uuid'], name: $municipality['name'], created: $municipality['created']);
 		$report->addImportWarnings(warnings: $this->translateImportWarnings(warnings: $workbook['importWarnings']));
 		$archive = $this->archiveSheet(workbook: $workbook);
-		$this->unreadableKeyRows = $this->unreadableKeyRows(rows: $rows);
+		$this->unreadableKeyRows = $this->unreadableKeyRows(rows: $rows, droppedRows: (array)($workbook['uncachedKeyRows'] ?? []));
 		$this->addRunWarnings(report: $report, municipality: $municipality, archive: $archive, missingRecords: $missingRecords);
 
 		$this->progressTracker->startOperation(
@@ -684,18 +684,29 @@ class CmdbExportImportService {
 	 * has an unreadable key.
 	 *
 	 * @param array<int, array{sheet: string, row: int, uncached?: array<int, string>}> $rows The reader rows.
+	 * @param array<string, array<int, int>> $droppedRows The rows the reader dropped as empty because their key
+	 *                                                    has no cached value (they are not in `$rows`), per sheet.
 	 *
 	 * @return array<string, array<int, int>> Sheet name => row numbers.
 	 *
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
-	private function unreadableKeyRows(array $rows): array {
+	private function unreadableKeyRows(array $rows, array $droppedRows): array {
 		$key = $this->profile->keyColumn();
 		$found = [];
+		foreach ($droppedRows as $sheet => $rowNumbers) {
+			$found[(string)$sheet] = array_map('intval', array_values((array)$rowNumbers));
+		}
+
 		foreach ($rows as $row) {
 			if (in_array($key, ($row['uncached'] ?? []), true) === true) {
 				$found[$row['sheet']][] = $row['row'];
 			}
+		}
+
+		foreach ($found as $sheet => $rowNumbers) {
+			sort($rowNumbers);
+			$found[$sheet] = $rowNumbers;
 		}
 
 		return $found;
@@ -2572,8 +2583,15 @@ class CmdbExportImportService {
 	/**
 	 * Archive or soft-delete one application that left the CMDB sheets, usage first, in its own error boundary.
 	 *
-	 * The usage is written before the module, so a failure between the two
-	 * leaves the municipality's view right and the module at worst visible.
+	 * The writes go in this order: the application's own usage, the other
+	 * usages of its key, its module, the other modules. A failure stops the
+	 * application there and reports one `failed` row (the step and the
+	 * exception class, no list of what was already written). What it leaves:
+	 * a failing own usage leaves everything as it was; a failing extra usage
+	 * leaves the own usage in the new state, that extra and the module as
+	 * they were (so the extra stays visible and the module stays working);
+	 * a failing module leaves every usage in the new state and the module
+	 * as it was. The next import reconciles the application again.
 	 * An application already in the state the export asks for is not reported.
 	 *
 	 * @param ScopeEntry $application The application.
@@ -2631,8 +2649,10 @@ class CmdbExportImportService {
 	/**
 	 * What one application brings to the state the export asks for: its usage and the other usages of its key, then its module and the other modules.
 	 *
-	 * Usages come before modules, so a failure part way leaves the
-	 * municipality's view right and a module at worst visible.
+	 * Own usage, extra usages, own module, extra modules. Usages come before
+	 * modules, so a failure leaves usages in the new state and a module at
+	 * worst unchanged; it does not leave a module changed under a usage that
+	 * still shows. An extra usage that fails does hold back the module.
 	 *
 	 * Only the application's own objects are restored from the trash, and only
 	 * when `restoreDeleted` says so; the extras never are.
