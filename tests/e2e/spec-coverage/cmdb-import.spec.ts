@@ -572,7 +572,9 @@ test.describe.serial('CMDB import section', () => {
 			working.modules,
 			'the working set must still hold an application the list can show',
 		).toBeGreaterThan(0)
-		await expect(page.locator('tbody tr').first()).toBeVisible({
+		await expect(
+			page.locator('.faceted-catalog-index__list tbody tr').first(),
+		).toBeVisible({
 			timeout: 30000,
 		})
 		await expect(page.getByText(ARCHIVED_APPLICATION_NAME)).toHaveCount(0)

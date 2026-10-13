@@ -50,14 +50,14 @@ const QUICK_FILTERS = [
  *
  * @return {object} The wrapper
  */
-function mountView() {
+function mountView(quickFilters = QUICK_FILTERS) {
 	setActivePinia(createPinia())
 	return mount(FacetedCatalogIndexView, {
 		props: {
 			schema: 'module',
 			register: 'voorzieningen',
 			title: 'Applications',
-			quickFilters: QUICK_FILTERS,
+			quickFilters,
 		},
 		global: {
 			mocks: {
@@ -93,6 +93,31 @@ describe('FacetedCatalogIndexView on the Archived tab', () => {
 		expect(wrapper.find(NOTE).text()).toContain('ignores the GEMMA filters')
 
 		await index.vm.$emit('quick-filter-change', 0)
+		expect(wrapper.find(NOTE).exists()).toBe(false)
+	})
+
+	it('follows the default tab at mount, before any tab event', () => {
+		expect(mountView().find(NOTE).exists()).toBe(false)
+
+		const archivedFirst = [
+			{ label: 'Archived', filter: { _archived: 'true', _ids: '' } },
+			{ label: 'All', filter: {} },
+		]
+		// No default marked: CnIndexPage starts on the first tab.
+		expect(mountView(archivedFirst).find(NOTE).exists()).toBe(true)
+	})
+
+	it('drops the note when a facet or search change remounts the list on its default tab', async () => {
+		const wrapper = mountView()
+		const index = wrapper.findComponent({ name: 'CnIndexPage' })
+		await index.vm.$emit('quick-filter-change', 1)
+		expect(wrapper.find(NOTE).exists()).toBe(true)
+
+		// A search term changes the key CnIndexPage is mounted under.
+		wrapper.vm.facetStore.module.search = 'mail'
+		await wrapper.vm.$nextTick()
+		await wrapper.vm.$nextTick()
+
 		expect(wrapper.find(NOTE).exists()).toBe(false)
 	})
 })

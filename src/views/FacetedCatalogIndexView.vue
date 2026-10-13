@@ -171,6 +171,21 @@ const DIMENSION_LABELS = {
 	domain: () => t('stackiq', 'Domain'),
 }
 
+/**
+ * The tab CnIndexPage starts on: the first quick filter marked `default`,
+ * else the first one (the library's own rule in `useSelfFetchList.js`).
+ *
+ * @param {Array<object>|null} quickFilters The quick filters
+ * @return {number|null} The index, or null without quick filters
+ */
+function initialQuickFilterIndex(quickFilters) {
+	if (!Array.isArray(quickFilters) || quickFilters.length === 0) {
+		return null
+	}
+	const index = quickFilters.findIndex((tab) => tab && tab.default === true)
+	return index >= 0 ? index : 0
+}
+
 /** Debounce delay (ms) between search keystrokes and the facets/list refetch. */
 const SEARCH_DEBOUNCE_MS = 400
 
@@ -294,7 +309,7 @@ export default {
 			showSaveViewModal: false,
 			savingView: false,
 			searchDebounceTimer: null,
-			activeQuickFilterIndex: null,
+			activeQuickFilterIndex: initialQuickFilterIndex(this.quickFilters),
 		}
 	},
 
@@ -380,6 +395,18 @@ export default {
 		 */
 		indexPageKey() {
 			return `${this.schema}-${JSON.stringify(this.listFilter)}`
+		},
+	},
+
+	watch: {
+		/**
+		 * CnIndexPage is remounted when the key changes and starts on its
+		 * default tab again, so the tab this view remembers goes back to it.
+		 *
+		 * @return {void}
+		 */
+		indexPageKey() {
+			this.activeQuickFilterIndex = initialQuickFilterIndex(this.quickFilters)
 		},
 	},
 
