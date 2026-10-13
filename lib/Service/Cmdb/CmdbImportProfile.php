@@ -200,7 +200,7 @@ class CmdbImportProfile {
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function load(): void {
-		$this->loadPacks(storedPack: fn (CmdbImportPackStore $store, array $shipped): ?array => $store->resolve(shipped: $shipped));
+		$this->loadPacks(storedPack: fn (CmdbImportPackStore $store, array $shipped): array => $store->resolve(shipped: $shipped));
 	}//end load()
 
 	/**
