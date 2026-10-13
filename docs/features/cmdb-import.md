@@ -326,7 +326,7 @@ every import:
 | `maxUncompressedBytes` | `52428800` (50 MB) | the size of the workbook once unpacked, checked before a sheet is parsed |
 | `maxPartBytes` | `10485760` (10 MB) | the size of one part the import parses once unpacked, such as a source sheet or the shared-strings table, checked before a sheet is parsed; a sheet the import does not read may be larger, and is read as an empty sheet |
 | `maxSharedStrings` | `200000` | the number of different texts in the workbook's shared-strings table, each formatted piece of a text with mixed formatting counted as one more, also in text written in a cell itself, counted before a sheet is parsed |
-| `maxReferencedStringBytes` | `67108864` (64 MB) | the shared text all cells of the workbook reference together, counted once per cell and once per CMDB sheet before a sheet is parsed; a long text that many cells repeat counts as often as it is repeated |
+| `maxReferencedStringBytes` | `67108864` (64 MB) | the shared text all cells of the workbook reference together, counted once per cell and once per sheet the import reads (the two CMDB sheets and the archive sheet, also when the workbook has no archive sheet) before a sheet is parsed; a long text that many cells repeat counts as often as it is repeated |
 
 The section's help text shows the defaults; when the server refuses a file,
 the message shows the limit the server applied. A larger file also has to
