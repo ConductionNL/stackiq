@@ -9,7 +9,7 @@ Nextcloud contact instead of its uuid. The name comes from the signed-in
 user's own address books (see `utils/contactNames.js`); when there is none,
 the uuid stays, as before.
 
-@spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
+@spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-005-a-contact-persons-name-shows-only-to-who-can-read-the-contact
 -->
 
 <template>
@@ -41,7 +41,7 @@ export default {
 	computed: {
 		/**
 		 * @return {string} The contact person uuid, or ''.
-		 * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
+		 * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-005-a-contact-persons-name-shows-only-to-who-can-read-the-contact
 		 */
 		id() {
 			return contactPersonId(this.value)
@@ -56,7 +56,7 @@ export default {
 			 *
 			 * @param {string} id The contact person uuid.
 			 * @return {Promise<void>}
-			 * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
+			 * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-005-a-contact-persons-name-shows-only-to-who-can-read-the-contact
 			 */
 			async handler(id) {
 				this.name = null

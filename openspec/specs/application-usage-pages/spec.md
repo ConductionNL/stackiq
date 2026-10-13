@@ -65,3 +65,25 @@ The usage schema SHALL declare its lifecycle on the status values its rows hold,
 - **GIVEN** a usage with status Planned
 - **WHEN** the information manager opens it and clicks Go live
 - **THEN** its status reads In production
+
+### Requirement: REQ-UAP-005 A contact person's name shows only to who can read the contact
+
+The contact person page and the Name column of an organisation's contact person list SHALL show the name of the linked Nextcloud contact only to a user who can read that contact in their own or shared address books, and SHALL say why there is no name when there is none.
+
+#### Scenario: A reader of the contact sees the name
+@e2e exclude Needs a Contacts address book per user; tests/vitest/contactNames.spec.js asserts the name on the contact person page and in the list column.
+
+- **GIVEN** a contact person linked to a contact in the information manager's own address book
+- **WHEN** the information manager opens the contact person, or the organisation it belongs to
+- **THEN** the contact person page opens with the contact's name
+- **AND** the Name column of the organisation's contact person list shows it
+
+#### Scenario: Without a name the page says why
+@e2e exclude Needs a Contacts address book per user; tests/vitest/contactNames.spec.js asserts each empty state.
+
+- **GIVEN** a contact person whose name the signed-in user does not get
+- **WHEN** the user opens the contact person page
+- **THEN** a contact person without a contactsUid reads that it is not linked to a Nextcloud contact
+- **AND** a contact in an address book the user cannot read reads that the name is kept in Nextcloud Contacts, in an address book the user cannot read
+- **AND** a request that failed (for example rate limited) reads that the name could not be loaded, to reload the page
+- **AND** the list column keeps the contact person's id in each of these cases
