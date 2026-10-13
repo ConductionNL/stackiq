@@ -90,7 +90,7 @@ class CmdbImportPackStoreTest extends TestCase {
 	 */
 	private function newerUsage(): array {
 		$pack = $this->shippedUsage();
-		$pack['version'] = '2.1.0';
+		$pack['version'] = '1.1.0';
 		$pack['fieldMappings'][0]['transform']['map']['Gepland'] = 'Planned';
 		return $pack;
 	}//end newerUsage()
@@ -211,7 +211,7 @@ class CmdbImportPackStoreTest extends TestCase {
 		$this->assertTrue($this->service->rows[$stored['id']]['builtin']);
 		$definition = $this->service->definition(id: $stored['id']);
 		$this->assertSame(
-			['shippedVersion' => '2.0.0', 'shippedHash' => (new CmdbImportPackMarker())->hash(pack: $shipped)],
+			['shippedVersion' => '1.0.0', 'shippedHash' => (new CmdbImportPackMarker())->hash(pack: $shipped)],
 			$definition[CmdbImportPackMarker::KEY]
 		);
 		$this->assertSame($shipped, (new CmdbImportPackMarker())->strip(definition: $definition), 'the pack itself is stored as shipped');
@@ -249,10 +249,10 @@ class CmdbImportPackStoreTest extends TestCase {
 
 		$this->assertSame(CmdbImportPackStore::UPDATED, $stored['outcome']);
 		$this->assertSame(['update ' . $id], $this->service->writes);
-		$this->assertSame('2.1.0', $stored['version']);
+		$this->assertSame('1.1.0', $stored['version']);
 		$definition = $this->service->definition(id: $id);
 		$this->assertSame('Planned', $definition['fieldMappings'][0]['transform']['map']['Gepland']);
-		$this->assertSame('2.1.0', $definition[CmdbImportPackMarker::KEY]['shippedVersion']);
+		$this->assertSame('1.1.0', $definition[CmdbImportPackMarker::KEY]['shippedVersion']);
 		$this->assertFalse((new CmdbImportPackMarker())->isEdited(definition: $definition));
 		$this->assertFalse((new CmdbImportPackMarker())->isNewerShipped(definition: $definition, shipped: $newer));
 	}//end testAnUneditedPackFollowsANewerShippedPack()
