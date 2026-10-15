@@ -201,7 +201,7 @@ final class FakeMigrationPackService {
 
 		foreach ($this->rows as $row) {
 			if ($row['slug'] === $definition['id']) {
-				throw new PackSlugExistsException('A migration pack with id "' . $definition['id'] . '" already exists');
+				throw new PackSlugExistsException($definition['id']);
 			}
 		}
 
@@ -281,19 +281,26 @@ final class FakeMigrationPackService {
 	/**
 	 * Make the classes of OpenRegister's hardened pack store exist, as on such an OpenRegister.
 	 *
+	 * A stand-in is loaded only for a class that does not exist yet: where
+	 * OpenRegister is installed (the PHPUnit job runs inside a Nextcloud with
+	 * OpenRegister's development branch), its own classes autoload, and a
+	 * second declaration of the same name is a fatal error.
+	 *
 	 * @return void
 	 */
 	public static function loadHardenedOpenRegister(): void {
-		$files = [
-			'MigrationPackRefusedException',
-			'InvalidPackDefinitionException',
-			'BuiltinPackSlugLockedException',
-			'PackSlugExistsException',
-			'PackChangedException',
-			'MigrationPacksController',
+		$classes = [
+			'MigrationPackRefusedException' => 'OCA\\OpenRegister\\Exception\\MigrationPackRefusedException',
+			'InvalidPackDefinitionException' => 'OCA\\OpenRegister\\Exception\\InvalidPackDefinitionException',
+			'BuiltinPackSlugLockedException' => 'OCA\\OpenRegister\\Exception\\BuiltinPackSlugLockedException',
+			'PackSlugExistsException' => 'OCA\\OpenRegister\\Exception\\PackSlugExistsException',
+			'PackChangedException' => 'OCA\\OpenRegister\\Exception\\PackChangedException',
+			'MigrationPacksController' => 'OCA\\OpenRegister\\Controller\\MigrationPacksController',
 		];
-		foreach ($files as $file) {
-			require_once __DIR__ . '/OpenRegister/' . $file . '.php';
+		foreach ($classes as $file => $class) {
+			if (class_exists($class) === false) {
+				require_once __DIR__ . '/OpenRegister/' . $file . '.php';
+			}
 		}
 	}//end loadHardenedOpenRegister()
 
