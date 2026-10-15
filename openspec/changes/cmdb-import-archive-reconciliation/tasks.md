@@ -4,7 +4,7 @@ Spec: `openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-imp
 
 ## Implementation Tasks
 
-Status in this PR (the reconciliation slice, on top of the reader slice): Tasks 1-5 are implemented here (the reader's tasks 1-2 come from the base PR). Tasks 6-7 stay unticked: the UI lands in #1287, and the docs and the e2e run of task 7 are not done yet.
+Status in this PR (the reconciliation slice, on top of the reader slice): Tasks 1-5 are implemented in #1286 (the reader's tasks 1-2 come from the base PR). Task 6 (the UI) is implemented in #1287; task 7 has its fixture, docs and e2e spec written there, and the Playwright run is the one thing not done yet.
 
 ### Task 1: Schema opt-in and the import profile
 - **spec_ref**: `SPEC#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017`, `SPEC#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012`
@@ -71,9 +71,10 @@ Status in this PR (the reconciliation slice, on top of the reader slice): Tasks 
   - GIVEN the section THEN a labelled choice "Applications missing from the export" offers Archive (default) and Keep with help text, and `buildImportForm()` sends the choice as `missingRecords`
   - GIVEN a report with the new outcomes THEN the summary shows their tiles, the outcome filter offers them, and a reconciliation row shows no row number
   - GIVEN the Applications and Applications in use pages THEN a quick filter "Archived" sends `_archived=true`
+  - GIVEN the Applications page with the "Archived" tab active THEN a note under the toolbar says the tab ignores the GEMMA filters and the search term, and it is gone on any other tab
   - Every new string is in `l10n/en.json` and `l10n/nl.json`, and the generated `l10n/*.js` are current
-- [ ] Implement
-- [ ] Test
+- [x] Implement
+- [x] Test
 
 ### Task 7: Fixture, docs and e2e
 - **spec_ref**: `SPEC#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015`
@@ -82,7 +83,7 @@ Status in this PR (the reconciliation slice, on top of the reader slice): Tasks 
   - GIVEN `build-fixtures.py` THEN it derives `topdesk-archived-applications.xlsx`: APPID 1234 on the archive sheet only, APPID 2 on no sheet, both CMDB sheets present and empty; the hygiene test passes on it
   - GIVEN the e2e THEN after the first import, importing the variant archives 1234 and soft-deletes 2, the Applications page lists 1234 under "Archived", and importing the original again reports 1234 `unarchived` and 2 `restored` with the object counts back to the first import's
   - GIVEN the docs THEN "Repeat imports" describes archive, soft delete, the archive sheet, the option and the return of an application, and the error table has `ARCHIVE_UNAVAILABLE` and the new meaning of `MISSING_RECORDS_UNSUPPORTED`
-- [ ] Implement
+- [x] Implement
 - [ ] Test
   - Status: PHPUnit covers the fixture round trip (testTheArchivedApplicationsFixtureArchivesDeletesAndBringsBack); the Playwright test is written and not run yet, because no Nextcloud was reachable from the worktree.
 

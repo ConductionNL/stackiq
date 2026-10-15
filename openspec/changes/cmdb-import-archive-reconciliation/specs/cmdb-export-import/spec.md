@@ -173,7 +173,7 @@ The import SHALL accept `missingRecords` with the values `keep` and `archive`; `
 
 ### Requirement: The admin settings SHALL offer a CMDB import section (REQ-CMDB-014)
 
-Stackiq's admin settings page SHALL show a section "CMDB import", rendered by the settings page and not registered as an in-app route. The section SHALL let the admin choose an existing municipality or type the name of a new one, choose an `.xlsx` file, choose what happens to applications missing from the export (archive, the default, or keep) with help text that says what each does, and start the import. While the import runs it SHALL show a progress bar and a Cancel button. Afterwards it SHALL show the summary, including the archived, unarchived, deleted and restored counts when they are not zero, and a report table that can be filtered by outcome, including the four new ones; a reconciliation row SHALL show no row number. Every control SHALL have a visible label, and every string SHALL be translatable.
+Stackiq's admin settings page SHALL show a section "CMDB import", rendered by the settings page and not registered as an in-app route. The section SHALL let the admin choose an existing municipality or type the name of a new one, choose an `.xlsx` file, choose what happens to applications missing from the export (archive, the default, or keep) with a one-sentence help text that says what each does and the details in the section's information panel, and start the import. While the import runs it SHALL show a progress bar and a Cancel button. Afterwards it SHALL show the summary, including the archived, unarchived, deleted and restored counts when they are not zero, and a report table that can be filtered by outcome, including the four new ones; a reconciliation row SHALL show no row number. Every control SHALL have a visible label, and every string SHALL be translatable.
 
 (Previously: the section had no choice for missing records; the request always sent `keep`.)
 
@@ -187,7 +187,7 @@ Stackiq's admin settings page SHALL show a section "CMDB import", rendered by th
 - **AND** filtering the table on `created` SHALL show the two imported rows
 
 #### Scenario: The admin chooses to keep missing applications
-@e2e exclude Covered by the Jest test; src/utils/cmdbImport.spec.js asserts buildImportForm() sends `archive` by default and `keep` when chosen, and src/views/settings/sections/CmdbImport.spec.js asserts the section's default.
+@e2e tests/e2e/spec-coverage/cmdb-import.spec.ts
 
 - **GIVEN** the section
 - **WHEN** the admin selects "Keep them as they are" and starts the import
