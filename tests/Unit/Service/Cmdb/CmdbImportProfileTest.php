@@ -21,12 +21,16 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Service\Cmdb;
 
 require_once __DIR__ . '/../../Support/CmdbTestSupport.php';
+require_once __DIR__ . '/../../Support/FakeMigrationPackService.php';
 
 use OCA\OpenRegister\Service\MigrationPack\MappingEngine;
 use OCA\OpenRegister\Service\MigrationPack\PackDefinitionValidator;
 use OCA\Stackiq\Exception\CmdbImportException;
+use OCA\Stackiq\Service\Cmdb\CmdbImportPackMarker;
+use OCA\Stackiq\Service\Cmdb\CmdbImportPackStore;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Tests\Unit\Support\CmdbTestSupport;
+use OCA\Stackiq\Tests\Unit\Support\FakeMigrationPackService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 
@@ -296,6 +300,516 @@ class CmdbImportProfileTest extends TestCase {
 			$this->assertSame(503, $e->getHttpStatus());
 		}
 	}//end testAMissingPackOrValidatorIsMappingUnavailable()
+
+	/**
+	 * A create-only default keeps its mapped field in createOnlyFields; only an unmapped default leaves it.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 */
+	public function testAMappedCreateOnlyDefaultStaysACreateOnlyField(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$profile = new class(container: $this->emptyContainer()) extends CmdbImportProfile {
+			/**
+			 * The usage pack's create-only fields with a create default on one mapped field and one unmapped one.
+			 *
+			 * @param string $target The pack target.
+			 *
+			 * @return array<string, mixed>
+			 */
+			public function createOnlyDefaults(string $target): array {
+				if ($target !== 'usage') {
+					return parent::createOnlyDefaults(target: $target);
+				}
+
+				return ['timeClassification' => 'Tolerate', 'unmappedFlag' => true];
+			}
+
+			/**
+			 * The usage pack's create-only fields plus the unmapped default's key.
+			 *
+			 * @param string $target The pack target.
+			 *
+			 * @return array<int, string>
+			 */
+			public function createOnlyFields(string $target): array {
+				if ($target !== 'usage') {
+					return parent::createOnlyFields(target: $target);
+				}
+
+				return [...parent::createOnlyFields(target: $target), 'unmappedFlag'];
+			}
+		};
+
+		$usage = array_values(array_filter($profile->mappingOverview()['packs'], static fn (array $pack): bool => $pack['target'] === 'usage'))[0];
+
+		$this->assertSame(['interneAnnotation', 'timeClassification'], $usage['createOnlyFields'], 'the mapped field stays, the unmapped default leaves');
+	}//end testAMappedCreateOnlyDefaultStaysACreateOnlyField()
+
+	/**
+	 * The overview the admin settings show is built from the validated packs, and a broken pack breaks it too.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 */
+	public function testTheOverviewShowsWhatTheImportRuns(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$profile = new CmdbImportProfile(container: $this->emptyContainer());
+
+		$overview = $profile->mappingOverview();
+
+		$this->assertSame(['profile', 'packs', 'openRegisterPacks'], array_keys($overview));
+		$this->assertFalse($overview['openRegisterPacks'], 'no OpenRegister pack store in this container');
+		$this->assertSame('topdesk-cmdb', $overview['profile']['id']);
+		$this->assertSame($profile->sheets(), $overview['profile']['sheets']);
+		$this->assertSame('Gearchiveerde Applicaties', $overview['profile']['archiveSheet']);
+		$this->assertSame(['Beheerde Applicaties CMDB', 'Onbeh Applicaties CMDB'], $overview['profile']['sheetPrecedence']);
+		$this->assertSame($profile->keyColumn(), $overview['profile']['keyColumn']);
+		$this->assertSame($profile->requiredColumns(), $overview['profile']['requiredColumns']);
+		$this->assertSame($profile->idColumns(), $overview['profile']['idColumns']);
+		$this->assertSame($profile->emptyValues(), $overview['profile']['emptyValues']);
+		$this->assertSame(CmdbImportProfile::TARGETS, array_column($overview['packs'], 'target'));
+		foreach ($overview['packs'] as $pack) {
+			$shipped = $profile->pack(target: $pack['target']);
+			$this->assertSame($shipped['id'], $pack['id']);
+			$this->assertSame($shipped['version'], $pack['version']);
+			$this->assertSame(array_column($shipped['fieldMappings'], 'source'), array_column($pack['fieldMappings'], 'source'), $pack['target']);
+			$this->assertSame(array_column($shipped['fieldMappings'], 'transform'), array_column($pack['fieldMappings'], 'transform'), $pack['target'] . ' transforms as stored');
+			foreach ($pack['fieldMappings'] as $mapping) {
+				$this->assertIsBool($mapping['required'], $pack['target']);
+			}
+
+			$this->assertSame($profile->createOnlyDefaults(target: $pack['target']), $pack['createOnlyDefaults'], $pack['target']);
+			$this->assertSame([], array_intersect($pack['createOnlyFields'], array_diff(array_keys($pack['createOnlyDefaults']), array_column($pack['fieldMappings'], 'target'))), $pack['target']);
+			$this->assertSame($profile->neverWrittenOnUpdate(target: $pack['target']), $pack['neverWritten'], $pack['target']);
+
+			$this->assertSame('file', $pack['source'], $pack['target']);
+			$this->assertNull($pack['packId'], $pack['target']);
+			$this->assertNull($pack['storedVersion'], $pack['target']);
+			$this->assertSame($shipped['version'], $pack['shippedVersion'], $pack['target']);
+			$this->assertNull($pack['edited'], $pack['target']);
+			$this->assertFalse($pack['newerShipped'], $pack['target']);
+			$this->assertSame($pack['target'] !== 'municipality', $pack['editable'], $pack['target']);
+		}
+
+		$directory = $this->copyOfShippedDirectory();
+		unlink($directory . '/topdesk-module.json');
+		try {
+			(new CmdbImportProfile(container: $this->emptyContainer(), directory: $directory))->mappingOverview();
+			$this->fail('MAPPING_UNAVAILABLE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('MAPPING_UNAVAILABLE', $e->getErrorCode());
+			$this->assertStringContainsString('topdesk-module.json', $e->getMessage());
+		} finally {
+			$this->remove(directory: $directory);
+		}
+	}//end testTheOverviewShowsWhatTheImportRuns()
+
+	/**
+	 * A profile that names no pack for a target cannot be run, so the mapping is unavailable.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 */
+	public function testAProfileWithoutAUsagePackIsMappingUnavailable(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$directory = $this->copyOfShippedDirectory();
+		$profile = json_decode((string)file_get_contents($directory . '/topdesk-profile.json'), true);
+		unset($profile['packs']['usage']);
+		file_put_contents($directory . '/topdesk-profile.json', json_encode($profile));
+		try {
+			(new CmdbImportProfile(container: $this->emptyContainer(), directory: $directory))->mappingOverview();
+			$this->fail('MAPPING_UNAVAILABLE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('MAPPING_UNAVAILABLE', $e->getErrorCode());
+		} finally {
+			$this->remove(directory: $directory);
+		}
+	}//end testAProfileWithoutAUsagePackIsMappingUnavailable()
+
+	/**
+	 * A shipped pack, decoded.
+	 *
+	 * @param string $file The file name.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function shipped(string $file): array {
+		return json_decode((string)file_get_contents(CmdbTestSupport::appRoot() . '/lib/Settings/cmdb-import/' . $file), true);
+	}//end shipped()
+
+	/**
+	 * A profile whose container holds the fake OpenRegister service and an app config.
+	 *
+	 * @param FakeMigrationPackService $service The fake service.
+	 * @param array<string, string> $config The app config values.
+	 *
+	 * @return CmdbImportProfile
+	 */
+	private function storedProfile(FakeMigrationPackService $service, array &$config): CmdbImportProfile {
+		return new CmdbImportProfile(
+			container: $service->container(test: $this, appConfig: FakeMigrationPackService::appConfig(test: $this, values: $config))
+		);
+	}//end storedProfile()
+
+	/**
+	 * The import runs the pack an administrator edited in OpenRegister; missing packs are seeded, the municipality stays a file.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testAStoredPackIsWhatTheImportRuns(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$service = new FakeMigrationPackService();
+		$module = (new CmdbImportPackMarker())->seed(shipped: $this->shipped(file: 'topdesk-module.json'));
+		$module['fieldMappings'][7]['transform']['map']['Cloud'] = ['SaaS'];
+		$module['version'] = '2.0.1';
+		$moduleId = $service->put(definition: $module);
+		$config = [];
+
+		$profile = $this->storedProfile(service: $service, config: $config);
+		// The import run loads the packs with writes; the overview then shows what it ran.
+		$profile->load();
+		$overview = $profile->mappingOverview();
+
+		$this->assertSame(['SaaS'], $profile->pack(target: 'module')['fieldMappings'][7]['transform']['map']['Cloud']);
+		$this->assertArrayNotHasKey(CmdbImportPackMarker::KEY, $profile->pack(target: 'module'), 'the engine gets the pack without the marker');
+		$this->assertSame(
+			['create stackiq-topdesk-manufacturer', 'create stackiq-topdesk-usage', 'create stackiq-topdesk-business-owner'],
+			$service->writes,
+			'the missing sheet packs are seeded; the municipality pack never is'
+		);
+		$this->assertTrue($overview['openRegisterPacks']);
+		$this->assertFalse($profile->usesShippedFallback());
+
+		$byTarget = array_column($overview['packs'], null, 'target');
+		$this->assertSame('openregister', $byTarget['module']['source']);
+		$this->assertSame($moduleId, $byTarget['module']['packId']);
+		$this->assertSame('2.0.1', $byTarget['module']['storedVersion']);
+		$this->assertSame('2.0.1', $byTarget['module']['version']);
+		$this->assertSame('1.0.0', $byTarget['module']['shippedVersion']);
+		$this->assertTrue($byTarget['module']['edited']);
+		$this->assertFalse($byTarget['module']['newerShipped'], 'seeded from the pack that still ships');
+		$this->assertTrue($byTarget['module']['editable']);
+		$this->assertSame('openregister', $byTarget['usage']['source']);
+		$this->assertFalse($byTarget['usage']['edited']);
+		$this->assertSame('file', $byTarget['municipality']['source']);
+		$this->assertNull($byTarget['municipality']['packId']);
+		$this->assertFalse($byTarget['municipality']['editable']);
+
+		$recorded = json_decode($config[CmdbImportPackStore::CONFIG_KEY], true);
+		$this->assertSame(['stackiq-topdesk-business-owner', 'stackiq-topdesk-manufacturer', 'stackiq-topdesk-module', 'stackiq-topdesk-usage'], array_keys($recorded));
+		$this->assertSame($moduleId, $recorded['stackiq-topdesk-module']);
+	}//end testAStoredPackIsWhatTheImportRuns()
+
+	/**
+	 * An unedited stored pack from an older release follows the shipped pack; an edited one is kept and reported.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testUneditedPacksFollowTheReleaseAndEditedOnesAreReported(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$service = new FakeMigrationPackService();
+		$olderUsage = $this->shipped(file: 'topdesk-usage.json');
+		$olderUsage['version'] = '1.9.0';
+		unset($olderUsage['fieldMappings'][0]['transform']['map']['Besteld']);
+		$usageId = $service->put(definition: (new CmdbImportPackMarker())->seed(shipped: $olderUsage));
+
+		$olderModule = $this->shipped(file: 'topdesk-module.json');
+		$olderModule['version'] = '1.9.0';
+		$editedModule = (new CmdbImportPackMarker())->seed(shipped: $olderModule);
+		$editedModule['fieldMappings'][0]['transform'] = ['type' => 'trim'];
+		$editedModule['description'] = 'Edited by the administrator';
+		$moduleId = $service->put(definition: $editedModule);
+		$config = [];
+
+		$profile = $this->storedProfile(service: $service, config: $config);
+		$profile->load();
+		$byTarget = array_column($profile->mappingOverview()['packs'], null, 'target');
+
+		$this->assertContains('update ' . $usageId, $service->writes);
+		$this->assertNotContains('update ' . $moduleId, $service->writes);
+		$this->assertSame('Acquisition', $profile->pack(target: 'usage')['fieldMappings'][0]['transform']['map']['Besteld']);
+		$this->assertFalse($byTarget['usage']['edited']);
+		$this->assertFalse($byTarget['usage']['newerShipped']);
+		$this->assertSame('1.0.0', $byTarget['usage']['storedVersion']);
+
+		$this->assertSame('Edited by the administrator', $profile->pack(target: 'module')['description']);
+		$this->assertTrue($byTarget['module']['edited']);
+		$this->assertTrue($byTarget['module']['newerShipped']);
+		$this->assertSame('1.9.0', $byTarget['module']['storedVersion']);
+		$this->assertSame('1.0.0', $byTarget['module']['shippedVersion']);
+	}//end testUneditedPacksFollowTheReleaseAndEditedOnesAreReported()
+
+	/**
+	 * Viewing the mapping writes nothing: an outdated unedited pack is shown as the import will run it (shipped, update pending), a missing one from its file.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 */
+	public function testTheMappingOverviewOnlyReadsTheStore(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$service = new FakeMigrationPackService();
+		$olderUsage = $this->shipped(file: 'topdesk-usage.json');
+		$olderUsage['version'] = '0.9.0';
+		unset($olderUsage['fieldMappings'][0]['transform']['map']['Besteld']);
+		$usageId = $service->put(definition: (new CmdbImportPackMarker())->seed(shipped: $olderUsage));
+		$config = [];
+
+		$profile = $this->storedProfile(service: $service, config: $config);
+		$byTarget = array_column($profile->mappingOverview()['packs'], null, 'target');
+
+		$this->assertSame([], $service->writes, 'nothing is seeded or updated');
+		$this->assertSame([], $config, 'no row id is recorded');
+		$this->assertSame('openregister', $byTarget['usage']['source']);
+		$this->assertSame($usageId, $byTarget['usage']['packId']);
+		$shipped = $this->shipped(file: 'topdesk-usage.json');
+		$this->assertSame('0.9.0', $byTarget['usage']['storedVersion'], 'what OpenRegister holds');
+		$this->assertSame($shipped['version'], $byTarget['usage']['version'], 'the shipped version, which the next import runs');
+		$this->assertSame($shipped['fieldMappings'][0]['transform']['map'], $byTarget['usage']['fieldMappings'][0]['transform']['map'], 'the shipped mapping, with Besteld');
+		$this->assertTrue($byTarget['usage']['updatePending']);
+		$this->assertFalse($byTarget['usage']['edited']);
+		$this->assertFalse($byTarget['module']['updatePending']);
+		$this->assertSame('file', $byTarget['module']['source'], 'not stored yet: shown from the shipped file');
+		$this->assertNull($byTarget['module']['packId']);
+
+		$profile->load();
+		$this->assertContains('update ' . $usageId, $service->writes, 'the import run still updates it');
+		$this->assertContains('create stackiq-topdesk-module', $service->writes, 'and seeds the missing pack');
+	}//end testTheMappingOverviewOnlyReadsTheStore()
+
+	/**
+	 * A stored pack OpenRegister's validator refuses stops the import, naming the pack and its id.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testAnInvalidStoredPackIsMappingUnavailable(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$service = new FakeMigrationPackService();
+		$usage = (new CmdbImportPackMarker())->seed(shipped: $this->shipped(file: 'topdesk-usage.json'));
+		$usage['fieldMappings'][0]['transform'] = ['type' => 'uppercase'];
+		$id = $service->put(definition: $usage);
+		$config = [];
+
+		try {
+			$this->storedProfile(service: $service, config: $config)->load();
+			$this->fail('MAPPING_UNAVAILABLE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('MAPPING_UNAVAILABLE', $e->getErrorCode());
+			$this->assertSame(503, $e->getHttpStatus());
+			$this->assertStringStartsWith('OpenRegister migration pack stackiq-topdesk-usage (id ' . $id . ') is invalid: ', $e->getMessage());
+			$this->assertStringContainsString('uppercase', $e->getMessage());
+			$this->assertSame(['pack' => 'stackiq-topdesk-usage', 'packId' => $id], $e->getDetails());
+		}
+	}//end testAnInvalidStoredPackIsMappingUnavailable()
+
+	/**
+	 * Edits a stored pack may not make, and the rule each one breaks.
+	 *
+	 * @return array<string, array{0: string, 1: callable, 2: string}>
+	 */
+	public static function brokenRules(): array {
+		$target = static fn (int $index, string $field): callable => static function (array $pack) use ($index, $field): array {
+			$pack['fieldMappings'][$index]['target'] = $field;
+			return $pack;
+		};
+
+		return [
+			'module name no longer required' => ['topdesk-module.json', static function (array $pack): array {
+				$pack['fieldMappings'][0]['required'] = false;
+				return $pack;
+			}, '"name" must be mapped as required'],
+			'externalNumber from another column' => ['topdesk-module.json', static function (array $pack): array {
+				$pack['fieldMappings'][1]['source'] = 'Applicatie Code';
+				return $pack;
+			}, 'the key column "APPID" must be mapped to "externalNumber" as required'],
+			'the object metadata' => ['topdesk-module.json', $target(2, '@self'), '"@self" is set by the import and cannot be mapped'],
+			'the match key' => ['topdesk-module.json', $target(2, 'externalKey'), '"externalKey" is set by the import'],
+			'a field never written' => ['topdesk-module.json', $target(2, 'publicationDate'), '"publicationDate" is set by the import'],
+			'a field the schema lacks' => ['topdesk-module.json', $target(2, 'secretNotes'), '"secretNotes" is not a field the module pack may map'],
+			'the usage provider' => ['topdesk-usage.json', $target(0, 'provider'), '"provider" is set by the import'],
+			'the usage consumer' => ['topdesk-usage.json', $target(1, 'consumer'), '"consumer" is set by the import'],
+			'the usage business owner' => ['topdesk-usage.json', $target(1, 'businessOwner'), '"businessOwner" is set by the import'],
+			'a default the import sets' => ['topdesk-usage.json', static function (array $pack): array {
+				$pack['defaults'] = ['module' => 'x'];
+				return $pack;
+			}, 'default "module" is set by the import'],
+			'the manufacturer type mapped' => ['topdesk-manufacturer.json', $target(0, 'type'), '"type" is set by the import'],
+			'the manufacturer type default changed' => ['topdesk-manufacturer.json', static function (array $pack): array {
+				$pack['defaults']['type'] = 'Municipality';
+				return $pack;
+			}, 'default "type" must stay "Supplier"'],
+			'an owner field that is no contact field' => ['topdesk-business-owner.json', $target(1, 'email'), '"email" is not a field the businessOwner pack may map'],
+		];
+	}//end brokenRules()
+
+	/**
+	 * A stored pack that breaks a rule of the import stops it, naming the pack, its id and the rule.
+	 *
+	 * @param string $file The shipped file the stored pack starts from.
+	 * @param callable $edit The edit.
+	 * @param string $rule The text of the broken rule.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider brokenRules
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testAStoredPackThatBreaksAnImportRuleIsRefused(string $file, callable $edit, string $rule): void {
+		CmdbTestSupport::loadMigrationPack();
+		$service = new FakeMigrationPackService();
+		$pack = $edit((new CmdbImportPackMarker())->seed(shipped: $this->shipped(file: $file)));
+		$id = $service->put(definition: $pack);
+		$config = [];
+
+		try {
+			$this->storedProfile(service: $service, config: $config)->load();
+			$this->fail('MAPPING_UNAVAILABLE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('MAPPING_UNAVAILABLE', $e->getErrorCode());
+			$this->assertStringStartsWith('OpenRegister migration pack ' . $pack['id'] . ' (id ' . $id . ') breaks a rule of the CMDB import: ', $e->getMessage());
+			$this->assertStringContainsString($rule, $e->getMessage());
+			$this->assertSame(['pack' => $pack['id'], 'packId' => $id], $e->getDetails());
+		}
+	}//end testAStoredPackThatBreaksAnImportRuleIsRefused()
+
+	/**
+	 * Without OpenRegister's store, and no pack ever stored there, the import uses the shipped files and says so.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testWithoutTheStoreBeforeASeedTheShippedFilesAreUsed(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$config = [];
+		$container = $this->createMock(ContainerInterface::class);
+		$appConfig = FakeMigrationPackService::appConfig(test: $this, values: $config);
+		$container->method('has')->willReturnCallback(fn (string $id): bool => $id === \OCP\IAppConfig::class);
+		$container->method('get')->willReturn($appConfig);
+
+		$profile = new CmdbImportProfile(container: $container);
+		$overview = $profile->mappingOverview();
+
+		$this->assertTrue($profile->usesShippedFallback());
+		$this->assertFalse($overview['openRegisterPacks']);
+		$this->assertSame(['file'], array_values(array_unique(array_column($overview['packs'], 'source'))));
+		$this->assertSame($this->shipped(file: 'topdesk-module.json'), $profile->pack(target: 'module'));
+	}//end testWithoutTheStoreBeforeASeedTheShippedFilesAreUsed()
+
+	/**
+	 * Once the packs were stored in OpenRegister, a store that is gone fails closed, naming the packs.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testWithoutTheStoreAfterASeedTheImportFailsClosed(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$config = [CmdbImportPackStore::CONFIG_KEY => (string)json_encode(['stackiq-topdesk-module' => 41, 'stackiq-topdesk-usage' => 43])];
+		$container = $this->createMock(ContainerInterface::class);
+		$appConfig = FakeMigrationPackService::appConfig(test: $this, values: $config);
+		$container->method('has')->willReturnCallback(fn (string $id): bool => $id === \OCP\IAppConfig::class);
+		$container->method('get')->willReturn($appConfig);
+
+		try {
+			(new CmdbImportProfile(container: $container))->load();
+			$this->fail('MAPPING_UNAVAILABLE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('MAPPING_UNAVAILABLE', $e->getErrorCode());
+			$this->assertStringContainsString('OpenRegister migration pack store is not available', $e->getMessage());
+			$this->assertStringContainsString('stackiq-topdesk-module (id 41)', $e->getMessage());
+			$this->assertStringContainsString('stackiq-topdesk-usage (id 43)', $e->getMessage());
+			$this->assertSame(['packs' => ['stackiq-topdesk-module' => 41, 'stackiq-topdesk-usage' => 43]], $e->getDetails());
+		}
+	}//end testWithoutTheStoreAfterASeedTheImportFailsClosed()
+
+	/**
+	 * A column a stored pack maps with a date transform is converted from an Excel date, and is read.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testADateColumnOfAStoredPackIsConverted(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$service = new FakeMigrationPackService();
+		$usage = (new CmdbImportPackMarker())->seed(shipped: $this->shipped(file: 'topdesk-usage.json'));
+		$usage['fieldMappings'][] = [
+			'source' => 'In productie sinds',
+			'target' => 'startDateInProduction',
+			'transform' => ['type' => 'date', 'sourceFormat' => '!Y-m-d', 'targetFormat' => 'Y-m-d'],
+		];
+		$service->put(definition: $usage);
+		$config = [];
+
+		$profile = $this->storedProfile(service: $service, config: $config);
+
+		$this->assertSame(
+			['Datum', 'Referentie datum wijziging', 'End-of-Life Functioneel', 'In productie sinds'],
+			$profile->dateColumns()
+		);
+		$this->assertContains('In productie sinds', $profile->referencedColumns(), 'a mapped column is read');
+		$this->assertSame(
+			['Datum', 'Referentie datum wijziging', 'End-of-Life Functioneel'],
+			(new CmdbImportProfile(container: $this->emptyContainer()))->dateColumns(),
+			'the shipped packs add no column the profile does not list'
+		);
+	}//end testADateColumnOfAStoredPackIsConverted()
+
+	/**
+	 * The separator the import drops empty note parts on is the pack's own.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testTheConcatSeparatorIsThePacks(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$shipped = new CmdbImportProfile(container: $this->emptyContainer());
+		$this->assertSame(' / ', $shipped->concatSeparator(target: 'usage', field: 'interneAnnotation'));
+		$this->assertNull($shipped->concatSeparator(target: 'usage', field: 'status'), 'no concat mapping writes it');
+
+		$service = new FakeMigrationPackService();
+		$usage = (new CmdbImportPackMarker())->seed(shipped: $this->shipped(file: 'topdesk-usage.json'));
+		$usage['fieldMappings'][3]['transform']['separator'] = ' | ';
+		$service->put(definition: $usage);
+		$config = [];
+		$this->assertSame(' | ', $this->storedProfile(service: $service, config: $config)->concatSeparator(target: 'usage', field: 'interneAnnotation'));
+
+		unset($usage['fieldMappings'][3]['transform']['separator']);
+		$service = new FakeMigrationPackService();
+		$service->put(definition: $usage);
+		$this->assertSame(' ', $this->storedProfile(service: $service, config: $config)->concatSeparator(target: 'usage', field: 'interneAnnotation'), "OpenRegister's default");
+	}//end testTheConcatSeparatorIsThePacks()
+
+	/**
+	 * A plain mapping after the concat one keeps the separator: on an empty column the engine keeps the concatenated value.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testALaterPlainMappingKeepsTheConcatSeparator(): void {
+		CmdbTestSupport::loadMigrationPack();
+		$service = new FakeMigrationPackService();
+		$usage = (new CmdbImportPackMarker())->seed(shipped: $this->shipped(file: 'topdesk-usage.json'));
+		$usage['fieldMappings'][] = ['source' => 'Opmerking', 'target' => 'interneAnnotation', 'transform' => ['type' => 'trim']];
+		$service->put(definition: $usage);
+		$config = [];
+
+		$this->assertSame(' / ', $this->storedProfile(service: $service, config: $config)->concatSeparator(target: 'usage', field: 'interneAnnotation'));
+	}//end testALaterPlainMappingKeepsTheConcatSeparator()
 
 	/**
 	 * The upload limit is readable without OpenRegister.

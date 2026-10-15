@@ -258,11 +258,6 @@ class CmdbExportImportService {
 	private const PAGE_SIZE = 500;
 
 	/**
-	 * Separator of the concat mapping for the internal note.
-	 */
-	private const NOTE_SEPARATOR = ' / ';
-
-	/**
 	 * The mapping engine of the current run.
 	 *
 	 * @var object|null
@@ -543,6 +538,7 @@ class CmdbExportImportService {
 	 * @return array<string, mixed> The report.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function runImport(string $path, array $options, string $startedAt): array {
@@ -635,8 +631,9 @@ class CmdbExportImportService {
 	/**
 	 * Add the run's own warnings.
 	 *
-	 * An archive sheet that is missing, has no key column or has unreadable keys, a CMDB sheet with
-	 * unreadable keys, and a created municipality.
+	 * A mapping that fell back to the packs shipped with stackiq, an archive sheet that is missing,
+	 * has no key column or has unreadable keys, a CMDB sheet with unreadable keys, and a created
+	 * municipality.
 	 *
 	 * @param CmdbImportReport $report The report.
 	 * @param array{uuid: string, name: string, created: bool} $municipality The consumer, as resolveMunicipality() found it.
@@ -647,8 +644,20 @@ class CmdbExportImportService {
 	 *
 	 * @spec openspec/changes/archive/2026-10-05-cmdb-export-import/tasks.md#task-7
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function addRunWarnings(CmdbImportReport $report, array $municipality, array $archive, string $missingRecords): void {
+		if ($this->profile->usesShippedFallback() === true) {
+			$report->addImportWarnings(
+				warnings: [
+					[
+						'sheet' => '',
+						'message' => $this->l10n->t('OpenRegister\'s migration pack store is not available, so this import used the mapping that ships with stackiq.'),
+					],
+				]
+			);
+		}
+
 		if ($missingRecords === 'archive' && ($archive['present'] === false || $archive['uncachedRows'] !== [])) {
 			$report->addImportWarnings(warnings: [['sheet' => $archive['sheet'], 'message' => $this->archiveSheetWarning(archive: $archive)]]);
 		}
@@ -1378,16 +1387,18 @@ class CmdbExportImportService {
 	 *                                            unarchived when the stored usage was revived first.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private function upsertUsage(array $data, string $municipalityUuid, string $moduleUuid, ?string $providerUuid, array $owners): array {
-		if (isset($data['interneAnnotation']) === true && is_string($data['interneAnnotation']) === true) {
+		$separator = $this->profile->concatSeparator(target: 'usage', field: 'interneAnnotation');
+		if ($separator !== null && isset($data['interneAnnotation']) === true && is_string($data['interneAnnotation']) === true) {
 			// The concat mapping leaves an empty part for every empty column; drop those.
 			$parts = array_filter(
-				array_map('trim', explode(self::NOTE_SEPARATOR, $data['interneAnnotation'])),
+				array_map('trim', explode($separator, $data['interneAnnotation'])),
 				fn (string $part): bool => $part !== ''
 			);
-			$data['interneAnnotation'] = implode(self::NOTE_SEPARATOR, $parts);
+			$data['interneAnnotation'] = implode($separator, $parts);
 		}
 
 		$data['consumer'] = $municipalityUuid;

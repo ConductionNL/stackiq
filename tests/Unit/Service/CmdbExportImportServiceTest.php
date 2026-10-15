@@ -32,10 +32,13 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Service;
 
 require_once __DIR__ . '/../Support/CmdbTestSupport.php';
+require_once __DIR__ . '/../Support/FakeMigrationPackService.php';
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Exception\CmdbImportException;
+use OCA\Stackiq\Service\Cmdb\CmdbImportPackMarker;
+use OCA\Stackiq\Service\Cmdb\CmdbImportPackStore;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\Cmdb\CmdbRowNormaliser;
 use OCA\Stackiq\Service\Cmdb\CmdbWorkbookReader;
@@ -44,6 +47,7 @@ use OCA\Stackiq\Service\ProgressTracker;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\StackiqContactSyncService;
 use OCA\Stackiq\Tests\Unit\Support\CmdbTestSupport;
+use OCA\Stackiq\Tests\Unit\Support\FakeMigrationPackService;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -1033,23 +1037,37 @@ class CmdbExportImportServiceTest extends TestCase {
 	 * @param CmdbWorkbookReader|null $reader The reader; null is the real one.
 	 * @param string|null $profileDir A profile directory other than the shipped one.
 	 * @param array<string, mixed> $config The voorzieningen config.
+	 * @param FakeMigrationPackService|false|null $packs OpenRegister's pack store: null is an empty one, false none at all.
 	 *
 	 * @return CmdbExportImportService
 	 */
-	private function service(?CmdbWorkbookReader $reader = null, ?string $profileDir = null, array $config = ['register' => '20']): CmdbExportImportService {
+	private function service(
+		?CmdbWorkbookReader $reader = null,
+		?string $profileDir = null,
+		array $config = ['register' => '20'],
+		FakeMigrationPackService|false|null $packs = null
+	): CmdbExportImportService {
 		$objectService = $this->objectService();
 		$schemaMapper = $this->schemaMapper();
+		if ($packs === null) {
+			$packs = new FakeMigrationPackService();
+		}
+
 		[$archiveHandler, $objectMapper] = $this->archiveDoubles();
 		$container = $this->createMock(ContainerInterface::class);
-		$container->method('has')->willReturn(false);
+		$container->method('has')->willReturnCallback(fn (string $id): bool => $packs !== false && $id === CmdbImportPackStore::SERVICE_CLASS);
 		$container->method('get')->willReturnCallback(
-			function (string $id) use ($objectService, $schemaMapper, $archiveHandler, $objectMapper) {
+			function (string $id) use ($objectService, $schemaMapper, $packs, $archiveHandler, $objectMapper) {
 				if ($id === ObjectServiceInterface::class) {
 					return $objectService;
 				}
 
 				if ($id === CmdbExportImportService::SCHEMA_MAPPER_CLASS) {
 					return $schemaMapper;
+				}
+
+				if ($packs !== false && $id === CmdbImportPackStore::SERVICE_CLASS) {
+					return $packs;
 				}
 
 				if ($this->archiveServicesAvailable === true && $id === CmdbExportImportService::ARCHIVE_HANDLER_CLASS) {
@@ -1301,6 +1319,94 @@ class CmdbExportImportServiceTest extends TestCase {
 
 		$this->assertSame([], $this->saves);
 	}//end testAnAmbiguousMunicipalityNameIsRefused()
+
+	/**
+	 * Without OpenRegister's pack store, and nothing stored there before, the import runs the shipped mapping and says so once.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testWithoutThePackStoreTheShippedMappingIsUsedWithAWarning(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Rotterdam', type: 'Municipality');
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]), packs: false)
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(1, $report['summary']['created']);
+		$this->assertSame(
+			[['sheet' => '', 'message' => "OpenRegister's migration pack store is not available, so this import used the mapping that ships with stackiq."]],
+			$report['importWarnings']
+		);
+		$this->assertSame('In production', $this->objects(self::USAGE)[0]['status']);
+	}//end testWithoutThePackStoreTheShippedMappingIsUsedWithAWarning()
+
+	/**
+	 * A pack edited in OpenRegister is what the import runs: its lookup, its concat separator and a new date column.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testAPackEditedInOpenRegisterIsWhatTheImportRuns(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Rotterdam', type: 'Municipality');
+		$packs = new FakeMigrationPackService();
+		$usage = (new CmdbImportPackMarker())->seed(
+			shipped: json_decode((string)file_get_contents(CmdbTestSupport::appRoot() . '/lib/Settings/cmdb-import/topdesk-usage.json'), true)
+		);
+		$usage['fieldMappings'][0]['transform']['map']['In productie'] = 'Planned';
+		$usage['fieldMappings'][3]['transform']['separator'] = ' | ';
+		$usage['fieldMappings'][] = [
+			'source' => 'In productie sinds',
+			'target' => 'startDateInProduction',
+			'transform' => ['type' => 'date', 'sourceFormat' => '!Y-m-d', 'targetFormat' => 'Y-m-d'],
+		];
+		$packs->put(definition: $usage);
+
+		$report = $this->service(
+			reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Cluster' => 'B10', 'In productie sinds' => 45111])]),
+			packs: $packs
+		)->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame([], $report['importWarnings'], 'the packs came from OpenRegister');
+		$this->assertSame([], $report['rows'][0]['warnings']);
+		$stored = $this->objects(self::USAGE)[0];
+		$this->assertSame('Planned', $stored['status'], 'the edited lookup');
+		$this->assertSame('Beheer geregeld: ja | B10', $stored['interneAnnotation'], 'empty parts dropped on the edited separator');
+		$this->assertSame('2023-07-04', $stored['startDateInProduction'], 'the new column was converted from an Excel date');
+		$this->assertSame(
+			['create stackiq-topdesk-module', 'create stackiq-topdesk-manufacturer', 'create stackiq-topdesk-business-owner'],
+			$packs->writes,
+			'the other sheet packs were seeded on the first import'
+		);
+	}//end testAPackEditedInOpenRegisterIsWhatTheImportRuns()
+
+	/**
+	 * A plain mapping of the note after the concat one, from an empty column, leaves the concatenated note clean.
+	 *
+	 * The engine skips a mapping whose column is empty, so the concatenated
+	 * value is the one kept and its empty parts are still dropped.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function testAPlainNoteMappingFromAnEmptyColumnKeepsTheNoteClean(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Rotterdam', type: 'Municipality');
+		$packs = new FakeMigrationPackService();
+		$usage = (new CmdbImportPackMarker())->seed(
+			shipped: json_decode((string)file_get_contents(CmdbTestSupport::appRoot() . '/lib/Settings/cmdb-import/topdesk-usage.json'), true)
+		);
+		$usage['fieldMappings'][] = ['source' => 'Opmerking', 'target' => 'interneAnnotation', 'transform' => ['type' => 'trim']];
+		$packs->put(definition: $usage);
+
+		$this->service(
+			reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Cluster' => 'B10', 'Opmerking' => ''])]),
+			packs: $packs
+		)->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame('Beheer geregeld: ja / B10', $this->objects(self::USAGE)[0]['interneAnnotation']);
+	}//end testAPlainNoteMappingFromAnEmptyColumnKeepsTheNoteClean()
 
 	/**
 	 * A name that matches no municipality creates it, and the report warns about that.

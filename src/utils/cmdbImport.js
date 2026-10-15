@@ -524,10 +524,12 @@ export function isKnownError(code) {
  * to which sheet or part, and what to do about it.
  *
  * @param {object} details The error details: `maxPartBytes`, `part`, `size` and, for a sheet, `sheet`; `maxSharedStrings`; `maxReferencedStringBytes`; or `maxUncompressedBytes`
+ * @param {Array<string>} sheetNames The sheets the import reads, for the hint
+ * @param {string|null} archiveSheet The archive sheet, of which the import reads the APPID column; null when the profile names none
  * @return {{title: string, hint: string}} The words
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-workbook-shall-be-read-as-stored-data-without-evaluating-formulas-or-following-links-req-cmdb-002
  */
-function workbookTooLarge(details) {
+function workbookTooLarge(details, sheetNames, archiveSheet) {
 	const compressed = t(
 		'stackiq',
 		'An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.',
@@ -564,16 +566,19 @@ function workbookTooLarge(details) {
 	const unread =
 		compressed
 		+ ' '
-		+ t(
-			'stackiq',
-			'Delete the sheets the import does not read from a copy of the export (it reads "{first}" and "{second}", and the APPID column of "{archive}"), and import that copy.',
-			{
-				first: PROFILE_DEFAULTS.sheets[0],
-				second: PROFILE_DEFAULTS.sheets[1],
-				archive: PROFILE_DEFAULTS.archiveSheet,
-			},
-			AS_TEXT,
-		)
+		+ (archiveSheet
+			? t(
+					'stackiq',
+					'Delete the sheets the import does not read from a copy of the export (it reads {sheets}, and the APPID column of "{archive}"), and import that copy.',
+					{ sheets: quotedSheetList(sheetNames), archive: archiveSheet },
+					AS_TEXT,
+				)
+			: t(
+					'stackiq',
+					'Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy.',
+					{ sheets: quotedSheetList(sheetNames) },
+					AS_TEXT,
+				))
 	if (Number(details.maxSharedStrings) > 0) {
 		return {
 			title: t(
@@ -619,10 +624,16 @@ function workbookTooLarge(details) {
  * when the server's message is not.
  *
  * @param {{error: string, message?: string, details?: object}} error The error in the server's shape
+ * @param {Array<string>} [sheetNames] The sheets the import reads, from mappingSheetNames(); the shipped names when left out. Hints name all of them, whatever their number
+ * @param {string|null} [archiveSheet] The archive sheet, from mappingArchiveSheet(); the shipped name when left out, null when the profile names none
  * @return {{title: string, hint: string}} The words
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-columns-shall-be-resolved-by-header-name-and-a-missing-required-column-shall-stop-the-import-with-422-req-cmdb-003
  */
-export function errorText(error) {
+export function errorText(
+	error,
+	sheetNames = PROFILE_DEFAULTS.sheets,
+	archiveSheet = mappingArchiveSheet(null),
+) {
 	const details = error?.details || {}
 	switch (error?.error) {
 		case 'NO_FILE_UPLOADED':
@@ -717,22 +728,28 @@ export function errorText(error) {
 		case 'NO_SOURCE_SHEET': {
 			const expected =
 				Array.isArray(details.expected) && details.expected.length > 0
-					? details.expected
-					: PROFILE_DEFAULTS.sheets
+					? details.expected.map((name) => String(name))
+					: sheetNames
+			const values = { sheets: quotedSheetList(expected) }
 			return {
 				title: t(
 					'stackiq',
 					'The workbook has none of the sheets the import reads.',
 				),
-				hint: t(
-					'stackiq',
-					'Expected a sheet named "{first}" or "{second}". Sheet names must match exactly.',
-					{
-						first: String(expected[0] ?? PROFILE_DEFAULTS.sheets[0]),
-						second: String(expected[1] ?? PROFILE_DEFAULTS.sheets[1]),
-					},
-					AS_TEXT,
-				),
+				hint:
+					expected.length === 1
+						? t(
+								'stackiq',
+								'Expected the sheet {sheets}. Sheet names must match exactly.',
+								values,
+								AS_TEXT,
+							)
+						: t(
+								'stackiq',
+								'Expected one of the sheets {sheets}. Sheet names must match exactly.',
+								values,
+								AS_TEXT,
+							),
 			}
 		}
 		case 'MISSING_COLUMN':
@@ -782,7 +799,7 @@ export function errorText(error) {
 				title: t('stackiq', 'The import mapping cannot run.'),
 				hint: t(
 					'stackiq',
-					"OpenRegister's mapping engine is missing or a mapping file is invalid. Update OpenRegister and check the Nextcloud log.",
+					"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.",
 				),
 			}
 		case 'READER_UNAVAILABLE':
@@ -802,7 +819,7 @@ export function errorText(error) {
 				),
 			}
 		case 'WORKBOOK_TOO_LARGE':
-			return workbookTooLarge(details)
+			return workbookTooLarge(details, sheetNames, archiveSheet)
 		case 'SCHEMA_OUTDATED':
 			return {
 				title: details.schema
@@ -1052,4 +1069,361 @@ export function reportRows(rows) {
 			.join('; '),
 		moduleUuid: row.moduleUuid ? String(row.moduleUuid) : '',
 	}))
+}
+
+/**
+ * The URL of the mapping overview endpoint.
+ *
+ * @return {string} The URL
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export function mappingUrl() {
+	return generateUrl('/apps/stackiq/api/settings/cmdb-import/mapping')
+}
+
+/**
+ * Read the mapping the import uses: the profile and one entry per pack.
+ *
+ * @param {object} options The options
+ * @param {object} options.http An axios-like client with get
+ * @return {Promise<{profile: object, packs: Array<object>}>} The server's answer
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export async function loadCmdbMapping({ http }) {
+	const response = await http.get(mappingUrl())
+	return response.data
+}
+
+/**
+ * The names of the source sheets: the profile's when the mapping has loaded
+ * and names at least one sheet, the shipped defaults until then or when it
+ * could not be loaded. Every sheet the profile names is returned, in the
+ * profile's order, so the help texts and the block show the same list.
+ *
+ * @param {object|null} mapping The mapping endpoint's answer, or null
+ * @return {Array<string>} The sheet names, never empty
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ */
+export function mappingSheetNames(mapping) {
+	const sheets = mapping?.profile?.sheets
+	const names = (Array.isArray(sheets) ? sheets : [])
+		.map((sheet) =>
+			typeof sheet === 'string' ? sheet : String(sheet?.name ?? ''),
+		)
+		.filter((name) => name !== '')
+	return names.length >= 1 ? names : [...PROFILE_DEFAULTS.sheets]
+}
+
+/**
+ * The name of the archive sheet: the profile's once the mapping has loaded,
+ * null when that profile names none (or names one of its source sheets), and
+ * the shipped name until then or when the mapping could not be loaded.
+ *
+ * @param {object|null} mapping The mapping endpoint's answer, or null
+ * @return {string|null} The sheet name, or null
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ */
+export function mappingArchiveSheet(mapping) {
+	const profile = mapping?.profile
+	if (!profile || typeof profile !== 'object' || !('archiveSheet' in profile)) {
+		return PROFILE_DEFAULTS.archiveSheet
+	}
+	return typeof profile.archiveSheet === 'string' && profile.archiveSheet !== ''
+		? profile.archiveSheet
+		: null
+}
+
+/**
+ * The sheet names as one quoted list: "A", "B", "C".
+ *
+ * @param {Array<string>} names The sheet names
+ * @return {string} The list
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ */
+export function quotedSheetList(names) {
+	return names.map((name) => `"${name}"`).join(', ')
+}
+
+/**
+ * The help text under the file chooser: which sheets the workbook needs and
+ * the default size limit. It names every sheet the profile reads, whatever
+ * their number, and does not depend on their order.
+ *
+ * @param {Array<string>} names The sheet names, from mappingSheetNames()
+ * @param {number} maxFileBytes The default size limit in bytes
+ * @return {string} The text
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ */
+export function fileHelpText(names, maxFileBytes) {
+	const values = {
+		sheets: quotedSheetList(names),
+		size: formatMegabytes(maxFileBytes),
+	}
+	if (names.length === 1) {
+		return t(
+			'stackiq',
+			'Excel workbook (.xlsx) with the sheet {sheets}. By default the file may be at most {size}.',
+			values,
+			AS_TEXT,
+		)
+	}
+	return t(
+		'stackiq',
+		'Excel workbook (.xlsx) with one of the sheets {sheets}. By default the file may be at most {size}.',
+		values,
+		AS_TEXT,
+	)
+}
+
+/**
+ * The sentence of the info panel that says which sheets are read: the source
+ * sheets, and of the archive sheet only its APPID column.
+ *
+ * @param {Array<string>} names The sheet names, from mappingSheetNames()
+ * @param {string|null} [archive] The archive sheet, from mappingArchiveSheet(); the shipped name when left out, null when the profile names none
+ * @return {string} The text
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ */
+export function sheetsReadText(names, archive = mappingArchiveSheet(null)) {
+	const values = { sheets: quotedSheetList(names), archive }
+	if (!archive) {
+		return names.length === 1
+			? t(
+					'stackiq',
+					'The sheet {sheets} is read; other sheets, including the "Invoer" sheets, are ignored.',
+					values,
+					AS_TEXT,
+				)
+			: t(
+					'stackiq',
+					'The sheets {sheets} are read; other sheets, including the "Invoer" sheets, are ignored.',
+					values,
+					AS_TEXT,
+				)
+	}
+	if (names.length === 1) {
+		return t(
+			'stackiq',
+			'The sheet {sheets} is read, and of the sheet "{archive}" only the APPID column; other sheets, including the "Invoer" sheets, are ignored.',
+			values,
+			AS_TEXT,
+		)
+	}
+	return t(
+		'stackiq',
+		'The sheets {sheets} are read, and of the sheet "{archive}" only the APPID column; other sheets, including the "Invoer" sheets, are ignored.',
+		values,
+		AS_TEXT,
+	)
+}
+
+/**
+ * The info-panel paragraph on applications missing from the export: what an
+ * import that archives does with them, naming the archive sheet.
+ *
+ * Without an archive sheet the import only archives: it moves nothing to the
+ * trash, because the workbook cannot say which applications were archived on
+ * purpose.
+ *
+ * @param {string|null} [archive] The archive sheet, from mappingArchiveSheet(); the shipped name when left out, null when the profile names none
+ * @return {string} The text
+ * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+ */
+export function missingApplicationsText(archive = mappingArchiveSheet(null)) {
+	if (!archive) {
+		return t(
+			'stackiq',
+			'An application of this municipality that is on no CMDB sheet any more is archived. It disappears from the lists, from OpenCatalogi and from Portaliq; one that returns in a later export is brought back. Choose Keep to leave such applications as they are.',
+		)
+	}
+	return t(
+		'stackiq',
+		'An application of this municipality that is on no CMDB sheet any more is archived when the sheet "{archive}" lists it, and moved to the trash when no sheet does. Both disappear from the lists, from OpenCatalogi and from Portaliq; one that returns in a later export is brought back. When that sheet is missing, has no APPID column, or has an APPID without a cached value, applications are only archived and the result says so. Choose Keep to leave them as they are.',
+		{ archive },
+		AS_TEXT,
+	)
+}
+
+/**
+ * The words for a pack's target: what the pack's rows become.
+ *
+ * @param {string} target The target as the profile names it (module, manufacturer, …)
+ * @return {string} The translated name, or the target itself when it is unknown
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export function packTargetLabel(target) {
+	switch (target) {
+		case 'module':
+			return t('stackiq', 'Application (module)')
+		case 'manufacturer':
+			return t('stackiq', 'Supplier organisation (Vendor)')
+		case 'usage':
+			return t('stackiq', 'Usage')
+		case 'businessOwner':
+			return t('stackiq', 'Business owner (contact person)')
+		default:
+			return String(target ?? '')
+	}
+}
+
+/**
+ * The field mappings of a pack as rows of text: the column of the export, the
+ * field it goes to, whether a failing row is skipped without it, and what the
+ * pack does with the value (the transform's type; a lookup also its size).
+ *
+ * @param {object} pack One entry of the endpoint's `packs`
+ * @return {Array<{source: string, target: string, required: boolean, transform: string}>} One row per mapping, in the pack's order
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export function packFieldRows(pack) {
+	const mappings = Array.isArray(pack?.fieldMappings) ? pack.fieldMappings : []
+	return mappings.map((mapping) => {
+		const transform = mapping?.transform
+		let text = ''
+		if (typeof transform === 'string') {
+			text = transform
+		} else if (transform && typeof transform === 'object') {
+			text = String(transform.type ?? '')
+			if (
+				text === 'lookup'
+				&& transform.map
+				&& typeof transform.map === 'object'
+			) {
+				text += ' (' + Object.keys(transform.map).length + ')'
+			}
+		}
+		return {
+			source: String(mapping?.source ?? ''),
+			target: String(mapping?.target ?? ''),
+			required: mapping?.required === true,
+			transform: text,
+		}
+	})
+}
+
+/**
+ * The write rules of a pack as rows of text: the values it sets, and the
+ * fields written only on create or never on an existing record. A rule the
+ * pack does not have gives no row.
+ *
+ * @param {object} pack One entry of the endpoint's `packs`
+ * @return {Array<{key: string, label: string, values: Array<string>}>} One row per rule that has values
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export function packWriteRules(pack) {
+	const pairs = (value) =>
+		value && typeof value === 'object' && !Array.isArray(value)
+			? Object.entries(value).map(
+					([key, val]) =>
+						key
+						+ ': '
+						+ (typeof val === 'string' ? val : JSON.stringify(val)),
+				)
+			: []
+	const list = (value) => (Array.isArray(value) ? value.map(String) : [])
+	return [
+		{
+			key: 'defaults',
+			label: t('stackiq', 'Set on every record'),
+			values: pairs(pack?.defaults),
+		},
+		{
+			key: 'createOnlyDefaults',
+			label: t('stackiq', 'Set on a new record only'),
+			values: pairs(pack?.createOnlyDefaults),
+		},
+		{
+			key: 'createOnlyFields',
+			label: t(
+				'stackiq',
+				'Written on a new record, or on an existing one only when empty',
+			),
+			values: list(pack?.createOnlyFields),
+		},
+		{
+			key: 'neverWritten',
+			label: t('stackiq', 'Never written on an existing record'),
+			values: list(pack?.neverWritten),
+		},
+	].filter((rule) => rule.values.length > 0)
+}
+
+/**
+ * The words for where the import takes a pack from: OpenRegister's pack
+ * store, or the file shipped with stackiq.
+ *
+ * @param {string} source The pack's `source` from the endpoint (`openregister` or `file`)
+ * @return {string} The translated name, or the source itself when it is unknown
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export function packSourceLabel(source) {
+	switch (source) {
+		case 'openregister':
+			return t('stackiq', 'OpenRegister')
+		case 'file':
+			return t('stackiq', 'Shipped file')
+		default:
+			return String(source ?? '')
+	}
+}
+
+/**
+ * The version of a pack as the import runs it: the stored version for a
+ * pack from OpenRegister, with the shipped version next to it when the two
+ * differ, and the shipped version for a pack read from the file.
+ *
+ * @param {object} pack One entry of the endpoint's `packs`
+ * @return {string} The text, empty when the pack names no version
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export function packVersionText(pack) {
+	const shipped = String(pack?.shippedVersion ?? pack?.version ?? '')
+	const stored = String(pack?.storedVersion ?? '')
+	if (pack?.source === 'openregister' && stored !== '') {
+		if (shipped !== '' && shipped !== stored) {
+			return t(
+				'stackiq',
+				'Version {version} (shipped: {shipped})',
+				{ version: stored, shipped },
+				AS_TEXT,
+			)
+		}
+		return t('stackiq', 'Version {version}', { version: stored }, AS_TEXT)
+	}
+	if (shipped === '') {
+		return ''
+	}
+	return t('stackiq', 'Version {version}', { version: shipped }, AS_TEXT)
+}
+
+/**
+ * An editor address from the server, when the page may link to it: an
+ * http(s) or server-relative address. Anything else (a `javascript:`
+ * address, a protocol-relative one, no address at all) gives no link.
+ *
+ * @param {unknown} url The address the server gave
+ * @return {string|null} The address, or null for no link
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export function editorUrl(url) {
+	if (typeof url !== 'string') {
+		return null
+	}
+	return /^(https?:\/\/|\/(?!\/))/i.test(url) ? url : null
+}
+
+/**
+ * The address of OpenRegister's editor for a pack, when the page may link
+ * to it: the pack is editable and its address passes editorUrl().
+ *
+ * @param {object} pack One entry of the endpoint's `packs`
+ * @return {string|null} The address, or null for no link
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+ */
+export function packEditUrl(pack) {
+	if (pack?.editable !== true) {
+		return null
+	}
+	return editorUrl(pack.editUrl)
 }
