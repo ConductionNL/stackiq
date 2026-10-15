@@ -124,6 +124,40 @@
 					}}
 				</p>
 			</div>
+			<fieldset
+				class="cmdb-import__field cmdb-import__choice"
+				aria-describedby="cmdb-import-missing-records-help"
+				data-testid="cmdb-import-missing-records">
+				<legend class="cmdb-import__legend">
+					{{ t('stackiq', 'Applications missing from the export') }}
+				</legend>
+				<NcCheckboxRadioSwitch
+					v-model="missingRecords"
+					value="archive"
+					name="cmdb-import-missing-records"
+					type="radio"
+					:disabled="importing"
+					data-testid="cmdb-import-missing-records-archive">
+					{{ t('stackiq', 'Archive or delete them') }}
+				</NcCheckboxRadioSwitch>
+				<NcCheckboxRadioSwitch
+					v-model="missingRecords"
+					value="keep"
+					name="cmdb-import-missing-records"
+					type="radio"
+					:disabled="importing"
+					data-testid="cmdb-import-missing-records-keep">
+					{{ t('stackiq', 'Keep them as they are') }}
+				</NcCheckboxRadioSwitch>
+				<p id="cmdb-import-missing-records-help" class="cmdb-import__help">
+					{{
+						t(
+							'stackiq',
+							'Applications no longer in the export are archived or moved to the trash. The (i) button above explains when.',
+						)
+					}}
+				</p>
+			</fieldset>
 
 			<!-- 4. Actions -->
 			<div class="cmdb-import__actions">
@@ -219,7 +253,7 @@
 					{{
 						t(
 							'stackiq',
-							'The import was cancelled. The rows processed before it stopped are kept.',
+							'The import was cancelled. The rows and applications processed before it stopped are kept.',
 						)
 					}}
 				</NcNoteCard>
@@ -285,7 +319,7 @@
 					</template>
 					<template #column-name="{ row }">
 						<a
-							v-if="row.moduleUuid"
+							v-if="row.moduleUuid && row.outcome !== 'deleted'"
 							:href="moduleUrl(row.moduleUuid)"
 							class="cmdb-import__module-link"
 							data-testid="cmdb-import-module-link">
@@ -383,7 +417,7 @@
 						{{
 							t(
 								'stackiq',
-								'Importing a newer export again updates the same applications, matched on APPID per municipality. Applications missing from it are left as they are.',
+								'Importing a newer export again updates the same applications, matched on APPID per municipality. Applications missing from it are archived or deleted, unless you choose to keep them.',
 							)
 						}}
 					</li>
@@ -422,6 +456,15 @@
 						}}
 					</li>
 				</ul>
+				<h4>{{ t('stackiq', 'Applications missing from the export') }}</h4>
+				<p>
+					{{
+						t(
+							'stackiq',
+							'An application of this municipality that is on neither CMDB sheet any more is archived when the sheet "Gearchiveerde Applicaties" lists it, and moved to the trash when no sheet does. Both disappear from the lists, from OpenCatalogi and from Portaliq; one that returns in a later export is brought back. When that sheet is missing, has no APPID column, or has an APPID without a cached value, applications are only archived and the result says so. Choose Keep to leave them as they are.',
+						)
+					}}
+				</p>
 			</div>
 		</template>
 	</AlwaysVisibleSection>
@@ -461,6 +504,7 @@ import {
 	isKnownError,
 	makeCmdbOperationId,
 	mappingSheetNames,
+	MISSING_RECORDS_MODES,
 	moduleUrl,
 	municipalityOptions,
 	normaliseError,
@@ -474,6 +518,15 @@ import {
 	typedMunicipalityOption,
 } from '../../../utils/cmdbImport.js'
 
+/** The summary tiles shown only when their count is not zero. */
+const COUNTED_ONLY_TILES = [
+	'unpublished',
+	'unarchived',
+	'restored',
+	'archived',
+	'deleted',
+]
+
 /**
  * The "CMDB import" section of stackiq's admin settings.
  *
@@ -483,6 +536,7 @@ import {
  * the text it renders; none of them may go into v-html.
  *
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 export default {
 	name: 'CmdbImport',
@@ -512,6 +566,7 @@ export default {
 			selectedFile: null,
 			updateExisting: true,
 			publish: true,
+			missingRecords: MISSING_RECORDS_MODES[0],
 			importing: false,
 			cancelling: false,
 			cancelStatus: '',
@@ -535,6 +590,10 @@ export default {
 				unchanged: 'default',
 				skipped: 'warning',
 				failed: 'error',
+				unarchived: 'info',
+				restored: 'info',
+				archived: 'default',
+				deleted: 'warning',
 			},
 		}
 	},
@@ -623,6 +682,7 @@ export default {
 		 *
 		 * @return {Array<object>} One tile per count
 		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome-req-cmdb-011
+		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		summaryTiles() {
 			const summary = this.report?.summary || {}
@@ -639,13 +699,21 @@ export default {
 						key: 'unpublished',
 						label: t('stackiq', 'Created unpublished'),
 					},
+					{ key: 'unarchived', label: t('stackiq', 'Unarchived') },
+					{ key: 'restored', label: t('stackiq', 'Restored') },
+					{ key: 'archived', label: t('stackiq', 'Archived') },
+					{ key: 'deleted', label: t('stackiq', 'Deleted') },
 				]
 					.map((tile) => ({
 						...tile,
 						value: Number(summary[tile.key]) || 0,
 					}))
-					// Only an import run with publishing off leaves modules unpublished.
-					.filter((tile) => tile.key !== 'unpublished' || tile.value > 0)
+					// Only an import run with publishing off leaves modules unpublished, and
+					// only a re-import archives, deletes or brings back applications.
+					.filter(
+						(tile) =>
+							!COUNTED_ONLY_TILES.includes(tile.key) || tile.value > 0,
+					)
 			)
 		},
 
@@ -664,28 +732,72 @@ export default {
 				updated: Number(summary.updated) || 0,
 				unchanged: Number(summary.unchanged) || 0,
 			}
+			let sentence
 			if (this.report?.cancelled) {
-				return t(
+				sentence = t(
 					'stackiq',
 					'Import for {name} cancelled after {read} rows.',
 					counts,
 					AS_TEXT,
 				)
-			}
-			if (this.report?.municipality?.created) {
-				return t(
+			} else if (this.report?.municipality?.created) {
+				sentence = t(
 					'stackiq',
 					'Import finished. The municipality {name} was created. {read} rows read: {created} created, {updated} updated, {unchanged} unchanged.',
 					counts,
 					AS_TEXT,
 				)
+			} else {
+				sentence = t(
+					'stackiq',
+					'Import for {name} finished. {read} rows read: {created} created, {updated} updated, {unchanged} unchanged.',
+					counts,
+					AS_TEXT,
+				)
 			}
-			return t(
-				'stackiq',
-				'Import for {name} finished. {read} rows read: {created} created, {updated} updated, {unchanged} unchanged.',
-				counts,
-				AS_TEXT,
-			)
+			const applications = this.applicationChangesText
+			return applications === '' ? sentence : `${sentence} ${applications}`
+		},
+
+		/**
+		 * What the import did to applications that are not on the sheets: the
+		 * non-zero counts, for the sentence the live region announces.
+		 *
+		 * @return {string} A sentence, or '' when no application was touched
+		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		applicationChangesText() {
+			const summary = this.report?.summary || {}
+			const parts = [
+				[
+					'archived',
+					(count) => t('stackiq', '{count} archived', { count }, AS_TEXT),
+				],
+				[
+					'unarchived',
+					(count) =>
+						t('stackiq', '{count} unarchived', { count }, AS_TEXT),
+				],
+				[
+					'deleted',
+					(count) => t('stackiq', '{count} deleted', { count }, AS_TEXT),
+				],
+				[
+					'restored',
+					(count) => t('stackiq', '{count} restored', { count }, AS_TEXT),
+				],
+			]
+				.map(([key, text]) => [Number(summary[key]) || 0, text])
+				.filter(([count]) => count > 0)
+				.map(([count, text]) => text(count))
+			return parts.length === 0
+				? ''
+				: t(
+						'stackiq',
+						'Applications: {changes}.',
+						{ changes: parts.join(', ') },
+						AS_TEXT,
+					)
 		},
 
 		/**
@@ -975,6 +1087,7 @@ export default {
 					},
 					updateExisting: this.updateExisting,
 					publish: this.publish,
+					missingRecords: this.missingRecords,
 					operationId: this.operationId,
 				})
 				const response = await axios.post(importUrl(), form)
@@ -1077,7 +1190,7 @@ export default {
 				})
 				this.cancelStatus = t(
 					'stackiq',
-					'Cancelling the import. It stops before the next row; the rows already processed stay imported.',
+					'Cancelling the import. It stops before the next row or, while the applications are compared with the export, before the next application; what was already processed stays.',
 				)
 			} catch (error) {
 				// The import keeps running; say why, and let the admin press Cancel again.
@@ -1144,6 +1257,17 @@ export default {
 	margin: 0.25rem 0 0;
 	font-size: 0.875rem;
 	color: var(--color-text-maxcontrast);
+}
+
+.cmdb-import__choice {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.cmdb-import__legend {
+	padding: 0;
+	font-weight: bold;
 }
 
 .cmdb-import__help--warning {

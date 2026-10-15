@@ -23,6 +23,7 @@ import OrganisatieCard from './components/cards/OrganisatieCard.vue'
 import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
+import ContactPersonName from './components/organisations/ContactPersonName.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
 import UsageRiskSignals from './components/portfolio/UsageRiskSignals.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
@@ -106,6 +107,11 @@ export default {
 	// (lifecycle-application-value-assessment): it joins the usage, its version
 	// and the vulnerabilities, which no built-in widget does.
 	UsageRiskSignals,
+
+	// The name of a contact person on its detail page (landscape-usage-registration):
+	// the name lives in Nextcloud Contacts, read through /api/contact-names,
+	// which no built-in widget does.
+	ContactPersonName,
 
 	// AI Act evidence per tag on the AI system page (landscape-ai-system-inventory):
 	// it reads the object's files and their tags, which no built-in widget lists per tag.

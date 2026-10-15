@@ -14,6 +14,15 @@
   a pack nobody edited follows newer releases, an edited one is kept.
   Viewing the mapping writes nothing. An older OpenRegister keeps the packs
   that ship with stackiq.
+- CMDB import, repeat imports: applications that left the CMDB sheets are
+  archived when the sheet "Gearchiveerde Applicaties" lists them and moved to
+  OpenRegister's trash when no sheet does; one that returns is unarchived or
+  restored, never duplicated. The new option `missingRecords` (`archive`, the
+  default, or `keep`) is a choice in the CMDB import section, and the report
+  counts archived, unarchived, deleted and restored applications. The module
+  (0.3.9) and usage (1.5.7) schemas opt into OpenRegister's archive state, and
+  the Applications and Applications in use pages get an "Archived" quick
+  filter. (cmdb-import-archive-reconciliation)
 
 ### Changed
 - EOL feed: the register and schema slugs the feature reads from are corrected.
