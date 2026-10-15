@@ -92,6 +92,55 @@ class CmdbExportImportServiceTest extends TestCase {
 	private $beforeSave = null;
 
 	/**
+	 * The archive and trash markers per schema id and uuid, as OpenRegister keeps them in `@self`.
+	 *
+	 * @var array<int, array<string, array{archived?: array<string, mixed>|null, deleted?: array<string, mixed>|null}>>
+	 */
+	private array $states = [];
+
+	/**
+	 * Every archive, unarchive, restore and delete: verb, schema id, uuid, reason.
+	 *
+	 * @var array<int, array{0: string, 1: int, 2: string, 3: string|null}>
+	 */
+	private array $transitions = [];
+
+	/**
+	 * Called before every archive, unarchive, restore and delete with the verb and the uuid; may throw.
+	 *
+	 * @var callable|null
+	 */
+	private $beforeTransition = null;
+
+	/**
+	 * How often the trash listing was read.
+	 *
+	 * @var int
+	 */
+	private int $trashReads = 0;
+
+	/**
+	 * The uuid whose delete OpenRegister refuses (deleteObject() answers false), when set.
+	 *
+	 * @var string|null
+	 */
+	private ?string $deleteRefusedFor = null;
+
+	/**
+	 * How many of the next trash reads throw.
+	 *
+	 * @var int
+	 */
+	private int $trashFailures = 0;
+
+	/**
+	 * Whether the container knows OpenRegister's archive handler and object mapper.
+	 *
+	 * @var bool
+	 */
+	private bool $archiveServicesAvailable = true;
+
+	/**
 	 * Contacts in the fake address book: uid => name, email.
 	 *
 	 * `book` is the address book's URI; a contact without one is in the admin's personal address book.
@@ -215,6 +264,13 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->store = [self::MODULE => [], self::ORGANIZATION => [], self::USAGE => [], self::CONTACT_PERSON => []];
 		$this->saves = [];
 		$this->beforeSave = null;
+		$this->states = [];
+		$this->transitions = [];
+		$this->beforeTransition = null;
+		$this->trashReads = 0;
+		$this->deleteRefusedFor = null;
+		$this->trashFailures = 0;
+		$this->archiveServicesAvailable = true;
 		$this->contacts = [];
 		$this->addressBooks = [];
 		$this->contactsEnabled = true;
@@ -341,20 +397,26 @@ class CmdbExportImportServiceTest extends TestCase {
 	 *
 	 * @param string $uuid The uuid.
 	 * @param array<string, mixed> $data The object data.
+	 * @param array<string, mixed> $state The archive and trash markers, serialised under `@self`.
+	 * @param string|null $schema The schema id, as OpenRegister's own reads set it.
 	 *
 	 * @return ObjectEntityInterface
 	 */
-	private function entity(string $uuid, array $data): ObjectEntityInterface {
-		return new class($uuid, $data) implements ObjectEntityInterface {
+	private function entity(string $uuid, array $data, array $state = [], ?string $schema = null): ObjectEntityInterface {
+		return new class($uuid, $data, $state, $schema) implements ObjectEntityInterface {
 			/**
 			 * Constructor.
 			 *
 			 * @param string $uuid The uuid.
 			 * @param array<string, mixed> $data The data.
+			 * @param array<string, mixed> $state The markers.
+			 * @param string|null $schema The schema id.
 			 */
 			public function __construct(
 				private string $uuid,
 				private array $data,
+				private array $state,
+				private ?string $schema,
 			) {
 			}
 
@@ -371,7 +433,7 @@ class CmdbExportImportServiceTest extends TestCase {
 			}
 
 			public function getSchema(): ?string {
-				return null;
+				return $this->schema;
 			}
 
 			public function getOrganisation(): ?string {
@@ -383,7 +445,7 @@ class CmdbExportImportServiceTest extends TestCase {
 			}
 
 			public function jsonSerialize(): array {
-				return $this->data;
+				return array_merge($this->data, ['@self' => array_merge(['archived' => null, 'deleted' => null], $this->state)]);
 			}
 		};
 	}//end entity()
@@ -401,6 +463,11 @@ class CmdbExportImportServiceTest extends TestCase {
 				$schema = (int)$schema;
 				if ($this->beforeSave !== null) {
 					($this->beforeSave)($schema, $object);
+				}
+
+				// OpenRegister refuses a data write to an archived object (ObjectStateWriteException).
+				if ($uuid !== null && empty($this->states[$schema][$uuid]['archived']) === false) {
+					throw new RuntimeException('write to an archived object');
 				}
 
 				$create = ($uuid === null);
@@ -435,10 +502,34 @@ class CmdbExportImportServiceTest extends TestCase {
 						}
 					}
 
+					$state = ($this->states[$schema][$uuid] ?? []);
+					// The list search loses every soft-deleted row, `_includeDeleted` or not:
+					// MagicSearchHandler::convertRowToObjectEntity() parses the JSON `_deleted`
+					// marker as a date, fails, and skips the row (OpenRegister beta ff4dad5c).
+					if (empty($state['deleted']) === false) {
+						continue;
+					}
+
+					if (self::inLens(query: $query, uuid: (string)$uuid, state: $state) === false) {
+						continue;
+					}
+
+					// The same converter hydrates no `_archived`: a search result never carries the archive marker.
 					$found[] = $this->entity(uuid: $uuid, data: $data);
 				}
 
 				return array_slice($found, $offset, $limit);
+			}
+		);
+		$service->method('deleteObject')->willReturnCallback(
+			function (string $uuid, $register = null, $schema = null, bool $_rbac = true, bool $_multitenancy = true): bool {
+				$this->noteScope(method: 'deleteObject', rbac: $_rbac, multitenancy: $_multitenancy);
+				if ($this->deleteRefusedFor === $uuid) {
+					return false;
+				}
+
+				$this->changeState(verb: 'delete', uuid: $uuid, reason: null);
+				return true;
 			}
 		);
 		$service->method('find')->willReturnCallback(
@@ -458,6 +549,227 @@ class CmdbExportImportServiceTest extends TestCase {
 
 		return $service;
 	}//end objectService()
+
+	/**
+	 * Whether a working or archived object is in the list a query asks for, as OpenRegister's lenses decide.
+	 *
+	 * Archived objects are left out unless `_archived` asks for them (`true`
+	 * only the archive, `any` both); `_ids` narrows to those uuids.
+	 *
+	 * @param array<string, mixed> $query The search query.
+	 * @param string $uuid The object.
+	 * @param array<string, mixed> $state Its markers.
+	 *
+	 * @return bool
+	 */
+	private static function inLens(array $query, string $uuid, array $state): bool {
+		if (isset($query['_ids']) === true && in_array($uuid, (array)$query['_ids'], true) === false) {
+			return false;
+		}
+
+		$archived = (empty($state['archived']) === false);
+		$lens = ($query['_archived'] ?? null);
+		if ($lens === 'any') {
+			return true;
+		}
+
+		if (filter_var($lens, FILTER_VALIDATE_BOOLEAN) === true) {
+			return $archived;
+		}
+
+		return $archived === false;
+	}//end inLens()
+
+	/**
+	 * Archive, unarchive, restore or soft-delete a stored object, as OpenRegister's handlers do.
+	 *
+	 * @param string $verb archive, unarchive, restore or delete.
+	 * @param string $uuid The object.
+	 * @param string|null $reason The archive reason.
+	 *
+	 * @return array{uuid: string, archived: array<string, mixed>|null}
+	 */
+	public function changeState(string $verb, string $uuid, ?string $reason): array {
+		if ($this->beforeTransition !== null) {
+			($this->beforeTransition)($verb, $uuid);
+		}
+
+		$schema = 0;
+		foreach ($this->store as $id => $objects) {
+			if (isset($objects[$uuid]) === true) {
+				$schema = $id;
+			}
+		}
+
+		$this->assertNotSame(0, $schema, 'no stored object ' . $uuid);
+		$this->transitions[] = [$verb, $schema, $uuid, $reason];
+		$state = ($this->states[$schema][$uuid] ?? []);
+		if ($verb !== 'restore' && empty($state['deleted']) === false) {
+			// The archive handler and the delete resolve the object without the trash.
+			throw new \OCP\AppFramework\Db\DoesNotExistException('object is in the trash');
+		}
+
+		match ($verb) {
+			'archive' => $state['archived'] = ($state['archived'] ?? null) ?: ['by' => 'admin', 'at' => '2026-10-09T00:00:00+00:00', 'reason' => $reason],
+			'unarchive' => $state['archived'] = null,
+			'restore' => $state['deleted'] = null,
+			'delete' => $state['deleted'] = ['deletedBy' => 'admin', 'deletedAt' => '2026-10-09T00:00:00+00:00'],
+		};
+		$this->states[$schema][$uuid] = $state;
+
+		return ['uuid' => $uuid, 'archived' => ($state['archived'] ?? null)];
+	}//end changeState()
+
+	/**
+	 * OpenRegister's archive handler and object mapper over the in-memory store.
+	 *
+	 * @return array{0: object, 1: object}
+	 */
+	private function archiveDoubles(): array {
+		$test = $this;
+		$handler = new class($test) {
+			/**
+			 * Constructor.
+			 *
+			 * @param CmdbExportImportServiceTest $test The test, which holds the markers.
+			 */
+			public function __construct(
+				private CmdbExportImportServiceTest $test,
+			) {
+			}
+
+			/**
+			 * Archive an object.
+			 *
+			 * @param string $identifier The uuid.
+			 * @param string|null $reason The reason.
+			 * @param string|null $register Ignored.
+			 * @param string|null $schema Ignored.
+			 *
+			 * @return array<string, mixed>
+			 */
+			public function archive(string $identifier, ?string $reason = null, ?string $register = null, ?string $schema = null): array {
+				return $this->test->changeState(verb: 'archive', uuid: $identifier, reason: $reason);
+			}
+
+			/**
+			 * Unarchive an object.
+			 *
+			 * @param string $identifier The uuid.
+			 * @param string|null $reason The reason.
+			 * @param string|null $register Ignored.
+			 * @param string|null $schema Ignored.
+			 *
+			 * @return array<string, mixed>
+			 */
+			public function unarchive(string $identifier, ?string $reason = null, ?string $register = null, ?string $schema = null): array {
+				return $this->test->changeState(verb: 'unarchive', uuid: $identifier, reason: $reason);
+			}
+		};
+		$mapper = new class($test) {
+			/**
+			 * Constructor.
+			 *
+			 * @param CmdbExportImportServiceTest $test The test, which holds the markers.
+			 */
+			public function __construct(
+				private CmdbExportImportServiceTest $test,
+			) {
+			}
+
+			/**
+			 * Take an object out of the trash and answer it as the mapper reads it, archive marker included.
+			 *
+			 * @param string $uuid The uuid.
+			 *
+			 * @return object
+			 */
+			public function restoreObject(string $uuid): object {
+				$this->test->changeState(verb: 'restore', uuid: $uuid, reason: null);
+				return $this->test->storedEntity(uuid: $uuid);
+			}
+
+			/**
+			 * The trash: every soft-deleted object, in every register and schema.
+			 *
+			 * @param int|null $limit Ignored.
+			 * @param int|null $offset Ignored.
+			 * @param bool $_rbac Must be false.
+			 * @param bool $_multitenancy Must be false.
+			 *
+			 * @return array<int, object>
+			 */
+			public function findDeletedAcrossAllMagicTables(?int $limit = null, ?int $offset = null, bool $_rbac = true, bool $_multitenancy = true): array {
+				return $this->test->trashListing(rbac: $_rbac, multitenancy: $_multitenancy);
+			}
+		};
+
+		return [$handler, $mapper];
+	}//end archiveDoubles()
+
+	/**
+	 * A stored object as OpenRegister's mapper reads it by uuid: data plus both markers.
+	 *
+	 * @param string $uuid The object.
+	 *
+	 * @return ObjectEntityInterface
+	 */
+	public function storedEntity(string $uuid): ObjectEntityInterface {
+		foreach ($this->store as $schema => $objects) {
+			if (isset($objects[$uuid]) === true) {
+				return $this->entity(uuid: $uuid, data: $objects[$uuid], state: ($this->states[$schema][$uuid] ?? []), schema: (string)$schema);
+			}
+		}
+
+		$this->fail('no stored object ' . $uuid);
+	}//end storedEntity()
+
+	/**
+	 * The trash as MagicMapper::findDeletedAcrossAllMagicTables() lists it.
+	 *
+	 * Its rows go through MagicMapper::rowToObjectEntity(): uuid, register,
+	 * schema and the data, with every string that parses as JSON decoded
+	 * ("2" becomes 2), and no archive or trash marker.
+	 *
+	 * @param bool $rbac The `_rbac` argument.
+	 * @param bool $multitenancy The `_multitenancy` argument.
+	 *
+	 * @return array<int, ObjectEntityInterface>
+	 */
+	public function trashListing(bool $rbac, bool $multitenancy): array {
+		$this->noteScope(method: 'findDeletedAcrossAllMagicTables', rbac: $rbac, multitenancy: $multitenancy);
+		$this->trashReads++;
+		if ($this->trashFailures > 0) {
+			$this->trashFailures--;
+			throw new RuntimeException('trash listing failed');
+		}
+
+		$listed = [];
+		foreach ($this->states as $schema => $states) {
+			foreach ($states as $uuid => $state) {
+				if (empty($state['deleted']) === true || isset($this->store[$schema][$uuid]) === false) {
+					continue;
+				}
+
+				$data = array_map(
+					static function (mixed $value): mixed {
+						if (is_string($value) === true) {
+							$decoded = json_decode($value, true);
+							if (json_last_error() === JSON_ERROR_NONE) {
+								return $decoded;
+							}
+						}
+
+						return $value;
+					},
+					$this->store[$schema][$uuid]
+				);
+				$listed[] = $this->entity(uuid: (string)$uuid, data: $data, schema: (string)$schema);
+			}
+		}
+
+		return $listed;
+	}//end trashListing()
 
 	/**
 	 * OpenRegister's schema mapper over the declared properties.
@@ -674,19 +986,29 @@ class CmdbExportImportServiceTest extends TestCase {
 	/**
 	 * A reader that hands out given rows, for tests that do not need the fixture.
 	 *
+	 * The workbook has the archive sheet, listing $archived; null is a workbook without the sheet.
+	 *
 	 * @param array<int, array{sheet: string, row: int, cells: array<string, mixed>}> $rows The rows.
+	 * @param array<int, string>|null $archived The APPIDs on the archive sheet, or null when there is no such sheet.
+	 * @param array<int, int> $uncachedRows The archive sheet's rows whose APPID formula has no cached value.
 	 *
 	 * @return CmdbWorkbookReader
 	 */
-	private function rowsReader(array $rows): CmdbWorkbookReader {
-		return new class($rows) extends CmdbWorkbookReader {
+	private function rowsReader(array $rows, ?array $archived = [], array $uncachedRows = [], array $uncachedKeyRows = []): CmdbWorkbookReader {
+		return new class($rows, $archived, $uncachedRows, $uncachedKeyRows) extends CmdbWorkbookReader {
 			/**
 			 * Constructor.
 			 *
 			 * @param array<int, array<string, mixed>> $rows The rows.
+			 * @param array<int, string>|null $archived The archive sheet's APPIDs, or null.
+			 * @param array<int, int> $uncachedRows The archive sheet's rows without a cached APPID.
+			 * @param array<string, array<int, int>> $uncachedKeyRows The CMDB rows dropped as empty, per sheet.
 			 */
 			public function __construct(
 				private array $rows,
+				private ?array $archived,
+				private array $uncachedRows,
+				private array $uncachedKeyRows = [],
 			) {
 			}
 
@@ -699,7 +1021,8 @@ class CmdbExportImportServiceTest extends TestCase {
 			 * @return array<string, mixed>
 			 */
 			public function read(string $path, CmdbImportProfile $profile): array {
-				return ['rows' => $this->rows, 'importWarnings' => [], 'date1904' => false];
+				$archive = ['sheet' => 'Gearchiveerde Applicaties', 'present' => ($this->archived !== null), 'keyColumnMissing' => false, 'appIds' => ($this->archived ?? []), 'uncachedRows' => $this->uncachedRows];
+				return ['rows' => $this->rows, 'importWarnings' => [], 'date1904' => false, 'archive' => $archive, 'uncachedKeyRows' => $this->uncachedKeyRows];
 			}
 		};
 	}//end rowsReader()
@@ -716,16 +1039,25 @@ class CmdbExportImportServiceTest extends TestCase {
 	private function service(?CmdbWorkbookReader $reader = null, ?string $profileDir = null, array $config = ['register' => '20']): CmdbExportImportService {
 		$objectService = $this->objectService();
 		$schemaMapper = $this->schemaMapper();
+		[$archiveHandler, $objectMapper] = $this->archiveDoubles();
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('has')->willReturn(false);
 		$container->method('get')->willReturnCallback(
-			function (string $id) use ($objectService, $schemaMapper) {
+			function (string $id) use ($objectService, $schemaMapper, $archiveHandler, $objectMapper) {
 				if ($id === ObjectServiceInterface::class) {
 					return $objectService;
 				}
 
 				if ($id === CmdbExportImportService::SCHEMA_MAPPER_CLASS) {
 					return $schemaMapper;
+				}
+
+				if ($this->archiveServicesAvailable === true && $id === CmdbExportImportService::ARCHIVE_HANDLER_CLASS) {
+					return $archiveHandler;
+				}
+
+				if ($this->archiveServicesAvailable === true && $id === CmdbExportImportService::OBJECT_MAPPER_CLASS) {
+					return $objectMapper;
 				}
 
 				throw new RuntimeException('not in this container: ' . $id);
@@ -846,7 +1178,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertTrue($report['success']);
 		$this->assertFalse($report['cancelled']);
 		$this->assertSame('cmdb-test-0001', $report['operationId']);
-		$this->assertSame(['rowsRead' => 2, 'processed' => 2, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 0, 'warnings' => 0, 'unpublished' => 0], $report['summary']);
+		$this->assertSame(['rowsRead' => 2, 'processed' => 2, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 0, 'archived' => 0, 'unarchived' => 0, 'deleted' => 0, 'restored' => 0, 'warnings' => 0, 'unpublished' => 0], $report['summary']);
 		$this->assertSame('Gemeente Voorbeeldstad', $report['municipality']['name']);
 		$this->assertTrue($report['municipality']['created']);
 		$this->assertSame(['No municipality named "Gemeente Voorbeeldstad" was found, so it was created. Check the name if you meant an existing one.'], array_column($report['importWarnings'], 'message'), 'only the warning that the municipality was created');
@@ -1448,29 +1780,1083 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testUpdateExistingFalseSkipsMatches()
 
 	/**
-	 * A module missing from a newer export, and its usage, are left as they are.
+	 * The uuid of the stored module with this APPID.
+	 *
+	 * @param string $appId The APPID.
+	 *
+	 * @return string
+	 */
+	private function moduleOf(string $appId): string {
+		foreach ($this->store[self::MODULE] as $uuid => $module) {
+			if (($module['externalNumber'] ?? null) === $appId) {
+				return (string)$uuid;
+			}
+		}
+
+		$this->fail('no module with APPID ' . $appId);
+	}//end moduleOf()
+
+	/**
+	 * The uuid of the stored usage of a module by a consumer.
+	 *
+	 * @param string $moduleUuid The module.
+	 * @param string $consumer The consumer.
+	 *
+	 * @return string
+	 */
+	private function usageOf(string $moduleUuid, string $consumer = 'muni-1'): string {
+		foreach ($this->store[self::USAGE] as $uuid => $usage) {
+			if (($usage['module'] ?? null) === $moduleUuid && ($usage['consumer'] ?? null) === $consumer) {
+				return (string)$uuid;
+			}
+		}
+
+		$this->fail('no usage of ' . $moduleUuid . ' by ' . $consumer);
+	}//end usageOf()
+
+	/**
+	 * Whether a stored object carries the archive marker, and whether the trash marker.
+	 *
+	 * @param int $schema The schema id.
+	 * @param string $uuid The object.
+	 *
+	 * @return array{0: bool, 1: bool} Archived, deleted.
+	 */
+	private function stateOf(int $schema, string $uuid): array {
+		$state = ($this->states[$schema][$uuid] ?? []);
+		return [empty($state['archived']) === false, empty($state['deleted']) === false];
+	}//end stateOf()
+
+	/**
+	 * Import APPIDs 1, 7 and 8 for muni-1, as a first import would.
 	 *
 	 * @return void
 	 */
-	public function testRecordsMissingFromTheExportStay(): void {
+	private function importOneSevenAndEight(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
-		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', row: 2), $this->row(appId: '7', row: 3, sheet: 'Onbeh Applicaties CMDB')]))
-			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$rows = [
+			$this->row(appId: '1', row: 2),
+			$this->row(appId: '7', row: 3, sheet: 'Onbeh Applicaties CMDB'),
+			$this->row(appId: '8', row: 4, cells: ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam']),
+		];
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+		$this->transitions = [];
+	}//end importOneSevenAndEight()
+
+	/**
+	 * A module missing from a newer export, and its usage, are left as they are when records are kept.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
+	 */
+	public function testRecordsMissingFromTheExportStayWhenKept(): void {
+		$this->importOneSevenAndEight();
 		$modules = $this->store[self::MODULE];
 		$usages = $this->store[self::USAGE];
 
-		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Applicatie Naam' => 'Nieuw'])]))
-			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Applicatie Naam' => 'Nieuw'])]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
 
 		foreach ($modules as $uuid => $module) {
-			if ($module['externalNumber'] === '7') {
+			if ($module['externalNumber'] !== '1') {
 				$this->assertSame($module, $this->store[self::MODULE][$uuid]);
 			}
 		}
 
 		$this->assertSame($usages, $this->store[self::USAGE]);
-		$this->assertCount(2, $this->store[self::MODULE]);
-	}//end testRecordsMissingFromTheExportStay()
+		$this->assertSame([], $this->transitions, 'nothing is archived or deleted');
+		$this->assertSame([], $this->states);
+		$this->assertSame(['updated'], array_column($report['rows'], 'outcome'));
+		$this->assertSame([], $report['importWarnings'], 'keep does not need the archive sheet');
+	}//end testRecordsMissingFromTheExportStayWhenKept()
+
+	/**
+	 * By default an application that moved to the archive sheet is archived and one on no sheet is soft-deleted,
+	 * usage before module, and the owner contact person stays.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testMissingApplicationsAreArchivedOrDeletedByDefault(): void {
+		$this->importOneSevenAndEight();
+		$contactPersons = $this->store[self::CONTACT_PERSON];
+		$this->assertNotSame([], $contactPersons, 'APPID 8 has an owner');
+		[$seven, $eight] = [$this->moduleOf(appId: '7'), $this->moduleOf(appId: '8')];
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7', '1198']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-archive-01']);
+
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $seven));
+		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $this->usageOf(moduleUuid: $seven)));
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: $eight));
+		$this->assertSame([false, true], $this->stateOf(schema: self::USAGE, uuid: $this->usageOf(moduleUuid: $eight)));
+		$this->assertSame([false, false], $this->stateOf(schema: self::MODULE, uuid: $this->moduleOf(appId: '1')));
+		$this->assertSame(
+			[
+				['archive', self::USAGE, $this->usageOf(moduleUuid: $seven)],
+				['archive', self::MODULE, $seven],
+				['delete', self::USAGE, $this->usageOf(moduleUuid: $eight)],
+				['delete', self::MODULE, $eight],
+			],
+			array_map(static fn (array $t): array => array_slice($t, 0, 3), $this->transitions),
+			'the usage is written before its module'
+		);
+		$this->assertSame('cmdb-import: on sheet "Gearchiveerde Applicaties" (cmdb-archive-01)', $this->transitions[0][3]);
+		$this->assertSame($contactPersons, $this->store[self::CONTACT_PERSON], 'contact persons are never touched');
+
+		$reconciled = array_values(array_filter($report['rows'], static fn (array $row): bool => $row['row'] === 0));
+		$this->assertSame(
+			[
+				['sheet' => 'Gearchiveerde Applicaties', 'row' => 0, 'appId' => '7', 'name' => 'Applicatie 7', 'outcome' => 'archived', 'reasons' => [], 'warnings' => [], 'moduleUuid' => $seven, 'usageUuid' => $this->usageOf(moduleUuid: $seven)],
+				['sheet' => '', 'row' => 0, 'appId' => '8', 'name' => 'Applicatie 8', 'outcome' => 'deleted', 'reasons' => [], 'warnings' => [], 'moduleUuid' => $eight, 'usageUuid' => $this->usageOf(moduleUuid: $eight)],
+			],
+			$reconciled
+		);
+		$this->assertSame(1, $report['summary']['processed'], 'reconciliation entries are not sheet rows');
+		$this->assertSame([1, 1], [$report['summary']['archived'], $report['summary']['deleted']]);
+		$this->assertStringNotContainsString('Achternaam', (string)json_encode($report));
+		$this->assertSame([], $report['importWarnings']);
+
+		$this->transitions = [];
+		$again = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$this->assertSame([], $this->transitions, 'an application already in the state the export asks for is left alone');
+		$this->assertSame(['unchanged'], array_column($again['rows'], 'outcome'));
+	}//end testMissingApplicationsAreArchivedOrDeletedByDefault()
+
+	/**
+	 * Without the archive sheet a missing application is archived, never deleted, and the report warns.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testWithoutTheArchiveSheetMissingApplicationsAreArchivedNotDeleted(): void {
+		$this->importOneSevenAndEight();
+		$eight = $this->moduleOf(appId: '8');
+		$this->states[self::MODULE][$eight] = ['deleted' => ['deletedBy' => 'admin']];
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: null))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $this->moduleOf(appId: '7')));
+		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $this->usageOf(moduleUuid: $this->moduleOf(appId: '7'))));
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: $eight), 'what is in the trash stays there');
+		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $this->usageOf(moduleUuid: $eight)));
+		$this->assertNotContains('delete', array_column($this->transitions, 0));
+		$this->assertNotContains('restore', array_column($this->transitions, 0));
+		$this->assertSame('cmdb-import: not in the export (' . $report['operationId'] . ')', $this->transitions[0][3]);
+		$this->assertSame(['unchanged', 'archived', 'archived'], array_column($report['rows'], 'outcome'));
+		$this->assertSame(
+			[['sheet' => 'Gearchiveerde Applicaties', 'message' => 'Sheet "Gearchiveerde Applicaties" was not found, so applications missing from the export are archived, not deleted.']],
+			$report['importWarnings']
+		);
+	}//end testWithoutTheArchiveSheetMissingApplicationsAreArchivedNotDeleted()
+
+	/**
+	 * An archive sheet with an APPID the reader could not see is not authoritative for a deletion: the import
+	 * archives what it would have deleted, and warns naming the sheet and the row.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAnUncachedArchiveRowArchivesInsteadOfDeleting(): void {
+		$this->importOneSevenAndEight();
+		[$seven, $eight] = [$this->moduleOf(appId: '7'), $this->moduleOf(appId: '8')];
+
+		// APPID 7 is listed on the archive sheet; APPID 8 is on no sheet, and row 4 of the sheet holds a formula without a cached value.
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7'], uncachedRows: [4]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertNotContains('delete', array_column($this->transitions, 0), 'nothing is soft-deleted');
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $seven));
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $eight), 'APPID 8 may be the unreadable row, so it is archived');
+		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $this->usageOf(moduleUuid: $eight)));
+		$this->assertSame('cmdb-import: not in the export (' . $report['operationId'] . ')', $this->transitions[2][3]);
+		$this->assertSame(
+			[['sheet' => 'Gearchiveerde Applicaties', 'message' => 'Sheet "Gearchiveerde Applicaties" has an APPID without a cached value in row 4, so applications missing from the export are archived, not deleted.']],
+			$report['importWarnings']
+		);
+		$this->assertSame([2, 0], [$report['summary']['archived'], $report['summary']['deleted']]);
+
+		// A long list of rows is cut.
+		$this->transitions = [];
+		$long = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7'], uncachedRows: range(2, 13)))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'archive']);
+		$this->assertSame(
+			'Sheet "Gearchiveerde Applicaties" has an APPID without a cached value in 12 rows (2, 3, 4, 5, 6, 7, 8, 9, 10, 11, …), so applications missing from the export are archived, not deleted.',
+			$long['importWarnings'][0]['message'],
+			'the warning counts the rows and cuts the list'
+		);
+
+		$few = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7'], uncachedRows: [3, 9]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'archive']);
+		$this->assertStringContainsString('in 2 rows (3, 9), so', $few['importWarnings'][0]['message']);
+
+		// Keeping missing records needs no sheet and gives no warning.
+		$kept = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7'], uncachedRows: [4]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+		$this->assertSame([], $kept['importWarnings']);
+	}//end testAnUncachedArchiveRowArchivesInsteadOfDeleting()
+
+	/**
+	 * A CMDB-sheet row whose APPID the reader could not see is skipped as empty, so its application looks absent:
+	 * the import archives what it would have deleted, and warns naming the CMDB sheet and the row.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAnUncachedCmdbRowArchivesInsteadOfDeleting(): void {
+		$this->importOneSevenAndEight();
+		[$seven, $eight] = [$this->moduleOf(appId: '7'), $this->moduleOf(appId: '8')];
+
+		// APPID 7 is on the readable archive sheet; APPID 8 is on no readable sheet, and row 5 of a CMDB sheet has an APPID formula without a cached value.
+		$report = $this->service(
+			reader: $this->rowsReader(
+				rows: [$this->row(appId: '1'), $this->row(appId: '', cells: ['APPID' => null], row: 5, uncached: ['APPID'])],
+				archived: ['7']
+			)
+		)->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertNotContains('delete', array_column($this->transitions, 0), 'nothing is soft-deleted');
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $seven));
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $eight), 'APPID 8 may be the unreadable row, so it is archived');
+		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $this->usageOf(moduleUuid: $eight)));
+		$this->assertSame([2, 0], [$report['summary']['archived'], $report['summary']['deleted']]);
+		$this->assertSame(
+			[['sheet' => 'Beheerde Applicaties CMDB', 'message' => 'Sheet "Beheerde Applicaties CMDB" has an APPID without a cached value in row 5, so applications missing from the export are archived, not deleted.']],
+			$report['importWarnings']
+		);
+
+		// Keeping missing records needs no warning, and without the unreadable row the same workbook deletes.
+		$this->transitions = [];
+		$this->states = array_replace_recursive($this->states, [self::MODULE => [$eight => ['archived' => null]], self::USAGE => [$this->usageOf(moduleUuid: $eight) => ['archived' => null]]]);
+		$kept = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1'), $this->row(appId: '', cells: ['APPID' => null], row: 5, uncached: ['APPID'])], archived: ['7']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+		$this->assertSame([], $kept['importWarnings']);
+		$this->assertSame([], $this->transitions);
+
+		$readable = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: $eight), 'a readable workbook still soft-deletes what is on no sheet');
+		$this->assertSame([], $readable['importWarnings']);
+	}//end testAnUncachedCmdbRowArchivesInsteadOfDeleting()
+
+	/**
+	 * A CMDB row whose only content is an uncached APPID is dropped by the reader before the service sees a row, and
+	 * is handed over as a list of rows: the import still archives instead of deleting, and warns.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAFullyEmptyCmdbRowWithAnUncachedKeyArchivesInsteadOfDeleting(): void {
+		$this->importOneSevenAndEight();
+		$eight = $this->moduleOf(appId: '8');
+
+		$report = $this->service(
+			reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7'], uncachedKeyRows: ['Beheerde Applicaties CMDB' => [6]])
+		)->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertNotContains('delete', array_column($this->transitions, 0));
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $eight));
+		$this->assertSame(
+			[['sheet' => 'Beheerde Applicaties CMDB', 'message' => 'Sheet "Beheerde Applicaties CMDB" has an APPID without a cached value in row 6, so applications missing from the export are archived, not deleted.']],
+			$report['importWarnings']
+		);
+	}//end testAFullyEmptyCmdbRowWithAnUncachedKeyArchivesInsteadOfDeleting()
+
+	/**
+	 * An extra usage of a key that cannot be archived fails the application's row; its module, written after every usage, stays
+	 * as it was, and the other applications are still reconciled.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAFailingExtraUsageFailsTheApplicationBeforeItsModule(): void {
+		$this->importOneSevenAndEight();
+		[$seven, $eight] = [$this->moduleOf(appId: '7'), $this->moduleOf(appId: '8')];
+		$sevenUsage = $this->usageOf(moduleUuid: $seven);
+		$this->store[self::USAGE]['usage-second'] = array_merge($this->store[self::USAGE][$sevenUsage], ['id' => 'usage-second']);
+		$this->beforeTransition = static function (string $verb, string $uuid): void {
+			if ($uuid === 'usage-second') {
+				throw new RuntimeException('the extra usage cannot be archived');
+			}
+		};
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$rows = array_values(array_filter($report['rows'], static fn (array $row): bool => $row['row'] === 0));
+		$this->assertSame(['failed', 'deleted'], array_column($rows, 'outcome'));
+		$this->assertSame(['step "archive" failed (RuntimeException)'], $rows[0]['reasons']);
+		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $sevenUsage), 'the application\'s own usage went first');
+		$this->assertSame([false, false], $this->stateOf(schema: self::USAGE, uuid: 'usage-second'), 'the failing extra is unchanged');
+		$this->assertSame([false, false], $this->stateOf(schema: self::MODULE, uuid: $seven), 'the module comes after every usage, so it was not reached');
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: $eight), 'the next application is still reconciled');
+		$this->assertSame(1, $report['summary']['failed']);
+	}//end testAFailingExtraUsageFailsTheApplicationBeforeItsModule()
+
+	/**
+	 * A cancelled import reconciles nothing.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testACancelledImportDoesNotReconcile(): void {
+		$this->importOneSevenAndEight();
+		$service = null;
+		$this->beforeSave = function (int $schema) use (&$service): void {
+			if ($schema === self::MODULE) {
+				$service->requestCancel(operationId: 'cmdb-cancel-02');
+			}
+		};
+		$service = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Applicatie Naam' => 'Nieuw']), $this->row(appId: '2', row: 3)]));
+
+		$report = $service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-cancel-02']);
+
+		$this->assertTrue($report['cancelled']);
+		$this->assertSame([], $this->transitions);
+		$this->assertSame(['updated'], array_column($report['rows'], 'outcome'));
+	}//end testACancelledImportDoesNotReconcile()
+
+	/**
+	 * A cancel that comes in while the last row is processed stops the import before anything is archived or deleted.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testACancelDuringTheLastRowArchivesNothing(): void {
+		$this->importOneSevenAndEight();
+		$service = null;
+		$this->beforeSave = function (int $schema) use (&$service): void {
+			if ($schema === self::MODULE) {
+				$this->assertTrue($service->requestCancel(operationId: 'cmdb-cancel-03'));
+			}
+		};
+		$service = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: ['Applicatie Naam' => 'Nieuw'])], archived: ['7', '8']));
+		$this->trashReads = 0;
+		$this->searches = [];
+
+		$report = $service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-cancel-03']);
+
+		$this->assertTrue($report['cancelled']);
+		$this->assertSame([], $this->transitions);
+		$this->assertSame(0, $this->trashReads, 'the scope was not loaded: the trash was not read');
+		$usageScans = array_filter($this->searches, static fn (array $query): bool => ($query['consumer'] ?? null) === 'muni-1' && isset($query['_offset']) === true);
+		$this->assertSame([], $usageScans, 'the municipality\'s usages were not paged');
+		$this->assertSame(['updated'], array_column($report['rows'], 'outcome'));
+		$this->assertSame('cancelled', $this->cache['progress_cmdb-cancel-03']['status']);
+		$this->assertArrayNotHasKey('cancel_cmdb-cancel-03', $this->cache);
+	}//end testACancelDuringTheLastRowArchivesNothing()
+
+	/**
+	 * A cancel during the reconciliation stops it before the next application and keeps what was archived.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testACancelDuringTheReconciliationStopsBeforeTheNextApplication(): void {
+		$this->importOneSevenAndEight();
+		[$seven, $eight] = [$this->moduleOf(appId: '7'), $this->moduleOf(appId: '8')];
+		$service = null;
+		$this->beforeTransition = function (string $verb, string $uuid) use (&$service, $seven): void {
+			if ($uuid === $seven) {
+				$this->assertTrue($service->requestCancel(operationId: 'cmdb-cancel-04'));
+			}
+		};
+		$service = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7', '8']));
+
+		$report = $service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-cancel-04']);
+
+		$this->assertTrue($report['cancelled']);
+		$this->assertSame([['archive', $this->usageOf(moduleUuid: $seven)], ['archive', $seven]], array_map(static fn (array $step): array => [$step[0], $step[2]], $this->transitions));
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $seven), 'what was archived stays archived');
+		$this->assertSame([false, false], $this->stateOf(schema: self::MODULE, uuid: $eight));
+		$this->assertSame([false, false], $this->stateOf(schema: self::USAGE, uuid: $this->usageOf(moduleUuid: $eight)));
+		$this->assertSame(['unchanged', 'archived'], array_column($report['rows'], 'outcome'));
+		$this->assertSame('cancelled', $this->cache['progress_cmdb-cancel-04']['status']);
+	}//end testACancelDuringTheReconciliationStopsBeforeTheNextApplication()
+
+	/**
+	 * Only this municipality's usages and the modules its import created are reconciled.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAnotherMunicipalitysUsagesAreNeverReconciled(): void {
+		$this->importOneSevenAndEight();
+		$this->seedOrganisation(uuid: 'muni-2', name: 'Gemeente Anders', type: 'Municipality');
+		$seven = $this->moduleOf(appId: '7');
+		// Another municipality uses the same module (added by hand), and muni-1 uses a hand-made module.
+		$this->store[self::USAGE]['usage-other'] = ['id' => 'usage-other', 'consumer' => 'muni-2', 'module' => $seven];
+		$this->store[self::MODULE]['module-manual'] = ['id' => 'module-manual', 'name' => 'Handmatig', 'externalKey' => 'topdesk:muni-2:9'];
+		$this->store[self::USAGE]['usage-manual'] = ['id' => 'usage-manual', 'consumer' => 'muni-1', 'module' => 'module-manual'];
+
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1'), $this->row(appId: '8', row: 3)], archived: ['7']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $this->usageOf(moduleUuid: $seven)));
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $seven), 'the module carries this municipality\'s import key');
+		$this->assertSame([false, false], $this->stateOf(schema: self::USAGE, uuid: 'usage-other'));
+		$this->assertSame([false, false], $this->stateOf(schema: self::USAGE, uuid: 'usage-manual'));
+		$this->assertSame([false, false], $this->stateOf(schema: self::MODULE, uuid: 'module-manual'));
+		$this->assertSame(2, count($this->transitions));
+	}//end testAnotherMunicipalitysUsagesAreNeverReconciled()
+
+	/**
+	 * A working pair and a stale pair in the trash under the same import key: the reconciliation acts on the
+	 * working one, as the import's own match does, and never restores the stale one into the archive.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAStaleDuplicateIsNeverRestoredByTheReconciliation(): void {
+		$this->importOneSevenAndEight();
+		$seven = $this->moduleOf(appId: '7');
+		$usage = $this->usageOf(moduleUuid: $seven);
+		// A stale module deleted by hand, with its own usage, carries the same import key as the working one.
+		$this->store[self::MODULE] = ['module-stale' => array_merge($this->store[self::MODULE][$seven], ['id' => 'module-stale'])] + $this->store[self::MODULE];
+		$this->store[self::USAGE] = ['usage-stale' => array_merge($this->store[self::USAGE][$usage], ['id' => 'usage-stale', 'module' => 'module-stale'])] + $this->store[self::USAGE];
+		$this->states[self::MODULE]['module-stale'] = ['deleted' => ['deletedBy' => 'admin', 'deletedAt' => '2026-10-01T00:00:00+00:00']];
+		$this->states[self::USAGE]['usage-stale'] = ['deleted' => ['deletedBy' => 'admin', 'deletedAt' => '2026-10-01T00:00:00+00:00']];
+
+		// APPID 7 is on the archive sheet; APPID 8 is on no sheet.
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertNotContains('restore', array_column($this->transitions, 0), 'the stale duplicate is not restored');
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: 'module-stale'));
+		$this->assertSame([false, true], $this->stateOf(schema: self::USAGE, uuid: 'usage-stale'));
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $seven));
+		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $usage));
+		$reconciled = array_values(array_filter($report['rows'], static fn (array $row): bool => $row['row'] === 0));
+		$this->assertSame([['7', 'archived', $seven], ['8', 'deleted', $this->moduleOf(appId: '8')]], array_map(static fn (array $row): array => [$row['appId'], $row['outcome'], $row['moduleUuid']], $reconciled));
+
+		// A second run finds the working pair archived and the stale pair in the trash: nothing to do.
+		$this->transitions = [];
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$this->assertSame([], $this->transitions, 'the archived pair is in the state the export asks for, and the stale one is left alone');
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: 'module-stale'));
+	}//end testAStaleDuplicateIsNeverRestoredByTheReconciliation()
+
+	/**
+	 * Of two usages under one import key, the one of the module the import would match is reconciled, whatever
+	 * state the usage is in: the module's state ranks first, the usage's second.
+	 *
+	 * The working usage is listed before the one in the trash but belongs to the duplicate module in the trash;
+	 * it is archived as well (a stray usage stays visible otherwise), and the module in the trash is not restored.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testTheModulesStateDecidesWhichDuplicateIsReconciled(): void {
+		$this->importOneSevenAndEight();
+		$seven = $this->moduleOf(appId: '7');
+		$usage = $this->usageOf(moduleUuid: $seven);
+		$this->store[self::MODULE]['module-stale'] = array_merge($this->store[self::MODULE][$seven], ['id' => 'module-stale']);
+		$this->store[self::USAGE]['usage-stale'] = array_merge($this->store[self::USAGE][$usage], ['id' => 'usage-stale', 'module' => 'module-stale']);
+		$this->states[self::MODULE]['module-stale'] = ['deleted' => ['deletedBy' => 'admin']];
+		$this->states[self::USAGE][$usage] = ['deleted' => ['deletedBy' => 'admin']];
+
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1'), $this->row(appId: '8', row: 3)], archived: ['7']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $seven), 'the working module is archived');
+		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $usage), 'its usage is restored from the trash and archived');
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: 'module-stale'));
+		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: 'usage-stale'), 'the working usage of the stale module is archived with the key');
+	}//end testTheModulesStateDecidesWhichDuplicateIsReconciled()
+
+	/**
+	 * A usage in the trash that names another consumer is never reconciled, though the trash is not filtered by consumer.
+	 *
+	 * The usage points at a working module that carries this municipality's import key; only the consumer
+	 * check keeps that module out of the scope, and with it out of the trash.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testATrashedUsageOfAnotherConsumerNeverReconcilesItsModule(): void {
+		$this->importOneSevenAndEight();
+		$this->seedOrganisation(uuid: 'muni-2', name: 'Gemeente Anders', type: 'Municipality');
+		$seven = $this->moduleOf(appId: '7');
+		$this->store[self::MODULE]['module-nine'] = ['id' => 'module-nine', 'name' => 'Negen', 'externalKey' => 'topdesk:muni-1:9', 'externalNumber' => '9'];
+		$this->store[self::USAGE]['usage-other'] = ['id' => 'usage-other', 'consumer' => 'muni-2', 'module' => 'module-nine'];
+		$this->states[self::USAGE]['usage-other'] = ['deleted' => ['deletedBy' => 'admin', 'deletedAt' => '2026-10-01T00:00:00+00:00']];
+
+		// APPID 9 is on no sheet, so a scope that took the trashed usage in would soft-delete its module.
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1'), $this->row(appId: '7', row: 3), $this->row(appId: '8', row: 4)], archived: []))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame([false, false], $this->stateOf(schema: self::MODULE, uuid: 'module-nine'), 'the module stays working');
+		$this->assertSame([false, true], $this->stateOf(schema: self::USAGE, uuid: 'usage-other'), 'and the other consumer\'s usage stays in the trash');
+		$this->assertSame([], $this->transitions);
+		$this->assertSame([false, false], $this->stateOf(schema: self::MODULE, uuid: $seven));
+	}//end testATrashedUsageOfAnotherConsumerNeverReconcilesItsModule()
+
+	/**
+	 * Only a module whose key is exactly this municipality's import key plus an APPID is reconciled.
+	 *
+	 * A module without an external key, one whose key is the bare prefix, and one whose key has another origin
+	 * are used by this municipality but are not what its import created.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testOnlyWhatTheImportCreatedIsReconciled(): void {
+		$this->importOneSevenAndEight();
+		$others = [
+			'module-nokey' => ['id' => 'module-nokey', 'name' => 'Zonder sleutel'],
+			'module-bare' => ['id' => 'module-bare', 'name' => 'Kale sleutel', 'externalKey' => 'topdesk:muni-1:'],
+			'module-origin' => ['id' => 'module-origin', 'name' => 'Andere herkomst', 'externalKey' => 'xxxxxxx:muni-1:9'],
+		];
+		foreach ($others as $uuid => $module) {
+			$this->store[self::MODULE][$uuid] = $module;
+			$this->store[self::USAGE]['usage-' . $uuid] = ['id' => 'usage-' . $uuid, 'consumer' => 'muni-1', 'module' => $uuid];
+		}
+
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1'), $this->row(appId: '7', row: 3), $this->row(appId: '8', row: 4)], archived: []))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame([], $this->transitions, 'nothing the import did not create is archived or deleted');
+		$this->assertSame([], $this->states);
+	}//end testOnlyWhatTheImportCreatedIsReconciled()
+
+	/**
+	 * A delete step that OpenRegister refuses, and a restore step that throws, each fail only their own application.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAFailingDeleteOrRestoreStepFailsOnlyItsApplication(): void {
+		$this->importOneSevenAndEight();
+		[$seven, $eight] = [$this->moduleOf(appId: '7'), $this->moduleOf(appId: '8')];
+
+		// APPID 7 and 8 are on no sheet: OpenRegister refuses to delete the usage of 7, then deletes 8.
+		$this->deleteRefusedFor = $this->usageOf(moduleUuid: $seven);
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: []))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$rows = array_values(array_filter($report['rows'], static fn (array $row): bool => $row['row'] === 0));
+		$this->assertSame([['7', 'failed'], ['8', 'deleted']], array_map(static fn (array $row): array => [$row['appId'], $row['outcome']], $rows));
+		$this->assertSame(['step "delete" failed (RuntimeException)'], $rows[0]['reasons']);
+		$this->assertSame([false, false], $this->stateOf(schema: self::MODULE, uuid: $seven), 'the module of the failed application is untouched');
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: $eight));
+
+		// APPID 7 and 8 are in the trash and on the archive sheet: the restore of 7 throws, 8 is restored and archived.
+		$this->deleteRefusedFor = null;
+		$this->states = [];
+		foreach ([$seven, $eight] as $uuid) {
+			$this->states[self::MODULE][$uuid] = ['deleted' => ['deletedBy' => 'admin']];
+			$this->states[self::USAGE][$this->usageOf(moduleUuid: $uuid)] = ['deleted' => ['deletedBy' => 'admin']];
+		}
+
+		$this->beforeTransition = function (string $verb, string $uuid) use ($seven): void {
+			if ($verb === 'restore' && $uuid === $this->usageOf(moduleUuid: $seven)) {
+				throw new RuntimeException('restore failed');
+			}
+		};
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7', '8']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$rows = array_values(array_filter($report['rows'], static fn (array $row): bool => $row['row'] === 0));
+		$this->assertSame([['7', 'failed'], ['8', 'archived']], array_map(static fn (array $row): array => [$row['appId'], $row['outcome']], $rows));
+		$this->assertSame(['step "restore" failed (RuntimeException)'], $rows[0]['reasons']);
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: $seven), 'the failed application stays in the trash');
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $eight));
+	}//end testAFailingDeleteOrRestoreStepFailsOnlyItsApplication()
+
+	/**
+	 * More usages than one page, and more modules than one chunk, are all reconciled.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testMoreApplicationsThanOnePageAreAllReconciled(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$count = 501;
+		for ($index = 1; $index <= $count; $index++) {
+			$this->store[self::MODULE]['module-' . $index] = ['id' => 'module-' . $index, 'name' => 'Applicatie ' . $index, 'externalKey' => 'topdesk:muni-1:' . $index, 'externalNumber' => (string)$index];
+			$this->store[self::USAGE]['usage-' . $index] = ['id' => 'usage-' . $index, 'consumer' => 'muni-1', 'module' => 'module-' . $index];
+		}
+
+		// Every application is on no sheet: every one is soft-deleted, the last of both lists included.
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1000')], archived: []))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame($count, $report['summary']['deleted']);
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: 'module-' . $count));
+		$this->assertSame([false, true], $this->stateOf(schema: self::USAGE, uuid: 'usage-' . $count));
+		$this->assertCount(($count * 2), $this->transitions);
+	}//end testMoreApplicationsThanOnePageAreAllReconciled()
+
+	/**
+	 * An archived match wins over a deleted one with the same import key, and a working match over an archived one.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 */
+	public function testTheMatchPrefersWorkingThenArchivedThenDeleted(): void {
+		$this->importOneSevenAndEight();
+		[$seven, $eight] = [$this->moduleOf(appId: '7'), $this->moduleOf(appId: '8')];
+		$sevenUsage = $this->usageOf(moduleUuid: $seven);
+		$eightUsage = $this->usageOf(moduleUuid: $eight);
+		foreach ([['7', $seven, $sevenUsage], ['8', $eight, $eightUsage]] as [$appId, $module, $usage]) {
+			$this->store[self::MODULE]['stale-module-' . $appId] = array_merge($this->store[self::MODULE][$module], ['id' => 'stale-module-' . $appId]);
+			$this->store[self::USAGE]['stale-usage-' . $appId] = array_merge($this->store[self::USAGE][$usage], ['id' => 'stale-usage-' . $appId, 'module' => 'stale-module-' . $appId]);
+		}
+
+		// APPID 7: the real pair is archived, the stale one deleted. APPID 8: the real pair is working, the stale one archived.
+		$gone = ['deleted' => ['deletedBy' => 'admin', 'deletedAt' => '2026-10-01T00:00:00+00:00']];
+		$shelved = ['archived' => ['by' => 'admin', 'at' => '2026-10-01T00:00:00+00:00', 'reason' => 'earlier']];
+		$this->states[self::MODULE][$seven] = $shelved;
+		$this->states[self::USAGE][$sevenUsage] = $shelved;
+		$this->states[self::MODULE]['stale-module-7'] = $gone;
+		$this->states[self::USAGE]['stale-usage-7'] = $gone;
+		$this->states[self::MODULE]['stale-module-8'] = $shelved;
+		$this->states[self::USAGE]['stale-usage-8'] = $shelved;
+		$counts = [count($this->store[self::MODULE]), count($this->store[self::USAGE])];
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '7', row: 2), $this->row(appId: '8', row: 3, sheet: 'Onbeh Applicaties CMDB')]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+
+		$this->assertSame(['unarchived', 'unchanged'], array_column($report['rows'], 'outcome'));
+		$this->assertSame([$seven, $eight], array_column($report['rows'], 'moduleUuid'));
+		$this->assertSame(
+			[['unarchive', $seven], ['unarchive', $sevenUsage]],
+			array_map(static fn (array $t): array => [$t[0], $t[2]], $this->transitions),
+			'only the preferred pair is revived; nothing is restored from the trash'
+		);
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: 'stale-module-7'));
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: 'stale-module-8'));
+		$this->assertSame($counts, [count($this->store[self::MODULE]), count($this->store[self::USAGE])], 'no module or usage is created');
+	}//end testTheMatchPrefersWorkingThenArchivedThenDeleted()
+
+	/**
+	 * With keep and without OpenRegister's archive handler a row whose match is archived fails at the module step.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 */
+	public function testKeepWithoutTheArchiveServicesFailsARowWhoseMatchIsArchived(): void {
+		$this->importOneSevenAndEight();
+		$seven = $this->moduleOf(appId: '7');
+		$this->states[self::MODULE][$seven] = ['archived' => ['by' => 'admin', 'at' => '2026-10-01T00:00:00+00:00', 'reason' => 'earlier']];
+		$this->archiveServicesAvailable = false;
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1'), $this->row(appId: '7', row: 3, sheet: 'Onbeh Applicaties CMDB')]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+
+		$this->assertSame(['unchanged', 'failed'], array_column($report['rows'], 'outcome'));
+		$this->assertSame(['step "module" failed (CmdbImportException)'], $report['rows'][1]['reasons']);
+		$this->assertSame([], $this->transitions);
+		$this->assertSame(0, $report['summary']['archived'] + $report['summary']['deleted']);
+	}//end testKeepWithoutTheArchiveServicesFailsARowWhoseMatchIsArchived()
+
+	/**
+	 * Every other usage of a key leaving the export follows the application: a working usage of a module deleted
+	 * by hand, and a second usage of the same module. A stale module in the trash is neither restored nor touched.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testEveryOtherUsageOfAKeyFollowsTheApplication(): void {
+		$this->importOneSevenAndEight();
+		[$seven, $eight] = [$this->moduleOf(appId: '7'), $this->moduleOf(appId: '8')];
+		$sevenUsage = $this->usageOf(moduleUuid: $seven);
+		// APPID 7: a module deleted by hand whose usage stayed working, and a second usage of the working module.
+		$this->store[self::MODULE]['module-stale'] = array_merge($this->store[self::MODULE][$seven], ['id' => 'module-stale']);
+		$this->states[self::MODULE]['module-stale'] = ['deleted' => ['deletedBy' => 'admin']];
+		$this->store[self::USAGE]['usage-stray'] = array_merge($this->store[self::USAGE][$sevenUsage], ['id' => 'usage-stray', 'module' => 'module-stale']);
+		$this->store[self::USAGE]['usage-second'] = array_merge($this->store[self::USAGE][$sevenUsage], ['id' => 'usage-second']);
+		// APPID 8 also has a stale pair in the trash: nothing to follow.
+		$this->store[self::MODULE]['module-stale-8'] = array_merge($this->store[self::MODULE][$eight], ['id' => 'module-stale-8']);
+		$this->store[self::USAGE]['usage-stale-8'] = array_merge($this->store[self::USAGE][$this->usageOf(moduleUuid: $eight)], ['id' => 'usage-stale-8', 'module' => 'module-stale-8']);
+		$this->states[self::MODULE]['module-stale-8'] = ['deleted' => ['deletedBy' => 'admin']];
+		$this->states[self::USAGE]['usage-stale-8'] = ['deleted' => ['deletedBy' => 'admin']];
+
+		// APPID 8 also has a second working module with its own usage, which a first-hit match never reaches.
+		$this->store[self::MODULE]['module-dup-8'] = array_merge($this->store[self::MODULE][$eight], ['id' => 'module-dup-8']);
+		$this->store[self::USAGE]['usage-dup-8'] = array_merge($this->store[self::USAGE][$this->usageOf(moduleUuid: $eight)], ['id' => 'usage-dup-8', 'module' => 'module-dup-8']);
+
+		// 7 is on the archive sheet, 8 on no sheet.
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$this->assertSame([[false, true], [false, true]], [$this->stateOf(schema: self::MODULE, uuid: 'module-dup-8'), $this->stateOf(schema: self::USAGE, uuid: 'usage-dup-8')], 'a working duplicate of 8 is deleted with it');
+
+		foreach ([$sevenUsage, 'usage-stray', 'usage-second'] as $usage) {
+			$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $usage), $usage . ' is archived');
+		}
+
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $seven));
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: 'module-stale'), 'the stale module stays in the trash');
+		$this->assertSame([false, true], $this->stateOf(schema: self::USAGE, uuid: 'usage-stale-8'), 'a usage in the trash is never restored');
+		$this->assertNotContains('restore', array_column($this->transitions, 0));
+		$this->assertSame([1, 1], [$report['summary']['archived'], $report['summary']['deleted']], 'one report row per application');
+
+		// The same key on no sheet: every usage is soft-deleted, once.
+		$this->transitions = [];
+		$this->states = array_replace_recursive($this->states, [self::USAGE => [$sevenUsage => ['archived' => null], 'usage-stray' => ['archived' => null], 'usage-second' => ['archived' => null]], self::MODULE => [$seven => ['archived' => null]]]);
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: []))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		foreach ([$sevenUsage, 'usage-stray', 'usage-second'] as $usage) {
+			$this->assertSame([false, true], $this->stateOf(schema: self::USAGE, uuid: $usage), $usage . ' is soft-deleted');
+		}
+
+		$deletes = array_column(array_filter($this->transitions, static fn (array $t): bool => $t[0] === 'delete'), 2);
+		$this->assertSame(count($deletes), count(array_unique($deletes)), 'nothing is deleted twice');
+	}//end testEveryOtherUsageOfAKeyFollowsTheApplication()
+
+	/**
+	 * One application that cannot be archived is a failed row; the others are still reconciled.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAFailingArchiveIsAFailedRowAndTheOthersAreReconciled(): void {
+		$this->importOneSevenAndEight();
+		$seven = $this->moduleOf(appId: '7');
+		$this->beforeTransition = function (string $verb, string $uuid) use ($seven): void {
+			if ($uuid === $seven) {
+				throw new RuntimeException('Schema "Applicatie 7" does not declare x-openregister-archive');
+			}
+		};
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7', '8']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$rows = array_values(array_filter($report['rows'], static fn (array $row): bool => $row['row'] === 0));
+		$this->assertSame(['failed', 'archived'], array_column($rows, 'outcome'));
+		$this->assertSame(['step "archive" failed (RuntimeException)'], $rows[0]['reasons']);
+		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $this->usageOf(moduleUuid: $seven)), 'the usage went first');
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $this->moduleOf(appId: '8')));
+		$this->assertSame(1, $report['summary']['failed']);
+		$failed = array_values(array_filter($this->logLines, static fn (string $line): bool => str_starts_with($line, 'CmdbExportImportService: row failed')));
+		$this->assertCount(1, $failed);
+		$this->assertStringNotContainsString('Applicatie 7', $failed[0]);
+	}//end testAFailingArchiveIsAFailedRowAndTheOthersAreReconciled()
+
+	/**
+	 * Without OpenRegister's archive services an archiving import is refused before the file is read; keep still imports.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testMissingArchiveServicesRefuseAnArchivingImport(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->archiveServicesAvailable = false;
+		$reader = new class extends CmdbWorkbookReader {
+			/**
+			 * Constructor.
+			 */
+			public function __construct() {
+			}
+
+			/**
+			 * Never reached.
+			 *
+			 * @param string $path Ignored.
+			 * @param CmdbImportProfile $profile Ignored.
+			 *
+			 * @return array<string, mixed>
+			 */
+			public function read(string $path, CmdbImportProfile $profile): array {
+				throw new RuntimeException('the file was read');
+			}
+		};
+
+		try {
+			$this->service(reader: $reader)->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+			$this->fail('ARCHIVE_UNAVAILABLE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('ARCHIVE_UNAVAILABLE', $e->getErrorCode());
+			$this->assertSame(503, $e->getHttpStatus());
+		}
+
+		$this->assertSame([], $this->saves);
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+		$this->assertSame(['created'], array_column($report['rows'], 'outcome'));
+	}//end testMissingArchiveServicesRefuseAnArchivingImport()
+
+	/**
+	 * An archived application that returns is unarchived and a soft-deleted one restored, before the write; no duplicates.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 */
+	public function testAReturningApplicationIsUnarchivedOrRestoredNotDuplicated(): void {
+		$this->importOneSevenAndEight();
+		[$seven, $eight] = [$this->moduleOf(appId: '7'), $this->moduleOf(appId: '8')];
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7']))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$modules = count($this->store[self::MODULE]);
+		$usages = count($this->store[self::USAGE]);
+		$this->transitions = [];
+
+		$rows = [
+			$this->row(appId: '1'),
+			$this->row(appId: '7', row: 3, sheet: 'Onbeh Applicaties CMDB', cells: ['Applicatie Naam' => 'Terug']),
+			$this->row(appId: '8', row: 4),
+		];
+		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(['unchanged', 'unarchived', 'restored'], array_column($report['rows'], 'outcome'));
+		$this->assertSame([1, 1], [$report['summary']['unarchived'], $report['summary']['restored']]);
+		$this->assertSame([$modules, $usages], [count($this->store[self::MODULE]), count($this->store[self::USAGE])], 'no second module or usage');
+		foreach ([$seven, $eight] as $module) {
+			$this->assertSame([false, false], $this->stateOf(schema: self::MODULE, uuid: $module));
+			$this->assertSame([false, false], $this->stateOf(schema: self::USAGE, uuid: $this->usageOf(moduleUuid: $module)));
+		}
+
+		$this->assertSame('Terug', $this->store[self::MODULE][$seven]['name'], 'the row is updated after the unarchive');
+		$this->assertSame(['unarchive', 'unarchive', 'restore', 'restore'], array_column($this->transitions, 0));
+	}//end testAReturningApplicationIsUnarchivedOrRestoredNotDuplicated()
+
+	/**
+	 * A usage archived or soft-deleted on its own, next to a working module, is unarchived or restored when its row returns.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 */
+	public function testAReturningUsageIsUnarchivedOrRestoredOnItsOwn(): void {
+		$this->importOneSevenAndEight();
+		[$seven, $eight] = [$this->moduleOf(appId: '7'), $this->moduleOf(appId: '8')];
+		[$usageSeven, $usageEight] = [$this->usageOf(moduleUuid: $seven), $this->usageOf(moduleUuid: $eight)];
+		$this->states[self::USAGE][$usageSeven] = ['archived' => ['by' => 'admin', 'at' => '2026-10-01T00:00:00+00:00', 'reason' => 'by hand']];
+		$this->states[self::USAGE][$usageEight] = ['deleted' => ['deletedBy' => 'admin', 'deletedAt' => '2026-10-01T00:00:00+00:00']];
+		$usages = array_keys($this->store[self::USAGE]);
+
+		$rows = [$this->row(appId: '7', sheet: 'Onbeh Applicaties CMDB'), $this->row(appId: '8', row: 3)];
+		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+
+		$this->assertSame(['unarchived', 'restored'], array_column($report['rows'], 'outcome'));
+		$this->assertSame([$usageSeven, $usageEight], array_column($report['rows'], 'usageUuid'));
+		$this->assertSame($usages, array_keys($this->store[self::USAGE]), 'no second usage');
+		$this->assertSame([false, false], $this->stateOf(schema: self::USAGE, uuid: $usageSeven));
+		$this->assertSame([false, false], $this->stateOf(schema: self::USAGE, uuid: $usageEight));
+		$this->assertSame([['unarchive', $usageSeven], ['restore', $usageEight]], array_map(static fn (array $t): array => [$t[0], $t[2]], $this->transitions));
+	}//end testAReturningUsageIsUnarchivedOrRestoredOnItsOwn()
+
+	/**
+	 * An application soft-deleted while archived is restored and unarchived when it returns, and updated from the restored object.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 */
+	public function testAnApplicationDeletedWhileArchivedIsRestoredAndUnarchived(): void {
+		$this->importOneSevenAndEight();
+		$seven = $this->moduleOf(appId: '7');
+		$usage = $this->usageOf(moduleUuid: $seven);
+		$marker = [
+			'archived' => ['by' => 'admin', 'at' => '2026-10-01T00:00:00+00:00', 'reason' => 'cmdb-import: on sheet'],
+			'deleted' => ['deletedBy' => 'admin', 'deletedAt' => '2026-10-02T00:00:00+00:00'],
+		];
+		$this->states[self::MODULE][$seven] = $marker;
+		$this->states[self::USAGE][$usage] = $marker;
+		$counts = [count($this->store[self::MODULE]), count($this->store[self::USAGE])];
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '7', sheet: 'Onbeh Applicaties CMDB', cells: ['Applicatie Naam' => 'Terug'])]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+
+		$this->assertSame(['restored'], array_column($report['rows'], 'outcome'));
+		$this->assertSame(
+			[['restore', $seven], ['unarchive', $seven], ['restore', $usage], ['unarchive', $usage]],
+			array_map(static fn (array $t): array => [$t[0], $t[2]], $this->transitions)
+		);
+		$this->assertSame([false, false], $this->stateOf(schema: self::MODULE, uuid: $seven));
+		$this->assertSame([false, false], $this->stateOf(schema: self::USAGE, uuid: $usage));
+		$this->assertSame($counts, [count($this->store[self::MODULE]), count($this->store[self::USAGE])], 'no second module or usage');
+		$this->assertSame('Terug', $this->store[self::MODULE][$seven]['name']);
+		$this->assertSame('7', $this->store[self::MODULE][$seven]['externalNumber'], 'the update starts from the restored object, not from the trash listing');
+	}//end testAnApplicationDeletedWhileArchivedIsRestoredAndUnarchived()
+
+	/**
+	 * A soft-deleted application the archive sheet lists is restored and archived, and the trash is read once.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testADeletedApplicationOnTheArchiveSheetIsRestoredAndArchived(): void {
+		$this->importOneSevenAndEight();
+		$seven = $this->moduleOf(appId: '7');
+		$usage = $this->usageOf(moduleUuid: $seven);
+		$this->states[self::MODULE][$seven] = ['deleted' => ['deletedBy' => 'admin', 'deletedAt' => '2026-10-02T00:00:00+00:00']];
+		$this->states[self::USAGE][$usage] = ['deleted' => ['deletedBy' => 'admin', 'deletedAt' => '2026-10-02T00:00:00+00:00']];
+		$this->trashReads = 0;
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1'), $this->row(appId: '8', row: 3)], archived: ['7']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(
+			[['restore', $usage], ['archive', $usage], ['restore', $seven], ['archive', $seven]],
+			array_map(static fn (array $t): array => [$t[0], $t[2]], $this->transitions)
+		);
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $seven));
+		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $usage));
+		$reconciled = array_values(array_filter($report['rows'], static fn (array $row): bool => $row['row'] === 0));
+		$this->assertSame([['7', 'archived']], array_map(static fn (array $row): array => [$row['appId'], $row['outcome']], $reconciled));
+		$this->assertSame(1, $this->trashReads, 'the trash is read once per import, not per row');
+	}//end testADeletedApplicationOnTheArchiveSheetIsRestoredAndArchived()
+
+	/**
+	 * A trash listing that throws fails its row and is read again by the next row, which restores instead of duplicating.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 */
+	public function testAFailedTrashReadIsNotCachedForTheNextRow(): void {
+		$this->importOneSevenAndEight();
+		$deleted = ['deleted' => ['deletedBy' => 'admin', 'deletedAt' => '2026-10-02T00:00:00+00:00']];
+		foreach (['7', '8'] as $appId) {
+			$module = $this->moduleOf(appId: $appId);
+			$this->states[self::MODULE][$module] = $deleted;
+			$this->states[self::USAGE][$this->usageOf(moduleUuid: $module)] = $deleted;
+		}
+
+		$counts = [count($this->store[self::MODULE]), count($this->store[self::USAGE])];
+		$this->trashReads = 0;
+		$this->trashFailures = 1;
+
+		$rows = [$this->row(appId: '8', row: 2), $this->row(appId: '7', row: 3, sheet: 'Onbeh Applicaties CMDB')];
+		$report = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+
+		$this->assertSame(['failed', 'restored'], array_column($report['rows'], 'outcome'));
+		$this->assertSame(2, $this->trashReads, 'the failed read is not cached');
+		$this->assertSame($counts, [count($this->store[self::MODULE]), count($this->store[self::USAGE])], 'no second module or usage');
+	}//end testAFailedTrashReadIsNotCachedForTheNextRow()
+
+	/**
+	 * With updateExisting false a returning application is skipped as `exists` and stays archived.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 */
+	public function testUpdateExistingFalseLeavesAnArchivedMatchArchived(): void {
+		$this->importOneSevenAndEight();
+		$seven = $this->moduleOf(appId: '7');
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1'), $this->row(appId: '8', row: 3)], archived: ['7']))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$modules = $this->store[self::MODULE];
+		$this->transitions = [];
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '7', sheet: 'Onbeh Applicaties CMDB')]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'updateExisting' => false, 'missingRecords' => 'keep']);
+
+		$this->assertSame(['skipped'], array_column($report['rows'], 'outcome'));
+		$this->assertSame(['exists'], $report['rows'][0]['reasons']);
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $seven));
+		$this->assertSame([], $this->transitions);
+		$this->assertSame($modules, $this->store[self::MODULE]);
+	}//end testUpdateExistingFalseLeavesAnArchivedMatchArchived()
+
+	/**
+	 * A module and usage deleted by hand next to the working ones with the same import key stay in the trash.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 */
+	public function testAWorkingMatchWinsOverADeletedOneWithTheSameKey(): void {
+		$this->importOneSevenAndEight();
+		$seven = $this->moduleOf(appId: '7');
+		$usage = $this->usageOf(moduleUuid: $seven);
+		// Stored ahead of the working ones, so a first-hit match would find them first.
+		$this->store[self::MODULE] = ['module-deleted' => array_merge($this->store[self::MODULE][$seven], ['id' => 'module-deleted'])] + $this->store[self::MODULE];
+		$this->store[self::USAGE] = ['usage-deleted' => array_merge($this->store[self::USAGE][$usage], ['id' => 'usage-deleted'])] + $this->store[self::USAGE];
+		$this->states[self::MODULE]['module-deleted'] = ['deleted' => ['deletedBy' => 'admin', 'deletedAt' => '2026-10-01T00:00:00+00:00']];
+		$this->states[self::USAGE]['usage-deleted'] = ['deleted' => ['deletedBy' => 'admin', 'deletedAt' => '2026-10-01T00:00:00+00:00']];
+		$counts = [count($this->store[self::MODULE]), count($this->store[self::USAGE])];
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '7', sheet: 'Onbeh Applicaties CMDB', cells: ['Applicatie Naam' => 'Terug'])]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+
+		$this->assertSame(['updated'], array_column($report['rows'], 'outcome'));
+		$this->assertSame($seven, $report['rows'][0]['moduleUuid']);
+		$this->assertSame('Terug', $this->store[self::MODULE][$seven]['name']);
+		$this->assertSame([], $this->transitions, 'nothing is restored');
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: 'module-deleted'));
+		$this->assertSame([false, true], $this->stateOf(schema: self::USAGE, uuid: 'usage-deleted'));
+		$this->assertSame($counts, [count($this->store[self::MODULE]), count($this->store[self::USAGE])], 'no module or usage is created');
+	}//end testAWorkingMatchWinsOverADeletedOneWithTheSameKey()
+
+	/**
+	 * The fixture round trip of the e2e test: the later export archives 1234 and deletes 2, the original brings both back.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
+	 */
+	public function testTheArchivedApplicationsFixtureArchivesDeletesAndBringsBack(): void {
+		$path = $this->fixture();
+		$options = ['municipalityName' => 'Gemeente Voorbeeldstad'];
+		$this->service()->import(path: $path, options: $options);
+		$counts = [count($this->store[self::MODULE]), count($this->store[self::USAGE]), count($this->store[self::CONTACT_PERSON])];
+		[$archived, $deleted] = [$this->moduleOf(appId: '1234'), $this->moduleOf(appId: '2')];
+
+		$report = $this->service()->import(path: CmdbTestSupport::fixtures() . '/topdesk-archived-applications.xlsx', options: $options);
+
+		$this->assertSame(['archived', 'deleted'], array_column($report['rows'], 'outcome'));
+		$this->assertSame(['1234', '2'], array_column($report['rows'], 'appId'));
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $archived));
+		$this->assertSame([false, true], $this->stateOf(schema: self::MODULE, uuid: $deleted));
+		$this->assertSame([], $report['importWarnings']);
+
+		$back = $this->service()->import(path: $path, options: $options);
+
+		$this->assertSame(['unarchived', 'restored'], array_column($back['rows'], 'outcome'));
+		$this->assertSame($counts, [count($this->store[self::MODULE]), count($this->store[self::USAGE]), count($this->store[self::CONTACT_PERSON])]);
+		$this->assertSame([false, false], $this->stateOf(schema: self::MODULE, uuid: $archived));
+		$this->assertSame([false, false], $this->stateOf(schema: self::MODULE, uuid: $deleted));
+	}//end testTheArchivedApplicationsFixtureArchivesDeletesAndBringsBack()
+
+	/**
+	 * The reconciliation reports its own progress phase and advances per application.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testTheReconciliationHasItsOwnProgressPhase(): void {
+		$this->importOneSevenAndEight();
+		$seen = [];
+		$this->beforeTransition = function () use (&$seen): void {
+			$progress = $this->tracker->getProgress(operationId: 'cmdb-reconcile-1');
+			$seen[] = [$progress['phase'], $progress['processed_items'], $progress['total_items']];
+		};
+
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7', '8']))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-reconcile-1']);
+
+		// One row, then three usages in scope: APPID 1 (on a CMDB sheet), 7 and 8.
+		$this->assertSame([['reconciling', 2, 4], ['reconciling', 2, 4], ['reconciling', 3, 4], ['reconciling', 3, 4]], $seen);
+		$this->assertSame('completed', $this->cache['progress_cmdb-reconcile-1']['status']);
+		$this->assertSame(4, $this->cache['progress_cmdb-reconcile-1']['processed_items']);
+	}//end testTheReconciliationHasItsOwnProgressPhase()
 
 	/**
 	 * An unknown Applicatie Status drops only that field and warns with column and value.
@@ -1806,7 +3192,7 @@ class CmdbExportImportServiceTest extends TestCase {
 			options: ['municipalityUuid' => 'muni-1', 'updateExisting' => false, 'publish' => false, 'operationId' => 'cmdb-audit-01', 'fileName' => 'C:\\Users\\beheer\\export.xlsx']
 		);
 
-		$audit = '"operationId":"cmdb-audit-01","uid":"admin","fileName":"export.xlsx","municipality":"muni-1","municipalityCreated":false,"updateExisting":false,"publish":false';
+		$audit = '"operationId":"cmdb-audit-01","uid":"admin","fileName":"export.xlsx","municipality":"muni-1","municipalityCreated":false,"updateExisting":false,"publish":false,"missingRecords":"archive"';
 		$started = array_values(array_filter($this->logLines, static fn (string $line): bool => str_starts_with($line, 'CmdbExportImportService: import started')));
 		$finished = array_values(array_filter($this->logLines, static fn (string $line): bool => str_starts_with($line, 'CmdbExportImportService: import finished')));
 		$this->assertCount(1, $started);
@@ -1879,7 +3265,7 @@ class CmdbExportImportServiceTest extends TestCase {
 
 		$this->assertSame(['created', 'failed', 'created'], array_column($report['rows'], 'outcome'));
 		$this->assertStringStartsWith('step "module" failed', $report['rows'][1]['reasons'][0]);
-		$this->assertSame(['rowsRead' => 3, 'processed' => 3, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 1, 'warnings' => 0, 'unpublished' => 0], $report['summary']);
+		$this->assertSame(['rowsRead' => 3, 'processed' => 3, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 1, 'archived' => 0, 'unarchived' => 0, 'deleted' => 0, 'restored' => 0, 'warnings' => 0, 'unpublished' => 0], $report['summary']);
 		$this->assertCount(2, $this->store[self::MODULE]);
 	}//end testOneBadRowDoesNotStopTheOthers()
 
@@ -2151,7 +3537,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testCancelNeedsARunningImport()
 
 	/**
-	 * A cancel that arrives after the last row's check leaves no flag that a later run with the same id would inherit.
+	 * A cancel that arrives after the last row's check, with records kept, leaves no flag that a later run with the same id would inherit.
 	 *
 	 * @return void
 	 */
@@ -2165,7 +3551,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		};
 		$service = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', row: 2)]));
 
-		$report = $service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-late-cancel-1']);
+		$report = $service->import(path: '', options: ['municipalityUuid' => 'muni-1', 'operationId' => 'cmdb-late-cancel-1', 'missingRecords' => 'keep']);
 
 		$this->assertFalse($report['cancelled'], 'the only row was already done');
 		$this->assertSame('completed', $this->cache['progress_cmdb-late-cancel-1']['status']);

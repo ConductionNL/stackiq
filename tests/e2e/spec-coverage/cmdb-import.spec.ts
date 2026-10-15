@@ -28,6 +28,15 @@
  * The last test checks, without signing in, that the imported owners are
  * not readable anonymously: neither through OpenRegister's objects API nor
  * in an OpenCatalogi search hit (skipped when OpenCatalogi is not installed).
+ *
+ * openspec/changes/cmdb-import-archive-reconciliation: a later export that
+ * moved APPID 1234 to "Gearchiveerde Applicaties" and dropped APPID 2 archives
+ * the one and moves the other to the trash, the Applications page lists 1234
+ * under "Archived", and the original export brings both back. The cleanup
+ * looks through OpenRegister's archive lens too, so an interrupted run
+ * leaves no archived application of the run's municipality behind; a
+ * soft-deleted one cannot be listed and stays in the trash until its purge
+ * date (design.md, D9).
  */
 
 import type { APIRequestContext, Locator, Page, Response } from '@playwright/test'
@@ -45,10 +54,18 @@ import {
 	resolveConfig,
 	RUN_ID,
 } from '../workflows/_fixtures.ts'
+import { dismissSupportDialog, gotoAppRoute } from './_helpers.ts'
 
 const FIXTURES_DIR = path.resolve(__dirname, '../../fixtures/cmdb')
 const EXPORT_FIXTURE = path.join(FIXTURES_DIR, 'topdesk-export-anonymised.xlsx')
 const MISSING_COLUMN_FIXTURE = path.join(FIXTURES_DIR, 'topdesk-missing-appid.xlsx')
+// The later export: APPID 1234 only on "Gearchiveerde Applicaties", APPID 2 on no sheet.
+const ARCHIVED_FIXTURE = path.join(
+	FIXTURES_DIR,
+	'topdesk-archived-applications.xlsx',
+)
+// The application name of APPID 1234 in the anonymised export.
+const ARCHIVED_APPLICATION_NAME = 'Aangetekend Mailen'
 // The owner values the anonymised export holds (tests/fixtures/cmdb/README.md).
 const OWNER_VALUES = ['Achternaam', 'Voornaam', 'Teamleider Applicatiebeheer']
 
@@ -120,6 +137,39 @@ async function objectsOfMunicipality(
 ): Promise<Array<Record<string, unknown>>> {
 	const rows = await findAll(ctx, config.register, schema)
 	return rows.filter((row) => JSON.stringify(row).includes(uuid))
+}
+
+/**
+ * The objects of a schema that mention a municipality, through OpenRegister's
+ * archive and trash lenses: `_archived` `true` lists the archive alone, `any`
+ * the archive and the working set. `_includeDeleted` is sent for completeness:
+ * the list cannot return a soft-deleted row even then (design.md, D9).
+ *
+ * @param ctx The API context
+ * @param schema The schema id
+ * @param lens The list lenses
+ * @param lens.archived The `_archived` value
+ * @param lens.includeDeleted Whether the trash is included
+ * @param uuid The municipality, by default the run's chosen one
+ */
+async function objectsInLens(
+	ctx: APIRequestContext,
+	schema: string,
+	lens: { archived: 'true' | 'any'; includeDeleted: boolean },
+	uuid: string = municipalityUuid,
+): Promise<Array<Record<string, unknown>>> {
+	const res = await ctx.get(
+		`/index.php/apps/openregister/api/objects/${config.register}/${schema}?_limit=5000&_archived=${lens.archived}&_includeDeleted=${lens.includeDeleted}`,
+	)
+	expect(
+		res.ok(),
+		`Listing ${schema} with _archived=${lens.archived} failed with ${res.status()}`,
+	).toBe(true)
+	const body = await res.json()
+	const list = body?.results ?? body ?? []
+	return (Array.isArray(list) ? list : []).filter((row) =>
+		JSON.stringify(row).includes(uuid),
+	)
 }
 
 /**
@@ -312,9 +362,12 @@ test.describe.serial('CMDB import section', () => {
 					config.contactpersoon_schema,
 					config.module_schema,
 				]) {
-					for (const row of await objectsOfMunicipality(
+					// Archived objects too: the archive test may have stopped half-way. A
+					// soft-deleted one is not listable and stays in the trash until it is purged.
+					for (const row of await objectsInLens(
 						ctx,
 						schema,
+						{ archived: 'any', includeDeleted: true },
 						uuid,
 					)) {
 						const id = String(
@@ -455,6 +508,153 @@ test.describe.serial('CMDB import section', () => {
 
 		// Same number of modules, usages, contact persons and municipalities.
 		expect(await countWritten(ctx)).toEqual(before)
+		await ctx.dispose()
+	})
+
+	// @e2e cmdb-export-import::an-application-that-moved-to-the-archive-sheet-is-archived
+	// @e2e cmdb-export-import::the-applications-page-lists-the-archive-on-request
+	// @e2e cmdb-export-import::an-archived-application-returns-to-the-export
+	test('a later export archives what moved to the archive sheet, deletes what left, and the original brings both back', async ({
+		page,
+	}) => {
+		requireFixture(EXPORT_FIXTURE)
+		requireFixture(ARCHIVED_FIXTURE)
+		const ctx = await newApiContext()
+		const before = await countWritten(ctx)
+		expect(
+			before.modules,
+			'the first import must have written the modules this test archives and deletes',
+		).toBeGreaterThan(0)
+		const archivedModules = async () =>
+			(
+				await objectsInLens(ctx, config.module_schema, {
+					archived: 'true',
+					includeDeleted: false,
+				})
+			).map((row) => String(row.externalNumber ?? ''))
+
+		// 1. The later export, with the default choice: archive or delete.
+		let section = await gotoCmdbSection(page)
+		await chooseMunicipality(page)
+		await expect(
+			section.locator(
+				'[data-testid="cmdb-import-missing-records-archive"] input',
+			),
+		).toBeChecked()
+		let response = await runImport(page, ARCHIVED_FIXTURE)
+		expect(response.status()).toBe(200)
+
+		await expect(summaryValue(page, 'rowsRead')).toHaveText('0')
+		await expect(summaryValue(page, 'archived')).toHaveText('1')
+		await expect(summaryValue(page, 'deleted')).toHaveText('1')
+		await expect(
+			reportRows(page).locator('[data-outcome="archived"]'),
+		).toHaveCount(1)
+		await expect(
+			reportRows(page).locator('[data-outcome="deleted"]'),
+		).toHaveCount(1)
+
+		// 1234 is in the archive, 2 in the trash; neither is in the working set.
+		expect(await archivedModules()).toEqual(['1234'])
+		const working = await countWritten(ctx)
+		expect(working.modules).toBe(before.modules - 2)
+		expect(working.usages).toBe(before.usages - 2)
+		// Contact persons are never archived or deleted.
+		expect(working.contactPersons).toBe(before.contactPersons)
+
+		// 2. The Applications page lists 1234 only under the quick filter "Archived".
+		await gotoAppRoute(page, '/modules')
+		await dismissSupportDialog(page)
+		// Not under the default tab. Nextcloud keeps polls open, so no network
+		// idle wait: wait until the list shows a working application (the
+		// export brought more than the two this test took out), then look.
+		expect(
+			working.modules,
+			'the working set must still hold an application the list can show',
+		).toBeGreaterThan(0)
+		await expect(
+			page.locator('.faceted-catalog-index__list tbody tr').first(),
+		).toBeVisible({
+			timeout: 30000,
+		})
+		await expect(page.getByText(ARCHIVED_APPLICATION_NAME)).toHaveCount(0)
+		await page.getByRole('tab', { name: 'Archived', exact: true }).click()
+		await expect(page.getByText(ARCHIVED_APPLICATION_NAME).first()).toBeVisible({
+			timeout: 30000,
+		})
+
+		// 3. The original export brings both back: no duplicates.
+		section = await gotoCmdbSection(page)
+		await chooseMunicipality(page)
+		response = await runImport(page, EXPORT_FIXTURE)
+		expect(response.status()).toBe(200)
+
+		await expect(summaryValue(page, 'unarchived')).toHaveText('1')
+		await expect(summaryValue(page, 'restored')).toHaveText('1')
+		await expect(
+			section.locator('[data-testid="cmdb-import-error"]'),
+		).toHaveCount(0)
+		expect(await archivedModules()).toEqual([])
+		expect(await countWritten(ctx)).toEqual(before)
+		await ctx.dispose()
+	})
+
+	// @e2e cmdb-export-import::the-admin-chooses-to-keep-missing-applications
+	test('choosing "Keep them as they are" leaves the applications a later export no longer lists as they are', async ({
+		page,
+	}) => {
+		requireFixture(EXPORT_FIXTURE)
+		requireFixture(ARCHIVED_FIXTURE)
+		const ctx = await newApiContext()
+		const before = await countWritten(ctx)
+		expect(
+			before.modules,
+			'the first import must have written the modules this test keeps',
+		).toBeGreaterThan(0)
+
+		// The same later export as the archive test, which archives 1234 and deletes 2.
+		const section = await gotoCmdbSection(page)
+		await chooseMunicipality(page)
+		const keep = section.locator(
+			'[data-testid="cmdb-import-missing-records-keep"] input',
+		)
+		await keep.check()
+		await expect(keep).toBeChecked()
+		await expect(
+			section.locator(
+				'[data-testid="cmdb-import-missing-records-archive"] input',
+			),
+		).not.toBeChecked()
+		const response = await runImport(page, ARCHIVED_FIXTURE)
+		expect(response.status()).toBe(200)
+		// The request carries the choice, not the default.
+		expect(response.request().postData() ?? '').toMatch(
+			/name="missingRecords"\s+keep/,
+		)
+
+		await expect(summaryValue(page, 'rowsRead')).toHaveText('0')
+		// The archived and deleted tiles only exist when the import did either.
+		await expect(
+			section.locator('[data-testid="cmdb-import-summary-archived"]'),
+		).toHaveCount(0)
+		await expect(
+			section.locator('[data-testid="cmdb-import-summary-deleted"]'),
+		).toHaveCount(0)
+		await expect(
+			reportRows(page).locator('[data-outcome="archived"]'),
+		).toHaveCount(0)
+		await expect(
+			reportRows(page).locator('[data-outcome="deleted"]'),
+		).toHaveCount(0)
+
+		// Both applications are still in the working set; nothing is archived.
+		expect(await countWritten(ctx)).toEqual(before)
+		expect(
+			await objectsInLens(ctx, config.module_schema, {
+				archived: 'true',
+				includeDeleted: false,
+			}),
+		).toEqual([])
 		await ctx.dispose()
 	})
 

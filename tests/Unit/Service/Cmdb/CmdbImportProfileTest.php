@@ -306,4 +306,28 @@ class CmdbImportProfileTest extends TestCase {
 		$profile = new CmdbImportProfile(container: $this->emptyContainer(), directory: '/nonexistent');
 		$this->assertSame(CmdbImportProfile::DEFAULT_MAX_FILE_BYTES, $profile->maxFileBytes());
 	}//end testTheUploadLimitNeedsNoOpenRegister()
+
+	/**
+	 * The archive sheet is read after the source sheets, and the accepted missingRecords values need no OpenRegister.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
+	 */
+	public function testTheArchiveSheetAndTheMissingRecordsModes(): void {
+		$profile = new CmdbImportProfile(container: $this->emptyContainer());
+		$this->assertSame(['keep', 'archive'], $profile->missingRecordsModes(), 'readable before load(), without the pack validator');
+
+		CmdbTestSupport::loadMigrationPack();
+		$profile->load();
+		$this->assertSame('Gearchiveerde Applicaties', $profile->archiveSheetName());
+		$this->assertSame(
+			['Onbeh Applicaties CMDB', 'Beheerde Applicaties CMDB', 'Gearchiveerde Applicaties'],
+			$profile->readSheetNames()
+		);
+		$this->assertNotContains('Gearchiveerde Applicaties', $profile->sheetNames(), 'the archive sheet holds no rows to import');
+
+		$missing = new CmdbImportProfile(container: $this->emptyContainer(), directory: '/nonexistent');
+		$this->assertSame(['keep'], $missing->missingRecordsModes(), 'without a profile only keep is safe');
+	}//end testTheArchiveSheetAndTheMissingRecordsModes()
 }//end class

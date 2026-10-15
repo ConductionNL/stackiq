@@ -1,15 +1,16 @@
 ---
 capability: cmdb-export-import
-status: done
+status: in-progress
 built_by: openspec/changes/archive/2026-10-05-cmdb-export-import
 ---
 
 # cmdb-export-import Specification
 
-**Status**: done
+**Status**: in-progress
 **Scope**: stackiq
 **OpenSpec changes**:
 - [cmdb-export-import](../../changes/archive/2026-10-05-cmdb-export-import/) _(archived 2026-10-05)_ — admin uploads a TOPdesk CMDB export (xlsx); stackiq upserts modules, vendor organisations, usages and owner contact persons for one municipality from the two CMDB sheets, matched on APPID, mapped by OpenRegister migration packs (kind: code)
+- [cmdb-import-archive-reconciliation](../../changes/cmdb-import-archive-reconciliation/) — a re-import archives the applications that moved to the sheet "Gearchiveerde Applicaties" and soft-deletes the ones on no sheet, revives the ones that return, with `missingRecords: keep | archive` (default archive) and an "Archived" quick filter (kind: code)
 
 ## Purpose
 
@@ -294,7 +295,7 @@ For each row the service SHALL compute `externalKey` = `topdesk:<municipality uu
 - **AND** a module with that key that "Gemeente Voorbeeldstad" uses, or that no organisation uses yet, SHALL be updated as before
 
 #### Scenario: Only an admin can change the import key
-@e2e exclude Property-level write rules are enforced by OpenRegister's PropertyRbacHandler; tests/Unit/Settings/TopdeskCmdbFragmentTest.php testTheMergedModuleIsVersion038WithTheExternalIds asserts the merged module schema gives externalKey the update rule `admin` next to its read rule.
+@e2e exclude Property-level write rules are enforced by OpenRegister's PropertyRbacHandler; tests/Unit/Settings/TopdeskCmdbFragmentTest.php testTheMergedModuleIsVersion039WithTheExternalIds asserts the merged module schema gives externalKey the update rule `admin` next to its read rule.
 
 - **GIVEN** a signed-in member of `software-catalog-admins` who is not a Nextcloud admin
 - **WHEN** they save a module with a changed `externalKey`

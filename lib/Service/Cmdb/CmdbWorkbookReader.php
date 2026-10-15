@@ -42,6 +42,9 @@
  *    beyond twice the row limit is `TOO_MANY_ROWS`. A read filter then materialises only the
  *    header row and the resolved columns of the rows up to that bound
  *    (CmdbReadFilter), which bounds the cell objects, not the parse.
+ * 7. The archive sheet ("Gearchiveerde Applicaties"), when the workbook has
+ *    it, counts as a read sheet for every bound above, and only its key
+ *    column is resolved and read (openspec/changes/cmdb-import-archive-reconciliation).
  *
  * @category  Service
  * @package   OCA\Stackiq\Service\Cmdb
@@ -151,17 +154,38 @@ class CmdbWorkbookReader {
 	 * The sheets are then read twice through a read filter: once for the
 	 * header row, once for the resolved columns of the data rows, so no other
 	 * cell is ever materialised.
+	 * The archive sheet, when the workbook has it, is read under the same
+	 * bounds as a source sheet, for its key column only. A row whose key is a
+	 * formula without a cached value is read as empty, as on a source sheet,
+	 * and its row number is listed in `archive.uncachedRows`: the sheet then
+	 * lists an application the reader could not see, so a caller must not
+	 * treat the sheet as complete.
+	 * The `appIds` are the raw key-column values as read, in sheet order:
+	 * not trimmed, not normalised and not de-duplicated, and an empty cell
+	 * is an empty entry. Matching them to the stored applications, and any
+	 * normalisation that needs, is the consumer's job.
+	 * The referenced-string budget (`maxReferencedStringBytes`) is divided
+	 * over every sheet in the profile's `readSheetNames()`, so the archive
+	 * sheet always counts as one of them, also in a workbook that has no
+	 * archive sheet: each sheet's share is limit / sheet count (limit / 3 for
+	 * the Topdesk profile). This is deliberate: the bound does not depend on
+	 * what the workbook contains.
 	 *
 	 * @param string $path The xlsx file, already checked by assertXlsx().
 	 * @param CmdbImportProfile $profile The import profile.
 	 *
 	 * @return array<string, mixed> `rows` (list of {sheet, row, cells, uncached}), `importWarnings`
-	 *                              (list of {sheet, message}) and `date1904` (bool).
+	 *                              (list of {sheet, message}), `date1904` (bool), `archive`
+	 *                              ({sheet, present, keyColumnMissing, appIds, uncachedRows}) and `uncachedKeyRows`
+	 *                              (source sheet => numbers of the rows dropped as empty because their key is a
+	 *                              formula without a cached value; a row with other content is in `rows`, its
+	 *                              `uncached` lists the key).
 	 *
 	 * @throws CmdbImportException WORKBOOK_TOO_LARGE, READER_UNAVAILABLE, NOT_XLSX, NO_SOURCE_SHEET,
 	 *                             MISSING_COLUMN or TOO_MANY_ROWS.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	public function read(string $path, CmdbImportProfile $profile): array {
 		$oversized = $this->assertUncompressedSize(path: $path, limit: $profile->maxUncompressedBytes(), partLimit: $profile->maxPartBytes());
@@ -177,7 +201,7 @@ class CmdbWorkbookReader {
 		$blank = (new CmdbPartReferences())->assertPartSizes(
 			path: $path,
 			oversized: $oversized,
-			sourceSheets: $profile->sheetNames(),
+			sourceSheets: $profile->readSheetNames(),
 			limit: $profile->maxPartBytes(),
 			scanner: $scanner
 		);
@@ -303,10 +327,99 @@ class CmdbWorkbookReader {
 		$bounds->assertReferencedStringBytes(
 			path: $path,
 			limit: $profile->maxReferencedStringBytes(),
-			sheetCount: count($profile->sheetNames()),
+			sheetCount: count($profile->readSheetNames()),
 			scanner: $scanner
 		);
 
+		['present' => $present, 'available' => $available] = $this->sourceSheets(path: $path, profile: $profile);
+
+		$archiveSheet = $profile->archiveSheetName();
+		$loaded = $present;
+		if ($archiveSheet !== null && in_array($archiveSheet, $available, true) === true) {
+			$loaded[] = $archiveSheet;
+		}
+
+		$limit = $profile->maxRowsPerSheet();
+		$lastRow = self::lastReadableRow(limit: $limit);
+		$this->assertRowSpan(path: $path, sheetNames: $loaded, lastRow: $lastRow, limit: $limit);
+
+		$headers = $this->load(path: $path, sheetNames: $loaded, filter: new CmdbReadFilter(lastRow: 1));
+		try {
+			$resolved = $this->resolveSheets(spreadsheet: $headers, sheetNames: $present, profile: $profile);
+			$archiveColumns = [];
+			if ($loaded !== $present) {
+				// Only the key column of the archive sheet is read; the allowlist does not grow.
+				$archiveColumns = $this->resolveColumns(worksheet: $headers->getSheetByName($archiveSheet), referenced: [$profile->keyColumn()]);
+			}
+		} finally {
+			$headers->disconnectWorksheets();
+		}
+
+		// A sheet without the key column is not read; the import reports it as missing its key column.
+		$archive = [
+			'sheet' => (string)$archiveSheet,
+			'present' => false,
+			'keyColumnMissing' => ($loaded !== $present && $archiveColumns === []),
+			'appIds' => [],
+			'uncachedRows' => [],
+		];
+		$letters = array_map(static fn (array $columns): array => array_keys($columns), $resolved['columns']);
+		$loaded = $present;
+		if ($archiveColumns !== []) {
+			$letters[$archiveSheet] = array_keys($archiveColumns);
+			$loaded[] = $archiveSheet;
+		}
+
+		$spreadsheet = $this->load(path: $path, sheetNames: $loaded, filter: new CmdbReadFilter(lastRow: $lastRow, columns: $letters));
+		try {
+			$uncachedKeyRows = [];
+			$rows = $this->readSourceRows(
+				spreadsheet: $spreadsheet,
+				sheetNames: $present,
+				columnsPerSheet: $resolved['columns'],
+				limit: $limit,
+				keyColumn: $profile->keyColumn(),
+				uncachedKeyRows: $uncachedKeyRows
+			);
+			if ($archiveColumns !== []) {
+				$unseen = [];
+				$archiveRows = $this->readRows(
+					worksheet: $spreadsheet->getSheetByName($archiveSheet),
+					columns: $archiveColumns,
+					sheetName: (string)$archiveSheet,
+					limit: $limit,
+					unseen: $unseen
+				);
+				$archive['present'] = true;
+				$archive['uncachedRows'] = $unseen;
+				$archive['appIds'] = array_column(array_column($archiveRows, 'cells'), $profile->keyColumn());
+			}
+
+			$date1904 = self::usesDate1904(spreadsheet: $spreadsheet);
+		} finally {
+			$spreadsheet->disconnectWorksheets();
+		}
+
+		return [
+			'rows' => $rows,
+			'importWarnings' => $resolved['warnings'],
+			'date1904' => $date1904,
+			'archive' => $archive,
+			'uncachedKeyRows' => $uncachedKeyRows,
+		];
+	}//end readBounded()
+
+	/**
+	 * The profile's source sheets that the workbook has, and every sheet it has.
+	 *
+	 * @param string $path The xlsx file.
+	 * @param CmdbImportProfile $profile The import profile.
+	 *
+	 * @return array{present: array<int, string>, available: array<int, string>}
+	 *
+	 * @throws CmdbImportException NOT_XLSX when the sheet list cannot be read, NO_SOURCE_SHEET when no source sheet is there.
+	 */
+	private function sourceSheets(string $path, CmdbImportProfile $profile): array {
 		$reader = $this->newReader(sheetNames: null);
 		try {
 			$available = $reader->listWorksheetNames($path);
@@ -328,41 +441,68 @@ class CmdbWorkbookReader {
 			);
 		}
 
-		$limit = $profile->maxRowsPerSheet();
-		$lastRow = self::lastReadableRow(limit: $limit);
-		$this->assertRowSpan(path: $path, sheetNames: $present, lastRow: $lastRow, limit: $limit);
+		return ['present' => $present, 'available' => $available];
+	}//end sourceSheets()
 
-		$headers = $this->load(path: $path, sheetNames: $present, filter: new CmdbReadFilter(lastRow: 1));
-		try {
-			$resolved = $this->resolveSheets(spreadsheet: $headers, sheetNames: $present, profile: $profile);
-		} finally {
-			$headers->disconnectWorksheets();
-		}
-
-		$letters = array_map(static fn (array $columns): array => array_keys($columns), $resolved['columns']);
-		$spreadsheet = $this->load(path: $path, sheetNames: $present, filter: new CmdbReadFilter(lastRow: $lastRow, columns: $letters));
-		try {
-			$rows = [];
-			foreach ($present as $sheetName) {
-				$sheetRows = $this->readRows(
-					worksheet: $spreadsheet->getSheetByName($sheetName),
-					columns: $resolved['columns'][$sheetName],
-					sheetName: $sheetName,
-					limit: $limit
-				);
-				array_push($rows, ...$sheetRows);
+	/**
+	 * The data rows of the source sheets, in sheet order.
+	 *
+	 * @param object $spreadsheet The spreadsheet, loaded through the data-pass read filter.
+	 * @param array<int, string> $sheetNames The source sheets the workbook has.
+	 * @param array<string, array<string, string>> $columnsPerSheet Sheet name => column letter => column name.
+	 * @param int $limit The row limit per sheet.
+	 * @param string $keyColumn The key column's name.
+	 * @param array<string, array<int, int>> $uncachedKeyRows Filled, per sheet, with the number of each row that was
+	 *                                                        dropped as empty only because its key is a formula
+	 *                                                        without a cached value.
+	 *
+	 * @return array<int, array<string, mixed>> See read().
+	 *
+	 * @throws CmdbImportException TOO_MANY_ROWS.
+	 */
+	private function readSourceRows(
+		object $spreadsheet,
+		array $sheetNames,
+		array $columnsPerSheet,
+		int $limit,
+		string $keyColumn,
+		array &$uncachedKeyRows,
+	): array {
+		$rows = [];
+		foreach ($sheetNames as $sheetName) {
+			$unseen = [];
+			$sheetRows = $this->readRows(
+				worksheet: $spreadsheet->getSheetByName($sheetName),
+				columns: $columnsPerSheet[$sheetName],
+				sheetName: $sheetName,
+				limit: $limit,
+				unseen: $unseen,
+				keyColumn: $keyColumn
+			);
+			if ($unseen !== []) {
+				$uncachedKeyRows[$sheetName] = array_values((array)$unseen);
 			}
 
-			$date1904 = false;
-			if (method_exists($spreadsheet, 'getExcelCalendar') === true) {
-				$date1904 = ((int)$spreadsheet->getExcelCalendar() === 1904);
-			}
-		} finally {
-			$spreadsheet->disconnectWorksheets();
+			array_push($rows, ...$sheetRows);
 		}
 
-		return ['rows' => $rows, 'importWarnings' => $resolved['warnings'], 'date1904' => $date1904];
-	}//end readBounded()
+		return $rows;
+	}//end readSourceRows()
+
+	/**
+	 * Whether the workbook uses the 1904 date system.
+	 *
+	 * @param object $spreadsheet The spreadsheet.
+	 *
+	 * @return bool
+	 */
+	private static function usesDate1904(object $spreadsheet): bool {
+		if (method_exists($spreadsheet, 'getExcelCalendar') === false) {
+			return false;
+		}
+
+		return ((int)$spreadsheet->getExcelCalendar() === 1904);
+	}//end usesDate1904()
 
 	/**
 	 * The last row number the data pass reads.
@@ -625,12 +765,22 @@ class CmdbWorkbookReader {
 	 * @param array<string, string> $columns Column letter => column name.
 	 * @param string $sheetName The sheet name.
 	 * @param int $limit The maximum number of non-empty rows.
+	 * @param array<int, int>|null $unseen Filled with the number of each row that read as empty only because
+	 *                                     a formula in it has no cached value; null to not collect them.
+	 * @param string|null $keyColumn When set, only a row whose uncached columns include this one is collected.
 	 *
 	 * @return array<int, array{sheet: string, row: int, cells: array<string, mixed>, uncached: array<int, string>}>
 	 *
 	 * @throws CmdbImportException TOO_MANY_ROWS.
 	 */
-	private function readRows(object $worksheet, array $columns, string $sheetName, int $limit): array {
+	private function readRows(
+		object $worksheet,
+		array $columns,
+		string $sheetName,
+		int $limit,
+		?array &$unseen = null,
+		?string $keyColumn = null,
+	): array {
 		$rows = [];
 		$lastRow = (int)$worksheet->getHighestDataRow();
 		for ($rowNumber = 2; $rowNumber <= $lastRow; $rowNumber++) {
@@ -640,6 +790,10 @@ class CmdbWorkbookReader {
 				rowNumber: $rowNumber
 			);
 			if ($empty === true) {
+				if ($uncached !== [] && $unseen !== null && ($keyColumn === null || in_array($keyColumn, $uncached, true) === true)) {
+					$unseen[] = $rowNumber;
+				}
+
 				continue;
 			}
 
