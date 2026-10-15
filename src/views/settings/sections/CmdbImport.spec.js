@@ -342,6 +342,52 @@ describe('CmdbImport sheet names in the help texts', () => {
 		}
 	})
 
+	it("names the profile's archive sheet in the info panel, and no archive sheet when the profile names none", async () => {
+		const wrapper = await mountWithSlots()
+		const mapping = (archiveSheet) => ({
+			...mappingOf(['Alpha', 'Beta']),
+			profile: { ...mappingOf(['Alpha', 'Beta']).profile, archiveSheet },
+		})
+
+		expect(renderedTexts(wrapper).info).toContain(
+			'of the sheet "Gearchiveerde Applicaties" only the APPID column',
+		)
+
+		wrapper
+			.findComponent(CmdbImportMapping)
+			.vm.$emit('loaded', mapping('Archief'))
+		await flushPromises()
+		expect(renderedTexts(wrapper).info).toContain(
+			'The sheets "Alpha", "Beta" are read, and of the sheet "Archief" only the APPID column',
+		)
+		expect(wrapper.find('.cmdb-import-info').text()).toContain(
+			'archived when the sheet "Archief" lists it',
+		)
+		const tooLarge = {
+			error: 'WORKBOOK_TOO_LARGE',
+			details: { maxUncompressedBytes: 50 * 1024 * 1024 },
+		}
+		await wrapper.setData({ error: tooLarge })
+		expect(wrapper.vm.errorView.hint).toContain(
+			'(it reads "Alpha", "Beta", and the APPID column of "Archief")',
+		)
+		await wrapper.setData({ error: null })
+
+		wrapper.findComponent(CmdbImportMapping).vm.$emit('loaded', mapping(null))
+		await flushPromises()
+		const info = renderedTexts(wrapper).info
+		expect(info).toContain('The sheets "Alpha", "Beta" are read;')
+		expect(info).not.toContain('APPID')
+		const panel = wrapper.find('.cmdb-import-info').text()
+		expect(panel).not.toContain('Gearchiveerde Applicaties')
+		expect(panel).not.toContain('moved to the trash')
+		await wrapper.setData({ error: tooLarge })
+		expect(wrapper.vm.errorView.hint).toContain(
+			'(it reads only "Alpha", "Beta")',
+		)
+		expect(wrapper.vm.errorView.hint).not.toContain('APPID')
+	})
+
 	it("names the profile's sheets in the section's missing-sheet and too-large errors", async () => {
 		const wrapper = await mountWithSlots()
 		wrapper

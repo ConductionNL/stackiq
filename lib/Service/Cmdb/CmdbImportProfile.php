@@ -989,6 +989,7 @@ class CmdbImportProfile {
 				'version' => (string)($profile['version'] ?? ''),
 				'profileFile' => $this->profileFile,
 				'sheets' => $this->sheets(),
+				'archiveSheet' => $this->archiveSheetName(),
 				'sheetPrecedence' => $this->stringList(key: 'sheetPrecedence'),
 				'keyColumn' => $this->keyColumn(),
 				'nameColumn' => $this->nameColumn(),

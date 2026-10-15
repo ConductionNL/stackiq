@@ -22,13 +22,16 @@ import {
 	interruptedImportError,
 	isKnownError,
 	makeCmdbOperationId,
+	mappingArchiveSheet,
 	MISSING_RECORDS_MODES,
+	missingApplicationsText,
 	municipalityOptions,
 	normaliseError,
 	outcomeLabel,
 	OUTCOMES,
 	PROFILE_DEFAULTS,
 	reportRows,
+	sheetsReadText,
 	sortReportRows,
 	typedMunicipalityOption,
 } from './cmdbImport.js'
@@ -470,6 +473,24 @@ describe('errorText', () => {
 		}
 	})
 
+	it('names the archive sheet the profile names in the too-large hint, and none when it names none', () => {
+		const details = { maxUncompressedBytes: 50 * 1024 * 1024 }
+		expect(
+			errorText(
+				{ error: 'WORKBOOK_TOO_LARGE', details },
+				['Blad A'],
+				'Archief',
+			).hint,
+		).toContain('(it reads "Blad A", and the APPID column of "Archief")')
+		const without = errorText(
+			{ error: 'WORKBOOK_TOO_LARGE', details },
+			['Blad A'],
+			null,
+		).hint
+		expect(without).toContain('(it reads only "Blad A")')
+		expect(without).not.toContain('APPID')
+	})
+
 	it('names the part limit and the part, the shared-strings limit or the referenced-text limit the server applied', () => {
 		expect(
 			errorText({
@@ -539,6 +560,53 @@ describe('errorText', () => {
 			details: { sheet: 'Apps & Co <b>', column: 'APPID' },
 		})
 		expect(words.title).toBe('The sheet "Apps & Co <b>" has no column "APPID".')
+	})
+})
+
+/**
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ */
+describe('the archive sheet in the help texts', () => {
+	it("takes the profile's archive sheet once the mapping has loaded, and the shipped one until then", () => {
+		expect(mappingArchiveSheet(null)).toBe(PROFILE_DEFAULTS.archiveSheet)
+		expect(mappingArchiveSheet({ profile: { sheets: [] } })).toBe(
+			PROFILE_DEFAULTS.archiveSheet,
+		)
+		expect(mappingArchiveSheet({ profile: { archiveSheet: 'Archief' } })).toBe(
+			'Archief',
+		)
+		expect(mappingArchiveSheet({ profile: { archiveSheet: null } })).toBeNull()
+		expect(mappingArchiveSheet({ profile: { archiveSheet: '' } })).toBeNull()
+	})
+
+	it('says only the APPID column of the archive sheet is read, and leaves it out when the profile names none', () => {
+		expect(sheetsReadText(['Blad A', 'Blad B'], 'Archief')).toBe(
+			'The sheets "Blad A", "Blad B" are read, and of the sheet "Archief" only the APPID column; other sheets, including the "Invoer" sheets, are ignored.',
+		)
+		expect(sheetsReadText(['Blad A'], 'Archief')).toContain(
+			'The sheet "Blad A" is read, and of the sheet "Archief" only the APPID column',
+		)
+		const without = sheetsReadText(['Blad A', 'Blad B'], null)
+		expect(without).toBe(
+			'The sheets "Blad A", "Blad B" are read; other sheets, including the "Invoer" sheets, are ignored.',
+		)
+		expect(sheetsReadText(['Blad A'], null)).not.toContain('APPID')
+		expect(sheetsReadText(['Blad A'])).toContain(
+			`"${PROFILE_DEFAULTS.archiveSheet}" only the APPID column`,
+		)
+	})
+
+	it('names the archive sheet in the missing-applications paragraph, and says the import only archives without one', () => {
+		const withArchive = missingApplicationsText('Archief')
+		expect(withArchive).toContain('archived when the sheet "Archief" lists it')
+		expect(withArchive).toContain('moved to the trash')
+		const without = missingApplicationsText(null)
+		expect(without).not.toContain('trash')
+		expect(without).not.toContain('sheet "')
+		expect(without).toContain('is archived.')
+		expect(missingApplicationsText()).toContain(
+			`the sheet "${PROFILE_DEFAULTS.archiveSheet}" lists it`,
+		)
 	})
 })
 

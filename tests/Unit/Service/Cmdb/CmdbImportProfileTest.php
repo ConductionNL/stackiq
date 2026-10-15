@@ -364,6 +364,7 @@ class CmdbImportProfileTest extends TestCase {
 		$this->assertFalse($overview['openRegisterPacks'], 'no OpenRegister pack store in this container');
 		$this->assertSame('topdesk-cmdb', $overview['profile']['id']);
 		$this->assertSame($profile->sheets(), $overview['profile']['sheets']);
+		$this->assertSame('Gearchiveerde Applicaties', $overview['profile']['archiveSheet']);
 		$this->assertSame(['Beheerde Applicaties CMDB', 'Onbeh Applicaties CMDB'], $overview['profile']['sheetPrecedence']);
 		$this->assertSame($profile->keyColumn(), $overview['profile']['keyColumn']);
 		$this->assertSame($profile->requiredColumns(), $overview['profile']['requiredColumns']);

@@ -458,12 +458,7 @@
 				</ul>
 				<h4>{{ t('stackiq', 'Applications missing from the export') }}</h4>
 				<p>
-					{{
-						t(
-							'stackiq',
-							'An application of this municipality that is on neither CMDB sheet any more is archived when the sheet "Gearchiveerde Applicaties" lists it, and moved to the trash when no sheet does. Both disappear from the lists, from OpenCatalogi and from Portaliq; one that returns in a later export is brought back. When that sheet is missing, has no APPID column, or has an APPID without a cached value, applications are only archived and the result says so. Choose Keep to leave them as they are.',
-						)
-					}}
+					{{ missingApplicationsInfo }}
 				</p>
 			</div>
 		</template>
@@ -503,7 +498,9 @@ import {
 	interruptedImportError,
 	isKnownError,
 	makeCmdbOperationId,
+	mappingArchiveSheet,
 	mappingSheetNames,
+	missingApplicationsText,
 	MISSING_RECORDS_MODES,
 	moduleUrl,
 	municipalityOptions,
@@ -612,6 +609,19 @@ export default {
 		},
 
 		/**
+		 * The archive sheet, of which the import reads only the APPID column:
+		 * the profile's once the mapping block has loaded it (null when the
+		 * profile names none), the shipped name until then or when it could
+		 * not be loaded.
+		 *
+		 * @return {string|null} The sheet name, or null
+		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		archiveSheet() {
+			return mappingArchiveSheet(this.mapping)
+		},
+
+		/**
 		 * The help text under the file chooser, naming every sheet the import reads.
 		 *
 		 * @return {string} The text
@@ -628,7 +638,18 @@ export default {
 		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		sheetsReadInfo() {
-			return sheetsReadText(this.sheetNames)
+			return sheetsReadText(this.sheetNames, this.archiveSheet)
+		},
+
+		/**
+		 * The info-panel paragraph on applications missing from the export,
+		 * naming the profile's archive sheet.
+		 *
+		 * @return {string} The text
+		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		missingApplicationsInfo() {
+			return missingApplicationsText(this.archiveSheet)
 		},
 
 		/**
@@ -667,7 +688,7 @@ export default {
 			if (!this.error) {
 				return null
 			}
-			const words = errorText(this.error, this.sheetNames)
+			const words = errorText(this.error, this.sheetNames, this.archiveSheet)
 			return {
 				...words,
 				code: this.error.error,
