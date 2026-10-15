@@ -24,4 +24,12 @@ namespace OCA\OpenRegister\Exception;
  * Another pack has the slug.
  */
 class PackSlugExistsException extends InvalidPackDefinitionException {
+	/**
+	 * Constructor, with OpenRegister's signature.
+	 *
+	 * @param string $packSlug The slug that is taken.
+	 */
+	public function __construct(string $packSlug) {
+		parent::__construct(errors: ['A migration pack with id "' . $packSlug . '" already exists']);
+	}//end __construct()
 }//end class

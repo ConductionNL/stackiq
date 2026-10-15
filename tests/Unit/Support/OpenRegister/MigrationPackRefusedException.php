@@ -26,4 +26,12 @@ use InvalidArgumentException;
  * A refused pack write.
  */
 abstract class MigrationPackRefusedException extends InvalidArgumentException {
+	/**
+	 * The reasons the write was refused, as OpenRegister's class answers them.
+	 *
+	 * @return array<int, string>
+	 */
+	public function getErrors(): array {
+		return [];
+	}//end getErrors()
 }//end class

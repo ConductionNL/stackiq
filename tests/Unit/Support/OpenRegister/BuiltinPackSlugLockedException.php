@@ -29,4 +29,12 @@ namespace OCA\OpenRegister\Exception;
  * A built-in pack's slug cannot change.
  */
 class BuiltinPackSlugLockedException extends InvalidPackDefinitionException {
+	/**
+	 * Constructor, with OpenRegister's signature.
+	 *
+	 * @param string $message The reason.
+	 */
+	public function __construct(string $message) {
+		parent::__construct(errors: [$message]);
+	}//end __construct()
 }//end class

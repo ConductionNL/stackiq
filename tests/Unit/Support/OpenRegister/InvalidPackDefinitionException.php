@@ -24,4 +24,21 @@ namespace OCA\OpenRegister\Exception;
  * A definition OpenRegister refuses.
  */
 class InvalidPackDefinitionException extends MigrationPackRefusedException {
+	/**
+	 * Constructor, with OpenRegister's signature.
+	 *
+	 * @param array<int, string> $errors The reasons the definition is refused.
+	 */
+	public function __construct(private readonly array $errors) {
+		parent::__construct(message: 'Invalid migration pack definition: ' . implode('; ', $errors));
+	}//end __construct()
+
+	/**
+	 * The reasons the definition is refused.
+	 *
+	 * @return array<int, string>
+	 */
+	public function getErrors(): array {
+		return array_values($this->errors);
+	}//end getErrors()
 }//end class
