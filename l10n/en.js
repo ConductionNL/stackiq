@@ -508,8 +508,6 @@ OC.L10N.register(
         "Organisation or new status is missing": "Organisation or new status is missing",
         "An error occurred while changing the status": "An error occurred while changing the status",
         "Search": "Search",
-        "Search applications and services…": "Search applications and services…",
-        "Clear search": "Clear search",
         "Saved views": "Saved views",
         "Save current filters as view": "Save current filters as view",
         "GEMMA filters": "GEMMA filters",
@@ -1154,8 +1152,14 @@ OC.L10N.register(
         "{count} deleted": "{count} deleted",
         "{count} restored": "{count} restored",
         "Applications: {changes}.": "Applications: {changes}.",
-        "This tab lists the whole archive. It ignores the GEMMA filters and the search term.": "This tab lists the whole archive. It ignores the GEMMA filters and the search term.",
-        "Applications no longer in the export are archived or moved to the trash. The (i) button above explains when.": "Applications no longer in the export are archived or moved to the trash. The (i) button above explains when."
+        "This tab lists the whole archive. It ignores the GEMMA filters.": "This tab lists the whole archive. It ignores the GEMMA filters.",
+        "Applications no longer in the export are archived or moved to the trash. The (i) button above explains when.": "Applications no longer in the export are archived or moved to the trash. The (i) button above explains when.",
+        "Not signed in": "Not signed in",
+        "At most %s contact persons per request": "At most %s contact persons per request",
+        "Loading the name": "Loading the name",
+        "The name could not be loaded. Reload the page to try again.": "The name could not be loaded. Reload the page to try again.",
+        "This contact person is not linked to a Nextcloud contact.": "This contact person is not linked to a Nextcloud contact.",
+        "The name is kept in Nextcloud Contacts, in an address book you cannot read.": "The name is kept in Nextcloud Contacts, in an address book you cannot read."
     },
     "nplurals=2; plural=(n != 1);"
 )

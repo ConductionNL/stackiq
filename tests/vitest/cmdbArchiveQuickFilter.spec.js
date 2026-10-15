@@ -150,7 +150,7 @@ describe('the archive quick filter', () => {
 
 		expect(page._note).toContain('additive AND')
 		expect(page._note).toMatch(/exception is the Archived tab/)
-		expect(page._note).toMatch(/ignores the GEMMA facets and the search term/)
+		expect(page._note).toMatch(/ignores the GEMMA facets; the search term still applies/)
 	})
 
 	it('uses an icon the app registers', () => {

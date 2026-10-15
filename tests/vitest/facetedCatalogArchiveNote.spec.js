@@ -1,10 +1,10 @@
 // @vitest-environment jsdom
 /**
- * The Archived tab of the Applications page says it ignores the facets and
- * the search term.
+ * The Archived tab of the Applications page says it ignores the facets.
  *
- * The facet sidebar and the search box stay on screen on that tab, but its
- * filter carries an empty `_ids` that drops the facet id set. Without a note
+ * The facet sidebar stays on screen on that tab, but its filter carries an
+ * empty `_ids` that drops the facet id set. The search term still applies:
+ * the list sends it as `_search`, outside the filter. Without a note
  * an admin who picks a facet sees an unchanged list and no reason.
  *
  * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017

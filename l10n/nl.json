@@ -544,8 +544,6 @@
         "Group members": "Groepsleden",
         "Merge organisations": "Organisaties samenvoegen",
         "Search": "Zoeken",
-        "Search applications and services…": "Zoek applicaties en diensten…",
-        "Clear search": "Zoekopdracht wissen",
         "Saved views": "Opgeslagen weergaven",
         "Save current filters as view": "Huidige filters opslaan als weergave",
         "GEMMA filters": "GEMMA-filters",
@@ -1221,7 +1219,13 @@
         "{count} deleted": "{count} verwijderd",
         "{count} restored": "{count} teruggezet",
         "Applications: {changes}.": "Applicaties: {changes}.",
-        "This tab lists the whole archive. It ignores the GEMMA filters and the search term.": "Dit tabblad toont het hele archief. De GEMMA-filters en de zoekterm worden genegeerd.",
-        "Applications no longer in the export are archived or moved to the trash. The (i) button above explains when.": "Applicaties die niet meer in de export staan, worden gearchiveerd of naar de prullenbak verplaatst. De (i)-knop bovenaan legt uit wanneer."
+        "This tab lists the whole archive. It ignores the GEMMA filters.": "Dit tabblad toont het hele archief. De GEMMA-filters worden genegeerd.",
+        "Applications no longer in the export are archived or moved to the trash. The (i) button above explains when.": "Applicaties die niet meer in de export staan, worden gearchiveerd of naar de prullenbak verplaatst. De (i)-knop bovenaan legt uit wanneer.",
+        "Not signed in": "Niet aangemeld",
+        "At most %s contact persons per request": "Ten hoogste %s contactpersonen per verzoek",
+        "Loading the name": "De naam wordt geladen",
+        "The name could not be loaded. Reload the page to try again.": "De naam kon niet worden geladen. Laad de pagina opnieuw om het nog eens te proberen.",
+        "This contact person is not linked to a Nextcloud contact.": "Deze contactpersoon is niet gekoppeld aan een Nextcloud-contact.",
+        "The name is kept in Nextcloud Contacts, in an address book you cannot read.": "De naam staat in Nextcloud Contacten, in een adresboek dat je niet kunt lezen."
     }
 }

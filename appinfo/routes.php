@@ -168,6 +168,8 @@ return [
 
         // User Profile endpoint
         ['name' => 'contactpersonen#getMe', 'url' => '/api/me', 'verb' => 'GET'],
+        // Display names of contact persons from the caller's own address books (owner columns).
+        ['name' => 'contactNames#index', 'url' => '/api/contact-names', 'verb' => 'GET'],
 
         // Contactpersonen Management endpoints
         ['name' => 'contactpersonen#getContactpersonen', 'url' => '/api/contactpersonen/organisation/{organisationId}', 'verb' => 'GET'],

@@ -71,7 +71,7 @@ Status in this PR (the reconciliation slice, on top of the reader slice): Tasks 
   - GIVEN the section THEN a labelled choice "Applications missing from the export" offers Archive (default) and Keep with help text, and `buildImportForm()` sends the choice as `missingRecords`
   - GIVEN a report with the new outcomes THEN the summary shows their tiles, the outcome filter offers them, and a reconciliation row shows no row number
   - GIVEN the Applications and Applications in use pages THEN a quick filter "Archived" sends `_archived=true`
-  - GIVEN the Applications page with the "Archived" tab active THEN a note under the toolbar says the tab ignores the GEMMA filters and the search term, and it is gone on any other tab
+  - GIVEN the Applications page with the "Archived" tab active THEN a note under the toolbar says the tab ignores the GEMMA filters, and it is gone on any other tab
   - Every new string is in `l10n/en.json` and `l10n/nl.json`, and the generated `l10n/*.js` are current
 - [x] Implement
 - [x] Test

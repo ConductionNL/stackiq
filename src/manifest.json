@@ -423,7 +423,7 @@
 					{ "id": "org-diensten", "type": "object-list", "title": "Services", "icon": "HandshakeOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "catalogService", "filter": { "provider": "@objectId" }, "columns": [ { "key": "type", "label": "Type" } ], "limit": 25, "emptyText": "No services registered for this organisation yet" } },
 					{ "id": "org-modules", "type": "object-list", "title": "Applications", "icon": "Package", "content": { "register": "@resolve:voorzieningen_register", "schema": "module", "filter": { "provider": "@objectId" }, "columns": [ { "key": "name", "label": "Name" }, { "key": "licentietype", "label": "License type" }, { "key": "bbnLevel", "label": "BBN level" } ], "limit": 25, "rowRoute": "ModuleDetail", "viewAllRoute": "Modules", "viewAllQuery": { "provider": "@objectId" }, "emptyText": "No applications registered for this organisation yet" } },
 					{ "id": "org-usages", "type": "object-list", "title": "Applications in use", "icon": "OfficeBuilding", "content": { "register": "@resolve:voorzieningen_register", "schema": "usage", "filter": { "consumer": "@objectId" }, "columns": [ { "key": "module", "label": "Application", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "module", "labelField": "name" } }, { "key": "moduleVersion", "label": "Version", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "moduleVersion", "labelField": "version" } }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "GebruikDetail", "viewAllRoute": "Gebruik", "viewAllQuery": { "consumer": "@objectId" }, "allowCreate": false, "emptyText": "No applications in use recorded for this organisation yet" } },
-					{ "id": "org-contactpersonen", "type": "object-list", "title": "Contact persons", "icon": "AccountGroup", "content": { "register": "@resolve:voorzieningen_register", "schema": "contactPerson", "filter": { "organization": "@objectId" }, "columns": [ { "key": "role", "label": "Function" }, { "key": "roles", "label": "Roles" } ], "limit": 25, "rowRoute": "ContactpersoonDetail", "emptyText": "No contact persons linked to this organisation yet" } }
+					{ "id": "org-contactpersonen", "type": "object-list", "title": "Contact persons", "icon": "AccountGroup", "content": { "register": "@resolve:voorzieningen_register", "schema": "contactPerson", "filter": { "organization": "@objectId" }, "columns": [ { "key": "id", "label": "Name", "widget": "contactName" }, { "key": "role", "label": "Function" }, { "key": "roles", "label": "Roles" } ], "limit": 25, "rowRoute": "ContactpersoonDetail", "emptyText": "No contact persons linked to this organisation yet" } }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "org-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
@@ -485,6 +485,9 @@
 				"layout": [
 					{ "id": "1", "widgetId": "cp-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 4 },
 					{ "id": "2", "widgetId": "cp-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 }
+				],
+				"bodyWidgets": [
+					{ "id": "cp-name", "component": "ContactPersonName", "props": { "objectId": "@objectId", "contactsUid": "@object.contactsUid", "loadedId": "@object.id" }, "placement": "before-body", "colSpan": 12 }
 				],
 				"sidebar": {
 					"enabled": true,
@@ -616,12 +619,13 @@
 			"type": "custom",
 			"title": "Applications",
 			"component": "FacetedCatalogIndexView",
-			"_note": "Faceted index page (gemma-faceted-search): CnFacetSidebar (live GEMMA-dimension counts from FacetService) + a standalone CnIndexPage narrowed via { _ids: matchedObjectIds } (OpenRegister's list parameter; the objects endpoint ignores a plain id filter). Columns are objects: `provider` is a reference, so it renders through the fkResolve cell widget (uuid → organisation name) and carries its own label — object-typed properties get no schema-generated column, so a bare key showed the raw uuid under the header 'provider'. Stays custom rather than type:index — see customComponents.js's FacetedCatalogIndexView entry for why CnIndexPage's own embedded facet sidebar cannot drive this narrowing. bio-compliance-assessment: bbnLevel/dpiaStatus columns + BBN/DPIA quickFilters reconciled onto this page after gemma-faceted-search (#382) merged — see FacetedCatalogIndexView.vue's quickFilters prop docblock for how the quick filter's field constraints compose with the facet { _ids: ... } narrowing (disjoint keys, additive AND, no clobber). The one exception is the Archived tab: its filter carries an empty-string `_ids` that replaces the facet id set in the merge, because that set is built from the working set, which leaves archived applications out, so ANDing it with `_archived=true` could never match. That tab lists the whole archive and ignores the GEMMA facets and the search term.",
+			"_note": "Faceted index page (gemma-faceted-search): CnFacetSidebar (live GEMMA-dimension counts from FacetService) + a standalone CnIndexPage narrowed via { _ids: matchedObjectIds } (OpenRegister's list parameter; the objects endpoint ignores a plain id filter). Columns are objects: `provider` is a reference, so it renders through the fkResolve cell widget (uuid → organisation name) and carries its own label — object-typed properties get no schema-generated column, so a bare key showed the raw uuid under the header 'provider'. Stays custom rather than type:index — see customComponents.js's FacetedCatalogIndexView entry for why CnIndexPage's own embedded facet sidebar cannot drive this narrowing. bio-compliance-assessment: bbnLevel/dpiaStatus columns + BBN/DPIA quickFilters reconciled onto this page after gemma-faceted-search (#382) merged — see FacetedCatalogIndexView.vue's quickFilters prop docblock for how the quick filter's field constraints compose with the facet { _ids: ... } narrowing (disjoint keys, additive AND, no clobber). config.sidebar gives the page the Search and Columns sidebar of the other index pages; its search is the page's free-text search, sent by the list itself as _search, so only a GEMMA facet selection narrows by _ids (a search narrowed by _ids put every match in the URL and failed with HTTP 414 from about 170 matches). The one exception is the Archived tab: its filter carries an empty-string `_ids` that replaces the facet id set in the merge, because that set is built from the working set, which leaves archived applications out, so ANDing it with `_archived=true` could never match. That tab lists the whole archive and ignores the GEMMA facets; the search term still applies, because the list sends it as _search, outside the filter.",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "module",
 				"detailRoute": "ModuleDetail",
 				"description": "Browse the application (module) catalogue, filtered by GEMMA architecture dimension.",
+				"sidebar": { "enabled": true, "showMetadata": true },
 				"columns": [
 					{ "key": "name", "label": "Name" },
 					{ "key": "provider", "label": "Supplier", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "organization", "labelField": "name" } },
@@ -685,6 +689,7 @@
 				"register": "@resolve:voorzieningen_register",
 				"schema": "catalogService",
 				"description": "Browse the service (dienst) catalogue, filtered by GEMMA architecture dimension.",
+				"sidebar": { "enabled": true, "showMetadata": true },
 				"columns": [
 					"name",
 					"provider",

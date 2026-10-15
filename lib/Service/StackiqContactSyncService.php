@@ -471,6 +471,81 @@ class StackiqContactSyncService {
 	}//end findContactByUid()
 
 	/**
+	 * Find a contact by its exact UID in the signed-in user's own and shared address books only.
+	 *
+	 * A result counts only when it comes from an address book the CardDAV
+	 * backend lists for the user's principal (own and shared); every
+	 * address book of the system principal is left out, the local system
+	 * address book (one card per local user) and the books synced from
+	 * trusted servers alike. The UID is matched exactly, not as a substring.
+	 * This is the lookup for a name shown to a user: a contactsUid is free
+	 * text on a contactPerson, so a lookup that read the system books would
+	 * name any local or federated user for whoever may write a contactPerson.
+	 * Without a CardDAV backend or a signed-in user nothing is found.
+	 *
+	 * @param string $uid The contact UID.
+	 *
+	 * @return ?array<string, mixed> The contact, or null when not found there.
+	 *
+	 * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
+	 */
+	public function findOwnContactByUid(string $uid): ?array {
+		if ($uid === '' || $this->isAvailable() === false) {
+			return null;
+		}
+
+		$keys = $this->userAddressBookKeys();
+		if ($keys === []) {
+			return null;
+		}
+
+		// With enumeration and fullmatch both off, the contacts manager skips the
+		// local system address book; strict_search turns the substring match off.
+		$options = ['limit' => 5, 'strict_search' => true, 'enumeration' => false, 'fullmatch' => false];
+		foreach ($this->contactsManager->search($uid, ['UID'], $options) as $result) {
+			$key = (string)($result['addressbook-key'] ?? '');
+			if (($result['UID'] ?? '') === $uid && in_array($key, $keys, true) === true) {
+				return $result;
+			}
+		}
+
+		return null;
+	}//end findOwnContactByUid()
+
+	/**
+	 * The keys of the signed-in user's own and shared address books.
+	 *
+	 * @return array<int, string> CardDAV address book ids as strings; empty without a backend or a user.
+	 */
+	private function userAddressBookKeys(): array {
+		try {
+			$backend = $this->container?->get(static::CARDDAV_BACKEND_CLASS);
+			$uid = $this->userSession?->getUser()?->getUID();
+			if (is_object($backend) === false || $uid === null) {
+				return [];
+			}
+
+			$books = $backend->getAddressBooksForUser('principals/users/' . $uid);
+		} catch (Throwable $e) {
+			$this->logger->warning('[StackiqContactSync] The address books of the user could not be read', ['exception' => get_class($e)]);
+			return [];
+		}
+
+		if (is_array($books) === false) {
+			return [];
+		}
+
+		$keys = [];
+		foreach ($books as $book) {
+			if (is_array($book) === true && isset($book['id']) === true) {
+				$keys[] = (string)$book['id'];
+			}
+		}
+
+		return $keys;
+	}//end userAddressBookKeys()
+
+	/**
 	 * Find a Nextcloud contact matching a relationship record's identity, by
 	 * e-mail first and — for organisations — by CBS/KvK code as a fallback.
 	 *

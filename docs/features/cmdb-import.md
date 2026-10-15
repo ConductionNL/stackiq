@@ -283,9 +283,9 @@ An archived or deleted application disappears from the stackiq lists, from
 OpenCatalogi and from Portaliq's **Software we use**. In stackiq, the quick
 filter **Archived** on the **Applications** and **Applications in use** pages
 lists the archive. On the **Applications** page the **Archived** tab lists
-the whole archive: it ignores the GEMMA filters and the search box (the page says so in a note under the search box while that tab is active), because
+the whole archive: it ignores the GEMMA filters (the page says so in a note above the list while that tab is active), because
 their counts and matches describe the working set, which leaves archived
-applications out. An OpenCatalogi caller finds archived applications by
+applications out. The search in the **Search** sidebar does apply to that tab. An OpenCatalogi caller finds archived applications by
 adding `_archived=true` to its request. Contact persons are never archived
 or deleted: an owner is shared with the municipality's other applications.
 An application that is already in the state the export asks for is left
