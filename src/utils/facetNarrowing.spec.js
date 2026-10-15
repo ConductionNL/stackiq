@@ -7,6 +7,8 @@
 import {
 	FACET_NO_MATCH_SENTINEL,
 	facetNarrowingFilter,
+	hasFacetSelection,
+	listNarrowingFilter,
 } from '../../src/utils/facetNarrowing.js'
 
 describe('facetNarrowingFilter', () => {
@@ -28,5 +30,29 @@ describe('facetNarrowingFilter', () => {
 		expect(facetNarrowingFilter(['', null])).toEqual({
 			_ids: [FACET_NO_MATCH_SENTINEL],
 		})
+	})
+})
+
+describe('listNarrowingFilter', () => {
+	it("does not narrow by id without a facet selection, so a search stays on the list's own _search", () => {
+		const many = Array.from({ length: 1200 }, (_, i) => `id-${i}`)
+		expect(listNarrowingFilter({}, many)).toEqual({})
+		expect(listNarrowingFilter({ domain: [] }, many)).toEqual({})
+		expect(listNarrowingFilter(undefined, many)).toEqual({})
+	})
+
+	it('narrows by the matched ids once a facet dimension has a value', () => {
+		expect(listNarrowingFilter({ domain: ['Burgerzaken'] }, ['a1'])).toEqual({
+			_ids: ['a1'],
+		})
+		expect(listNarrowingFilter({ standard: ['StUF'] }, [])).toEqual({
+			_ids: [FACET_NO_MATCH_SENTINEL],
+		})
+	})
+
+	it('tells a selection from an empty dimension', () => {
+		expect(hasFacetSelection({ domain: [], standard: ['StUF'] })).toBe(true)
+		expect(hasFacetSelection({ domain: [] })).toBe(false)
+		expect(hasFacetSelection(null)).toBe(false)
 	})
 })
