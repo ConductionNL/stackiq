@@ -423,7 +423,7 @@
 					{ "id": "org-diensten", "type": "object-list", "title": "Services", "icon": "HandshakeOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "catalogService", "filter": { "provider": "@objectId" }, "columns": [ { "key": "type", "label": "Type" } ], "limit": 25, "emptyText": "No services registered for this organisation yet" } },
 					{ "id": "org-modules", "type": "object-list", "title": "Applications", "icon": "Package", "content": { "register": "@resolve:voorzieningen_register", "schema": "module", "filter": { "provider": "@objectId" }, "columns": [ { "key": "name", "label": "Name" }, { "key": "licentietype", "label": "License type" }, { "key": "bbnLevel", "label": "BBN level" } ], "limit": 25, "rowRoute": "ModuleDetail", "viewAllRoute": "Modules", "viewAllQuery": { "provider": "@objectId" }, "emptyText": "No applications registered for this organisation yet" } },
 					{ "id": "org-usages", "type": "object-list", "title": "Applications in use", "icon": "OfficeBuilding", "content": { "register": "@resolve:voorzieningen_register", "schema": "usage", "filter": { "consumer": "@objectId" }, "columns": [ { "key": "module", "label": "Application", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "module", "labelField": "name" } }, { "key": "moduleVersion", "label": "Version", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "moduleVersion", "labelField": "version" } }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "GebruikDetail", "viewAllRoute": "Gebruik", "viewAllQuery": { "consumer": "@objectId" }, "allowCreate": false, "emptyText": "No applications in use recorded for this organisation yet" } },
-					{ "id": "org-contactpersonen", "type": "object-list", "title": "Contact persons", "icon": "AccountGroup", "content": { "register": "@resolve:voorzieningen_register", "schema": "contactPerson", "filter": { "organization": "@objectId" }, "columns": [ { "key": "role", "label": "Function" }, { "key": "roles", "label": "Roles" } ], "limit": 25, "rowRoute": "ContactpersoonDetail", "emptyText": "No contact persons linked to this organisation yet" } }
+					{ "id": "org-contactpersonen", "type": "object-list", "title": "Contact persons", "icon": "AccountGroup", "content": { "register": "@resolve:voorzieningen_register", "schema": "contactPerson", "filter": { "organization": "@objectId" }, "columns": [ { "key": "id", "label": "Name", "widget": "contactName" }, { "key": "role", "label": "Function" }, { "key": "roles", "label": "Roles" } ], "limit": 25, "rowRoute": "ContactpersoonDetail", "emptyText": "No contact persons linked to this organisation yet" } }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "org-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 5 },
@@ -485,6 +485,9 @@
 				"layout": [
 					{ "id": "1", "widgetId": "cp-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 4 },
 					{ "id": "2", "widgetId": "cp-related", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 }
+				],
+				"bodyWidgets": [
+					{ "id": "cp-name", "component": "ContactPersonName", "props": { "objectId": "@objectId", "contactsUid": "@object.contactsUid", "loadedId": "@object.id" }, "placement": "before-body", "colSpan": 12 }
 				],
 				"sidebar": {
 					"enabled": true,

@@ -1130,7 +1130,13 @@ OC.L10N.register(
         "The workbook holds more than {count} different texts, the most the import reads.": "The workbook holds more than {count} different texts, the most the import reads.",
         "Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.": "Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.",
         "In development since": "In development since",
-        "In use since": "In use since"
+        "In use since": "In use since",
+        "Not signed in": "Not signed in",
+        "At most %s contact persons per request": "At most %s contact persons per request",
+        "Loading the name": "Loading the name",
+        "The name could not be loaded. Reload the page to try again.": "The name could not be loaded. Reload the page to try again.",
+        "This contact person is not linked to a Nextcloud contact.": "This contact person is not linked to a Nextcloud contact.",
+        "The name is kept in Nextcloud Contacts, in an address book you cannot read.": "The name is kept in Nextcloud Contacts, in an address book you cannot read."
     },
     "nplurals=2; plural=(n != 1);"
 )

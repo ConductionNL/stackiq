@@ -21,6 +21,7 @@
 			:manifest="manifest"
 			:customComponents="customComponents"
 			:formatters="formatters"
+			:cellWidgets="cellWidgets"
 			:registry="registry"
 			:pageTypes="pageTypes"
 			appId="stackiq"
@@ -75,6 +76,7 @@ import { reactive } from 'vue'
 import OrganisationSwitcher from './components/organisations/OrganisationSwitcher.vue'
 import Dialogs from './dialogs/Dialogs.vue'
 import Modals from './modals/Modals.vue'
+import appCellWidgets from './cellWidgets.js'
 import { setActiveOrganisationUuid } from './composables/orClient.js'
 import appFormatters from './formatters.js'
 import { settingsStore } from './store/store.js'
@@ -152,6 +154,8 @@ export default {
 		return {
 			// App cell formatters for manifest columns (`columns[].formatter`).
 			formatters: appFormatters,
+			// App cell widgets for manifest columns (`columns[].widget`).
+			cellWidgets: appCellWidgets,
 			objectSidebarState: reactive({
 				active: false,
 				open: true,
