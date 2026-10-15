@@ -373,6 +373,14 @@ Nextcloud admins only) answers, per pack, where the import takes it from
 link to its editor in OpenRegister. Reading it changes nothing: it does not
 store or update a pack.
 
+**In the settings.** Open **Administration settings → Stackiq → CMDB import**
+and press **Mapping** under the import form. One table lists the sheets the
+import reads and its match, name, required and date columns; a second table
+lists the four packs, each with where the import takes it from, its version
+and, for a pack kept in OpenRegister, an **Edit in OpenRegister** link. The
+municipality pack is not listed: it maps the municipality you choose for the
+import, not a column. Opening the page changes nothing.
+
 Each pack has a list of field mappings, one per column: the column name in
 the export, the field it goes to, whether it is required, and a
 transformation such as trim, a date, or a lookup table of export values to
@@ -405,15 +413,27 @@ rules, so it checks every pack before it reads a row. It refuses a pack, with
   defaults of the vendor and municipality packs stay as shipped.
 
 The mapping endpoint answers the same reason, with the link to the pack's
-editor in `details.editUrl`, so you can correct it there and try again.
+editor in `details.editUrl`, and the **Mapping** block shows it with an
+**Edit in OpenRegister** link, so you can correct the pack there. After saving
+it, reload the settings page: **Mapping** then shows the new version, or the
+reason the pack is still refused.
+
+**What the Mapping block shows.** Below the table of packs, each pack has a
+collapsible block "Columns and fields": which column of the export goes to
+which field, whether the mapping is required and which transform it uses, and
+the rules for what the import writes (the values it sets, the fields written
+only on a new record, the fields it never writes on an existing record). When
+an unedited pack in OpenRegister is older than the shipped one, the row says
+"Update pending": the next import replaces it with the shipped version.
 
 **What a pack does not change.** Which sheets are read, the APPID and
 "Applicatie Naam" columns, the values that mean empty (`NB`), the constant
-each sheet adds (`Beheer geregeld: ja` or `nee`), the limits, and which fields
-are written only on create or never on an existing record are part of the app
-(`lib/Settings/cmdb-import/topdesk-profile.json`) and cannot be changed. The
+each sheet adds (`Beheer geregeld: ja` or `nee`) and the limits are part of
+the app (`lib/Settings/cmdb-import/topdesk-profile.json`) and cannot be
+changed; the **Mapping** block shows the sheets and the match, name, required
+and date columns, not the empty values, the constants or the limits. The
 municipality is mapped from the name you choose for the import, not from the
-export; that pack is not stored in OpenRegister.
+export; that pack is not stored in OpenRegister and the block does not list it.
 
 **Reading more columns.** The import reads only the columns the mapping
 names. When you map a new column in a pack, the import reads that column from
@@ -428,7 +448,7 @@ endpoint already shows the new pack, with `updatePending` true, before the
 next import runs). A pack you changed
 is never overwritten, also not when you save it while an import is updating
 it. When an update ships a newer version of a pack you changed, the mapping
-endpoint reports it (`newerShipped`); compare the two and copy what you need
+endpoint reports it (`newerShipped`) and the **Mapping** block says so; compare the two and copy what you need
 into your pack in OpenRegister.
 
 **Back to the shipped pack.** Delete the pack in OpenRegister. The next

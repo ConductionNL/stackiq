@@ -40,14 +40,18 @@ Spec: `openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.m
 - [x] Test
 
 ### Task 4 (#1289): The section's mapping block shows the source and the editor link per pack
-- **spec_ref**: `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020); the section requirement is changed in #1289
-- **files**: `src/views/settings/sections/CmdbImportMapping.vue`, `src/views/settings/sections/CmdbImport.vue`, `src/utils/cmdbImport.js`, `tests/vitest/cmdbImportMapping.spec.js`
+- **spec_ref**: `SPEC#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014` (cmdb-export-import#REQ-CMDB-014) and `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020)
+- **files**: `src/views/settings/sections/CmdbImportMapping.vue`, `src/views/settings/sections/CmdbImport.vue`, `src/utils/cmdbImport.js`, `tests/vitest/cmdbImportMapping.spec.js`, `src/views/settings/sections/CmdbImport.spec.js`, `src/utils/cmdbImport.spec.js`
 - **acceptance_criteria**:
-  - GIVEN the endpoint's answer WHEN the block renders THEN each pack shows its source, its version, a hint when `newerShipped`, and a link to its editor (`editUrl`) when there is one
-  - GIVEN a 503 THEN the block shows the error, the code and the reason
+  - GIVEN the endpoint's answer WHEN the block renders THEN each pack shows its source, its version, a hint when `newerShipped`, and an "Edit in OpenRegister" link to `editUrl` when there is one
+  - GIVEN a pack with `updatePending` THEN the block says the shipped version replaces the stored one at the next import
+  - GIVEN a sheet pack THEN a collapsible block lists its field mappings (column, field, required, transform) and the write rules that have values, as text in tables with captions and `th` scopes
+  - GIVEN the block is collapsed while the answer loads THEN the loading announcement is in a live region outside the hidden block
+  - GIVEN a 503 THEN the block shows the error, the code and the reason, and for a stored pack an "Edit in OpenRegister" link to `details.editUrl`
   - GIVEN the answer THEN the help text names the endpoint's sheets; before and on failure `PROFILE_DEFAULTS.sheets`
-- [ ] Implement
-- [ ] Test
+  - GIVEN a profile with one, two or three sheets WHEN the section renders its help text and its info text THEN both name exactly those sheets in the profile's order
+- [x] Implement
+- [x] Test
 
 ### Task 5: Translations and documentation
 - **spec_ref**: `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020)
@@ -55,7 +59,7 @@ Spec: `openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.m
 - **acceptance_criteria**:
   - GIVEN the new strings WHEN `npm run test:l10n` and `npm run check:l10n-js` run THEN both pass, with Dutch for every string
   - GIVEN the docs WHEN an administrator reads "Viewing and editing the mapping" THEN they know where to edit a pack, what the import refuses, what happens on an app update and how to go back to the shipped pack
-- [x] Implement (backend strings and documentation; the section's strings come with Task 4)
+- [x] Implement (backend strings, the section's strings and documentation)
 - [x] Test
 
 ### Task 6: End-to-end coverage of the endpoint, the import and the seed
@@ -75,9 +79,9 @@ Spec: `openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.m
 - **spec_ref**: `SPEC#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020` (cmdb-export-import#REQ-CMDB-020); the section itself is specified in #1289
 - **files**: `tests/e2e/spec-coverage/cmdb-import-mapping.spec.ts`
 - **acceptance_criteria**:
-  - GIVEN an admin on the settings page WHEN the mapping has loaded THEN every sheet pack shows its source and a link to its editor
-- [ ] Implement
-- [ ] Test
+  - GIVEN an admin on the settings page WHEN the mapping has loaded THEN every sheet pack shows its source and an "Edit in OpenRegister" link, and the error of a broken stored pack links to its editor
+- [x] Implement
+- [x] Test
 
 ### Task 8: Archive
 - **spec_ref**: `SPEC#requirement-the-import-shall-run-the-mapping-packs-stored-in-openregister-req-cmdb-021` (cmdb-export-import#REQ-CMDB-021)
