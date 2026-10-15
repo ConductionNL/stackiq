@@ -404,6 +404,7 @@ export default {
 		 * default tab again, so the tab this view remembers goes back to it.
 		 *
 		 * @return {void}
+		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017
 		 */
 		indexPageKey() {
 			this.activeQuickFilterIndex = initialQuickFilterIndex(this.quickFilters)
@@ -437,6 +438,7 @@ export default {
 		 *
 		 * @param {number|number[]} index The tab index, or the selected indices
 		 * @return {void}
+		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017
 		 */
 		onQuickFilterChange(index) {
 			this.activeQuickFilterIndex = Number.isInteger(index) ? index : null
