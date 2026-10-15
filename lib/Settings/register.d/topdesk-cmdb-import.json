@@ -2,7 +2,7 @@
   "components": {
     "schemas": {
       "module": {
-        "version": "0.3.8",
+        "version": "0.3.9",
         "properties": {
           "externalId": {
             "type": "string",
@@ -72,7 +72,7 @@
         }
       },
       "usage": {
-        "version": "1.5.6",
+        "version": "1.5.7",
         "configuration": {
           "x-openregister-lifecycle": {
             "transitions": {
