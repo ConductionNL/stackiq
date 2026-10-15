@@ -92,6 +92,18 @@ generic route-query-to-filter passthrough never sees it (see the
 			</NcActions>
 		</div>
 
+		<p
+			v-if="archivedTabIgnoresFilters"
+			class="faceted-catalog-index__archive-note"
+			role="note">
+			{{
+				t(
+					'stackiq',
+					'This tab lists the whole archive. It ignores the GEMMA filters and the search term.',
+				)
+			}}
+		</p>
+
 		<div class="faceted-catalog-index__body">
 			<CnFacetSidebar
 				:title="t('stackiq', 'GEMMA filters')"
@@ -117,7 +129,8 @@ generic route-query-to-filter passthrough never sees it (see the
 					:quickFilterMultiple="quickFilterMultiple"
 					:rowClickToView="Boolean(detailRoute)"
 					@rowClick="openDetail"
-					@view="openDetail" />
+					@view="openDetail"
+					@quickFilterChange="onQuickFilterChange" />
 			</div>
 		</div>
 
@@ -156,6 +169,21 @@ const DIMENSION_LABELS = {
 	standard: () => t('stackiq', 'Standard'),
 	applicationService: () => t('stackiq', 'Application service'),
 	domain: () => t('stackiq', 'Domain'),
+}
+
+/**
+ * The tab CnIndexPage starts on: the first quick filter marked `default`,
+ * else the first one (the library's own rule in `useSelfFetchList.js`).
+ *
+ * @param {Array<object>|null} quickFilters The quick filters
+ * @return {number|null} The index, or null without quick filters
+ */
+function initialQuickFilterIndex(quickFilters) {
+	if (!Array.isArray(quickFilters) || quickFilters.length === 0) {
+		return null
+	}
+	const index = quickFilters.findIndex((tab) => tab && tab.default === true)
+	return index >= 0 ? index : 0
 }
 
 /** Debounce delay (ms) between search keystrokes and the facets/list refetch. */
@@ -232,7 +260,20 @@ export default {
 		 * filter's keys (`bbnLevel`, `dpiaStatus`, …) never collide with
 		 * `_ids`, so the merge is additive — both the facet-matched id set AND
 		 * the active quick filter's field constraints apply together
-		 * (logical AND), never clobbering one another.
+		 * (logical AND), never clobbering one another. The one exception is
+		 * the Archived tab of the Applications page, below.
+		 *
+		 * The exception is the Archived tab of the Applications page
+		 * (cmdb-import-archive-reconciliation): the facet id set is built from
+		 * the working set, which OpenRegister's default lens limits to objects
+		 * that are not archived, so ANDing `_ids` with `_archived=true` could
+		 * never match an archived application. That tab's filter therefore
+		 * carries an empty-string `_ids` (not an empty array, which the filter
+		 * resolver drops before the merge), which wins over this view's `_ids`
+		 * and which the request leaves out: the tab lists the whole archive
+		 * and ignores the GEMMA selection and the search term. The tab's
+		 * filter, not this view, owns that, so it holds however the page's
+		 * tab state is restored.
 		 */
 		quickFilters: {
 			type: Array,
@@ -268,6 +309,7 @@ export default {
 			showSaveViewModal: false,
 			savingView: false,
 			searchDebounceTimer: null,
+			activeQuickFilterIndex: initialQuickFilterIndex(this.quickFilters),
 		}
 	},
 
@@ -328,6 +370,20 @@ export default {
 		},
 
 		/**
+		 * Whether the active quick-filter tab drops the facet id set and the
+		 * search term: a tab whose filter carries the empty-string `_ids`
+		 * override (the Archived tab, see the `quickFilters` prop). The facet
+		 * sidebar and the search box stay on screen, so the page says so.
+		 *
+		 * @return {boolean} True while such a tab is active.
+		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017
+		 */
+		archivedTabIgnoresFilters() {
+			const tab = (this.quickFilters ?? [])[this.activeQuickFilterIndex]
+			return tab?.filter?._ids === ''
+		},
+
+		/**
 		 * Remount key for `CnIndexPage`: its self-fetch mode has no reactive
 		 * watcher on the `filter` prop (only route/quick-filter/tab changes
 		 * trigger an internal refetch), so this view forces a clean remount —
@@ -339,6 +395,18 @@ export default {
 		 */
 		indexPageKey() {
 			return `${this.schema}-${JSON.stringify(this.listFilter)}`
+		},
+	},
+
+	watch: {
+		/**
+		 * CnIndexPage is remounted when the key changes and starts on its
+		 * default tab again, so the tab this view remembers goes back to it.
+		 *
+		 * @return {void}
+		 */
+		indexPageKey() {
+			this.activeQuickFilterIndex = initialQuickFilterIndex(this.quickFilters)
 		},
 	},
 
@@ -362,6 +430,18 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Remember which quick-filter tab is active (single-select mode emits the
+		 * tab index; multi-select emits an array, which never selects the
+		 * Archived tab here).
+		 *
+		 * @param {number|number[]} index The tab index, or the selected indices
+		 * @return {void}
+		 */
+		onQuickFilterChange(index) {
+			this.activeQuickFilterIndex = Number.isInteger(index) ? index : null
+		},
+
 		/**
 		 * Open the detail page of a clicked row, or of the row whose View action was used.
 		 *
@@ -523,6 +603,13 @@ export default {
 .faceted-catalog-index__search {
 	max-width: 400px;
 	flex: 1;
+}
+
+.faceted-catalog-index__archive-note {
+	color: var(--color-text-maxcontrast);
+	margin: 0;
+	padding: 0 calc(var(--default-grid-baseline, 8px) * 2)
+		calc(var(--default-grid-baseline, 8px) * 2);
 }
 
 .faceted-catalog-index__body {

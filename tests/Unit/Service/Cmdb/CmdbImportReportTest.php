@@ -69,4 +69,27 @@ class CmdbImportReportTest extends TestCase {
 
 		$this->assertSame(array_merge($report->toArray(), ['rowsStored' => 5, 'rowsTruncated' => false]), $stored);
 	}//end testWithinTheLimitEveryRowIsStored()
+
+	/**
+	 * The reconciliation outcomes are counted, and their entries (row 0) are not counted as processed sheet rows.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testTheReconciliationOutcomesAreCounted(): void {
+		$report = new CmdbImportReport(operationId: 'cmdb-report-02', rowsRead: 2);
+		$report->addRow(sheet: 'S', row: 2, appId: '1', name: 'Een', outcome: CmdbImportReport::UNARCHIVED);
+		$report->addRow(sheet: 'S', row: 3, appId: '2', name: 'Twee', outcome: CmdbImportReport::RESTORED);
+		$report->addRow(sheet: 'Gearchiveerde Applicaties', row: 0, appId: '7', name: 'Zeven', outcome: CmdbImportReport::ARCHIVED);
+		$report->addRow(sheet: '', row: 0, appId: '8', name: 'Acht', outcome: CmdbImportReport::DELETED);
+
+		$summary = $report->summary();
+		$this->assertSame(2, $summary['processed']);
+		$this->assertSame(2, $report->processed());
+		$this->assertSame([1, 1, 1, 1], [$summary['archived'], $summary['unarchived'], $summary['deleted'], $summary['restored']]);
+		$this->assertFalse($report->isCancelled());
+		$report->markCancelled();
+		$this->assertTrue($report->isCancelled());
+	}//end testTheReconciliationOutcomesAreCounted()
 }//end class
