@@ -54,7 +54,7 @@ The method carries no auth attribute (Nextcloud's default: admins with a CSRF to
 
 ### D4. The section takes the sheet names from the endpoint, with the constant as fallback
 
-Unchanged from the first version: the help text computes the sheet names from the endpoint's answer, or from `PROFILE_DEFAULTS.sheets` until it arrives or when it fails. The help text, the info text and the missing-sheet and too-large hints name every sheet the profile lists, whatever their number: they are built from the list (`quotedSheetList`), not from its first two entries, and say nothing that depends on a sheet's position.
+Unchanged from the first version: the help text computes the sheet names from the endpoint's answer, or from `PROFILE_DEFAULTS.sheets` until it arrives or when it fails. The help text, the info text and the missing-sheet and too-large hints name every sheet the profile lists, whatever their number: they are built from the list (`quotedSheetList`), not from its first two entries, and say nothing that depends on a sheet's position. The archive sheet those texts name comes from the endpoint's `profile.archiveSheet` the same way, with `PROFILE_DEFAULTS.archiveSheet` as the fallback; when the profile names none, the texts leave it out and the information panel says the import only archives.
 
 ### D5. The packs live in OpenRegister's migration-pack store, found by slug
 

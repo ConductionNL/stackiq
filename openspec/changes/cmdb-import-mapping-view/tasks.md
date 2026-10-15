@@ -50,6 +50,7 @@ Spec: `openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.m
   - GIVEN a 503 THEN the block shows the error, the code and the reason, and for a stored pack an "Edit in OpenRegister" link to `details.editUrl`
   - GIVEN the answer THEN the help text names the endpoint's sheets; before and on failure `PROFILE_DEFAULTS.sheets`
   - GIVEN a profile with one, two or three sheets WHEN the section renders its help text and its info text THEN both name exactly those sheets in the profile's order
+  - GIVEN the answer names an archive sheet, or none THEN the info text, the missing-applications paragraph and the too-large hint name that sheet, or no archive sheet
 - [x] Implement
 - [x] Test
 

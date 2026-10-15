@@ -18,7 +18,7 @@ Nextcloud OCP interfaces used: `OCP\IL10N` (messages), `OCP\IURLGenerator` (the 
 
 `GET /api/settings/cmdb-import/mapping` SHALL be reachable only by Nextcloud admins and SHALL require Nextcloud's CSRF token; like the import routes (REQ-CMDB-001) it SHALL NOT carry `#[AuthorizedAdminSetting]`, `#[NoAdminRequired]` or `#[NoCSRFRequired]`. It SHALL load the import profile and every pack through the same loader, store and validator the import uses (REQ-CMDB-021), and SHALL answer 200 with a flat envelope of three keys:
 
-- `profile`: the profile's `id`, `name`, `version`, `sheets` with each sheet's `name`, `constants` and `absentColumns`, `sheetPrecedence`, `keyColumn`, `nameColumn`, `requiredColumns`, `dateColumns` (the columns the import converts from Excel dates, REQ-CMDB-005), `idColumns`, `emptyValues`, `externalKeyPrefix`, `missingRecords` and `profileFile`;
+- `profile`: the profile's `id`, `name`, `version`, `sheets` with each sheet's `name`, `constants` and `absentColumns`, `archiveSheet` (the sheet of which the import reads only the APPID column, REQ-CMDB-015, or null when the profile names none or names one of its source sheets), `sheetPrecedence`, `keyColumn`, `nameColumn`, `requiredColumns`, `dateColumns` (the columns the import converts from Excel dates, REQ-CMDB-005), `idColumns`, `emptyValues`, `externalKeyPrefix`, `missingRecords` and `profileFile`;
 - `packs`: one entry per target in the order module, manufacturer, municipality, usage, businessOwner, each with `target`, `file`, `id`, `name`, `version`, `description`, `fieldMappings`, the write rules `defaults`, `createOnlyDefaults`, `createOnlyFields` and `neverWritten`, and where the pack comes from: `source` (`openregister` or `file`), `packId` (the OpenRegister row id, or null), `storedVersion` (or null), `shippedVersion`, `edited` (whether the stored pack differs from what stackiq seeded; null when unknown or for a file), `newerShipped` (an edited pack kept a newer shipped pack out), `editable` (false for the municipality pack), `updatePending` (an unedited stored pack that the next import run replaces with the shipped one; then `version`, `fieldMappings`, `defaults` and the other pack fields show the shipped pack and `storedVersion` what OpenRegister holds) and `editUrl` (the absolute link to the pack's editor in OpenRegister, built by Nextcloud's URL generator so an instance that needs `/index.php` gets it, or null when the pack is not stored there or the link cannot be built);
 - `openRegisterPacks`: whether OpenRegister's migration-pack store is available.
 
@@ -154,9 +154,9 @@ The service SHALL map each normalised row with OpenRegister's `MigrationPack\Map
 
 ### Requirement: The admin settings SHALL offer a CMDB import section (REQ-CMDB-014)
 
-Stackiq's admin settings page SHALL show a section "CMDB import", rendered by the settings page and not registered as an in-app route. The section SHALL let the admin choose an existing municipality or type the name of a new one, choose an `.xlsx` file, and start the import. While the import runs it SHALL show a progress bar and a Cancel button. Afterwards it SHALL show the summary and a report table that can be filtered by outcome. The section SHALL also show the mapping the import uses (REQ-CMDB-020), as tables: the export's sheets and columns, and per sheet pack its source, its version, a hint when a newer shipped pack was not applied, and a link "Edit in OpenRegister" when the pack has an `editUrl`; the municipality pack, which maps the import options and no column, SHALL NOT be listed. When the endpoint answers 503 for a stored pack, the error SHALL carry the same link from `details.editUrl`. The section SHALL offer no editing of the mapping itself. The sheet names in its help text SHALL come from that mapping, every sheet it names and in its order, whatever their number, with the shipped names as the fallback until the mapping has loaded or when it cannot be loaded. Every control SHALL have a visible label, and every string SHALL be translatable.
+Stackiq's admin settings page SHALL show a section "CMDB import", rendered by the settings page and not registered as an in-app route. The section SHALL let the admin choose an existing municipality or type the name of a new one, choose an `.xlsx` file, choose what happens to applications missing from the export (archive, the default, or keep) with a one-sentence help text that says what each does and the details in the section's information panel, and start the import. While the import runs it SHALL show a progress bar and a Cancel button. Afterwards it SHALL show the summary, including the archived, unarchived, deleted and restored counts when they are not zero, and a report table that can be filtered by outcome, including those four; a reconciliation row SHALL show no row number. The section SHALL also show the mapping the import uses (REQ-CMDB-020), as tables: the export's sheets and columns, and per sheet pack its source, its version, a hint when a newer shipped pack was not applied, and a link "Edit in OpenRegister" when the pack has an `editUrl`; the municipality pack, which maps the import options and no column, SHALL NOT be listed. When the endpoint answers 503 for a stored pack, the error SHALL carry the same link from `details.editUrl`. The section SHALL offer no editing of the mapping itself. The sheet names in its help text SHALL come from that mapping, every sheet it names and in its order, whatever their number, and so SHALL the archive sheet its texts name, with no archive sheet when the profile names none; the shipped names are the fallback until the mapping has loaded or when it cannot be loaded. Every control SHALL have a visible label, and every string SHALL be translatable.
 
-(Previously: the section had no mapping block, and the sheet names in its help text were a constant in the page, which could drift from the profile on the server.)
+(Previously: the section had no mapping block, and the sheet names in its help text were a constant in the page, which could drift from the profile on the server. This block also carries the missing-applications choice, the four counts and the reconciliation rows of cmdb-import-archive-reconciliation, which modifies REQ-CMDB-014 too (before it, the request always sent `keep`); both changes carry this same block, so archiving them in either order leaves the whole requirement.)
 
 #### Scenario: The admin runs an import from the settings page
 @e2e tests/e2e/spec-coverage/cmdb-import.spec.ts
@@ -167,6 +167,14 @@ Stackiq's admin settings page SHALL show a section "CMDB import", rendered by th
 - **AND** afterwards the summary and the report table SHALL be shown
 - **AND** filtering the table on `created` SHALL show the two imported rows
 
+#### Scenario: The admin chooses to keep missing applications
+@e2e tests/e2e/spec-coverage/cmdb-import.spec.ts
+
+- **GIVEN** the section
+- **WHEN** the admin selects "Keep them as they are" and starts the import
+- **THEN** the request SHALL carry `missingRecords=keep`
+- **AND** without a choice it SHALL carry `missingRecords=archive`
+
 #### Scenario: The sheet names in the help come from the server
 @e2e tests/e2e/spec-coverage/cmdb-import-mapping.spec.ts
 
@@ -175,6 +183,14 @@ Stackiq's admin settings page SHALL show a section "CMDB import", rendered by th
 - **THEN** the help text under the file control SHALL name the sheets the endpoint returned
 - **AND** a profile with one, two or three sheets SHALL give a help text and an info text that name exactly those sheets, with no sheet the profile does not name and no description tied to a sheet's position
 - **AND** when the endpoint fails, it SHALL name the shipped sheets and the mapping block SHALL show the error
+
+#### Scenario: The archive sheet in the help comes from the server
+@e2e exclude Not driven in e2e yet: the texts are derived in the page from the endpoint's answer, and src/views/settings/sections/CmdbImport.spec.js emits mappings with the archive sheet "Archief" and with none and asserts the info text, the missing-applications paragraph and the too-large hint; the route intercept in tests/e2e/spec-coverage/cmdb-import-mapping.spec.ts could drive it as well.
+
+- **GIVEN** the mapping endpoint answers `profile.archiveSheet` `Archief`
+- **WHEN** the section renders its information panel and a too-large error
+- **THEN** the info text, the paragraph on applications missing from the export and the hint SHALL name the sheet `Archief`
+- **AND** when it answers `null`, none of them SHALL name an archive sheet, and the paragraph SHALL say that the import only archives
 
 #### Scenario: The section lists the mapping and links each pack to its editor
 @e2e tests/e2e/spec-coverage/cmdb-import-mapping.spec.ts
@@ -217,3 +233,4 @@ Stackiq's admin settings page SHALL show a section "CMDB import", rendered by th
 - One mapping per instance: OpenRegister's pack store has no organisation scope. An instance that imports for more than one municipality shares the mapping between them.
 - `MigrationPackService`, `PackDefinitionValidator` and `MappingEngine` are not part of OpenRegister's `Contract` namespace; stackiq resolves them defensively.
 - Deleting a stored pack means "back to the shipped pack": the next import or upgrade seeds it again.
+- REQ-CMDB-014 is modified by this change and by cmdb-import-archive-reconciliation; both carry the same block, which holds what each adds, so archiving them in either order leaves the whole requirement. A change to that block goes into both.
