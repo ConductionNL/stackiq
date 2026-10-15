@@ -2605,24 +2605,18 @@ class CmdbExportImportService {
 	 */
 	private function reconcileApplication(array $application, array $archive, string $operationId, CmdbImportReport $report): void {
 		$moduleData = $application['module']->getObject();
-		$onArchiveSheet = ($archive['present'] === true && isset($archive['keys'][$application['key']]) === true);
+		[
+			'target' => $target,
+			'reason' => $reason,
+			'sheet' => $sheet,
+			'onArchiveSheet' => $onArchiveSheet,
+		] = $this->reconcileTarget(key: $application['key'], archive: $archive, operationId: $operationId);
 		$entry = [
-			'sheet' => '',
+			'sheet' => $sheet,
 			'row' => 0,
 			'appId' => (string)($moduleData['externalNumber'] ?? $application['key']),
 			'name' => (string)($moduleData['name'] ?? ''),
 		];
-
-		$target = CmdbImportReport::ARCHIVED;
-		$reason = self::REASON_PREFIX . 'not in the export (' . $operationId . ')';
-		if ($onArchiveSheet === true) {
-			$entry['sheet'] = $archive['sheet'];
-			$reason = self::REASON_PREFIX . 'on sheet "' . $archive['sheet'] . '" (' . $operationId . ')';
-		} elseif ($archive['present'] === true && $archive['uncachedRows'] === [] && $this->unreadableKeyRows === []) {
-			// A sheet with an unreadable key (the archive sheet or a CMDB sheet) may list this application, so the
-			// workbook is not authoritative for a deletion.
-			$target = CmdbImportReport::DELETED;
-		}
 
 		$uuids = ['module' => (string)$application['module']->getUuid(), 'usage' => (string)$application['usage']->getUuid()];
 		$step = 'archive';
@@ -2645,6 +2639,47 @@ class CmdbExportImportService {
 			$this->addRow(report: $report, entry: $entry, outcome: $target, moduleUuid: $uuids['module'], usageUuid: $uuids['usage']);
 		}
 	}//end reconcileApplication()
+
+	/**
+	 * Where an application that left the CMDB sheets goes, and the archive reason it gets.
+	 *
+	 * Listed on the archive sheet: archived, with that sheet as the reason.
+	 * Otherwise soft-deleted, but only when the workbook is authoritative for
+	 * a deletion: it has the archive sheet and no sheet has a row whose key
+	 * could not be read. In every other case it is archived.
+	 *
+	 * @param string $key The application key.
+	 * @param ArchiveSheet $archive The archive sheet.
+	 * @param string $operationId The operation id, for the archive reason.
+	 *
+	 * @return array{target: string, reason: string, sheet: string, onArchiveSheet: bool}
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	private function reconcileTarget(string $key, array $archive, string $operationId): array {
+		if ($archive['present'] === true && isset($archive['keys'][$key]) === true) {
+			return [
+				'target' => CmdbImportReport::ARCHIVED,
+				'reason' => self::REASON_PREFIX . 'on sheet "' . $archive['sheet'] . '" (' . $operationId . ')',
+				'sheet' => $archive['sheet'],
+				'onArchiveSheet' => true,
+			];
+		}
+
+		$target = CmdbImportReport::ARCHIVED;
+		if ($archive['present'] === true && $archive['uncachedRows'] === [] && $this->unreadableKeyRows === []) {
+			// A sheet with an unreadable key (the archive sheet or a CMDB sheet) may list this application, so the
+			// workbook is not authoritative for a deletion.
+			$target = CmdbImportReport::DELETED;
+		}
+
+		return [
+			'target' => $target,
+			'reason' => self::REASON_PREFIX . 'not in the export (' . $operationId . ')',
+			'sheet' => '',
+			'onArchiveSheet' => false,
+		];
+	}//end reconcileTarget()
 
 	/**
 	 * What one application brings to the state the export asks for: its usage and the other usages of its key, then its module and the other modules.
