@@ -998,8 +998,8 @@ class CmdbExportImportServiceTest extends TestCase {
 	 *
 	 * @return CmdbWorkbookReader
 	 */
-	private function rowsReader(array $rows, ?array $archived = [], array $uncachedRows = [], array $uncachedKeyRows = []): CmdbWorkbookReader {
-		return new class($rows, $archived, $uncachedRows, $uncachedKeyRows) extends CmdbWorkbookReader {
+	private function rowsReader(array $rows, ?array $archived = [], array $uncachedRows = [], array $uncachedKeyRows = [], array $absentSheets = []): CmdbWorkbookReader {
+		return new class($rows, $archived, $uncachedRows, $uncachedKeyRows, $absentSheets) extends CmdbWorkbookReader {
 			/**
 			 * Constructor.
 			 *
@@ -1007,12 +1007,14 @@ class CmdbExportImportServiceTest extends TestCase {
 			 * @param array<int, string>|null $archived The archive sheet's APPIDs, or null.
 			 * @param array<int, int> $uncachedRows The archive sheet's rows without a cached APPID.
 			 * @param array<string, array<int, int>> $uncachedKeyRows The CMDB rows dropped as empty, per sheet.
+			 * @param array<int, string> $absentSheets The source sheets the workbook lacks.
 			 */
 			public function __construct(
 				private array $rows,
 				private ?array $archived,
 				private array $uncachedRows,
 				private array $uncachedKeyRows = [],
+				private array $absentSheets = [],
 			) {
 			}
 
@@ -1026,7 +1028,14 @@ class CmdbExportImportServiceTest extends TestCase {
 			 */
 			public function read(string $path, CmdbImportProfile $profile): array {
 				$archive = ['sheet' => 'Gearchiveerde Applicaties', 'present' => ($this->archived !== null), 'keyColumnMissing' => false, 'appIds' => ($this->archived ?? []), 'uncachedRows' => $this->uncachedRows];
-				return ['rows' => $this->rows, 'importWarnings' => [], 'date1904' => false, 'archive' => $archive, 'uncachedKeyRows' => $this->uncachedKeyRows];
+				return [
+					'rows' => $this->rows,
+					'importWarnings' => [],
+					'date1904' => false,
+					'archive' => $archive,
+					'uncachedKeyRows' => $this->uncachedKeyRows,
+					'absentSheets' => $this->absentSheets,
+				];
 			}
 		};
 	}//end rowsReader()
@@ -2175,6 +2184,32 @@ class CmdbExportImportServiceTest extends TestCase {
 			$report['importWarnings']
 		);
 	}//end testAFullyEmptyCmdbRowWithAnUncachedKeyArchivesInsteadOfDeleting()
+
+	/**
+	 * A workbook that lacks one of the source sheets is not the whole CMDB: what is on no sheet is archived, not deleted,
+	 * and the import names the missing sheet.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAMissingSourceSheetArchivesInsteadOfDeleting(): void {
+		$this->importOneSevenAndEight();
+		$eight = $this->moduleOf(appId: '8');
+
+		$report = $this->service(
+			reader: $this->rowsReader(rows: [$this->row(appId: '1')], archived: ['7'], absentSheets: ['Beheerde Applicaties CMDB'])
+		)->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertNotContains('delete', array_column($this->transitions, 0), 'nothing is soft-deleted');
+		$this->assertSame([true, false], $this->stateOf(schema: self::MODULE, uuid: $eight), 'APPID 8 may be on the missing sheet, so it is archived');
+		$this->assertSame([true, false], $this->stateOf(schema: self::USAGE, uuid: $this->usageOf(moduleUuid: $eight)));
+		$this->assertSame(0, $report['summary']['deleted']);
+		$this->assertSame(
+			[['sheet' => 'Beheerde Applicaties CMDB', 'message' => 'Sheet "Beheerde Applicaties CMDB" was not found, so applications missing from the export are archived, not deleted.']],
+			$report['importWarnings']
+		);
+	}//end testAMissingSourceSheetArchivesInsteadOfDeleting()
 
 	/**
 	 * An extra usage of a key that cannot be archived fails the application's row; its module, written after every usage, stays

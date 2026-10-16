@@ -300,6 +300,16 @@ class CmdbExportImportService {
 	private array $unreadableKeyRows = [];
 
 	/**
+	 * The profile's source sheets this run's workbook does not have.
+	 *
+	 * Applications an earlier import took from such a sheet are missing from
+	 * `winningSheets`, so a run with one is not authoritative for a deletion.
+	 *
+	 * @var array<int, string>
+	 */
+	private array $absentSheets = [];
+
+	/**
 	 * OpenRegister's archive handler and object mapper, once resolved.
 	 *
 	 * @var array{handler: object, mapper: object}|null
@@ -553,6 +563,7 @@ class CmdbExportImportService {
 		$report->addImportWarnings(warnings: $this->translateImportWarnings(warnings: $workbook['importWarnings']));
 		$archive = $this->archiveSheet(workbook: $workbook);
 		$this->unreadableKeyRows = $this->unreadableKeyRows(rows: $rows, droppedRows: (array)($workbook['uncachedKeyRows'] ?? []));
+		$this->absentSheets = array_values(array_map('strval', (array)($workbook['absentSheets'] ?? [])));
 		$this->addRunWarnings(report: $report, municipality: $municipality, archive: $archive, missingRecords: $missingRecords);
 
 		$this->progressTracker->startOperation(
@@ -632,8 +643,8 @@ class CmdbExportImportService {
 	 * Add the run's own warnings.
 	 *
 	 * A mapping that fell back to the packs shipped with stackiq, an archive sheet that is missing,
-	 * has no key column or has unreadable keys, a CMDB sheet with unreadable keys, and a created
-	 * municipality.
+	 * has no key column or has unreadable keys, a CMDB sheet that is missing or has unreadable keys,
+	 * and a created municipality.
 	 *
 	 * @param CmdbImportReport $report The report.
 	 * @param array{uuid: string, name: string, created: bool} $municipality The consumer, as resolveMunicipality() found it.
@@ -663,6 +674,11 @@ class CmdbExportImportService {
 		}
 
 		if ($missingRecords === 'archive') {
+			foreach ($this->absentSheets as $sheet) {
+				$absent = ['sheet' => $sheet, 'keyColumnMissing' => false, 'uncachedRows' => []];
+				$report->addImportWarnings(warnings: [['sheet' => $sheet, 'message' => $this->archiveSheetWarning(archive: $absent)]]);
+			}
+
 			foreach ($this->unreadableKeyRows as $sheet => $rowNumbers) {
 				$cmdbSheet = ['sheet' => $sheet, 'keyColumnMissing' => false, 'uncachedRows' => $rowNumbers];
 				$report->addImportWarnings(warnings: [['sheet' => $sheet, 'message' => $this->archiveSheetWarning(archive: $cmdbSheet)]]);
@@ -2656,8 +2672,8 @@ class CmdbExportImportService {
 	 *
 	 * Listed on the archive sheet: archived, with that sheet as the reason.
 	 * Otherwise soft-deleted, but only when the workbook is authoritative for
-	 * a deletion: it has the archive sheet and no sheet has a row whose key
-	 * could not be read. In every other case it is archived.
+	 * a deletion: it has the archive sheet and every source sheet, and no sheet
+	 * has a row whose key could not be read. In every other case it is archived.
 	 *
 	 * @param string $key The application key.
 	 * @param ArchiveSheet $archive The archive sheet.
@@ -2678,9 +2694,9 @@ class CmdbExportImportService {
 		}
 
 		$target = CmdbImportReport::ARCHIVED;
-		if ($archive['present'] === true && $archive['uncachedRows'] === [] && $this->unreadableKeyRows === []) {
-			// A sheet with an unreadable key (the archive sheet or a CMDB sheet) may list this application, so the
-			// workbook is not authoritative for a deletion.
+		if ($archive['present'] === true && $archive['uncachedRows'] === [] && $this->unreadableKeyRows === [] && $this->absentSheets === []) {
+			// A sheet with an unreadable key (the archive sheet or a CMDB sheet), or a source sheet the workbook
+			// lacks, may list this application, so the workbook is not authoritative for a deletion.
 			$target = CmdbImportReport::DELETED;
 		}
 
@@ -3023,6 +3039,8 @@ class CmdbExportImportService {
 		$this->suppliers = null;
 		$this->seenKeys = [];
 		$this->winningSheets = [];
+		$this->unreadableKeyRows = [];
+		$this->absentSheets = [];
 		$this->contactUids = [];
 		$this->contactPersons = [];
 		$this->archiveServices = null;
