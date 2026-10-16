@@ -397,7 +397,7 @@ page.
 
 ## Limits
 
-Five limits are read from `lib/Settings/cmdb-import/topdesk-profile.json` on
+Six limits are read from `lib/Settings/cmdb-import/topdesk-profile.json` on
 every import:
 
 | Setting | Default | What it limits |
