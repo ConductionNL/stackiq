@@ -24,7 +24,7 @@
 					{ "key": "moduleVersion", "label": "Version", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "moduleVersion", "labelField": "version" } },
 					"status",
 					{ "key": "businessOwner", "label": "Business owner", "widget": "contactName" },
-					"technicalOwner",
+					{ "key": "technicalOwner", "label": "Technical owner", "widget": "contactName" },
 					"timeClassification",
 					"serviceDeskRecordId"
 				],
