@@ -23,6 +23,7 @@ import OrganisatieCard from './components/cards/OrganisatieCard.vue'
 import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
+import ContactPersonName from './components/organisations/ContactPersonName.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
 import UsageRiskSignals from './components/portfolio/UsageRiskSignals.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
@@ -107,6 +108,11 @@ export default {
 	// and the vulnerabilities, which no built-in widget does.
 	UsageRiskSignals,
 
+	// The name of a contact person on its detail page (landscape-usage-registration):
+	// the name lives in Nextcloud Contacts, read through /api/contact-names,
+	// which no built-in widget does.
+	ContactPersonName,
+
 	// AI Act evidence per tag on the AI system page (landscape-ai-system-inventory):
 	// it reads the object's files and their tags, which no built-in widget lists per tag.
 	AiActChecklist,
@@ -151,7 +157,7 @@ export default {
 	// object) and `referentiecomponent`/`standaard` are exposed here by display
 	// NAME, not the identifiers the schema stores — feeding them through that
 	// path would break the list. Stays a custom page (wrapping `CnFacetSidebar`
-	// + a standalone `CnIndexPage` narrowed via `{ id: matchedObjectIds }`) until
+	// + a standalone `CnIndexPage` narrowed via `{ _ids: matchedObjectIds }`) until
 	// the lib grows a facet-sidebar mode whose counts/narrowing are computed by
 	// an external, non-schema-field aggregation (see FacetedCatalogIndexView.vue).
 	FacetedCatalogIndexView,

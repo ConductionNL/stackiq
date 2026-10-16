@@ -43,10 +43,13 @@ class ConceptOrganisatiesWidget implements IWidget {
 	public function getId(): string {
 		// FROZEN across the softwarecatalog -> stackiq rename. The Dashboard app
 		// stores each user's chosen widgets BY WIDGET ID, in its own `dashboard`
-		// appid namespace in `oc_preferences` — data this app's repair steps
-		// cannot reach. Renaming this id therefore does not error: the widget
-		// simply stops matching the stored selection and silently vanishes from
-		// every dashboard that had it.
+		// appid namespace in `oc_preferences`. Renaming this id therefore does
+		// not error: the widget simply stops matching the stored selection and
+		// silently vanishes from every dashboard that had it. Stable 0.1.148 to
+		// 0.2.0 shipped the renamed id anyway, so the repair step
+		// `RepointDashboardWidgetId` rewrites that id back to this one in every
+		// user's `dashboard`/`layout` row — the Dashboard rows are ordinary user
+		// preferences, which `IConfig` reaches like this app's own.
 		return 'softwarecatalog_concept_organisaties_widget';
 	}//end getId()
 

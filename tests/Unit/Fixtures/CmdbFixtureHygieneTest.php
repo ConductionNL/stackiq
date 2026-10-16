@@ -188,7 +188,7 @@ class CmdbFixtureHygieneTest extends TestCase {
 	 */
 	public function testTheFixturesExist(): void {
 		$names = array_keys(self::fixtures());
-		foreach (['topdesk-export-anonymised.xlsx', 'topdesk-missing-appid.xlsx', 'topdesk-shuffled-columns.xlsx', 'topdesk-formula-and-connection.xlsx'] as $expected) {
+		foreach (['topdesk-export-anonymised.xlsx', 'topdesk-missing-appid.xlsx', 'topdesk-shuffled-columns.xlsx', 'topdesk-formula-and-connection.xlsx', 'topdesk-archived-applications.xlsx'] as $expected) {
 			$this->assertContains($expected, $names);
 		}
 	}//end testTheFixturesExist()

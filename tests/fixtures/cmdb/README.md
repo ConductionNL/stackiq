@@ -1,6 +1,7 @@
 # CMDB import fixtures
 
-Test workbooks for the TOPdesk CMDB import (`openspec/changes/archive/2026-10-05-cmdb-export-import`).
+Test workbooks for the TOPdesk CMDB import (`openspec/changes/archive/2026-10-05-cmdb-export-import`,
+`openspec/changes/cmdb-import-archive-reconciliation`).
 They are used by the PHPUnit tests under `tests/Unit/` and by the Playwright test
 `tests/e2e/spec-coverage/cmdb-import.spec.ts`.
 
@@ -19,6 +20,7 @@ in the script. The "Invoer" sheets are not read and stay as they are.
 | `topdesk-shuffled-columns.xlsx` | The same rows with the columns of both CMDB sheets in reverse order, and the header "Vendor" written as `Vendor⚡`. Reads to the same rows as the original. |
 | `topdesk-formula-and-connection.xlsx` | On "Beheerde", "Applicatie Naam" is a formula that would evaluate to `Evaluated` with the cached value `Rekenmodel`, "Roepnaam" is a formula without any cached value, and the package declares a synthetic external web connection to `https://example.invalid/`. |
 | `topdesk-no-source-sheet.xlsx` | A minimal workbook with only a sheet "Blad1". |
+| `topdesk-archived-applications.xlsx` | A later export of the same municipality (`openspec/changes/cmdb-import-archive-reconciliation`): both CMDB sheets lose their data row, so APPID 1234 and APPID 2 are gone from them, and the one row of "Gearchiveerde Applicaties" caches APPID 1234. Importing it after `topdesk-export-anonymised.xlsx` archives 1234 and soft-deletes 2. |
 
 ## Placeholder data only
 

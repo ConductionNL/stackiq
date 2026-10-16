@@ -19,7 +19,15 @@
 				"register": "@resolve:voorzieningen_register",
 				"schema": "connection",
 				"description": "Every connection between applications, and from an application to a national provision.",
-				"columns": ["name", "type", "status", "moduleA", "moduleB", "nonMunicipalProvision", "dataExchangeDirection"],
+				"columns": [
+					"name",
+					"type",
+					"status",
+					{ "key": "moduleA", "label": "From application", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "module", "labelField": "name" } },
+					{ "key": "moduleB", "label": "To application", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "module", "labelField": "name" } },
+					"nonMunicipalProvision",
+					"dataExchangeDirection"
+				],
 				"filterMenu": true,
 				"quickFilters": [
 					{ "label": "All", "filter": {}, "default": true },
