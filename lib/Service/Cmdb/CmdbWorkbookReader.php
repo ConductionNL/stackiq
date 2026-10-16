@@ -179,7 +179,8 @@ class CmdbWorkbookReader {
 	 *                              ({sheet, present, keyColumnMissing, appIds, uncachedRows}) and `uncachedKeyRows`
 	 *                              (source sheet => numbers of the rows dropped as empty because their key is a
 	 *                              formula without a cached value; a row with other content is in `rows`, its
-	 *                              `uncached` lists the key).
+	 *                              `uncached` lists the key) and `absentSheets` (the profile's source sheets the
+	 *                              workbook does not have, in profile order).
 	 *
 	 * @throws CmdbImportException WORKBOOK_TOO_LARGE, READER_UNAVAILABLE, NOT_XLSX, NO_SOURCE_SHEET,
 	 *                             MISSING_COLUMN or TOO_MANY_ROWS.
@@ -331,7 +332,7 @@ class CmdbWorkbookReader {
 			scanner: $scanner
 		);
 
-		['present' => $present, 'available' => $available] = $this->sourceSheets(path: $path, profile: $profile);
+		['present' => $present, 'absent' => $absent, 'available' => $available] = $this->sourceSheets(path: $path, profile: $profile);
 
 		$archiveSheet = $profile->archiveSheetName();
 		$loaded = $present;
@@ -406,16 +407,19 @@ class CmdbWorkbookReader {
 			'date1904' => $date1904,
 			'archive' => $archive,
 			'uncachedKeyRows' => $uncachedKeyRows,
+			'absentSheets' => $absent,
 		];
 	}//end readBounded()
 
 	/**
-	 * The profile's source sheets that the workbook has, and every sheet it has.
+	 * The profile's source sheets that the workbook has, the ones it lacks, and every sheet it has.
+	 *
+	 * A workbook with only some of the source sheets is read; the import must not take it as the whole CMDB.
 	 *
 	 * @param string $path The xlsx file.
 	 * @param CmdbImportProfile $profile The import profile.
 	 *
-	 * @return array{present: array<int, string>, available: array<int, string>}
+	 * @return array{present: array<int, string>, absent: array<int, string>, available: array<int, string>}
 	 *
 	 * @throws CmdbImportException NOT_XLSX when the sheet list cannot be read, NO_SOURCE_SHEET when no source sheet is there.
 	 */
@@ -441,7 +445,7 @@ class CmdbWorkbookReader {
 			);
 		}
 
-		return ['present' => $present, 'available' => $available];
+		return ['present' => $present, 'absent' => array_values(array_diff($expected, $available)), 'available' => $available];
 	}//end sourceSheets()
 
 	/**

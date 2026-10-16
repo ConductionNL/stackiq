@@ -1246,6 +1246,36 @@ export function missingApplicationsText(archive = mappingArchiveSheet(null)) {
 }
 
 /**
+ * The words of the "Applications missing from the export" choice and of the
+ * info-panel line on re-imports: they promise the trash only when the profile
+ * names an archive sheet, because without one the import only archives.
+ *
+ * @param {string|null} [archive] The archive sheet, from mappingArchiveSheet(); the shipped name when left out, null when the profile names none
+ * @return {{archiveOption: string, archiveHelp: string, reimportInfo: string}} The texts
+ * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+ */
+export function missingRecordsTexts(archive = mappingArchiveSheet(null)) {
+	if (!archive) {
+		return {
+			archiveOption: t('stackiq', 'Archive them'),
+			archiveHelp: t('stackiq', 'Applications no longer in the export are archived. The (i) button above explains when.'),
+			reimportInfo: t(
+				'stackiq',
+				'Importing a newer export again updates the same applications, matched on APPID per municipality. Applications missing from it are archived, unless you choose to keep them.',
+			),
+		}
+	}
+	return {
+		archiveOption: t('stackiq', 'Archive or delete them'),
+		archiveHelp: t('stackiq', 'Applications no longer in the export are archived or moved to the trash. The (i) button above explains when.'),
+		reimportInfo: t(
+			'stackiq',
+			'Importing a newer export again updates the same applications, matched on APPID per municipality. Applications missing from it are archived or deleted, unless you choose to keep them.',
+		),
+	}
+}
+
+/**
  * The words for a pack's target: what the pack's rows become.
  *
  * @param {string} target The target as the profile names it (module, manufacturer, …)
