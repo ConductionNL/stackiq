@@ -138,7 +138,7 @@
 					type="radio"
 					:disabled="importing"
 					data-testid="cmdb-import-missing-records-archive">
-					{{ t('stackiq', 'Archive or delete them') }}
+					{{ missingRecordsWords.archiveOption }}
 				</NcCheckboxRadioSwitch>
 				<NcCheckboxRadioSwitch
 					v-model="missingRecords"
@@ -150,12 +150,7 @@
 					{{ t('stackiq', 'Keep them as they are') }}
 				</NcCheckboxRadioSwitch>
 				<p id="cmdb-import-missing-records-help" class="cmdb-import__help">
-					{{
-						t(
-							'stackiq',
-							'Applications no longer in the export are archived or moved to the trash. The (i) button above explains when.',
-						)
-					}}
+					{{ missingRecordsWords.archiveHelp }}
 				</p>
 			</fieldset>
 
@@ -414,12 +409,7 @@
 						}}
 					</li>
 					<li>
-						{{
-							t(
-								'stackiq',
-								'Importing a newer export again updates the same applications, matched on APPID per municipality. Applications missing from it are archived or deleted, unless you choose to keep them.',
-							)
-						}}
+						{{ missingRecordsWords.reimportInfo }}
 					</li>
 				</ul>
 				<h4>{{ t('stackiq', 'Update existing records') }}</h4>
@@ -502,6 +492,7 @@ import {
 	mappingSheetNames,
 	MISSING_RECORDS_MODES,
 	missingApplicationsText,
+	missingRecordsTexts,
 	moduleUrl,
 	municipalityOptions,
 	normaliseError,
@@ -650,6 +641,17 @@ export default {
 		 */
 		missingApplicationsInfo() {
 			return missingApplicationsText(this.archiveSheet)
+		},
+
+		/**
+		 * The words of the missing-records choice and of the re-import line,
+		 * which mention deleting only when the profile names an archive sheet.
+		 *
+		 * @return {{archiveOption: string, archiveHelp: string, reimportInfo: string}} The texts
+		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+		 */
+		missingRecordsWords() {
+			return missingRecordsTexts(this.archiveSheet)
 		},
 
 		/**

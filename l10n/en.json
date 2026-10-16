@@ -1211,6 +1211,9 @@
         "Loading the name": "Loading the name",
         "The name could not be loaded. Reload the page to try again.": "The name could not be loaded. Reload the page to try again.",
         "This contact person is not linked to a Nextcloud contact.": "This contact person is not linked to a Nextcloud contact.",
-        "The name is kept in Nextcloud Contacts, in an address book you cannot read.": "The name is kept in Nextcloud Contacts, in an address book you cannot read."
+        "The name is kept in Nextcloud Contacts, in an address book you cannot read.": "The name is kept in Nextcloud Contacts, in an address book you cannot read.",
+        "Archive them": "Archive them",
+        "Applications no longer in the export are archived. The (i) button above explains when.": "Applications no longer in the export are archived. The (i) button above explains when.",
+        "Importing a newer export again updates the same applications, matched on APPID per municipality. Applications missing from it are archived, unless you choose to keep them.": "Importing a newer export again updates the same applications, matched on APPID per municipality. Applications missing from it are archived, unless you choose to keep them."
     }
 }

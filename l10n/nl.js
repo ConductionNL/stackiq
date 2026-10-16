@@ -1280,7 +1280,10 @@ OC.L10N.register(
         "Loading the name": "De naam wordt geladen",
         "The name could not be loaded. Reload the page to try again.": "De naam kon niet worden geladen. Laad de pagina opnieuw om het nog eens te proberen.",
         "This contact person is not linked to a Nextcloud contact.": "Deze contactpersoon is niet gekoppeld aan een Nextcloud-contact.",
-        "The name is kept in Nextcloud Contacts, in an address book you cannot read.": "De naam staat in Nextcloud Contacten, in een adresboek dat je niet kunt lezen."
+        "The name is kept in Nextcloud Contacts, in an address book you cannot read.": "De naam staat in Nextcloud Contacten, in een adresboek dat je niet kunt lezen.",
+        "Archive them": "Archiveren",
+        "Applications no longer in the export are archived. The (i) button above explains when.": "Applicaties die niet meer in de export staan, worden gearchiveerd. De (i)-knop bovenaan legt uit wanneer.",
+        "Importing a newer export again updates the same applications, matched on APPID per municipality. Applications missing from it are archived, unless you choose to keep them.": "Een nieuwere export opnieuw importeren werkt dezelfde applicaties bij, herkend aan het APPID per gemeente. Applicaties die er niet meer in staan, worden gearchiveerd, tenzij je kiest ze te laten zoals ze zijn."
     },
     "nplurals=2; plural=(n != 1);"
 )
