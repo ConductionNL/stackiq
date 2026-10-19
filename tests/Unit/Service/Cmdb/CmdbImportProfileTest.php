@@ -23,8 +23,6 @@ namespace OCA\Stackiq\Tests\Unit\Service\Cmdb;
 require_once __DIR__ . '/../../Support/CmdbTestSupport.php';
 require_once __DIR__ . '/../../Support/FakeMigrationPackService.php';
 
-use OCA\OpenRegister\Service\MigrationPack\MappingEngine;
-use OCA\OpenRegister\Service\MigrationPack\PackDefinitionValidator;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportPackMarker;
 use OCA\Stackiq\Service\Cmdb\CmdbImportPackStore;
@@ -86,7 +84,7 @@ class CmdbImportProfileTest extends TestCase {
 		$profile = new CmdbImportProfile(container: $this->emptyContainer());
 		$profile->load();
 
-		$validator = new PackDefinitionValidator();
+		$validator = CmdbTestSupport::newPackClass(class: 'PackDefinitionValidator');
 		foreach (CmdbImportProfile::TARGETS as $target) {
 			$pack = $profile->pack(target: $target);
 			$this->assertSame([], $validator->validate($pack), $target);
@@ -176,7 +174,7 @@ class CmdbImportProfileTest extends TestCase {
 		CmdbTestSupport::loadMigrationPack();
 		$profile = new CmdbImportProfile(container: $this->emptyContainer());
 		$profile->load();
-		$engine = new MappingEngine();
+		$engine = CmdbTestSupport::newPackClass(class: 'MappingEngine');
 
 		$usage = $engine->mapRow(
 			$profile->pack(target: 'usage'),

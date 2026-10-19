@@ -102,6 +102,7 @@ final class CmdbTestSupport {
 			$base = $dir . '/lib/Service/MigrationPack';
 		}
 
+		\OCA\Stackiq\Service\Cmdb\OpenRegisterInstance::$l10nOverride = static fn (): \OCP\IL10N => self::l10n();
 		foreach (['PackDefinitionValidator', 'MappingEngine'] as $class) {
 			if (class_exists('OCA\\OpenRegister\\Service\\MigrationPack\\' . $class, false) === false) {
 				require_once $base . '/' . $class . '.php';
@@ -111,6 +112,56 @@ final class CmdbTestSupport {
 		self::$packSource = $source;
 		return $source;
 	}//end loadMigrationPack()
+
+	/**
+	 * A pass-through IL10N.
+	 *
+	 * @return \OCP\IL10N
+	 */
+	private static function l10n(): \OCP\IL10N {
+		return new class implements \OCP\IL10N {
+			public function t(string $text, $parameters = []): string {
+				return vsprintf($text, (array)$parameters);
+			}
+
+			public function n(string $text_singular, string $text_plural, int $count, array $parameters = []): string {
+				return vsprintf(($count === 1 ? $text_singular : $text_plural), $parameters);
+			}
+
+			public function l(string $type, $data, array $options = []) {
+				return (string)$data;
+			}
+
+			public function getLanguageCode(): string {
+				return 'en';
+			}
+
+			public function getLocaleCode(): string {
+				return 'en';
+			}
+		};
+	}//end l10n()
+
+	/**
+	 * An OpenRegister pack class, built with a pass-through IL10N when its constructor requires one.
+	 *
+	 * Newer OpenRegister versions give PackDefinitionValidator and MappingEngine
+	 * an IL10N parameter, older ones have none; this works against both.
+	 *
+	 * @param string $class PackDefinitionValidator or MappingEngine.
+	 *
+	 * @return object
+	 */
+	public static function newPackClass(string $class): object {
+		self::loadMigrationPack();
+		$name = 'OCA\\OpenRegister\\Service\\MigrationPack\\' . $class;
+		$required = (new \ReflectionClass($name))->getConstructor()?->getNumberOfRequiredParameters() ?? 0;
+		if ($required === 0) {
+			return new $name();
+		}
+
+		return new $name(self::l10n());
+	}//end newPackClass()
 
 	/**
 	 * Make PhpSpreadsheet loadable from OpenRegister's vendor directory.

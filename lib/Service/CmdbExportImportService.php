@@ -69,6 +69,7 @@ use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\Cmdb\CmdbImportReport;
 use OCA\Stackiq\Service\Cmdb\CmdbOwnerIdentity;
+use OCA\Stackiq\Service\Cmdb\OpenRegisterInstance;
 use OCA\Stackiq\Service\Cmdb\CmdbRowNormaliser;
 use OCA\Stackiq\Service\Cmdb\CmdbWorkbookReader;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -2919,8 +2920,8 @@ class CmdbExportImportService {
 		}
 
 		if (class_exists($class) === true) {
-			$engine = new $class();
-			if (method_exists($engine, 'mapRow') === true) {
+			$engine = (new OpenRegisterInstance(container: $this->container))->build(class: $class);
+			if ($engine !== null && method_exists($engine, 'mapRow') === true) {
 				return $engine;
 			}
 		}
