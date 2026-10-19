@@ -243,13 +243,6 @@ class StackiqContactSyncService {
 				displayName: $displayName
 			);
 			$contactUid = ($fixedUid ?? self::newUid());
-			// Nextcloud refuses a second card with the same UID (UidConflict), and
-			// the contacts search that found no card by it may lag or skip it: a card
-			// that already has the fixed UID is the contact, not an error.
-			if ($fixedUid !== null && is_array($backend->getCard($addressBookId, $contactUid . '.vcf')) === true) {
-				return $contactUid;
-			}
-
 			$backend->createCard($addressBookId, $contactUid . '.vcf', self::serialiseVCard(uid: $contactUid, properties: $properties));
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -297,8 +290,10 @@ class StackiqContactSyncService {
 	/**
 	 * The contact in the named address book with the record's e-mail address, or null.
 	 *
-	 * Always null with a fixed UID: the caller identifies the contact by
-	 * that UID, and a shared e-mail address must not merge two of them.
+	 * With a fixed UID the e-mail address matches nothing: the caller
+	 * identifies the contact by that UID, and a shared e-mail address must
+	 * not merge two of them. Only a card that already has that UID (by URI)
+	 * is returned.
 	 *
 	 * @param array<string, mixed> $record The relationship record.
 	 * @param string $addressBookUri The address book's URI.
@@ -310,6 +305,19 @@ class StackiqContactSyncService {
 	 */
 	private function namedAddressBookContactByEmail(array $record, string $addressBookUri, ?string $fixedUid): ?string {
 		if ($fixedUid !== null) {
+			// A card that already has the fixed UID is the contact: Nextcloud
+			// refuses a second one (UidConflict), and the contacts search may not
+			// show it yet. Looked up by URI, not by search.
+			$key = $this->existingNamedAddressBookKey(addressBookUri: $addressBookUri);
+			$backend = null;
+			if ($key !== null) {
+				$backend = $this->container?->get(static::CARDDAV_BACKEND_CLASS);
+			}
+
+			if (is_object($backend) === true && is_array($backend->getCard((int)$key, $fixedUid . '.vcf')) === true) {
+				return $fixedUid;
+			}
+
 			return null;
 		}
 
