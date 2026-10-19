@@ -243,6 +243,13 @@ class StackiqContactSyncService {
 				displayName: $displayName
 			);
 			$contactUid = ($fixedUid ?? self::newUid());
+			// Nextcloud refuses a second card with the same UID (UidConflict), and
+			// the contacts search that found no card by it may lag or skip it: a card
+			// that already has the fixed UID is the contact, not an error.
+			if ($fixedUid !== null && is_array($backend->getCard($addressBookId, $contactUid . '.vcf')) === true) {
+				return $contactUid;
+			}
+
 			$backend->createCard($addressBookId, $contactUid . '.vcf', self::serialiseVCard(uid: $contactUid, properties: $properties));
 		} catch (Throwable $e) {
 			$this->logger->warning(

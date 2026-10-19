@@ -64,7 +64,21 @@ class StackiqContactSyncServiceTest extends TestCase {
 				return $id;
 			}
 
+			public function getCard(int $addressBookId, string $cardUri): array|false {
+				foreach ($this->cards as $card) {
+					if ($card[0] === $addressBookId && $card[1] === $cardUri) {
+						return ['uri' => $cardUri, 'carddata' => $card[2]];
+					}
+				}
+
+				return false;
+			}
+
 			public function createCard(int $addressBookId, string $cardUri, string $cardData): string {
+				if ($this->getCard($addressBookId, $cardUri) !== false) {
+					throw new \RuntimeException('UidConflict');
+				}
+
 				$this->cards[] = [$addressBookId, $cardUri, $cardData];
 				return 'etag';
 			}
@@ -220,6 +234,32 @@ class StackiqContactSyncServiceTest extends TestCase {
 		$this->assertStringStartsWith("BEGIN:VCARD\r\nVERSION:3.0\r\nUID:stackiq-cmdb-owner-abc\r\n", $backend->cards[0][2]);
 		$this->assertStringContainsString("\r\nEMAIL:owner@example.org\r\n", $backend->cards[0][2]);
 	}//end testANewContactTakesTheGivenUid()
+
+	/**
+	 * A card that already has the given UID is the contact: a second call returns it and creates nothing.
+	 *
+	 * Nextcloud's createCard refuses a duplicate UID; the owners' import must
+	 * not lose the owner when the contacts search does not show the card.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 */
+	public function testAnExistingCardWithTheGivenUidIsReused(): void {
+		$backend = $this->backend();
+		$service = $this->service(backend: $backend);
+		$call = fn (): ?string => $service->syncToNamedAddressBook(
+			objectType: 'contactPerson',
+			record: ['voornaam' => 'Voornaam', 'achternaam' => 'Achternaam'],
+			addressBookUri: 'stackiq-cmdb-owners',
+			displayName: 'Stackiq CMDB owners',
+			fixedUid: 'stackiq-cmdb-owner-abc'
+		);
+
+		$this->assertSame('stackiq-cmdb-owner-abc', $call());
+		$this->assertSame('stackiq-cmdb-owner-abc', $call());
+		$this->assertCount(1, $backend->cards);
+	}//end testAnExistingCardWithTheGivenUidIsReused()
 
 	/**
 	 * With a given UID the e-mail address matches no existing contact, so a shared mailbox does not merge two owners.
