@@ -89,9 +89,7 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 	 * @return ContainerInterface
 	 */
 	private function emptyContainer(): ContainerInterface {
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('has')->willReturn(false);
-		return $container;
+		return CmdbTestSupport::emptyContainer(test: $this);
 	}//end emptyContainer()
 
 	/**

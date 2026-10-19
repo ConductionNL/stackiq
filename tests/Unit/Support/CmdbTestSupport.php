@@ -30,6 +30,10 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Support;
 
+use OCP\L10N\IFactory;
+use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
+
 /**
  * Locates and loads the OpenRegister pieces the CMDB import uses.
  */
@@ -102,7 +106,6 @@ final class CmdbTestSupport {
 			$base = $dir . '/lib/Service/MigrationPack';
 		}
 
-		\OCA\Stackiq\Service\Cmdb\OpenRegisterInstance::$l10nOverride = static fn (): \OCP\IL10N => self::l10n();
 		foreach (['PackDefinitionValidator', 'MappingEngine'] as $class) {
 			if (class_exists('OCA\\OpenRegister\\Service\\MigrationPack\\' . $class, false) === false) {
 				require_once $base . '/' . $class . '.php';
@@ -118,7 +121,7 @@ final class CmdbTestSupport {
 	 *
 	 * @return \OCP\IL10N
 	 */
-	private static function l10n(): \OCP\IL10N {
+	public static function l10n(): \OCP\IL10N {
 		return new class implements \OCP\IL10N {
 			public function t(string $text, $parameters = []): string {
 				return vsprintf($text, (array)$parameters);
@@ -141,6 +144,45 @@ final class CmdbTestSupport {
 			}
 		};
 	}//end l10n()
+
+	/**
+	 * A container that knows only the translation factory, so a pack class comes from class_exists.
+	 *
+	 * @param TestCase $test The running test.
+	 *
+	 * @return ContainerInterface
+	 */
+	public static function emptyContainer(TestCase $test): ContainerInterface {
+		$builder = new \ReflectionMethod(TestCase::class, 'createMock');
+		$container = $builder->invoke($test, ContainerInterface::class);
+		$container->method('has')->willReturnCallback(static fn (string $id): bool => $id === IFactory::class);
+		$container->method('get')->willReturnCallback(
+			static function (string $id) use ($test) {
+				if ($id !== IFactory::class) {
+					throw new \RuntimeException('not in this container: ' . $id);
+				}
+
+				return self::translationFactory(test: $test);
+			}
+		);
+
+		return $container;
+	}//end emptyContainer()
+
+	/**
+	 * A translation factory that hands out the pass-through IL10N.
+	 *
+	 * @param TestCase $test The running test.
+	 *
+	 * @return IFactory
+	 */
+	public static function translationFactory(TestCase $test): IFactory {
+		$builder = new \ReflectionMethod(TestCase::class, 'createMock');
+		$factory = $builder->invoke($test, IFactory::class);
+		$factory->method('get')->willReturn(self::l10n());
+
+		return $factory;
+	}//end translationFactory()
 
 	/**
 	 * An OpenRegister pack class, built with a pass-through IL10N when its constructor requires one.

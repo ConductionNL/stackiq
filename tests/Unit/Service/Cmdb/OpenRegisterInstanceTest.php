@@ -22,6 +22,7 @@ namespace OCA\Stackiq\Tests\Unit\Service\Cmdb;
 
 use OCA\Stackiq\Service\Cmdb\OpenRegisterInstance;
 use OCP\IL10N;
+use OCP\L10N\IFactory;
 use PHPUnit\Framework\Attributes\CoversClass;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -31,15 +32,6 @@ use Psr\Container\ContainerInterface;
  */
 #[CoversClass(OpenRegisterInstance::class)]
 class OpenRegisterInstanceTest extends TestCase {
-	/**
-	 * Reset the translations override.
-	 *
-	 * @return void
-	 */
-	protected function tearDown(): void {
-		OpenRegisterInstance::$l10nOverride = null;
-	}//end tearDown()
-
 	/**
 	 * A class without constructor parameters (older OpenRegister) is built as is.
 	 *
@@ -58,20 +50,23 @@ class OpenRegisterInstanceTest extends TestCase {
 	 */
 	public function testAClassRequiringTranslationsGetsThem(): void {
 		$l10n = $this->createMock(IL10N::class);
-		OpenRegisterInstance::$l10nOverride = static fn (): IL10N => $l10n;
+		$factory = $this->createMock(IFactory::class);
+		$factory->expects($this->once())->method('get')->with('openregister')->willReturn($l10n);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->with(IFactory::class)->willReturn($factory);
 		$class = new class($l10n) {
 			public function __construct(public readonly IL10N $l10n) {
 			}
 		};
 
-		$object = (new OpenRegisterInstance(container: $this->createMock(ContainerInterface::class)))->build(class: $class::class);
+		$object = (new OpenRegisterInstance(container: $container))->build(class: $class::class);
 
 		$this->assertInstanceOf($class::class, $object);
 		$this->assertSame($l10n, $object->l10n);
 	}//end testAClassRequiringTranslationsGetsThem()
 
 	/**
-	 * A constructor needing anything else, or translations that cannot be resolved, gives null.
+	 * A constructor needing anything else, or a container without the translation factory, gives null.
 	 *
 	 * @return void
 	 */
@@ -83,13 +78,12 @@ class OpenRegisterInstanceTest extends TestCase {
 		};
 		$this->assertNull((new OpenRegisterInstance(container: $container))->build(class: $other::class));
 
-		OpenRegisterInstance::$l10nOverride = static function (): IL10N {
-			throw new \RuntimeException('no factory');
-		};
+		$noFactory = $this->createMock(ContainerInterface::class);
+		$noFactory->method('get')->willThrowException(new \RuntimeException('not in this container'));
 		$needsL10n = new class($this->createMock(IL10N::class)) {
 			public function __construct(public readonly IL10N $l10n) {
 			}
 		};
-		$this->assertNull((new OpenRegisterInstance(container: $container))->build(class: $needsL10n::class));
+		$this->assertNull((new OpenRegisterInstance(container: $noFactory))->build(class: $needsL10n::class));
 	}//end testAnUnbuildableClassGivesNull()
 }//end class

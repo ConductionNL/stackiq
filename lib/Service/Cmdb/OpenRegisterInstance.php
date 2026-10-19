@@ -37,13 +37,6 @@ use Throwable;
  */
 class OpenRegisterInstance {
 	/**
-	 * Replaces the translations lookup; for unit tests that run without a Nextcloud server.
-	 *
-	 * @var (callable(): IL10N)|null
-	 */
-	public static $l10nOverride = null;
-
-	/**
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container The container that resolves the translation factory.
@@ -94,10 +87,6 @@ class OpenRegisterInstance {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-3
 	 */
 	private function l10n(): IL10N {
-		if (self::$l10nOverride !== null) {
-			return (self::$l10nOverride)();
-		}
-
 		$factory = $this->container->get(IFactory::class);
 
 		return $factory->get('openregister');

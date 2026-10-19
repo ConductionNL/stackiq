@@ -163,8 +163,7 @@ class SeedCmdbImportPacksTest extends TestCase {
 	 * @return void
 	 */
 	public function testWithoutTheStoreNothingIsSeeded(): void {
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('has')->willReturn(false);
+		$container = CmdbTestSupport::emptyContainer(test: $this);
 		$step = new SeedCmdbImportPacks(
 			profile: new CmdbImportProfile(container: $container),
 			store: new CmdbImportPackStore(container: $container),

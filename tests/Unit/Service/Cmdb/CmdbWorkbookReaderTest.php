@@ -43,8 +43,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 	 */
 	private function profile(?string $directory = null): CmdbImportProfile {
 		CmdbTestSupport::loadMigrationPack();
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('has')->willReturn(false);
+		$container = CmdbTestSupport::emptyContainer(test: $this);
 
 		$profile = new CmdbImportProfile(container: $container, directory: $directory);
 		$profile->load();
