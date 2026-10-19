@@ -1163,8 +1163,8 @@ class CmdbImportProfile {
 		}
 
 		if (class_exists($class) === true) {
-			$validator = new $class();
-			if (method_exists($validator, 'validate') === true) {
+			$validator = (new OpenRegisterInstance(container: $this->container))->build(class: $class);
+			if ($validator !== null && method_exists($validator, 'validate') === true) {
 				return $validator;
 			}
 		}

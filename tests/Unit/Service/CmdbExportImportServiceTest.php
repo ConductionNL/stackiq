@@ -1075,9 +1075,13 @@ class CmdbExportImportServiceTest extends TestCase {
 
 		[$archiveHandler, $objectMapper] = $this->archiveDoubles();
 		$container = $this->createMock(ContainerInterface::class);
-		$container->method('has')->willReturnCallback(fn (string $id): bool => $packs !== false && $id === CmdbImportPackStore::SERVICE_CLASS);
+		$container->method('has')->willReturnCallback(fn (string $id): bool => $id === \OCP\L10N\IFactory::class || ($packs !== false && $id === CmdbImportPackStore::SERVICE_CLASS));
 		$container->method('get')->willReturnCallback(
 			function (string $id) use ($objectService, $schemaMapper, $packs, $archiveHandler, $objectMapper) {
+				if ($id === \OCP\L10N\IFactory::class) {
+					return CmdbTestSupport::translationFactory(test: $this);
+				}
+
 				if ($id === ObjectServiceInterface::class) {
 					return $objectService;
 				}

@@ -74,8 +74,10 @@ class CmdbOwnerIdentity {
 	 * e-mail address or the name instead of sharing one UID with every
 	 * other owner whose cell holds the same placeholder.
 	 *
-	 * Fail-mode (ADR-102): closed. Without a `secret` the number is not used
-	 * (null, logged once), never hashed with an empty key. A changed secret
+	 * Fail-mode (ADR-102): degrades. Without a `secret` the employee number is
+	 * not used (null, logged once), never hashed with an empty key, and the
+	 * owner is matched on the e-mail address or the name like before the
+	 * number existed, so two namesakes become one contact. A changed secret
 	 * gives every owner a new UID, so a new contact on the next import.
 	 *
 	 * @param string $employeeNumber The employee number from the owner pack.

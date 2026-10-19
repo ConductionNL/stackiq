@@ -23,8 +23,6 @@ namespace OCA\Stackiq\Tests\Unit\Service\Cmdb;
 require_once __DIR__ . '/../../Support/CmdbTestSupport.php';
 require_once __DIR__ . '/../../Support/FakeMigrationPackService.php';
 
-use OCA\OpenRegister\Service\MigrationPack\MappingEngine;
-use OCA\OpenRegister\Service\MigrationPack\PackDefinitionValidator;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportPackMarker;
 use OCA\Stackiq\Service\Cmdb\CmdbImportPackStore;
@@ -44,9 +42,7 @@ class CmdbImportProfileTest extends TestCase {
 	 * @return ContainerInterface
 	 */
 	private function emptyContainer(): ContainerInterface {
-		$container = $this->createMock(ContainerInterface::class);
-		$container->method('has')->willReturn(false);
-		return $container;
+		return CmdbTestSupport::emptyContainer(test: $this);
 	}//end emptyContainer()
 
 	/**
@@ -86,7 +82,7 @@ class CmdbImportProfileTest extends TestCase {
 		$profile = new CmdbImportProfile(container: $this->emptyContainer());
 		$profile->load();
 
-		$validator = new PackDefinitionValidator();
+		$validator = CmdbTestSupport::newPackClass(class: 'PackDefinitionValidator');
 		foreach (CmdbImportProfile::TARGETS as $target) {
 			$pack = $profile->pack(target: $target);
 			$this->assertSame([], $validator->validate($pack), $target);
@@ -176,7 +172,7 @@ class CmdbImportProfileTest extends TestCase {
 		CmdbTestSupport::loadMigrationPack();
 		$profile = new CmdbImportProfile(container: $this->emptyContainer());
 		$profile->load();
-		$engine = new MappingEngine();
+		$engine = CmdbTestSupport::newPackClass(class: 'MappingEngine');
 
 		$usage = $engine->mapRow(
 			$profile->pack(target: 'usage'),
@@ -704,8 +700,9 @@ class CmdbImportProfileTest extends TestCase {
 		$config = [];
 		$container = $this->createMock(ContainerInterface::class);
 		$appConfig = FakeMigrationPackService::appConfig(test: $this, values: $config);
-		$container->method('has')->willReturnCallback(fn (string $id): bool => $id === \OCP\IAppConfig::class);
-		$container->method('get')->willReturn($appConfig);
+		$factory = CmdbTestSupport::translationFactory(test: $this);
+		$container->method('has')->willReturnCallback(fn (string $id): bool => $id === \OCP\IAppConfig::class || $id === \OCP\L10N\IFactory::class);
+		$container->method('get')->willReturnCallback(fn (string $id): object => $id === \OCP\L10N\IFactory::class ? $factory : $appConfig);
 
 		$profile = new CmdbImportProfile(container: $container);
 		$overview = $profile->mappingOverview();
@@ -728,8 +725,9 @@ class CmdbImportProfileTest extends TestCase {
 		$config = [CmdbImportPackStore::CONFIG_KEY => (string)json_encode(['stackiq-topdesk-module' => 41, 'stackiq-topdesk-usage' => 43])];
 		$container = $this->createMock(ContainerInterface::class);
 		$appConfig = FakeMigrationPackService::appConfig(test: $this, values: $config);
-		$container->method('has')->willReturnCallback(fn (string $id): bool => $id === \OCP\IAppConfig::class);
-		$container->method('get')->willReturn($appConfig);
+		$factory = CmdbTestSupport::translationFactory(test: $this);
+		$container->method('has')->willReturnCallback(fn (string $id): bool => $id === \OCP\IAppConfig::class || $id === \OCP\L10N\IFactory::class);
+		$container->method('get')->willReturnCallback(fn (string $id): object => $id === \OCP\L10N\IFactory::class ? $factory : $appConfig);
 
 		try {
 			(new CmdbImportProfile(container: $container))->load();

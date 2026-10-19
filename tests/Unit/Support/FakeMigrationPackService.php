@@ -259,7 +259,7 @@ final class FakeMigrationPackService {
 	public function container(TestCase $test, ?IAppConfig $appConfig = null): ContainerInterface {
 		$builder = new \ReflectionMethod(TestCase::class, 'createMock');
 		$container = $builder->invoke($test, ContainerInterface::class);
-		$known = ['OCA\OpenRegister\Service\MigrationPackService' => $this];
+		$known = ['OCA\OpenRegister\Service\MigrationPackService' => $this, \OCP\L10N\IFactory::class => CmdbTestSupport::translationFactory(test: $test)];
 		if ($appConfig !== null) {
 			$known[IAppConfig::class] = $appConfig;
 		}
