@@ -13,11 +13,12 @@
     {
       "name": "Onbeh Applicaties CMDB",
       "constants": { "Beheer": "Beheer geregeld: nee" },
-      "absentColumns": ["Nickname"]
+      "absentColumns": ["Nickname", "Applicatie Eigenaar (E-mail)", "Applicatie Eigenaar (Personeelsnummer)"]
     },
     {
       "name": "Beheerde Applicaties CMDB",
-      "constants": { "Beheer": "Beheer geregeld: ja" }
+      "constants": { "Beheer": "Beheer geregeld: ja" },
+      "absentColumns": ["Applicatie Eigenaar (E-mail)", "Applicatie Eigenaar (Personeelsnummer)"]
     }
   ],
   "sheetPrecedence": ["Beheerde Applicaties CMDB", "Onbeh Applicaties CMDB"],

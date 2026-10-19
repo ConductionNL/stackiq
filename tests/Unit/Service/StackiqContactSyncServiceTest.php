@@ -197,6 +197,31 @@ class StackiqContactSyncServiceTest extends TestCase {
 	}//end testNewContactsGoIntoTheNamedAddressBook()
 
 	/**
+	 * A caller that gives a UID gets a new contact with exactly that UID, so it can find it again by UID.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 */
+	public function testANewContactTakesTheGivenUid(): void {
+		$backend = $this->backend();
+		$service = $this->service(backend: $backend);
+
+		$uid = $service->syncToNamedAddressBook(
+			objectType: 'contactPerson',
+			record: ['voornaam' => 'Voornaam', 'achternaam' => 'Achternaam', 'email' => 'owner@example.org'],
+			addressBookUri: 'stackiq-cmdb-owners',
+			displayName: 'Stackiq CMDB owners',
+			fixedUid: 'stackiq-cmdb-owner-abc'
+		);
+
+		$this->assertSame('stackiq-cmdb-owner-abc', $uid);
+		$this->assertSame('stackiq-cmdb-owner-abc.vcf', $backend->cards[0][1]);
+		$this->assertStringStartsWith("BEGIN:VCARD\r\nVERSION:3.0\r\nUID:stackiq-cmdb-owner-abc\r\n", $backend->cards[0][2]);
+		$this->assertStringContainsString("\r\nEMAIL:owner@example.org\r\n", $backend->cards[0][2]);
+	}//end testANewContactTakesTheGivenUid()
+
+	/**
 	 * An e-mail address matches only a contact in the named address book; a personal contact with it is not linked.
 	 *
 	 * @return void

@@ -135,7 +135,15 @@ class CmdbImportProfileTest extends TestCase {
 			['Applicatie Status' => 'status', 'Classificatie' => 'timeClassification', 'End-of-Life Functioneel' => 'startDateOutPhased', 'Beheer' => 'interneAnnotation'],
 			$targets('usage')
 		);
-		$this->assertSame(['Applicatie Eigenaar (Persoon)' => 'name', 'Applicatie Eigenaar (Functie)' => 'role'], $targets('businessOwner'));
+		$this->assertSame(
+			[
+				'Applicatie Eigenaar (Persoon)' => 'name',
+				'Applicatie Eigenaar (Functie)' => 'role',
+				'Applicatie Eigenaar (E-mail)' => 'email',
+				'Applicatie Eigenaar (Personeelsnummer)' => 'employeeNumber',
+			],
+			$targets('businessOwner')
+		);
 		$this->assertSame(['module', 'manufacturer', 'municipality', 'usage', 'businessOwner'], CmdbImportProfile::TARGETS, 'no technical owner');
 
 		$this->assertSame(['type' => 'Supplier', 'status' => 'Active', 'registeredBy' => 'Supplier'], $profile->pack(target: 'manufacturer')['defaults']);
@@ -148,8 +156,9 @@ class CmdbImportProfileTest extends TestCase {
 		$this->assertSame(['Onbeh Applicaties CMDB', 'Beheerde Applicaties CMDB'], $profile->sheetNames());
 		$this->assertSame(['Beheer' => 'Beheer geregeld: nee'], $profile->sheetConstants(sheetName: 'Onbeh Applicaties CMDB'));
 		$this->assertSame(['Beheer' => 'Beheer geregeld: ja'], $profile->sheetConstants(sheetName: 'Beheerde Applicaties CMDB'));
-		$this->assertSame(['Nickname'], $profile->absentColumns(sheetName: 'Onbeh Applicaties CMDB'));
-		$this->assertSame([], $profile->absentColumns(sheetName: 'Beheerde Applicaties CMDB'));
+		$ownerColumns = ['Applicatie Eigenaar (E-mail)', 'Applicatie Eigenaar (Personeelsnummer)'];
+		$this->assertSame(['Nickname', ...$ownerColumns], $profile->absentColumns(sheetName: 'Onbeh Applicaties CMDB'));
+		$this->assertSame($ownerColumns, $profile->absentColumns(sheetName: 'Beheerde Applicaties CMDB'), 'the export has no owner e-mail or employee number column yet');
 		$this->assertSame(['BNN Classificatie' => ['NB']], $profile->emptyValues());
 		$this->assertSame(10485760, $profile->maxFileBytes());
 		$this->assertSame(10000, $profile->maxRowsPerSheet());
@@ -648,7 +657,7 @@ class CmdbImportProfileTest extends TestCase {
 				$pack['defaults']['type'] = 'Municipality';
 				return $pack;
 			}, 'default "type" must stay "Supplier"'],
-			'an owner field that is no contact field' => ['topdesk-business-owner.json', $target(1, 'email'), '"email" is not a field the businessOwner pack may map'],
+			'an owner field that is no contact field' => ['topdesk-business-owner.json', $target(1, 'telephone'), '"telephone" is not a field the businessOwner pack may map'],
 		];
 	}//end brokenRules()
 

@@ -858,11 +858,16 @@ class CmdbExportImportServiceTest extends TestCase {
 		$sync->method('isAvailable')->willReturnCallback(fn (): bool => $this->contactsEnabled);
 		$sync->method('searchContacts')->willThrowException(new \LogicException('owners are only searched in the named address book'));
 		$sync->method('searchNamedAddressBook')->willReturnCallback(
-			function (string $query, string $addressBookUri): array {
+			function (string $query, string $addressBookUri, array $properties): array {
 				$found = [];
 				foreach ($this->contacts as $uid => $contact) {
+					$haystack = $contact['name'];
+					if ($properties === ['UID']) {
+						$haystack = (string)$uid;
+					}
+
 					if (($contact['book'] ?? 'personal') === $addressBookUri
-						&& str_contains(mb_strtolower($contact['name']), mb_strtolower($query)) === true
+						&& str_contains(mb_strtolower($haystack), mb_strtolower($query)) === true
 					) {
 						$found[] = ['uid' => $uid, 'name' => $contact['name'], 'email' => $contact['email']];
 					}
@@ -873,7 +878,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		);
 		$sync->method('syncToContacts')->willThrowException(new \LogicException('owners go into the named address book, not the first writable one'));
 		$sync->method('syncToNamedAddressBook')->willReturnCallback(
-			function (string $objectType, array $record, string $addressBookUri, string $displayName): ?string {
+			function (string $objectType, array $record, string $addressBookUri, string $displayName, ?string $fixedUid = null): ?string {
 				$this->addressBooks[$addressBookUri] = $displayName;
 				$email = (string)($record['email'] ?? '');
 				foreach ($this->contacts as $uid => $contact) {
@@ -882,7 +887,7 @@ class CmdbExportImportServiceTest extends TestCase {
 					}
 				}
 
-				$uid = 'contact-' . (count($this->contacts) + 1);
+				$uid = ($fixedUid ?? 'contact-' . (count($this->contacts) + 1));
 				$this->contacts[$uid] = [
 					'name' => trim(($record['voornaam'] ?? '') . ' ' . ($record['achternaam'] ?? '')),
 					'email' => $email,
@@ -3196,6 +3201,87 @@ class CmdbExportImportServiceTest extends TestCase {
 		$created = array_diff_key($this->contacts, ['contact-personal' => true, 'contact-owner' => true]);
 		$this->assertSame(['stackiq-cmdb-owners'], array_values(array_unique(array_column($created, 'book'))));
 	}//end testOwnersAreMatchedOnlyInTheOwnersAddressBook()
+
+	/**
+	 * With an employee number the owner is matched on it: two namesakes stay two owners, and a renamed owner keeps its contact.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 */
+	public function testAnOwnerWithAnEmployeeNumberIsMatchedOnItNotOnTheName(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$first = ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'Applicatie Eigenaar (Personeelsnummer)' => '1001'];
+		$namesake = ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'Applicatie Eigenaar (Personeelsnummer)' => '2002'];
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: $first, row: 2), $this->row(appId: '2', cells: $namesake, row: 3)]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertCount(2, $this->contacts, 'two namesakes with their own number are two contacts');
+		$this->assertCount(2, $this->objects(self::CONTACT_PERSON));
+		$uid = CmdbExportImportService::ownerUidForEmployeeNumber(employeeNumber: '1001', municipalityUuid: 'muni-1');
+		$this->assertArrayHasKey($uid, $this->contacts);
+		$this->assertStringNotContainsString('1001', (string)$uid, 'the number is not readable from the contact');
+
+		// The owner changed their name; Excel stored the number as a decimal.
+		$renamed = ['Applicatie Eigenaar (Persoon)' => 'Nieuwenaam, Voornaam', 'Applicatie Eigenaar (Personeelsnummer)' => '1001.0'];
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: $renamed, row: 2)]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertCount(2, $this->contacts, 'the renamed owner is the same contact');
+		$people = array_column($this->objects(self::CONTACT_PERSON), null, 'contactsUid');
+		$this->assertSame($people[$uid]['id'], $this->objects(self::USAGE)[0]['businessOwner']);
+		$this->assertNull(CmdbExportImportService::ownerUidForEmployeeNumber(employeeNumber: ' ', municipalityUuid: 'muni-1'));
+		$this->assertNotSame($uid, CmdbExportImportService::ownerUidForEmployeeNumber(employeeNumber: '1001', municipalityUuid: 'muni-2'), 'scoped to the municipality');
+	}//end testAnOwnerWithAnEmployeeNumberIsMatchedOnItNotOnTheName()
+
+	/**
+	 * Without an employee number an e-mail address matches the owner, and is stored on the new contact.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 */
+	public function testAnOwnerWithOnlyAnEmailAddressIsMatchedOnIt(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->contacts['contact-namesake'] = ['name' => 'Voornaam Achternaam', 'email' => '', 'book' => 'stackiq-cmdb-owners'];
+		$owner = ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'Applicatie Eigenaar (E-mail)' => 'v.achternaam@example.org'];
+		$rows = [$this->row(appId: '1', cells: $owner)];
+
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertCount(2, $this->contacts, 'one new contact next to the namesake without an e-mail address');
+		$created = array_diff_key($this->contacts, ['contact-namesake' => true]);
+		$this->assertSame(['v.achternaam@example.org'], array_column($created, 'email'));
+		$this->assertCount(1, $this->objects(self::CONTACT_PERSON));
+	}//end testAnOwnerWithOnlyAnEmailAddressIsMatchedOnIt()
+
+	/**
+	 * Renaming the e-mail and employee number columns in OpenRegister is all an export with other column names needs.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-1
+	 */
+	public function testRenamedOwnerColumnsInOpenRegisterAreRead(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Rotterdam', type: 'Municipality');
+		$packs = new FakeMigrationPackService();
+		$owner = (new CmdbImportPackMarker())->seed(
+			shipped: json_decode((string)file_get_contents(CmdbTestSupport::appRoot() . '/lib/Settings/cmdb-import/topdesk-business-owner.json'), true)
+		);
+		$owner['fieldMappings'][2]['source'] = 'E-mailadres eigenaar';
+		$owner['fieldMappings'][3]['source'] = 'Pers.nr. eigenaar';
+		$packs->put(definition: $owner);
+
+		$cells = ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'E-mailadres eigenaar' => 'v.achternaam@example.org', 'Pers.nr. eigenaar' => '1001'];
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: $cells)]), packs: $packs)
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame([], $report['rows'][0]['warnings']);
+		$uid = CmdbExportImportService::ownerUidForEmployeeNumber(employeeNumber: '1001', municipalityUuid: 'muni-1');
+		$this->assertSame([$uid], array_keys($this->contacts), 'matched on the renamed employee number column');
+		$this->assertSame('v.achternaam@example.org', $this->contacts[$uid]['email'], 'the renamed e-mail column');
+	}//end testRenamedOwnerColumnsInOpenRegisterAreRead()
 
 	/**
 	 * No technical owner is written, whatever the row holds.

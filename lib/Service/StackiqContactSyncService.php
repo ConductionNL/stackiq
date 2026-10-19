@@ -191,12 +191,20 @@ class StackiqContactSyncService {
 	 * @param array<string, mixed> $record The relationship record.
 	 * @param string $addressBookUri The address book's URI, stable across languages.
 	 * @param string $displayName The display name for a new address book.
+	 * @param string|null $fixedUid The UID for a new contact, so the caller can find it again by UID; a random one when null.
 	 *
 	 * @return ?string The contacts UID, or null when it could not be resolved or created.
 	 *
 	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
 	 */
-	public function syncToNamedAddressBook(string $objectType, array $record, string $addressBookUri, string $displayName): ?string {
+	public function syncToNamedAddressBook(
+		string $objectType,
+		array $record,
+		string $addressBookUri,
+		string $displayName,
+		?string $fixedUid = null,
+	): ?string {
 		if ($this->isAvailable() === false) {
 			return null;
 		}
@@ -231,7 +239,7 @@ class StackiqContactSyncService {
 				uri: $addressBookUri,
 				displayName: $displayName
 			);
-			$contactUid = self::newUid();
+			$contactUid = ($fixedUid ?? self::newUid());
 			$backend->createCard($addressBookId, $contactUid . '.vcf', self::serialiseVCard(uid: $contactUid, properties: $properties));
 		} catch (Throwable $e) {
 			$this->logger->warning(
