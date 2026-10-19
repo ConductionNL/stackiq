@@ -8981,6 +8981,11 @@
 				"SkGebruikDetail"
 			]
 		},
+		"ai-system-inventory": {
+			"board": [
+				"SkApplicatie"
+			]
+		},
 		"app-id-rename": {
 			"board": null,
 			"reason": "Interne migratie van de app-id, geen scherm."
@@ -9069,6 +9074,15 @@
 			"board": [
 				"SkOrganisatie",
 				"SkInstellingenGegevens"
+			]
+		},
+		"contract-administration": {
+			"board": [
+				"SkApplicatie",
+				"SkContract",
+				"SkContracten",
+				"SkLicenties",
+				"SkRapportages"
 			]
 		},
 		"contract-decision-delegation": {
@@ -9164,6 +9178,13 @@
 				"SkLicenties"
 			]
 		},
+		"maintenance-and-supplier-roadmap": {
+			"board": [
+				"SkApplicatie",
+				"SkDashboard",
+				"SkModuleversie"
+			]
+		},
 		"method-decomposition": {
 			"board": null,
 			"reason": "Refactoring van controllers en services, geen scherm."
@@ -9187,6 +9208,12 @@
 		"multi-org-membership": {
 			"board": [
 				"SkOrganisatie"
+			]
+		},
+		"open-data-publishing": {
+			"board": [
+				"SkApplicaties",
+				"SkPubliek"
 			]
 		},
 		"org-archimate-export": {
