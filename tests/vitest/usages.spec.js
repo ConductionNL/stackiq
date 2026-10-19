@@ -99,6 +99,18 @@ describe('the usage pages', () => {
 		expect(statuses).toEqual(usage.properties.status.enum)
 	})
 
+	it('resolves both owner columns to the contact name, not the contact person uuid', () => {
+		// A contact person carries only `contactsUid`; the name lives in
+		// Nextcloud Contacts, so a plain column would print the uuid.
+		const columns = page('Gebruik').config.columns
+		for (const owner of ['businessOwner', 'technicalOwner']) {
+			const column = columns.find(
+				(c) => (typeof c === 'string' ? c : c.key) === owner,
+			)
+			expect(column, owner).toMatchObject({ widget: 'contactName' })
+		}
+	})
+
 	it('shows version, status and owners on the detail page and offers the lifecycle', () => {
 		const detail = page('GebruikDetail')
 		expect(detail.route).toBe('/gebruik/:id')
