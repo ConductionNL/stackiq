@@ -1258,7 +1258,10 @@ export function missingRecordsTexts(archive = mappingArchiveSheet(null)) {
 	if (!archive) {
 		return {
 			archiveOption: t('stackiq', 'Archive them'),
-			archiveHelp: t('stackiq', 'Applications no longer in the export are archived. The (i) button above explains when.'),
+			archiveHelp: t(
+				'stackiq',
+				'Applications no longer in the export are archived. The (i) button above explains when.',
+			),
 			reimportInfo: t(
 				'stackiq',
 				'Importing a newer export again updates the same applications, matched on APPID per municipality. Applications missing from it are archived, unless you choose to keep them.',
@@ -1267,7 +1270,10 @@ export function missingRecordsTexts(archive = mappingArchiveSheet(null)) {
 	}
 	return {
 		archiveOption: t('stackiq', 'Archive or delete them'),
-		archiveHelp: t('stackiq', 'Applications no longer in the export are archived or moved to the trash. The (i) button above explains when.'),
+		archiveHelp: t(
+			'stackiq',
+			'Applications no longer in the export are archived or moved to the trash. The (i) button above explains when.',
+		),
 		reimportInfo: t(
 			'stackiq',
 			'Importing a newer export again updates the same applications, matched on APPID per municipality. Applications missing from it are archived or deleted, unless you choose to keep them.',

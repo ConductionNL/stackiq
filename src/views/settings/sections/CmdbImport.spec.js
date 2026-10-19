@@ -382,7 +382,9 @@ describe('CmdbImport sheet names in the help texts', () => {
 		expect(panel).not.toContain('Gearchiveerde Applicaties')
 		expect(panel).not.toContain('moved to the trash')
 		expect(panel).not.toContain('archived or deleted')
-		const choice = wrapper.find('[data-testid="cmdb-import-missing-records"]').text()
+		const choice = wrapper
+			.find('[data-testid="cmdb-import-missing-records"]')
+			.text()
 		expect(wrapper.vm.missingRecordsWords.archiveOption).toBe('Archive them')
 		expect(choice).not.toContain('delete')
 		expect(choice).not.toContain('trash')
