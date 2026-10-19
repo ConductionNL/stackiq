@@ -179,11 +179,11 @@ class StackiqContactSyncService {
 	/**
 	 * Resolve the contact of a record, creating it in a dedicated address book of the signed-in user.
 	 *
-	 * A contact the record already links (`contactsUid`) is kept. Otherwise
-	 * a contact with the record's e-mail address is reused only when it is
-	 * in the address book with this URI: a contact in another address book
-	 * of the user is never matched, so the user's own contacts are never
-	 * linked to imported records. A new contact goes into that address book,
+	 * A contact the record already links (`contactsUid`) is kept. Otherwise,
+	 * without a fixed UID, a contact with the record's e-mail address is
+	 * reused only when it is in the address book with this URI: a contact
+	 * in another address book of the user is never matched, so the user's
+	 * own contacts are never linked to imported records. A new contact goes into that address book,
 	 * which is created with the display name when the user has none, and
 	 * never into the user's own first writable address book.
 	 *
@@ -192,6 +192,9 @@ class StackiqContactSyncService {
 	 * @param string $addressBookUri The address book's URI, stable across languages.
 	 * @param string $displayName The display name for a new address book.
 	 * @param string|null $fixedUid The UID for a new contact, so the caller can find it again by UID; a random one when null.
+	 *                              With a fixed UID the record's e-mail address matches no existing contact: the
+	 *                              caller identifies the contact by that UID, and a shared e-mail address must not
+	 *                              merge two of them.
 	 *
 	 * @return ?string The contacts UID, or null when it could not be resolved or created.
 	 *
@@ -214,7 +217,7 @@ class StackiqContactSyncService {
 			return $existingUid;
 		}
 
-		$matched = $this->namedAddressBookContactByEmail(record: $record, addressBookUri: $addressBookUri);
+		$matched = $this->namedAddressBookContactByEmail(record: $record, addressBookUri: $addressBookUri, fixedUid: $fixedUid);
 		if ($matched !== null) {
 			return $matched;
 		}
@@ -259,10 +262,12 @@ class StackiqContactSyncService {
 	 * @param string $addressBookUri The address book's URI.
 	 * @param array<int, string> $properties The vCard properties to search, such as FN or EMAIL.
 	 *
-	 * @return array<int, array<string, mixed>> The matching contacts, as searchContacts() returns them;
+	 * @return array<int, array<string, mixed>> The matching contacts, as searchContacts() returns them,
+	 *                                          plus `emails`: every e-mail address of the contact;
 	 *                                          none when the user has no such address book.
 	 *
 	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function searchNamedAddressBook(string $query, string $addressBookUri, array $properties): array {
 		$contacts = [];
@@ -271,6 +276,10 @@ class StackiqContactSyncService {
 				'uid' => (string)$result['UID'],
 				'name' => $this->firstValue(value: ($result['FN'] ?? '')),
 				'email' => $this->firstValue(value: ($result['EMAIL'] ?? '')),
+				'emails' => array_map(
+					fn (mixed $email): string => $this->firstValue(value: [$email]),
+					array_values((array)($result['EMAIL'] ?? []))
+				),
 				'addressBookKey' => (string)($result['addressbook-key'] ?? ''),
 			];
 		}
@@ -281,12 +290,22 @@ class StackiqContactSyncService {
 	/**
 	 * The contact in the named address book with the record's e-mail address, or null.
 	 *
+	 * Always null with a fixed UID: the caller identifies the contact by
+	 * that UID, and a shared e-mail address must not merge two of them.
+	 *
 	 * @param array<string, mixed> $record The relationship record.
 	 * @param string $addressBookUri The address book's URI.
+	 * @param string|null $fixedUid The UID the caller gives a new contact, or null.
 	 *
 	 * @return string|null The contact UID.
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
 	 */
-	private function namedAddressBookContactByEmail(array $record, string $addressBookUri): ?string {
+	private function namedAddressBookContactByEmail(array $record, string $addressBookUri, ?string $fixedUid): ?string {
+		if ($fixedUid !== null) {
+			return null;
+		}
+
 		$email = trim((string)($record['e-mailadres'] ?? $record['email'] ?? ''));
 		foreach ($this->namedAddressBookResults(query: $email, addressBookUri: $addressBookUri, properties: ['EMAIL']) as $result) {
 			if ($this->valueMatches(value: ($result['EMAIL'] ?? ''), needle: $email) === true) {

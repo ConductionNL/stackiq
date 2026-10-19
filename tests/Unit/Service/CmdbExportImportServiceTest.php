@@ -60,6 +60,7 @@ use OCP\Lock\LockedException;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
+use Psr\Log\LoggerInterface;
 use RuntimeException;
 
 /**
@@ -867,10 +868,14 @@ class CmdbExportImportServiceTest extends TestCase {
 						$haystack = (string)$uid;
 					}
 
+					if ($properties === ['EMAIL']) {
+						$haystack = implode(' ', array_merge([$contact['email']], $contact['emails'] ?? []));
+					}
+
 					if (($contact['book'] ?? 'personal') === $addressBookUri
 						&& str_contains(mb_strtolower($haystack), mb_strtolower($query)) === true
 					) {
-						$found[] = ['uid' => $uid, 'name' => $contact['name'], 'email' => $contact['email']];
+						$found[] = ['uid' => $uid, 'name' => $contact['name'], 'email' => $contact['email'], 'emails' => array_merge([$contact['email']], $contact['emails'] ?? [])];
 					}
 				}
 
@@ -883,7 +888,7 @@ class CmdbExportImportServiceTest extends TestCase {
 				$this->addressBooks[$addressBookUri] = $displayName;
 				$email = (string)($record['email'] ?? '');
 				foreach ($this->contacts as $uid => $contact) {
-					if ($email !== '' && ($contact['book'] ?? 'personal') === $addressBookUri && strcasecmp($contact['email'], $email) === 0) {
+					if ($fixedUid === null && $email !== '' && ($contact['book'] ?? 'personal') === $addressBookUri && strcasecmp($contact['email'], $email) === 0) {
 						return $uid;
 					}
 				}
@@ -1107,9 +1112,21 @@ class CmdbExportImportServiceTest extends TestCase {
 			l10n: $this->l10n(),
 			logger: $this->logger(),
 			lockingProvider: $this->locks,
-			userSession: $this->adminSession()
+			userSession: $this->adminSession(),
+			ownerIdentity: $this->ownerIdentity()
 		);
 	}//end service()
+
+	/**
+	 * The owner identity with a fixed instance secret.
+	 *
+	 * @return CmdbOwnerIdentity
+	 */
+	private function ownerIdentity(): CmdbOwnerIdentity {
+		$config = $this->createMock(IConfig::class);
+		$config->method('getSystemValueString')->willReturnCallback(fn (string $key, string $default = ''): string => $key === 'secret' ? 'instance-secret' : $default);
+		return new CmdbOwnerIdentity(config: $config, logger: $this->createMock(LoggerInterface::class));
+	}//end ownerIdentity()
 
 	/**
 	 * A session signed in as "admin".
@@ -3219,9 +3236,9 @@ class CmdbExportImportServiceTest extends TestCase {
 
 		$this->assertCount(2, $this->contacts, 'two namesakes with their own number are two contacts');
 		$this->assertCount(2, $this->objects(self::CONTACT_PERSON));
-		$uid = (new CmdbOwnerIdentity())->contactUid(employeeNumber: '1001', municipalityUuid: 'muni-1');
+		$uid = $this->ownerIdentity()->contactUid(employeeNumber: '1001', municipalityUuid: 'muni-1');
 		$this->assertArrayHasKey($uid, $this->contacts);
-		$this->assertStringNotContainsString('1001', (string)$uid, 'the number is not readable from the contact');
+		$this->assertStringNotContainsString('1001', (string)$uid, 'the number is not in the contact UID');
 
 		// The owner changed their name; Excel stored the number as a decimal.
 		$renamed = ['Applicatie Eigenaar (Persoon)' => 'Nieuwenaam, Voornaam', 'Applicatie Eigenaar (Personeelsnummer)' => '1001.0'];
@@ -3231,9 +3248,105 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertCount(2, $this->contacts, 'the renamed owner is the same contact');
 		$people = array_column($this->objects(self::CONTACT_PERSON), null, 'contactsUid');
 		$this->assertSame($people[$uid]['id'], $this->objects(self::USAGE)[0]['businessOwner']);
-		$this->assertNull((new CmdbOwnerIdentity())->contactUid(employeeNumber: ' ', municipalityUuid: 'muni-1'));
-		$this->assertNotSame($uid, (new CmdbOwnerIdentity())->contactUid(employeeNumber: '1001', municipalityUuid: 'muni-2'), 'scoped to the municipality');
+		$this->assertNull($this->ownerIdentity()->contactUid(employeeNumber: ' ', municipalityUuid: 'muni-1'));
+		$this->assertNotSame($uid, $this->ownerIdentity()->contactUid(employeeNumber: '1001', municipalityUuid: 'muni-2'), 'scoped to the municipality');
 	}//end testAnOwnerWithAnEmployeeNumberIsMatchedOnItNotOnTheName()
+
+	/**
+	 * Two namesakes with their own number and one shared mailbox stay two owners: the e-mail address never overrides the number.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 */
+	public function testASharedEmailAddressDoesNotMergeOwnersWithTheirOwnNumber(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$first = ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'Applicatie Eigenaar (E-mail)' => 'team@example.org', 'Applicatie Eigenaar (Personeelsnummer)' => '1001'];
+		$namesake = ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'Applicatie Eigenaar (E-mail)' => 'team@example.org', 'Applicatie Eigenaar (Personeelsnummer)' => '2002'];
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: $first, row: 2), $this->row(appId: '2', cells: $namesake, row: 3)]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$identity = $this->ownerIdentity();
+		$this->assertEqualsCanonicalizing(
+			[$identity->contactUid(employeeNumber: '1001', municipalityUuid: 'muni-1'), $identity->contactUid(employeeNumber: '2002', municipalityUuid: 'muni-1')],
+			array_keys($this->contacts)
+		);
+		$this->assertCount(2, $this->objects(self::CONTACT_PERSON));
+	}//end testASharedEmailAddressDoesNotMergeOwnersWithTheirOwnNumber()
+
+	/**
+	 * An owner known by e-mail address gets the employee-number contact once the number arrives; the old contact stays.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 */
+	public function testAnOwnerFirstKnownByEmailGetsTheNumberContact(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->contacts['contact-email'] = ['name' => 'Voornaam Achternaam', 'email' => 'v.achternaam@example.org', 'book' => 'stackiq-cmdb-owners'];
+		$owner = ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'Applicatie Eigenaar (E-mail)' => 'v.achternaam@example.org', 'Applicatie Eigenaar (Personeelsnummer)' => '1001'];
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: $owner)]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$uid = $this->ownerIdentity()->contactUid(employeeNumber: '1001', municipalityUuid: 'muni-1');
+		$this->assertArrayHasKey('contact-email', $this->contacts, 'the earlier contact stays');
+		$this->assertArrayHasKey($uid, $this->contacts);
+		$people = array_column($this->objects(self::CONTACT_PERSON), null, 'contactsUid');
+		$this->assertSame($people[$uid]['id'], $this->objects(self::USAGE)[0]['businessOwner']);
+	}//end testAnOwnerFirstKnownByEmailGetsTheNumberContact()
+
+	/**
+	 * A placeholder in the number column is no employee number: owners with "-" stay apart by name.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 */
+	public function testAPlaceholderInTheNumberColumnIsNoEmployeeNumber(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$first = ['Applicatie Eigenaar (Persoon)' => 'Eerste, Voornaam', 'Applicatie Eigenaar (Personeelsnummer)' => '-'];
+		$second = ['Applicatie Eigenaar (Persoon)' => 'Tweede, Voornaam', 'Applicatie Eigenaar (Personeelsnummer)' => '-'];
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: $first, row: 2), $this->row(appId: '2', cells: $second, row: 3)]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertCount(2, $this->contacts, 'two owners, not one contact for "-"');
+		$this->assertSame([], array_filter(array_keys($this->contacts), fn (string $uid): bool => str_starts_with($uid, CmdbOwnerIdentity::UID_PREFIX)));
+	}//end testAPlaceholderInTheNumberColumnIsNoEmployeeNumber()
+
+	/**
+	 * An owner without a number never takes a contact identified by an employee number, by e-mail address or by name.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 */
+	public function testAnOwnerWithoutANumberNeverTakesANumberContact(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$numbered = ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'Applicatie Eigenaar (E-mail)' => 'team@example.org', 'Applicatie Eigenaar (Personeelsnummer)' => '1001'];
+		$byEmail = ['Applicatie Eigenaar (Persoon)' => 'Anders, Iemand', 'Applicatie Eigenaar (E-mail)' => 'team@example.org'];
+		$byName = ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam'];
+		$rows = [$this->row(appId: '1', cells: $numbered, row: 2), $this->row(appId: '2', cells: $byEmail, row: 3), $this->row(appId: '3', cells: $byName, row: 4)];
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertCount(3, $this->contacts, 'the number contact, one for the shared mailbox, one for the namesake');
+		$this->assertCount(3, $this->objects(self::CONTACT_PERSON));
+	}//end testAnOwnerWithoutANumberNeverTakesANumberContact()
+
+	/**
+	 * Any e-mail address of an owner contact matches, not only its first one.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 */
+	public function testASecondEmailAddressOfAContactMatches(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->contacts['contact-two'] = ['name' => 'Voornaam Achternaam', 'email' => 'eerste@example.org', 'emails' => ['tweede@example.org'], 'book' => 'stackiq-cmdb-owners'];
+		$owner = ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'Applicatie Eigenaar (E-mail)' => 'Tweede@example.org'];
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', cells: $owner)]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(['contact-two'], array_keys($this->contacts));
+	}//end testASecondEmailAddressOfAContactMatches()
 
 	/**
 	 * Without an employee number an e-mail address matches the owner, and is stored on the new contact.
@@ -3279,7 +3392,7 @@ class CmdbExportImportServiceTest extends TestCase {
 			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
 
 		$this->assertSame([], $report['rows'][0]['warnings']);
-		$uid = (new CmdbOwnerIdentity())->contactUid(employeeNumber: '1001', municipalityUuid: 'muni-1');
+		$uid = $this->ownerIdentity()->contactUid(employeeNumber: '1001', municipalityUuid: 'muni-1');
 		$this->assertSame([$uid], array_keys($this->contacts), 'matched on the renamed employee number column');
 		$this->assertSame('v.achternaam@example.org', $this->contacts[$uid]['email'], 'the renamed e-mail column');
 	}//end testRenamedOwnerColumnsInOpenRegisterAreRead()

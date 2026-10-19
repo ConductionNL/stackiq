@@ -344,11 +344,22 @@ is not linked to the application. Within **Stackiq CMDB owners** the import
 recognises an owner, in this order:
 
 1. by the **employee number**, when the row has one. Two people with the same
-   name stay two owners, and an owner whose name changes keeps their contact.
-   The number is not stored on the contact; the contact's id is derived from
-   it and the municipality.
+   name stay two owners, also when they share an e-mail address, and an owner
+   whose name changes keeps their contact. The number is not stored on the
+   contact; the contact's id is a keyed hash of it, the municipality and the
+   server's secret, so the number cannot be read back from it. A value
+   without a digit other than 0, such as `-`, `0` or `n.v.t.`, is not an
+   employee number; leading zeros and a decimal `.0` are ignored.
 2. by the **e-mail address**, when the row has one and no employee number.
 3. by an exact match on the **name** otherwise.
+
+A row without an employee number never takes a contact that was created
+for an employee number, even with the same e-mail address or name: that
+contact belongs to that employee. When the server has no `secret` in
+`config.php`, employee numbers are not used (the log says so once per
+import) and owners are matched by e-mail address or name. Changing that
+`secret` gives every owner with an employee number a new contact on the
+next import; the old contacts stay.
 
 When nothing matches, the contact is created there, with the e-mail address
 when the row has one. The stackiq contact person object only holds the link
@@ -361,9 +372,12 @@ Those names are placeholders: the export does not have these columns yet.
 When your export names them differently, change the source column of the
 business-owner pack in OpenRegister (**Edit in OpenRegister** in the
 **CMDB import** section); no stackiq update is needed. An export without the
-columns imports as before, without a warning. Once you add the employee
-number, an owner who was found by name until then gets a new contact; the
-old contact stays in **Stackiq CMDB owners**.
+columns imports as before, without a warning. That holds for the
+placeholder names only: once you rename the columns, an export that has
+them on only one of the two CMDB sheets warns that the column is missing
+on the other. Once you add the employee number, an owner who was found by
+name or e-mail address until then gets a new contact; the old contact
+stays in **Stackiq CMDB owners**.
 
 When the Contacts app is disabled, applications and usages are still
 imported; the owners are skipped and each affected row carries a warning.

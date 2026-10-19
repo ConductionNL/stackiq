@@ -21,7 +21,11 @@ Spec: `openspec/changes/cmdb-import-owner-identity/specs/cmdb-export-import/spec
 - **acceptance_criteria**:
   - GIVEN two namesakes with their own employee number THEN two contacts and two contact persons
   - GIVEN a renamed owner with the same number (also as `1001.0`) THEN the same contact person
-  - GIVEN the same number at another municipality THEN another contact UID; the number is not readable from the UID
+  - GIVEN the same number at another municipality THEN another contact UID; the UID is keyed with the instance secret, so the number cannot be recovered from it by hashing candidate numbers
+  - GIVEN two namesakes with their own number and the same e-mail address THEN two contacts
+  - GIVEN a number cell holding `-`, `0` or `n.v.t.` THEN no employee number; GIVEN `01001` THEN the same UID as `1001`
+  - GIVEN an owner without a number who shares an e-mail address or name with an employee-number contact THEN a contact of their own
+  - GIVEN no instance secret THEN the number is not used and one warning is logged
   - GIVEN only an e-mail address THEN the owner is matched on it, not on a namesake without one
   - GIVEN a fixed UID WHEN a new contact is created THEN the card has that UID
 - [x] Implement

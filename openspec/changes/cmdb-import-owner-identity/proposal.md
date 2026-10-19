@@ -43,5 +43,5 @@ None.
 
 ## Risks
 
-- An owner first imported by name gets a second contact once the employee number arrives; the old contact stays in the address book. Documented.
+- An owner first imported by name or e-mail address gets a second contact once the employee number arrives; the old contact stays in the address book. Documented.
 - An unedited stored business-owner pack is replaced by 1.1.0 on update (REQ-CMDB-022); an edited one is kept and the new columns are then not added, with the existing "newer shipped version not applied" warning.
