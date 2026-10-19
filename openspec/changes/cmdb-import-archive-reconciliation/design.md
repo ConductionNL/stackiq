@@ -94,7 +94,7 @@ Per application, with `processed` = every APPID match key on the CMDB sheets (wh
 | on the archive sheet | deleted | restore, then archive | `archived` |
 | nowhere, sheet present | working or archived | soft-delete usage, then module | `deleted` |
 | nowhere, sheet present | deleted | nothing | — |
-| nowhere, sheet absent or incomplete (no key column, `uncachedRows` not empty, or a CMDB-sheet row with an unreadable APPID) | working | archive usage, then module | `archived` |
+| nowhere, sheet absent or incomplete (no key column, `uncachedRows` not empty, a CMDB-sheet row with an unreadable APPID, or a CMDB sheet absent from the workbook: `absentSheets` not empty) | working | archive usage, then module | `archived` |
 | nowhere, sheet absent or incomplete | archived or deleted | nothing | — |
 
 The table decides on one entry per key. When a municipality has several usages and modules under the same import key (D4 says earlier imports created exactly such duplicates, a module deleted by hand next to the one a later import created), the scope keeps the entry the import would match: the best module state wins (working, then archived, then deleted), the best usage state breaks a tie, the first listed breaks the rest. The other usages of the key follow the application, so a stray usage stays visible nowhere: a working or archived usage of a stale duplicate, a second usage of the same module, and a working or archived duplicate module are archived or soft-deleted as the key asks, once, in the same error boundary and the same report row (usages first, then modules). What is in the trash is left as it is: a stale trashed duplicate is not restored into the archive when the key is on the archive sheet, and is not touched when it is on no sheet.
@@ -196,7 +196,7 @@ No seed objects change. The fragment's three seed modules stay as they are; the 
 ## Risks / Trade-offs
 
 - [The default archives on the first re-import after the upgrade] → The section shows the choice with help text; the report lists every archived and deleted application; nothing is hard-deleted.
-- [A workbook saved without the archive sheet, or whose archive sheet has no APPID column or an APPID without a cached value, or a CMDB sheet with an APPID without a cached value] → archive only, never delete, plus a warning (D3).
+- [A workbook saved without the archive sheet, or whose archive sheet has no APPID column or an APPID without a cached value, or a CMDB sheet with an APPID without a cached value, or a workbook without one of the CMDB sheets] → archive only, never delete, plus a warning (D3).
 - [A failure part way through an application] → usages are written before modules, so a module is never changed under a usage that still shows; but a failing extra usage leaves the own usage changed, that extra visible and the module unchanged, and the row only says `failed`. The next import retries (D5).
 - [Reviving before writing adds calls per returning row] → only for rows whose match is archived or deleted; a row whose module is working costs the same searches as before, a new row one more search (the archive lens).
 - [The trash listing scans every magic table of the instance] → read once per import, not per row (D9).

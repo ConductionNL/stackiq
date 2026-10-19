@@ -1239,7 +1239,7 @@ export function missingApplicationsText(archive = mappingArchiveSheet(null)) {
 	}
 	return t(
 		'stackiq',
-		'An application of this municipality that is on no CMDB sheet any more is archived when the sheet "{archive}" lists it, and moved to the trash when no sheet does. Both disappear from the lists, from OpenCatalogi and from Portaliq; one that returns in a later export is brought back. When that sheet is missing, has no APPID column, or has an APPID without a cached value, applications are only archived and the result says so. Choose Keep to leave them as they are.',
+		'An application of this municipality that is on no CMDB sheet any more is archived when the sheet "{archive}" lists it, and moved to the trash when no sheet does. Both disappear from the lists, from OpenCatalogi and from Portaliq; one that returns in a later export is brought back. When that sheet is missing, has no APPID column or has an APPID without a cached value, or the workbook lacks one of the CMDB sheets, applications are only archived and the result says so. Choose Keep to leave them as they are.',
 		{ archive },
 		AS_TEXT,
 	)
