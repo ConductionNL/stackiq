@@ -600,6 +600,7 @@ describe('the archive sheet in the help texts', () => {
 		const withArchive = missingApplicationsText('Archief')
 		expect(withArchive).toContain('archived when the sheet "Archief" lists it')
 		expect(withArchive).toContain('moved to the trash')
+		expect(withArchive).toContain('or the workbook lacks one of the CMDB sheets')
 		const without = missingApplicationsText(null)
 		expect(without).not.toContain('trash')
 		expect(without).not.toContain('sheet "')

@@ -381,6 +381,13 @@ describe('CmdbImport sheet names in the help texts', () => {
 		const panel = wrapper.find('.cmdb-import-info').text()
 		expect(panel).not.toContain('Gearchiveerde Applicaties')
 		expect(panel).not.toContain('moved to the trash')
+		expect(panel).not.toContain('archived or deleted')
+		const choice = wrapper
+			.find('[data-testid="cmdb-import-missing-records"]')
+			.text()
+		expect(wrapper.vm.missingRecordsWords.archiveOption).toBe('Archive them')
+		expect(choice).not.toContain('delete')
+		expect(choice).not.toContain('trash')
 		await wrapper.setData({ error: tooLarge })
 		expect(wrapper.vm.errorView.hint).toContain(
 			'(it reads only "Alpha", "Beta")',

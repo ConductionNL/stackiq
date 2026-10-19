@@ -996,6 +996,41 @@ class CmdbWorkbookReaderTest extends TestCase {
 	}//end testTheArchiveSheetIsOptionalAndReadForItsKeyOnly()
 
 	/**
+	 * A workbook with only some of the source sheets is read, and names the ones it lacks; with all of them it names none.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function testAWorkbookWithSomeSourceSheetsNamesTheAbsentOnes(): void {
+		$this->requireSpreadsheet();
+		$cmdb = [['APPID', 'Applicatie Naam'], [1, 'Een']];
+		$archive = [['APPID'], [7]];
+		$cases = [
+			'one source sheet missing' => [
+				['Onbeh Applicaties CMDB' => $cmdb, 'Gearchiveerde Applicaties' => $archive],
+				['Beheerde Applicaties CMDB'],
+			],
+			'every source sheet there' => [
+				['Onbeh Applicaties CMDB' => $cmdb, 'Beheerde Applicaties CMDB' => $cmdb, 'Gearchiveerde Applicaties' => $archive],
+				[],
+			],
+		];
+
+		foreach ($cases as $case => [$sheets, $absent]) {
+			$path = CmdbTestSupport::buildWorkbook(sheets: $sheets);
+			try {
+				$result = (new CmdbWorkbookReader())->read(path: $path, profile: $this->profile());
+			} finally {
+				unlink($path);
+			}
+
+			$this->assertSame($absent, $result['absentSheets'], $case);
+			$this->assertTrue($result['archive']['present'], $case);
+		}
+	}//end testAWorkbookWithSomeSourceSheetsNamesTheAbsentOnes()
+
+	/**
 	 * An archive sheet with more rows than the profile allows is refused and named, like a source sheet.
 	 *
 	 * @return void
