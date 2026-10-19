@@ -377,7 +377,12 @@ placeholder names only: once you rename the columns, an export that has
 them on only one of the two CMDB sheets warns that the column is missing
 on the other. Once you add the employee number, an owner who was found by
 name or e-mail address until then gets a new contact; the old contact
-stays in **Stackiq CMDB owners**.
+stays in **Stackiq CMDB owners**. The same happens when an owner first
+imported by name alone arrives with an e-mail address: the name-only
+contact is not found by that address, so a second contact is created next
+to it. An instance without a `secret` in `config.php` cannot use the
+employee number: owners are then matched on e-mail address or name, so
+two namesakes become one contact (the log warns once).
 
 When the Contacts app is disabled, applications and usages are still
 imported; the owners are skipped and each affected row carries a warning.
