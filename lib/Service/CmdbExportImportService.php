@@ -1656,8 +1656,10 @@ class CmdbExportImportService {
 	 * Nextcloud indexes the UID property of every card (CardDavBackend
 	 * INDEXED_PROPERTIES) and AddressBookImpl::search() matches it with a
 	 * LIKE on that index, so a search on ['UID'] finds the card. Should the
-	 * index lag, the second createCard with the same UID is tolerated in
-	 * StackiqContactSyncService::syncToNamedAddressBook().
+	 * search miss it anyway, StackiqContactSyncService::syncToNamedAddressBook()
+	 * reuses a card found by getCard('<uid>.vcf') in the same address book. A
+	 * card with this UID at a different URI is not found that way: createCard
+	 * then throws UidConflict, which is caught and returns null.
 	 *
 	 * @param string $uid The contact UID.
 	 *
