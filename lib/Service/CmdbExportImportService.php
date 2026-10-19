@@ -68,6 +68,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\Cmdb\CmdbImportReport;
+use OCA\Stackiq\Service\Cmdb\CmdbOwnerIdentity;
 use OCA\Stackiq\Service\Cmdb\CmdbRowNormaliser;
 use OCA\Stackiq\Service\Cmdb\CmdbWorkbookReader;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -1564,28 +1565,18 @@ class CmdbExportImportService {
 		$parts = self::splitPersonName(name: (string)$identity['name']);
 		$displayName = trim($parts['voornaam'] . ' ' . $parts['achternaam']);
 		$email = trim((string)($identity['email'] ?? ''));
-		$numberUid = self::ownerUidForEmployeeNumber(
+		$ownerIdentity = new CmdbOwnerIdentity();
+		$numberUid = $ownerIdentity->contactUid(
 			employeeNumber: (string)($identity['employeeNumber'] ?? ''),
 			municipalityUuid: $municipalityUuid
 		);
 
-		$cacheKey = 'name:' . mb_strtolower($displayName);
-		if ($numberUid !== null) {
-			$cacheKey = 'uid:' . $numberUid;
-		} elseif ($email !== '') {
-			$cacheKey = 'email:' . mb_strtolower($email);
-		}
-
+		$cacheKey = $ownerIdentity->cacheKey(contactUid: $numberUid, email: $email, displayName: $displayName);
 		if (array_key_exists($cacheKey, $this->contactUids) === true) {
 			return $this->contactUids[$cacheKey];
 		}
 
-		$uid = null;
-		if ($numberUid !== null) {
-			$uid = $this->contactByUid(uid: $numberUid);
-		} elseif ($email === '') {
-			$uid = $this->contactByDisplayName(displayName: $displayName);
-		}
+		$uid = $this->existingOwnerContact(numberUid: $numberUid, email: $email, displayName: $displayName);
 
 		if ($uid === null) {
 			$record = ['voornaam' => $parts['voornaam'], 'achternaam' => $parts['achternaam']];
@@ -1615,29 +1606,30 @@ class CmdbExportImportService {
 	}//end resolveContactUid()
 
 	/**
-	 * The contact UID of an owner with this employee number, or null without one.
+	 * The contact an owner already has: by the UID from the employee number, else by exact name when there is no e-mail address.
 	 *
-	 * A hash, so the employee number is not readable from the contact, and
-	 * scoped to the municipality, so the same number at two municipalities
-	 * is two owners. A number Excel stored as a decimal ("1234.0") is the
-	 * same number as "1234".
+	 * With an e-mail address and no employee number, StackiqContactSyncService
+	 * matches on the address itself when it resolves the contact.
 	 *
-	 * @param string $employeeNumber The employee number from the owner pack.
-	 * @param string $municipalityUuid The municipality.
+	 * @param string|null $numberUid The UID from the employee number, or null.
+	 * @param string $email The e-mail address, or ''.
+	 * @param string $displayName The display name.
 	 *
-	 * @return string|null
+	 * @return string|null The contact UID, or null.
 	 *
 	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
 	 */
-	public static function ownerUidForEmployeeNumber(string $employeeNumber, string $municipalityUuid): ?string {
-		$number = mb_strtolower(trim($employeeNumber));
-		$number = (string)preg_replace('/^(\d+)\.0+$/', '$1', $number);
-		if ($number === '') {
-			return null;
+	private function existingOwnerContact(?string $numberUid, string $email, string $displayName): ?string {
+		if ($numberUid !== null) {
+			return $this->contactByUid(uid: $numberUid);
 		}
 
-		return 'stackiq-cmdb-owner-' . hash('sha256', $municipalityUuid . '|' . $number);
-	}//end ownerUidForEmployeeNumber()
+		if ($email === '') {
+			return $this->contactByDisplayName(displayName: $displayName);
+		}
+
+		return null;
+	}//end existingOwnerContact()
 
 	/**
 	 * The contact in the owners' address book with exactly this UID.

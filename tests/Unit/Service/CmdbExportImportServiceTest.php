@@ -40,6 +40,7 @@ use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportPackMarker;
 use OCA\Stackiq\Service\Cmdb\CmdbImportPackStore;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
+use OCA\Stackiq\Service\Cmdb\CmdbOwnerIdentity;
 use OCA\Stackiq\Service\Cmdb\CmdbRowNormaliser;
 use OCA\Stackiq\Service\Cmdb\CmdbWorkbookReader;
 use OCA\Stackiq\Service\CmdbExportImportService;
@@ -3218,7 +3219,7 @@ class CmdbExportImportServiceTest extends TestCase {
 
 		$this->assertCount(2, $this->contacts, 'two namesakes with their own number are two contacts');
 		$this->assertCount(2, $this->objects(self::CONTACT_PERSON));
-		$uid = CmdbExportImportService::ownerUidForEmployeeNumber(employeeNumber: '1001', municipalityUuid: 'muni-1');
+		$uid = (new CmdbOwnerIdentity())->contactUid(employeeNumber: '1001', municipalityUuid: 'muni-1');
 		$this->assertArrayHasKey($uid, $this->contacts);
 		$this->assertStringNotContainsString('1001', (string)$uid, 'the number is not readable from the contact');
 
@@ -3230,8 +3231,8 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertCount(2, $this->contacts, 'the renamed owner is the same contact');
 		$people = array_column($this->objects(self::CONTACT_PERSON), null, 'contactsUid');
 		$this->assertSame($people[$uid]['id'], $this->objects(self::USAGE)[0]['businessOwner']);
-		$this->assertNull(CmdbExportImportService::ownerUidForEmployeeNumber(employeeNumber: ' ', municipalityUuid: 'muni-1'));
-		$this->assertNotSame($uid, CmdbExportImportService::ownerUidForEmployeeNumber(employeeNumber: '1001', municipalityUuid: 'muni-2'), 'scoped to the municipality');
+		$this->assertNull((new CmdbOwnerIdentity())->contactUid(employeeNumber: ' ', municipalityUuid: 'muni-1'));
+		$this->assertNotSame($uid, (new CmdbOwnerIdentity())->contactUid(employeeNumber: '1001', municipalityUuid: 'muni-2'), 'scoped to the municipality');
 	}//end testAnOwnerWithAnEmployeeNumberIsMatchedOnItNotOnTheName()
 
 	/**
@@ -3278,7 +3279,7 @@ class CmdbExportImportServiceTest extends TestCase {
 			->import(path: '', options: ['municipalityUuid' => 'muni-1']);
 
 		$this->assertSame([], $report['rows'][0]['warnings']);
-		$uid = CmdbExportImportService::ownerUidForEmployeeNumber(employeeNumber: '1001', municipalityUuid: 'muni-1');
+		$uid = (new CmdbOwnerIdentity())->contactUid(employeeNumber: '1001', municipalityUuid: 'muni-1');
 		$this->assertSame([$uid], array_keys($this->contacts), 'matched on the renamed employee number column');
 		$this->assertSame('v.achternaam@example.org', $this->contacts[$uid]['email'], 'the renamed e-mail column');
 	}//end testRenamedOwnerColumnsInOpenRegisterAreRead()

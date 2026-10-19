@@ -17,7 +17,7 @@ Spec: `openspec/changes/cmdb-import-owner-identity/specs/cmdb-export-import/spec
 
 ### Task 2: The owner is matched on the employee number, then the e-mail address, then the name
 - **spec_ref**: `SPEC#requirement-the-owner-shall-become-a-contact-person-of-the-municipality-through-nextcloud-contacts-never-a-user-account-and-shall-never-be-publicly-readable-req-cmdb-010` (cmdb-export-import#REQ-CMDB-010)
-- **files**: `lib/Service/CmdbExportImportService.php`, `lib/Service/StackiqContactSyncService.php`, `tests/Unit/Service/CmdbExportImportServiceTest.php`, `tests/Unit/Service/StackiqContactSyncServiceTest.php`
+- **files**: `lib/Service/CmdbExportImportService.php`, `lib/Service/Cmdb/CmdbOwnerIdentity.php`, `lib/Service/StackiqContactSyncService.php`, `tests/Unit/Service/CmdbExportImportServiceTest.php`, `tests/Unit/Service/Cmdb/CmdbOwnerIdentityTest.php`, `tests/Unit/Service/StackiqContactSyncServiceTest.php`
 - **acceptance_criteria**:
   - GIVEN two namesakes with their own employee number THEN two contacts and two contact persons
   - GIVEN a renamed owner with the same number (also as `1001.0`) THEN the same contact person
