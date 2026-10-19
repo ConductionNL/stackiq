@@ -68,6 +68,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\Cmdb\CmdbImportReport;
+use OCA\Stackiq\Service\Cmdb\CmdbOwnerIdentity;
 use OCA\Stackiq\Service\Cmdb\CmdbRowNormaliser;
 use OCA\Stackiq\Service\Cmdb\CmdbWorkbookReader;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -351,6 +352,7 @@ class CmdbExportImportService {
 	 * @param LoggerInterface $logger Logger; never handed person data.
 	 * @param ILockingProvider $lockingProvider Serialises imports per register.
 	 * @param IUserSession $userSession Names the admin who ran an import in its audit log lines.
+	 * @param CmdbOwnerIdentity $ownerIdentity Derives an owner's contact UID and cache key.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList) Each collaborator is one concern of the
 	 * import (the file, the packs, OpenRegister, Contacts, progress, the lock); grouping them
@@ -370,6 +372,7 @@ class CmdbExportImportService {
 		private readonly LoggerInterface $logger,
 		private readonly ILockingProvider $lockingProvider,
 		private readonly IUserSession $userSession,
+		private readonly CmdbOwnerIdentity $ownerIdentity,
 	) {
 	}//end __construct()
 
@@ -1531,7 +1534,7 @@ class CmdbExportImportService {
 		foreach ($identities as $target => $identity) {
 			$column = $this->ownerColumn(target: $target);
 			try {
-				$contactsUid = $this->resolveContactUid(identity: $identity);
+				$contactsUid = $this->resolveContactUid(identity: $identity, municipalityUuid: $municipalityUuid);
 				if ($contactsUid === null) {
 					$warnings[] = $this->l10n->t('Owner from column "%s" could not be resolved in Nextcloud Contacts', [$column]);
 					continue;
@@ -1559,36 +1562,43 @@ class CmdbExportImportService {
 	 *
 	 * Contacts are matched, and created, only in the importing admin's
 	 * dedicated "Stackiq CMDB owners" address book, never in the admin's
-	 * other address books. With an e-mail address, StackiqContactSyncService
-	 * matches on it there or creates the contact. Without one, only a contact
-	 * there whose display name is exactly the owner's name (case-insensitive)
-	 * is reused, so an owner known by name alone is not created again on
-	 * every import.
+	 * other address books. With an employee number, the contact is the one
+	 * whose UID derives from that number and the municipality, so two
+	 * namesakes stay two contacts and a renamed owner keeps the same one;
+	 * the number itself is never stored, and an e-mail address on the row
+	 * never matches another contact (a shared mailbox would merge two
+	 * owners again): the contact is created with that UID. Without a
+	 * number, a contact there with the row's e-mail address is reused, and
+	 * without either, a contact whose display name is exactly the owner's
+	 * name (case-insensitive), so an owner known by name alone is not
+	 * created again on every import; neither ever reuses a contact
+	 * identified by an employee number, which belongs to that employee.
+	 * A new contact gets its UID from here, so StackiqContactSyncService
+	 * does no matching of its own.
 	 *
-	 * @param array<string, mixed> $identity name, email and role from the owner pack.
+	 * @param array<string, mixed> $identity name, email, employeeNumber and role from the owner pack.
+	 * @param string $municipalityUuid The municipality whose employee numbers these are.
 	 *
 	 * @return string|null The contact UID, or null.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-6
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
 	 */
-	private function resolveContactUid(array $identity): ?string {
+	private function resolveContactUid(array $identity, string $municipalityUuid): ?string {
 		$parts = self::splitPersonName(name: (string)$identity['name']);
 		$displayName = trim($parts['voornaam'] . ' ' . $parts['achternaam']);
 		$email = trim((string)($identity['email'] ?? ''));
+		$numberUid = $this->ownerIdentity->contactUid(
+			employeeNumber: (string)($identity['employeeNumber'] ?? ''),
+			municipalityUuid: $municipalityUuid
+		);
 
-		$cacheKey = 'name:' . mb_strtolower($displayName);
-		if ($email !== '') {
-			$cacheKey = 'email:' . mb_strtolower($email);
-		}
-
+		$cacheKey = $this->ownerIdentity->cacheKey(contactUid: $numberUid, email: $email, displayName: $displayName);
 		if (array_key_exists($cacheKey, $this->contactUids) === true) {
 			return $this->contactUids[$cacheKey];
 		}
 
-		$uid = null;
-		if ($email === '') {
-			$uid = $this->contactByDisplayName(displayName: $displayName);
-		}
+		$uid = $this->existingOwnerContact(numberUid: $numberUid, email: $email, displayName: $displayName);
 
 		if ($uid === null) {
 			$record = ['voornaam' => $parts['voornaam'], 'achternaam' => $parts['achternaam']];
@@ -1605,7 +1615,8 @@ class CmdbExportImportService {
 				objectType: 'contactPerson',
 				record: $record,
 				addressBookUri: self::OWNER_ADDRESS_BOOK_URI,
-				displayName: $this->l10n->t('Stackiq CMDB owners')
+				displayName: $this->l10n->t('Stackiq CMDB owners'),
+				fixedUid: ($numberUid ?? $this->ownerIdentity->newContactUid())
 			);
 			if ($uid === '') {
 				$uid = null;
@@ -1617,29 +1628,80 @@ class CmdbExportImportService {
 	}//end resolveContactUid()
 
 	/**
-	 * The contact in the owners' address book whose display name is exactly this one, case-insensitive.
+	 * The contact an owner already has: by the UID from the employee number, else by e-mail address, else by exact name.
 	 *
-	 * Only the dedicated "Stackiq CMDB owners" address book is searched: a
-	 * namesake in another address book of the admin, such as a personal
-	 * contact, is never linked to an imported owner.
-	 *
+	 * @param string|null $numberUid The UID from the employee number, or null.
+	 * @param string $email The e-mail address, or ''.
 	 * @param string $displayName The display name.
 	 *
 	 * @return string|null The contact UID, or null.
 	 *
-	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-6
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
 	 */
-	private function contactByDisplayName(string $displayName): ?string {
-		$needle = mb_strtolower($displayName);
-		$contacts = $this->contactSync->searchNamedAddressBook(query: $displayName, addressBookUri: self::OWNER_ADDRESS_BOOK_URI, properties: ['FN']);
+	private function existingOwnerContact(?string $numberUid, string $email, string $displayName): ?string {
+		if ($numberUid !== null) {
+			return $this->contactByUid(uid: $numberUid);
+		}
+
+		if ($email !== '') {
+			return $this->contactByProperty(property: 'EMAIL', key: 'emails', value: $email);
+		}
+
+		return $this->contactByProperty(property: 'FN', key: 'name', value: $displayName);
+	}//end existingOwnerContact()
+
+	/**
+	 * The contact in the owners' address book with exactly this UID.
+	 *
+	 * @param string $uid The contact UID.
+	 *
+	 * @return string|null The contact UID, or null.
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 */
+	private function contactByUid(string $uid): ?string {
+		$contacts = $this->contactSync->searchNamedAddressBook(query: $uid, addressBookUri: self::OWNER_ADDRESS_BOOK_URI, properties: ['UID']);
 		foreach ($contacts as $contact) {
-			if (mb_strtolower(trim((string)($contact['name'] ?? ''))) === $needle) {
-				return (string)$contact['uid'];
+			if ((string)($contact['uid'] ?? '') === $uid) {
+				return $uid;
 			}
 		}
 
 		return null;
-	}//end contactByDisplayName()
+	}//end contactByUid()
+
+	/**
+	 * The contact in the owners' address book whose e-mail address or display name is exactly this one, case-insensitive.
+	 *
+	 * Only the dedicated "Stackiq CMDB owners" address book is searched: a
+	 * namesake in another address book of the admin, such as a personal
+	 * contact, is never linked to an imported owner. A contact identified by
+	 * an employee number is never returned: it is that employee's, and an
+	 * owner without a number who shares a name or mailbox is someone else
+	 * as far as the import can tell.
+	 *
+	 * @param string $property The vCard property to search: EMAIL or FN.
+	 * @param string $key The key of that value in a search result: emails (every address) or name.
+	 * @param string $value The e-mail address or display name.
+	 *
+	 * @return string|null The contact UID, or null.
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-6
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 */
+	private function contactByProperty(string $property, string $key, string $value): ?string {
+		$needle = mb_strtolower(trim($value));
+		$contacts = $this->contactSync->searchNamedAddressBook(query: $value, addressBookUri: self::OWNER_ADDRESS_BOOK_URI, properties: [$property]);
+		foreach ($contacts as $contact) {
+			$uid = (string)($contact['uid'] ?? '');
+			$values = array_map(fn (mixed $candidate): string => mb_strtolower(trim((string)$candidate)), (array)($contact[$key] ?? []));
+			if (str_starts_with($uid, CmdbOwnerIdentity::UID_PREFIX) === false && in_array($needle, $values, true) === true) {
+				return $uid;
+			}
+		}
+
+		return null;
+	}//end contactByProperty()
 
 	/**
 	 * Find or create the contact person of a contact for the municipality.

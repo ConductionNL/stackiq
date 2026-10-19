@@ -70,13 +70,14 @@ class CmdbImportPackRules {
 	/**
 	 * The fields a pack may map or default for a target that writes into no schema.
 	 *
-	 * The business owner is resolved in Nextcloud Contacts by name, with the
-	 * role on the contact person, so it has no schema to read its fields from.
+	 * The business owner is resolved in Nextcloud Contacts by employee number,
+	 * e-mail address or name, with the role on the contact person, so it has
+	 * no schema to read its fields from.
 	 *
 	 * @var array<string, array<int, string>>
 	 */
 	private const FIELDS_WITHOUT_SCHEMA = [
-		'businessOwner' => ['name', 'role'],
+		'businessOwner' => ['name', 'role', 'email', 'employeeNumber'],
 	];
 
 	/**

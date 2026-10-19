@@ -112,7 +112,7 @@ class CmdbImportPackRulesTest extends TestCase {
 			'the organisation image, a file' => ['manufacturer', 'image', '"image" is a relation or a file and cannot be mapped'],
 			'a field the module schema does not have' => ['module', 'noSuchField', '"noSuchField" is not a field the module pack may map'],
 			'a field the usage schema does not have' => ['usage', 'noSuchField', '"noSuchField" is not a field the usage pack may map'],
-			'a contact field the business owner does not have' => ['businessOwner', 'email', '"email" is not a field the businessOwner pack may map'],
+			'a contact field the business owner does not have' => ['businessOwner', 'telephone', '"telephone" is not a field the businessOwner pack may map'],
 		];
 	}//end refusedMappings()
 
@@ -134,6 +134,25 @@ class CmdbImportPackRulesTest extends TestCase {
 
 		$this->assertSame([$rule], (new CmdbImportPackRules())->violations(target: $target, pack: $pack, profile: $profile));
 	}//end testARefusedFieldCannotBeMapped()
+
+	/**
+	 * The owner pack may map an e-mail address and an employee number, from any column.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-1
+	 */
+	public function testTheOwnerPackMayMapAnEmailAddressAndAnEmployeeNumber(): void {
+		$profile = $this->shipped(file: 'topdesk-profile.json');
+		$pack = $this->shipped(file: 'topdesk-business-owner.json');
+		$pack['fieldMappings'] = array_map(
+			fn (array $mapping): array => array_merge($mapping, ['source' => 'Kolom ' . $mapping['target']]),
+			$pack['fieldMappings']
+		);
+
+		$this->assertSame(['name', 'role', 'email', 'employeeNumber'], array_column($pack['fieldMappings'], 'target'));
+		$this->assertSame([], (new CmdbImportPackRules())->violations(target: 'businessOwner', pack: $pack, profile: $profile));
+	}//end testTheOwnerPackMayMapAnEmailAddressAndAnEmployeeNumber()
 
 	/**
 	 * A refused field cannot be set as a default either, and the admin defaults keep their shipped value.

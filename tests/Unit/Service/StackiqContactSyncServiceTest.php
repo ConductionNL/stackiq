@@ -89,7 +89,7 @@ class StackiqContactSyncServiceTest extends TestCase {
 						$contacts,
 						static function (array $contact) use ($pattern, $properties): bool {
 							foreach ($properties as $property) {
-								if (str_contains(mb_strtolower((string)($contact[$property] ?? '')), mb_strtolower($pattern)) === true) {
+								if (str_contains(mb_strtolower(json_encode($contact[$property] ?? '', JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)), mb_strtolower($pattern)) === true) {
 									return true;
 								}
 							}
@@ -197,6 +197,56 @@ class StackiqContactSyncServiceTest extends TestCase {
 	}//end testNewContactsGoIntoTheNamedAddressBook()
 
 	/**
+	 * A caller that gives a UID gets a new contact with exactly that UID, so it can find it again by UID.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 */
+	public function testANewContactTakesTheGivenUid(): void {
+		$backend = $this->backend();
+		$service = $this->service(backend: $backend);
+
+		$uid = $service->syncToNamedAddressBook(
+			objectType: 'contactPerson',
+			record: ['voornaam' => 'Voornaam', 'achternaam' => 'Achternaam', 'email' => 'owner@example.org'],
+			addressBookUri: 'stackiq-cmdb-owners',
+			displayName: 'Stackiq CMDB owners',
+			fixedUid: 'stackiq-cmdb-owner-abc'
+		);
+
+		$this->assertSame('stackiq-cmdb-owner-abc', $uid);
+		$this->assertSame('stackiq-cmdb-owner-abc.vcf', $backend->cards[0][1]);
+		$this->assertStringStartsWith("BEGIN:VCARD\r\nVERSION:3.0\r\nUID:stackiq-cmdb-owner-abc\r\n", $backend->cards[0][2]);
+		$this->assertStringContainsString("\r\nEMAIL:owner@example.org\r\n", $backend->cards[0][2]);
+	}//end testANewContactTakesTheGivenUid()
+
+	/**
+	 * With a given UID the e-mail address matches no existing contact, so a shared mailbox does not merge two owners.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 */
+	public function testAGivenUidIsNotOverriddenByAnEmailMatch(): void {
+		$backend = $this->backend();
+		$backend->books['principals/users/admin|stackiq-cmdb-owners'] = ['id' => 7, 'displayname' => 'Stackiq CMDB owners'];
+		$contacts = [['UID' => 'owners-1', 'FN' => 'Voornaam Achternaam', 'EMAIL' => 'team@example.org', 'addressbook-key' => '7']];
+		$service = $this->service(backend: $backend, contacts: $contacts);
+
+		$uid = $service->syncToNamedAddressBook(
+			objectType: 'contactPerson',
+			record: ['voornaam' => 'Voornaam', 'achternaam' => 'Achternaam', 'email' => 'team@example.org'],
+			addressBookUri: 'stackiq-cmdb-owners',
+			displayName: 'Stackiq CMDB owners',
+			fixedUid: 'stackiq-cmdb-owner-def'
+		);
+
+		$this->assertSame('stackiq-cmdb-owner-def', $uid);
+		$this->assertCount(1, $backend->cards, 'a new contact, not the one with the same e-mail address');
+	}//end testAGivenUidIsNotOverriddenByAnEmailMatch()
+
+	/**
 	 * An e-mail address matches only a contact in the named address book; a personal contact with it is not linked.
 	 *
 	 * @return void
@@ -221,6 +271,24 @@ class StackiqContactSyncServiceTest extends TestCase {
 
 		$this->assertSame(['owners-1'], array_column($service->searchNamedAddressBook(query: 'e', addressBookUri: 'stackiq-cmdb-owners', properties: ['FN']), 'uid'));
 	}//end testAnExistingContactIsMatchedOnlyInTheNamedAddressBook()
+
+	/**
+	 * A search result lists every e-mail address of the contact, so a match on the second one is possible.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 */
+	public function testASearchResultListsEveryEmailAddress(): void {
+		$backend = $this->backend();
+		$backend->books['principals/users/admin|stackiq-cmdb-owners'] = ['id' => 7, 'displayname' => 'Stackiq CMDB owners'];
+		$contacts = [['UID' => 'owners-1', 'FN' => 'Voornaam Achternaam', 'EMAIL' => ['eerste@example.org', ['value' => 'tweede@example.org']], 'addressbook-key' => '7']];
+
+		$found = $this->service(backend: $backend, contacts: $contacts)->searchNamedAddressBook(query: 'tweede', addressBookUri: 'stackiq-cmdb-owners', properties: ['EMAIL']);
+
+		$this->assertSame('eerste@example.org', $found[0]['email']);
+		$this->assertSame(['eerste@example.org', 'tweede@example.org'], $found[0]['emails']);
+	}//end testASearchResultListsEveryEmailAddress()
 
 	/**
 	 * Without the named address book a search finds nothing and creates no address book.

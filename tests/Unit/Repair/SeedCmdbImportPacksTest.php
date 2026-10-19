@@ -152,7 +152,7 @@ class SeedCmdbImportPacksTest extends TestCase {
 		);
 		$this->assertContains(
 			'warning: CMDB import pack stackiq-topdesk-business-owner (id ' . $ownerId . ') was edited in OpenRegister and is kept; '
-			. 'this release ships version 1.0.0, which is not applied',
+			. 'this release ships version 1.1.0, which is not applied',
 			$this->lines
 		);
 	}//end testUneditedPacksAreUpdatedAndEditedOnesKept()
