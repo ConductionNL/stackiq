@@ -936,7 +936,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkModuleversie"
+				"board": [
+					"SkModuleversie"
+				]
 			}
 		},
 		{
@@ -972,7 +974,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkSuiteWizard"
+				"board": [
+					"SkSuiteWizard"
+				]
 			}
 		},
 		{
@@ -1008,7 +1012,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicaties"
+				"board": [
+					"SkApplicaties"
+				]
 			}
 		},
 		{
@@ -1039,6 +1045,10 @@
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967603-manage-object-questionnaires: 'A questionnaire is a group of fields that add more details to objects' configured by admins, which can hold a sector field; no sector list is shipped (read 2026-09-26). Reached on: Admin > Object questionnaires.",
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/tags-and-custom-fields: tags and tag groups for 'quick, high-level classification', filterable and usable as reporting views; no predefined government sector list is documented (read 2026-09-26). Reached on: Fact sheet > Tags.",
 				"glpi": "source read at 11.0.9: no government sector concept, grep -i 'sector' over src/*.php and locales/glpi.pot hits only menu sectorization (src/Html.php:1019); the nearest holder is the single-valued Appliance type dropdown install/mysql/glpi-empty.sql:8941 appliancetypes_id, or an admin custom dropdown (install/mysql/glpi-empty.sql:10113 glpi_dropdowns_dropdowndefinitions) used as a field of a custom asset. Multi-valued tagging needs the separate tag plugin (github.com/pluginsGLPI/tag, not read). Reached on: Management > Appliances, Appliance type field."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -1113,7 +1123,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicatie"
+				"board": [
+					"SkApplicatie"
+				]
 			}
 		},
 		{
@@ -1148,7 +1160,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicaties"
+				"board": [
+					"SkApplicaties"
+				]
 			}
 		},
 		{
@@ -1184,7 +1198,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicatie"
+				"board": [
+					"SkApplicatie"
+				]
 			}
 		},
 		{
@@ -1220,7 +1236,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicaties"
+				"board": [
+					"SkApplicaties"
+				]
 			}
 		},
 		{
@@ -1293,7 +1311,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkDatakwaliteit"
+				"board": [
+					"SkDatakwaliteit"
+				]
 			}
 		},
 		{
@@ -1367,7 +1387,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkInstellingenGegevens"
+				"board": [
+					"SkInstellingenGegevens"
+				]
 			}
 		},
 		{
@@ -1402,7 +1424,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkSuiteWizard"
+				"board": [
+					"SkSuiteWizard"
+				]
 			}
 		},
 		{
@@ -1437,7 +1461,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkModuleversie"
+				"board": [
+					"SkModuleversie"
+				]
 			}
 		},
 		{
@@ -1473,7 +1499,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicatie"
+				"board": [
+					"SkApplicatie"
+				]
 			}
 		},
 		{
@@ -1509,7 +1537,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkKoppelingen"
+				"board": [
+					"SkKoppelingen"
+				]
 			}
 		},
 		{
@@ -1545,7 +1575,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkKoppelingen"
+				"board": [
+					"SkKoppelingen"
+				]
 			}
 		},
 		{
@@ -1581,7 +1613,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicatie"
+				"board": [
+					"SkApplicatie"
+				]
 			}
 		},
 		{
@@ -1617,7 +1651,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkKoppelingen"
+				"board": [
+					"SkKoppelingen"
+				]
 			}
 		},
 		{
@@ -1652,7 +1688,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicatie"
+				"board": [
+					"SkApplicatie"
+				]
 			}
 		},
 		{
@@ -1687,7 +1725,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkKoppelingen"
+				"board": [
+					"SkKoppelingen"
+				]
 			}
 		},
 		{
@@ -1722,7 +1762,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicatie"
+				"board": [
+					"SkApplicatie"
+				]
 			}
 		},
 		{
@@ -1758,7 +1800,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkKoppelingen"
+				"board": [
+					"SkKoppelingen"
+				]
 			}
 		},
 		{
@@ -1793,7 +1837,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkInstellingenUitwisseling"
+				"board": [
+					"SkInstellingenUitwisseling"
+				]
 			}
 		},
 		{
@@ -1829,7 +1875,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkInstellingenGegevens"
+				"board": [
+					"SkInstellingenGegevens"
+				]
 			}
 		},
 		{
@@ -1865,7 +1913,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkInstellingenGegevens"
+				"board": [
+					"SkInstellingenGegevens"
+				]
 			}
 		},
 		{
@@ -1901,7 +1951,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkInstellingenGegevens"
+				"board": [
+					"SkInstellingenGegevens"
+				]
 			}
 		},
 		{
@@ -1937,7 +1989,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkInstellingenGegevens"
+				"board": [
+					"SkInstellingenGegevens"
+				]
 			}
 		},
 		{
@@ -1973,7 +2027,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkInstellingenGegevens"
+				"board": [
+					"SkInstellingenGegevens"
+				]
 			}
 		},
 		{
@@ -2049,7 +2105,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkGemmaPlaat"
+				"board": [
+					"SkGemmaPlaat"
+				]
 			}
 		},
 		{
@@ -2084,7 +2142,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkModelleren"
+				"board": [
+					"SkModelleren"
+				]
 			}
 		},
 		{
@@ -2119,7 +2179,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkModelleren"
+				"board": [
+					"SkModelleren"
+				]
 			}
 		},
 		{
@@ -2154,7 +2216,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkModelleren"
+				"board": [
+					"SkModelleren"
+				]
 			}
 		},
 		{
@@ -2189,7 +2253,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkGemmaPlaat"
+				"board": [
+					"SkGemmaPlaat"
+				]
 			}
 		},
 		{
@@ -2224,7 +2290,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkModelleren"
+				"board": [
+					"SkModelleren"
+				]
 			}
 		},
 		{
@@ -2260,7 +2328,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkStandaarden"
+				"board": [
+					"SkStandaarden"
+				]
 			}
 		},
 		{
@@ -2296,7 +2366,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkComplianceMatrix"
+				"board": [
+					"SkComplianceMatrix"
+				]
 			}
 		},
 		{
@@ -2332,7 +2404,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkComplianceMatrix"
+				"board": [
+					"SkComplianceMatrix"
+				]
 			}
 		},
 		{
@@ -2368,7 +2442,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkComplianceMatrix"
+				"board": [
+					"SkComplianceMatrix"
+				]
 			}
 		},
 		{
@@ -2404,7 +2480,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkInstellingenGegevens"
+				"board": [
+					"SkInstellingenGegevens"
+				]
 			}
 		},
 		{
@@ -2440,7 +2518,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkStandaarden"
+				"board": [
+					"SkStandaarden"
+				]
 			}
 		},
 		{
@@ -2476,7 +2556,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkComplianceMatrix"
+				"board": [
+					"SkComplianceMatrix"
+				]
 			}
 		},
 		{
@@ -2546,6 +2628,10 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/ for Forum Standaardisatie, no hits (read 2026-09-26)",
 				"sap-leanix": "unknown: docs searched at https://help.sap.com/docs/leanix/ea for Forum Standaardisatie and comply or explain, no hits (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: grep -rli 'standaard\\|forum standaardisatie\\|comply' over src/ locales/glpi.pot returns nothing relevant; no comply or explain list in core (Setup menu src/Html.php:1330 onwards)."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -2614,6 +2700,10 @@
 				"vng-softwarecatalogus": "unknown: no questionnaire to suppliers is described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/reviewing-responses: survey answers are reviewed and saved to the fact sheet; recipients are the users 'assigned to the fact sheet'. Sending to an outside supplier is not documented (read 2026-09-26). Reached on: Surveys.",
 				"glpi": "source read at 11.0.9: native forms (src/Glpi/Form/Form.php:92) are filled by logged in or helpdesk users and only produce tickets, changes or problems (src/Glpi/Form/Destination/FormDestinationTicket.php:47); nothing sends a questionnaire to a supplier or stores answers on an appliance."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -2649,7 +2739,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicaties"
+				"board": [
+					"SkApplicaties"
+				]
 			}
 		},
 		{
@@ -2685,7 +2777,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicaties"
+				"board": [
+					"SkApplicaties"
+				]
 			}
 		},
 		{
@@ -2720,7 +2814,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkOrganisaties"
+				"board": [
+					"SkOrganisaties"
+				]
 			}
 		},
 		{
@@ -2751,6 +2847,10 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; a vendor community is referenced in the docs (https://help.bluedolphin.io/en/articles/11967582-iso27001-management-system-template 'a post on the community'), but finding peers who use the same product is not documented (read 2026-09-26)",
 				"sap-leanix": "unknown: docs searched at https://help.sap.com/docs/leanix/ea; a vendor community exists (https://community.leanix.net/) but no in product way to find organisations using the same product is documented (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: each GLPI instance holds one organisation's data (entities are internal subdivisions, src/Entity.php), so there is no view of other organisations using the same product; grep -rli 'peer' src/*.php matches only relation and network code such as src/CommonDBConnexity.php, no peer organisation feature."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -2825,7 +2925,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicatie"
+				"board": [
+					"SkApplicatie"
+				]
 			}
 		},
 		{
@@ -2861,7 +2963,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicatie"
+				"board": [
+					"SkApplicatie"
+				]
 			}
 		},
 		{
@@ -2896,7 +3000,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicatie"
+				"board": [
+					"SkApplicatie"
+				]
 			}
 		},
 		{
@@ -2970,7 +3076,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkRoadmap"
+				"board": [
+					"SkRoadmap"
+				]
 			}
 		},
 		{
@@ -3006,7 +3114,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkRoadmap"
+				"board": [
+					"SkRoadmap"
+				]
 			}
 		},
 		{
@@ -3079,7 +3189,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkRapportages"
+				"board": [
+					"SkRapportages"
+				]
 			}
 		},
 		{
@@ -3226,6 +3338,10 @@
 				"vng-softwarecatalogus": "unknown: no strategic goals are described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/objective-modeling-guidelines: 'Objectives link to business capabilities and initiatives so progress can be tracked over time'. Applications reach objectives through capabilities and initiatives; a direct application to objective relation is not described (read 2026-09-26). Reached on: Objective fact sheet.",
 				"glpi": "source read at 11.0.9: grep -i 'strategic\\|goal\\|objective' over src/Appliance.php and src/Project.php returns nothing; no goal itemtype exists and the Appliance tabs (src/Appliance.php:98 onwards) link items, contracts, documents, tickets and projects only."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -3340,7 +3456,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkContract"
+				"board": [
+					"SkContract"
+				]
 			}
 		},
 		{
@@ -3492,7 +3610,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkLicenties"
+				"board": [
+					"SkLicenties"
+				]
 			}
 		},
 		{
@@ -3562,6 +3682,10 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; no entitlement against consumption computation is documented (read 2026-09-26)",
 				"sap-leanix": "unknown: docs searched at https://help.sap.com/docs/leanix/ea; no entitlement against consumption computation is documented (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: entitlement is compared with licence assignments (src/SoftwareLicense.php:158 computeValidityIndicator), while measured installations are counted separately (src/Item_SoftwareVersion.php:39); core has no computed effective licence position report reconciling the two for an audit. Reached on: Assets > Software > Licenses and Installations tabs."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -3592,6 +3716,10 @@
 				"vng-softwarecatalogus": "unknown: contracts, licences and costs are not described anywhere in the public docs (the 2021 user survey asks which other tool municipalities use for contract management); searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/gebruikersonderzoek%202021 (read 2026-09-26)",
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/ for budget, no hits (read 2026-09-26)",
 				"sap-leanix": "unknown: docs searched at https://help.sap.com/docs/leanix/ea; the contract has a 'Contract Cost Center' string (https://help.sap.com/docs/leanix/ea/contract-extension-to-meta-model) but charging costs against a budget with a period is not documented (read 2026-09-26)"
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -3622,6 +3750,10 @@
 				"vng-softwarecatalogus": "unknown: contracts, licences and costs are not described anywhere in the public docs (the 2021 user survey asks which other tool municipalities use for contract management); searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/gebruikersonderzoek%202021 (read 2026-09-26)",
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/ for depreciation, no hits (read 2026-09-26)",
 				"sap-leanix": "unknown: docs searched at https://help.sap.com/docs/leanix/ea for depreciation and amortisation, no hits (read 2026-09-26)"
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -3658,7 +3790,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkContract"
+				"board": [
+					"SkContract"
+				]
 			}
 		},
 		{
@@ -3731,7 +3865,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkKwetsbaarheden"
+				"board": [
+					"SkKwetsbaarheden"
+				]
 			}
 		},
 		{
@@ -3804,7 +3940,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkModuleversie"
+				"board": [
+					"SkModuleversie"
+				]
 			}
 		},
 		{
@@ -3835,6 +3973,10 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/ for CVE, no hits (read 2026-09-26)",
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/api-updates-sbom-async-processing: 'Switching to asynchronous processing will allow us to add additional post-processing mechanisms in the future, such as vulnerability checks. Though there's no established timeline for these enhancements' (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: grep -rli 'cve' over src/ templates/ finds no feed matching (only src/Glpi/System/Requirement/PhpSupportedVersion.php:74 text); no pluginsGLPI cve repository exists (git ls-remote https://github.com/pluginsGLPI/cve: repository not found)."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -3865,6 +4007,10 @@
 				"vng-softwarecatalogus": "unknown: no vulnerability, SBOM or risk functions are described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; risk can be captured in questionnaires ('Risk Assessment' example in https://help.bluedolphin.io/en/articles/11967710-using-the-odata-feed), but a risk score from vulnerabilities and support status is not documented (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: with no vulnerability data (only hit src/Glpi/System/Requirement/PhpSupportedVersion.php:74) and no support status field on software (install/mysql/glpi-empty.sql:6856 glpi_softwares), no risk score is computed; grep -i 'risk' over src/Appliance.php src/Software.php returns nothing."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -3895,6 +4041,10 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/ for patch and vulnerability, no hits (read 2026-09-26)",
 				"sap-leanix": "unknown: docs searched at https://help.sap.com/docs/leanix/ea; no per vulnerability patch status is documented, and vulnerability checks are a future item (https://help.sap.com/docs/leanix/ea/api-updates-sbom-async-processing) (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: installed versions are known (src/Item_SoftwareVersion.php:39) but no vulnerability or fixed in version exists to compare against (grep -rli 'cve' src/ hits only src/Glpi/System/Requirement/PhpSupportedVersion.php:74)."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -3929,7 +4079,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkKwetsbaarheden"
+				"board": [
+					"SkKwetsbaarheden"
+				]
 			}
 		},
 		{
@@ -3964,7 +4116,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkOrganisaties"
+				"board": [
+					"SkOrganisaties"
+				]
 			}
 		},
 		{
@@ -4000,7 +4154,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkBeheerToegang"
+				"board": [
+					"SkBeheerToegang"
+				]
 			}
 		},
 		{
@@ -4031,6 +4187,10 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; concept, active and inactive states for organisations are not documented (read 2026-09-26)",
 				"sap-leanix": "unknown: https://help.sap.com/docs/leanix/ea/organization-modeling-guidelines does not describe concept, active and inactive states for organizations; only archiving of fact sheets in general (https://help.sap.com/docs/leanix/ea/archiving-deleting-and-recovering-fact-sheets) (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: a supplier is active or inactive, src/Supplier.php:365 is_active search option (install/mysql/glpi-empty.sql:7087 glpi_suppliers.is_active); there is no concept state. Reached on: Management > Suppliers, Active field."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -4065,7 +4225,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkOrganisatie"
+				"board": [
+					"SkOrganisatie"
+				]
 			}
 		},
 		{
@@ -4101,7 +4263,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkOrganisatie"
+				"board": [
+					"SkOrganisatie"
+				]
 			}
 		},
 		{
@@ -4137,7 +4301,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkOrganisatie"
+				"board": [
+					"SkOrganisatie"
+				]
 			}
 		},
 		{
@@ -4172,7 +4338,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkOrganisatie"
+				"board": [
+					"SkOrganisatie"
+				]
 			}
 		},
 		{
@@ -4207,7 +4375,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkOrganisatie"
+				"board": [
+					"SkOrganisatie"
+				]
 			}
 		},
 		{
@@ -4242,7 +4412,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkBeheerToegang"
+				"board": [
+					"SkBeheerToegang"
+				]
 			}
 		},
 		{
@@ -4273,6 +4445,10 @@
 				"vng-softwarecatalogus": "unknown: login is by username and password (\"Vul uw GEMMA Softwarecatalogus-gebruikersnaam in\"); no identity provider sign-in is described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier, https://www.softwarecatalogus.nl/user/login (read 2026-09-26)",
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967579-configure-single-sign-on-sso-with-okta-saml and https://help.bluedolphin.io/en/articles/11967575-configure-single-sign-on-sso-with-office-365-openid: SSO setup guides for Okta SAML, ADFS and Office 365 OpenID (read 2026-09-26). Reached on: Admin > Identity providers.",
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/managing-users: 'SSO : You manage access through your identity provider (IdP) system. Users sign in through your IdP'; guides for Entra ID, Okta, OneLogin (read 2026-09-26). Reached on: Administration > Single Sign-On."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -4303,6 +4479,10 @@
 				"vng-softwarecatalogus": "unknown: no directory sync is described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967618-automatic-user-provisioning-with-scim-2-0: 'BlueDolphin supports automatic user provisioning ... manage BlueDolphin users and their role assignments', with guides for Entra ID, Okta and SailPoint (read 2026-09-26). Reached on: Admin > SCIM provisioning.",
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/scim-provisioning: 'SCIM facilitates the transfer of user information from a source system, such as an external identity provider (IdP), to a target system, such as SAP LeanIX'; setup guides for Entra ID and Okta (read 2026-09-26). Reached on: Administration > SCIM provisioning."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -4333,6 +4513,10 @@
 				"bluedolphin": "https://help.bluedolphin.io/en/articles/11967481-user-profile: users see 'Profile > Personal information'; https://help.bluedolphin.io/en/articles/11967487-forgotten-password: 'To have your password reset, you need to contact your BlueDolphin administrator' and change the temporary password after login (read 2026-09-26). Reached on: Account > Profile.",
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/user-profile: 'Manage your user profile settings. Change or reset your password if needed' on the My Settings profile page (read 2026-09-26). Reached on: User menu > My Settings.",
 				"glpi": "source read at 11.0.9: front/preference.php renders the user's own form through src/User.php:3105 showMyForm (template pages/admin/user/user.html.twig), whose preference variant shows a 'Change password' button to front/updatepassword.php at templates/pages/admin/user/user.html.twig:277 to :279; the new password form is templates/password_form.html.twig:79."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -4367,7 +4551,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkBeheerToegang"
+				"board": [
+					"SkBeheerToegang"
+				]
 			}
 		},
 		{
@@ -4403,7 +4589,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicaties"
+				"board": [
+					"SkApplicaties"
+				]
 			}
 		},
 		{
@@ -4435,6 +4623,10 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; no open data publication is documented (read 2026-09-26)",
 				"sap-leanix": "unknown: docs searched at https://help.sap.com/docs/leanix/ea; no open data publication is documented (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: no open data publication exists (grep -rli 'open data' src/ returns nothing); anonymisation settings cover ticket actors only (install/mysql/glpi-empty.sql:2824 anonymize_support_agents on entities)."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -4470,7 +4662,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkInstellingenUitwisseling"
+				"board": [
+					"SkInstellingenUitwisseling"
+				]
 			}
 		},
 		{
@@ -4506,7 +4700,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkInstellingenUitwisseling"
+				"board": [
+					"SkInstellingenUitwisseling"
+				]
 			}
 		},
 		{
@@ -4542,7 +4738,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkInstellingenUitwisseling"
+				"board": [
+					"SkInstellingenUitwisseling"
+				]
 			}
 		},
 		{
@@ -4687,7 +4885,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkInstellingenUitwisseling"
+				"board": [
+					"SkInstellingenUitwisseling"
+				]
 			}
 		},
 		{
@@ -4758,7 +4958,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicaties"
+				"board": [
+					"SkApplicaties"
+				]
 			}
 		},
 		{
@@ -4793,7 +4995,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicaties"
+				"board": [
+					"SkApplicaties"
+				]
 			}
 		},
 		{
@@ -4828,7 +5032,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkDashboard"
+				"board": [
+					"SkDashboard"
+				]
 			}
 		},
 		{
@@ -4863,7 +5069,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkDashboard"
+				"board": [
+					"SkDashboard"
+				]
 			}
 		},
 		{
@@ -4898,7 +5106,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkRapportages"
+				"board": [
+					"SkRapportages"
+				]
 			}
 		},
 		{
@@ -4934,7 +5144,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkRapportages"
+				"board": [
+					"SkRapportages"
+				]
 			}
 		},
 		{
@@ -5004,6 +5216,10 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; surveys can be scheduled (https://bluedolphin.io/application-portfolio-management-application-rationalization/ 'Keep data current by scheduling surveys'), but sending reports on a schedule is not documented (read 2026-09-26)",
 				"sap-leanix": "unknown: docs searched at https://help.sap.com/docs/leanix/ea; scheduled notification digests (https://help.sap.com/docs/leanix/ea/notifications-center) and scheduled snapshot exports by API (https://help.sap.com/docs/leanix/ea/export) exist, but mailing a report to named people on a schedule is not documented (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: saved search alerts, src/SavedSearch_Alert.php:45 with count conditions (src/SavedSearch_Alert.php:53 to :58) and a frequency, run by src/SavedSearch_Alert.php:307 cronSavedSearchesAlerts and sent through the notification system to configured recipients; they notify on a result count rather than sending the report itself. Reached on: Tools > Saved searches > Alerts tab."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -5077,7 +5293,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkFunctiesRoadmap"
+				"board": [
+					"SkFunctiesRoadmap"
+				]
 			}
 		},
 		{
@@ -5150,7 +5368,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicatie"
+				"board": [
+					"SkApplicatie"
+				]
 			}
 		},
 		{
@@ -5181,6 +5401,10 @@
 				"vng-softwarecatalogus": "unknown: operational IT management functions are not described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; the DataCollector uploads data from databases and files (https://help.bluedolphin.io/en/articles/11967629-import-and-export-options-with-bluedolphin), an installation discovery agent is not documented (read 2026-09-26)",
 				"sap-leanix": "unknown: docs searched at https://help.sap.com/docs/leanix/ea; LeanIX has no own installation agent, software assets come in through the ServiceNow integration (https://help.sap.com/docs/leanix/ea/obsolescence-risk-management-import-software-assets) (read 2026-09-26)"
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -5211,6 +5435,10 @@
 				"vng-softwarecatalogus": "unknown: operational IT management functions are not described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; network discovery is not documented (read 2026-09-26)",
 				"sap-leanix": "unknown: docs searched at https://help.sap.com/docs/leanix/ea; network device discovery is not documented (read 2026-09-26)"
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -5241,6 +5469,10 @@
 				"vng-softwarecatalogus": "unknown: operational IT management functions are not described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/ for SaaS discovery, no hits (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: inventory handlers under src/Glpi/Inventory/Asset/ (Software.php, Process.php, VirtualMachine.php and others) read what the agent sees on devices; grep -i 'saas' over src/ returns nothing, so cloud subscriptions nobody registered are not discovered. The software handler is src/Glpi/Inventory/Asset/Software.php:56."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -5275,7 +5507,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkCmdb"
+				"board": [
+					"SkCmdb"
+				]
 			}
 		},
 		{
@@ -5382,6 +5616,10 @@
 				"vng-softwarecatalogus": "unknown: operational IT management functions are not described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; incidents stay in the ITSM tool, logging them against an application in BlueDolphin is not documented (read 2026-09-26)",
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/portals: an Application Portal 'accessible to everyone to order software, issue support tickets' through configurable links to the helpdesk; incidents themselves stay in the ITSM tool (read 2026-09-26). Reached on: Portals > links to helpdesk."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -5412,6 +5650,10 @@
 				"vng-softwarecatalogus": "unknown: operational IT management functions are not described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; a change approval workflow on an application is not documented (read 2026-09-26)",
 				"sap-leanix": "unknown: docs searched at https://help.sap.com/docs/leanix/ea; architecture decisions have a review process (https://help.sap.com/docs/leanix/ea/architecture-decisions) but a change approval workflow on an application is not documented (read 2026-09-26)"
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -5442,6 +5684,10 @@
 				"vng-softwarecatalogus": "unknown: operational IT management functions are not described; searched https://www.softwarecatalogus.nl/node/16564, https://www.softwarecatalogus.nl/node/13683, https://www.softwarecatalogus.nl/node/19703, https://www.softwarecatalogus.nl/Gebruikershandleiding_leverancier (read 2026-09-26)",
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/ for SLA and service level, no hits (read 2026-09-26)",
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/contract-extension-to-meta-model: 'Service Level Agreement (SLA) Single Select Corporate-Level SLA, Customer-Level SLA, Service-Level SLA' and an SLA description on the contract. No tracking of targets against results (read 2026-09-26). Reached on: Contract fact sheet > Governance and Regulations."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -5472,6 +5718,10 @@
 				"bluedolphin": "unknown: docs searched at https://help.bluedolphin.io/en/; the process portal publishes processes (https://help.bluedolphin.io/en/articles/11967500-getting-started-with-process-publication-portal), but requesting software is not documented (read 2026-09-26)",
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/portals: 'create an Application Portal that is accessible to everyone to order software ... Action button: Perform an action, in this case \"Request new Application\"' (read 2026-09-26). Reached on: Portals > Application Portal.",
 				"glpi": "source read at 11.0.9: the 11.0 service catalog src/Glpi/Form/ServiceCatalog/ServiceCatalog.php:45 lists native forms for self service users (menu src/Html.php:1283), and a form question can offer software items to pick, src/Glpi/Form/QuestionType/QuestionTypeItem.php:180 Software::class, creating a ticket from the answer. Reached on: Self service > Service catalog. Driven on the lab at 11.0.9 (2026-09-26): /ServiceCatalog shows the service catalog with \"Report an issue\" and \"Request a service\"."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -5502,6 +5752,10 @@
 				"bluedolphin": "unknown: https://help.bluedolphin.io/en/articles/11967477-minimum-system-requirements lists desktop browsers (Chrome, Firefox, Edge) and says Safari 'is not supported'; a native mobile app is not documented (read 2026-09-26)",
 				"sap-leanix": "https://updates.leanix.net/announcements/explore-portals-on-mobile-devices (2025-09-18): 'Since the mobile app was decommissioned in June 2023, we planned to make portals mobile responsive'; only portals are mobile friendly (read 2026-09-26)",
 				"glpi": "source read at 11.0.9: grep -rli 'android\\|ios app\\|mobile app' over src/ templates/ returns nothing; the repository ships only the responsive web interface (templates/) and APIs (src/Glpi/Api/HL/Controller/CoreController.php:322 docs), no native mobile client."
+			},
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
 			}
 		},
 		{
@@ -5537,7 +5791,9 @@
 			},
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkInstellingenGegevens"
+				"board": [
+					"SkInstellingenGegevens"
+				]
 			}
 		},
 		{
@@ -5573,7 +5829,9 @@
 			"topdesk": "unknown",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkGemmaPlaat"
+				"board": [
+					"SkGemmaPlaat"
+				]
 			}
 		},
 		{
@@ -5609,7 +5867,9 @@
 			"topdesk": "unknown",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkGemmaPlaat"
+				"board": [
+					"SkGemmaPlaat"
+				]
 			}
 		},
 		{
@@ -5645,7 +5905,9 @@
 			"topdesk": "unknown",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkModelleren"
+				"board": [
+					"SkModelleren"
+				]
 			}
 		},
 		{
@@ -5681,7 +5943,9 @@
 			"topdesk": "partial",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkBeheerToegang"
+				"board": [
+					"SkBeheerToegang"
+				]
 			}
 		},
 		{
@@ -5717,7 +5981,9 @@
 			"topdesk": "unknown",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicatie"
+				"board": [
+					"SkApplicatie"
+				]
 			}
 		},
 		{
@@ -5749,7 +6015,11 @@
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "no",
-			"topdesk": "unknown"
+			"topdesk": "unknown",
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
+			}
 		},
 		{
 			"id": "life-value-assessment",
@@ -5819,7 +6089,11 @@
 			"sap-leanix": "partial",
 			"bluedolphin": "unknown",
 			"glpi": "no",
-			"topdesk": "unknown"
+			"topdesk": "unknown",
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
+			}
 		},
 		{
 			"id": "comp-processing-register-generate",
@@ -5850,7 +6124,11 @@
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "no",
-			"topdesk": "unknown"
+			"topdesk": "unknown",
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
+			}
 		},
 		{
 			"id": "ctr-collective-agreements",
@@ -5881,7 +6159,11 @@
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "no",
-			"topdesk": "unknown"
+			"topdesk": "unknown",
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
+			}
 		},
 		{
 			"id": "share-compliance-documents",
@@ -5990,7 +6272,11 @@
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "partial",
-			"topdesk": "unknown"
+			"topdesk": "unknown",
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
+			}
 		},
 		{
 			"id": "org-act-as-user",
@@ -6021,7 +6307,11 @@
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "yes",
-			"topdesk": "unknown"
+			"topdesk": "unknown",
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
+			}
 		},
 		{
 			"id": "comp-common-ground-fit",
@@ -6052,7 +6342,11 @@
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "no",
-			"topdesk": "unknown"
+			"topdesk": "unknown",
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
+			}
 		},
 		{
 			"id": "land-version-carry-connections",
@@ -6122,7 +6416,11 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "partial",
 			"bluedolphin": "unknown",
-			"glpi": "partial"
+			"glpi": "partial",
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
+			}
 		},
 		{
 			"id": "land-dependent-fields",
@@ -6157,7 +6455,9 @@
 			"glpi": "partial",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicatie"
+				"board": [
+					"SkApplicatie"
+				]
 			}
 		},
 		{
@@ -6193,7 +6493,9 @@
 			"glpi": "partial",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicaties"
+				"board": [
+					"SkApplicaties"
+				]
 			}
 		},
 		{
@@ -6229,7 +6531,9 @@
 			"glpi": "no",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkDashboard"
+				"board": [
+					"SkDashboard"
+				]
 			}
 		},
 		{
@@ -6261,7 +6565,11 @@
 			"glpi": "yes",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
-			"bluedolphin": "unknown"
+			"bluedolphin": "unknown",
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
+			}
 		},
 		{
 			"id": "sec-password-policy",
@@ -6292,7 +6600,11 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "yes",
 			"bluedolphin": "unknown",
-			"glpi": "yes"
+			"glpi": "yes",
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
+			}
 		},
 		{
 			"id": "ops-change-risk-score",
@@ -6323,7 +6635,11 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"glpi": "no"
+			"glpi": "no",
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
+			}
 		},
 		{
 			"id": "conn-auto-populate-dependencies",
@@ -6358,7 +6674,9 @@
 			"topdesk": "unknown",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicatie"
+				"board": [
+					"SkApplicatie"
+				]
 			}
 		},
 		{
@@ -6390,7 +6708,11 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"topdesk": "partial"
+			"topdesk": "partial",
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
+			}
 		},
 		{
 			"id": "ctr-contract-owner",
@@ -6460,7 +6782,11 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
 			"bluedolphin": "unknown",
-			"topdesk": "unknown"
+			"topdesk": "unknown",
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
+			}
 		},
 		{
 			"id": "org-assigned-only-rights",
@@ -6491,7 +6817,11 @@
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "partial",
 			"bluedolphin": "unknown",
-			"topdesk": "partial"
+			"topdesk": "partial",
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
+			}
 		},
 		{
 			"id": "ops-own-house-style",
@@ -6562,7 +6892,9 @@
 			"topdesk": "partial",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicaties"
+				"board": [
+					"SkApplicaties"
+				]
 			}
 		},
 		{
@@ -6599,7 +6931,9 @@
 			"topdesk": "unknown",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicatie"
+				"board": [
+					"SkApplicatie"
+				]
 			}
 		},
 		{
@@ -6635,7 +6969,9 @@
 			"topdesk": "unknown",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkModelleren"
+				"board": [
+					"SkModelleren"
+				]
 			}
 		},
 		{
@@ -6671,7 +7007,9 @@
 			"topdesk": "partial",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkDashboard"
+				"board": [
+					"SkDashboard"
+				]
 			}
 		},
 		{
@@ -6708,7 +7046,9 @@
 			"topdesk": "unknown",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicatie"
+				"board": [
+					"SkApplicatie"
+				]
 			}
 		},
 		{
@@ -6740,7 +7080,11 @@
 			"vng-softwarecatalogus": "unknown",
 			"bluedolphin": "unknown",
 			"glpi": "no",
-			"topdesk": "unknown"
+			"topdesk": "unknown",
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
+			}
 		},
 		{
 			"id": "arch-diagram-version-compare",
@@ -6775,7 +7119,9 @@
 			"topdesk": "unknown",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkModelleren"
+				"board": [
+					"SkModelleren"
+				]
 			}
 		},
 		{
@@ -6811,7 +7157,9 @@
 			"topdesk": "partial",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkInstellingenUitwisseling"
+				"board": [
+					"SkInstellingenUitwisseling"
+				]
 			}
 		},
 		{
@@ -6843,7 +7191,11 @@
 			"vng-softwarecatalogus": "partial",
 			"sap-leanix": "unknown",
 			"glpi": "no",
-			"topdesk": "partial"
+			"topdesk": "partial",
+			"screen": {
+				"board": null,
+				"reason": "Besloten dit niet te bouwen (decided-no), dus er is geen scherm."
+			}
 		},
 		{
 			"id": "land-move-between-workspaces",
@@ -6878,7 +7230,9 @@
 			"topdesk": "unknown",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicaties"
+				"board": [
+					"SkApplicaties"
+				]
 			}
 		},
 		{
@@ -6940,7 +7294,9 @@
 			"topdesk": "unknown",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkModelleren"
+				"board": [
+					"SkModelleren"
+				]
 			}
 		},
 		{
@@ -6976,7 +7332,9 @@
 			"topdesk": "unknown",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkModelleren"
+				"board": [
+					"SkModelleren"
+				]
 			}
 		},
 		{
@@ -7057,7 +7415,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicaties"
+				"board": [
+					"SkApplicaties"
+				]
 			}
 		},
 		{
@@ -7096,7 +7456,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkKoppelingen"
+				"board": [
+					"SkKoppelingen"
+				]
 			}
 		},
 		{
@@ -7135,7 +7497,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkGebruikDetail"
+				"board": [
+					"SkGebruikDetail"
+				]
 			}
 		},
 		{
@@ -7216,7 +7580,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkGebruikDetail"
+				"board": [
+					"SkGebruikDetail"
+				]
 			}
 		},
 		{
@@ -7255,7 +7621,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkGemmaPlaat"
+				"board": [
+					"SkGemmaPlaat"
+				]
 			}
 		},
 		{
@@ -7294,7 +7662,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkGemmaPlaat"
+				"board": [
+					"SkGemmaPlaat"
+				]
 			}
 		},
 		{
@@ -7372,7 +7742,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkComplianceMatrix"
+				"board": [
+					"SkComplianceMatrix"
+				]
 			}
 		},
 		{
@@ -7411,7 +7783,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkOrganisatie"
+				"board": [
+					"SkOrganisatie"
+				]
 			}
 		},
 		{
@@ -7450,7 +7824,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkGemmaPlaat"
+				"board": [
+					"SkGemmaPlaat"
+				]
 			}
 		},
 		{
@@ -7489,7 +7865,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicatie"
+				"board": [
+					"SkApplicatie"
+				]
 			}
 		},
 		{
@@ -7528,7 +7906,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkBeheerToegang"
+				"board": [
+					"SkBeheerToegang"
+				]
 			}
 		},
 		{
@@ -7687,7 +8067,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkInstellingenGegevens"
+				"board": [
+					"SkInstellingenGegevens"
+				]
 			}
 		},
 		{
@@ -7810,7 +8192,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkContracten"
+				"board": [
+					"SkContracten"
+				]
 			}
 		},
 		{
@@ -7893,7 +8277,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkContract"
+				"board": [
+					"SkContract"
+				]
 			}
 		},
 		{
@@ -8015,7 +8401,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkPubliek"
+				"board": [
+					"SkPubliek"
+				]
 			}
 		},
 		{
@@ -8054,7 +8442,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkOrganisatie"
+				"board": [
+					"SkOrganisatie"
+				]
 			}
 		},
 		{
@@ -8214,7 +8604,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkPubliek"
+				"board": [
+					"SkPubliek"
+				]
 			}
 		},
 		{
@@ -8366,7 +8758,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkInstellingenUitwisseling"
+				"board": [
+					"SkInstellingenUitwisseling"
+				]
 			}
 		},
 		{
@@ -8405,7 +8799,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkApplicatie"
+				"board": [
+					"SkApplicatie"
+				]
 			}
 		},
 		{
@@ -8487,7 +8883,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkDashboard"
+				"board": [
+					"SkDashboard"
+				]
 			}
 		},
 		{
@@ -8525,7 +8923,9 @@
 			"source": "pending-moved-2026-10-07",
 			"screen": {
 				"canvas": "design-system",
-				"board": "SkFunctiesRoadmap"
+				"board": [
+					"SkFunctiesRoadmap"
+				]
 			}
 		},
 		{
@@ -8579,6 +8979,11 @@
 			"board": [
 				"SkOrganisatie",
 				"SkGebruikDetail"
+			]
+		},
+		"ai-system-inventory": {
+			"board": [
+				"SkApplicatie"
 			]
 		},
 		"app-id-rename": {
@@ -8669,6 +9074,15 @@
 			"board": [
 				"SkOrganisatie",
 				"SkInstellingenGegevens"
+			]
+		},
+		"contract-administration": {
+			"board": [
+				"SkApplicatie",
+				"SkContract",
+				"SkContracten",
+				"SkLicenties",
+				"SkRapportages"
 			]
 		},
 		"contract-decision-delegation": {
@@ -8764,6 +9178,13 @@
 				"SkLicenties"
 			]
 		},
+		"maintenance-and-supplier-roadmap": {
+			"board": [
+				"SkApplicatie",
+				"SkDashboard",
+				"SkModuleversie"
+			]
+		},
 		"method-decomposition": {
 			"board": null,
 			"reason": "Refactoring van controllers en services, geen scherm."
@@ -8787,6 +9208,12 @@
 		"multi-org-membership": {
 			"board": [
 				"SkOrganisatie"
+			]
+		},
+		"open-data-publishing": {
+			"board": [
+				"SkApplicaties",
+				"SkPubliek"
 			]
 		},
 		"org-archimate-export": {

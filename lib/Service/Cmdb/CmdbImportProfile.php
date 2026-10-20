@@ -11,10 +11,18 @@
  * mean empty, which constants a sheet adds to its rows, and which columns
  * may be read at all (the allowlist, design D3).
  *
+ * The four sheet packs come from OpenRegister's migration-pack store when it
+ * is available (CmdbImportPackStore), so an administrator's edit there is
+ * what the import runs; the shipped files are the seed. The municipality
+ * pack maps the request options and always comes from its file. A pack from
+ * either source must pass the validator and the import's own rules
+ * (CmdbImportPackRules).
+ *
  * `PackDefinitionValidator` is not part of OpenRegister's `Contract`
- * namespace, so it is resolved defensively. When it is missing, or a shipped
- * pack is invalid, loading throws `MAPPING_UNAVAILABLE` (503) before any
- * row is read (REQ-CMDB-005).
+ * namespace, so it is resolved defensively. When it is missing, a pack is
+ * invalid or breaks a rule, or the store that holds the packs is gone,
+ * loading throws `MAPPING_UNAVAILABLE` (503) before any row is read
+ * (REQ-CMDB-005, REQ-CMDB-021).
  *
  * @category  Service
  * @package   OCA\Stackiq\Service\Cmdb
@@ -24,6 +32,7 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/cmdb-export-import/tasks.md#task-3
+ * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -47,6 +56,8 @@ use Throwable;
  * @SuppressWarnings(PHPMD.TooManyMethods) The same accessors, plus the loader's small private helpers.
  * @SuppressWarnings(PHPMD.ExcessiveClassComplexity) The accessors each guard against a
  * malformed profile value; the sum passes the threshold, no single method is complex.
+ * @SuppressWarnings(PHPMD.ExcessiveClassLength) The same accessors with their docblocks, and the
+ * loader that picks each pack's source; the store, the marker and the import rules are classes of their own.
  */
 class CmdbImportProfile {
 	/**
@@ -87,11 +98,26 @@ class CmdbImportProfile {
 	public const DEFAULT_MAX_REFERENCED_STRING_BYTES = 67108864;
 
 	/**
+	 * The targets whose pack an administrator edits in OpenRegister.
+	 *
+	 * The municipality pack maps the request options, not a sheet, so it
+	 * stays a shipped file.
+	 *
+	 * @var array<int, string>
+	 */
+	public const EDITABLE_TARGETS = ['module', 'manufacturer', 'usage', 'businessOwner'];
+
+	/**
 	 * Sources of the municipality pack that come from the request, not from a sheet.
 	 *
 	 * @var array<int, string>
 	 */
 	private const OPTION_SOURCES = ['municipalityName'];
+
+	/**
+	 * The separator of a concat mapping when the pack names none (OpenRegister's default).
+	 */
+	private const DEFAULT_CONCAT_SEPARATOR = ' ';
 
 	/**
 	 * The decoded profile, once loaded.
@@ -108,63 +134,204 @@ class CmdbImportProfile {
 	private array $packs = [];
 
 	/**
+	 * Where each loaded pack came from, per target.
+	 *
+	 * @var array<string, array<string, mixed>> Per target: source, packId, storedVersion, shippedVersion, edited, newerShipped, updatePending.
+	 */
+	private array $sources = [];
+
+	/**
+	 * Whether OpenRegister's pack store was available when the packs were loaded.
+	 *
+	 * @var bool
+	 */
+	private bool $storeAvailable = false;
+
+	/**
+	 * The import rules every pack must follow.
+	 *
+	 * @var CmdbImportPackRules
+	 */
+	private readonly CmdbImportPackRules $rules;
+
+	/**
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container Resolves OpenRegister's validator.
 	 * @param string|null $directory Directory of the profile and packs; null is the shipped one.
 	 * @param string $profileFile File name of the profile inside the directory.
+	 * @param CmdbImportPackStore|null $packStore OpenRegister's pack store; null builds one on the container.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-3
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
 		private ?string $directory = null,
 		private readonly string $profileFile = 'topdesk-profile.json',
+		private ?CmdbImportPackStore $packStore = null,
 	) {
 		if ($this->directory === null) {
 			$this->directory = __DIR__ . '/../../Settings/cmdb-import';
 		}
+
+		$this->rules = new CmdbImportPackRules();
 	}//end __construct()
 
 	/**
 	 * Load the profile and validate every pack it names.
 	 *
+	 * Each sheet pack is taken from OpenRegister's pack store when the store
+	 * is available, seeded from its shipped file when it is missing there, and
+	 * otherwise from the shipped file. Once the packs were stored in
+	 * OpenRegister, a store that is gone fails closed: the import never falls
+	 * back to the files and silently drops an administrator's edit.
+	 *
+	 * The import run and the seed step load this way; viewing the mapping
+	 * uses loadForView(), which writes nothing.
+	 *
 	 * @return void
 	 *
-	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the validator is missing,
-	 *                             or the profile or a pack is unreadable or invalid.
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the validator is missing, the profile
+	 *                             or a pack is unreadable, invalid or breaks an import rule, or
+	 *                             the store that holds the packs is not available.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-3
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function load(): void {
+		$this->loadPacks(storedPack: fn (CmdbImportPackStore $store, array $shipped): array => $store->resolve(shipped: $shipped));
+	}//end load()
+
+	/**
+	 * Load the profile and validate every pack it names, reading the store only.
+	 *
+	 * A pack the store does not hold yet is taken from its shipped file, and
+	 * nothing is seeded, updated or recorded: viewing the mapping changes
+	 * neither OpenRegister nor stackiq's app config. The next import run
+	 * seeds and updates as load() does.
+	 *
+	 * @return void
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE as load().
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 */
+	public function loadForView(): void {
+		$this->loadPacks(storedPack: fn (CmdbImportPackStore $store, array $shipped): ?array => $store->find(shipped: $shipped));
+	}//end loadForView()
+
+	/**
+	 * Load the profile and the packs, taking each editable pack from the store as the callback answers it.
+	 *
+	 * @param callable $storedPack (store, shipped pack) => the stored pack, or null to use the shipped file.
+	 *
+	 * @return void
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE as load().
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	private function loadPacks(callable $storedPack): void {
+		$validator = $this->resolveValidator();
+		$profile = $this->decodeFile(fileName: $this->profileFile);
+		$store = $this->packStore();
+		$storeAvailable = $store->isAvailable();
+		if ($storeAvailable === false) {
+			$store->assertShippedFallbackAllowed();
+		}
+
+		$packs = [];
+		$sources = [];
+		foreach (self::TARGETS as $target) {
+			$fileName = (string)($profile['packs'][$target] ?? '');
+			$shipped = $this->readShippedPack(profile: $profile, target: $target, validator: $validator);
+			$pack = $shipped;
+			$label = 'CMDB mapping pack ' . $fileName;
+			$details = [];
+			$source = [
+				'source' => 'file',
+				'packId' => null,
+				'storedVersion' => null,
+				'shippedVersion' => (string)($shipped['version'] ?? ''),
+				'edited' => null,
+				'newerShipped' => false,
+				'updatePending' => false,
+			];
+
+			$stored = null;
+			if ($storeAvailable === true && in_array($target, self::EDITABLE_TARGETS, true) === true) {
+				$stored = $storedPack($store, $shipped);
+			}
+
+			if ($stored !== null) {
+				$pack = $stored['pack'];
+				$label = 'OpenRegister migration pack ' . $stored['slug'] . ' (id ' . $stored['id'] . ')';
+				$details = ['pack' => $stored['slug'], 'packId' => $stored['id']];
+				$this->assertValidPack(validator: $validator, pack: $pack, label: $label, details: $details);
+				$source = array_merge(
+					$source,
+					[
+						'source' => 'openregister',
+						'packId' => $stored['id'],
+						'storedVersion' => $stored['storedVersion'],
+						'edited' => $stored['edited'],
+						'newerShipped' => $stored['newerShipped'],
+						'updatePending' => $stored['updatePending'],
+					]
+				);
+			}
+
+			$this->assertImportRules(target: $target, pack: $pack, profile: $profile, label: $label, details: $details);
+			$packs[$target] = $pack;
+			$sources[$target] = $source;
+		}//end foreach
+
+		$this->profile = $profile;
+		$this->packs = $packs;
+		$this->sources = $sources;
+		$this->storeAvailable = $storeAvailable;
+	}//end loadPacks()
+
+	/**
+	 * The shipped packs an administrator edits in OpenRegister, validated, per target.
+	 *
+	 * The seed step stores these; it reads them without touching the store.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the validator is missing or a file is unreadable or invalid.
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-2
+	 */
+	public function shippedEditablePacks(): array {
 		$validator = $this->resolveValidator();
 		$profile = $this->decodeFile(fileName: $this->profileFile);
 
 		$packs = [];
-		foreach (self::TARGETS as $target) {
-			$fileName = $profile['packs'][$target] ?? null;
-			if (is_string($fileName) === false || $fileName === '' || basename($fileName) !== $fileName) {
-				throw new CmdbImportException(
-					errorCode: CmdbImportException::MAPPING_UNAVAILABLE,
-					message: 'CMDB import profile names no pack for target ' . $target
-				);
-			}
-
-			$pack = $this->decodeFile(fileName: $fileName);
-			$errors = $validator->validate($pack);
-			if (is_array($errors) === true && $errors !== []) {
-				throw new CmdbImportException(
-					errorCode: CmdbImportException::MAPPING_UNAVAILABLE,
-					message: 'CMDB mapping pack ' . $fileName . ' is invalid: ' . implode('; ', array_map('strval', $errors))
-				);
-			}
-
-			$packs[$target] = $pack;
+		foreach (self::EDITABLE_TARGETS as $target) {
+			$packs[$target] = $this->readShippedPack(profile: $profile, target: $target, validator: $validator);
 		}
 
-		$this->profile = $profile;
-		$this->packs = $packs;
-	}//end load()
+		return $packs;
+	}//end shippedEditablePacks()
+
+	/**
+	 * Whether the import uses the shipped files because OpenRegister's pack store is not available.
+	 *
+	 * Only true while the packs were never stored there; afterwards a missing
+	 * store fails the load instead.
+	 *
+	 * @return bool
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE when loading fails.
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function usesShippedFallback(): bool {
+		$this->profile();
+		return $this->storeAvailable === false;
+	}//end usesShippedFallback()
 
 	/**
 	 * The upload limit in bytes, readable without validating the packs.
@@ -333,6 +500,42 @@ class CmdbImportProfile {
 	}//end sheetNames()
 
 	/**
+	 * The name of the archive sheet, or null when the profile names none.
+	 *
+	 * The archive sheet lists the applications the municipality archived; the
+	 * import reads only its key column (`archiveSheet.name` in the profile).
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function archiveSheetName(): ?string {
+		$name = $this->profile()['archiveSheet']['name'] ?? null;
+		if (is_string($name) === false || $name === '' || in_array($name, $this->sheetNames(), true) === true) {
+			return null;
+		}
+
+		return $name;
+	}//end archiveSheetName()
+
+	/**
+	 * Every sheet the reader may parse: the source sheets, then the archive sheet.
+	 *
+	 * @return array<int, string>
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function readSheetNames(): array {
+		$names = $this->sheetNames();
+		$archive = $this->archiveSheetName();
+		if ($archive !== null) {
+			$names[] = $archive;
+		}
+
+		return $names;
+	}//end readSheetNames()
+
+	/**
 	 * The rank of a sheet when an APPID is on more than one: lower wins.
 	 *
 	 * The profile's `sheetPrecedence` lists the sheets, the winner first; a
@@ -469,14 +672,40 @@ class CmdbImportProfile {
 	}//end requiredColumns()
 
 	/**
-	 * Columns that hold Excel serial dates.
+	 * Columns that hold Excel serial dates: the profile's, plus every column a pack maps with a date transform.
+	 *
+	 * A pack edited in OpenRegister can map a new column to a date; that
+	 * column is converted too, so the date transform gets `Y-m-d` and not an
+	 * Excel serial number.
 	 *
 	 * @return array<int, string>
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	public function dateColumns(): array {
-		return $this->stringList(key: 'dateColumns');
+		$columns = $this->stringList(key: 'dateColumns');
+		foreach (self::TARGETS as $target) {
+			if ($target === 'municipality') {
+				continue;
+			}
+
+			foreach (($this->pack(target: $target)['fieldMappings'] ?? []) as $mapping) {
+				if (is_array($mapping) === true && ($mapping['transform']['type'] ?? null) === 'date') {
+					$columns[] = (string)($mapping['source'] ?? '');
+				}
+			}
+		}
+
+		$constants = $this->constantColumns();
+		return array_values(
+			array_unique(
+				array_filter(
+					$columns,
+					fn (string $column): bool => $column !== '' && in_array($column, $constants, true) === false
+				)
+			)
+		);
 	}//end dateColumns()
 
 	/**
@@ -574,19 +803,65 @@ class CmdbImportProfile {
 	}//end neverWrittenOnUpdate()
 
 	/**
-	 * The accepted values of the missingRecords option.
+	 * The separator of the concat mapping that writes a field, or null when no concat mapping writes it.
+	 *
+	 * The import drops the empty parts of a concatenated note; it splits on
+	 * the separator the pack uses, which an administrator can change. A later
+	 * plain mapping of the same field does not cancel it: the engine skips a
+	 * mapping whose column is empty, so the concatenated value can still be
+	 * the one kept, and the cleanup does no harm to a plain value. With several
+	 * concat mappings, the last one's separator counts.
+	 *
+	 * @param string $target The profile target.
+	 * @param string $field The target field.
+	 *
+	 * @return string|null
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	public function concatSeparator(string $target, string $field): ?string {
+		$separator = null;
+		foreach (($this->pack(target: $target)['fieldMappings'] ?? []) as $mapping) {
+			if (is_array($mapping) === false || ($mapping['target'] ?? null) !== $field) {
+				continue;
+			}
+
+			if (($mapping['transform']['type'] ?? null) !== 'concat') {
+				continue;
+			}
+
+			$separator = ($mapping['transform']['separator'] ?? self::DEFAULT_CONCAT_SEPARATOR);
+			if (is_string($separator) === false || $separator === '') {
+				$separator = self::DEFAULT_CONCAT_SEPARATOR;
+			}
+		}
+
+		return $separator;
+	}//end concatSeparator()
+
+	/**
+	 * The accepted values of the missingRecords option, readable without validating the packs.
+	 *
+	 * The controller checks the option before the import runs, so, like
+	 * maxFileBytes(), this must not depend on OpenRegister being available.
 	 *
 	 * @return array<int, string>
 	 *
-	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
 	 */
 	public function missingRecordsModes(): array {
-		$modes = $this->stringList(key: 'missingRecords');
-		if ($modes === []) {
+		try {
+			$profile = $this->profile ?? $this->decodeFile(fileName: $this->profileFile);
+		} catch (CmdbImportException $e) {
 			return ['keep'];
 		}
 
-		return $modes;
+		$modes = $profile['missingRecords'] ?? [];
+		if (is_array($modes) === false || $modes === []) {
+			return ['keep'];
+		}
+
+		return array_values(array_map('strval', $modes));
 	}//end missingRecordsModes()
 
 	/**
@@ -626,7 +901,115 @@ class CmdbImportProfile {
 	}//end referencedColumns()
 
 	/**
-	 * The loaded profile.
+	 * The profile and the packs as the admin settings show them: what the next import runs.
+	 *
+	 * Loads and validates everything first, so a broken pack throws here as
+	 * it does when an import starts. The transform of each field mapping is
+	 * passed through as the pack stores it, so no key the engine reads is
+	 * hidden from the admin; `required` is normalised to a boolean. Each pack
+	 * also carries the write rules the import applies on top of the mapping:
+	 * `defaults` (pack values set on every write), `createOnlyDefaults`
+	 * (values set on create only, not mapped columns), `createOnlyFields` (mapped
+	 * fields written on create or, on update, only when the stored value is
+	 * empty; a key of `createOnlyDefaults` only when it is also mapped) and `neverWritten` (fields the
+	 * import never writes on an existing object). It also says where it came
+	 * from (`source`, `packId`, the stored and the shipped version, whether it
+	 * was edited and whether a newer shipped pack was left out because of
+	 * that) and whether it is edited in OpenRegister (`editable`).
+	 *
+	 * @return array{profile: array<string, mixed>, packs: array<int, array<string, mixed>>, openRegisterPacks: bool}
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the validator is missing,
+	 *                             or the profile or a pack is unreadable or invalid.
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-3
+	 */
+	public function mappingOverview(): array {
+		$profile = $this->profile();
+
+		$packs = [];
+		foreach (self::TARGETS as $target) {
+			$pack = $this->pack(target: $target);
+			$mappings = [];
+			foreach (($pack['fieldMappings'] ?? []) as $mapping) {
+				if (is_array($mapping) === false) {
+					continue;
+				}
+
+				$transform = $mapping['transform'] ?? null;
+				if (is_array($transform) === false) {
+					$transform = null;
+				}
+
+				$mappings[] = [
+					'source' => (string)($mapping['source'] ?? ''),
+					'target' => (string)($mapping['target'] ?? ''),
+					'required' => (bool)($mapping['required'] ?? false),
+					'transform' => $transform,
+				];
+			}
+
+			// A create-only default that is not a mapped field (the module type) is a
+			// value the import sets on create; merge() never reads it on update, so it
+			// is listed under createOnlyDefaults only. A mapped field keeps its place
+			// in createOnlyFields, since merge() guards it on update.
+			$createOnlyDefaults = $this->createOnlyDefaults(target: $target);
+			$unmappedDefaults = array_diff(array_map('strval', array_keys($createOnlyDefaults)), array_column($mappings, 'target'));
+			$createOnlyFields = array_values(array_diff($this->createOnlyFields(target: $target), $unmappedDefaults));
+
+			$defaults = $pack['defaults'] ?? [];
+			if (is_array($defaults) === false) {
+				$defaults = [];
+			}
+
+			$packs[] = array_merge(
+				[
+					'target' => $target,
+					'file' => (string)($profile['packs'][$target] ?? ''),
+					'id' => (string)($pack['id'] ?? ''),
+					'name' => (string)($pack['name'] ?? ''),
+					'version' => (string)($pack['version'] ?? ''),
+					'description' => (string)($pack['description'] ?? ''),
+					'fieldMappings' => $mappings,
+					'defaults' => $defaults,
+					'createOnlyDefaults' => $createOnlyDefaults,
+					'createOnlyFields' => $createOnlyFields,
+					'neverWritten' => $this->neverWrittenOnUpdate(target: $target),
+				],
+				$this->sources[$target],
+				['editable' => in_array($target, self::EDITABLE_TARGETS, true)]
+			);
+		}//end foreach
+
+		return [
+			'profile' => [
+				'id' => (string)($profile['id'] ?? ''),
+				'name' => (string)($profile['name'] ?? ''),
+				'version' => (string)($profile['version'] ?? ''),
+				'profileFile' => $this->profileFile,
+				'sheets' => $this->sheets(),
+				'archiveSheet' => $this->archiveSheetName(),
+				'sheetPrecedence' => $this->stringList(key: 'sheetPrecedence'),
+				'keyColumn' => $this->keyColumn(),
+				'nameColumn' => $this->nameColumn(),
+				'requiredColumns' => $this->requiredColumns(),
+				'dateColumns' => $this->dateColumns(),
+				'idColumns' => $this->idColumns(),
+				'emptyValues' => $this->emptyValues(),
+				'externalKeyPrefix' => $this->externalKeyPrefix(),
+				'missingRecords' => $this->missingRecordsModes(),
+			],
+			'packs' => $packs,
+			'openRegisterPacks' => $this->storeAvailable,
+		];
+	}//end mappingOverview()
+
+	/**
+	 * The loaded profile; loaded read only when nothing loaded it yet.
+	 *
+	 * The import run calls load() itself before it reads a row, so a lazy
+	 * load is a read: the limits, the sheet names or the mapping view.
 	 *
 	 * @return array<string, mixed>
 	 *
@@ -634,7 +1017,7 @@ class CmdbImportProfile {
 	 */
 	private function profile(): array {
 		if ($this->profile === null) {
-			$this->load();
+			$this->loadForView();
 		}
 
 		return ($this->profile ?? []);
@@ -655,6 +1038,107 @@ class CmdbImportProfile {
 
 		return array_values(array_map('strval', $value));
 	}//end stringList()
+
+	/**
+	 * OpenRegister's pack store, built on the container when none was injected.
+	 *
+	 * @return CmdbImportPackStore
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	private function packStore(): CmdbImportPackStore {
+		if ($this->packStore === null) {
+			$this->packStore = new CmdbImportPackStore(container: $this->container);
+		}
+
+		return $this->packStore;
+	}//end packStore()
+
+	/**
+	 * Read and validate the shipped pack of a target.
+	 *
+	 * @param array<string, mixed> $profile The decoded profile.
+	 * @param string $target The target.
+	 * @param object $validator OpenRegister's validator.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the profile names no pack or the file is unreadable or invalid.
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	private function readShippedPack(array $profile, string $target, object $validator): array {
+		$fileName = $profile['packs'][$target] ?? null;
+		if (is_string($fileName) === false || $fileName === '' || basename($fileName) !== $fileName) {
+			throw new CmdbImportException(
+				errorCode: CmdbImportException::MAPPING_UNAVAILABLE,
+				message: 'CMDB import profile names no pack for target ' . $target
+			);
+		}
+
+		$pack = $this->decodeFile(fileName: $fileName);
+		$this->assertValidPack(validator: $validator, pack: $pack, label: 'CMDB mapping pack ' . $fileName);
+
+		return $pack;
+	}//end readShippedPack()
+
+	/**
+	 * Refuse a pack OpenRegister's validator refuses.
+	 *
+	 * @param object $validator OpenRegister's validator.
+	 * @param array<string, mixed> $pack The pack.
+	 * @param string $label The pack as the message names it: its file, or its OpenRegister slug and id.
+	 * @param array<string, mixed> $details The exception details: the OpenRegister pack and its id, for a stored pack.
+	 *
+	 * @return void
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the pack is invalid.
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	private function assertValidPack(object $validator, array $pack, string $label, array $details = []): void {
+		$errors = $validator->validate($pack);
+		if (is_array($errors) === true && $errors !== []) {
+			throw new CmdbImportException(
+				errorCode: CmdbImportException::MAPPING_UNAVAILABLE,
+				message: $label . ' is invalid: ' . implode('; ', array_map('strval', $errors)),
+				details: $details
+			);
+		}
+	}//end assertValidPack()
+
+	/**
+	 * Refuse a pack that breaks a rule of the import, which the validator does not know.
+	 *
+	 * The import writes with OpenRegister's RBAC and multitenancy off, so a
+	 * pack may map any plain property of its target schema, never the
+	 * object's metadata, the keys the import sets itself, a relation, a file,
+	 * a field the register hides from forms or calculates, the publication
+	 * dates or an admin field, and must keep the mappings the
+	 * import matches records on (REQ-CMDB-021, CmdbImportPackRules).
+	 *
+	 * @param string $target The target.
+	 * @param array<string, mixed> $pack The validated pack.
+	 * @param array<string, mixed> $profile The decoded profile.
+	 * @param string $label The pack as the message names it.
+	 * @param array<string, mixed> $details The exception details: the OpenRegister pack and its id, for a stored pack.
+	 *
+	 * @return void
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the pack breaks a rule, or the register cannot be read.
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	private function assertImportRules(string $target, array $pack, array $profile, string $label, array $details): void {
+		$violations = $this->rules->violations(target: $target, pack: $pack, profile: $profile);
+		if ($violations !== []) {
+			throw new CmdbImportException(
+				errorCode: CmdbImportException::MAPPING_UNAVAILABLE,
+				message: $label . ' breaks a rule of the CMDB import: ' . implode('; ', $violations),
+				details: $details
+			);
+		}
+	}//end assertImportRules()
 
 	/**
 	 * Resolve OpenRegister's pack validator.
@@ -679,8 +1163,8 @@ class CmdbImportProfile {
 		}
 
 		if (class_exists($class) === true) {
-			$validator = new $class();
-			if (method_exists($validator, 'validate') === true) {
+			$validator = (new OpenRegisterInstance(container: $this->container))->build(class: $class);
+			if ($validator !== null && method_exists($validator, 'validate') === true) {
 				return $validator;
 			}
 		}

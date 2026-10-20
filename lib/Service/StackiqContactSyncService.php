@@ -179,11 +179,11 @@ class StackiqContactSyncService {
 	/**
 	 * Resolve the contact of a record, creating it in a dedicated address book of the signed-in user.
 	 *
-	 * A contact the record already links (`contactsUid`) is kept. Otherwise
-	 * a contact with the record's e-mail address is reused only when it is
-	 * in the address book with this URI: a contact in another address book
-	 * of the user is never matched, so the user's own contacts are never
-	 * linked to imported records. A new contact goes into that address book,
+	 * A contact the record already links (`contactsUid`) is kept. Otherwise,
+	 * without a fixed UID, a contact with the record's e-mail address is
+	 * reused only when it is in the address book with this URI: a contact
+	 * in another address book of the user is never matched, so the user's
+	 * own contacts are never linked to imported records. A new contact goes into that address book,
 	 * which is created with the display name when the user has none, and
 	 * never into the user's own first writable address book.
 	 *
@@ -191,12 +191,23 @@ class StackiqContactSyncService {
 	 * @param array<string, mixed> $record The relationship record.
 	 * @param string $addressBookUri The address book's URI, stable across languages.
 	 * @param string $displayName The display name for a new address book.
+	 * @param string|null $fixedUid The UID for a new contact, so the caller can find it again by UID; a random one when null.
+	 *                              With a fixed UID the record's e-mail address matches no existing contact: the
+	 *                              caller identifies the contact by that UID, and a shared e-mail address must not
+	 *                              merge two of them.
 	 *
 	 * @return ?string The contacts UID, or null when it could not be resolved or created.
 	 *
 	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
 	 */
-	public function syncToNamedAddressBook(string $objectType, array $record, string $addressBookUri, string $displayName): ?string {
+	public function syncToNamedAddressBook(
+		string $objectType,
+		array $record,
+		string $addressBookUri,
+		string $displayName,
+		?string $fixedUid = null,
+	): ?string {
 		if ($this->isAvailable() === false) {
 			return null;
 		}
@@ -206,7 +217,7 @@ class StackiqContactSyncService {
 			return $existingUid;
 		}
 
-		$matched = $this->namedAddressBookContactByEmail(record: $record, addressBookUri: $addressBookUri);
+		$matched = $this->namedAddressBookContactByEmail(record: $record, addressBookUri: $addressBookUri, fixedUid: $fixedUid);
 		if ($matched !== null) {
 			return $matched;
 		}
@@ -231,7 +242,7 @@ class StackiqContactSyncService {
 				uri: $addressBookUri,
 				displayName: $displayName
 			);
-			$contactUid = self::newUid();
+			$contactUid = ($fixedUid ?? self::newUid());
 			$backend->createCard($addressBookId, $contactUid . '.vcf', self::serialiseVCard(uid: $contactUid, properties: $properties));
 		} catch (Throwable $e) {
 			$this->logger->warning(
@@ -251,10 +262,12 @@ class StackiqContactSyncService {
 	 * @param string $addressBookUri The address book's URI.
 	 * @param array<int, string> $properties The vCard properties to search, such as FN or EMAIL.
 	 *
-	 * @return array<int, array<string, mixed>> The matching contacts, as searchContacts() returns them;
+	 * @return array<int, array<string, mixed>> The matching contacts, as searchContacts() returns them,
+	 *                                          plus `emails`: every e-mail address of the contact;
 	 *                                          none when the user has no such address book.
 	 *
 	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function searchNamedAddressBook(string $query, string $addressBookUri, array $properties): array {
 		$contacts = [];
@@ -263,6 +276,10 @@ class StackiqContactSyncService {
 				'uid' => (string)$result['UID'],
 				'name' => $this->firstValue(value: ($result['FN'] ?? '')),
 				'email' => $this->firstValue(value: ($result['EMAIL'] ?? '')),
+				'emails' => array_map(
+					fn (mixed $email): string => $this->firstValue(value: [$email]),
+					array_values((array)($result['EMAIL'] ?? []))
+				),
 				'addressBookKey' => (string)($result['addressbook-key'] ?? ''),
 			];
 		}
@@ -273,12 +290,37 @@ class StackiqContactSyncService {
 	/**
 	 * The contact in the named address book with the record's e-mail address, or null.
 	 *
+	 * With a fixed UID the e-mail address matches nothing: the caller
+	 * identifies the contact by that UID, and a shared e-mail address must
+	 * not merge two of them. Only a card that already has that UID (by URI)
+	 * is returned.
+	 *
 	 * @param array<string, mixed> $record The relationship record.
 	 * @param string $addressBookUri The address book's URI.
+	 * @param string|null $fixedUid The UID the caller gives a new contact, or null.
 	 *
 	 * @return string|null The contact UID.
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
 	 */
-	private function namedAddressBookContactByEmail(array $record, string $addressBookUri): ?string {
+	private function namedAddressBookContactByEmail(array $record, string $addressBookUri, ?string $fixedUid): ?string {
+		if ($fixedUid !== null) {
+			// A card that already has the fixed UID is the contact: Nextcloud
+			// refuses a second one (UidConflict), and the contacts search may not
+			// show it yet. Looked up by URI, not by search.
+			$key = $this->existingNamedAddressBookKey(addressBookUri: $addressBookUri);
+			$backend = null;
+			if ($key !== null) {
+				$backend = $this->container?->get(static::CARDDAV_BACKEND_CLASS);
+			}
+
+			if (is_object($backend) === true && is_array($backend->getCard((int)$key, $fixedUid . '.vcf')) === true) {
+				return $fixedUid;
+			}
+
+			return null;
+		}
+
 		$email = trim((string)($record['e-mailadres'] ?? $record['email'] ?? ''));
 		foreach ($this->namedAddressBookResults(query: $email, addressBookUri: $addressBookUri, properties: ['EMAIL']) as $result) {
 			if ($this->valueMatches(value: ($result['EMAIL'] ?? ''), needle: $email) === true) {
@@ -469,6 +511,81 @@ class StackiqContactSyncService {
 
 		return null;
 	}//end findContactByUid()
+
+	/**
+	 * Find a contact by its exact UID in the signed-in user's own and shared address books only.
+	 *
+	 * A result counts only when it comes from an address book the CardDAV
+	 * backend lists for the user's principal (own and shared); every
+	 * address book of the system principal is left out, the local system
+	 * address book (one card per local user) and the books synced from
+	 * trusted servers alike. The UID is matched exactly, not as a substring.
+	 * This is the lookup for a name shown to a user: a contactsUid is free
+	 * text on a contactPerson, so a lookup that read the system books would
+	 * name any local or federated user for whoever may write a contactPerson.
+	 * Without a CardDAV backend or a signed-in user nothing is found.
+	 *
+	 * @param string $uid The contact UID.
+	 *
+	 * @return ?array<string, mixed> The contact, or null when not found there.
+	 *
+	 * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
+	 */
+	public function findOwnContactByUid(string $uid): ?array {
+		if ($uid === '' || $this->isAvailable() === false) {
+			return null;
+		}
+
+		$keys = $this->userAddressBookKeys();
+		if ($keys === []) {
+			return null;
+		}
+
+		// With enumeration and fullmatch both off, the contacts manager skips the
+		// local system address book; strict_search turns the substring match off.
+		$options = ['limit' => 5, 'strict_search' => true, 'enumeration' => false, 'fullmatch' => false];
+		foreach ($this->contactsManager->search($uid, ['UID'], $options) as $result) {
+			$key = (string)($result['addressbook-key'] ?? '');
+			if (($result['UID'] ?? '') === $uid && in_array($key, $keys, true) === true) {
+				return $result;
+			}
+		}
+
+		return null;
+	}//end findOwnContactByUid()
+
+	/**
+	 * The keys of the signed-in user's own and shared address books.
+	 *
+	 * @return array<int, string> CardDAV address book ids as strings; empty without a backend or a user.
+	 */
+	private function userAddressBookKeys(): array {
+		try {
+			$backend = $this->container?->get(static::CARDDAV_BACKEND_CLASS);
+			$uid = $this->userSession?->getUser()?->getUID();
+			if (is_object($backend) === false || $uid === null) {
+				return [];
+			}
+
+			$books = $backend->getAddressBooksForUser('principals/users/' . $uid);
+		} catch (Throwable $e) {
+			$this->logger->warning('[StackiqContactSync] The address books of the user could not be read', ['exception' => get_class($e)]);
+			return [];
+		}
+
+		if (is_array($books) === false) {
+			return [];
+		}
+
+		$keys = [];
+		foreach ($books as $book) {
+			if (is_array($book) === true && isset($book['id']) === true) {
+				$keys[] = (string)$book['id'];
+			}
+		}
+
+		return $keys;
+	}//end userAddressBookKeys()
 
 	/**
 	 * Find a Nextcloud contact matching a relationship record's identity, by

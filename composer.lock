@@ -2792,16 +2792,16 @@
         },
         {
             "name": "conduction/hydra-gates",
-            "version": "v1.16.1",
+            "version": "v1.18.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/ConductionNL/.github.git",
-                "reference": "bfb34cc6caa9762f6aa3da66f9a2b573f8442358"
+                "reference": "477f930e84f1b3e709d2fb645d7c303d8d39a994"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/ConductionNL/.github/zipball/bfb34cc6caa9762f6aa3da66f9a2b573f8442358",
-                "reference": "bfb34cc6caa9762f6aa3da66f9a2b573f8442358",
+                "url": "https://api.github.com/repos/ConductionNL/.github/zipball/477f930e84f1b3e709d2fb645d7c303d8d39a994",
+                "reference": "477f930e84f1b3e709d2fb645d7c303d8d39a994",
                 "shasum": ""
             },
             "require": {
@@ -2840,9 +2840,9 @@
             "support": {
                 "docs": "https://github.com/ConductionNL/.github/blob/main/hydra-gates/README.md",
                 "issues": "https://github.com/ConductionNL/.github/issues",
-                "source": "https://github.com/ConductionNL/.github/tree/v1.16.1"
+                "source": "https://github.com/ConductionNL/.github/tree/v1.18.0"
             },
-            "time": "2026-09-07T08:01:54+00:00"
+            "time": "2026-09-10T10:15:53+00:00"
         },
         {
             "name": "consolidation/annotated-command",
@@ -9968,16 +9968,16 @@
         },
         {
             "name": "symfony/yaml",
-            "version": "v6.4.40",
+            "version": "v6.4.48",
             "source": {
                 "type": "git",
                 "url": "https://github.com/symfony/yaml.git",
-                "reference": "68dcd1f1602dac9d9221e25729683e0ce8733f3b"
+                "reference": "91288fddb497a598b564343ea663ea272370a7dc"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/symfony/yaml/zipball/68dcd1f1602dac9d9221e25729683e0ce8733f3b",
-                "reference": "68dcd1f1602dac9d9221e25729683e0ce8733f3b",
+                "url": "https://api.github.com/repos/symfony/yaml/zipball/91288fddb497a598b564343ea663ea272370a7dc",
+                "reference": "91288fddb497a598b564343ea663ea272370a7dc",
                 "shasum": ""
             },
             "require": {
@@ -10020,7 +10020,7 @@
             "description": "Loads and dumps YAML files",
             "homepage": "https://symfony.com",
             "support": {
-                "source": "https://github.com/symfony/yaml/tree/v6.4.40"
+                "source": "https://github.com/symfony/yaml/tree/v6.4.48"
             },
             "funding": [
                 {
@@ -10040,7 +10040,7 @@
                     "type": "tidelift"
                 }
             ],
-            "time": "2026-05-19T20:33:22+00:00"
+            "time": "2026-10-12T09:18:28+00:00"
         },
         {
             "name": "theseer/tokenizer",

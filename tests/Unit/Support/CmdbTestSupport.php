@@ -30,6 +30,10 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Support;
 
+use OCP\L10N\IFactory;
+use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
+
 /**
  * Locates and loads the OpenRegister pieces the CMDB import uses.
  */
@@ -111,6 +115,95 @@ final class CmdbTestSupport {
 		self::$packSource = $source;
 		return $source;
 	}//end loadMigrationPack()
+
+	/**
+	 * A pass-through IL10N.
+	 *
+	 * @return \OCP\IL10N
+	 */
+	public static function l10n(): \OCP\IL10N {
+		return new class implements \OCP\IL10N {
+			public function t(string $text, $parameters = []): string {
+				return vsprintf($text, (array)$parameters);
+			}
+
+			public function n(string $text_singular, string $text_plural, int $count, array $parameters = []): string {
+				return vsprintf(($count === 1 ? $text_singular : $text_plural), $parameters);
+			}
+
+			public function l(string $type, $data, array $options = []) {
+				return (string)$data;
+			}
+
+			public function getLanguageCode(): string {
+				return 'en';
+			}
+
+			public function getLocaleCode(): string {
+				return 'en';
+			}
+		};
+	}//end l10n()
+
+	/**
+	 * A container that knows only the translation factory, so a pack class comes from class_exists.
+	 *
+	 * @param TestCase $test The running test.
+	 *
+	 * @return ContainerInterface
+	 */
+	public static function emptyContainer(TestCase $test): ContainerInterface {
+		$builder = new \ReflectionMethod(TestCase::class, 'createMock');
+		$container = $builder->invoke($test, ContainerInterface::class);
+		$container->method('has')->willReturnCallback(static fn (string $id): bool => $id === IFactory::class);
+		$container->method('get')->willReturnCallback(
+			static function (string $id) use ($test) {
+				if ($id !== IFactory::class) {
+					throw new \RuntimeException('not in this container: ' . $id);
+				}
+
+				return self::translationFactory(test: $test);
+			}
+		);
+
+		return $container;
+	}//end emptyContainer()
+
+	/**
+	 * A translation factory that hands out the pass-through IL10N.
+	 *
+	 * @param TestCase $test The running test.
+	 *
+	 * @return IFactory
+	 */
+	public static function translationFactory(TestCase $test): IFactory {
+		$builder = new \ReflectionMethod(TestCase::class, 'createMock');
+		$factory = $builder->invoke($test, IFactory::class);
+		$factory->method('get')->willReturn(self::l10n());
+
+		return $factory;
+	}//end translationFactory()
+
+	/**
+	 * An OpenRegister pack class, built with a pass-through IL10N when its constructor requires one.
+	 *
+	 * Newer OpenRegister versions give PackDefinitionValidator and MappingEngine
+	 * an IL10N parameter, older ones have none; this works against both.
+	 *
+	 * @param string $class PackDefinitionValidator or MappingEngine.
+	 *
+	 * @return object
+	 */
+	public static function newPackClass(string $class): object {
+		self::loadMigrationPack();
+		$name = 'OCA\\OpenRegister\\Service\\MigrationPack\\' . $class;
+		$required = (new \ReflectionClass($name))->getConstructor()?->getNumberOfRequiredParameters() ?? 0;
+		if ($required === 0) {
+			return new $name();
+		}
+
+		return new $name(self::l10n());
+	}//end newPackClass()
 
 	/**
 	 * Make PhpSpreadsheet loadable from OpenRegister's vendor directory.

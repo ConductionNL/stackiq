@@ -46,6 +46,15 @@ A usage SHALL carry a business owner and a technical owner, each picked from the
 - **WHEN** the supplier opens that usage
 - **THEN** the owner contact persons do not open for the supplier
 
+#### Scenario: The usage list names an owner only for who can read the contact
+@e2e exclude Needs a Contacts address book per user; tests/Unit/Controller/ContactNamesControllerTest.php asserts the read with the caller's rights and the 401, and tests/Unit/Service/StackiqContactSyncServiceTest.php testANameLookupSkipsTheSystemAddressBookAndMatchesExactly asserts the lookup skips the system address book.
+
+- **GIVEN** a usage whose business owner is a contact person linked to a contact in the information manager's own address book
+- **WHEN** the information manager opens Applications in use
+- **THEN** the Business owner column shows the contact's name
+- **AND** a user without that contact in their own or shared address books sees the contact person's id, as before
+- **AND** a request that is not signed in gets 401 and no name, and a contactsUid that is a local or remote user id names nobody
+
 ### Requirement: REQ-UAP-004 A usage moves through its lifecycle from its page
 
 The usage schema SHALL declare its lifecycle on the status values its rows hold, so the detail page offers Plan, Go live, Phase out and Retire from the matching status.
@@ -56,3 +65,25 @@ The usage schema SHALL declare its lifecycle on the status values its rows hold,
 - **GIVEN** a usage with status Planned
 - **WHEN** the information manager opens it and clicks Go live
 - **THEN** its status reads In production
+
+### Requirement: REQ-UAP-005 A contact person's name shows only to who can read the contact
+
+The contact person page and the Name column of an organisation's contact person list SHALL show the name of the linked Nextcloud contact only to a user who can read that contact in their own or shared address books, and SHALL say why there is no name when there is none.
+
+#### Scenario: A reader of the contact sees the name
+@e2e exclude Needs a Contacts address book per user; tests/vitest/contactPersonName.spec.js asserts the name on the contact person page and tests/vitest/contactNames.spec.js the list column cell.
+
+- **GIVEN** a contact person linked to a contact in the information manager's own address book
+- **WHEN** the information manager opens the contact person, or the organisation it belongs to
+- **THEN** the contact person page opens with the contact's name
+- **AND** the Name column of the organisation's contact person list shows it
+
+#### Scenario: Without a name the page says why
+@e2e exclude Needs a Contacts address book per user; tests/vitest/contactPersonName.spec.js asserts each empty state, and that none shows before the object has loaded; tests/vitest/contactNames.spec.js asserts a failed request apart from an empty answer.
+
+- **GIVEN** a contact person whose name the signed-in user does not get
+- **WHEN** the user opens the contact person page
+- **THEN** a contact person without a contactsUid reads that it is not linked to a Nextcloud contact
+- **AND** a contact in an address book the user cannot read reads that the name is kept in Nextcloud Contacts, in an address book the user cannot read
+- **AND** a request that failed (for example rate limited) reads that the name could not be loaded, to reload the page
+- **AND** the list column keeps the contact person's id in each of these cases
