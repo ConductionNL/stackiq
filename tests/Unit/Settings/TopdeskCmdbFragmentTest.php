@@ -58,14 +58,14 @@ class TopdeskCmdbFragmentTest extends TestCase {
 	}//end mergedRegister()
 
 	/**
-	 * The merged module is 0.3.9, carries the six optional, titled properties and allows BBN2+.
+	 * The merged module is 0.3.10, carries the six optional, titled properties and allows BBN2+.
 	 *
 	 * @return void
 	 */
 	public function testTheMergedModuleIsVersion039WithTheExternalIds(): void {
 		$module = $this->mergedRegister()['components']['schemas']['module'];
 
-		$this->assertSame('0.3.9', $module['version'], 'a fragment sorting after topdesk-cmdb-import.json overwrote the bump');
+		$this->assertSame('0.3.10', $module['version'], 'a fragment sorting after topdesk-cmdb-import.json overwrote the bump');
 		foreach (self::PROPERTIES as $property) {
 			$this->assertArrayHasKey($property, $module['properties']);
 			$this->assertNotEmpty($module['properties'][$property]['title'] ?? '', $property);
@@ -104,7 +104,7 @@ class TopdeskCmdbFragmentTest extends TestCase {
 	 */
 	public function testAnAdministratorMayMoveAUsageToAnyStateTheSourceRecords(): void {
 		$usage = $this->mergedRegister()['components']['schemas']['usage'];
-		$this->assertSame('1.5.7', $usage['version'], 'a configuration-only edit deploys only with a version bump');
+		$this->assertSame('1.5.8', $usage['version'], 'a configuration-only edit deploys only with a version bump');
 
 		$lifecycle = $usage['configuration']['x-openregister-lifecycle'];
 		$states = $usage['properties']['status']['enum'];
@@ -178,8 +178,8 @@ class TopdeskCmdbFragmentTest extends TestCase {
 	public function testTheMergedSchemasOfferTheArchiveState(): void {
 		$schemas = $this->mergedRegister()['components']['schemas'];
 
-		$this->assertSame('0.3.9', $schemas['module']['version']);
-		$this->assertSame('1.5.7', $schemas['usage']['version']);
+		$this->assertSame('0.3.10', $schemas['module']['version']);
+		$this->assertSame('1.5.8', $schemas['usage']['version']);
 		foreach (['module', 'usage'] as $slug) {
 			$this->assertSame(['enabled' => true], $schemas[$slug]['configuration']['x-openregister-archive'] ?? null, $slug);
 		}
