@@ -23073,9 +23073,10 @@
 							"listen": "test",
 							"script": {
 								"exec": [
-									"pm.test(\"Only missingRecords=keep is accepted\", function () {",
+									"pm.test(\"Only missingRecords=keep or archive is accepted\", function () {",
 									"    pm.response.to.have.status(422);",
 									"    pm.expect(pm.response.json().error).to.eql(\"MISSING_RECORDS_UNSUPPORTED\");",
+									"    pm.expect(pm.response.json().details.accepted).to.eql([\"keep\", \"archive\"]);",
 									"});"
 								],
 								"type": "text/javascript"

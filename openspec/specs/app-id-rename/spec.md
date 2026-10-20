@@ -102,8 +102,15 @@ The appId this app passes to OpenRegister's configuration importer is NOT frozen
 
 - **GIVEN** a user who added the concept organisations widget to their Nextcloud dashboard before the rename
 - **WHEN** the dashboard loads after the rename
-- **THEN** `ConceptOrganisatiesWidget::getId()` MUST still return `softwarecatalog_concept_organisaties_widget`, because the Dashboard app stores each user's chosen widgets by widget id in its own `oc_preferences` namespace, which this app's repair steps cannot reach
+- **THEN** `ConceptOrganisatiesWidget::getId()` MUST still return `softwarecatalog_concept_organisaties_widget`, because the Dashboard app stores each user's chosen widgets by widget id in its own `oc_preferences` namespace, which a renamed id silently stops matching
 - @e2e exclude Cross-app persistence behaviour; asserted at the unit level against the frozen literal.
+
+#### Scenario: A dashboard that chose the widget under the renamed id keeps it too
+
+- **GIVEN** a user who added the widget while stackiq 0.1.148 through 0.2.0 or `beta` registered it as `stackiq_concept_organisaties_widget`
+- **WHEN** the app upgrades to a version that registers the frozen id again
+- **THEN** the repair step `RepointDashboardWidgetId` MUST rewrite `stackiq_concept_organisaties_widget` to `softwarecatalog_concept_organisaties_widget` in that user's `dashboard`/`layout` preference, in place and without listing the frozen id twice, because the Dashboard rows are ordinary user preferences that `IConfig` reaches like this app's own
+- @e2e exclude Cross-app persistence behaviour; asserted at the unit level against the rewritten layout.
 
 #### Scenario: The OpenRegister import keeps addressing the existing register and schemas
 

@@ -29,7 +29,7 @@
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
+ * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -52,7 +52,7 @@ use Throwable;
 /**
  * Copies per-user preferences from the legacy `stackiq` app id to `stackiq`.
  *
- * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
+ * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
  */
 class MigrateUserPreferences implements IRepairStep {
 	/**
@@ -93,7 +93,7 @@ class MigrateUserPreferences implements IRepairStep {
 	 *
 	 * @return string The repair step name.
 	 *
-	 * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
+	 * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
 	 */
 	public function getName(): string {
 		return 'Migrate user preferences from the stackiq app id to stackiq';
@@ -111,7 +111,7 @@ class MigrateUserPreferences implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
+	 * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
 	 */
 	public function run(IOutput $output): void {
 		$this->copied = 0;
@@ -156,7 +156,7 @@ class MigrateUserPreferences implements IRepairStep {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/rename-app-id-to-stackiq/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
+	 * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
 	 */
 	protected function migrateUser(IUser $user): void {
 		$userId = $user->getUID();

@@ -137,7 +137,7 @@ The module (`Applications`) and dienst (`Services`) `CnIndexPage`-based index pa
 - GIVEN a user navigates to the module index page
 - WHEN the page renders
 - THEN a facet filter panel MUST be visible showing all four GEMMA dimensions
-- AND the existing free-text search box and any `quickFilters` MUST continue to render and function unchanged
+- AND the free-text search (the Search tab of the page's Search and columns sidebar, sent by the list as `_search`) and any `quickFilters` MUST continue to render and function
 
 #### Scenario: Selecting a facet value updates the object list without a full page reload
 

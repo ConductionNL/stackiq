@@ -47,7 +47,7 @@
 					{{
 						t(
 							'stackiq',
-							'Pick an existing organisation of type Municipality, or type a new name and press Enter.',
+							'Choose a municipality, or type a new name and press Enter.',
 						)
 					}}
 				</p>
@@ -84,18 +84,7 @@
 					}}</span>
 				</label>
 				<p id="cmdb-import-file-help" class="cmdb-import__help">
-					{{
-						t(
-							'stackiq',
-							'Excel workbook (.xlsx) with the sheet "{first}" or "{second}". By default the file may be at most {size}.',
-							{
-								first: profileDefaults.sheets[0],
-								second: profileDefaults.sheets[1],
-								size: formatMegabytes(profileDefaults.maxFileBytes),
-							},
-							asText,
-						)
-					}}
+					{{ fileHelp }}
 				</p>
 			</div>
 
@@ -111,15 +100,7 @@
 					{{
 						t(
 							'stackiq',
-							'When off, applications imported before are left as they are and reported as skipped.',
-						)
-					}}
-				</p>
-				<p class="cmdb-import__help" data-testid="cmdb-import-update-fields">
-					{{
-						t(
-							'stackiq',
-							"When on, a re-import overwrites the application's name, descriptions, application type, hosting model, BBN level, source fields and supplier, and the usage's status, phase-out date and business owner, with the values from the export. The usage's TIME classification and internal note are only set when the usage is created or the field is empty, so changes made in stackiq stay.",
+							'Overwrites applications imported before with the values from the export. The (i) button above lists the fields.',
 						)
 					}}
 				</p>
@@ -138,11 +119,40 @@
 					{{
 						t(
 							'stackiq',
-							'A published application is visible to anyone, including anonymous visitors of OpenCatalogi. When off, the applications this import creates stay unpublished until you publish them by hand. Applications imported before keep their publication as it is.',
+							'New applications become visible to everyone, also without logging in.',
 						)
 					}}
 				</p>
 			</div>
+			<fieldset
+				class="cmdb-import__field cmdb-import__choice"
+				aria-describedby="cmdb-import-missing-records-help"
+				data-testid="cmdb-import-missing-records">
+				<legend class="cmdb-import__legend">
+					{{ t('stackiq', 'Applications missing from the export') }}
+				</legend>
+				<NcCheckboxRadioSwitch
+					v-model="missingRecords"
+					value="archive"
+					name="cmdb-import-missing-records"
+					type="radio"
+					:disabled="importing"
+					data-testid="cmdb-import-missing-records-archive">
+					{{ missingRecordsWords.archiveOption }}
+				</NcCheckboxRadioSwitch>
+				<NcCheckboxRadioSwitch
+					v-model="missingRecords"
+					value="keep"
+					name="cmdb-import-missing-records"
+					type="radio"
+					:disabled="importing"
+					data-testid="cmdb-import-missing-records-keep">
+					{{ t('stackiq', 'Keep them as they are') }}
+				</NcCheckboxRadioSwitch>
+				<p id="cmdb-import-missing-records-help" class="cmdb-import__help">
+					{{ missingRecordsWords.archiveHelp }}
+				</p>
+			</fieldset>
 
 			<!-- 4. Actions -->
 			<div class="cmdb-import__actions">
@@ -238,7 +248,7 @@
 					{{
 						t(
 							'stackiq',
-							'The import was cancelled. The rows processed before it stopped are kept.',
+							'The import was cancelled. The rows and applications processed before it stopped are kept.',
 						)
 					}}
 				</NcNoteCard>
@@ -304,7 +314,7 @@
 					</template>
 					<template #column-name="{ row }">
 						<a
-							v-if="row.moduleUuid"
+							v-if="row.moduleUuid && row.outcome !== 'deleted'"
 							:href="moduleUrl(row.moduleUuid)"
 							class="cmdb-import__module-link"
 							data-testid="cmdb-import-module-link">
@@ -361,6 +371,9 @@
 					</NcButton>
 				</div>
 			</div>
+
+			<!-- The mapping the import uses, with links to its editor in OpenRegister; its sheet names feed the help text -->
+			<CmdbImportMapping @loaded="onMappingLoaded" />
 		</div>
 
 		<template #info-content>
@@ -377,17 +390,7 @@
 				<h4>{{ t('stackiq', 'The file') }}</h4>
 				<ul>
 					<li>
-						{{
-							t(
-								'stackiq',
-								'The sheets "{first}" (applications without arranged maintenance) and "{second}" (with arranged maintenance) are read; other sheets, including the "Invoer" sheets, are ignored.',
-								{
-									first: profileDefaults.sheets[0],
-									second: profileDefaults.sheets[1],
-								},
-								asText,
-							)
-						}}
+						{{ sheetsReadInfo }}
 					</li>
 					<li>
 						{{
@@ -406,14 +409,47 @@
 						}}
 					</li>
 					<li>
+						{{ missingRecordsWords.reimportInfo }}
+					</li>
+				</ul>
+				<h4>{{ t('stackiq', 'Update existing records') }}</h4>
+				<ul>
+					<li data-testid="cmdb-import-update-fields">
 						{{
 							t(
 								'stackiq',
-								'Importing a newer export again updates the same applications, matched on APPID per municipality. Applications missing from it are left as they are.',
+								"When on, a re-import overwrites the application's name, descriptions, application type, hosting model, BBN level, source fields and supplier, and the usage's status, phase-out date and business owner, with the values from the export. The usage's TIME classification and internal note are only set when the usage is created or the field is empty, so changes made in stackiq stay.",
+							)
+						}}
+					</li>
+					<li>
+						{{
+							t(
+								'stackiq',
+								'When off, applications imported before are left as they are and reported as skipped.',
 							)
 						}}
 					</li>
 				</ul>
+				<h4>
+					{{
+						t('stackiq', 'Publish the applications this import creates')
+					}}
+				</h4>
+				<ul>
+					<li>
+						{{
+							t(
+								'stackiq',
+								'A published application is visible to anyone, including anonymous visitors of OpenCatalogi. When off, the applications this import creates stay unpublished until you publish them by hand. Applications imported before keep their publication as it is.',
+							)
+						}}
+					</li>
+				</ul>
+				<h4>{{ t('stackiq', 'Applications missing from the export') }}</h4>
+				<p>
+					{{ missingApplicationsInfo }}
+				</p>
 			</div>
 		</template>
 	</AlwaysVisibleSection>
@@ -436,6 +472,7 @@ import Close from 'vue-material-design-icons/Close.vue'
 import DatabaseImport from 'vue-material-design-icons/DatabaseImport.vue'
 import TrayArrowUp from 'vue-material-design-icons/TrayArrowUp.vue'
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
+import CmdbImportMapping from './CmdbImportMapping.vue'
 import { startProgressPolling } from '../../../utils/archiMateImportProgress.js'
 import {
 	AS_TEXT,
@@ -445,12 +482,17 @@ import {
 	checkFile,
 	cmdbProgressView,
 	errorText,
+	fileHelpText,
 	followInterruptedImport,
-	formatMegabytes,
 	importUrl,
 	interruptedImportError,
 	isKnownError,
 	makeCmdbOperationId,
+	mappingArchiveSheet,
+	mappingSheetNames,
+	MISSING_RECORDS_MODES,
+	missingApplicationsText,
+	missingRecordsTexts,
 	moduleUrl,
 	municipalityOptions,
 	normaliseError,
@@ -459,9 +501,19 @@ import {
 	PROFILE_DEFAULTS,
 	REPORT_PAGE_SIZE,
 	reportRows,
+	sheetsReadText,
 	sortReportRows,
 	typedMunicipalityOption,
 } from '../../../utils/cmdbImport.js'
+
+/** The summary tiles shown only when their count is not zero. */
+const COUNTED_ONLY_TILES = [
+	'unpublished',
+	'unarchived',
+	'restored',
+	'archived',
+	'deleted',
+]
 
 /**
  * The "CMDB import" section of stackiq's admin settings.
@@ -472,12 +524,14 @@ import {
  * the text it renders; none of them may go into v-html.
  *
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 export default {
 	name: 'CmdbImport',
 
 	components: {
 		AlwaysVisibleSection,
+		CmdbImportMapping,
 		CnDataTable,
 		CnStatusBadge,
 		NcButton,
@@ -500,6 +554,7 @@ export default {
 			selectedFile: null,
 			updateExisting: true,
 			publish: true,
+			missingRecords: MISSING_RECORDS_MODES[0],
 			importing: false,
 			cancelling: false,
 			cancelStatus: '',
@@ -515,6 +570,7 @@ export default {
 			reportPageSize: REPORT_PAGE_SIZE,
 			visibleRowCount: REPORT_PAGE_SIZE,
 			profileDefaults: PROFILE_DEFAULTS,
+			mapping: null,
 			asText: AS_TEXT,
 			outcomeColors: {
 				created: 'success',
@@ -522,11 +578,82 @@ export default {
 				unchanged: 'default',
 				skipped: 'warning',
 				failed: 'error',
+				unarchived: 'info',
+				restored: 'info',
+				archived: 'default',
+				deleted: 'warning',
 			},
 		}
 	},
 
 	computed: {
+		/**
+		 * The names of the sheets the import reads, for the help texts: the
+		 * profile's once the mapping block has loaded it, the shipped names
+		 * until then or when it could not be loaded.
+		 *
+		 * @return {Array<string>} Every sheet the profile names, at least one
+		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		sheetNames() {
+			return mappingSheetNames(this.mapping)
+		},
+
+		/**
+		 * The archive sheet, of which the import reads only the APPID column:
+		 * the profile's once the mapping block has loaded it (null when the
+		 * profile names none), the shipped name until then or when it could
+		 * not be loaded.
+		 *
+		 * @return {string|null} The sheet name, or null
+		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		archiveSheet() {
+			return mappingArchiveSheet(this.mapping)
+		},
+
+		/**
+		 * The help text under the file chooser, naming every sheet the import reads.
+		 *
+		 * @return {string} The text
+		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		fileHelp() {
+			return fileHelpText(this.sheetNames, this.profileDefaults.maxFileBytes)
+		},
+
+		/**
+		 * The info-panel sentence naming the sheets the import reads.
+		 *
+		 * @return {string} The text
+		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		sheetsReadInfo() {
+			return sheetsReadText(this.sheetNames, this.archiveSheet)
+		},
+
+		/**
+		 * The info-panel paragraph on applications missing from the export,
+		 * naming the profile's archive sheet.
+		 *
+		 * @return {string} The text
+		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		missingApplicationsInfo() {
+			return missingApplicationsText(this.archiveSheet)
+		},
+
+		/**
+		 * The words of the missing-records choice and of the re-import line,
+		 * which mention deleting only when the profile names an archive sheet.
+		 *
+		 * @return {{archiveOption: string, archiveHelp: string, reimportInfo: string}} The texts
+		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+		 */
+		missingRecordsWords() {
+			return missingRecordsTexts(this.archiveSheet)
+		},
+
 		/**
 		 * Whether everything the import needs has been chosen.
 		 *
@@ -563,7 +690,7 @@ export default {
 			if (!this.error) {
 				return null
 			}
-			const words = errorText(this.error)
+			const words = errorText(this.error, this.sheetNames, this.archiveSheet)
 			return {
 				...words,
 				code: this.error.error,
@@ -578,6 +705,7 @@ export default {
 		 *
 		 * @return {Array<object>} One tile per count
 		 * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-each-row-shall-be-processed-in-isolation-and-reported-with-its-outcome-req-cmdb-011
+		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
 		 */
 		summaryTiles() {
 			const summary = this.report?.summary || {}
@@ -594,13 +722,21 @@ export default {
 						key: 'unpublished',
 						label: t('stackiq', 'Created unpublished'),
 					},
+					{ key: 'unarchived', label: t('stackiq', 'Unarchived') },
+					{ key: 'restored', label: t('stackiq', 'Restored') },
+					{ key: 'archived', label: t('stackiq', 'Archived') },
+					{ key: 'deleted', label: t('stackiq', 'Deleted') },
 				]
 					.map((tile) => ({
 						...tile,
 						value: Number(summary[tile.key]) || 0,
 					}))
-					// Only an import run with publishing off leaves modules unpublished.
-					.filter((tile) => tile.key !== 'unpublished' || tile.value > 0)
+					// Only an import run with publishing off leaves modules unpublished, and
+					// only a re-import archives, deletes or brings back applications.
+					.filter(
+						(tile) =>
+							!COUNTED_ONLY_TILES.includes(tile.key) || tile.value > 0,
+					)
 			)
 		},
 
@@ -619,28 +755,72 @@ export default {
 				updated: Number(summary.updated) || 0,
 				unchanged: Number(summary.unchanged) || 0,
 			}
+			let sentence
 			if (this.report?.cancelled) {
-				return t(
+				sentence = t(
 					'stackiq',
 					'Import for {name} cancelled after {read} rows.',
 					counts,
 					AS_TEXT,
 				)
-			}
-			if (this.report?.municipality?.created) {
-				return t(
+			} else if (this.report?.municipality?.created) {
+				sentence = t(
 					'stackiq',
 					'Import finished. The municipality {name} was created. {read} rows read: {created} created, {updated} updated, {unchanged} unchanged.',
 					counts,
 					AS_TEXT,
 				)
+			} else {
+				sentence = t(
+					'stackiq',
+					'Import for {name} finished. {read} rows read: {created} created, {updated} updated, {unchanged} unchanged.',
+					counts,
+					AS_TEXT,
+				)
 			}
-			return t(
-				'stackiq',
-				'Import for {name} finished. {read} rows read: {created} created, {updated} updated, {unchanged} unchanged.',
-				counts,
-				AS_TEXT,
-			)
+			const applications = this.applicationChangesText
+			return applications === '' ? sentence : `${sentence} ${applications}`
+		},
+
+		/**
+		 * What the import did to applications that are not on the sheets: the
+		 * non-zero counts, for the sentence the live region announces.
+		 *
+		 * @return {string} A sentence, or '' when no application was touched
+		 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		applicationChangesText() {
+			const summary = this.report?.summary || {}
+			const parts = [
+				[
+					'archived',
+					(count) => t('stackiq', '{count} archived', { count }, AS_TEXT),
+				],
+				[
+					'unarchived',
+					(count) =>
+						t('stackiq', '{count} unarchived', { count }, AS_TEXT),
+				],
+				[
+					'deleted',
+					(count) => t('stackiq', '{count} deleted', { count }, AS_TEXT),
+				],
+				[
+					'restored',
+					(count) => t('stackiq', '{count} restored', { count }, AS_TEXT),
+				],
+			]
+				.map(([key, text]) => [Number(summary[key]) || 0, text])
+				.filter(([count]) => count > 0)
+				.map(([count, text]) => text(count))
+			return parts.length === 0
+				? ''
+				: t(
+						'stackiq',
+						'Applications: {changes}.',
+						{ changes: parts.join(', ') },
+						AS_TEXT,
+					)
 		},
 
 		/**
@@ -767,9 +947,19 @@ export default {
 
 	methods: {
 		t,
-		formatMegabytes,
 		moduleUrl,
 		outcomeLabel,
+
+		/**
+		 * Keep the mapping the block loaded, so the help text names its sheets.
+		 *
+		 * @param {object} mapping The mapping endpoint's answer
+		 * @return {void}
+		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+		 */
+		onMappingLoaded(mapping) {
+			this.mapping = mapping
+		},
 
 		/**
 		 * Read the organisations of type Municipality from OpenRegister.
@@ -920,6 +1110,7 @@ export default {
 					},
 					updateExisting: this.updateExisting,
 					publish: this.publish,
+					missingRecords: this.missingRecords,
 					operationId: this.operationId,
 				})
 				const response = await axios.post(importUrl(), form)
@@ -1022,7 +1213,7 @@ export default {
 				})
 				this.cancelStatus = t(
 					'stackiq',
-					'Cancelling the import. It stops before the next row; the rows already processed stay imported.',
+					'Cancelling the import. It stops before the next row or, while the applications are compared with the export, before the next application; what was already processed stays.',
 				)
 			} catch (error) {
 				// The import keeps running; say why, and let the admin press Cancel again.
@@ -1089,6 +1280,17 @@ export default {
 	margin: 0.25rem 0 0;
 	font-size: 0.875rem;
 	color: var(--color-text-maxcontrast);
+}
+
+.cmdb-import__choice {
+	margin: 0;
+	padding: 0;
+	border: 0;
+}
+
+.cmdb-import__legend {
+	padding: 0;
+	font-weight: bold;
 }
 
 .cmdb-import__help--warning {

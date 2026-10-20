@@ -141,6 +141,14 @@ export default {
 			this.loading = true
 			this.error = false
 			try {
+				// Opened straight from a link, this widget can mount before the
+				// app has read its settings; without them no type resolves.
+				if (
+					!objectStore.settings
+					&& typeof objectStore.fetchSettings === 'function'
+				) {
+					await objectStore.fetchSettings()
+				}
 				this.ensureType('usage')
 				this.ensureType('moduleVersion')
 				this.ensureType('vulnerability')
@@ -216,6 +224,10 @@ export default {
 }
 
 .usage-risk-signals__list dt {
+	/* Undo the page-wide fixed width and right alignment of a dt, which made
+	   a long label run into its value. */
+	width: auto;
+	text-align: start;
 	font-weight: bold;
 }
 

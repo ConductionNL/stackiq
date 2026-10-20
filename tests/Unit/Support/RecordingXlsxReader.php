@@ -1,10 +1,10 @@
 <?php
 
 /**
- * PhpSpreadsheet's Xlsx reader, counting how often a workbook is loaded.
+ * PhpSpreadsheet's Xlsx reader, counting how often a workbook is loaded and keeping the read filter of each load.
  *
  * Lets a reader test prove that a bound stopped the import before
- * PhpSpreadsheet loaded a sheet. Require it only after
+ * PhpSpreadsheet loaded a sheet, and which cells a load was allowed to read. Require it only after
  * CmdbTestSupport::loadPhpSpreadsheet() returned true.
  *
  * @category  Test
@@ -39,6 +39,13 @@ class RecordingXlsxReader extends Xlsx {
 	public static int $loads = 0;
 
 	/**
+	 * The read filter of every load since the last reset, in load order.
+	 *
+	 * @var array<int, object|null>
+	 */
+	public static array $filters = [];
+
+	/**
 	 * Load a workbook and count it.
 	 *
 	 * @param string $filename The file.
@@ -48,6 +55,7 @@ class RecordingXlsxReader extends Xlsx {
 	 */
 	public function load(string $filename, int $flags = 0): Spreadsheet {
 		self::$loads++;
+		self::$filters[] = $this->getReadFilter();
 		return parent::load($filename, $flags);
 	}//end load()
 }//end class

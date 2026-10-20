@@ -62,6 +62,11 @@ class ProgressTracker {
 		'processing_relationships' => ['weight' => 15, 'description' => 'Processing relationships'],
 		'processing_organizations' => ['weight' => 10, 'description' => 'Processing organizations'],
 		'processing_views' => ['weight' => 10, 'description' => 'Processing views'],
+		// The CMDB import's reconciliation of records missing from the source
+		// (openspec/changes/cmdb-import-archive-reconciliation). Weight 0, so the
+		// weighted percentage of the ArchiMate import's phases is unchanged; the
+		// CMDB section computes its own percentage from the item counts.
+		'reconciling' => ['weight' => 0, 'description' => 'Reconciling records missing from the source'],
 		'finalizing' => ['weight' => 5, 'description' => 'Finalizing import'],
 		'completed' => ['weight' => 0, 'description' => 'Completed'],
 	];

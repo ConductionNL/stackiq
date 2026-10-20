@@ -285,3 +285,38 @@ export async function expectIndexSurface(
 	const populated = main.getByText(/Showing\s+\d+\s+of\s+\d+/i).first()
 	await expect(emptyState.or(populated)).toBeVisible({ timeout: 30000 })
 }
+
+/**
+ * Get Nextcloud's own first-run wizard out of the way.
+ *
+ * It opens on an admin's first visit to a fresh instance, and its modal mask
+ * intercepts every click, so the chooser below would time out on a click
+ * that reads like a broken select. It has no close button and ignores
+ * Escape until its last slide, so it is marked as seen through its own
+ * route (what finishing it does) and the page is loaded again. A bounded
+ * wait, because the wizard mounts after the page.
+ *
+ * @param page The page
+ * @return True when the page was reloaded
+ */
+export async function dismissFirstRunWizard(page: Page): Promise<boolean> {
+	const wizard = page.locator('.first-run-wizard[role="dialog"]')
+	try {
+		await wizard.waitFor({ state: 'visible', timeout: 3000 })
+	} catch {
+		return false
+	}
+	await page.evaluate(async () => {
+		const oc = (
+			window as unknown as {
+				OC: { requestToken: string; generateUrl: (u: string) => string }
+			}
+		).OC
+		await fetch(oc.generateUrl('/apps/firstrunwizard/wizard'), {
+			method: 'DELETE',
+			headers: { requesttoken: oc.requestToken },
+		})
+	})
+	await page.reload({ waitUntil: 'domcontentloaded' })
+	return true
+}

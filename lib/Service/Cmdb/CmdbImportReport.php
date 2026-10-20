@@ -36,6 +36,10 @@ class CmdbImportReport {
 	public const UNCHANGED = 'unchanged';
 	public const SKIPPED = 'skipped';
 	public const FAILED = 'failed';
+	public const ARCHIVED = 'archived';
+	public const UNARCHIVED = 'unarchived';
+	public const DELETED = 'deleted';
+	public const RESTORED = 'restored';
 
 	/**
 	 * The row entries, in processing order.
@@ -90,7 +94,7 @@ class CmdbImportReport {
 	 * Add one row outcome.
 	 *
 	 * @param string $sheet The sheet name.
-	 * @param int $row The 1-based sheet row number.
+	 * @param int $row The 1-based sheet row number, or 0 for an application the reconciliation archived or deleted.
 	 * @param string $appId The APPID ('' when missing).
 	 * @param string $name The application name ('' when missing).
 	 * @param string $outcome One of the outcome constants.
@@ -180,14 +184,25 @@ class CmdbImportReport {
 	}//end markCancelled()
 
 	/**
-	 * The number of rows processed so far.
+	 * Whether the run stopped on a cancel.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
+	 */
+	public function isCancelled(): bool {
+		return $this->cancelled;
+	}//end isCancelled()
+
+	/**
+	 * The number of sheet rows processed so far; reconciliation entries (row 0) are not sheet rows.
 	 *
 	 * @return int
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
 	 */
 	public function processed(): int {
-		return count($this->rows);
+		return count(array_filter($this->rows, static fn (array $row): bool => $row['row'] > 0));
 	}//end processed()
 
 	/**
@@ -195,21 +210,28 @@ class CmdbImportReport {
 	 *
 	 * `unpublished` counts the modules created without a publication date;
 	 * a row whose module was created but whose usage then failed counts too.
+	 * `processed` counts sheet rows only; every outcome, also of a
+	 * reconciliation entry, is counted under its own key.
 	 *
 	 * @return array{rowsRead: int, processed: int, created: int, updated: int, unchanged: int, skipped: int, failed: int,
-	 *     warnings: int, unpublished: int}
+	 *     archived: int, unarchived: int, deleted: int, restored: int, warnings: int, unpublished: int}
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	public function summary(): array {
 		$summary = [
 			'rowsRead' => $this->rowsRead,
-			'processed' => count($this->rows),
+			'processed' => $this->processed(),
 			self::CREATED => 0,
 			self::UPDATED => 0,
 			self::UNCHANGED => 0,
 			self::SKIPPED => 0,
 			self::FAILED => 0,
+			self::ARCHIVED => 0,
+			self::UNARCHIVED => 0,
+			self::DELETED => 0,
+			self::RESTORED => 0,
 			'warnings' => 0,
 			'unpublished' => $this->unpublished,
 		];

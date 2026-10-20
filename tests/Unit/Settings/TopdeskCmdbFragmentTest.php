@@ -58,14 +58,14 @@ class TopdeskCmdbFragmentTest extends TestCase {
 	}//end mergedRegister()
 
 	/**
-	 * The merged module is 0.3.8, carries the six optional, titled properties and allows BBN2+.
+	 * The merged module is 0.3.9, carries the six optional, titled properties and allows BBN2+.
 	 *
 	 * @return void
 	 */
-	public function testTheMergedModuleIsVersion038WithTheExternalIds(): void {
+	public function testTheMergedModuleIsVersion039WithTheExternalIds(): void {
 		$module = $this->mergedRegister()['components']['schemas']['module'];
 
-		$this->assertSame('0.3.8', $module['version'], 'a fragment sorting after topdesk-cmdb-import.json overwrote the bump');
+		$this->assertSame('0.3.9', $module['version'], 'a fragment sorting after topdesk-cmdb-import.json overwrote the bump');
 		foreach (self::PROPERTIES as $property) {
 			$this->assertArrayHasKey($property, $module['properties']);
 			$this->assertNotEmpty($module['properties'][$property]['title'] ?? '', $property);
@@ -91,7 +91,7 @@ class TopdeskCmdbFragmentTest extends TestCase {
 		$this->assertSame(['BBN1', 'BBN2', 'BBN3', 'BBN2+'], $module['properties']['bbnLevel']['enum'], 'the fragment adds BBN2+ to the BIO levels');
 		$this->assertArrayHasKey('roadmapStatement', $module['properties'], 'the 0.3.4 fragment still applies');
 		$this->assertSame(['name'], $module['required']);
-	}//end testTheMergedModuleIsVersion038WithTheExternalIds()
+	}//end testTheMergedModuleIsVersion039WithTheExternalIds()
 
 	/**
 	 * A CMDB import sets the usage status TOPdesk records from any state; only an administrator may.
@@ -104,7 +104,7 @@ class TopdeskCmdbFragmentTest extends TestCase {
 	 */
 	public function testAnAdministratorMayMoveAUsageToAnyStateTheSourceRecords(): void {
 		$usage = $this->mergedRegister()['components']['schemas']['usage'];
-		$this->assertSame('1.5.6', $usage['version'], 'a lifecycle-only edit deploys only with a version bump');
+		$this->assertSame('1.5.7', $usage['version'], 'a configuration-only edit deploys only with a version bump');
 
 		$lifecycle = $usage['configuration']['x-openregister-lifecycle'];
 		$states = $usage['properties']['status']['enum'];
@@ -167,4 +167,24 @@ class TopdeskCmdbFragmentTest extends TestCase {
 		// The base seeds are still there: the fragment appends, it does not replace.
 		$this->assertGreaterThan(3, count($register['components']['objects']));
 	}//end testTheSeedModulesShowTheNewProperties()
+
+	/**
+	 * Module and usage offer OpenRegister's archive state, and the usage keeps its lifecycle.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-archived-applications-and-usages-shall-be-listable-in-stackiq-and-shall-stay-out-of-opencatalogi-and-portaliq-by-default-req-cmdb-017
+	 */
+	public function testTheMergedSchemasOfferTheArchiveState(): void {
+		$schemas = $this->mergedRegister()['components']['schemas'];
+
+		$this->assertSame('0.3.9', $schemas['module']['version']);
+		$this->assertSame('1.5.7', $schemas['usage']['version']);
+		foreach (['module', 'usage'] as $slug) {
+			$this->assertSame(['enabled' => true], $schemas[$slug]['configuration']['x-openregister-archive'] ?? null, $slug);
+		}
+
+		$this->assertArrayHasKey('importAcquisition', $schemas['usage']['configuration']['x-openregister-lifecycle']['transitions'], 'the 1.5.6 lifecycle is still declared');
+		$this->assertArrayNotHasKey('x-openregister-archive', $schemas['contactPerson']['configuration'] ?? [], 'contact persons are never archived by the import');
+	}//end testTheMergedSchemasOfferTheArchiveState()
 }//end class

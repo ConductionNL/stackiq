@@ -64,7 +64,21 @@ class StackiqContactSyncServiceTest extends TestCase {
 				return $id;
 			}
 
+			public function getCard(int $addressBookId, string $cardUri): array|false {
+				foreach ($this->cards as $card) {
+					if ($card[0] === $addressBookId && $card[1] === $cardUri) {
+						return ['uri' => $cardUri, 'carddata' => $card[2]];
+					}
+				}
+
+				return false;
+			}
+
 			public function createCard(int $addressBookId, string $cardUri, string $cardData): string {
+				if ($this->getCard($addressBookId, $cardUri) !== false) {
+					throw new \RuntimeException('UidConflict');
+				}
+
 				$this->cards[] = [$addressBookId, $cardUri, $cardData];
 				return 'etag';
 			}
@@ -89,7 +103,7 @@ class StackiqContactSyncServiceTest extends TestCase {
 						$contacts,
 						static function (array $contact) use ($pattern, $properties): bool {
 							foreach ($properties as $property) {
-								if (str_contains(mb_strtolower((string)($contact[$property] ?? '')), mb_strtolower($pattern)) === true) {
+								if (str_contains(mb_strtolower(json_encode($contact[$property] ?? '', JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES)), mb_strtolower($pattern)) === true) {
 									return true;
 								}
 							}
@@ -112,6 +126,62 @@ class StackiqContactSyncServiceTest extends TestCase {
 
 		return new StackiqContactSyncService(contactsManager: $manager, logger: new NullLogger(), container: $container, userSession: $session);
 	}//end service()
+
+	/**
+	 * A name lookup skips the system address book and matches the UID exactly.
+	 *
+	 * With enumeration and fullmatch both off, Nextcloud's contacts manager
+	 * skips the local system address book (one card per local user, UID =
+	 * user id); a result from any book outside the user's own and shared
+	 * ones (such as a book synced from a trusted server) is dropped, so a
+	 * contactsUid set to a local or remote user id names nobody.
+	 *
+	 * @spec openspec/specs/application-usage-pages/spec.md#requirement-req-uap-003-a-usage-names-a-business-owner-and-a-technical-owner
+	 *
+	 * @return void
+	 */
+	public function testANameLookupSkipsTheSystemAddressBookAndMatchesExactly(): void {
+		$manager = $this->createMock(IManager::class);
+		$manager->method('isEnabled')->willReturn(true);
+		$manager->expects($this->exactly(3))
+			->method('search')
+			->with(
+				$this->anything(),
+				['UID'],
+				['limit' => 5, 'strict_search' => true, 'enumeration' => false, 'fullmatch' => false]
+			)
+			->willReturnCallback(
+				static fn (string $uid): array => match ($uid) {
+					// Book 7 is the user's own; 99 is a book synced from a trusted server.
+					'uid-a' => [
+						['UID' => 'uid-a-longer', 'FN' => 'Other', 'addressbook-key' => '7'],
+						['UID' => 'uid-a', 'FN' => 'Owner', 'addressbook-key' => '7'],
+					],
+					'remote-user' => [['UID' => 'remote-user', 'FN' => 'Remote User', 'addressbook-key' => '99']],
+					default => [],
+				}
+			);
+		$backend = new class {
+			public function getAddressBooksForUser(string $principal): array {
+				return $principal === 'principals/users/admin' ? [['id' => 7, 'uri' => 'contacts'], ['id' => 8, 'uri' => 'shared_by_bob']] : [];
+			}
+		};
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($backend);
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn('admin');
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($user);
+		$service = new StackiqContactSyncService(contactsManager: $manager, logger: new NullLogger(), container: $container, userSession: $session);
+
+		$this->assertSame('Owner', $service->findOwnContactByUid(uid: 'uid-a')['FN']);
+		$this->assertNull($service->findOwnContactByUid(uid: 'remote-user'));
+		$this->assertNull($service->findOwnContactByUid(uid: 'admin'));
+		$this->assertNull($service->findOwnContactByUid(uid: ''));
+
+		$noUser = new StackiqContactSyncService(contactsManager: $manager, logger: new NullLogger(), container: $container);
+		$this->assertNull($noUser->findOwnContactByUid(uid: 'uid-a'));
+	}//end testANameLookupSkipsTheSystemAddressBookAndMatchesExactly()
 
 	/**
 	 * The first contact creates the address book; the second reuses it; neither touches another address book.
@@ -141,6 +211,82 @@ class StackiqContactSyncServiceTest extends TestCase {
 	}//end testNewContactsGoIntoTheNamedAddressBook()
 
 	/**
+	 * A caller that gives a UID gets a new contact with exactly that UID, so it can find it again by UID.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 */
+	public function testANewContactTakesTheGivenUid(): void {
+		$backend = $this->backend();
+		$service = $this->service(backend: $backend);
+
+		$uid = $service->syncToNamedAddressBook(
+			objectType: 'contactPerson',
+			record: ['voornaam' => 'Voornaam', 'achternaam' => 'Achternaam', 'email' => 'owner@example.org'],
+			addressBookUri: 'stackiq-cmdb-owners',
+			displayName: 'Stackiq CMDB owners',
+			fixedUid: 'stackiq-cmdb-owner-abc'
+		);
+
+		$this->assertSame('stackiq-cmdb-owner-abc', $uid);
+		$this->assertSame('stackiq-cmdb-owner-abc.vcf', $backend->cards[0][1]);
+		$this->assertStringStartsWith("BEGIN:VCARD\r\nVERSION:3.0\r\nUID:stackiq-cmdb-owner-abc\r\n", $backend->cards[0][2]);
+		$this->assertStringContainsString("\r\nEMAIL:owner@example.org\r\n", $backend->cards[0][2]);
+	}//end testANewContactTakesTheGivenUid()
+
+	/**
+	 * A card that already has the given UID is the contact: a second call returns it and creates nothing.
+	 *
+	 * Nextcloud's createCard refuses a duplicate UID; the owners' import must
+	 * not lose the owner when the contacts search does not show the card.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 */
+	public function testAnExistingCardWithTheGivenUidIsReused(): void {
+		$backend = $this->backend();
+		$service = $this->service(backend: $backend);
+		$call = fn (): ?string => $service->syncToNamedAddressBook(
+			objectType: 'contactPerson',
+			record: ['voornaam' => 'Voornaam', 'achternaam' => 'Achternaam'],
+			addressBookUri: 'stackiq-cmdb-owners',
+			displayName: 'Stackiq CMDB owners',
+			fixedUid: 'stackiq-cmdb-owner-abc'
+		);
+
+		$this->assertSame('stackiq-cmdb-owner-abc', $call());
+		$this->assertSame('stackiq-cmdb-owner-abc', $call());
+		$this->assertCount(1, $backend->cards);
+	}//end testAnExistingCardWithTheGivenUidIsReused()
+
+	/**
+	 * With a given UID the e-mail address matches no existing contact, so a shared mailbox does not merge two owners.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 */
+	public function testAGivenUidIsNotOverriddenByAnEmailMatch(): void {
+		$backend = $this->backend();
+		$backend->books['principals/users/admin|stackiq-cmdb-owners'] = ['id' => 7, 'displayname' => 'Stackiq CMDB owners'];
+		$contacts = [['UID' => 'owners-1', 'FN' => 'Voornaam Achternaam', 'EMAIL' => 'team@example.org', 'addressbook-key' => '7']];
+		$service = $this->service(backend: $backend, contacts: $contacts);
+
+		$uid = $service->syncToNamedAddressBook(
+			objectType: 'contactPerson',
+			record: ['voornaam' => 'Voornaam', 'achternaam' => 'Achternaam', 'email' => 'team@example.org'],
+			addressBookUri: 'stackiq-cmdb-owners',
+			displayName: 'Stackiq CMDB owners',
+			fixedUid: 'stackiq-cmdb-owner-def'
+		);
+
+		$this->assertSame('stackiq-cmdb-owner-def', $uid);
+		$this->assertCount(1, $backend->cards, 'a new contact, not the one with the same e-mail address');
+	}//end testAGivenUidIsNotOverriddenByAnEmailMatch()
+
+	/**
 	 * An e-mail address matches only a contact in the named address book; a personal contact with it is not linked.
 	 *
 	 * @return void
@@ -165,6 +311,24 @@ class StackiqContactSyncServiceTest extends TestCase {
 
 		$this->assertSame(['owners-1'], array_column($service->searchNamedAddressBook(query: 'e', addressBookUri: 'stackiq-cmdb-owners', properties: ['FN']), 'uid'));
 	}//end testAnExistingContactIsMatchedOnlyInTheNamedAddressBook()
+
+	/**
+	 * A search result lists every e-mail address of the contact, so a match on the second one is possible.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 */
+	public function testASearchResultListsEveryEmailAddress(): void {
+		$backend = $this->backend();
+		$backend->books['principals/users/admin|stackiq-cmdb-owners'] = ['id' => 7, 'displayname' => 'Stackiq CMDB owners'];
+		$contacts = [['UID' => 'owners-1', 'FN' => 'Voornaam Achternaam', 'EMAIL' => ['eerste@example.org', ['value' => 'tweede@example.org']], 'addressbook-key' => '7']];
+
+		$found = $this->service(backend: $backend, contacts: $contacts)->searchNamedAddressBook(query: 'tweede', addressBookUri: 'stackiq-cmdb-owners', properties: ['EMAIL']);
+
+		$this->assertSame('eerste@example.org', $found[0]['email']);
+		$this->assertSame(['eerste@example.org', 'tweede@example.org'], $found[0]['emails']);
+	}//end testASearchResultListsEveryEmailAddress()
 
 	/**
 	 * Without the named address book a search finds nothing and creates no address book.

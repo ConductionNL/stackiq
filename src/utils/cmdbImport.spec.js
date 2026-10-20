@@ -22,12 +22,16 @@ import {
 	interruptedImportError,
 	isKnownError,
 	makeCmdbOperationId,
+	mappingArchiveSheet,
+	MISSING_RECORDS_MODES,
+	missingApplicationsText,
 	municipalityOptions,
 	normaliseError,
 	outcomeLabel,
 	OUTCOMES,
 	PROFILE_DEFAULTS,
 	reportRows,
+	sheetsReadText,
 	sortReportRows,
 	typedMunicipalityOption,
 } from './cmdbImport.js'
@@ -58,6 +62,7 @@ const SERVER_CODES = [
 	'SCHEMA_OUTDATED',
 	'IMPORT_IN_PROGRESS',
 	'MUNICIPALITY_AMBIGUOUS',
+	'ARCHIVE_UNAVAILABLE',
 	'OPERATION_NOT_FOUND',
 	'IMPORT_INTERRUPTED',
 	'NOT_SIGNED_IN',
@@ -198,8 +203,24 @@ describe('buildImportForm', () => {
 		expect(form.get('municipalityUuid')).toBe('uuid-1')
 		expect(form.has('municipalityName')).toBe(false)
 		expect(form.get('updateExisting')).toBe('true')
-		expect(form.get('missingRecords')).toBe('keep')
+		expect(form.get('missingRecords')).toBe('archive')
 		expect(form.get('operationId')).toBe('cmdb-abcdefgh')
+	})
+
+	it('sends the choice for applications missing from the export, archive by default', () => {
+		const options = {
+			file,
+			municipality: { uuid: 'uuid-1', name: 'Tilburg' },
+			updateExisting: true,
+			operationId: 'cmdb-abcdefgh',
+		}
+		expect(MISSING_RECORDS_MODES).toEqual(['archive', 'keep'])
+		expect(buildImportForm(options).get('missingRecords')).toBe('archive')
+		expect(
+			buildImportForm({ ...options, missingRecords: 'keep' }).get(
+				'missingRecords',
+			),
+		).toBe('keep')
 	})
 
 	it('sends a typed new municipality by name, and updateExisting as an explicit false', () => {
@@ -363,11 +384,50 @@ describe('errorText', () => {
 				error: 'NO_SOURCE_SHEET',
 				details: { expected: ['Blad A', 'Blad B'] },
 			}).hint,
-		).toContain('"Blad A" or "Blad B"')
+		).toContain('one of the sheets "Blad A", "Blad B"')
 		expect(errorText({ error: 'NO_SOURCE_SHEET', details: {} }).hint).toContain(
-			PROFILE_DEFAULTS.sheets[1],
+			'"' + PROFILE_DEFAULTS.sheets.join('", "') + '"',
 		)
 	})
+
+	it.each([
+		[1, ['Blad A'], 'Expected the sheet "Blad A".'],
+		[
+			3,
+			['Blad A', 'Blad B', 'Blad C'],
+			'one of the sheets "Blad A", "Blad B", "Blad C".',
+		],
+	])(
+		'names all %i sheets of the profile in the missing-sheet and too-large hints',
+		(count, names, expected) => {
+			const quoted = names.map((name) => '"' + name + '"').join(', ')
+
+			const missing = errorText(
+				{ error: 'NO_SOURCE_SHEET', details: {} },
+				names,
+			)
+			expect(missing.hint).toContain(expected)
+			for (const shipped of PROFILE_DEFAULTS.sheets) {
+				expect(missing.hint).not.toContain(shipped)
+			}
+
+			const tooLarge = errorText(
+				{
+					error: 'WORKBOOK_TOO_LARGE',
+					details: { maxSharedStrings: 200000 },
+				},
+				names,
+			)
+			expect(tooLarge.hint).toContain(
+				'(it reads '
+					+ quoted
+					+ ', and the APPID column of "Gearchiveerde Applicaties")',
+			)
+			for (const shipped of PROFILE_DEFAULTS.sheets) {
+				expect(tooLarge.hint).not.toContain(shipped)
+			}
+		},
+	)
 
 	it('names the unpacked size limit the server applied', () => {
 		expect(
@@ -395,7 +455,7 @@ describe('errorText', () => {
 			'The sheet "Beheerde Applicaties CMDB" is too large to import: unpacked it is 14.3 MB, and the import reads at most 10 MB of one sheet.',
 		)
 		expect(words.hint).toBe(
-			'An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported. Split the rows over two copies of the export and import them one after the other.',
+			'An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported. Split the rows over two copies of the export and import both with "Keep them as they are": an import that archives treats the applications of the other copy as missing.',
 		)
 	})
 
@@ -408,9 +468,27 @@ describe('errorText', () => {
 			expect(
 				errorText({ error: 'WORKBOOK_TOO_LARGE', details }).hint,
 			).toContain(
-				'(it reads only "Onbeh Applicaties CMDB" and "Beheerde Applicaties CMDB")',
+				'(it reads "Onbeh Applicaties CMDB", "Beheerde Applicaties CMDB", and the APPID column of "Gearchiveerde Applicaties")',
 			)
 		}
+	})
+
+	it('names the archive sheet the profile names in the too-large hint, and none when it names none', () => {
+		const details = { maxUncompressedBytes: 50 * 1024 * 1024 }
+		expect(
+			errorText(
+				{ error: 'WORKBOOK_TOO_LARGE', details },
+				['Blad A'],
+				'Archief',
+			).hint,
+		).toContain('(it reads "Blad A", and the APPID column of "Archief")')
+		const without = errorText(
+			{ error: 'WORKBOOK_TOO_LARGE', details },
+			['Blad A'],
+			null,
+		).hint
+		expect(without).toContain('(it reads only "Blad A")')
+		expect(without).not.toContain('APPID')
 	})
 
 	it('names the part limit and the part, the shared-strings limit or the referenced-text limit the server applied', () => {
@@ -482,6 +560,54 @@ describe('errorText', () => {
 			details: { sheet: 'Apps & Co <b>', column: 'APPID' },
 		})
 		expect(words.title).toBe('The sheet "Apps & Co <b>" has no column "APPID".')
+	})
+})
+
+/**
+ * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
+ */
+describe('the archive sheet in the help texts', () => {
+	it("takes the profile's archive sheet once the mapping has loaded, and the shipped one until then", () => {
+		expect(mappingArchiveSheet(null)).toBe(PROFILE_DEFAULTS.archiveSheet)
+		expect(mappingArchiveSheet({ profile: { sheets: [] } })).toBe(
+			PROFILE_DEFAULTS.archiveSheet,
+		)
+		expect(mappingArchiveSheet({ profile: { archiveSheet: 'Archief' } })).toBe(
+			'Archief',
+		)
+		expect(mappingArchiveSheet({ profile: { archiveSheet: null } })).toBeNull()
+		expect(mappingArchiveSheet({ profile: { archiveSheet: '' } })).toBeNull()
+	})
+
+	it('says only the APPID column of the archive sheet is read, and leaves it out when the profile names none', () => {
+		expect(sheetsReadText(['Blad A', 'Blad B'], 'Archief')).toBe(
+			'The sheets "Blad A", "Blad B" are read, and of the sheet "Archief" only the APPID column; other sheets, including the "Invoer" sheets, are ignored.',
+		)
+		expect(sheetsReadText(['Blad A'], 'Archief')).toContain(
+			'The sheet "Blad A" is read, and of the sheet "Archief" only the APPID column',
+		)
+		const without = sheetsReadText(['Blad A', 'Blad B'], null)
+		expect(without).toBe(
+			'The sheets "Blad A", "Blad B" are read; other sheets, including the "Invoer" sheets, are ignored.',
+		)
+		expect(sheetsReadText(['Blad A'], null)).not.toContain('APPID')
+		expect(sheetsReadText(['Blad A'])).toContain(
+			`"${PROFILE_DEFAULTS.archiveSheet}" only the APPID column`,
+		)
+	})
+
+	it('names the archive sheet in the missing-applications paragraph, and says the import only archives without one', () => {
+		const withArchive = missingApplicationsText('Archief')
+		expect(withArchive).toContain('archived when the sheet "Archief" lists it')
+		expect(withArchive).toContain('moved to the trash')
+		expect(withArchive).toContain('or the workbook lacks one of the CMDB sheets')
+		const without = missingApplicationsText(null)
+		expect(without).not.toContain('trash')
+		expect(without).not.toContain('sheet "')
+		expect(without).toContain('is archived.')
+		expect(missingApplicationsText()).toContain(
+			`the sheet "${PROFILE_DEFAULTS.archiveSheet}" lists it`,
+		)
 	})
 })
 
@@ -642,6 +768,44 @@ describe('cmdbProgressView', () => {
 		).toEqual({ percentage: 25, detail: '1 of 4 rows processed' })
 	})
 
+	it('says the import checks the applications, without counting them as rows', () => {
+		// The service reports rows + the municipality's applications as the total.
+		const view = cmdbProgressView({
+			phase: 'reconciling',
+			processed_items: 400,
+			total_items: 810,
+		})
+		expect(view.detail).toBe(
+			'Checking the applications of this municipality against the export',
+		)
+		expect(view.detail).not.toMatch(/\d/)
+	})
+
+	it('does not let the bar fall when the phase changes from the rows to the comparison', () => {
+		const lastOfTheRows = cmdbProgressView({
+			phase: 'importing',
+			processed_items: 400,
+			total_items: 400,
+		})
+		const firstOfTheComparison = cmdbProgressView({
+			phase: 'reconciling',
+			processed_items: 400,
+			total_items: 810,
+		})
+		const midComparison = cmdbProgressView({
+			phase: 'reconciling',
+			processed_items: 600,
+			total_items: 810,
+		})
+		expect(lastOfTheRows.percentage).toBe(100)
+		expect(firstOfTheComparison.percentage).toBeGreaterThanOrEqual(
+			lastOfTheRows.percentage,
+		)
+		expect(midComparison.percentage).toBeGreaterThanOrEqual(
+			lastOfTheRows.percentage,
+		)
+	})
+
 	it('shows nothing before any progress', () => {
 		expect(cmdbProgressView(null)).toBeNull()
 	})
@@ -681,6 +845,31 @@ describe('the report table', () => {
 			},
 		])
 		expect(reportRows(null)).toEqual([])
+	})
+
+	it('shows no row number for an application archived or deleted after the rows', () => {
+		const [row] = reportRows([
+			{
+				sheet: 'Gearchiveerde Applicaties',
+				row: 0,
+				appId: '7',
+				name: 'Zeven',
+				outcome: 'archived',
+				reasons: [],
+				warnings: [],
+				moduleUuid: 'm-7',
+			},
+		])
+		expect(row.row).toBe('')
+		expect(outcomeLabel('archived')).toBe('Archived')
+		expect(OUTCOMES).toEqual(
+			expect.arrayContaining([
+				'archived',
+				'unarchived',
+				'deleted',
+				'restored',
+			]),
+		)
 	})
 
 	it('sorts numbers by value and keeps the report order for ties', () => {
