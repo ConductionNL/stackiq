@@ -1327,7 +1327,9 @@ OC.L10N.register(
         "The coverage could not be loaded.": "De dekking kon niet worden geladen.",
         "No application": "Geen applicatie",
         "Gap, fillable": "Gat, te vullen",
-        "Gap": "Gat"
+        "Gap": "Gat",
+        "Licence": "Licentie",
+        "Software catalogue": "Softwarecatalogus"
     },
     "nplurals=2; plural=(n != 1);"
 )
