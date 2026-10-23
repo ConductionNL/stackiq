@@ -289,4 +289,22 @@ class PortalContributionProviderTest extends TestCase {
 		$segments = explode('/', $ref);
 		return (string)end($segments);
 	}
+
+	/**
+	 * REQ-PORT-005: both audiences declare the public software catalogue, and
+	 * the methods it names exist and answer empty without OpenRegister.
+	 *
+	 * @return void
+	 */
+	public function testBothAudiencesDeclareThePublicSoftwareCatalogue(): void {
+		foreach (['vendor-org', 'participant-org'] as $audience) {
+			$lists = $this->provider->getContribution(['audience' => $audience])['publicRecords'];
+			$this->assertSame('softwareCatalogue', $lists[0]['id']);
+			$this->assertTrue(method_exists($this->provider, $lists[0]['listProvider']));
+			$this->assertTrue(method_exists($this->provider, $lists[0]['recordProvider']));
+		}
+
+		$this->assertSame([], $this->provider->publicCatalogue());
+		$this->assertNull($this->provider->publicCatalogueEntry('any'));
+	}//end testBothAudiencesDeclareThePublicSoftwareCatalogue()
 }

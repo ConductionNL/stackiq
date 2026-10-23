@@ -1259,7 +1259,9 @@ OC.L10N.register(
         "The coverage could not be loaded.": "The coverage could not be loaded.",
         "No application": "No application",
         "Gap, fillable": "Gap, fillable",
-        "Gap": "Gap"
+        "Gap": "Gap",
+        "Licence": "Licence",
+        "Software catalogue": "Software catalogue"
     },
     "nplurals=2; plural=(n != 1);"
 )
