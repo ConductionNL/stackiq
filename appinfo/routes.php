@@ -318,6 +318,8 @@ return [
         // Portfolio rationalization report (TIME quadrants + EOL + cloud + cost), JSON or CSV (?format=csv).
         // @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
         ['name' => 'portfolioReport#index', 'url' => '/api/portfolio-report', 'verb' => 'GET'],
+        // @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+        ['name' => 'dataQualityReport#index', 'url' => '/api/data-quality', 'verb' => 'GET'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode routing)
         // `postfix` keeps this SPA catch-all from colliding with the bare-root

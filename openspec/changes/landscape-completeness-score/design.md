@@ -42,9 +42,22 @@ Rejected: a stackiq scoring service. OpenRegister already scores on save and ser
 
 A header action on `ModuleDetail` and on the usage detail page that saves `lastConfirmedAt = now` and nothing else. The save triggers the rescore, so the freshness part goes back to full. The action shows for users who may update the entry.
 
-## D4. The report
+## D4. The page
 
-`Reports` (`src/manifest.json:1021`) gets a second card, "Data quality", routing to a new page `DataQualityReport` (`/data-quality`), a custom view `src/views/DataQualityReportView.vue` that calls the two OpenRegister endpoints per schema (`module`, `usage`): the score spread (good, fair, poor counts, from `stats`) and the twenty lowest entries (from the listing), each row opening its page.
+The board (SkDatakwaliteit) makes the report a page of its own under Reports &
+Compliance, per organisation, rather than a card with an applications-and-usages
+spread. `GET /api/data-quality?organisation=` (`DataQualityReportController`,
+`DataQualityReportService`) reads the usage schema's declared rules and one
+bounded, organisation-scoped query of usages (the portfolio report's bound), and
+`DataQualityDerivation` evaluates them the way OpenRegister's QualityScorer
+scores: the register score and average completeness out of 100, entries not
+confirmed within the freshness half-life, how many entries meet each rule, and
+the twenty least complete entries with what is missing. The organisation check
+is `OrganisationReportAccess`, shared with the portfolio report. The page
+(`src/views/organisaties/DataQualityReport.vue`) renders that response with
+CnKpiGrid, CnProgressBar and CnDataTable. The board's duplicates and owner
+survey sections wait for OpenRegister's duplicate listing on usage and for
+`landscape-owner-attestation`.
 
 ## D5. Existing rows
 

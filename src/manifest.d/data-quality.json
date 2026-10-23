@@ -1,0 +1,21 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "landscape-completeness-score (board SkDatakwaliteit): the Data quality page, a child of Reports & Compliance (ADR-097: no new top-level entry). A custom page because it renders one organisation-scoped, bounded report endpoint (GET /api/data-quality) like the portfolio report; the rules it counts are the usage schema's x-openregister-quality in lib/Settings/register.d/data-quality.json.",
+	"menu": [
+		{
+			"id": "ReportsCompliance",
+			"children": [
+				{ "id": "DataQuality", "label": "Data quality", "icon": "ClipboardCheckOutline", "route": "DataQuality", "order": 30 }
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "DataQuality",
+			"route": "/datakwaliteit",
+			"type": "custom",
+			"title": "Data quality",
+			"component": "DataQualityReportView"
+		}
+	]
+}
