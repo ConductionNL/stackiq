@@ -22,8 +22,8 @@ the portal page that saves into stackiq's organisation schema with
   direct call to OpenRegister's objects API alike. Until now only stackiq's
   intake endpoint set it, and the organisation schema already allows an
   anonymous create.
-- The organisation schema gets what the form asks: `website`, and the
-  registering person's `registrationContactName` and `registrationContactEmail`,
+- The organisation schema gets what the form asks: `website`, the
+  `registrationNumber` (KvK number or OIN), and the registering person's `registrationContactName` and `registrationContactEmail`,
   readable only by signed-in users, like `registrationStatus` itself.
 - The existing moderation queue (`ModerationService`, `registrationStatus`
   pending to active) reviews these registrations unchanged.

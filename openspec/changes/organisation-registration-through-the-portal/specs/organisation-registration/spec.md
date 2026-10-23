@@ -23,7 +23,7 @@ An organisation created while no user is signed in SHALL be stored with `registr
 
 ### Requirement: REQ-ORR-002 The organisation keeps what the registration form asks
 
-The organisation schema SHALL hold `website`, `registrationContactName` and `registrationContactEmail`. The two contact fields SHALL be readable only by signed-in users.
+The organisation schema SHALL hold `website`, `registrationNumber` (a KvK number or an OIN), `registrationContactName` and `registrationContactEmail`. The registration number and the two contact fields SHALL be readable only by signed-in users.
 
 #### Scenario: An anonymous reader does not see who registered
 @e2e exclude A property read rule enforced by OpenRegister; tests/Unit/Settings/OrganisationRegistrationFragmentTest.php asserts the rule on the merged schema.

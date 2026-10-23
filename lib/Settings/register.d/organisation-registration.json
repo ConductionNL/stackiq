@@ -14,6 +14,20 @@
             "visible": true,
             "order": 19
           },
+          "registrationNumber": {
+            "type": "string",
+            "title": "KvK number or OIN",
+            "description": "The number the organisation registered with: a KvK number (8 digits) or an OIN (20 digits), for the reviewing administrator.",
+            "pattern": "^(\\d{8}|\\d{20})$",
+            "visible": true,
+            "hideOnCollection": true,
+            "order": 20,
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
+          },
           "registrationContactName": {
             "type": "string",
             "title": "Registered by",
@@ -21,8 +35,12 @@
             "maxLength": 200,
             "visible": true,
             "hideOnCollection": true,
-            "order": 20,
-            "authorization": { "read": ["authenticated"] }
+            "order": 21,
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
           },
           "registrationContactEmail": {
             "type": "string",
@@ -32,8 +50,12 @@
             "maxLength": 320,
             "visible": true,
             "hideOnCollection": true,
-            "order": 21,
-            "authorization": { "read": ["authenticated"] }
+            "order": 22,
+            "authorization": {
+              "read": [
+                "authenticated"
+              ]
+            }
           }
         }
       }

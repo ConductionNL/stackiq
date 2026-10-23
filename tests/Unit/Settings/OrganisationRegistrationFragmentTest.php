@@ -33,12 +33,14 @@ final class OrganisationRegistrationFragmentTest extends TestCase {
 	public function testTheFormsFieldsExistAndTheContactIsNotPublic(): void {
 		$organisation = $this->organisation();
 
-		foreach (['name', 'type', 'oin', 'website', 'registrationContactName', 'registrationContactEmail', 'registrationStatus'] as $field) {
+		foreach (['name', 'type', 'oin', 'website', 'registrationNumber', 'registrationContactName', 'registrationContactEmail', 'registrationStatus'] as $field) {
 			self::assertArrayHasKey($field, $organisation['properties'], $field);
 		}
 
 		self::assertSame(['authenticated'], $organisation['properties']['registrationContactName']['authorization']['read']);
 		self::assertSame(['authenticated'], $organisation['properties']['registrationContactEmail']['authorization']['read']);
+		self::assertSame(['authenticated'], $organisation['properties']['registrationNumber']['authorization']['read']);
+		self::assertSame(1, preg_match('/' . $organisation['properties']['registrationNumber']['pattern'] . '/', '91827364'));
 		self::assertContains('pending', $organisation['properties']['registrationStatus']['enum']);
 		self::assertTrue(version_compare($organisation['version'], '0.5.5', '>='));
 	}//end testTheFormsFieldsExistAndTheContactIsNotPublic()
