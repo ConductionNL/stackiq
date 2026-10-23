@@ -35,6 +35,8 @@ import FacetedCatalogIndexView from './views/FacetedCatalogIndexView.vue'
 import KwetsbaarhedenView from './views/KwetsbaarhedenView.vue'
 import LicensePostureView from './views/LicensePostureView.vue'
 import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
+import DataQualityReportView from './views/organisaties/DataQualityReport.vue'
+import GemmaPlateView from './views/organisaties/GemmaPlate.vue'
 import PortfolioReportView from './views/organisaties/PortfolioReport.vue'
 import StackiqSettingsPage from './views/settings/StackiqSettings.vue'
 import SuitesIndexView from './views/suites/SuitesIndexView.vue'
@@ -171,6 +173,17 @@ export default {
 	// fetched, pre-aggregated multi-metric report with a CSV export button.
 	// @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md
 	PortfolioReportView,
+	// --- Lib gap: the organisation-scoped data quality report. ---
+	// GET /api/data-quality evaluates the usage schema's declared quality
+	// rules over one organisation's usages, bounded like the portfolio report.
+	// @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+	DataQualityReportView,
+	// --- Lib gap: the GEMMA plate. ---
+	// GET /api/reference-component-coverage joins one organisation's usages
+	// with the GEMMA reference components; a component nobody uses has no
+	// facet bucket, so no index or dashboard page can show the gaps.
+	// @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
+	GemmaPlateView,
 	// --- SBOM (Software Bill of Materials) import — Components tab. ---
 	// ModuleversieDetail sidebar tab: the imported sbomComponent list
 	// (name/version/purl/licenses), summary counts, an upload control, and a

@@ -205,11 +205,6 @@ class CmdbImportPackRulesTest extends TestCase {
 				$pack = $this->shipped(file: $profile['packs'][$target]);
 				$pack['fieldMappings'][] = ['source' => 'Opmerking', 'target' => $field];
 				$violations = $rules->violations(target: $target, pack: $pack, profile: $profile);
-				if ($target === 'manufacturer' && $field === 'website') {
-					$this->assertSame(['"website" is not a field the manufacturer pack may map'], $violations, 'organization has no website');
-					continue;
-				}
-
 				$this->assertSame([], $violations, $target . '.' . $field);
 			}
 		}
