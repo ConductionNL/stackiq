@@ -1,0 +1,42 @@
+{
+  "$comment": "organisation-registration-through-the-portal (board SkPubliek): what the registration form on the municipality website asks, so the anonymous create keeps it. The contact of the person who registered is for the reviewing administrator: only signed-in users read it, like registrationStatus. AnonymousRegistrationListener stores every anonymous create as pending.",
+  "components": {
+    "schemas": {
+      "organization": {
+        "version": "0.5.5",
+        "properties": {
+          "website": {
+            "type": "string",
+            "format": "url",
+            "title": "Website",
+            "description": "The organisation's website.",
+            "maxLength": 500,
+            "visible": true,
+            "order": 19
+          },
+          "registrationContactName": {
+            "type": "string",
+            "title": "Registered by",
+            "description": "The person who registered the organisation, for the reviewing administrator.",
+            "maxLength": 200,
+            "visible": true,
+            "hideOnCollection": true,
+            "order": 20,
+            "authorization": { "read": ["authenticated"] }
+          },
+          "registrationContactEmail": {
+            "type": "string",
+            "format": "email",
+            "title": "E-mail of the registering person",
+            "description": "Where the reviewing administrator sends the activation. Not shown to anonymous readers.",
+            "maxLength": 320,
+            "visible": true,
+            "hideOnCollection": true,
+            "order": 21,
+            "authorization": { "read": ["authenticated"] }
+          }
+        }
+      }
+    }
+  }
+}
