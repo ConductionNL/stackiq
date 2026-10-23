@@ -1307,6 +1307,25 @@
         "The data quality could not be loaded.": "De datakwaliteit kon niet worden geladen.",
         "{field} is recent": "{field} is recent",
         "{field} has the right format": "{field} heeft de juiste vorm",
-        "{field} is filled in": "{field} is ingevuld"
+        "{field} is filled in": "{field} is ingevuld",
+        "GEMMA plate": "GEMMA-plaat",
+        "The GEMMA reference components with the applications an organisation uses for them.": "De GEMMA-referentiecomponenten met de applicaties die een organisatie ervoor gebruikt.",
+        "Download": "Downloaden",
+        "Pick an organisation above to see its applications on the GEMMA plate.": "Kies hierboven een organisatie om haar applicaties op de GEMMA-plaat te zien.",
+        "No GEMMA model": "Geen GEMMA-model",
+        "Import the GEMMA model to see coverage.": "Importeer het GEMMA-model om de dekking te zien.",
+        "The plate covers the first applications in use of {total}.": "De plaat toont de eerste applicaties in gebruik van {total}.",
+        "Covered": "Afgedekt",
+        "Gaps": "Gaten",
+        "{count} fillable with an application in use": "{count} te vullen met een applicatie in gebruik",
+        "Overlap": "Overlap",
+        "{count} applications in use name no reference component, so they cover nothing on this plate.": "{count} applicaties in gebruik noemen geen referentiecomponent en dekken dus niets af op deze plaat.",
+        "Show": "Tonen",
+        "Fillable gaps": "Te vullen gaten",
+        "Applications in use that offer it: {names}": "Applicaties in gebruik die het bieden: {names}",
+        "The coverage could not be loaded.": "De dekking kon niet worden geladen.",
+        "No application": "Geen applicatie",
+        "Gap, fillable": "Gat, te vullen",
+        "Gap": "Gat"
     }
 }

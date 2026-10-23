@@ -10,8 +10,8 @@
   - GIVEN two usages of one module WHEN the coverage is derived THEN they count as one application
   - GIVEN a gap and a used module that declares it WHEN the coverage is derived THEN the gap is fillable
   - GIVEN a usage with an unknown status WHEN the coverage is derived THEN it counts
-- [ ] Implement
-- [ ] Test (PHPUnit `ReferenceComponentCoverageDerivationTest`)
+- [x] Implement
+- [x] Test (PHPUnit `ReferenceComponentCoverageDerivationTest`)
 
 ### Task 2: Shared organisation check
 - **spec_ref**: openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
@@ -19,8 +19,8 @@
 - **acceptance_criteria**:
   - GIVEN an admin, an ambtenaar, a member and a non-member WHEN the check runs THEN only the non-member is refused, as today
   - GIVEN the portfolio report controller WHEN it runs THEN it calls the shared check and its existing tests stay green
-- [ ] Implement
-- [ ] Test (PHPUnit `OrganisationReportAccessTest`, existing `PortfolioReportControllerTest`)
+- [x] Implement
+- [x] Test (PHPUnit `OrganisationReportAccessTest`, existing `PortfolioReportControllerTest`)
 
 ### Task 3: Coverage service, controller and route
 - **spec_ref**: openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
@@ -29,17 +29,17 @@
   - GIVEN a user of another organisation WHEN the endpoint is called THEN it answers 403 before the service runs
   - GIVEN an organisation WHEN the endpoint is called THEN usages and components are read with bounded limits and the payload has the shape of design D2
   - GIVEN `format=csv` WHEN the endpoint is called THEN the same rows come back as CSV
-- [ ] Implement
-- [ ] Test (PHPUnit `ReferenceComponentCoverageControllerTest`, `ReferenceComponentCoverageServiceTest`)
+- [x] Implement
+- [x] Test (PHPUnit `ReferenceComponentCoverageControllerTest`, `ReferenceComponentCoverageServiceTest`)
 
-### Task 4: Coverage page and Reports card
+### Task 4: GEMMA plate page (board SkGemmaPlaat)
 - **spec_ref**: openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
-- **files**: `src/manifest.d/reference-component-coverage.json`, `src/views/organisaties/ReferenceComponentCoverage.vue`, `src/customComponents.js`, `tests/e2e/workflows/reference-component-coverage.spec.ts`
+- **files**: `src/manifest.d/reference-component-coverage.json` (menu child of Reports & Compliance), `src/views/organisaties/GemmaPlate.vue`, `src/utils/referenceComponentCoverage.js`, `tests/vitest/referenceComponentCoverage.spec.js`, `src/customComponents.js`, `tests/e2e/workflows/reference-component-coverage.spec.ts`
 - **acceptance_criteria**:
   - GIVEN the Reports page WHEN it renders THEN it shows the card Reference component coverage next to Portfolio rationalization
   - GIVEN a picked organisation WHEN the page loads THEN it shows the counts, the table and the four quick filters
   - GIVEN no reference components WHEN the page loads THEN it says the GEMMA model must be imported
-- [ ] Implement
+- [x] Implement
 - [ ] Test (Playwright `reference-component-coverage.spec.ts` overlap filter and empty model scenarios)
 
 ### Task 5: Coverage map on a GEMMA view
