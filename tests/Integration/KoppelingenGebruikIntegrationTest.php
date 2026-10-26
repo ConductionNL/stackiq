@@ -18,7 +18,8 @@
 
 namespace OCA\Stackiq\Tests\Integration;
 
-use GuzzleHttp\Client;
+use Symfony\Component\HttpClient\HttpClient;
+use Symfony\Contracts\HttpClient\HttpClientInterface;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -49,11 +50,11 @@ use PHPUnit\Framework\TestCase;
  */
 class KoppelingenGebruikIntegrationTest extends TestCase {
 	/**
-	 * Guzzle HTTP client
+	 * HTTP client
 	 *
-	 * @var Client
+	 * @var HttpClientInterface
 	 */
-	private Client $client;
+	private HttpClientInterface $client;
 
 	/**
 	 * Base URL for API requests
@@ -198,11 +199,8 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		// Initialize Guzzle client with admin authentication
-		$this->client = new Client([
-			'base_uri' => $this->baseUrl,
-			'http_errors' => false,
-			'auth' => $this->adminAuth,
+		// Initialize HTTP client with admin authentication.
+		$this->client = HttpClient::createForBaseUri($this->baseUrl, [
 			'headers' => [
 				'Authorization' => 'Basic ' . base64_encode(implode(':', $this->adminAuth)),
 				'OCS-APIRequest' => 'true',
@@ -233,7 +231,7 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 		// Clean up created objects
 		foreach ($this->createdObjectIds as $id) {
 			try {
-				$this->client->delete("/index.php/apps/openregister/api/objects/{$id}");
+				$this->client->request('DELETE', "/index.php/apps/openregister/api/objects/{$id}")->getStatusCode();
 			} catch (\Exception $e) {
 				// Ignore cleanup errors
 			}
@@ -242,7 +240,7 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 		// Clean up created users
 		foreach ($this->createdUserIds as $userId) {
 			try {
-				$this->client->delete("/ocs/v1.php/cloud/users/{$userId}");
+				$this->client->request('DELETE', "/ocs/v1.php/cloud/users/{$userId}")->getStatusCode();
 			} catch (\Exception $e) {
 				// Ignore cleanup errors
 			}
@@ -259,10 +257,10 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 	 * @return void
 	 */
 	private function loadVoorzieningenConfiguration(): void {
-		$response = $this->client->get('/index.php/apps/stackiq/api/voorzieningen/config');
+		$response = $this->client->request('GET', '/index.php/apps/stackiq/api/voorzieningen/config');
 
 		if ($response->getStatusCode() === 200) {
-			$data = json_decode($response->getBody()->getContents(), true);
+			$data = json_decode($response->getContent(false), true);
 
 			// The config is nested under 'config' key
 			$config = $data['config'] ?? $data;
@@ -448,8 +446,8 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 	private function createNextcloudUser(string $userId, string $displayName, ?string $group = null): void {
 		try {
 			// Create user
-			$response = $this->client->post('/ocs/v1.php/cloud/users', [
-				'form_params' => [
+			$response = $this->client->request('POST', '/ocs/v1.php/cloud/users', [
+				'body' => [
 					'userid' => $userId,
 					'password' => 'testpassword123',
 					'displayName' => $displayName,
@@ -461,9 +459,9 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 
 				// Add to group if specified
 				if ($group) {
-					$this->client->post("/ocs/v1.php/cloud/users/{$userId}/groups", [
-						'form_params' => ['groupid' => $group]
-					]);
+					$this->client->request('POST', "/ocs/v1.php/cloud/users/{$userId}/groups", [
+						'body' => ['groupid' => $group]
+					])->getStatusCode();
 				}
 			}
 		} catch (\Exception $e) {
@@ -485,12 +483,12 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 		$targetOrganisation = $data['organisation'] ?? null;
 
 		try {
-			$response = $this->client->post(
+			$response = $this->client->request('POST',
 				"/index.php/apps/openregister/api/objects/{$registerId}/{$schemaId}",
 				['json' => $data]
 			);
 
-			$responseBody = $response->getBody()->getContents();
+			$responseBody = $response->getContent(false);
 			$object = json_decode($responseBody, true);
 
 			if (!is_array($object)) {
@@ -513,12 +511,12 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 
 					try {
 						// Update the object with the correct organisation
-						$updateResponse = $this->client->put(
+						$updateResponse = $this->client->request('PUT',
 							"/index.php/apps/openregister/api/objects/{$id}",
 							['json' => $object]
 						);
 
-						$updatedObject = json_decode($updateResponse->getBody()->getContents(), true);
+						$updatedObject = json_decode($updateResponse->getContent(false), true);
 
 						if (is_array($updatedObject)) {
 							$object = $updatedObject;
@@ -553,11 +551,11 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 		}
 
 		$suiteId = $this->testSuite['uuid'] ?? $this->testSuite['id'];
-		$response = $this->client->get("/index.php/apps/stackiq/api/koppelingen-gebruik/{$suiteId}");
+		$response = $this->client->request('GET', "/index.php/apps/stackiq/api/koppelingen-gebruik/{$suiteId}");
 
 		$this->assertEquals(200, $response->getStatusCode(), 'Expected 200 OK response');
 
-		$data = json_decode($response->getBody()->getContents(), true);
+		$data = json_decode($response->getContent(false), true);
 
 		$this->assertIsArray($data, 'Response should be an array');
 		$this->assertArrayHasKey('results', $data);
@@ -586,11 +584,11 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 		}
 
 		$moduleId = $this->testModule['uuid'] ?? $this->testModule['id'];
-		$response = $this->client->get("/index.php/apps/stackiq/api/koppelingen-gebruik/{$moduleId}");
+		$response = $this->client->request('GET', "/index.php/apps/stackiq/api/koppelingen-gebruik/{$moduleId}");
 
 		$this->assertEquals(200, $response->getStatusCode(), 'Expected 200 OK response');
 
-		$data = json_decode($response->getBody()->getContents(), true);
+		$data = json_decode($response->getContent(false), true);
 
 		$this->assertGreaterThan(0, $data['total'], 'Should find gebruiks/koppelingen for module');
 
@@ -616,11 +614,11 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 		}
 
 		$orgAId = $this->organisationA['uuid'] ?? $this->organisationA['id'];
-		$response = $this->client->get("/index.php/apps/stackiq/api/koppelingen-gebruik/{$orgAId}");
+		$response = $this->client->request('GET', "/index.php/apps/stackiq/api/koppelingen-gebruik/{$orgAId}");
 
 		$this->assertEquals(200, $response->getStatusCode(), 'Expected 200 OK response');
 
-		$data = json_decode($response->getBody()->getContents(), true);
+		$data = json_decode($response->getContent(false), true);
 
 		$this->assertGreaterThan(0, $data['total'], 'Should find gebruiks/koppelingen for organisation');
 
@@ -649,8 +647,8 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 		$orgBId = $this->organisationB['uuid'] ?? $this->organisationB['id'];
 
 		// Admin (ambtenaar) should see objects from all organisations
-		$response = $this->client->get("/index.php/apps/stackiq/api/koppelingen-gebruik/{$suiteId}");
-		$data = json_decode($response->getBody()->getContents(), true);
+		$response = $this->client->request('GET', "/index.php/apps/stackiq/api/koppelingen-gebruik/{$suiteId}");
+		$data = json_decode($response->getContent(false), true);
 
 		// Should see objects from both org A and org B
 		$organisations = array_unique(array_map(
@@ -661,10 +659,10 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 		$this->assertGreaterThan(1, count($organisations), 'Ambtenaar should see objects from multiple organisations');
 
 		// Test filtering by organisation
-		$response = $this->client->get(
+		$response = $this->client->request('GET',
 			"/index.php/apps/stackiq/api/koppelingen-gebruik/{$suiteId}?organisation={$orgBId}"
 		);
-		$filteredData = json_decode($response->getBody()->getContents(), true);
+		$filteredData = json_decode($response->getContent(false), true);
 
 		// All results should belong to org B
 		foreach ($filteredData['results'] as $result) {
@@ -688,8 +686,8 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 		$suiteId = $this->testSuite['uuid'] ?? $this->testSuite['id'];
 
 		// Test with limit
-		$response = $this->client->get("/index.php/apps/stackiq/api/koppelingen-gebruik/{$suiteId}?_limit=2");
-		$data = json_decode($response->getBody()->getContents(), true);
+		$response = $this->client->request('GET', "/index.php/apps/stackiq/api/koppelingen-gebruik/{$suiteId}?_limit=2");
+		$data = json_decode($response->getContent(false), true);
 
 		$this->assertEquals(2, $data['limit'], 'Limit should be 2');
 		$this->assertLessThanOrEqual(2, count($data['results']), 'Results should respect limit');
@@ -708,8 +706,8 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 		}
 
 		$suiteId = $this->testSuite['uuid'] ?? $this->testSuite['id'];
-		$response = $this->client->get("/index.php/apps/stackiq/api/koppelingen-gebruik/{$suiteId}");
-		$data = json_decode($response->getBody()->getContents(), true);
+		$response = $this->client->request('GET', "/index.php/apps/stackiq/api/koppelingen-gebruik/{$suiteId}");
+		$data = json_decode($response->getContent(false), true);
 
 		// Verify required fields
 		$this->assertArrayHasKey('results', $data);
@@ -735,11 +733,11 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 	 */
 	public function testInvalidUuidReturnsEmptyResults(): void {
 		$invalidUuid = '00000000-0000-0000-0000-000000000000';
-		$response = $this->client->get("/index.php/apps/stackiq/api/koppelingen-gebruik/{$invalidUuid}");
+		$response = $this->client->request('GET', "/index.php/apps/stackiq/api/koppelingen-gebruik/{$invalidUuid}");
 
 		$this->assertEquals(200, $response->getStatusCode());
 
-		$data = json_decode($response->getBody()->getContents(), true);
+		$data = json_decode($response->getContent(false), true);
 		$this->assertEquals(0, $data['total'], 'Invalid UUID should return zero results');
 	}
 
@@ -760,8 +758,8 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 
 		// Admin (acting as org A owner since product is owned by org A) should see
 		// all gebruiks/koppelingen for the product, including those by org B
-		$response = $this->client->get("/index.php/apps/stackiq/api/koppelingen-gebruik/{$productId}");
-		$data = json_decode($response->getBody()->getContents(), true);
+		$response = $this->client->request('GET', "/index.php/apps/stackiq/api/koppelingen-gebruik/{$productId}");
+		$data = json_decode($response->getContent(false), true);
 
 		// Should see gebruiks from both org A and org B
 		$titles = array_map(fn ($r) => $r['title'] ?? '', $data['results']);
@@ -792,8 +790,8 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 		$suiteId = $this->testSuite['uuid'] ?? $this->testSuite['id'];
 
 		// Scenario 1: Admin (ambtenaar) can see all organisations
-		$response = $this->client->get("/index.php/apps/stackiq/api/koppelingen-gebruik/{$suiteId}");
-		$data = json_decode($response->getBody()->getContents(), true);
+		$response = $this->client->request('GET', "/index.php/apps/stackiq/api/koppelingen-gebruik/{$suiteId}");
+		$data = json_decode($response->getContent(false), true);
 
 		$organisations = array_unique(array_map(
 			fn ($r) => $r['@self']['organisation'] ?? $r['organisation'] ?? null,
@@ -806,17 +804,17 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 		$this->assertContains($orgBId, $organisations, 'Should see Org B objects');
 
 		// Scenario 2: Org C should have no objects (isolated organisation)
-		$response = $this->client->get("/index.php/apps/stackiq/api/koppelingen-gebruik/{$orgCId}");
-		$data = json_decode($response->getBody()->getContents(), true);
+		$response = $this->client->request('GET', "/index.php/apps/stackiq/api/koppelingen-gebruik/{$orgCId}");
+		$data = json_decode($response->getContent(false), true);
 
 		$this->assertEquals(0, $data['total'],
 			'Organisation C should have no gebruiks/koppelingen (isolated org)');
 
 		// Scenario 3: Admin with organisation filter should only see filtered org
-		$response = $this->client->get(
+		$response = $this->client->request('GET',
 			"/index.php/apps/stackiq/api/koppelingen-gebruik/{$suiteId}?organisation={$orgBId}"
 		);
-		$filteredData = json_decode($response->getBody()->getContents(), true);
+		$filteredData = json_decode($response->getContent(false), true);
 
 		if ($filteredData['total'] > 0) {
 			foreach ($filteredData['results'] as $result) {
@@ -827,8 +825,8 @@ class KoppelingenGebruikIntegrationTest extends TestCase {
 		}
 
 		// Scenario 4: Verify Org A owns the suite (cross-org access)
-		$response = $this->client->get("/index.php/apps/stackiq/api/koppelingen-gebruik/{$suiteId}");
-		$data = json_decode($response->getBody()->getContents(), true);
+		$response = $this->client->request('GET', "/index.php/apps/stackiq/api/koppelingen-gebruik/{$suiteId}");
+		$data = json_decode($response->getContent(false), true);
 
 		// Should see usage from both A and B (since A owns the product)
 		$this->assertGreaterThan(1, $data['total'],
