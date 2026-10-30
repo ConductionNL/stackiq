@@ -918,7 +918,9 @@
 				"state": "built",
 				"evidence": "src/manifest.json:915 Moduleversies type:index (columns version, module, dateInUse, status) + :937 ModuleversieDetail; register.json:7649 moduleVersion schema with dateInUse (register.json:7746), dateInDevelopment, dateEndSupport, dateWithdrawn",
 				"owner": "ConductionNL/stackiq",
-				"change": "2026-06-14-softwarecatalog-manifest-v1"
+				"change": "openspec/changes/landscape-services-and-module-versions",
+				"requirement": "A released version of an application is recorded with its lifecycle dates (REQ-MVR-001)",
+				"readOn": "2026-10-30"
 			},
 			"reachedOn": "Module versions /moduleversies (menu), Add + detail /moduleversies/:id; also ModuleDetail md-versions list (src/manifest.json:504, allowCreate false)",
 			"provider": "stackiq",
@@ -992,9 +994,11 @@
 			"stackiq": "yes",
 			"built": {
 				"state": "built",
-				"evidence": "src/manifest.json:647 Diensten page (FacetedCatalogIndexView, schema catalogService) with the CnIndexPage create form; register.json:1324 catalogService with provider (required), modules[] (register.json:1419) and type enum Functional/Application/Technical management, Implementation support, Training, Licence reseller (register.json:1459)",
+				"evidence": "src/manifest.json:682 Diensten page (FacetedCatalogIndexView, schema catalogService, columns name, provider, type, publicationDate) with the CnIndexPage create form; :423 org-diensten list on the organisation page; register.json catalogService requires name, provider and type (enum Functional/Application/Technical management, Implementation support, Training, Licence reseller), modules[]. Re-read 30 Oct against board SkApplicaties: the board draws services as the Diensten tab with its count, no service detail page and no hosting type, so the missing detail page and hosting type named before are not gaps against the canon.",
 				"owner": "ConductionNL/stackiq",
-				"change": "2026-07-23-gemma-faceted-search"
+				"change": "openspec/changes/landscape-services-and-module-versions",
+				"requirement": "A supplier's service is registered over one or more applications (REQ-CSV-001)",
+				"readOn": "2026-10-30"
 			},
 			"reachedOn": "Services /diensten (menu), Add button",
 			"provider": "stackiq",
