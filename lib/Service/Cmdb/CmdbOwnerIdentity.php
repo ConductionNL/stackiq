@@ -15,7 +15,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -31,7 +31,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Derives the contact UID and the per-run cache key of an owner.
  *
- * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
  */
 class CmdbOwnerIdentity {
 	/**
@@ -52,7 +52,7 @@ class CmdbOwnerIdentity {
 	 * @param IConfig $config Reads this instance's `secret`, from which the UID's HMAC key derives.
 	 * @param LoggerInterface $logger Says, once, that employee numbers are not used without a secret; never handed a number.
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function __construct(
 		private readonly IConfig $config,
@@ -85,7 +85,7 @@ class CmdbOwnerIdentity {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function contactUid(string $employeeNumber, string $municipalityUuid): ?string {
 		$number = self::normaliseNumber(employeeNumber: $employeeNumber);
@@ -116,7 +116,7 @@ class CmdbOwnerIdentity {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function newContactUid(): string {
 		$bytes = random_bytes(16);
@@ -133,7 +133,7 @@ class CmdbOwnerIdentity {
 	 *
 	 * @return string|null
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	private static function normaliseNumber(string $employeeNumber): ?string {
 		$number = mb_strtolower((string)preg_replace('/^[\s\x{00A0}]+|[\s\x{00A0}]+$/u', '', $employeeNumber));
@@ -158,7 +158,7 @@ class CmdbOwnerIdentity {
 	 *
 	 * @return string
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function cacheKey(?string $contactUid, string $email, string $displayName): string {
 		if ($contactUid !== null) {

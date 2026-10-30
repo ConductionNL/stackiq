@@ -140,7 +140,7 @@ class CmdbImportPackRulesTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-1
 	 */
 	public function testTheOwnerPackMayMapAnEmailAddressAndAnEmployeeNumber(): void {
 		$profile = $this->shipped(file: 'topdesk-profile.json');
