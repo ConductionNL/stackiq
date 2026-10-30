@@ -7418,11 +7418,12 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "none",
+				"state": "specified",
 				"evidence": "lib/Repair/* still only rename stackiq's own data (MigrateRegisterSlug.php, RenameDutchCatalogValues.php); appinfo/routes.php:110 POST /api/cmdb-import (lib/Service/CmdbExportImportService.php) imports a TOPdesk CMDB xlsx; :307 POST /api/itsm/import with lib/Service/ItsmFileImportService.php imports applications from a CSV/XLSX through the service desk flow; neither reads the previous VNG Softwarecatalogus's registrations; no change or spec names this row",
 				"owner": "ConductionNL/stackiq",
-				"spec": "none",
-				"readOn": "2026-10-07"
+				"readOn": "2026-10-30",
+				"change": "openspec/changes/landscape-migrate-from-previous-catalogue",
+				"requirement": "An organisation imports its export from the previous catalogue (REQ-LCM-001)"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
