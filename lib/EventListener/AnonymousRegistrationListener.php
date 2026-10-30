@@ -10,7 +10,7 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
  *
- * @spec openspec/changes/organisation-registration-through-the-portal/specs/organisation-registration/spec.md#requirement-req-orr-001-an-organisation-registered-without-an-account-is-pending-until-reviewed
+ * @spec openspec/specs/organisation-registration/spec.md#requirement-req-orr-001-an-organisation-registered-without-an-account-is-pending-until-reviewed
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -38,7 +38,7 @@ use OCP\IUserSession;
  *
  * @template-implements IEventListener<Event>
  *
- * @spec openspec/changes/organisation-registration-through-the-portal/specs/organisation-registration/spec.md#requirement-req-orr-001-an-organisation-registered-without-an-account-is-pending-until-reviewed
+ * @spec openspec/specs/organisation-registration/spec.md#requirement-req-orr-001-an-organisation-registered-without-an-account-is-pending-until-reviewed
  */
 class AnonymousRegistrationListener implements IEventListener {
 	/**
@@ -63,7 +63,7 @@ class AnonymousRegistrationListener implements IEventListener {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/organisation-registration-through-the-portal/specs/organisation-registration/spec.md#requirement-req-orr-001-an-organisation-registered-without-an-account-is-pending-until-reviewed
+	 * @spec openspec/specs/organisation-registration/spec.md#requirement-req-orr-001-an-organisation-registered-without-an-account-is-pending-until-reviewed
 	 */
 	public function handle(Event $event): void {
 		if (($event instanceof ObjectCreatingEvent) === false || $this->commandLine === true || $this->userSession->getUser() !== null) {

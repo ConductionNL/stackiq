@@ -1583,7 +1583,7 @@ class CmdbExportImportService {
 	 * @return string|null The contact UID, or null.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-6
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	private function resolveContactUid(array $identity, string $municipalityUuid): ?string {
 		$parts = self::splitPersonName(name: (string)$identity['name']);
@@ -1637,7 +1637,7 @@ class CmdbExportImportService {
 	 *
 	 * @return string|null The contact UID, or null.
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	private function existingOwnerContact(?string $numberUid, string $email, string $displayName): ?string {
 		if ($numberUid !== null) {
@@ -1666,7 +1666,7 @@ class CmdbExportImportService {
 	 *
 	 * @return string|null The contact UID, or null.
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	private function contactByUid(string $uid): ?string {
 		$contacts = $this->contactSync->searchNamedAddressBook(query: $uid, addressBookUri: self::OWNER_ADDRESS_BOOK_URI, properties: ['UID']);
@@ -1696,7 +1696,7 @@ class CmdbExportImportService {
 	 * @return string|null The contact UID, or null.
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-6
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	private function contactByProperty(string $property, string $key, string $value): ?string {
 		$needle = mb_strtolower(trim($value));
