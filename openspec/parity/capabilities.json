@@ -4758,7 +4758,8 @@
 				"state": "built",
 				"evidence": "Every catalogue entity is an OpenRegister object (src/manifest.json pages read register @resolve:voorzieningen_register), so OpenRegister's /apps/openregister/api/objects/{register}/{schema} CRUD applies, gated by the schema authorization rules (lib/Settings/softwarecatalogus_register.json:6777 module and others). Stackiq adds its own routed endpoints in appinfo/routes.php (e.g. :202 /api/aanbod, :255-261 /api/aangeboden-gebruik, :298 /api/gebruik, :303 /api/portfolio-report).",
 				"owner": "ConductionNL/openregister",
-				"spec": "none"
+				"change": "openspec/changes/platform-properties",
+				"requirement": "Catalogue data is read and written through a REST API (REQ-PLAT-002)"
 			},
 			"reachedOn": "API: /apps/openregister/api/objects plus stackiq /api/*; the stackiq pages themselves use the same API",
 			"provider": "openregister",
@@ -4905,7 +4906,8 @@
 				"state": "built",
 				"evidence": "appinfo/info.xml: a Nextcloud app (id stackiq, EUPL-1.2) installed on the customer's own Nextcloud with OpenRegister; stackiq-compose.yaml at repo root for a local stack.",
 				"owner": "ConductionNL/stackiq",
-				"spec": "none"
+				"change": "openspec/changes/platform-properties",
+				"requirement": "The catalogue runs on the customer's own Nextcloud (REQ-PLAT-001)"
 			},
 			"reachedOn": "the whole app runs on the customer's own Nextcloud",
 			"provider": "nextcloud",
@@ -6834,7 +6836,8 @@
 				"state": "built",
 				"evidence": "stackiq styles use Nextcloud's theming variables (src/views/KwetsbaarhedenView.vue:478 var(--color-primary-element)), so the colours and logo an admin sets in Nextcloud theming apply to stackiq pages",
 				"owner": "nextcloud/server",
-				"spec": "none"
+				"change": "openspec/changes/platform-properties",
+				"requirement": "The look comes from the theme, not the code (REQ-PLAT-003)"
 			},
 			"reachedOn": "every stackiq page, through Nextcloud theming",
 			"provider": "nextcloud",
@@ -7132,10 +7135,12 @@
 			"originUrl": "https://bluedolphin.io/blog/november-2025-product-updates-effortless-enterprise-architecture-management/",
 			"stackiq": "yes",
 			"built": {
-				"state": "built",
-				"evidence": "src/manifest.json:1057 Flows page (entitySource flows, app stackiq) and FlowDetail canvas over OpenRegister's flow store; openregister lib/Service/Flow/Nodes/TriggerObjectNode.php:82 object.updated trigger per register and schema; lib/Service/Flow/Nodes/FilterNode.php:10 and :186 per-item condition (for example the status); integriq lib/Flow/SourceCallNode.php (development) calls the outside source.",
+				"state": "building",
+				"evidence": "src/manifest.json:1057 Flows page (entitySource flows, app stackiq) and FlowDetail canvas over OpenRegister's flow store; openregister lib/Service/Flow/Nodes/TriggerObjectNode.php:82 object.updated trigger per register and schema; lib/Service/Flow/Nodes/FilterNode.php:10 and :186 per-item condition (for example the status); integriq lib/Flow/SourceCallNode.php (development) calls the outside source. Open half (30 Oct, board canon): platform-properties task 4: the threshold field on the service desk exchange drawn on SkInstellingenUitwisseling; a flow authored by hand on the Flows page already gates on the status.",
 				"owner": "ConductionNL/openregister",
-				"spec": "none"
+				"change": "openspec/changes/platform-properties",
+				"requirement": "Entries go to outside systems only from a chosen lifecycle state (REQ-PLAT-004)",
+				"readOn": "2026-10-30"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "openregister",
@@ -8735,11 +8740,12 @@
 			"topdesk": "yes",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
-				"evidence": "New since 1 Oct (#1205): lib/Settings/flows/itsm-outbound-applications.json:5-30 is a stackiq flow template triggered on object.created/object.updated of usage that sends stackiq-owned fields to TOPdesk or ServiceNow through integriq; lib/Service/ItsmExchangeService.php:134 maps the outbound template; an admin creates and publishes it from Admin settings > Service desk exchange (src/views/settings/sections/ItsmExchange.vue, lib/Controller/ItsmExchangeController.php:98/:116 AuthorizedAdminSetting, appinfo/routes.php:304-307). There is still no generic webhook in stackiq: the Flows page (src/manifest.json:1085, menu FlowsMenu :208) authors OpenRegister flows, and OpenRegister has its own webhooks admin.",
+				"state": "building",
+				"evidence": "New since 1 Oct (#1205): lib/Settings/flows/itsm-outbound-applications.json:5-30 is a stackiq flow template triggered on object.created/object.updated of usage that sends stackiq-owned fields to TOPdesk or ServiceNow through integriq; lib/Service/ItsmExchangeService.php:134 maps the outbound template; an admin creates and publishes it from Admin settings > Service desk exchange (src/views/settings/sections/ItsmExchange.vue, lib/Controller/ItsmExchangeController.php:98/:116 AuthorizedAdminSetting, appinfo/routes.php:304-307). There is still no generic webhook in stackiq: the Flows page (src/manifest.json:1085, menu FlowsMenu :208) authors OpenRegister flows, and OpenRegister has its own webhooks admin. Open half (30 Oct, board canon): platform-properties task 5: the Webhooks section on SkInstellingenUitwisseling over OpenRegister webhooks; today only OpenRegister's own admin and the ITSM flow template reach it.",
 				"owner": "ConductionNL/openregister",
-				"change": "sharing-itsm-exchange",
-				"readOn": "2026-10-07"
+				"change": "openspec/changes/platform-properties",
+				"readOn": "2026-10-30",
+				"requirement": "Another system is notified when a catalogue entry changes (REQ-PLAT-005)"
 			},
 			"reachedOn": "Admin settings > Service desk exchange (sets up the outbound flow); Flows /flows; general webhooks only in OpenRegister's own admin UI",
 			"provider": "openregister",
@@ -8778,8 +8784,9 @@
 				"state": "built",
 				"evidence": "A History sidebar tab with widget type audit (OpenRegister's per-object audit trail) is declared on 14 detail pages: src/manifest.json:445, :493, :541, :607, :717, :771, :821, :873, :923, :990, :1026 (Organisation, Contact person, Module, Contract, Suite, Standard, BIO measure, Review, Compliance, Module version, Vulnerability), plus src/manifest.d/usages.json:67 (GebruikDetail), src/manifest.d/connections.json:59 (KoppelingDetail) and src/manifest.d/ai-systems.json:71 (AiSystemDetail). No catalogue-wide audit page; openspec/features.overlay.json:173-178 still lists audit-trail-view as 'soon', providedBy openregister.",
 				"owner": "ConductionNL/openregister",
-				"change": "2026-06-14-softwarecatalog-manifest-v1",
-				"readOn": "2026-10-07"
+				"change": "openspec/changes/platform-properties",
+				"readOn": "2026-10-07",
+				"requirement": "Every record keeps its history (REQ-PLAT-006)"
 			},
 			"reachedOn": "History sidebar tab on the detail pages, e.g. Organisation /organisaties/:id",
 			"provider": "openregister",
@@ -8903,8 +8910,9 @@
 				"state": "built",
 				"evidence": "src/manifest.json:218 Store page (type store, route /store, footer menu StoreMenu :184) over the OpenRegister store plane; :55-61 store.types openregister.configset and openregister.flows; page _note says that with no registry configured it shows only the app's built-in items. No stackiq controller; no spec covers the Store page (added by commit ed189291 on 4 Sep).",
 				"owner": "ConductionNL/openregister",
-				"spec": "none",
-				"readOn": "2026-10-07"
+				"readOn": "2026-10-07",
+				"change": "openspec/changes/platform-properties",
+				"requirement": "The store adds configuration published by others (REQ-PLAT-007)"
 			},
 			"reachedOn": "Store /store (footer menu)",
 			"provider": "openregister",
