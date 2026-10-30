@@ -1147,7 +1147,8 @@
 				"state": "built",
 				"evidence": "Library CnIndexPage (@conduction/nextcloud-vue 2.55.1, package-lock) showMassImport default true (CnIndexPage.vue:1599) and self-mode handleMassImport (selfModeActions.js:168) POSTs to /apps/openregister/api/registers/{register}/import with the schema for CSV (selfModeIO.js:82); rendered on the Modules page's CnIndexPage (src/views/FacetedCatalogIndexView.vue:108)",
 				"owner": "ConductionNL/openregister",
-				"spec": "none"
+				"change": "sharing-itsm-exchange",
+				"requirement": "openspec/changes/sharing-itsm-exchange :: REQ-ITX-006 A file feeds the same import; openspec/specs/cmdb-export-import :: REQ-CMDB-000"
 			},
 			"reachedOn": "Modules /modules, Import in the index actions (also every type:index page)",
 			"provider": "openregister",
@@ -1301,7 +1302,8 @@
 				"state": "specified",
 				"evidence": "No survey, attestation or owner-confirmation code in lib/ or src/ (searched survey/enquete/confirm entry)",
 				"owner": "ConductionNL/stackiq",
-				"change": "landscape-owner-attestation"
+				"change": "landscape-owner-attestation",
+				"requirement": "openspec/changes/landscape-owner-attestation :: REQ-OAT-001 An information manager starts a confirmation round for a scope; REQ-OAT-003 An owner confirms or corrects each entry"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -1824,10 +1826,11 @@
 			"topdesk": "partial",
 			"stackiq": "partial",
 			"built": {
-				"state": "building",
-				"evidence": "src/manifest.d/connection-registry.json:23 Integrations page (register integriq, schema app_connection) with visibleIf appInstalled 'integriq' (:17) and permission admin (:15,:27); Add integration handler leaves for integriq (src/services/connectionRegistry.js:43); rows synced from lib/Settings/connections.json (email, federation, eol-feed); status worked out by integriq",
+				"state": "built",
+				"evidence": "src/manifest.d/connection-registry.json:23 Integrations page (register integriq, schema app_connection) with visibleIf appInstalled 'integriq' (:17) and permission admin (:15,:27); Add integration handler leaves for integriq (src/services/connectionRegistry.js:43); rows synced from lib/Settings/connections.json (email, federation, eol-feed); status worked out by integriq. Re-read 30 Oct: adopt-connection-registry tasks 1-5 ticked and on development (tests/vitest/connectionRegistry.spec.js, tests/Unit/Service/ConnectionReportServiceTest.php, tests/Unit/Settings/ConnectionsDeclarationTest.php, tests/e2e/workflows/integrations-page.spec.ts); integriq's connection-registry archived 29 Sep. Only the live e2e run plus archive (task 6.1) is left.",
 				"owner": "ConductionNL/integriq",
-				"change": "adopt-connection-registry"
+				"change": "adopt-connection-registry",
+				"readOn": "2026-10-30"
 			},
 			"reachedOn": "Integrations /settings/integrations (settings menu, admin, only when app id 'integriq' is installed)",
 			"provider": "integriq",
@@ -2734,7 +2737,8 @@
 				"state": "built",
 				"evidence": "src/manifest.json:592 Modules and :647 Diensten are FacetedCatalogIndexView over schema module/catalogService (CnIndexPage, showAdd default true); lib/Settings/softwarecatalogus_register.json:6779 module has provider + publicationDate (visible on form) and public read when publicationDate <= now or registeredBy Supplier",
 				"owner": "ConductionNL/stackiq",
-				"change": "2026-06-14-open-data-publishing"
+				"change": "2026-06-14-open-data-publishing",
+				"requirement": "openspec/specs/aangeboden-gebruik-api :: REQ-002; openspec/specs/open-data-publishing :: Catalog entries can be marked as published open data (supplier side implied, not stated)"
 			},
 			"reachedOn": "Applications /modules and Services /diensten (main menu), create via the index Add form",
 			"provider": "stackiq",
@@ -2772,7 +2776,8 @@
 				"state": "built",
 				"evidence": "lib/Service/FacetService.php:109 DIMENSIONS referenceComponent, standard, applicationService, domain for schemas module and catalogService (:102); src/views/FacetedCatalogIndexView.vue:108 CnFacetSidebar narrows CnIndexPage; route GET /api/facets/{schema} called from src/services/facets.js Corrections round 8 (2026-09-28), stackiq#1141: the fourth dimension, domain, is always empty because lib/Service/FacetService.php:704 reads domain while GEMMA elements carry domein (lib/Settings/softwarecatalogus_register.json:4642), at d22033a.",
 				"owner": "ConductionNL/stackiq",
-				"change": "2026-07-23-gemma-faceted-search"
+				"change": "2026-07-23-gemma-faceted-search",
+				"requirement": "openspec/specs/gemma-faceted-search :: Facet aggregation endpoint returns GEMMA dimension counts; Facet sidebar UI on the module and dienst index pages"
 			},
 			"reachedOn": "Applications /modules and Services /diensten, GEMMA facet sidebar",
 			"provider": "stackiq",
@@ -2996,7 +3001,8 @@
 				"state": "built",
 				"evidence": "src/manifest.json ModuleDetail md-data includes contactPerson (was the stale key contactpersoon, which rendered nothing); tests/vitest/manifestIncludeKeys.spec.js keeps detail page keys on their schema",
 				"owner": "ConductionNL/stackiq",
-				"change": "2026-09-29-landscape-application-page"
+				"change": "2026-09-29-landscape-application-page",
+				"requirement": "openspec/specs/application-page :: REQ-APG-001 The application page shows every field it lists under the schema's current keys (scenario: a buyer reads a product's contact person)"
 			},
 			"reachedOn": "Applications /modules create/edit form; not shown on ModuleDetail /modules/:id",
 			"provider": "stackiq",
@@ -3823,7 +3829,8 @@
 				"state": "built",
 				"evidence": "usage.cloudDienstverleningsmodel (register :3050) plus contract cost; lib/Service/PortfolioReportService.php:302 per-usage annualised cost and cloud-transition share; src/views/organisaties/PortfolioReport.vue:166 cloudTransitionLabel per row",
 				"owner": "ConductionNL/stackiq",
-				"change": "2026-07-23-portfolio-rationalization-time"
+				"change": "2026-07-23-portfolio-rationalization-time",
+				"requirement": "openspec/specs/portfolio-rationalization-time :: Portfolio rationalization report aggregates per organisation"
 			},
 			"reachedOn": "Reports /reports -> Portfolio rationalization /portfolio-report",
 			"provider": "stackiq",
@@ -5550,7 +5557,8 @@
 				"state": "specified",
 				"evidence": "Applications (module lib/Settings/softwarecatalogus_register.json:6777), versions (moduleVersion :7649), suites (suite :1135) and application-to-application connections (connection :3563) with relations; ModuleDetail and SuiteDetail show a Related panel. No manifest page has register+schema 'connection' or 'usage', so connections are not listed or created on their own page.",
 				"owner": "ConductionNL/stackiq",
-				"change": "operations-technology-components"
+				"change": "operations-technology-components",
+				"requirement": "openspec/changes/operations-technology-components :: REQ-TCO-001; REQ-TCO-002 The Technology pages SHALL list components and show their relations both ways"
 			},
 			"reachedOn": "Applications /modules/:id and Suites /suites/:id Related panels; no page for connections",
 			"provider": "stackiq",
@@ -5588,7 +5596,8 @@
 				"state": "specified",
 				"evidence": "Organisation merge: src/manifest.json:430 OrganisationMergePanel on OrganisatieDetail, calling /api/organisaties/{uuid}/merge/dry-run and /merge (src/store/modules/organisatie.js:486/524, lib/Controller/MergeController.php:106, admin-only body guard). Federation mirrors are reconciled per peer by lib/Service/Federation/FederationMerger.php.",
 				"owner": "ConductionNL/stackiq",
-				"change": "operations-record-reconciliation"
+				"change": "operations-record-reconciliation",
+				"requirement": "openspec/changes/operations-record-reconciliation :: REQ-RRC-001 to REQ-RRC-004"
 			},
 			"reachedOn": "Organisation /organisaties/:id, Merge organisation panel (admin only)",
 			"provider": "stackiq",
@@ -7959,7 +7968,8 @@
 				"owner": "ConductionNL/openregister",
 				"ownerNote": "reader wrote: ConductionNL/stackiq (rules), executed by ConductionNL/openregister",
 				"change": "2026-07-23-vendor-visibility-rbac",
-				"readOn": "2026-10-07"
+				"readOn": "2026-10-07",
+				"requirement": "openspec/specs/vendor-visibility-rbac :: REQ-002 aanbod-beheerder (vendor) reads of gebruik/koppeling objects MUST be scoped to the vendor's own offered products"
 			},
 			"reachedOn": "no page of its own: enforced by OpenRegister RBAC on every read, including /gebruik, /koppelingen and the /modules/:id Usages list",
 			"provider": "openregister",
@@ -8370,7 +8380,8 @@
 				"evidence": "lib/Settings/softwarecatalogus_register.json:1624 x-openregister-notifications 'vulnerability-reported' on vulnerability, trigger created, channels nc-notification + email, recipients group software-catalog-admins and object-acl manage (:1629-1631); the subject uses {{naam}} (:1634) while the field is name (:1650); dispatched by OpenRegister's notification engine (openregister lib/BackgroundJob/AnnotationNotificationDispatchJob.php); fires on create from Vulnerabilities /kwetsbaarheden (src/manifest.json:997)",
 				"owner": "ConductionNL/openregister",
 				"change": "2026-06-14-softwarecatalog-notifications",
-				"readOn": "2026-10-07"
+				"readOn": "2026-10-07",
+				"requirement": "openspec/specs/softwarecatalog-notifications :: Catalogue schemas declare notification rules (the vulnerability rule)"
 			},
 			"reachedOn": "Declaration in the register; fires on create from Vulnerabilities /kwetsbaarheden",
 			"provider": "openregister",
@@ -8695,7 +8706,8 @@
 				"evidence": "lib/Portal/PortalContributionProvider.php:130 getContribution() declares read-only, organisation-scoped collections for audiences vendor-org (:167 catalogService, :184 usage, :204 catalogContract, :228 compliancy) and participant-org (:270 usage, :291 catalogContract); :97 audiences; docblock :24 says accept/deny actions are deferred. No change to lib/Portal since 26 Sep. Inert without portaliq.",
 				"owner": "ConductionNL/portaliq",
 				"change": "portal-contribution",
-				"readOn": "2026-10-07"
+				"readOn": "2026-10-07",
+				"requirement": "openspec/specs/portal-contribution :: Software Catalog ships the ADR-046 read contribution (REQ-PORT-000)"
 			},
 			"reachedOn": "Portaliq external portal (not a stackiq page), only for signed-in portal subjects of a supplier or participant organisation",
 			"provider": "portaliq",
@@ -8897,7 +8909,8 @@
 				"evidence": "Declared x-openregister-notifications on vulnerability (lib/Settings/softwarecatalogus_register.json:1624), usage (:2659), catalogContract (:3252), software-review (:3959), module (:6778), moduleVersion (:7649) and, new since 29 Sep, maintenanceWindow (:8562 maintenance-announced, :8586 maintenance-starts-tomorrow, both to the notifyUserIds relation). Stackiq now has code behind the maintenance rules: lib/AppInfo/Application.php:818 registers MaintenanceRecipientsListener on ObjectCreatedEvent, which queues MaintenanceRecipientsJob; lib/Service/MaintenanceRecipientService.php:140-168 resolves the business and technical owners of every usage and writes notifyUserIds and recipientsResolvedAt. Delivery is OpenRegister's notification engine; no INotifier in stackiq. The contract-expiry rule still filters status equals 'Actief' (:3254) against the enum Active/Expired/In negotiation and uses {{contractNummer}}/{{eindDatum}}, which the schema no longer has (contractNumber, endDate); the open change contracts-expiry-and-owner would fix it.",
 				"owner": "ConductionNL/openregister",
 				"change": "2026-09-29-lifecycle-maintenance-and-supplier-roadmap",
-				"readOn": "2026-10-07"
+				"readOn": "2026-10-07",
+				"requirement": "openspec/specs/softwarecatalog-notifications :: Catalogue schemas declare notification rules"
 			},
 			"reachedOn": "Nextcloud notifications bell, if OpenRegister dispatches the declared rules; no stackiq page",
 			"provider": "openregister",
@@ -8975,7 +8988,8 @@
 				"evidence": "Property-level read rules added 1 Oct (#1206) in lib/Settings/register.d/publication-field-rules.json: module :8-65 (contactPerson, usages, dpiaDocumentRef, verwerkingsregisterRef, external ids read authenticated), suite :132, catalogService :144, connection :157-248, usage :260 onward (owners, costs, TIME and value scores, service desk fields), organization (contactsUid, xml, pki, registrationStatus, mergedInto), merged into the register by lib/Service/SettingsService.php:1655-1683. Older rules stay in the main register: contactPerson.roles update limited to gebruik-beheerder/admin (lib/Settings/softwarecatalogus_register.json:1905), organization.contactpersonen read authenticated (:2191), usage.interneAnnotation read/update own organisation. Enforcement is OpenRegister's; tests/live/publication-field-rules-live.sh:42-47 checks that an anonymous read of a published application leaves out the private fields, and tests/Unit/Settings/PublicationFieldRulesTest.php checks the rules. The rules are fixed in the register; there is no admin UI to change them.",
 				"owner": "ConductionNL/openregister",
 				"change": "publication-field-rules",
-				"readOn": "2026-10-07"
+				"readOn": "2026-10-07",
+				"requirement": "openspec/specs/publication-field-rules :: REQ-PFR-001 Contacts, costs and internal judgements stay with signed-in users"
 			},
 			"reachedOn": "API: OpenRegister leaves the restricted fields out of anonymous reads; no page to configure the rules",
 			"provider": "openregister",
