@@ -2044,10 +2044,12 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
-				"evidence": "src/manifest.json StandaardDetail /standaarden/:id st-data widget shows all element fields (documentation, gemmaNotes) of a standard; FacetedCatalogIndexView.vue:150 shows reference components by name only",
+				"state": "building",
+				"evidence": "src/manifest.json StandaardDetail /standaarden/:id st-data widget shows documentation and gemmaNotes of a standard; src/views/organisaties/GemmaPlate.vue:121 shows element.documentation of the selected reference component in the side panel (re-read 30 Oct). Missing against board SkApplicaties: FacetedCatalogIndexView.vue shows reference components by name only, no definition popover; planned in gemma-plate-views-peers-and-definitions task 5.",
 				"owner": "ConductionNL/stackiq",
-				"change": "2026-06-14-softwarecatalog-manifest-v1"
+				"change": "openspec/changes/gemma-plate-views-peers-and-definitions",
+				"requirement": "GEMMA terms show their definition where they appear (REQ-GPL-003)",
+				"readOn": "2026-10-30"
 			},
 			"reachedOn": "Standaarden /standaarden and StandaardDetail /standaarden/:id for standards; no page for reference components or other GEMMA terms, and no in-place definition while working",
 			"provider": "stackiq",
@@ -7597,11 +7599,12 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
-				"evidence": "appinfo/routes.php:189-191 GET /api/views, /api/views/docs, /api/views/{viewId}; lib/Service/ViewService.php:442 enrichViewNodes adds the org's usages per node; lib/Service/ArchiMateExportService.php:2731 copyAndEnrichViews nests the org's applications inside copies of GEMMA views in the org export; src/store/modules/view.js:15 useViewStore is still imported by nothing; no page renders a view; open change architecture-views-editor explicitly leaves this out",
+				"state": "building",
+				"evidence": "appinfo/routes.php GET /api/views, /api/views/{viewId}; lib/Service/ViewService.php enrichViewNodes adds the org's usages per node; lib/Service/ArchiMateExportService.php copyAndEnrichViews for the org export. Re-read 30 Oct: src/views/organisaties/GemmaPlate.vue (architecture-reference-component-coverage) now draws the organisation's reference components with gap and overlap states, but has no view picker and does not draw a chosen GEMMA view; src/store/modules/view.js useViewStore is still imported by nothing. Board SkGemmaPlaat draws the picker; planned in gemma-plate-views-peers-and-definitions task 1.",
 				"owner": "ConductionNL/stackiq",
-				"change": "2026-06-14-view-enrichment-api",
-				"readOn": "2026-10-07"
+				"change": "openspec/changes/gemma-plate-views-peers-and-definitions",
+				"readOn": "2026-10-30",
+				"requirement": "The plate draws the GEMMA view the user picks (REQ-GPL-001)"
 			},
 			"reachedOn": "API only: GET /api/views (src/store/modules/view.js:89 defines a store but nothing imports useViewStore); the drawn view is only visible in Archi after 'Organization Export' on admin settings section ArchiMate Import/Export",
 			"provider": "stackiq",
@@ -7800,11 +7803,12 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "building",
 				"evidence": "lib/Controller/ViewController.php:82 getAllViews (routes appinfo/routes.php:189-191 GET /api/views, /api/views/{viewId}) with include_gebruik / include_deelnames_gebruik; lib/Service/ViewService.php:1206-1265 adds only usages where the current organisation is a participant (deelnemer), not other organisations' own usages; the only caller is src/store/modules/view.js:89 and no component imports useViewStore; usage read rules (lib/Settings/softwarecatalogus_register.json:3149-3172) limit gebruik-beheerder to its own organisation, so the new md-usages list on /modules/:id (src/manifest.json:514) shows a municipality only its own usages",
 				"owner": "ConductionNL/stackiq",
-				"change": "2026-06-14-deelnames-gebruik",
-				"readOn": "2026-10-07"
+				"change": "openspec/changes/gemma-plate-views-peers-and-definitions",
+				"readOn": "2026-10-30",
+				"requirement": "The plate shows what comparable organisations use (REQ-GPL-002)"
 			},
 			"reachedOn": "API only: GET /api/views, the only caller is src/store/modules/view.js which no mounted component uses",
 			"provider": "stackiq",
