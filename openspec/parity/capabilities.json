@@ -6903,7 +6903,9 @@
 				"state": "specified",
 				"evidence": "library CnIndexPage mass copy on stackiq index pages: @conduction/nextcloud-vue v2.55.1 src/components/CnIndexPage/CnIndexPage.vue:215 CnMassCopyDialog, showMassCopy default true at :1611 (package.json:45 pins ^2.55.1); whether relations are copied along was not traced",
 				"owner": "ConductionNL/nextcloud-vue",
-				"change": "nextcloud-vue/index-copy-with-relations"
+				"change": "openspec/changes/applications-copy-with-links",
+				"requirement": "An application is copied with the links the user picks (REQ-ACP-001)",
+				"readOn": "2026-10-30"
 			},
 			"reachedOn": "index pages such as Module versions /moduleversies: select rows, Copy",
 			"provider": "stackiq",
