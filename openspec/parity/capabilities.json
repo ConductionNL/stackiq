@@ -4696,10 +4696,12 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "built",
+				"state": "building",
 				"evidence": "lib/Service/Federation/FederationService.php:434 fetchPeerCatalog() calls OpenCatalogi DirectoryService->getDirectory(['url' => $peerUrl]); OpenCatalogi's getDirectory (opencatalogi lib/Service/DirectoryService.php:2409, also on origin/development) reads only filters/limit/offset/include-federated and ignores 'url', so it returns this instance's own directory listings, not the peer's published entries. Provenance marking itself is built: lib/Service/Federation/FederationMerger.php:239 stamps _source.instance. Mirrors are written into the organization schema (FederationService.php:56 PEER_MIRROR_TYPE). No src/ code reads _source, so no page shows where an entry came from.",
 				"owner": "ConductionNL/opencatalogi",
-				"change": "2026-06-14-federated-catalog-sync"
+				"change": "openspec/changes/federation-pull-fetches-the-peer",
+				"requirement": "A pull reads the peer's own published catalogue (REQ-FED-010)",
+				"readOn": "2026-10-30"
 			},
 			"reachedOn": "admin settings section Catalog federation, Pull now button (src/views/settings/sections/FederationSettings.vue:332)",
 			"provider": "opencatalogi",
