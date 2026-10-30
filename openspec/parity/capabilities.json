@@ -1215,10 +1215,13 @@
 			"topdesk": "partial",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "building",
 				"evidence": "Library CnIndexPage mass delete/copy/export (showMassDelete default true, CnIndexPage.vue:1617; selfModeActions.js:63 handleMassDelete) on index pages; stackiq's MassPublishObjects/MassLockObjects dialogs (src/dialogs/Dialogs.vue:8-14) are only opened from src/modals/object/ViewObject.vue:4865, and ViewObject is only mounted for modals 'viewOrganisatie'/'viewContactpersoon' (src/modals/Modals.vue:7,19) which nothing in src/ sets",
 				"owner": "ConductionNL/stackiq",
-				"spec": "none"
+				"spec": "none",
+				"change": "openspec/changes/publish-and-lock-from-the-list",
+				"requirement": "Selected entries are published, withdrawn or locked together from the list (REQ-ODP-010)",
+				"readOn": "2026-10-30"
 			},
 			"reachedOn": "Any index page (e.g. Module versions /moduleversies): select rows, mass delete; publish and lock: nothing reaches them",
 			"provider": "stackiq",
@@ -4568,10 +4571,12 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "building",
 				"evidence": "lib/Controller/PublicationController.php:87 publish/depublish (routes.php:208-209, PUT/DELETE /api/publication/{objectType}/{uuid}) with an IDOR guard; lib/Service/PublicationService.php:51 publishable types catalogService, module, connection, organization. No src/ caller of /api/publication (only a comment in src/utils/openDataProjection.js). The publish buttons in src/modals/object/ViewObject.vue:4854 are unreachable: Modals.vue renders ViewObject only for modal 'viewOrganisatie'/'viewContactpersoon', which nothing sets. Workaround: publicationDate/depublicationDate are visible, editable fields on module/catalogService/organization/connection (lib/Settings/softwarecatalogus_register.json:6777 schema).",
 				"owner": "ConductionNL/stackiq",
-				"change": "2026-06-14-open-data-publishing"
+				"change": "openspec/changes/publish-and-lock-from-the-list",
+				"requirement": "An entry's page publishes or withdraws that entry (REQ-ODP-011)",
+				"readOn": "2026-10-30"
 			},
 			"reachedOn": "API only for the publish action: PUT /api/publication/{objectType}/{uuid}/publish, no stackiq page calls it; a user can only set the publicationDate field by hand in the edit form on Applications /modules or Services /diensten",
 			"provider": "stackiq",
