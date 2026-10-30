@@ -5282,7 +5282,9 @@
 				"state": "built",
 				"evidence": "src/manifest.json:1048 FeaturesRoadmap page (type roadmap, line 1050), footer menu entry FeaturesRoadmapMenu; content from openspec/features.overlay.json statuses stable/beta/soon.",
 				"owner": "ConductionNL/stackiq",
-				"spec": "none"
+				"change": "openspec/changes/features-roadmap-page",
+				"requirement": "The Features and roadmap page groups the app's features by status (REQ-FRM-001)",
+				"readOn": "2026-10-30"
 			},
 			"reachedOn": "Features & roadmap /features-roadmap (footer menu)",
 			"provider": "stackiq",
