@@ -7783,11 +7783,12 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "building",
 				"evidence": "lib/Controller/AanbodController.php:200 acceptAanbod and :303 denyAanbod; lib/Service/AanbodService.php:289 acceptAanbod (check at :335 that the active organisation is afnemer or aanbieder, then re-owns the object) and :438 denyAanbod; routes appinfo/routes.php:206-208 GET /api/aanbod, PUT /api/aanbod/{uuid}/accept, DELETE /api/aanbod/{uuid}/deny; also lib/Controller/AangebodenGebruikController.php:654 set-self and :763 deny (routes.php:263-264); grep of src finds no caller of /api/aanbod or /api/aangeboden-gebruik; the new Applications in use pages (src/manifest.d/usages.json:14,:37) offer only edit and lifecycle actions (plan, goLive, phaseOut, retire), not accept or decline",
 				"owner": "ConductionNL/stackiq",
-				"change": "2026-05-31-retrofit-2026-05-24-aanbod-listings",
-				"readOn": "2026-10-07"
+				"change": "openspec/changes/supplier-accepts-claimed-usage",
+				"readOn": "2026-10-30",
+				"requirement": "A supplier answers the usages claimed of its products (REQ-010)"
 			},
 			"reachedOn": "API only: /api/aanbod and /api/aangeboden-gebruik, no stackiq page calls them (grep of src finds no caller)",
 			"provider": "stackiq",
