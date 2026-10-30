@@ -7527,11 +7527,12 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "building",
 				"evidence": "register.json:2717 usage.participants (visible, editable on /gebruik/:id via src/manifest.d/usages.json:37); register.json:3136-3172 usage read rules match only _organisation, consumer and provider, not participants, so a participating org does not see the shared usage on /gebruik; appinfo/routes.php:262 GET /api/aangeboden-gebruik/deelnemers and :273 /api/koppelingen-gebruik/{uuid} still have no caller in src/",
 				"owner": "ConductionNL/stackiq",
-				"change": "2026-06-14-deelnames-gebruik",
-				"readOn": "2026-10-07"
+				"change": "openspec/changes/shared-usage-visible-to-participants",
+				"readOn": "2026-10-30",
+				"requirement": "The connections list says with whom a connection is shared (REQ-DLG-011)"
 			},
 			"reachedOn": "API only: /api/aangeboden-gebruik/deelnemers; participants set (not seen by partners) on /gebruik/:id",
 			"provider": "stackiq",
@@ -8474,11 +8475,12 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "building",
 				"evidence": "register organization.type 'Collaboration' (:2309) + participants/deelnames (:2233, :2197) on the Organisations form (src/modals/OrganisationModal.vue:186); usage.participants (:2717, visible) is now on the usage form of Applications in use /gebruik (src/manifest.d/usages.json:14); shared landscape endpoint GET /api/aangeboden-gebruik/deelnemers (appinfo/routes.php:262) and src/store/modules/view.js:48 setIncludeDeelnamesGebruik have no caller in src; usage read rules (lib/Settings/register.d/publication-field-rules.json:442) match consumer/_organisation/provider, not participants",
 				"owner": "ConductionNL/stackiq",
-				"change": "2026-06-14-deelnames-gebruik",
-				"readOn": "2026-10-07"
+				"change": "openspec/changes/shared-usage-visible-to-participants",
+				"readOn": "2026-10-30",
+				"requirement": "A participant reads the usages shared with it, and their connections (REQ-DLG-010)"
 			},
 			"reachedOn": "Organisations /organisaties form (type Collaboration, participants); Applications in use /gebruik form (participants); shared landscape API only",
 			"provider": "stackiq",
