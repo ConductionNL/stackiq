@@ -4544,10 +4544,12 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "building",
 				"evidence": "lib/Service/SymfonyEmailService.php:466 registration, :553 activation, :641 user creation mails from templates; src/views/settings/sections/EmailConfiguration.vue:902 saveTemplate is a stub that logs 'not yet implemented in the backend' and still shows success; backend POST /api/email/templates/{templateName} (lib/Controller/SettingsController.php:2194) has no caller in src/; lib/Settings/connections.json email adapter reports the 'null' transport as simulated",
 				"owner": "ConductionNL/stackiq",
-				"change": "2026-06-14-retrofit-2026-05-26-email-delivery"
+				"change": "openspec/changes/mail-template-editor-saves",
+				"requirement": "An administrator edits and saves a mail template (REQ-010)",
+				"readOn": "2026-10-30"
 			},
 			"reachedOn": "admin settings section 'Email configuration', Templates tab (save does not persist)",
 			"provider": "stackiq",
