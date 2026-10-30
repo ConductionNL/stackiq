@@ -199,7 +199,7 @@ class StackiqContactSyncService {
 	 * @return ?string The contacts UID, or null when it could not be resolved or created.
 	 *
 	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function syncToNamedAddressBook(
 		string $objectType,
@@ -267,7 +267,7 @@ class StackiqContactSyncService {
 	 *                                          none when the user has no such address book.
 	 *
 	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function searchNamedAddressBook(string $query, string $addressBookUri, array $properties): array {
 		$contacts = [];
@@ -301,7 +301,7 @@ class StackiqContactSyncService {
 	 *
 	 * @return string|null The contact UID.
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	private function namedAddressBookContactByEmail(array $record, string $addressBookUri, ?string $fixedUid): ?string {
 		if ($fixedUid !== null) {

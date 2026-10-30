@@ -1,0 +1,21 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "architecture-reference-component-coverage (board SkGemmaPlaat): the GEMMA plate, a child of Reports & Compliance (ADR-097: no new top-level entry). A custom page because it renders one organisation-scoped, bounded join of usages and GEMMA reference components (GET /api/reference-component-coverage), which no facet can express: a component nobody uses has no bucket.",
+	"menu": [
+		{
+			"id": "ReportsCompliance",
+			"children": [
+				{ "id": "GemmaPlate", "label": "GEMMA plate", "icon": "Sitemap", "route": "GemmaPlate", "order": 20 }
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "GemmaPlate",
+			"route": "/gemma-plaat",
+			"type": "custom",
+			"title": "GEMMA plate",
+			"component": "GemmaPlateView"
+		}
+	]
+}
