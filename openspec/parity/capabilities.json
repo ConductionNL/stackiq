@@ -2497,10 +2497,12 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "building",
 				"evidence": "src/manifest.json BioMaatregelen /bio-maatregelen index (columns code,name,thema,bioVersion,bbnNiveau) and BioMaatregelDetail; register property is bbnLevel (lib/Settings/softwarecatalogus_register.json bioMeasure), so the bbnNiveau column is empty; no BIO catalogue is seeded (only 6 demo objects in lib/Settings/stackiq_mock_register.json)",
 				"owner": "ConductionNL/stackiq",
-				"change": "2026-07-23-bio-compliance-assessment"
+				"change": "openspec/changes/bio-measures-shipped-and-not-met",
+				"requirement": "The BIO 2.0 measures ship with the app and show their level (REQ-BIO-010)",
+				"readOn": "2026-10-30"
 			},
 			"reachedOn": "BioMaatregelen /bio-maatregelen, menu BIO measures; detail BioMaatregelDetail /bio-maatregelen/:id",
 			"provider": "stackiq",
@@ -2535,10 +2537,12 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
+				"state": "building",
 				"evidence": "lib/Settings/softwarecatalogus_register.json compliancy.bioMeasure links a module to a BIO measure; src/manifest.json ModuleDetail md-compliance lists claims incl. bioMaatregel column, BioMaatregelDetail bm-compliance lists modules per measure; compliancy has no status/met-not-met field",
 				"owner": "ConductionNL/stackiq",
-				"change": "2026-07-23-bio-compliance-assessment"
+				"change": "openspec/changes/bio-measures-shipped-and-not-met",
+				"requirement": "A compliance claim says whether the application meets the measure (REQ-BIO-011)",
+				"readOn": "2026-10-30"
 			},
 			"reachedOn": "Komplianties /komplianties (create a claim with a BIO measure); ComplianceMatrix /compliance-matrix with BIO measures as columns",
 			"provider": "stackiq",
