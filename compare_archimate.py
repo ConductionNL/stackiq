@@ -20,13 +20,16 @@ Exit codes:
     2 = error (file not found, parse error, etc.)
 """
 
-import sys
 import json as json_module
+import sys
 import xml.etree.ElementTree as ET
-from collections import Counter
+from collections import Counter, namedtuple
 
 NS = {"am": "http://www.opengroup.org/xsd/archimate/3.0/"}
 XSI = "http://www.w3.org/2001/XMLSchema-instance"
+
+# Both parsed models with the outcome of compare().
+Comparison = namedtuple("Comparison", "original exported results all_pass")
 
 
 def parse_archimate(filepath):
@@ -296,16 +299,18 @@ def compare(original, exported):
     return results, all_pass
 
 
-def print_report(original, exported, results, all_pass, orig_path, exp_path):
-    """Print human-readable comparison report."""
-    print("=" * 70)
-    print("  ArchiMate Semantic Comparison Report")
-    print("=" * 70)
-    print(f"  Original : {orig_path}")
-    print(f"  Exported : {exp_path}")
-    print()
+def print_count_row(label, counts):
+    """Print one row of the counts table; ``counts`` is (original, exported)."""
+    o, e = counts
+    delta = e - o
+    delta_str = f"{delta:+d}" if delta != 0 else "0"
+    marker = " *" if delta != 0 else ""
+    print(f"  {label:<25s} {o:>10d} {e:>10d} {delta_str:>10s}{marker}")
 
-    # Summary table
+
+def print_counts(comparison):
+    """Print the counts table of both models."""
+    original, exported = comparison.original, comparison.exported
     sections = [
         ("Elements", "elements"),
         ("Relationships", "relationships"),
@@ -317,38 +322,21 @@ def print_report(original, exported, results, all_pass, orig_path, exp_path):
     print(f"  {'Section':<25s} {'Original':>10s} {'Exported':>10s} {'Delta':>10s}")
     print(f"  {'-'*25} {'-'*10} {'-'*10} {'-'*10}")
     for label, key in sections:
-        o = len(original[key])
-        e = len(exported[key])
-        delta = e - o
-        delta_str = f"{delta:+d}" if delta != 0 else "0"
-        marker = " *" if delta != 0 else ""
-        print(f"  {label:<25s} {o:>10d} {e:>10d} {delta_str:>10s}{marker}")
+        print_count_row(label, (len(original[key]), len(exported[key])))
 
     # Organizations (special structure)
-    o = original["organizations"]["total_items"]
-    e = exported["organizations"]["total_items"]
-    delta = e - o
-    delta_str = f"{delta:+d}" if delta != 0 else "0"
-    marker = " *" if delta != 0 else ""
-    print(f"  {'Org items (total)':<25s} {o:>10d} {e:>10d} {delta_str:>10s}{marker}")
-    o = len(original["organizations"]["identifier_refs"])
-    e = len(exported["organizations"]["identifier_refs"])
-    delta = e - o
-    delta_str = f"{delta:+d}" if delta != 0 else "0"
-    marker = " *" if delta != 0 else ""
-    print(f"  {'Org identifierRefs':<25s} {o:>10d} {e:>10d} {delta_str:>10s}{marker}")
-    o = original["organizations"]["folder_count"]
-    e = exported["organizations"]["folder_count"]
-    delta = e - o
-    delta_str = f"{delta:+d}" if delta != 0 else "0"
-    marker = " *" if delta != 0 else ""
-    print(f"  {'Org folders':<25s} {o:>10d} {e:>10d} {delta_str:>10s}{marker}")
+    orgs_o, orgs_e = original["organizations"], exported["organizations"]
+    print_count_row("Org items (total)", (orgs_o["total_items"], orgs_e["total_items"]))
+    print_count_row("Org identifierRefs", (len(orgs_o["identifier_refs"]), len(orgs_e["identifier_refs"])))
+    print_count_row("Org folders", (orgs_o["folder_count"], orgs_e["folder_count"]))
     print()
 
-    # Detailed checks
+
+def print_checks(comparison):
+    """Print every check, the summary line and the overall result."""
     print("  ---- Checks ----")
     pass_count = fail_count = warn_count = 0
-    for status, message in results:
+    for status, message in comparison.results:
         icon = {"PASS": "  [PASS]", "FAIL": "  [FAIL]", "WARN": "  [WARN]"}[status]
         print(f"  {icon} {message}")
         if status == "PASS":
@@ -362,14 +350,26 @@ def print_report(original, exported, results, all_pass, orig_path, exp_path):
     print(f"  Summary: {pass_count} passed, {fail_count} failed, {warn_count} warnings")
     print()
 
-    if all_pass:
+    if comparison.all_pass:
         print("  RESULT: ALL CHECKS PASSED")
     else:
         print("  RESULT: SOME CHECKS FAILED")
     print("=" * 70)
 
 
-def print_json(original, exported, results, all_pass):
+def print_report(comparison, paths):
+    """Print human-readable comparison report; ``paths`` is (original, exported)."""
+    print("=" * 70)
+    print("  ArchiMate Semantic Comparison Report")
+    print("=" * 70)
+    print(f"  Original : {paths[0]}")
+    print(f"  Exported : {paths[1]}")
+    print()
+    print_counts(comparison)
+    print_checks(comparison)
+
+
+def print_json(comparison):
     """Print JSON comparison report."""
 
     def counts(info):
@@ -384,10 +384,10 @@ def print_json(original, exported, results, all_pass):
         }
 
     output = {
-        "all_pass": all_pass,
-        "original": counts(original),
-        "exported": counts(exported),
-        "checks": [{"status": s, "message": m} for s, m in results],
+        "all_pass": comparison.all_pass,
+        "original": counts(comparison.original),
+        "exported": counts(comparison.exported),
+        "checks": [{"status": s, "message": m} for s, m in comparison.results],
     }
     print(json_module.dumps(output, indent=2))
 
@@ -422,14 +422,14 @@ def main():
         print(f"ERROR: Failed to parse exported XML: {e}", file=sys.stderr)
         sys.exit(2)
 
-    results, all_pass = compare(original, exported)
+    comparison = Comparison(original, exported, *compare(original, exported))
 
     if json_output:
-        print_json(original, exported, results, all_pass)
+        print_json(comparison)
     else:
-        print_report(original, exported, results, all_pass, original_file, exported_file)
+        print_report(comparison, (original_file, exported_file))
 
-    sys.exit(0 if all_pass else 1)
+    sys.exit(0 if comparison.all_pass else 1)
 
 
 if __name__ == "__main__":
