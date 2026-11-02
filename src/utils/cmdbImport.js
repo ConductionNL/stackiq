@@ -647,13 +647,13 @@ function unpackedLimitTitle(details) {
  * @type {Object<string, function(object, {sheetNames: Array<string>, archiveSheet: string|null}): {title: string, hint: string}>}
  */
 const ERROR_TEXTS = Object.freeze({
-	NO_FILE_UPLOADED() {
+	NO_FILE_UPLOADED: () => {
 		return {
 			title: t('stackiq', 'No file was uploaded.'),
 			hint: t('stackiq', 'Choose the TOPdesk export and try again.'),
 		}
 	},
-	NOT_XLSX() {
+	NOT_XLSX: () => {
 		return {
 			title: t('stackiq', 'This file is not an Excel workbook (.xlsx).'),
 			hint: t(
@@ -662,7 +662,7 @@ const ERROR_TEXTS = Object.freeze({
 			),
 		}
 	},
-	FILE_TOO_LARGE(details) {
+	FILE_TOO_LARGE: (details) => {
 		return {
 			title:
 				Number(details.maxBytes) > 0
@@ -679,7 +679,7 @@ const ERROR_TEXTS = Object.freeze({
 			),
 		}
 	},
-	MISSING_RECORDS_UNSUPPORTED() {
+	MISSING_RECORDS_UNSUPPORTED: () => {
 		return {
 			title: t(
 				'stackiq',
@@ -688,7 +688,7 @@ const ERROR_TEXTS = Object.freeze({
 			hint: '',
 		}
 	},
-	FIELD_INVALID(details) {
+	FIELD_INVALID: (details) => {
 		const accepted = Array.isArray(details.accepted)
 			? details.accepted.map((value) => String(value))
 			: []
@@ -710,7 +710,7 @@ const ERROR_TEXTS = Object.freeze({
 					: t('stackiq', 'Reload the page and try again.'),
 		}
 	},
-	UPLOAD_FAILED() {
+	UPLOAD_FAILED: () => {
 		return {
 			title: t('stackiq', 'The server could not store the uploaded file.'),
 			hint: t(
@@ -719,7 +719,7 @@ const ERROR_TEXTS = Object.freeze({
 			),
 		}
 	},
-	MUNICIPALITY_REQUIRED() {
+	MUNICIPALITY_REQUIRED: () => {
 		return {
 			title: t('stackiq', 'Choose a municipality first.'),
 			hint: t(
@@ -728,7 +728,7 @@ const ERROR_TEXTS = Object.freeze({
 			),
 		}
 	},
-	MUNICIPALITY_INVALID() {
+	MUNICIPALITY_INVALID: () => {
 		return {
 			title: t('stackiq', 'The chosen organisation is not a municipality.'),
 			hint: t(
@@ -737,7 +737,7 @@ const ERROR_TEXTS = Object.freeze({
 			),
 		}
 	},
-	NO_SOURCE_SHEET(details, names) {
+	NO_SOURCE_SHEET: (details, names) => {
 		const expected =
 			Array.isArray(details.expected) && details.expected.length > 0
 				? details.expected.map((name) => String(name))
@@ -764,7 +764,7 @@ const ERROR_TEXTS = Object.freeze({
 						),
 		}
 	},
-	MISSING_COLUMN(details) {
+	MISSING_COLUMN: (details) => {
 		return {
 			title: t(
 				'stackiq',
@@ -781,7 +781,7 @@ const ERROR_TEXTS = Object.freeze({
 			),
 		}
 	},
-	TOO_MANY_ROWS(details) {
+	TOO_MANY_ROWS: (details) => {
 		return {
 			title: details.sheet
 				? t(
@@ -805,7 +805,7 @@ const ERROR_TEXTS = Object.freeze({
 						),
 		}
 	},
-	MAPPING_UNAVAILABLE() {
+	MAPPING_UNAVAILABLE: () => {
 		return {
 			title: t('stackiq', 'The import mapping cannot run.'),
 			hint: t(
@@ -814,7 +814,7 @@ const ERROR_TEXTS = Object.freeze({
 			),
 		}
 	},
-	READER_UNAVAILABLE() {
+	READER_UNAVAILABLE: () => {
 		return {
 			title: t('stackiq', 'The Excel reader is not available.'),
 			hint: t(
@@ -823,7 +823,7 @@ const ERROR_TEXTS = Object.freeze({
 			),
 		}
 	},
-	NOT_CONFIGURED() {
+	NOT_CONFIGURED: () => {
 		return {
 			title: t('stackiq', 'Stackiq is not configured for the import.'),
 			hint: t(
@@ -832,10 +832,10 @@ const ERROR_TEXTS = Object.freeze({
 			),
 		}
 	},
-	WORKBOOK_TOO_LARGE(details, names) {
+	WORKBOOK_TOO_LARGE: (details, names) => {
 		return workbookTooLarge(details, names)
 	},
-	SCHEMA_OUTDATED(details) {
+	SCHEMA_OUTDATED: (details) => {
 		return {
 			title: details.schema
 				? t(
@@ -851,7 +851,7 @@ const ERROR_TEXTS = Object.freeze({
 			),
 		}
 	},
-	IMPORT_IN_PROGRESS() {
+	IMPORT_IN_PROGRESS: () => {
 		return {
 			title: t('stackiq', 'Another CMDB import is running.'),
 			hint: t(
@@ -860,7 +860,7 @@ const ERROR_TEXTS = Object.freeze({
 			),
 		}
 	},
-	MUNICIPALITY_AMBIGUOUS(details) {
+	MUNICIPALITY_AMBIGUOUS: (details) => {
 		return {
 			title:
 				Array.isArray(details.matches) && details.matches.length > 1
@@ -877,7 +877,7 @@ const ERROR_TEXTS = Object.freeze({
 			),
 		}
 	},
-	ARCHIVE_UNAVAILABLE() {
+	ARCHIVE_UNAVAILABLE: () => {
 		return {
 			title: t(
 				'stackiq',
@@ -889,19 +889,19 @@ const ERROR_TEXTS = Object.freeze({
 			),
 		}
 	},
-	OPERATION_NOT_FOUND() {
+	OPERATION_NOT_FOUND: () => {
 		return {
 			title: t('stackiq', 'This import is no longer running.'),
 			hint: '',
 		}
 	},
-	NOT_SIGNED_IN() {
+	NOT_SIGNED_IN: () => {
 		return {
 			title: t('stackiq', 'You are not signed in.'),
 			hint: t('stackiq', 'Sign in again and retry the import.'),
 		}
 	},
-	NOT_ADMIN() {
+	NOT_ADMIN: () => {
 		return {
 			title: t(
 				'stackiq',
@@ -910,19 +910,19 @@ const ERROR_TEXTS = Object.freeze({
 			hint: '',
 		}
 	},
-	CSRF_FAILED() {
+	CSRF_FAILED: () => {
 		return {
 			title: t('stackiq', 'Your session has expired.'),
 			hint: t('stackiq', 'Reload the page and try again.'),
 		}
 	},
-	NETWORK_ERROR() {
+	NETWORK_ERROR: () => {
 		return {
 			title: t('stackiq', 'The server could not be reached.'),
 			hint: t('stackiq', 'Check the connection and try again.'),
 		}
 	},
-	IMPORT_INTERRUPTED() {
+	IMPORT_INTERRUPTED: () => {
 		return {
 			title: t('stackiq', 'The page got no answer from the import.'),
 			hint: t(
@@ -931,7 +931,7 @@ const ERROR_TEXTS = Object.freeze({
 			),
 		}
 	},
-	IMPORT_FAILED() {
+	IMPORT_FAILED: () => {
 		return {
 			title: t('stackiq', 'The import failed unexpectedly.'),
 			hint: t(
