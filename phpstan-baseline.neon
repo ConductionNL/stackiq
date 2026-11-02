@@ -76,16 +76,6 @@ parameters:
 			path: lib/Service/AangebodenGebruikService.php
 
 		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\AangebodenGebruikService\\:\\:checkOrganisationOwnership\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/AangebodenGebruikService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\AangebodenGebruikService\\:\\:getApplicationsOwnedByOrganisation\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/AangebodenGebruikService.php
-
-		-
 			message: "#^Property OCA\\\\Stackiq\\\\Service\\\\AangebodenGebruikService\\:\\:\\$config is never read, only written\\.$#"
 			count: 1
 			path: lib/Service/AangebodenGebruikService.php
