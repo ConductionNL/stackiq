@@ -2,6 +2,103 @@ import { showError, showSuccess } from '@nextcloud/dialogs'
 import { defineStore } from 'pinia'
 
 /**
+ * Fetch a URL and parse the JSON answer.
+ *
+ * @param {string} url The URL.
+ * @param {object} [options] The fetch options.
+ * @return {Promise<object>} The parsed answer.
+ * @throws {Error} `HTTP <status>: <statusText>` when the answer is not ok.
+ * @spec openspec/specs/fe-stores/spec.md
+ */
+async function fetchJson(url, options) {
+	const response = await fetch(url, options)
+	if (!response.ok) {
+		throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+	}
+	return response.json()
+}
+
+/**
+ * A fresh configuration with no schema chosen for any object type.
+ *
+ * @return {object} Schema selection per configuration key.
+ * @spec openspec/specs/fe-stores/spec.md
+ */
+function emptyConfiguration() {
+	return {
+		amef_element_schema: { schema: null },
+		amef_organization_schema: { schema: null },
+		amef_relation_schema: { schema: null },
+		amef_view_schema: { schema: null },
+		amef_model_schema: { schema: null },
+		amef_property_definition_schema: { schema: null },
+		voorzieningen_sector_schema: { schema: null },
+		voorzieningen_suite_schema: { schema: null },
+		voorzieningen_dienst_schema: { schema: null },
+		voorzieningen_kwetsbaarheid_schema: { schema: null },
+		voorzieningen_contactpersoon_schema: { schema: null },
+		voorzieningen_organisatie_schema: { schema: null },
+		voorzieningen_gebruik_schema: { schema: null },
+		voorzieningen_contract_schema: { schema: null },
+		voorzieningen_koppeling_schema: { schema: null },
+		voorzieningen_beoordeeling_schema: { schema: null },
+		voorzieningen_module_schema: { schema: null },
+		voorzieningen_compliancy_schema: { schema: null },
+		voorzieningen_moduleVersie_schema: { schema: null },
+	}
+}
+
+/**
+ * Fresh, unconfigured object statistics for both registers.
+ *
+ * @return {object} The statistics.
+ * @spec openspec/specs/fe-stores/spec.md
+ */
+function emptyStatistics() {
+	const empty = () => ({ config: {}, object_counts: {}, configured: false })
+	return { voorzieningen: empty(), amef: empty(), timestamp: null }
+}
+
+/**
+ * Write the user group configuration into the store: the three role lists,
+ * every group, and the top-level copies the components read.
+ *
+ * @param {object} store The settings store.
+ * @param {object} config The user group configuration from the API.
+ * @return {void}
+ * @spec openspec/specs/fe-stores/spec.md
+ */
+function applyUserGroups(store, config) {
+	store.userGroups = {
+		generic: config.generic || [],
+		organizationAdmin: config.organizationAdmin || [],
+		superUser: config.superUser || [],
+	}
+	store.allGroups = config.allGroups || []
+	store.genericUserGroups = [...(config.generic || [])]
+	store.organizationAdminGroups = [...(config.organizationAdmin || [])]
+	store.superUserGroups = [...(config.superUser || [])]
+}
+
+/**
+ * Write the ArchiMate import/export status into the store, and stop polling
+ * once neither is running.
+ *
+ * @param {object} store The settings store.
+ * @param {object} status The status from the API.
+ * @return {void}
+ * @spec openspec/specs/fe-stores/spec.md
+ */
+function applyArchiMateStatus(store, status) {
+	store.archimateStatus = status
+	store.isImportRunning = status.import?.status === 'running'
+	store.isExportRunning = status.export?.status === 'running'
+	if (!store.isImportRunning && !store.isExportRunning) {
+		store.stopStatusPolling()
+	}
+}
+
+/**
  * Settings store for managing all settings-related state and business logic
  *
  * This store handles:
@@ -51,29 +148,7 @@ export const useSettingsStore = defineStore('settings', {
 		amefSchemas: [],
 
 		// Configuration
-		configuration: {
-			// AMEF register configuration - updated to match current schemas
-			amef_element_schema: { schema: null },
-			amef_organization_schema: { schema: null },
-			amef_relation_schema: { schema: null },
-			amef_view_schema: { schema: null },
-			amef_model_schema: { schema: null },
-			amef_property_definition_schema: { schema: null },
-			// Voorzieningen register configuration - updated to match current schemas
-			voorzieningen_sector_schema: { schema: null },
-			voorzieningen_suite_schema: { schema: null },
-			voorzieningen_dienst_schema: { schema: null },
-			voorzieningen_kwetsbaarheid_schema: { schema: null },
-			voorzieningen_contactpersoon_schema: { schema: null },
-			voorzieningen_organisatie_schema: { schema: null },
-			voorzieningen_gebruik_schema: { schema: null },
-			voorzieningen_contract_schema: { schema: null },
-			voorzieningen_koppeling_schema: { schema: null },
-			voorzieningen_beoordeeling_schema: { schema: null },
-			voorzieningen_module_schema: { schema: null },
-			voorzieningen_compliancy_schema: { schema: null },
-			voorzieningen_moduleVersie_schema: { schema: null },
-		},
+		configuration: emptyConfiguration(),
 
 		// ArchiMate status and operations
 		archimateStatus: {
@@ -129,19 +204,7 @@ export const useSettingsStore = defineStore('settings', {
 		},
 
 		// Statistics
-		statistics: {
-			voorzieningen: {
-				config: {},
-				object_counts: {},
-				configured: false,
-			},
-			amef: {
-				config: {},
-				object_counts: {},
-				configured: false,
-			},
-			timestamp: null,
-		},
+		statistics: emptyStatistics(),
 		loadingStats: false,
 
 		// Error handling
@@ -382,17 +445,9 @@ export const useSettingsStore = defineStore('settings', {
 			this.loadingStatistics = true
 
 			try {
-				const response = await fetch(
+				const data = await fetchJson(
 					'/index.php/apps/stackiq/api/objects/counts',
 				)
-
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-
-				const data = await response.json()
 
 				if (data.success && data.counts) {
 					// Update statistics with object counts
@@ -435,13 +490,7 @@ export const useSettingsStore = defineStore('settings', {
 
 			try {
 				// Load basic settings first (minimal data)
-				const response = await fetch('/index.php/apps/stackiq/api/settings')
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-				const data = await response.json()
+				const data = await fetchJson('/index.php/apps/stackiq/api/settings')
 				if (data.success !== false) {
 					// OpenRegister dependency check
 					this.openRegisters = data.openRegisters ?? false
@@ -548,15 +597,9 @@ export const useSettingsStore = defineStore('settings', {
 		async loadVoorzieningenConfigFocused() {
 			this.loadingVoorzieningenSchemas = true
 			try {
-				const response = await fetch(
+				const data = await fetchJson(
 					'/index.php/apps/stackiq/api/voorzieningen/config',
 				)
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-				const data = await response.json()
 				if (data.success && data.config) {
 					this.voorzieningenRawConfig = data.config
 				}
@@ -575,15 +618,9 @@ export const useSettingsStore = defineStore('settings', {
 		async loadAmefConfigFocused() {
 			this.loadingAmefSchemas = true
 			try {
-				const response = await fetch(
+				const data = await fetchJson(
 					'/index.php/apps/stackiq/api/amef/config',
 				)
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-				const data = await response.json()
 				if (data.success && data.config) {
 					this.amefRawConfig = data.config
 				}
@@ -635,7 +672,7 @@ export const useSettingsStore = defineStore('settings', {
 		async loadGeneralConfig() {
 			this.loadingGeneralSettings = true
 			try {
-				const response = await fetch(
+				const data = await fetchJson(
 					'/index.php/apps/stackiq/api/settings/general/config',
 					{
 						headers: {
@@ -643,14 +680,6 @@ export const useSettingsStore = defineStore('settings', {
 						},
 					},
 				)
-
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-
-				const data = await response.json()
 				if (data.success && data.config) {
 					this.settings.catalogLocation = data.config.catalogLocation || ''
 				}
@@ -670,7 +699,7 @@ export const useSettingsStore = defineStore('settings', {
 		async loadSyncConfig() {
 			this.loadingSyncSettings = true
 			try {
-				const response = await fetch(
+				const data = await fetchJson(
 					'/index.php/apps/stackiq/api/settings/sync/config',
 					{
 						headers: {
@@ -678,14 +707,6 @@ export const useSettingsStore = defineStore('settings', {
 						},
 					},
 				)
-
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-
-				const data = await response.json()
 				if (data.success && data.config) {
 					this.settings.syncTimeWindow =
 						parseInt(data.config.syncTimeWindow) || 10
@@ -705,15 +726,9 @@ export const useSettingsStore = defineStore('settings', {
 		async loadVersionInfo() {
 			this.loadingVersionInfo = true
 			try {
-				const response = await fetch(
+				const data = await fetchJson(
 					'/index.php/apps/stackiq/api/settings/version',
 				)
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-				const data = await response.json()
 				if (data.success !== false) {
 					this.versionInfo = data
 				}
@@ -732,22 +747,11 @@ export const useSettingsStore = defineStore('settings', {
 		async loadArchiMateStatus() {
 			this.loadingArchiMateStatus = true
 			try {
-				const response = await fetch(
+				const data = await fetchJson(
 					'/index.php/apps/stackiq/api/archimate/status',
 				)
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-				const data = await response.json()
 				if (data.success && data.status) {
-					this.archimateStatus = data.status
-					this.isImportRunning = data.status.import?.status === 'running'
-					this.isExportRunning = data.status.export?.status === 'running'
-					if (!this.isImportRunning && !this.isExportRunning) {
-						this.stopStatusPolling()
-					}
+					applyArchiMateStatus(this, data.status)
 				}
 			} catch (error) {
 				// ignore
@@ -764,15 +768,9 @@ export const useSettingsStore = defineStore('settings', {
 		async loadObjectCounts() {
 			this.loadingObjectCounts = true
 			try {
-				const response = await fetch(
+				const data = await fetchJson(
 					'/index.php/apps/stackiq/api/objects/counts',
 				)
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-				const data = await response.json()
 				if (data.success && data.counts) {
 					if (data.counts.voorzieningen) {
 						this.statistics.voorzieningen.object_counts =
@@ -798,15 +796,9 @@ export const useSettingsStore = defineStore('settings', {
 		async loadEmailConfig() {
 			this.loadingEmailConfig = true
 			try {
-				const response = await fetch(
+				const data = await fetchJson(
 					'/index.php/apps/stackiq/api/email/config',
 				)
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-				const data = await response.json()
 				if (data.success && data.emailSettings) {
 					this.emailSettings = data.emailSettings
 					this.emailTemplates = data.emailTemplates || {}
@@ -826,28 +818,11 @@ export const useSettingsStore = defineStore('settings', {
 		async loadUserGroupsConfig() {
 			this.loadingUserGroups = true
 			try {
-				const response = await fetch(
+				const data = await fetchJson(
 					'/index.php/apps/stackiq/api/user-groups/config',
 				)
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-				const data = await response.json()
 				if (data.success && data.config) {
-					this.userGroups = {
-						generic: data.config.generic || [],
-						organizationAdmin: data.config.organizationAdmin || [],
-						superUser: data.config.superUser || [],
-					}
-					this.allGroups = data.config.allGroups || []
-					// Populate top-level arrays used by components
-					this.genericUserGroups = [...(data.config.generic || [])]
-					this.organizationAdminGroups = [
-						...(data.config.organizationAdmin || []),
-					]
-					this.superUserGroups = [...(data.config.superUser || [])]
+					applyUserGroups(this, data.config)
 				}
 			} catch (error) {
 				// ignore
@@ -862,26 +837,11 @@ export const useSettingsStore = defineStore('settings', {
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async loadUserGroupsOnly() {
-			const response = await fetch(
+			const data = await fetchJson(
 				'/index.php/apps/stackiq/api/user-groups/config',
 			)
-			if (!response.ok) {
-				throw new Error(`HTTP ${response.status}: ${response.statusText}`)
-			}
-			const data = await response.json()
 			if (data.success && data.config) {
-				this.userGroups = {
-					generic: data.config.generic || [],
-					organizationAdmin: data.config.organizationAdmin || [],
-					superUser: data.config.superUser || [],
-				}
-				this.allGroups = data.config.allGroups || []
-				// Populate top-level arrays used by components
-				this.genericUserGroups = [...(data.config.generic || [])]
-				this.organizationAdminGroups = [
-					...(data.config.organizationAdmin || []),
-				]
-				this.superUserGroups = [...(data.config.superUser || [])]
+				applyUserGroups(this, data.config)
 			}
 		},
 
@@ -893,15 +853,9 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async loadAmefConfig() {
 			try {
-				const response = await fetch(
+				const data = await fetchJson(
 					'/index.php/apps/stackiq/api/amef/config',
 				)
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-				const data = await response.json()
 				if (data.success && data.config) {
 					// Store raw AMEF config for mapping
 					this.amefRawConfig = data.config
@@ -919,15 +873,9 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async loadVoorzieningenConfig() {
 			try {
-				const response = await fetch(
+				const data = await fetchJson(
 					'/index.php/apps/stackiq/api/voorzieningen/config',
 				)
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-				const data = await response.json()
 				if (data.success && data.config) {
 					// Store raw Voorzieningen config for mapping
 					this.voorzieningenRawConfig = data.config
@@ -944,30 +892,7 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		initializeConfiguration() {
 			// Initialize register-specific configuration
-			this.configuration = {
-				// AMEF register configuration - updated to match current schemas
-				amef_element_schema: { schema: null },
-				amef_organization_schema: { schema: null },
-				amef_relation_schema: { schema: null },
-				amef_view_schema: { schema: null },
-				amef_model_schema: { schema: null },
-
-				amef_property_definition_schema: { schema: null },
-				// Voorzieningen register configuration - updated to match current schemas
-				voorzieningen_sector_schema: { schema: null },
-				voorzieningen_suite_schema: { schema: null },
-				voorzieningen_dienst_schema: { schema: null },
-				voorzieningen_kwetsbaarheid_schema: { schema: null },
-				voorzieningen_contactpersoon_schema: { schema: null },
-				voorzieningen_organisatie_schema: { schema: null },
-				voorzieningen_gebruik_schema: { schema: null },
-				voorzieningen_contract_schema: { schema: null },
-				voorzieningen_koppeling_schema: { schema: null },
-				voorzieningen_beoordeeling_schema: { schema: null },
-				voorzieningen_module_schema: { schema: null },
-				voorzieningen_compliancy_schema: { schema: null },
-				voorzieningen_moduleVersie_schema: { schema: null },
-			}
+			this.configuration = emptyConfiguration()
 		},
 
 		/**
@@ -1231,22 +1156,11 @@ export const useSettingsStore = defineStore('settings', {
 			}
 			this.isStatusPolling = true
 			try {
-				const response = await fetch(
+				const data = await fetchJson(
 					'/index.php/apps/stackiq/api/archimate/status',
 				)
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-				const data = await response.json()
 				if (data.success && data.status) {
-					this.archimateStatus = data.status
-					this.isImportRunning = data.status.import?.status === 'running'
-					this.isExportRunning = data.status.export?.status === 'running'
-					if (!this.isImportRunning && !this.isExportRunning) {
-						this.stopStatusPolling()
-					}
+					applyArchiMateStatus(this, data.status)
 				}
 			} catch (error) {
 				// ignore
@@ -1634,7 +1548,7 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async consolidatedAutoConfigure() {
 			try {
-				const response = await fetch(
+				const result = await fetchJson(
 					'/index.php/apps/stackiq/api/settings/auto-configure',
 					{
 						method: 'POST',
@@ -1645,14 +1559,6 @@ export const useSettingsStore = defineStore('settings', {
 						body: JSON.stringify({ force: true }),
 					},
 				)
-
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-
-				const result = await response.json()
 
 				if (result.success) {
 					// Reload settings to reflect the new configuration
@@ -1687,7 +1593,7 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async resetAutoConfig() {
 			try {
-				const response = await fetch(
+				const result = await fetchJson(
 					'/index.php/apps/stackiq/api/settings/reset-auto-config',
 					{
 						method: 'POST',
@@ -1698,12 +1604,6 @@ export const useSettingsStore = defineStore('settings', {
 						body: JSON.stringify({ resetConfiguration: false }),
 					},
 				)
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-				const result = await response.json()
 				// Refresh version info after reset
 				await this.loadVersionInfo()
 				return result
@@ -1721,7 +1621,7 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async forceUpdate() {
 			try {
-				const response = await fetch(
+				const result = await fetchJson(
 					'/index.php/apps/stackiq/api/settings/force-update',
 					{
 						method: 'POST',
@@ -1731,12 +1631,6 @@ export const useSettingsStore = defineStore('settings', {
 						},
 					},
 				)
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-				const result = await response.json()
 				// Reload all settings so UI reflects the new configuration fully
 				await this.loadSettings()
 				return result
@@ -1769,7 +1663,7 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async testEmailConnection() {
 			try {
-				const response = await fetch(
+				const result = await fetchJson(
 					'/index.php/apps/stackiq/api/email/test',
 					{
 						method: 'POST',
@@ -1783,14 +1677,6 @@ export const useSettingsStore = defineStore('settings', {
 						}),
 					},
 				)
-
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-
-				const result = await response.json()
 
 				if (result.success) {
 					showSuccess('Email connection test successful')
@@ -1822,7 +1708,7 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async sendTestEmail(testEmail = '') {
 			try {
-				const response = await fetch(
+				const result = await fetchJson(
 					'/index.php/apps/stackiq/api/email/test',
 					{
 						method: 'POST',
@@ -1838,14 +1724,6 @@ export const useSettingsStore = defineStore('settings', {
 						}),
 					},
 				)
-
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-
-				const result = await response.json()
 
 				if (result.success) {
 					showSuccess('Test email sent successfully')
@@ -1975,30 +1853,7 @@ export const useSettingsStore = defineStore('settings', {
 			this.amefRegister = null
 			this.voorzieningenSchemas = []
 			this.amefSchemas = []
-			this.configuration = {
-				// AMEF register configuration - updated to match current schemas
-				amef_element_schema: { schema: null },
-				amef_organization_schema: { schema: null },
-				amef_relation_schema: { schema: null },
-				amef_view_schema: { schema: null },
-				amef_model_schema: { schema: null },
-
-				amef_property_definition_schema: { schema: null },
-				// Voorzieningen register configuration - updated to match current schemas
-				voorzieningen_sector_schema: { schema: null },
-				voorzieningen_suite_schema: { schema: null },
-				voorzieningen_dienst_schema: { schema: null },
-				voorzieningen_kwetsbaarheid_schema: { schema: null },
-				voorzieningen_contactpersoon_schema: { schema: null },
-				voorzieningen_organisatie_schema: { schema: null },
-				voorzieningen_gebruik_schema: { schema: null },
-				voorzieningen_contract_schema: { schema: null },
-				voorzieningen_koppeling_schema: { schema: null },
-				voorzieningen_beoordeeling_schema: { schema: null },
-				voorzieningen_module_schema: { schema: null },
-				voorzieningen_compliancy_schema: { schema: null },
-				voorzieningen_moduleVersie_schema: { schema: null },
-			}
+			this.configuration = emptyConfiguration()
 			this.archimateStatus = {
 				import: {},
 				export: {},
@@ -2009,19 +1864,7 @@ export const useSettingsStore = defineStore('settings', {
 			this.genericUserGroups = []
 			this.organizationAdminGroups = []
 			this.superUserGroups = []
-			this.statistics = {
-				voorzieningen: {
-					config: {},
-					object_counts: {},
-					configured: false,
-				},
-				amef: {
-					config: {},
-					object_counts: {},
-					configured: false,
-				},
-				timestamp: null,
-			}
+			this.statistics = emptyStatistics()
 			this.loadingStats = false
 			this.error = null
 			this.importError = null
