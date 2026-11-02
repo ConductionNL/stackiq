@@ -26,7 +26,7 @@ const expected = process.env.RECORD_GOLDEN
 	: JSON.parse(readFileSync(GOLDEN, 'utf8'))
 
 const REGISTERS = [
-	{ id: 3, title: 'Voorzieningen', schemas: [{ id: 30 }] },
+	{ id: 3, title: 'Voorzieningen', name: 'vz', schemas: [{ id: 30 }] },
 	{ id: 4, name: 'Amef' },
 	{ id: '5', schemas: [] },
 ]
