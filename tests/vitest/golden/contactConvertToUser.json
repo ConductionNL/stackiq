@@ -1,0 +1,711 @@
+{
+	"not found": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"console.info",
+				"convertToUser called with:",
+				{
+					"id": "zz"
+				}
+			],
+			[
+				"console.info",
+				"organisationData.contactpersonen:",
+				[
+					{
+						"id": "a"
+					}
+				]
+			],
+			[
+				"console.info",
+				"Found contactpersoon at index:",
+				-1
+			],
+			[
+				"showError",
+				"stackiq:Contactpersoon not found in organisation data:null"
+			]
+		],
+		"rows": [
+			{
+				"id": "a"
+			}
+		]
+	},
+	"row is not an object": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"console.info",
+				"convertToUser called with:",
+				{}
+			],
+			[
+				"console.info",
+				"organisationData.contactpersonen:",
+				[
+					"plain"
+				]
+			],
+			[
+				"console.info",
+				"Found contactpersoon at index:",
+				0
+			],
+			[
+				"console.error",
+				"Contactpersoon is not an object:",
+				"plain"
+			],
+			[
+				"showError",
+				"stackiq:Invalid contact person data structure:null"
+			]
+		],
+		"rows": [
+			"plain"
+		]
+	},
+	"row is null": {
+		"outcome": "rejected: TypeError",
+		"trace": [
+			[
+				"console.info",
+				"convertToUser called with:",
+				{
+					"id": "a"
+				}
+			],
+			[
+				"console.info",
+				"organisationData.contactpersonen:",
+				[
+					null
+				]
+			]
+		],
+		"rows": [
+			null
+		]
+	},
+	"replaced with the API person": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"console.info",
+				"convertToUser called with:",
+				{
+					"id": "a"
+				}
+			],
+			[
+				"console.info",
+				"organisationData.contactpersonen:",
+				[
+					{
+						"id": "x"
+					},
+					{
+						"id": "new-1",
+						"uuid": "new-1",
+						"data": {
+							"voornaam": "Ada",
+							"achternaam": "Lovelace",
+							"e-mailadres": "ada@example.org",
+							"name": "Ada Lovelace",
+							"organization": "org-1",
+							"username": "ada",
+							"groups": [
+								"gebruik-raadpleger"
+							]
+						},
+						"loading": false
+					},
+					{
+						"id": "y"
+					}
+				]
+			],
+			[
+				"console.info",
+				"Found contactpersoon at index:",
+				1
+			],
+			[
+				"store.convertToUser",
+				"a",
+				[
+					"(no flag)",
+					true,
+					"(no flag)"
+				]
+			],
+			[
+				"console.info",
+				"Convert to user result:",
+				{
+					"contactPerson": {
+						"id": "new-1",
+						"voornaam": "Ada",
+						"achternaam": "Lovelace",
+						"e-mailadres": "ada@example.org",
+						"name": "Ada Lovelace",
+						"organization": "org-1",
+						"username": "ada",
+						"groups": [
+							"gebruik-raadpleger"
+						],
+						"extra": "dropped"
+					}
+				}
+			],
+			[
+				"console.info",
+				"Replacing contactpersoon at index:",
+				1,
+				{
+					"id": "new-1",
+					"uuid": "new-1",
+					"data": {
+						"voornaam": "Ada",
+						"achternaam": "Lovelace",
+						"e-mailadres": "ada@example.org",
+						"name": "Ada Lovelace",
+						"organization": "org-1",
+						"username": "ada",
+						"groups": [
+							"gebruik-raadpleger"
+						]
+					},
+					"loading": false
+				}
+			],
+			[
+				"console.info",
+				"Refreshing user info after successful conversion..."
+			],
+			[
+				"refreshUserData"
+			],
+			[
+				"showSuccess",
+				"stackiq:User account created successfully:null"
+			]
+		],
+		"rows": [
+			{
+				"id": "x"
+			},
+			{
+				"id": "new-1",
+				"uuid": "new-1",
+				"data": {
+					"voornaam": "Ada",
+					"achternaam": "Lovelace",
+					"e-mailadres": "ada@example.org",
+					"name": "Ada Lovelace",
+					"organization": "org-1",
+					"username": "ada",
+					"groups": [
+						"gebruik-raadpleger"
+					]
+				},
+				"loading": false
+			},
+			{
+				"id": "y"
+			}
+		]
+	},
+	"matched on uuid, id from @self, no groups": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"console.info",
+				"convertToUser called with:",
+				{
+					"id": "u1"
+				}
+			],
+			[
+				"console.info",
+				"organisationData.contactpersonen:",
+				[
+					{
+						"id": "self-1",
+						"uuid": "self-1",
+						"data": {
+							"voornaam": "B",
+							"achternaam": "(undefined)",
+							"e-mailadres": "(undefined)",
+							"name": "(undefined)",
+							"organization": "(undefined)",
+							"username": "(undefined)",
+							"groups": []
+						},
+						"loading": false
+					}
+				]
+			],
+			[
+				"console.info",
+				"Found contactpersoon at index:",
+				0
+			],
+			[
+				"store.convertToUser",
+				"u1",
+				[
+					true
+				]
+			],
+			[
+				"console.info",
+				"Convert to user result:",
+				{
+					"contactPerson": {
+						"@self": {
+							"id": "self-1"
+						},
+						"voornaam": "B"
+					}
+				}
+			],
+			[
+				"console.info",
+				"Replacing contactpersoon at index:",
+				0,
+				{
+					"id": "self-1",
+					"uuid": "self-1",
+					"data": {
+						"voornaam": "B",
+						"achternaam": "(undefined)",
+						"e-mailadres": "(undefined)",
+						"name": "(undefined)",
+						"organization": "(undefined)",
+						"username": "(undefined)",
+						"groups": []
+					},
+					"loading": false
+				}
+			],
+			[
+				"console.info",
+				"Refreshing user info after successful conversion..."
+			],
+			[
+				"refreshUserData"
+			],
+			[
+				"showSuccess",
+				"stackiq:User account created successfully:null"
+			]
+		],
+		"rows": [
+			{
+				"id": "self-1",
+				"uuid": "self-1",
+				"data": {
+					"voornaam": "B",
+					"achternaam": "(undefined)",
+					"e-mailadres": "(undefined)",
+					"name": "(undefined)",
+					"organization": "(undefined)",
+					"username": "(undefined)",
+					"groups": []
+				},
+				"loading": false
+			}
+		]
+	},
+	"id wins over @self": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"console.info",
+				"convertToUser called with:",
+				{
+					"id": "a"
+				}
+			],
+			[
+				"console.info",
+				"organisationData.contactpersonen:",
+				[
+					{
+						"id": "own",
+						"uuid": "own",
+						"data": {
+							"voornaam": "(undefined)",
+							"achternaam": "(undefined)",
+							"e-mailadres": "(undefined)",
+							"name": "(undefined)",
+							"organization": "(undefined)",
+							"username": "(undefined)",
+							"groups": []
+						},
+						"loading": false
+					}
+				]
+			],
+			[
+				"console.info",
+				"Found contactpersoon at index:",
+				0
+			],
+			[
+				"store.convertToUser",
+				"a",
+				[
+					true
+				]
+			],
+			[
+				"console.info",
+				"Convert to user result:",
+				{
+					"contactPerson": {
+						"id": "own",
+						"@self": {
+							"id": "self"
+						}
+					}
+				}
+			],
+			[
+				"console.info",
+				"Replacing contactpersoon at index:",
+				0,
+				{
+					"id": "own",
+					"uuid": "own",
+					"data": {
+						"voornaam": "(undefined)",
+						"achternaam": "(undefined)",
+						"e-mailadres": "(undefined)",
+						"name": "(undefined)",
+						"organization": "(undefined)",
+						"username": "(undefined)",
+						"groups": []
+					},
+					"loading": false
+				}
+			],
+			[
+				"console.info",
+				"Refreshing user info after successful conversion..."
+			],
+			[
+				"refreshUserData"
+			],
+			[
+				"showSuccess",
+				"stackiq:User account created successfully:null"
+			]
+		],
+		"rows": [
+			{
+				"id": "own",
+				"uuid": "own",
+				"data": {
+					"voornaam": "(undefined)",
+					"achternaam": "(undefined)",
+					"e-mailadres": "(undefined)",
+					"name": "(undefined)",
+					"organization": "(undefined)",
+					"username": "(undefined)",
+					"groups": []
+				},
+				"loading": false
+			}
+		]
+	},
+	"no contactPerson in the answer": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"console.info",
+				"convertToUser called with:",
+				{
+					"id": "a"
+				}
+			],
+			[
+				"console.info",
+				"organisationData.contactpersonen:",
+				[
+					{
+						"id": "a",
+						"loading": true
+					}
+				]
+			],
+			[
+				"console.info",
+				"Found contactpersoon at index:",
+				0
+			],
+			[
+				"store.convertToUser",
+				"a",
+				[
+					true
+				]
+			],
+			[
+				"console.info",
+				"Convert to user result:",
+				{
+					"message": "ok"
+				}
+			],
+			[
+				"console.info",
+				"Refreshing user info after successful conversion..."
+			],
+			[
+				"refreshUserData"
+			],
+			[
+				"showSuccess",
+				"stackiq:User account created successfully:null"
+			]
+		],
+		"rows": [
+			{
+				"id": "a",
+				"loading": true
+			}
+		]
+	},
+	"store call fails": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"console.info",
+				"convertToUser called with:",
+				{
+					"id": "a"
+				}
+			],
+			[
+				"console.info",
+				"organisationData.contactpersonen:",
+				[
+					{
+						"id": "a",
+						"loading": false
+					}
+				]
+			],
+			[
+				"console.info",
+				"Found contactpersoon at index:",
+				0
+			],
+			[
+				"store.convertToUser",
+				"a",
+				[
+					true
+				]
+			],
+			[
+				"console.error",
+				"Error in convertToUser:",
+				"Error: boom"
+			],
+			[
+				"showError",
+				"stackiq:Failed to create user account: {error}:{\"error\":\"boom\"}"
+			]
+		],
+		"rows": [
+			{
+				"id": "a",
+				"loading": false
+			}
+		]
+	},
+	"refresh fails after the row was replaced": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"console.info",
+				"convertToUser called with:",
+				{
+					"id": "a"
+				}
+			],
+			[
+				"console.info",
+				"organisationData.contactpersonen:",
+				[
+					{
+						"id": "new-1",
+						"uuid": "new-1",
+						"data": {
+							"voornaam": "Ada",
+							"achternaam": "Lovelace",
+							"e-mailadres": "ada@example.org",
+							"name": "Ada Lovelace",
+							"organization": "org-1",
+							"username": "ada",
+							"groups": [
+								"gebruik-raadpleger"
+							]
+						},
+						"loading": false
+					}
+				]
+			],
+			[
+				"console.info",
+				"Found contactpersoon at index:",
+				0
+			],
+			[
+				"store.convertToUser",
+				"a",
+				[
+					true
+				]
+			],
+			[
+				"console.info",
+				"Convert to user result:",
+				{
+					"contactPerson": {
+						"id": "new-1",
+						"voornaam": "Ada",
+						"achternaam": "Lovelace",
+						"e-mailadres": "ada@example.org",
+						"name": "Ada Lovelace",
+						"organization": "org-1",
+						"username": "ada",
+						"groups": [
+							"gebruik-raadpleger"
+						],
+						"extra": "dropped"
+					}
+				}
+			],
+			[
+				"console.info",
+				"Replacing contactpersoon at index:",
+				0,
+				{
+					"id": "new-1",
+					"uuid": "new-1",
+					"data": {
+						"voornaam": "Ada",
+						"achternaam": "Lovelace",
+						"e-mailadres": "ada@example.org",
+						"name": "Ada Lovelace",
+						"organization": "org-1",
+						"username": "ada",
+						"groups": [
+							"gebruik-raadpleger"
+						]
+					},
+					"loading": false
+				}
+			],
+			[
+				"console.info",
+				"Refreshing user info after successful conversion..."
+			],
+			[
+				"refreshUserData"
+			],
+			[
+				"console.error",
+				"Error in convertToUser:",
+				"Error: refresh failed"
+			],
+			[
+				"showError",
+				"stackiq:Failed to create user account: {error}:{\"error\":\"refresh failed\"}"
+			]
+		],
+		"rows": [
+			{
+				"id": "new-1",
+				"uuid": "new-1",
+				"data": {
+					"voornaam": "Ada",
+					"achternaam": "Lovelace",
+					"e-mailadres": "ada@example.org",
+					"name": "Ada Lovelace",
+					"organization": "org-1",
+					"username": "ada",
+					"groups": [
+						"gebruik-raadpleger"
+					]
+				},
+				"loading": false
+			}
+		]
+	},
+	"store call fails on a uuid row": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"console.info",
+				"convertToUser called with:",
+				{
+					"id": "a"
+				}
+			],
+			[
+				"console.info",
+				"organisationData.contactpersonen:",
+				[
+					{
+						"id": "",
+						"uuid": "a",
+						"loading": false
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"console.info",
+				"Found contactpersoon at index:",
+				0
+			],
+			[
+				"store.convertToUser",
+				"a",
+				[
+					true,
+					"(no flag)"
+				]
+			],
+			[
+				"console.error",
+				"Error in convertToUser:",
+				"Error: boom"
+			],
+			[
+				"showError",
+				"stackiq:Failed to create user account: {error}:{\"error\":\"boom\"}"
+			]
+		],
+		"rows": [
+			{
+				"id": "",
+				"uuid": "a",
+				"loading": false
+			},
+			{
+				"id": "b"
+			}
+		]
+	}
+}

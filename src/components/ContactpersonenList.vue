@@ -200,6 +200,118 @@ import ChangePasswordDialog from '../dialogs/ChangePasswordDialog.vue'
 import ManageUserGroupsDialog from '../dialogs/ManageUserGroupsDialog.vue'
 import { useOrganisatieStore } from '../store/modules/organisatie.js'
 
+/**
+ * Set the loading flag of a contact person row.
+ *
+ * @param {?object} row The row.
+ * @param {boolean} loading The new flag.
+ * @return {boolean} Whether the row is an object (and was updated).
+ * @spec openspec/specs/fe-organizations/spec.md
+ */
+function markLoading(row, loading) {
+	if (typeof row === 'object' && row !== null) {
+		row.loading = loading
+		return true
+	}
+	return false
+}
+
+/**
+ * Find the row of a contact person to convert and mark it as loading.
+ * Shows an error when the row is missing or not an object.
+ *
+ * @param {object} component The ContactpersonenList instance.
+ * @param {object} contactpersoon The contact person to convert.
+ * @return {number} The row index, or -1 when there is nothing to convert.
+ * @spec openspec/specs/fe-organizations/spec.md
+ */
+function claimContactRow(component, contactpersoon) {
+	const rows = component.organisationData.contactpersonen
+	console.info('convertToUser called with:', contactpersoon)
+	console.info('organisationData.contactpersonen:', rows)
+	const contactIndex = rows.findIndex(
+		(cp) => (cp.id || cp.uuid) === contactpersoon.id,
+	)
+	console.info('Found contactpersoon at index:', contactIndex)
+	if (contactIndex === -1) {
+		showError(
+			component.t('stackiq', 'Contactpersoon not found in organisation data'),
+		)
+		return -1
+	}
+	if (markLoading(rows[contactIndex], true)) {
+		return contactIndex
+	}
+	console.error('Contactpersoon is not an object:', rows[contactIndex])
+	showError(component.t('stackiq', 'Invalid contact person data structure'))
+	return -1
+}
+
+/**
+ * Contact person row built from the person the API returns, loading cleared.
+ *
+ * @param {object} person The contact person from the API.
+ * @return {object} The row.
+ * @spec openspec/specs/fe-organizations/spec.md
+ */
+function contactRowFromApi(person) {
+	const id = person.id || person['@self']?.id
+	return {
+		id,
+		uuid: id,
+		data: {
+			voornaam: person.voornaam,
+			achternaam: person.achternaam,
+			'e-mailadres': person['e-mailadres'],
+			name: person.name,
+			organization: person.organization,
+			username: person.username,
+			groups: person.groups || [],
+		},
+		loading: false,
+	}
+}
+
+/**
+ * Create the user account, replace the row with the API answer and refresh
+ * the user data.
+ *
+ * @param {object} component The ContactpersonenList instance.
+ * @param {{id: string, index: number}} target The contact person id and its row index.
+ * @return {Promise<void>}
+ * @spec openspec/specs/fe-organizations/spec.md
+ */
+async function createUserAccount(component, target) {
+	const result = await component.organisatieStore.convertToUser(target.id)
+	console.info('Convert to user result:', result)
+	if (result.contactPerson) {
+		const row = contactRowFromApi(result.contactPerson)
+		console.info('Replacing contactpersoon at index:', target.index, row)
+		component.organisationData.contactpersonen.splice(target.index, 1, row)
+	}
+	console.info('Refreshing user info after successful conversion...')
+	await component.refreshUserData()
+	showSuccess(component.t('stackiq', 'User account created successfully'))
+}
+
+/**
+ * Report a failed conversion and clear the row's loading flag.
+ *
+ * @param {object} component The ContactpersonenList instance.
+ * @param {{error: Error, index: number}} failure The error and the row index.
+ * @return {void}
+ * @spec openspec/specs/fe-organizations/spec.md
+ */
+function reportConversionError(component, failure) {
+	console.error('Error in convertToUser:', failure.error)
+	showError(
+		component.t('stackiq', 'Failed to create user account: {error}', {
+			error: failure.error.message,
+		}),
+	)
+	markLoading(component.organisationData.contactpersonen[failure.index], false)
+}
+
 export default {
 	name: 'ContactpersonenList',
 
@@ -583,105 +695,17 @@ export default {
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async convertToUser(contactpersoon) {
-			console.info('convertToUser called with:', contactpersoon)
-			console.info(
-				'organisationData.contactpersonen:',
-				this.organisationData.contactpersonen,
-			)
-
-			// Find the contactpersoon in the organisation data and set loading state
-			const contactIndex = this.organisationData.contactpersonen.findIndex(
-				(cp) => (cp.id || cp.uuid) === contactpersoon.id,
-			)
-
-			console.info('Found contactpersoon at index:', contactIndex)
-
+			const contactIndex = claimContactRow(this, contactpersoon)
 			if (contactIndex === -1) {
-				showError(
-					this.t(
-						'stackiq',
-						'Contactpersoon not found in organisation data',
-					),
-				)
 				return
 			}
-
-			// Set loading state on the specific contactpersoon - ensure it's an object first
-			const contactObject = this.organisationData.contactpersonen[contactIndex]
-			if (typeof contactObject === 'object' && contactObject !== null) {
-				contactObject.loading = true
-			} else {
-				console.error('Contactpersoon is not an object:', contactObject)
-				showError(this.t('stackiq', 'Invalid contact person data structure'))
-				return
-			}
-
 			try {
-				const result = await this.organisatieStore.convertToUser(
-					contactpersoon.id,
-				)
-
-				console.info('Convert to user result:', result)
-
-				// Replace the contactpersoon object with the updated one from the API
-				if (result.contactPerson) {
-					// The API returns the contactpersoon object directly, we need to structure it properly
-					const updatedContactpersoon = {
-						id:
-							result.contactPerson.id
-							|| result.contactPerson['@self']?.id,
-
-						uuid:
-							result.contactPerson.id
-							|| result.contactPerson['@self']?.id,
-
-						data: {
-							voornaam: result.contactPerson.voornaam,
-							achternaam: result.contactPerson.achternaam,
-							'e-mailadres': result.contactPerson['e-mailadres'],
-							name: result.contactPerson.name,
-							organization: result.contactPerson.organization,
-							username: result.contactPerson.username,
-							groups: result.contactPerson.groups || [],
-						},
-
-						loading: false, // Clear loading state
-					}
-
-					console.info(
-						'Replacing contactpersoon at index:',
-						contactIndex,
-						updatedContactpersoon,
-					)
-
-					// Replace the entire contactpersoon object in the organisation data
-					// eslint-disable-next-line vue/no-mutating-props -- @TODO: fix this.
-					this.organisationData.contactpersonen.splice(
-						contactIndex,
-						1,
-						updatedContactpersoon,
-					)
-				}
-
-				// Refresh user info for all contactpersonen to ensure the newly created user shows correct status
-				console.info('Refreshing user info after successful conversion...')
-				await this.refreshUserData()
-
-				showSuccess(this.t('stackiq', 'User account created successfully'))
+				await createUserAccount(this, {
+					id: contactpersoon.id,
+					index: contactIndex,
+				})
 			} catch (error) {
-				console.error('Error in convertToUser:', error)
-				showError(
-					this.t('stackiq', 'Failed to create user account: {error}', {
-						error: error.message,
-					}),
-				)
-
-				// Clear loading state on error - ensure it's an object first
-				const contactObject =
-					this.organisationData.contactpersonen[contactIndex]
-				if (typeof contactObject === 'object' && contactObject !== null) {
-					contactObject.loading = false
-				}
+				reportConversionError(this, { error, index: contactIndex })
 			}
 		},
 
