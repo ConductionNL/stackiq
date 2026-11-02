@@ -111,6 +111,15 @@ const SCHEMA_CASES = {
 		},
 		type: 'element',
 	},
+	'amef blob wins over amefConfig': {
+		ctx: {
+			settings: {
+				amef: { register: 5, element_schema: 6 },
+				amefConfig: { register: 7, element_schema: 2 },
+			},
+		},
+		type: 'element',
+	},
 	'amef without register falls to legacy': {
 		ctx: {
 			settings: {
@@ -200,6 +209,15 @@ const SAVE_CASES = {
 	'typed answer without id': {
 		args: ['app', { name: 'n' }],
 		answer: { ok: true, body: { name: 'n' } },
+	},
+	'typed create next to another cached type': {
+		args: ['app', { name: 'n' }],
+		answer: { ok: true, body: { id: 'a3' } },
+		objects: { module: { m1: { id: 'm1' } } },
+	},
+	'legacy without an item': {
+		args: [undefined, { register: 3, schema: 7 }],
+		answer: { ok: true, body: {} },
 	},
 	'typed failure': {
 		args: ['app', { id: 'a1' }],

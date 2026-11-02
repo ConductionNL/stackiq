@@ -40,6 +40,13 @@
 			"register": 7
 		}
 	},
+	"getSchemaConfig: amef blob wins over amefConfig": {
+		"result": {
+			"source": "openregister",
+			"schema": 6,
+			"register": 5
+		}
+	},
 	"getSchemaConfig: amef without register falls to legacy": {
 		"result": {
 			"source": "openregister",
@@ -228,6 +235,62 @@
 				null
 			]
 		]
+	},
+	"saveObject: typed create next to another cached type": {
+		"result": {
+			"id": "a3"
+		},
+		"fetch": [
+			[
+				"/url/app/null",
+				{
+					"method": "POST",
+					"headers": {
+						"requesttoken": "token",
+						"X-OpenRegister-Organisation": "org-1"
+					},
+					"body": "{\"name\":\"n\"}"
+				}
+			]
+		],
+		"args": [
+			"app",
+			{
+				"name": "n"
+			}
+		],
+		"objects": {
+			"module": {
+				"m1": {
+					"id": "m1"
+				}
+			},
+			"app": {
+				"a3": {
+					"id": "a3"
+				}
+			}
+		},
+		"calls": [
+			[
+				"_buildUrl",
+				"app",
+				null
+			]
+		]
+	},
+	"saveObject: legacy without an item": {
+		"error": "Error: Object item, register and schema are required",
+		"fetch": [],
+		"args": [
+			"(undefined)",
+			{
+				"register": 3,
+				"schema": 7
+			}
+		],
+		"objects": {},
+		"calls": []
 	},
 	"saveObject: typed failure": {
 		"error": "Error: Failed to save app object",
