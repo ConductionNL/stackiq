@@ -211,6 +211,110 @@ import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 import StandardTabs from '../../../components/StandardTabs.vue'
 import { settingsStore } from '../../../store/store.js'
 
+// One schema select per row on the voorzieningen tab.
+const VOORZIENINGEN_ITEMS = [
+	{
+		key: 'voorzieningen_organisatie_schema',
+		title: 'Organisatie Schema',
+		description: 'Schema for organizations',
+	},
+	{
+		key: 'voorzieningen_contactpersoon_schema',
+		title: 'Contactpersoon Schema',
+		description: 'Schema for contact persons',
+	},
+	{
+		key: 'voorzieningen_suite_schema',
+		title: 'Suite Schema',
+		description: 'Schema for suites',
+	},
+	{
+		key: 'voorzieningen_dienst_schema',
+		title: 'Dienst Schema',
+		description: 'Schema for services',
+	},
+	{
+		key: 'voorzieningen_kwetsbaarheid_schema',
+		title: 'Kwetsbaarheid Schema',
+		description: 'Schema for vulnerabilities',
+	},
+	{
+		key: 'voorzieningen_gebruik_schema',
+		title: 'Gebruik Schema',
+		description: 'Schema for usage',
+	},
+	{
+		key: 'voorzieningen_contract_schema',
+		title: 'Contract Schema',
+		description: 'Schema for contracts',
+	},
+	{
+		key: 'voorzieningen_koppeling_schema',
+		title: 'Koppeling Schema',
+		description: 'Schema for connections/links',
+	},
+	{
+		key: 'voorzieningen_beoordeeling_schema',
+		title: 'Beoordeeling Schema',
+		description: 'Schema for assessments',
+	},
+	{
+		key: 'voorzieningen_module_schema',
+		title: 'Module Schema',
+		description: 'Schema for modules',
+	},
+	{
+		key: 'voorzieningen_compliancy_schema',
+		title: 'Compliancy Schema',
+		description: 'Schema for compliance records',
+	},
+	{
+		key: 'voorzieningen_moduleVersie_schema',
+		title: 'Module Versie Schema',
+		description: 'Schema for module versions',
+	},
+	{
+		key: 'voorzieningen_sector_schema',
+		title: 'Sector Schema',
+		description: 'Schema for sectors',
+	},
+]
+
+// One schema select per row on the AMEF tab.
+const AMEF_ITEMS = [
+	{
+		key: 'amef_element_schema',
+		title: 'Element Schema',
+		description: 'Schema for ArchiMate elements',
+	},
+	{
+		key: 'amef_model_schema',
+		title: 'Model Schema',
+		description: 'Schema for ArchiMate models',
+	},
+	{
+		key: 'amef_organization_schema',
+		title: 'Organization Schema',
+		description: 'Schema for organizations in AMEF',
+	},
+	{
+		key: 'amef_property_definition_schema',
+		title: 'Property Definition Schema',
+		description: 'Schema for property definitions',
+	},
+	{
+		key: 'amef_relation_schema',
+		title: 'Relation Schema',
+		description: 'Schema for ArchiMate relationships',
+	},
+	{
+		key: 'amef_view_schema',
+		title: 'View Schema',
+		description: 'Schema for ArchiMate views',
+	},
+	// NOTE: 'amef_property_schema' removed - properties are never root-level AMEF objects, only nested within other elements
+]
+
 export default {
 	name: 'OpenRegisterIntegration',
 
@@ -330,73 +434,7 @@ export default {
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		voorzieningenItems() {
-			return [
-				{
-					key: 'voorzieningen_organisatie_schema',
-					title: 'Organisatie Schema',
-					description: 'Schema for organizations',
-				},
-				{
-					key: 'voorzieningen_contactpersoon_schema',
-					title: 'Contactpersoon Schema',
-					description: 'Schema for contact persons',
-				},
-				{
-					key: 'voorzieningen_suite_schema',
-					title: 'Suite Schema',
-					description: 'Schema for suites',
-				},
-				{
-					key: 'voorzieningen_dienst_schema',
-					title: 'Dienst Schema',
-					description: 'Schema for services',
-				},
-				{
-					key: 'voorzieningen_kwetsbaarheid_schema',
-					title: 'Kwetsbaarheid Schema',
-					description: 'Schema for vulnerabilities',
-				},
-				{
-					key: 'voorzieningen_gebruik_schema',
-					title: 'Gebruik Schema',
-					description: 'Schema for usage',
-				},
-				{
-					key: 'voorzieningen_contract_schema',
-					title: 'Contract Schema',
-					description: 'Schema for contracts',
-				},
-				{
-					key: 'voorzieningen_koppeling_schema',
-					title: 'Koppeling Schema',
-					description: 'Schema for connections/links',
-				},
-				{
-					key: 'voorzieningen_beoordeeling_schema',
-					title: 'Beoordeeling Schema',
-					description: 'Schema for assessments',
-				},
-				{
-					key: 'voorzieningen_module_schema',
-					title: 'Module Schema',
-					description: 'Schema for modules',
-				},
-				{
-					key: 'voorzieningen_compliancy_schema',
-					title: 'Compliancy Schema',
-					description: 'Schema for compliance records',
-				},
-				{
-					key: 'voorzieningen_moduleVersie_schema',
-					title: 'Module Versie Schema',
-					description: 'Schema for module versions',
-				},
-				{
-					key: 'voorzieningen_sector_schema',
-					title: 'Sector Schema',
-					description: 'Schema for sectors',
-				},
-			]
+			return VOORZIENINGEN_ITEMS
 		},
 
 		// Dynamic list of all AMEF schema config entries
@@ -404,39 +442,7 @@ export default {
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		amefItems() {
-			return [
-				{
-					key: 'amef_element_schema',
-					title: 'Element Schema',
-					description: 'Schema for ArchiMate elements',
-				},
-				{
-					key: 'amef_model_schema',
-					title: 'Model Schema',
-					description: 'Schema for ArchiMate models',
-				},
-				{
-					key: 'amef_organization_schema',
-					title: 'Organization Schema',
-					description: 'Schema for organizations in AMEF',
-				},
-				{
-					key: 'amef_property_definition_schema',
-					title: 'Property Definition Schema',
-					description: 'Schema for property definitions',
-				},
-				{
-					key: 'amef_relation_schema',
-					title: 'Relation Schema',
-					description: 'Schema for ArchiMate relationships',
-				},
-				{
-					key: 'amef_view_schema',
-					title: 'View Schema',
-					description: 'Schema for ArchiMate views',
-				},
-				// NOTE: 'amef_property_schema' removed - properties are never root-level AMEF objects, only nested within other elements
-			]
+			return AMEF_ITEMS
 		},
 
 		// Two-way computed properties for register selections
