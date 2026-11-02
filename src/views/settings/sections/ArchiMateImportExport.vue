@@ -707,6 +707,81 @@ import {
 } from '../../../utils/archiMateImportProgress.js'
 import { withHeartbeat } from '../../../utils/heartbeat.js'
 
+// The file name in a Content-Disposition header, quoted or not. The double
+// quote is written as \x22 because lizard reads a lone one as a string start.
+const FILENAME_PATTERN = /filename=\x22?([^\x22]*)\x22?/
+
+/**
+ * The download file name from a Content-Disposition header, or the fallback.
+ *
+ * @param {string|null} contentDisposition The header value.
+ * @param {string} fallbackName The name used when the header names no file.
+ * @return {string} The file name.
+ * @spec openspec/specs/fe-settings-ui/spec.md
+ */
+function downloadFileName(contentDisposition, fallbackName) {
+	const match = contentDisposition
+		? contentDisposition.match(FILENAME_PATTERN)
+		: null
+	return match ? match[1] : fallbackName
+}
+
+/**
+ * Save a fetch answer as a file download in the browser.
+ *
+ * @param {Response} response The answer.
+ * @param {string} fallbackName The file name when the answer names none.
+ * @return {Promise<void>}
+ * @spec openspec/specs/fe-settings-ui/spec.md
+ */
+async function downloadResponse(response, fallbackName) {
+	const blob = await response.blob()
+	const url = window.URL.createObjectURL(blob)
+	const fileName = downloadFileName(
+		response.headers.get('content-disposition'),
+		fallbackName,
+	)
+	const a = document.createElement('a')
+	a.href = url
+	a.download = fileName
+	document.body.appendChild(a)
+	a.click()
+	window.URL.revokeObjectURL(url)
+	document.body.removeChild(a)
+}
+
+/**
+ * Throw the error of a failed export answer.
+ *
+ * @param {Response} response The answer.
+ * @param {string} fallbackMessage The message when the answer carries none.
+ * @return {Promise<never>}
+ * @throws {Error} Always.
+ * @spec openspec/specs/fe-settings-ui/spec.md
+ */
+async function throwExportError(response, fallbackMessage) {
+	const errorData = await response.json()
+	throw new Error(errorData.message || fallbackMessage)
+}
+
+/**
+ * The import answer, unless it reports a failure.
+ *
+ * @param {object} result The parsed import answer.
+ * @return {object} The answer, also when the import was cancelled.
+ * @throws {Error} When the import did not succeed.
+ * @spec openspec/specs/fe-settings-ui/spec.md
+ */
+function importResultOrThrow(result) {
+	if (result.cancelled) {
+		return result
+	}
+	if (!result.success) {
+		throw new Error(result.error || result.message || 'Import failed')
+	}
+	return result
+}
+
 export default {
 	name: 'ArchiMateImportExport',
 
@@ -865,7 +940,23 @@ export default {
 			if (!this.selectedFile) {
 				return
 			}
+			this.beginImport()
+			try {
+				this.finishImport(await this.uploadArchiMateFile())
+			} catch (error) {
+				this.failImport(error)
+			} finally {
+				this.endImport()
+			}
+		},
 
+		/**
+		 * Reset the import state and start polling the import progress.
+		 *
+		 * @return {void}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		beginImport() {
 			this.importing = true
 			this.importResult = null
 			this.importError = null
@@ -879,77 +970,89 @@ export default {
 					this.importProgress = progress
 				},
 			})
+		},
 
-			try {
-				// Create FormData for file upload
-				const formData = new FormData()
-				formData.append('archiMateFile', this.selectedFile)
-				formData.append('operationId', this.operationId)
+		/**
+		 * Upload the selected file, kept alive by a heartbeat.
+		 *
+		 * @return {Promise<object>} The import answer.
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		async uploadArchiMateFile() {
+			const formData = new FormData()
+			formData.append('archiMateFile', this.selectedFile)
+			formData.append('operationId', this.operationId)
 
-				// Wrap the import operation with heartbeat to prevent 504 timeouts
-				const result = await withHeartbeat(async () => {
-					// Make the API call
-					// Note: Do not set Content-Type header for FormData - let browser set it with boundary
-					// Also remove OCS-APIREQUEST for file uploads as it interferes with multipart form data
-					const response = await fetch(
-						'/index.php/apps/stackiq/api/archimate/import',
-						{
-							method: 'POST',
-							headers: {
-								'X-Requested-With': 'XMLHttpRequest',
-							},
-							body: formData,
+			// Wrap the import operation with heartbeat to prevent 504 timeouts
+			return withHeartbeat(async () => {
+				// Note: Do not set Content-Type header for FormData - let browser set it with boundary
+				// Also remove OCS-APIREQUEST for file uploads as it interferes with multipart form data
+				const response = await fetch(
+					'/index.php/apps/stackiq/api/archimate/import',
+					{
+						method: 'POST',
+						headers: {
+							'X-Requested-With': 'XMLHttpRequest',
 						},
-					)
-
-					const result = await response.json()
-
-					if (result.cancelled) {
-						return result
-					}
-
-					if (!result.success) {
-						throw new Error(
-							result.error || result.message || 'Import failed',
-						)
-					}
-
-					return result
-				}, 30000) // 30-second heartbeat interval
-
-				if (result.cancelled) {
-					this.importCancelled = result
-					return
-				}
-
-				// Handle successful result
-				this.importResult = result
-				// Show success notification
-				OC.Notification.showTemporary(
-					`Successfully imported ${result.performance_metrics.objects_processed} objects in ${this.formatTime(result.performance_metrics.total_time_seconds)}`,
-					{ type: 'success' },
+						body: formData,
+					},
 				)
-			} catch (error) {
-				console.error('Error importing ArchiMate file:', error)
-				this.importError = {
-					message: error.message || 'Failed to import ArchiMate file',
-					details: error.details || null,
-				}
+				return importResultOrThrow(await response.json())
+			}, 30000) // 30-second heartbeat interval
+		},
 
-				// Show error notification
-				OC.Notification.showTemporary(
-					'Import failed: ' + this.importError.message,
-					{ type: 'error' },
-				)
-			} finally {
-				if (this.stopProgressPolling) {
-					this.stopProgressPolling()
-					this.stopProgressPolling = null
-				}
-				this.importing = false
-				this.cancelling = false
-				this.operationId = null
+		/**
+		 * Keep the import answer: a cancellation, or a result with a notification.
+		 *
+		 * @param {object} result The import answer.
+		 * @return {void}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		finishImport(result) {
+			if (result.cancelled) {
+				this.importCancelled = result
+				return
 			}
+			this.importResult = result
+			OC.Notification.showTemporary(
+				`Successfully imported ${result.performance_metrics.objects_processed} objects in ${this.formatTime(result.performance_metrics.total_time_seconds)}`,
+				{ type: 'success' },
+			)
+		},
+
+		/**
+		 * Keep and show the error of a failed import.
+		 *
+		 * @param {Error} error The error.
+		 * @return {void}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		failImport(error) {
+			console.error('Error importing ArchiMate file:', error)
+			this.importError = {
+				message: error.message || 'Failed to import ArchiMate file',
+				details: error.details || null,
+			}
+			OC.Notification.showTemporary(
+				'Import failed: ' + this.importError.message,
+				{ type: 'error' },
+			)
+		},
+
+		/**
+		 * Stop the progress polling and clear the running-import state.
+		 *
+		 * @return {void}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		endImport() {
+			if (this.stopProgressPolling) {
+				this.stopProgressPolling()
+				this.stopProgressPolling = null
+			}
+			this.importing = false
+			this.cancelling = false
+			this.operationId = null
 		},
 
 		/**
@@ -1003,46 +1106,21 @@ export default {
 						},
 					)
 
-					// Handle file download
-					if (response.ok) {
-						const blob = await response.blob()
-						const url = window.URL.createObjectURL(blob)
-
-						// Get filename from response headers or create default
-						const contentDisposition =
-							response.headers.get('content-disposition')
-						let fileName = 'archimate_export.xml'
-						if (contentDisposition) {
-							const match =
-								contentDisposition.match(/filename="?([^"]*)"?/)
-							if (match) {
-								fileName = match[1]
-							}
-						}
-
-						// Create download link and trigger download
-						const a = document.createElement('a')
-						a.href = url
-						a.download = fileName
-						document.body.appendChild(a)
-						a.click()
-						window.URL.revokeObjectURL(url)
-						document.body.removeChild(a)
-
-						// Show success notification
-						const orgName = this.selectedOrganization
-							? this.organizationOptions.find(
-									(opt) => opt.value === this.selectedOrganization,
-								)?.label
-							: 'Generic'
-						OC.Notification.showTemporary(
-							`ArchiMate file exported successfully for ${orgName}`,
-							{ type: 'success' },
-						)
-					} else {
-						const errorData = await response.json()
-						throw new Error(errorData.message || 'Export failed')
+					if (!response.ok) {
+						await throwExportError(response, 'Export failed')
 					}
+					await downloadResponse(response, 'archimate_export.xml')
+
+					// Show success notification
+					const orgName = this.selectedOrganization
+						? this.organizationOptions.find(
+								(opt) => opt.value === this.selectedOrganization,
+							)?.label
+						: 'Generic'
+					OC.Notification.showTemporary(
+						`ArchiMate file exported successfully for ${orgName}`,
+						{ type: 'success' },
+					)
 				}, 30000) // 30-second heartbeat interval
 			} catch (error) {
 				console.error('Error exporting ArchiMate file:', error)
@@ -1086,43 +1164,21 @@ export default {
 						},
 					})
 
-					if (response.ok) {
-						const blob = await response.blob()
-						const blobUrl = window.URL.createObjectURL(blob)
-
-						const contentDisposition =
-							response.headers.get('content-disposition')
-						let fileName = 'archimate_org_export.xml'
-						if (contentDisposition) {
-							const match =
-								contentDisposition.match(/filename="?([^"]*)"?/)
-							if (match) {
-								fileName = match[1]
-							}
-						}
-
-						const a = document.createElement('a')
-						a.href = blobUrl
-						a.download = fileName
-						document.body.appendChild(a)
-						a.click()
-						window.URL.revokeObjectURL(blobUrl)
-						document.body.removeChild(a)
-
-						const orgLabel =
-							this.organizationOptions.find(
-								(opt) => opt.value === orgUuid,
-							)?.label ?? 'Organization'
-						OC.Notification.showTemporary(
-							`Organization ArchiMate file exported for ${orgLabel}`,
-							{ type: 'success' },
-						)
-					} else {
-						const errorData = await response.json()
-						throw new Error(
-							errorData.message || 'Organization export failed',
+					if (!response.ok) {
+						await throwExportError(
+							response,
+							'Organization export failed',
 						)
 					}
+					await downloadResponse(response, 'archimate_org_export.xml')
+
+					const orgLabel =
+						this.organizationOptions.find((opt) => opt.value === orgUuid)
+							?.label ?? 'Organization'
+					OC.Notification.showTemporary(
+						`Organization ArchiMate file exported for ${orgLabel}`,
+						{ type: 'success' },
+					)
 				}, 30000)
 			} catch (error) {
 				console.error('Error exporting organization ArchiMate file:', error)
