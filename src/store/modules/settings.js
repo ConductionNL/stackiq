@@ -184,6 +184,52 @@ function applyArchiMateStatus(store, status) {
 }
 
 /**
+ * The store fields that track a running ArchiMate import or export: the
+ * running flag and the last error.
+ *
+ * @type {{import: Array<string>, export: Array<string>}}
+ */
+const ARCHIMATE_RUN_FIELDS = {
+	import: ['isImportRunning', 'importError'],
+	export: ['isExportRunning', 'exportError'],
+}
+
+/**
+ * Clear the server-side status of an ArchiMate import or export, reset it in
+ * the store and refresh the status.
+ *
+ * @param {object} store The settings store.
+ * @param {string} kind The run: import or export.
+ * @return {Promise<void>}
+ */
+async function clearArchiMateStatus(store, kind) {
+	try {
+		const response = await fetch(
+			`/index.php/apps/stackiq/api/archimate/status/${kind}/clear`,
+			{ method: 'POST', headers: { 'Content-Type': 'application/json' } },
+		)
+		if (!response.ok) {
+			throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+		}
+		store.stopStatusPolling()
+		store.archimateStatus[kind] = {
+			status: null,
+			current_step: null,
+			progress: null,
+			statistics: null,
+		}
+		const [runningFlag, errorField] = ARCHIMATE_RUN_FIELDS[kind]
+		store[runningFlag] = false
+		store[errorField] = null
+		await store.refreshArchiMateStatus()
+		showSuccess(`ArchiMate ${kind} status cleared successfully`)
+	} catch (error) {
+		console.error(`Failed to clear ${kind} status:`, error)
+		showError(`Failed to clear ArchiMate ${kind} status: ` + error.message)
+	}
+}
+
+/**
  * The label of a register option: its title, its name or its id.
  *
  * @param {object} register The register.
@@ -1511,46 +1557,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async clearImportStatus() {
-			try {
-				const response = await fetch(
-					'/index.php/apps/stackiq/api/archimate/status/import/clear',
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-						},
-					},
-				)
-
-				if (response.ok) {
-					// Stop polling
-					this.stopStatusPolling()
-
-					// Clear frontend state immediately
-					this.archimateStatus.import = {
-						status: null,
-						current_step: null,
-						progress: null,
-						statistics: null,
-					}
-					this.isImportRunning = false
-					this.importError = null
-
-					// Refresh settings to get updated ArchiMate status
-					await this.refreshArchiMateStatus()
-
-					showSuccess('ArchiMate import status cleared successfully')
-				} else {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-			} catch (error) {
-				console.error('Failed to clear import status:', error)
-				showError(
-					'Failed to clear ArchiMate import status: ' + error.message,
-				)
-			}
+			await clearArchiMateStatus(this, 'import')
 		},
 
 		/**
@@ -1560,46 +1567,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async clearExportStatus() {
-			try {
-				const response = await fetch(
-					'/index.php/apps/stackiq/api/archimate/status/export/clear',
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-						},
-					},
-				)
-
-				if (response.ok) {
-					// Stop polling
-					this.stopStatusPolling()
-
-					// Clear frontend state immediately
-					this.archimateStatus.export = {
-						status: null,
-						current_step: null,
-						progress: null,
-						statistics: null,
-					}
-					this.isExportRunning = false
-					this.exportError = null
-
-					// Refresh settings to get updated ArchiMate status
-					await this.refreshArchiMateStatus()
-
-					showSuccess('ArchiMate export status cleared successfully')
-				} else {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-			} catch (error) {
-				console.error('Failed to clear export status:', error)
-				showError(
-					'Failed to clear ArchiMate export status: ' + error.message,
-				)
-			}
+			await clearArchiMateStatus(this, 'export')
 		},
 
 		/**
