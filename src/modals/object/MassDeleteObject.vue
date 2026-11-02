@@ -3,7 +3,7 @@
 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 */
 
 <script setup>
-import { catalogStore, navigationStore, objectStore } from '../../store/store.js'
+import { navigationStore, objectStore } from '../../store/store.js'
 </script>
 
 <template>
@@ -88,6 +88,7 @@ import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import Cancel from 'vue-material-design-icons/Cancel.vue'
 import TrashCanOutline from 'vue-material-design-icons/TrashCanOutline.vue'
 import SelectedObjectsList from '../../components/SelectedObjectsList.vue'
+import { runMassObjectAction } from '../../utils/massObjectAction.js'
 
 export default {
 	name: 'MassDeleteObject',
@@ -184,44 +185,16 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async deleteObject() {
-			this.loading = true
-
-			try {
-				// Get the objects to delete
-				const objectsToProcess = [...(objectStore.selectedObjects || [])]
-
-				// Use the store's mass delete method
-				const { successful, failed } =
-					await objectStore.massDeleteObjects(objectsToProcess)
-
-				if (successful.length > 0) {
-					this.success = true
-					// Refresh publications using catalogStore
-					catalogStore.fetchPublications()
-
-					// Only auto-close if there are no failures
-					if (failed.length === 0) {
-						this.closeModalTimeout = setTimeout(() => {
-							this.closeDialog()
-						}, 2000)
-					}
-				}
-
-				if (failed.length > 0) {
-					this.error = this.t(
-						'stackiq',
-						'Failed to delete {count} objects',
-						{ count: failed.length },
-					)
-				}
-			} catch (error) {
-				this.success = false
-				this.error =
-					error.message
-					|| this.t('stackiq', 'An error occurred while deleting objects')
-			} finally {
-				this.loading = false
-			}
+			await runMassObjectAction(this, {
+				run: () =>
+					objectStore.massDeleteObjects([
+						...(objectStore.selectedObjects || []),
+					]),
+				failedText: (count) =>
+					this.t('stackiq', 'Failed to delete {count} objects', { count }),
+				errorText: () =>
+					this.t('stackiq', 'An error occurred while deleting objects'),
+			})
 		},
 
 		/**
