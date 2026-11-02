@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\Stackiq\Service\Settings\EmailTemplateDefaults;
+use OCA\Stackiq\Service\Settings\SettingsObjectCounts;
 use OCA\Stackiq\Service\Settings\VoorzieningenConfigNormalizer;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -4739,7 +4740,7 @@ class SettingsService {
 			$exportDecoded = json_decode($exportStatus, true);
 
 			// Get AMEF object counts.
-			$amefObjectCounts = $this->getAmefObjectCounts();
+			$amefObjectCounts = $this->objectCounts()->amefCounts();
 
 			$importValue = [];
 			if (is_array($importDecoded) === true) {
@@ -4762,189 +4763,6 @@ class SettingsService {
 			];
 		}//end try
 	}//end getArchiMateStatus()
-
-	/**
-	 * Get Voorzieningen object counts for statistics
-	 *
-	 * @return array Object counts for Voorzieningen schemas
-	 */
-	private function getVoorzieningenObjectCounts(): array {
-		try {
-			$objectService = $this->getObjectService();
-			if ($objectService === null) {
-				return [
-					'totalOrganisatieObjects' => 0,
-					'totalContactpersoonObjects' => 0,
-					'totalVoorzieningObjects' => 0,
-					'totalVoorzieningAanbodObjects' => 0,
-					'totalVoorzieningVersieObjects' => 0,
-					'totalKwetsbaarheidObjects' => 0,
-					'totalContractObjects' => 0,
-					'totalStandaardObjects' => 0,
-					'totalReviewObjects' => 0,
-					'totalKoppelingObjects' => 0,
-					'totalBeoordeelingObjects' => 0,
-					'totalVoorzieningModuleObjects' => 0,
-					'totalVerklaringObjects' => 0,
-					'totalKoppelingGebruikObjects' => 0,
-					'totalCompliancyObjects' => 0,
-					'totalModuleGebruikObjects' => 0,
-					'totalModuleVersieObjects' => 0,
-					'totalSectorObjects' => 0,
-					'totalGebruikObjects' => 0,
-				];
-			}//end if
-
-			$voorzieningenConfig = $this->getVoorzieningenConfig();
-			$registerId = $voorzieningenConfig['register'] ?? null;
-
-			// Define all schema mappings.
-			$schemaMappings = [
-				'organisatie_schema' => 'totalOrganisatieObjects',
-				'contactpersoon_schema' => 'totalContactpersoonObjects',
-				'voorziening_schema' => 'totalVoorzieningObjects',
-				'voorziening_aanbod_schema' => 'totalVoorzieningAanbodObjects',
-				'voorziening_versie_schema' => 'totalVoorzieningVersieObjects',
-				'kwetsbaarheid_schema' => 'totalKwetsbaarheidObjects',
-				'contract_schema' => 'totalContractObjects',
-				'standaard_schema' => 'totalStandaardObjects',
-				'review_schema' => 'totalReviewObjects',
-				'koppeling_schema' => 'totalKoppelingObjects',
-				'beoordeeling_schema' => 'totalBeoordeelingObjects',
-				'module_schema' => 'totalVoorzieningModuleObjects',
-				'verklaring_schema' => 'totalVerklaringObjects',
-				'koppeling_gebruik_schema' => 'totalKoppelingGebruikObjects',
-				'compliancy_schema' => 'totalCompliancyObjects',
-				'module_gebruik_schema' => 'totalModuleGebruikObjects',
-				'module_versie_schema' => 'totalModuleVersieObjects',
-				'sector_schema' => 'totalSectorObjects',
-				'gebruik_schema' => 'totalGebruikObjects',
-			];
-
-			$counts = [];
-
-			// Initialize all counts to 0.
-			foreach ($schemaMappings as $key => $countKey) {
-				$counts[$countKey] = 0;
-			}
-
-			// Count objects for each configured schema.
-			foreach ($schemaMappings as $configKey => $countKey) {
-				$schemaId = $voorzieningenConfig[$configKey] ?? null;
-
-				if ($registerId !== false && $schemaId === true) {
-					try {
-						$query = [
-							'@self' => [
-								'register' => (int)$registerId,
-								'schema' => (int)$schemaId,
-							],
-						];
-						// A true SQL COUNT via OpenRegister's countSearchObjects()
-						// — NOT count(searchObjects()), which would either
-						// hydrate the entire register into memory (unbounded)
-						// or, if bounded with `_limit`, silently under-report
-						// the total for a register larger than the limit.
-						$counts[$countKey] = $objectService->countSearchObjects($query);
-					} catch (\Exception $e) {
-						$this->logger->warning("Failed to get {$configKey} count", ['error' => $e->getMessage()]);
-					}
-				}
-			}//end foreach
-
-			$this->logger->debug('SettingsService: Retrieved Voorzieningen object counts', $counts);
-
-			return $counts;
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'SettingsService: Failed to get Voorzieningen object counts',
-				[
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			return [
-				'totalOrganisatieObjects' => 0,
-				'totalContactpersoonObjects' => 0,
-				'totalVoorzieningObjects' => 0,
-				'totalVoorzieningAanbodObjects' => 0,
-				'totalVoorzieningVersieObjects' => 0,
-				'totalKwetsbaarheidObjects' => 0,
-				'totalContractObjects' => 0,
-				'totalStandaardObjects' => 0,
-				'totalReviewObjects' => 0,
-				'totalKoppelingObjects' => 0,
-				'totalBeoordeelingObjects' => 0,
-				'totalVoorzieningModuleObjects' => 0,
-				'totalVerklaringObjects' => 0,
-				'totalKoppelingGebruikObjects' => 0,
-				'totalCompliancyObjects' => 0,
-				'totalModuleGebruikObjects' => 0,
-				'totalModuleVersieObjects' => 0,
-				'totalSectorObjects' => 0,
-				'totalGebruikObjects' => 0,
-			];
-		}//end try
-	}//end getVoorzieningenObjectCounts()
-
-	/**
-	 * Gets AMEF object counts for consolidated configuration
-	 *
-	 * This method retrieves counts of all AMEF object types using the ArchiMateService
-	 * and returns them in a format suitable for the consolidated configuration.
-	 *
-	 * @return array AMEF object counts
-	 */
-	private function getAmefObjectCounts(): array {
-		try {
-			// Get ArchiMateService from container to avoid circular dependency.
-			$archiMateService = $this->container->get(\OCA\Stackiq\Service\ArchiMateService::class);
-
-			// Get object counts using ArchiMateService methods.
-			$elementObjects = $archiMateService->getElementObjects();
-			$organizationObjects = $archiMateService->getOrganizationObjects();
-			$viewObjects = $archiMateService->getViewObjects();
-			$relationshipObjects = $archiMateService->getRelationshipObjects();
-			$modelObjects = $archiMateService->getModelObjects();
-
-			$this->logger->debug(
-				'SettingsService: Retrieved AMEF object counts',
-				[
-					'elementObjects' => count($elementObjects),
-					'organizationObjects' => count($organizationObjects),
-					'viewObjects' => count($viewObjects),
-					'relationshipObjects' => count($relationshipObjects),
-					'modelObjects' => count($modelObjects),
-				]
-			);
-
-			return [
-				'totalElementObjects' => count($elementObjects),
-				'totalOrganizationObjects' => count($organizationObjects),
-				'totalViewObjects' => count($viewObjects),
-				'totalRelationshipsObjects' => count($relationshipObjects),
-				'totalModelObjects' => count($modelObjects),
-			];
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'SettingsService: Failed to get AMEF object counts',
-				[
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			// Return zero counts on error to prevent API failures.
-			return [
-				'totalElementObjects' => 0,
-				'totalOrganizationObjects' => 0,
-				'totalViewObjects' => 0,
-				'totalRelationshipsObjects' => 0,
-				'totalModelObjects' => 0,
-			];
-		}//end try
-	}//end getAmefObjectCounts()
 
 	/**
 	 * Set ArchiMate import status
@@ -5604,98 +5422,23 @@ class SettingsService {
 	}//end getAllSettings()
 
 	/**
+	 * The counter behind the object counts and statistics.
+	 *
+	 * @return SettingsObjectCounts
+	 */
+	private function objectCounts(): SettingsObjectCounts {
+		return new SettingsObjectCounts(settings: $this, container: $this->container, logger: $this->logger);
+
+	}//end objectCounts()
+
+	/**
 	 * Get object counts statistics for all configured registers
 	 *
 	 * @return array Statistics for all registers with object counts
 	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function getObjectCountsStatistics(): array {
-		try {
-			$statistics = [
-				'voorzieningen' => [],
-				'amef' => [],
-				'timestamp' => time(),
-			];
-
-			// Get Voorzieningen statistics.
-			try {
-				$voorzieningenConfig = $this->getVoorzieningenConfig();
-				$voorzieningenCounts = $this->getVoorzieningenObjectCounts();
-
-				$statistics['voorzieningen'] = [
-					'config' => $voorzieningenConfig,
-					'object_counts' => $voorzieningenCounts,
-					'configured' => empty($voorzieningenConfig['register']) === false
-						&& empty($voorzieningenConfig['organisatie_schema']) === false,
-				];
-			} catch (\Exception $e) {
-				$this->logger->error('Failed to get Voorzieningen statistics', ['error' => $e->getMessage()]);
-				$statistics['voorzieningen'] = [
-					'config' => [],
-					'object_counts' => ['totalOrganisatieObjects' => 0, 'totalContactpersoonObjects' => 0],
-					'configured' => false,
-					'error' => $e->getMessage(),
-				];
-			}
-
-			// Get AMEF statistics.
-			try {
-				$amefConfig = $this->getAmefConfig();
-				$amefCounts = $this->getAmefObjectCounts();
-
-				$statistics['amef'] = [
-					'config' => $amefConfig,
-					'object_counts' => $amefCounts,
-					'configured' => empty($amefConfig['register_id']) === false
-						&& empty($amefConfig['elements_schema']) === false,
-				];
-			} catch (\Exception $e) {
-				$this->logger->error('Failed to get AMEF statistics', ['error' => $e->getMessage()]);
-				$statistics['amef'] = [
-					'config' => [],
-					'object_counts' => [
-						'totalElementObjects' => 0,
-						'totalOrganizationObjects' => 0,
-						'totalViewObjects' => 0,
-						'totalRelationshipsObjects' => 0,
-						'totalModelObjects' => 0,
-					],
-					'configured' => false,
-					'error' => $e->getMessage(),
-				];
-			}//end try
-
-			return $statistics;
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'SettingsService: Failed to get object counts statistics',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return [
-				'voorzieningen' => [
-					'config' => [],
-					'object_counts' => ['totalOrganisatieObjects' => 0, 'totalContactpersoonObjects' => 0],
-					'configured' => false,
-					'error' => $e->getMessage(),
-				],
-				'amef' => [
-					'config' => [],
-					'object_counts' => [
-						'totalElementObjects' => 0,
-						'totalOrganizationObjects' => 0,
-						'totalViewObjects' => 0,
-						'totalRelationshipsObjects' => 0,
-						'totalModelObjects' => 0,
-					],
-					'configured' => false,
-					'error' => $e->getMessage(),
-				],
-				'timestamp' => time(),
-				'error' => $e->getMessage(),
-			];
-		}//end try
+		return $this->objectCounts()->statistics();
 	}//end getObjectCountsStatistics()
 
 	/**
@@ -6221,8 +5964,8 @@ class SettingsService {
 	public function getObjectsCounts(): array {
 		try {
 			$counts = [
-				'voorzieningen' => $this->getVoorzieningenObjectCounts(),
-				'amef' => $this->getAmefObjectCounts(),
+				'voorzieningen' => $this->objectCounts()->voorzieningenCounts(),
+				'amef' => $this->objectCounts()->amefCounts(),
 				'timestamp' => time(),
 			];
 
