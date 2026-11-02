@@ -81,22 +81,7 @@ parameters:
 			path: lib/Service/AangebodenGebruikService.php
 
 		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\AangebodenGebruikService\\:\\:getAllObjectsForSchema\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/AangebodenGebruikService.php
-
-		-
 			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\AangebodenGebruikService\\:\\:getApplicationsOwnedByOrganisation\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/AangebodenGebruikService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\AangebodenGebruikService\\:\\:getKoppelingenConfiguration\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/AangebodenGebruikService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\AangebodenGebruikService\\:\\:getObjectsRelatedToUuid\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/AangebodenGebruikService.php
 
@@ -118,11 +103,6 @@ parameters:
 		-
 			message: "#^Cannot call method addAttribute\\(\\) on array\\<int, string\\>\\.$#"
 			count: 2
-			path: lib/Service/ArchiMateExportService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateExportService\\:\\:addDataToXmlNode\\(\\) is unused\\.$#"
-			count: 1
 			path: lib/Service/ArchiMateExportService.php
 
 		-
@@ -152,61 +132,6 @@ parameters:
 
 		-
 			message: "#^Comparison operation \"\\>\" between \\(array\\|float\\|int\\) and 0 results in an error\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateImportService.php
-
-		-
-			message: "#^Constant OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:CONFIG_KEYS is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateImportService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:calculateOptimizedStatistics\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateImportService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:debugViewNodeHierarchy\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateImportService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:extractNodesRecursively\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateImportService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:isAssoc\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateImportService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:logMemoryUsage\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateImportService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:saveObjectsDirectToService\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateImportService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:saveObjectsInParallelBatches\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateImportService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:saveObjectsInSingleBatch\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateImportService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:transformSectionObjectsBatch\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateImportService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateImportService\\:\\:transformViewsOptimized\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateImportService.php
 
@@ -291,62 +216,7 @@ parameters:
 			path: lib/Service/ArchiMateImportService.php
 
 		-
-			message: "#^Constant OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:CONFIG_KEYS is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:calculateObjectStatistics\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:calculateOptimizedStatistics\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:convertToOpenRegisterObjects\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:findItemsInSection\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:getAmefSchemaIdForType\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateService.php
-
-		-
 			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:getVoorzieningenConfig\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:initializeCache\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:isOperationInProgress\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:logMemoryUsage\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:saveObjectsToDatabase\\(\\) is unused\\.$#"
-			count: 1
-			path: lib/Service/ArchiMateService.php
-
-		-
-			message: "#^Method OCA\\\\Stackiq\\\\Service\\\\ArchiMateService\\:\\:transformArchiMateXmlToObjectsBatch\\(\\) is unused\\.$#"
 			count: 1
 			path: lib/Service/ArchiMateService.php
 
