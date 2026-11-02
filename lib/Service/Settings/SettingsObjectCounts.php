@@ -91,6 +91,7 @@ final class SettingsObjectCounts {
 	 * Object counts per voorzieningen schema, zero for every schema that cannot be counted.
 	 *
 	 * @return array<string, int>
+	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function voorzieningenCounts(): array {
 		try {
@@ -129,6 +130,7 @@ final class SettingsObjectCounts {
 	 * Object counts per AMEF type, zero for every type when ArchiMate cannot answer.
 	 *
 	 * @return array<string, int>
+	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function amefCounts(): array {
 		try {
@@ -171,6 +173,7 @@ final class SettingsObjectCounts {
 	 * whether they are configured.
 	 *
 	 * @return array
+	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function statistics(): array {
 		try {
