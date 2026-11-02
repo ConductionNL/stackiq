@@ -4791,6 +4791,1108 @@
 			"isAdmin": false
 		}
 	},
+	"clearImportStatus / ok": {
+		"outcome": {
+			"returned": "(undefined)"
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/status/import/clear",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json"
+					}
+				}
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/status",
+				"(no options)"
+			],
+			[
+				"showSuccess",
+				"ArchiMate import status cleared successfully"
+			]
+		],
+		"links": 0,
+		"state": {
+			"loading": false,
+			"saving": false,
+			"importing": false,
+			"exporting": false,
+			"loadingVersionInfo": false,
+			"loadingGeneralSettings": false,
+			"loadingSyncSettings": false,
+			"loadingStatistics": false,
+			"loadingOpenRegisterConfig": false,
+			"loadingRegisters": false,
+			"loadingVoorzieningenSchemas": false,
+			"loadingAmefSchemas": false,
+			"loadingUserGroups": false,
+			"loadingEmailConfig": false,
+			"loadingArchiMateStatus": false,
+			"loadingObjectCounts": false,
+			"loadingMainSettings": false,
+			"settings": {
+				"availableRegisters": []
+			},
+			"versionInfo": {},
+			"voorzieningenRegister": null,
+			"amefRegister": null,
+			"voorzieningenSchemas": [],
+			"amefSchemas": [],
+			"configuration": {
+				"amef_element_schema": {
+					"schema": null
+				},
+				"amef_organization_schema": {
+					"schema": null
+				},
+				"amef_relation_schema": {
+					"schema": null
+				},
+				"amef_view_schema": {
+					"schema": null
+				},
+				"amef_model_schema": {
+					"schema": null
+				},
+				"amef_property_definition_schema": {
+					"schema": null
+				},
+				"voorzieningen_sector_schema": {
+					"schema": null
+				},
+				"voorzieningen_suite_schema": {
+					"schema": null
+				},
+				"voorzieningen_dienst_schema": {
+					"schema": null
+				},
+				"voorzieningen_kwetsbaarheid_schema": {
+					"schema": null
+				},
+				"voorzieningen_contactpersoon_schema": {
+					"schema": null
+				},
+				"voorzieningen_organisatie_schema": {
+					"schema": null
+				},
+				"voorzieningen_gebruik_schema": {
+					"schema": null
+				},
+				"voorzieningen_contract_schema": {
+					"schema": null
+				},
+				"voorzieningen_koppeling_schema": {
+					"schema": null
+				},
+				"voorzieningen_beoordeeling_schema": {
+					"schema": null
+				},
+				"voorzieningen_module_schema": {
+					"schema": null
+				},
+				"voorzieningen_compliancy_schema": {
+					"schema": null
+				},
+				"voorzieningen_moduleVersie_schema": {
+					"schema": null
+				}
+			},
+			"archimateStatus": {
+				"import": {
+					"status": null,
+					"current_step": null,
+					"progress": null,
+					"statistics": null
+				},
+				"export": {
+					"status": "running",
+					"progress": 60
+				}
+			},
+			"isImportRunning": false,
+			"isExportRunning": true,
+			"statusPollingInterval": null,
+			"isStatusPolling": false,
+			"importOptions": {
+				"updateExisting": true,
+				"deleteOrphaned": false
+			},
+			"exportOptions": {
+				"includeViews": true,
+				"includeRelationships": true
+			},
+			"selectedFile": null,
+			"genericUserGroups": [],
+			"organizationAdminGroups": [],
+			"superUserGroups": [],
+			"emailSettings": {
+				"enabled": false,
+				"senderEmail": "",
+				"senderName": "",
+				"testReceiverOverride": "",
+				"organizationRegistrationEnabled": true,
+				"organizationActivationEnabled": true,
+				"userCreationEnabled": true,
+				"userPasswordEnabled": true,
+				"transportType": "smtp",
+				"smtpHost": "localhost",
+				"smtpPort": 587,
+				"smtpEncryption": "tls",
+				"smtpUsername": "",
+				"smtpPassword": "",
+				"sendgridApiKey": "",
+				"mailgunApiKey": "",
+				"mailgunDomain": "",
+				"postmarkApiKey": "",
+				"sesAccessKey": "",
+				"sesSecretKey": "",
+				"sesRegion": "us-east-1",
+				"mailjetApiKey": "",
+				"mailjetSecretKey": ""
+			},
+			"statistics": {
+				"voorzieningen": {
+					"config": {},
+					"object_counts": {},
+					"configured": false
+				},
+				"amef": {
+					"config": {},
+					"object_counts": {},
+					"configured": false
+				},
+				"timestamp": null
+			},
+			"loadingStats": false,
+			"error": null,
+			"importError": null,
+			"exportError": "export broke",
+			"openRegisters": false,
+			"isAdmin": false
+		}
+	},
+	"clearImportStatus / http 500": {
+		"outcome": {
+			"returned": "(undefined)"
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/status/import/clear",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json"
+					}
+				}
+			],
+			[
+				"console.error",
+				"Failed to clear import status:",
+				"Error: HTTP 500: Server Error"
+			],
+			[
+				"showError",
+				"Failed to clear ArchiMate import status: HTTP 500: Server Error"
+			]
+		],
+		"links": 0,
+		"state": {
+			"loading": false,
+			"saving": false,
+			"importing": false,
+			"exporting": false,
+			"loadingVersionInfo": false,
+			"loadingGeneralSettings": false,
+			"loadingSyncSettings": false,
+			"loadingStatistics": false,
+			"loadingOpenRegisterConfig": false,
+			"loadingRegisters": false,
+			"loadingVoorzieningenSchemas": false,
+			"loadingAmefSchemas": false,
+			"loadingUserGroups": false,
+			"loadingEmailConfig": false,
+			"loadingArchiMateStatus": false,
+			"loadingObjectCounts": false,
+			"loadingMainSettings": false,
+			"settings": {
+				"availableRegisters": []
+			},
+			"versionInfo": {},
+			"voorzieningenRegister": null,
+			"amefRegister": null,
+			"voorzieningenSchemas": [],
+			"amefSchemas": [],
+			"configuration": {
+				"amef_element_schema": {
+					"schema": null
+				},
+				"amef_organization_schema": {
+					"schema": null
+				},
+				"amef_relation_schema": {
+					"schema": null
+				},
+				"amef_view_schema": {
+					"schema": null
+				},
+				"amef_model_schema": {
+					"schema": null
+				},
+				"amef_property_definition_schema": {
+					"schema": null
+				},
+				"voorzieningen_sector_schema": {
+					"schema": null
+				},
+				"voorzieningen_suite_schema": {
+					"schema": null
+				},
+				"voorzieningen_dienst_schema": {
+					"schema": null
+				},
+				"voorzieningen_kwetsbaarheid_schema": {
+					"schema": null
+				},
+				"voorzieningen_contactpersoon_schema": {
+					"schema": null
+				},
+				"voorzieningen_organisatie_schema": {
+					"schema": null
+				},
+				"voorzieningen_gebruik_schema": {
+					"schema": null
+				},
+				"voorzieningen_contract_schema": {
+					"schema": null
+				},
+				"voorzieningen_koppeling_schema": {
+					"schema": null
+				},
+				"voorzieningen_beoordeeling_schema": {
+					"schema": null
+				},
+				"voorzieningen_module_schema": {
+					"schema": null
+				},
+				"voorzieningen_compliancy_schema": {
+					"schema": null
+				},
+				"voorzieningen_moduleVersie_schema": {
+					"schema": null
+				}
+			},
+			"archimateStatus": {
+				"import": {
+					"status": "running",
+					"progress": 40
+				},
+				"export": {
+					"status": "running",
+					"progress": 60
+				}
+			},
+			"isImportRunning": true,
+			"isExportRunning": true,
+			"statusPollingInterval": null,
+			"isStatusPolling": false,
+			"importOptions": {
+				"updateExisting": true,
+				"deleteOrphaned": false
+			},
+			"exportOptions": {
+				"includeViews": true,
+				"includeRelationships": true
+			},
+			"selectedFile": null,
+			"genericUserGroups": [],
+			"organizationAdminGroups": [],
+			"superUserGroups": [],
+			"emailSettings": {
+				"enabled": false,
+				"senderEmail": "",
+				"senderName": "",
+				"testReceiverOverride": "",
+				"organizationRegistrationEnabled": true,
+				"organizationActivationEnabled": true,
+				"userCreationEnabled": true,
+				"userPasswordEnabled": true,
+				"transportType": "smtp",
+				"smtpHost": "localhost",
+				"smtpPort": 587,
+				"smtpEncryption": "tls",
+				"smtpUsername": "",
+				"smtpPassword": "",
+				"sendgridApiKey": "",
+				"mailgunApiKey": "",
+				"mailgunDomain": "",
+				"postmarkApiKey": "",
+				"sesAccessKey": "",
+				"sesSecretKey": "",
+				"sesRegion": "us-east-1",
+				"mailjetApiKey": "",
+				"mailjetSecretKey": ""
+			},
+			"statistics": {
+				"voorzieningen": {
+					"config": {},
+					"object_counts": {},
+					"configured": false
+				},
+				"amef": {
+					"config": {},
+					"object_counts": {},
+					"configured": false
+				},
+				"timestamp": null
+			},
+			"loadingStats": false,
+			"error": null,
+			"importError": "import broke",
+			"exportError": "export broke",
+			"openRegisters": false,
+			"isAdmin": false
+		}
+	},
+	"clearImportStatus / network failure": {
+		"outcome": {
+			"returned": "(undefined)"
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/status/import/clear",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json"
+					}
+				}
+			],
+			[
+				"console.error",
+				"Failed to clear import status:",
+				"TypeError: Failed to fetch"
+			],
+			[
+				"showError",
+				"Failed to clear ArchiMate import status: Failed to fetch"
+			]
+		],
+		"links": 0,
+		"state": {
+			"loading": false,
+			"saving": false,
+			"importing": false,
+			"exporting": false,
+			"loadingVersionInfo": false,
+			"loadingGeneralSettings": false,
+			"loadingSyncSettings": false,
+			"loadingStatistics": false,
+			"loadingOpenRegisterConfig": false,
+			"loadingRegisters": false,
+			"loadingVoorzieningenSchemas": false,
+			"loadingAmefSchemas": false,
+			"loadingUserGroups": false,
+			"loadingEmailConfig": false,
+			"loadingArchiMateStatus": false,
+			"loadingObjectCounts": false,
+			"loadingMainSettings": false,
+			"settings": {
+				"availableRegisters": []
+			},
+			"versionInfo": {},
+			"voorzieningenRegister": null,
+			"amefRegister": null,
+			"voorzieningenSchemas": [],
+			"amefSchemas": [],
+			"configuration": {
+				"amef_element_schema": {
+					"schema": null
+				},
+				"amef_organization_schema": {
+					"schema": null
+				},
+				"amef_relation_schema": {
+					"schema": null
+				},
+				"amef_view_schema": {
+					"schema": null
+				},
+				"amef_model_schema": {
+					"schema": null
+				},
+				"amef_property_definition_schema": {
+					"schema": null
+				},
+				"voorzieningen_sector_schema": {
+					"schema": null
+				},
+				"voorzieningen_suite_schema": {
+					"schema": null
+				},
+				"voorzieningen_dienst_schema": {
+					"schema": null
+				},
+				"voorzieningen_kwetsbaarheid_schema": {
+					"schema": null
+				},
+				"voorzieningen_contactpersoon_schema": {
+					"schema": null
+				},
+				"voorzieningen_organisatie_schema": {
+					"schema": null
+				},
+				"voorzieningen_gebruik_schema": {
+					"schema": null
+				},
+				"voorzieningen_contract_schema": {
+					"schema": null
+				},
+				"voorzieningen_koppeling_schema": {
+					"schema": null
+				},
+				"voorzieningen_beoordeeling_schema": {
+					"schema": null
+				},
+				"voorzieningen_module_schema": {
+					"schema": null
+				},
+				"voorzieningen_compliancy_schema": {
+					"schema": null
+				},
+				"voorzieningen_moduleVersie_schema": {
+					"schema": null
+				}
+			},
+			"archimateStatus": {
+				"import": {
+					"status": "running",
+					"progress": 40
+				},
+				"export": {
+					"status": "running",
+					"progress": 60
+				}
+			},
+			"isImportRunning": true,
+			"isExportRunning": true,
+			"statusPollingInterval": null,
+			"isStatusPolling": false,
+			"importOptions": {
+				"updateExisting": true,
+				"deleteOrphaned": false
+			},
+			"exportOptions": {
+				"includeViews": true,
+				"includeRelationships": true
+			},
+			"selectedFile": null,
+			"genericUserGroups": [],
+			"organizationAdminGroups": [],
+			"superUserGroups": [],
+			"emailSettings": {
+				"enabled": false,
+				"senderEmail": "",
+				"senderName": "",
+				"testReceiverOverride": "",
+				"organizationRegistrationEnabled": true,
+				"organizationActivationEnabled": true,
+				"userCreationEnabled": true,
+				"userPasswordEnabled": true,
+				"transportType": "smtp",
+				"smtpHost": "localhost",
+				"smtpPort": 587,
+				"smtpEncryption": "tls",
+				"smtpUsername": "",
+				"smtpPassword": "",
+				"sendgridApiKey": "",
+				"mailgunApiKey": "",
+				"mailgunDomain": "",
+				"postmarkApiKey": "",
+				"sesAccessKey": "",
+				"sesSecretKey": "",
+				"sesRegion": "us-east-1",
+				"mailjetApiKey": "",
+				"mailjetSecretKey": ""
+			},
+			"statistics": {
+				"voorzieningen": {
+					"config": {},
+					"object_counts": {},
+					"configured": false
+				},
+				"amef": {
+					"config": {},
+					"object_counts": {},
+					"configured": false
+				},
+				"timestamp": null
+			},
+			"loadingStats": false,
+			"error": null,
+			"importError": "import broke",
+			"exportError": "export broke",
+			"openRegisters": false,
+			"isAdmin": false
+		}
+	},
+	"clearExportStatus / ok": {
+		"outcome": {
+			"returned": "(undefined)"
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/status/export/clear",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json"
+					}
+				}
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/status",
+				"(no options)"
+			],
+			[
+				"showSuccess",
+				"ArchiMate export status cleared successfully"
+			]
+		],
+		"links": 0,
+		"state": {
+			"loading": false,
+			"saving": false,
+			"importing": false,
+			"exporting": false,
+			"loadingVersionInfo": false,
+			"loadingGeneralSettings": false,
+			"loadingSyncSettings": false,
+			"loadingStatistics": false,
+			"loadingOpenRegisterConfig": false,
+			"loadingRegisters": false,
+			"loadingVoorzieningenSchemas": false,
+			"loadingAmefSchemas": false,
+			"loadingUserGroups": false,
+			"loadingEmailConfig": false,
+			"loadingArchiMateStatus": false,
+			"loadingObjectCounts": false,
+			"loadingMainSettings": false,
+			"settings": {
+				"availableRegisters": []
+			},
+			"versionInfo": {},
+			"voorzieningenRegister": null,
+			"amefRegister": null,
+			"voorzieningenSchemas": [],
+			"amefSchemas": [],
+			"configuration": {
+				"amef_element_schema": {
+					"schema": null
+				},
+				"amef_organization_schema": {
+					"schema": null
+				},
+				"amef_relation_schema": {
+					"schema": null
+				},
+				"amef_view_schema": {
+					"schema": null
+				},
+				"amef_model_schema": {
+					"schema": null
+				},
+				"amef_property_definition_schema": {
+					"schema": null
+				},
+				"voorzieningen_sector_schema": {
+					"schema": null
+				},
+				"voorzieningen_suite_schema": {
+					"schema": null
+				},
+				"voorzieningen_dienst_schema": {
+					"schema": null
+				},
+				"voorzieningen_kwetsbaarheid_schema": {
+					"schema": null
+				},
+				"voorzieningen_contactpersoon_schema": {
+					"schema": null
+				},
+				"voorzieningen_organisatie_schema": {
+					"schema": null
+				},
+				"voorzieningen_gebruik_schema": {
+					"schema": null
+				},
+				"voorzieningen_contract_schema": {
+					"schema": null
+				},
+				"voorzieningen_koppeling_schema": {
+					"schema": null
+				},
+				"voorzieningen_beoordeeling_schema": {
+					"schema": null
+				},
+				"voorzieningen_module_schema": {
+					"schema": null
+				},
+				"voorzieningen_compliancy_schema": {
+					"schema": null
+				},
+				"voorzieningen_moduleVersie_schema": {
+					"schema": null
+				}
+			},
+			"archimateStatus": {
+				"import": {
+					"status": "running",
+					"progress": 40
+				},
+				"export": {
+					"status": null,
+					"current_step": null,
+					"progress": null,
+					"statistics": null
+				}
+			},
+			"isImportRunning": true,
+			"isExportRunning": false,
+			"statusPollingInterval": null,
+			"isStatusPolling": false,
+			"importOptions": {
+				"updateExisting": true,
+				"deleteOrphaned": false
+			},
+			"exportOptions": {
+				"includeViews": true,
+				"includeRelationships": true
+			},
+			"selectedFile": null,
+			"genericUserGroups": [],
+			"organizationAdminGroups": [],
+			"superUserGroups": [],
+			"emailSettings": {
+				"enabled": false,
+				"senderEmail": "",
+				"senderName": "",
+				"testReceiverOverride": "",
+				"organizationRegistrationEnabled": true,
+				"organizationActivationEnabled": true,
+				"userCreationEnabled": true,
+				"userPasswordEnabled": true,
+				"transportType": "smtp",
+				"smtpHost": "localhost",
+				"smtpPort": 587,
+				"smtpEncryption": "tls",
+				"smtpUsername": "",
+				"smtpPassword": "",
+				"sendgridApiKey": "",
+				"mailgunApiKey": "",
+				"mailgunDomain": "",
+				"postmarkApiKey": "",
+				"sesAccessKey": "",
+				"sesSecretKey": "",
+				"sesRegion": "us-east-1",
+				"mailjetApiKey": "",
+				"mailjetSecretKey": ""
+			},
+			"statistics": {
+				"voorzieningen": {
+					"config": {},
+					"object_counts": {},
+					"configured": false
+				},
+				"amef": {
+					"config": {},
+					"object_counts": {},
+					"configured": false
+				},
+				"timestamp": null
+			},
+			"loadingStats": false,
+			"error": null,
+			"importError": "import broke",
+			"exportError": null,
+			"openRegisters": false,
+			"isAdmin": false
+		}
+	},
+	"clearExportStatus / http 500": {
+		"outcome": {
+			"returned": "(undefined)"
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/status/export/clear",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json"
+					}
+				}
+			],
+			[
+				"console.error",
+				"Failed to clear export status:",
+				"Error: HTTP 500: Server Error"
+			],
+			[
+				"showError",
+				"Failed to clear ArchiMate export status: HTTP 500: Server Error"
+			]
+		],
+		"links": 0,
+		"state": {
+			"loading": false,
+			"saving": false,
+			"importing": false,
+			"exporting": false,
+			"loadingVersionInfo": false,
+			"loadingGeneralSettings": false,
+			"loadingSyncSettings": false,
+			"loadingStatistics": false,
+			"loadingOpenRegisterConfig": false,
+			"loadingRegisters": false,
+			"loadingVoorzieningenSchemas": false,
+			"loadingAmefSchemas": false,
+			"loadingUserGroups": false,
+			"loadingEmailConfig": false,
+			"loadingArchiMateStatus": false,
+			"loadingObjectCounts": false,
+			"loadingMainSettings": false,
+			"settings": {
+				"availableRegisters": []
+			},
+			"versionInfo": {},
+			"voorzieningenRegister": null,
+			"amefRegister": null,
+			"voorzieningenSchemas": [],
+			"amefSchemas": [],
+			"configuration": {
+				"amef_element_schema": {
+					"schema": null
+				},
+				"amef_organization_schema": {
+					"schema": null
+				},
+				"amef_relation_schema": {
+					"schema": null
+				},
+				"amef_view_schema": {
+					"schema": null
+				},
+				"amef_model_schema": {
+					"schema": null
+				},
+				"amef_property_definition_schema": {
+					"schema": null
+				},
+				"voorzieningen_sector_schema": {
+					"schema": null
+				},
+				"voorzieningen_suite_schema": {
+					"schema": null
+				},
+				"voorzieningen_dienst_schema": {
+					"schema": null
+				},
+				"voorzieningen_kwetsbaarheid_schema": {
+					"schema": null
+				},
+				"voorzieningen_contactpersoon_schema": {
+					"schema": null
+				},
+				"voorzieningen_organisatie_schema": {
+					"schema": null
+				},
+				"voorzieningen_gebruik_schema": {
+					"schema": null
+				},
+				"voorzieningen_contract_schema": {
+					"schema": null
+				},
+				"voorzieningen_koppeling_schema": {
+					"schema": null
+				},
+				"voorzieningen_beoordeeling_schema": {
+					"schema": null
+				},
+				"voorzieningen_module_schema": {
+					"schema": null
+				},
+				"voorzieningen_compliancy_schema": {
+					"schema": null
+				},
+				"voorzieningen_moduleVersie_schema": {
+					"schema": null
+				}
+			},
+			"archimateStatus": {
+				"import": {
+					"status": "running",
+					"progress": 40
+				},
+				"export": {
+					"status": "running",
+					"progress": 60
+				}
+			},
+			"isImportRunning": true,
+			"isExportRunning": true,
+			"statusPollingInterval": null,
+			"isStatusPolling": false,
+			"importOptions": {
+				"updateExisting": true,
+				"deleteOrphaned": false
+			},
+			"exportOptions": {
+				"includeViews": true,
+				"includeRelationships": true
+			},
+			"selectedFile": null,
+			"genericUserGroups": [],
+			"organizationAdminGroups": [],
+			"superUserGroups": [],
+			"emailSettings": {
+				"enabled": false,
+				"senderEmail": "",
+				"senderName": "",
+				"testReceiverOverride": "",
+				"organizationRegistrationEnabled": true,
+				"organizationActivationEnabled": true,
+				"userCreationEnabled": true,
+				"userPasswordEnabled": true,
+				"transportType": "smtp",
+				"smtpHost": "localhost",
+				"smtpPort": 587,
+				"smtpEncryption": "tls",
+				"smtpUsername": "",
+				"smtpPassword": "",
+				"sendgridApiKey": "",
+				"mailgunApiKey": "",
+				"mailgunDomain": "",
+				"postmarkApiKey": "",
+				"sesAccessKey": "",
+				"sesSecretKey": "",
+				"sesRegion": "us-east-1",
+				"mailjetApiKey": "",
+				"mailjetSecretKey": ""
+			},
+			"statistics": {
+				"voorzieningen": {
+					"config": {},
+					"object_counts": {},
+					"configured": false
+				},
+				"amef": {
+					"config": {},
+					"object_counts": {},
+					"configured": false
+				},
+				"timestamp": null
+			},
+			"loadingStats": false,
+			"error": null,
+			"importError": "import broke",
+			"exportError": "export broke",
+			"openRegisters": false,
+			"isAdmin": false
+		}
+	},
+	"clearExportStatus / network failure": {
+		"outcome": {
+			"returned": "(undefined)"
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/status/export/clear",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json"
+					}
+				}
+			],
+			[
+				"console.error",
+				"Failed to clear export status:",
+				"TypeError: Failed to fetch"
+			],
+			[
+				"showError",
+				"Failed to clear ArchiMate export status: Failed to fetch"
+			]
+		],
+		"links": 0,
+		"state": {
+			"loading": false,
+			"saving": false,
+			"importing": false,
+			"exporting": false,
+			"loadingVersionInfo": false,
+			"loadingGeneralSettings": false,
+			"loadingSyncSettings": false,
+			"loadingStatistics": false,
+			"loadingOpenRegisterConfig": false,
+			"loadingRegisters": false,
+			"loadingVoorzieningenSchemas": false,
+			"loadingAmefSchemas": false,
+			"loadingUserGroups": false,
+			"loadingEmailConfig": false,
+			"loadingArchiMateStatus": false,
+			"loadingObjectCounts": false,
+			"loadingMainSettings": false,
+			"settings": {
+				"availableRegisters": []
+			},
+			"versionInfo": {},
+			"voorzieningenRegister": null,
+			"amefRegister": null,
+			"voorzieningenSchemas": [],
+			"amefSchemas": [],
+			"configuration": {
+				"amef_element_schema": {
+					"schema": null
+				},
+				"amef_organization_schema": {
+					"schema": null
+				},
+				"amef_relation_schema": {
+					"schema": null
+				},
+				"amef_view_schema": {
+					"schema": null
+				},
+				"amef_model_schema": {
+					"schema": null
+				},
+				"amef_property_definition_schema": {
+					"schema": null
+				},
+				"voorzieningen_sector_schema": {
+					"schema": null
+				},
+				"voorzieningen_suite_schema": {
+					"schema": null
+				},
+				"voorzieningen_dienst_schema": {
+					"schema": null
+				},
+				"voorzieningen_kwetsbaarheid_schema": {
+					"schema": null
+				},
+				"voorzieningen_contactpersoon_schema": {
+					"schema": null
+				},
+				"voorzieningen_organisatie_schema": {
+					"schema": null
+				},
+				"voorzieningen_gebruik_schema": {
+					"schema": null
+				},
+				"voorzieningen_contract_schema": {
+					"schema": null
+				},
+				"voorzieningen_koppeling_schema": {
+					"schema": null
+				},
+				"voorzieningen_beoordeeling_schema": {
+					"schema": null
+				},
+				"voorzieningen_module_schema": {
+					"schema": null
+				},
+				"voorzieningen_compliancy_schema": {
+					"schema": null
+				},
+				"voorzieningen_moduleVersie_schema": {
+					"schema": null
+				}
+			},
+			"archimateStatus": {
+				"import": {
+					"status": "running",
+					"progress": 40
+				},
+				"export": {
+					"status": "running",
+					"progress": 60
+				}
+			},
+			"isImportRunning": true,
+			"isExportRunning": true,
+			"statusPollingInterval": null,
+			"isStatusPolling": false,
+			"importOptions": {
+				"updateExisting": true,
+				"deleteOrphaned": false
+			},
+			"exportOptions": {
+				"includeViews": true,
+				"includeRelationships": true
+			},
+			"selectedFile": null,
+			"genericUserGroups": [],
+			"organizationAdminGroups": [],
+			"superUserGroups": [],
+			"emailSettings": {
+				"enabled": false,
+				"senderEmail": "",
+				"senderName": "",
+				"testReceiverOverride": "",
+				"organizationRegistrationEnabled": true,
+				"organizationActivationEnabled": true,
+				"userCreationEnabled": true,
+				"userPasswordEnabled": true,
+				"transportType": "smtp",
+				"smtpHost": "localhost",
+				"smtpPort": 587,
+				"smtpEncryption": "tls",
+				"smtpUsername": "",
+				"smtpPassword": "",
+				"sendgridApiKey": "",
+				"mailgunApiKey": "",
+				"mailgunDomain": "",
+				"postmarkApiKey": "",
+				"sesAccessKey": "",
+				"sesSecretKey": "",
+				"sesRegion": "us-east-1",
+				"mailjetApiKey": "",
+				"mailjetSecretKey": ""
+			},
+			"statistics": {
+				"voorzieningen": {
+					"config": {},
+					"object_counts": {},
+					"configured": false
+				},
+				"amef": {
+					"config": {},
+					"object_counts": {},
+					"configured": false
+				},
+				"timestamp": null
+			},
+			"loadingStats": false,
+			"error": null,
+			"importError": "import broke",
+			"exportError": "export broke",
+			"openRegisters": false,
+			"isAdmin": false
+		}
+	},
 	"exportToArchiMate / default format / quoted filename": {
 		"outcome": {
 			"returned": "(undefined)"

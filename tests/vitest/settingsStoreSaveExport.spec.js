@@ -129,6 +129,32 @@ const EXPORT_ANSWERS = {
 	'network failure': 'reject',
 }
 
+const CLEAR_ANSWERS = {
+	ok: () => ({
+		ok: true,
+		status: 200,
+		body: { import: { status: 'done' }, export: { status: 'running' } },
+	}),
+	'http 500': () => ({ ok: false, status: 500, statusText: 'Server Error' }),
+	'network failure': () => 'reject',
+}
+
+/**
+ * Write a running import and export with errors into the store.
+ *
+ * @param {object} store The settings store.
+ */
+function runningArchiMate(store) {
+	store.archimateStatus = {
+		import: { status: 'running', progress: 40 },
+		export: { status: 'running', progress: 60 },
+	}
+	store.isImportRunning = true
+	store.isExportRunning = true
+	store.importError = 'import broke'
+	store.exportError = 'export broke'
+}
+
 const EXPORT_CALLS = {
 	'default format': [],
 	'json format, options off': ['json'],
@@ -267,6 +293,16 @@ describe('settings store save and export', () => {
 			it(key, async () => {
 				globalThis.fetch = fakeFetch(answerFor)
 				check(key, await run(prepare, (store) => store.saveConfiguration()))
+			})
+		}
+	}
+
+	for (const action of ['clearImportStatus', 'clearExportStatus']) {
+		for (const [answerName, answerFor] of Object.entries(CLEAR_ANSWERS)) {
+			const key = `${action} / ${answerName}`
+			it(key, async () => {
+				globalThis.fetch = fakeFetch(answerFor)
+				check(key, await run(runningArchiMate, (store) => store[action]()))
 			})
 		}
 	}
