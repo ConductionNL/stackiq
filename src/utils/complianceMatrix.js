@@ -42,6 +42,10 @@
  * @spec openspec/specs/bio-compliance-assessment/spec.md
  */
 
+import { dataOf, resolveUuid } from './lifecyclePhase.js'
+
+export { dataOf, resolveUuid }
+
 /**
  * @typedef {('verified'|'claimed'|'none')} CellState
  */
@@ -71,27 +75,6 @@ export const COLUMN_SOURCE = Object.freeze({
 	STANDAARDVERSIE: 'standard_version',
 	BIO_MAATREGEL: 'bioMeasure',
 })
-
-/**
- * Resolve the UUID of a related object that may be served as a bare string,
- * an object with `uuid`/`id`, or null. Mirrors the leniency of the backend
- * ModuleComplianceService::extractStandaardversieUuids().
- *
- * @param {*} value A relation value (string UUID, object, or null).
- * @return {string} The resolved UUID, or '' when none.
- *
- * @spec openspec/specs/module-compliance-assessment/spec.md
- */
-export function resolveUuid(value) {
-	if (typeof value === 'string') {
-		return value.trim()
-	}
-	if (value && typeof value === 'object') {
-		const uuid = value.uuid ?? value.id ?? value['@self']?.id ?? ''
-		return typeof uuid === 'string' ? uuid.trim() : String(uuid || '')
-	}
-	return ''
-}
 
 /**
  * Decide whether a compliancy record carries usable evidence.
@@ -125,29 +108,6 @@ export function hasEvidence(record) {
 	const hasUrl = typeof url === 'string' && url.trim() !== ''
 
 	return hasBewijs || hasRef || hasUrl
-}
-
-/**
- * Read the data bag of a record that may be a plain object or an OR object
- * envelope (`{ '@self': …, …props }`). OR object-API responses already inline
- * the properties at the top level, so we treat the record itself as the bag.
- * Exported for reuse by callers that unwrap other object types (e.g.
- * `gebruik` records) the same way.
- *
- * @param {object} record A record (OR object or plain data).
- * @return {object} The property bag.
- * @spec openspec/specs/module-compliance-assessment/spec.md
- */
-export function dataOf(record) {
-	if (!record || typeof record !== 'object') {
-		return {}
-	}
-	// OR responses inline properties alongside `@self`; nested `object` only
-	// appears in some legacy shapes — prefer it when present.
-	if (record.object && typeof record.object === 'object') {
-		return record.object
-	}
-	return record
 }
 
 /**

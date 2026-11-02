@@ -24,7 +24,7 @@
  */
 
 import { totalAnnualisedCost } from './contractCost.js'
-import { resolveUuid } from './lifecyclePhase.js'
+import { dataOf, resolveUuid } from './lifecyclePhase.js'
 import { isInProduction } from './vulnerabilityExposure.js'
 
 /**
@@ -38,22 +38,6 @@ export const LICENSE_TYPE = Object.freeze({
 	CLOSED: 'Closed source',
 	UNKNOWN: 'Unknown',
 })
-
-/**
- * Read the data bag of a record that may be an OR object envelope or plain data.
- *
- * @param {object} record Any OR object or data bag.
- * @return {object} The property bag.
- */
-function dataOf(record) {
-	if (!record || typeof record !== 'object') {
-		return {}
-	}
-	if (record.object && typeof record.object === 'object') {
-		return record.object
-	}
-	return record
-}
 
 /**
  * Normalise a module's `licentietype` to the policy axis (empty → Unknown).
