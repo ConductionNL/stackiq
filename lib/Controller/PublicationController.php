@@ -33,7 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCA\Stackiq\Service\PublicationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -68,7 +68,7 @@ class PublicationController extends Controller {
 		private readonly PublicationService $publicationService,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

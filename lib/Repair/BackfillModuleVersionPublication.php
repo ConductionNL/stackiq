@@ -30,7 +30,7 @@ namespace OCA\Stackiq\Repair;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCA\Stackiq\Service\ModuleVersionPublicationService;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
@@ -95,7 +95,7 @@ class BackfillModuleVersionPublication implements IRepairStep {
 	 * @spec openspec/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
 	 */
 	public function run(IOutput $output): void {
-		if ($this->appConfig->getValueBool(Application::APP_ID, self::DONE_CONFIG_KEY, false) === true) {
+		if ($this->appConfig->getValueBool(AppIdentity::APP_ID, self::DONE_CONFIG_KEY, false) === true) {
 			return;
 		}
 
@@ -125,7 +125,7 @@ class BackfillModuleVersionPublication implements IRepairStep {
 			return;
 		}
 
-		$this->appConfig->setValueBool(Application::APP_ID, self::DONE_CONFIG_KEY, true);
+		$this->appConfig->setValueBool(AppIdentity::APP_ID, self::DONE_CONFIG_KEY, true);
 	}//end run()
 
 	/**

@@ -38,7 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCA\Stackiq\Exception\UnsupportedSbomFormatException;
 use OCA\Stackiq\Service\SbomImportService;
 use OCP\AppFramework\Controller;
@@ -95,7 +95,7 @@ class SbomController extends Controller {
 		private readonly SbomImportService $importService,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**
