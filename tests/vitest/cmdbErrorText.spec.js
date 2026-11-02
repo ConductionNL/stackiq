@@ -87,6 +87,7 @@ const DETAILS = {
 	notArrays: { accepted: 'archive', expected: 'Applicaties', matches: 'x' },
 	part: { maxPartBytes: 1000, part: 'xl/sharedStrings.xml', size: 2000 },
 	strings: { maxSharedStrings: 10 },
+	zeroPart: { maxPartBytes: 0, sheet: 'S', maxSharedStrings: 3 },
 	referenced: { maxReferencedStringBytes: 5000 },
 }
 

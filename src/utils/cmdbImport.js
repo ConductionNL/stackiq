@@ -524,16 +524,32 @@ export function isKnownError(code) {
  * to which sheet or part, and what to do about it.
  *
  * @param {object} details The error details: `maxPartBytes`, `part`, `size` and, for a sheet, `sheet`; `maxSharedStrings`; `maxReferencedStringBytes`; or `maxUncompressedBytes`
- * @param {Array<string>} sheetNames The sheets the import reads, for the hint
- * @param {string|null} archiveSheet The archive sheet, of which the import reads the APPID column; null when the profile names none
+ * @param {{sheetNames: Array<string>, archiveSheet: string|null}} names The sheets the import reads, for the hint, and the archive sheet, of which the import reads the APPID column (null when the profile names none)
  * @return {{title: string, hint: string}} The words
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-workbook-shall-be-read-as-stored-data-without-evaluating-formulas-or-following-links-req-cmdb-002
  */
-function workbookTooLarge(details, sheetNames, archiveSheet) {
+function workbookTooLarge(details, names) {
 	const compressed = t(
 		'stackiq',
 		'An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.',
 	)
+	if (Number(details.maxPartBytes) > 0) {
+		return partTooLarge(details, compressed)
+	}
+	return {
+		title: unpackedLimitTitle(details),
+		hint: compressed + ' ' + unreadSheetsHint(names),
+	}
+}
+
+/**
+ * What the page says when one sheet or part of the workbook is too large.
+ *
+ * @param {object} details The error details: `maxPartBytes`, `part`, `size` and, for a sheet, `sheet`
+ * @param {string} compressed The sentence on compression that opens the hint
+ * @return {{title: string, hint: string}} The words
+ */
+function partTooLarge(details, compressed) {
 	const split =
 		compressed
 		+ ' '
@@ -541,81 +557,86 @@ function workbookTooLarge(details, sheetNames, archiveSheet) {
 			'stackiq',
 			'Split the rows over two copies of the export and import both with "Keep them as they are": an import that archives treats the applications of the other copy as missing.',
 		)
-	if (Number(details.maxPartBytes) > 0) {
-		const sizes = {
-			size: formatMegabytes(details.size),
-			limit: formatMegabytes(details.maxPartBytes),
-		}
-		return {
-			title: details.sheet
-				? t(
-						'stackiq',
-						'The sheet "{sheet}" is too large to import: unpacked it is {size}, and the import reads at most {limit} of one sheet.',
-						{ sheet: String(details.sheet), ...sizes },
-						AS_TEXT,
-					)
-				: t(
-						'stackiq',
-						'The part {part} of the workbook is too large to import: unpacked it is {size}, and the import reads at most {limit} of one part.',
-						{ part: String(details.part ?? ''), ...sizes },
-						AS_TEXT,
-					),
-			hint: split,
-		}
+	const sizes = {
+		size: formatMegabytes(details.size),
+		limit: formatMegabytes(details.maxPartBytes),
 	}
-	const unread =
-		compressed
-		+ ' '
-		+ (archiveSheet
+	return {
+		title: details.sheet
 			? t(
 					'stackiq',
-					'Delete the sheets the import does not read from a copy of the export (it reads {sheets}, and the APPID column of "{archive}"), and import that copy.',
-					{ sheets: quotedSheetList(sheetNames), archive: archiveSheet },
+					'The sheet "{sheet}" is too large to import: unpacked it is {size}, and the import reads at most {limit} of one sheet.',
+					{ sheet: String(details.sheet), ...sizes },
 					AS_TEXT,
 				)
 			: t(
 					'stackiq',
-					'Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy.',
-					{ sheets: quotedSheetList(sheetNames) },
+					'The part {part} of the workbook is too large to import: unpacked it is {size}, and the import reads at most {limit} of one part.',
+					{ part: String(details.part ?? ''), ...sizes },
 					AS_TEXT,
-				))
-	if (Number(details.maxSharedStrings) > 0) {
-		return {
-			title: t(
+				),
+		hint: split,
+	}
+}
+
+/**
+ * The hint to delete the sheets the import does not read.
+ *
+ * @param {{sheetNames: Array<string>, archiveSheet: string|null}} names The sheets the import reads and the archive sheet
+ * @return {string} The hint
+ */
+function unreadSheetsHint(names) {
+	return names.archiveSheet
+		? t(
 				'stackiq',
-				'The workbook holds more than {count} different texts, the most the import reads.',
-				{ count: String(details.maxSharedStrings) },
+				'Delete the sheets the import does not read from a copy of the export (it reads {sheets}, and the APPID column of "{archive}"), and import that copy.',
+				{
+					sheets: quotedSheetList(names.sheetNames),
+					archive: names.archiveSheet,
+				},
 				AS_TEXT,
-			),
-			hint: unread,
-		}
+			)
+		: t(
+				'stackiq',
+				'Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy.',
+				{ sheets: quotedSheetList(names.sheetNames) },
+				AS_TEXT,
+			)
+}
+
+/**
+ * The title for a workbook that is too large once unpacked: which limit the
+ * server applied.
+ *
+ * @param {object} details The error details: `maxSharedStrings`, `maxReferencedStringBytes` or `maxUncompressedBytes`
+ * @return {string} The title
+ */
+function unpackedLimitTitle(details) {
+	if (Number(details.maxSharedStrings) > 0) {
+		return t(
+			'stackiq',
+			'The workbook holds more than {count} different texts, the most the import reads.',
+			{ count: String(details.maxSharedStrings) },
+			AS_TEXT,
+		)
 	}
 	if (Number(details.maxReferencedStringBytes) > 0) {
-		return {
-			title: t(
-				'stackiq',
-				'Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.',
-				{ size: formatMegabytes(details.maxReferencedStringBytes) },
-				AS_TEXT,
-			),
-			hint: unread,
-		}
+		return t(
+			'stackiq',
+			'Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.',
+			{ size: formatMegabytes(details.maxReferencedStringBytes) },
+			AS_TEXT,
+		)
 	}
 	if (Number(details.maxUncompressedBytes) > 0) {
-		return {
-			title: t(
-				'stackiq',
-				'Unpacked, the workbook is larger than {size}, the most the import reads.',
-				{ size: formatMegabytes(details.maxUncompressedBytes) },
-				AS_TEXT,
-			),
-			hint: unread,
-		}
+		return t(
+			'stackiq',
+			'Unpacked, the workbook is larger than {size}, the most the import reads.',
+			{ size: formatMegabytes(details.maxUncompressedBytes) },
+			AS_TEXT,
+		)
 	}
-	return {
-		title: t('stackiq', 'The workbook is too large to read once unpacked.'),
-		hint: unread,
-	}
+	return t('stackiq', 'The workbook is too large to read once unpacked.')
 }
 
 /**
@@ -812,7 +833,7 @@ const ERROR_TEXTS = Object.freeze({
 		}
 	},
 	WORKBOOK_TOO_LARGE(details, names) {
-		return workbookTooLarge(details, names.sheetNames, names.archiveSheet)
+		return workbookTooLarge(details, names)
 	},
 	SCHEMA_OUTDATED(details) {
 		return {
