@@ -5552,12 +5552,7 @@ class SettingsService {
 				'groups' => $validation['valid'],
 			];
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'SettingsService: Failed to update ' . $label,
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
+			$this->logger->error('SettingsService: Failed to update ' . $label, ['exception' => $e->getMessage()]);
 			return [
 				'success' => false,
 				'message' => 'Failed to update ' . $label . ': ' . $e->getMessage(),
