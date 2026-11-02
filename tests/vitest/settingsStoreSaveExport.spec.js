@@ -61,13 +61,20 @@ const SAVE_STATES = {
 	'registers only': (store) => {
 		store.amefRegister = { value: 4 }
 		store.voorzieningenRegister = { value: '' }
+		store.configuration = {
+			amef_property_definition_schema: { schema: { value: 31 } },
+		}
 		store.genericUserGroups = ['', '  ']
 		store.settings.catalogLocation = 'https://catalog.example'
 	},
 }
 
 const SAVE_ANSWERS = {
-	'all ok': () => ({ ok: true, status: 200, body: { success: true } }),
+	'all ok': () => ({
+		ok: true,
+		status: 200,
+		body: { success: true, syncTimeWindow: 0, isAdmin: 0 },
+	}),
 	'http 500 on user groups': (url) =>
 		url.includes('user-groups')
 			? { ok: false, status: 500, statusText: 'Server Error', body: {} }

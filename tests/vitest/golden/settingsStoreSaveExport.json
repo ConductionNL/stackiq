@@ -104,7 +104,9 @@
 				"syncTimeWindow": 10
 			},
 			"versionInfo": {
-				"success": true
+				"success": true,
+				"syncTimeWindow": 0,
+				"isAdmin": 0
 			},
 			"voorzieningenRegister": null,
 			"amefRegister": null,
@@ -232,7 +234,7 @@
 			"importError": null,
 			"exportError": null,
 			"openRegisters": false,
-			"isAdmin": false
+			"isAdmin": 0
 		}
 	},
 	"saveConfiguration / defaults / http 500 on user groups": {
@@ -1803,7 +1805,9 @@
 				"syncTimeWindow": 10
 			},
 			"versionInfo": {
-				"success": true
+				"success": true,
+				"syncTimeWindow": 0,
+				"isAdmin": 0
 			},
 			"voorzieningenRegister": null,
 			"amefRegister": null,
@@ -1909,7 +1913,7 @@
 			"importError": null,
 			"exportError": null,
 			"openRegisters": false,
-			"isAdmin": false
+			"isAdmin": 0
 		}
 	},
 	"saveConfiguration / no email object / http 500 on user groups": {
@@ -2762,7 +2766,9 @@
 				"syncTimeWindow": 10
 			},
 			"versionInfo": {
-				"success": true
+				"success": true,
+				"syncTimeWindow": 0,
+				"isAdmin": 0
 			},
 			"voorzieningenRegister": {
 				"value": "3"
@@ -2901,7 +2907,7 @@
 			"importError": null,
 			"exportError": null,
 			"openRegisters": false,
-			"isAdmin": false
+			"isAdmin": 0
 		}
 	},
 	"saveConfiguration / full / http 500 on user groups": {
@@ -3834,7 +3840,7 @@
 						"Content-Type": "application/json",
 						"X-Requested-With": "XMLHttpRequest"
 					},
-					"body": "{\"register\":4}"
+					"body": "{\"register\":4,\"property-definition_schema\":31}"
 				}
 			],
 			[
@@ -3961,7 +3967,9 @@
 				"syncTimeWindow": 10
 			},
 			"versionInfo": {
-				"success": true
+				"success": true,
+				"syncTimeWindow": 0,
+				"isAdmin": 0
 			},
 			"voorzieningenRegister": {
 				"value": ""
@@ -4096,7 +4104,7 @@
 			"importError": null,
 			"exportError": null,
 			"openRegisters": false,
-			"isAdmin": false
+			"isAdmin": 0
 		}
 	},
 	"saveConfiguration / registers only / http 500 on user groups": {
@@ -4113,7 +4121,7 @@
 						"Content-Type": "application/json",
 						"X-Requested-With": "XMLHttpRequest"
 					},
-					"body": "{\"register\":4}"
+					"body": "{\"register\":4,\"property-definition_schema\":31}"
 				}
 			],
 			[
@@ -4195,62 +4203,10 @@
 			"voorzieningenSchemas": [],
 			"amefSchemas": [],
 			"configuration": {
-				"amef_element_schema": {
-					"schema": null
-				},
-				"amef_organization_schema": {
-					"schema": null
-				},
-				"amef_relation_schema": {
-					"schema": null
-				},
-				"amef_view_schema": {
-					"schema": null
-				},
-				"amef_model_schema": {
-					"schema": null
-				},
 				"amef_property_definition_schema": {
-					"schema": null
-				},
-				"voorzieningen_sector_schema": {
-					"schema": null
-				},
-				"voorzieningen_suite_schema": {
-					"schema": null
-				},
-				"voorzieningen_dienst_schema": {
-					"schema": null
-				},
-				"voorzieningen_kwetsbaarheid_schema": {
-					"schema": null
-				},
-				"voorzieningen_contactpersoon_schema": {
-					"schema": null
-				},
-				"voorzieningen_organisatie_schema": {
-					"schema": null
-				},
-				"voorzieningen_gebruik_schema": {
-					"schema": null
-				},
-				"voorzieningen_contract_schema": {
-					"schema": null
-				},
-				"voorzieningen_koppeling_schema": {
-					"schema": null
-				},
-				"voorzieningen_beoordeeling_schema": {
-					"schema": null
-				},
-				"voorzieningen_module_schema": {
-					"schema": null
-				},
-				"voorzieningen_compliancy_schema": {
-					"schema": null
-				},
-				"voorzieningen_moduleVersie_schema": {
-					"schema": null
+					"schema": {
+						"value": 31
+					}
 				}
 			},
 			"archimateStatus": {
@@ -4336,7 +4292,7 @@
 						"Content-Type": "application/json",
 						"X-Requested-With": "XMLHttpRequest"
 					},
-					"body": "{\"register\":4}"
+					"body": "{\"register\":4,\"property-definition_schema\":31}"
 				}
 			],
 			[
@@ -4418,62 +4374,10 @@
 			"voorzieningenSchemas": [],
 			"amefSchemas": [],
 			"configuration": {
-				"amef_element_schema": {
-					"schema": null
-				},
-				"amef_organization_schema": {
-					"schema": null
-				},
-				"amef_relation_schema": {
-					"schema": null
-				},
-				"amef_view_schema": {
-					"schema": null
-				},
-				"amef_model_schema": {
-					"schema": null
-				},
 				"amef_property_definition_schema": {
-					"schema": null
-				},
-				"voorzieningen_sector_schema": {
-					"schema": null
-				},
-				"voorzieningen_suite_schema": {
-					"schema": null
-				},
-				"voorzieningen_dienst_schema": {
-					"schema": null
-				},
-				"voorzieningen_kwetsbaarheid_schema": {
-					"schema": null
-				},
-				"voorzieningen_contactpersoon_schema": {
-					"schema": null
-				},
-				"voorzieningen_organisatie_schema": {
-					"schema": null
-				},
-				"voorzieningen_gebruik_schema": {
-					"schema": null
-				},
-				"voorzieningen_contract_schema": {
-					"schema": null
-				},
-				"voorzieningen_koppeling_schema": {
-					"schema": null
-				},
-				"voorzieningen_beoordeeling_schema": {
-					"schema": null
-				},
-				"voorzieningen_module_schema": {
-					"schema": null
-				},
-				"voorzieningen_compliancy_schema": {
-					"schema": null
-				},
-				"voorzieningen_moduleVersie_schema": {
-					"schema": null
+					"schema": {
+						"value": 31
+					}
 				}
 			},
 			"archimateStatus": {
@@ -4559,7 +4463,7 @@
 						"Content-Type": "application/json",
 						"X-Requested-With": "XMLHttpRequest"
 					},
-					"body": "{\"register\":4}"
+					"body": "{\"register\":4,\"property-definition_schema\":31}"
 				}
 			],
 			[
@@ -4641,62 +4545,10 @@
 			"voorzieningenSchemas": [],
 			"amefSchemas": [],
 			"configuration": {
-				"amef_element_schema": {
-					"schema": null
-				},
-				"amef_organization_schema": {
-					"schema": null
-				},
-				"amef_relation_schema": {
-					"schema": null
-				},
-				"amef_view_schema": {
-					"schema": null
-				},
-				"amef_model_schema": {
-					"schema": null
-				},
 				"amef_property_definition_schema": {
-					"schema": null
-				},
-				"voorzieningen_sector_schema": {
-					"schema": null
-				},
-				"voorzieningen_suite_schema": {
-					"schema": null
-				},
-				"voorzieningen_dienst_schema": {
-					"schema": null
-				},
-				"voorzieningen_kwetsbaarheid_schema": {
-					"schema": null
-				},
-				"voorzieningen_contactpersoon_schema": {
-					"schema": null
-				},
-				"voorzieningen_organisatie_schema": {
-					"schema": null
-				},
-				"voorzieningen_gebruik_schema": {
-					"schema": null
-				},
-				"voorzieningen_contract_schema": {
-					"schema": null
-				},
-				"voorzieningen_koppeling_schema": {
-					"schema": null
-				},
-				"voorzieningen_beoordeeling_schema": {
-					"schema": null
-				},
-				"voorzieningen_module_schema": {
-					"schema": null
-				},
-				"voorzieningen_compliancy_schema": {
-					"schema": null
-				},
-				"voorzieningen_moduleVersie_schema": {
-					"schema": null
+					"schema": {
+						"value": 31
+					}
 				}
 			},
 			"archimateStatus": {
@@ -4782,7 +4634,7 @@
 						"Content-Type": "application/json",
 						"X-Requested-With": "XMLHttpRequest"
 					},
-					"body": "{\"register\":4}"
+					"body": "{\"register\":4,\"property-definition_schema\":31}"
 				}
 			],
 			[
@@ -4864,62 +4716,10 @@
 			"voorzieningenSchemas": [],
 			"amefSchemas": [],
 			"configuration": {
-				"amef_element_schema": {
-					"schema": null
-				},
-				"amef_organization_schema": {
-					"schema": null
-				},
-				"amef_relation_schema": {
-					"schema": null
-				},
-				"amef_view_schema": {
-					"schema": null
-				},
-				"amef_model_schema": {
-					"schema": null
-				},
 				"amef_property_definition_schema": {
-					"schema": null
-				},
-				"voorzieningen_sector_schema": {
-					"schema": null
-				},
-				"voorzieningen_suite_schema": {
-					"schema": null
-				},
-				"voorzieningen_dienst_schema": {
-					"schema": null
-				},
-				"voorzieningen_kwetsbaarheid_schema": {
-					"schema": null
-				},
-				"voorzieningen_contactpersoon_schema": {
-					"schema": null
-				},
-				"voorzieningen_organisatie_schema": {
-					"schema": null
-				},
-				"voorzieningen_gebruik_schema": {
-					"schema": null
-				},
-				"voorzieningen_contract_schema": {
-					"schema": null
-				},
-				"voorzieningen_koppeling_schema": {
-					"schema": null
-				},
-				"voorzieningen_beoordeeling_schema": {
-					"schema": null
-				},
-				"voorzieningen_module_schema": {
-					"schema": null
-				},
-				"voorzieningen_compliancy_schema": {
-					"schema": null
-				},
-				"voorzieningen_moduleVersie_schema": {
-					"schema": null
+					"schema": {
+						"value": 31
+					}
 				}
 			},
 			"archimateStatus": {
