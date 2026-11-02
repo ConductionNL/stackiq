@@ -216,6 +216,11 @@ async function run(prepare, act) {
 	trace.length = 0
 	setActivePinia(createPinia())
 	const store = useSettingsStore()
+	const stopStatusPolling = store.stopStatusPolling
+	store.stopStatusPolling = () => {
+		trace.push(['stopStatusPolling'])
+		return stopStatusPolling()
+	}
 	prepare(store)
 	let outcome
 	try {
@@ -227,7 +232,7 @@ async function run(prepare, act) {
 		await Promise.resolve()
 	}
 	await new Promise((resolve) => setTimeout(resolve, 0))
-	store.stopStatusPolling()
+	stopStatusPolling()
 	return plain({
 		outcome,
 		trace: [...trace],

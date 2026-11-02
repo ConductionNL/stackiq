@@ -4807,6 +4807,9 @@
 				}
 			],
 			[
+				"stopStatusPolling"
+			],
+			[
 				"fetch",
 				"/index.php/apps/stackiq/api/archimate/status",
 				"(no options)"
@@ -5356,6 +5359,9 @@
 						"Content-Type": "application/json"
 					}
 				}
+			],
+			[
+				"stopStatusPolling"
 			],
 			[
 				"fetch",
