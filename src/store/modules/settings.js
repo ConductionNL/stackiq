@@ -184,6 +184,39 @@ function applyArchiMateStatus(store, status) {
 }
 
 /**
+ * The label of a register option: its title, its name or its id.
+ *
+ * @param {object} register The register.
+ * @return {string} The label.
+ */
+function registerLabel(register) {
+	return register.title || register.name || `Register ${register.id}`
+}
+
+/**
+ * Select a configured register among the available ones, with its schemas.
+ * Leaves the selection as it is when no id is configured or no available
+ * register has it.
+ *
+ * @param {object} store The settings store.
+ * @param {{registerId: (string|number|undefined|null), register: string, schemas: string}} selection The configured register id and the store properties for the selection and its schemas.
+ * @return {void}
+ */
+function applyRegisterSelection(store, selection) {
+	if (!selection.registerId) return
+	const id = selection.registerId.toString()
+	const register = store.settings.availableRegisters.find(
+		(r) => r.id.toString() === id,
+	)
+	if (!register) return
+	store[selection.register] = {
+		label: registerLabel(register),
+		value: register.id.toString(),
+	}
+	store[selection.schemas] = register.schemas || []
+}
+
+/**
  * POST a JSON body to one of the app's endpoints.
  *
  * @param {string} url The endpoint.
@@ -1306,42 +1339,19 @@ export const useSettingsStore = defineStore('settings', {
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		populateRegisterSelectionsFromFocused() {
-			// Voorzieningen register
-			if (
-				this.voorzieningenRawConfig
-				&& this.voorzieningenRawConfig.register
-			) {
-				const regId = this.voorzieningenRawConfig.register.toString()
-				const reg = this.settings.availableRegisters.find(
-					(r) => r.id.toString() === regId,
-				)
-				if (reg) {
-					this.voorzieningenRegister = {
-						label: reg.title || reg.name || `Register ${reg.id}`,
-						value: reg.id.toString(),
-					}
-					this.voorzieningenSchemas = reg.schemas || []
-				}
-			}
+			const voorzieningen = this.voorzieningenRawConfig
+			applyRegisterSelection(this, {
+				registerId: voorzieningen && voorzieningen.register,
+				register: 'voorzieningenRegister',
+				schemas: 'voorzieningenSchemas',
+			})
 			// AMEF register (singular key only; fallback kept for robustness)
-			if (
-				this.amefRawConfig
-				&& (this.amefRawConfig.register || this.amefRawConfig.register_id)
-			) {
-				const regId = (
-					this.amefRawConfig.register || this.amefRawConfig.register_id
-				).toString()
-				const reg = this.settings.availableRegisters.find(
-					(r) => r.id.toString() === regId,
-				)
-				if (reg) {
-					this.amefRegister = {
-						label: reg.title || reg.name || `Register ${reg.id}`,
-						value: reg.id.toString(),
-					}
-					this.amefSchemas = reg.schemas || []
-				}
-			}
+			const amef = this.amefRawConfig
+			applyRegisterSelection(this, {
+				registerId: amef && (amef.register || amef.register_id),
+				register: 'amefRegister',
+				schemas: 'amefSchemas',
+			})
 		},
 
 		/**
