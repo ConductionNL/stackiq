@@ -41,7 +41,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Repair;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -139,7 +139,7 @@ class MigrateAppConfigKeys implements IRepairStep {
 
 				// Never clobber a value the new namespace already holds — either
 				// a previous run copied it, or an admin has since changed it.
-				if ($this->appConfig->hasKey(Application::APP_ID, $key) === true) {
+				if ($this->appConfig->hasKey(AppIdentity::APP_ID, $key) === true) {
 					$skipped++;
 					continue;
 				}
@@ -171,7 +171,7 @@ class MigrateAppConfigKeys implements IRepairStep {
 			$this->logger->error(
 				'Stackiq: failed to migrate app config from the legacy app id: ' . $e->getMessage(),
 				[
-					'app' => Application::APP_ID,
+					'app' => AppIdentity::APP_ID,
 					'exception' => $e,
 				]
 			);
@@ -196,17 +196,17 @@ class MigrateAppConfigKeys implements IRepairStep {
 	 */
 	protected function copyValue(string $key, mixed $value): bool {
 		if (is_bool($value) === true) {
-			$this->appConfig->setValueBool(Application::APP_ID, $key, $value);
+			$this->appConfig->setValueBool(AppIdentity::APP_ID, $key, $value);
 			return true;
 		}
 
 		if (is_int($value) === true) {
-			$this->appConfig->setValueInt(Application::APP_ID, $key, $value);
+			$this->appConfig->setValueInt(AppIdentity::APP_ID, $key, $value);
 			return true;
 		}
 
 		if (is_float($value) === true) {
-			$this->appConfig->setValueFloat(Application::APP_ID, $key, $value);
+			$this->appConfig->setValueFloat(AppIdentity::APP_ID, $key, $value);
 			return true;
 		}
 
@@ -215,7 +215,7 @@ class MigrateAppConfigKeys implements IRepairStep {
 				return false;
 			}
 
-			$this->appConfig->setValueArray(Application::APP_ID, $key, $value);
+			$this->appConfig->setValueArray(AppIdentity::APP_ID, $key, $value);
 			return true;
 		}
 
@@ -224,7 +224,7 @@ class MigrateAppConfigKeys implements IRepairStep {
 			return false;
 		}
 
-		$this->appConfig->setValueString(Application::APP_ID, $key, $string);
+		$this->appConfig->setValueString(AppIdentity::APP_ID, $key, $string);
 		return true;
 	}//end copyValue()
 }//end class

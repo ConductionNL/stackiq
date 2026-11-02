@@ -1,0 +1,41 @@
+<?php
+
+/**
+ * The app's identity, without the bootstrap.
+ *
+ * Code that only needs the app id reads it here, so it does not depend on
+ * the Application bootstrap class.
+ *
+ * @category  AppInfo
+ * @package   OCA\Stackiq\AppInfo
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @version   GIT: <git_id>
+ * @link      https://github.com/ConductionNL/stackiq
+ *
+ * @spec openspec/specs/method-decomposition/spec.md
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Stackiq\AppInfo;
+
+/**
+ * The app id as one constant.
+ *
+ * @category AppInfo
+ * @package  OCA\Stackiq\AppInfo
+ *
+ * @spec openspec/specs/method-decomposition/spec.md
+ */
+final class AppIdentity {
+
+	/**
+	 * The Nextcloud app id.
+	 *
+	 * @var string
+	 */
+	public const APP_ID = 'stackiq';
+
+}//end class

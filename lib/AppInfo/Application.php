@@ -112,9 +112,9 @@ use Psr\Log\LoggerInterface;
  */
 class Application extends App implements IBootstrap {
 	/**
-	 * The application ID
+	 * The application ID, kept here for code that reads it from the bootstrap class
 	 */
-	public const APP_ID = 'stackiq';
+	public const APP_ID = AppIdentity::APP_ID;
 
 	/**
 	 * Application constructor

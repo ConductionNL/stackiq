@@ -373,13 +373,12 @@ class FederationService {
 		}
 
 		$localMirrors = $this->loadPeerMirrors(peerUrl: $peerUrl, target: $target);
-		$plan = $this->merger->plan(
-			$peerUrl,
-			(string)($fetch['organisation'] ?? $peerUrl),
-			$fetch['entries'],
-			$localMirrors,
-			$this->now()
-		);
+		$peer = [
+			'url' => $peerUrl,
+			'organisation' => (string)($fetch['organisation'] ?? $peerUrl),
+			'syncedAt' => $this->now(),
+		];
+		$plan = $this->merger->plan(peer: $peer, peerEntries: $fetch['entries'], localMirrors: $localMirrors);
 
 		$created = $this->applyMirrors(
 			objectService: $objectService,

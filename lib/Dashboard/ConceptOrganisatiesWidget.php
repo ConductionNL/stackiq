@@ -14,7 +14,7 @@
 
 namespace OCA\Stackiq\Dashboard;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCP\Dashboard\IWidget;
 use OCP\IL10N;
 use OCP\IURLGenerator;
@@ -99,7 +99,7 @@ class ConceptOrganisatiesWidget implements IWidget {
 	 * @spec openspec/specs/concept-organizations-widget/spec.md
 	 */
 	public function load(): void {
-		$appId = Application::APP_ID;
+		$appId = AppIdentity::APP_ID;
 		// Shared chunks emitted by webpack splitChunks + runtimeChunk (see webpack.config.js).
 		// Order: runtime → vendor → nc-vue → widget.
 		Util::addScript(application: $appId, file: $appId . '-runtime');

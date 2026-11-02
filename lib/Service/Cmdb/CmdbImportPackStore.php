@@ -38,7 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Cmdb;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IAppConfig;
@@ -165,7 +165,7 @@ class CmdbImportPackStore {
 			return [];
 		}
 
-		$decoded = json_decode($config->getValueString(Application::APP_ID, self::CONFIG_KEY, ''), true);
+		$decoded = json_decode($config->getValueString(AppIdentity::APP_ID, self::CONFIG_KEY, ''), true);
 		if (is_array($decoded) === false) {
 			return [];
 		}
@@ -543,7 +543,7 @@ class CmdbImportPackStore {
 
 		$ids[$slug] = $id;
 		ksort($ids);
-		$config->setValueString(Application::APP_ID, self::CONFIG_KEY, (string)json_encode($ids));
+		$config->setValueString(AppIdentity::APP_ID, self::CONFIG_KEY, (string)json_encode($ids));
 	}//end record()
 
 	/**

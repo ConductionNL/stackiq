@@ -1920,13 +1920,13 @@ class OrganizationSyncService {
 					);
 
 					// Create contact person object in OpenRegister if it doesn't exist.
-					$this->createOrUpdateContactPersonObject(
-						contactData: $contactData,
-						organizationUuid: $organizationUuid,
-						register: $register,
-						contactSchema: $contactSchema,
-						stats: $stats
-					);
+					$run = [
+						'organizationUuid' => $organizationUuid,
+						'register' => $register,
+						'contactSchema' => $contactSchema,
+						'stats' => &$stats,
+					];
+					$this->createOrUpdateContactPersonObject(contactData: $contactData, run: $run);
 				} catch (\Exception $e) {
 					$this->logger->error(
 						'[FLOW] Failed to process nested contact person',
@@ -2245,382 +2245,514 @@ class OrganizationSyncService {
 	}//end processRelatedContactPersons()
 
 	/**
-	 * Create or update a contact person object and user account
+	 * Create or update a contact person object and its user account.
 	 *
 	 * @param array $contactData The contact person data.
-	 * @param string $organizationUuid The organization UUID.
-	 * @param string $register The register ID.
-	 * @param string $contactSchema The contact schema ID.
-	 * @param array $stats The statistics array to update.
+	 * @param array $run         The sync run: `organizationUuid`, `register`, `contactSchema` and, held by
+	 *                           reference so every step updates the caller's counters, `stats`.
 	 *
 	 * @return void
 	 */
-	private function createOrUpdateContactPersonObject(
-		array $contactData,
-		string $organizationUuid,
-		string $register,
-		string $contactSchema,
-		array &$stats,
-	): void {
+	private function createOrUpdateContactPersonObject(array $contactData, array $run): void {
 		try {
 			$email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
 			if (empty($email) === true) {
 				$this->logger->warning(
 					'[FLOW] Contact person has no email, skipping',
 					[
-						'organizationId' => $organizationUuid,
+						'organizationId' => $run['organizationUuid'],
 						'contactData' => array_keys($contactData),
 					]
 				);
 				return;
 			}
 
+			$run['email'] = $email;
+
 			// Check if contact already exists (has id from cascading or previous creation).
 			$existingContactId = ($contactData['id'] ?? $contactData['uuid'] ?? null);
-			$contactObject = null;
-
-			if (empty($existingContactId) === false) {
-				// Contact already exists - fetch it instead of trying to re-create.
-				$this->logger->info(
-					'📧 FETCHING EXISTING CONTACT PERSON',
-					[
-						'app' => 'stackiq',
-						'organizationId' => $organizationUuid,
-						'contactId' => $existingContactId,
-						'email' => $email,
-					]
-				);
-
-				try {
-					$contactObject = $this->objectService->find(
-						id: $existingContactId,
-						register: $register,
-						schema: $contactSchema,
-						_rbac: false,
-						_multitenancy: false
-					);
-				} catch (\Exception $e) {
-					$this->logger->warning(
-						'[FLOW] Could not fetch existing contact, will create new',
-						[
-							'organizationId' => $organizationUuid,
-							'contactId' => $existingContactId,
-							'exception' => $e->getMessage(),
-						]
-					);
-				}
-			}//end if
-
-			// If contact doesn't exist, create it (but don't set organisatie as string - it's handled by inversedBy).
+			$contactObject     = $this->findExistingContactPerson(contactId: $existingContactId, run: $run);
 			if ($contactObject === null) {
-				$this->logger->info(
-					'📧 CREATING NEW CONTACT PERSON OBJECT',
-					[
-						'app' => 'stackiq',
-						'organizationId' => $organizationUuid,
-						'email' => $email,
-						'name' => ($contactData['voornaam'] ?? '') . ' ' . ($contactData['achternaam'] ?? ''),
-					]
-				);
+				$contactObject = $this->createContactPersonObject(contactData: $contactData, run: $run);
+			}
 
-				// Temporarily remove organisatie from contactData to avoid validation error.
-				// (schema expects object type but field stores a UUID string).
-				$savedOrganisation = $contactData['organization'] ?? null;
-				unset($contactData['organization']);
-				unset($contactData['id']);
-				unset($contactData['uuid']);
-
-				$contactObject = $this->objectService->saveObject(
-					object: $contactData,
-					register: $register,
-					schema: $contactSchema,
-					_rbac: false,
-					_multitenancy: false
-				);
-
-				// Restore the organisatie field so the link to the organisation is preserved.
-				if ($savedOrganisation !== null) {
-					$restoredData = $contactObject->getObject();
-					$restoredData['organization'] = $savedOrganisation;
-					// Published contract instead of OpenRegister's Db layer. The
-					// payload is threaded through explicitly rather than pushed
-					// into the entity with `setObject()` and read back out:
-					// `setObject()` is not on ObjectEntityInterface (ADR-084).
-					// The `$contactObject !== false` half of this guard also went:
-					// `saveObject()` declares a non-nullable entity, so it could
-					// never be false.
-					$this->objectService->saveObject(
-						object: array_merge(
-							$restoredData,
-							['@self' => ['organisation' => $contactObject->getOrganisation()]]
-						),
-						register: $contactObject->getRegister(),
-						schema: $contactObject->getSchema(),
-						uuid: $contactObject->getUuid(),
-						silent: true,
-						_validation: false
-					);
-				}
-			}//end if
-
-			if ($contactObject !== null) {
-				$stats['contactPersonsProcessed']++;
-
-				// Ensure the contact has the organisatie field set (may be missing when linked via inversedBy).
-				$contactObjectData = $contactObject->getObject();
-				if (empty($contactObjectData['organization']) === true && empty($organizationUuid) === false) {
-					$contactObjectData['organization'] = $organizationUuid;
-					// Published contract instead of OpenRegister's Db layer.
-					// `setObject()`/`setOrganisation()` are implementation-only
-					// accessors reached through Entity::__call() and are not on
-					// ObjectEntityInterface (ADR-084); the values they staged are
-					// carried in the payload sent below instead.
-					$this->objectService->saveObject(
-						object: array_merge(
-							$contactObjectData,
-							['@self' => ['organisation' => $organizationUuid]]
-						),
-						register: $contactObject->getRegister(),
-						schema: $contactObject->getSchema(),
-						uuid: $contactObject->getUuid(),
-						silent: true,
-						_validation: false
-					);
-					$this->logger->info(
-						'[FLOW] Set missing organisatie field on contact person',
-						[
-							'contactId' => $contactObject->getUuid(),
-							'organizationUuid' => $organizationUuid,
-						]
-					);
-				}
-
-				$this->logger->info(
-					'✅ CONTACT PERSON OBJECT READY',
-					[
-						'app' => 'stackiq',
-						'organizationId' => $organizationUuid,
-						'contactId' => $contactObject->getUuid(),
-						'email' => $email,
-						'wasExisting' => empty($existingContactId) === false,
-					]
-				);
-
-				// Create user account if username is missing AND organization is active.
-				if (empty($contactObjectData['username']) === true) {
-					// Check if organization exists in organisation entity table.
-					$organisationEntity = null;
-					try {
-						$organisationEntity = $this->organisationMapper->findByUuid($organizationUuid);
-					} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
-						// Backup: org entity missing — create it now so user creation can proceed.
-						$this->logger->info(
-							'Organisation entity missing for ' . $organizationUuid . ', creating backup entity',
-							[
-								'app' => 'stackiq',
-								'contactId' => $contactObject->getUuid(),
-							]
-						);
-						try {
-							$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-							$orgObject = $this->objectService->find(
-								id: $organizationUuid,
-								register: ($voorzieningenConfig['register'] ?? ''),
-								schema: ($voorzieningenConfig['organisatie_schema'] ?? '')
-							);
-							if (empty($orgObject) === false) {
-								$backupStats = [
-									'entitiesCreated' => 0,
-									'entitiesUpdated' => 0,
-								];
-								$organisationEntity = $this->ensureOrganisationEntity(
-									organisationObject: $orgObject,
-									stats: $backupStats
-								);
-							}
-						} catch (\Exception $backupEx) {
-							$this->logger->error(
-								'Backup org entity creation failed',
-								[
-									'app' => 'stackiq',
-									'organizationId' => $organizationUuid,
-									'error' => $backupEx->getMessage(),
-								]
-							);
-						}//end try
-					}//end try
-
-					try {
-						if ($organisationEntity !== false && $organisationEntity->getActive() === true) {
-							// Determine if this is the first contact for the organization.
-							$isFirstContact = $this->contactpersonHandler->isFirstContactForOrganization(
-								$contactObject,
-								$contactObjectData
-							);
-
-							$this->logger->info(
-								'Creating user account for contact person (org is active)',
-								[
-									'app' => 'stackiq',
-									'contactId' => $contactObject->getUuid(),
-									'organizationId' => $organizationUuid,
-									'email' => $email,
-									'isFirstContact' => $isFirstContact,
-								]
-							);
-
-							$user = $this->contactpersonHandler->createUserAccount($contactObject, $isFirstContact);
-							if (empty($user) === false) {
-								$stats['usersCreated']++;
-
-								// FIX #434: Refresh contactObjectData from the entity AFTER.
-								// createUserAccount() because createUserAccount() modifies the.
-								// entity in-place (sets username). Using the stale $contactObjectData.
-								// captured before createUserAccount() would overwrite those changes.
-								// and could lose the organisatie field.
-								$contactObjectData = $contactObject->getObject();
-								$contactObjectData['username'] = $user->getUID();
-
-								// FIX #434: Use MagicMapper::update() directly instead of.
-								// ObjectService::saveObject() to persist the username. This avoids:.
-								// 1. Having to strip the organisatie field (saveObject validates it.
-								// as object type but it is stored as a UUID string).
-								// 2. Triggering ObjectUpdatedEvent cascades that re-enter.
-								// processContactpersoon() with missing organisatie field, causing.
-								// the org lookup to fail.
-								// 3. Potential data loss from stale variables.
-								// The staged payload travels in $contactObjectData
-								// rather than through `setObject()`, which is not on
-								// ObjectEntityInterface (ADR-084).
-
-								$this->logger->debug(
-									'Saving contact with username via direct mapper update',
-									[
-										'app' => 'stackiq',
-										'contactId' => $contactObject->getUuid(),
-										'username' => $user->getUID(),
-										'hasOrganisatie' => isset($contactObjectData['organization']) === true,
-									]
-								);
-
-								try {
-									// Published contract instead of OpenRegister's Db layer.
-									$this->objectService->saveObject(
-										object: array_merge(
-											$contactObjectData,
-											['@self' => ['organisation' => $contactObject->getOrganisation()]]
-										),
-										register: $contactObject->getRegister(),
-										schema: $contactObject->getSchema(),
-										uuid: $contactObject->getUuid(),
-										silent: true,
-										_validation: false
-									);
-									$this->logger->info(
-										'Contact saved with username',
-										[
-											'app' => 'stackiq',
-											'contactId' => $contactObject->getUuid(),
-											'username' => $user->getUID(),
-										]
-									);
-								} catch (\Exception $saveEx) {
-									$this->logger->warning(
-										'Failed to save username to contact object (user was created)',
-										[
-											'app' => 'stackiq',
-											'contactId' => $contactObject->getUuid(),
-											'username' => $user->getUID(),
-											'error' => $saveEx->getMessage(),
-										]
-									);
-								}//end try
-
-								// Add user to organization entity in database.
-								$this->contactpersonHandler->addUserToOrganizationEntity(
-									$contactObject,
-									$user->getUID(),
-									$organizationUuid
-								);
-
-								// Update contactpersoon object owner to user UID and organisation.
-								$this->updateContactPersonObjectOwner(
-									contactObject: $contactObject,
-									userUID: $user->getUID(),
-									register: $register,
-									contactSchema: $contactSchema,
-									organizationUuidOverride: $organizationUuid
-								);
-
-								$this->logger->info(
-									'User account created',
-									[
-										'app' => 'stackiq',
-										'contactId' => $contactObject->getUuid(),
-										'username' => $user->getUID(),
-									]
-								);
-							}//end if
-
-							if (empty($user) === true) {
-								$this->logger->error(
-									'User account creation failed',
-									[
-										'app' => 'stackiq',
-										'contactId' => $contactObject->getUuid(),
-										'email' => $email,
-									]
-								);
-								$stats['errors'][] = "Failed to create user account for {$email}";
-							}
-						}//end if
-
-						if ($organisationEntity === false || $organisationEntity->getActive() !== true) {
-							if ($organisationEntity !== null) {
-								$organizationActiveValue = $organisationEntity->getActive();
-							} else {
-								$organizationActiveValue = false;
-							}
-
-							$this->logger->info(
-								'Skipping user creation - organization not active or not found in entity table',
-								[
-									'contactId' => $contactObject->getUuid(),
-									'organizationId' => $organizationUuid,
-									'organizationFound' => $organisationEntity !== null,
-									'organizationActive' => $organizationActiveValue,
-									'email' => $email,
-								]
-							);
-						}
-					} catch (\Exception $e) {
-						// Organization not found in entity table = not active.
-						$this->logger->info(
-							'Skipping user creation - organization not found in entity table (not active)',
-							[
-								'contactId' => $contactObject->getUuid(),
-								'organizationId' => $organizationUuid,
-								'reason' => 'Organization not found in entity table',
-								'email' => $email,
-							]
-						);
-					}//end try
-				}//end if
-			}//end if
+			$run['contact']     = $contactObject;
+			$run['wasExisting'] = empty($existingContactId) === false;
+			$this->completeContactPerson(run: $run);
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'[FLOW] Failed to create/update contact person object',
 				[
-					'organizationId' => $organizationUuid,
+					'organizationId' => $run['organizationUuid'],
 					'email' => ($contactData['email'] ?? $contactData['e-mailadres'] ?? 'unknown'),
 					'exception' => $e->getMessage(),
 					'trace' => $e->getTraceAsString(),
 				]
 			);
-			$stats['errors'][] = 'Contact person creation failed: ' . $e->getMessage();
+			$run['stats']['errors'][] = 'Contact person creation failed: ' . $e->getMessage();
 		}//end try
 
 	}//end createOrUpdateContactPersonObject()
+
+	/**
+	 * Fetch the contact person a contact id points at, if there is one.
+	 *
+	 * @param mixed $contactId The id or uuid from the contact data, or null.
+	 * @param array $run       The sync run (see createOrUpdateContactPersonObject()).
+	 *
+	 * @return object|null The contact object, or null when there is no id or the fetch fails.
+	 */
+	private function findExistingContactPerson(mixed $contactId, array $run): ?object {
+		if (empty($contactId) === true) {
+			return null;
+		}
+
+		// Contact already exists - fetch it instead of trying to re-create.
+		$this->logger->info(
+			'📧 FETCHING EXISTING CONTACT PERSON',
+			[
+				'app' => 'stackiq',
+				'organizationId' => $run['organizationUuid'],
+				'contactId' => $contactId,
+				'email' => $run['email'],
+			]
+		);
+
+		try {
+			return $this->objectService->find(
+				id: $contactId,
+				register: $run['register'],
+				schema: $run['contactSchema'],
+				_rbac: false,
+				_multitenancy: false
+			);
+		} catch (\Exception $e) {
+			$this->logger->warning(
+				'[FLOW] Could not fetch existing contact, will create new',
+				[
+					'organizationId' => $run['organizationUuid'],
+					'contactId' => $contactId,
+					'exception' => $e->getMessage(),
+				]
+			);
+		}
+
+		return null;
+
+	}//end findExistingContactPerson()
+
+	/**
+	 * Create a contact person object, keeping its link to the organisation.
+	 *
+	 * The organisation field is left out of the create (the schema expects an
+	 * object, the field stores a uuid) and written back afterwards; the
+	 * organisation link itself is handled by inversedBy.
+	 *
+	 * @param array $contactData The contact person data.
+	 * @param array $run         The sync run (see createOrUpdateContactPersonObject()).
+	 *
+	 * @return object The created contact object.
+	 */
+	private function createContactPersonObject(array $contactData, array $run): object {
+		$this->logger->info(
+			'📧 CREATING NEW CONTACT PERSON OBJECT',
+			[
+				'app' => 'stackiq',
+				'organizationId' => $run['organizationUuid'],
+				'email' => $run['email'],
+				'name' => ($contactData['voornaam'] ?? '') . ' ' . ($contactData['achternaam'] ?? ''),
+			]
+		);
+
+		$savedOrganisation = $contactData['organization'] ?? null;
+		unset($contactData['organization']);
+		unset($contactData['id']);
+		unset($contactData['uuid']);
+
+		$contactObject = $this->objectService->saveObject(
+			object: $contactData,
+			register: $run['register'],
+			schema: $run['contactSchema'],
+			_rbac: false,
+			_multitenancy: false
+		);
+
+		if ($savedOrganisation !== null) {
+			$restoredData = $contactObject->getObject();
+			$restoredData['organization'] = $savedOrganisation;
+			$this->persistContactObject(
+				contactObject: $contactObject,
+				object: array_merge(
+					$restoredData,
+					['@self' => ['organisation' => $contactObject->getOrganisation()]]
+				)
+			);
+		}
+
+		return $contactObject;
+
+	}//end createContactPersonObject()
+
+	/**
+	 * Count a ready contact person, make sure it names its organisation and
+	 * give it a user account when it has none.
+	 *
+	 * @param array $run The sync run (see createOrUpdateContactPersonObject()) with the `contact` object and `wasExisting`.
+	 *
+	 * @return void
+	 */
+	private function completeContactPerson(array $run): void {
+		$contactObject = $run['contact'];
+		$run['stats']['contactPersonsProcessed']++;
+
+		$run['contactData'] = $this->ensureContactOrganisation(run: $run);
+
+		$this->logger->info(
+			'✅ CONTACT PERSON OBJECT READY',
+			[
+				'app' => 'stackiq',
+				'organizationId' => $run['organizationUuid'],
+				'contactId' => $contactObject->getUuid(),
+				'email' => $run['email'],
+				'wasExisting' => $run['wasExisting'],
+			]
+		);
+
+		// Create user account if username is missing AND organization is active.
+		if (empty($run['contactData']['username']) === true) {
+			$this->provisionContactUser(run: $run);
+		}
+
+	}//end completeContactPerson()
+
+	/**
+	 * Set the organisation field on a contact person that lacks it.
+	 *
+	 * @param array $run The sync run with the `contact` object.
+	 *
+	 * @return array The contact object data, with the organisation set when it was missing.
+	 */
+	private function ensureContactOrganisation(array $run): array {
+		$contactObject     = $run['contact'];
+		$contactObjectData = $contactObject->getObject();
+		if (empty($contactObjectData['organization']) === true && empty($run['organizationUuid']) === false) {
+			$contactObjectData['organization'] = $run['organizationUuid'];
+			$this->persistContactObject(
+				contactObject: $contactObject,
+				object: array_merge(
+					$contactObjectData,
+					['@self' => ['organisation' => $run['organizationUuid']]]
+				)
+			);
+			$this->logger->info(
+				'[FLOW] Set missing organisatie field on contact person',
+				[
+					'contactId' => $contactObject->getUuid(),
+					'organizationUuid' => $run['organizationUuid'],
+				]
+			);
+		}
+
+		return $contactObjectData;
+
+	}//end ensureContactOrganisation()
+
+	/**
+	 * Create a user account for a contact person when its organisation is active.
+	 *
+	 * @param array $run The sync run with the `contact` object and its `contactData`.
+	 *
+	 * @return void
+	 */
+	private function provisionContactUser(array $run): void {
+		$contactObject      = $run['contact'];
+		$organisationEntity = $this->findOrganisationEntityForContact(
+			contactObject: $contactObject,
+			organizationUuid: $run['organizationUuid']
+		);
+
+		try {
+			if ($organisationEntity !== false && $organisationEntity->getActive() === true) {
+				$this->createUserForContact(run: $run);
+			}
+
+			if ($organisationEntity === false || $organisationEntity->getActive() !== true) {
+				$this->logSkippedUserCreation(organisationEntity: $organisationEntity, run: $run);
+			}
+		} catch (\Exception $e) {
+			// Organization not found in entity table = not active.
+			$this->logger->info(
+				'Skipping user creation - organization not found in entity table (not active)',
+				[
+					'contactId' => $contactObject->getUuid(),
+					'organizationId' => $run['organizationUuid'],
+					'reason' => 'Organization not found in entity table',
+					'email' => $run['email'],
+				]
+			);
+		}//end try
+
+	}//end provisionContactUser()
+
+	/**
+	 * The organisation entity of a contact person's organisation, created from
+	 * the organisation object when the entity is missing.
+	 *
+	 * @param object $contactObject    The contact object.
+	 * @param string $organizationUuid The organisation uuid.
+	 *
+	 * @return mixed The organisation entity, or null when it is missing and cannot be created.
+	 */
+	private function findOrganisationEntityForContact(object $contactObject, string $organizationUuid): mixed {
+		try {
+			return $this->organisationMapper->findByUuid($organizationUuid);
+		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+			$this->logger->info(
+				'Organisation entity missing for ' . $organizationUuid . ', creating backup entity',
+				[
+					'app' => 'stackiq',
+					'contactId' => $contactObject->getUuid(),
+				]
+			);
+		}
+
+		return $this->createBackupOrganisationEntity(organizationUuid: $organizationUuid);
+
+	}//end findOrganisationEntityForContact()
+
+	/**
+	 * Create the organisation entity for an organisation object that has none,
+	 * so user creation can proceed.
+	 *
+	 * @param string $organizationUuid The organisation uuid.
+	 *
+	 * @return object|null The organisation entity, or null when the object is missing or creation fails.
+	 */
+	private function createBackupOrganisationEntity(string $organizationUuid): ?object {
+		try {
+			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+			$orgObject = $this->objectService->find(
+				id: $organizationUuid,
+				register: ($voorzieningenConfig['register'] ?? ''),
+				schema: ($voorzieningenConfig['organisatie_schema'] ?? '')
+			);
+			if (empty($orgObject) === false) {
+				$backupStats = [
+					'entitiesCreated' => 0,
+					'entitiesUpdated' => 0,
+				];
+				return $this->ensureOrganisationEntity(
+					organisationObject: $orgObject,
+					stats: $backupStats
+				);
+			}
+		} catch (\Exception $backupEx) {
+			$this->logger->error(
+				'Backup org entity creation failed',
+				[
+					'app' => 'stackiq',
+					'organizationId' => $organizationUuid,
+					'error' => $backupEx->getMessage(),
+				]
+			);
+		}//end try
+
+		return null;
+
+	}//end createBackupOrganisationEntity()
+
+	/**
+	 * Create the user account of a contact person and link it to the contact
+	 * and the organisation.
+	 *
+	 * @param array $run The sync run with the `contact` object and its `contactData`.
+	 *
+	 * @return void
+	 */
+	private function createUserForContact(array $run): void {
+		$contactObject = $run['contact'];
+
+		// Determine if this is the first contact for the organization.
+		$isFirstContact = $this->contactpersonHandler->isFirstContactForOrganization(
+			$contactObject,
+			$run['contactData']
+		);
+
+		$this->logger->info(
+			'Creating user account for contact person (org is active)',
+			[
+				'app' => 'stackiq',
+				'contactId' => $contactObject->getUuid(),
+				'organizationId' => $run['organizationUuid'],
+				'email' => $run['email'],
+				'isFirstContact' => $isFirstContact,
+			]
+		);
+
+		$user = $this->contactpersonHandler->createUserAccount($contactObject, $isFirstContact);
+		if (empty($user) === false) {
+			$run['stats']['usersCreated']++;
+			$this->linkCreatedUser(user: $user, run: $run);
+		}
+
+		if (empty($user) === true) {
+			$this->logger->error(
+				'User account creation failed',
+				[
+					'app' => 'stackiq',
+					'contactId' => $contactObject->getUuid(),
+					'email' => $run['email'],
+				]
+			);
+			$run['stats']['errors'][] = "Failed to create user account for {$run['email']}";
+		}
+
+	}//end createUserForContact()
+
+	/**
+	 * Store a new user's uid on its contact person, add the user to the
+	 * organisation and make the user the contact's owner.
+	 *
+	 * @param object $user The created user.
+	 * @param array  $run  The sync run with the `contact` object.
+	 *
+	 * @return void
+	 */
+	private function linkCreatedUser(object $user, array $run): void {
+		$contactObject = $run['contact'];
+
+		// Read the contact again: createUserAccount() changes the entity in
+		// place, and the data read before it would overwrite those changes.
+		$contactObjectData = $contactObject->getObject();
+		$contactObjectData['username'] = $user->getUID();
+		$this->saveContactUsername(contactObject: $contactObject, contactObjectData: $contactObjectData);
+
+		$this->contactpersonHandler->addUserToOrganizationEntity(
+			$contactObject,
+			$user->getUID(),
+			$run['organizationUuid']
+		);
+
+		$this->updateContactPersonObjectOwner(
+			contactObject: $contactObject,
+			owner: [
+				'userUID' => $user->getUID(),
+				'register' => $run['register'],
+				'contactSchema' => $run['contactSchema'],
+				'organizationUuidOverride' => $run['organizationUuid'],
+			]
+		);
+
+		$this->logger->info(
+			'User account created',
+			[
+				'app' => 'stackiq',
+				'contactId' => $contactObject->getUuid(),
+				'username' => $user->getUID(),
+			]
+		);
+
+	}//end linkCreatedUser()
+
+	/**
+	 * Save a contact person with its new username, without validation or
+	 * events, so the organisation field (a uuid where the schema expects an
+	 * object) is kept and no update cascade re-enters the sync.
+	 *
+	 * @param object $contactObject     The contact object.
+	 * @param array  $contactObjectData The contact data with `username` set.
+	 *
+	 * @return void
+	 */
+	private function saveContactUsername(object $contactObject, array $contactObjectData): void {
+		$this->logger->debug(
+			'Saving contact with username via direct mapper update',
+			[
+				'app' => 'stackiq',
+				'contactId' => $contactObject->getUuid(),
+				'username' => $contactObjectData['username'],
+				'hasOrganisatie' => isset($contactObjectData['organization']) === true,
+			]
+		);
+
+		try {
+			$this->persistContactObject(
+				contactObject: $contactObject,
+				object: array_merge(
+					$contactObjectData,
+					['@self' => ['organisation' => $contactObject->getOrganisation()]]
+				)
+			);
+			$this->logger->info(
+				'Contact saved with username',
+				[
+					'app' => 'stackiq',
+					'contactId' => $contactObject->getUuid(),
+					'username' => $contactObjectData['username'],
+				]
+			);
+		} catch (\Exception $saveEx) {
+			$this->logger->warning(
+				'Failed to save username to contact object (user was created)',
+				[
+					'app' => 'stackiq',
+					'contactId' => $contactObject->getUuid(),
+					'username' => $contactObjectData['username'],
+					'error' => $saveEx->getMessage(),
+				]
+			);
+		}//end try
+
+	}//end saveContactUsername()
+
+	/**
+	 * Log why no user account was created for a contact person.
+	 *
+	 * @param mixed $organisationEntity The organisation entity, or null when there is none.
+	 * @param array $run                The sync run with the `contact` object.
+	 *
+	 * @return void
+	 */
+	private function logSkippedUserCreation(mixed $organisationEntity, array $run): void {
+		$organizationActiveValue = false;
+		if ($organisationEntity !== null) {
+			$organizationActiveValue = $organisationEntity->getActive();
+		}
+
+		$this->logger->info(
+			'Skipping user creation - organization not active or not found in entity table',
+			[
+				'contactId' => $run['contact']->getUuid(),
+				'organizationId' => $run['organizationUuid'],
+				'organizationFound' => $organisationEntity !== null,
+				'organizationActive' => $organizationActiveValue,
+				'email' => $run['email'],
+			]
+		);
+
+	}//end logSkippedUserCreation()
+
+	/**
+	 * Save a contact person object as it is, without validation and without events.
+	 *
+	 * @param object $contactObject The contact object, for its register, schema and uuid.
+	 * @param array  $object        The object data to save.
+	 *
+	 * @return void
+	 */
+	private function persistContactObject(object $contactObject, array $object): void {
+		// Published contract instead of OpenRegister's Db layer: the payload is
+		// passed explicitly, as `setObject()` is not on ObjectEntityInterface (ADR-084).
+		$this->objectService->saveObject(
+			object: $object,
+			register: $contactObject->getRegister(),
+			schema: $contactObject->getSchema(),
+			uuid: $contactObject->getUuid(),
+			silent: true,
+			_validation: false
+		);
+
+	}//end persistContactObject()
 
 	/**
 	 * Process a specific contact person object (called from event listener)
@@ -2783,13 +2915,9 @@ class OrganizationSyncService {
 							);
 
 							// Update contactpersoon object owner to user UID.
-							$this->updateContactPersonObjectOwner(
-								contactObject: $contactObject,
-								userUID: $user->getUID(),
-								register: $register,
-								contactSchema: $contactSchema,
-								organizationUuidOverride: $organizationUuid
-							);
+							$owner = ['userUID' => $user->getUID(), 'register' => $register, 'contactSchema' => $contactSchema];
+							$owner['organizationUuidOverride'] = $organizationUuid;
+							$this->updateContactPersonObjectOwner(contactObject: $contactObject, owner: $owner);
 
 							$stats['usersCreated']++;
 						}//end if
@@ -3280,111 +3408,46 @@ class OrganizationSyncService {
 	}//end updateOrganisatieObjectOwner()
 
 	/**
-	 * Updates the contactpersoon object's @self metadata to set owner to the user UID
+	 * Make a user the owner of a contactpersoon object and set its organisation.
 	 *
 	 * @param object $contactObject The contactpersoon object to update.
-	 * @param string $userUID The user UID to set as owner.
-	 * @param string $register The register ID.
-	 * @param string $contactSchema The contact schema ID.
-	 * @param string|null $organizationUuidOverride Optional organization UUID override.
+	 * @param array  $owner         `userUID` (the new owner), `register` and `contactSchema` (logged) and the
+	 *                              optional `organizationUuidOverride` (used before the object's own organisation).
 	 *
 	 * @return void
 	 */
-	private function updateContactPersonObjectOwner(
-		object $contactObject,
-		string $userUID,
-		string $register,
-		string $contactSchema,
-		?string $organizationUuidOverride = null,
-	): void {
+	private function updateContactPersonObjectOwner(object $contactObject, array $owner): void {
 		try {
-			$contactId = $contactObject->getUuid();
+			$owner['contactId'] = $contactObject->getUuid();
+			$owner['organizationUuidOverride'] = ($owner['organizationUuidOverride'] ?? null);
 
 			$this->logger->info(
 				'OrganizationSyncService: Updating contactpersoon object owner',
 				[
-					'contactId' => $contactId,
-					'userUID' => $userUID,
-					'register' => $register,
-					'schema' => $contactSchema,
-					'organizationUuidOverride' => $organizationUuidOverride,
+					'contactId' => $owner['contactId'],
+					'userUID' => $owner['userUID'],
+					'register' => $owner['register'],
+					'schema' => $owner['contactSchema'],
+					'organizationUuidOverride' => $owner['organizationUuidOverride'],
 				]
 			);
 
-			// Get the current object data.
-			$currentObject = $contactObject->getObject();
+			$selfMetadata = $this->stageContactOwner(contactObject: $contactObject, owner: $owner);
 
-			// Get current @self metadata or create new.
-			$selfMetadata = ($currentObject['@self'] ?? []);
-
-			// Update the owner field to the user UID.
-			$selfMetadata['owner'] = $userUID;
-
-			// Set the organisation field in @self metadata to the organization UUID.
-			// Use override if provided, otherwise try to get from object data.
-			$orgUuid = $currentObject['organisation'] ?? $currentObject['organization'] ?? '';
-			$organizationUuid = ($organizationUuidOverride ?? $orgUuid);
-			if (empty($organizationUuid) === false) {
-				$selfMetadata['organisation'] = $organizationUuid;
-				if (empty($organizationUuidOverride) === false) {
-					$sourceValue = 'override';
-				} else {
-					$sourceValue = 'object';
-				}
-
-				$this->logger->info(
-					'OrganizationSyncService: Setting @self.organisation metadata',
-					[
-						'contactId' => $contactId,
-						'organizationUuid' => $organizationUuid,
-						'source' => $sourceValue,
-					]
-				);
-			}//end if
-
-			// Restore the organisatie field if it was removed during username save.
-			// This is the safety net that ensures the contact→org link is never lost.
-			if (empty($organizationUuid) === false && empty($currentObject['organization']) === true) {
-				$currentObject['organization'] = $organizationUuid;
-				$this->logger->info(
-					'OrganizationSyncService: Restored missing organisatie field on contact person',
-					[
-						'contactId' => $contactId,
-						'organizationUuid' => $organizationUuid,
-					]
-				);
-			}
-
-			// Update the object with the new @self metadata.
-			$currentObject['@self'] = $selfMetadata;
-			$contactObject->setObject($currentObject);
-
-			// Also update the entity's owner and organisation fields directly.
-			// These are separate from the object data and control multi-tenancy.
-			$contactObject->setOwner($userUID);
-			if (empty($organizationUuid) === false) {
-				$contactObject->setOrganisation($organizationUuid);
-			}
-
-			// Save using MagicMapper directly to bypass validation and ensure metadata is persisted.
-			// Published contract instead of OpenRegister's Db layer.
-			$this->objectService->saveObject(
+			// Save directly, bypassing validation, so the metadata is persisted.
+			$this->persistContactObject(
+				contactObject: $contactObject,
 				object: array_merge(
 					$contactObject->getObject(),
 					['@self' => ['organisation' => $contactObject->getOrganisation()]]
-				),
-				register: $contactObject->getRegister(),
-				schema: $contactObject->getSchema(),
-				uuid: $contactObject->getUuid(),
-				silent: true,
-				_validation: false
+				)
 			);
 
 			$this->logger->info(
 				'OrganizationSyncService: Successfully updated contactpersoon object owner and organisation',
 				[
-					'contactId' => $contactId,
-					'userUID' => $userUID,
+					'contactId' => $owner['contactId'],
+					'userUID' => $owner['userUID'],
 					'ownerSet' => $selfMetadata['owner'],
 					'organisationSet' => ($selfMetadata['organisation'] ?? 'not set'),
 				]
@@ -3394,7 +3457,7 @@ class OrganizationSyncService {
 				'OrganizationSyncService: Failed to update contactpersoon object owner',
 				[
 					'contactId' => $contactObject->getUuid(),
-					'userUID' => $userUID,
+					'userUID' => $owner['userUID'],
 					'exception' => $e->getMessage(),
 					'file' => $e->getFile(),
 					'line' => $e->getLine(),
@@ -3402,5 +3465,83 @@ class OrganizationSyncService {
 			);
 		}//end try
 
-	}//end updateContactpersoonObjectOwner()
+	}//end updateContactPersonObjectOwner()
+
+	/**
+	 * Set the owner and organisation on a contactpersoon entity: in its @self
+	 * metadata, in its organisation field when that is empty, and on the entity.
+	 *
+	 * @param object $contactObject The contactpersoon object.
+	 * @param array  $owner         `contactId`, `userUID` and `organizationUuidOverride`.
+	 *
+	 * @return array The @self metadata that was set.
+	 */
+	private function stageContactOwner(object $contactObject, array $owner): array {
+		$currentObject = $contactObject->getObject();
+
+		$selfMetadata = ($currentObject['@self'] ?? []);
+		$selfMetadata['owner'] = $owner['userUID'];
+
+		$organizationUuid = $this->ownerOrganisation(currentObject: $currentObject, owner: $owner);
+		if (empty($organizationUuid) === false) {
+			$selfMetadata['organisation'] = $organizationUuid;
+		}
+
+		// Restore the organisatie field if it was removed during username save.
+		// This is the safety net that ensures the contact→org link is never lost.
+		if (empty($organizationUuid) === false && empty($currentObject['organization']) === true) {
+			$currentObject['organization'] = $organizationUuid;
+			$this->logger->info(
+				'OrganizationSyncService: Restored missing organisatie field on contact person',
+				[
+					'contactId' => $owner['contactId'],
+					'organizationUuid' => $organizationUuid,
+				]
+			);
+		}
+
+		$currentObject['@self'] = $selfMetadata;
+		$contactObject->setObject($currentObject);
+
+		// The entity's owner and organisation fields control multi-tenancy.
+		$contactObject->setOwner($owner['userUID']);
+		if (empty($organizationUuid) === false) {
+			$contactObject->setOrganisation($organizationUuid);
+		}
+
+		return $selfMetadata;
+
+	}//end stageContactOwner()
+
+	/**
+	 * The organisation a contactpersoon's owner belongs to: the override, else
+	 * the object's own organisation field.
+	 *
+	 * @param array $currentObject The contactpersoon object data.
+	 * @param array $owner         `contactId` and `organizationUuidOverride`.
+	 *
+	 * @return mixed The organisation uuid, empty when there is none.
+	 */
+	private function ownerOrganisation(array $currentObject, array $owner): mixed {
+		$orgUuid = $currentObject['organisation'] ?? $currentObject['organization'] ?? '';
+		$organizationUuid = ($owner['organizationUuidOverride'] ?? $orgUuid);
+		if (empty($organizationUuid) === false) {
+			$sourceValue = 'object';
+			if (empty($owner['organizationUuidOverride']) === false) {
+				$sourceValue = 'override';
+			}
+
+			$this->logger->info(
+				'OrganizationSyncService: Setting @self.organisation metadata',
+				[
+					'contactId' => $owner['contactId'],
+					'organizationUuid' => $organizationUuid,
+					'source' => $sourceValue,
+				]
+			);
+		}
+
+		return $organizationUuid;
+
+	}//end ownerOrganisation()
 }//end class

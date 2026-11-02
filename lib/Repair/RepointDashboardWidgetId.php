@@ -44,7 +44,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Repair;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCP\IConfig;
 use OCP\IUser;
 use OCP\IUserManager;
@@ -142,7 +142,7 @@ class RepointDashboardWidgetId implements IRepairStep {
 						$this->logger->warning(
 							'Stackiq: could not re-point the dashboard widget id for user ' . $user->getUID() . ': ' . $e->getMessage(),
 							[
-								'app'       => Application::APP_ID,
+								'app'       => AppIdentity::APP_ID,
 								'exception' => $e,
 							]
 						);
@@ -165,7 +165,7 @@ class RepointDashboardWidgetId implements IRepairStep {
 			$this->logger->error(
 				'Stackiq: failed to re-point the dashboard widget id: ' . $e->getMessage(),
 				[
-					'app'       => Application::APP_ID,
+					'app'       => AppIdentity::APP_ID,
 					'exception' => $e,
 				]
 			);
