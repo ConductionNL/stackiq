@@ -282,7 +282,7 @@ function registerBlobSchemaConfig(blob, objectType) {
  * chain of `||` gives).
  *
  * @param {Array} values The candidates, in order
- * @return {*} The chosen value
+ * @return {string|number|undefined} The chosen value
  */
 function firstTruthyOrLast(values) {
 	return values.find(Boolean) ?? values[values.length - 1]
@@ -381,7 +381,7 @@ async function saveTypedObject(store, request) {
  *
  * @param {object} objectItem The object item
  * @param {object|undefined} config The `{ register, schema }` config
- * @return {{register: *, schema: *}} The register and schema
+ * @return {{register: (string|number|object), schema: (string|number|object)}} The register and schema
  * @throws {Error} When the item, the register or the schema is missing.
  */
 function requireLegacyConfig(objectItem, config) {
