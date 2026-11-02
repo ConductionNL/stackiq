@@ -19,6 +19,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\Stackiq\Service\Settings\EmailTemplateDefaults;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCA\Stackiq\Service\Settings\SettingsObjectCounts;
 use OCA\Stackiq\Service\Settings\VoorzieningenConfigNormalizer;
 use OCP\App\IAppManager;
@@ -68,7 +69,7 @@ use Symfony\Component\Mime\Email;
  *
  * @spec openspec/specs/settings-service/spec.md
  */
-class SettingsService {
+class SettingsService implements ObjectTypeLocatorInterface {
 
 	/**
 	 * The application name for identification and configuration purposes
