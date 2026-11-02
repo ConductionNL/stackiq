@@ -1166,27 +1166,12 @@ class AangebodenGebruikService {
 	}//end getGebruiksConfiguration()
 
 	/**
-	 * Get configuration for koppelingen objects (register ID and schema IDs)
-	 *
-	 * @return array Configuration with register_id and schemas array
-	 * @throws Exception When configuration is not available
-	 */
-	private function getKoppelingenConfiguration(): array {
-		return $this->resolveVoorzieningenSchemaConfig(
-			schemaKey: 'koppeling_schema',
-			labelForLogs: 'koppelingen'
-		);
-	}//end getKoppelingenConfiguration()
-
-	/**
 	 * Resolves a `{register_id, schemas: [schemaId]}` tuple for the supplied
 	 * voorzieningen-config schema key.
 	 *
-	 * Extracted from {@see getGebruiksConfiguration()} +
-	 * {@see getKoppelingenConfiguration()} as part of task 7.3 — the two
-	 * methods were 95% identical (differing only on the schema key and the
-	 * log label). Throws when either the register id or the requested schema
-	 * id is missing on the voorzieningen config.
+	 * Used by {@see getGebruiksConfiguration()}. Throws when either the
+	 * register id or the requested schema id is missing on the voorzieningen
+	 * config.
 	 *
 	 * @param string $schemaKey The voorzieningen-config schema key
 	 *                          (e.g. "gebruik_schema").
@@ -1237,64 +1222,6 @@ class AangebodenGebruikService {
 
 		throw new Exception(ucfirst($labelForLogs) . ' configuration not found. Please configure the schemas in the admin panel.');
 	}//end resolveVoorzieningenSchemaConfig()
-
-	/**
-	 * Get all objects for a specific schema using paginated search, optionally filtered by organization
-	 *
-	 * Uses ObjectService's buildSearchQuery() for proper query construction
-	 *
-	 * @param ObjectServiceInterface $objectService The OpenRegister object service
-	 * @param string $registerId The register ID
-	 * @param string $schemaId The schema ID
-	 * @param array $options Query options (includes request parameters for buildSearchQuery)
-	 * @param string|null $organisationFilter Optional organization UUID to filter by
-	 *
-	 * @return array Paginated result from searchObjectsPaginated
-	 *
-	 * @throws Exception When query fails
-	 */
-	private function getAllObjectsForSchema(
-		ObjectServiceInterface $objectService,
-		string $registerId,
-		string $schemaId,
-		array $options = [],
-		?string $organisationFilter = null,
-	): array {
-		// Use ObjectService's buildSearchQuery to properly handle request parameters.
-		$searchQuery = $objectService->buildSearchQuery($options);
-
-		// Add schema and register filters.
-		$searchQuery['@self']['schema'] = $schemaId;
-		$searchQuery['@self']['register'] = $registerId;
-
-		// Add organization filter if provided.
-		if ($organisationFilter !== null) {
-			$searchQuery['@self']['organisation'] = $organisationFilter;
-		}
-
-		// Force database source for real-time data.
-		$searchQuery['_source'] = 'database';
-
-		$this->logger->debug(
-			'Getting all objects for schema (paginated)',
-			[
-				'register' => $registerId,
-				'schema' => $schemaId,
-				'organisation_filter' => $organisationFilter,
-				'query' => $searchQuery,
-			]
-		);
-
-		// Execute search with RBAC and multitenancy disabled using paginated search.
-		$searchResult = $objectService->searchObjectsPaginated(
-			query: $searchQuery,
-			_rbac: false,
-			_multitenancy: false,
-			deleted: false
-		);
-
-		return $searchResult;
-	}//end getAllObjectsForSchema()
 
 	/**
 	 * Get all applications/modules owned by an organization
@@ -1399,68 +1326,6 @@ class AangebodenGebruikService {
 			return [];
 		}//end try
 	}//end getApplicationsOwnedByOrganisation()
-
-	/**
-	 * Get objects related to a specific UUID via the uses relationship using paginated search
-	 *
-	 * Uses ObjectService's buildSearchQuery() for proper query construction
-	 *
-	 * @param ObjectServiceInterface $objectService The OpenRegister object service
-	 * @param string $registerId The register ID
-	 * @param string $schemaId The schema ID
-	 * @param string $relatedUuid The UUID to find relationships for
-	 * @param array $options Query options (includes request parameters for buildSearchQuery)
-	 * @param string|null $organisationFilter Optional organization UUID to filter by
-	 *
-	 * @return array Paginated result from searchObjectsPaginated
-	 *
-	 * @throws Exception When query fails
-	 */
-	private function getObjectsRelatedToUuid(
-		ObjectServiceInterface $objectService,
-		string $registerId,
-		string $schemaId,
-		string $relatedUuid,
-		array $options = [],
-		?string $organisationFilter = null,
-	): array {
-		// Use ObjectService's buildSearchQuery to properly handle request parameters.
-		$searchQuery = $objectService->buildSearchQuery($options);
-
-		// Add schema and register filters.
-		$searchQuery['@self']['schema'] = $schemaId;
-		$searchQuery['@self']['register'] = $registerId;
-
-		// Add organization filter if provided.
-		if ($organisationFilter !== null) {
-			$searchQuery['@self']['organisation'] = $organisationFilter;
-		}
-
-		// Force database source for real-time data.
-		$searchQuery['_source'] = 'database';
-
-		$this->logger->debug(
-			'Getting objects related to UUID (paginated)',
-			[
-				'register' => $registerId,
-				'schema' => $schemaId,
-				'related_uuid' => $relatedUuid,
-				'organisation_filter' => $organisationFilter,
-				'query' => $searchQuery,
-			]
-		);
-
-		// Execute search using the uses parameter to find relationships with pagination.
-		$searchResult = $objectService->searchObjectsPaginated(
-			query: $searchQuery,
-			_rbac: false,
-			_multitenancy: false,
-			deleted: false,
-			uses: $relatedUuid
-		);
-
-		return $searchResult;
-	}//end getObjectsRelatedToUuid()
 
 	/**
 	 * Check if an organization owns a specific application/module
