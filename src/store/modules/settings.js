@@ -233,7 +233,7 @@ const SCHEMA_SAVE_SECTIONS = [
  * The schema id chosen for one configuration entry, or null when none is.
  *
  * @param {object|null} config The configuration entry.
- * @return {*} The option value, the raw schema, or null.
+ * @return {object|string|number|null} The option value, the raw schema, or null.
  */
 function chosenSchema(config) {
 	if (!config || !config.schema) return null
@@ -344,7 +344,7 @@ function syncWindowSavePayload(store) {
  * The settings saveConfiguration posts after the schema configs, in order,
  * each with the function that builds its payload.
  *
- * @type {Array<[string, Function]>}
+ * @type {Array<[string, function(object): (object|null)]>}
  */
 const GENERAL_SAVES = [
 	['/index.php/apps/stackiq/api/user-groups/config', userGroupsSavePayload],

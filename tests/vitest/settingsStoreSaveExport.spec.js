@@ -266,10 +266,7 @@ describe('settings store save and export', () => {
 			const key = `saveConfiguration / ${stateName} / ${answerName}`
 			it(key, async () => {
 				globalThis.fetch = fakeFetch(answerFor)
-				check(
-					key,
-					await run(prepare, (store) => store.saveConfiguration()),
-				)
+				check(key, await run(prepare, (store) => store.saveConfiguration()))
 			})
 		}
 	}
@@ -289,9 +286,7 @@ describe('settings store save and export', () => {
 				}
 				check(
 					key,
-					await run(prepare, (store) =>
-						store.exportToArchiMate(...args),
-					),
+					await run(prepare, (store) => store.exportToArchiMate(...args)),
 				)
 			})
 		}
