@@ -35,7 +35,7 @@ namespace OCA\Stackiq\Service;
 use DateTimeImmutable;
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -587,7 +587,7 @@ class PortfolioReportService {
 	 */
 	private function getPageSizeCeiling(): int {
 		try {
-			$value = $this->config->getValueInt(Application::APP_ID, 'portfolio_report_page_size_ceiling', self::DEFAULT_PAGE_SIZE_CEILING);
+			$value = $this->config->getValueInt(AppIdentity::APP_ID, 'portfolio_report_page_size_ceiling', self::DEFAULT_PAGE_SIZE_CEILING);
 		} catch (\Throwable $e) {
 			$value = self::DEFAULT_PAGE_SIZE_CEILING;
 		}

@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use InvalidArgumentException;
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCA\Stackiq\Service\Itsm\ItsmFlowGateway;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
@@ -171,7 +171,7 @@ class ItsmExchangeService {
 
 		return [
 			'available'    => $this->gateway->available(),
-			'enabled'      => $this->appConfig->getValueBool(Application::APP_ID, self::ENABLED_KEY, false),
+			'enabled'      => $this->appConfig->getValueBool(AppIdentity::APP_ID, self::ENABLED_KEY, false),
 			'desk'         => ($config['desk'] ?? null),
 			'organisation' => ($config['organisation'] ?? null),
 			'flows'        => ($config['flows'] ?? []),
@@ -201,7 +201,7 @@ class ItsmExchangeService {
 		}
 
 		$profile = self::DESKS[$desk];
-		$appUrl  = rtrim($this->urlGenerator->getAbsoluteURL('/index.php/apps/' . Application::APP_ID), '/');
+		$appUrl  = rtrim($this->urlGenerator->getAbsoluteURL('/index.php/apps/' . AppIdentity::APP_ID), '/');
 		$base    = self::baseOf(location: $location);
 		$flows   = [];
 		foreach (self::FLOWS as $key => $flow) {
@@ -311,7 +311,7 @@ class ItsmExchangeService {
 		}
 
 		$this->storeConfig(desk: $desk, organisation: $organisation, flows: $saved);
-		$this->appConfig->setValueBool(Application::APP_ID, self::ENABLED_KEY, true);
+		$this->appConfig->setValueBool(AppIdentity::APP_ID, self::ENABLED_KEY, true);
 		$this->connectionReports?->itsmSetUp(
 			created: true,
 			message: count($saved) . ' flows set up for ' . self::DESKS[$desk]['label'] . '. The first import runs tonight.'
@@ -487,7 +487,7 @@ class ItsmExchangeService {
 	 * @return array<string, mixed> The stored set-up, or an empty array.
 	 */
 	private function config(): array {
-		$decoded = json_decode($this->appConfig->getValueString(Application::APP_ID, self::CONFIG_KEY, '{}'), true);
+		$decoded = json_decode($this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_KEY, '{}'), true);
 		if (is_array($decoded) === false) {
 			return [];
 		}
@@ -506,7 +506,7 @@ class ItsmExchangeService {
 	 */
 	private function storeConfig(string $desk, string $organisation, array $flows): void {
 		$this->appConfig->setValueString(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::CONFIG_KEY,
 			(string) json_encode(['desk' => $desk, 'organisation' => $organisation, 'flows' => $flows, 'setUpAt' => date(DATE_ATOM)])
 		);

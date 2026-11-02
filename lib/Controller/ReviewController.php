@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCA\Stackiq\Service\ReviewAggregateService;
 use OCA\Stackiq\Service\ReviewService;
 use OCP\AppFramework\Controller;
@@ -60,7 +60,7 @@ class ReviewController extends Controller {
 		private readonly ReviewService $reviews,
 		private readonly ReviewAggregateService $aggregate,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

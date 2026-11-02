@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Federation;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCP\IAppConfig;
 
 /**
@@ -53,7 +53,7 @@ class FederationConfig {
 	 * @return bool True when enabled.
 	 */
 	public function isEnabled(): bool {
-		return $this->appConfig->getValueBool(Application::APP_ID, 'federation_enabled', false);
+		return $this->appConfig->getValueBool(AppIdentity::APP_ID, 'federation_enabled', false);
 	}//end isEnabled()
 
 	/**
@@ -64,7 +64,7 @@ class FederationConfig {
 	 * @spec openspec/specs/federated-catalog-sync/spec.md
 	 */
 	public function getDirectoryUrl(): string {
-		$url = trim($this->appConfig->getValueString(Application::APP_ID, 'federation_directory_url', ''));
+		$url = trim($this->appConfig->getValueString(AppIdentity::APP_ID, 'federation_directory_url', ''));
 		if ($url !== '') {
 			return $url;
 		}
@@ -80,7 +80,7 @@ class FederationConfig {
 	 * @spec openspec/specs/federated-catalog-sync/spec.md
 	 */
 	public function getPeers(): array {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, 'federation_peers', '[]');
+		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, 'federation_peers', '[]');
 		$decoded = json_decode($raw, true);
 		if (is_array($decoded) === false) {
 			return [];
@@ -100,7 +100,7 @@ class FederationConfig {
 	 */
 	public function setPeers(array $peers): void {
 		$clean = array_values(array_unique(array_filter(array_map('strval', $peers))));
-		$this->appConfig->setValueString(Application::APP_ID, 'federation_peers', json_encode($clean));
+		$this->appConfig->setValueString(AppIdentity::APP_ID, 'federation_peers', json_encode($clean));
 	}//end setPeers()
 
 	/**
@@ -111,7 +111,7 @@ class FederationConfig {
 	 * @spec openspec/specs/federated-catalog-sync/spec.md
 	 */
 	public function getSyncInterval(): int {
-		$value = $this->appConfig->getValueInt(Application::APP_ID, 'federation_sync_interval', 3600);
+		$value = $this->appConfig->getValueInt(AppIdentity::APP_ID, 'federation_sync_interval', 3600);
 		if ($value > 0) {
 			return $value;
 		}
@@ -128,7 +128,7 @@ class FederationConfig {
 	 * @spec openspec/specs/federated-catalog-sync/spec.md
 	 */
 	public function getStaleAfterFailures(): int {
-		$value = $this->appConfig->getValueInt(Application::APP_ID, 'federation_stale_after_failures', 3);
+		$value = $this->appConfig->getValueInt(AppIdentity::APP_ID, 'federation_stale_after_failures', 3);
 		if ($value > 0) {
 			return $value;
 		}
@@ -145,7 +145,7 @@ class FederationConfig {
 	 * @spec openspec/specs/federated-catalog-sync/spec.md
 	 */
 	public function getPeerTimeout(): int {
-		$value = $this->appConfig->getValueInt(Application::APP_ID, 'federation_peer_timeout', 15);
+		$value = $this->appConfig->getValueInt(AppIdentity::APP_ID, 'federation_peer_timeout', 15);
 		if ($value > 0) {
 			return $value;
 		}
@@ -163,7 +163,7 @@ class FederationConfig {
 	 * @spec openspec/specs/federated-catalog-sync/spec.md
 	 */
 	public function getPeerFailures(string $peerUrl): int {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, 'federation_peer_failures', '{}');
+		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, 'federation_peer_failures', '{}');
 		$decoded = json_decode($raw, true);
 		if (is_array($decoded) === false) {
 			return 0;
@@ -183,7 +183,7 @@ class FederationConfig {
 	 * @spec openspec/specs/federated-catalog-sync/spec.md
 	 */
 	public function setPeerFailures(string $peerUrl, int $failures): void {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, 'federation_peer_failures', '{}');
+		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, 'federation_peer_failures', '{}');
 		$decoded = json_decode($raw, true);
 		if (is_array($decoded) === false) {
 			$decoded = [];
@@ -196,7 +196,7 @@ class FederationConfig {
 			$decoded[$peerUrl] = $failures;
 		}
 
-		$this->appConfig->setValueString(Application::APP_ID, 'federation_peer_failures', json_encode($decoded));
+		$this->appConfig->setValueString(AppIdentity::APP_ID, 'federation_peer_failures', json_encode($decoded));
 	}//end setPeerFailures()
 
 	/**
@@ -210,7 +210,7 @@ class FederationConfig {
 	 * @spec openspec/specs/federated-catalog-sync/spec.md
 	 */
 	public function getLocalFederationHosts(): array {
-		$raw = $this->appConfig->getValueString(Application::APP_ID, 'local_federation_hosts', '');
+		$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, 'local_federation_hosts', '');
 		if (trim($raw) === '') {
 			return [];
 		}

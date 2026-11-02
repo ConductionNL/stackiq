@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCA\Stackiq\Service\Itsm\ItsmFlowGateway;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -93,7 +93,7 @@ class ItsmFileImportService {
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-006-a-file-feeds-the-same-import
 	 */
 	public function import(string $path, string $name): array {
-		$config = json_decode($this->appConfig->getValueString(Application::APP_ID, ItsmExchangeService::CONFIG_KEY, '{}'), true);
+		$config = json_decode($this->appConfig->getValueString(AppIdentity::APP_ID, ItsmExchangeService::CONFIG_KEY, '{}'), true);
 		$flow   = null;
 		if (is_array($config) === true) {
 			$flow = ($config['flows']['file'] ?? null);

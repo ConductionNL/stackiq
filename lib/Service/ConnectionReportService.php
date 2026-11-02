@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventDispatcher;
 use Psr\Log\LoggerInterface;
@@ -427,7 +427,7 @@ class ConnectionReportService {
 
 		return $this->send(
 			key: $key,
-			build: static fn (): object => new $eventClass(app: Application::APP_ID, key: $key)
+			build: static fn (): object => new $eventClass(app: AppIdentity::APP_ID, key: $key)
 		);
 	}//end refresh()
 
@@ -450,7 +450,7 @@ class ConnectionReportService {
 
 		return $this->send(
 			key: $key,
-			build: static fn (): object => new $eventClass(app: Application::APP_ID, key: $key, status: $status, message: $message)
+			build: static fn (): object => new $eventClass(app: AppIdentity::APP_ID, key: $key, status: $status, message: $message)
 		);
 	}//end report()
 

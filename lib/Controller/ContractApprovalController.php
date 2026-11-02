@@ -44,7 +44,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCA\Stackiq\Service\ContractApprovalService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -81,7 +81,7 @@ class ContractApprovalController extends Controller {
 		private readonly IConfig $config,
 		private readonly LoggerInterface $logger,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 
 	}//end __construct()
 

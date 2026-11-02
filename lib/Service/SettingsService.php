@@ -1709,7 +1709,7 @@ class SettingsService {
 							fragmentSig: $fragmentSig
 						);
 
-						$appId = \OCA\Stackiq\AppInfo\Application::APP_ID;
+						$appId = \OCA\Stackiq\AppInfo\AppIdentity::APP_ID;
 
 						// Force-when-stale workaround (register-import-reliability,
 						// https://github.com/ConductionNL/openregister/issues/2075):
@@ -1809,7 +1809,7 @@ class SettingsService {
 								'trace' => $e->getTraceAsString(),
 								'force_flag' => $force,
 								'effective_force' => $effectiveForce,
-								'app_id' => \OCA\Stackiq\AppInfo\Application::APP_ID,
+								'app_id' => \OCA\Stackiq\AppInfo\AppIdentity::APP_ID,
 							]
 						);
 
@@ -3584,7 +3584,7 @@ class SettingsService {
 	public function getVersionInfo(): array {
 		try {
 			// Get the current app version.
-			$currentAppVersion = $this->appManager->getAppVersion(\OCA\Stackiq\AppInfo\Application::APP_ID);
+			$currentAppVersion = $this->appManager->getAppVersion(\OCA\Stackiq\AppInfo\AppIdentity::APP_ID);
 
 			$this->logger->debug(
 				'SettingsService: Getting version information',
@@ -3598,7 +3598,7 @@ class SettingsService {
 			$storedConfigVersion = null;
 
 			try {
-				$appId = \OCA\Stackiq\AppInfo\Application::APP_ID;
+				$appId = \OCA\Stackiq\AppInfo\AppIdentity::APP_ID;
 				$storedConfigVersion = $configurationService->getConfiguredAppVersion($appId);
 			} catch (\Exception $e) {
 				$this->logger->warning(
