@@ -619,6 +619,309 @@ function workbookTooLarge(details, sheetNames, archiveSheet) {
 }
 
 /**
+ * The words for each error code the page knows: the title and, where the
+ * code has one, a hint. Each entry takes the error details and the sheet
+ * names the hints mention.
+ *
+ * @type {Object<string, function(object, {sheetNames: Array<string>, archiveSheet: string|null}): {title: string, hint: string}>}
+ */
+const ERROR_TEXTS = Object.freeze({
+	NO_FILE_UPLOADED() {
+		return {
+			title: t('stackiq', 'No file was uploaded.'),
+			hint: t('stackiq', 'Choose the TOPdesk export and try again.'),
+		}
+	},
+	NOT_XLSX() {
+		return {
+			title: t('stackiq', 'This file is not an Excel workbook (.xlsx).'),
+			hint: t(
+				'stackiq',
+				'Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.',
+			),
+		}
+	},
+	FILE_TOO_LARGE(details) {
+		return {
+			title:
+				Number(details.maxBytes) > 0
+					? t(
+							'stackiq',
+							'The file is larger than {size}, the most the import accepts.',
+							{ size: formatMegabytes(details.maxBytes) },
+							AS_TEXT,
+						)
+					: t('stackiq', 'The file is larger than the server accepts.'),
+			hint: t(
+				'stackiq',
+				'Remove sheets the import does not read and try again. Or split the export and import every part with "Keep them as they are".',
+			),
+		}
+	},
+	MISSING_RECORDS_UNSUPPORTED() {
+		return {
+			title: t(
+				'stackiq',
+				'Applications missing from the export can only be archived or kept.',
+			),
+			hint: '',
+		}
+	},
+	FIELD_INVALID(details) {
+		const accepted = Array.isArray(details.accepted)
+			? details.accepted.map((value) => String(value))
+			: []
+		return {
+			title: t(
+				'stackiq',
+				'The request field "{field}" has a value the import does not accept.',
+				{ field: String(details.field ?? '') },
+				AS_TEXT,
+			),
+			hint:
+				accepted.length > 0
+					? t(
+							'stackiq',
+							'Accepted values: {accepted}. Reload the page and try again.',
+							{ accepted: accepted.join(', ') },
+							AS_TEXT,
+						)
+					: t('stackiq', 'Reload the page and try again.'),
+		}
+	},
+	UPLOAD_FAILED() {
+		return {
+			title: t('stackiq', 'The server could not store the uploaded file.'),
+			hint: t(
+				'stackiq',
+				'Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.',
+			),
+		}
+	},
+	MUNICIPALITY_REQUIRED() {
+		return {
+			title: t('stackiq', 'Choose a municipality first.'),
+			hint: t(
+				'stackiq',
+				'Pick an existing municipality or type the name of a new one.',
+			),
+		}
+	},
+	MUNICIPALITY_INVALID() {
+		return {
+			title: t('stackiq', 'The chosen organisation is not a municipality.'),
+			hint: t(
+				'stackiq',
+				'Pick an organisation of type Municipality, or type the name of a new one.',
+			),
+		}
+	},
+	NO_SOURCE_SHEET(details, names) {
+		const expected =
+			Array.isArray(details.expected) && details.expected.length > 0
+				? details.expected.map((name) => String(name))
+				: names.sheetNames
+		const values = { sheets: quotedSheetList(expected) }
+		return {
+			title: t(
+				'stackiq',
+				'The workbook has none of the sheets the import reads.',
+			),
+			hint:
+				expected.length === 1
+					? t(
+							'stackiq',
+							'Expected the sheet {sheets}. Sheet names must match exactly.',
+							values,
+							AS_TEXT,
+						)
+					: t(
+							'stackiq',
+							'Expected one of the sheets {sheets}. Sheet names must match exactly.',
+							values,
+							AS_TEXT,
+						),
+		}
+	},
+	MISSING_COLUMN(details) {
+		return {
+			title: t(
+				'stackiq',
+				'The sheet "{sheet}" has no column "{column}".',
+				{
+					sheet: String(details.sheet ?? ''),
+					column: String(details.column ?? ''),
+				},
+				AS_TEXT,
+			),
+			hint: t(
+				'stackiq',
+				'The columns "APPID" and "Applicatie Naam" are required on every source sheet. Add the column to the export and try again. Nothing was imported.',
+			),
+		}
+	},
+	TOO_MANY_ROWS(details) {
+		return {
+			title: details.sheet
+				? t(
+						'stackiq',
+						'The sheet "{sheet}" has more rows than the import can process.',
+						{ sheet: String(details.sheet) },
+						AS_TEXT,
+					)
+				: t('stackiq', 'A sheet has more rows than the import can process.'),
+			hint:
+				Number(details.limit) > 0
+					? t(
+							'stackiq',
+							'A source sheet may hold at most {limit} rows. Split the export and import the parts one after the other with "Keep them as they are".',
+							{ limit: Number(details.limit).toLocaleString() },
+							AS_TEXT,
+						)
+					: t(
+							'stackiq',
+							'Split the export and import the parts one after the other with "Keep them as they are".',
+						),
+		}
+	},
+	MAPPING_UNAVAILABLE() {
+		return {
+			title: t('stackiq', 'The import mapping cannot run.'),
+			hint: t(
+				'stackiq',
+				"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.",
+			),
+		}
+	},
+	READER_UNAVAILABLE() {
+		return {
+			title: t('stackiq', 'The Excel reader is not available.'),
+			hint: t(
+				'stackiq',
+				'The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.',
+			),
+		}
+	},
+	NOT_CONFIGURED() {
+		return {
+			title: t('stackiq', 'Stackiq is not configured for the import.'),
+			hint: t(
+				'stackiq',
+				'The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.',
+			),
+		}
+	},
+	WORKBOOK_TOO_LARGE(details, names) {
+		return workbookTooLarge(details, names.sheetNames, names.archiveSheet)
+	},
+	SCHEMA_OUTDATED(details) {
+		return {
+			title: details.schema
+				? t(
+						'stackiq',
+						'The "{schema}" schema of the stackiq register is out of date.',
+						{ schema: String(details.schema) },
+						AS_TEXT,
+					)
+				: t('stackiq', 'The stackiq register is out of date.'),
+			hint: t(
+				'stackiq',
+				'It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.',
+			),
+		}
+	},
+	IMPORT_IN_PROGRESS() {
+		return {
+			title: t('stackiq', 'Another CMDB import is running.'),
+			hint: t(
+				'stackiq',
+				'Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.',
+			),
+		}
+	},
+	MUNICIPALITY_AMBIGUOUS(details) {
+		return {
+			title:
+				Array.isArray(details.matches) && details.matches.length > 1
+					? t(
+							'stackiq',
+							'{count} municipalities have this name.',
+							{ count: String(details.matches.length) },
+							AS_TEXT,
+						)
+					: t('stackiq', 'Several municipalities have this name.'),
+			hint: t(
+				'stackiq',
+				'Choose the municipality from the list instead of typing its name. Nothing was imported.',
+			),
+		}
+	},
+	ARCHIVE_UNAVAILABLE() {
+		return {
+			title: t(
+				'stackiq',
+				'Applications missing from the export cannot be archived.',
+			),
+			hint: t(
+				'stackiq',
+				'OpenRegister is missing or too old to archive objects. Choose "Keep them as they are" and import again, or update OpenRegister. Nothing was imported.',
+			),
+		}
+	},
+	OPERATION_NOT_FOUND() {
+		return {
+			title: t('stackiq', 'This import is no longer running.'),
+			hint: '',
+		}
+	},
+	NOT_SIGNED_IN() {
+		return {
+			title: t('stackiq', 'You are not signed in.'),
+			hint: t('stackiq', 'Sign in again and retry the import.'),
+		}
+	},
+	NOT_ADMIN() {
+		return {
+			title: t(
+				'stackiq',
+				'Only Nextcloud administrators can import a CMDB export.',
+			),
+			hint: '',
+		}
+	},
+	CSRF_FAILED() {
+		return {
+			title: t('stackiq', 'Your session has expired.'),
+			hint: t('stackiq', 'Reload the page and try again.'),
+		}
+	},
+	NETWORK_ERROR() {
+		return {
+			title: t('stackiq', 'The server could not be reached.'),
+			hint: t('stackiq', 'Check the connection and try again.'),
+		}
+	},
+	IMPORT_INTERRUPTED() {
+		return {
+			title: t('stackiq', 'The page got no answer from the import.'),
+			hint: t(
+				'stackiq',
+				'The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.',
+			),
+		}
+	},
+	IMPORT_FAILED() {
+		return {
+			title: t('stackiq', 'The import failed unexpectedly.'),
+			hint: t(
+				'stackiq',
+				'Nothing more is known on this page; the Nextcloud log has the details.',
+			),
+		}
+	},
+})
+
+/**
  * What the page says for an error: a title and, where the code has one, a
  * hint on what to do. The text is the page's own, so it is translated even
  * when the server's message is not.
@@ -635,287 +938,12 @@ export function errorText(
 	archiveSheet = mappingArchiveSheet(null),
 ) {
 	const details = error?.details || {}
-	switch (error?.error) {
-		case 'NO_FILE_UPLOADED':
-			return {
-				title: t('stackiq', 'No file was uploaded.'),
-				hint: t('stackiq', 'Choose the TOPdesk export and try again.'),
-			}
-		case 'NOT_XLSX':
-			return {
-				title: t('stackiq', 'This file is not an Excel workbook (.xlsx).'),
-				hint: t(
-					'stackiq',
-					'Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.',
-				),
-			}
-		case 'FILE_TOO_LARGE':
-			return {
-				title:
-					Number(details.maxBytes) > 0
-						? t(
-								'stackiq',
-								'The file is larger than {size}, the most the import accepts.',
-								{ size: formatMegabytes(details.maxBytes) },
-								AS_TEXT,
-							)
-						: t(
-								'stackiq',
-								'The file is larger than the server accepts.',
-							),
-				hint: t(
-					'stackiq',
-					'Remove sheets the import does not read and try again. Or split the export and import every part with "Keep them as they are".',
-				),
-			}
-		case 'MISSING_RECORDS_UNSUPPORTED':
-			return {
-				title: t(
-					'stackiq',
-					'Applications missing from the export can only be archived or kept.',
-				),
-				hint: '',
-			}
-		case 'FIELD_INVALID': {
-			const accepted = Array.isArray(details.accepted)
-				? details.accepted.map((value) => String(value))
-				: []
-			return {
-				title: t(
-					'stackiq',
-					'The request field "{field}" has a value the import does not accept.',
-					{ field: String(details.field ?? '') },
-					AS_TEXT,
-				),
-				hint:
-					accepted.length > 0
-						? t(
-								'stackiq',
-								'Accepted values: {accepted}. Reload the page and try again.',
-								{ accepted: accepted.join(', ') },
-								AS_TEXT,
-							)
-						: t('stackiq', 'Reload the page and try again.'),
-			}
-		}
-		case 'UPLOAD_FAILED':
-			return {
-				title: t('stackiq', 'The server could not store the uploaded file.'),
-				hint: t(
-					'stackiq',
-					'Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.',
-				),
-			}
-		case 'MUNICIPALITY_REQUIRED':
-			return {
-				title: t('stackiq', 'Choose a municipality first.'),
-				hint: t(
-					'stackiq',
-					'Pick an existing municipality or type the name of a new one.',
-				),
-			}
-		case 'MUNICIPALITY_INVALID':
-			return {
-				title: t(
-					'stackiq',
-					'The chosen organisation is not a municipality.',
-				),
-				hint: t(
-					'stackiq',
-					'Pick an organisation of type Municipality, or type the name of a new one.',
-				),
-			}
-		case 'NO_SOURCE_SHEET': {
-			const expected =
-				Array.isArray(details.expected) && details.expected.length > 0
-					? details.expected.map((name) => String(name))
-					: sheetNames
-			const values = { sheets: quotedSheetList(expected) }
-			return {
-				title: t(
-					'stackiq',
-					'The workbook has none of the sheets the import reads.',
-				),
-				hint:
-					expected.length === 1
-						? t(
-								'stackiq',
-								'Expected the sheet {sheets}. Sheet names must match exactly.',
-								values,
-								AS_TEXT,
-							)
-						: t(
-								'stackiq',
-								'Expected one of the sheets {sheets}. Sheet names must match exactly.',
-								values,
-								AS_TEXT,
-							),
-			}
-		}
-		case 'MISSING_COLUMN':
-			return {
-				title: t(
-					'stackiq',
-					'The sheet "{sheet}" has no column "{column}".',
-					{
-						sheet: String(details.sheet ?? ''),
-						column: String(details.column ?? ''),
-					},
-					AS_TEXT,
-				),
-				hint: t(
-					'stackiq',
-					'The columns "APPID" and "Applicatie Naam" are required on every source sheet. Add the column to the export and try again. Nothing was imported.',
-				),
-			}
-		case 'TOO_MANY_ROWS':
-			return {
-				title: details.sheet
-					? t(
-							'stackiq',
-							'The sheet "{sheet}" has more rows than the import can process.',
-							{ sheet: String(details.sheet) },
-							AS_TEXT,
-						)
-					: t(
-							'stackiq',
-							'A sheet has more rows than the import can process.',
-						),
-				hint:
-					Number(details.limit) > 0
-						? t(
-								'stackiq',
-								'A source sheet may hold at most {limit} rows. Split the export and import the parts one after the other with "Keep them as they are".',
-								{ limit: Number(details.limit).toLocaleString() },
-								AS_TEXT,
-							)
-						: t(
-								'stackiq',
-								'Split the export and import the parts one after the other with "Keep them as they are".',
-							),
-			}
-		case 'MAPPING_UNAVAILABLE':
-			return {
-				title: t('stackiq', 'The import mapping cannot run.'),
-				hint: t(
-					'stackiq',
-					"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.",
-				),
-			}
-		case 'READER_UNAVAILABLE':
-			return {
-				title: t('stackiq', 'The Excel reader is not available.'),
-				hint: t(
-					'stackiq',
-					'The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.',
-				),
-			}
-		case 'NOT_CONFIGURED':
-			return {
-				title: t('stackiq', 'Stackiq is not configured for the import.'),
-				hint: t(
-					'stackiq',
-					'The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.',
-				),
-			}
-		case 'WORKBOOK_TOO_LARGE':
-			return workbookTooLarge(details, sheetNames, archiveSheet)
-		case 'SCHEMA_OUTDATED':
-			return {
-				title: details.schema
-					? t(
-							'stackiq',
-							'The "{schema}" schema of the stackiq register is out of date.',
-							{ schema: String(details.schema) },
-							AS_TEXT,
-						)
-					: t('stackiq', 'The stackiq register is out of date.'),
-				hint: t(
-					'stackiq',
-					'It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.',
-				),
-			}
-		case 'IMPORT_IN_PROGRESS':
-			return {
-				title: t('stackiq', 'Another CMDB import is running.'),
-				hint: t(
-					'stackiq',
-					'Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.',
-				),
-			}
-		case 'MUNICIPALITY_AMBIGUOUS':
-			return {
-				title:
-					Array.isArray(details.matches) && details.matches.length > 1
-						? t(
-								'stackiq',
-								'{count} municipalities have this name.',
-								{ count: String(details.matches.length) },
-								AS_TEXT,
-							)
-						: t('stackiq', 'Several municipalities have this name.'),
-				hint: t(
-					'stackiq',
-					'Choose the municipality from the list instead of typing its name. Nothing was imported.',
-				),
-			}
-		case 'ARCHIVE_UNAVAILABLE':
-			return {
-				title: t(
-					'stackiq',
-					'Applications missing from the export cannot be archived.',
-				),
-				hint: t(
-					'stackiq',
-					'OpenRegister is missing or too old to archive objects. Choose "Keep them as they are" and import again, or update OpenRegister. Nothing was imported.',
-				),
-			}
-		case 'OPERATION_NOT_FOUND':
-			return {
-				title: t('stackiq', 'This import is no longer running.'),
-				hint: '',
-			}
-		case 'NOT_SIGNED_IN':
-			return {
-				title: t('stackiq', 'You are not signed in.'),
-				hint: t('stackiq', 'Sign in again and retry the import.'),
-			}
-		case 'NOT_ADMIN':
-			return {
-				title: t(
-					'stackiq',
-					'Only Nextcloud administrators can import a CMDB export.',
-				),
-				hint: '',
-			}
-		case 'CSRF_FAILED':
-			return {
-				title: t('stackiq', 'Your session has expired.'),
-				hint: t('stackiq', 'Reload the page and try again.'),
-			}
-		case 'NETWORK_ERROR':
-			return {
-				title: t('stackiq', 'The server could not be reached.'),
-				hint: t('stackiq', 'Check the connection and try again.'),
-			}
-		case 'IMPORT_INTERRUPTED':
-			return {
-				title: t('stackiq', 'The page got no answer from the import.'),
-				hint: t(
-					'stackiq',
-					'The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.',
-				),
-			}
-		case 'IMPORT_FAILED':
-		default:
-			return {
-				title: t('stackiq', 'The import failed unexpectedly.'),
-				hint: t(
-					'stackiq',
-					'Nothing more is known on this page; the Nextcloud log has the details.',
-				),
-			}
-	}
+	const code = error?.error
+	const words =
+		typeof code === 'string' && Object.hasOwn(ERROR_TEXTS, code)
+			? ERROR_TEXTS[code]
+			: ERROR_TEXTS.IMPORT_FAILED
+	return words(details, { sheetNames, archiveSheet })
 }
 
 /**

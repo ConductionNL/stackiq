@@ -1,0 +1,3066 @@
+{
+	"code:NO_FILE_UPLOADED": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"No file was uploaded.\"]",
+			"hint": "[\"stackiq\",\"Choose the TOPdesk export and try again.\"]"
+		}
+	},
+	"code:NOT_XLSX": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		}
+	},
+	"code:FILE_TOO_LARGE": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"The file is larger than {size}, the most the import accepts.\",{\"size\":\"[\\\"stackiq\\\",\\\"{size} MB\\\",{\\\"size\\\":\\\"20\\\"},{\\\"escape\\\":false,\\\"sanitize\\\":false}]\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"The file is larger than {size}, the most the import accepts.\",{\"size\":\"[\\\"stackiq\\\",\\\"{size} MB\\\",{\\\"size\\\":\\\"20\\\"},{\\\"escape\\\":false,\\\"sanitize\\\":false}]\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"The file is larger than {size}, the most the import accepts.\",{\"size\":\"[\\\"stackiq\\\",\\\"{size} MB\\\",{\\\"size\\\":\\\"20\\\"},{\\\"escape\\\":false,\\\"sanitize\\\":false}]\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"The file is larger than the server accepts.\"]",
+			"hint": "[\"stackiq\",\"Remove sheets the import does not read and try again. Or split the export and import every part with \\\"Keep them as they are\\\".\"]"
+		}
+	},
+	"code:MISSING_RECORDS_UNSUPPORTED": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"Applications missing from the export can only be archived or kept.\"]",
+			"hint": ""
+		}
+	},
+	"code:FIELD_INVALID": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"missing\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Accepted values: {accepted}. Reload the page and try again.\",{\"accepted\":\"archive, keep, 3\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"missing\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Accepted values: {accepted}. Reload the page and try again.\",{\"accepted\":\"archive, keep, 3\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"missing\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Accepted values: {accepted}. Reload the page and try again.\",{\"accepted\":\"archive, keep, 3\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"The request field \\\"{field}\\\" has a value the import does not accept.\",{\"field\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		}
+	},
+	"code:UPLOAD_FAILED": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"The server could not store the uploaded file.\"]",
+			"hint": "[\"stackiq\",\"Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.\"]"
+		}
+	},
+	"code:MUNICIPALITY_REQUIRED": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"Choose a municipality first.\"]",
+			"hint": "[\"stackiq\",\"Pick an existing municipality or type the name of a new one.\"]"
+		}
+	},
+	"code:MUNICIPALITY_INVALID": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"The chosen organisation is not a municipality.\"]",
+			"hint": "[\"stackiq\",\"Pick an organisation of type Municipality, or type the name of a new one.\"]"
+		}
+	},
+	"code:NO_SOURCE_SHEET": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected one of the sheets {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"Onbeh Applicaties CMDB\\\", \\\"Beheerde Applicaties CMDB\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected the sheet {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"Only\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected one of the sheets {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"A\\\", \\\"B\\\", \\\"C\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected one of the sheets {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"Onbeh Applicaties CMDB\\\", \\\"Beheerde Applicaties CMDB\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected the sheet {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"Only\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected one of the sheets {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"A\\\", \\\"B\\\", \\\"C\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected one of the sheets {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"Applicaties\\\", \\\"Koppelingen\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected one of the sheets {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"Applicaties\\\", \\\"Koppelingen\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected one of the sheets {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"Applicaties\\\", \\\"Koppelingen\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected the sheet {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"Applicaties\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected the sheet {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"Applicaties\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected the sheet {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"Applicaties\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected one of the sheets {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"Onbeh Applicaties CMDB\\\", \\\"Beheerde Applicaties CMDB\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected the sheet {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"Only\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected one of the sheets {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"A\\\", \\\"B\\\", \\\"C\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected one of the sheets {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"Onbeh Applicaties CMDB\\\", \\\"Beheerde Applicaties CMDB\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected the sheet {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"Only\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected one of the sheets {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"A\\\", \\\"B\\\", \\\"C\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected one of the sheets {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"Onbeh Applicaties CMDB\\\", \\\"Beheerde Applicaties CMDB\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected the sheet {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"Only\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected one of the sheets {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"A\\\", \\\"B\\\", \\\"C\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected one of the sheets {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"Onbeh Applicaties CMDB\\\", \\\"Beheerde Applicaties CMDB\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected the sheet {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"Only\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"The workbook has none of the sheets the import reads.\"]",
+			"hint": "[\"stackiq\",\"Expected one of the sheets {sheets}. Sheet names must match exactly.\",{\"sheets\":\"\\\"A\\\", \\\"B\\\", \\\"C\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		}
+	},
+	"code:MISSING_COLUMN": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"Applicaties\",\"column\":\"APPID\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"Applicaties\",\"column\":\"APPID\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"Applicaties\",\"column\":\"APPID\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has no column \\\"{column}\\\".\",{\"sheet\":\"\",\"column\":\"\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"The columns \\\"APPID\\\" and \\\"Applicatie Naam\\\" are required on every source sheet. Add the column to the export and try again. Nothing was imported.\"]"
+		}
+	},
+	"code:TOO_MANY_ROWS": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has more rows than the import can process.\",{\"sheet\":\"Applicaties\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"A source sheet may hold at most {limit} rows. Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\",{\"limit\":\"50,000\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has more rows than the import can process.\",{\"sheet\":\"Applicaties\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"A source sheet may hold at most {limit} rows. Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\",{\"limit\":\"50,000\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"The sheet \\\"{sheet}\\\" has more rows than the import can process.\",{\"sheet\":\"Applicaties\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"A source sheet may hold at most {limit} rows. Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\",{\"limit\":\"50,000\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"A sheet has more rows than the import can process.\"]",
+			"hint": "[\"stackiq\",\"Split the export and import the parts one after the other with \\\"Keep them as they are\\\".\"]"
+		}
+	},
+	"code:MAPPING_UNAVAILABLE": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"The import mapping cannot run.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.\"]"
+		}
+	},
+	"code:READER_UNAVAILABLE": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"The Excel reader is not available.\"]",
+			"hint": "[\"stackiq\",\"The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.\"]"
+		}
+	},
+	"code:NOT_CONFIGURED": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"Stackiq is not configured for the import.\"]",
+			"hint": "[\"stackiq\",\"The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.\"]"
+		}
+	},
+	"code:WORKBOOK_TOO_LARGE": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"The workbook is too large to read once unpacked.\"]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads {sheets}, and the APPID column of \\\"{archive}\\\"), and import that copy.\",{\"sheets\":\"\\\"Onbeh Applicaties CMDB\\\", \\\"Beheerde Applicaties CMDB\\\"\",\"archive\":\"Gearchiveerde Applicaties\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"The workbook is too large to read once unpacked.\"]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads {sheets}, and the APPID column of \\\"{archive}\\\"), and import that copy.\",{\"sheets\":\"\\\"Only\\\"\",\"archive\":\"Archive\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"The workbook is too large to read once unpacked.\"]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy.\",{\"sheets\":\"\\\"A\\\", \\\"B\\\", \\\"C\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"The workbook is too large to read once unpacked.\"]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads {sheets}, and the APPID column of \\\"{archive}\\\"), and import that copy.\",{\"sheets\":\"\\\"Onbeh Applicaties CMDB\\\", \\\"Beheerde Applicaties CMDB\\\"\",\"archive\":\"Gearchiveerde Applicaties\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"The workbook is too large to read once unpacked.\"]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads {sheets}, and the APPID column of \\\"{archive}\\\"), and import that copy.\",{\"sheets\":\"\\\"Only\\\"\",\"archive\":\"Archive\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"The workbook is too large to read once unpacked.\"]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy.\",{\"sheets\":\"\\\"A\\\", \\\"B\\\", \\\"C\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"Unpacked, the workbook is larger than {size}, the most the import reads.\",{\"size\":\"[\\\"stackiq\\\",\\\"{size} MB\\\",{\\\"size\\\":\\\"100\\\"},{\\\"escape\\\":false,\\\"sanitize\\\":false}]\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads {sheets}, and the APPID column of \\\"{archive}\\\"), and import that copy.\",{\"sheets\":\"\\\"Onbeh Applicaties CMDB\\\", \\\"Beheerde Applicaties CMDB\\\"\",\"archive\":\"Gearchiveerde Applicaties\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"Unpacked, the workbook is larger than {size}, the most the import reads.\",{\"size\":\"[\\\"stackiq\\\",\\\"{size} MB\\\",{\\\"size\\\":\\\"100\\\"},{\\\"escape\\\":false,\\\"sanitize\\\":false}]\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads {sheets}, and the APPID column of \\\"{archive}\\\"), and import that copy.\",{\"sheets\":\"\\\"Only\\\"\",\"archive\":\"Archive\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"Unpacked, the workbook is larger than {size}, the most the import reads.\",{\"size\":\"[\\\"stackiq\\\",\\\"{size} MB\\\",{\\\"size\\\":\\\"100\\\"},{\\\"escape\\\":false,\\\"sanitize\\\":false}]\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy.\",{\"sheets\":\"\\\"A\\\", \\\"B\\\", \\\"C\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"The workbook is too large to read once unpacked.\"]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads {sheets}, and the APPID column of \\\"{archive}\\\"), and import that copy.\",{\"sheets\":\"\\\"Onbeh Applicaties CMDB\\\", \\\"Beheerde Applicaties CMDB\\\"\",\"archive\":\"Gearchiveerde Applicaties\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"The workbook is too large to read once unpacked.\"]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads {sheets}, and the APPID column of \\\"{archive}\\\"), and import that copy.\",{\"sheets\":\"\\\"Only\\\"\",\"archive\":\"Archive\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"The workbook is too large to read once unpacked.\"]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy.\",{\"sheets\":\"\\\"A\\\", \\\"B\\\", \\\"C\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"The workbook is too large to read once unpacked.\"]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads {sheets}, and the APPID column of \\\"{archive}\\\"), and import that copy.\",{\"sheets\":\"\\\"Onbeh Applicaties CMDB\\\", \\\"Beheerde Applicaties CMDB\\\"\",\"archive\":\"Gearchiveerde Applicaties\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"The workbook is too large to read once unpacked.\"]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads {sheets}, and the APPID column of \\\"{archive}\\\"), and import that copy.\",{\"sheets\":\"\\\"Only\\\"\",\"archive\":\"Archive\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"The workbook is too large to read once unpacked.\"]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy.\",{\"sheets\":\"\\\"A\\\", \\\"B\\\", \\\"C\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"The part {part} of the workbook is too large to import: unpacked it is {size}, and the import reads at most {limit} of one part.\",{\"part\":\"xl/sharedStrings.xml\",\"size\":\"[\\\"stackiq\\\",\\\"{size} MB\\\",{\\\"size\\\":\\\"0\\\"},{\\\"escape\\\":false,\\\"sanitize\\\":false}]\",\"limit\":\"[\\\"stackiq\\\",\\\"{size} MB\\\",{\\\"size\\\":\\\"0\\\"},{\\\"escape\\\":false,\\\"sanitize\\\":false}]\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Split the rows over two copies of the export and import both with \\\"Keep them as they are\\\": an import that archives treats the applications of the other copy as missing.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"The part {part} of the workbook is too large to import: unpacked it is {size}, and the import reads at most {limit} of one part.\",{\"part\":\"xl/sharedStrings.xml\",\"size\":\"[\\\"stackiq\\\",\\\"{size} MB\\\",{\\\"size\\\":\\\"0\\\"},{\\\"escape\\\":false,\\\"sanitize\\\":false}]\",\"limit\":\"[\\\"stackiq\\\",\\\"{size} MB\\\",{\\\"size\\\":\\\"0\\\"},{\\\"escape\\\":false,\\\"sanitize\\\":false}]\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Split the rows over two copies of the export and import both with \\\"Keep them as they are\\\": an import that archives treats the applications of the other copy as missing.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"The part {part} of the workbook is too large to import: unpacked it is {size}, and the import reads at most {limit} of one part.\",{\"part\":\"xl/sharedStrings.xml\",\"size\":\"[\\\"stackiq\\\",\\\"{size} MB\\\",{\\\"size\\\":\\\"0\\\"},{\\\"escape\\\":false,\\\"sanitize\\\":false}]\",\"limit\":\"[\\\"stackiq\\\",\\\"{size} MB\\\",{\\\"size\\\":\\\"0\\\"},{\\\"escape\\\":false,\\\"sanitize\\\":false}]\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Split the rows over two copies of the export and import both with \\\"Keep them as they are\\\": an import that archives treats the applications of the other copy as missing.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"The workbook holds more than {count} different texts, the most the import reads.\",{\"count\":\"10\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads {sheets}, and the APPID column of \\\"{archive}\\\"), and import that copy.\",{\"sheets\":\"\\\"Onbeh Applicaties CMDB\\\", \\\"Beheerde Applicaties CMDB\\\"\",\"archive\":\"Gearchiveerde Applicaties\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"The workbook holds more than {count} different texts, the most the import reads.\",{\"count\":\"10\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads {sheets}, and the APPID column of \\\"{archive}\\\"), and import that copy.\",{\"sheets\":\"\\\"Only\\\"\",\"archive\":\"Archive\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"The workbook holds more than {count} different texts, the most the import reads.\",{\"count\":\"10\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy.\",{\"sheets\":\"\\\"A\\\", \\\"B\\\", \\\"C\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.\",{\"size\":\"[\\\"stackiq\\\",\\\"{size} MB\\\",{\\\"size\\\":\\\"0\\\"},{\\\"escape\\\":false,\\\"sanitize\\\":false}]\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads {sheets}, and the APPID column of \\\"{archive}\\\"), and import that copy.\",{\"sheets\":\"\\\"Onbeh Applicaties CMDB\\\", \\\"Beheerde Applicaties CMDB\\\"\",\"archive\":\"Gearchiveerde Applicaties\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.\",{\"size\":\"[\\\"stackiq\\\",\\\"{size} MB\\\",{\\\"size\\\":\\\"0\\\"},{\\\"escape\\\":false,\\\"sanitize\\\":false}]\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads {sheets}, and the APPID column of \\\"{archive}\\\"), and import that copy.\",{\"sheets\":\"\\\"Only\\\"\",\"archive\":\"Archive\"},{\"escape\":false,\"sanitize\":false}]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.\",{\"size\":\"[\\\"stackiq\\\",\\\"{size} MB\\\",{\\\"size\\\":\\\"0\\\"},{\\\"escape\\\":false,\\\"sanitize\\\":false}]\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.\"] [\"stackiq\",\"Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy.\",{\"sheets\":\"\\\"A\\\", \\\"B\\\", \\\"C\\\"\"},{\"escape\":false,\"sanitize\":false}]"
+		}
+	},
+	"code:SCHEMA_OUTDATED": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"The \\\"{schema}\\\" schema of the stackiq register is out of date.\",{\"schema\":\"application\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"The \\\"{schema}\\\" schema of the stackiq register is out of date.\",{\"schema\":\"application\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"The \\\"{schema}\\\" schema of the stackiq register is out of date.\",{\"schema\":\"application\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"The stackiq register is out of date.\"]",
+			"hint": "[\"stackiq\",\"It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.\"]"
+		}
+	},
+	"code:IMPORT_IN_PROGRESS": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"Another CMDB import is running.\"]",
+			"hint": "[\"stackiq\",\"Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.\"]"
+		}
+	},
+	"code:MUNICIPALITY_AMBIGUOUS": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"{count} municipalities have this name.\",{\"count\":\"3\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"{count} municipalities have this name.\",{\"count\":\"3\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"{count} municipalities have this name.\",{\"count\":\"3\"},{\"escape\":false,\"sanitize\":false}]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"Several municipalities have this name.\"]",
+			"hint": "[\"stackiq\",\"Choose the municipality from the list instead of typing its name. Nothing was imported.\"]"
+		}
+	},
+	"code:ARCHIVE_UNAVAILABLE": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"Applications missing from the export cannot be archived.\"]",
+			"hint": "[\"stackiq\",\"OpenRegister is missing or too old to archive objects. Choose \\\"Keep them as they are\\\" and import again, or update OpenRegister. Nothing was imported.\"]"
+		}
+	},
+	"code:OPERATION_NOT_FOUND": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"This import is no longer running.\"]",
+			"hint": ""
+		}
+	},
+	"code:NOT_SIGNED_IN": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"You are not signed in.\"]",
+			"hint": "[\"stackiq\",\"Sign in again and retry the import.\"]"
+		}
+	},
+	"code:NOT_ADMIN": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"Only Nextcloud administrators can import a CMDB export.\"]",
+			"hint": ""
+		}
+	},
+	"code:CSRF_FAILED": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"Your session has expired.\"]",
+			"hint": "[\"stackiq\",\"Reload the page and try again.\"]"
+		}
+	},
+	"code:NETWORK_ERROR": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"The server could not be reached.\"]",
+			"hint": "[\"stackiq\",\"Check the connection and try again.\"]"
+		}
+	},
+	"code:IMPORT_INTERRUPTED": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"The page got no answer from the import.\"]",
+			"hint": "[\"stackiq\",\"The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.\"]"
+		}
+	},
+	"code:IMPORT_FAILED": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		}
+	},
+	"code:SOMETHING_ELSE": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		}
+	},
+	"code:toString": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		}
+	},
+	"code:__proto__": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		}
+	},
+	"code:constructor": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		}
+	},
+	"code:": {
+		"none/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"none/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"none/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"empty/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"empty/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"empty/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"full/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"full/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"full/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"single/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"single/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"single/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"notArrays/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"notArrays/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"notArrays/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"part/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"part/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"part/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"strings/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"strings/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"strings/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"referenced/defaults": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"referenced/one": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		"referenced/many": {
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		}
+	},
+	"odd": [
+		{
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		{
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		{
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		{
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		{
+			"title": "[\"stackiq\",\"The import failed unexpectedly.\"]",
+			"hint": "[\"stackiq\",\"Nothing more is known on this page; the Nextcloud log has the details.\"]"
+		},
+		{
+			"title": "[\"stackiq\",\"This file is not an Excel workbook (.xlsx).\"]",
+			"hint": "[\"stackiq\",\"Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.\"]"
+		}
+	]
+}
