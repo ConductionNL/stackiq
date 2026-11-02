@@ -56,11 +56,9 @@ class FederationMergerTest extends TestCase {
 	 */
 	public function testNewPeerEntryIsCreatedWithProvenance(): void {
 		$plan = $this->merger->plan(
-			self::PEER,
-			self::ORG,
-			[['id' => 'p-1', 'name' => 'Service A']],
-			[],
-			self::NOW
+			peer: ['url' => self::PEER, 'organisation' => self::ORG, 'syncedAt' => self::NOW],
+			peerEntries: [['id' => 'p-1', 'name' => 'Service A']],
+			localMirrors: []
 		);
 
 		$this->assertCount(1, $plan['create']);
@@ -86,11 +84,9 @@ class FederationMergerTest extends TestCase {
 	 */
 	public function testInboundSourceCannotBeSpoofed(): void {
 		$plan = $this->merger->plan(
-			self::PEER,
-			self::ORG,
-			[['id' => 'p-1', 'name' => 'X', '_source' => ['instance' => 'https://evil.example']]],
-			[],
-			self::NOW
+			peer: ['url' => self::PEER, 'organisation' => self::ORG, 'syncedAt' => self::NOW],
+			peerEntries: [['id' => 'p-1', 'name' => 'X', '_source' => ['instance' => 'https://evil.example']]],
+			localMirrors: []
 		);
 
 		$this->assertSame(self::PEER, $plan['create'][0]['_source']['instance']);
@@ -107,11 +103,9 @@ class FederationMergerTest extends TestCase {
 		];
 
 		$plan = $this->merger->plan(
-			self::PEER,
-			self::ORG,
-			[['id' => 'p-1', 'name' => 'New name']],
-			$local,
-			self::NOW
+			peer: ['url' => self::PEER, 'organisation' => self::ORG, 'syncedAt' => self::NOW],
+			peerEntries: [['id' => 'p-1', 'name' => 'New name']],
+			localMirrors: $local
 		);
 
 		$this->assertCount(0, $plan['create']);
@@ -132,11 +126,9 @@ class FederationMergerTest extends TestCase {
 		];
 
 		$plan = $this->merger->plan(
-			self::PEER,
-			self::ORG,
-			[['id' => 'p-1', 'name' => 'Same']],
-			$local,
-			'2026-06-15T13:00:00+00:00'
+			peer: ['url' => self::PEER, 'organisation' => self::ORG, 'syncedAt' => '2026-06-15T13:00:00+00:00'],
+			peerEntries: [['id' => 'p-1', 'name' => 'Same']],
+			localMirrors: $local
 		);
 
 		$this->assertSame([], $plan['create']);
@@ -156,11 +148,9 @@ class FederationMergerTest extends TestCase {
 		];
 
 		$plan = $this->merger->plan(
-			self::PEER,
-			self::ORG,
-			[['id' => 'p-2', 'name' => 'Stays']],
-			$local,
-			self::NOW
+			peer: ['url' => self::PEER, 'organisation' => self::ORG, 'syncedAt' => self::NOW],
+			peerEntries: [['id' => 'p-2', 'name' => 'Stays']],
+			localMirrors: $local
 		);
 
 		$this->assertCount(0, $plan['create']);
@@ -187,7 +177,11 @@ class FederationMergerTest extends TestCase {
 			],
 		];
 
-		$plan = $this->merger->plan(self::PEER, self::ORG, [], $local, self::NOW);
+		$plan = $this->merger->plan(
+			peer: ['url' => self::PEER, 'organisation' => self::ORG, 'syncedAt' => self::NOW],
+			peerEntries: [],
+			localMirrors: $local
+		);
 
 		// The other peer's mirror is NOT withdrawn by THIS peer's empty pull.
 		$this->assertSame([], $plan['withdraw']);
@@ -202,11 +196,9 @@ class FederationMergerTest extends TestCase {
 	 */
 	public function testEntryWithoutStableIdIsSkipped(): void {
 		$plan = $this->merger->plan(
-			self::PEER,
-			self::ORG,
-			[['name' => 'No id']],
-			[],
-			self::NOW
+			peer: ['url' => self::PEER, 'organisation' => self::ORG, 'syncedAt' => self::NOW],
+			peerEntries: [['name' => 'No id']],
+			localMirrors: []
 		);
 
 		$this->assertSame([], $plan['create']);
