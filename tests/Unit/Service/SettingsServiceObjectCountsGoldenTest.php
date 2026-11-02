@@ -36,6 +36,7 @@ use Psr\Log\AbstractLogger;
  *
  * @covers \OCA\Stackiq\Service\SettingsService
  * @uses   \OCA\Stackiq\Service\Settings\SettingsObjectCounts
+ * @uses   \OCA\Stackiq\Service\Settings\VoorzieningenConfigNormalizer
  *
  * @spec openspec/specs/settings-service/spec.md
  */

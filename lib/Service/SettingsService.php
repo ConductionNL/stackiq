@@ -18,7 +18,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\EmailTemplateDefaults;
 use OCA\Stackiq\Service\Settings\SettingsObjectCounts;
+use OCA\Stackiq\Service\Settings\VoorzieningenConfigNormalizer;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -2857,52 +2859,7 @@ class SettingsService {
 	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function getDefaultEmailTemplate(string $templateName): string {
-		$templates = [
-			'organization_registration' => '
-<h1>Welkom bij de Software Catalogus!</h1>
-<p>Beste {{ organization.name }},</p>
-<p>Hartelijk welkom bij de Software Catalogus! Uw organisatie is succesvol geregistreerd.</p>
-<p>Met de Software Catalogus kunt u:</p>
-<ul>
-    <li>Uw software overzichtelijk beheren</li>
-    <li>Software delen met andere organisaties</li>
-    <li>Ontdekken welke software andere organisaties gebruiken</li>
-</ul>
-<p>Uw organisatie heeft de status "{{ organization.beoordeling }}" en kan nu gebruik maken van alle functionaliteiten.</p>
-<p>Heeft u vragen? Neem dan contact met ons op.</p>
-<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
-            ',
-			'organization_activation' => '
-<h1>Uw organisatie is geactiveerd!</h1>
-<p>Beste {{ organization.name }},</p>
-<p>Goed nieuws! Uw organisatie is zojuist geactiveerd in de Software Catalogus.</p>
-<p>Dit betekent dat u nu volledig kunt deelnemen aan:</p>
-<ul>
-    <li>Het delen van software informatie</li>
-    <li>Samenwerking met andere organisaties</li>
-    <li>Toegang tot alle catalogus functionaliteiten</li>
-</ul>
-<p>Status: {{ organization.beoordeling }}</p>
-<p>U kunt nu inloggen en gebruik maken van alle beschikbare functionaliteiten.</p>
-<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
-            ',
-			'user_creation' => '
-<h1>Welkom {{ user.name }}!</h1>
-<p>Beste {{ user.name }},</p>
-<p>Er is een gebruikersaccount voor u aangemaakt in de Software Catalogus.</p>
-<p>Uw accountgegevens:</p>
-<ul>
-    <li>E-mailadres: {{ user.email }}</li>
-    <li>Gebruikersnaam: {{ user.username }}</li>
-    <li>Organisatie: {{ user.organization.name if user.organization }}</li>
-</ul>
-<p>U kunt nu inloggen op het platform en gebruik maken van alle functionaliteiten.</p>
-<p>Heeft u vragen over uw account? Neem dan contact met ons op.</p>
-<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
-            ',
-		];
-
-		return $templates[$templateName] ?? '';
+		return (new EmailTemplateDefaults())->template(templateName: $templateName);
 	}//end getDefaultEmailTemplate()
 
 	/**
@@ -2914,28 +2871,7 @@ class SettingsService {
 	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function getEmailTemplateVariables(string $templateName): array {
-		$variables = [
-			'organization_registration' => [
-				'organization.name' => 'Organization name',
-				'organization.beoordeling' => 'Organization status (e.g., Actief)',
-				'organization.type' => 'Organization type (e.g., Leverancier)',
-				'organization.website' => 'Organization website',
-			],
-			'organization_activation' => [
-				'organization.name' => 'Organization name',
-				'organization.beoordeling' => 'Organization status (e.g., Actief)',
-				'organization.type' => 'Organization type',
-				'organization.website' => 'Organization website',
-			],
-			'user_creation' => [
-				'user.name' => 'User display name',
-				'user.email' => 'User email address',
-				'user.username' => 'Username',
-				'user.organization.name' => 'Organization name (if applicable)',
-			],
-		];
-
-		return $variables[$templateName] ?? [];
+		return (new EmailTemplateDefaults())->variables(templateName: $templateName);
 	}//end getEmailTemplateVariables()
 
 	/**
@@ -4607,7 +4543,7 @@ class SettingsService {
 
 		// Normalize to the new, clean structure: no *_source or *_register keys,.
 		// include all known schema keys, and accept legacy 'voorzieningen_*_schema' fallbacks.
-		return $this->normalizeVoorzieningenConfig(input: $decoded);
+		return (new VoorzieningenConfigNormalizer())->normalize(input: $decoded);
 	}//end getVoorzieningenConfig()
 
 	/**
@@ -4623,66 +4559,10 @@ class SettingsService {
 		$this->clearConfigurationCache();
 
 		// Persist only normalized structure.
-		$normalized = $this->normalizeVoorzieningenConfig(input: $config);
+		$normalized = (new VoorzieningenConfigNormalizer())->normalize(input: $config);
 		$jsonConfig = json_encode($normalized, JSON_PRETTY_PRINT);
 		$this->config->setValueString($this->appName, 'voorzieningen_config', $jsonConfig);
 	}//end setVoorzieningenConfig()
-
-	/**
-	 * Normalize voorzieningen configuration to the new, clean format.
-	 * - Keep only 'register' and individual '*_schema' keys
-	 * - Drop any '*_source' and '*_register' keys
-	 * - Ensure all known schema keys are present (null if missing)
-	 *
-	 * @param array $input Raw/legacy configuration.
-	 *
-	 * @return array Normalized configuration.
-	 */
-	private function normalizeVoorzieningenConfig(array $input): array {
-		$normalized = [];
-
-		// Register id.
-		if (isset($input['register']) === true) {
-			$normalized['register'] = (string)$input['register'];
-		} else {
-			$normalized['register'] = '';
-		}
-
-		// Known schema keys to support - updated to match actual schemas from register.
-		$schemaKeys = [
-			'organisatie_schema',
-			'contactpersoon_schema',
-			'suite_schema',
-			'dienst_schema',
-			'kwetsbaarheid_schema',
-			'gebruik_schema',
-			'contract_schema',
-			'koppeling_schema',
-			'beoordeeling_schema',
-			'module_schema',
-			'compliancy_schema',
-			'moduleVersie_schema',
-			'sector_schema',
-			'sbomComponent_schema',
-			'maintenanceWindow_schema',
-		];
-
-		// Copy any present schema keys; ignore sources/registers.
-		foreach ($schemaKeys as $key) {
-			if (array_key_exists($key, $input) === true) {
-				if ($input[$key] === null) {
-					$normalized[$key] = '';
-				} else {
-					$normalized[$key] = (string)$input[$key];
-				}
-			} else {
-				// Accept legacy keys that might be nested under 'voorzieningen_*_schema'.
-				$normalized[$key] = '';
-			}
-		}
-
-		return $normalized;
-	}//end normalizeVoorzieningenConfig()
 
 	/**
 	 * Gets AMEF configuration using ArchiMateService to avoid code duplication
