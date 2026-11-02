@@ -1920,57 +1920,6 @@ XML;
 	}//end addModelMetadataToXml()
 
 	/**
-	 * Optimized method to add data to XML node.
-	 *
-	 * @param \SimpleXMLElement $node The XML node.
-	 * @param array $data The data array.
-	 *
-	 * @return void
-	 */
-	private function addDataToXmlNode(\SimpleXMLElement $node, array $data): void {
-		// Add attributes first.
-		if (isset($data['_attributes']) === true && is_array($data['_attributes']) === true) {
-			foreach ($data['_attributes'] as $attrName => $attrValue) {
-				$node->addAttribute($attrName, (string)$attrValue);
-			}
-		}
-
-		// Add text content.
-		if (isset($data['_value']) === true) {
-			$node[0] = (string)$data['_value'];
-		}
-
-		// Add child elements.
-		foreach ($data as $key => $value) {
-			if ($key === '_attributes' || $key === '_value' || is_int($key) === true) {
-				continue;
-			}
-
-			if (is_array($value) === true) {
-				if (isset($value[0]) === true) {
-					// Array of items.
-					foreach ($value as $item) {
-						$child = $node->addChild($key);
-						if (is_array($item) === true) {
-							$this->addDataToXmlNode(node: $child, data: $item);
-						} else {
-							$child[0] = (string)$item;
-						}
-					}
-				} else {
-					// Single object.
-					$child = $node->addChild($key);
-					$this->addDataToXmlNode(node: $child, data: $value);
-				}
-			} else {
-				// Scalar value.
-				$child = $node->addChild($key);
-				$child[0] = (string)$value;
-			}//end if
-		}//end foreach
-	}//end addDataToXmlNode()
-
-	/**
 	 * Convert OpenRegister objects back to ArchiMate format
 	 *
 	 * @param array $objects OpenRegister objects from all schemas.
