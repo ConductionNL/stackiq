@@ -152,7 +152,12 @@ class ReferencesAuditCommand extends Command {
 		}
 
 		[$owners, $ownerIds] = $this->ownerIndex($objectService, $output);
-		$counts = $this->auditRows($objectService, $satellites, $owners, $ownerIds, $write, $output);
+		$counts = $this->auditRows(
+			objectService: $objectService,
+			satellites: $satellites,
+			index: ['owners' => $owners, 'ownerIds' => $ownerIds],
+			run: ['write' => $write, 'output' => $output]
+		);
 		$this->report($output, $counts, $write);
 
 		if ($counts['dangling'] > 0) {
@@ -172,21 +177,15 @@ class ReferencesAuditCommand extends Command {
 	 *
 	 * @param mixed $objectService The OpenRegister object service.
 	 * @param array<int, mixed> $satellites The satellite rows.
-	 * @param array<string, array<int, string>> $owners Identity key to owner ids.
-	 * @param array<string, bool> $ownerIds Every known owner id.
-	 * @param bool $write Whether this run may write.
-	 * @param OutputInterface $output Console output.
+	 * @param array{owners: array<string, array<int, string>>, ownerIds: array<string, bool>} $index
+	 *        `owners` (identity key to owner ids) and `ownerIds` (every known owner id).
+	 * @param array{write: bool, output: OutputInterface} $run
+	 *        `write` (whether this run may write) and `output` (console output).
 	 *
 	 * @return array<string, int> The per-outcome tally.
 	 */
-	private function auditRows(
-		mixed $objectService,
-		array $satellites,
-		array $owners,
-		array $ownerIds,
-		bool $write,
-		OutputInterface $output,
-	): array {
+	private function auditRows(mixed $objectService, array $satellites, array $index, array $run): array {
+		$output = $run['output'];
 		$counts = ['set' => 0, 'dangling' => 0, 'backfillable' => 0, 'ambiguous' => 0, 'unmatched' => 0, 'written' => 0];
 
 		foreach ($satellites as $raw) {
@@ -195,14 +194,14 @@ class ReferencesAuditCommand extends Command {
 				continue;
 			}
 
-			$verdict = $this->classifyRow($row, $owners, $ownerIds);
+			$verdict = $this->classifyRow($row, $index['owners'], $index['ownerIds']);
 			$counts[$verdict['outcome']]++;
 
 			if ($verdict['message'] !== '') {
 				$output->writeln($verdict['message']);
 			}
 
-			if ($verdict['outcome'] !== 'backfillable' || $write === false) {
+			if ($verdict['outcome'] !== 'backfillable' || $run['write'] === false) {
 				continue;
 			}
 
