@@ -751,8 +751,8 @@
                 "success": true,
                 "counts": {
                     "voorzieningen": {
-                        "totalOrganisatieObjects": 0,
-                        "totalContactpersoonObjects": 0,
+                        "totalOrganisatieObjects": 7,
+                        "totalContactpersoonObjects": 7,
                         "totalVoorzieningObjects": 0,
                         "totalVoorzieningAanbodObjects": 0,
                         "totalVoorzieningVersieObjects": 0,
@@ -804,8 +804,8 @@
                             "maintenanceWindow_schema": ""
                         },
                         "object_counts": {
-                            "totalOrganisatieObjects": 0,
-                            "totalContactpersoonObjects": 0,
+                            "totalOrganisatieObjects": 7,
+                            "totalContactpersoonObjects": 7,
                             "totalVoorzieningObjects": 0,
                             "totalVoorzieningAanbodObjects": 0,
                             "totalVoorzieningVersieObjects": 0,
@@ -861,8 +861,8 @@
                         "maintenanceWindow_schema": ""
                     },
                     "object_counts": {
-                        "totalOrganisatieObjects": 0,
-                        "totalContactpersoonObjects": 0,
+                        "totalOrganisatieObjects": 7,
+                        "totalContactpersoonObjects": 7,
                         "totalVoorzieningObjects": 0,
                         "totalVoorzieningAanbodObjects": 0,
                         "totalVoorzieningVersieObjects": 0,
@@ -923,11 +923,29 @@
                 "voorzieningen_config"
             ],
             [
+                "objects.count",
+                {
+                    "@self": {
+                        "register": 5,
+                        "schema": 7
+                    }
+                }
+            ],
+            [
+                "objects.count",
+                {
+                    "@self": {
+                        "register": 5,
+                        "schema": 8
+                    }
+                }
+            ],
+            [
                 "log.debug",
                 "SettingsService: Retrieved Voorzieningen object counts",
                 {
-                    "totalOrganisatieObjects": 0,
-                    "totalContactpersoonObjects": 0,
+                    "totalOrganisatieObjects": 7,
+                    "totalContactpersoonObjects": 7,
                     "totalVoorzieningObjects": 0,
                     "totalVoorzieningAanbodObjects": 0,
                     "totalVoorzieningVersieObjects": 0,
@@ -996,11 +1014,29 @@
                 "voorzieningen_config"
             ],
             [
+                "objects.count",
+                {
+                    "@self": {
+                        "register": 5,
+                        "schema": 7
+                    }
+                }
+            ],
+            [
+                "objects.count",
+                {
+                    "@self": {
+                        "register": 5,
+                        "schema": 8
+                    }
+                }
+            ],
+            [
                 "log.debug",
                 "SettingsService: Retrieved Voorzieningen object counts",
                 {
-                    "totalOrganisatieObjects": 0,
-                    "totalContactpersoonObjects": 0,
+                    "totalOrganisatieObjects": 7,
+                    "totalContactpersoonObjects": 7,
                     "totalVoorzieningObjects": 0,
                     "totalVoorzieningAanbodObjects": 0,
                     "totalVoorzieningVersieObjects": 0,
@@ -1073,11 +1109,29 @@
                 "voorzieningen_config"
             ],
             [
+                "objects.count",
+                {
+                    "@self": {
+                        "register": 5,
+                        "schema": 7
+                    }
+                }
+            ],
+            [
+                "objects.count",
+                {
+                    "@self": {
+                        "register": 5,
+                        "schema": 8
+                    }
+                }
+            ],
+            [
                 "log.debug",
                 "SettingsService: Retrieved Voorzieningen object counts",
                 {
-                    "totalOrganisatieObjects": 0,
-                    "totalContactpersoonObjects": 0,
+                    "totalOrganisatieObjects": 7,
+                    "totalContactpersoonObjects": 7,
                     "totalVoorzieningObjects": 0,
                     "totalVoorzieningAanbodObjects": 0,
                     "totalVoorzieningVersieObjects": 0,
@@ -1195,7 +1249,7 @@
                 "success": true,
                 "counts": {
                     "voorzieningen": {
-                        "totalOrganisatieObjects": 0,
+                        "totalOrganisatieObjects": 7,
                         "totalContactpersoonObjects": 0,
                         "totalVoorzieningObjects": 0,
                         "totalVoorzieningAanbodObjects": 0,
@@ -1248,7 +1302,7 @@
                             "maintenanceWindow_schema": ""
                         },
                         "object_counts": {
-                            "totalOrganisatieObjects": 0,
+                            "totalOrganisatieObjects": 7,
                             "totalContactpersoonObjects": 0,
                             "totalVoorzieningObjects": 0,
                             "totalVoorzieningAanbodObjects": 0,
@@ -1305,7 +1359,7 @@
                         "maintenanceWindow_schema": ""
                     },
                     "object_counts": {
-                        "totalOrganisatieObjects": 0,
+                        "totalOrganisatieObjects": 7,
                         "totalContactpersoonObjects": 0,
                         "totalVoorzieningObjects": 0,
                         "totalVoorzieningAanbodObjects": 0,
@@ -1382,10 +1436,19 @@
                 "voorzieningen_contactpersoon_schema"
             ],
             [
+                "objects.count",
+                {
+                    "@self": {
+                        "register": 3,
+                        "schema": 4
+                    }
+                }
+            ],
+            [
                 "log.debug",
                 "SettingsService: Retrieved Voorzieningen object counts",
                 {
-                    "totalOrganisatieObjects": 0,
+                    "totalOrganisatieObjects": 7,
                     "totalContactpersoonObjects": 0,
                     "totalVoorzieningObjects": 0,
                     "totalVoorzieningAanbodObjects": 0,
@@ -1470,10 +1533,19 @@
                 "voorzieningen_contactpersoon_schema"
             ],
             [
+                "objects.count",
+                {
+                    "@self": {
+                        "register": 3,
+                        "schema": 4
+                    }
+                }
+            ],
+            [
                 "log.debug",
                 "SettingsService: Retrieved Voorzieningen object counts",
                 {
-                    "totalOrganisatieObjects": 0,
+                    "totalOrganisatieObjects": 7,
                     "totalContactpersoonObjects": 0,
                     "totalVoorzieningObjects": 0,
                     "totalVoorzieningAanbodObjects": 0,
@@ -1562,10 +1634,19 @@
                 "voorzieningen_contactpersoon_schema"
             ],
             [
+                "objects.count",
+                {
+                    "@self": {
+                        "register": 3,
+                        "schema": 4
+                    }
+                }
+            ],
+            [
                 "log.debug",
                 "SettingsService: Retrieved Voorzieningen object counts",
                 {
-                    "totalOrganisatieObjects": 0,
+                    "totalOrganisatieObjects": 7,
                     "totalContactpersoonObjects": 0,
                     "totalVoorzieningObjects": 0,
                     "totalVoorzieningAanbodObjects": 0,

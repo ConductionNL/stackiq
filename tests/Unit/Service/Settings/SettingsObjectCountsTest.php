@@ -34,18 +34,15 @@ use Psr\Log\NullLogger;
 class SettingsObjectCountsTest extends TestCase {
 
 	/**
-	 * Counts run only for schemas set to true, with the register and schema as
-	 * integers; a failing count stays zero; a register of false counts nothing.
+	 * A count that fails stays zero and does not stop the other counts.
 	 *
 	 * @return void
 	 */
-	public function testCountsOnlyWhatTheConfigSwitchesOn(): void {
-		$queries = [];
+	public function testAFailingCountStaysZero(): void {
 		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('countSearchObjects')->willReturnCallback(
-			function (array $query) use (&$queries) {
-				$queries[] = $query;
-				if ($query['@self']['schema'] === 1 && count($queries) === 2) {
+			function (array $query) {
+				if ($query['@self']['schema'] === 2) {
 					throw new \RuntimeException('count failed');
 				}
 
@@ -53,19 +50,43 @@ class SettingsObjectCountsTest extends TestCase {
 			}
 		);
 
-		$config = ['register' => '5', 'organisatie_schema' => true, 'contract_schema' => true, 'review_schema' => '3'];
+		$config = ['register' => '5', 'organisatie_schema' => '1', 'contract_schema' => '2', 'review_schema' => '3'];
+		$counts = $this->counter(objects: $objects, config: $config)->voorzieningenCounts();
+		$this->assertSame(expected: 7, actual: $counts['totalOrganisatieObjects']);
+		$this->assertSame(expected: 0, actual: $counts['totalContractObjects']);
+		$this->assertSame(expected: 7, actual: $counts['totalReviewObjects']);
+		$this->assertCount(expectedCount: 19, haystack: $counts);
+
+	}//end testAFailingCountStaysZero()
+
+	/**
+	 * A configured register and schema, stored as strings the way
+	 * getVoorzieningenConfig() returns them, are counted; unset ones are not.
+	 *
+	 * @return void
+	 */
+	public function testCountsConfiguredSchemasStoredAsStrings(): void {
+		$queries = [];
+		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
+		$objects->method('countSearchObjects')->willReturnCallback(
+			function (array $query) use (&$queries) {
+				$queries[] = $query;
+				return 7;
+			}
+		);
+
+		$config = ['register' => '5', 'organisatie_schema' => '12', 'contract_schema' => '', 'review_schema' => null];
 		$counts = $this->counter(objects: $objects, config: $config)->voorzieningenCounts();
 		$this->assertSame(expected: 7, actual: $counts['totalOrganisatieObjects']);
 		$this->assertSame(expected: 0, actual: $counts['totalContractObjects']);
 		$this->assertSame(expected: 0, actual: $counts['totalReviewObjects']);
-		$this->assertCount(expectedCount: 19, haystack: $counts);
-		$this->assertSame(expected: [['@self' => ['register' => 5, 'schema' => 1]], ['@self' => ['register' => 5, 'schema' => 1]]], actual: $queries);
+		$this->assertSame(expected: [['@self' => ['register' => 5, 'schema' => 12]]], actual: $queries);
 
-		$counts = $this->counter(objects: $objects, config: ['register' => false, 'organisatie_schema' => true])->voorzieningenCounts();
+		$counts = $this->counter(objects: $objects, config: ['register' => '', 'organisatie_schema' => '12'])->voorzieningenCounts();
 		$this->assertSame(expected: 0, actual: $counts['totalOrganisatieObjects']);
-		$this->assertCount(expectedCount: 2, haystack: $queries);
+		$this->assertCount(expectedCount: 1, haystack: $queries);
 
-	}//end testCountsOnlyWhatTheConfigSwitchesOn()
+	}//end testCountsConfiguredSchemasStoredAsStrings()
 
 	/**
 	 * Build a counter over a settings double.

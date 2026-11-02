@@ -259,7 +259,7 @@ final class SettingsObjectCounts {
 	 * @return int The count, zero when the schema is not set or counting fails.
 	 */
 	private function countSchema(object $objectService, array $target): int {
-		if ($target['register'] === false || $target['schema'] !== true) {
+		if (empty($target['register']) === true || empty($target['schema']) === true) {
 			return 0;
 		}
 
