@@ -49,6 +49,91 @@ function emptyConfiguration() {
 }
 
 /**
+ * The configuration entries for the voorzieningen schemas, each with the raw
+ * config key that holds its schema id.
+ *
+ * @type {Array<[string, Array<string>]>}
+ */
+const VOORZIENINGEN_SCHEMA_KEYS = [
+	['voorzieningen_sector_schema', ['sector_schema']],
+	['voorzieningen_suite_schema', ['suite_schema']],
+	['voorzieningen_dienst_schema', ['dienst_schema']],
+	['voorzieningen_kwetsbaarheid_schema', ['kwetsbaarheid_schema']],
+	['voorzieningen_contactpersoon_schema', ['contactpersoon_schema']],
+	['voorzieningen_organisatie_schema', ['organisatie_schema']],
+	['voorzieningen_gebruik_schema', ['gebruik_schema']],
+	['voorzieningen_contract_schema', ['contract_schema']],
+	['voorzieningen_koppeling_schema', ['koppeling_schema']],
+	['voorzieningen_beoordeeling_schema', ['beoordeeling_schema']],
+	['voorzieningen_module_schema', ['module_schema']],
+	['voorzieningen_compliancy_schema', ['compliancy_schema']],
+	['voorzieningen_moduleVersie_schema', ['moduleVersie_schema']],
+]
+
+/**
+ * The configuration entries for the AMEF schemas, each with the raw config
+ * keys that can hold its schema id, the first set one winning.
+ *
+ * @type {Array<[string, Array<string>]>}
+ */
+const AMEF_SCHEMA_KEYS = [
+	['amef_organization_schema', ['organization_schema', 'organizations_schema']],
+	['amef_element_schema', ['element_schema', 'elements_schema']],
+	['amef_relation_schema', ['relation_schema', 'relationships_schema']],
+	['amef_view_schema', ['view_schema', 'views_schema']],
+	['amef_model_schema', ['model_schema', 'models_schema']],
+	[
+		'amef_property_definition_schema',
+		[
+			'property_definition_schema',
+			'property-definition_schema',
+			'property_definitions_schema',
+		],
+	],
+]
+
+/**
+ * The option for a schema id, or null when there is none.
+ *
+ * @param {string|number} schemaId The schema id
+ * @param {Array|null} options The schema options
+ * @return {object|null} The option
+ */
+function findSchemaOption(schemaId, options) {
+	if (!schemaId || !options || !Array.isArray(options)) return null
+	const id = schemaId.toString()
+	return options.find((o) => o && o.value && o.value.toString() === id) || null
+}
+
+/**
+ * The first set value among the given keys of a raw config.
+ *
+ * @param {object} config The raw config
+ * @param {Array<string>} keys The keys, in order of preference
+ * @return {string|number|undefined} The value, or undefined when none is set
+ */
+function firstSetValue(config, keys) {
+	const key = keys.find((candidate) => config[candidate])
+	return key === undefined ? undefined : config[key]
+}
+
+/**
+ * Select the configured schema of each configuration entry, where the raw
+ * config names one the options offer.
+ *
+ * @param {object} store The settings store
+ * @param {{config: object, optionsGetter: string, keys: Array}} selection The raw config, the store getter with the schema options and the entries
+ */
+function applySchemaSelections(store, selection) {
+	for (const [uiKey, configKeys] of selection.keys) {
+		const schemaId = firstSetValue(selection.config, configKeys)
+		if (!schemaId) continue
+		const option = findSchemaOption(schemaId, store[selection.optionsGetter])
+		if (option) store.configuration[uiKey].schema = option
+	}
+}
+
+/**
  * Fresh, unconfigured object statistics for both registers.
  *
  * @return {object} The statistics.
@@ -945,96 +1030,16 @@ export const useSettingsStore = defineStore('settings', {
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		populateSchemaSelectionsFromFocused() {
-			const findOption = (schemaId, options) => {
-				if (!schemaId || !options || !Array.isArray(options)) return null
-				const id = schemaId.toString()
-				return (
-					options.find((o) => o && o.value && o.value.toString() === id)
-					|| null
-				)
-			}
-
-			// Voorzieningen schemas - updated mapping to match current schema structure
-			const vc = this.voorzieningenRawConfig || {}
-			const vMap = [
-				['sector_schema', 'voorzieningen_sector_schema'],
-				['suite_schema', 'voorzieningen_suite_schema'],
-				['dienst_schema', 'voorzieningen_dienst_schema'],
-				['kwetsbaarheid_schema', 'voorzieningen_kwetsbaarheid_schema'],
-				['contactpersoon_schema', 'voorzieningen_contactpersoon_schema'],
-				['organisatie_schema', 'voorzieningen_organisatie_schema'],
-				['gebruik_schema', 'voorzieningen_gebruik_schema'],
-				['contract_schema', 'voorzieningen_contract_schema'],
-				['koppeling_schema', 'voorzieningen_koppeling_schema'],
-				['beoordeeling_schema', 'voorzieningen_beoordeeling_schema'],
-				['module_schema', 'voorzieningen_module_schema'],
-				['compliancy_schema', 'voorzieningen_compliancy_schema'],
-				['moduleVersie_schema', 'voorzieningen_moduleVersie_schema'],
-			]
-			vMap.forEach(([cfgKey, uiKey]) => {
-				if (vc[cfgKey]) {
-					const opt = findOption(
-						vc[cfgKey],
-						this.voorzieningenSchemaOptions,
-					)
-					if (opt) {
-						this.configuration[uiKey].schema = opt
-					}
-				}
+			applySchemaSelections(this, {
+				config: this.voorzieningenRawConfig || {},
+				optionsGetter: 'voorzieningenSchemaOptions',
+				keys: VOORZIENINGEN_SCHEMA_KEYS,
 			})
-
-			// AMEF schemas - updated to match new key structure
-			const ac = this.amefRawConfig || {}
-			if (ac.organization_schema || ac.organizations_schema) {
-				const opt = findOption(
-					ac.organization_schema || ac.organizations_schema,
-					this.amefSchemaOptions,
-				)
-				if (opt) this.configuration.amef_organization_schema.schema = opt
-			}
-			if (ac.element_schema || ac.elements_schema) {
-				const opt = findOption(
-					ac.element_schema || ac.elements_schema,
-					this.amefSchemaOptions,
-				)
-				if (opt) this.configuration.amef_element_schema.schema = opt
-			}
-			if (ac.relation_schema || ac.relationships_schema) {
-				const opt = findOption(
-					ac.relation_schema || ac.relationships_schema,
-					this.amefSchemaOptions,
-				)
-				if (opt) this.configuration.amef_relation_schema.schema = opt
-			}
-			if (ac.view_schema || ac.views_schema) {
-				const opt = findOption(
-					ac.view_schema || ac.views_schema,
-					this.amefSchemaOptions,
-				)
-				if (opt) this.configuration.amef_view_schema.schema = opt
-			}
-			if (ac.model_schema || ac.models_schema) {
-				const opt = findOption(
-					ac.model_schema || ac.models_schema,
-					this.amefSchemaOptions,
-				)
-				if (opt) this.configuration.amef_model_schema.schema = opt
-			}
-
-			if (
-				ac.property_definition_schema
-				|| ac['property-definition_schema']
-				|| ac.property_definitions_schema
-			) {
-				const opt = findOption(
-					ac.property_definition_schema
-						|| ac['property-definition_schema']
-						|| ac.property_definitions_schema,
-					this.amefSchemaOptions,
-				)
-				if (opt)
-					this.configuration.amef_property_definition_schema.schema = opt
-			}
+			applySchemaSelections(this, {
+				config: this.amefRawConfig || {},
+				optionsGetter: 'amefSchemaOptions',
+				keys: AMEF_SCHEMA_KEYS,
+			})
 		},
 
 		/**
