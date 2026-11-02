@@ -150,6 +150,17 @@ class SettingsService {
 	private const SHARED_ORGANISATION_SCHEMA = 'nc-organisation';
 
 	/**
+	 * The name each role group list goes by in result messages and logs.
+	 *
+	 * @var array<string, string>
+	 */
+	private const ROLE_GROUP_LABELS = [
+		'generic' => 'generic user groups',
+		'organizationAdmin' => 'organization admin groups',
+		'superUser' => 'super user groups',
+	];
+
+	/**
 	 * SettingsService constructor
 	 *
 	 * @param IAppConfig $config App configuration interface
@@ -5478,36 +5489,7 @@ class SettingsService {
 	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function updateGenericUserGroups(array $groups): array {
-		try {
-			$validation = $this->validateGroups(groups: $groups);
-
-			if (empty($validation['invalid']) === false) {
-				return [
-					'success' => false,
-					'message' => 'Invalid group names provided',
-					'validation' => $validation,
-				];
-			}
-
-			$this->setGenericUserGroups(groups: $validation['valid']);
-
-			return [
-				'success' => true,
-				'message' => 'Generic user groups updated successfully',
-				'groups' => $validation['valid'],
-			];
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'SettingsService: Failed to update generic user groups',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return [
-				'success' => false,
-				'message' => 'Failed to update generic user groups: ' . $e->getMessage(),
-			];
-		}//end try
+		return $this->updateRoleGroups(groups: $groups, role: 'generic');
 	}//end updateGenericUserGroups()
 
 	/**
@@ -5519,36 +5501,7 @@ class SettingsService {
 	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function updateOrganizationAdminGroups(array $groups): array {
-		try {
-			$validation = $this->validateGroups(groups: $groups);
-
-			if (empty($validation['invalid']) === false) {
-				return [
-					'success' => false,
-					'message' => 'Invalid group names provided',
-					'validation' => $validation,
-				];
-			}
-
-			$this->setOrganizationAdminGroups(groups: $validation['valid']);
-
-			return [
-				'success' => true,
-				'message' => 'Organization admin groups updated successfully',
-				'groups' => $validation['valid'],
-			];
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'SettingsService: Failed to update organization admin groups',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return [
-				'success' => false,
-				'message' => 'Failed to update organization admin groups: ' . $e->getMessage(),
-			];
-		}//end try
+		return $this->updateRoleGroups(groups: $groups, role: 'organizationAdmin');
 	}//end updateOrganizationAdminGroups()
 
 	/**
@@ -5560,6 +5513,22 @@ class SettingsService {
 	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function updateSuperUserGroups(array $groups): array {
+		return $this->updateRoleGroups(groups: $groups, role: 'superUser');
+	}//end updateSuperUserGroups()
+
+	/**
+	 * Validate a role's group list and store it when every name is valid.
+	 *
+	 * @param array  $groups Groups to set.
+	 * @param string $role   The role: generic, organizationAdmin or superUser.
+	 *
+	 * @psalm-param 'generic'|'organizationAdmin'|'superUser' $role
+	 *
+	 * @return array Update result with validation.
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	private function updateRoleGroups(array $groups, string $role): array {
+		$label = self::ROLE_GROUP_LABELS[$role];
 		try {
 			$validation = $this->validateGroups(groups: $groups);
 
@@ -5571,26 +5540,30 @@ class SettingsService {
 				];
 			}
 
-			$this->setSuperUserGroups(groups: $validation['valid']);
+			match ($role) {
+				'generic' => $this->setGenericUserGroups(groups: $validation['valid']),
+				'organizationAdmin' => $this->setOrganizationAdminGroups(groups: $validation['valid']),
+				'superUser' => $this->setSuperUserGroups(groups: $validation['valid']),
+			};
 
 			return [
 				'success' => true,
-				'message' => 'Super user groups updated successfully',
+				'message' => ucfirst($label) . ' updated successfully',
 				'groups' => $validation['valid'],
 			];
 		} catch (\Exception $e) {
 			$this->logger->error(
-				'SettingsService: Failed to update super user groups',
+				'SettingsService: Failed to update ' . $label,
 				[
 					'exception' => $e->getMessage(),
 				]
 			);
 			return [
 				'success' => false,
-				'message' => 'Failed to update super user groups: ' . $e->getMessage(),
+				'message' => 'Failed to update ' . $label . ': ' . $e->getMessage(),
 			];
 		}//end try
-	}//end updateSuperUserGroups()
+	}//end updateRoleGroups()
 
 	// ======================================================.
 	// FOCUSED ENDPOINT METHODS FOR PERFORMANCE OPTIMIZATION.
