@@ -65,6 +65,142 @@ function buildObjectUrl(objectItem, action = null, withLang = false) {
 }
 
 /**
+ * The id a selection entry stands for: selections hold plain ids or objects.
+ *
+ * @param {string|object} entry A selected id or object
+ * @return {string|undefined} The id
+ */
+function selectionId(entry) {
+	return typeof entry === 'string' ? entry : entry.id || entry['@self']?.id
+}
+
+/**
+ * The OpenRegister URL for one kind of related data of an object.
+ *
+ * @param {object} config Schema config with `register` and `schema`
+ * @param {{id: string, dataType: string, params: object}} request The object id, the kind of related data and the query parameters
+ * @return {string} The URL
+ */
+function relatedDataUrl(config, request) {
+	const registerId = extractId(config.register)
+	const schemaId = extractId(config.schema)
+	const actionPath =
+		request.dataType === 'logs' ? 'audit-trails' : request.dataType
+	return withLanguageParam(
+		`/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${request.id}/${actionPath}${buildQueryString(relatedQuery(request))}`,
+	)
+}
+
+/**
+ * The query parameters for a related-data request: relations get their
+ * schema expanded unless the caller asks for another expansion.
+ *
+ * @param {{dataType: string, params: object}} request The kind of related data and the query parameters
+ * @return {object} The query parameters
+ */
+function relatedQuery(request) {
+	const queryParams = { ...request.params }
+	if (request.dataType === 'uses' || request.dataType === 'used') {
+		queryParams._extend = request.params._extend || '@self.schema'
+	}
+	return queryParams
+}
+
+/**
+ * Whether a related-data answer carries pagination fields.
+ *
+ * @param {object} data The answer
+ * @return {boolean} True when it has a total or a page
+ */
+function hasPagination(data) {
+	return data.total !== undefined || data.page !== undefined
+}
+
+/**
+ * The pagination state for a related-data answer.
+ *
+ * @param {object} data The answer
+ * @param {{dataType: string, params: object}} request The kind of related data and the query parameters
+ * @return {object} The pagination state
+ */
+function relatedPagination(data, request) {
+	const limit = relatedPageLimit(data, request)
+	return {
+		total: data.total || 0,
+		page: data.page || 1,
+		pages: relatedPageCount(data, limit),
+		limit,
+		next: data.next || null,
+		prev: data.prev || null,
+	}
+}
+
+/**
+ * The page count of a related-data answer: the server's, else the total
+ * divided by the page size.
+ *
+ * @param {object} data The answer
+ * @param {number} limit The page size
+ * @return {number} The page count
+ */
+function relatedPageCount(data, limit) {
+	return data.pages || Math.ceil((data.total || 0) / limit)
+}
+
+/**
+ * The page size of a related-data answer: the server's, else the requested
+ * one, else 500 for files and 20 for the rest.
+ *
+ * @param {object} data The answer
+ * @param {{dataType: string, params: object}} request The kind of related data and the query parameters
+ * @return {number} The page size
+ */
+function relatedPageLimit(data, request) {
+	const requestedLimit = request.params._limit || request.params.limit
+	const apiLimit = data.limit ? parseInt(data.limit, 10) : null
+	return (
+		apiLimit || requestedLimit || (request.dataType === 'files' ? 500 : 20)
+	)
+}
+
+/**
+ * What the store keeps for a related-data answer: the result list for audit
+ * logs, the whole answer for the rest.
+ *
+ * @param {object} data The answer
+ * @param {string} dataType The kind of related data
+ * @return {object|Array} The stored value
+ */
+function relatedEntry(data, dataType) {
+	return dataType === 'logs' ? data.results || [] : data
+}
+
+/**
+ * Store a related-data answer: its pagination, when it has any, and the
+ * related data itself under the object type.
+ *
+ * @param {object} store The store
+ * @param {{type: string, dataType: string, params: object, data: object}} answer The object type, the kind of related data, the query parameters and the answer
+ */
+function storeRelatedAnswer(store, answer) {
+	const { type, dataType, data } = answer
+	if (!store.relatedData[type]) {
+		store.relatedData = { ...store.relatedData, [type]: {} }
+	}
+
+	if (hasPagination(data)) {
+		store.pagination = {
+			...store.pagination,
+			[`${type}_${dataType}`]: relatedPagination(data, answer),
+		}
+	}
+
+	const relatedTypeData = { ...store.relatedData[type] }
+	relatedTypeData[dataType] = relatedEntry(data, dataType)
+	store.relatedData = { ...store.relatedData, [type]: relatedTypeData }
+}
+
+/**
  * Separate Promise.allSettled results into successful and failed arrays.
  *
  * @param {Array} results Promise.allSettled results
@@ -296,7 +432,7 @@ export function stackiqPlugin() {
 			hasMorePages: (state) => (type) => {
 				const pagination = state.pagination?.[type]
 				return pagination
-					? pagination.next !== null || pagination.page < pagination.pages
+					? pagination.next !== null || pagination.pages > pagination.page
 					: false
 			},
 
@@ -655,69 +791,21 @@ export function stackiqPlugin() {
 				try {
 					if (!this.settings) await this.fetchSettings()
 
-					let config = organisatieData
-					if (!config) {
-						config = this.getSchemaConfig(type)
-					}
-
-					const registerId = extractId(config.register)
-					const schemaId = extractId(config.schema)
-
-					// Build the URL
-					let actionPath = dataType
-					if (dataType === 'logs') actionPath = 'audit-trails'
-
-					const queryParams = { ...params }
-					if (dataType === 'uses' || dataType === 'used') {
-						queryParams._extend = params._extend || '@self.schema'
-					}
-
-					const url = withLanguageParam(
-						`/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${id}/${actionPath}${buildQueryString(queryParams)}`,
+					const request = { id, dataType, params }
+					const url = relatedDataUrl(
+						organisatieData || this.getSchemaConfig(type),
+						request,
 					)
 
 					const response = await fetch(url, { headers: buildHeaders() })
 					if (!response.ok)
 						throw new Error(`Failed to fetch ${dataType} for ${type}`)
 
-					const data = await response.json()
-
-					if (!this.relatedData[type]) {
-						this.relatedData = { ...this.relatedData, [type]: {} }
-					}
-
-					// Update pagination for related data
-					if (data.total !== undefined || data.page !== undefined) {
-						const paginationKey = `${type}_${dataType}`
-						const requestedLimit = params._limit || params.limit
-						const apiLimit = data.limit ? parseInt(data.limit, 10) : null
-						const actualLimit =
-							apiLimit
-							|| requestedLimit
-							|| (dataType === 'files' ? 500 : 20)
-						this.pagination = {
-							...this.pagination,
-							[paginationKey]: {
-								total: data.total || 0,
-								page: data.page || 1,
-								pages:
-									data.pages
-									|| Math.ceil((data.total || 0) / actualLimit),
-								limit: actualLimit,
-								next: data.next || null,
-								prev: data.prev || null,
-							},
-						}
-					}
-
-					// Store the data
-					const relatedTypeData = { ...this.relatedData[type] }
-					relatedTypeData[dataType] =
-						dataType === 'logs' ? data.results || [] : data
-					this.relatedData = {
-						...this.relatedData,
-						[type]: relatedTypeData,
-					}
+					storeRelatedAnswer(this, {
+						...request,
+						type,
+						data: await response.json(),
+					})
 				} catch (error) {
 					console.error(`Error fetching ${dataType} for ${type}:`, error)
 				} finally {
@@ -856,18 +944,12 @@ export function stackiqPlugin() {
 
 					// Remove from selection if selected
 					const isSelected = this.selectedObjects.some(
-						(obj) =>
-							(typeof obj === 'string'
-								? obj
-								: obj.id || obj['@self']?.id) === objectId,
+						(obj) => selectionId(obj) === objectId,
 					)
 					if (isSelected) {
 						this.setSelectedObjects(
 							this.selectedObjects.filter(
-								(obj) =>
-									(typeof obj === 'string'
-										? obj
-										: obj.id || obj['@self']?.id) !== objectId,
+								(obj) => selectionId(obj) !== objectId,
 							),
 						)
 					}
