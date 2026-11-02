@@ -197,10 +197,12 @@ class FacetService {
 
 		$result = $this->computeFacetsForRequest(
 			objectService: $objectService,
-			schema: $schema,
-			normalizedFilters: $normalizedFilters,
-			normalizedSearch: $normalizedSearch,
-			organization: $organization
+			request: [
+				'schema' => $schema,
+				'filters' => $normalizedFilters,
+				'search' => $normalizedSearch,
+				'organization' => $organization,
+			]
 		);
 
 		$this->facetsCache->set(key: $cacheKey, value: $result, ttl: self::CACHE_TTL);
@@ -237,29 +239,23 @@ class FacetService {
 	 * (including `_meta.matchedObjectIds` for the frontend's list narrowing).
 	 *
 	 * @param ObjectServiceInterface $objectService OpenRegister object service.
-	 * @param string $schema `module` or `dienst`.
-	 * @param array<string,string[]> $normalizedFilters Normalized selected filters.
-	 * @param string|null $normalizedSearch Normalized free-text query.
-	 * @param string|null $organization Optional organisation override.
+	 * @param array $request The request: `schema` (`module` or `dienst`), `filters` (the normalized
+	 *                       selected filters), `search` (the normalized free-text query or null) and
+	 *                       `organization` (the optional organisation override).
 	 *
 	 * @return array{referenceComponent: array, standard: array, applicationService: array,
 	 *     domain: array, _meta: array{totalMatched: int, processingTimeMs: float, cached: bool,
 	 *     matchedObjectIds: string[]}}
 	 */
-	private function computeFacetsForRequest(
-		ObjectServiceInterface $objectService,
-		string $schema,
-		array $normalizedFilters,
-		?string $normalizedSearch,
-		?string $organization,
-	): array {
+	private function computeFacetsForRequest(ObjectServiceInterface $objectService, array $request): array {
 		$startTime = microtime(true);
+		$schema    = $request['schema'];
 
 		$baseObjects = $this->fetchBaseObjects(
 			objectService: $objectService,
 			schema: $schema,
-			search: $normalizedSearch,
-			organization: $organization
+			search: $request['search'],
+			organization: $request['organization']
 		);
 
 		$modulesByObjectId = $this->resolveModulesPerObject(
@@ -272,12 +268,12 @@ class FacetService {
 
 		$facets = $this->computeFacets(
 			dimValsByObjId: $dimValsByObjId,
-			selectedFilters: $normalizedFilters
+			selectedFilters: $request['filters']
 		);
 
 		$matchedObjectIds = $this->filterObjectIds(
 			dimValsByObjId: $dimValsByObjId,
-			selectedFilters: $normalizedFilters,
+			selectedFilters: $request['filters'],
 			excludeDimension: null
 		);
 
