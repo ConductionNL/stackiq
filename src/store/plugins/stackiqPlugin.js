@@ -158,9 +158,7 @@ function relatedPageCount(data, limit) {
 function relatedPageLimit(data, request) {
 	const requestedLimit = request.params._limit || request.params.limit
 	const apiLimit = data.limit ? parseInt(data.limit, 10) : null
-	return (
-		apiLimit || requestedLimit || (request.dataType === 'files' ? 500 : 20)
-	)
+	return apiLimit || requestedLimit || (request.dataType === 'files' ? 500 : 20)
 }
 
 /**

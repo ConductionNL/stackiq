@@ -20,9 +20,7 @@ vi.mock('@conduction/nextcloud-vue', () => ({
 		Object.keys(params).length ? '?' + JSON.stringify(params) : '',
 }))
 
-const { stackiqPlugin } = await import(
-	'../../src/store/plugins/stackiqPlugin.js'
-)
+const { stackiqPlugin } = await import('../../src/store/plugins/stackiqPlugin.js')
 
 const GOLDEN = path.resolve(
 	import.meta.dirname,
@@ -249,7 +247,11 @@ describe('stackiqPlugin related data', () => {
 			{ pagination: { t: { next: 'n', prev: 'p', page: 1, pages: 1 } } },
 			{ pagination: { t: { next: undefined, prev: undefined } } },
 			{ pagination: { t: { next: null, prev: null, page: 2 } } },
-			{ pagination: { t: { next: null, prev: null, page: '2', pages: '10' } } },
+			{
+				pagination: {
+					t: { next: null, prev: null, page: '2', pages: '10' },
+				},
+			},
 		]
 		check(
 			'pagination getters',
