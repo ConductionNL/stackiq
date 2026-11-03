@@ -134,6 +134,24 @@ function applySchemaSelections(store, selection) {
 }
 
 /**
+ * Write the object counts of each register that has them into the
+ * statistics, marking that register configured, and stamp the time.
+ *
+ * @param {object} statistics The store's statistics.
+ * @param {object} counts The counts answer.
+ * @return {void}
+ */
+function applyObjectCounts(statistics, counts) {
+	for (const register of ['voorzieningen', 'amef']) {
+		if (counts[register]) {
+			statistics[register].object_counts = counts[register]
+			statistics[register].configured = true
+		}
+	}
+	statistics.timestamp = counts.timestamp
+}
+
+/**
  * Fresh, unconfigured object statistics for both registers.
  *
  * @return {object} The statistics.
@@ -535,17 +553,7 @@ export const useSettingsStore = defineStore('settings', {
 				)
 
 				if (data.success && data.counts) {
-					// Update statistics with object counts
-					if (data.counts.voorzieningen) {
-						this.statistics.voorzieningen.object_counts =
-							data.counts.voorzieningen
-						this.statistics.voorzieningen.configured = true
-					}
-					if (data.counts.amef) {
-						this.statistics.amef.object_counts = data.counts.amef
-						this.statistics.amef.configured = true
-					}
-					this.statistics.timestamp = data.counts.timestamp
+					applyObjectCounts(this.statistics, data.counts)
 				} else {
 					console.error('Statistics API error:', data.error)
 					this.setError(data.error || 'Failed to load statistics')
