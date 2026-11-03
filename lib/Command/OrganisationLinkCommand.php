@@ -77,9 +77,7 @@ class OrganisationLinkCommand extends Command {
 	 *
 	 * @param ContainerInterface $container Container, for the lazy sync service resolve.
 	 */
-	public function __construct(
-		private readonly ContainerInterface $container,
-	) {
+	public function __construct(private readonly ContainerInterface $container) {
 		parent::__construct();
 	}//end __construct()
 
