@@ -1,0 +1,681 @@
+{
+	"ok / 0": {
+		"outcome": {
+			"result": {
+				"a": 1
+			}
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					}
+				}
+			]
+		]
+	},
+	"ok / 1": {
+		"outcome": {
+			"result": {
+				"a": 1
+			}
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "{\"r\":1}"
+				}
+			]
+		]
+	},
+	"ok / 2": {
+		"outcome": {
+			"result": {
+				"a": 1
+			}
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/federation/peers/1",
+				{
+					"method": "DELETE",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					}
+				}
+			]
+		]
+	},
+	"ok / 3": {
+		"outcome": {
+			"result": {
+				"a": 1
+			}
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "0"
+				}
+			]
+		]
+	},
+	"ok / 4": {
+		"outcome": {
+			"result": {
+				"a": 1
+			}
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					}
+				}
+			]
+		]
+	},
+	"ok / 5": {
+		"outcome": {
+			"result": {
+				"a": 1
+			}
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "PUT",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "\"text\""
+				}
+			]
+		]
+	},
+	"ok bad json / 0": {
+		"outcome": {
+			"result": {}
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					}
+				}
+			]
+		]
+	},
+	"ok bad json / 1": {
+		"outcome": {
+			"result": {}
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "{\"r\":1}"
+				}
+			]
+		]
+	},
+	"ok bad json / 2": {
+		"outcome": {
+			"result": {}
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/federation/peers/1",
+				{
+					"method": "DELETE",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					}
+				}
+			]
+		]
+	},
+	"ok bad json / 3": {
+		"outcome": {
+			"result": {}
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "0"
+				}
+			]
+		]
+	},
+	"ok bad json / 4": {
+		"outcome": {
+			"result": {}
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					}
+				}
+			]
+		]
+	},
+	"ok bad json / 5": {
+		"outcome": {
+			"result": {}
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "PUT",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "\"text\""
+				}
+			]
+		]
+	},
+	"error with message / 0": {
+		"outcome": {
+			"error": "bad"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					}
+				}
+			]
+		]
+	},
+	"error with message / 1": {
+		"outcome": {
+			"error": "bad"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "{\"r\":1}"
+				}
+			]
+		]
+	},
+	"error with message / 2": {
+		"outcome": {
+			"error": "bad"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/federation/peers/1",
+				{
+					"method": "DELETE",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					}
+				}
+			]
+		]
+	},
+	"error with message / 3": {
+		"outcome": {
+			"error": "bad"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "0"
+				}
+			]
+		]
+	},
+	"error with message / 4": {
+		"outcome": {
+			"error": "bad"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					}
+				}
+			]
+		]
+	},
+	"error with message / 5": {
+		"outcome": {
+			"error": "bad"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "PUT",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "\"text\""
+				}
+			]
+		]
+	},
+	"error without message / 0": {
+		"outcome": {
+			"error": "HTTP 500"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					}
+				}
+			]
+		]
+	},
+	"error without message / 1": {
+		"outcome": {
+			"error": "HTTP 500"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "{\"r\":1}"
+				}
+			]
+		]
+	},
+	"error without message / 2": {
+		"outcome": {
+			"error": "HTTP 500"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/federation/peers/1",
+				{
+					"method": "DELETE",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					}
+				}
+			]
+		]
+	},
+	"error without message / 3": {
+		"outcome": {
+			"error": "HTTP 500"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "0"
+				}
+			]
+		]
+	},
+	"error without message / 4": {
+		"outcome": {
+			"error": "HTTP 500"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					}
+				}
+			]
+		]
+	},
+	"error without message / 5": {
+		"outcome": {
+			"error": "HTTP 500"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "PUT",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "\"text\""
+				}
+			]
+		]
+	},
+	"error bad json / 0": {
+		"outcome": {
+			"error": "HTTP 502"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					}
+				}
+			]
+		]
+	},
+	"error bad json / 1": {
+		"outcome": {
+			"error": "HTTP 502"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "{\"r\":1}"
+				}
+			]
+		]
+	},
+	"error bad json / 2": {
+		"outcome": {
+			"error": "HTTP 502"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/federation/peers/1",
+				{
+					"method": "DELETE",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					}
+				}
+			]
+		]
+	},
+	"error bad json / 3": {
+		"outcome": {
+			"error": "HTTP 502"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "0"
+				}
+			]
+		]
+	},
+	"error bad json / 4": {
+		"outcome": {
+			"error": "HTTP 502"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					}
+				}
+			]
+		]
+	},
+	"error bad json / 5": {
+		"outcome": {
+			"error": "HTTP 502"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "PUT",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "\"text\""
+				}
+			]
+		]
+	},
+	"error null json / 0": {
+		"outcome": {
+			"error": "HTTP 503"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					}
+				}
+			]
+		]
+	},
+	"error null json / 1": {
+		"outcome": {
+			"error": "HTTP 503"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "{\"r\":1}"
+				}
+			]
+		]
+	},
+	"error null json / 2": {
+		"outcome": {
+			"error": "HTTP 503"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/federation/peers/1",
+				{
+					"method": "DELETE",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					}
+				}
+			]
+		]
+	},
+	"error null json / 3": {
+		"outcome": {
+			"error": "HTTP 503"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "0"
+				}
+			]
+		]
+	},
+	"error null json / 4": {
+		"outcome": {
+			"error": "HTTP 503"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					}
+				}
+			]
+		]
+	},
+	"error null json / 5": {
+		"outcome": {
+			"error": "HTTP 503"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "PUT",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "\"text\""
+				}
+			]
+		]
+	},
+	"no fetch": "No fetch implementation available"
+}
