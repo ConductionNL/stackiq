@@ -32,6 +32,15 @@ abstract class OrganisationMapper {
 	abstract public function findByUuid(string $uuid): Organisation;
 
 	/**
+	 * Find an organisation by slug.
+	 *
+	 * @param string $slug The organisation slug.
+	 *
+	 * @return Organisation
+	 */
+	abstract public function findBySlug(string $slug): Organisation;
+
+	/**
 	 * Persist an organisation entity.
 	 *
 	 * @param Organisation $entity The entity to save.
