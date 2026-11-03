@@ -199,6 +199,81 @@ function storeRelatedAnswer(store, answer) {
 }
 
 /**
+ * The metadata columns GenericObjectTable can show, in order: column, label,
+ * object key, description and whether it is shown by default.
+ *
+ * @type {Array<[string, string, string, string, boolean]>}
+ */
+const METADATA_COLUMNS = [
+	['name', 'Name', 'name', 'Display name of the object', true],
+	[
+		'description',
+		'Description',
+		'description',
+		'Description of the object',
+		false,
+	],
+	['objectId', 'ID', 'id', 'Unique identifier of the object', false],
+	['uri', 'URI', 'uri', 'URI of the object', false],
+	['version', 'Version', 'version', 'Version of the object', false],
+	['register', 'Register', 'register', 'Register of the object', false],
+	['schema', 'Schema', 'schema', 'Schema of the object', false],
+	['files', 'Files', 'files', 'Attached files count', true],
+	['locked', 'Locked', 'locked', 'Whether the object is locked', false],
+	[
+		'organization',
+		'Organization',
+		'organization',
+		'Organization owning the object',
+		false,
+	],
+	[
+		'validation',
+		'Validation',
+		'validation',
+		'Validation status of the object',
+		false,
+	],
+	['owner', 'Owner', 'owner', 'Owner of the object', false],
+	[
+		'application',
+		'Application',
+		'application',
+		'Application of the object',
+		false,
+	],
+	['folder', 'Folder', 'folder', 'Folder of the object', false],
+	['geo', 'Geo', 'geo', 'Geographic information', false],
+	['retention', 'Retention', 'retention', 'Retention policy', false],
+	['size', 'Size', 'size', 'Size of the object', false],
+	['published', 'Published', 'published', 'Publication date', false],
+	['depublished', 'Depublished', 'depublished', 'Depublication date', false],
+	['deleted', 'Deleted', 'deleted', 'Deletion date', false],
+	['created', 'Created', 'created', 'Creation date and time', false],
+	['updated', 'Updated', 'updated', 'Last update date and time', false],
+]
+
+/**
+ * One metadata column definition, keyed by its column name.
+ *
+ * @param {Array} row A row of METADATA_COLUMNS
+ * @return {[string, object]} The column name and a fresh definition
+ */
+function metadataEntry(row) {
+	const [column, label, key, description, enabled] = row
+	return [column, { label, key, description, enabled }]
+}
+
+/**
+ * Fresh column metadata definitions for a new store state.
+ *
+ * @return {object} The definitions by column name
+ */
+function columnMetadata() {
+	return Object.fromEntries(METADATA_COLUMNS.map(metadataEntry))
+}
+
+/**
  * Separate Promise.allSettled results into successful and failed arrays.
  *
  * @param {Array} results Promise.allSettled results
@@ -251,140 +326,7 @@ export function stackiqPlugin() {
 			objectErrors: {},
 
 			// Column metadata definitions for GenericObjectTable
-			metadata: {
-				name: {
-					label: 'Name',
-					key: 'name',
-					description: 'Display name of the object',
-					enabled: true,
-				},
-				description: {
-					label: 'Description',
-					key: 'description',
-					description: 'Description of the object',
-					enabled: false,
-				},
-				objectId: {
-					label: 'ID',
-					key: 'id',
-					description: 'Unique identifier of the object',
-					enabled: false,
-				},
-				uri: {
-					label: 'URI',
-					key: 'uri',
-					description: 'URI of the object',
-					enabled: false,
-				},
-				version: {
-					label: 'Version',
-					key: 'version',
-					description: 'Version of the object',
-					enabled: false,
-				},
-				register: {
-					label: 'Register',
-					key: 'register',
-					description: 'Register of the object',
-					enabled: false,
-				},
-				schema: {
-					label: 'Schema',
-					key: 'schema',
-					description: 'Schema of the object',
-					enabled: false,
-				},
-				files: {
-					label: 'Files',
-					key: 'files',
-					description: 'Attached files count',
-					enabled: true,
-				},
-				locked: {
-					label: 'Locked',
-					key: 'locked',
-					description: 'Whether the object is locked',
-					enabled: false,
-				},
-				organization: {
-					label: 'Organization',
-					key: 'organization',
-					description: 'Organization owning the object',
-					enabled: false,
-				},
-				validation: {
-					label: 'Validation',
-					key: 'validation',
-					description: 'Validation status of the object',
-					enabled: false,
-				},
-				owner: {
-					label: 'Owner',
-					key: 'owner',
-					description: 'Owner of the object',
-					enabled: false,
-				},
-				application: {
-					label: 'Application',
-					key: 'application',
-					description: 'Application of the object',
-					enabled: false,
-				},
-				folder: {
-					label: 'Folder',
-					key: 'folder',
-					description: 'Folder of the object',
-					enabled: false,
-				},
-				geo: {
-					label: 'Geo',
-					key: 'geo',
-					description: 'Geographic information',
-					enabled: false,
-				},
-				retention: {
-					label: 'Retention',
-					key: 'retention',
-					description: 'Retention policy',
-					enabled: false,
-				},
-				size: {
-					label: 'Size',
-					key: 'size',
-					description: 'Size of the object',
-					enabled: false,
-				},
-				published: {
-					label: 'Published',
-					key: 'published',
-					description: 'Publication date',
-					enabled: false,
-				},
-				depublished: {
-					label: 'Depublished',
-					key: 'depublished',
-					description: 'Depublication date',
-					enabled: false,
-				},
-				deleted: {
-					label: 'Deleted',
-					key: 'deleted',
-					description: 'Deletion date',
-					enabled: false,
-				},
-				created: {
-					label: 'Created',
-					key: 'created',
-					description: 'Creation date and time',
-					enabled: false,
-				},
-				updated: {
-					label: 'Updated',
-					key: 'updated',
-					description: 'Last update date and time',
-					enabled: false,
-				},
-			},
+			metadata: columnMetadata(),
 
 			// Schema-derived property columns
 			properties: {},
