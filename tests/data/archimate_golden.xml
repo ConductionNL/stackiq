@@ -1,0 +1,144 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" identifier="id-model-golden">
+  <name xml:lang="nl">Golden model</name>
+  <documentation>Model used to pin the import output</documentation>
+  <properties>
+    <property propertyDefinitionRef="propid-2">
+      <value>Model unit</value>
+    </property>
+  </properties>
+  <elements>
+    <element identifier="id-el-1" xsi:type="ApplicationComponent">
+      <name xml:lang="nl">Zaaksysteem</name>
+      <documentation>Handles cases</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value>uuid-el-1</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value xml:lang="nl">Backoffice</value>
+        </property>
+        <property propertyDefinitionRef="propid-3">
+          <value>Referentiecomponent</value>
+        </property>
+        <property propertyDefinitionRef="propid-99">
+          <value>Unknown definition</value>
+        </property>
+        <property>
+          <value>No definition ref</value>
+        </property>
+        <property propertyDefinitionRef="propid-4"/>
+      </properties>
+    </element>
+    <element identifier="id-el-2" xsi:type="Capability">
+      <name>Zaakgericht werken</name>
+      <properties>
+        <property propertyDefinitionRef="propid-4">
+          <value>single</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="el-3" xsi:type="BusinessActor">
+      <name/>
+      <documentation/>
+    </element>
+    <element identifier="id-el-4" xsi:type="DataObject">
+      <name>Zaakdossier</name>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value>uuid-el-4</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="id-el-5" xsi:type="Grouping">
+      <name>Standaard groep</name>
+      <properties>
+        <property propertyDefinitionRef="propid-5">
+          <value>Gemma waarde</value>
+        </property>
+        <property propertyDefinitionRef="propid-2">
+          <value>Second unit</value>
+        </property>
+      </properties>
+    </element>
+  </elements>
+  <relationships>
+    <relationship identifier="id-rel-1" xsi:type="Serving" source="id-el-1" target="id-el-2">
+      <name>serves</name>
+      <documentation>Serving relation</documentation>
+      <properties>
+        <property propertyDefinitionRef="propid-1">
+          <value>uuid-rel-1</value>
+        </property>
+      </properties>
+    </relationship>
+    <relationship identifier="rel-2" xsi:type="Association" source="el-3" target="id-el-4"/>
+  </relationships>
+  <organizations>
+    <item>
+      <label xml:lang="nl">Business</label>
+      <item identifierRef="id-el-1"/>
+      <item>
+        <label>Nested</label>
+        <item identifierRef="id-el-2"/>
+      </item>
+    </item>
+    <item>
+      <label>Relations</label>
+      <item identifierRef="id-rel-1"/>
+    </item>
+  </organizations>
+  <propertyDefinitions>
+    <propertyDefinition identifier="propid-1" type="string">
+      <name>Object ID</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-2" type="string">
+      <name>Business Unit</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-3" type="string">
+      <name>GEMMA type</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-4" type="string">
+      <name>Remark</name>
+    </propertyDefinition>
+    <propertyDefinition identifier="propid-5" type="string">
+      <name>Gemma Online URL</name>
+    </propertyDefinition>
+  </propertyDefinitions>
+  <views>
+    <diagrams>
+      <view identifier="id-view-1" xsi:type="Diagram" viewpoint="Layered">
+        <name>Overview</name>
+        <documentation>Main view</documentation>
+        <properties>
+          <property propertyDefinitionRef="propid-2">
+            <value>View unit</value>
+          </property>
+        </properties>
+        <node identifier="id-node-1" elementRef="id-el-1" xsi:type="Element" x="10" y="20" w="120" h="55">
+          <style>
+            <fillColor r="255" g="255" b="181" a="100"/>
+            <lineColor r="92" g="92" b="92"/>
+            <font name="Segoe UI" size="9">
+              <color r="0" g="0" b="0"/>
+            </font>
+          </style>
+          <node identifier="id-node-2" elementRef="id-el-2" xsi:type="Element" x="20" y="30" w="60" h="40"/>
+        </node>
+        <node identifier="id-node-3" xsi:type="Label" x="200" y="20" w="100" h="30">
+          <label>A note</label>
+        </node>
+        <node identifier="id-node-4" elementRef="id-el-missing" xsi:type="Element" x="300" y="20" w="100" h="30"/>
+        <connection identifier="id-conn-1" relationshipRef="id-rel-1" xsi:type="Relationship" source="id-node-1" target="id-node-2">
+          <style>
+            <lineColor r="0" g="0" b="0"/>
+          </style>
+          <bendpoint x="50" y="60"/>
+        </connection>
+      </view>
+      <view identifier="view-2" xsi:type="Diagram">
+        <name>Empty view</name>
+      </view>
+    </diagrams>
+  </views>
+</model>
