@@ -67,6 +67,23 @@ export const OUTCOMES = [
 export const MISSING_RECORDS_MODES = Object.freeze(['archive', 'keep'])
 
 /**
+ * The translated label of each import outcome.
+ *
+ * @type {Readonly<Record<string, function(): string>>}
+ */
+const OUTCOME_LABELS = Object.freeze({
+	created: () => t('stackiq', 'Created'),
+	updated: () => t('stackiq', 'Updated'),
+	unchanged: () => t('stackiq', 'Unchanged'),
+	skipped: () => t('stackiq', 'Skipped'),
+	failed: () => t('stackiq', 'Failed'),
+	unarchived: () => t('stackiq', 'Unarchived'),
+	restored: () => t('stackiq', 'Restored'),
+	archived: () => t('stackiq', 'Archived'),
+	deleted: () => t('stackiq', 'Deleted'),
+})
+
+/**
  * The words for one row outcome.
  *
  * @param {string} outcome The outcome key from the report
@@ -75,28 +92,11 @@ export const MISSING_RECORDS_MODES = Object.freeze(['archive', 'keep'])
  * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 export function outcomeLabel(outcome) {
-	switch (outcome) {
-		case 'created':
-			return t('stackiq', 'Created')
-		case 'updated':
-			return t('stackiq', 'Updated')
-		case 'unchanged':
-			return t('stackiq', 'Unchanged')
-		case 'skipped':
-			return t('stackiq', 'Skipped')
-		case 'failed':
-			return t('stackiq', 'Failed')
-		case 'unarchived':
-			return t('stackiq', 'Unarchived')
-		case 'restored':
-			return t('stackiq', 'Restored')
-		case 'archived':
-			return t('stackiq', 'Archived')
-		case 'deleted':
-			return t('stackiq', 'Deleted')
-		default:
-			return String(outcome ?? '')
-	}
+	const label =
+		typeof outcome === 'string' && Object.hasOwn(OUTCOME_LABELS, outcome)
+			? OUTCOME_LABELS[outcome]
+			: null
+	return label ? label() : String(outcome ?? '')
 }
 
 /**
@@ -330,6 +330,53 @@ export function moduleUrl(uuid) {
 const INTERRUPTED_STATUSES = new Set([0, 502, 503, 504])
 
 /**
+ * The CMDB error code of an answer without one in its body, by HTTP status.
+ * Any other status is IMPORT_FAILED.
+ *
+ * @type {Map<number, string>}
+ */
+const STATUS_ERROR_CODES = new Map([
+	[401, 'NOT_SIGNED_IN'],
+	[403, 'NOT_ADMIN'],
+	[412, 'CSRF_FAILED'],
+	[413, 'FILE_TOO_LARGE'],
+	[0, 'NETWORK_ERROR'],
+])
+
+/**
+ * An answer body when it is an object, else null.
+ *
+ * @param {object|string|null|undefined} body The answer body.
+ * @return {object|null} The body.
+ */
+function bodyObject(body) {
+	return body && typeof body === 'object' ? body : null
+}
+
+/**
+ * A string field of an answer body, or an empty string.
+ *
+ * @param {object|null} body The answer body.
+ * @param {string} key The field.
+ * @return {string} The value.
+ */
+function stringField(body, key) {
+	return typeof body?.[key] === 'string' ? body[key] : ''
+}
+
+/**
+ * An object field of an answer body, or an empty object.
+ *
+ * @param {object|null} body The answer body.
+ * @param {string} key The field.
+ * @return {object} The value.
+ */
+function objectField(body, key) {
+	const value = body?.[key]
+	return value && typeof value === 'object' ? value : {}
+}
+
+/**
  * Turn a failed request into the server's error shape.
  *
  * Errors raised by Nextcloud itself (not signed in, not an admin, CSRF) come
@@ -344,42 +391,123 @@ const INTERRUPTED_STATUSES = new Set([0, 502, 503, 504])
  */
 export function normaliseError(error) {
 	const status = error?.response?.status ?? 0
-	const body = error?.response?.data
-	const fromBody =
-		body && typeof body === 'object' && typeof body.error === 'string'
-			? body.error
-			: ''
-	let code = fromBody
-	if (code === '') {
-		if (status === 401) {
-			code = 'NOT_SIGNED_IN'
-		} else if (status === 403) {
-			code = 'NOT_ADMIN'
-		} else if (status === 412) {
-			code = 'CSRF_FAILED'
-		} else if (status === 413) {
-			code = 'FILE_TOO_LARGE'
-		} else if (status === 0) {
-			code = 'NETWORK_ERROR'
-		} else {
-			code = 'IMPORT_FAILED'
-		}
-	}
+	const body = bodyObject(error?.response?.data)
+	const fromBody = stringField(body, 'error')
 	return {
-		error: code,
-		message:
-			body && typeof body === 'object' && typeof body.message === 'string'
-				? body.message
-				: '',
-		details:
-			body
-			&& typeof body === 'object'
-			&& body.details
-			&& typeof body.details === 'object'
-				? body.details
-				: {},
+		error: fromBody || STATUS_ERROR_CODES.get(status) || 'IMPORT_FAILED',
+		message: stringField(body, 'message'),
+		details: objectField(body, 'details'),
 		status,
 		interrupted: fromBody === '' && INTERRUPTED_STATUSES.has(status),
+	}
+}
+
+/**
+ * Marks a progress poll that got no answer at all.
+ *
+ * @type {symbol}
+ */
+const UNREACHABLE = Symbol('unreachable')
+
+/**
+ * Read the import progress once.
+ *
+ * @param {object} http The http client.
+ * @param {string} url The progress endpoint.
+ * @return {Promise<object|null|symbol>} The progress, null when the answer has none, or UNREACHABLE.
+ */
+async function readProgress(http, url) {
+	try {
+		const response = await http.get(url)
+		return response?.data?.progress ?? null
+	} catch (error) {
+		return error?.response ? null : UNREACHABLE
+	}
+}
+
+/**
+ * The outcome of a poll that gave no usable progress, or null when it did.
+ *
+ * @param {object|null|symbol} progress The poll result.
+ * @return {{state: string}|null} The outcome.
+ */
+function unusableProgress(progress) {
+	if (progress === UNREACHABLE) {
+		return { state: 'unreachable' }
+	}
+	if (!progress || typeof progress !== 'object') {
+		return { state: 'unknown' }
+	}
+	return null
+}
+
+/**
+ * Whether a progress status ends the import with a report to read.
+ *
+ * @param {string} status The progress status.
+ * @return {boolean} True for completed and cancelled.
+ */
+function isClosedStatus(status) {
+	return status === 'completed' || status === 'cancelled'
+}
+
+/**
+ * The outcome of a progress that ended the import, or null while it runs on.
+ *
+ * @param {object} progress The progress.
+ * @return {object|null} The outcome.
+ */
+function endedOutcome(progress) {
+	const report = progress.statistics?.report
+	if (isClosedStatus(progress.status) && report && typeof report === 'object') {
+		return { state: 'finished', report }
+	}
+	if (progress.status === 'failed') {
+		return { state: 'failed' }
+	}
+	return null
+}
+
+/**
+ * Whether to poll again: the import still runs, the time is not up and no
+ * stop was asked.
+ *
+ * @param {object} progress The progress.
+ * @param {{run: object, waited: number}} poll The run and the time waited so far.
+ * @return {boolean} True to poll again.
+ */
+function keepPolling(progress, poll) {
+	const { run, waited } = poll
+	const stop =
+		progress.status !== 'running' || waited >= run.timeoutMs || run.shouldStop()
+	return !stop
+}
+
+/**
+ * Poll the progress until the import ends, cannot be read, or polling stops.
+ *
+ * @param {object} run The http client, url, callbacks, interval and timeout.
+ * @param {Function} wait Waits the given milliseconds.
+ * @return {Promise<object>} The outcome.
+ */
+async function pollProgress(run, wait) {
+	let waited = 0
+	for (;;) {
+		const progress = await readProgress(run.http, run.url)
+		const unusable = unusableProgress(progress)
+		if (unusable) {
+			return unusable
+		}
+		run.onProgress(progress)
+		const ended = endedOutcome(progress)
+		if (ended) {
+			return ended
+		}
+		if (!keepPolling(progress, { run, waited })) {
+			return { state: 'unknown' }
+		}
+		await wait(run.intervalMs)
+		waited += run.intervalMs
 	}
 }
 
@@ -413,38 +541,26 @@ export async function followInterruptedImport({
 	const url = generateUrl('/apps/stackiq/api/progress/{operationId}', {
 		operationId,
 	})
-	let waited = 0
-	for (;;) {
-		let progress = null
-		try {
-			const response = await http.get(url)
-			progress = response?.data?.progress ?? null
-		} catch (error) {
-			if (!error?.response) {
-				return { state: 'unreachable' }
-			}
-		}
-		if (!progress || typeof progress !== 'object') {
-			return { state: 'unknown' }
-		}
-		onProgress(progress)
-		const report = progress.statistics?.report
-		if (
-			(progress.status === 'completed' || progress.status === 'cancelled')
-			&& report
-			&& typeof report === 'object'
-		) {
-			return { state: 'finished', report }
-		}
-		if (progress.status === 'failed') {
-			return { state: 'failed' }
-		}
-		if (progress.status !== 'running' || waited >= timeoutMs || shouldStop()) {
-			return { state: 'unknown' }
-		}
-		await wait(intervalMs)
-		waited += intervalMs
+	const run = { http, url, onProgress, shouldStop, intervalMs, timeoutMs }
+	return pollProgress(run, wait)
+}
+
+/**
+ * The error code of an import whose follow-up did not finish: a failure, a
+ * network error when the server was never reached, else an interruption.
+ *
+ * @param {string|undefined} state The follow-up state.
+ * @param {number|string|null} status The HTTP status of the upload error.
+ * @return {string} The error code.
+ */
+function interruptedErrorCode(state, status) {
+	if (state === 'failed') {
+		return 'IMPORT_FAILED'
 	}
+	if (state === 'unreachable' && status === 0) {
+		return 'NETWORK_ERROR'
+	}
+	return 'IMPORT_INTERRUPTED'
 }
 
 /**
@@ -457,24 +573,16 @@ export async function followInterruptedImport({
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
  */
 export function interruptedImportError(outcome, error) {
-	const base = {
+	const status = error?.status ?? 0
+	if (outcome?.state === 'finished') {
+		return null
+	}
+	return {
 		message: '',
 		details: {},
-		status: error?.status ?? 0,
+		status,
 		interrupted: true,
-	}
-	switch (outcome?.state) {
-		case 'finished':
-			return null
-		case 'failed':
-			return { ...base, error: 'IMPORT_FAILED' }
-		case 'unreachable':
-			if ((error?.status ?? 0) === 0) {
-				return { ...base, error: 'NETWORK_ERROR' }
-			}
-			return { ...base, error: 'IMPORT_INTERRUPTED' }
-		default:
-			return { ...base, error: 'IMPORT_INTERRUPTED' }
+		error: interruptedErrorCode(outcome?.state, status),
 	}
 }
 
@@ -992,6 +1100,51 @@ export function cancelFailureText(error) {
 }
 
 /**
+ * The processed and total row counts of an import progress, zero when unset.
+ *
+ * @param {object} progress The progress.
+ * @return {{processed: number, total: number}} The counts.
+ */
+function progressCounts(progress) {
+	return {
+		processed: Number(progress.processed_items) || 0,
+		total: Number(progress.total_items) || 0,
+	}
+}
+
+/**
+ * The progress percentage: from the row counts when there is a total,
+ * capped at 100, else the reported percentage.
+ *
+ * @param {object} progress The progress.
+ * @param {{processed: number, total: number}} counts The row counts.
+ * @return {number} The percentage.
+ */
+function progressPercentage(progress, counts) {
+	const { processed, total } = counts
+	if (total > 0) {
+		return Math.min(100, Math.round((processed / total) * 100))
+	}
+	return Number(progress.percentage) || 0
+}
+
+/**
+ * The rows-processed line of an import progress.
+ *
+ * @param {{processed: number, total: number}} counts The row counts.
+ * @return {string} The line.
+ */
+function rowsProcessedText(counts) {
+	const { processed, total } = counts
+	return t(
+		'stackiq',
+		'{processed} of {total} rows processed',
+		{ processed, total },
+		AS_TEXT,
+	)
+}
+
+/**
  * What the page shows for a progress snapshot of the running import.
  *
  * The percentage comes from the processed and total row counts when the
@@ -1014,12 +1167,6 @@ export function cmdbProgressView(progress) {
 	if (!progress) {
 		return null
 	}
-	const processed = Number(progress.processed_items) || 0
-	const total = Number(progress.total_items) || 0
-	const percentage =
-		total > 0
-			? Math.min(100, Math.round((processed / total) * 100))
-			: Number(progress.percentage) || 0
 	if (progress.phase === 'reconciling') {
 		return {
 			percentage: 100,
@@ -1031,20 +1178,10 @@ export function cmdbProgressView(progress) {
 			),
 		}
 	}
+	const counts = progressCounts(progress)
 	return {
-		percentage,
-		detail:
-			total > 0
-				? t(
-						'stackiq',
-						'{processed} of {total} rows processed',
-						{
-							processed,
-							total,
-						},
-						AS_TEXT,
-					)
-				: '',
+		percentage: progressPercentage(progress, counts),
+		detail: counts.total > 0 ? rowsProcessedText(counts) : '',
 	}
 }
 
@@ -1454,6 +1591,39 @@ export function packSourceLabel(source) {
 }
 
 /**
+ * The shipped and stored version of a register pack, as text.
+ *
+ * @param {object|null} pack The pack.
+ * @return {{shipped: string, stored: string}} The versions, empty when unknown.
+ */
+function packVersions(pack) {
+	return {
+		shipped: String(pack?.shippedVersion ?? pack?.version ?? ''),
+		stored: String(pack?.storedVersion ?? ''),
+	}
+}
+
+/**
+ * The version line of a pack stored in OpenRegister, naming the shipped
+ * version when it differs.
+ *
+ * @param {{shipped: string, stored: string}} versions The versions.
+ * @return {string} The line.
+ */
+function storedPackVersionText(versions) {
+	const { shipped, stored } = versions
+	if (shipped !== '' && shipped !== stored) {
+		return t(
+			'stackiq',
+			'Version {version} (shipped: {shipped})',
+			{ version: stored, shipped },
+			AS_TEXT,
+		)
+	}
+	return t('stackiq', 'Version {version}', { version: stored }, AS_TEXT)
+}
+
+/**
  * The version of a pack as the import runs it: the stored version for a
  * pack from OpenRegister, with the shipped version next to it when the two
  * differ, and the shipped version for a pack read from the file.
@@ -1463,23 +1633,14 @@ export function packSourceLabel(source) {
  * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
 export function packVersionText(pack) {
-	const shipped = String(pack?.shippedVersion ?? pack?.version ?? '')
-	const stored = String(pack?.storedVersion ?? '')
-	if (pack?.source === 'openregister' && stored !== '') {
-		if (shipped !== '' && shipped !== stored) {
-			return t(
-				'stackiq',
-				'Version {version} (shipped: {shipped})',
-				{ version: stored, shipped },
-				AS_TEXT,
-			)
-		}
-		return t('stackiq', 'Version {version}', { version: stored }, AS_TEXT)
+	const versions = packVersions(pack)
+	if (pack?.source === 'openregister' && versions.stored !== '') {
+		return storedPackVersionText(versions)
 	}
-	if (shipped === '') {
+	if (versions.shipped === '') {
 		return ''
 	}
-	return t('stackiq', 'Version {version}', { version: shipped }, AS_TEXT)
+	return t('stackiq', 'Version {version}', { version: versions.shipped }, AS_TEXT)
 }
 
 /**

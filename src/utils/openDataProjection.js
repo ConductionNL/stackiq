@@ -87,6 +87,56 @@ function isStripped(name) {
 }
 
 /**
+ * The fields of an entry that are published: everything except @-prefixed
+ * keys and the stripped fields.
+ *
+ * @param {object} data The entry data.
+ * @return {object} The published fields.
+ */
+function publishedFields(data) {
+	const projected = {}
+	for (const [key, value] of Object.entries(data)) {
+		if (!key.startsWith('@') && !isStripped(key)) {
+			projected[key] = value
+		}
+	}
+	return projected
+}
+
+/**
+ * The stable uuid of an entry, from its @self envelope or its data.
+ *
+ * @param {{data: object, self: object}} entry The entry data and envelope.
+ * @return {string|null} The uuid, or null.
+ */
+function entryUuid(entry) {
+	const { data, self } = entry
+	return self.uuid ?? self.id ?? data.uuid ?? null
+}
+
+/**
+ * The slug of an entry, from its @self envelope or its data.
+ *
+ * @param {{data: object, self: object}} entry The entry data and envelope.
+ * @return {string|null} The slug, or null.
+ */
+function entrySlug(entry) {
+	const { data, self } = entry
+	return self.slug ?? data.slug ?? null
+}
+
+/**
+ * When an entry last changed, from its @self envelope or its data.
+ *
+ * @param {{data: object, self: object}} entry The entry data and envelope.
+ * @return {string|null} The moment, or null.
+ */
+function lastModified(entry) {
+	const { data, self } = entry
+	return self.updated ?? self.modified ?? data.updated ?? null
+}
+
+/**
  * Project a catalog entry into its anonymous open-data representation.
  *
  * @param {object} entry                    An OR object (with `@self`) or data bag.
@@ -102,32 +152,15 @@ export function projectOpenData(
 	{ license = DEFAULT_LICENSE, publisherName = null } = {},
 ) {
 	const { data, self } = split(entry)
-
-	const projected = {}
-	for (const [key, value] of Object.entries(data)) {
-		if (key.startsWith('@')) {
-			continue
-		}
-		if (isStripped(key)) {
-			continue
-		}
-		projected[key] = value
-	}
-
-	// Stable identifiers retained from the @self envelope.
-	const identifiers = {
-		uuid: self.uuid ?? self.id ?? data.uuid ?? null,
-		slug: self.slug ?? data.slug ?? null,
-	}
-
+	const uuid = entryUuid({ data, self })
 	return {
-		...projected,
-		'@id': identifiers.uuid,
-		uuid: identifiers.uuid,
-		slug: identifiers.slug,
+		...publishedFields(data),
+		'@id': uuid,
+		uuid,
+		slug: entrySlug({ data, self }),
 		license,
 		publisher: publisherName,
-		lastModified: self.updated ?? self.modified ?? data.updated ?? null,
+		lastModified: lastModified({ data, self }),
 	}
 }
 
