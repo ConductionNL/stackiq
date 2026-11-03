@@ -254,6 +254,20 @@ class CmdbExportImportServiceTest extends TestCase {
 	private ?\Throwable $findFailure = null;
 
 	/**
+	 * The mapping engine the container answers, when a test replaces OpenRegister's.
+	 *
+	 * @var object|null
+	 */
+	private ?object $engine = null;
+
+	/**
+	 * Every deleteObject() call: uuid and schema.
+	 *
+	 * @var array<int, array{0: string, 1: mixed}>
+	 */
+	private array $deletes = [];
+
+	/**
 	 * The locking provider every service of a test shares, as the instance does.
 	 *
 	 * @var ILockingProvider|null
@@ -289,6 +303,8 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->scopedCalls = [];
 		$this->searches = [];
 		$this->findFailure = null;
+		$this->engine = null;
+		$this->deletes = [];
 		$this->locks = $this->lockingProvider();
 	}//end setUp()
 
@@ -347,7 +363,66 @@ class CmdbExportImportServiceTest extends TestCase {
 	 */
 	protected function assertPostConditions(): void {
 		$this->assertSame([], $this->scopedCalls, 'every OpenRegister call passes _rbac: false and _multitenancy: false');
+		$this->checkGolden();
 	}//end assertPostConditions()
+
+	/**
+	 * Compare what the test left in the doubles with its recording, or record it
+	 * (RECORD_GOLDEN=1): the register, every save, archive state and transition,
+	 * every search, the log lines, the address books and the progress cache.
+	 *
+	 * Times and durations of the run, generated operation ids and generated uuids (by first
+	 * appearance) are replaced by placeholders.
+	 * Each case is stored as JSON text, so stored keys never become JSON keys.
+	 *
+	 * @return void
+	 */
+	private function checkGolden(): void {
+		$observed = [
+			'store'        => $this->store,
+			'saves'        => $this->saves,
+			'states'       => $this->states,
+			'transitions'  => $this->transitions,
+			'searches'     => $this->searches,
+			'logLines'     => $this->logLines,
+			'contacts'     => $this->contacts,
+			'addressBooks' => $this->addressBooks,
+			'cache'        => $this->cache,
+		];
+		$json = (string) json_encode($observed, (JSON_PARTIAL_OUTPUT_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+		$json = (string) preg_replace('/' . gmdate('Y-m-d') . 'T[0-9:.]+(Z|[+-][0-9:]+)?/', '(now)', $json);
+		$json = (string) preg_replace('/' . date('Y-m-d') . 'T[0-9:.]+(Z|[+-][0-9:]+)?/', '(now)', $json);
+		$json = (string) preg_replace('/cmdb-[0-9a-f]{32}/', 'cmdb-(operation)', $json);
+		$json = (string) preg_replace('/stackiq-cmdb-pack-[0-9a-f]{8}/', 'stackiq-cmdb-pack-(dir)', $json);
+		$json = (string) preg_replace('/(?<![0-9])1[789][0-9]{8}(\\.[0-9]+)?(?![0-9])/', '"(epoch)"', $json);
+		$json = (string) preg_replace('/duration(\\\\?"):[0-9]+/', 'duration$1:0', $json);
+		$generated = [];
+		$json      = (string) preg_replace_callback(
+			'/(?!00000000-0000-4000-8000-)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/',
+			static function (array $match) use (&$generated): string {
+				$generated[$match[0]] ??= '(uuid-' . (count($generated) + 1) . ')';
+				return $generated[$match[0]];
+			},
+			$json
+		);
+
+		$file  = __DIR__ . '/golden/cmdbExportImport.json';
+		$saved = [];
+		if (file_exists($file) === true) {
+			$saved = (array) json_decode((string) file_get_contents($file), true);
+		}
+
+		$key = $this->name() . ' ' . $this->dataName();
+		if (getenv('RECORD_GOLDEN') !== false) {
+			$saved[$key] = $json;
+			ksort($saved);
+			file_put_contents($file, json_encode($saved, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+			return;
+		}
+
+		$this->assertArrayHasKey($key, $saved, 'No golden for ' . $key);
+		$this->assertSame($saved[$key], $json, 'golden ' . $key);
+	}//end checkGolden()
 
 	/**
 	 * The properties a schema declares, from the register and every register fragment.
@@ -530,6 +605,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$service->method('deleteObject')->willReturnCallback(
 			function (string $uuid, $register = null, $schema = null, bool $_rbac = true, bool $_multitenancy = true): bool {
 				$this->noteScope(method: 'deleteObject', rbac: $_rbac, multitenancy: $_multitenancy);
+				$this->deletes[] = [$uuid, $schema];
 				if ($this->deleteRefusedFor === $uuid) {
 					return false;
 				}
@@ -1009,8 +1085,8 @@ class CmdbExportImportServiceTest extends TestCase {
 	 *
 	 * @return CmdbWorkbookReader
 	 */
-	private function rowsReader(array $rows, ?array $archived = [], array $uncachedRows = [], array $uncachedKeyRows = [], array $absentSheets = []): CmdbWorkbookReader {
-		return new class($rows, $archived, $uncachedRows, $uncachedKeyRows, $absentSheets) extends CmdbWorkbookReader {
+	private function rowsReader(array $rows, ?array $archived = [], array $uncachedRows = [], array $uncachedKeyRows = [], array $absentSheets = [], bool $date1904 = false): CmdbWorkbookReader {
+		return new class($rows, $archived, $uncachedRows, $uncachedKeyRows, $absentSheets, $date1904) extends CmdbWorkbookReader {
 			/**
 			 * Constructor.
 			 *
@@ -1019,6 +1095,7 @@ class CmdbExportImportServiceTest extends TestCase {
 			 * @param array<int, int> $uncachedRows The archive sheet's rows without a cached APPID.
 			 * @param array<string, array<int, int>> $uncachedKeyRows The CMDB rows dropped as empty, per sheet.
 			 * @param array<int, string> $absentSheets The source sheets the workbook lacks.
+			 * @param bool $date1904 The workbook's date system.
 			 */
 			public function __construct(
 				private array $rows,
@@ -1026,6 +1103,7 @@ class CmdbExportImportServiceTest extends TestCase {
 				private array $uncachedRows,
 				private array $uncachedKeyRows = [],
 				private array $absentSheets = [],
+				private bool $date1904 = false,
 			) {
 			}
 
@@ -1042,7 +1120,7 @@ class CmdbExportImportServiceTest extends TestCase {
 				return [
 					'rows' => $this->rows,
 					'importWarnings' => [],
-					'date1904' => false,
+					'date1904' => $this->date1904,
 					'archive' => $archive,
 					'uncachedKeyRows' => $this->uncachedKeyRows,
 					'absentSheets' => $this->absentSheets,
@@ -1075,9 +1153,13 @@ class CmdbExportImportServiceTest extends TestCase {
 
 		[$archiveHandler, $objectMapper] = $this->archiveDoubles();
 		$container = $this->createMock(ContainerInterface::class);
-		$container->method('has')->willReturnCallback(fn (string $id): bool => $id === \OCP\L10N\IFactory::class || ($packs !== false && $id === CmdbImportPackStore::SERVICE_CLASS));
+		$container->method('has')->willReturnCallback(fn (string $id): bool => ($id === CmdbExportImportService::ENGINE_CLASS && $this->engine !== null) || $id === \OCP\L10N\IFactory::class || ($packs !== false && $id === CmdbImportPackStore::SERVICE_CLASS));
 		$container->method('get')->willReturnCallback(
 			function (string $id) use ($objectService, $schemaMapper, $packs, $archiveHandler, $objectMapper) {
+				if ($id === CmdbExportImportService::ENGINE_CLASS && $this->engine !== null) {
+					return $this->engine;
+				}
+
 				if ($id === \OCP\L10N\IFactory::class) {
 					return CmdbTestSupport::translationFactory(test: $this);
 				}
@@ -3613,6 +3695,139 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame(['rowsRead' => 3, 'processed' => 3, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 1, 'archived' => 0, 'unarchived' => 0, 'deleted' => 0, 'restored' => 0, 'warnings' => 0, 'unpublished' => 0], $report['summary']);
 		$this->assertCount(2, $this->store[self::MODULE]);
 	}//end testOneBadRowDoesNotStopTheOthers()
+
+	/**
+	 * A mapping engine that counts its calls, keeps the row numbers it is given, and throws on one call.
+	 *
+	 * Per row the calls are the module, the manufacturer, the owner and the usage, in that order.
+	 *
+	 * @param int $throwOnCall The call that throws, counted from 1; 0 for none.
+	 *
+	 * @return object
+	 */
+	private function countingEngine(int $throwOnCall): object {
+		return new class($throwOnCall) {
+			/**
+			 * The row numbers given, per call.
+			 *
+			 * @var array<int, int>
+			 */
+			public array $rowNumbers = [];
+
+			/**
+			 * Constructor.
+			 *
+			 * @param int $throwOnCall The call that throws.
+			 */
+			public function __construct(private int $throwOnCall) {
+			}
+
+			/**
+			 * Map nothing, or throw.
+			 *
+			 * @param array<string, mixed> $pack The pack.
+			 * @param array<string, mixed> $values The values.
+			 * @param int $rowNumber The row number.
+			 *
+			 * @return array{data: array<string, mixed>, errors: array<int, mixed>}
+			 */
+			public function mapRow(array $pack, array $values, int $rowNumber): array {
+				$this->rowNumbers[] = $rowNumber;
+				if (count($this->rowNumbers) === $this->throwOnCall) {
+					throw new RuntimeException('engine failed');
+				}
+
+				return ['data' => [], 'errors' => []];
+			}
+		};
+	}//end countingEngine()
+
+	/**
+	 * A failing mapping names its step: the module's mapping, or the owner's.
+	 *
+	 * @return void
+	 */
+	public function testAFailingMappingNamesItsStep(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		foreach ([1 => 'step "mapping" failed (RuntimeException)', 3 => 'step "owners" failed (RuntimeException)'] as $call => $reason) {
+			$this->engine = $this->countingEngine(throwOnCall: $call);
+
+			$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: (string) $call)]))
+				->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+
+			$this->assertSame('failed', $report['rows'][0]['outcome']);
+			$this->assertSame([$reason], $report['rows'][0]['reasons']);
+		}
+	}//end testAFailingMappingNamesItsStep()
+
+	/**
+	 * A supplier that cannot be saved fails the row at the manufacturer step.
+	 *
+	 * @return void
+	 */
+	public function testAFailingSupplierNamesItsStep(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->beforeSave = function (int $schema): void {
+			if ($schema === self::ORGANIZATION) {
+				throw new RuntimeException('no supplier');
+			}
+		};
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+
+		$this->assertSame(['step "manufacturer" failed (RuntimeException)'], $report['rows'][0]['reasons']);
+	}//end testAFailingSupplierNamesItsStep()
+
+	/**
+	 * The engine gets the row's own sheet row number, for every pack it maps.
+	 *
+	 * @return void
+	 */
+	public function testTheEngineGetsTheSheetRowNumber(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->engine = $this->countingEngine(throwOnCall: 0);
+
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', row: 7)]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+
+		$this->assertSame([7, 7, 7, 7], $this->engine->rowNumbers);
+	}//end testTheEngineGetsTheSheetRowNumber()
+
+	/**
+	 * Dates are read in the workbook's own date system.
+	 *
+	 * @return void
+	 */
+	public function testAWorkbookInThe1904DateSystemIsReadAsSuch(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$row = $this->row(appId: '1', cells: ['End-of-Life Functioneel' => 45111]);
+
+		$this->service(reader: $this->rowsReader(rows: [$row], date1904: true))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+
+		$stored = (string) json_encode($this->store);
+		$this->assertStringContainsString('2027-07-05', $stored);
+		$this->assertStringNotContainsString('2023-07-04', $stored);
+	}//end testAWorkbookInThe1904DateSystemIsReadAsSuch()
+
+	/**
+	 * A soft delete goes to the schema of the object: the usage's first, then the module's.
+	 *
+	 * @return void
+	 */
+	public function testADeleteGoesToTheSchemaOfTheObject(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$rows = [$this->row(appId: '1', row: 2), $this->row(appId: '2', row: 3)];
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$module = $this->moduleOf(appId: '2');
+		$usage  = $this->usageOf(moduleUuid: $module);
+
+		$this->service(reader: $this->rowsReader(rows: [$rows[0]]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame([$usage, $module], array_column($this->deletes, 0));
+		$this->assertSame([self::USAGE, self::MODULE], array_map('intval', array_column($this->deletes, 1)));
+	}//end testADeleteGoesToTheSchemaOfTheObject()
 
 	/**
 	 * A duplicate APPID (also across the two sheets), a missing APPID and a missing Applicatie Naam are skipped with their reasons.
