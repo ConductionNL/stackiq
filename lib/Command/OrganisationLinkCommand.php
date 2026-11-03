@@ -59,6 +59,7 @@ class OrganisationLinkCommand extends Command {
 		'no-organisation'     => '<error>No OpenRegister organisation has this uuid.</error>',
 		'organisation-in-use' => '<error>This OpenRegister organisation belongs to another organisatie.</error>',
 		'default-organisation' => '<error>This is the OpenRegister default organisation, which is never linked.</error>',
+		'default-unknown'     => '<error>OpenRegister cannot say which organisation is its default, so nothing is linked.</error>',
 		'not-confirmed'       => '<comment>Not linked.</comment> Confirm, or run again with --yes.',
 	];
 
