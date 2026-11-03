@@ -546,6 +546,24 @@ export async function followInterruptedImport({
 }
 
 /**
+ * The error code of an import whose follow-up did not finish: a failure, a
+ * network error when the server was never reached, else an interruption.
+ *
+ * @param {string|undefined} state The follow-up state.
+ * @param {number|string|null} status The HTTP status of the upload error.
+ * @return {string} The error code.
+ */
+function interruptedErrorCode(state, status) {
+	if (state === 'failed') {
+		return 'IMPORT_FAILED'
+	}
+	if (state === 'unreachable' && status === 0) {
+		return 'NETWORK_ERROR'
+	}
+	return 'IMPORT_INTERRUPTED'
+}
+
+/**
  * The error the page shows for an interrupted import, once
  * followInterruptedImport() has an outcome; null when the report was found.
  *
@@ -555,24 +573,16 @@ export async function followInterruptedImport({
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
  */
 export function interruptedImportError(outcome, error) {
-	const base = {
+	const status = error?.status ?? 0
+	if (outcome?.state === 'finished') {
+		return null
+	}
+	return {
 		message: '',
 		details: {},
-		status: error?.status ?? 0,
+		status,
 		interrupted: true,
-	}
-	switch (outcome?.state) {
-		case 'finished':
-			return null
-		case 'failed':
-			return { ...base, error: 'IMPORT_FAILED' }
-		case 'unreachable':
-			if ((error?.status ?? 0) === 0) {
-				return { ...base, error: 'NETWORK_ERROR' }
-			}
-			return { ...base, error: 'IMPORT_INTERRUPTED' }
-		default:
-			return { ...base, error: 'IMPORT_INTERRUPTED' }
+		error: interruptedErrorCode(outcome?.state, status),
 	}
 }
 
