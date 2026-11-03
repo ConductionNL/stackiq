@@ -51,13 +51,6 @@ use Throwable;
  */
 class ReferencesAuditCommand extends Command {
 	/**
-	 * How many rows to read per page. Never "unlimited".
-	 *
-	 * @var int
-	 */
-	private const READ_BATCH_SIZE = 200;
-
-	/**
 	 * This app's own register slug.
 	 *
 	 * @var string
@@ -145,7 +138,7 @@ class ReferencesAuditCommand extends Command {
 
 		try {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$satellites = $this->readAll($objectService, self::REGISTER, self::SATELLITE_SCHEMA);
+			$satellites = (new ObjectPages(objectService: $objectService))->all(register: self::REGISTER, schema: self::SATELLITE_SCHEMA);
 		} catch (Throwable $e) {
 			$output->writeln('<error>could not read '.self::SATELLITE_SCHEMA.': '.$e->getMessage().'</error>');
 			return 1;
@@ -188,8 +181,7 @@ class ReferencesAuditCommand extends Command {
 		$output = $run['output'];
 		$counts = ['set' => 0, 'dangling' => 0, 'backfillable' => 0, 'ambiguous' => 0, 'unmatched' => 0, 'written' => 0];
 
-		foreach ($satellites as $raw) {
-			$row = $this->payload($raw);
+		foreach ($satellites as $row) {
 			if ($row === []) {
 				continue;
 			}
@@ -311,8 +303,7 @@ class ReferencesAuditCommand extends Command {
 		$owners = [];
 
 		try {
-			foreach ($this->readAll($objectService, self::OWNER_REGISTER, self::OWNER_SCHEMA) as $row) {
-				$owner = $this->payload($row);
+			foreach ((new ObjectPages(objectService: $objectService))->all(register: self::OWNER_REGISTER, schema: self::OWNER_SCHEMA) as $owner) {
 				$key = trim((string)($owner[self::IDENTITY_KEY] ?? ''));
 				if ($key === '') {
 					continue;
@@ -373,76 +364,4 @@ class ReferencesAuditCommand extends Command {
 			$output->writeln('Re-run with the write option to fill in the '.$counts['backfillable'].' unambiguous match(es).');
 		}
 	}//end report()
-
-	/**
-	 * Read every row of a schema in explicit limit/offset pages.
-	 *
-	 * @param object $objectService The OpenRegister ObjectService.
-	 * @param string $register The register slug.
-	 * @param string $schema The schema slug.
-	 *
-	 * @return array<int, mixed> Every row.
-	 */
-	private function readAll(object $objectService, string $register, string $schema): array {
-		$rows = [];
-		$offset = 0;
-
-		while (true) {
-			$page = $objectService
-				->setRegister($register)
-				->setSchema($schema)
-				->findAll(['limit' => self::READ_BATCH_SIZE, 'offset' => $offset]);
-
-			if (is_array($page) === false || $page === []) {
-				break;
-			}
-
-			foreach ($page as $row) {
-				$rows[] = $row;
-			}
-
-			if (count($page) < self::READ_BATCH_SIZE) {
-				break;
-			}
-
-			$offset += self::READ_BATCH_SIZE;
-		}//end while
-
-		return $rows;
-	}//end readAll()
-
-	/**
-	 * Resolve one findAll() row to its schema payload.
-	 *
-	 * OpenRegister yields ObjectEntity instances whose payload lives behind
-	 * jsonSerialize()/getObject(). A blind array cast yields mangled keys and
-	 * loses every field, so a caller that casts reads garbage and silently
-	 * mis-maps every row.
-	 *
-	 * @param mixed $row One result row.
-	 *
-	 * @return array<string, mixed> The payload, empty when unusable.
-	 */
-	private function payload(mixed $row): array {
-		if (is_array($row) === true) {
-			return $row;
-		}
-
-		if (is_object($row) === false) {
-			return [];
-		}
-
-		foreach (['jsonSerialize', 'getObject'] as $method) {
-			try {
-				$out = $row->$method();
-				if (is_array($out) === true) {
-					return $out;
-				}
-			} catch (Throwable $e) {
-				continue;
-			}
-		}
-
-		return [];
-	}//end payload()
 }//end class
