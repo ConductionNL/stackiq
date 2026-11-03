@@ -1,0 +1,748 @@
+{
+	"outcomes": [
+		"Created",
+		"Updated",
+		"Unchanged",
+		"Skipped",
+		"Failed",
+		"Unarchived",
+		"Restored",
+		"Archived",
+		"Deleted",
+		"other",
+		"",
+		"",
+		"",
+		"3",
+		"toString",
+		"constructor"
+	],
+	"projections": [
+		{
+			"name": "n",
+			"@id": "u1",
+			"uuid": "u1",
+			"slug": "s1",
+			"license": "CC0-1.0",
+			"publisher": null,
+			"lastModified": "t1"
+		},
+		{
+			"name": "n",
+			"@id": "u1",
+			"uuid": "u1",
+			"slug": "s1",
+			"license": "MIT",
+			"publisher": "P",
+			"lastModified": "t1"
+		},
+		{
+			"name": "n",
+			"@id": "u1",
+			"uuid": "u1",
+			"slug": "s1",
+			"license": "CC0-1.0",
+			"publisher": null,
+			"lastModified": "t1"
+		},
+		{
+			"name": "n",
+			"uuid": "i2",
+			"slug": "s2",
+			"updated": "t2",
+			"@id": "i2",
+			"license": "CC0-1.0",
+			"publisher": null,
+			"lastModified": "m2"
+		},
+		{
+			"name": "n",
+			"uuid": "i2",
+			"slug": "s2",
+			"updated": "t2",
+			"@id": "i2",
+			"license": "MIT",
+			"publisher": "P",
+			"lastModified": "m2"
+		},
+		{
+			"name": "n",
+			"uuid": "i2",
+			"slug": "s2",
+			"updated": "t2",
+			"@id": "i2",
+			"license": "CC0-1.0",
+			"publisher": null,
+			"lastModified": "m2"
+		},
+		{
+			"name": "n",
+			"uuid": "u3",
+			"updated": "t3",
+			"@id": "u3",
+			"slug": null,
+			"license": "CC0-1.0",
+			"publisher": null,
+			"lastModified": "t3"
+		},
+		{
+			"name": "n",
+			"uuid": "u3",
+			"updated": "t3",
+			"@id": "u3",
+			"slug": null,
+			"license": "MIT",
+			"publisher": "P",
+			"lastModified": "t3"
+		},
+		{
+			"name": "n",
+			"uuid": "u3",
+			"updated": "t3",
+			"@id": "u3",
+			"slug": null,
+			"license": "CC0-1.0",
+			"publisher": null,
+			"lastModified": "t3"
+		},
+		{
+			"name": "n",
+			"@id": null,
+			"uuid": null,
+			"slug": null,
+			"license": "CC0-1.0",
+			"publisher": null,
+			"lastModified": null
+		},
+		{
+			"name": "n",
+			"@id": null,
+			"uuid": null,
+			"slug": null,
+			"license": "MIT",
+			"publisher": "P",
+			"lastModified": null
+		},
+		{
+			"name": "n",
+			"@id": null,
+			"uuid": null,
+			"slug": null,
+			"license": "CC0-1.0",
+			"publisher": null,
+			"lastModified": null
+		},
+		{
+			"@id": null,
+			"uuid": null,
+			"slug": null,
+			"license": "CC0-1.0",
+			"publisher": null,
+			"lastModified": null
+		},
+		{
+			"@id": null,
+			"uuid": null,
+			"slug": null,
+			"license": "MIT",
+			"publisher": "P",
+			"lastModified": null
+		},
+		{
+			"@id": null,
+			"uuid": null,
+			"slug": null,
+			"license": "CC0-1.0",
+			"publisher": null,
+			"lastModified": null
+		},
+		{
+			"@id": null,
+			"uuid": null,
+			"slug": null,
+			"license": "CC0-1.0",
+			"publisher": null,
+			"lastModified": null
+		},
+		{
+			"@id": null,
+			"uuid": null,
+			"slug": null,
+			"license": "MIT",
+			"publisher": "P",
+			"lastModified": null
+		},
+		{
+			"@id": null,
+			"uuid": null,
+			"slug": null,
+			"license": "CC0-1.0",
+			"publisher": null,
+			"lastModified": null
+		}
+	],
+	"requests": {
+		"ok / 0": {
+			"outcome": {
+				"result": {
+					"a": 1
+				}
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "GET",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						}
+					}
+				]
+			]
+		},
+		"ok / 1": {
+			"outcome": {
+				"result": {
+					"a": 1
+				}
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "POST",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						},
+						"body": "{\"r\":1}"
+					}
+				]
+			]
+		},
+		"ok / 2": {
+			"outcome": {
+				"result": {
+					"a": 1
+				}
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "DELETE",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						}
+					}
+				]
+			]
+		},
+		"ok / 3": {
+			"outcome": {
+				"result": {
+					"a": 1
+				}
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "GET",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						},
+						"body": "0"
+					}
+				]
+			]
+		},
+		"ok / 4": {
+			"outcome": {
+				"result": {
+					"a": 1
+				}
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "GET",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						}
+					}
+				]
+			]
+		},
+		"ok bad json / 0": {
+			"outcome": {
+				"result": {}
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "GET",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						}
+					}
+				]
+			]
+		},
+		"ok bad json / 1": {
+			"outcome": {
+				"result": {}
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "POST",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						},
+						"body": "{\"r\":1}"
+					}
+				]
+			]
+		},
+		"ok bad json / 2": {
+			"outcome": {
+				"result": {}
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "DELETE",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						}
+					}
+				]
+			]
+		},
+		"ok bad json / 3": {
+			"outcome": {
+				"result": {}
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "GET",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						},
+						"body": "0"
+					}
+				]
+			]
+		},
+		"ok bad json / 4": {
+			"outcome": {
+				"result": {}
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "GET",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						}
+					}
+				]
+			]
+		},
+		"error with message / 0": {
+			"outcome": {
+				"error": "bad"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "GET",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						}
+					}
+				]
+			]
+		},
+		"error with message / 1": {
+			"outcome": {
+				"error": "bad"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "POST",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						},
+						"body": "{\"r\":1}"
+					}
+				]
+			]
+		},
+		"error with message / 2": {
+			"outcome": {
+				"error": "bad"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "DELETE",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						}
+					}
+				]
+			]
+		},
+		"error with message / 3": {
+			"outcome": {
+				"error": "bad"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "GET",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						},
+						"body": "0"
+					}
+				]
+			]
+		},
+		"error with message / 4": {
+			"outcome": {
+				"error": "bad"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "GET",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						}
+					}
+				]
+			]
+		},
+		"error without message / 0": {
+			"outcome": {
+				"error": "HTTP 500"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "GET",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						}
+					}
+				]
+			]
+		},
+		"error without message / 1": {
+			"outcome": {
+				"error": "HTTP 500"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "POST",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						},
+						"body": "{\"r\":1}"
+					}
+				]
+			]
+		},
+		"error without message / 2": {
+			"outcome": {
+				"error": "HTTP 500"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "DELETE",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						}
+					}
+				]
+			]
+		},
+		"error without message / 3": {
+			"outcome": {
+				"error": "HTTP 500"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "GET",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						},
+						"body": "0"
+					}
+				]
+			]
+		},
+		"error without message / 4": {
+			"outcome": {
+				"error": "HTTP 500"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "GET",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						}
+					}
+				]
+			]
+		},
+		"error bad json / 0": {
+			"outcome": {
+				"error": "HTTP 502"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "GET",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						}
+					}
+				]
+			]
+		},
+		"error bad json / 1": {
+			"outcome": {
+				"error": "HTTP 502"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "POST",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						},
+						"body": "{\"r\":1}"
+					}
+				]
+			]
+		},
+		"error bad json / 2": {
+			"outcome": {
+				"error": "HTTP 502"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "DELETE",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						}
+					}
+				]
+			]
+		},
+		"error bad json / 3": {
+			"outcome": {
+				"error": "HTTP 502"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "GET",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						},
+						"body": "0"
+					}
+				]
+			]
+		},
+		"error bad json / 4": {
+			"outcome": {
+				"error": "HTTP 502"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "GET",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						}
+					}
+				]
+			]
+		},
+		"error null json / 0": {
+			"outcome": {
+				"error": "HTTP 503"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "GET",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						}
+					}
+				]
+			]
+		},
+		"error null json / 1": {
+			"outcome": {
+				"error": "HTTP 503"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "POST",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						},
+						"body": "{\"r\":1}"
+					}
+				]
+			]
+		},
+		"error null json / 2": {
+			"outcome": {
+				"error": "HTTP 503"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "DELETE",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						}
+					}
+				]
+			]
+		},
+		"error null json / 3": {
+			"outcome": {
+				"error": "HTTP 503"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "GET",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						},
+						"body": "0"
+					}
+				]
+			]
+		},
+		"error null json / 4": {
+			"outcome": {
+				"error": "HTTP 503"
+			},
+			"calls": [
+				[
+					"/index.php/apps/stackiq/api/reviews",
+					{
+						"method": "GET",
+						"headers": {
+							"Content-Type": "application/json",
+							"X-Requested-With": "XMLHttpRequest",
+							"requesttoken": ""
+						}
+					}
+				]
+			]
+		}
+	}
+}
