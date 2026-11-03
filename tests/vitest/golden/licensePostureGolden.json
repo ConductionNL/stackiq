@@ -1,0 +1,2221 @@
+{
+	"1": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": [
+			{
+				"contractId": "",
+				"contractNumber": "C-1",
+				"moduleId": "",
+				"consumerId": "",
+				"metric": "Named user",
+				"bought": 5,
+				"inUse": 5,
+				"state": "within",
+				"over": 0
+			},
+			{
+				"contractId": "c1",
+				"contractNumber": "C-1",
+				"moduleId": "",
+				"consumerId": "",
+				"metric": "Named user",
+				"bought": 5,
+				"inUse": 0,
+				"state": "within",
+				"over": 0
+			}
+		]
+	},
+	"2": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"3": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"4": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"5": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"EUPL-1.2": 1
+			},
+			"openShare": null
+		},
+		"vendors": [
+			{
+				"vendorId": "v3",
+				"deployments": 1,
+				"mix": {
+					"Open source": 0,
+					"Closed source": 0,
+					"Unknown": 1
+				},
+				"annualCost": null
+			}
+		],
+		"org1": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"6": {
+		"portfolio": {
+			"total": 1,
+			"open": 1,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": 1
+		},
+		"vendors": [
+			{
+				"vendorId": "v3",
+				"deployments": 1,
+				"mix": {
+					"Open source": 1,
+					"Closed source": 0,
+					"Unknown": 0
+				},
+				"annualCost": 0
+			}
+		],
+		"org1": {
+			"total": 1,
+			"open": 1,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": 1,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"7": {
+		"portfolio": {
+			"total": 2,
+			"open": 0,
+			"closed": 0,
+			"unknown": 2,
+			"byLicense": {
+				"Unknown": 2
+			},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"8": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"9": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": [
+			{
+				"contractId": "",
+				"contractNumber": "",
+				"moduleId": "",
+				"consumerId": "",
+				"metric": "Named user",
+				"bought": 10,
+				"inUse": 3,
+				"state": "within",
+				"over": 0
+			}
+		]
+	},
+	"10": {
+		"portfolio": {
+			"total": 2,
+			"open": 1,
+			"closed": 1,
+			"unknown": 0,
+			"byLicense": {
+				"EUPL-1.2": 1,
+				"Unknown": 1
+			},
+			"openShare": 0.5
+		},
+		"vendors": [
+			{
+				"vendorId": "v3",
+				"deployments": 1,
+				"mix": {
+					"Open source": 0,
+					"Closed source": 1,
+					"Unknown": 0
+				},
+				"annualCost": null
+			},
+			{
+				"vendorId": "v1",
+				"deployments": 1,
+				"mix": {
+					"Open source": 1,
+					"Closed source": 0,
+					"Unknown": 0
+				},
+				"annualCost": null
+			}
+		],
+		"org1": {
+			"total": 2,
+			"open": 1,
+			"closed": 1,
+			"unknown": 0,
+			"openShare": 0.5,
+			"closedContributors": [
+				"m3"
+			]
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"11": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 1,
+			"unknown": 0,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": 0
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 1,
+			"open": 0,
+			"closed": 1,
+			"unknown": 0,
+			"openShare": 0,
+			"closedContributors": [
+				"m1"
+			]
+		},
+		"seats": [
+			{
+				"contractId": "",
+				"contractNumber": "",
+				"moduleId": "m0",
+				"consumerId": "",
+				"metric": "Named user",
+				"bought": 0,
+				"inUse": 5,
+				"state": "over",
+				"over": 5
+			}
+		]
+	},
+	"12": {
+		"portfolio": {
+			"total": 2,
+			"open": 0,
+			"closed": 0,
+			"unknown": 2,
+			"byLicense": {
+				"Unknown": 2
+			},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"13": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 1,
+			"unknown": 0,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": 0
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"14": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"15": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"16": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"17": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": [
+			{
+				"contractId": "c0",
+				"contractNumber": "",
+				"moduleId": "m1",
+				"consumerId": "",
+				"metric": "Named user",
+				"bought": 5,
+				"inUse": null,
+				"state": "unknown",
+				"over": 0
+			}
+		]
+	},
+	"18": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"19": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"20": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": [
+			{
+				"contractId": "c0",
+				"contractNumber": "",
+				"moduleId": "mx",
+				"consumerId": "o2",
+				"metric": "Named user",
+				"bought": 10,
+				"inUse": null,
+				"state": "unknown",
+				"over": 0
+			}
+		]
+	},
+	"21": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": [
+			{
+				"contractId": "c4",
+				"contractNumber": "",
+				"moduleId": "",
+				"consumerId": "o2",
+				"metric": "Named user",
+				"bought": 10,
+				"inUse": 5,
+				"state": "within",
+				"over": 0
+			}
+		]
+	},
+	"22": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"23": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": [
+			{
+				"contractId": "c3",
+				"contractNumber": "",
+				"moduleId": "",
+				"consumerId": "",
+				"metric": "Named user",
+				"bought": 0,
+				"inUse": 12,
+				"state": "over",
+				"over": 12
+			}
+		]
+	},
+	"24": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"25": {
+		"portfolio": {
+			"total": 1,
+			"open": 1,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": 1
+		},
+		"vendors": [
+			{
+				"vendorId": "v1",
+				"deployments": 1,
+				"mix": {
+					"Open source": 1,
+					"Closed source": 0,
+					"Unknown": 0
+				},
+				"annualCost": null
+			}
+		],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"26": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 1,
+			"unknown": 0,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": 0
+		},
+		"vendors": [],
+		"org1": {
+			"total": 1,
+			"open": 0,
+			"closed": 1,
+			"unknown": 0,
+			"openShare": 0,
+			"closedContributors": [
+				"m1"
+			]
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"27": {
+		"portfolio": {
+			"total": 2,
+			"open": 0,
+			"closed": 2,
+			"unknown": 0,
+			"byLicense": {
+				"MIT": 2
+			},
+			"openShare": 0
+		},
+		"vendors": [
+			{
+				"vendorId": "v3",
+				"deployments": 2,
+				"mix": {
+					"Open source": 0,
+					"Closed source": 2,
+					"Unknown": 0
+				},
+				"annualCost": null
+			}
+		],
+		"org1": {
+			"total": 2,
+			"open": 0,
+			"closed": 2,
+			"unknown": 0,
+			"openShare": 0,
+			"closedContributors": [
+				"m1"
+			]
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"28": {
+		"portfolio": {
+			"total": 1,
+			"open": 1,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": 1
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": [
+			{
+				"contractId": "c1",
+				"contractNumber": "",
+				"moduleId": "",
+				"consumerId": "o1",
+				"metric": "Named user",
+				"bought": 5,
+				"inUse": 5,
+				"state": "within",
+				"over": 0
+			}
+		]
+	},
+	"29": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": [
+			{
+				"contractId": "c4",
+				"contractNumber": "",
+				"moduleId": "m1",
+				"consumerId": "o1",
+				"metric": "Named user",
+				"bought": 10,
+				"inUse": 12,
+				"state": "over",
+				"over": 2
+			}
+		]
+	},
+	"30": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": [
+			{
+				"contractId": "c4",
+				"contractNumber": "",
+				"moduleId": "",
+				"consumerId": "",
+				"metric": "Named user",
+				"bought": 0,
+				"inUse": null,
+				"state": "unknown",
+				"over": 0
+			}
+		]
+	},
+	"31": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"32": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": [
+			{
+				"contractId": "",
+				"contractNumber": "",
+				"moduleId": "m3",
+				"consumerId": "o1",
+				"metric": "Named user",
+				"bought": 10,
+				"inUse": 3,
+				"state": "within",
+				"over": 0
+			}
+		]
+	},
+	"33": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"34": {
+		"portfolio": {
+			"total": 2,
+			"open": 0,
+			"closed": 1,
+			"unknown": 1,
+			"byLicense": {
+				"Unknown": 2
+			},
+			"openShare": 0
+		},
+		"vendors": [
+			{
+				"vendorId": "v2",
+				"deployments": 1,
+				"mix": {
+					"Open source": 0,
+					"Closed source": 1,
+					"Unknown": 0
+				},
+				"annualCost": null
+			}
+		],
+		"org1": {
+			"total": 1,
+			"open": 0,
+			"closed": 1,
+			"unknown": 0,
+			"openShare": 0,
+			"closedContributors": [
+				"m1"
+			]
+		},
+		"org2": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"35": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": null
+		},
+		"vendors": [
+			{
+				"vendorId": "v2",
+				"deployments": 1,
+				"mix": {
+					"Open source": 0,
+					"Closed source": 0,
+					"Unknown": 1
+				},
+				"annualCost": null
+			}
+		],
+		"org1": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"36": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"37": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": [
+			{
+				"contractId": "c1",
+				"contractNumber": "",
+				"moduleId": "m1",
+				"consumerId": "o1",
+				"metric": "Named user",
+				"bought": 0,
+				"inUse": 12,
+				"state": "over",
+				"over": 12
+			},
+			{
+				"contractId": "",
+				"contractNumber": "C-1",
+				"moduleId": "m1",
+				"consumerId": "o1",
+				"metric": "Named user",
+				"bought": 0,
+				"inUse": 12,
+				"state": "over",
+				"over": 12
+			}
+		]
+	},
+	"38": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"39": {
+		"portfolio": {
+			"total": 2,
+			"open": 1,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"Unknown": 1,
+				"EUPL-1.2": 1
+			},
+			"openShare": 1
+		},
+		"vendors": [
+			{
+				"vendorId": "v3",
+				"deployments": 1,
+				"mix": {
+					"Open source": 1,
+					"Closed source": 0,
+					"Unknown": 0
+				},
+				"annualCost": null
+			}
+		],
+		"org1": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 1,
+			"open": 1,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": 1,
+			"closedContributors": []
+		},
+		"seats": [
+			{
+				"contractId": "c3",
+				"contractNumber": "",
+				"moduleId": "",
+				"consumerId": "",
+				"metric": "Named user",
+				"bought": 10,
+				"inUse": 3,
+				"state": "within",
+				"over": 0
+			}
+		]
+	},
+	"40": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"41": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": [
+			{
+				"contractId": "c4",
+				"contractNumber": "C-1",
+				"moduleId": "",
+				"consumerId": "o1",
+				"metric": "Named user",
+				"bought": 0,
+				"inUse": 3,
+				"state": "over",
+				"over": 3
+			}
+		]
+	},
+	"42": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": [
+			{
+				"contractId": "",
+				"contractNumber": "",
+				"moduleId": "",
+				"consumerId": "",
+				"metric": "Named user",
+				"bought": 10,
+				"inUse": 12,
+				"state": "over",
+				"over": 2
+			}
+		]
+	},
+	"43": {
+		"portfolio": {
+			"total": 2,
+			"open": 0,
+			"closed": 0,
+			"unknown": 2,
+			"byLicense": {
+				"Unknown": 2
+			},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 2,
+			"open": 0,
+			"closed": 0,
+			"unknown": 2,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"44": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"45": {
+		"portfolio": {
+			"total": 2,
+			"open": 1,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"Unknown": 1,
+				"EUPL-1.2": 1
+			},
+			"openShare": 1
+		},
+		"vendors": [
+			{
+				"vendorId": "v1",
+				"deployments": 1,
+				"mix": {
+					"Open source": 1,
+					"Closed source": 0,
+					"Unknown": 0
+				},
+				"annualCost": null
+			}
+		],
+		"org1": {
+			"total": 2,
+			"open": 1,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": 1,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"46": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": [
+			{
+				"contractId": "c0",
+				"contractNumber": "C-1",
+				"moduleId": "",
+				"consumerId": "",
+				"metric": "Named user",
+				"bought": 5,
+				"inUse": null,
+				"state": "unknown",
+				"over": 0
+			}
+		]
+	},
+	"47": {
+		"portfolio": {
+			"total": 1,
+			"open": 1,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {
+				"EUPL-1.2": 1
+			},
+			"openShare": 1
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 1,
+			"open": 1,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": 1,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"48": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"49": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"MIT": 1
+			},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"50": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"51": {
+		"portfolio": {
+			"total": 2,
+			"open": 0,
+			"closed": 2,
+			"unknown": 0,
+			"byLicense": {
+				"Unknown": 2
+			},
+			"openShare": 0
+		},
+		"vendors": [
+			{
+				"vendorId": "v1",
+				"deployments": 1,
+				"mix": {
+					"Open source": 0,
+					"Closed source": 1,
+					"Unknown": 0
+				},
+				"annualCost": null
+			},
+			{
+				"vendorId": "v2",
+				"deployments": 1,
+				"mix": {
+					"Open source": 0,
+					"Closed source": 1,
+					"Unknown": 0
+				},
+				"annualCost": null
+			}
+		],
+		"org1": {
+			"total": 1,
+			"open": 0,
+			"closed": 1,
+			"unknown": 0,
+			"openShare": 0,
+			"closedContributors": [
+				"m1"
+			]
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"52": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"53": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"MIT": 1
+			},
+			"openShare": null
+		},
+		"vendors": [
+			{
+				"vendorId": "v2",
+				"deployments": 1,
+				"mix": {
+					"Open source": 0,
+					"Closed source": 0,
+					"Unknown": 1
+				},
+				"annualCost": null
+			}
+		],
+		"org1": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"54": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"55": {
+		"portfolio": {
+			"total": 2,
+			"open": 0,
+			"closed": 2,
+			"unknown": 0,
+			"byLicense": {
+				"Unknown": 1,
+				"MIT": 1
+			},
+			"openShare": 0
+		},
+		"vendors": [
+			{
+				"vendorId": "v1",
+				"deployments": 2,
+				"mix": {
+					"Open source": 0,
+					"Closed source": 2,
+					"Unknown": 0
+				},
+				"annualCost": 0
+			}
+		],
+		"org1": {
+			"total": 1,
+			"open": 0,
+			"closed": 1,
+			"unknown": 0,
+			"openShare": 0,
+			"closedContributors": [
+				"m2"
+			]
+		},
+		"org2": {
+			"total": 1,
+			"open": 0,
+			"closed": 1,
+			"unknown": 0,
+			"openShare": 0,
+			"closedContributors": [
+				"m1"
+			]
+		},
+		"seats": []
+	},
+	"56": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": null
+		},
+		"vendors": [
+			{
+				"vendorId": "v3",
+				"deployments": 1,
+				"mix": {
+					"Open source": 0,
+					"Closed source": 0,
+					"Unknown": 1
+				},
+				"annualCost": null
+			}
+		],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": [
+			{
+				"contractId": "c1",
+				"contractNumber": "C-1",
+				"moduleId": "m1",
+				"consumerId": "o1",
+				"metric": "Named user",
+				"bought": 5,
+				"inUse": 12,
+				"state": "over",
+				"over": 7
+			},
+			{
+				"contractId": "c0",
+				"contractNumber": "",
+				"moduleId": "",
+				"consumerId": "",
+				"metric": "Named user",
+				"bought": 0,
+				"inUse": 3,
+				"state": "over",
+				"over": 3
+			}
+		]
+	},
+	"57": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": [
+			{
+				"contractId": "c1",
+				"contractNumber": "C-1",
+				"moduleId": "m1",
+				"consumerId": "o1",
+				"metric": "Named user",
+				"bought": 5,
+				"inUse": 12,
+				"state": "over",
+				"over": 7
+			}
+		]
+	},
+	"58": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": null
+		},
+		"vendors": [
+			{
+				"vendorId": "v2",
+				"deployments": 1,
+				"mix": {
+					"Open source": 0,
+					"Closed source": 0,
+					"Unknown": 1
+				},
+				"annualCost": 0
+			}
+		],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": [
+			{
+				"contractId": "c2",
+				"contractNumber": "C-1",
+				"moduleId": "m1",
+				"consumerId": "o2",
+				"metric": "Named user",
+				"bought": 10,
+				"inUse": null,
+				"state": "unknown",
+				"over": 0
+			}
+		]
+	},
+	"59": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"60": {
+		"portfolio": {
+			"total": 1,
+			"open": 0,
+			"closed": 0,
+			"unknown": 1,
+			"byLicense": {
+				"Unknown": 1
+			},
+			"openShare": null
+		},
+		"vendors": [],
+		"org1": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"org2": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"openShare": null,
+			"closedContributors": []
+		},
+		"seats": []
+	},
+	"empty": {
+		"portfolio": {
+			"total": 0,
+			"open": 0,
+			"closed": 0,
+			"unknown": 0,
+			"byLicense": {},
+			"openShare": null
+		},
+		"vendors": [],
+		"seats": []
+	}
+}
