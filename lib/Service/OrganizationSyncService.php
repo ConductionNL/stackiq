@@ -1761,11 +1761,7 @@ class OrganizationSyncService {
 					]
 				);
 
-				$this->processRelatedContactPersons(
-					organizationUuid: $organizationUuid,
-					organizationObject: $organizationObject,
-					stats: $stats
-				);
+				$this->processRelatedContactPersons(organizationUuid: $organizationUuid, stats: $stats);
 			}//end if
 
 			if (empty($organisationEntity) === true) {
@@ -1956,14 +1952,11 @@ class OrganizationSyncService {
 	 * Process related contactpersoon objects that have this organization in their organisation property
 	 *
 	 * @param string $organizationUuid The organization UUID.
-	 * @param \OCA\OpenRegister\Db\ObjectEntity $organizationObject The organization object.
-	 * @param array $stats The statistics array to update.
+	 * @param array  $stats            The statistics array to update.
 	 *
 	 * @return void
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $organizationObject reserved for future contact person enrichment
 	 */
-	private function processRelatedContactPersons(string $organizationUuid, $organizationObject, array &$stats): void {
+	private function processRelatedContactPersons(string $organizationUuid, array &$stats): void {
 		try {
 			$this->logger->debug(
 				'Finding related contact persons',
@@ -1975,148 +1968,28 @@ class OrganizationSyncService {
 
 			// Get configuration.
 			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-			$register = ($voorzieningenConfig['register'] ?? '');
-			$contactSchema = ($voorzieningenConfig['contactpersoon_schema'] ?? '');
+			$run = [
+				'organizationUuid' => $organizationUuid,
+				'register' => ($voorzieningenConfig['register'] ?? ''),
+				'contactSchema' => ($voorzieningenConfig['contactpersoon_schema'] ?? ''),
+			];
 
-			if (empty($register) === true || empty($contactSchema) === true) {
+			if (empty($run['register']) === true || empty($run['contactSchema']) === true) {
 				$this->logger->warning(
 					'[FLOW] Related contact processing skipped - configuration missing',
 					[
 						'organizationId' => $organizationUuid,
-						'register' => $register,
-						'contactSchema' => $contactSchema,
+						'register' => $run['register'],
+						'contactSchema' => $run['contactSchema'],
 					]
 				);
 				return;
 			}
 
-			// Find all contactpersoon objects that have this organization in their organisation property.
-
-			// Search for contactpersoon objects with this organization reference.
-			// Try both 'organization' and 'organisation' field names.
-			$query = [
-				'@self' => [
-					'register' => (int)$register,
-					'schema' => (int)$contactSchema,
-				],
-				'organization' => $organizationUuid,
-				'_limit' => 500,
-			];
-
-			$this->logger->info(
-				'[FLOW] Searching for related contact persons with organisatie field',
-				[
-					'organizationId' => $organizationUuid,
-					'register' => $register,
-					'contactSchema' => $contactSchema,
-					'query' => $query,
-				]
-			);
-
-			$relatedContacts = $this->objectService->searchObjects($query);
-
-			// If not found, try with 'organisation' field.
+			$relatedContacts = $this->findRelatedContacts(run: $run);
 			if (empty($relatedContacts) === true) {
-				$query['organisation'] = $organizationUuid;
-				unset($query['organization']);
-
-				$this->logger->info(
-					'[FLOW] Retrying search with organisation field',
-					[
-						'organizationId' => $organizationUuid,
-						'query' => $query,
-					]
-				);
-
-				$relatedContacts = $this->objectService->searchObjects($query);
+				return;
 			}
-
-			if (empty($relatedContacts) === true) {
-				// Fallback: fetch contacts by UUID from the org's contactpersonen array.
-				// This handles the case where contacts were linked via inversedBy (org → contact).
-				// but the contact's own organisatie field was never set.
-				$this->logger->info(
-					'[FLOW] No contacts found by organisatie field, checking org contactpersonen array',
-					['organizationId' => $organizationUuid]
-				);
-
-				// Re-fetch the org object without _extend to get raw UUIDs.
-				try {
-					$voorzieningenConfig2 = $this->settingsService->getVoorzieningenConfig();
-					$orgRegister = ($voorzieningenConfig2['register'] ?? '');
-					$orgSchema = ($voorzieningenConfig2['organisatie_schema'] ?? '');
-
-					$rawOrgObject = $this->objectService->find(
-						id: $organizationUuid,
-						register: $orgRegister,
-						schema: $orgSchema,
-						_rbac: false,
-						_multitenancy: false
-					);
-
-					$rawOrgData = [];
-					if ($rawOrgObject !== null) {
-						$rawOrgData = $rawOrgObject->getObject();
-					}
-
-					$contactUuids = ($rawOrgData['contactpersonen'] ?? []);
-
-					$this->logger->info(
-						'[FLOW] Raw org contactpersonen array',
-						[
-							'organizationId' => $organizationUuid,
-							'contactpersonen' => $contactUuids,
-							'count' => count($contactUuids),
-						]
-					);
-
-					if (empty($contactUuids) === false) {
-						foreach ($contactUuids as $contactUuid) {
-							if (is_string($contactUuid) === false || empty($contactUuid) === true) {
-								continue;
-							}
-
-							try {
-								$contactObj = $this->objectService->find(
-									id: $contactUuid,
-									register: $register,
-									schema: $contactSchema,
-									_rbac: false,
-									_multitenancy: false
-								);
-								if ($contactObj !== null) {
-									$relatedContacts[] = $contactObj;
-								}
-							} catch (\Exception $fetchEx) {
-								$this->logger->warning(
-									'[FLOW] Could not fetch contact from contactpersonen array',
-									[
-										'organizationId' => $organizationUuid,
-										'contactUuid' => $contactUuid,
-										'exception' => $fetchEx->getMessage(),
-									]
-								);
-							}//end try
-						}//end foreach
-					}//end if
-				} catch (\Exception $orgEx) {
-					$this->logger->warning(
-						'[FLOW] Could not re-fetch org for contactpersonen fallback',
-						[
-							'organizationId' => $organizationUuid,
-							'exception' => $orgEx->getMessage(),
-						]
-					);
-				}//end try
-
-				if (empty($relatedContacts) === true) {
-					$this->logger->info(
-						'[FLOW] No related contact persons found (including contactpersonen fallback)',
-						['organizationId' => $organizationUuid]
-					);
-					return;
-				}
-			}//end if
 
 			$this->logger->info(
 				'👥 PROCESSING RELATED CONTACT PERSONS',
@@ -2127,108 +2000,10 @@ class OrganizationSyncService {
 				]
 			);
 
+			$run['stats'] = &$stats;
 			foreach ($relatedContacts as $contactObject) {
-				try {
-					$contactUuid = $contactObject->getUuid();
-					$contactData = $contactObject->getObject();
-
-					// Check if contact data is complete (has email).
-					$email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
-					if (empty($email) === true && empty($contactUuid) === false) {
-						// Re-fetch the full contact object if email is missing.
-						$this->logger->info(
-							'[FLOW] Contact data incomplete, re-fetching full object',
-							[
-								'organizationId' => $organizationUuid,
-								'contactId' => $contactUuid,
-							]
-						);
-
-						try {
-							$fullContactObject = $this->objectService->find(
-								id: $contactUuid,
-								register: $register,
-								schema: $contactSchema,
-								_rbac: false,
-								_multitenancy: false
-							);
-							if ($fullContactObject !== null) {
-								$contactObject = $fullContactObject;
-								$contactData = $contactObject->getObject();
-								$email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
-							}
-						} catch (\Exception $e) {
-							$this->logger->warning(
-								'[FLOW] Failed to re-fetch contact object',
-								[
-									'organizationId' => $organizationUuid,
-									'contactId' => $contactUuid,
-									'exception' => $e->getMessage(),
-								]
-							);
-						}//end try
-					}//end if
-
-					// Ensure the contact has the organisatie field set before processing.
-					// (may be missing when contacts were linked via inversedBy from the org side).
-					if (empty($contactData['organization']) === true) {
-						$contactData['organization'] = $organizationUuid;
-						$contactObject->setObject($contactData);
-						// Published contract instead of OpenRegister's Db layer; see
-						// ContactpersonenController for the reasoning.
-						$this->objectService->saveObject(
-							object: $contactData,
-							register: $contactObject->getRegister(),
-							schema: $contactObject->getSchema(),
-							uuid: $contactObject->getUuid(),
-							silent: true,
-							_validation: false
-						);
-						$this->logger->info(
-							'[FLOW] Set missing organisatie field on related contact',
-							[
-								'contactId' => $contactUuid,
-								'organizationUuid' => $organizationUuid,
-							]
-						);
-					}
-
-					$contactEmailValue = $email;
-					if ($contactEmailValue === false || $contactEmailValue === '' || $contactEmailValue === null) {
-						$contactEmailValue = 'unknown';
-					}
-
-					$this->logger->info(
-						'[FLOW] Processing related contact person',
-						[
-							'organizationId' => $organizationUuid,
-							'contactId' => $contactUuid,
-							'contactEmail' => $contactEmailValue,
-						]
-					);
-
-					// Process the contact person through processSpecificContactPerson.
-					$contactStats = $this->processSpecificContactPerson(contactObject: $contactObject);
-
-					// Merge stats.
-					$stats['contactPersonsProcessed'] += ($contactStats['contactPersonsProcessed'] ?? 0);
-					$stats['usersCreated'] += ($contactStats['usersCreated'] ?? 0);
-					$stats['usersUpdated'] += ($contactStats['usersUpdated'] ?? 0);
-					if (empty($contactStats['errors']) === false) {
-						$stats['errors'] = array_merge($stats['errors'], $contactStats['errors']);
-					}
-				} catch (\Exception $e) {
-					$this->logger->error(
-						'[FLOW] Failed to process related contact person',
-						[
-							'organizationId' => $organizationUuid,
-							'contactId' => $contactObject->getUuid(),
-							'exception' => $e->getMessage(),
-						]
-					);
-					$stats['errors'][] = "Related contact {$contactObject->getUuid()}: " . $e->getMessage();
-				}//end try
-			}//end foreach
+				$this->processRelatedContact(contactObject: $contactObject, run: $run);
+			}
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'[FLOW] Failed to process related contact persons',
@@ -2243,6 +2018,299 @@ class OrganizationSyncService {
 		}//end try
 
 	}//end processRelatedContactPersons()
+
+	/**
+	 * Find the contactpersoon objects of an organisation: by their organization field, then by
+	 * their organisation field, then from the organisation's own contactpersonen array.
+	 *
+	 * @param array $run The sync run: `organizationUuid`, `register` and `contactSchema`.
+	 *
+	 * @return array The related contact objects, empty when none are found
+	 */
+	private function findRelatedContacts(array $run): array {
+		$organizationUuid = $run['organizationUuid'];
+
+		// Search for contactpersoon objects with this organization reference.
+		// Try both 'organization' and 'organisation' field names.
+		$query = [
+			'@self' => [
+				'register' => (int)$run['register'],
+				'schema' => (int)$run['contactSchema'],
+			],
+			'organization' => $organizationUuid,
+			'_limit' => 500,
+		];
+
+		$this->logger->info(
+			'[FLOW] Searching for related contact persons with organisatie field',
+			[
+				'organizationId' => $organizationUuid,
+				'register' => $run['register'],
+				'contactSchema' => $run['contactSchema'],
+				'query' => $query,
+			]
+		);
+
+		$relatedContacts = $this->objectService->searchObjects($query);
+
+		// If not found, try with 'organisation' field.
+		if (empty($relatedContacts) === true) {
+			$query['organisation'] = $organizationUuid;
+			unset($query['organization']);
+
+			$this->logger->info(
+				'[FLOW] Retrying search with organisation field',
+				[
+					'organizationId' => $organizationUuid,
+					'query' => $query,
+				]
+			);
+
+			$relatedContacts = $this->objectService->searchObjects($query);
+		}
+
+		if (empty($relatedContacts) === false) {
+			return $relatedContacts;
+		}
+
+		// Fallback: fetch contacts by UUID from the org's contactpersonen array.
+		// This handles the case where contacts were linked via inversedBy (org → contact).
+		// but the contact's own organisatie field was never set.
+		$this->logger->info(
+			'[FLOW] No contacts found by organisatie field, checking org contactpersonen array',
+			['organizationId' => $organizationUuid]
+		);
+
+		$relatedContacts = $this->contactsFromOrganisationList(run: $run);
+		if (empty($relatedContacts) === true) {
+			$this->logger->info(
+				'[FLOW] No related contact persons found (including contactpersonen fallback)',
+				['organizationId' => $organizationUuid]
+			);
+		}
+
+		return $relatedContacts;
+	}//end findRelatedContacts()
+
+	/**
+	 * The contact objects listed in the organisation's raw contactpersonen array.
+	 *
+	 * @param array $run The sync run: `organizationUuid`, `register` and `contactSchema`.
+	 *
+	 * @return array The contact objects that could be fetched
+	 */
+	private function contactsFromOrganisationList(array $run): array {
+		$organizationUuid = $run['organizationUuid'];
+		$contacts = [];
+
+		// Re-fetch the org object without _extend to get raw UUIDs.
+		try {
+			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+			$rawOrgObject = $this->objectService->find(
+				id: $organizationUuid,
+				register: ($voorzieningenConfig['register'] ?? ''),
+				schema: ($voorzieningenConfig['organisatie_schema'] ?? ''),
+				_rbac: false,
+				_multitenancy: false
+			);
+
+			$rawOrgData = [];
+			if ($rawOrgObject !== null) {
+				$rawOrgData = $rawOrgObject->getObject();
+			}
+
+			$contactUuids = ($rawOrgData['contactpersonen'] ?? []);
+
+			$this->logger->info(
+				'[FLOW] Raw org contactpersonen array',
+				[
+					'organizationId' => $organizationUuid,
+					'contactpersonen' => $contactUuids,
+					'count' => count($contactUuids),
+				]
+			);
+
+			foreach ($contactUuids as $contactUuid) {
+				if (is_string($contactUuid) === false || empty($contactUuid) === true) {
+					continue;
+				}
+
+				$contactObj = $this->fetchListedContact(contactUuid: $contactUuid, run: $run);
+				if ($contactObj !== null) {
+					$contacts[] = $contactObj;
+				}
+			}
+		} catch (\Exception $orgEx) {
+			$this->logger->warning(
+				'[FLOW] Could not re-fetch org for contactpersonen fallback',
+				[
+					'organizationId' => $organizationUuid,
+					'exception' => $orgEx->getMessage(),
+				]
+			);
+		}//end try
+
+		return $contacts;
+	}//end contactsFromOrganisationList()
+
+	/**
+	 * Fetch one contact listed in an organisation's contactpersonen array.
+	 *
+	 * @param string $contactUuid The contact uuid.
+	 * @param array  $run         The sync run: `organizationUuid`, `register` and `contactSchema`.
+	 *
+	 * @return object|null The contact object, or null when it cannot be fetched
+	 */
+	private function fetchListedContact(string $contactUuid, array $run): ?object {
+		try {
+			return $this->objectService->find(
+				id: $contactUuid,
+				register: $run['register'],
+				schema: $run['contactSchema'],
+				_rbac: false,
+				_multitenancy: false
+			);
+		} catch (\Exception $fetchEx) {
+			$this->logger->warning(
+				'[FLOW] Could not fetch contact from contactpersonen array',
+				[
+					'organizationId' => $run['organizationUuid'],
+					'contactUuid' => $contactUuid,
+					'exception' => $fetchEx->getMessage(),
+				]
+			);
+			return null;
+		}//end try
+	}//end fetchListedContact()
+
+	/**
+	 * Process one related contact: complete it, give it its organisation, then sync it.
+	 *
+	 * @param object $contactObject The contact object.
+	 * @param array  $run           The sync run: `organizationUuid`, `register`, `contactSchema` and,
+	 *                              held by reference, `stats`.
+	 *
+	 * @return void
+	 */
+	private function processRelatedContact(object $contactObject, array $run): void {
+		$organizationUuid = $run['organizationUuid'];
+		try {
+			$contactUuid = $contactObject->getUuid();
+			$contactObject = $this->completeRelatedContact(contactObject: $contactObject, run: $run);
+			$contactData = $contactObject->getObject();
+			$email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+
+			// Ensure the contact has the organisatie field set before processing.
+			// (may be missing when contacts were linked via inversedBy from the org side).
+			if (empty($contactData['organization']) === true) {
+				$contactData['organization'] = $organizationUuid;
+				$contactObject->setObject($contactData);
+				// Published contract instead of OpenRegister's Db layer; see
+				// ContactpersonenController for the reasoning.
+				$this->objectService->saveObject(
+					object: $contactData,
+					register: $contactObject->getRegister(),
+					schema: $contactObject->getSchema(),
+					uuid: $contactObject->getUuid(),
+					silent: true,
+					_validation: false
+				);
+				$this->logger->info(
+					'[FLOW] Set missing organisatie field on related contact',
+					[
+						'contactId' => $contactUuid,
+						'organizationUuid' => $organizationUuid,
+					]
+				);
+			}//end if
+
+			if ($email === false || $email === '' || $email === null) {
+				$email = 'unknown';
+			}
+
+			$this->logger->info(
+				'[FLOW] Processing related contact person',
+				[
+					'organizationId' => $organizationUuid,
+					'contactId' => $contactUuid,
+					'contactEmail' => $email,
+				]
+			);
+
+			// Process the contact person through processSpecificContactPerson.
+			$contactStats = $this->processSpecificContactPerson(contactObject: $contactObject);
+
+			// Merge stats.
+			$run['stats']['contactPersonsProcessed'] += ($contactStats['contactPersonsProcessed'] ?? 0);
+			$run['stats']['usersCreated'] += ($contactStats['usersCreated'] ?? 0);
+			$run['stats']['usersUpdated'] += ($contactStats['usersUpdated'] ?? 0);
+			if (empty($contactStats['errors']) === false) {
+				$run['stats']['errors'] = array_merge($run['stats']['errors'], $contactStats['errors']);
+			}
+		} catch (\Exception $e) {
+			$this->logger->error(
+				'[FLOW] Failed to process related contact person',
+				[
+					'organizationId' => $organizationUuid,
+					'contactId' => $contactObject->getUuid(),
+					'exception' => $e->getMessage(),
+				]
+			);
+			$run['stats']['errors'][] = "Related contact {$contactObject->getUuid()}: " . $e->getMessage();
+		}//end try
+	}//end processRelatedContact()
+
+	/**
+	 * A related contact with its full data: one without an email is fetched again by uuid.
+	 *
+	 * @param object $contactObject The contact object as found.
+	 * @param array  $run           The sync run: `organizationUuid`, `register` and `contactSchema`.
+	 *
+	 * @return object The re-fetched contact, or the one given when it is complete or cannot be fetched
+	 */
+	private function completeRelatedContact(object $contactObject, array $run): object {
+		$contactUuid = $contactObject->getUuid();
+		$contactData = $contactObject->getObject();
+
+		// Check if contact data is complete (has email).
+		$email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+		if (empty($email) === false || empty($contactUuid) === true) {
+			return $contactObject;
+		}
+
+		// Re-fetch the full contact object if email is missing.
+		$this->logger->info(
+			'[FLOW] Contact data incomplete, re-fetching full object',
+			[
+				'organizationId' => $run['organizationUuid'],
+				'contactId' => $contactUuid,
+			]
+		);
+
+		try {
+			$fullContactObject = $this->objectService->find(
+				id: $contactUuid,
+				register: $run['register'],
+				schema: $run['contactSchema'],
+				_rbac: false,
+				_multitenancy: false
+			);
+			if ($fullContactObject !== null) {
+				return $fullContactObject;
+			}
+		} catch (\Exception $e) {
+			$this->logger->warning(
+				'[FLOW] Failed to re-fetch contact object',
+				[
+					'organizationId' => $run['organizationUuid'],
+					'contactId' => $contactUuid,
+					'exception' => $e->getMessage(),
+				]
+			);
+		}//end try
+
+		return $contactObject;
+	}//end completeRelatedContact()
 
 	/**
 	 * Create or update a contact person object and its user account.
