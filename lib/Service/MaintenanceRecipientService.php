@@ -27,6 +27,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -54,15 +55,15 @@ class MaintenanceRecipientService {
 	/**
 	 * Constructor.
 	 *
-	 * @param SettingsService           $settingsService The register and schema lookups.
-	 * @param StackiqContactSyncService $contacts        The Nextcloud Contacts lookups.
-	 * @param IUserManager              $userManager     The Nextcloud user manager.
-	 * @param ContainerInterface        $container       The DI container, for OpenRegister's ObjectService.
-	 * @param LoggerInterface           $logger          The logger.
-	 * @param MaintenanceAnnouncerCheck $announcers      Who may have a product's owners notified.
+	 * @param ObjectTypeLocatorInterface $settingsService The register and schema lookups.
+	 * @param StackiqContactSyncService  $contacts        The Nextcloud Contacts lookups.
+	 * @param IUserManager               $userManager     The Nextcloud user manager.
+	 * @param ContainerInterface         $container       The DI container, for OpenRegister's ObjectService.
+	 * @param LoggerInterface            $logger          The logger.
+	 * @param MaintenanceAnnouncerCheck  $announcers      Who may have a product's owners notified.
 	 */
 	public function __construct(
-		private readonly SettingsService $settingsService,
+		private readonly ObjectTypeLocatorInterface $settingsService,
 		private readonly StackiqContactSyncService $contacts,
 		private readonly IUserManager $userManager,
 		private readonly ContainerInterface $container,

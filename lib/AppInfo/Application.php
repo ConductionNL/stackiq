@@ -70,6 +70,7 @@ use OCA\Stackiq\Service\ReviewService;
 use OCA\Stackiq\Service\SbomImportService;
 use OCA\Stackiq\Service\SbomParserService;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
 use OCA\Stackiq\Service\Stackiq\HierarchyHandler;
@@ -148,6 +149,10 @@ class Application extends App implements IBootstrap {
 		$context->registerServiceAlias(
 			ObjectServiceInterface::class,
 			'OCA\OpenRegister\Service\ObjectService'
+		);
+		$context->registerServiceAlias(
+			ObjectTypeLocatorInterface::class,
+			SettingsService::class
 		);
 		include_once __DIR__ . '/../../vendor/autoload.php';
 
