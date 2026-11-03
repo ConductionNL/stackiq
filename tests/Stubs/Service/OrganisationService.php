@@ -79,4 +79,21 @@ abstract class OrganisationService {
 	 */
 	abstract public function leaveOrganisation(string $organisationUuid, ?string $targetUserId = null): bool;
 
+	/**
+	 * Create an organisation; with addCurrentUser the signed-in user becomes its owner and a member.
+	 *
+	 * @param string $name           The name.
+	 * @param string $description    The description.
+	 * @param bool   $addCurrentUser Whether the signed-in user owns and joins it.
+	 * @param string $uuid           The uuid to use.
+	 *
+	 * @return Organisation
+	 */
+	abstract public function createOrganisation(
+		string $name,
+		string $description = '',
+		bool $addCurrentUser = true,
+		string $uuid = '',
+	): Organisation;
+
 }//end class

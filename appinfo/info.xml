@@ -344,6 +344,10 @@ Vrij en open source onder de EUPL-licentie.
 		     shared `contractNumber`: a wrong cross-app link is worse than an
 		     empty one. -->
 		<command>OCA\Stackiq\Command\ReferencesAuditCommand</command>
+		<!-- Link an organisatie to an existing OpenRegister organisation. The
+		     organisation sync leaves an organisatie unlinked when another
+		     organisation already has its name; only an administrator links them. -->
+		<command>OCA\Stackiq\Command\OrganisationLinkCommand</command>
 	</commands>
 
 	<settings>

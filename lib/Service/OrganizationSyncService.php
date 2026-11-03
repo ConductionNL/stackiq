@@ -992,7 +992,11 @@ class OrganizationSyncService {
 				$organisationEntity = $this->organisationMapper->findByUuid($organisationId);
 				return $this->refreshOrganisationEntity(organisationEntity: $organisationEntity, run: $run);
 			} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
-				return $this->adoptOrganisationEntityBySlug(run: $run) ?? $this->createOrganisationEntity(run: $run);
+				if ($this->slugIsTaken(run: $run) === true) {
+					return null;
+				}
+
+				return $this->createOrganisationEntity(run: $run);
 			}
 		} catch (\Exception $e) {
 			$this->logger->error(
@@ -1100,48 +1104,159 @@ class OrganizationSyncService {
 	}//end refreshOrganisationEntity()
 
 	/**
-	 * Adopt an entity that has the organisation's slug but another uuid: it takes the object's uuid.
+	 * Link an organisatie to an existing OpenRegister organisation, as an administrator decides.
+	 *
+	 * The organisation takes the organisatie's uuid, which is what links the two,
+	 * and becomes the organisatie object's owner. Refused when the organisatie is
+	 * unknown or already has an organisation, when the organisation is unknown, or
+	 * when the organisation is already another organisatie's.
+	 *
+	 * @param string $organisatieUuid The organisatie object's uuid.
+	 * @param string $entityUuid      The OpenRegister organisation's uuid.
+	 *
+	 * @return string linked, no-organisatie, already-linked, no-organisation or organisation-in-use.
+	 *
+	 * @spec openspec/specs/organisatie-service/spec.md
+	 */
+	public function linkOrganisationEntity(string $organisatieUuid, string $entityUuid): string {
+		$config = $this->settingsService->getVoorzieningenConfig();
+		$run    = [
+			'register'           => (string) ($config['register'] ?? ''),
+			'organizationSchema' => (string) ($config['organisatie_schema'] ?? ''),
+		];
+		$run['organisationObject'] = $this->findOrganisatie(run: $run, uuid: $organisatieUuid);
+		if ($run['organisationObject'] === null) {
+			return 'no-organisatie';
+		}
+
+		$outcome = $this->linkRefusal(run: $run, uuids: [$organisatieUuid, $entityUuid]);
+		if ($outcome !== null) {
+			return $outcome;
+		}
+
+		$entity = $this->organisationMapper->findByUuid($entityUuid);
+		$entity->setUuid($organisatieUuid);
+		$this->organisationMapper->save($entity);
+		$this->makeEntityOwner(organisationEntity: $entity, run: $run);
+		$this->logger->info(
+			'OrganizationSyncService: an administrator linked an organisatie to an OpenRegister organisation',
+			['app' => 'stackiq', 'organisatieId' => $organisatieUuid, 'previousOrganisationUuid' => $entityUuid]
+		);
+
+		return 'linked';
+	}//end linkOrganisationEntity()
+
+	/**
+	 * Why a link may not be made, or null when it may.
+	 *
+	 * @param array                       $run   The register and organisatie schema.
+	 * @param array{0: string, 1: string} $uuids The organisatie uuid and the organisation uuid.
+	 *
+	 * @return string|null already-linked, no-organisation, organisation-in-use, or null.
+	 */
+	private function linkRefusal(array $run, array $uuids): ?string {
+		[$organisatieUuid, $entityUuid] = $uuids;
+		if ($this->organisationExists(uuid: $organisatieUuid) === true) {
+			return 'already-linked';
+		}
+
+		if ($this->organisationExists(uuid: $entityUuid) === false) {
+			return 'no-organisation';
+		}
+
+		if ($this->findOrganisatie(run: $run, uuid: $entityUuid) !== null) {
+			return 'organisation-in-use';
+		}
+
+		return null;
+	}//end linkRefusal()
+
+	/**
+	 * Whether an OpenRegister organisation has this uuid.
+	 *
+	 * @param string $uuid The uuid.
+	 *
+	 * @return bool
+	 */
+	private function organisationExists(string $uuid): bool {
+		try {
+			$this->organisationMapper->findByUuid($uuid);
+			return true;
+		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+			return false;
+		}
+	}//end organisationExists()
+
+	/**
+	 * The organisatie object with this uuid, or null.
+	 *
+	 * @param array  $run  The register and organisatie schema.
+	 * @param string $uuid The uuid.
+	 *
+	 * @return object|null
+	 */
+	private function findOrganisatie(array $run, string $uuid): ?object {
+		try {
+			return $this->objectService->find(
+				id: $uuid,
+				register: $run['register'],
+				schema: $run['organizationSchema'],
+				_rbac: false,
+				_multitenancy: false
+			);
+		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+			return null;
+		}
+	}//end findOrganisatie()
+
+	/**
+	 * Whether another OpenRegister organisation already has the slug this organisatie's name gives.
+	 *
+	 * Such an organisation is never taken over on a name match: the organisatie is
+	 * left without an entity, logged and counted, for an administrator to link
+	 * explicitly (occ stackiq:organisation:link). A missing or "Unknown" name gets a
+	 * uuid-based name when the entity is created, so it is not checked.
 	 *
 	 * @param array $run The ensure run (see ensureOrganisationEntity).
 	 *
-	 * @return object|null The adopted entity, or null when the object has no name or no entity has its slug
+	 * @return bool True when the slug is taken and nothing may be created.
 	 */
-	private function adoptOrganisationEntityBySlug(array $run): ?object {
-		// Entity not found by UUID — try finding by slug before creating.
-		// This handles the case where the entity exists but with a different UUID (e.g. from slug collision).
-		$orgName = ($run['objectData']['name'] ?? '');
-		if (empty($orgName) === true) {
-			return null;
+	private function slugIsTaken(array $run): bool {
+		$orgName = (string) ($run['objectData']['name'] ?? '');
+		if ($orgName === '' || $orgName === 'Unknown') {
+			return false;
 		}
 
-		$slug = strtolower(preg_replace('/[^a-z0-9]+/', '-', strtolower($orgName)));
-		$slug = trim($slug, '-');
+		$slug = (new OrganisationSlug())->fromName(name: $orgName);
 		try {
-			$organisationEntity = $this->organisationMapper->findBySlug($slug);
-			$this->logger->info(
-				'OrganizationSyncService: Found existing entity by slug, updating UUID to match object',
-				[
-					'app' => 'stackiq',
-					'organisatieId' => $run['organisationId'],
-					'oldEntityUuid' => $organisationEntity->getUuid(),
-					'slug' => $slug,
-				]
-			);
+			$existing = $this->organisationMapper->findBySlug($slug);
+		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+			return false;
+		}
 
-			// Update the entity's UUID to match the object UUID so future lookups work.
-			$organisationEntity->setUuid($run['organisationId']);
-			$this->organisationMapper->save($organisationEntity);
-			$run['stats']['entitiesUpdated']++;
+		$this->refuseSlugConflict(run: $run, existingUuid: $existing->getUuid());
+		return true;
+	}//end slugIsTaken()
 
-			// Update organisatie object owner to this entity.
-			$this->makeEntityOwner(organisationEntity: $organisationEntity, run: $run);
-
-			return $organisationEntity;
-		} catch (\OCP\AppFramework\Db\DoesNotExistException $slugEx) {
-			// Not found by slug either — proceed with creation.
-			return null;
-		}//end try
-	}//end adoptOrganisationEntityBySlug()
+	/**
+	 * Log and count an organisatie left unlinked because its slug is taken.
+	 *
+	 * @param array       $run          The ensure run (see ensureOrganisationEntity).
+	 * @param string|null $existingUuid The uuid of the organisation holding the slug, when known.
+	 *
+	 * @return void
+	 */
+	private function refuseSlugConflict(array $run, ?string $existingUuid): void {
+		$this->logger->warning(
+			'OrganizationSyncService: an organisation with this name already exists; the organisatie is left unlinked for an administrator',
+			[
+				'app' => 'stackiq',
+				'organisatieId' => $run['organisationId'],
+				'existingOrganisationUuid' => $existingUuid,
+			]
+		);
+		$run['stats']['slugConflicts'][] = $run['organisationId'];
+	}//end refuseSlugConflict()
 
 	/**
 	 * Create the organisation entity, mail the new organisation and make the entity the object's owner.
@@ -1161,7 +1276,17 @@ class OrganizationSyncService {
 			]
 		);
 
-		$organisationEntity = $this->organisationService->createOrganisationInOpenRegister($run['objectData']);
+		try {
+			$organisationEntity = $this->organisationService->createOrganisationInOpenRegister($run['objectData']);
+		} catch (\RuntimeException $e) {
+			if (is_a($e, OrganisationSlug::CONFLICT_EXCEPTION) === false) {
+				throw $e;
+			}
+
+			$this->refuseSlugConflict(run: $run, existingUuid: null);
+			return null;
+		}
+
 		if (empty($organisationEntity) === true) {
 			$this->logger->error(
 				'❌ ORGANISATION ENTITY CREATION FAILED',

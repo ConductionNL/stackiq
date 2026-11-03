@@ -43,6 +43,12 @@ use Psr\Log\LoggerInterface;
  */
 class OrganisatieService {
 	/**
+	 * OpenRegister's exception for a taken slug, by name (OrganisationSlug::CONFLICT_EXCEPTION;
+	 * not imported, to keep this class's coupling down).
+	 */
+	private const SLUG_CONFLICT = 'OCA\\OpenRegister\\Exception\\OrganisationSlugConflictException';
+
+	/**
 	 * OrganisatieService constructor.
 	 *
 	 * @param OrganizationHandler $organizationHandler Organization handler
@@ -70,6 +76,8 @@ class OrganisatieService {
 	 * @param array $objectData The organization object data
 	 *
 	 * @return object|null The created organisation entity or null on failure
+	 *
+	 * OpenRegister's OrganisationSlugConflictException (another organisation has the name's slug) is passed on.
 	 *
 	 * @spec openspec/specs/organisatie-service/spec.md
 	 */
@@ -118,6 +126,11 @@ class OrganisatieService {
 
 			return $organisationEntity;
 		} catch (\Exception $e) {
+			// The caller decides what a taken slug means; every other failure ends here.
+			if (is_a($e, self::SLUG_CONFLICT) === true) {
+				throw $e;
+			}
+
 			$this->logger->error(
 				'OrganisatieService: Error creating organization entity',
 				[
