@@ -282,7 +282,7 @@ OC.L10N.register(
         "Reports": "Ataskaitos",
         "Pick a report to open it.": "Pasirinkite ataskaitą, kad ją atidarytumėte.",
         "Overlapping and ageing software across the portfolio.": "Persidengianti ir senstanti programinė įranga portfelyje.",
-        "Store": "Parduotuvė",
+        "Marketplace": "Parduotuvė",
         "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Įdiekite registrus, schemas ir srautus, kuriuos paskelbė kitos organizacijos."
     },
     "nplurals=2; plural=(n != 1);"

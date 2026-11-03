@@ -282,7 +282,7 @@ OC.L10N.register(
         "Reports": "Rapporter",
         "Pick a report to open it.": "Vælg en rapport for at åbne den.",
         "Overlapping and ageing software across the portfolio.": "Overlappende og aldrende software i porteføljen.",
-        "Store": "Butik",
+        "Marketplace": "Butik",
         "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Installer registre, skemaer og flows, som andre organisationer har udgivet."
     },
     "nplurals=2; plural=(n != 1);"

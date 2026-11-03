@@ -282,7 +282,7 @@ OC.L10N.register(
         "Reports": "Reporty",
         "Pick a report to open it.": "Vyberte report a otvorte ho.",
         "Overlapping and ageing software across the portfolio.": "Prekrývajúci sa a zastaraný softvér v portfóliu.",
-        "Store": "Obchod",
+        "Marketplace": "Obchod",
         "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Nainštalujte registre, schémy a toky zverejnené inými organizáciami."
     },
     "nplurals=2; plural=(n != 1);"

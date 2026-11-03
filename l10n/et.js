@@ -282,7 +282,7 @@ OC.L10N.register(
         "Reports": "Aruanded",
         "Pick a report to open it.": "Valige aruanne, et see avada.",
         "Overlapping and ageing software across the portfolio.": "Kattuv ja vananev tarkvara portfellis.",
-        "Store": "Pood",
+        "Marketplace": "Pood",
         "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Paigalda registrid, skeemid ja voog, mille teised organisatsioonid on avaldanud."
     },
     "nplurals=2; plural=(n != 1);"
