@@ -7,7 +7,7 @@
  * @param {Array<object>} components Coverage rows from the endpoint.
  * @param {string} filter all, gap, fillable or overlap.
  * @return {Array<object>} The kept rows.
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
+ * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
  */
 export function filterCoverage(components, filter) {
 	if (filter === 'gap' || filter === 'overlap') {
@@ -26,7 +26,7 @@ export function filterCoverage(components, filter) {
  * @param {Array<object>} components Coverage rows.
  * @param {string} fallback The name for rows without a group.
  * @return {Array<{name: string, components: Array<object>}>} Groups.
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
+ * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
  */
 export function groupCoverage(components, fallback) {
 	const groups = new Map()
@@ -37,6 +37,10 @@ export function groupCoverage(components, fallback) {
 		}
 		groups.get(name).push(component)
 	}
-	const named = [...groups.entries()].filter(([name]) => name !== '').map(([name, rows]) => ({ name, components: rows }))
-	return groups.has('') ? [...named, { name: fallback, components: groups.get('') }] : named
+	const named = [...groups.entries()]
+		.filter(([name]) => name !== '')
+		.map(([name, rows]) => ({ name, components: rows }))
+	return groups.has('')
+		? [...named, { name: fallback, components: groups.get('') }]
+		: named
 }

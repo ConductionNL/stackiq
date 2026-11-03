@@ -182,7 +182,7 @@ export default {
 	// GET /api/reference-component-coverage joins one organisation's usages
 	// with the GEMMA reference components; a component nobody uses has no
 	// facet bucket, so no index or dashboard page can show the gaps.
-	// @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
+	// @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 	GemmaPlateView,
 	// --- SBOM (Software Bill of Materials) import — Components tab. ---
 	// ModuleversieDetail sidebar tab: the imported sbomComponent list
