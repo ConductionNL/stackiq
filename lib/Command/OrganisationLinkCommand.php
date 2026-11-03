@@ -26,9 +26,12 @@ namespace OCA\Stackiq\Command;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Command\Command;
+use Symfony\Component\Console\Helper\QuestionHelper;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
+use Symfony\Component\Console\Question\ConfirmationQuestion;
 use Throwable;
 
 /**
@@ -37,6 +40,8 @@ use Throwable;
  * The organisation sync never takes over an OpenRegister organisation whose
  * name gives the same slug: it leaves the organisatie unlinked and logs it.
  * This command is how an administrator links the two when they are the same.
+ * The organisation takes the organisatie's uuid, so the command first says what
+ * keeps the old uuid and asks for confirmation (or --yes).
  *
  * @spec openspec/specs/organisatie-service/spec.md
  *
@@ -53,6 +58,18 @@ class OrganisationLinkCommand extends Command {
 		'already-linked'      => '<error>This organisatie already has an OpenRegister organisation.</error>',
 		'no-organisation'     => '<error>No OpenRegister organisation has this uuid.</error>',
 		'organisation-in-use' => '<error>This OpenRegister organisation belongs to another organisatie.</error>',
+		'default-organisation' => '<error>This is the OpenRegister default organisation, which is never linked.</error>',
+		'not-confirmed'       => '<comment>Not linked.</comment> Confirm, or run again with --yes.',
+	];
+
+	/**
+	 * What still holds the organisation's old uuid after a link.
+	 */
+	private const STORED_REFERENCES = [
+		'objects in OpenRegister stamped with this organisation (their @self.organisation)',
+		'the active organisation of its members',
+		'the parent of its child organisations',
+		'references in other apps',
 	];
 
 	/**
@@ -77,7 +94,8 @@ class OrganisationLinkCommand extends Command {
 		$this->setName('stackiq:organisation:link')
 			->setDescription('Link an organisatie to an existing OpenRegister organisation.')
 			->addArgument('organisatie', InputArgument::REQUIRED, 'The organisatie object uuid.')
-			->addArgument('organisation', InputArgument::REQUIRED, 'The OpenRegister organisation uuid.');
+			->addArgument('organisation', InputArgument::REQUIRED, 'The OpenRegister organisation uuid.')
+			->addOption('yes', 'y', InputOption::VALUE_NONE, 'Link without asking for confirmation.');
 	}//end configure()
 
 	/**
@@ -91,11 +109,18 @@ class OrganisationLinkCommand extends Command {
 	 * @spec openspec/specs/organisatie-service/spec.md
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
+		$organisatie  = (string) $input->getArgument('organisatie');
+		$organisation = (string) $input->getArgument('organisation');
 		try {
-			$outcome = $this->container->get(OrganizationSyncService::class)->linkOrganisationEntity(
-				organisatieUuid: (string) $input->getArgument('organisatie'),
-				entityUuid: (string) $input->getArgument('organisation')
-			);
+			$sync    = $this->container->get(OrganizationSyncService::class);
+			$outcome = $sync->checkOrganisationLink(organisatieUuid: $organisatie, entityUuid: $organisation);
+			if ($outcome === null && $this->confirmed(input: $input, output: $output) === false) {
+				$outcome = 'not-confirmed';
+			}
+
+			if ($outcome === null) {
+				$outcome = $sync->linkOrganisationEntity(organisatieUuid: $organisatie, entityUuid: $organisation);
+			}
 		} catch (Throwable $e) {
 			$output->writeln(messages: '<error>Could not link: ' . $e->getMessage() . '</error>');
 			return 1;
@@ -108,4 +133,28 @@ class OrganisationLinkCommand extends Command {
 
 		return 1;
 	}//end execute()
+
+	/**
+	 * Say what keeps the organisation's old uuid, and ask whether to link anyway.
+	 *
+	 * @param InputInterface  $input  Console input.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return bool True when --yes is given or the administrator confirms.
+	 */
+	private function confirmed(InputInterface $input, OutputInterface $output): bool {
+		$organisation = (string) $input->getArgument('organisation');
+		$organisatie  = (string) $input->getArgument('organisatie');
+		$output->writeln(messages: '<comment>The OpenRegister organisation ' . $organisation . ' will take the uuid ' . $organisatie . '.</comment>');
+		$output->writeln(messages: 'These keep the old uuid and are not moved:');
+		foreach (self::STORED_REFERENCES as $reference) {
+			$output->writeln(messages: '  - ' . $reference);
+		}
+
+		if ($input->getOption('yes') === true) {
+			return true;
+		}
+
+		return (new QuestionHelper())->ask($input, $output, new ConfirmationQuestion('Link anyway? [y/N] ', false)) === true;
+	}//end confirmed()
 }//end class

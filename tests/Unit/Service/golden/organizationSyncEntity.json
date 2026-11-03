@@ -1408,6 +1408,10 @@
                 "o-1"
             ],
             [
+                "mapper.findBySlug",
+                "organisation"
+            ],
+            [
                 "log.debug",
                 "Creating new organisation entity",
                 {
@@ -2134,6 +2138,10 @@
             [
                 "mapper.findByUuid",
                 "o-1"
+            ],
+            [
+                "mapper.findBySlug",
+                "organisation"
             ],
             [
                 "log.debug",

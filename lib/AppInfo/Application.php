@@ -264,13 +264,9 @@ class Application extends App implements IBootstrap {
 			OrganisatieService::class,
 			function ($container) {
 				return new OrganisatieService(
-					organizationHandler: $container->get(
-						OrganizationHandler::class
-					),
 					logger: $container->get('Psr\Log\LoggerInterface'),
 					container: $container,
 					appManager: $container->get('OCP\App\IAppManager'),
-					config: $container->get(IAppConfig::class),
 					userManager: $container->get(IUserManager::class),
 					emailService: $container->get(SymfonyEmailService::class),
 				);

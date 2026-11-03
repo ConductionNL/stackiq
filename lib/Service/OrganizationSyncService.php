@@ -1107,28 +1107,18 @@ class OrganizationSyncService {
 	 * Link an organisatie to an existing OpenRegister organisation, as an administrator decides.
 	 *
 	 * The organisation takes the organisatie's uuid, which is what links the two,
-	 * and becomes the organisatie object's owner. Refused when the organisatie is
-	 * unknown or already has an organisation, when the organisation is unknown, or
-	 * when the organisation is already another organisatie's.
+	 * and becomes the organisatie object's owner. Refused for the reasons
+	 * checkOrganisationLink() gives.
 	 *
 	 * @param string $organisatieUuid The organisatie object's uuid.
 	 * @param string $entityUuid      The OpenRegister organisation's uuid.
 	 *
-	 * @return string linked, no-organisatie, already-linked, no-organisation or organisation-in-use.
+	 * @return string linked, or the refusal checkOrganisationLink() gives.
 	 *
 	 * @spec openspec/specs/organisatie-service/spec.md
 	 */
 	public function linkOrganisationEntity(string $organisatieUuid, string $entityUuid): string {
-		$config = $this->settingsService->getVoorzieningenConfig();
-		$run    = [
-			'register'           => (string) ($config['register'] ?? ''),
-			'organizationSchema' => (string) ($config['organisatie_schema'] ?? ''),
-		];
-		$run['organisationObject'] = $this->findOrganisatie(run: $run, uuid: $organisatieUuid);
-		if ($run['organisationObject'] === null) {
-			return 'no-organisatie';
-		}
-
+		$run     = $this->linkRun(organisatieUuid: $organisatieUuid);
 		$outcome = $this->linkRefusal(run: $run, uuids: [$organisatieUuid, $entityUuid]);
 		if ($outcome !== null) {
 			return $outcome;
@@ -1147,21 +1137,80 @@ class OrganizationSyncService {
 	}//end linkOrganisationEntity()
 
 	/**
+	 * Why an organisatie may not be linked to an OpenRegister organisation, or null when it may.
+	 *
+	 * Refused when the organisatie is unknown or already has an organisation, when
+	 * the organisation is unknown, is OpenRegister's default organisation, or is
+	 * already another organisatie's. Nothing is written.
+	 *
+	 * @param string $organisatieUuid The organisatie object's uuid.
+	 * @param string $entityUuid      The OpenRegister organisation's uuid.
+	 *
+	 * @return string|null no-organisatie, already-linked, no-organisation,
+	 *                     default-organisation, organisation-in-use, or null.
+	 *
+	 * @spec openspec/specs/organisatie-service/spec.md
+	 */
+	public function checkOrganisationLink(string $organisatieUuid, string $entityUuid): ?string {
+		return $this->linkRefusal(
+			run: $this->linkRun(organisatieUuid: $organisatieUuid),
+			uuids: [$organisatieUuid, $entityUuid]
+		);
+	}//end checkOrganisationLink()
+
+	/**
+	 * The register, organisatie schema and organisatie object a link works on.
+	 *
+	 * @param string $organisatieUuid The organisatie object's uuid.
+	 *
+	 * @return array The run: register, organizationSchema and organisationObject (null when unknown).
+	 */
+	private function linkRun(string $organisatieUuid): array {
+		$config = $this->settingsService->getVoorzieningenConfig();
+		$run    = [
+			'register'           => (string) ($config['register'] ?? ''),
+			'organizationSchema' => (string) ($config['organisatie_schema'] ?? ''),
+		];
+		$run['organisationObject'] = $this->findOrganisatie(run: $run, uuid: $organisatieUuid);
+		return $run;
+	}//end linkRun()
+
+	/**
 	 * Why a link may not be made, or null when it may.
 	 *
-	 * @param array                       $run   The register and organisatie schema.
+	 * @param array                       $run   The link run (see linkRun()).
 	 * @param array{0: string, 1: string} $uuids The organisatie uuid and the organisation uuid.
 	 *
-	 * @return string|null already-linked, no-organisation, organisation-in-use, or null.
+	 * @return string|null The refusal, or null.
 	 */
 	private function linkRefusal(array $run, array $uuids): ?string {
 		[$organisatieUuid, $entityUuid] = $uuids;
+		if ($run['organisationObject'] === null) {
+			return 'no-organisatie';
+		}
+
 		if ($this->organisationExists(uuid: $organisatieUuid) === true) {
 			return 'already-linked';
 		}
 
+		return $this->organisationRefusal(run: $run, entityUuid: $entityUuid);
+	}//end linkRefusal()
+
+	/**
+	 * Why this OpenRegister organisation may not take an organisatie's uuid, or null when it may.
+	 *
+	 * @param array  $run        The link run (see linkRun()).
+	 * @param string $entityUuid The OpenRegister organisation's uuid.
+	 *
+	 * @return string|null no-organisation, default-organisation, organisation-in-use, or null.
+	 */
+	private function organisationRefusal(array $run, string $entityUuid): ?string {
 		if ($this->organisationExists(uuid: $entityUuid) === false) {
 			return 'no-organisation';
+		}
+
+		if ($this->container->get('OCA\OpenRegister\Service\OrganisationService')->getDefaultOrganisationUuid() === $entityUuid) {
+			return 'default-organisation';
 		}
 
 		if ($this->findOrganisatie(run: $run, uuid: $entityUuid) !== null) {
@@ -1169,7 +1218,7 @@ class OrganizationSyncService {
 		}
 
 		return null;
-	}//end linkRefusal()
+	}//end organisationRefusal()
 
 	/**
 	 * Whether an OpenRegister organisation has this uuid.
@@ -1210,24 +1259,19 @@ class OrganizationSyncService {
 	}//end findOrganisatie()
 
 	/**
-	 * Whether another OpenRegister organisation already has the slug this organisatie's name gives.
+	 * Whether another OpenRegister organisation already has the slug of the name
+	 * OpenRegister would receive for this organisatie (OrganisationSlug::nameFor()).
 	 *
 	 * Such an organisation is never taken over on a name match: the organisatie is
 	 * left without an entity, logged and counted, for an administrator to link
-	 * explicitly (occ stackiq:organisation:link). A missing or "Unknown" name gets a
-	 * uuid-based name when the entity is created, so it is not checked.
+	 * explicitly (occ stackiq:organisation:link).
 	 *
 	 * @param array $run The ensure run (see ensureOrganisationEntity).
 	 *
 	 * @return bool True when the slug is taken and nothing may be created.
 	 */
 	private function slugIsTaken(array $run): bool {
-		$orgName = (string) ($run['objectData']['name'] ?? '');
-		if ($orgName === '' || $orgName === 'Unknown') {
-			return false;
-		}
-
-		$slug = (new OrganisationSlug())->fromName(name: $orgName);
+		$slug = (new OrganisationSlug())->fromObjectData(objectData: $run['objectData']);
 		try {
 			$existing = $this->organisationMapper->findBySlug($slug);
 		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
@@ -2707,11 +2751,11 @@ class OrganizationSyncService {
 		);
 
 		try {
-			if ($organisationEntity !== false && $organisationEntity->getActive() === true) {
+			if ($this->organisationIsActive(organisationEntity: $organisationEntity) === true) {
 				$this->createUserForContact(run: $run);
 			}
 
-			if ($organisationEntity === false || $organisationEntity->getActive() !== true) {
+			if ($this->organisationIsActive(organisationEntity: $organisationEntity) === false) {
 				$this->logSkippedUserCreation(organisationEntity: $organisationEntity, run: $run);
 			}
 		} catch (\Exception $e) {
@@ -2728,6 +2772,17 @@ class OrganizationSyncService {
 		}//end try
 
 	}//end provisionContactUser()
+
+	/**
+	 * Whether a contact person's organisation entity exists and is active.
+	 *
+	 * @param mixed $organisationEntity The organisation entity, or null when there is none.
+	 *
+	 * @return bool
+	 */
+	private function organisationIsActive(mixed $organisationEntity): bool {
+		return $organisationEntity !== null && $organisationEntity->getActive() === true;
+	}//end organisationIsActive()
 
 	/**
 	 * The organisation entity of a contact person's organisation, created from
@@ -3085,7 +3140,7 @@ class OrganizationSyncService {
 				}//end try
 
 				try {
-					if ($organisationEntity !== false && $organisationEntity->getActive() === true) {
+					if ($this->organisationIsActive(organisationEntity: $organisationEntity) === true) {
 						// Determine if this is the first contact for the organization.
 						$isFirstContact = $this->contactpersonHandler->isFirstContactForOrganization(
 							$contactObject,
@@ -3168,7 +3223,7 @@ class OrganizationSyncService {
 						}
 					}//end if
 
-					if ($organisationEntity === false || $organisationEntity->getActive() !== true) {
+					if ($this->organisationIsActive(organisationEntity: $organisationEntity) === false) {
 						if ($organisationEntity !== null) {
 							$organizationActiveValue = $organisationEntity->getActive();
 						} else {

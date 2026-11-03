@@ -47,6 +47,13 @@ abstract class OrganisationService {
 	abstract public function ensureDefaultOrganisation(): Organisation;
 
 	/**
+	 * The uuid of the instance's default organisation, or null when none is set.
+	 *
+	 * @return string|null
+	 */
+	abstract public function getDefaultOrganisationUuid(): ?string;
+
+	/**
 	 * Get the caller's own organisations (session-scoped).
 	 *
 	 * @return Organisation[]
