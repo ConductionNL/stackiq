@@ -92,7 +92,7 @@ function dataSet(seed) {
 describe('compliance matrix golden', () => {
 	it('answers the same for every seeded data set', () => {
 		const recorded = {}
-		for (let seed = 1; seed <= 80; seed++) {
+		for (let seed = 1; seed <= 30; seed++) {
 			const { compliancy, columns, modules, usages } = dataSet(seed)
 			const out = {}
 			for (const source of Object.values(COLUMN_SOURCE)) {

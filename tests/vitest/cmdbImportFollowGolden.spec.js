@@ -114,9 +114,10 @@ describe('cmdb import errors and follow-up', () => {
 					status === undefined && body === undefined
 						? undefined
 						: { status, data: body }
-				recorded.errors[`${typeof status} ${String(status)} / ${b}`] = normaliseError({
-					response,
-				})
+				recorded.errors[`${typeof status} ${String(status)} / ${b}`] =
+					normaliseError({
+						response,
+					})
 			}
 		}
 		recorded.errors['no error'] = normaliseError(undefined)
