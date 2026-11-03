@@ -1,0 +1,624 @@
+{
+    "cyclonedx 1.5": {
+        "result": {
+            "success": true,
+            "operationId": null,
+            "moduleVersieUuid": "mv-1",
+            "componentCount": 2,
+            "previousComponentCount": 0,
+            "distinctLicenseCount": 2,
+            "vulnerabilityPairCount": 0,
+            "sbomFormat": "cyclonedx-json",
+            "sbomFileName": "sbom.json"
+        },
+        "calls": [
+            [
+                "objects.find",
+                [
+                    "mv-1",
+                    [],
+                    false,
+                    1,
+                    10,
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "@self": {
+                        "schema": 20,
+                        "register": 1
+                    },
+                    "moduleVersion": "mv-1",
+                    "_limit": 1000
+                }
+            ],
+            [
+                "objects.saveObjects",
+                2,
+                {
+                    "moduleVersion": "mv-1",
+                    "name": "express",
+                    "version": "4.19.2",
+                    "purl": "pkg:npm/express@4.19.2",
+                    "licenses": [
+                        "MIT License"
+                    ],
+                    "type": "library",
+                    "hashes": [],
+                    "bomRef": "pkg:npm/express@4.19.2",
+                    "vexCveIds": []
+                },
+                1,
+                20
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "id": "mv-1",
+                    "version": "1.0.0",
+                    "sbomLastImportedAt": "(time)",
+                    "sbomFormat": "cyclonedx-json",
+                    "sbomFileName": "sbom.json"
+                },
+                1,
+                10
+            ],
+            [
+                "log.info",
+                "SbomImportService: import completed",
+                {
+                    "moduleVersieUuid": "mv-1",
+                    "format": "cyclonedx-json",
+                    "componentCount": 2,
+                    "previousCount": 0
+                }
+            ]
+        ]
+    },
+    "cyclonedx 1.6, previous set": {
+        "result": {
+            "success": true,
+            "operationId": null,
+            "moduleVersieUuid": "mv-1",
+            "componentCount": 3,
+            "previousComponentCount": 2,
+            "distinctLicenseCount": 2,
+            "vulnerabilityPairCount": 0,
+            "sbomFormat": "cyclonedx-json",
+            "sbomFileName": "sbom.json"
+        },
+        "calls": [
+            [
+                "objects.find",
+                [
+                    "mv-1",
+                    [],
+                    false,
+                    1,
+                    10,
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "@self": {
+                        "schema": 20,
+                        "register": 1
+                    },
+                    "moduleVersion": "mv-1",
+                    "_limit": 1000
+                }
+            ],
+            [
+                "objects.deleteObjects",
+                [
+                    "old-1",
+                    "old-2"
+                ]
+            ],
+            [
+                "objects.saveObjects",
+                3,
+                {
+                    "moduleVersion": "mv-1",
+                    "name": "lodash",
+                    "version": "4.17.21",
+                    "purl": "pkg:npm/lodash@4.17.21",
+                    "licenses": [
+                        "MIT"
+                    ],
+                    "type": "library",
+                    "hashes": [
+                        {
+                            "alg": "SHA-256",
+                            "value": "1a4f6c2a9c1b0e0a6f8e3d2c1b0a9f8e7d6c5b4a3f2e1d0c9b8a7f6e5d4c3b2a"
+                        }
+                    ],
+                    "bomRef": "pkg:npm/lodash@4.17.21",
+                    "vexCveIds": []
+                },
+                1,
+                20
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "id": "mv-1",
+                    "version": "1.0.0",
+                    "sbomLastImportedAt": "(time)",
+                    "sbomFormat": "cyclonedx-json",
+                    "sbomFileName": "sbom.json"
+                },
+                1,
+                10
+            ],
+            [
+                "log.info",
+                "SbomImportService: import completed",
+                {
+                    "moduleVersieUuid": "mv-1",
+                    "format": "cyclonedx-json",
+                    "componentCount": 3,
+                    "previousCount": 2
+                }
+            ]
+        ]
+    },
+    "cyclonedx with vex": {
+        "result": {
+            "success": true,
+            "operationId": null,
+            "moduleVersieUuid": "mv-1",
+            "componentCount": 1,
+            "previousComponentCount": 0,
+            "distinctLicenseCount": 1,
+            "vulnerabilityPairCount": 1,
+            "sbomFormat": "cyclonedx-json",
+            "sbomFileName": "sbom.json"
+        },
+        "calls": [
+            [
+                "objects.find",
+                [
+                    "mv-1",
+                    [],
+                    false,
+                    1,
+                    10,
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "@self": {
+                        "schema": 20,
+                        "register": 1
+                    },
+                    "moduleVersion": "mv-1",
+                    "_limit": 1000
+                }
+            ],
+            [
+                "objects.saveObjects",
+                1,
+                {
+                    "moduleVersion": "mv-1",
+                    "name": "log4j-core",
+                    "version": "2.14.1",
+                    "purl": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1",
+                    "licenses": [
+                        "Apache-2.0"
+                    ],
+                    "type": "library",
+                    "hashes": [],
+                    "bomRef": "pkg:maven/org.apache.logging.log4j/log4j-core@2.14.1",
+                    "vexCveIds": [
+                        "CVE-2021-44228"
+                    ]
+                },
+                1,
+                20
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "id": "mv-1",
+                    "version": "1.0.0",
+                    "sbomLastImportedAt": "(time)",
+                    "sbomFormat": "cyclonedx-json",
+                    "sbomFileName": "sbom.json"
+                },
+                1,
+                10
+            ],
+            [
+                "log.info",
+                "SbomImportService: import completed",
+                {
+                    "moduleVersieUuid": "mv-1",
+                    "format": "cyclonedx-json",
+                    "componentCount": 1,
+                    "previousCount": 0
+                }
+            ]
+        ]
+    },
+    "cyclonedx empty": {
+        "result": {
+            "success": true,
+            "operationId": null,
+            "moduleVersieUuid": "mv-1",
+            "componentCount": 0,
+            "previousComponentCount": 0,
+            "distinctLicenseCount": 0,
+            "vulnerabilityPairCount": 0,
+            "sbomFormat": "cyclonedx-json",
+            "sbomFileName": "sbom.json"
+        },
+        "calls": [
+            [
+                "objects.find",
+                [
+                    "mv-1",
+                    [],
+                    false,
+                    1,
+                    10,
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "@self": {
+                        "schema": 20,
+                        "register": 1
+                    },
+                    "moduleVersion": "mv-1",
+                    "_limit": 1000
+                }
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "id": "mv-1",
+                    "version": "1.0.0",
+                    "sbomLastImportedAt": "(time)",
+                    "sbomFormat": "cyclonedx-json",
+                    "sbomFileName": "sbom.json"
+                },
+                1,
+                10
+            ],
+            [
+                "log.info",
+                "SbomImportService: import completed",
+                {
+                    "moduleVersieUuid": "mv-1",
+                    "format": "cyclonedx-json",
+                    "componentCount": 0,
+                    "previousCount": 0
+                }
+            ]
+        ]
+    },
+    "spdx 2.3": {
+        "result": {
+            "success": true,
+            "operationId": null,
+            "moduleVersieUuid": "mv-1",
+            "componentCount": 2,
+            "previousComponentCount": 0,
+            "distinctLicenseCount": 2,
+            "vulnerabilityPairCount": 0,
+            "sbomFormat": "spdx-json",
+            "sbomFileName": "sbom.json"
+        },
+        "calls": [
+            [
+                "objects.find",
+                [
+                    "mv-1",
+                    [],
+                    false,
+                    1,
+                    10,
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "@self": {
+                        "schema": 20,
+                        "register": 1
+                    },
+                    "moduleVersion": "mv-1",
+                    "_limit": 1000
+                }
+            ],
+            [
+                "objects.saveObjects",
+                2,
+                {
+                    "moduleVersion": "mv-1",
+                    "name": "lodash",
+                    "version": "4.17.21",
+                    "purl": "pkg:npm/lodash@4.17.21",
+                    "licenses": [
+                        "MIT"
+                    ],
+                    "type": "library",
+                    "hashes": [],
+                    "bomRef": "SPDXRef-Package-lodash",
+                    "vexCveIds": []
+                },
+                1,
+                20
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "id": "mv-1",
+                    "version": "1.0.0",
+                    "sbomLastImportedAt": "(time)",
+                    "sbomFormat": "spdx-json",
+                    "sbomFileName": "sbom.json"
+                },
+                1,
+                10
+            ],
+            [
+                "log.info",
+                "SbomImportService: import completed",
+                {
+                    "moduleVersieUuid": "mv-1",
+                    "format": "spdx-json",
+                    "componentCount": 2,
+                    "previousCount": 0
+                }
+            ]
+        ]
+    },
+    "unsupported": {
+        "result": {
+            "escaped": "OCA\\Stackiq\\Exception\\UnsupportedSbomFormatException",
+            "message": "Unsupported SBOM format/version: bomFormat=CycloneDX, specVersion=1.4 (expected CycloneDX 1.5 or 1.6)"
+        },
+        "calls": []
+    },
+    "module version missing": {
+        "result": {
+            "escaped": "RuntimeException",
+            "message": "moduleVersie not found: mv-1"
+        },
+        "calls": [
+            [
+                "objects.find",
+                [
+                    "mv-1",
+                    [],
+                    false,
+                    1,
+                    10,
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ]
+        ]
+    },
+    "large set, progress tracked": {
+        "result": {
+            "success": true,
+            "operationId": "op-1",
+            "moduleVersieUuid": "mv-1",
+            "componentCount": 60,
+            "previousComponentCount": 0,
+            "distinctLicenseCount": 0,
+            "vulnerabilityPairCount": 0,
+            "sbomFormat": "cyclonedx-json",
+            "sbomFileName": "sbom.json"
+        },
+        "calls": [
+            [
+                "objects.find",
+                [
+                    "mv-1",
+                    [],
+                    false,
+                    1,
+                    10,
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ],
+            [
+                "progress.startOperation",
+                [
+                    "sbom-import",
+                    {
+                        "total_items": 60
+                    },
+                    null,
+                    null
+                ]
+            ],
+            [
+                "progress.setPhase",
+                [
+                    "processing_elements",
+                    []
+                ]
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "@self": {
+                        "schema": 20,
+                        "register": 1
+                    },
+                    "moduleVersion": "mv-1",
+                    "_limit": 1000
+                }
+            ],
+            [
+                "objects.saveObjects",
+                60,
+                {
+                    "moduleVersion": "mv-1",
+                    "name": "lib-0",
+                    "version": "1.0",
+                    "purl": "pkg:npm/lib-0@1.0",
+                    "licenses": [],
+                    "type": "library",
+                    "hashes": [],
+                    "bomRef": "",
+                    "vexCveIds": []
+                },
+                1,
+                20
+            ],
+            [
+                "progress.updateProgress",
+                [
+                    60,
+                    null,
+                    null
+                ]
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "id": "mv-1",
+                    "version": "1.0.0",
+                    "sbomLastImportedAt": "(time)",
+                    "sbomFormat": "cyclonedx-json",
+                    "sbomFileName": "sbom.json"
+                },
+                1,
+                10
+            ],
+            [
+                "progress.completeOperation",
+                [
+                    {
+                        "componentsCreated": 60,
+                        "previousCount": 0
+                    }
+                ]
+            ],
+            [
+                "log.info",
+                "SbomImportService: import completed",
+                {
+                    "moduleVersieUuid": "mv-1",
+                    "format": "cyclonedx-json",
+                    "componentCount": 60,
+                    "previousCount": 0
+                }
+            ]
+        ]
+    },
+    "threshold set, not tracked": {
+        "result": {
+            "success": true,
+            "operationId": null,
+            "moduleVersieUuid": "mv-1",
+            "componentCount": 50,
+            "previousComponentCount": 0,
+            "distinctLicenseCount": 0,
+            "vulnerabilityPairCount": 0,
+            "sbomFormat": "cyclonedx-json",
+            "sbomFileName": "sbom.json"
+        },
+        "calls": [
+            [
+                "objects.find",
+                [
+                    "mv-1",
+                    [],
+                    false,
+                    1,
+                    10,
+                    false,
+                    false,
+                    true,
+                    true
+                ]
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "@self": {
+                        "schema": 20,
+                        "register": 1
+                    },
+                    "moduleVersion": "mv-1",
+                    "_limit": 1000
+                }
+            ],
+            [
+                "objects.saveObjects",
+                50,
+                {
+                    "moduleVersion": "mv-1",
+                    "name": "lib-0",
+                    "version": "1.0",
+                    "purl": "pkg:npm/lib-0@1.0",
+                    "licenses": [],
+                    "type": "library",
+                    "hashes": [],
+                    "bomRef": "",
+                    "vexCveIds": []
+                },
+                1,
+                20
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "id": "mv-1",
+                    "version": "1.0.0",
+                    "sbomLastImportedAt": "(time)",
+                    "sbomFormat": "cyclonedx-json",
+                    "sbomFileName": "sbom.json"
+                },
+                1,
+                10
+            ],
+            [
+                "log.info",
+                "SbomImportService: import completed",
+                {
+                    "moduleVersieUuid": "mv-1",
+                    "format": "cyclonedx-json",
+                    "componentCount": 50,
+                    "previousCount": 0
+                }
+            ]
+        ]
+    }
+}

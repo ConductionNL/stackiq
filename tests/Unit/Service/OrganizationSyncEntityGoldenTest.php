@@ -785,6 +785,71 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 	}//end testLinkOrganisationEntity()
 
 	/**
+	 * The batch back-fill creates missing organisation entities without mailing them.
+	 *
+	 * @return void
+	 */
+	public function testTheBackfillSendsNoMail(): void {
+		$this->trace = [];
+		$missing     = new \OCP\AppFramework\Db\DoesNotExistException('missing');
+		$this->plan  = [
+			'config' => ['register' => '6', 'organisatie_schema' => '9'],
+			'find'   => [$this->entity(object: ['name' => 'Gemeente N', 'status' => 'actief'], uuid: 'o-1'), null],
+			'save'   => [],
+			'org'    => [$missing],
+			'slug'   => [$missing],
+		];
+		$service = $this->service();
+		(new \ReflectionProperty(OrganizationSyncService::class, 'db'))->setValue($service, $this->batchDatabase(rows: [['uuid' => 'o-1', 'status' => 'actief']]));
+
+		$stats = $service->performOrganizationsSync();
+
+		self::assertSame(1, $stats['entitiesCreated'], 'the back-fill must reach the entity creation');
+		self::assertSame([], array_values(array_filter($this->trace, fn (array $call) => str_starts_with($call[0], 'mail.'))));
+	}//end testTheBackfillSendsNoMail()
+
+	/**
+	 * A created organisation processed on its own gets its registration mail.
+	 *
+	 * @return void
+	 */
+	public function testProcessSpecificOrganizationMailsOnCreate(): void {
+		$this->trace = [];
+		$missing     = new \OCP\AppFramework\Db\DoesNotExistException('missing');
+		$this->plan  = ['find' => [null], 'save' => [], 'org' => [$missing], 'slug' => [$missing]];
+
+		$this->service()->processSpecificOrganization($this->entity(object: ['name' => 'Gemeente O', 'status' => 'actief'], uuid: 'o-1'));
+
+		self::assertContains(['mail.sendOrganizationRegistrationEmail', 'Gemeente O'], $this->trace);
+	}//end testProcessSpecificOrganizationMailsOnCreate()
+
+	/**
+	 * A database whose count and batch queries answer the given rows.
+	 *
+	 * @param array<int, array<string, string>> $rows The organisations without an entity.
+	 *
+	 * @return \OCP\IDBConnection
+	 */
+	private function batchDatabase(array $rows): \OCP\IDBConnection {
+		$result = $this->createMock(originalClassName: \OCP\DB\IResult::class);
+		$result->method('fetchOne')->willReturn(count($rows));
+		$result->method('fetchAll')->willReturn($rows);
+
+		$query = $this->createMock(originalClassName: \OCP\DB\QueryBuilder\IQueryBuilder::class);
+		foreach (['select', 'from', 'leftJoin', 'where', 'andWhere', 'orderBy', 'setMaxResults'] as $method) {
+			$query->method($method)->willReturnSelf();
+		}
+
+		$query->method('createFunction')->willReturn($this->createMock(originalClassName: \OCP\DB\QueryBuilder\IQueryFunction::class));
+		$query->method('createNamedParameter')->willReturn(':status');
+		$query->method('executeQuery')->willReturn($result);
+
+		$database = $this->createMock(originalClassName: \OCP\IDBConnection::class);
+		$database->method('getQueryBuilder')->willReturn($query);
+		return $database;
+	}//end batchDatabase()
+
+	/**
 	 * Compare a case with the golden file, or record it.
 	 *
 	 * @param string $key   The case.
