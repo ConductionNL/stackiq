@@ -789,7 +789,7 @@
             "success": true,
             "file_info": {
                 "name": "archimate_golden.xml",
-                "size": 5157
+                "size": 5163
             },
             "performance_metrics": {
                 "total_time_seconds": "<volatile>",
@@ -998,7 +998,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -1009,8 +1009,8 @@
                 "GEMMA type property processed",
                 {
                     "object_id": "id-el-1",
-                    "property_name": "GEMMA type",
-                    "camel_case_name": "gemmaType",
+                    "property_name": "Referentie soort",
+                    "camel_case_name": "referentieSoort",
                     "value": "Referentiecomponent",
                     "def_ref": "propid-3"
                 }
@@ -1070,8 +1070,8 @@
                             "def_ref": "propid-2"
                         },
                         {
-                            "original": "GEMMA type",
-                            "camelCase": "gemmaType",
+                            "original": "Referentie soort",
+                            "camelCase": "referentieSoort",
                             "value": "Referentiecomponent",
                             "def_ref": "propid-3"
                         }
@@ -1088,7 +1088,7 @@
                         "objectId",
                         "_propertyMapping",
                         "businessUnit",
-                        "gemmaType"
+                        "referentieSoort"
                     ]
                 }
             ],
@@ -1112,7 +1112,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -1175,7 +1175,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -1228,7 +1228,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -1306,7 +1306,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -1473,7 +1473,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -1543,7 +1543,7 @@
                 "Objects before save",
                 {
                     "total_objects_to_save": 16,
-                    "elements_with_gemmaType": 1
+                    "elements_with_gemmaType": 0
                 }
             ],
             [
@@ -1555,8 +1555,8 @@
                 "log.debug",
                 "GEMMA Type property found",
                 {
-                    "property_name": "gemmaType",
-                    "value": "Referentiecomponent",
+                    "property_name": "type",
+                    "value": "ApplicationComponent",
                     "object_id": "id-el-1"
                 }
             ],
@@ -1567,13 +1567,13 @@
                     "total_elements": 5,
                     "elements_with_gemma_type": 5,
                     "gemma_type_variations": {
-                        "Referentiecomponent": 1,
+                        "ApplicationComponent": 1,
                         "Capability": 1,
                         "BusinessActor": 1,
                         "DataObject": 1,
                         "Grouping": 1
                     },
-                    "referentiecomponenten_count": 1,
+                    "referentiecomponenten_count": 0,
                     "standaarden_count": 0,
                     "standaardversies_count": 0,
                     "processed_relationships": 0,
@@ -1585,7 +1585,7 @@
                 "GEMMA Referentiecomponent-Standaard processing completed",
                 {
                     "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 1,
+                    "total_referentiecomponenten": 0,
                     "total_relationships_processed": 0
                 }
             ],
@@ -1603,7 +1603,7 @@
                 "GEMMA ReferentieComponent-StandaardVersies processing completed",
                 {
                     "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 1,
+                    "total_referentiecomponenten": 0,
                     "standaard_to_versies_mappings": 0
                 }
             ],
@@ -1665,7 +1665,7 @@
                                 "propertyDefinitionMap": {
                                     "propid-1": "Object ID",
                                     "propid-2": "Business Unit",
-                                    "propid-3": "GEMMA type",
+                                    "propid-3": "Referentie soort",
                                     "propid-4": "Remark",
                                     "propid-5": "Gemma Online URL"
                                 }
@@ -1690,7 +1690,7 @@
                             "propertyDefinitionMap": {
                                 "propid-1": "Object ID",
                                 "propid-2": "Business Unit",
-                                "propid-3": "GEMMA type",
+                                "propid-3": "Referentie soort",
                                 "propid-4": "Remark",
                                 "propid-5": "Gemma Online URL"
                             },
@@ -1822,10 +1822,10 @@
                             "_propertyMapping": {
                                 "objectId": "Object ID",
                                 "businessUnit": "Business Unit",
-                                "gemmaType": "GEMMA type"
+                                "referentieSoort": "Referentie soort"
                             },
                             "businessUnit": "Backoffice",
-                            "gemmaType": "Referentiecomponent"
+                            "referentieSoort": "Referentiecomponent"
                         },
                         {
                             "@self": {
@@ -2291,11 +2291,11 @@
                                     ":type": "string"
                                 },
                                 "name": {
-                                    "_value": "GEMMA type"
+                                    "_value": "Referentie soort"
                                 },
                                 "_essential_data": true
                             },
-                            "name": "GEMMA type"
+                            "name": "Referentie soort"
                         },
                         {
                             "@self": {
@@ -2663,7 +2663,7 @@
                                         "height": 55,
                                         "parent": null,
                                         "name": "Zaaksysteem",
-                                        "type": "referentiecomponent",
+                                        "type": "element",
                                         "color": "rgb(255, 255, 181)",
                                         "borderColor": "rgb(92, 92, 92)",
                                         "font": {
@@ -2682,10 +2682,9 @@
                                             "type": "ApplicationComponent",
                                             "objectId": "uuid-el-1",
                                             "businessUnit": "Backoffice",
-                                            "gemmaType": "Referentiecomponent"
+                                            "referentieSoort": "Referentiecomponent"
                                         },
                                         "objectId": "uuid-el-1",
-                                        "gemmaType": "Referentiecomponent",
                                         "elementSection": "element"
                                     },
                                     {
@@ -2795,7 +2794,7 @@
                                     "height": 55,
                                     "parent": null,
                                     "name": "Zaaksysteem",
-                                    "type": "referentiecomponent",
+                                    "type": "element",
                                     "color": "rgb(255, 255, 181)",
                                     "borderColor": "rgb(92, 92, 92)",
                                     "font": {
@@ -2814,10 +2813,9 @@
                                         "type": "ApplicationComponent",
                                         "objectId": "uuid-el-1",
                                         "businessUnit": "Backoffice",
-                                        "gemmaType": "Referentiecomponent"
+                                        "referentieSoort": "Referentiecomponent"
                                     },
                                     "objectId": "uuid-el-1",
-                                    "gemmaType": "Referentiecomponent",
                                     "elementSection": "element"
                                 },
                                 {
@@ -2978,7 +2976,7 @@
             "success": true,
             "file_info": {
                 "name": "archimate_golden.xml",
-                "size": 5157,
+                "size": 5163,
                 "mime_type": "text/xml"
             },
             "processing_times": "<volatile>",
@@ -3174,7 +3172,7 @@
                     "property_mapping": {
                         "Object ID": "objectId",
                         "Business Unit": "businessUnit",
-                        "GEMMA type": "gemmaType",
+                        "Referentie soort": "referentieSoort",
                         "Remark": "remark",
                         "Gemma Online URL": "gemmaOnlineUrl"
                     }
@@ -3591,7 +3589,7 @@
                                 "propertyDefinitionMap": {
                                     "propid-1": "Object ID",
                                     "propid-2": "Business Unit",
-                                    "propid-3": "GEMMA type",
+                                    "propid-3": "Referentie soort",
                                     "propid-4": "Remark",
                                     "propid-5": "Gemma Online URL"
                                 }
@@ -3617,7 +3615,7 @@
                             "propertyDefinitionMap": {
                                 "propid-1": "Object ID",
                                 "propid-2": "Business Unit",
-                                "propid-3": "GEMMA type",
+                                "propid-3": "Referentie soort",
                                 "propid-4": "Remark",
                                 "propid-5": "Gemma Online URL"
                             }
@@ -3750,12 +3748,12 @@
                             "_propertyMapping": {
                                 "objectId": "Object ID",
                                 "businessUnit": "Business Unit",
-                                "gemmaType": "GEMMA type",
+                                "referentieSoort": "Referentie soort",
                                 "remark": "Remark"
                             },
                             "_slug": "uuid-el-1",
                             "businessUnit": "Backoffice",
-                            "gemmaType": "Referentiecomponent",
+                            "referentieSoort": "Referentiecomponent",
                             "remark": null
                         },
                         {
@@ -4673,11 +4671,11 @@
                                     ":type": "string"
                                 },
                                 "name": {
-                                    "_value": "GEMMA type"
+                                    "_value": "Referentie soort"
                                 },
                                 "_essential_data": true
                             },
-                            "name": "GEMMA type"
+                            "name": "Referentie soort"
                         },
                         {
                             "@self": {
@@ -4849,7 +4847,7 @@
             "success": true,
             "file_info": {
                 "name": "archimate_golden.xml",
-                "size": 5157
+                "size": 5163
             },
             "performance_metrics": {
                 "total_time_seconds": "<volatile>",
@@ -5090,7 +5088,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -5101,8 +5099,8 @@
                 "GEMMA type property processed",
                 {
                     "object_id": "id-el-1",
-                    "property_name": "GEMMA type",
-                    "camel_case_name": "gemmaType",
+                    "property_name": "Referentie soort",
+                    "camel_case_name": "referentieSoort",
                     "value": "Referentiecomponent",
                     "def_ref": "propid-3"
                 }
@@ -5162,8 +5160,8 @@
                             "def_ref": "propid-2"
                         },
                         {
-                            "original": "GEMMA type",
-                            "camelCase": "gemmaType",
+                            "original": "Referentie soort",
+                            "camelCase": "referentieSoort",
                             "value": "Referentiecomponent",
                             "def_ref": "propid-3"
                         }
@@ -5180,7 +5178,7 @@
                         "objectId",
                         "_propertyMapping",
                         "businessUnit",
-                        "gemmaType"
+                        "referentieSoort"
                     ]
                 }
             ],
@@ -5204,7 +5202,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -5267,7 +5265,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -5320,7 +5318,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -5398,7 +5396,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -5565,7 +5563,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -5640,7 +5638,7 @@
                 "Objects before save",
                 {
                     "total_objects_to_save": 16,
-                    "elements_with_gemmaType": 1
+                    "elements_with_gemmaType": 0
                 }
             ],
             [
@@ -5652,8 +5650,8 @@
                 "log.debug",
                 "GEMMA Type property found",
                 {
-                    "property_name": "gemmaType",
-                    "value": "Referentiecomponent",
+                    "property_name": "type",
+                    "value": "ApplicationComponent",
                     "object_id": "id-el-1"
                 }
             ],
@@ -5664,13 +5662,13 @@
                     "total_elements": 5,
                     "elements_with_gemma_type": 5,
                     "gemma_type_variations": {
-                        "Referentiecomponent": 1,
+                        "ApplicationComponent": 1,
                         "Capability": 1,
                         "BusinessActor": 1,
                         "DataObject": 1,
                         "Grouping": 1
                     },
-                    "referentiecomponenten_count": 1,
+                    "referentiecomponenten_count": 0,
                     "standaarden_count": 0,
                     "standaardversies_count": 0,
                     "processed_relationships": 0,
@@ -5682,7 +5680,7 @@
                 "GEMMA Referentiecomponent-Standaard processing completed",
                 {
                     "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 1,
+                    "total_referentiecomponenten": 0,
                     "total_relationships_processed": 0
                 }
             ],
@@ -5700,7 +5698,7 @@
                 "GEMMA ReferentieComponent-StandaardVersies processing completed",
                 {
                     "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 1,
+                    "total_referentiecomponenten": 0,
                     "standaard_to_versies_mappings": 0
                 }
             ],
@@ -5777,7 +5775,7 @@
                                 "propertyDefinitionMap": {
                                     "propid-1": "Object ID",
                                     "propid-2": "Business Unit",
-                                    "propid-3": "GEMMA type",
+                                    "propid-3": "Referentie soort",
                                     "propid-4": "Remark",
                                     "propid-5": "Gemma Online URL"
                                 }
@@ -5802,7 +5800,7 @@
                             "propertyDefinitionMap": {
                                 "propid-1": "Object ID",
                                 "propid-2": "Business Unit",
-                                "propid-3": "GEMMA type",
+                                "propid-3": "Referentie soort",
                                 "propid-4": "Remark",
                                 "propid-5": "Gemma Online URL"
                             },
@@ -5947,10 +5945,10 @@
                             "_propertyMapping": {
                                 "objectId": "Object ID",
                                 "businessUnit": "Business Unit",
-                                "gemmaType": "GEMMA type"
+                                "referentieSoort": "Referentie soort"
                             },
                             "businessUnit": "Backoffice",
-                            "gemmaType": "Referentiecomponent"
+                            "referentieSoort": "Referentiecomponent"
                         },
                         {
                             "@self": {
@@ -6455,11 +6453,11 @@
                                     ":type": "string"
                                 },
                                 "name": {
-                                    "_value": "GEMMA type"
+                                    "_value": "Referentie soort"
                                 },
                                 "_essential_data": true
                             },
-                            "name": "GEMMA type"
+                            "name": "Referentie soort"
                         },
                         {
                             "@self": {
@@ -6840,7 +6838,7 @@
                                         "height": 55,
                                         "parent": null,
                                         "name": "Zaaksysteem",
-                                        "type": "referentiecomponent",
+                                        "type": "element",
                                         "color": "rgb(255, 255, 181)",
                                         "borderColor": "rgb(92, 92, 92)",
                                         "font": {
@@ -6859,10 +6857,9 @@
                                             "type": "ApplicationComponent",
                                             "objectId": "uuid-el-1",
                                             "businessUnit": "Backoffice",
-                                            "gemmaType": "Referentiecomponent"
+                                            "referentieSoort": "Referentiecomponent"
                                         },
                                         "objectId": "uuid-el-1",
-                                        "gemmaType": "Referentiecomponent",
                                         "elementSection": "element"
                                     },
                                     {
@@ -6972,7 +6969,7 @@
                                     "height": 55,
                                     "parent": null,
                                     "name": "Zaaksysteem",
-                                    "type": "referentiecomponent",
+                                    "type": "element",
                                     "color": "rgb(255, 255, 181)",
                                     "borderColor": "rgb(92, 92, 92)",
                                     "font": {
@@ -6991,10 +6988,9 @@
                                         "type": "ApplicationComponent",
                                         "objectId": "uuid-el-1",
                                         "businessUnit": "Backoffice",
-                                        "gemmaType": "Referentiecomponent"
+                                        "referentieSoort": "Referentiecomponent"
                                     },
                                     "objectId": "uuid-el-1",
-                                    "gemmaType": "Referentiecomponent",
                                     "elementSection": "element"
                                 },
                                 {
@@ -7351,7 +7347,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -7362,8 +7358,8 @@
                 "GEMMA type property processed",
                 {
                     "object_id": "id-el-1",
-                    "property_name": "GEMMA type",
-                    "camel_case_name": "gemmaType",
+                    "property_name": "Referentie soort",
+                    "camel_case_name": "referentieSoort",
                     "value": "Referentiecomponent",
                     "def_ref": "propid-3"
                 }
@@ -7423,8 +7419,8 @@
                             "def_ref": "propid-2"
                         },
                         {
-                            "original": "GEMMA type",
-                            "camelCase": "gemmaType",
+                            "original": "Referentie soort",
+                            "camelCase": "referentieSoort",
                             "value": "Referentiecomponent",
                             "def_ref": "propid-3"
                         }
@@ -7441,7 +7437,7 @@
                         "objectId",
                         "_propertyMapping",
                         "businessUnit",
-                        "gemmaType"
+                        "referentieSoort"
                     ]
                 }
             ],
@@ -7465,7 +7461,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -7528,7 +7524,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -7581,7 +7577,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -7659,7 +7655,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -7826,7 +7822,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -7901,7 +7897,7 @@
                 "Objects before save",
                 {
                     "total_objects_to_save": 16,
-                    "elements_with_gemmaType": 1
+                    "elements_with_gemmaType": 0
                 }
             ],
             [
@@ -7913,8 +7909,8 @@
                 "log.debug",
                 "GEMMA Type property found",
                 {
-                    "property_name": "gemmaType",
-                    "value": "Referentiecomponent",
+                    "property_name": "type",
+                    "value": "ApplicationComponent",
                     "object_id": "id-el-1"
                 }
             ],
@@ -7925,13 +7921,13 @@
                     "total_elements": 5,
                     "elements_with_gemma_type": 5,
                     "gemma_type_variations": {
-                        "Referentiecomponent": 1,
+                        "ApplicationComponent": 1,
                         "Capability": 1,
                         "BusinessActor": 1,
                         "DataObject": 1,
                         "Grouping": 1
                     },
-                    "referentiecomponenten_count": 1,
+                    "referentiecomponenten_count": 0,
                     "standaarden_count": 0,
                     "standaardversies_count": 0,
                     "processed_relationships": 0,
@@ -7943,7 +7939,7 @@
                 "GEMMA Referentiecomponent-Standaard processing completed",
                 {
                     "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 1,
+                    "total_referentiecomponenten": 0,
                     "total_relationships_processed": 0
                 }
             ],
@@ -7961,7 +7957,7 @@
                 "GEMMA ReferentieComponent-StandaardVersies processing completed",
                 {
                     "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 1,
+                    "total_referentiecomponenten": 0,
                     "standaard_to_versies_mappings": 0
                 }
             ],
@@ -8038,7 +8034,7 @@
                                 "propertyDefinitionMap": {
                                     "propid-1": "Object ID",
                                     "propid-2": "Business Unit",
-                                    "propid-3": "GEMMA type",
+                                    "propid-3": "Referentie soort",
                                     "propid-4": "Remark",
                                     "propid-5": "Gemma Online URL"
                                 }
@@ -8063,7 +8059,7 @@
                             "propertyDefinitionMap": {
                                 "propid-1": "Object ID",
                                 "propid-2": "Business Unit",
-                                "propid-3": "GEMMA type",
+                                "propid-3": "Referentie soort",
                                 "propid-4": "Remark",
                                 "propid-5": "Gemma Online URL"
                             },
@@ -8128,7 +8124,7 @@
             "success": true,
             "file_info": {
                 "name": "archimate_golden.xml",
-                "size": 5157
+                "size": 5163
             },
             "performance_metrics": {
                 "total_time_seconds": "<volatile>",
@@ -8337,7 +8333,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -8348,8 +8344,8 @@
                 "GEMMA type property processed",
                 {
                     "object_id": "id-el-1",
-                    "property_name": "GEMMA type",
-                    "camel_case_name": "gemmaType",
+                    "property_name": "Referentie soort",
+                    "camel_case_name": "referentieSoort",
                     "value": "Referentiecomponent",
                     "def_ref": "propid-3"
                 }
@@ -8409,8 +8405,8 @@
                             "def_ref": "propid-2"
                         },
                         {
-                            "original": "GEMMA type",
-                            "camelCase": "gemmaType",
+                            "original": "Referentie soort",
+                            "camelCase": "referentieSoort",
                             "value": "Referentiecomponent",
                             "def_ref": "propid-3"
                         }
@@ -8427,7 +8423,7 @@
                         "objectId",
                         "_propertyMapping",
                         "businessUnit",
-                        "gemmaType"
+                        "referentieSoort"
                     ]
                 }
             ],
@@ -8451,7 +8447,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -8514,7 +8510,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -8567,7 +8563,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -8645,7 +8641,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -8812,7 +8808,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -8882,7 +8878,7 @@
                 "Objects before save",
                 {
                     "total_objects_to_save": 16,
-                    "elements_with_gemmaType": 1
+                    "elements_with_gemmaType": 0
                 }
             ],
             [
@@ -8894,8 +8890,8 @@
                 "log.debug",
                 "GEMMA Type property found",
                 {
-                    "property_name": "gemmaType",
-                    "value": "Referentiecomponent",
+                    "property_name": "type",
+                    "value": "ApplicationComponent",
                     "object_id": "id-el-1"
                 }
             ],
@@ -8906,13 +8902,13 @@
                     "total_elements": 5,
                     "elements_with_gemma_type": 5,
                     "gemma_type_variations": {
-                        "Referentiecomponent": 1,
+                        "ApplicationComponent": 1,
                         "Capability": 1,
                         "BusinessActor": 1,
                         "DataObject": 1,
                         "Grouping": 1
                     },
-                    "referentiecomponenten_count": 1,
+                    "referentiecomponenten_count": 0,
                     "standaarden_count": 0,
                     "standaardversies_count": 0,
                     "processed_relationships": 0,
@@ -8924,7 +8920,7 @@
                 "GEMMA Referentiecomponent-Standaard processing completed",
                 {
                     "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 1,
+                    "total_referentiecomponenten": 0,
                     "total_relationships_processed": 0
                 }
             ],
@@ -8942,7 +8938,7 @@
                 "GEMMA ReferentieComponent-StandaardVersies processing completed",
                 {
                     "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 1,
+                    "total_referentiecomponenten": 0,
                     "standaard_to_versies_mappings": 0
                 }
             ],
@@ -9004,7 +9000,7 @@
                                 "propertyDefinitionMap": {
                                     "propid-1": "Object ID",
                                     "propid-2": "Business Unit",
-                                    "propid-3": "GEMMA type",
+                                    "propid-3": "Referentie soort",
                                     "propid-4": "Remark",
                                     "propid-5": "Gemma Online URL"
                                 }
@@ -9029,7 +9025,7 @@
                             "propertyDefinitionMap": {
                                 "propid-1": "Object ID",
                                 "propid-2": "Business Unit",
-                                "propid-3": "GEMMA type",
+                                "propid-3": "Referentie soort",
                                 "propid-4": "Remark",
                                 "propid-5": "Gemma Online URL"
                             },
@@ -9161,10 +9157,10 @@
                             "_propertyMapping": {
                                 "objectId": "Object ID",
                                 "businessUnit": "Business Unit",
-                                "gemmaType": "GEMMA type"
+                                "referentieSoort": "Referentie soort"
                             },
                             "businessUnit": "Backoffice",
-                            "gemmaType": "Referentiecomponent"
+                            "referentieSoort": "Referentiecomponent"
                         },
                         {
                             "@self": {
@@ -9629,11 +9625,11 @@
                                     ":type": "string"
                                 },
                                 "name": {
-                                    "_value": "GEMMA type"
+                                    "_value": "Referentie soort"
                                 },
                                 "_essential_data": true
                             },
-                            "name": "GEMMA type"
+                            "name": "Referentie soort"
                         },
                         {
                             "@self": {
@@ -10001,7 +9997,7 @@
                                         "height": 55,
                                         "parent": null,
                                         "name": "Zaaksysteem",
-                                        "type": "referentiecomponent",
+                                        "type": "element",
                                         "color": "rgb(255, 255, 181)",
                                         "borderColor": "rgb(92, 92, 92)",
                                         "font": {
@@ -10020,10 +10016,9 @@
                                             "type": "ApplicationComponent",
                                             "objectId": "uuid-el-1",
                                             "businessUnit": "Backoffice",
-                                            "gemmaType": "Referentiecomponent"
+                                            "referentieSoort": "Referentiecomponent"
                                         },
                                         "objectId": "uuid-el-1",
-                                        "gemmaType": "Referentiecomponent",
                                         "elementSection": "element"
                                     },
                                     {
@@ -10133,7 +10128,7 @@
                                     "height": 55,
                                     "parent": null,
                                     "name": "Zaaksysteem",
-                                    "type": "referentiecomponent",
+                                    "type": "element",
                                     "color": "rgb(255, 255, 181)",
                                     "borderColor": "rgb(92, 92, 92)",
                                     "font": {
@@ -10152,10 +10147,9 @@
                                         "type": "ApplicationComponent",
                                         "objectId": "uuid-el-1",
                                         "businessUnit": "Backoffice",
-                                        "gemmaType": "Referentiecomponent"
+                                        "referentieSoort": "Referentiecomponent"
                                     },
                                     "objectId": "uuid-el-1",
-                                    "gemmaType": "Referentiecomponent",
                                     "elementSection": "element"
                                 },
                                 {
@@ -10316,7 +10310,7 @@
             "success": true,
             "file_info": {
                 "name": "archimate_golden.xml",
-                "size": 5157
+                "size": 5163
             },
             "performance_metrics": {
                 "total_time_seconds": "<volatile>",
@@ -10535,7 +10529,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -10546,8 +10540,8 @@
                 "GEMMA type property processed",
                 {
                     "object_id": "id-el-1",
-                    "property_name": "GEMMA type",
-                    "camel_case_name": "gemmaType",
+                    "property_name": "Referentie soort",
+                    "camel_case_name": "referentieSoort",
                     "value": "Referentiecomponent",
                     "def_ref": "propid-3"
                 }
@@ -10607,8 +10601,8 @@
                             "def_ref": "propid-2"
                         },
                         {
-                            "original": "GEMMA type",
-                            "camelCase": "gemmaType",
+                            "original": "Referentie soort",
+                            "camelCase": "referentieSoort",
                             "value": "Referentiecomponent",
                             "def_ref": "propid-3"
                         }
@@ -10625,7 +10619,7 @@
                         "objectId",
                         "_propertyMapping",
                         "businessUnit",
-                        "gemmaType"
+                        "referentieSoort"
                     ]
                 }
             ],
@@ -10654,7 +10648,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -10727,7 +10721,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -10785,7 +10779,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -10868,7 +10862,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -11075,7 +11069,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -11150,7 +11144,7 @@
                 "Objects before save",
                 {
                     "total_objects_to_save": 16,
-                    "elements_with_gemmaType": 1
+                    "elements_with_gemmaType": 0
                 }
             ],
             [
@@ -11162,8 +11156,8 @@
                 "log.debug",
                 "GEMMA Type property found",
                 {
-                    "property_name": "gemmaType",
-                    "value": "Referentiecomponent",
+                    "property_name": "type",
+                    "value": "ApplicationComponent",
                     "object_id": "id-el-1"
                 }
             ],
@@ -11174,13 +11168,13 @@
                     "total_elements": 5,
                     "elements_with_gemma_type": 5,
                     "gemma_type_variations": {
-                        "Referentiecomponent": 1,
+                        "ApplicationComponent": 1,
                         "Capability": 1,
                         "BusinessActor": 1,
                         "DataObject": 1,
                         "Grouping": 1
                     },
-                    "referentiecomponenten_count": 1,
+                    "referentiecomponenten_count": 0,
                     "standaarden_count": 0,
                     "standaardversies_count": 0,
                     "processed_relationships": 0,
@@ -11192,7 +11186,7 @@
                 "GEMMA Referentiecomponent-Standaard processing completed",
                 {
                     "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 1,
+                    "total_referentiecomponenten": 0,
                     "total_relationships_processed": 0
                 }
             ],
@@ -11210,7 +11204,7 @@
                 "GEMMA ReferentieComponent-StandaardVersies processing completed",
                 {
                     "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 1,
+                    "total_referentiecomponenten": 0,
                     "standaard_to_versies_mappings": 0
                 }
             ],
@@ -11272,7 +11266,7 @@
                                 "propertyDefinitionMap": {
                                     "propid-1": "Object ID",
                                     "propid-2": "Business Unit",
-                                    "propid-3": "GEMMA type",
+                                    "propid-3": "Referentie soort",
                                     "propid-4": "Remark",
                                     "propid-5": "Gemma Online URL"
                                 }
@@ -11297,7 +11291,7 @@
                             "propertyDefinitionMap": {
                                 "propid-1": "Object ID",
                                 "propid-2": "Business Unit",
-                                "propid-3": "GEMMA type",
+                                "propid-3": "Referentie soort",
                                 "propid-4": "Remark",
                                 "propid-5": "Gemma Online URL"
                             },
@@ -11429,10 +11423,10 @@
                             "_propertyMapping": {
                                 "objectId": "Object ID",
                                 "businessUnit": "Business Unit",
-                                "gemmaType": "GEMMA type"
+                                "referentieSoort": "Referentie soort"
                             },
                             "businessUnit": "Backoffice",
-                            "gemmaType": "Referentiecomponent"
+                            "referentieSoort": "Referentiecomponent"
                         },
                         {
                             "@self": {
@@ -11898,11 +11892,11 @@
                                     ":type": "string"
                                 },
                                 "name": {
-                                    "_value": "GEMMA type"
+                                    "_value": "Referentie soort"
                                 },
                                 "_essential_data": true
                             },
-                            "name": "GEMMA type"
+                            "name": "Referentie soort"
                         },
                         {
                             "@self": {
@@ -12270,7 +12264,7 @@
                                         "height": 55,
                                         "parent": null,
                                         "name": "Zaaksysteem",
-                                        "type": "referentiecomponent",
+                                        "type": "element",
                                         "color": "rgb(255, 255, 181)",
                                         "borderColor": "rgb(92, 92, 92)",
                                         "font": {
@@ -12289,10 +12283,9 @@
                                             "type": "ApplicationComponent",
                                             "objectId": "uuid-el-1",
                                             "businessUnit": "Backoffice",
-                                            "gemmaType": "Referentiecomponent"
+                                            "referentieSoort": "Referentiecomponent"
                                         },
                                         "objectId": "uuid-el-1",
-                                        "gemmaType": "Referentiecomponent",
                                         "elementSection": "element"
                                     },
                                     {
@@ -12402,7 +12395,7 @@
                                     "height": 55,
                                     "parent": null,
                                     "name": "Zaaksysteem",
-                                    "type": "referentiecomponent",
+                                    "type": "element",
                                     "color": "rgb(255, 255, 181)",
                                     "borderColor": "rgb(92, 92, 92)",
                                     "font": {
@@ -12421,10 +12414,9 @@
                                         "type": "ApplicationComponent",
                                         "objectId": "uuid-el-1",
                                         "businessUnit": "Backoffice",
-                                        "gemmaType": "Referentiecomponent"
+                                        "referentieSoort": "Referentiecomponent"
                                     },
                                     "objectId": "uuid-el-1",
-                                    "gemmaType": "Referentiecomponent",
                                     "elementSection": "element"
                                 },
                                 {
@@ -12585,7 +12577,7 @@
             "success": true,
             "file_info": {
                 "name": "archimate_golden.xml",
-                "size": 5157,
+                "size": 5163,
                 "mime_type": "text/xml"
             },
             "processing_times": "<volatile>",
@@ -12781,7 +12773,7 @@
                     "property_mapping": {
                         "Object ID": "objectId",
                         "Business Unit": "businessUnit",
-                        "GEMMA type": "gemmaType",
+                        "Referentie soort": "referentieSoort",
                         "Remark": "remark",
                         "Gemma Online URL": "gemmaOnlineUrl"
                     }
@@ -13198,7 +13190,7 @@
                                 "propertyDefinitionMap": {
                                     "propid-1": "Object ID",
                                     "propid-2": "Business Unit",
-                                    "propid-3": "GEMMA type",
+                                    "propid-3": "Referentie soort",
                                     "propid-4": "Remark",
                                     "propid-5": "Gemma Online URL"
                                 }
@@ -13224,7 +13216,7 @@
                             "propertyDefinitionMap": {
                                 "propid-1": "Object ID",
                                 "propid-2": "Business Unit",
-                                "propid-3": "GEMMA type",
+                                "propid-3": "Referentie soort",
                                 "propid-4": "Remark",
                                 "propid-5": "Gemma Online URL"
                             }
@@ -13357,12 +13349,12 @@
                             "_propertyMapping": {
                                 "objectId": "Object ID",
                                 "businessUnit": "Business Unit",
-                                "gemmaType": "GEMMA type",
+                                "referentieSoort": "Referentie soort",
                                 "remark": "Remark"
                             },
                             "_slug": "uuid-el-1",
                             "businessUnit": "Backoffice",
-                            "gemmaType": "Referentiecomponent",
+                            "referentieSoort": "Referentiecomponent",
                             "remark": null
                         },
                         {
@@ -14280,11 +14272,11 @@
                                     ":type": "string"
                                 },
                                 "name": {
-                                    "_value": "GEMMA type"
+                                    "_value": "Referentie soort"
                                 },
                                 "_essential_data": true
                             },
-                            "name": "GEMMA type"
+                            "name": "Referentie soort"
                         },
                         {
                             "@self": {
@@ -14591,7 +14583,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -14602,8 +14594,8 @@
                 "GEMMA type property processed",
                 {
                     "object_id": "id-el-1",
-                    "property_name": "GEMMA type",
-                    "camel_case_name": "gemmaType",
+                    "property_name": "Referentie soort",
+                    "camel_case_name": "referentieSoort",
                     "value": "Referentiecomponent",
                     "def_ref": "propid-3"
                 }
@@ -14663,8 +14655,8 @@
                             "def_ref": "propid-2"
                         },
                         {
-                            "original": "GEMMA type",
-                            "camelCase": "gemmaType",
+                            "original": "Referentie soort",
+                            "camelCase": "referentieSoort",
                             "value": "Referentiecomponent",
                             "def_ref": "propid-3"
                         }
@@ -14681,7 +14673,7 @@
                         "objectId",
                         "_propertyMapping",
                         "businessUnit",
-                        "gemmaType"
+                        "referentieSoort"
                     ]
                 }
             ],
@@ -14705,7 +14697,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -14768,7 +14760,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -14821,7 +14813,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }
@@ -14899,7 +14891,7 @@
                     "sample_property_definitions": {
                         "propid-1": "Object ID",
                         "propid-2": "Business Unit",
-                        "propid-3": "GEMMA type",
+                        "propid-3": "Referentie soort",
                         "propid-4": "Remark",
                         "propid-5": "Gemma Online URL"
                     }

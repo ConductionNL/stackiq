@@ -96,7 +96,7 @@
       <name>Business Unit</name>
     </propertyDefinition>
     <propertyDefinition identifier="propid-3" type="string">
-      <name>GEMMA type</name>
+      <name>Referentie soort</name>
     </propertyDefinition>
     <propertyDefinition identifier="propid-4" type="string">
       <name>Remark</name>
