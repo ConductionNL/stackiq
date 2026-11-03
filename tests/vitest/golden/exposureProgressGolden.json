@@ -1,6 +1,10 @@
 {
 	"exposure": [
 		[
+			[],
+			[]
+		],
+		[
 			[
 				{
 					"gebruikId": "g1",
@@ -155,6 +159,7 @@
 		}
 	],
 	"packs": [
+		"Version 2.0",
 		"",
 		"",
 		"Version 1.2 (shipped: 1.3)",

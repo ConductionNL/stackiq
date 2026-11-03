@@ -49,6 +49,7 @@ const USAGES = [
 	{ id: 'g8', module: 'm2' },
 ]
 const VULNS = [
+	{ modules: [''] },
 	{ modules: ['m1', 'm2'] },
 	{ modules: [{ id: 'm2' }] },
 	{ modules: [] },
@@ -85,6 +86,7 @@ const PROGRESS = [
 	{ processed_items: 1, total_items: 3 },
 ]
 const PACKS = [
+	{ shippedVersion: '2.0', version: '3.0' },
 	null,
 	{},
 	{ source: 'openregister', storedVersion: '1.2', shippedVersion: '1.3' },
