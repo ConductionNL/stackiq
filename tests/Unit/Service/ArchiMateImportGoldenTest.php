@@ -6,7 +6,8 @@
  * Runs both import entry points over ArchiMate fixtures with recording doubles
  * and records, per case, every object service, progress tracker, database and
  * logger call plus the import result. Values that depend on the clock or the
- * memory of the run are masked. Recorded with RECORD_GOLDEN=1.
+ * memory of the run are masked, and the checkout path reads <root>.
+ * Recorded with RECORD_GOLDEN=1.
  *
  * @category  Test
  * @package   OCA\Stackiq\Tests\Unit\Service
@@ -43,6 +44,7 @@ use Psr\Log\AbstractLogger;
  * Golden cases for the ArchiMate import.
  *
  * @covers \OCA\Stackiq\Service\ArchiMateImportService
+ * @uses   \OCA\Stackiq\Service\ArchiMate\ArchiMateImportScope
  *
  * @spec openspec/specs/archimate-import/spec.md
  */
@@ -414,6 +416,10 @@ class ArchiMateImportGoldenTest extends TestCase {
 	 * @return mixed
 	 */
 	private static function mask(mixed $value): mixed {
+		if (is_string($value) === true) {
+			return str_replace(dirname(__DIR__, 3), '<root>', $value);
+		}
+
 		if (is_array($value) === false) {
 			return $value;
 		}

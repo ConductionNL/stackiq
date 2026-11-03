@@ -83,7 +83,7 @@
                 "log.info",
                 "GEMMA IMPORT DEBUG: Starting optimized import",
                 {
-                    "file_path": "/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/../../data/sample_archimate.xml",
+                    "file_path": "<root>/tests/Unit/Service/../../data/sample_archimate.xml",
                     "fileName": "sample_archimate.xml"
                 }
             ],
@@ -685,7 +685,7 @@
                 "log.info",
                 "Step 1: Parsing XML to array for complete data capture",
                 {
-                    "filePath": "/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/../../data/sample_archimate.xml"
+                    "filePath": "<root>/tests/Unit/Service/../../data/sample_archimate.xml"
                 }
             ],
             [
@@ -868,7 +868,7 @@
                 "log.info",
                 "GEMMA IMPORT DEBUG: Starting optimized import",
                 {
-                    "file_path": "/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/../../data/archimate_golden.xml",
+                    "file_path": "<root>/tests/Unit/Service/../../data/archimate_golden.xml",
                     "fileName": "archimate_golden.xml"
                 }
             ],
@@ -3079,7 +3079,7 @@
                 "log.info",
                 "Step 1: Parsing XML to array for complete data capture",
                 {
-                    "filePath": "/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/../../data/archimate_golden.xml"
+                    "filePath": "<root>/tests/Unit/Service/../../data/archimate_golden.xml"
                 }
             ],
             [
@@ -4926,7 +4926,7 @@
                 "log.info",
                 "GEMMA IMPORT DEBUG: Starting optimized import",
                 {
-                    "file_path": "/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/../../data/archimate_golden.xml",
+                    "file_path": "<root>/tests/Unit/Service/../../data/archimate_golden.xml",
                     "fileName": "archimate_golden.xml",
                     "operationId": "archimate_import_golden01"
                 }
@@ -7185,7 +7185,7 @@
                 "log.info",
                 "GEMMA IMPORT DEBUG: Starting optimized import",
                 {
-                    "file_path": "/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/../../data/archimate_golden.xml",
+                    "file_path": "<root>/tests/Unit/Service/../../data/archimate_golden.xml",
                     "fileName": "archimate_golden.xml",
                     "operationId": "archimate_import_golden02"
                 }
@@ -8203,7 +8203,7 @@
                 "log.info",
                 "GEMMA IMPORT DEBUG: Starting optimized import",
                 {
-                    "file_path": "/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/../../data/archimate_golden.xml",
+                    "file_path": "<root>/tests/Unit/Service/../../data/archimate_golden.xml",
                     "fileName": "archimate_golden.xml"
                 }
             ],
@@ -10389,7 +10389,7 @@
                 "log.info",
                 "GEMMA IMPORT DEBUG: Starting optimized import",
                 {
-                    "file_path": "/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/../../data/archimate_golden.xml",
+                    "file_path": "<root>/tests/Unit/Service/../../data/archimate_golden.xml",
                     "fileName": "archimate_golden.xml"
                 }
             ],
@@ -12680,7 +12680,7 @@
                 "log.info",
                 "Step 1: Parsing XML to array for complete data capture",
                 {
-                    "filePath": "/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/../../data/archimate_golden.xml"
+                    "filePath": "<root>/tests/Unit/Service/../../data/archimate_golden.xml"
                 }
             ],
             [
@@ -14453,7 +14453,7 @@
                 "log.info",
                 "GEMMA IMPORT DEBUG: Starting optimized import",
                 {
-                    "file_path": "/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/../../data/archimate_golden.xml",
+                    "file_path": "<root>/tests/Unit/Service/../../data/archimate_golden.xml",
                     "fileName": "archimate_golden.xml"
                 }
             ],
@@ -15043,7 +15043,7 @@
                 "OPTIMIZED ArchiMate import failed",
                 {
                     "error": "Schema ID for section 'view' is not configured. Expected object type: 'view'",
-                    "file_path": "/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/../../data/archimate_golden.xml"
+                    "file_path": "<root>/tests/Unit/Service/../../data/archimate_golden.xml"
                 }
             ]
         ]
@@ -15132,7 +15132,7 @@
                 "log.info",
                 "GEMMA IMPORT DEBUG: Starting optimized import",
                 {
-                    "file_path": "/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/../../fixtures/archimate/big1.xml",
+                    "file_path": "<root>/tests/Unit/Service/../../fixtures/archimate/big1.xml",
                     "fileName": "big1.xml"
                 }
             ],
@@ -17796,7 +17796,7 @@
                 "log.info",
                 "Step 1: Parsing XML to array for complete data capture",
                 {
-                    "filePath": "/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/../../fixtures/archimate/big1.xml"
+                    "filePath": "<root>/tests/Unit/Service/../../fixtures/archimate/big1.xml"
                 }
             ],
             [
@@ -20676,7 +20676,7 @@
                 "log.info",
                 "GEMMA IMPORT DEBUG: Starting optimized import",
                 {
-                    "file_path": "/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/../../fixtures/archimate/big2.xml",
+                    "file_path": "<root>/tests/Unit/Service/../../fixtures/archimate/big2.xml",
                     "fileName": "big2.xml"
                 }
             ],
@@ -23162,7 +23162,7 @@
                 "log.info",
                 "Step 1: Parsing XML to array for complete data capture",
                 {
-                    "filePath": "/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/../../fixtures/archimate/big2.xml"
+                    "filePath": "<root>/tests/Unit/Service/../../fixtures/archimate/big2.xml"
                 }
             ],
             [
@@ -25892,7 +25892,7 @@
                 "log.info",
                 "GEMMA IMPORT DEBUG: Starting optimized import",
                 {
-                    "file_path": "/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/../../fixtures/archimate/noorg.xml",
+                    "file_path": "<root>/tests/Unit/Service/../../fixtures/archimate/noorg.xml",
                     "fileName": "noorg.xml"
                 }
             ],
@@ -26420,7 +26420,7 @@
                 "log.info",
                 "Step 1: Parsing XML to array for complete data capture",
                 {
-                    "filePath": "/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/../../fixtures/archimate/noorg.xml"
+                    "filePath": "<root>/tests/Unit/Service/../../fixtures/archimate/noorg.xml"
                 }
             ],
             [
