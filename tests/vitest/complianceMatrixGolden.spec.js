@@ -15,8 +15,8 @@ import { describe, expect, it } from 'vitest'
 import {
 	buildComplianceMatrix,
 	buildOrganisationCoverage,
-	columnLabel,
 	COLUMN_SOURCE,
+	columnLabel,
 	hasEvidence,
 	partitionCompliancy,
 	standardLabel,
