@@ -67,6 +67,23 @@ export const OUTCOMES = [
 export const MISSING_RECORDS_MODES = Object.freeze(['archive', 'keep'])
 
 /**
+ * The translated label of each import outcome.
+ *
+ * @type {Readonly<Record<string, function(): string>>}
+ */
+const OUTCOME_LABELS = Object.freeze({
+	created: () => t('stackiq', 'Created'),
+	updated: () => t('stackiq', 'Updated'),
+	unchanged: () => t('stackiq', 'Unchanged'),
+	skipped: () => t('stackiq', 'Skipped'),
+	failed: () => t('stackiq', 'Failed'),
+	unarchived: () => t('stackiq', 'Unarchived'),
+	restored: () => t('stackiq', 'Restored'),
+	archived: () => t('stackiq', 'Archived'),
+	deleted: () => t('stackiq', 'Deleted'),
+})
+
+/**
  * The words for one row outcome.
  *
  * @param {string} outcome The outcome key from the report
@@ -75,28 +92,11 @@ export const MISSING_RECORDS_MODES = Object.freeze(['archive', 'keep'])
  * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 export function outcomeLabel(outcome) {
-	switch (outcome) {
-		case 'created':
-			return t('stackiq', 'Created')
-		case 'updated':
-			return t('stackiq', 'Updated')
-		case 'unchanged':
-			return t('stackiq', 'Unchanged')
-		case 'skipped':
-			return t('stackiq', 'Skipped')
-		case 'failed':
-			return t('stackiq', 'Failed')
-		case 'unarchived':
-			return t('stackiq', 'Unarchived')
-		case 'restored':
-			return t('stackiq', 'Restored')
-		case 'archived':
-			return t('stackiq', 'Archived')
-		case 'deleted':
-			return t('stackiq', 'Deleted')
-		default:
-			return String(outcome ?? '')
-	}
+	const label =
+		typeof outcome === 'string' && Object.hasOwn(OUTCOME_LABELS, outcome)
+			? OUTCOME_LABELS[outcome]
+			: null
+	return label ? label() : String(outcome ?? '')
 }
 
 /**
