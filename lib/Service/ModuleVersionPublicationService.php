@@ -37,6 +37,7 @@ namespace OCA\Stackiq\Service;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\BackgroundJob\ModuleVersionPublicationJob;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\BackgroundJob\IJobList;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -59,13 +60,13 @@ class ModuleVersionPublicationService {
 	/**
 	 * Constructor.
 	 *
-	 * @param SettingsService    $settingsService Resolves the module and moduleVersion schemas.
-	 * @param ContainerInterface $container       Resolves OpenRegister's object service.
-	 * @param LoggerInterface    $logger          The logger.
-	 * @param IJobList           $jobList         Queues the copy onto a module's versions.
+	 * @param ObjectTypeLocatorInterface $settingsService Resolves the module and moduleVersion schemas.
+	 * @param ContainerInterface         $container       Resolves OpenRegister's object service.
+	 * @param LoggerInterface            $logger          The logger.
+	 * @param IJobList                   $jobList         Queues the copy onto a module's versions.
 	 */
 	public function __construct(
-		private readonly SettingsService $settingsService,
+		private readonly ObjectTypeLocatorInterface $settingsService,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
 		private readonly IJobList $jobList,
