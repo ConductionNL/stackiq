@@ -90,3 +90,23 @@ foreach (['ConnectionStatusReportedEvent', 'ConnectionRefreshRequestedEvent'] as
 }
 
 unset($integriqStubEvent);
+
+// OCP\DB\QueryBuilder\IQueryBuilder initialises its PARAM_* class constants
+// from Doctrine constants at class-load, and IExpressionBuilder reads
+// Doctrine's ExpressionBuilder, so mocking OCP\IDBConnection fatals without
+// them. The real classes ship with the Nextcloud server at runtime.
+if (class_exists(\Doctrine\DBAL\ParameterType::class) === false) {
+	require_once __DIR__ . '/Stubs/Doctrine/ParameterType.php';
+	require_once __DIR__ . '/Stubs/Doctrine/ArrayParameterType.php';
+	require_once __DIR__ . '/Stubs/Doctrine/Types.php';
+}
+
+if (class_exists(\Doctrine\DBAL\Query\Expression\ExpressionBuilder::class) === false) {
+	require_once __DIR__ . '/Stubs/Doctrine/ExpressionBuilder.php';
+}
+
+// OCP's DownloadResponse builds its Content-Disposition with Symfony's
+// HeaderUtils, which only the server ships.
+if (class_exists(\Symfony\Component\HttpFoundation\HeaderUtils::class) === false) {
+	require_once __DIR__ . '/Stubs/Symfony/HeaderUtils.php';
+}
