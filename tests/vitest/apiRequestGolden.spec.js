@@ -14,8 +14,10 @@ import { readFileSync, writeFileSync } from 'fs'
 import path from 'path'
 import { describe, expect, it, vi } from 'vitest'
 
+const token = { value: 'csrf-token' }
+
 vi.mock('@nextcloud/auth', () => ({
-	getRequestToken: () => 'csrf-token',
+	getRequestToken: () => token.value,
 }))
 
 const { apiRequest } = await import('../../src/utils/adminApi.js')
@@ -78,6 +80,14 @@ describe('apiRequest golden', () => {
 			globalThis.fetch = saved
 		}
 		recorded['no fetch'] = noFetch
+		token.value = null
+		const tokenless = []
+		await apiRequest('reviews', { method: 'POST' }, async (url, init) => {
+			tokenless.push([url, init])
+			return { ok: true, status: 200, json: async () => ({}) }
+		})
+		token.value = 'csrf-token'
+		recorded['no token'] = tokenless
 		const value = JSON.parse(JSON.stringify(recorded))
 		if (process.env.RECORD_GOLDEN) {
 			writeFileSync(GOLDEN, JSON.stringify(value, null, '\t') + '\n')

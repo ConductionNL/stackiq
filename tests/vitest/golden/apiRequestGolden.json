@@ -677,5 +677,18 @@
 			]
 		]
 	},
-	"no fetch": "No fetch implementation available"
+	"no fetch": "No fetch implementation available",
+	"no token": [
+		[
+			"/index.php/apps/stackiq/api/reviews",
+			{
+				"method": "POST",
+				"headers": {
+					"Content-Type": "application/json",
+					"X-Requested-With": "XMLHttpRequest",
+					"requesttoken": ""
+				}
+			}
+		]
+	]
 }
