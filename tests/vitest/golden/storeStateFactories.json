@@ -1,0 +1,592 @@
+{
+	"plugin state": {
+		"settings": null,
+		"objectItem": null,
+		"activeObjects": {},
+		"relatedData": {},
+		"selectedObjects": [],
+		"success": {},
+		"objectErrors": {},
+		"metadata": {
+			"name": {
+				"label": "Name",
+				"key": "name",
+				"description": "Display name of the object",
+				"enabled": true
+			},
+			"description": {
+				"label": "Description",
+				"key": "description",
+				"description": "Description of the object",
+				"enabled": false
+			},
+			"objectId": {
+				"label": "ID",
+				"key": "id",
+				"description": "Unique identifier of the object",
+				"enabled": false
+			},
+			"uri": {
+				"label": "URI",
+				"key": "uri",
+				"description": "URI of the object",
+				"enabled": false
+			},
+			"version": {
+				"label": "Version",
+				"key": "version",
+				"description": "Version of the object",
+				"enabled": false
+			},
+			"register": {
+				"label": "Register",
+				"key": "register",
+				"description": "Register of the object",
+				"enabled": false
+			},
+			"schema": {
+				"label": "Schema",
+				"key": "schema",
+				"description": "Schema of the object",
+				"enabled": false
+			},
+			"files": {
+				"label": "Files",
+				"key": "files",
+				"description": "Attached files count",
+				"enabled": true
+			},
+			"locked": {
+				"label": "Locked",
+				"key": "locked",
+				"description": "Whether the object is locked",
+				"enabled": false
+			},
+			"organization": {
+				"label": "Organization",
+				"key": "organization",
+				"description": "Organization owning the object",
+				"enabled": false
+			},
+			"validation": {
+				"label": "Validation",
+				"key": "validation",
+				"description": "Validation status of the object",
+				"enabled": false
+			},
+			"owner": {
+				"label": "Owner",
+				"key": "owner",
+				"description": "Owner of the object",
+				"enabled": false
+			},
+			"application": {
+				"label": "Application",
+				"key": "application",
+				"description": "Application of the object",
+				"enabled": false
+			},
+			"folder": {
+				"label": "Folder",
+				"key": "folder",
+				"description": "Folder of the object",
+				"enabled": false
+			},
+			"geo": {
+				"label": "Geo",
+				"key": "geo",
+				"description": "Geographic information",
+				"enabled": false
+			},
+			"retention": {
+				"label": "Retention",
+				"key": "retention",
+				"description": "Retention policy",
+				"enabled": false
+			},
+			"size": {
+				"label": "Size",
+				"key": "size",
+				"description": "Size of the object",
+				"enabled": false
+			},
+			"published": {
+				"label": "Published",
+				"key": "published",
+				"description": "Publication date",
+				"enabled": false
+			},
+			"depublished": {
+				"label": "Depublished",
+				"key": "depublished",
+				"description": "Depublication date",
+				"enabled": false
+			},
+			"deleted": {
+				"label": "Deleted",
+				"key": "deleted",
+				"description": "Deletion date",
+				"enabled": false
+			},
+			"created": {
+				"label": "Created",
+				"key": "created",
+				"description": "Creation date and time",
+				"enabled": false
+			},
+			"updated": {
+				"label": "Updated",
+				"key": "updated",
+				"description": "Last update date and time",
+				"enabled": false
+			}
+		},
+		"properties": {},
+		"columnFilters": {}
+	},
+	"settings state": {
+		"loading": false,
+		"saving": false,
+		"importing": false,
+		"exporting": false,
+		"loadingVersionInfo": false,
+		"loadingGeneralSettings": false,
+		"loadingSyncSettings": false,
+		"loadingStatistics": false,
+		"loadingOpenRegisterConfig": false,
+		"loadingRegisters": false,
+		"loadingVoorzieningenSchemas": false,
+		"loadingAmefSchemas": false,
+		"loadingUserGroups": false,
+		"loadingEmailConfig": false,
+		"loadingArchiMateStatus": false,
+		"loadingObjectCounts": false,
+		"loadingMainSettings": false,
+		"settings": {
+			"availableRegisters": []
+		},
+		"versionInfo": {},
+		"voorzieningenRegister": null,
+		"amefRegister": null,
+		"voorzieningenSchemas": [],
+		"amefSchemas": [],
+		"configuration": {
+			"amef_element_schema": {
+				"schema": null
+			},
+			"amef_organization_schema": {
+				"schema": null
+			},
+			"amef_relation_schema": {
+				"schema": null
+			},
+			"amef_view_schema": {
+				"schema": null
+			},
+			"amef_model_schema": {
+				"schema": null
+			},
+			"amef_property_definition_schema": {
+				"schema": null
+			},
+			"voorzieningen_sector_schema": {
+				"schema": null
+			},
+			"voorzieningen_suite_schema": {
+				"schema": null
+			},
+			"voorzieningen_dienst_schema": {
+				"schema": null
+			},
+			"voorzieningen_kwetsbaarheid_schema": {
+				"schema": null
+			},
+			"voorzieningen_contactpersoon_schema": {
+				"schema": null
+			},
+			"voorzieningen_organisatie_schema": {
+				"schema": null
+			},
+			"voorzieningen_gebruik_schema": {
+				"schema": null
+			},
+			"voorzieningen_contract_schema": {
+				"schema": null
+			},
+			"voorzieningen_koppeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_beoordeeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_module_schema": {
+				"schema": null
+			},
+			"voorzieningen_compliancy_schema": {
+				"schema": null
+			},
+			"voorzieningen_moduleVersie_schema": {
+				"schema": null
+			}
+		},
+		"archimateStatus": {
+			"import": {},
+			"export": {}
+		},
+		"isImportRunning": false,
+		"isExportRunning": false,
+		"statusPollingInterval": null,
+		"isStatusPolling": false,
+		"importOptions": {
+			"updateExisting": true,
+			"deleteOrphaned": false
+		},
+		"exportOptions": {
+			"includeViews": true,
+			"includeRelationships": true
+		},
+		"selectedFile": null,
+		"genericUserGroups": [],
+		"organizationAdminGroups": [],
+		"superUserGroups": [],
+		"emailSettings": {
+			"enabled": false,
+			"senderEmail": "",
+			"senderName": "",
+			"testReceiverOverride": "",
+			"organizationRegistrationEnabled": true,
+			"organizationActivationEnabled": true,
+			"userCreationEnabled": true,
+			"userPasswordEnabled": true,
+			"transportType": "smtp",
+			"smtpHost": "localhost",
+			"smtpPort": 587,
+			"smtpEncryption": "tls",
+			"smtpUsername": "",
+			"smtpPassword": "",
+			"sendgridApiKey": "",
+			"mailgunApiKey": "",
+			"mailgunDomain": "",
+			"postmarkApiKey": "",
+			"sesAccessKey": "",
+			"sesSecretKey": "",
+			"sesRegion": "us-east-1",
+			"mailjetApiKey": "",
+			"mailjetSecretKey": ""
+		},
+		"statistics": {
+			"voorzieningen": {
+				"config": {},
+				"object_counts": {},
+				"configured": false
+			},
+			"amef": {
+				"config": {},
+				"object_counts": {},
+				"configured": false
+			},
+			"timestamp": null
+		},
+		"loadingStats": false,
+		"error": null,
+		"importError": null,
+		"exportError": null,
+		"openRegisters": false,
+		"isAdmin": false
+	},
+	"formattedStatistics: nothing configured": [],
+	"formattedStatistics: voorzieningen only": [
+		{
+			"register": "Voorzieningen",
+			"type": "Organisatie",
+			"count": 3,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Contactpersoon",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Voorziening",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Voorziening Aanbod",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Voorziening Versie",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Kwetsbaarheid",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Contract",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Standaard",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Review",
+			"count": "7",
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Koppeling",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Beoordeeling",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Voorziening Module",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Verklaring",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Koppeling Gebruik",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Compliancy",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Module Gebruik",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Module Versie",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Sector",
+			"count": 0,
+			"configured": true
+		}
+	],
+	"formattedStatistics: amef only": [
+		{
+			"register": "AMEF",
+			"type": "Elements",
+			"count": 5,
+			"configured": true
+		},
+		{
+			"register": "AMEF",
+			"type": "Organizations",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "AMEF",
+			"type": "Relationships",
+			"count": 2,
+			"configured": true
+		},
+		{
+			"register": "AMEF",
+			"type": "Views",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "AMEF",
+			"type": "Models",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "AMEF",
+			"type": "Properties",
+			"count": 0,
+			"configured": true
+		}
+	],
+	"formattedStatistics: both": [
+		{
+			"register": "Voorzieningen",
+			"type": "Organisatie",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Contactpersoon",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Voorziening",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Voorziening Aanbod",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Voorziening Versie",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Kwetsbaarheid",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Contract",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Standaard",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Review",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Koppeling",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Beoordeeling",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Voorziening Module",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Verklaring",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Koppeling Gebruik",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Compliancy",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Module Gebruik",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Module Versie",
+			"count": 11,
+			"configured": true
+		},
+		{
+			"register": "Voorzieningen",
+			"type": "Sector",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "AMEF",
+			"type": "Elements",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "AMEF",
+			"type": "Organizations",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "AMEF",
+			"type": "Relationships",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "AMEF",
+			"type": "Views",
+			"count": 6,
+			"configured": true
+		},
+		{
+			"register": "AMEF",
+			"type": "Models",
+			"count": 1,
+			"configured": true
+		},
+		{
+			"register": "AMEF",
+			"type": "Properties",
+			"count": 0,
+			"configured": true
+		}
+	]
+}
