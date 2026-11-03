@@ -47,7 +47,7 @@ class SettingsServiceTemplatesConfigGoldenTest extends TestCase {
 		$service = $this->service(stored: []);
 		$out     = [];
 		foreach (['organization_registration', 'organization_activation', 'user_creation', 'welcome', ''] as $name) {
-			$out[$name] = [
+			$out[($name === '' ? '(empty)' : $name)] = [
 				'template' => $service->getDefaultEmailTemplate($name),
 				'variables' => $service->getEmailTemplateVariables($name),
 			];
