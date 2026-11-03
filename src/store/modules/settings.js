@@ -19,6 +19,24 @@ async function fetchJson(url, options) {
 }
 
 /**
+ * Write the object counts of each register that has them into the
+ * statistics, marking that register configured, and stamp the time.
+ *
+ * @param {object} statistics The store's statistics.
+ * @param {object} counts The counts answer.
+ * @return {void}
+ */
+function applyObjectCounts(statistics, counts) {
+	for (const register of ['voorzieningen', 'amef']) {
+		if (counts[register]) {
+			statistics[register].object_counts = counts[register]
+			statistics[register].configured = true
+		}
+	}
+	statistics.timestamp = counts.timestamp
+}
+
+/**
  * A fresh configuration with no schema chosen for any object type.
  *
  * @return {object} Schema selection per configuration key.
@@ -131,24 +149,6 @@ function applySchemaSelections(store, selection) {
 		const option = findSchemaOption(schemaId, store[selection.optionsGetter])
 		if (option) store.configuration[uiKey].schema = option
 	}
-}
-
-/**
- * Write the object counts of each register that has them into the
- * statistics, marking that register configured, and stamp the time.
- *
- * @param {object} statistics The store's statistics.
- * @param {object} counts The counts answer.
- * @return {void}
- */
-function applyObjectCounts(statistics, counts) {
-	for (const register of ['voorzieningen', 'amef']) {
-		if (counts[register]) {
-			statistics[register].object_counts = counts[register]
-			statistics[register].configured = true
-		}
-	}
-	statistics.timestamp = counts.timestamp
 }
 
 /**
