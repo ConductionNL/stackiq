@@ -74,6 +74,13 @@ const STATISTICS = {
 			},
 		},
 	},
+	'falsy flags and counts': {
+		voorzieningen: { configured: 0, object_counts: { totalSectorObjects: 4 } },
+		amef: {
+			configured: true,
+			object_counts: { totalElementObjects: '', totalViewObjects: false },
+		},
+	},
 	both: {
 		voorzieningen: {
 			configured: 1,

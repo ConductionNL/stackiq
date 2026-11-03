@@ -443,6 +443,44 @@
 			"configured": true
 		}
 	],
+	"formattedStatistics: falsy flags and counts": [
+		{
+			"register": "AMEF",
+			"type": "Elements",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "AMEF",
+			"type": "Organizations",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "AMEF",
+			"type": "Relationships",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "AMEF",
+			"type": "Views",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "AMEF",
+			"type": "Models",
+			"count": 0,
+			"configured": true
+		},
+		{
+			"register": "AMEF",
+			"type": "Properties",
+			"count": 0,
+			"configured": true
+		}
+	],
 	"formattedStatistics: both": [
 		{
 			"register": "Voorzieningen",
