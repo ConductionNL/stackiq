@@ -43,6 +43,7 @@ use Psr\Log\NullLogger;
  *
  * @covers \OCA\Stackiq\Service\ArchiMateImportService
  * @uses   \OCA\Stackiq\Service\ArchiMate\ArchiMateImportScope
+ * @uses   \OCA\Stackiq\Service\ArchiMate\GemmaObjectReader
  * @uses   \OCA\Stackiq\Service\ArchiMate\GemmaStandardLinker
  *
  * @spec openspec/specs/archimate-import/spec.md

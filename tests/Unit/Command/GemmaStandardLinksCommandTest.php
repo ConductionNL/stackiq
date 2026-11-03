@@ -30,6 +30,7 @@ use Symfony\Component\Console\Tester\CommandTester;
  * @covers \OCA\Stackiq\Command\GemmaStandardLinksCommand
  * @uses   \OCA\Stackiq\Command\ObjectPages
  * @uses   \OCA\Stackiq\Service\ArchiMate\GemmaStandardLinker
+ * @uses   \OCA\Stackiq\Service\ArchiMate\GemmaObjectReader
  *
  * @spec openspec/specs/archimate-import/spec.md
  */
