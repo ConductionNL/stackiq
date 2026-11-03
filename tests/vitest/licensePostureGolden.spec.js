@@ -96,8 +96,8 @@ function catalogue(seed) {
 				]),
 				licencesBought: pick([10, '5', '', null, -1, 2.5, 0]),
 				licencesInUse: pick([12, '5', 3, null, '', 0]),
-				annualCost: pick([1000, '250', null]),
-				costPeriod: pick(['year', 'month', undefined]),
+				cost: pick([1000, '250', null]),
+				costPeriod: pick(['Annually', 'Monthly', 'One-off', undefined]),
 			},
 			'c' + i,
 		),
@@ -108,7 +108,7 @@ function catalogue(seed) {
 describe('licence posture golden', () => {
 	it('answers the same for every seeded catalogue', () => {
 		const recorded = {}
-		for (let seed = 1; seed <= 60; seed++) {
+		for (let seed = 1; seed <= 300; seed++) {
 			const { modules, usages, contracts } = catalogue(seed)
 			recorded[seed] = JSON.parse(
 				JSON.stringify(
