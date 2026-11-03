@@ -40,6 +40,17 @@ const REQUESTS = [
 	['reviews', { body: 0 }],
 	['reviews', { method: '' }],
 	['reviews', { method: 'PUT', body: 'text' }],
+	// A caller cannot put its own request token on the request: only the
+	// session's token from @nextcloud/auth is sent.
+	[
+		'reviews',
+		{
+			method: 'POST',
+			requesttoken: 'forged',
+			headers: { requesttoken: 'forged', 'X-Requested-With': 'forged' },
+			body: { r: 2 },
+		},
+	],
 ]
 
 describe('apiRequest golden', () => {

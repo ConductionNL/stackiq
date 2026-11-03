@@ -122,6 +122,27 @@
 			]
 		]
 	},
+	"ok / 6": {
+		"outcome": {
+			"result": {
+				"a": 1
+			}
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "{\"r\":2}"
+				}
+			]
+		]
+	},
 	"ok bad json / 0": {
 		"outcome": {
 			"result": {}
@@ -229,6 +250,25 @@
 						"requesttoken": "csrf-token"
 					},
 					"body": "\"text\""
+				}
+			]
+		]
+	},
+	"ok bad json / 6": {
+		"outcome": {
+			"result": {}
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "{\"r\":2}"
 				}
 			]
 		]
@@ -344,6 +384,25 @@
 			]
 		]
 	},
+	"error with message / 6": {
+		"outcome": {
+			"error": "bad"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "{\"r\":2}"
+				}
+			]
+		]
+	},
 	"error without message / 0": {
 		"outcome": {
 			"error": "HTTP 500"
@@ -451,6 +510,25 @@
 						"requesttoken": "csrf-token"
 					},
 					"body": "\"text\""
+				}
+			]
+		]
+	},
+	"error without message / 6": {
+		"outcome": {
+			"error": "HTTP 500"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "{\"r\":2}"
 				}
 			]
 		]
@@ -566,6 +644,25 @@
 			]
 		]
 	},
+	"error bad json / 6": {
+		"outcome": {
+			"error": "HTTP 502"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "{\"r\":2}"
+				}
+			]
+		]
+	},
 	"error null json / 0": {
 		"outcome": {
 			"error": "HTTP 503"
@@ -673,6 +770,25 @@
 						"requesttoken": "csrf-token"
 					},
 					"body": "\"text\""
+				}
+			]
+		]
+	},
+	"error null json / 6": {
+		"outcome": {
+			"error": "HTTP 503"
+		},
+		"calls": [
+			[
+				"/index.php/apps/stackiq/api/reviews",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"X-Requested-With": "XMLHttpRequest",
+						"requesttoken": "csrf-token"
+					},
+					"body": "{\"r\":2}"
 				}
 			]
 		]
