@@ -136,6 +136,12 @@ describe('compliance matrix golden', () => {
 				{
 					emptyMatrix: buildComplianceMatrix(),
 					noColumns: buildComplianceMatrix({ modules: ['m1'] }),
+					bothColumnSets: buildComplianceMatrix({
+						modules: ['m1'],
+						columns: ['c1'],
+						standardVersions: ['s1'],
+					}),
+					namedTwice: columnLabel({ name: 'N', titel: 'T', title: 'X' }),
 					emptyCoverage: buildOrganisationCoverage(),
 					nullPartition: partitionCompliancy(null),
 					labels: [

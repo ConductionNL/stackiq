@@ -67812,6 +67812,29 @@
 			"unresolved": [],
 			"conflicted": []
 		},
+		"bothColumnSets": {
+			"rows": [
+				{
+					"module": "m1",
+					"moduleUuid": "m1",
+					"cells": {
+						"c1": {
+							"state": "none",
+							"record": null
+						}
+					}
+				}
+			],
+			"columns": [
+				{
+					"uuid": "c1",
+					"label": "c1"
+				}
+			],
+			"unresolved": [],
+			"conflicted": []
+		},
+		"namedTwice": "N",
 		"emptyCoverage": [],
 		"nullPartition": {
 			"resolved": [],
