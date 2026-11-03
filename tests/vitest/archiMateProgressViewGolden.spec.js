@@ -10,8 +10,14 @@
 
 import { readFileSync, writeFileSync } from 'fs'
 import path from 'path'
-import { describe, expect, it } from 'vitest'
-import { progressView } from '../../src/utils/archiMateImportProgress.js'
+import { describe, expect, it, vi } from 'vitest'
+
+vi.mock('@nextcloud/l10n', () => ({
+	t: (app, text, vars = {}) =>
+		`${app}:` + text.replace(/{(\w+)}/g, (m, k) => String(vars[k] ?? m)),
+}))
+
+const { progressView } = await import('../../src/utils/archiMateImportProgress.js')
 
 const GOLDEN = path.resolve(
 	import.meta.dirname,
