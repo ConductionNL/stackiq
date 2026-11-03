@@ -41,6 +41,10 @@ const OUTCOMES = [
 
 const ENTRIES = [
 	{
+		object: { slug: 'ds', uuid: 'du' },
+		'@self': { uuid: 'su', id: 'si', slug: 'ss' },
+	},
+	{
 		name: 'n',
 		'@self': { uuid: 'u1', slug: 's1', updated: 't1' },
 		owner: 'x',

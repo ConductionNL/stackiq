@@ -19,6 +19,30 @@
 	],
 	"projections": [
 		{
+			"slug": "ss",
+			"uuid": "su",
+			"@id": "su",
+			"license": "CC0-1.0",
+			"publisher": null,
+			"lastModified": null
+		},
+		{
+			"slug": "ss",
+			"uuid": "su",
+			"@id": "su",
+			"license": "MIT",
+			"publisher": "P",
+			"lastModified": null
+		},
+		{
+			"slug": "ss",
+			"uuid": "su",
+			"@id": "su",
+			"license": "CC0-1.0",
+			"publisher": null,
+			"lastModified": null
+		},
+		{
 			"name": "n",
 			"@id": "u1",
 			"uuid": "u1",
