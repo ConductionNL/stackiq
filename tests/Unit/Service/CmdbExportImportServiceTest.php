@@ -395,7 +395,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$json = (string) preg_replace('/cmdb-[0-9a-f]{32}/', 'cmdb-(operation)', $json);
 		$json = (string) preg_replace('/stackiq-cmdb-pack-[0-9a-f]{8}/', 'stackiq-cmdb-pack-(dir)', $json);
 		$json = (string) preg_replace('/(?<![0-9])1[789][0-9]{8}(\\.[0-9]+)?(?![0-9])/', '"(epoch)"', $json);
-		$json = (string) preg_replace('/duration(\\\\?"):[0-9]+/', 'duration$1:0', $json);
+		$json = (string) preg_replace('/duration(\\\\?"):-?[0-9]+/', 'duration$1:0', $json);
 		$generated = [];
 		$json      = (string) preg_replace_callback(
 			'/(?!00000000-0000-4000-8000-)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/',
