@@ -19,33 +19,42 @@ async function fetchJson(url, options) {
 }
 
 /**
+ * The schema choices a configuration holds, AMEF first, then voorzieningen.
+ *
+ * @type {Array<string>}
+ */
+const CONFIGURATION_KEYS = [
+	'amef_element_schema',
+	'amef_organization_schema',
+	'amef_relation_schema',
+	'amef_view_schema',
+	'amef_model_schema',
+	'amef_property_definition_schema',
+	'voorzieningen_sector_schema',
+	'voorzieningen_suite_schema',
+	'voorzieningen_dienst_schema',
+	'voorzieningen_kwetsbaarheid_schema',
+	'voorzieningen_contactpersoon_schema',
+	'voorzieningen_organisatie_schema',
+	'voorzieningen_gebruik_schema',
+	'voorzieningen_contract_schema',
+	'voorzieningen_koppeling_schema',
+	'voorzieningen_beoordeeling_schema',
+	'voorzieningen_module_schema',
+	'voorzieningen_compliancy_schema',
+	'voorzieningen_moduleVersie_schema',
+]
+
+/**
  * A fresh configuration with no schema chosen for any object type.
  *
  * @return {object} Schema selection per configuration key.
  * @spec openspec/specs/fe-stores/spec.md
  */
 function emptyConfiguration() {
-	return {
-		amef_element_schema: { schema: null },
-		amef_organization_schema: { schema: null },
-		amef_relation_schema: { schema: null },
-		amef_view_schema: { schema: null },
-		amef_model_schema: { schema: null },
-		amef_property_definition_schema: { schema: null },
-		voorzieningen_sector_schema: { schema: null },
-		voorzieningen_suite_schema: { schema: null },
-		voorzieningen_dienst_schema: { schema: null },
-		voorzieningen_kwetsbaarheid_schema: { schema: null },
-		voorzieningen_contactpersoon_schema: { schema: null },
-		voorzieningen_organisatie_schema: { schema: null },
-		voorzieningen_gebruik_schema: { schema: null },
-		voorzieningen_contract_schema: { schema: null },
-		voorzieningen_koppeling_schema: { schema: null },
-		voorzieningen_beoordeeling_schema: { schema: null },
-		voorzieningen_module_schema: { schema: null },
-		voorzieningen_compliancy_schema: { schema: null },
-		voorzieningen_moduleVersie_schema: { schema: null },
-	}
+	return Object.fromEntries(
+		CONFIGURATION_KEYS.map((key) => [key, { schema: null }]),
+	)
 }
 
 /**
@@ -131,6 +140,197 @@ function applySchemaSelections(store, selection) {
 		const option = findSchemaOption(schemaId, store[selection.optionsGetter])
 		if (option) store.configuration[uiKey].schema = option
 	}
+}
+
+/**
+ * The store's loading and busy flags, all false in a fresh state.
+ *
+ * @type {Array<string>}
+ */
+const IDLE_FLAGS = [
+	'loading',
+	'saving',
+	'importing',
+	'exporting',
+	'loadingVersionInfo',
+	'loadingGeneralSettings',
+	'loadingSyncSettings',
+	'loadingStatistics',
+	'loadingOpenRegisterConfig',
+	'loadingRegisters',
+	'loadingVoorzieningenSchemas',
+	'loadingAmefSchemas',
+	'loadingUserGroups',
+	'loadingEmailConfig',
+	'loadingArchiMateStatus',
+	'loadingObjectCounts',
+	'loadingMainSettings',
+]
+
+/**
+ * Every loading and busy flag, set to false.
+ *
+ * @return {object} The flags by name.
+ */
+function idleFlags() {
+	return Object.fromEntries(IDLE_FLAGS.map((flag) => [flag, false]))
+}
+
+/**
+ * The email settings of a fresh state, before the email config is loaded.
+ *
+ * @type {object}
+ */
+const DEFAULT_EMAIL_SETTINGS = Object.freeze({
+	enabled: false,
+	senderEmail: '',
+	senderName: '',
+	testReceiverOverride: '',
+	organizationRegistrationEnabled: true,
+	organizationActivationEnabled: true,
+	userCreationEnabled: true,
+	userPasswordEnabled: true,
+	transportType: 'smtp',
+	smtpHost: 'localhost',
+	smtpPort: 587,
+	smtpEncryption: 'tls',
+	smtpUsername: '',
+	smtpPassword: '',
+	sendgridApiKey: '',
+	mailgunApiKey: '',
+	mailgunDomain: '',
+	postmarkApiKey: '',
+	sesAccessKey: '',
+	sesSecretKey: '',
+	sesRegion: 'us-east-1',
+	mailjetApiKey: '',
+	mailjetSecretKey: '',
+})
+
+/**
+ * A fresh state's settings answer, version and register and schema choices.
+ *
+ * @return {object} The state fields.
+ */
+function registerSelectionState() {
+	return {
+		settings: { availableRegisters: [] },
+		versionInfo: {},
+		voorzieningenRegister: null,
+		amefRegister: null,
+		voorzieningenSchemas: [],
+		amefSchemas: [],
+		configuration: emptyConfiguration(),
+	}
+}
+
+/**
+ * A fresh state's ArchiMate import and export status and polling.
+ *
+ * @return {object} The state fields.
+ */
+function archiMateRunState() {
+	return {
+		archimateStatus: { import: {}, export: {} },
+		isImportRunning: false,
+		isExportRunning: false,
+		statusPollingInterval: null,
+		// Prevents concurrent status polls
+		isStatusPolling: false,
+	}
+}
+
+/**
+ * A fresh state's ArchiMate import and export options and chosen file.
+ *
+ * @return {object} The state fields.
+ */
+function archiMateOptions() {
+	return {
+		importOptions: { updateExisting: true, deleteOrphaned: false },
+		exportOptions: { includeViews: true, includeRelationships: true },
+		selectedFile: null,
+	}
+}
+
+/**
+ * A fresh state's user group lists and email settings.
+ *
+ * @return {object} The state fields.
+ */
+function userSettingsState() {
+	return {
+		genericUserGroups: [],
+		organizationAdminGroups: [],
+		superUserGroups: [],
+		emailSettings: { ...DEFAULT_EMAIL_SETTINGS },
+	}
+}
+
+/**
+ * The object counts the settings page lists for the voorzieningen register,
+ * with the type name each row shows.
+ *
+ * @type {{register: string, labels: object}}
+ */
+const VOORZIENINGEN_STATISTICS = {
+	register: 'Voorzieningen',
+	labels: {
+		totalOrganisatieObjects: 'Organisatie',
+		totalContactpersoonObjects: 'Contactpersoon',
+		totalVoorzieningObjects: 'Voorziening',
+		totalVoorzieningAanbodObjects: 'Voorziening Aanbod',
+		totalVoorzieningVersieObjects: 'Voorziening Versie',
+		totalKwetsbaarheidObjects: 'Kwetsbaarheid',
+		totalContractObjects: 'Contract',
+		totalStandaardObjects: 'Standaard',
+		totalReviewObjects: 'Review',
+		totalKoppelingObjects: 'Koppeling',
+		totalBeoordeelingObjects: 'Beoordeeling',
+		totalVoorzieningModuleObjects: 'Voorziening Module',
+		totalVerklaringObjects: 'Verklaring',
+		totalKoppelingGebruikObjects: 'Koppeling Gebruik',
+		totalCompliancyObjects: 'Compliancy',
+		totalModuleGebruikObjects: 'Module Gebruik',
+		totalModuleVersieObjects: 'Module Versie',
+		totalSectorObjects: 'Sector',
+	},
+}
+
+/**
+ * The object counts the settings page lists for the AMEF register, with the
+ * type name each row shows.
+ *
+ * @type {{register: string, labels: object}}
+ */
+const AMEF_STATISTICS = {
+	register: 'AMEF',
+	labels: {
+		totalElementObjects: 'Elements',
+		totalOrganizationObjects: 'Organizations',
+		totalRelationshipsObjects: 'Relationships',
+		totalViewObjects: 'Views',
+		totalModelObjects: 'Models',
+		totalPropertyObjects: 'Properties',
+	},
+}
+
+/**
+ * The statistics rows of one register: none when it is not configured, else
+ * one row per listed count, zero when the count is missing.
+ *
+ * @param {{configured: boolean, object_counts: object}} statistics The register's statistics.
+ * @param {{register: string, labels: object}} listing The register name and the listed counts.
+ * @return {Array<object>} The rows.
+ */
+function statisticsRows(statistics, listing) {
+	if (!statistics.configured) return []
+	return Object.entries(listing.labels).map(([countKey, label]) => ({
+		register: listing.register,
+		type: label,
+		count: statistics.object_counts[countKey] || 0,
+		configured: true,
+	}))
 }
 
 /**
@@ -624,94 +824,12 @@ function applyConfigurationState(store, data) {
  */
 export const useSettingsStore = defineStore('settings', {
 	state: () => ({
-		// Loading states
-		loading: false,
-		saving: false,
-		importing: false,
-		exporting: false,
-		loadingVersionInfo: false,
-		loadingGeneralSettings: false,
-		loadingSyncSettings: false,
-		loadingStatistics: false,
-		loadingOpenRegisterConfig: false,
-		loadingRegisters: false,
-		loadingVoorzieningenSchemas: false,
-		loadingAmefSchemas: false,
-		loadingUserGroups: false,
-		loadingEmailConfig: false,
-		loadingArchiMateStatus: false,
-		loadingObjectCounts: false,
-		loadingMainSettings: false,
+		...idleFlags(),
 
-		// Settings data
-		settings: {
-			availableRegisters: [],
-		},
-
-		// Version information
-		versionInfo: {},
-
-		// Register selections
-		voorzieningenRegister: null,
-		amefRegister: null,
-		voorzieningenSchemas: [],
-		amefSchemas: [],
-
-		// Configuration
-		configuration: emptyConfiguration(),
-
-		// ArchiMate status and operations
-		archimateStatus: {
-			import: {},
-			export: {},
-		},
-		isImportRunning: false,
-		isExportRunning: false,
-		statusPollingInterval: null,
-		isStatusPolling: false, // Prevent concurrent status polls
-
-		// Import/Export options
-		importOptions: {
-			updateExisting: true,
-			deleteOrphaned: false,
-		},
-		exportOptions: {
-			includeViews: true,
-			includeRelationships: true,
-		},
-		selectedFile: null,
-
-		// User groups
-		genericUserGroups: [],
-		organizationAdminGroups: [],
-		superUserGroups: [],
-
-		// Email settings
-		emailSettings: {
-			enabled: false,
-			senderEmail: '',
-			senderName: '',
-			testReceiverOverride: '',
-			organizationRegistrationEnabled: true,
-			organizationActivationEnabled: true,
-			userCreationEnabled: true,
-			userPasswordEnabled: true,
-			transportType: 'smtp',
-			smtpHost: 'localhost',
-			smtpPort: 587,
-			smtpEncryption: 'tls',
-			smtpUsername: '',
-			smtpPassword: '',
-			sendgridApiKey: '',
-			mailgunApiKey: '',
-			mailgunDomain: '',
-			postmarkApiKey: '',
-			sesAccessKey: '',
-			sesSecretKey: '',
-			sesRegion: 'us-east-1',
-			mailjetApiKey: '',
-			mailjetSecretKey: '',
-		},
+		...registerSelectionState(),
+		...archiMateRunState(),
+		...archiMateOptions(),
+		...userSettingsState(),
 
 		// Statistics
 		statistics: emptyStatistics(),
@@ -836,85 +954,13 @@ export const useSettingsStore = defineStore('settings', {
 		 * @param {object} state - The store state
 		 * @return {Array} Array of formatted statistics rows
 		 */
-		formattedStatistics: (state) => {
-			const stats = []
-			// Voorzieningen statistics
-			if (state.statistics.voorzieningen.configured) {
-				const voorzieningenCounts =
-					state.statistics.voorzieningen.object_counts
-				const voorzieningenSchemaMap = {
-					totalOrganisatieObjects: 'Organisatie',
-					totalContactpersoonObjects: 'Contactpersoon',
-					totalVoorzieningObjects: 'Voorziening',
-					totalVoorzieningAanbodObjects: 'Voorziening Aanbod',
-					totalVoorzieningVersieObjects: 'Voorziening Versie',
-					totalKwetsbaarheidObjects: 'Kwetsbaarheid',
-					totalContractObjects: 'Contract',
-					totalStandaardObjects: 'Standaard',
-					totalReviewObjects: 'Review',
-					totalKoppelingObjects: 'Koppeling',
-					totalBeoordeelingObjects: 'Beoordeeling',
-					totalVoorzieningModuleObjects: 'Voorziening Module',
-					totalVerklaringObjects: 'Verklaring',
-					totalKoppelingGebruikObjects: 'Koppeling Gebruik',
-					totalCompliancyObjects: 'Compliancy',
-					totalModuleGebruikObjects: 'Module Gebruik',
-					totalModuleVersieObjects: 'Module Versie',
-					totalSectorObjects: 'Sector',
-				}
-				Object.entries(voorzieningenSchemaMap).forEach(
-					([countKey, displayName]) => {
-						stats.push({
-							register: 'Voorzieningen',
-							type: displayName,
-							count: voorzieningenCounts[countKey] || 0,
-							configured: true,
-						})
-					},
-				)
-			}
-			// AMEF statistics
-			if (state.statistics.amef.configured) {
-				const amefCounts = state.statistics.amef.object_counts
-				stats.push({
-					register: 'AMEF',
-					type: 'Elements',
-					count: amefCounts.totalElementObjects || 0,
-					configured: true,
-				})
-				stats.push({
-					register: 'AMEF',
-					type: 'Organizations',
-					count: amefCounts.totalOrganizationObjects || 0,
-					configured: true,
-				})
-				stats.push({
-					register: 'AMEF',
-					type: 'Relationships',
-					count: amefCounts.totalRelationshipsObjects || 0,
-					configured: true,
-				})
-				stats.push({
-					register: 'AMEF',
-					type: 'Views',
-					count: amefCounts.totalViewObjects || 0,
-					configured: true,
-				})
-				stats.push({
-					register: 'AMEF',
-					type: 'Models',
-					count: amefCounts.totalModelObjects || 0,
-					configured: true,
-				})
-				stats.push({
-					register: 'AMEF',
-					type: 'Properties',
-					count: amefCounts.totalPropertyObjects || 0,
-					configured: true,
-				})
-			}
-			return stats
-		},
+		formattedStatistics: (state) => [
+			...statisticsRows(
+				state.statistics.voorzieningen,
+				VOORZIENINGEN_STATISTICS,
+			),
+			...statisticsRows(state.statistics.amef, AMEF_STATISTICS),
+		],
 	},
 
 	actions: {
