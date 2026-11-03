@@ -25,6 +25,7 @@ use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Service\ArchiMate\ArchiMateImportScope;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
@@ -158,7 +159,7 @@ class ArchiMateImportService {
 	 * @param IAppManager $appManager App manager service
 	 * @param ContainerInterface $container PSR-11 container interface
 	 * @param LoggerInterface $logger Logger service
-	 * @param SettingsService $settingsService Settings service for AMEF configuration.
+	 * @param ObjectTypeLocatorInterface $settingsService Resolves the AMEF schema ids.
 	 * @param OrganisationService $organisationService Organisation service.
 	 * @param IDBConnection $dbConnection Database connection interface.
 	 * @param ProgressTracker $progressTracker Progress store the page follows and cancels the import through.
@@ -169,7 +170,7 @@ class ArchiMateImportService {
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
-		private readonly SettingsService $settingsService,
+		private readonly ObjectTypeLocatorInterface $settingsService,
 		private readonly OrganisationService $organisationService,
 		private readonly IDBConnection $dbConnection,
 		private readonly ProgressTracker $progressTracker,
@@ -1945,7 +1946,7 @@ class ArchiMateImportService {
 	}//end getAmefSchemaIdForType()
 
 	/**
-	 * Get schema ID for a section using SettingsService (no hardcoded fallbacks)
+	 * Get schema ID for a section using the object type locator (no hardcoded fallbacks)
 	 *
 	 * @param string $section Section name
 	 *
@@ -1953,7 +1954,7 @@ class ArchiMateImportService {
 	 * @throws \RuntimeException If schema ID is not configured
 	 */
 	private function getSchemaIdForSection(string $section): int {
-		// Map section names to object types for SettingsService.
+		// Map section names to object types for the object type locator.
 		$objectTypeMapping = [
 			'elements' => 'element',
 			'relationships' => 'relationship',

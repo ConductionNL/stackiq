@@ -19,33 +19,42 @@ async function fetchJson(url, options) {
 }
 
 /**
+ * The schema choices a configuration holds, AMEF first, then voorzieningen.
+ *
+ * @type {Array<string>}
+ */
+const CONFIGURATION_KEYS = [
+	'amef_element_schema',
+	'amef_organization_schema',
+	'amef_relation_schema',
+	'amef_view_schema',
+	'amef_model_schema',
+	'amef_property_definition_schema',
+	'voorzieningen_sector_schema',
+	'voorzieningen_suite_schema',
+	'voorzieningen_dienst_schema',
+	'voorzieningen_kwetsbaarheid_schema',
+	'voorzieningen_contactpersoon_schema',
+	'voorzieningen_organisatie_schema',
+	'voorzieningen_gebruik_schema',
+	'voorzieningen_contract_schema',
+	'voorzieningen_koppeling_schema',
+	'voorzieningen_beoordeeling_schema',
+	'voorzieningen_module_schema',
+	'voorzieningen_compliancy_schema',
+	'voorzieningen_moduleVersie_schema',
+]
+
+/**
  * A fresh configuration with no schema chosen for any object type.
  *
  * @return {object} Schema selection per configuration key.
  * @spec openspec/specs/fe-stores/spec.md
  */
 function emptyConfiguration() {
-	return {
-		amef_element_schema: { schema: null },
-		amef_organization_schema: { schema: null },
-		amef_relation_schema: { schema: null },
-		amef_view_schema: { schema: null },
-		amef_model_schema: { schema: null },
-		amef_property_definition_schema: { schema: null },
-		voorzieningen_sector_schema: { schema: null },
-		voorzieningen_suite_schema: { schema: null },
-		voorzieningen_dienst_schema: { schema: null },
-		voorzieningen_kwetsbaarheid_schema: { schema: null },
-		voorzieningen_contactpersoon_schema: { schema: null },
-		voorzieningen_organisatie_schema: { schema: null },
-		voorzieningen_gebruik_schema: { schema: null },
-		voorzieningen_contract_schema: { schema: null },
-		voorzieningen_koppeling_schema: { schema: null },
-		voorzieningen_beoordeeling_schema: { schema: null },
-		voorzieningen_module_schema: { schema: null },
-		voorzieningen_compliancy_schema: { schema: null },
-		voorzieningen_moduleVersie_schema: { schema: null },
-	}
+	return Object.fromEntries(
+		CONFIGURATION_KEYS.map((key) => [key, { schema: null }]),
+	)
 }
 
 /**
@@ -134,6 +143,197 @@ function applySchemaSelections(store, selection) {
 }
 
 /**
+ * The store's loading and busy flags, all false in a fresh state.
+ *
+ * @type {Array<string>}
+ */
+const IDLE_FLAGS = [
+	'loading',
+	'saving',
+	'importing',
+	'exporting',
+	'loadingVersionInfo',
+	'loadingGeneralSettings',
+	'loadingSyncSettings',
+	'loadingStatistics',
+	'loadingOpenRegisterConfig',
+	'loadingRegisters',
+	'loadingVoorzieningenSchemas',
+	'loadingAmefSchemas',
+	'loadingUserGroups',
+	'loadingEmailConfig',
+	'loadingArchiMateStatus',
+	'loadingObjectCounts',
+	'loadingMainSettings',
+]
+
+/**
+ * Every loading and busy flag, set to false.
+ *
+ * @return {object} The flags by name.
+ */
+function idleFlags() {
+	return Object.fromEntries(IDLE_FLAGS.map((flag) => [flag, false]))
+}
+
+/**
+ * The email settings of a fresh state, before the email config is loaded.
+ *
+ * @type {object}
+ */
+const DEFAULT_EMAIL_SETTINGS = Object.freeze({
+	enabled: false,
+	senderEmail: '',
+	senderName: '',
+	testReceiverOverride: '',
+	organizationRegistrationEnabled: true,
+	organizationActivationEnabled: true,
+	userCreationEnabled: true,
+	userPasswordEnabled: true,
+	transportType: 'smtp',
+	smtpHost: 'localhost',
+	smtpPort: 587,
+	smtpEncryption: 'tls',
+	smtpUsername: '',
+	smtpPassword: '',
+	sendgridApiKey: '',
+	mailgunApiKey: '',
+	mailgunDomain: '',
+	postmarkApiKey: '',
+	sesAccessKey: '',
+	sesSecretKey: '',
+	sesRegion: 'us-east-1',
+	mailjetApiKey: '',
+	mailjetSecretKey: '',
+})
+
+/**
+ * A fresh state's settings answer, version and register and schema choices.
+ *
+ * @return {object} The state fields.
+ */
+function registerSelectionState() {
+	return {
+		settings: { availableRegisters: [] },
+		versionInfo: {},
+		voorzieningenRegister: null,
+		amefRegister: null,
+		voorzieningenSchemas: [],
+		amefSchemas: [],
+		configuration: emptyConfiguration(),
+	}
+}
+
+/**
+ * A fresh state's ArchiMate import and export status and polling.
+ *
+ * @return {object} The state fields.
+ */
+function archiMateRunState() {
+	return {
+		archimateStatus: { import: {}, export: {} },
+		isImportRunning: false,
+		isExportRunning: false,
+		statusPollingInterval: null,
+		// Prevents concurrent status polls
+		isStatusPolling: false,
+	}
+}
+
+/**
+ * A fresh state's ArchiMate import and export options and chosen file.
+ *
+ * @return {object} The state fields.
+ */
+function archiMateOptions() {
+	return {
+		importOptions: { updateExisting: true, deleteOrphaned: false },
+		exportOptions: { includeViews: true, includeRelationships: true },
+		selectedFile: null,
+	}
+}
+
+/**
+ * A fresh state's user group lists and email settings.
+ *
+ * @return {object} The state fields.
+ */
+function userSettingsState() {
+	return {
+		genericUserGroups: [],
+		organizationAdminGroups: [],
+		superUserGroups: [],
+		emailSettings: { ...DEFAULT_EMAIL_SETTINGS },
+	}
+}
+
+/**
+ * The object counts the settings page lists for the voorzieningen register,
+ * with the type name each row shows.
+ *
+ * @type {{register: string, labels: object}}
+ */
+const VOORZIENINGEN_STATISTICS = {
+	register: 'Voorzieningen',
+	labels: {
+		totalOrganisatieObjects: 'Organisatie',
+		totalContactpersoonObjects: 'Contactpersoon',
+		totalVoorzieningObjects: 'Voorziening',
+		totalVoorzieningAanbodObjects: 'Voorziening Aanbod',
+		totalVoorzieningVersieObjects: 'Voorziening Versie',
+		totalKwetsbaarheidObjects: 'Kwetsbaarheid',
+		totalContractObjects: 'Contract',
+		totalStandaardObjects: 'Standaard',
+		totalReviewObjects: 'Review',
+		totalKoppelingObjects: 'Koppeling',
+		totalBeoordeelingObjects: 'Beoordeeling',
+		totalVoorzieningModuleObjects: 'Voorziening Module',
+		totalVerklaringObjects: 'Verklaring',
+		totalKoppelingGebruikObjects: 'Koppeling Gebruik',
+		totalCompliancyObjects: 'Compliancy',
+		totalModuleGebruikObjects: 'Module Gebruik',
+		totalModuleVersieObjects: 'Module Versie',
+		totalSectorObjects: 'Sector',
+	},
+}
+
+/**
+ * The object counts the settings page lists for the AMEF register, with the
+ * type name each row shows.
+ *
+ * @type {{register: string, labels: object}}
+ */
+const AMEF_STATISTICS = {
+	register: 'AMEF',
+	labels: {
+		totalElementObjects: 'Elements',
+		totalOrganizationObjects: 'Organizations',
+		totalRelationshipsObjects: 'Relationships',
+		totalViewObjects: 'Views',
+		totalModelObjects: 'Models',
+		totalPropertyObjects: 'Properties',
+	},
+}
+
+/**
+ * The statistics rows of one register: none when it is not configured, else
+ * one row per listed count, zero when the count is missing.
+ *
+ * @param {{configured: boolean, object_counts: object}} statistics The register's statistics.
+ * @param {{register: string, labels: object}} listing The register name and the listed counts.
+ * @return {Array<object>} The rows.
+ */
+function statisticsRows(statistics, listing) {
+	if (!statistics.configured) return []
+	return Object.entries(listing.labels).map(([countKey, label]) => ({
+		register: listing.register,
+		type: label,
+		count: statistics.object_counts[countKey] || 0,
+		configured: true,
+	}))
+}
+
+/**
  * Fresh, unconfigured object statistics for both registers.
  *
  * @return {object} The statistics.
@@ -202,6 +402,413 @@ function applyArchiMateStatus(store, status) {
 }
 
 /**
+ * The store fields that track a running ArchiMate import or export: the
+ * running flag and the last error.
+ *
+ * @type {{import: Array<string>, export: Array<string>}}
+ */
+const ARCHIMATE_RUN_FIELDS = {
+	import: ['isImportRunning', 'importError'],
+	export: ['isExportRunning', 'exportError'],
+}
+
+/**
+ * Clear the server-side status of an ArchiMate import or export, reset it in
+ * the store and refresh the status.
+ *
+ * @param {object} store The settings store.
+ * @param {string} kind The run: import or export.
+ * @return {Promise<void>}
+ */
+async function clearArchiMateStatus(store, kind) {
+	try {
+		const response = await fetch(
+			`/index.php/apps/stackiq/api/archimate/status/${kind}/clear`,
+			{ method: 'POST', headers: { 'Content-Type': 'application/json' } },
+		)
+		if (!response.ok) {
+			throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+		}
+		store.stopStatusPolling()
+		store.archimateStatus[kind] = {
+			status: null,
+			current_step: null,
+			progress: null,
+			statistics: null,
+		}
+		const [runningFlag, errorField] = ARCHIMATE_RUN_FIELDS[kind]
+		store[runningFlag] = false
+		store[errorField] = null
+		await store.refreshArchiMateStatus()
+		showSuccess(`ArchiMate ${kind} status cleared successfully`)
+	} catch (error) {
+		console.error(`Failed to clear ${kind} status:`, error)
+		showError(`Failed to clear ArchiMate ${kind} status: ` + error.message)
+	}
+}
+
+/**
+ * The label of a register option: its title, its name or its id.
+ *
+ * @param {object} register The register.
+ * @return {string} The label.
+ */
+function registerLabel(register) {
+	return register.title || register.name || `Register ${register.id}`
+}
+
+/**
+ * Select a configured register among the available ones, with its schemas.
+ * Leaves the selection as it is when no id is configured or no available
+ * register has it.
+ *
+ * @param {object} store The settings store.
+ * @param {{registerId: (string|number|undefined|null), register: string, schemas: string}} selection The configured register id and the store properties for the selection and its schemas.
+ * @return {void}
+ */
+function applyRegisterSelection(store, selection) {
+	if (!selection.registerId) return
+	const id = selection.registerId.toString()
+	const register = store.settings.availableRegisters.find(
+		(r) => r.id.toString() === id,
+	)
+	if (!register) return
+	store[selection.register] = {
+		label: registerLabel(register),
+		value: register.id.toString(),
+	}
+	store[selection.schemas] = register.schemas || []
+}
+
+/**
+ * POST a JSON body to one of the app's endpoints.
+ *
+ * @param {string} url The endpoint.
+ * @param {object} body The payload.
+ * @return {Promise<Response>} The fetch answer.
+ * @spec openspec/specs/fe-stores/spec.md
+ */
+function postJson(url, body) {
+	return fetch(url, {
+		method: 'POST',
+		headers: {
+			'Content-Type': 'application/json',
+			'X-Requested-With': 'XMLHttpRequest',
+		},
+		body: JSON.stringify(body),
+	})
+}
+
+/**
+ * The register-scoped schema configs that saveConfiguration posts: the store
+ * property with the register selection, and per configuration entry the key
+ * the endpoint expects.
+ *
+ * @type {Array<{url: string, register: string, entries: Array<[string, string]>}>}
+ */
+const SCHEMA_SAVE_SECTIONS = [
+	{
+		url: '/index.php/apps/stackiq/api/amef/config',
+		register: 'amefRegister',
+		entries: [
+			['amef_element_schema', 'element_schema'],
+			['amef_organization_schema', 'organization_schema'],
+			['amef_relation_schema', 'relation_schema'],
+			['amef_view_schema', 'view_schema'],
+			['amef_model_schema', 'model_schema'],
+			['amef_property_definition_schema', 'property-definition_schema'],
+		],
+	},
+	{
+		url: '/index.php/apps/stackiq/api/voorzieningen/config',
+		register: 'voorzieningenRegister',
+		entries: VOORZIENINGEN_SCHEMA_KEYS.map(([uiKey, keys]) => [uiKey, keys[0]]),
+	},
+]
+
+/**
+ * The schema id chosen for one configuration entry, or null when none is.
+ *
+ * @param {object|null} config The configuration entry.
+ * @return {object|string|number|null} The option value, the raw schema, or null.
+ */
+function chosenSchema(config) {
+	if (!config || !config.schema) return null
+	return config.schema.value || config.schema
+}
+
+/**
+ * The payload for one register-scoped schema config: the register and every
+ * chosen schema.
+ *
+ * @param {object} store The settings store.
+ * @param {object} section One entry of SCHEMA_SAVE_SECTIONS.
+ * @return {object} The payload, empty when nothing is chosen.
+ */
+function schemaSavePayload(store, section) {
+	const payload = {}
+	if (store[section.register]?.value) {
+		payload.register = store[section.register].value
+	}
+	for (const [uiKey, apiKey] of section.entries) {
+		const schema = chosenSchema(store.configuration[uiKey])
+		if (schema) payload[apiKey] = schema
+	}
+	return payload
+}
+
+/**
+ * Post the register-scoped schema configs that have something to save.
+ *
+ * @param {object} store The settings store.
+ * @return {Array<Promise<Response>>} The started requests.
+ */
+function postSchemaConfigs(store) {
+	const requests = []
+	for (const section of SCHEMA_SAVE_SECTIONS) {
+		const payload = schemaSavePayload(store, section)
+		if (Object.keys(payload).length > 0) {
+			requests.push(postJson(section.url, payload))
+		}
+	}
+	return requests
+}
+
+/**
+ * The user group lists the store keeps, by the key the endpoint expects.
+ *
+ * @type {Array<[string, string]>}
+ */
+const USER_GROUP_LISTS = [
+	['generic', 'genericUserGroups'],
+	['organizationAdmin', 'organizationAdminGroups'],
+	['superUser', 'superUserGroups'],
+]
+
+/**
+ * The user group payload without blank groups, or null when every list is
+ * empty.
+ *
+ * @param {object} store The settings store.
+ * @return {object|null} The payload.
+ */
+function userGroupsSavePayload(store) {
+	if (!USER_GROUP_LISTS.some(([, list]) => store[list].length > 0)) {
+		return null
+	}
+	return Object.fromEntries(
+		USER_GROUP_LISTS.map(([key, list]) => [
+			key,
+			store[list].filter((group) => group && group.trim()),
+		]),
+	)
+}
+
+/**
+ * The email settings payload, or null when there are none.
+ *
+ * @param {object} store The settings store.
+ * @return {object|null} The payload.
+ */
+function emailSavePayload(store) {
+	const settings = store.emailSettings
+	return settings && Object.keys(settings).length > 0 ? settings : null
+}
+
+/**
+ * The catalog location payload, or null when the location is not loaded.
+ *
+ * @param {object} store The settings store.
+ * @return {object|null} The payload.
+ */
+function catalogLocationSavePayload(store) {
+	const catalogLocation = store.settings.catalogLocation
+	return catalogLocation === undefined ? null : { catalogLocation }
+}
+
+/**
+ * The sync window payload, or null when the window is not loaded.
+ *
+ * @param {object} store The settings store.
+ * @return {object|null} The payload.
+ */
+function syncWindowSavePayload(store) {
+	const syncTimeWindow = store.settings.syncTimeWindow
+	return syncTimeWindow === undefined ? null : { syncTimeWindow }
+}
+
+/**
+ * The settings saveConfiguration posts after the schema configs, in order,
+ * each with the function that builds its payload.
+ *
+ * @type {Array<[string, function(object): (object|null)]>}
+ */
+const GENERAL_SAVES = [
+	['/index.php/apps/stackiq/api/user-groups/config', userGroupsSavePayload],
+	['/index.php/apps/stackiq/api/email/config', emailSavePayload],
+	[
+		'/index.php/apps/stackiq/api/settings/general/config',
+		catalogLocationSavePayload,
+	],
+	['/index.php/apps/stackiq/api/settings/sync/config', syncWindowSavePayload],
+]
+
+/**
+ * Post the user group, email, general and sync settings that are set.
+ *
+ * @param {object} store The settings store.
+ * @return {Array<Promise<Response>>} The started requests.
+ */
+function postGeneralConfigs(store) {
+	const requests = []
+	for (const [url, payloadOf] of GENERAL_SAVES) {
+		const payload = payloadOf(store)
+		if (payload !== null) requests.push(postJson(url, payload))
+	}
+	return requests
+}
+
+/**
+ * Check every save answer in order, throwing on the first that failed.
+ *
+ * @param {Array<Response>} responses The answers.
+ * @return {Promise<void>}
+ * @throws {Error} The HTTP status or the answer's message.
+ */
+async function assertSaved(responses) {
+	for (const response of responses) {
+		if (!response.ok) {
+			throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+		}
+		const result = await response.json()
+		if (!result.success) {
+			throw new Error(result.message || 'Unknown error occurred')
+		}
+	}
+}
+
+/**
+ * The ArchiMate export request for the chosen format and export options.
+ *
+ * @param {object} options The store's export options.
+ * @param {string} format The export format.
+ * @return {object} The request payload.
+ */
+function archiMateExportRequest(options, format) {
+	return {
+		format,
+		includeRelationships: options.includeRelationships ?? true,
+		includeViews: options.includeViews ?? true,
+		organizationSpecific: false,
+		selectedSchemas: [],
+	}
+}
+
+/**
+ * Throw when the export answer has an error status.
+ *
+ * @param {Response} response The export answer.
+ * @return {Promise<void>}
+ * @throws {Error} The server message or the HTTP status.
+ */
+async function assertExportStatus(response) {
+	if (response.status === 500) {
+		const errorData = await response.json()
+		throw new Error(errorData.message || 'Server error occurred')
+	}
+	if (!response.ok) {
+		throw new Error(`HTTP ${response.status}: ${response.statusText}`)
+	}
+}
+
+/**
+ * Throw when the export answer is a JSON error instead of a file.
+ *
+ * @param {Response} response The export answer.
+ * @return {Promise<void>}
+ * @throws {Error} The message from the JSON answer.
+ */
+async function assertExportIsFile(response) {
+	const contentType = response.headers.get('content-type')
+	if (contentType && contentType.includes('application/json')) {
+		const errorData = await response.json()
+		throw new Error(errorData.message || errorData.error || 'Export failed')
+	}
+}
+
+/**
+ * The download name from a Content-Disposition header, or a timestamped
+ * default.
+ *
+ * @param {string|null} contentDisposition The header value.
+ * @return {string} The file name.
+ */
+function exportFileName(contentDisposition) {
+	const fallback = `archimate_export_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.xml`
+	const match = contentDisposition?.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/)
+	if (!match) return fallback
+	return match[1].replace(/['"]/g, '')
+}
+
+/**
+ * Append a hidden link to the page body, to download a file through.
+ *
+ * @return {HTMLAnchorElement} The link.
+ */
+function appendHiddenLink() {
+	const link = document.createElement('a')
+	link.style.display = 'none'
+	document.body.appendChild(link)
+	return link
+}
+
+/**
+ * Download an object URL through a hidden link, then remove the link and
+ * release the URL.
+ *
+ * @param {HTMLAnchorElement} link The hidden link.
+ * @param {{url: string, fileName: string}} file The object URL and download name.
+ * @return {void}
+ */
+function downloadThroughLink(link, file) {
+	link.href = file.url
+	link.download = file.fileName
+	link.click()
+	document.body.removeChild(link)
+	window.URL.revokeObjectURL(file.url)
+}
+
+/**
+ * Write the access flags and basic app settings of the settings answer into
+ * the store.
+ *
+ * @param {object} store The settings store.
+ * @param {object} data The settings answer.
+ * @return {void}
+ */
+function applyBasicSettings(store, data) {
+	store.openRegisters = data.openRegisters ?? false
+	store.isAdmin = data.isAdmin ?? false
+	store.settings.availableRegisters = data.availableRegisters || []
+	store.settings.catalogLocation = data.catalogLocation || ''
+}
+
+/**
+ * Write the sync window, version and configuration status of the settings
+ * answer into the store.
+ *
+ * @param {object} store The settings store.
+ * @param {object} data The settings answer.
+ * @return {void}
+ */
+function applyConfigurationState(store, data) {
+	store.settings.syncTimeWindow = data.syncTimeWindow || 10
+	store.versionInfo = data.versionInfo || {}
+	store.isFullyConfigured = data.isFullyConfigured || false
+	store.configurationStatus = data.configurationStatus || {}
+}
+
+/**
  * Settings store for managing all settings-related state and business logic
  *
  * This store handles:
@@ -217,94 +824,12 @@ function applyArchiMateStatus(store, status) {
  */
 export const useSettingsStore = defineStore('settings', {
 	state: () => ({
-		// Loading states
-		loading: false,
-		saving: false,
-		importing: false,
-		exporting: false,
-		loadingVersionInfo: false,
-		loadingGeneralSettings: false,
-		loadingSyncSettings: false,
-		loadingStatistics: false,
-		loadingOpenRegisterConfig: false,
-		loadingRegisters: false,
-		loadingVoorzieningenSchemas: false,
-		loadingAmefSchemas: false,
-		loadingUserGroups: false,
-		loadingEmailConfig: false,
-		loadingArchiMateStatus: false,
-		loadingObjectCounts: false,
-		loadingMainSettings: false,
+		...idleFlags(),
 
-		// Settings data
-		settings: {
-			availableRegisters: [],
-		},
-
-		// Version information
-		versionInfo: {},
-
-		// Register selections
-		voorzieningenRegister: null,
-		amefRegister: null,
-		voorzieningenSchemas: [],
-		amefSchemas: [],
-
-		// Configuration
-		configuration: emptyConfiguration(),
-
-		// ArchiMate status and operations
-		archimateStatus: {
-			import: {},
-			export: {},
-		},
-		isImportRunning: false,
-		isExportRunning: false,
-		statusPollingInterval: null,
-		isStatusPolling: false, // Prevent concurrent status polls
-
-		// Import/Export options
-		importOptions: {
-			updateExisting: true,
-			deleteOrphaned: false,
-		},
-		exportOptions: {
-			includeViews: true,
-			includeRelationships: true,
-		},
-		selectedFile: null,
-
-		// User groups
-		genericUserGroups: [],
-		organizationAdminGroups: [],
-		superUserGroups: [],
-
-		// Email settings
-		emailSettings: {
-			enabled: false,
-			senderEmail: '',
-			senderName: '',
-			testReceiverOverride: '',
-			organizationRegistrationEnabled: true,
-			organizationActivationEnabled: true,
-			userCreationEnabled: true,
-			userPasswordEnabled: true,
-			transportType: 'smtp',
-			smtpHost: 'localhost',
-			smtpPort: 587,
-			smtpEncryption: 'tls',
-			smtpUsername: '',
-			smtpPassword: '',
-			sendgridApiKey: '',
-			mailgunApiKey: '',
-			mailgunDomain: '',
-			postmarkApiKey: '',
-			sesAccessKey: '',
-			sesSecretKey: '',
-			sesRegion: 'us-east-1',
-			mailjetApiKey: '',
-			mailjetSecretKey: '',
-		},
+		...registerSelectionState(),
+		...archiMateRunState(),
+		...archiMateOptions(),
+		...userSettingsState(),
 
 		// Statistics
 		statistics: emptyStatistics(),
@@ -429,85 +954,13 @@ export const useSettingsStore = defineStore('settings', {
 		 * @param {object} state - The store state
 		 * @return {Array} Array of formatted statistics rows
 		 */
-		formattedStatistics: (state) => {
-			const stats = []
-			// Voorzieningen statistics
-			if (state.statistics.voorzieningen.configured) {
-				const voorzieningenCounts =
-					state.statistics.voorzieningen.object_counts
-				const voorzieningenSchemaMap = {
-					totalOrganisatieObjects: 'Organisatie',
-					totalContactpersoonObjects: 'Contactpersoon',
-					totalVoorzieningObjects: 'Voorziening',
-					totalVoorzieningAanbodObjects: 'Voorziening Aanbod',
-					totalVoorzieningVersieObjects: 'Voorziening Versie',
-					totalKwetsbaarheidObjects: 'Kwetsbaarheid',
-					totalContractObjects: 'Contract',
-					totalStandaardObjects: 'Standaard',
-					totalReviewObjects: 'Review',
-					totalKoppelingObjects: 'Koppeling',
-					totalBeoordeelingObjects: 'Beoordeeling',
-					totalVoorzieningModuleObjects: 'Voorziening Module',
-					totalVerklaringObjects: 'Verklaring',
-					totalKoppelingGebruikObjects: 'Koppeling Gebruik',
-					totalCompliancyObjects: 'Compliancy',
-					totalModuleGebruikObjects: 'Module Gebruik',
-					totalModuleVersieObjects: 'Module Versie',
-					totalSectorObjects: 'Sector',
-				}
-				Object.entries(voorzieningenSchemaMap).forEach(
-					([countKey, displayName]) => {
-						stats.push({
-							register: 'Voorzieningen',
-							type: displayName,
-							count: voorzieningenCounts[countKey] || 0,
-							configured: true,
-						})
-					},
-				)
-			}
-			// AMEF statistics
-			if (state.statistics.amef.configured) {
-				const amefCounts = state.statistics.amef.object_counts
-				stats.push({
-					register: 'AMEF',
-					type: 'Elements',
-					count: amefCounts.totalElementObjects || 0,
-					configured: true,
-				})
-				stats.push({
-					register: 'AMEF',
-					type: 'Organizations',
-					count: amefCounts.totalOrganizationObjects || 0,
-					configured: true,
-				})
-				stats.push({
-					register: 'AMEF',
-					type: 'Relationships',
-					count: amefCounts.totalRelationshipsObjects || 0,
-					configured: true,
-				})
-				stats.push({
-					register: 'AMEF',
-					type: 'Views',
-					count: amefCounts.totalViewObjects || 0,
-					configured: true,
-				})
-				stats.push({
-					register: 'AMEF',
-					type: 'Models',
-					count: amefCounts.totalModelObjects || 0,
-					configured: true,
-				})
-				stats.push({
-					register: 'AMEF',
-					type: 'Properties',
-					count: amefCounts.totalPropertyObjects || 0,
-					configured: true,
-				})
-			}
-			return stats
-		},
+		formattedStatistics: (state) => [
+			...statisticsRows(
+				state.statistics.voorzieningen,
+				VOORZIENINGEN_STATISTICS,
+			),
+			...statisticsRows(state.statistics.amef, AMEF_STATISTICS),
+		],
 	},
 
 	actions: {
@@ -585,16 +1038,8 @@ export const useSettingsStore = defineStore('settings', {
 				// Load basic settings first (minimal data)
 				const data = await fetchJson('/index.php/apps/stackiq/api/settings')
 				if (data.success !== false) {
-					// OpenRegister dependency check
-					this.openRegisters = data.openRegisters ?? false
-					this.isAdmin = data.isAdmin ?? false
-					// Basic app settings
-					this.settings.availableRegisters = data.availableRegisters || []
-					this.settings.catalogLocation = data.catalogLocation || ''
-					this.settings.syncTimeWindow = data.syncTimeWindow || 10
-					this.versionInfo = data.versionInfo || {}
-					this.isFullyConfigured = data.isFullyConfigured || false
-					this.configurationStatus = data.configurationStatus || {}
+					applyBasicSettings(this, data)
+					applyConfigurationState(this, data)
 					// Initialize base configuration containers
 					this.initializeConfiguration()
 					// Load focused data from separate endpoints in parallel (don't wait for them)
@@ -994,42 +1439,19 @@ export const useSettingsStore = defineStore('settings', {
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		populateRegisterSelectionsFromFocused() {
-			// Voorzieningen register
-			if (
-				this.voorzieningenRawConfig
-				&& this.voorzieningenRawConfig.register
-			) {
-				const regId = this.voorzieningenRawConfig.register.toString()
-				const reg = this.settings.availableRegisters.find(
-					(r) => r.id.toString() === regId,
-				)
-				if (reg) {
-					this.voorzieningenRegister = {
-						label: reg.title || reg.name || `Register ${reg.id}`,
-						value: reg.id.toString(),
-					}
-					this.voorzieningenSchemas = reg.schemas || []
-				}
-			}
+			const voorzieningen = this.voorzieningenRawConfig
+			applyRegisterSelection(this, {
+				registerId: voorzieningen && voorzieningen.register,
+				register: 'voorzieningenRegister',
+				schemas: 'voorzieningenSchemas',
+			})
 			// AMEF register (singular key only; fallback kept for robustness)
-			if (
-				this.amefRawConfig
-				&& (this.amefRawConfig.register || this.amefRawConfig.register_id)
-			) {
-				const regId = (
-					this.amefRawConfig.register || this.amefRawConfig.register_id
-				).toString()
-				const reg = this.settings.availableRegisters.find(
-					(r) => r.id.toString() === regId,
-				)
-				if (reg) {
-					this.amefRegister = {
-						label: reg.title || reg.name || `Register ${reg.id}`,
-						value: reg.id.toString(),
-					}
-					this.amefSchemas = reg.schemas || []
-				}
-			}
+			const amef = this.amefRawConfig
+			applyRegisterSelection(this, {
+				registerId: amef && (amef.register || amef.register_id),
+				register: 'amefRegister',
+				schemas: 'amefSchemas',
+			})
 		},
 
 		/**
@@ -1189,46 +1611,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async clearImportStatus() {
-			try {
-				const response = await fetch(
-					'/index.php/apps/stackiq/api/archimate/status/import/clear',
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-						},
-					},
-				)
-
-				if (response.ok) {
-					// Stop polling
-					this.stopStatusPolling()
-
-					// Clear frontend state immediately
-					this.archimateStatus.import = {
-						status: null,
-						current_step: null,
-						progress: null,
-						statistics: null,
-					}
-					this.isImportRunning = false
-					this.importError = null
-
-					// Refresh settings to get updated ArchiMate status
-					await this.refreshArchiMateStatus()
-
-					showSuccess('ArchiMate import status cleared successfully')
-				} else {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-			} catch (error) {
-				console.error('Failed to clear import status:', error)
-				showError(
-					'Failed to clear ArchiMate import status: ' + error.message,
-				)
-			}
+			await clearArchiMateStatus(this, 'import')
 		},
 
 		/**
@@ -1238,46 +1621,7 @@ export const useSettingsStore = defineStore('settings', {
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async clearExportStatus() {
-			try {
-				const response = await fetch(
-					'/index.php/apps/stackiq/api/archimate/status/export/clear',
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-						},
-					},
-				)
-
-				if (response.ok) {
-					// Stop polling
-					this.stopStatusPolling()
-
-					// Clear frontend state immediately
-					this.archimateStatus.export = {
-						status: null,
-						current_step: null,
-						progress: null,
-						statistics: null,
-					}
-					this.isExportRunning = false
-					this.exportError = null
-
-					// Refresh settings to get updated ArchiMate status
-					await this.refreshArchiMateStatus()
-
-					showSuccess('ArchiMate export status cleared successfully')
-				} else {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-			} catch (error) {
-				console.error('Failed to clear export status:', error)
-				showError(
-					'Failed to clear ArchiMate export status: ' + error.message,
-				)
-			}
+			await clearArchiMateStatus(this, 'export')
 		},
 
 		/**
@@ -1337,215 +1681,18 @@ export const useSettingsStore = defineStore('settings', {
 		 */
 		async saveConfiguration() {
 			try {
-				// Save configurations to their respective focused endpoints
-				const savePromises = []
-
-				// Save AMEF configuration (clean payload)
-				const amefConfig = {}
-				const amefKeys = [
-					'amef_element_schema',
-					'amef_organization_schema',
-					'amef_relation_schema',
-					'amef_view_schema',
-					'amef_model_schema',
-					'amef_property_definition_schema',
+				const savePromises = [
+					...postSchemaConfigs(this),
+					...postGeneralConfigs(this),
 				]
-				// Map UI keys to API keys
-				const amefMap = {
-					amef_organization_schema: 'organization_schema',
-					amef_element_schema: 'element_schema',
-					amef_relation_schema: 'relation_schema',
-					amef_view_schema: 'view_schema',
-					amef_model_schema: 'model_schema',
-					amef_property_definition_schema: 'property-definition_schema',
-				}
-				if (this.amefRegister?.value) {
-					amefConfig.register = this.amefRegister.value
-				}
-				amefKeys.forEach((configKey) => {
-					const config = this.configuration[configKey]
-					if (config && config.schema) {
-						amefConfig[amefMap[configKey]] =
-							config.schema.value || config.schema
-					}
-				})
-
-				if (Object.keys(amefConfig).length > 0) {
-					savePromises.push(
-						fetch('/index.php/apps/stackiq/api/amef/config', {
-							method: 'POST',
-							headers: {
-								'Content-Type': 'application/json',
-								'X-Requested-With': 'XMLHttpRequest',
-							},
-							body: JSON.stringify(amefConfig),
-						}),
-					)
-				}
-
-				// Save Voorzieningen configuration (clean payload)
-				const voorzieningenConfig = {}
-				const voorzieningenKeys = [
-					'voorzieningen_sector_schema',
-					'voorzieningen_suite_schema',
-					'voorzieningen_dienst_schema',
-					'voorzieningen_kwetsbaarheid_schema',
-					'voorzieningen_contactpersoon_schema',
-					'voorzieningen_organisatie_schema',
-					'voorzieningen_gebruik_schema',
-					'voorzieningen_contract_schema',
-					'voorzieningen_koppeling_schema',
-					'voorzieningen_beoordeeling_schema',
-					'voorzieningen_module_schema',
-					'voorzieningen_compliancy_schema',
-					'voorzieningen_moduleVersie_schema',
-				]
-				// Map UI keys to API keys
-				const vzMap = {
-					voorzieningen_sector_schema: 'sector_schema',
-					voorzieningen_suite_schema: 'suite_schema',
-					voorzieningen_dienst_schema: 'dienst_schema',
-					voorzieningen_kwetsbaarheid_schema: 'kwetsbaarheid_schema',
-					voorzieningen_contactpersoon_schema: 'contactpersoon_schema',
-					voorzieningen_organisatie_schema: 'organisatie_schema',
-					voorzieningen_gebruik_schema: 'gebruik_schema',
-					voorzieningen_contract_schema: 'contract_schema',
-					voorzieningen_koppeling_schema: 'koppeling_schema',
-					voorzieningen_beoordeeling_schema: 'beoordeeling_schema',
-					voorzieningen_module_schema: 'module_schema',
-					voorzieningen_compliancy_schema: 'compliancy_schema',
-					voorzieningen_moduleVersie_schema: 'moduleVersie_schema',
-				}
-				if (this.voorzieningenRegister?.value) {
-					voorzieningenConfig.register = this.voorzieningenRegister.value
-				}
-				voorzieningenKeys.forEach((configKey) => {
-					const config = this.configuration[configKey]
-					if (config && config.schema) {
-						voorzieningenConfig[vzMap[configKey]] =
-							config.schema.value || config.schema
-					}
-				})
-
-				if (Object.keys(voorzieningenConfig).length > 0) {
-					savePromises.push(
-						fetch('/index.php/apps/stackiq/api/voorzieningen/config', {
-							method: 'POST',
-							headers: {
-								'Content-Type': 'application/json',
-								'X-Requested-With': 'XMLHttpRequest',
-							},
-							body: JSON.stringify(voorzieningenConfig),
-						}),
-					)
-				}
-
-				// Save user groups configuration
-				if (
-					this.genericUserGroups.length > 0
-					|| this.organizationAdminGroups.length > 0
-					|| this.superUserGroups.length > 0
-				) {
-					const userGroupsConfig = {
-						generic: this.genericUserGroups.filter(
-							(group) => group && group.trim(),
-						),
-						organizationAdmin: this.organizationAdminGroups.filter(
-							(group) => group && group.trim(),
-						),
-						superUser: this.superUserGroups.filter(
-							(group) => group && group.trim(),
-						),
-					}
-
-					savePromises.push(
-						fetch('/index.php/apps/stackiq/api/user-groups/config', {
-							method: 'POST',
-							headers: {
-								'Content-Type': 'application/json',
-								'X-Requested-With': 'XMLHttpRequest',
-							},
-							body: JSON.stringify(userGroupsConfig),
-						}),
-					)
-				}
-
-				// Save email settings
-				if (
-					this.emailSettings
-					&& Object.keys(this.emailSettings).length > 0
-				) {
-					savePromises.push(
-						fetch('/index.php/apps/stackiq/api/email/config', {
-							method: 'POST',
-							headers: {
-								'Content-Type': 'application/json',
-								'X-Requested-With': 'XMLHttpRequest',
-							},
-							body: JSON.stringify(this.emailSettings),
-						}),
-					)
-				}
-
-				// Save general settings (catalog location)
-				if (this.settings.catalogLocation !== undefined) {
-					savePromises.push(
-						fetch(
-							'/index.php/apps/stackiq/api/settings/general/config',
-							{
-								method: 'POST',
-								headers: {
-									'Content-Type': 'application/json',
-									'X-Requested-With': 'XMLHttpRequest',
-								},
-								body: JSON.stringify({
-									catalogLocation: this.settings.catalogLocation,
-								}),
-							},
-						),
-					)
-				}
-
-				// Save organization synchronization settings
-				if (this.settings.syncTimeWindow !== undefined) {
-					savePromises.push(
-						fetch('/index.php/apps/stackiq/api/settings/sync/config', {
-							method: 'POST',
-							headers: {
-								'Content-Type': 'application/json',
-								'X-Requested-With': 'XMLHttpRequest',
-							},
-							body: JSON.stringify({
-								syncTimeWindow: this.settings.syncTimeWindow,
-							}),
-						}),
-					)
-				}
-
-				// Execute all save operations
-				if (savePromises.length > 0) {
-					const responses = await Promise.all(savePromises)
-					// Check all responses
-					for (const response of responses) {
-						if (!response.ok) {
-							throw new Error(
-								`HTTP ${response.status}: ${response.statusText}`,
-							)
-						}
-						const result = await response.json()
-						if (!result.success) {
-							throw new Error(
-								result.message || 'Unknown error occurred',
-							)
-						}
-					}
-
-					showSuccess('Configuration saved successfully')
-					// Reload settings to get updated configuration
-					await this.loadSettings()
-				} else {
+				if (savePromises.length === 0) {
 					showSuccess('No configuration changes to save')
+					return
 				}
+				await assertSaved(await Promise.all(savePromises))
+				showSuccess('Configuration saved successfully')
+				// Reload settings to get updated configuration
+				await this.loadSettings()
 			} catch (error) {
 				console.error('Failed to save configuration:', error)
 				showError('Failed to save configuration: ' + error.message)
@@ -1770,62 +1917,23 @@ export const useSettingsStore = defineStore('settings', {
 			this.exporting = true
 			this.exportError = null
 			try {
-				const requestData = {
+				const requestData = archiMateExportRequest(
+					this.exportOptions,
 					format,
-					includeRelationships:
-						this.exportOptions.includeRelationships ?? true,
-					includeViews: this.exportOptions.includeViews ?? true,
-					organizationSpecific: false,
-					selectedSchemas: [],
-				}
-				const link = document.createElement('a')
-				link.style.display = 'none'
-				document.body.appendChild(link)
-				const response = await fetch(
-					'/index.php/apps/stackiq/api/archimate/export',
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							'X-Requested-With': 'XMLHttpRequest',
-						},
-						body: JSON.stringify(requestData),
-					},
 				)
-				if (response.status === 500) {
-					const errorData = await response.json()
-					throw new Error(errorData.message || 'Server error occurred')
-				}
-				if (!response.ok) {
-					throw new Error(
-						`HTTP ${response.status}: ${response.statusText}`,
-					)
-				}
-				const contentType = response.headers.get('content-type')
-				if (contentType && contentType.includes('application/json')) {
-					const errorData = await response.json()
-					throw new Error(
-						errorData.message || errorData.error || 'Export failed',
-					)
-				}
+				const link = appendHiddenLink()
+				const response = await postJson(
+					'/index.php/apps/stackiq/api/archimate/export',
+					requestData,
+				)
+				await assertExportStatus(response)
+				await assertExportIsFile(response)
 				const blob = await response.blob()
 				const url = window.URL.createObjectURL(blob)
-				const contentDisposition =
-					response.headers.get('content-disposition')
-				let fileName = `archimate_export_${new Date().toISOString().slice(0, 19).replace(/[:-]/g, '')}.xml`
-				if (contentDisposition) {
-					const fileNameMatch = contentDisposition.match(
-						/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/,
-					)
-					if (fileNameMatch) {
-						fileName = fileNameMatch[1].replace(/['"]/g, '')
-					}
-				}
-				link.href = url
-				link.download = fileName
-				link.click()
-				document.body.removeChild(link)
-				window.URL.revokeObjectURL(url)
+				const fileName = exportFileName(
+					response.headers.get('content-disposition'),
+				)
+				downloadThroughLink(link, { url, fileName })
 				showSuccess(`Export completed! Downloaded ${fileName}`)
 			} catch (error) {
 				this.exportError = error.message

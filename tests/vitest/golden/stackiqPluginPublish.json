@@ -1,0 +1,242 @@
+{
+	"publishObject / top-level id / ok": {
+		"outcome": {
+			"result": {
+				"id": "done"
+			}
+		},
+		"calls": [
+			[
+				"/index.php/apps/openregister/api/objects/3/7/o1/publish",
+				{
+					"method": "POST",
+					"headers": {
+						"requesttoken": "token"
+					}
+				},
+				{
+					"other": true,
+					"publish_o1": true
+				}
+			]
+		],
+		"loading": {
+			"other": true,
+			"publish_o1": false
+		}
+	},
+	"publishObject / top-level id / http 409": {
+		"outcome": {
+			"error": "Failed to publish object: 409 Conflict"
+		},
+		"calls": [
+			[
+				"/index.php/apps/openregister/api/objects/3/7/o1/publish",
+				{
+					"method": "POST",
+					"headers": {
+						"requesttoken": "token"
+					}
+				},
+				{
+					"other": true,
+					"publish_o1": true
+				}
+			]
+		],
+		"loading": {
+			"other": true,
+			"publish_o1": false
+		}
+	},
+	"publishObject / @self id / ok": {
+		"outcome": {
+			"result": {
+				"id": "done"
+			}
+		},
+		"calls": [
+			[
+				"/index.php/apps/openregister/api/objects/4/8/o2/publish",
+				{
+					"method": "POST",
+					"headers": {
+						"requesttoken": "token"
+					}
+				},
+				{
+					"other": true,
+					"publish_o2": true
+				}
+			]
+		],
+		"loading": {
+			"other": true,
+			"publish_o2": false
+		}
+	},
+	"publishObject / @self id / http 409": {
+		"outcome": {
+			"error": "Failed to publish object: 409 Conflict"
+		},
+		"calls": [
+			[
+				"/index.php/apps/openregister/api/objects/4/8/o2/publish",
+				{
+					"method": "POST",
+					"headers": {
+						"requesttoken": "token"
+					}
+				},
+				{
+					"other": true,
+					"publish_o2": true
+				}
+			]
+		],
+		"loading": {
+			"other": true,
+			"publish_o2": false
+		}
+	},
+	"publishObject / missing schema / ok": {
+		"outcome": {
+			"error": "Object must have id, register, and schema information"
+		},
+		"calls": [],
+		"loading": {
+			"other": true,
+			"publish_o3": false
+		}
+	},
+	"publishObject / missing schema / http 409": {
+		"outcome": {
+			"error": "Object must have id, register, and schema information"
+		},
+		"calls": [],
+		"loading": {
+			"other": true,
+			"publish_o3": false
+		}
+	},
+	"depublishObject / top-level id / ok": {
+		"outcome": {
+			"result": {
+				"id": "done"
+			}
+		},
+		"calls": [
+			[
+				"/index.php/apps/openregister/api/objects/3/7/o1/depublish",
+				{
+					"method": "POST",
+					"headers": {
+						"requesttoken": "token"
+					}
+				},
+				{
+					"other": true,
+					"depublish_o1": true
+				}
+			]
+		],
+		"loading": {
+			"other": true,
+			"depublish_o1": false
+		}
+	},
+	"depublishObject / top-level id / http 409": {
+		"outcome": {
+			"error": "Failed to depublish object: 409 Conflict"
+		},
+		"calls": [
+			[
+				"/index.php/apps/openregister/api/objects/3/7/o1/depublish",
+				{
+					"method": "POST",
+					"headers": {
+						"requesttoken": "token"
+					}
+				},
+				{
+					"other": true,
+					"depublish_o1": true
+				}
+			]
+		],
+		"loading": {
+			"other": true,
+			"depublish_o1": false
+		}
+	},
+	"depublishObject / @self id / ok": {
+		"outcome": {
+			"result": {
+				"id": "done"
+			}
+		},
+		"calls": [
+			[
+				"/index.php/apps/openregister/api/objects/4/8/o2/depublish",
+				{
+					"method": "POST",
+					"headers": {
+						"requesttoken": "token"
+					}
+				},
+				{
+					"other": true,
+					"depublish_o2": true
+				}
+			]
+		],
+		"loading": {
+			"other": true,
+			"depublish_o2": false
+		}
+	},
+	"depublishObject / @self id / http 409": {
+		"outcome": {
+			"error": "Failed to depublish object: 409 Conflict"
+		},
+		"calls": [
+			[
+				"/index.php/apps/openregister/api/objects/4/8/o2/depublish",
+				{
+					"method": "POST",
+					"headers": {
+						"requesttoken": "token"
+					}
+				},
+				{
+					"other": true,
+					"depublish_o2": true
+				}
+			]
+		],
+		"loading": {
+			"other": true,
+			"depublish_o2": false
+		}
+	},
+	"depublishObject / missing schema / ok": {
+		"outcome": {
+			"error": "Object must have id, register, and schema information"
+		},
+		"calls": [],
+		"loading": {
+			"other": true,
+			"depublish_o3": false
+		}
+	},
+	"depublishObject / missing schema / http 409": {
+		"outcome": {
+			"error": "Object must have id, register, and schema information"
+		},
+		"calls": [],
+		"loading": {
+			"other": true,
+			"depublish_o3": false
+		}
+	}
+}

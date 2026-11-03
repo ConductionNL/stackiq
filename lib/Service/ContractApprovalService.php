@@ -38,6 +38,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\EventDispatcher\IEventDispatcher;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -179,13 +180,13 @@ class ContractApprovalService {
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container The DI container (lazy OR lookup).
-	 * @param SettingsService $settingsService Resolves register/schema ids.
+	 * @param ObjectTypeLocatorInterface $settingsService Resolves register/schema ids.
 	 * @param IEventDispatcher $eventDispatcher Dispatches the decidesk request event in-process.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly ObjectTypeLocatorInterface $settingsService,
 		private readonly IEventDispatcher $eventDispatcher,
 		private readonly LoggerInterface $logger,
 	) {

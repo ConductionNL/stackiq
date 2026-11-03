@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -61,12 +62,12 @@ class ReviewAggregateService {
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container The DI container (lazy OR lookup).
-	 * @param SettingsService $settingsService Resolves register/schema ids.
+	 * @param ObjectTypeLocatorInterface $settingsService Resolves register/schema ids.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly ObjectTypeLocatorInterface $settingsService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
