@@ -1,0 +1,3106 @@
+{
+    "created organisation active": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectCreatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object creation",
+            {
+                "objectId": "obj-1",
+                "schemaId": "1",
+                "schemaIdInt": 1,
+                "registerId": "5",
+                "objectData": "{\"name\":\"Gemeente A\",\"status\":\"Actief\"}"
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.debug",
+            "Stackiq: Configuration lookup results",
+            {
+                "organisatieSchemaId": 1,
+                "contactpersoonSchemaId": 2,
+                "contactgegevensSchemaId": 3,
+                "gebruikSchemaId": 4,
+                "objectSchemaId": 1
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing active organization creation",
+            {
+                "objectId": "obj-1",
+                "status": "actief"
+            }
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\OrganizationSyncService"
+        ],
+        [
+            "orgSync.processSpecificOrganization",
+            "obj-1",
+            {
+                "name": "Gemeente A",
+                "status": "Actief"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Successfully processed organization creation",
+            {
+                "objectId": "obj-1",
+                "processResult": {
+                    "organizationsProcessed": 1
+                }
+            }
+        ]
+    ],
+    "created organisation active english": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectCreatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object creation",
+            {
+                "objectId": "obj-1",
+                "schemaId": "1",
+                "schemaIdInt": 1,
+                "registerId": "5",
+                "objectData": "{\"status\":\"ACTIVE\"}"
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.debug",
+            "Stackiq: Configuration lookup results",
+            {
+                "organisatieSchemaId": 1,
+                "contactpersoonSchemaId": 2,
+                "contactgegevensSchemaId": 3,
+                "gebruikSchemaId": 4,
+                "objectSchemaId": 1
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing active organization creation",
+            {
+                "objectId": "obj-1",
+                "status": "active"
+            }
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\OrganizationSyncService"
+        ],
+        [
+            "orgSync.processSpecificOrganization",
+            "obj-1",
+            {
+                "status": "ACTIVE"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Successfully processed organization creation",
+            {
+                "objectId": "obj-1",
+                "processResult": {
+                    "organizationsProcessed": 1
+                }
+            }
+        ]
+    ],
+    "created organisation inactive": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectCreatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object creation",
+            {
+                "objectId": "obj-1",
+                "schemaId": "1",
+                "schemaIdInt": 1,
+                "registerId": "5",
+                "objectData": "{\"name\":\"Gemeente A\",\"status\":\"inactief\"}"
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.debug",
+            "Stackiq: Configuration lookup results",
+            {
+                "organisatieSchemaId": 1,
+                "contactpersoonSchemaId": 2,
+                "contactgegevensSchemaId": 3,
+                "gebruikSchemaId": 4,
+                "objectSchemaId": 1
+            }
+        ],
+        [
+            "log.debug",
+            "Stackiq: Skipping non-active organization creation",
+            {
+                "objectId": "obj-1",
+                "status": "inactief"
+            }
+        ]
+    ],
+    "created organisation no status": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectCreatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object creation",
+            {
+                "objectId": "obj-1",
+                "schemaId": "1",
+                "schemaIdInt": 1,
+                "registerId": "5",
+                "objectData": "[]"
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.debug",
+            "Stackiq: Configuration lookup results",
+            {
+                "organisatieSchemaId": 1,
+                "contactpersoonSchemaId": 2,
+                "contactgegevensSchemaId": 3,
+                "gebruikSchemaId": 4,
+                "objectSchemaId": 1
+            }
+        ],
+        [
+            "log.debug",
+            "Stackiq: Skipping non-active organization creation",
+            {
+                "objectId": "obj-1",
+                "status": ""
+            }
+        ]
+    ],
+    "created organisation sync fails": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectCreatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object creation",
+            {
+                "objectId": "obj-1",
+                "schemaId": "1",
+                "schemaIdInt": 1,
+                "registerId": "5",
+                "objectData": "{\"name\":\"Gemeente A\",\"status\":\"Actief\"}"
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.debug",
+            "Stackiq: Configuration lookup results",
+            {
+                "organisatieSchemaId": 1,
+                "contactpersoonSchemaId": 2,
+                "contactgegevensSchemaId": 3,
+                "gebruikSchemaId": 4,
+                "objectSchemaId": 1
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing active organization creation",
+            {
+                "objectId": "obj-1",
+                "status": "actief"
+            }
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\OrganizationSyncService"
+        ],
+        [
+            "orgSync.processSpecificOrganization",
+            "obj-1",
+            {
+                "name": "Gemeente A",
+                "status": "Actief"
+            }
+        ],
+        [
+            "log.error",
+            "Stackiq: Failed to process organization creation",
+            {
+                "objectId": "obj-1",
+                "exception": "org sync failed",
+                "file": "(file)",
+                "line": "(line)"
+            }
+        ]
+    ],
+    "created contact person": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectCreatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object creation",
+            {
+                "objectId": "obj-1",
+                "schemaId": "2",
+                "schemaIdInt": 2,
+                "registerId": "5",
+                "objectData": "{\"email\":\"a@a.nl\"}"
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.debug",
+            "Stackiq: Configuration lookup results",
+            {
+                "organisatieSchemaId": 1,
+                "contactpersoonSchemaId": 2,
+                "contactgegevensSchemaId": 3,
+                "gebruikSchemaId": 4,
+                "objectSchemaId": 2
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing contactpersoon creation",
+            {
+                "objectId": "obj-1"
+            }
+        ],
+        [
+            "contacts.processContactpersoon",
+            [
+                "obj-1",
+                false
+            ]
+        ]
+    ],
+    "created contact person fails": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectCreatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object creation",
+            {
+                "objectId": "obj-1",
+                "schemaId": "2",
+                "schemaIdInt": 2,
+                "registerId": "5",
+                "objectData": "{\"email\":\"a@a.nl\"}"
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.debug",
+            "Stackiq: Configuration lookup results",
+            {
+                "organisatieSchemaId": 1,
+                "contactpersoonSchemaId": 2,
+                "contactgegevensSchemaId": 3,
+                "gebruikSchemaId": 4,
+                "objectSchemaId": 2
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing contactpersoon creation",
+            {
+                "objectId": "obj-1"
+            }
+        ],
+        [
+            "contacts.processContactpersoon",
+            [
+                "obj-1",
+                false
+            ]
+        ],
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "log.error",
+            "Stackiq: Error in event handler",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectCreatedEvent",
+                "exception": "contact failed",
+                "file": "(file)",
+                "line": "(line)",
+                "trace": "(trace)"
+            }
+        ]
+    ],
+    "created contactgegevens": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectCreatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object creation",
+            {
+                "objectId": "obj-1",
+                "schemaId": "3",
+                "schemaIdInt": 3,
+                "registerId": "5",
+                "objectData": "[]"
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.debug",
+            "Stackiq: Configuration lookup results",
+            {
+                "organisatieSchemaId": 1,
+                "contactpersoonSchemaId": 2,
+                "contactgegevensSchemaId": 3,
+                "gebruikSchemaId": 4,
+                "objectSchemaId": 3
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing contactgegevens creation (deprecated)",
+            {
+                "objectId": "obj-1"
+            }
+        ]
+    ],
+    "created usage": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectCreatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object creation",
+            {
+                "objectId": "obj-1",
+                "schemaId": "4",
+                "schemaIdInt": 4,
+                "registerId": "5",
+                "objectData": "{\"consumer\":{\"name\":\"Gemeente A\"},\"product\":{\"name\":\"Zaaksysteem\"}}"
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.debug",
+            "Stackiq: Configuration lookup results",
+            {
+                "organisatieSchemaId": 1,
+                "contactpersoonSchemaId": 2,
+                "contactgegevensSchemaId": 3,
+                "gebruikSchemaId": 4,
+                "objectSchemaId": 4
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing gebruik creation",
+            {
+                "objectId": "obj-1"
+            }
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\GebruikSyncService"
+        ],
+        [
+            "usageSync.processSpecificGebruik",
+            "obj-1"
+        ],
+        [
+            "log.info",
+            "Stackiq: Successfully processed gebruik creation",
+            {
+                "objectId": "obj-1",
+                "processResult": {
+                    "processed": 1
+                }
+            }
+        ]
+    ],
+    "created usage sync fails": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectCreatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object creation",
+            {
+                "objectId": "obj-1",
+                "schemaId": "4",
+                "schemaIdInt": 4,
+                "registerId": "5",
+                "objectData": "{\"consumer\":{\"name\":\"Gemeente A\"},\"product\":{\"name\":\"Zaaksysteem\"}}"
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.debug",
+            "Stackiq: Configuration lookup results",
+            {
+                "organisatieSchemaId": 1,
+                "contactpersoonSchemaId": 2,
+                "contactgegevensSchemaId": 3,
+                "gebruikSchemaId": 4,
+                "objectSchemaId": 4
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing gebruik creation",
+            {
+                "objectId": "obj-1"
+            }
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\GebruikSyncService"
+        ],
+        [
+            "usageSync.processSpecificGebruik",
+            "obj-1"
+        ],
+        [
+            "log.error",
+            "Stackiq: Failed to process gebruik creation",
+            {
+                "objectId": "obj-1",
+                "exception": "usage sync failed",
+                "file": "(file)",
+                "line": "(line)"
+            }
+        ]
+    ],
+    "created other schema": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectCreatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object creation",
+            {
+                "objectId": "obj-1",
+                "schemaId": "9",
+                "schemaIdInt": 9,
+                "registerId": "5",
+                "objectData": "{\"x\":1}"
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.debug",
+            "Stackiq: Configuration lookup results",
+            {
+                "organisatieSchemaId": 1,
+                "contactpersoonSchemaId": 2,
+                "contactgegevensSchemaId": 3,
+                "gebruikSchemaId": 4,
+                "objectSchemaId": 9
+            }
+        ],
+        [
+            "log.debug",
+            "Stackiq: Object creation not handled - not a supported object type",
+            {
+                "objectId": "obj-1",
+                "schemaId": 9,
+                "registerId": "5",
+                "supportedSchemas": {
+                    "organization": 1,
+                    "contactPerson": 2,
+                    "contactgegevens": 3,
+                    "usage": 4
+                }
+            }
+        ]
+    ],
+    "created, no schemas configured": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectCreatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object creation",
+            {
+                "objectId": "obj-1",
+                "schemaId": "1",
+                "schemaIdInt": 1,
+                "registerId": "5",
+                "objectData": "{\"name\":\"Gemeente A\",\"status\":\"Actief\"}"
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.debug",
+            "Stackiq: Configuration lookup results",
+            {
+                "organisatieSchemaId": null,
+                "contactpersoonSchemaId": null,
+                "contactgegevensSchemaId": null,
+                "gebruikSchemaId": null,
+                "objectSchemaId": 1
+            }
+        ],
+        [
+            "log.debug",
+            "Stackiq: Object creation not handled - not a supported object type",
+            {
+                "objectId": "obj-1",
+                "schemaId": 1,
+                "registerId": "5",
+                "supportedSchemas": {
+                    "organization": null,
+                    "contactPerson": null,
+                    "contactgegevens": null,
+                    "usage": null
+                }
+            }
+        ]
+    ],
+    "created, schema id as string": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectCreatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object creation",
+            {
+                "objectId": "obj-1",
+                "schemaId": "01",
+                "schemaIdInt": 1,
+                "registerId": "5",
+                "objectData": "{\"name\":\"Gemeente A\",\"status\":\"Actief\"}"
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.debug",
+            "Stackiq: Configuration lookup results",
+            {
+                "organisatieSchemaId": 1,
+                "contactpersoonSchemaId": 2,
+                "contactgegevensSchemaId": 3,
+                "gebruikSchemaId": 4,
+                "objectSchemaId": 1
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing active organization creation",
+            {
+                "objectId": "obj-1",
+                "status": "actief"
+            }
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\OrganizationSyncService"
+        ],
+        [
+            "orgSync.processSpecificOrganization",
+            "obj-1",
+            {
+                "name": "Gemeente A",
+                "status": "Actief"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Successfully processed organization creation",
+            {
+                "objectId": "obj-1",
+                "processResult": {
+                    "organizationsProcessed": 1
+                }
+            }
+        ]
+    ],
+    "updated organisation activated": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectUpdatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object update",
+            {
+                "objectId": "obj-1",
+                "schemaId": "1",
+                "schemaIdInt": 1,
+                "registerId": "5",
+                "hasOldObject": true
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "log.debug",
+            "Got organisation schema ID",
+            {
+                "app": "stackiq",
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1
+            }
+        ],
+        [
+            "log.debug",
+            "Organization schema check",
+            {
+                "app": "stackiq",
+                "objectSchemaId": "1",
+                "objectSchemaIdInt": 1,
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1,
+                "matches": true
+            }
+        ],
+        [
+            "log.debug",
+            "Organization status check",
+            {
+                "app": "stackiq",
+                "objectId": "obj-1",
+                "status": "actief",
+                "oldStatus": "inactief",
+                "statusChanged": true,
+                "isActief": true,
+                "willProcess": true
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing active organization update",
+            {
+                "objectId": "obj-1",
+                "status": "actief",
+                "schemaId": "1"
+            }
+        ],
+        [
+            "settings.getVoorzieningenConfig"
+        ],
+        [
+            "container.get",
+            "OCA\\OpenRegister\\Service\\ObjectService"
+        ],
+        [
+            "objects.find",
+            {
+                "id": "obj-1",
+                "register": "5",
+                "schema": "1",
+                "_extend": [
+                    "contactpersonen"
+                ],
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Refetched organization with contactpersonen",
+            {
+                "objectId": "obj-1",
+                "contactpersonenCount": 2
+            }
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\OrganizationSyncService"
+        ],
+        [
+            "orgSync.processSpecificOrganization",
+            "obj-1",
+            {
+                "status": "actief",
+                "contactpersonen": [
+                    {
+                        "email": "a@a.nl"
+                    },
+                    {
+                        "email": "b@a.nl"
+                    }
+                ]
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Successfully processed organization update",
+            {
+                "objectId": "obj-1",
+                "processResult": {
+                    "organizationsProcessed": 1
+                }
+            }
+        ]
+    ],
+    "updated organisation, no old object": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectUpdatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object update",
+            {
+                "objectId": "obj-1",
+                "schemaId": "1",
+                "schemaIdInt": 1,
+                "registerId": "5",
+                "hasOldObject": false
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "log.debug",
+            "Got organisation schema ID",
+            {
+                "app": "stackiq",
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1
+            }
+        ],
+        [
+            "log.debug",
+            "Organization schema check",
+            {
+                "app": "stackiq",
+                "objectSchemaId": "1",
+                "objectSchemaIdInt": 1,
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1,
+                "matches": true
+            }
+        ],
+        [
+            "log.debug",
+            "Organization status check",
+            {
+                "app": "stackiq",
+                "objectId": "obj-1",
+                "status": "actief",
+                "oldStatus": "",
+                "statusChanged": true,
+                "isActief": true,
+                "willProcess": true
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing active organization update",
+            {
+                "objectId": "obj-1",
+                "status": "actief",
+                "schemaId": "1"
+            }
+        ],
+        [
+            "settings.getVoorzieningenConfig"
+        ],
+        [
+            "container.get",
+            "OCA\\OpenRegister\\Service\\ObjectService"
+        ],
+        [
+            "objects.find",
+            {
+                "id": "obj-1",
+                "register": "5",
+                "schema": "1",
+                "_extend": [
+                    "contactpersonen"
+                ],
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Refetched organization with contactpersonen",
+            {
+                "objectId": "obj-1",
+                "contactpersonenCount": 2
+            }
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\OrganizationSyncService"
+        ],
+        [
+            "orgSync.processSpecificOrganization",
+            "obj-1",
+            {
+                "status": "actief",
+                "contactpersonen": [
+                    {
+                        "email": "a@a.nl"
+                    },
+                    {
+                        "email": "b@a.nl"
+                    }
+                ]
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Successfully processed organization update",
+            {
+                "objectId": "obj-1",
+                "processResult": {
+                    "organizationsProcessed": 1
+                }
+            }
+        ]
+    ],
+    "updated organisation still active": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectUpdatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object update",
+            {
+                "objectId": "obj-1",
+                "schemaId": "1",
+                "schemaIdInt": 1,
+                "registerId": "5",
+                "hasOldObject": true
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "log.debug",
+            "Got organisation schema ID",
+            {
+                "app": "stackiq",
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1
+            }
+        ],
+        [
+            "log.debug",
+            "Organization schema check",
+            {
+                "app": "stackiq",
+                "objectSchemaId": "1",
+                "objectSchemaIdInt": 1,
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1,
+                "matches": true
+            }
+        ],
+        [
+            "log.debug",
+            "Organization status check",
+            {
+                "app": "stackiq",
+                "objectId": "obj-1",
+                "status": "actief",
+                "oldStatus": "actief",
+                "statusChanged": false,
+                "isActief": true,
+                "willProcess": false
+            }
+        ],
+        [
+            "log.debug",
+            "Stackiq: Skipping non-active organization update",
+            {
+                "objectId": "obj-1",
+                "status": "actief",
+                "schemaId": "1"
+            }
+        ]
+    ],
+    "updated organisation deactivated": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectUpdatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object update",
+            {
+                "objectId": "obj-1",
+                "schemaId": "1",
+                "schemaIdInt": 1,
+                "registerId": "5",
+                "hasOldObject": true
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "log.debug",
+            "Got organisation schema ID",
+            {
+                "app": "stackiq",
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1
+            }
+        ],
+        [
+            "log.debug",
+            "Organization schema check",
+            {
+                "app": "stackiq",
+                "objectSchemaId": "1",
+                "objectSchemaIdInt": 1,
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1,
+                "matches": true
+            }
+        ],
+        [
+            "log.debug",
+            "Organization status check",
+            {
+                "app": "stackiq",
+                "objectId": "obj-1",
+                "status": "inactief",
+                "oldStatus": "actief",
+                "statusChanged": true,
+                "isActief": false,
+                "willProcess": false
+            }
+        ],
+        [
+            "log.debug",
+            "Stackiq: Skipping non-active organization update",
+            {
+                "objectId": "obj-1",
+                "status": "inactief",
+                "schemaId": "1"
+            }
+        ]
+    ],
+    "updated organisation, refetch fails": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectUpdatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object update",
+            {
+                "objectId": "obj-1",
+                "schemaId": "1",
+                "schemaIdInt": 1,
+                "registerId": "5",
+                "hasOldObject": true
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "log.debug",
+            "Got organisation schema ID",
+            {
+                "app": "stackiq",
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1
+            }
+        ],
+        [
+            "log.debug",
+            "Organization schema check",
+            {
+                "app": "stackiq",
+                "objectSchemaId": "1",
+                "objectSchemaIdInt": 1,
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1,
+                "matches": true
+            }
+        ],
+        [
+            "log.debug",
+            "Organization status check",
+            {
+                "app": "stackiq",
+                "objectId": "obj-1",
+                "status": "actief",
+                "oldStatus": "inactief",
+                "statusChanged": true,
+                "isActief": true,
+                "willProcess": true
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing active organization update",
+            {
+                "objectId": "obj-1",
+                "status": "actief",
+                "schemaId": "1"
+            }
+        ],
+        [
+            "settings.getVoorzieningenConfig"
+        ],
+        [
+            "container.get",
+            "OCA\\OpenRegister\\Service\\ObjectService"
+        ],
+        [
+            "objects.find",
+            {
+                "id": "obj-1",
+                "register": "5",
+                "schema": "1",
+                "_extend": [
+                    "contactpersonen"
+                ],
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        ],
+        [
+            "log.error",
+            "Stackiq: Failed to refetch organization with contactpersonen",
+            {
+                "objectId": "obj-1",
+                "exception": "find failed",
+                "file": "(file)",
+                "line": "(line)"
+            }
+        ]
+    ],
+    "updated organisation, sync fails": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectUpdatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object update",
+            {
+                "objectId": "obj-1",
+                "schemaId": "1",
+                "schemaIdInt": 1,
+                "registerId": "5",
+                "hasOldObject": true
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "log.debug",
+            "Got organisation schema ID",
+            {
+                "app": "stackiq",
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1
+            }
+        ],
+        [
+            "log.debug",
+            "Organization schema check",
+            {
+                "app": "stackiq",
+                "objectSchemaId": "1",
+                "objectSchemaIdInt": 1,
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1,
+                "matches": true
+            }
+        ],
+        [
+            "log.debug",
+            "Organization status check",
+            {
+                "app": "stackiq",
+                "objectId": "obj-1",
+                "status": "actief",
+                "oldStatus": "inactief",
+                "statusChanged": true,
+                "isActief": true,
+                "willProcess": true
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing active organization update",
+            {
+                "objectId": "obj-1",
+                "status": "actief",
+                "schemaId": "1"
+            }
+        ],
+        [
+            "settings.getVoorzieningenConfig"
+        ],
+        [
+            "container.get",
+            "OCA\\OpenRegister\\Service\\ObjectService"
+        ],
+        [
+            "objects.find",
+            {
+                "id": "obj-1",
+                "register": "5",
+                "schema": "1",
+                "_extend": [
+                    "contactpersonen"
+                ],
+                "_rbac": false,
+                "_multitenancy": false
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Refetched organization with contactpersonen",
+            {
+                "objectId": "obj-1",
+                "contactpersonenCount": 2
+            }
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\OrganizationSyncService"
+        ],
+        [
+            "orgSync.processSpecificOrganization",
+            "obj-1",
+            {
+                "status": "actief",
+                "contactpersonen": [
+                    {
+                        "email": "a@a.nl"
+                    },
+                    {
+                        "email": "b@a.nl"
+                    }
+                ]
+            }
+        ],
+        [
+            "log.error",
+            "Stackiq: Failed to process organization update",
+            {
+                "objectId": "obj-1",
+                "exception": "org sync failed",
+                "file": "(file)",
+                "line": "(line)"
+            }
+        ]
+    ],
+    "updated contact person": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectUpdatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object update",
+            {
+                "objectId": "obj-1",
+                "schemaId": "2",
+                "schemaIdInt": 2,
+                "registerId": "5",
+                "hasOldObject": true
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "log.debug",
+            "Got organisation schema ID",
+            {
+                "app": "stackiq",
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1
+            }
+        ],
+        [
+            "log.debug",
+            "Organization schema check",
+            {
+                "app": "stackiq",
+                "objectSchemaId": "2",
+                "objectSchemaIdInt": 2,
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1,
+                "matches": false
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "log.info",
+            "Stackiq: Matched contactpersoon schema - processing update",
+            {
+                "objectId": "obj-1",
+                "schemaId": "2",
+                "configuredSchemaId": 2
+            }
+        ],
+        [
+            "contacts.handleContactpersoonUpdate",
+            [
+                "obj-1",
+                "obj-1"
+            ]
+        ],
+        [
+            "log.info",
+            "Stackiq: Successfully processed contactpersoon update",
+            {
+                "objectId": "obj-1",
+                "timestamp": "(timestamp)"
+            }
+        ]
+    ],
+    "updated contact person fails": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectUpdatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object update",
+            {
+                "objectId": "obj-1",
+                "schemaId": "2",
+                "schemaIdInt": 2,
+                "registerId": "5",
+                "hasOldObject": false
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "log.debug",
+            "Got organisation schema ID",
+            {
+                "app": "stackiq",
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1
+            }
+        ],
+        [
+            "log.debug",
+            "Organization schema check",
+            {
+                "app": "stackiq",
+                "objectSchemaId": "2",
+                "objectSchemaIdInt": 2,
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1,
+                "matches": false
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "log.info",
+            "Stackiq: Matched contactpersoon schema - processing update",
+            {
+                "objectId": "obj-1",
+                "schemaId": "2",
+                "configuredSchemaId": 2
+            }
+        ],
+        [
+            "contacts.handleContactpersoonUpdate",
+            [
+                "obj-1",
+                null
+            ]
+        ],
+        [
+            "log.error",
+            "Stackiq: Failed to process contactpersoon update",
+            {
+                "objectId": "obj-1",
+                "exception": "contact failed",
+                "file": "(file)",
+                "line": "(line)",
+                "trace": "(trace)"
+            }
+        ]
+    ],
+    "updated contactgegevens": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectUpdatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object update",
+            {
+                "objectId": "obj-1",
+                "schemaId": "3",
+                "schemaIdInt": 3,
+                "registerId": "5",
+                "hasOldObject": false
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "log.debug",
+            "Got organisation schema ID",
+            {
+                "app": "stackiq",
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1
+            }
+        ],
+        [
+            "log.debug",
+            "Organization schema check",
+            {
+                "app": "stackiq",
+                "objectSchemaId": "3",
+                "objectSchemaIdInt": 3,
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1,
+                "matches": false
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "log.info",
+            "Stackiq: Matched contactgegevens schema - processing update (backward compatibility)",
+            {
+                "objectId": "obj-1",
+                "schemaId": "3",
+                "configuredSchemaId": 3
+            }
+        ],
+        [
+            "contacts.handleContactpersoonUpdate",
+            [
+                "obj-1",
+                null
+            ]
+        ],
+        [
+            "log.info",
+            "Stackiq: Successfully processed contactgegevens update (as contactpersoon)",
+            {
+                "objectId": "obj-1",
+                "timestamp": "(timestamp)"
+            }
+        ]
+    ],
+    "updated contactgegevens fails": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectUpdatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object update",
+            {
+                "objectId": "obj-1",
+                "schemaId": "3",
+                "schemaIdInt": 3,
+                "registerId": "5",
+                "hasOldObject": false
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "log.debug",
+            "Got organisation schema ID",
+            {
+                "app": "stackiq",
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1
+            }
+        ],
+        [
+            "log.debug",
+            "Organization schema check",
+            {
+                "app": "stackiq",
+                "objectSchemaId": "3",
+                "objectSchemaIdInt": 3,
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1,
+                "matches": false
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "log.info",
+            "Stackiq: Matched contactgegevens schema - processing update (backward compatibility)",
+            {
+                "objectId": "obj-1",
+                "schemaId": "3",
+                "configuredSchemaId": 3
+            }
+        ],
+        [
+            "contacts.handleContactpersoonUpdate",
+            [
+                "obj-1",
+                null
+            ]
+        ],
+        [
+            "log.error",
+            "Stackiq: Failed to process contactgegevens update",
+            {
+                "objectId": "obj-1",
+                "exception": "contact failed",
+                "file": "(file)",
+                "line": "(line)",
+                "trace": "(trace)"
+            }
+        ]
+    ],
+    "updated usage": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectUpdatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object update",
+            {
+                "objectId": "obj-1",
+                "schemaId": "4",
+                "schemaIdInt": 4,
+                "registerId": "5",
+                "hasOldObject": false
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "log.debug",
+            "Got organisation schema ID",
+            {
+                "app": "stackiq",
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1
+            }
+        ],
+        [
+            "log.debug",
+            "Organization schema check",
+            {
+                "app": "stackiq",
+                "objectSchemaId": "4",
+                "objectSchemaIdInt": 4,
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1,
+                "matches": false
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.info",
+            "Stackiq: Matched gebruik schema - processing update",
+            {
+                "objectId": "obj-1",
+                "schemaId": "4",
+                "configuredSchemaId": 4
+            }
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\GebruikSyncService"
+        ],
+        [
+            "usageSync.processSpecificGebruik",
+            "obj-1"
+        ],
+        [
+            "log.info",
+            "Stackiq: Successfully processed gebruik update",
+            {
+                "objectId": "obj-1",
+                "processResult": {
+                    "processed": 1
+                }
+            }
+        ]
+    ],
+    "updated other schema": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectUpdatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object update",
+            {
+                "objectId": "obj-1",
+                "schemaId": "9",
+                "schemaIdInt": 9,
+                "registerId": "5",
+                "hasOldObject": false
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "log.debug",
+            "Got organisation schema ID",
+            {
+                "app": "stackiq",
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1
+            }
+        ],
+        [
+            "log.debug",
+            "Organization schema check",
+            {
+                "app": "stackiq",
+                "objectSchemaId": "9",
+                "objectSchemaIdInt": 9,
+                "organisatieSchemaId": 1,
+                "organisatieSchemaIdInt": 1,
+                "matches": false
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.debug",
+            "Stackiq: Object update not handled - focusing only on organisatie, contactpersonen, and gebruik",
+            {
+                "objectId": "obj-1",
+                "schemaId": "9",
+                "schemaIdInt": 9,
+                "schemaIdType": "string",
+                "registerId": "5",
+                "handledSchemas": {
+                    "organization": 1,
+                    "contactPerson": 2,
+                    "contactgegevens": 3,
+                    "usage": 4
+                }
+            }
+        ]
+    ],
+    "updated, no schemas configured": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectUpdatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object update",
+            {
+                "objectId": "obj-1",
+                "schemaId": "2",
+                "schemaIdInt": 2,
+                "registerId": "5",
+                "hasOldObject": false
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "log.debug",
+            "Got organisation schema ID",
+            {
+                "app": "stackiq",
+                "organisatieSchemaId": null,
+                "organisatieSchemaIdInt": 0
+            }
+        ],
+        [
+            "log.debug",
+            "Organization schema check",
+            {
+                "app": "stackiq",
+                "objectSchemaId": "2",
+                "objectSchemaIdInt": 2,
+                "organisatieSchemaId": null,
+                "organisatieSchemaIdInt": 0,
+                "matches": false
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.debug",
+            "Stackiq: Object update not handled - focusing only on organisatie, contactpersonen, and gebruik",
+            {
+                "objectId": "obj-1",
+                "schemaId": "2",
+                "schemaIdInt": 2,
+                "schemaIdType": "string",
+                "registerId": "5",
+                "handledSchemas": {
+                    "organization": null,
+                    "contactPerson": null,
+                    "contactgegevens": null,
+                    "usage": null
+                }
+            }
+        ]
+    ],
+    "deleted organisation": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectDeletedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object deletion",
+            {
+                "objectId": "obj-1",
+                "schemaId": "1",
+                "registerId": "5",
+                "objectData": {
+                    "name": "Gemeente A",
+                    "status": "Actief"
+                }
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing organization deletion",
+            {
+                "objectId": "obj-1"
+            }
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\OrganizationSyncService"
+        ],
+        [
+            "orgSync.processSpecificOrganization",
+            "obj-1",
+            {
+                "name": "Gemeente A",
+                "status": "Actief"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Successfully processed organization deletion",
+            {
+                "objectId": "obj-1",
+                "processResult": {
+                    "organizationsProcessed": 1
+                }
+            }
+        ]
+    ],
+    "deleted organisation, sync fails": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectDeletedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object deletion",
+            {
+                "objectId": "obj-1",
+                "schemaId": "1",
+                "registerId": "5",
+                "objectData": {
+                    "name": "Gemeente A",
+                    "status": "Actief"
+                }
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing organization deletion",
+            {
+                "objectId": "obj-1"
+            }
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\OrganizationSyncService"
+        ],
+        [
+            "orgSync.processSpecificOrganization",
+            "obj-1",
+            {
+                "name": "Gemeente A",
+                "status": "Actief"
+            }
+        ],
+        [
+            "log.error",
+            "Stackiq: Failed to process organization deletion",
+            {
+                "objectId": "obj-1",
+                "exception": "org sync failed",
+                "file": "(file)",
+                "line": "(line)"
+            }
+        ]
+    ],
+    "deleted contact person": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectDeletedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object deletion",
+            {
+                "objectId": "obj-1",
+                "schemaId": "2",
+                "registerId": "5",
+                "objectData": {
+                    "email": "a@a.nl"
+                }
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "log.info",
+            "Stackiq: Matched contactpersoon schema - processing deletion",
+            {
+                "objectId": "obj-1",
+                "schemaId": "2",
+                "configuredSchemaId": 2
+            }
+        ],
+        [
+            "contacts.handleContactDeletion",
+            [
+                "obj-1"
+            ]
+        ],
+        [
+            "log.info",
+            "Stackiq: Successfully processed contactpersoon deletion",
+            {
+                "objectId": "obj-1",
+                "timestamp": "(timestamp)"
+            }
+        ]
+    ],
+    "deleted contact person fails": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectDeletedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object deletion",
+            {
+                "objectId": "obj-1",
+                "schemaId": "2",
+                "registerId": "5",
+                "objectData": {
+                    "email": "a@a.nl"
+                }
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "log.info",
+            "Stackiq: Matched contactpersoon schema - processing deletion",
+            {
+                "objectId": "obj-1",
+                "schemaId": "2",
+                "configuredSchemaId": 2
+            }
+        ],
+        [
+            "contacts.handleContactDeletion",
+            [
+                "obj-1"
+            ]
+        ],
+        [
+            "log.error",
+            "Stackiq: Failed to process contactpersoon deletion",
+            {
+                "objectId": "obj-1",
+                "exception": "contact failed",
+                "file": "(file)",
+                "line": "(line)",
+                "trace": "(trace)"
+            }
+        ]
+    ],
+    "deleted contactgegevens": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectDeletedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object deletion",
+            {
+                "objectId": "obj-1",
+                "schemaId": "3",
+                "registerId": "5",
+                "objectData": []
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "log.info",
+            "Stackiq: Matched contactgegevens schema - processing deletion (backward compatibility)",
+            {
+                "objectId": "obj-1",
+                "schemaId": "3",
+                "configuredSchemaId": 3
+            }
+        ],
+        [
+            "contacts.handleContactDeletion",
+            [
+                "obj-1"
+            ]
+        ],
+        [
+            "log.info",
+            "Stackiq: Successfully processed contactgegevens deletion",
+            {
+                "objectId": "obj-1",
+                "timestamp": "(timestamp)"
+            }
+        ]
+    ],
+    "deleted contactgegevens fails": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectDeletedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object deletion",
+            {
+                "objectId": "obj-1",
+                "schemaId": "3",
+                "registerId": "5",
+                "objectData": []
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "log.info",
+            "Stackiq: Matched contactgegevens schema - processing deletion (backward compatibility)",
+            {
+                "objectId": "obj-1",
+                "schemaId": "3",
+                "configuredSchemaId": 3
+            }
+        ],
+        [
+            "contacts.handleContactDeletion",
+            [
+                "obj-1"
+            ]
+        ],
+        [
+            "log.error",
+            "Stackiq: Failed to process contactgegevens deletion",
+            {
+                "objectId": "obj-1",
+                "exception": "contact failed",
+                "file": "(file)",
+                "line": "(line)",
+                "trace": "(trace)"
+            }
+        ]
+    ],
+    "deleted usage": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectDeletedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object deletion",
+            {
+                "objectId": "obj-1",
+                "schemaId": "4",
+                "registerId": "5",
+                "objectData": {
+                    "consumer": {
+                        "name": "Gemeente A"
+                    },
+                    "product": {
+                        "name": "Zaaksysteem"
+                    }
+                }
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.info",
+            "Stackiq: Matched gebruik schema - processing deletion",
+            {
+                "objectId": "obj-1",
+                "schemaId": "4",
+                "configuredSchemaId": 4,
+                "consumer": "Gemeente A",
+                "product": "Zaaksysteem"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Gebruik object deleted - no specific cleanup required",
+            {
+                "objectId": "obj-1",
+                "timestamp": "(timestamp)"
+            }
+        ]
+    ],
+    "deleted usage without names": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectDeletedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object deletion",
+            {
+                "objectId": "obj-1",
+                "schemaId": "4",
+                "registerId": "5",
+                "objectData": []
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.info",
+            "Stackiq: Matched gebruik schema - processing deletion",
+            {
+                "objectId": "obj-1",
+                "schemaId": "4",
+                "configuredSchemaId": 4,
+                "consumer": "Unknown",
+                "product": "Unknown"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Gebruik object deleted - no specific cleanup required",
+            {
+                "objectId": "obj-1",
+                "timestamp": "(timestamp)"
+            }
+        ]
+    ],
+    "deleted other schema": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectDeletedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object deletion",
+            {
+                "objectId": "obj-1",
+                "schemaId": "9",
+                "registerId": "5",
+                "objectData": {
+                    "x": 1
+                }
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.debug",
+            "Stackiq: Object deletion not handled - focusing only on organisatie, contactpersonen, and gebruik",
+            {
+                "objectId": "obj-1",
+                "schemaId": "9",
+                "registerId": "5",
+                "handledSchemas": {
+                    "organization": 1,
+                    "contactPerson": 2,
+                    "contactgegevens": 3,
+                    "usage": 4
+                }
+            }
+        ]
+    ],
+    "deleted, no schemas configured": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectDeletedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object deletion",
+            {
+                "objectId": "obj-1",
+                "schemaId": "4",
+                "registerId": "5",
+                "objectData": []
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.debug",
+            "Stackiq: Object deletion not handled - focusing only on organisatie, contactpersonen, and gebruik",
+            {
+                "objectId": "obj-1",
+                "schemaId": "4",
+                "registerId": "5",
+                "handledSchemas": {
+                    "organization": null,
+                    "contactPerson": null,
+                    "contactgegevens": null,
+                    "usage": null
+                }
+            }
+        ]
+    ],
+    "created, two types share a schema": [
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ContactpersoonService"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing event",
+            {
+                "eventType": "OCA\\OpenRegister\\Event\\ObjectCreatedEvent",
+                "timestamp": "(timestamp)"
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing object creation",
+            {
+                "objectId": "obj-1",
+                "schemaId": "4",
+                "schemaIdInt": 4,
+                "registerId": "5",
+                "objectData": "{\"email\":\"a@a.nl\"}"
+            }
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "organization"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactPerson"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "contactgegevens"
+        ],
+        [
+            "settings.getSchemaIdForObjectType",
+            "usage"
+        ],
+        [
+            "log.debug",
+            "Stackiq: Configuration lookup results",
+            {
+                "organisatieSchemaId": 1,
+                "contactpersoonSchemaId": 4,
+                "contactgegevensSchemaId": 3,
+                "gebruikSchemaId": 4,
+                "objectSchemaId": 4
+            }
+        ],
+        [
+            "log.info",
+            "Stackiq: Processing contactpersoon creation",
+            {
+                "objectId": "obj-1"
+            }
+        ],
+        [
+            "contacts.processContactpersoon",
+            [
+                "obj-1",
+                false
+            ]
+        ]
+    ]
+}
