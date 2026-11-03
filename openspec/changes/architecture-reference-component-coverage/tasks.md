@@ -33,7 +33,7 @@
 - [x] Test (PHPUnit `ReferenceComponentCoverageControllerTest`, `ReferenceComponentCoverageServiceTest`)
 
 ### Task 4: GEMMA plate page (board SkGemmaPlaat)
-- **spec_ref**: openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
+- **spec_ref**: openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 - **files**: `src/manifest.d/reference-component-coverage.json` (menu child of Reports & Compliance), `src/views/organisaties/GemmaPlate.vue`, `src/utils/referenceComponentCoverage.js`, `tests/vitest/referenceComponentCoverage.spec.js`, `src/customComponents.js`, `tests/e2e/workflows/reference-component-coverage.spec.ts`
 - **acceptance_criteria**:
   - GIVEN the Reports page WHEN it renders THEN it shows the card Reference component coverage next to Portfolio rationalization
@@ -62,7 +62,7 @@
 - [ ] Test (PHPUnit `PortfolioReportServiceOverlapTest`, Playwright portfolio overlap scenario)
 
 ### Task 7: Documentation and translations
-- **spec_ref**: openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
+- **spec_ref**: openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 - **files**: `docs/features/reference-component-coverage.md`, `docs/features/portfolio-rationalization.md`, `l10n/en.json`, `l10n/nl.json`
 - **acceptance_criteria**:
   - GIVEN the feature pages WHEN they are read THEN they show the coverage table, the map and the Overlap section, each in a screenshot

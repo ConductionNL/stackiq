@@ -30,7 +30,11 @@ const merged = buildManifest(
 describe('Data quality page (board SkDatakwaliteit)', () => {
 	it('is a custom page on /datakwaliteit rendered by DataQualityReportView', () => {
 		const page = merged.pages.find((p) => p.id === 'DataQuality')
-		expect(page).toMatchObject({ route: '/datakwaliteit', type: 'custom', component: 'DataQualityReportView' })
+		expect(page).toMatchObject({
+			route: '/datakwaliteit',
+			type: 'custom',
+			component: 'DataQualityReportView',
+		})
 	})
 
 	it('is in the menu under Reports & Compliance, not at the top level', () => {
@@ -40,7 +44,10 @@ describe('Data quality page (board SkDatakwaliteit)', () => {
 	})
 
 	it('registers its component', () => {
-		const source = fs.readFileSync(path.resolve(__dirname, '../../src/customComponents.js'), 'utf8')
+		const source = fs.readFileSync(
+			path.resolve(__dirname, '../../src/customComponents.js'),
+			'utf8',
+		)
 		expect(source).toMatch(/^\tDataQualityReportView,$/m)
 	})
 })
