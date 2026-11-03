@@ -155,7 +155,7 @@ class AiSystemFragmentTest extends TestCase {
 		$read = $this->schema()['authorization']['read'];
 
 		$this->assertContains(['group' => 'gebruik-beheerder', 'match' => ['_organisation' => '$organisation']], $read);
-		$this->assertContains(['group' => 'aanbod-beheerder', 'match' => ['provider' => '$organisation']], $read);
+		$this->assertContains(['group' => 'aanbod-beheerder', 'match' => ['provider' => '$organisation'], 'crossOrganisation' => true], $read);
 		foreach ($read as $rule) {
 			if (is_string($rule) === true) {
 				$this->assertSame('software-catalog-admins', $rule, 'only the catalogue admins read every AI system');
