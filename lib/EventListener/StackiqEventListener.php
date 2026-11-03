@@ -55,6 +55,37 @@ use Psr\Log\LoggerInterface;
  */
 class StackiqEventListener implements IEventListener {
 	/**
+	 * The log lines for a contact person (or contactgegevens) update or deletion:
+	 * matched, done and failed.
+	 */
+	private const CONTACT_MESSAGES = [
+		'update'   => [
+			'contactPerson'   => [
+				'Stackiq: Matched contactpersoon schema - processing update',
+				'Stackiq: Successfully processed contactpersoon update',
+				'Stackiq: Failed to process contactpersoon update',
+			],
+			'contactgegevens' => [
+				'Stackiq: Matched contactgegevens schema - processing update (backward compatibility)',
+				'Stackiq: Successfully processed contactgegevens update (as contactpersoon)',
+				'Stackiq: Failed to process contactgegevens update',
+			],
+		],
+		'deletion' => [
+			'contactPerson'   => [
+				'Stackiq: Matched contactpersoon schema - processing deletion',
+				'Stackiq: Successfully processed contactpersoon deletion',
+				'Stackiq: Failed to process contactpersoon deletion',
+			],
+			'contactgegevens' => [
+				'Stackiq: Matched contactgegevens schema - processing deletion (backward compatibility)',
+				'Stackiq: Successfully processed contactgegevens deletion',
+				'Stackiq: Failed to process contactgegevens deletion',
+			],
+		],
+	];
+
+	/**
 	 * Constructor for StackiqEventListener
 	 *
 	 * @param ContainerInterface $container DI container for lazy service resolution.
@@ -92,9 +123,7 @@ class StackiqEventListener implements IEventListener {
 
 			$this->dispatchEvent(
 				event: $event,
-				contactSvc: $contactSvc,
-				settingsService: $settingsService,
-				logger: $logger
+				services: ['contactSvc' => $contactSvc, 'settings' => $settingsService, 'logger' => $logger]
 			);
 		} catch (\Exception $e) {
 			try {
@@ -118,51 +147,26 @@ class StackiqEventListener implements IEventListener {
 	/**
 	 * Dispatches the supplied event to the matching per-lifecycle handler.
 	 *
-	 * Extracted from {@see handle()} as part of the task 6.1 decomposition so the
-	 * outer method retains only the try/catch envelope and the logging shell.
-	 *
 	 * @param Event $event The event to dispatch.
-	 * @param ContactpersoonService $contactSvc Contact-person service handle.
-	 * @param SettingsService $settingsService Settings service handle.
-	 * @param LoggerInterface $logger Logger handle.
+	 * @param array<string, mixed> $services The contactSvc, settings and logger services.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-6
 	 */
-	private function dispatchEvent(
-		Event $event,
-		ContactpersoonService $contactSvc,
-		SettingsService $settingsService,
-		LoggerInterface $logger,
-	): void {
+	private function dispatchEvent(Event $event, array $services): void {
 		if ($event instanceof ObjectCreatedEvent) {
-			$this->handleObjectCreated(
-				event: $event,
-				contactSvc: $contactSvc,
-				settingsService: $settingsService,
-				logger: $logger
-			);
+			$this->handleObjectCreated(event: $event, services: $services);
 			return;
 		}
 
 		if ($event instanceof ObjectUpdatedEvent) {
-			$this->handleObjectUpdated(
-				event: $event,
-				contactSvc: $contactSvc,
-				settingsService: $settingsService,
-				logger: $logger
-			);
+			$this->handleObjectUpdated(event: $event, services: $services);
 			return;
 		}
 
 		if ($event instanceof ObjectDeletedEvent) {
-			$this->handleObjectDeleted(
-				event: $event,
-				contactSvc: $contactSvc,
-				settingsService: $settingsService,
-				logger: $logger
-			);
+			$this->handleObjectDeleted(event: $event, services: $services);
 			return;
 		}
 
@@ -170,7 +174,7 @@ class StackiqEventListener implements IEventListener {
 			|| $event instanceof ObjectUnlockedEvent
 			|| $event instanceof ObjectRevertedEvent
 		) {
-			$logger->debug(
+			$services['logger']->debug(
 				'Stackiq: Ignoring object lifecycle event',
 				[
 					'eventType' => get_class($event),
@@ -391,189 +395,245 @@ class StackiqEventListener implements IEventListener {
 	}//end refetchOrganizationWithContactpersonen()
 
 	/**
+	 * The facts every handler reads off an object, with the services.
+	 *
+	 * @param \OCA\OpenRegister\Db\ObjectEntity $object The event's object.
+	 * @param array<string, mixed> $services The contactSvc, settings and logger services.
+	 *
+	 * @return array<string, mixed> The object, its id, schema (raw and as int) and register, and the services.
+	 */
+	private function objectContext(\OCA\OpenRegister\Db\ObjectEntity $object, array $services): array {
+		$schemaId = $object->getSchema();
+		return $services + [
+			'object'      => $object,
+			'objectId'    => $object->getUuid(),
+			'schemaId'    => $schemaId,
+			'schemaIdInt' => (int)$schemaId,
+			'registerId'  => $object->getRegister(),
+		];
+	}//end objectContext()
+
+	/**
+	 * Look the catalog schemas up one by one, until one matches the object's schema.
+	 *
+	 * @param array<string, mixed> $ctx   The object context.
+	 * @param array<int, string>   $kinds The catalog object types, in lookup order.
+	 *
+	 * @return array{kind: string|null, ids: array<string, int|null>} The matching type and the ids looked up.
+	 */
+	private function firstMatchingSchema(array $ctx, array $kinds): array {
+		$ids = [];
+		foreach ($kinds as $kind) {
+			$ids[$kind] = $ctx['settings']->getSchemaIdForObjectType(objectType: $kind);
+			if ($this->matchesSchema(objectSchemaIdInt: $ctx['schemaIdInt'], configured: $ids[$kind]) === true) {
+				return ['kind' => $kind, 'ids' => $ids];
+			}
+		}
+
+		return ['kind' => null, 'ids' => $ids];
+	}//end firstMatchingSchema()
+
+	/**
 	 * Handles object creation events
 	 *
 	 * @param ObjectCreatedEvent $event The creation event
-	 * @param ContactpersoonService $contactSvc The contact person service
-	 * @param SettingsService $settingsService The settings service
-	 * @param LoggerInterface $logger The logger instance
+	 * @param array<string, mixed> $services The contactSvc, settings and logger services.
 	 *
 	 * @return void
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 * @SuppressWarnings(PHPMD.NPathComplexity)
-	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
-	private function handleObjectCreated(
-		ObjectCreatedEvent $event,
-		ContactpersoonService $contactSvc,
-		SettingsService $settingsService,
-		LoggerInterface $logger,
-	): void {
+	private function handleObjectCreated(ObjectCreatedEvent $event, array $services): void {
 		$object = $event->getObject();
 		if ($object === null) {
-			$logger->warning('Stackiq: ObjectCreatedEvent received with null object');
+			$services['logger']->warning('Stackiq: ObjectCreatedEvent received with null object');
 			return;
 		}
 
-		$objectSchemaId = $object->getSchema();
-		$objectId = $object->getUuid();
-		$objectRegisterId = $object->getRegister();
-
-		// Convert schema ID to integer for consistent comparison.
-		$objectSchemaIdInt = (int)$objectSchemaId;
-
+		$ctx    = $this->objectContext(object: $object, services: $services);
+		$logger = $ctx['logger'];
 		$logger->info(
 			'Stackiq: Processing object creation',
 			[
-				'objectId' => $objectId,
-				'schemaId' => $objectSchemaId,
-				'schemaIdInt' => $objectSchemaIdInt,
-				'registerId' => $objectRegisterId,
+				'objectId' => $ctx['objectId'],
+				'schemaId' => $ctx['schemaId'],
+				'schemaIdInt' => $ctx['schemaIdInt'],
+				'registerId' => $ctx['registerId'],
 				'objectData' => json_encode($object->getObject()),
 			]
 		);
 
-		// Get configuration for different object types.
-		$catalogSchemaIds = $this->resolveCatalogSchemaIds(settingsService: $settingsService);
-		$organisationSchemaId = $catalogSchemaIds['organization'];
-		$contactSchemaId = $catalogSchemaIds['contactPerson'];
-		$contactInfoSchemaId = $catalogSchemaIds['contactgegevens'];
-		$gebruikSchemaId = $catalogSchemaIds['usage'];
-
+		$ids = $this->resolveCatalogSchemaIds(settingsService: $ctx['settings']);
 		$logger->debug(
 			'Stackiq: Configuration lookup results',
 			[
-				'organisatieSchemaId' => $organisationSchemaId,
-				'contactpersoonSchemaId' => $contactSchemaId,
-				'contactgegevensSchemaId' => $contactInfoSchemaId,
-				'gebruikSchemaId' => $gebruikSchemaId,
-				'objectSchemaId' => $objectSchemaIdInt,
+				'organisatieSchemaId' => $ids['organization'],
+				'contactpersoonSchemaId' => $ids['contactPerson'],
+				'contactgegevensSchemaId' => $ids['contactgegevens'],
+				'gebruikSchemaId' => $ids['usage'],
+				'objectSchemaId' => $ctx['schemaIdInt'],
 			]
 		);
 
-		// Check if this is an organization object.
-		if ($this->matchesSchema(objectSchemaIdInt: $objectSchemaIdInt, configured: $organisationSchemaId) === true) {
-			$objectData = $object->getObject();
-			$status = strtolower($objectData['status'] ?? '');
-
-			// Only process active organizations.
-			if ($this->isActiveStatus(status: $status) === false) {
-				$logger->debug(
-					'Stackiq: Skipping non-active organization creation',
-					[
-						'objectId' => $objectId,
-						'status' => $status,
-					]
-				);
-				return;
+		$kind = null;
+		foreach ($ids as $type => $configured) {
+			if ($kind === null && $this->matchesSchema(objectSchemaIdInt: $ctx['schemaIdInt'], configured: $configured) === true) {
+				$kind = $type;
 			}
+		}
 
-			$logger->info(
-				'Stackiq: Processing active organization creation',
+		match ($kind) {
+			'organization' => $this->onOrganisationCreated(ctx: $ctx),
+			'contactPerson' => $this->onContactPersonCreated(ctx: $ctx),
+			'contactgegevens' => $logger->info('Stackiq: Processing contactgegevens creation (deprecated)', ['objectId' => $ctx['objectId']]),
+			'usage' => $this->onUsageCreated(ctx: $ctx),
+			default => $logger->debug(
+				'Stackiq: Object creation not handled - not a supported object type',
 				[
-					'objectId' => $objectId,
+					'objectId' => $ctx['objectId'],
+					'schemaId' => $ctx['schemaIdInt'],
+					'registerId' => $ctx['registerId'],
+					'supportedSchemas' => $ids,
+				]
+			),
+		};
+	}//end handleObjectCreated()
+
+	/**
+	 * A created organisation is synced when it is active.
+	 *
+	 * @param array<string, mixed> $ctx The object context.
+	 *
+	 * @return void
+	 */
+	private function onOrganisationCreated(array $ctx): void {
+		$status = strtolower($ctx['object']->getObject()['status'] ?? '');
+		if ($this->isActiveStatus(status: $status) === false) {
+			$ctx['logger']->debug(
+				'Stackiq: Skipping non-active organization creation',
+				[
+					'objectId' => $ctx['objectId'],
 					'status' => $status,
 				]
 			);
-
-			$this->runOrganizationSync(object: $object, phase: 'creation', logger: $logger);
-			return;
-		}//end if
-
-		// Check if this is a contactpersoon object.
-		if ($this->matchesSchema(objectSchemaIdInt: $objectSchemaIdInt, configured: $contactSchemaId) === true) {
-			$logger->info('Stackiq: Processing contactpersoon creation', ['objectId' => $objectId]);
-			$contactSvc->processContactpersoon($object);
 			return;
 		}
 
-		// Check if this is a contactgegevens object (deprecated - use contactpersoon instead).
-		if ($this->matchesSchema(objectSchemaIdInt: $objectSchemaIdInt, configured: $contactInfoSchemaId) === true) {
-			$logger->info('Stackiq: Processing contactgegevens creation (deprecated)', ['objectId' => $objectId]);
-			// Contactgegevens is deprecated, use contactpersoon instead.
-			return;
-		}
-
-		// Check if this is a gebruik object.
-		if ($this->matchesSchema(objectSchemaIdInt: $objectSchemaIdInt, configured: $gebruikSchemaId) === true) {
-			$logger->info('Stackiq: Processing gebruik creation', ['objectId' => $objectId]);
-			$this->runGebruikSync(object: $object, phase: 'creation', logger: $logger);
-			return;
-		}//end if
-
-		// Log unhandled object types.
-		$logger->debug(
-			'Stackiq: Object creation not handled - not a supported object type',
+		$ctx['logger']->info(
+			'Stackiq: Processing active organization creation',
 			[
-				'objectId' => $objectId,
-				'schemaId' => $objectSchemaIdInt,
-				'registerId' => $objectRegisterId,
-				'supportedSchemas' => [
-					'organization' => $organisationSchemaId,
-					'contactPerson' => $contactSchemaId,
-					'contactgegevens' => $contactInfoSchemaId,
-					'usage' => $gebruikSchemaId,
-				],
+				'objectId' => $ctx['objectId'],
+				'status' => $status,
 			]
 		);
-	}//end handleObjectCreated()
+
+		$this->runOrganizationSync(object: $ctx['object'], phase: 'creation', logger: $ctx['logger']);
+	}//end onOrganisationCreated()
+
+	/**
+	 * A created contact person gets processed.
+	 *
+	 * @param array<string, mixed> $ctx The object context.
+	 *
+	 * @return void
+	 */
+	private function onContactPersonCreated(array $ctx): void {
+		$ctx['logger']->info('Stackiq: Processing contactpersoon creation', ['objectId' => $ctx['objectId']]);
+		$ctx['contactSvc']->processContactpersoon($ctx['object']);
+	}//end onContactPersonCreated()
+
+	/**
+	 * A created usage gets synced.
+	 *
+	 * @param array<string, mixed> $ctx The object context.
+	 *
+	 * @return void
+	 */
+	private function onUsageCreated(array $ctx): void {
+		$ctx['logger']->info('Stackiq: Processing gebruik creation', ['objectId' => $ctx['objectId']]);
+		$this->runGebruikSync(object: $ctx['object'], phase: 'creation', logger: $ctx['logger']);
+	}//end onUsageCreated()
 
 	/**
 	 * Handles object update events
 	 *
 	 * @param ObjectUpdatedEvent $event The update event
-	 * @param ContactpersoonService $contactSvc The contact person service
-	 * @param SettingsService $settingsService The settings service
-	 * @param LoggerInterface $logger The logger instance
+	 * @param array<string, mixed> $services The contactSvc, settings and logger services.
 	 *
 	 * @return void
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 * @SuppressWarnings(PHPMD.NPathComplexity)
-	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
-	private function handleObjectUpdated(
-		ObjectUpdatedEvent $event,
-		ContactpersoonService $contactSvc,
-		SettingsService $settingsService,
-		LoggerInterface $logger,
-	): void {
+	private function handleObjectUpdated(ObjectUpdatedEvent $event, array $services): void {
 		$object = $event->getNewObject();
-		$oldObject = $event->getOldObject();
-
 		if ($object === null) {
-			$logger->warning('Stackiq: ObjectUpdatedEvent received with null object');
+			$services['logger']->warning('Stackiq: ObjectUpdatedEvent received with null object');
 			return;
 		}
 
-		$objectSchemaId = $object->getSchema();
-		$objectId = $object->getUuid();
-		$objectRegisterId = $object->getRegister();
-
-		// Convert schema ID to integer for consistent comparison.
-		$objectSchemaIdInt = (int)$objectSchemaId;
-
-		$logger->info(
+		$ctx = $this->objectContext(object: $object, services: $services) + ['oldObject' => $event->getOldObject()];
+		$ctx['logger']->info(
 			'Stackiq: Processing object update',
 			[
-				'objectId' => $objectId,
-				'schemaId' => $objectSchemaId,
-				'schemaIdInt' => $objectSchemaIdInt,
-				'registerId' => $objectRegisterId,
-				'hasOldObject' => $oldObject !== null,
+				'objectId' => $ctx['objectId'],
+				'schemaId' => $ctx['schemaId'],
+				'schemaIdInt' => $ctx['schemaIdInt'],
+				'registerId' => $ctx['registerId'],
+				'hasOldObject' => $ctx['oldObject'] !== null,
 			]
 		);
 
-		// Check if this is an organization update.
-		$organisationSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'organization');
+		if ($this->isOrganisationUpdate(ctx: $ctx) === true) {
+			$this->onOrganisationUpdated(ctx: $ctx);
+			return;
+		}
+
+		$match = $this->firstMatchingSchema(ctx: $ctx, kinds: ['contactPerson', 'contactgegevens', 'usage']);
+		if ($match['kind'] === 'contactPerson' || $match['kind'] === 'contactgegevens') {
+			$this->runContactAction(ctx: $ctx, action: ['phase' => 'update', 'kind' => $match['kind'], 'configured' => $match['ids'][$match['kind']]]);
+			return;
+		}
+
+		if ($match['kind'] === 'usage') {
+			$ctx['logger']->info(
+				'Stackiq: Matched gebruik schema - processing update',
+				[
+					'objectId' => $ctx['objectId'],
+					'schemaId' => $ctx['schemaId'],
+					'configuredSchemaId' => $match['ids']['usage'],
+				]
+			);
+
+			$this->runGebruikSync(object: $object, phase: 'update', logger: $ctx['logger']);
+			return;
+		}
+
+		$ctx['logger']->debug(
+			'Stackiq: Object update not handled - focusing only on organisatie, contactpersonen, and gebruik',
+			[
+				'objectId' => $ctx['objectId'],
+				'schemaId' => $ctx['schemaId'],
+				'schemaIdInt' => $ctx['schemaIdInt'],
+				'schemaIdType' => gettype($ctx['schemaId']),
+				'registerId' => $ctx['registerId'],
+				'handledSchemas' => ['organization' => $ctx['organisationSchemaId']] + $match['ids'],
+			]
+		);
+	}//end handleObjectUpdated()
+
+	/**
+	 * Whether an updated object is an organisation; logs the schema check.
+	 *
+	 * @param array<string, mixed> $ctx The object context; gets the organisation schema id.
+	 *
+	 * @return bool True when the object's schema is the organisation schema.
+	 */
+	private function isOrganisationUpdate(array &$ctx): bool {
+		$organisationSchemaId        = $ctx['settings']->getSchemaIdForObjectType(objectType: 'organization');
+		$ctx['organisationSchemaId'] = $organisationSchemaId;
 		$orgSchemaIdInt = (int)$organisationSchemaId;
 
-		$logger->debug(
+		$ctx['logger']->debug(
 			'Got organisation schema ID',
 			[
 				'app' => 'stackiq',
@@ -582,378 +642,208 @@ class StackiqEventListener implements IEventListener {
 			]
 		);
 
-		$logger->debug(
+		$ctx['logger']->debug(
 			'Organization schema check',
 			[
 				'app' => 'stackiq',
-				'objectSchemaId' => $objectSchemaId,
-				'objectSchemaIdInt' => $objectSchemaIdInt,
+				'objectSchemaId' => $ctx['schemaId'],
+				'objectSchemaIdInt' => $ctx['schemaIdInt'],
 				'organisatieSchemaId' => $organisationSchemaId,
 				'organisatieSchemaIdInt' => $orgSchemaIdInt,
-				'matches' => ($objectSchemaIdInt === $orgSchemaIdInt),
+				'matches' => ($ctx['schemaIdInt'] === $orgSchemaIdInt),
 			]
 		);
 
-		if ($organisationSchemaId !== null && $objectSchemaIdInt === $orgSchemaIdInt) {
-			$objectData = $object->getObject();
-			$status = strtolower($objectData['status'] ?? '');
+		return $this->matchesSchema(objectSchemaIdInt: $ctx['schemaIdInt'], configured: $organisationSchemaId);
+	}//end isOrganisationUpdate()
 
-			$oldStatus = '';
-			if ($oldObject !== null) {
-				$oldData = $oldObject->getObject();
-				$oldStatus = strtolower($oldData['status'] ?? '');
-			}
+	/**
+	 * An updated organisation that just became active is refetched with its contact persons and synced.
+	 *
+	 * @param array<string, mixed> $ctx The object context, with the old object.
+	 *
+	 * @return void
+	 */
+	private function onOrganisationUpdated(array $ctx): void {
+		$status    = strtolower($ctx['object']->getObject()['status'] ?? '');
+		$oldStatus = '';
+		if ($ctx['oldObject'] !== null) {
+			$oldStatus = strtolower($ctx['oldObject']->getObject()['status'] ?? '');
+		}
 
-			$logger->debug(
-				'Organization status check',
-				[
-					'app' => 'stackiq',
-					'objectId' => $objectId,
-					'status' => $status,
-					'oldStatus' => $oldStatus,
-					'statusChanged' => ($status !== $oldStatus),
-					'isActief' => $this->isActiveStatus(status: $status),
-					'willProcess' => ($this->isActiveStatus(status: $status) === true
-						&& $status !== $oldStatus),
-				]
-			);
-
-			// Only process active organizations.
-			if ($this->isActiveStatus(status: $status) === true && $status !== $oldStatus) {
-				$logger->info(
-					'Stackiq: Processing active organization update',
-					[
-						'objectId' => $objectId,
-						'status' => $status,
-						'schemaId' => $objectSchemaId,
-					]
-				);
-
-				$orgWithContacts = $this->refetchOrganizationWithContactpersonen(
-					objectId: $objectId,
-					settingsService: $settingsService,
-					logger: $logger
-				);
-				if ($orgWithContacts !== null) {
-					$this->runOrganizationSync(object: $orgWithContacts, phase: 'update', logger: $logger);
-				}
-			}//end if
-
-			if ($this->isActiveStatus(status: $status) === false || $status === $oldStatus) {
-				$logger->debug(
-					'Stackiq: Skipping non-active organization update',
-					[
-						'objectId' => $objectId,
-						'status' => $status,
-						'schemaId' => $objectSchemaId,
-					]
-				);
-			}
-
-			return;
-		}//end if
-
-		// Handle contactpersoon updates.
-		$contactSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'contactPerson');
-		$cntSchemaIdInt = (int)$contactSchemaId;
-
-		if ($contactSchemaId !== null && $objectSchemaIdInt === $cntSchemaIdInt) {
-			$logger->info(
-				'Stackiq: Matched contactpersoon schema - processing update',
-				[
-					'objectId' => $objectId,
-					'schemaId' => $objectSchemaId,
-					'configuredSchemaId' => $contactSchemaId,
-				]
-			);
-
-			try {
-				$contactSvc->handleContactpersoonUpdate(
-					contactPersonObject: $object,
-					oldContactPersonObject: $oldObject
-				);
-
-				$logger->info(
-					'Stackiq: Successfully processed contactpersoon update',
-					[
-						'objectId' => $objectId,
-						'timestamp' => date('Y-m-d H:i:s'),
-					]
-				);
-			} catch (\Exception $e) {
-				$logger->error(
-					'Stackiq: Failed to process contactpersoon update',
-					[
-						'objectId' => $objectId,
-						'exception' => $e->getMessage(),
-						'file' => $e->getFile(),
-						'line' => $e->getLine(),
-						'trace' => $e->getTraceAsString(),
-					]
-				);
-			}//end try
-
-			return;
-		}//end if
-
-		// Handle contactgegevens updates (backward compatibility).
-		$contactInfoSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'contactgegevens');
-		$infoSchemaIdInt = (int)$contactInfoSchemaId;
-
-		if ($contactInfoSchemaId !== null && $objectSchemaIdInt === $infoSchemaIdInt) {
-			$logger->info(
-				'Stackiq: Matched contactgegevens schema - processing update (backward compatibility)',
-				[
-					'objectId' => $objectId,
-					'schemaId' => $objectSchemaId,
-					'configuredSchemaId' => $contactInfoSchemaId,
-				]
-			);
-
-			try {
-				// Handle contactgegevens as contactpersoon (backward compatibility).
-				$contactSvc->handleContactpersoonUpdate(
-					contactPersonObject: $object,
-					oldContactPersonObject: $oldObject
-				);
-
-				$logger->info(
-					'Stackiq: Successfully processed contactgegevens update (as contactpersoon)',
-					[
-						'objectId' => $objectId,
-						'timestamp' => date('Y-m-d H:i:s'),
-					]
-				);
-			} catch (\Exception $e) {
-				$logger->error(
-					'Stackiq: Failed to process contactgegevens update',
-					[
-						'objectId' => $objectId,
-						'exception' => $e->getMessage(),
-						'file' => $e->getFile(),
-						'line' => $e->getLine(),
-						'trace' => $e->getTraceAsString(),
-					]
-				);
-			}//end try
-
-			return;
-		}//end if
-
-		// Handle gebruik updates.
-		$gebruikSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'usage');
-		$gebruikSchemaIdInt = (int)$gebruikSchemaId;
-
-		if ($gebruikSchemaId !== null && $objectSchemaIdInt === $gebruikSchemaIdInt) {
-			$logger->info(
-				'Stackiq: Matched gebruik schema - processing update',
-				[
-					'objectId' => $objectId,
-					'schemaId' => $objectSchemaId,
-					'configuredSchemaId' => $gebruikSchemaId,
-				]
-			);
-
-			$this->runGebruikSync(object: $object, phase: 'update', logger: $logger);
-			return;
-		}//end if
-
-		// Log if we don't handle this schema type.
-		$logger->debug(
-			'Stackiq: Object update not handled - focusing only on organisatie, contactpersonen, and gebruik',
+		$becameActive = $this->isActiveStatus(status: $status) === true && $status !== $oldStatus;
+		$ctx['logger']->debug(
+			'Organization status check',
 			[
-				'objectId' => $objectId,
-				'schemaId' => $objectSchemaId,
-				'schemaIdInt' => $objectSchemaIdInt,
-				'schemaIdType' => gettype($objectSchemaId),
-				'registerId' => $objectRegisterId,
-				'handledSchemas' => [
-					'organization' => $organisationSchemaId,
-					'contactPerson' => $contactSchemaId,
-					'contactgegevens' => $contactInfoSchemaId,
-					'usage' => $gebruikSchemaId,
-				],
+				'app' => 'stackiq',
+				'objectId' => $ctx['objectId'],
+				'status' => $status,
+				'oldStatus' => $oldStatus,
+				'statusChanged' => ($status !== $oldStatus),
+				'isActief' => $this->isActiveStatus(status: $status),
+				'willProcess' => $becameActive,
 			]
 		);
-	}//end handleObjectUpdated()
+
+		$facts = [
+			'objectId' => $ctx['objectId'],
+			'status' => $status,
+			'schemaId' => $ctx['schemaId'],
+		];
+		if ($becameActive === false) {
+			$ctx['logger']->debug('Stackiq: Skipping non-active organization update', $facts);
+			return;
+		}
+
+		$ctx['logger']->info('Stackiq: Processing active organization update', $facts);
+		$orgWithContacts = $this->refetchOrganizationWithContactpersonen(
+			objectId: $ctx['objectId'],
+			settingsService: $ctx['settings'],
+			logger: $ctx['logger']
+		);
+		if ($orgWithContacts !== null) {
+			$this->runOrganizationSync(object: $orgWithContacts, phase: 'update', logger: $ctx['logger']);
+		}
+	}//end onOrganisationUpdated()
+
+	/**
+	 * Hand an updated or deleted contact person (or contactgegevens) to the contact person service.
+	 *
+	 * @param array<string, mixed>                                         $ctx    The object context.
+	 * @param array{phase: string, kind: string, configured: int|null} $action The phase, the matched type and its configured schema id.
+	 *
+	 * @return void
+	 */
+	private function runContactAction(array $ctx, array $action): void {
+		[$matched, $done, $failed] = self::CONTACT_MESSAGES[$action['phase']][$action['kind']];
+		$ctx['logger']->info(
+			$matched,
+			[
+				'objectId' => $ctx['objectId'],
+				'schemaId' => $ctx['schemaId'],
+				'configuredSchemaId' => $action['configured'],
+			]
+		);
+
+		$call = fn () => $ctx['contactSvc']->handleContactDeletion($ctx['object']);
+		if ($action['phase'] === 'update') {
+			$call = fn () => $ctx['contactSvc']->handleContactpersoonUpdate(
+				contactPersonObject: $ctx['object'],
+				oldContactPersonObject: $ctx['oldObject']
+			);
+		}
+
+		try {
+			$call();
+
+			$ctx['logger']->info(
+				$done,
+				[
+					'objectId' => $ctx['objectId'],
+					'timestamp' => date('Y-m-d H:i:s'),
+				]
+			);
+		} catch (\Exception $e) {
+			$ctx['logger']->error(
+				$failed,
+				[
+					'objectId' => $ctx['objectId'],
+					'exception' => $e->getMessage(),
+					'file' => $e->getFile(),
+					'line' => $e->getLine(),
+					'trace' => $e->getTraceAsString(),
+				]
+			);
+		}//end try
+	}//end runContactAction()
 
 	/**
 	 * Handles object deletion events
 	 *
 	 * @param ObjectDeletedEvent $event The deletion event
-	 * @param ContactpersoonService $contactSvc The contact person service
-	 * @param SettingsService $settingsService The settings service
-	 * @param LoggerInterface $logger The logger instance
+	 * @param array<string, mixed> $services The contactSvc, settings and logger services.
 	 *
 	 * @return void
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 * @SuppressWarnings(PHPMD.NPathComplexity)
-	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
-	private function handleObjectDeleted(
-		ObjectDeletedEvent $event,
-		ContactpersoonService $contactSvc,
-		SettingsService $settingsService,
-		LoggerInterface $logger,
-	): void {
+	private function handleObjectDeleted(ObjectDeletedEvent $event, array $services): void {
 		$object = $event->getObject();
 		if ($object === null) {
-			$logger->warning('Stackiq: ObjectDeletedEvent received with null object');
+			$services['logger']->warning('Stackiq: ObjectDeletedEvent received with null object');
 			return;
 		}
 
-		$objectSchemaId = $object->getSchema();
-		$objectId = $object->getUuid();
-		$objectRegisterId = $object->getRegister();
-
-		$logger->info(
+		$ctx = $this->objectContext(object: $object, services: $services);
+		$ctx['logger']->info(
 			'Stackiq: Processing object deletion',
 			[
-				'objectId' => $objectId,
-				'schemaId' => $objectSchemaId,
-				'registerId' => $objectRegisterId,
+				'objectId' => $ctx['objectId'],
+				'schemaId' => $ctx['schemaId'],
+				'registerId' => $ctx['registerId'],
 				'objectData' => $object->getObject(),
 			]
 		);
 
-		// Check if this is an organization deletion.
-		$organisationSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'organization');
-		$orgSchemaIdInt = (int)$organisationSchemaId;
-		$objectSchemaIdInt = (int)$objectSchemaId;
-
-		if ($organisationSchemaId !== null && $objectSchemaIdInt === $orgSchemaIdInt) {
-			$logger->info('Stackiq: Processing organization deletion', ['objectId' => $objectId]);
-			$this->runOrganizationSync(object: $object, phase: 'deletion', logger: $logger);
-			return;
-		}//end if
-
-		// Handle contactpersoon deletion.
-		$contactSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'contactPerson');
-		$cntSchemaIdInt = (int)$contactSchemaId;
-
-		if ($contactSchemaId !== null && $objectSchemaIdInt === $cntSchemaIdInt) {
-			$logger->info(
-				'Stackiq: Matched contactpersoon schema - processing deletion',
+		$match = $this->firstMatchingSchema(ctx: $ctx, kinds: ['organization', 'contactPerson', 'contactgegevens', 'usage']);
+		match ($match['kind']) {
+			'organization' => $this->onOrganisationDeleted(ctx: $ctx),
+			'contactPerson', 'contactgegevens' => $this->runContactAction(
+				ctx: $ctx,
+				action: ['phase' => 'deletion', 'kind' => $match['kind'], 'configured' => $match['ids'][$match['kind']]]
+			),
+			'usage' => $this->onUsageDeleted(ctx: $ctx, configured: $match['ids']['usage']),
+			default => $ctx['logger']->debug(
+				'Stackiq: Object deletion not handled - focusing only on organisatie, contactpersonen, and gebruik',
 				[
-					'objectId' => $objectId,
-					'schemaId' => $objectSchemaId,
-					'configuredSchemaId' => $contactSchemaId,
+					'objectId' => $ctx['objectId'],
+					'schemaId' => $ctx['schemaId'],
+					'registerId' => $ctx['registerId'],
+					'handledSchemas' => $match['ids'],
 				]
-			);
+			),
+		};
+	}//end handleObjectDeleted()
 
-			try {
-				$contactSvc->handleContactDeletion($object);
+	/**
+	 * A deleted organisation gets synced.
+	 *
+	 * @param array<string, mixed> $ctx The object context.
+	 *
+	 * @return void
+	 */
+	private function onOrganisationDeleted(array $ctx): void {
+		$ctx['logger']->info('Stackiq: Processing organization deletion', ['objectId' => $ctx['objectId']]);
+		$this->runOrganizationSync(object: $ctx['object'], phase: 'deletion', logger: $ctx['logger']);
+	}//end onOrganisationDeleted()
 
-				$logger->info(
-					'Stackiq: Successfully processed contactpersoon deletion',
-					[
-						'objectId' => $objectId,
-						'timestamp' => date('Y-m-d H:i:s'),
-					]
-				);
-			} catch (\Exception $e) {
-				$logger->error(
-					'Stackiq: Failed to process contactpersoon deletion',
-					[
-						'objectId' => $objectId,
-						'exception' => $e->getMessage(),
-						'file' => $e->getFile(),
-						'line' => $e->getLine(),
-						'trace' => $e->getTraceAsString(),
-					]
-				);
-			}//end try
-
-			return;
-		}//end if
-
-		// Handle contactgegevens deletion (backward compatibility).
-		$contactInfoSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'contactgegevens');
-		$infoSchemaIdInt = (int)$contactInfoSchemaId;
-
-		if ($contactInfoSchemaId !== null && $objectSchemaIdInt === $infoSchemaIdInt) {
-			$logger->info(
-				'Stackiq: Matched contactgegevens schema - processing deletion (backward compatibility)',
-				[
-					'objectId' => $objectId,
-					'schemaId' => $objectSchemaId,
-					'configuredSchemaId' => $contactInfoSchemaId,
-				]
-			);
-
-			try {
-				$contactSvc->handleContactDeletion($object);
-
-				$logger->info(
-					'Stackiq: Successfully processed contactgegevens deletion',
-					[
-						'objectId' => $objectId,
-						'timestamp' => date('Y-m-d H:i:s'),
-					]
-				);
-			} catch (\Exception $e) {
-				$logger->error(
-					'Stackiq: Failed to process contactgegevens deletion',
-					[
-						'objectId' => $objectId,
-						'exception' => $e->getMessage(),
-						'file' => $e->getFile(),
-						'line' => $e->getLine(),
-						'trace' => $e->getTraceAsString(),
-					]
-				);
-			}//end try
-
-			return;
-		}//end if
-
-		// Handle gebruik deletion.
-		$gebruikSchemaId = $settingsService->getSchemaIdForObjectType(objectType: 'usage');
-		$gebruikSchemaIdInt = (int)$gebruikSchemaId;
-
-		if ($gebruikSchemaId !== null && $objectSchemaIdInt === $gebruikSchemaIdInt) {
-			$objectData = $object->getObject();
-
-			$logger->info(
-				'Stackiq: Matched gebruik schema - processing deletion',
-				[
-					'objectId' => $objectId,
-					'schemaId' => $objectSchemaId,
-					'configuredSchemaId' => $gebruikSchemaId,
-					'consumer' => $objectData['consumer']['name'] ?? 'Unknown',
-					'product' => $objectData['product']['name'] ?? 'Unknown',
-				]
-			);
-
-			// For deletions, we mainly log the event since the object is being removed.
-			// No specific cleanup needed for gebruik objects currently.
-			$logger->info(
-				'Stackiq: Gebruik object deleted - no specific cleanup required',
-				[
-					'objectId' => $objectId,
-					'timestamp' => date('Y-m-d H:i:s'),
-				]
-			);
-			return;
-		}//end if
-
-		// Log if we don't handle this schema type.
-		$logger->debug(
-			'Stackiq: Object deletion not handled - focusing only on organisatie, contactpersonen, and gebruik',
+	/**
+	 * A deleted usage is only logged; it needs no clean-up.
+	 *
+	 * @param array<string, mixed> $ctx        The object context.
+	 * @param int|null             $configured The configured usage schema id.
+	 *
+	 * @return void
+	 */
+	private function onUsageDeleted(array $ctx, ?int $configured): void {
+		$objectData = $ctx['object']->getObject();
+		$ctx['logger']->info(
+			'Stackiq: Matched gebruik schema - processing deletion',
 			[
-				'objectId' => $objectId,
-				'schemaId' => $objectSchemaId,
-				'registerId' => $objectRegisterId,
-				'handledSchemas' => [
-					'organization' => $organisationSchemaId,
-					'contactPerson' => $contactSchemaId,
-					'contactgegevens' => $contactInfoSchemaId,
-					'usage' => $gebruikSchemaId,
-				],
+				'objectId' => $ctx['objectId'],
+				'schemaId' => $ctx['schemaId'],
+				'configuredSchemaId' => $configured,
+				'consumer' => $objectData['consumer']['name'] ?? 'Unknown',
+				'product' => $objectData['product']['name'] ?? 'Unknown',
 			]
 		);
-	}//end handleObjectDeleted()
+
+		$ctx['logger']->info(
+			'Stackiq: Gebruik object deleted - no specific cleanup required',
+			[
+				'objectId' => $ctx['objectId'],
+				'timestamp' => date('Y-m-d H:i:s'),
+			]
+		);
+	}//end onUsageDeleted()
 }//end class
