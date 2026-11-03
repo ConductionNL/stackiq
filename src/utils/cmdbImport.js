@@ -330,6 +330,53 @@ export function moduleUrl(uuid) {
 const INTERRUPTED_STATUSES = new Set([0, 502, 503, 504])
 
 /**
+ * The CMDB error code of an answer without one in its body, by HTTP status.
+ * Any other status is IMPORT_FAILED.
+ *
+ * @type {Map<number, string>}
+ */
+const STATUS_ERROR_CODES = new Map([
+	[401, 'NOT_SIGNED_IN'],
+	[403, 'NOT_ADMIN'],
+	[412, 'CSRF_FAILED'],
+	[413, 'FILE_TOO_LARGE'],
+	[0, 'NETWORK_ERROR'],
+])
+
+/**
+ * An answer body when it is an object, else null.
+ *
+ * @param {object|string|null|undefined} body The answer body.
+ * @return {object|null} The body.
+ */
+function bodyObject(body) {
+	return body && typeof body === 'object' ? body : null
+}
+
+/**
+ * A string field of an answer body, or an empty string.
+ *
+ * @param {object|null} body The answer body.
+ * @param {string} key The field.
+ * @return {string} The value.
+ */
+function stringField(body, key) {
+	return typeof body?.[key] === 'string' ? body[key] : ''
+}
+
+/**
+ * An object field of an answer body, or an empty object.
+ *
+ * @param {object|null} body The answer body.
+ * @param {string} key The field.
+ * @return {object} The value.
+ */
+function objectField(body, key) {
+	const value = body?.[key]
+	return value && typeof value === 'object' ? value : {}
+}
+
+/**
  * Turn a failed request into the server's error shape.
  *
  * Errors raised by Nextcloud itself (not signed in, not an admin, CSRF) come
@@ -344,42 +391,123 @@ const INTERRUPTED_STATUSES = new Set([0, 502, 503, 504])
  */
 export function normaliseError(error) {
 	const status = error?.response?.status ?? 0
-	const body = error?.response?.data
-	const fromBody =
-		body && typeof body === 'object' && typeof body.error === 'string'
-			? body.error
-			: ''
-	let code = fromBody
-	if (code === '') {
-		if (status === 401) {
-			code = 'NOT_SIGNED_IN'
-		} else if (status === 403) {
-			code = 'NOT_ADMIN'
-		} else if (status === 412) {
-			code = 'CSRF_FAILED'
-		} else if (status === 413) {
-			code = 'FILE_TOO_LARGE'
-		} else if (status === 0) {
-			code = 'NETWORK_ERROR'
-		} else {
-			code = 'IMPORT_FAILED'
-		}
-	}
+	const body = bodyObject(error?.response?.data)
+	const fromBody = stringField(body, 'error')
 	return {
-		error: code,
-		message:
-			body && typeof body === 'object' && typeof body.message === 'string'
-				? body.message
-				: '',
-		details:
-			body
-			&& typeof body === 'object'
-			&& body.details
-			&& typeof body.details === 'object'
-				? body.details
-				: {},
+		error: fromBody || STATUS_ERROR_CODES.get(status) || 'IMPORT_FAILED',
+		message: stringField(body, 'message'),
+		details: objectField(body, 'details'),
 		status,
 		interrupted: fromBody === '' && INTERRUPTED_STATUSES.has(status),
+	}
+}
+
+/**
+ * Marks a progress poll that got no answer at all.
+ *
+ * @type {symbol}
+ */
+const UNREACHABLE = Symbol('unreachable')
+
+/**
+ * Read the import progress once.
+ *
+ * @param {object} http The http client.
+ * @param {string} url The progress endpoint.
+ * @return {Promise<object|null|symbol>} The progress, null when the answer has none, or UNREACHABLE.
+ */
+async function readProgress(http, url) {
+	try {
+		const response = await http.get(url)
+		return response?.data?.progress ?? null
+	} catch (error) {
+		return error?.response ? null : UNREACHABLE
+	}
+}
+
+/**
+ * The outcome of a poll that gave no usable progress, or null when it did.
+ *
+ * @param {object|null|symbol} progress The poll result.
+ * @return {{state: string}|null} The outcome.
+ */
+function unusableProgress(progress) {
+	if (progress === UNREACHABLE) {
+		return { state: 'unreachable' }
+	}
+	if (!progress || typeof progress !== 'object') {
+		return { state: 'unknown' }
+	}
+	return null
+}
+
+/**
+ * Whether a progress status ends the import with a report to read.
+ *
+ * @param {string} status The progress status.
+ * @return {boolean} True for completed and cancelled.
+ */
+function isClosedStatus(status) {
+	return status === 'completed' || status === 'cancelled'
+}
+
+/**
+ * The outcome of a progress that ended the import, or null while it runs on.
+ *
+ * @param {object} progress The progress.
+ * @return {object|null} The outcome.
+ */
+function endedOutcome(progress) {
+	const report = progress.statistics?.report
+	if (isClosedStatus(progress.status) && report && typeof report === 'object') {
+		return { state: 'finished', report }
+	}
+	if (progress.status === 'failed') {
+		return { state: 'failed' }
+	}
+	return null
+}
+
+/**
+ * Whether to poll again: the import still runs, the time is not up and no
+ * stop was asked.
+ *
+ * @param {object} progress The progress.
+ * @param {{run: object, waited: number}} poll The run and the time waited so far.
+ * @return {boolean} True to poll again.
+ */
+function keepPolling(progress, poll) {
+	const { run, waited } = poll
+	const stop =
+		progress.status !== 'running' || waited >= run.timeoutMs || run.shouldStop()
+	return !stop
+}
+
+/**
+ * Poll the progress until the import ends, cannot be read, or polling stops.
+ *
+ * @param {object} run The http client, url, callbacks, interval and timeout.
+ * @param {Function} wait Waits the given milliseconds.
+ * @return {Promise<object>} The outcome.
+ */
+async function pollProgress(run, wait) {
+	let waited = 0
+	for (;;) {
+		const progress = await readProgress(run.http, run.url)
+		const unusable = unusableProgress(progress)
+		if (unusable) {
+			return unusable
+		}
+		run.onProgress(progress)
+		const ended = endedOutcome(progress)
+		if (ended) {
+			return ended
+		}
+		if (!keepPolling(progress, { run, waited })) {
+			return { state: 'unknown' }
+		}
+		await wait(run.intervalMs)
+		waited += run.intervalMs
 	}
 }
 
@@ -413,38 +541,8 @@ export async function followInterruptedImport({
 	const url = generateUrl('/apps/stackiq/api/progress/{operationId}', {
 		operationId,
 	})
-	let waited = 0
-	for (;;) {
-		let progress = null
-		try {
-			const response = await http.get(url)
-			progress = response?.data?.progress ?? null
-		} catch (error) {
-			if (!error?.response) {
-				return { state: 'unreachable' }
-			}
-		}
-		if (!progress || typeof progress !== 'object') {
-			return { state: 'unknown' }
-		}
-		onProgress(progress)
-		const report = progress.statistics?.report
-		if (
-			(progress.status === 'completed' || progress.status === 'cancelled')
-			&& report
-			&& typeof report === 'object'
-		) {
-			return { state: 'finished', report }
-		}
-		if (progress.status === 'failed') {
-			return { state: 'failed' }
-		}
-		if (progress.status !== 'running' || waited >= timeoutMs || shouldStop()) {
-			return { state: 'unknown' }
-		}
-		await wait(intervalMs)
-		waited += intervalMs
-	}
+	const run = { http, url, onProgress, shouldStop, intervalMs, timeoutMs }
+	return pollProgress(run, wait)
 }
 
 /**
