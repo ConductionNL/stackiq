@@ -1090,6 +1090,51 @@ export function cancelFailureText(error) {
 }
 
 /**
+ * The processed and total row counts of an import progress, zero when unset.
+ *
+ * @param {object} progress The progress.
+ * @return {{processed: number, total: number}} The counts.
+ */
+function progressCounts(progress) {
+	return {
+		processed: Number(progress.processed_items) || 0,
+		total: Number(progress.total_items) || 0,
+	}
+}
+
+/**
+ * The progress percentage: from the row counts when there is a total,
+ * capped at 100, else the reported percentage.
+ *
+ * @param {object} progress The progress.
+ * @param {{processed: number, total: number}} counts The row counts.
+ * @return {number} The percentage.
+ */
+function progressPercentage(progress, counts) {
+	const { processed, total } = counts
+	if (total > 0) {
+		return Math.min(100, Math.round((processed / total) * 100))
+	}
+	return Number(progress.percentage) || 0
+}
+
+/**
+ * The rows-processed line of an import progress.
+ *
+ * @param {{processed: number, total: number}} counts The row counts.
+ * @return {string} The line.
+ */
+function rowsProcessedText(counts) {
+	const { processed, total } = counts
+	return t(
+		'stackiq',
+		'{processed} of {total} rows processed',
+		{ processed, total },
+		AS_TEXT,
+	)
+}
+
+/**
  * What the page shows for a progress snapshot of the running import.
  *
  * The percentage comes from the processed and total row counts when the
@@ -1112,12 +1157,6 @@ export function cmdbProgressView(progress) {
 	if (!progress) {
 		return null
 	}
-	const processed = Number(progress.processed_items) || 0
-	const total = Number(progress.total_items) || 0
-	const percentage =
-		total > 0
-			? Math.min(100, Math.round((processed / total) * 100))
-			: Number(progress.percentage) || 0
 	if (progress.phase === 'reconciling') {
 		return {
 			percentage: 100,
@@ -1129,20 +1168,10 @@ export function cmdbProgressView(progress) {
 			),
 		}
 	}
+	const counts = progressCounts(progress)
 	return {
-		percentage,
-		detail:
-			total > 0
-				? t(
-						'stackiq',
-						'{processed} of {total} rows processed',
-						{
-							processed,
-							total,
-						},
-						AS_TEXT,
-					)
-				: '',
+		percentage: progressPercentage(progress, counts),
+		detail: counts.total > 0 ? rowsProcessedText(counts) : '',
 	}
 }
 
@@ -1552,6 +1581,39 @@ export function packSourceLabel(source) {
 }
 
 /**
+ * The shipped and stored version of a register pack, as text.
+ *
+ * @param {object|null} pack The pack.
+ * @return {{shipped: string, stored: string}} The versions, empty when unknown.
+ */
+function packVersions(pack) {
+	return {
+		shipped: String(pack?.shippedVersion ?? pack?.version ?? ''),
+		stored: String(pack?.storedVersion ?? ''),
+	}
+}
+
+/**
+ * The version line of a pack stored in OpenRegister, naming the shipped
+ * version when it differs.
+ *
+ * @param {{shipped: string, stored: string}} versions The versions.
+ * @return {string} The line.
+ */
+function storedPackVersionText(versions) {
+	const { shipped, stored } = versions
+	if (shipped !== '' && shipped !== stored) {
+		return t(
+			'stackiq',
+			'Version {version} (shipped: {shipped})',
+			{ version: stored, shipped },
+			AS_TEXT,
+		)
+	}
+	return t('stackiq', 'Version {version}', { version: stored }, AS_TEXT)
+}
+
+/**
  * The version of a pack as the import runs it: the stored version for a
  * pack from OpenRegister, with the shipped version next to it when the two
  * differ, and the shipped version for a pack read from the file.
@@ -1561,23 +1623,14 @@ export function packSourceLabel(source) {
  * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
 export function packVersionText(pack) {
-	const shipped = String(pack?.shippedVersion ?? pack?.version ?? '')
-	const stored = String(pack?.storedVersion ?? '')
-	if (pack?.source === 'openregister' && stored !== '') {
-		if (shipped !== '' && shipped !== stored) {
-			return t(
-				'stackiq',
-				'Version {version} (shipped: {shipped})',
-				{ version: stored, shipped },
-				AS_TEXT,
-			)
-		}
-		return t('stackiq', 'Version {version}', { version: stored }, AS_TEXT)
+	const versions = packVersions(pack)
+	if (pack?.source === 'openregister' && versions.stored !== '') {
+		return storedPackVersionText(versions)
 	}
-	if (shipped === '') {
+	if (versions.shipped === '') {
 		return ''
 	}
-	return t('stackiq', 'Version {version}', { version: shipped }, AS_TEXT)
+	return t('stackiq', 'Version {version}', { version: versions.shipped }, AS_TEXT)
 }
 
 /**
