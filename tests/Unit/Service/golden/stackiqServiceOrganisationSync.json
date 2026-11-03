@@ -289,10 +289,7 @@
         ]
     },
     "sync: sync, new, signed in": {
-        "result": {
-            "escaped": "Error",
-            "message": "Call to undefined method Mock::createWithUuid()"
-        },
+        "result": true,
         "calls": [
             [
                 "log.info",
@@ -385,60 +382,19 @@
                 []
             ],
             [
-                "log.info",
-                "StackiqService: STEP 1 - Starting createOrganisationInOpenRegister",
-                {
-                    "organizationUuid": "org-1",
-                    "name": "Gemeente A",
-                    "mappedDataKeys": [
-                        "name",
-                        "type",
-                        "website",
-                        "active",
-                        "contactpersonen",
-                        "participants"
-                    ]
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 2 - Checking user context",
-                {
-                    "hasUserSession": true,
-                    "currentUser": "signed-in",
-                    "isAnonymous": false
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 4A - Auth path: User logged in, creating org via mapper",
-                {
-                    "organizationUuid": "org-1",
-                    "currentUser": "signed-in"
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 4B - Using original UUID format for OpenRegister",
-                {
-                    "organizationUuid": "org-1"
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 4C - Getting OrganisationMapper from container",
-                []
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
             ],
             [
                 "container.get",
                 "OCA\\OpenRegister\\Db\\OrganisationMapper"
             ],
             [
-                "log.info",
-                "StackiqService: STEP 4D - OrganisationMapper retrieved",
-                {
-                    "mapperClass": "Mock"
-                }
+                "organisations.createOrganisation",
+                "Gemeente A",
+                "https://a.nl",
+                true,
+                "org-1"
             ],
             [
                 "log.info",
@@ -465,49 +421,31 @@
                 []
             ],
             [
-                "log.info",
-                "StackiqService: STEP 4E - Debug - UUID before createWithUuid",
-                {
-                    "organizationUuid": "org-1",
-                    "uuidLength": 5,
-                    "uuidIsEmpty": false,
-                    "name": "Gemeente A",
-                    "description": "https://a.nl",
-                    "owner": "signed-in",
-                    "users": [
-                        "signed-in"
-                    ],
-                    "contactPersonUsernames": []
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 4F - Calling organisationMapper->createWithUuid()",
+                "organisation.getUserIds",
                 []
             ],
             [
                 "log.info",
-                "StackiqService: STEP 4F_DEBUG - Parameters for createWithUuid",
+                "StackiqService: Created organization in OpenRegister",
                 {
-                    "name": "Gemeente A",
-                    "description": "https://a.nl",
-                    "uuid": "org-1",
-                    "owner": "signed-in",
-                    "users": [
-                        "signed-in"
-                    ],
-                    "isDefault": false,
-                    "uuidLength": 5,
-                    "uuidIsEmpty": false
+                    "organizationUuid": "org-1",
+                    "openRegisterId": "org-1",
+                    "contactPersons": 0
+                }
+            ],
+            [
+                "log.info",
+                "StackiqService: SYNC_STEP_11 - Successfully created organization in OpenRegister",
+                {
+                    "organizationId": "org-1",
+                    "openRegisterId": "org-1",
+                    "createdOrganisationClass": "OCA\\OpenRegister\\Db\\Organisation@anonymous"
                 }
             ]
         ]
     },
     "sync: sync, new, signed in with schema": {
-        "result": {
-            "escaped": "Error",
-            "message": "Call to undefined method Mock::createWithUuid()"
-        },
+        "result": true,
         "calls": [
             [
                 "log.info",
@@ -600,60 +538,19 @@
                 []
             ],
             [
-                "log.info",
-                "StackiqService: STEP 1 - Starting createOrganisationInOpenRegister",
-                {
-                    "organizationUuid": "org-1",
-                    "name": "Gemeente A",
-                    "mappedDataKeys": [
-                        "name",
-                        "type",
-                        "website",
-                        "active",
-                        "contactpersonen",
-                        "participants"
-                    ]
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 2 - Checking user context",
-                {
-                    "hasUserSession": true,
-                    "currentUser": "signed-in",
-                    "isAnonymous": false
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 4A - Auth path: User logged in, creating org via mapper",
-                {
-                    "organizationUuid": "org-1",
-                    "currentUser": "signed-in"
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 4B - Using original UUID format for OpenRegister",
-                {
-                    "organizationUuid": "org-1"
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 4C - Getting OrganisationMapper from container",
-                []
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
             ],
             [
                 "container.get",
                 "OCA\\OpenRegister\\Db\\OrganisationMapper"
             ],
             [
-                "log.info",
-                "StackiqService: STEP 4D - OrganisationMapper retrieved",
-                {
-                    "mapperClass": "Mock"
-                }
+                "organisations.createOrganisation",
+                "Gemeente A",
+                "https://a.nl",
+                true,
+                "org-1"
             ],
             [
                 "log.info",
@@ -725,56 +622,41 @@
                 }
             ],
             [
+                "organisation.getUserIds",
+                []
+            ],
+            [
+                "mapper.addUserToOrganisation",
+                "org-1",
+                "b@a.nl"
+            ],
+            [
+                "mapper.addUserToOrganisation",
+                "org-1",
+                "c@a.nl"
+            ],
+            [
                 "log.info",
-                "StackiqService: STEP 4E - Debug - UUID before createWithUuid",
+                "StackiqService: Created organization in OpenRegister",
                 {
                     "organizationUuid": "org-1",
-                    "uuidLength": 5,
-                    "uuidIsEmpty": false,
-                    "name": "Gemeente A",
-                    "description": "https://a.nl",
-                    "owner": "signed-in",
-                    "users": [
-                        "signed-in",
-                        "b@a.nl",
-                        "c@a.nl"
-                    ],
-                    "contactPersonUsernames": [
-                        "b@a.nl",
-                        "c@a.nl"
-                    ]
+                    "openRegisterId": "org-1",
+                    "contactPersons": 2
                 }
             ],
             [
                 "log.info",
-                "StackiqService: STEP 4F - Calling organisationMapper->createWithUuid()",
-                []
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 4F_DEBUG - Parameters for createWithUuid",
+                "StackiqService: SYNC_STEP_11 - Successfully created organization in OpenRegister",
                 {
-                    "name": "Gemeente A",
-                    "description": "https://a.nl",
-                    "uuid": "org-1",
-                    "owner": "signed-in",
-                    "users": [
-                        "signed-in",
-                        "b@a.nl",
-                        "c@a.nl"
-                    ],
-                    "isDefault": false,
-                    "uuidLength": 5,
-                    "uuidIsEmpty": false
+                    "organizationId": "org-1",
+                    "openRegisterId": "org-1",
+                    "createdOrganisationClass": "OCA\\OpenRegister\\Db\\Organisation@anonymous"
                 }
             ]
         ]
     },
     "sync: sync, new, anonymous": {
-        "result": {
-            "escaped": "Error",
-            "message": "Call to undefined method OCA\\OpenRegister\\Db\\Organisation::setName()"
-        },
+        "result": false,
         "calls": [
             [
                 "log.info",
@@ -867,107 +749,14 @@
                 []
             ],
             [
-                "log.info",
-                "StackiqService: STEP 1 - Starting createOrganisationInOpenRegister",
+                "log.error",
+                "StackiqService: Failed to sync organization with OpenRegister: An OpenRegister organisation is only created for a signed-in user",
                 {
-                    "organizationUuid": "org-1",
-                    "name": "Gemeente A",
-                    "mappedDataKeys": [
-                        "name",
-                        "type",
-                        "website",
-                        "active",
-                        "contactpersonen",
-                        "participants"
-                    ]
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 2 - Checking user context",
-                {
-                    "hasUserSession": true,
-                    "currentUser": "null",
-                    "isAnonymous": true
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 3A - Anonymous path: No user, creating org directly via mapper",
-                {
-                    "organizationUuid": "org-1"
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 3B - Using original UUID format for OpenRegister (anonymous)",
-                {
-                    "organizationUuid": "org-1"
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 3C - Getting OrganisationMapper from container",
-                []
-            ],
-            [
-                "container.get",
-                "OCA\\OpenRegister\\Db\\OrganisationMapper"
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 3D - OrganisationMapper retrieved",
-                {
-                    "mapperClass": "Mock"
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 3E - Creating new Organisation entity",
-                []
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 3F - Setting organisation properties",
-                {
-                    "name": "Gemeente A",
-                    "description": "https://a.nl",
-                    "uuid": "org-1"
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: Processing nested contact persons",
-                {
-                    "organizationUuid": "org-1",
-                    "nestedContactPersonCount": 0
-                }
-            ],
-            [
-                "container.get",
-                "OCA\\OpenRegister\\Service\\ObjectService"
-            ],
-            [
-                "container.get",
-                "OCA\\Stackiq\\Service\\SettingsService"
-            ],
-            [
-                "settings.getVoorzieningenConfig"
-            ],
-            [
-                "log.warning",
-                "StackiqService: Missing contactpersoon schema config for username extraction",
-                []
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 3F_2 - Collected usernames for organization",
-                {
-                    "organizationUuid": "org-1",
-                    "totalUsernames": 1,
-                    "usernames": [
-                        "admin"
-                    ]
+                    "objectId": 17,
+                    "exception": "An OpenRegister organisation is only created for a signed-in user",
+                    "file": "(file)",
+                    "line": "(line)",
+                    "trace": "(trace)"
                 }
             ]
         ]
@@ -983,70 +772,26 @@
         ]
     },
     "create: create, signed in": {
-        "result": {
-            "escaped": "Error",
-            "message": "Call to undefined method Mock::createWithUuid()"
-        },
+        "result": "entity:org-1",
         "calls": [
             [
                 "container.get",
                 "OCA\\OpenRegister\\Service\\OrganisationService"
             ],
             [
-                "log.info",
-                "StackiqService: STEP 1 - Starting createOrganisationInOpenRegister",
-                {
-                    "organizationUuid": "org-1",
-                    "name": "Gemeente A",
-                    "mappedDataKeys": [
-                        "name",
-                        "type",
-                        "website",
-                        "active",
-                        "contactpersonen",
-                        "participants"
-                    ]
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 2 - Checking user context",
-                {
-                    "hasUserSession": true,
-                    "currentUser": "signed-in",
-                    "isAnonymous": false
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 4A - Auth path: User logged in, creating org via mapper",
-                {
-                    "organizationUuid": "org-1",
-                    "currentUser": "signed-in"
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 4B - Using original UUID format for OpenRegister",
-                {
-                    "organizationUuid": "org-1"
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 4C - Getting OrganisationMapper from container",
-                []
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
             ],
             [
                 "container.get",
                 "OCA\\OpenRegister\\Db\\OrganisationMapper"
             ],
             [
-                "log.info",
-                "StackiqService: STEP 4D - OrganisationMapper retrieved",
-                {
-                    "mapperClass": "Mock"
-                }
+                "organisations.createOrganisation",
+                "Gemeente A",
+                "https://a.nl",
+                true,
+                "org-1"
             ],
             [
                 "log.info",
@@ -1083,44 +828,21 @@
                 []
             ],
             [
-                "log.info",
-                "StackiqService: STEP 4E - Debug - UUID before createWithUuid",
-                {
-                    "organizationUuid": "org-1",
-                    "uuidLength": 5,
-                    "uuidIsEmpty": false,
-                    "name": "Gemeente A",
-                    "description": "https://a.nl",
-                    "owner": "signed-in",
-                    "users": [
-                        "signed-in",
-                        "a@a.nl"
-                    ],
-                    "contactPersonUsernames": [
-                        "a@a.nl"
-                    ]
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 4F - Calling organisationMapper->createWithUuid()",
+                "organisation.getUserIds",
                 []
             ],
             [
+                "mapper.addUserToOrganisation",
+                "org-1",
+                "a@a.nl"
+            ],
+            [
                 "log.info",
-                "StackiqService: STEP 4F_DEBUG - Parameters for createWithUuid",
+                "StackiqService: Created organization in OpenRegister",
                 {
-                    "name": "Gemeente A",
-                    "description": "https://a.nl",
-                    "uuid": "org-1",
-                    "owner": "signed-in",
-                    "users": [
-                        "signed-in",
-                        "a@a.nl"
-                    ],
-                    "isDefault": false,
-                    "uuidLength": 5,
-                    "uuidIsEmpty": false
+                    "organizationUuid": "org-1",
+                    "openRegisterId": "org-1",
+                    "contactPersons": 1
                 }
             ]
         ]
@@ -1164,63 +886,10 @@
                 "OCA\\OpenRegister\\Service\\OrganisationService"
             ],
             [
-                "log.info",
-                "StackiqService: STEP 1 - Starting createOrganisationInOpenRegister",
-                {
-                    "organizationUuid": "org-1",
-                    "name": "Gemeente A",
-                    "mappedDataKeys": [
-                        "name",
-                        "type",
-                        "website",
-                        "active",
-                        "contactpersonen",
-                        "participants"
-                    ]
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 2 - Checking user context",
-                {
-                    "hasUserSession": true,
-                    "currentUser": "null",
-                    "isAnonymous": true
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 3A - Anonymous path: No user, creating org directly via mapper",
-                {
-                    "organizationUuid": "org-1"
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 3B - Using original UUID format for OpenRegister (anonymous)",
-                {
-                    "organizationUuid": "org-1"
-                }
-            ],
-            [
-                "log.info",
-                "StackiqService: STEP 3C - Getting OrganisationMapper from container",
-                []
-            ],
-            [
-                "container.get",
-                "OCA\\OpenRegister\\Db\\OrganisationMapper"
-            ],
-            [
-                "log.error",
-                "Failed to get OrganisationMapper: no mapper",
-                []
-            ],
-            [
                 "log.error",
                 "StackiqService: Error in public createOrganisationInOpenRegister",
                 {
-                    "error": "OpenRegister OrganisationMapper is not available",
+                    "error": "An OpenRegister organisation is only created for a signed-in user",
                     "objectData": {
                         "id": "org-1",
                         "name": "Gemeente A",
@@ -1237,6 +906,290 @@
                         ]
                     }
                 }
+            ]
+        ]
+    },
+    "create: create, anonymous": {
+        "result": null,
+        "calls": [
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
+            ],
+            [
+                "log.error",
+                "StackiqService: Error in public createOrganisationInOpenRegister",
+                {
+                    "error": "An OpenRegister organisation is only created for a signed-in user",
+                    "objectData": {
+                        "id": "org-1",
+                        "name": "Gemeente A",
+                        "website": "https://a.nl",
+                        "beoordeling": "actief",
+                        "contactpersonen": [
+                            {
+                                "email": "a@a.nl"
+                            },
+                            {
+                                "naam": "zonder mail"
+                            },
+                            "c-2"
+                        ]
+                    }
+                }
+            ]
+        ]
+    },
+    "create: create, forged owner and members": {
+        "result": "entity:org-1",
+        "calls": [
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Db\\OrganisationMapper"
+            ],
+            [
+                "organisations.createOrganisation",
+                "Gemeente A",
+                "https://a.nl",
+                true,
+                "org-1"
+            ],
+            [
+                "log.info",
+                "StackiqService: Processing nested contact persons",
+                {
+                    "organizationUuid": "org-1",
+                    "nestedContactPersonCount": 3
+                }
+            ],
+            [
+                "log.info",
+                "StackiqService: Added nested contact person username",
+                {
+                    "username": "a@a.nl",
+                    "contactPersonData": {
+                        "email": "a@a.nl"
+                    }
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\SettingsService"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.warning",
+                "StackiqService: Missing contactpersoon schema config for username extraction",
+                []
+            ],
+            [
+                "organisation.getUserIds",
+                []
+            ],
+            [
+                "mapper.addUserToOrganisation",
+                "org-1",
+                "a@a.nl"
+            ],
+            [
+                "log.info",
+                "StackiqService: Created organization in OpenRegister",
+                {
+                    "organizationUuid": "org-1",
+                    "openRegisterId": "org-1",
+                    "contactPersons": 1
+                }
+            ]
+        ]
+    },
+    "create: create, creator is a contact": {
+        "result": "entity:org-1",
+        "calls": [
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Db\\OrganisationMapper"
+            ],
+            [
+                "organisations.createOrganisation",
+                "Gemeente A",
+                "https://a.nl",
+                true,
+                "org-1"
+            ],
+            [
+                "log.info",
+                "StackiqService: Processing nested contact persons",
+                {
+                    "organizationUuid": "org-1",
+                    "nestedContactPersonCount": 2
+                }
+            ],
+            [
+                "log.info",
+                "StackiqService: Added nested contact person username",
+                {
+                    "username": "signed-in",
+                    "contactPersonData": {
+                        "email": "signed-in"
+                    }
+                }
+            ],
+            [
+                "log.info",
+                "StackiqService: Added nested contact person username",
+                {
+                    "username": "a@a.nl",
+                    "contactPersonData": {
+                        "email": "a@a.nl"
+                    }
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "container.get",
+                "OCA\\Stackiq\\Service\\SettingsService"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.warning",
+                "StackiqService: Missing contactpersoon schema config for username extraction",
+                []
+            ],
+            [
+                "organisation.getUserIds",
+                []
+            ],
+            [
+                "mapper.addUserToOrganisation",
+                "org-1",
+                "a@a.nl"
+            ],
+            [
+                "log.info",
+                "StackiqService: Created organization in OpenRegister",
+                {
+                    "organizationUuid": "org-1",
+                    "openRegisterId": "org-1",
+                    "contactPersons": 2
+                }
+            ]
+        ]
+    },
+    "create: create, no mapper": {
+        "result": null,
+        "calls": [
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Db\\OrganisationMapper"
+            ],
+            [
+                "log.error",
+                "Failed to get OrganisationMapper: no mapper",
+                []
+            ],
+            [
+                "log.error",
+                "StackiqService: Error in public createOrganisationInOpenRegister",
+                {
+                    "error": "OpenRegister organisations are not available",
+                    "objectData": {
+                        "id": "org-1",
+                        "name": "Gemeente A",
+                        "website": "https://a.nl",
+                        "beoordeling": "actief",
+                        "contactpersonen": [
+                            {
+                                "email": "a@a.nl"
+                            },
+                            {
+                                "naam": "zonder mail"
+                            },
+                            "c-2"
+                        ]
+                    }
+                }
+            ]
+        ]
+    },
+    "sync: sync, new, organisation service down": {
+        "result": false,
+        "calls": [
+            [
+                "log.info",
+                "StackiqService: SYNC_STEP_1 - Starting syncOrganizationWithOpenRegister",
+                {
+                    "objectId": 17,
+                    "objectClass": "class@anonymous"
+                }
+            ],
+            [
+                "log.info",
+                "StackiqService: SYNC_STEP_2 - Extracted organization data",
+                {
+                    "organizationUuid": "org-1",
+                    "objectDataKeys": [
+                        "id",
+                        "name",
+                        "website",
+                        "beoordeling",
+                        "contactpersonen"
+                    ],
+                    "hasId": true
+                }
+            ],
+            [
+                "log.info",
+                "StackiqService: SYNC_STEP_3 - Getting OrganisationService",
+                []
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
+            ],
+            [
+                "log.error",
+                "Failed to get OrganisationService: organisation service down",
+                []
+            ],
+            [
+                "log.error",
+                "StackiqService: SYNC_STEP_3 - OpenRegister OrganisationService not available",
+                []
             ]
         ]
     }

@@ -5,7 +5,10 @@
  *
  * The real Organisation is an NC AppFramework Entity whose accessors are
  * partly magic. This stub declares the concrete surface the Stackiq
- * unit tests exercise (uuid + parent + a couple of read accessors).
+ * unit tests exercise (uuid + parent + a couple of read accessors), and
+ * answers the other accessors and the membership helpers (getUserIds,
+ * addUser) through __call, as the Entity does. Test doubles that extend it
+ * and override __call keep recording those calls.
  *
  * SPDX-License-Identifier: EUPL-1.2
  *
@@ -41,6 +44,13 @@ class Organisation {
 	 * @var bool
 	 */
 	private bool $active = true;
+
+	/**
+	 * The magic properties, by name.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private array $properties = [];
 
 	/**
 	 * @param int|null $id The id.
@@ -106,5 +116,41 @@ class Organisation {
 	public function isActive(): bool {
 		return $this->active;
 	}//end isActive()
+
+	/**
+	 * Answer the magic accessors and the membership helpers.
+	 *
+	 * @param string $name The method.
+	 * @param array  $args The arguments.
+	 *
+	 * @return mixed
+	 */
+	public function __call(string $name, array $args) {
+		if ($name === 'getUserIds') {
+			return $this->properties['users'] ?? [];
+		}
+
+		if ($name === 'addUser') {
+			$users = $this->properties['users'] ?? [];
+			if (in_array($args[0], $users, true) === false) {
+				$users[] = $args[0];
+			}
+
+			$this->properties['users'] = $users;
+			return $this;
+		}
+
+		$property = lcfirst(substr($name, 3));
+		if (str_starts_with($name, 'set') === true) {
+			$this->properties[$property] = $args[0] ?? null;
+			return $this;
+		}
+
+		if (str_starts_with($name, 'get') === true) {
+			return $this->properties[$property] ?? null;
+		}
+
+		throw new \BadFunctionCallException($name . ' is not a valid method');
+	}//end __call()
 
 }//end class

@@ -1489,278 +1489,51 @@ class StackiqService {
 	}//end mapStatus()
 
 	/**
-	 * Creates an organization in OpenRegister using OrganisationService
+	 * Creates an organization in OpenRegister through its OrganisationService
 	 *
-	 * @param array $mappedData The mapped organization data
+	 * The signed-in user creates it and becomes its owner and a member; the
+	 * organisation's contact persons are added as members. Without a signed-in
+	 * user nothing is created: no rule says who would own it.
+	 *
+	 * @param array  $mappedData       The mapped organization data
 	 * @param string $organizationUuid The organization UUID to use
 	 *
 	 * @return \OCA\OpenRegister\Db\Organisation The created organization
+	 *
+	 * @throws RuntimeException When no user is signed in, or OpenRegister is not available
 	 */
 	private function createOrganisationInOpenRegisterInternal(array $mappedData, string $organizationUuid): \OCA\OpenRegister\Db\Organisation {
-		$this->_logger->info(
-			'StackiqService: STEP 1 - Starting createOrganisationInOpenRegister',
-			[
-				'organizationUuid' => $organizationUuid,
-				'name' => $mappedData['name'] ?? 'Unknown',
-				'mappedDataKeys' => array_keys($mappedData),
-			]
-		);
-
-		// Check if we're in an anonymous context (no logged-in user).
-		$userSession = $this->_userSession;
-		$currentUser = $userSession->getUser();
-
-		$currentUserValue = 'null';
-		if ($currentUser !== null) {
-			$currentUserValue = $currentUser->getUID();
+		if ($this->_userSession->getUser() === null) {
+			throw new RuntimeException('An OpenRegister organisation is only created for a signed-in user');
 		}
 
-		$this->_logger->info(
-			'StackiqService: STEP 2 - Checking user context',
-			[
-				// Always true: $userSession is an injected, non-nullable IUserSession.
-				'hasUserSession' => true,
-				'currentUser' => $currentUserValue,
-				'isAnonymous' => $currentUser === null,
-			]
-		);
-
-		if ($currentUser === null) {
-			$this->_logger->info(
-				'StackiqService: STEP 3A - Anonymous path: No user, creating org directly via mapper',
-				[
-					'organizationUuid' => $organizationUuid,
-				]
-			);
-
-			// Keep the original UUID format - no conversion needed.
-			$this->_logger->info(
-				'StackiqService: STEP 3B - Using original UUID format for OpenRegister (anonymous)',
-				[
-					'organizationUuid' => $organizationUuid,
-				]
-			);
-
-			// Create organization directly via mapper to avoid user context requirements.
-			$this->_logger->info('StackiqService: STEP 3C - Getting OrganisationMapper from container');
-			$organisationMapper = $this->getOrganisationMapper();
-			if ($organisationMapper === null) {
-				// This method's return type is non-nullable and its caller already
-				// holds an OpenRegister OrganisationService, so "unavailable" here
-				// escapes exactly as the raw container exception used to.
-				throw new RuntimeException('OpenRegister OrganisationMapper is not available');
-			}
-
-			$this->_logger->info(
-				'StackiqService: STEP 3D - OrganisationMapper retrieved',
-				[
-					'mapperClass' => get_class($organisationMapper),
-				]
-			);
-
-			// Create a new Organisation entity.
-			$this->_logger->info('StackiqService: STEP 3E - Creating new Organisation entity');
-			$organisation = new \OCA\OpenRegister\Db\Organisation();
-
-			$this->_logger->info(
-				'StackiqService: STEP 3F - Setting organisation properties',
-				[
-					'name' => $mappedData['name'] ?? 'Unknown Organization',
-					'description' => $mappedData['website'] ?? '',
-					'uuid' => $organizationUuid,
-				]
-			);
-
-			// Collect all contact person usernames for this organization.
-			$contactPersonUsernames = $this->collectContactPersonUsernames(
-				organizationUuid: $organizationUuid,
-				objectData: $mappedData
-			);
-
-			// Start with admin user and add all contact person usernames.
-			$allUsernames = array_merge(['admin'], $contactPersonUsernames);
-			$allUsernames = array_unique($allUsernames);
-
-			$this->_logger->info(
-				'StackiqService: STEP 3F_2 - Collected usernames for organization',
-				[
-					'organizationUuid' => $organizationUuid,
-					'totalUsernames' => count($allUsernames),
-					'usernames' => $allUsernames,
-				]
-			);
-
-			$organisation->setName($mappedData['name'] ?? 'Unknown Organization');
-			$organisation->setDescription($mappedData['website'] ?? '');
-			// Use website as description.
-			$organisation->setUuid($organizationUuid);
-			$organisation->setUsers($allUsernames);
-			$organisation->setOwner('admin');
-			// Set admin as owner for anonymous registrations.
-			$organisation->setActive($mappedData['active'] ?? true);
-			// Set active status based on organization beoordeling.
-			// Debug: Check if UUID was set correctly.
-			$this->_logger->info(
-				'StackiqService: STEP 3G - Debug - UUID before save',
-				[
-					'setUuid' => $organizationUuid,
-					'getUuid' => $organisation->getUuid(),
-					'uuidMatches' => $organisation->getUuid() === $organizationUuid,
-					'organisationClass' => get_class($organisation),
-				]
-			);
-
-			// Save the organization.
-			$this->_logger->info('StackiqService: STEP 3H - Calling organisationMapper->save()');
-			try {
-				$savedOrganisation = $organisationMapper->save($organisation);
-				$this->_logger->info(
-					'StackiqService: STEP 3I - organisationMapper->save() completed'
-				);
-			} catch (\Exception $e) {
-				$this->_logger->error(
-					'StackiqService: STEP 3I - organisationMapper->save() failed',
-					[
-						'error' => $e->getMessage(),
-						'errorClass' => get_class($e),
-						'trace' => $e->getTraceAsString(),
-					]
-				);
-				throw $e;
-			}
-
-			$this->_logger->info(
-				'StackiqService: Successfully created organization in OpenRegister via mapper',
-				[
-					'organizationUuid' => $organizationUuid,
-					'openRegisterId' => $savedOrganisation->getUuid(),
-					'savedUuid' => $savedOrganisation->getUuid(),
-					'expectedUuid' => $organizationUuid,
-				]
-			);
-
-			// Verify the UUID was preserved.
-			if ($savedOrganisation->getUuid() !== $organizationUuid) {
-				$this->_logger->warning(
-					'StackiqService: UUID mismatch after saving organization',
-					[
-						'expectedUuid' => $organizationUuid,
-						'actualUuid' => $savedOrganisation->getUuid(),
-					]
-				);
-			}
-		}//end if
-
-		$this->_logger->info(
-			'StackiqService: STEP 4A - Auth path: User logged in, creating org via mapper',
-			[
-				'organizationUuid' => $organizationUuid,
-				'currentUser' => $currentUser->getUID(),
-			]
-		);
-
-		// Keep the original UUID format - no conversion needed.
-		$this->_logger->info(
-			'StackiqService: STEP 4B - Using original UUID format for OpenRegister',
-			[
-				'organizationUuid' => $organizationUuid,
-			]
-		);
-
-		// Create organization directly via mapper to avoid service issues.
-		$this->_logger->info('StackiqService: STEP 4C - Getting OrganisationMapper from container');
-		$organisationMapper = $this->getOrganisationMapper();
-		if ($organisationMapper === null) {
-			// Non-nullable return type, same reasoning as the anonymous branch above.
-			throw new RuntimeException('OpenRegister OrganisationMapper is not available');
+		$organisationService = $this->getOrganisationService();
+		$organisationMapper  = $this->getOrganisationMapper();
+		if ($organisationService === null || $organisationMapper === null) {
+			throw new RuntimeException('OpenRegister organisations are not available');
 		}
 
-		$this->_logger->info(
-			'StackiqService: STEP 4D - OrganisationMapper retrieved',
-			[
-				'mapperClass' => get_class($organisationMapper),
-			]
+		$organisation = $organisationService->createOrganisation(
+			name: $mappedData['name'] ?? 'Unknown Organization',
+			description: $mappedData['website'] ?? '',
+			addCurrentUser: true,
+			uuid: $organizationUuid
 		);
 
-		// Debug: Check UUID before creating.
-		// Collect all contact person usernames for this organization.
 		$contactPersonUsernames = $this->collectContactPersonUsernames(
 			organizationUuid: $organizationUuid,
 			objectData: $mappedData
 		);
-
-		// Start with current user and add all contact person usernames.
-		$allUsernames = array_merge([$currentUser->getUID()], $contactPersonUsernames);
-		$allUsernames = array_unique($allUsernames);
+		foreach (array_diff(array_unique($contactPersonUsernames), $organisation->getUserIds()) as $username) {
+			$organisation = $organisationMapper->addUserToOrganisation($organisation->getUuid(), $username);
+		}
 
 		$this->_logger->info(
-			'StackiqService: STEP 4E - Debug - UUID before createWithUuid',
+			'StackiqService: Created organization in OpenRegister',
 			[
 				'organizationUuid' => $organizationUuid,
-				'uuidLength' => strlen($organizationUuid),
-				'uuidIsEmpty' => empty($organizationUuid) === true,
-				'name' => $mappedData['name'] ?? 'Unknown Organization',
-				'description' => $mappedData['website'] ?? '',
-				'owner' => $currentUser->getUID(),
-				'users' => $allUsernames,
-				'contactPersonUsernames' => $contactPersonUsernames,
-			]
-		);
-
-		$this->_logger->info('StackiqService: STEP 4F - Calling organisationMapper->createWithUuid()');
-		try {
-			// Debug: Log the exact parameters being passed.
-			$this->_logger->info(
-				'StackiqService: STEP 4F_DEBUG - Parameters for createWithUuid',
-				[
-					'name' => $mappedData['name'] ?? 'Unknown Organization',
-					'description' => $mappedData['website'] ?? '',
-					'uuid' => $organizationUuid,
-					'owner' => $currentUser->getUID(),
-					'users' => $allUsernames,
-					'isDefault' => false,
-					'uuidLength' => strlen($organizationUuid),
-					'uuidIsEmpty' => empty($organizationUuid) === true,
-				]
-			);
-
-			$organisation = $organisationMapper->createWithUuid(
-				$mappedData['name'] ?? 'Unknown Organization',
-				$mappedData['website'] ?? '',
-				// Use website as description.
-				$organizationUuid,
-				// Pass the original UUID.
-				$currentUser->getUID(),
-				// Set current user as owner.
-				$allUsernames,
-				// Add all users including contact persons.
-				false
-				// Not default.
-			);
-			$this->_logger->info(
-				'StackiqService: STEP 4G - organisationMapper->createWithUuid() completed'
-			);
-		} catch (\Exception $e) {
-			$this->_logger->error(
-				'StackiqService: STEP 4G - organisationMapper->createWithUuid() failed',
-				[
-					'error' => $e->getMessage(),
-					'errorClass' => get_class($e),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-			throw $e;
-		}//end try
-
-		// Note: OpenRegister Organisation entity doesn't have status or type fields.
-		// These are managed in the Stackiq object, not in the OpenRegister organisation.
-		$this->_logger->info(
-			'StackiqService: Successfully created organization in OpenRegister via service',
-			[
-				'organizationUuid' => $organizationUuid,
-				'openRegisterId' => $organisation->getUuid(),
-				'savedUuid' => $organisation->getUuid(),
-				'expectedUuid' => $organizationUuid,
+				'openRegisterId'   => $organisation->getUuid(),
+				'contactPersons'   => count($contactPersonUsernames),
 			]
 		);
 

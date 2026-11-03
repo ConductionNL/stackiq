@@ -97,10 +97,15 @@ class StackiqServiceOrganisationSyncGoldenTest extends TestCase {
 			'sync, new, signed in'              => ['sync', $org, []],
 			'sync, new, signed in with schema'  => ['sync', $org, ['schema' => true, 'contacts' => [['email' => 'b@a.nl', 'organization' => 'org-1'], ['email' => 'c@a.nl', 'organization' => 'org-9']]]],
 			'sync, new, anonymous'              => ['sync', $org, ['anonymous' => true]],
+			'sync, new, organisation service down' => ['sync', $org, ['serviceThrows' => true]],
 			'create, no id'                     => ['create', ['name' => 'X'], []],
 			'create, signed in'                 => ['create', $org, []],
 			'create, organisation service down' => ['create', $org, ['serviceThrows' => true]],
 			'create, anonymous, no mapper'      => ['create', $org, ['anonymous' => true, 'noMapper' => true]],
+			'create, anonymous'                 => ['create', $org, ['anonymous' => true]],
+			'create, forged owner and members'  => ['create', $org + ['owner' => 'mallory', 'users' => ['mallory'], 'participants' => ['mallory']], []],
+			'create, creator is a contact'      => ['create', ['contactpersonen' => [['email' => 'signed-in'], ['email' => 'a@a.nl']]] + $org, []],
+			'create, no mapper'                 => ['create', $org, ['noMapper' => true]],
 		];
 
 	}//end cases()
@@ -156,6 +161,12 @@ class StackiqServiceOrganisationSyncGoldenTest extends TestCase {
 			}
 		);
 		$organisations = $this->createMock(OrganisationService::class);
+		$organisations->method('createOrganisation')->willReturnCallback(
+			function (string $name, string $description = '', bool $addCurrentUser = true, string $uuid = '') {
+				$this->trace[] = ['organisations.createOrganisation', $name, $description, $addCurrentUser, $uuid];
+				return $this->organisation(uuid: $uuid, users: ['signed-in']);
+			}
+		);
 
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
@@ -217,6 +228,12 @@ class StackiqServiceOrganisationSyncGoldenTest extends TestCase {
 				return $this->organisation(uuid: $uuid);
 			}
 		);
+		$mapper->method('addUserToOrganisation')->willReturnCallback(
+			function (string $uuid, string $userId) {
+				$this->trace[] = ['mapper.addUserToOrganisation', $uuid, $userId];
+				return $this->organisation(uuid: $uuid, users: ['signed-in', $userId]);
+			}
+		);
 		$mapper->method('save')->willReturnCallback(
 			function ($organisation) {
 				$this->trace[] = ['mapper.save', $organisation->getUuid()];
@@ -235,17 +252,19 @@ class StackiqServiceOrganisationSyncGoldenTest extends TestCase {
 	/**
 	 * An organisation entity double that records its writes.
 	 *
-	 * @param string $uuid The uuid.
+	 * @param string             $uuid  The uuid.
+	 * @param array<int, string> $users The member user ids getUserIds() answers.
 	 *
 	 * @return Organisation
 	 */
-	private function organisation(string $uuid): Organisation {
+	private function organisation(string $uuid, array $users = []): Organisation {
 		$trace = &$this->trace;
-		$organisation = new class($trace) extends Organisation {
+		$organisation = new class($trace, $users) extends Organisation {
 			/**
-			 * @param array $trace The shared trace.
+			 * @param array              $trace The shared trace.
+			 * @param array<int, string> $users The member user ids.
 			 */
-			public function __construct(private array &$trace) {
+			public function __construct(private array &$trace, private array $users) {
 			}
 
 			/**
@@ -256,6 +275,10 @@ class StackiqServiceOrganisationSyncGoldenTest extends TestCase {
 			 */
 			public function __call(string $name, array $args) {
 				$this->trace[] = ['organisation.' . $name, $args];
+				if ($name === 'getUserIds') {
+					return $this->users;
+				}
+
 				return null;
 			}
 		};

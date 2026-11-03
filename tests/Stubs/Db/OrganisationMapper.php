@@ -49,4 +49,14 @@ abstract class OrganisationMapper {
 	 */
 	abstract public function save(Organisation $entity): Organisation;
 
+	/**
+	 * Add a user to an organisation.
+	 *
+	 * @param string $organisationUuid The organisation uuid.
+	 * @param string $userId           The user id.
+	 *
+	 * @return Organisation
+	 */
+	abstract public function addUserToOrganisation(string $organisationUuid, string $userId): Organisation;
+
 }//end class

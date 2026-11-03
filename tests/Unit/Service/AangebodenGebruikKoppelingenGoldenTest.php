@@ -103,6 +103,11 @@ class AangebodenGebruikKoppelingenGoldenTest extends TestCase {
 			'ownership lookup throws'            => ['uuid-mod', [], false, ['findThrows' => true]],
 			'ownership object missing'           => ['uuid-mod', [], false, ['found' => null]],
 			'search throws'                      => ['uuid-mod', [], true, ['found' => $module, 'searchThrows' => true]],
+			'not the owner, filter names the owner' => ['uuid-mod', ['organisation' => 'org-other'], false, ['found' => ['owner' => 'org-other', 'schema' => 'schema-module']]],
+			'owner in another case'              => ['uuid-mod', [], false, ['found' => ['owner' => 'ORG-ACTING', 'schema' => 'schema-module']]],
+			'owner with trailing space'          => ['uuid-mod', [], false, ['found' => ['owner' => self::ACTING_ORG . ' ', 'schema' => 'schema-module']]],
+			'forged @self and ambtenaar options' => ['uuid-mod', ['@self' => ['organisation' => self::ACTING_ORG, 'register' => 'reg-forged'], 'isAmbtenaar' => true, 'organisation' => 'org-other'], false, ['found' => ['owner' => 'org-other', 'schema' => 'schema-module']]],
+			'owner, forged @self in options'     => ['uuid-mod', ['@self' => ['register' => 'reg-forged', 'schema' => 'schema-forged']], false, ['found' => $module]],
 		];
 
 	}//end cases()
@@ -236,7 +241,8 @@ class AangebodenGebruikKoppelingenGoldenTest extends TestCase {
 		$objectService->method('buildSearchQuery')->willReturnCallback(
 			function (array $requestParams): array {
 				$this->trace[] = ['objects.buildSearchQuery', $requestParams];
-				return ['@self' => ['seed' => true], '_limit' => $requestParams['_limit'] ?? 20];
+				// Like OpenRegister, a caller's @self filters are carried into the query.
+				return ['@self' => ['seed' => true] + ($requestParams['@self'] ?? []), '_limit' => $requestParams['_limit'] ?? 20];
 			}
 		);
 		$objectService->method('searchObjectsPaginated')->willReturnCallback(

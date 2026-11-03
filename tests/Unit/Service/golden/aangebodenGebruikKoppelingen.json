@@ -1365,5 +1365,290 @@
                 }
             ]
         ]
+    },
+    "[\"uuid-mod\",{\"organisation\":\"org-other\"},false,{\"found\":{\"owner\":\"org-other\",\"schema\":\"schema-module\"}}]": {
+        "result": {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting koppelingen and gebruiks for UUID with extended access",
+                {
+                    "uuid": "uuid-mod",
+                    "options": {
+                        "organisation": "org-other"
+                    },
+                    "isAmbtenaar": false
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
+            ],
+            [
+                "organisations.getActiveOrganisation"
+            ],
+            [
+                "objects.find",
+                "uuid-mod",
+                false,
+                false
+            ]
+        ]
+    },
+    "[\"uuid-mod\",[],false,{\"found\":{\"owner\":\"ORG-ACTING\",\"schema\":\"schema-module\"}}]": {
+        "result": {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting koppelingen and gebruiks for UUID with extended access",
+                {
+                    "uuid": "uuid-mod",
+                    "options": [],
+                    "isAmbtenaar": false
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
+            ],
+            [
+                "organisations.getActiveOrganisation"
+            ],
+            [
+                "objects.find",
+                "uuid-mod",
+                false,
+                false
+            ]
+        ]
+    },
+    "[\"uuid-mod\",[],false,{\"found\":{\"owner\":\"org-acting \",\"schema\":\"schema-module\"}}]": {
+        "result": {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting koppelingen and gebruiks for UUID with extended access",
+                {
+                    "uuid": "uuid-mod",
+                    "options": [],
+                    "isAmbtenaar": false
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
+            ],
+            [
+                "organisations.getActiveOrganisation"
+            ],
+            [
+                "objects.find",
+                "uuid-mod",
+                false,
+                false
+            ]
+        ]
+    },
+    "[\"uuid-mod\",{\"@self\":{\"organisation\":\"org-acting\",\"register\":\"reg-forged\"},\"isAmbtenaar\":true,\"organisation\":\"org-other\"},false,{\"found\":{\"owner\":\"org-other\",\"schema\":\"schema-module\"}}]": {
+        "result": {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting koppelingen and gebruiks for UUID with extended access",
+                {
+                    "uuid": "uuid-mod",
+                    "options": {
+                        "@self": {
+                            "organisation": "org-acting",
+                            "register": "reg-forged"
+                        },
+                        "isAmbtenaar": true,
+                        "organisation": "org-other"
+                    },
+                    "isAmbtenaar": false
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
+            ],
+            [
+                "organisations.getActiveOrganisation"
+            ],
+            [
+                "objects.find",
+                "uuid-mod",
+                false,
+                false
+            ]
+        ]
+    },
+    "[\"uuid-mod\",{\"@self\":{\"register\":\"reg-forged\",\"schema\":\"schema-forged\"}},false,{\"found\":{\"owner\":\"org-acting\",\"schema\":\"schema-module\"}}]": {
+        "result": {
+            "results": [
+                {
+                    "id": "g-1"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting koppelingen and gebruiks for UUID with extended access",
+                {
+                    "uuid": "uuid-mod",
+                    "options": {
+                        "@self": {
+                            "register": "reg-forged",
+                            "schema": "schema-forged"
+                        }
+                    },
+                    "isAmbtenaar": false
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
+            ],
+            [
+                "organisations.getActiveOrganisation"
+            ],
+            [
+                "objects.find",
+                "uuid-mod",
+                false,
+                false
+            ],
+            [
+                "objects.buildSearchQuery",
+                {
+                    "@self": {
+                        "register": "reg-forged",
+                        "schema": "schema-forged"
+                    }
+                }
+            ],
+            [
+                "objects.find",
+                "uuid-mod",
+                false,
+                false
+            ],
+            [
+                "log.debug",
+                "Executing koppelingen-gebruik by suite/module UUID",
+                {
+                    "uuid": "uuid-mod",
+                    "query": {
+                        "@self": {
+                            "seed": true,
+                            "register": "reg-1",
+                            "schema": [
+                                "schema-gebruik",
+                                "schema-koppeling"
+                            ]
+                        },
+                        "_limit": 20,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "objects.searchObjectsPaginated",
+                {
+                    "query": {
+                        "@self": {
+                            "seed": true,
+                            "register": "reg-1",
+                            "schema": [
+                                "schema-gebruik",
+                                "schema-koppeling"
+                            ]
+                        },
+                        "_limit": 20,
+                        "_source": "database"
+                    },
+                    "_rbac": false,
+                    "_multitenancy": false,
+                    "deleted": false,
+                    "uses": "uuid-mod"
+                }
+            ],
+            [
+                "log.debug",
+                "Koppelingen-gebruik by UUID search completed",
+                {
+                    "uuid": "uuid-mod",
+                    "total": 1,
+                    "results_count": 1
+                }
+            ]
+        ]
     }
 }
