@@ -21,7 +21,7 @@
  *
  * @link https://conduction.nl
  *
- * @spec openspec/changes/archive/2026-09-29-controller-test-coverage-security-critical/tasks.md#task-3
+ * @spec exclude test stub for a server-only Symfony class; no app behaviour to trace
  */
 
 declare(strict_types=1);
