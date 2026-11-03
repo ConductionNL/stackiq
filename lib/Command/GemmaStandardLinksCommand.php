@@ -68,6 +68,8 @@ class GemmaStandardLinksCommand extends Command {
 	 * Declare the command.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/specs/archimate-import/spec.md
 	 */
 	protected function configure(): void {
 		$this->setName('stackiq:gemma:link-standards')
