@@ -274,6 +274,44 @@ function columnMetadata() {
 }
 
 /**
+ * POST a lifecycle action (publish, depublish) for an object.
+ *
+ * @param {object} objectItem The object
+ * @param {string} action The action
+ * @return {Promise<object>} The updated object
+ * @throws {Error} When the object lacks ids or the request fails.
+ */
+async function requestObjectAction(objectItem, action) {
+	const url = buildObjectUrl(objectItem, action)
+	const response = await fetch(url, { method: 'POST', headers: buildHeaders() })
+	if (!response.ok) {
+		throw new Error(
+			`Failed to ${action} object: ${response.status} ${response.statusText}`,
+		)
+	}
+	return await response.json()
+}
+
+/**
+ * Run a lifecycle action for an object, flagging `<action>_<id>` in the
+ * store's loading map while it runs.
+ *
+ * @param {object} store The object store
+ * @param {{objectItem: object, action: string}} request The object and the action
+ * @return {Promise<object>} The updated object
+ */
+async function postObjectAction(store, request) {
+	const { objectItem, action } = request
+	const flag = `${action}_${objectItem.id || objectItem['@self']?.id}`
+	store.loading = { ...store.loading, [flag]: true }
+	try {
+		return await requestObjectAction(objectItem, action)
+	} finally {
+		store.loading = { ...store.loading, [flag]: false }
+	}
+}
+
+/**
  * Separate Promise.allSettled results into successful and failed arrays.
  *
  * @param {Array} results Promise.allSettled results
@@ -999,29 +1037,7 @@ export function stackiqPlugin() {
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			async publishObject(objectItem) {
-				const objectId = objectItem.id || objectItem['@self']?.id
-				this.loading = { ...this.loading, [`publish_${objectId}`]: true }
-
-				try {
-					const url = buildObjectUrl(objectItem, 'publish')
-					const response = await fetch(url, {
-						method: 'POST',
-						headers: buildHeaders(),
-					})
-
-					if (!response.ok) {
-						throw new Error(
-							`Failed to publish object: ${response.status} ${response.statusText}`,
-						)
-					}
-
-					return await response.json()
-				} finally {
-					this.loading = {
-						...this.loading,
-						[`publish_${objectId}`]: false,
-					}
-				}
+				return postObjectAction(this, { objectItem, action: 'publish' })
 			},
 
 			/**
@@ -1032,29 +1048,7 @@ export function stackiqPlugin() {
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			async depublishObject(objectItem) {
-				const objectId = objectItem.id || objectItem['@self']?.id
-				this.loading = { ...this.loading, [`depublish_${objectId}`]: true }
-
-				try {
-					const url = buildObjectUrl(objectItem, 'depublish')
-					const response = await fetch(url, {
-						method: 'POST',
-						headers: buildHeaders(),
-					})
-
-					if (!response.ok) {
-						throw new Error(
-							`Failed to depublish object: ${response.status} ${response.statusText}`,
-						)
-					}
-
-					return await response.json()
-				} finally {
-					this.loading = {
-						...this.loading,
-						[`depublish_${objectId}`]: false,
-					}
-				}
+				return postObjectAction(this, { objectItem, action: 'depublish' })
 			},
 
 			/**

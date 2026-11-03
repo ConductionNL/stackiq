@@ -19,33 +19,42 @@ async function fetchJson(url, options) {
 }
 
 /**
+ * The schema choices a configuration holds, AMEF first, then voorzieningen.
+ *
+ * @type {Array<string>}
+ */
+const CONFIGURATION_KEYS = [
+	'amef_element_schema',
+	'amef_organization_schema',
+	'amef_relation_schema',
+	'amef_view_schema',
+	'amef_model_schema',
+	'amef_property_definition_schema',
+	'voorzieningen_sector_schema',
+	'voorzieningen_suite_schema',
+	'voorzieningen_dienst_schema',
+	'voorzieningen_kwetsbaarheid_schema',
+	'voorzieningen_contactpersoon_schema',
+	'voorzieningen_organisatie_schema',
+	'voorzieningen_gebruik_schema',
+	'voorzieningen_contract_schema',
+	'voorzieningen_koppeling_schema',
+	'voorzieningen_beoordeeling_schema',
+	'voorzieningen_module_schema',
+	'voorzieningen_compliancy_schema',
+	'voorzieningen_moduleVersie_schema',
+]
+
+/**
  * A fresh configuration with no schema chosen for any object type.
  *
  * @return {object} Schema selection per configuration key.
  * @spec openspec/specs/fe-stores/spec.md
  */
 function emptyConfiguration() {
-	return {
-		amef_element_schema: { schema: null },
-		amef_organization_schema: { schema: null },
-		amef_relation_schema: { schema: null },
-		amef_view_schema: { schema: null },
-		amef_model_schema: { schema: null },
-		amef_property_definition_schema: { schema: null },
-		voorzieningen_sector_schema: { schema: null },
-		voorzieningen_suite_schema: { schema: null },
-		voorzieningen_dienst_schema: { schema: null },
-		voorzieningen_kwetsbaarheid_schema: { schema: null },
-		voorzieningen_contactpersoon_schema: { schema: null },
-		voorzieningen_organisatie_schema: { schema: null },
-		voorzieningen_gebruik_schema: { schema: null },
-		voorzieningen_contract_schema: { schema: null },
-		voorzieningen_koppeling_schema: { schema: null },
-		voorzieningen_beoordeeling_schema: { schema: null },
-		voorzieningen_module_schema: { schema: null },
-		voorzieningen_compliancy_schema: { schema: null },
-		voorzieningen_moduleVersie_schema: { schema: null },
-	}
+	return Object.fromEntries(
+		CONFIGURATION_KEYS.map((key) => [key, { schema: null }]),
+	)
 }
 
 /**
