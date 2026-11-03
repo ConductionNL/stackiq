@@ -1,0 +1,174 @@
+{
+	"exposure": [
+		[
+			[],
+			[]
+		],
+		[
+			[
+				{
+					"gebruikId": "g1",
+					"moduleId": "m1",
+					"afnemerId": "o1",
+					"moduleVersieId": "v1"
+				},
+				{
+					"gebruikId": "g2",
+					"moduleId": "m2",
+					"afnemerId": "o2",
+					"moduleVersieId": ""
+				},
+				{
+					"gebruikId": "g3",
+					"moduleId": "m1",
+					"afnemerId": "",
+					"moduleVersieId": ""
+				},
+				{
+					"gebruikId": "",
+					"moduleId": "m1",
+					"afnemerId": "",
+					"moduleVersieId": ""
+				}
+			],
+			[]
+		],
+		[
+			[
+				{
+					"gebruikId": "g2",
+					"moduleId": "m2",
+					"afnemerId": "o2",
+					"moduleVersieId": ""
+				}
+			],
+			[]
+		],
+		[
+			[],
+			[]
+		],
+		[
+			[],
+			[]
+		],
+		[
+			[],
+			[]
+		]
+	],
+	"cvss": [
+		[
+			7.5,
+			false
+		],
+		[
+			0,
+			false
+		],
+		[
+			0,
+			false
+		],
+		[
+			10,
+			false
+		],
+		[
+			5.5,
+			false
+		],
+		[
+			6.1,
+			false
+		],
+		[
+			null,
+			false
+		],
+		[
+			null,
+			false
+		],
+		[
+			null,
+			false
+		],
+		[
+			null,
+			false
+		],
+		[
+			null,
+			false
+		],
+		[
+			null,
+			false
+		],
+		[
+			null,
+			false
+		],
+		[
+			null,
+			false
+		],
+		[
+			10,
+			false
+		],
+		[
+			0,
+			true
+		],
+		[
+			0,
+			true
+		]
+	],
+	"progress": [
+		null,
+		{
+			"percentage": 0,
+			"detail": ""
+		},
+		{
+			"percentage": 50,
+			"detail": "5 of 10 rows processed"
+		},
+		{
+			"percentage": 100,
+			"detail": "12 of 10 rows processed"
+		},
+		{
+			"percentage": 40,
+			"detail": ""
+		},
+		{
+			"percentage": 0,
+			"detail": ""
+		},
+		{
+			"percentage": 100,
+			"detail": "Checking the applications of this municipality against the export"
+		},
+		{
+			"percentage": 33,
+			"detail": "1 of 3 rows processed"
+		}
+	],
+	"packs": [
+		"Version 2.0",
+		"",
+		"",
+		"Version 1.2 (shipped: 1.3)",
+		"Version 1.2",
+		"Version 1.2 (shipped: 1.4)",
+		"Version 1.2",
+		"Version 1.5",
+		"Version 1.6",
+		"Version 0",
+		""
+	]
+}

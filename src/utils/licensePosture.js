@@ -118,29 +118,100 @@ export function portfolioPosture(modules, usages) {
 	const acc = { total: 0, open: 0, closed: 0, unknown: 0, byLicense: {} }
 
 	for (const g of inProductionUsages(usages)) {
-		const moduleId = resolveUuid(dataOf(g).module)
-		const mod = idx[moduleId] || {}
-		const type = normaliseLicenseType(mod.licentietype)
-		acc.total += 1
-		if (type === LICENSE_TYPE.OPEN) {
-			acc.open += 1
-		} else if (type === LICENSE_TYPE.CLOSED) {
-			acc.closed += 1
-		} else {
-			acc.unknown += 1
-		}
-		const licence =
-			typeof mod.licence === 'string' && mod.licence.trim() !== ''
-				? mod.licence
-				: LICENSE_TYPE.UNKNOWN
+		const { mod } = moduleOfUsage(idx, g)
+		countLicenseType(acc, normaliseLicenseType(mod.licentietype))
+		const licence = licenceName(mod)
 		acc.byLicense[licence] = (acc.byLicense[licence] || 0) + 1
 	}
 
-	const denom = acc.open + acc.closed
-	return {
-		...acc,
-		openShare: denom > 0 ? acc.open / denom : null,
+	return { ...acc, openShare: openShare(acc) }
+}
+
+/**
+ * The module a usage runs, looked up in a module index.
+ *
+ * @param {object} idx Module data by uuid, from indexModules.
+ * @param {object} usage A usage record.
+ * @return {{moduleId: string, mod: object}} The module uuid and its data, empty when unknown.
+ */
+function moduleOfUsage(idx, usage) {
+	const moduleId = resolveUuid(dataOf(usage).module)
+	return { moduleId, mod: idx[moduleId] || {} }
+}
+
+/**
+ * Count one deployment of a licence type into an open/closed/unknown tally.
+ *
+ * @param {{total: number, open: number, closed: number, unknown: number}} acc The tally.
+ * @param {string} type A normalised licence type.
+ * @return {void}
+ */
+function countLicenseType(acc, type) {
+	acc.total += 1
+	if (type === LICENSE_TYPE.OPEN) {
+		acc.open += 1
+	} else if (type === LICENSE_TYPE.CLOSED) {
+		acc.closed += 1
+	} else {
+		acc.unknown += 1
 	}
+}
+
+/**
+ * The open share among deployments of a known licence type.
+ *
+ * @param {{open: number, closed: number}} acc The tally.
+ * @return {number|null} The share, or null when no type is known.
+ */
+function openShare(acc) {
+	const denom = acc.open + acc.closed
+	return denom > 0 ? acc.open / denom : null
+}
+
+/**
+ * The licence a module names, or Unknown when it names none.
+ *
+ * @param {object} mod The module data.
+ * @return {string} The licence.
+ */
+function licenceName(mod) {
+	const licence = mod.licence
+	return typeof licence === 'string' && licence.trim() !== ''
+		? licence
+		: LICENSE_TYPE.UNKNOWN
+}
+
+/**
+ * The rollup entry of a vendor, created empty on first use.
+ *
+ * @param {object} vendors Rollup entries by vendor uuid.
+ * @param {string} vendorId The vendor uuid.
+ * @return {object} The entry.
+ */
+function vendorEntry(vendors, vendorId) {
+	if (!vendors[vendorId]) {
+		vendors[vendorId] = {
+			vendorId,
+			deployments: 0,
+			mix: {
+				[LICENSE_TYPE.OPEN]: 0,
+				[LICENSE_TYPE.CLOSED]: 0,
+				[LICENSE_TYPE.UNKNOWN]: 0,
+			},
+			usageIds: new Set(),
+		}
+	}
+	return vendors[vendorId]
+}
+
+/**
+ * The uuid of a usage record: its own id, its @self id or the id in its data.
+ *
+ * @param {object} usage A usage record.
+ * @return {string} The uuid, empty when it has none.
+ */
+function usageUuid(usage) {
+	return resolveUuid(usage.id ?? usage['@self']?.id ?? dataOf(usage).id ?? '')
 }
 
 /**
@@ -183,30 +254,17 @@ export function perVendorRollup(modules, usages, contracts) {
 	const vendors = {}
 
 	for (const g of inProductionUsages(usages)) {
-		const data = dataOf(g)
-		const moduleId = resolveUuid(data.module)
-		const mod = idx[moduleId] || {}
+		const { mod } = moduleOfUsage(idx, g)
 		const vendorId = resolveUuid(mod.provider)
 		if (vendorId === '') {
 			continue
 		}
-		if (!vendors[vendorId]) {
-			vendors[vendorId] = {
-				vendorId,
-				deployments: 0,
-				mix: {
-					[LICENSE_TYPE.OPEN]: 0,
-					[LICENSE_TYPE.CLOSED]: 0,
-					[LICENSE_TYPE.UNKNOWN]: 0,
-				},
-				usageIds: new Set(),
-			}
-		}
-		vendors[vendorId].deployments += 1
-		vendors[vendorId].mix[normaliseLicenseType(mod.licentietype)] += 1
-		const usageId = resolveUuid(g.id ?? g['@self']?.id ?? data.id ?? '')
+		const vendor = vendorEntry(vendors, vendorId)
+		vendor.deployments += 1
+		vendor.mix[normaliseLicenseType(mod.licentietype)] += 1
+		const usageId = usageUuid(g)
 		if (usageId !== '') {
-			vendors[vendorId].usageIds.add(usageId)
+			vendor.usageIds.add(usageId)
 		}
 	}
 
@@ -233,41 +291,25 @@ export function perVendorRollup(modules, usages, contracts) {
  */
 export function perOrganisationPosture(orgId, modules, usages) {
 	const idx = indexModules(modules)
-	const acc = {
-		total: 0,
-		open: 0,
-		closed: 0,
-		unknown: 0,
-		closedContributors: new Set(),
-	}
+	const acc = { total: 0, open: 0, closed: 0, unknown: 0 }
+	const closedContributors = new Set()
 
 	for (const g of inProductionUsages(usages)) {
-		const data = dataOf(g)
-		if (resolveUuid(data.consumer) !== orgId) {
+		if (resolveUuid(dataOf(g).consumer) !== orgId) {
 			continue
 		}
-		const moduleId = resolveUuid(data.module)
-		const mod = idx[moduleId] || {}
+		const { moduleId, mod } = moduleOfUsage(idx, g)
 		const type = normaliseLicenseType(mod.licentietype)
-		acc.total += 1
-		if (type === LICENSE_TYPE.OPEN) {
-			acc.open += 1
-		} else if (type === LICENSE_TYPE.CLOSED) {
-			acc.closed += 1
-			acc.closedContributors.add(moduleId)
-		} else {
-			acc.unknown += 1
+		countLicenseType(acc, type)
+		if (type === LICENSE_TYPE.CLOSED) {
+			closedContributors.add(moduleId)
 		}
 	}
 
-	const denom = acc.open + acc.closed
 	return {
-		total: acc.total,
-		open: acc.open,
-		closed: acc.closed,
-		unknown: acc.unknown,
-		openShare: denom > 0 ? acc.open / denom : null,
-		closedContributors: [...acc.closedContributors],
+		...acc,
+		openShare: openShare(acc),
+		closedContributors: [...closedContributors],
 	}
 }
 
@@ -333,6 +375,72 @@ export function seatPosition(contract) {
 }
 
 /**
+ * The uuid of a record: id, uuid or @self id.
+ *
+ * @param {object} record A record.
+ * @return {string} The uuid, empty when it has none.
+ */
+function recordUuid(record) {
+	return resolveUuid(record?.id ?? record?.uuid ?? record?.['@self']?.id ?? '')
+}
+
+/**
+ * Usage data by usage uuid.
+ *
+ * @param {Array<object>} usages The usage records.
+ * @return {object} The index.
+ */
+function indexUsages(usages) {
+	const usageIndex = {}
+	for (const u of usages || []) {
+		const id = recordUuid(u)
+		if (id !== '') {
+			usageIndex[id] = dataOf(u)
+		}
+	}
+	return usageIndex
+}
+
+/**
+ * Whether a seat position belongs in the seat table: counted, with a metric
+ * and a bought number.
+ *
+ * @param {object} position A seat position.
+ * @return {boolean} True when it is listed.
+ */
+function isCountedSeat(position) {
+	return (
+		position.state !== SEAT_STATE.NOT_COUNTED
+		&& position.metric !== ''
+		&& position.bought !== null
+	)
+}
+
+/**
+ * The seat table row of one contract.
+ *
+ * @param {object} contract The contract record.
+ * @param {{position: object, usageIndex: object}} context Its seat position and the usage index.
+ * @return {object} The row.
+ */
+function seatRow(contract, context) {
+	const { position, usageIndex } = context
+	const data = dataOf(contract)
+	const usage = usageIndex[resolveUuid(data.usage)] || {}
+	return {
+		contractId: recordUuid(contract),
+		contractNumber: data.contractNumber || '',
+		moduleId: resolveUuid(usage.module),
+		consumerId: resolveUuid(usage.consumer),
+		metric: position.metric,
+		bought: position.bought,
+		inUse: position.inUse,
+		state: position.state,
+		over: position.over,
+	}
+}
+
+/**
  * One row per counted licence contract for the Seats section of the License
  * posture page, over-licence rows first (most over first). A contract is left
  * out when its metric is uncounted or empty, or when `licencesBought` is empty.
@@ -344,37 +452,13 @@ export function seatPosition(contract) {
  * @spec openspec/specs/licence-seats/spec.md#requirement-req-lsc-003-the-license-posture-page-shall-list-every-counted-licence-contract-with-its-seat-state-over-use-first
  */
 export function seatRows(contracts, usages) {
-	const usageIndex = {}
-	for (const u of usages || []) {
-		const id = resolveUuid(u?.id ?? u?.uuid ?? u?.['@self']?.id ?? '')
-		if (id !== '') {
-			usageIndex[id] = dataOf(u)
-		}
-	}
-
+	const usageIndex = indexUsages(usages)
 	const rows = []
 	for (const c of contracts || []) {
 		const position = seatPosition(c)
-		if (
-			position.state === SEAT_STATE.NOT_COUNTED
-			|| position.metric === ''
-			|| position.bought === null
-		) {
-			continue
+		if (isCountedSeat(position)) {
+			rows.push(seatRow(c, { position, usageIndex }))
 		}
-		const data = dataOf(c)
-		const usage = usageIndex[resolveUuid(data.usage)] || {}
-		rows.push({
-			contractId: resolveUuid(c?.id ?? c?.uuid ?? c?.['@self']?.id ?? ''),
-			contractNumber: data.contractNumber || '',
-			moduleId: resolveUuid(usage.module),
-			consumerId: resolveUuid(usage.consumer),
-			metric: position.metric,
-			bought: position.bought,
-			inUse: position.inUse,
-			state: position.state,
-			over: position.over,
-		})
 	}
 
 	const rank = (row) => (row.state === SEAT_STATE.OVER ? 0 : 1)
