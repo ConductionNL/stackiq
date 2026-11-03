@@ -7,7 +7,7 @@
                 "StackiqService: SYNC_STEP_1 - Starting syncOrganizationWithOpenRegister",
                 {
                     "objectId": 17,
-                    "objectClass": "class@anonymous\u0000/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/StackiqServiceOrganisationSyncGoldenTest.php:298$c1"
+                    "objectClass": "class@anonymous"
                 }
             ],
             [
@@ -45,7 +45,7 @@
                 "StackiqService: SYNC_STEP_1 - Starting syncOrganizationWithOpenRegister",
                 {
                     "objectId": 17,
-                    "objectClass": "class@anonymous\u0000/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/StackiqServiceOrganisationSyncGoldenTest.php:298$c1"
+                    "objectClass": "class@anonymous"
                 }
             ],
             [
@@ -117,7 +117,7 @@
                 "StackiqService: SYNC_STEP_6 - Organization exists in OpenRegister, updating",
                 {
                     "organizationId": "org-1",
-                    "existingOrganisationClass": "OCA\\OpenRegister\\Db\\Organisation@anonymous\u0000/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/StackiqServiceOrganisationSyncGoldenTest.php:243$c0"
+                    "existingOrganisationClass": "OCA\\OpenRegister\\Db\\Organisation@anonymous"
                 }
             ],
             [
@@ -173,7 +173,7 @@
                 "StackiqService: SYNC_STEP_1 - Starting syncOrganizationWithOpenRegister",
                 {
                     "objectId": 17,
-                    "objectClass": "class@anonymous\u0000/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/StackiqServiceOrganisationSyncGoldenTest.php:298$c1"
+                    "objectClass": "class@anonymous"
                 }
             ],
             [
@@ -245,7 +245,7 @@
                 "StackiqService: SYNC_STEP_6 - Organization exists in OpenRegister, updating",
                 {
                     "organizationId": "org-1",
-                    "existingOrganisationClass": "OCA\\OpenRegister\\Db\\Organisation@anonymous\u0000/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/StackiqServiceOrganisationSyncGoldenTest.php:243$c0"
+                    "existingOrganisationClass": "OCA\\OpenRegister\\Db\\Organisation@anonymous"
                 }
             ],
             [
@@ -299,7 +299,7 @@
                 "StackiqService: SYNC_STEP_1 - Starting syncOrganizationWithOpenRegister",
                 {
                     "objectId": 17,
-                    "objectClass": "class@anonymous\u0000/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/StackiqServiceOrganisationSyncGoldenTest.php:298$c1"
+                    "objectClass": "class@anonymous"
                 }
             ],
             [
@@ -514,7 +514,7 @@
                 "StackiqService: SYNC_STEP_1 - Starting syncOrganizationWithOpenRegister",
                 {
                     "objectId": 17,
-                    "objectClass": "class@anonymous\u0000/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/StackiqServiceOrganisationSyncGoldenTest.php:298$c1"
+                    "objectClass": "class@anonymous"
                 }
             ],
             [
@@ -781,7 +781,7 @@
                 "StackiqService: SYNC_STEP_1 - Starting syncOrganizationWithOpenRegister",
                 {
                     "objectId": 17,
-                    "objectClass": "class@anonymous\u0000/home/rubenlinde/sig-lanes/sq3/stackiq/tests/Unit/Service/StackiqServiceOrganisationSyncGoldenTest.php:298$c1"
+                    "objectClass": "class@anonymous"
                 }
             ],
             [

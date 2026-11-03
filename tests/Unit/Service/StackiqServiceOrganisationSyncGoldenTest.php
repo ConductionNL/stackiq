@@ -6,7 +6,8 @@
  * Records, per case, every container, mapper, organisation entity, object
  * service, settings and logger call that syncOrganizationWithOpenRegister and
  * createOrganisationInOpenRegister make, plus their result or the error that
- * escapes. Recorded with RECORD_GOLDEN=1.
+ * escapes. Mock and anonymous class names are masked, as they depend on the
+ * order tests run in. Recorded with RECORD_GOLDEN=1.
  *
  * @category  Test
  * @package   OCA\Stackiq\Tests\Unit\Service
@@ -352,7 +353,7 @@ class StackiqServiceOrganisationSyncGoldenTest extends TestCase {
 					$context,
 					function (&$value) {
 						if (is_string($value) === true) {
-							$value = preg_replace('/Mock\w+/', 'Mock', $value);
+							$value = preg_replace(['/Mock\w+/', '/@anonymous.*/s'], ['Mock', '@anonymous'], $value);
 						}
 					}
 				);

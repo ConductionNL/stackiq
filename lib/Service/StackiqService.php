@@ -1364,7 +1364,6 @@ class StackiqService {
 
 				// Update the organization using OrganisationService.
 				$updatedOrganisation = $this->updateOrganisationInOpenRegister(
-					organisationService: $organisationService,
 					existingOrganisation: $existingOrganisation,
 					mappedData: $mappedData
 				);
@@ -1395,7 +1394,6 @@ class StackiqService {
 				// Create the organization using OrganisationService.
 				$this->_logger->info('StackiqService: SYNC_STEP_10 - Calling createOrganisationInOpenRegister');
 				$createdOrganisation = $this->createOrganisationInOpenRegisterInternal(
-					organisationService: $organisationService,
 					mappedData: $mappedData,
 					organizationUuid: $organizationUuid
 				);
@@ -1452,11 +1450,10 @@ class StackiqService {
 				'participants' => $objectData['participants'] ?? [],
 			];
 
-			// Get organisation service.
-			$organisationService = $this->_container->get('OCA\OpenRegister\Service\OrganisationService');
+			// Fails early when OpenRegister's organisation service is not available.
+			$this->_container->get('OCA\OpenRegister\Service\OrganisationService');
 
 			return $this->createOrganisationInOpenRegisterInternal(
-				organisationService: $organisationService,
 				mappedData: $mappedData,
 				organizationUuid: $organizationUuid
 			);
@@ -1494,17 +1491,12 @@ class StackiqService {
 	/**
 	 * Creates an organization in OpenRegister using OrganisationService
 	 *
-	 * @param \OCA\OpenRegister\Service\OrganisationService $organisationService The OpenRegister organisation service
 	 * @param array $mappedData The mapped organization data
 	 * @param string $organizationUuid The organization UUID to use
 	 *
 	 * @return \OCA\OpenRegister\Db\Organisation The created organization
 	 */
-	private function createOrganisationInOpenRegisterInternal(
-		\OCA\OpenRegister\Service\OrganisationService $organisationService,
-		array $mappedData,
-		string $organizationUuid,
-	): \OCA\OpenRegister\Db\Organisation {
+	private function createOrganisationInOpenRegisterInternal(array $mappedData, string $organizationUuid): \OCA\OpenRegister\Db\Organisation {
 		$this->_logger->info(
 			'StackiqService: STEP 1 - Starting createOrganisationInOpenRegister',
 			[
@@ -1778,14 +1770,12 @@ class StackiqService {
 	/**
 	 * Updates an organization in OpenRegister using OrganisationService
 	 *
-	 * @param \OCA\OpenRegister\Service\OrganisationService $organisationService The OpenRegister organisation service
 	 * @param \OCA\OpenRegister\Db\Organisation $existingOrganisation The existing organization
 	 * @param array $mappedData The mapped organization data
 	 *
 	 * @return \OCA\OpenRegister\Db\Organisation The updated organization
 	 */
 	private function updateOrganisationInOpenRegister(
-		\OCA\OpenRegister\Service\OrganisationService $organisationService,
 		\OCA\OpenRegister\Db\Organisation $existingOrganisation,
 		array $mappedData,
 	): \OCA\OpenRegister\Db\Organisation {
