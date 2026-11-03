@@ -195,6 +195,6 @@ abstract class ObjectEntity implements \OCA\OpenRegister\Contract\ObjectEntityIn
 	abstract public function setObject($object = null);
 
 	/** @return array<string,mixed> */
-	abstract public function jsonSerialize();
+	abstract public function jsonSerialize(): array;
 
 }//end class
