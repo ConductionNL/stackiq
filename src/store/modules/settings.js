@@ -199,6 +199,66 @@ const DEFAULT_EMAIL_SETTINGS = Object.freeze({
 })
 
 /**
+ * A fresh state's settings answer, version and register and schema choices.
+ *
+ * @return {object} The state fields.
+ */
+function registerSelectionState() {
+	return {
+		settings: { availableRegisters: [] },
+		versionInfo: {},
+		voorzieningenRegister: null,
+		amefRegister: null,
+		voorzieningenSchemas: [],
+		amefSchemas: [],
+		configuration: emptyConfiguration(),
+	}
+}
+
+/**
+ * A fresh state's ArchiMate import and export status and polling.
+ *
+ * @return {object} The state fields.
+ */
+function archiMateRunState() {
+	return {
+		archimateStatus: { import: {}, export: {} },
+		isImportRunning: false,
+		isExportRunning: false,
+		statusPollingInterval: null,
+		// Prevents concurrent status polls
+		isStatusPolling: false,
+	}
+}
+
+/**
+ * A fresh state's ArchiMate import and export options and chosen file.
+ *
+ * @return {object} The state fields.
+ */
+function archiMateOptions() {
+	return {
+		importOptions: { updateExisting: true, deleteOrphaned: false },
+		exportOptions: { includeViews: true, includeRelationships: true },
+		selectedFile: null,
+	}
+}
+
+/**
+ * A fresh state's user group lists and email settings.
+ *
+ * @return {object} The state fields.
+ */
+function userSettingsState() {
+	return {
+		genericUserGroups: [],
+		organizationAdminGroups: [],
+		superUserGroups: [],
+		emailSettings: { ...DEFAULT_EMAIL_SETTINGS },
+	}
+}
+
+/**
  * The object counts the settings page lists for the voorzieningen register,
  * with the type name each row shows.
  *
@@ -332,51 +392,10 @@ export const useSettingsStore = defineStore('settings', {
 	state: () => ({
 		...idleFlags(),
 
-		// Settings data
-		settings: {
-			availableRegisters: [],
-		},
-
-		// Version information
-		versionInfo: {},
-
-		// Register selections
-		voorzieningenRegister: null,
-		amefRegister: null,
-		voorzieningenSchemas: [],
-		amefSchemas: [],
-
-		// Configuration
-		configuration: emptyConfiguration(),
-
-		// ArchiMate status and operations
-		archimateStatus: {
-			import: {},
-			export: {},
-		},
-		isImportRunning: false,
-		isExportRunning: false,
-		statusPollingInterval: null,
-		isStatusPolling: false, // Prevent concurrent status polls
-
-		// Import/Export options
-		importOptions: {
-			updateExisting: true,
-			deleteOrphaned: false,
-		},
-		exportOptions: {
-			includeViews: true,
-			includeRelationships: true,
-		},
-		selectedFile: null,
-
-		// User groups
-		genericUserGroups: [],
-		organizationAdminGroups: [],
-		superUserGroups: [],
-
-		// Email settings
-		emailSettings: { ...DEFAULT_EMAIL_SETTINGS },
+		...registerSelectionState(),
+		...archiMateRunState(),
+		...archiMateOptions(),
+		...userSettingsState(),
 
 		// Statistics
 		statistics: emptyStatistics(),
