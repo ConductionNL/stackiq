@@ -33,25 +33,13 @@ export function apiUrl(path) {
 }
 
 /**
- * Perform a JSON request against an app API endpoint and return the parsed
- * body. Throws an Error carrying the server's `message` (when present) on a
- * non-2xx response, so callers can surface a meaningful toast.
+ * The fetch options of an API request: the method, the JSON and CSRF
+ * headers, and the JSON body when there is one.
  *
- * @param {string} path             - Path under the app API root.
- * @param {object} [options]        - Options.
- * @param {string} [options.method] - HTTP method (default GET).
- * @param {object} [options.body]   - JSON body (serialised when present).
- * @param {Function} [fetchImpl]    - Injected fetch (defaults to global fetch; for tests).
- * @return {Promise<object>} The parsed JSON response body.
- * @spec openspec/specs/federated-catalog-sync/spec.md
- * @spec openspec/specs/open-data-publishing/spec.md
+ * @param {{method?: string, body?: object}} options The request options.
+ * @return {object} The fetch options.
  */
-export async function apiRequest(path, options = {}, fetchImpl = undefined) {
-	const doFetch = fetchImpl || (typeof fetch !== 'undefined' ? fetch : null)
-	if (doFetch === null) {
-		throw new Error('No fetch implementation available')
-	}
-
+function requestInit(options) {
 	// ⚠️ `requesttoken` is NOT optional on a state-changing request.
 	//
 	// Nextcloud's CSRF middleware rejects any cookie-authenticated request
@@ -91,21 +79,73 @@ export async function apiRequest(path, options = {}, fetchImpl = undefined) {
 	if (options.body !== undefined && options.body !== null) {
 		init.body = JSON.stringify(options.body)
 	}
+	return init
+}
 
-	const response = await doFetch(apiUrl(path), init)
-	let data = {}
+/**
+ * The JSON body of an answer, or an empty object when it has none.
+ *
+ * @param {Response} response The answer.
+ * @return {Promise<object>} The body.
+ */
+async function jsonOrEmpty(response) {
 	try {
-		data = await response.json()
+		return await response.json()
 	} catch (e) {
-		data = {}
+		return {}
 	}
+}
 
+/**
+ * The fetch to use: the one given, else the global one.
+ *
+ * @param {Function|undefined} fetchImpl The fetch given by the caller.
+ * @return {Function} The fetch.
+ * @throws {Error} When there is no fetch at all.
+ */
+function fetchFunction(fetchImpl) {
+	const doFetch = fetchImpl || (typeof fetch !== 'undefined' ? fetch : null)
+	if (doFetch === null) {
+		throw new Error('No fetch implementation available')
+	}
+	return doFetch
+}
+
+/**
+ * Throw when the answer failed, with the server message or the status.
+ *
+ * @param {Response} response The answer.
+ * @param {object} data Its JSON body.
+ * @return {void}
+ * @throws {Error} When the answer is not ok.
+ */
+function assertAnswerOk(response, data) {
 	if (!response.ok) {
-		const message =
-			data && data.message ? data.message : `HTTP ${response.status}`
-		throw new Error(message)
+		throw new Error(
+			data && data.message ? data.message : `HTTP ${response.status}`,
+		)
 	}
+}
 
+/**
+ * Perform a JSON request against an app API endpoint and return the parsed
+ * body. Throws an Error carrying the server's `message` (when present) on a
+ * non-2xx response, so callers can surface a meaningful toast.
+ *
+ * @param {string} path             - Path under the app API root.
+ * @param {object} [options]        - Options.
+ * @param {string} [options.method] - HTTP method (default GET).
+ * @param {object} [options.body]   - JSON body (serialised when present).
+ * @param {Function} [fetchImpl]    - Injected fetch (defaults to global fetch; for tests).
+ * @return {Promise<object>} The parsed JSON response body.
+ * @spec openspec/specs/federated-catalog-sync/spec.md
+ * @spec openspec/specs/open-data-publishing/spec.md
+ */
+export async function apiRequest(path, options = {}, fetchImpl = undefined) {
+	const doFetch = fetchFunction(fetchImpl)
+	const response = await doFetch(apiUrl(path), requestInit(options))
+	const data = await jsonOrEmpty(response)
+	assertAnswerOk(response, data)
 	return data
 }
 

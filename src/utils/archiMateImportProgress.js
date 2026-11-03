@@ -32,27 +32,49 @@ export function makeOperationId() {
 }
 
 /**
+ * The translated label of each import phase; any other phase reads as
+ * importing.
+ *
+ * @type {Readonly<Record<string, function(): string>>}
+ */
+const PHASE_LABELS = Object.freeze({
+	initializing: () => t('stackiq', 'Checking the file'),
+	validating: () => t('stackiq', 'Checking the file'),
+	parsing: () => t('stackiq', 'Reading the model'),
+	analyzing: () => t('stackiq', 'Converting the model'),
+	processing_elements: () => t('stackiq', 'Saving objects'),
+	finalizing: () => t('stackiq', 'Finishing the import'),
+	importing: () => t('stackiq', 'Importing'),
+})
+
+/**
  * The words for each import phase the server records.
  *
  * @param {string} phase The phase key
  * @return {string} The label
  */
 function phaseLabel(phase) {
-	switch (phase) {
-		case 'initializing':
-		case 'validating':
-			return t('stackiq', 'Checking the file')
-		case 'parsing':
-			return t('stackiq', 'Reading the model')
-		case 'analyzing':
-			return t('stackiq', 'Converting the model')
-		case 'processing_elements':
-			return t('stackiq', 'Saving objects')
-		case 'finalizing':
-			return t('stackiq', 'Finishing the import')
-		default:
-			return t('stackiq', 'Importing')
+	const label =
+		typeof phase === 'string' && Object.hasOwn(PHASE_LABELS, phase)
+			? PHASE_LABELS[phase]
+			: PHASE_LABELS.importing
+	return label()
+}
+
+/**
+ * The objects-saved line of a progress snapshot, empty while the total is
+ * unknown.
+ *
+ * @param {object} progress The snapshot.
+ * @return {string} The line.
+ */
+function objectsSavedText(progress) {
+	const processed = Number(progress.processed_items) || 0
+	const total = Number(progress.total_items) || 0
+	if (total <= 0) {
+		return ''
 	}
+	return t('stackiq', '{processed} of {total} objects saved', { processed, total })
 }
 
 /**
@@ -66,18 +88,10 @@ export function progressView(progress) {
 	if (!progress) {
 		return null
 	}
-	const processed = Number(progress.processed_items) || 0
-	const total = Number(progress.total_items) || 0
 	return {
 		label: phaseLabel(progress.phase),
 		percentage: Number(progress.percentage) || 0,
-		detail:
-			total > 0
-				? t('stackiq', '{processed} of {total} objects saved', {
-						processed,
-						total,
-					})
-				: '',
+		detail: objectsSavedText(progress),
 	}
 }
 
