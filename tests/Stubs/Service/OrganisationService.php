@@ -40,6 +40,13 @@ abstract class OrganisationService {
 	abstract public function getActiveOrganisation(): ?Organisation;
 
 	/**
+	 * Get the default organisation, creating it when it does not exist yet.
+	 *
+	 * @return Organisation
+	 */
+	abstract public function ensureDefaultOrganisation(): Organisation;
+
+	/**
 	 * Get the caller's own organisations (session-scoped).
 	 *
 	 * @return Organisation[]
