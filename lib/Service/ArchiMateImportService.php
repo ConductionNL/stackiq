@@ -581,7 +581,7 @@ class ArchiMateImportService {
 					'total_objects_created' => $statistics['omschrijving']['total_objects_created'],
 					'total_objects_updated' => $statistics['omschrijving']['total_objects_updated'],
 					'total_objects_deleted' => $statistics['omschrijving']['total_objects_deleted'],
-					'total_objects_skipped' => $statistics['omschrijving']['total_objects_skipped'],
+					'total_objects_unchanged' => $statistics['omschrijving']['total_objects_unchanged'],
 					'total_errors' => $statistics['omschrijving']['total_errors'],
 				],
 				'performance_metrics' => [
@@ -2355,8 +2355,8 @@ class ArchiMateImportService {
 			$items = [$sectionData];
 		}
 
-		// Ensure items is always an array.
-		if (is_array($items) === false) {
+		// Ensure items is always an array; a section with one item holds that item, not a list.
+		if (is_array($items) === false || isset($items['_attributes']) === true) {
 			$items = [$items];
 		}
 

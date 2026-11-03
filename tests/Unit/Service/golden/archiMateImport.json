@@ -642,8 +642,71 @@
     },
     "classic sample_archimate.xml []": {
         "result": {
-            "escaped": "TypeError",
-            "message": "OCA\\Stackiq\\Service\\ArchiMateImportService::extractIdentifier(): Argument #1 ($item) must be of type array, string given,"
+            "success": true,
+            "file_info": {
+                "name": "sample_archimate.xml",
+                "size": 1111,
+                "mime_type": "text/xml"
+            },
+            "processing_times": "<volatile>",
+            "memory_usage": "<volatile>",
+            "statistics": {
+                "elements": {
+                    "created": 0,
+                    "updated": 0,
+                    "unchanged": 5,
+                    "errors": []
+                },
+                "organizations": {
+                    "created": 0,
+                    "updated": 0,
+                    "unchanged": 0,
+                    "errors": []
+                },
+                "relationships": {
+                    "created": 0,
+                    "updated": 0,
+                    "unchanged": 0,
+                    "errors": []
+                },
+                "views": {
+                    "created": 0,
+                    "updated": 0,
+                    "unchanged": 0,
+                    "errors": []
+                },
+                "property_definitions": {
+                    "created": 0,
+                    "updated": 0,
+                    "unchanged": 0,
+                    "errors": []
+                },
+                "omschrijving": {
+                    "total_objects_created": 0,
+                    "total_objects_updated": 0,
+                    "total_objects_deleted": 0,
+                    "total_objects_unchanged": 5,
+                    "total_errors": 0
+                }
+            },
+            "omschrijving": {
+                "total_objects_created": 0,
+                "total_objects_updated": 0,
+                "total_objects_deleted": 0,
+                "total_objects_unchanged": 5,
+                "total_errors": 0
+            },
+            "performance_metrics": {
+                "items_per_second": "<volatile>",
+                "processing_method": "synchronous_batch_processing",
+                "batch_size_used": 100,
+                "dataset_size": 0
+            },
+            "detailed_errors": {
+                "total_count": 0,
+                "by_section": [],
+                "omschrijving": []
+            }
         },
         "calls": [
             [
@@ -780,6 +843,548 @@
                     ],
                     "has_name": true,
                     "has_documentation": false
+                }
+            ],
+            [
+                "log.info",
+                "Data normalization completed",
+                {
+                    "model_identifier": "test-model",
+                    "sections_processed": [
+                        "elements",
+                        "relationships",
+                        "organizations",
+                        "views",
+                        "property_definitions"
+                    ],
+                    "round_trip_fidelity": "enabled"
+                }
+            ],
+            [
+                "log.info",
+                "Step 4: Converting to OpenRegister objects with @self structure",
+                []
+            ],
+            [
+                "log.info",
+                "Converting to OpenRegister objects with @self structure",
+                {
+                    "model_identifier": "test-model"
+                }
+            ],
+            [
+                "log.debug",
+                "Creating model object from metadata",
+                []
+            ],
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "element"
+            ],
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "element"
+            ],
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "relationship"
+            ],
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "view"
+            ],
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ],
+            [
+                "log.debug",
+                "Sections processed",
+                {
+                    "elements": 2,
+                    "relationships": 1,
+                    "organizations": 0,
+                    "views": 1,
+                    "property_definitions": 0
+                }
+            ],
+            [
+                "log.info",
+                "Conversion to OpenRegister objects completed",
+                {
+                    "model_identifier": "test-model",
+                    "total_objects": 5,
+                    "sections_processed": [
+                        "elements",
+                        "relationships",
+                        "organizations",
+                        "views",
+                        "property_definitions"
+                    ]
+                }
+            ],
+            [
+                "log.info",
+                "Step 5: Saving objects to database using ObjectService::saveObjects",
+                []
+            ],
+            [
+                "log.debug",
+                "Objects before save",
+                {
+                    "total_objects_to_save": 5,
+                    "elements_with_gemmaType": 0
+                }
+            ],
+            [
+                "log.info",
+                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
+                []
+            ],
+            [
+                "log.info",
+                "GEMMA objects processing complete",
+                {
+                    "total_elements": 0,
+                    "elements_with_gemma_type": 0,
+                    "gemma_type_variations": [],
+                    "referentiecomponenten_count": 0,
+                    "standaarden_count": 0,
+                    "standaardversies_count": 0,
+                    "processed_relationships": 0,
+                    "standaardversie_relationships": 0
+                }
+            ],
+            [
+                "log.info",
+                "GEMMA Referentiecomponent-Standaard processing completed",
+                {
+                    "referentiecomponenten_enhanced": 0,
+                    "total_referentiecomponenten": 0,
+                    "total_relationships_processed": 0
+                }
+            ],
+            [
+                "log.info",
+                "GEMMA StandaardVersie-Standaard processing completed",
+                {
+                    "standaardversies_enhanced": 0,
+                    "total_standaardversies": 0,
+                    "total_versie_relationships": 0
+                }
+            ],
+            [
+                "log.info",
+                "GEMMA ReferentieComponent-StandaardVersies processing completed",
+                {
+                    "referentiecomponenten_with_versies": 0,
+                    "total_referentiecomponenten": 0,
+                    "standaard_to_versies_mappings": 0
+                }
+            ],
+            [
+                "log.info",
+                "ArchiMate import: Grouped objects by schema for magic mapping",
+                {
+                    "schemaCount": 4,
+                    "schemas": {
+                        "10": 1,
+                        "11": 2,
+                        "12": 1,
+                        "13": 1
+                    }
+                }
+            ],
+            [
+                "objects.saveObjects",
+                {
+                    "objects": [
+                        {
+                            "@self": {
+                                "register": 7,
+                                "schema": 10,
+                                "id": "test-model",
+                                "owner": "importer",
+                                "organisation": "org-default",
+                                "published": "<volatile>"
+                            },
+                            "identifier": "test-model",
+                            "section": "model",
+                            "model_identifier": "test-model",
+                            "xml": {
+                                "name": "Test ArchiMate Model",
+                                "propertyDefinitionMap": []
+                            },
+                            "name": "Test ArchiMate Model",
+                            ":identifier": "test-model",
+                            ":name": "Test ArchiMate Model",
+                            "propertyDefinitionMap": []
+                        }
+                    ],
+                    "register": 7,
+                    "schema": 10,
+                    "_rbac": false,
+                    "_multitenancy": false,
+                    "validation": false,
+                    "events": false
+                }
+            ],
+            [
+                "log.debug",
+                "Schema group saved for magic mapping",
+                {
+                    "schemaId": 10,
+                    "objectCount": 1,
+                    "saved": 0,
+                    "updated": 1
+                }
+            ],
+            [
+                "objects.saveObjects",
+                {
+                    "objects": [
+                        {
+                            "@self": {
+                                "register": 7,
+                                "schema": 11,
+                                "id": "test-element-1",
+                                "slug": "test-element-1",
+                                "owner": "importer",
+                                "organisation": "org-default",
+                                "published": "<volatile>"
+                            },
+                            "identifier": "test-element-1",
+                            "section": "elements",
+                            "model_identifier": "test-model",
+                            "extracted_at": "<volatile>",
+                            "xml": {
+                                "_attributes": {
+                                    "identifier": "test-element-1",
+                                    ":identifier": "test-element-1",
+                                    "xsi:type": "archimate:BusinessActor"
+                                },
+                                "name": {
+                                    "_value": "Test Business Actor"
+                                },
+                                "properties": {
+                                    "property": {
+                                        "_identifier": "test-prop-1",
+                                        "_attributes": {
+                                            "identifier": "test-prop-1",
+                                            ":identifier": "test-prop-1"
+                                        },
+                                        "___identifier": "test-prop-1",
+                                        "value": {
+                                            "_value": "Test Property Value"
+                                        }
+                                    }
+                                },
+                                "_essential_data": true
+                            },
+                            "type": "archimate:BusinessActor",
+                            "name": "Test Business Actor"
+                        },
+                        {
+                            "@self": {
+                                "register": 7,
+                                "schema": 11,
+                                "id": "test-element-2",
+                                "slug": "test-element-2",
+                                "owner": "importer",
+                                "organisation": "org-default",
+                                "published": "<volatile>"
+                            },
+                            "identifier": "test-element-2",
+                            "section": "elements",
+                            "model_identifier": "test-model",
+                            "extracted_at": "<volatile>",
+                            "xml": {
+                                "_attributes": {
+                                    "identifier": "test-element-2",
+                                    ":identifier": "test-element-2",
+                                    "xsi:type": "archimate:BusinessRole"
+                                },
+                                "name": {
+                                    "_value": "Test Business Role"
+                                },
+                                "_essential_data": true
+                            },
+                            "type": "archimate:BusinessRole",
+                            "name": "Test Business Role"
+                        }
+                    ],
+                    "register": 7,
+                    "schema": 11,
+                    "_rbac": false,
+                    "_multitenancy": false,
+                    "validation": false,
+                    "events": false
+                }
+            ],
+            [
+                "log.debug",
+                "Schema group saved for magic mapping",
+                {
+                    "schemaId": 11,
+                    "objectCount": 2,
+                    "saved": 1,
+                    "updated": 1
+                }
+            ],
+            [
+                "objects.saveObjects",
+                {
+                    "objects": [
+                        {
+                            "@self": {
+                                "register": 7,
+                                "schema": 12,
+                                "id": "test-rel-1",
+                                "slug": "test-rel-1",
+                                "owner": "importer",
+                                "organisation": "org-default",
+                                "published": "<volatile>"
+                            },
+                            "identifier": "test-rel-1",
+                            "section": "relationships",
+                            "model_identifier": "test-model",
+                            "extracted_at": "<volatile>",
+                            "xml": {
+                                "_attributes": {
+                                    "identifier": "test-rel-1",
+                                    ":identifier": "test-rel-1",
+                                    "xsi:type": "archimate:AssignmentRelationship"
+                                },
+                                "name": {
+                                    "_value": "Test Assignment"
+                                },
+                                "source": {
+                                    "element": {
+                                        "_ref": "test-element-1",
+                                        "_attributes": {
+                                            "ref": "test-element-1",
+                                            ":ref": "test-element-1"
+                                        },
+                                        "___ref": "test-element-1"
+                                    }
+                                },
+                                "target": {
+                                    "element": {
+                                        "_ref": "test-element-2",
+                                        "_attributes": {
+                                            "ref": "test-element-2",
+                                            ":ref": "test-element-2"
+                                        },
+                                        "___ref": "test-element-2"
+                                    }
+                                },
+                                "_essential_data": true
+                            },
+                            "type": "archimate:AssignmentRelationship",
+                            "name": "Test Assignment"
+                        }
+                    ],
+                    "register": 7,
+                    "schema": 12,
+                    "_rbac": false,
+                    "_multitenancy": false,
+                    "validation": false,
+                    "events": false
+                }
+            ],
+            [
+                "log.debug",
+                "Schema group saved for magic mapping",
+                {
+                    "schemaId": 12,
+                    "objectCount": 1,
+                    "saved": 0,
+                    "updated": 1
+                }
+            ],
+            [
+                "objects.saveObjects",
+                {
+                    "objects": [
+                        {
+                            "@self": {
+                                "register": 7,
+                                "schema": 13,
+                                "id": "test-view-1",
+                                "slug": "test-view-1",
+                                "owner": "importer",
+                                "organisation": "org-default",
+                                "published": "<volatile>"
+                            },
+                            "identifier": "test-view-1",
+                            "section": "views",
+                            "model_identifier": "test-model",
+                            "extracted_at": "<volatile>",
+                            "xml": {
+                                "_attributes": {
+                                    "identifier": "test-view-1",
+                                    ":identifier": "test-view-1",
+                                    "xsi:type": "archimate:ArchimateDiagramModel"
+                                },
+                                "name": {
+                                    "_value": "Test View"
+                                },
+                                "_essential_data": true
+                            },
+                            "type": "archimate:ArchimateDiagramModel",
+                            "name": "Test View"
+                        }
+                    ],
+                    "register": 7,
+                    "schema": 13,
+                    "_rbac": false,
+                    "_multitenancy": false,
+                    "validation": false,
+                    "events": false
+                }
+            ],
+            [
+                "log.debug",
+                "Schema group saved for magic mapping",
+                {
+                    "schemaId": 13,
+                    "objectCount": 1,
+                    "saved": 0,
+                    "updated": 1
+                }
+            ],
+            [
+                "db.executeQuery",
+                "SELECT _uuid, identifier FROM oc_openregister_table_7_11 WHERE gemma_type = 'Standaard' AND identifier IS NOT NULL"
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Built identifier->uuid mapping",
+                {
+                    "standaard_count": 0
+                }
+            ],
+            [
+                "log.warning",
+                "fixStandaardVersieUuids: No Standaarden found to map",
+                []
+            ],
+            [
+                "log.info",
+                "[ArchiMate] Using lastSaveResult for statistics",
+                {
+                    "saved_count": 1,
+                    "updated_count": 4,
+                    "unchanged_count": 0,
+                    "invalid_count": 0,
+                    "keys_present": [
+                        "saved",
+                        "updated",
+                        "unchanged",
+                        "invalid",
+                        "countsBySchema"
+                    ]
+                }
+            ],
+            [
+                "log.info",
+                "[ArchiMate] Statistics summary calculated",
+                {
+                    "omschrijving": {
+                        "total_objects_created": 0,
+                        "total_objects_updated": 0,
+                        "total_objects_deleted": 0,
+                        "total_objects_unchanged": 5,
+                        "total_errors": 0
+                    },
+                    "section_counts": {
+                        "elements": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 5,
+                            "errors": 0
+                        },
+                        "organizations": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "relationships": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "views": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "property_definitions": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        }
+                    }
+                }
+            ],
+            [
+                "log.info",
+                "ArchiMate XML import completed successfully",
+                {
+                    "model_identifier": "test-model",
+                    "model_exists": false,
+                    "imported_objects": 0,
+                    "round_trip_fidelity": "enabled"
                 }
             ]
         ]
@@ -3024,7 +3629,7 @@
                 "total_objects_created": 0,
                 "total_objects_updated": 0,
                 "total_objects_deleted": 0,
-                "total_objects_skipped": null,
+                "total_objects_unchanged": 16,
                 "total_errors": 0
             },
             "performance_metrics": {
@@ -12625,7 +13230,7 @@
                 "total_objects_created": 0,
                 "total_objects_updated": 0,
                 "total_objects_deleted": 0,
-                "total_objects_skipped": null,
+                "total_objects_unchanged": 16,
                 "total_errors": 0
             },
             "performance_metrics": {
@@ -17741,7 +18346,7 @@
                 "total_objects_created": 0,
                 "total_objects_updated": 0,
                 "total_objects_deleted": 0,
-                "total_objects_skipped": null,
+                "total_objects_unchanged": 54,
                 "total_errors": 0
             },
             "performance_metrics": {
@@ -23107,7 +23712,7 @@
                 "total_objects_created": 0,
                 "total_objects_updated": 0,
                 "total_objects_deleted": 0,
-                "total_objects_skipped": null,
+                "total_objects_unchanged": 51,
                 "total_errors": 0
             },
             "performance_metrics": {
@@ -26377,8 +26982,71 @@
     },
     "classic noorg.xml []": {
         "result": {
-            "escaped": "TypeError",
-            "message": "OCA\\Stackiq\\Service\\ArchiMateImportService::extractIdentifier(): Argument #1 ($item) must be of type array, string given,"
+            "success": true,
+            "file_info": {
+                "name": "noorg.xml",
+                "size": 563,
+                "mime_type": "text/xml"
+            },
+            "processing_times": "<volatile>",
+            "memory_usage": "<volatile>",
+            "statistics": {
+                "elements": {
+                    "created": 0,
+                    "updated": 0,
+                    "unchanged": 4,
+                    "errors": []
+                },
+                "organizations": {
+                    "created": 0,
+                    "updated": 0,
+                    "unchanged": 0,
+                    "errors": []
+                },
+                "relationships": {
+                    "created": 0,
+                    "updated": 0,
+                    "unchanged": 0,
+                    "errors": []
+                },
+                "views": {
+                    "created": 0,
+                    "updated": 0,
+                    "unchanged": 0,
+                    "errors": []
+                },
+                "property_definitions": {
+                    "created": 0,
+                    "updated": 0,
+                    "unchanged": 0,
+                    "errors": []
+                },
+                "omschrijving": {
+                    "total_objects_created": 0,
+                    "total_objects_updated": 0,
+                    "total_objects_deleted": 0,
+                    "total_objects_unchanged": 4,
+                    "total_errors": 0
+                }
+            },
+            "omschrijving": {
+                "total_objects_created": 0,
+                "total_objects_updated": 0,
+                "total_objects_deleted": 0,
+                "total_objects_unchanged": 4,
+                "total_errors": 0
+            },
+            "performance_metrics": {
+                "items_per_second": "<volatile>",
+                "processing_method": "synchronous_batch_processing",
+                "batch_size_used": 100,
+                "dataset_size": 0
+            },
+            "detailed_errors": {
+                "total_count": 0,
+                "by_section": [],
+                "omschrijving": []
+            }
         },
         "calls": [
             [
@@ -26522,6 +27190,470 @@
                     ],
                     "has_name": false,
                     "has_documentation": false
+                }
+            ],
+            [
+                "log.info",
+                "Data normalization completed",
+                {
+                    "model_identifier": "big",
+                    "sections_processed": [
+                        "elements",
+                        "relationships",
+                        "organizations",
+                        "views",
+                        "property_definitions"
+                    ],
+                    "round_trip_fidelity": "enabled"
+                }
+            ],
+            [
+                "log.info",
+                "Step 4: Converting to OpenRegister objects with @self structure",
+                []
+            ],
+            [
+                "log.info",
+                "Converting to OpenRegister objects with @self structure",
+                {
+                    "model_identifier": "big"
+                }
+            ],
+            [
+                "log.debug",
+                "Creating model object from metadata",
+                []
+            ],
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "element"
+            ],
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "view"
+            ],
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ],
+            [
+                "settings.getSchemaIdForObjectType",
+                "property_definition"
+            ],
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ],
+            [
+                "log.debug",
+                "Sections processed",
+                {
+                    "elements": 1,
+                    "relationships": 0,
+                    "organizations": 0,
+                    "views": 1,
+                    "property_definitions": 1
+                }
+            ],
+            [
+                "log.info",
+                "Conversion to OpenRegister objects completed",
+                {
+                    "model_identifier": "big",
+                    "total_objects": 4,
+                    "sections_processed": [
+                        "elements",
+                        "relationships",
+                        "organizations",
+                        "views",
+                        "property_definitions"
+                    ]
+                }
+            ],
+            [
+                "log.info",
+                "Step 5: Saving objects to database using ObjectService::saveObjects",
+                []
+            ],
+            [
+                "log.debug",
+                "Objects before save",
+                {
+                    "total_objects_to_save": 4,
+                    "elements_with_gemmaType": 0
+                }
+            ],
+            [
+                "log.info",
+                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
+                []
+            ],
+            [
+                "log.info",
+                "GEMMA objects processing complete",
+                {
+                    "total_elements": 0,
+                    "elements_with_gemma_type": 0,
+                    "gemma_type_variations": [],
+                    "referentiecomponenten_count": 0,
+                    "standaarden_count": 0,
+                    "standaardversies_count": 0,
+                    "processed_relationships": 0,
+                    "standaardversie_relationships": 0
+                }
+            ],
+            [
+                "log.info",
+                "GEMMA Referentiecomponent-Standaard processing completed",
+                {
+                    "referentiecomponenten_enhanced": 0,
+                    "total_referentiecomponenten": 0,
+                    "total_relationships_processed": 0
+                }
+            ],
+            [
+                "log.info",
+                "GEMMA StandaardVersie-Standaard processing completed",
+                {
+                    "standaardversies_enhanced": 0,
+                    "total_standaardversies": 0,
+                    "total_versie_relationships": 0
+                }
+            ],
+            [
+                "log.info",
+                "GEMMA ReferentieComponent-StandaardVersies processing completed",
+                {
+                    "referentiecomponenten_with_versies": 0,
+                    "total_referentiecomponenten": 0,
+                    "standaard_to_versies_mappings": 0
+                }
+            ],
+            [
+                "log.info",
+                "ArchiMate import: Grouped objects by schema for magic mapping",
+                {
+                    "schemaCount": 4,
+                    "schemas": {
+                        "10": 1,
+                        "11": 1,
+                        "13": 1,
+                        "15": 1
+                    }
+                }
+            ],
+            [
+                "objects.saveObjects",
+                {
+                    "objects": [
+                        {
+                            "@self": {
+                                "register": 7,
+                                "schema": 10,
+                                "id": "big",
+                                "owner": "importer",
+                                "organisation": "org-default",
+                                "published": "<volatile>"
+                            },
+                            "identifier": "big",
+                            "section": "model",
+                            "model_identifier": "big",
+                            "xml": {
+                                "propertyDefinitionMap": {
+                                    "pd-0": "Prop 0"
+                                }
+                            },
+                            ":identifier": "big",
+                            "propertyDefinitionMap": {
+                                "pd-0": "Prop 0"
+                            }
+                        }
+                    ],
+                    "register": 7,
+                    "schema": 10,
+                    "_rbac": false,
+                    "_multitenancy": false,
+                    "validation": false,
+                    "events": false
+                }
+            ],
+            [
+                "log.debug",
+                "Schema group saved for magic mapping",
+                {
+                    "schemaId": 10,
+                    "objectCount": 1,
+                    "saved": 0,
+                    "updated": 1
+                }
+            ],
+            [
+                "objects.saveObjects",
+                {
+                    "objects": [
+                        {
+                            "@self": {
+                                "register": 7,
+                                "schema": 11,
+                                "id": "el-00",
+                                "slug": "el-00",
+                                "owner": "importer",
+                                "organisation": "org-default",
+                                "published": "<volatile>"
+                            },
+                            "identifier": "el-00",
+                            "section": "elements",
+                            "model_identifier": "big",
+                            "extracted_at": "<volatile>",
+                            "xml": {
+                                "_attributes": {
+                                    "identifier": "el-00",
+                                    ":identifier": "el-00",
+                                    "xsi:type": "Role"
+                                },
+                                "name": {
+                                    "_value": "el-00"
+                                },
+                                "_essential_data": true
+                            },
+                            "type": "Role",
+                            "name": "el-00"
+                        }
+                    ],
+                    "register": 7,
+                    "schema": 11,
+                    "_rbac": false,
+                    "_multitenancy": false,
+                    "validation": false,
+                    "events": false
+                }
+            ],
+            [
+                "log.debug",
+                "Schema group saved for magic mapping",
+                {
+                    "schemaId": 11,
+                    "objectCount": 1,
+                    "saved": 0,
+                    "updated": 1
+                }
+            ],
+            [
+                "objects.saveObjects",
+                {
+                    "objects": [
+                        {
+                            "@self": {
+                                "register": 7,
+                                "schema": 13,
+                                "id": "view-0",
+                                "slug": "view-0",
+                                "owner": "importer",
+                                "organisation": "org-default",
+                                "published": "<volatile>"
+                            },
+                            "identifier": "view-0",
+                            "section": "views",
+                            "model_identifier": "big",
+                            "extracted_at": "<volatile>",
+                            "xml": {
+                                "_attributes": {
+                                    "identifier": "view-0",
+                                    ":identifier": "view-0"
+                                },
+                                "name": {
+                                    "_value": "View 0"
+                                },
+                                "_essential_data": true
+                            },
+                            "name": "View 0"
+                        }
+                    ],
+                    "register": 7,
+                    "schema": 13,
+                    "_rbac": false,
+                    "_multitenancy": false,
+                    "validation": false,
+                    "events": false
+                }
+            ],
+            [
+                "log.debug",
+                "Schema group saved for magic mapping",
+                {
+                    "schemaId": 13,
+                    "objectCount": 1,
+                    "saved": 0,
+                    "updated": 1
+                }
+            ],
+            [
+                "objects.saveObjects",
+                {
+                    "objects": [
+                        {
+                            "@self": {
+                                "register": 7,
+                                "schema": 15,
+                                "id": "pd-0",
+                                "slug": "pd-0",
+                                "owner": "importer",
+                                "organisation": "org-default",
+                                "published": "<volatile>"
+                            },
+                            "identifier": "pd-0",
+                            "section": "property_definitions",
+                            "model_identifier": "big",
+                            "extracted_at": "<volatile>",
+                            "xml": {
+                                "_attributes": {
+                                    "identifier": "pd-0",
+                                    ":identifier": "pd-0"
+                                },
+                                "name": {
+                                    "_value": "Prop 0"
+                                },
+                                "_essential_data": true
+                            },
+                            "name": "Prop 0"
+                        }
+                    ],
+                    "register": 7,
+                    "schema": 15,
+                    "_rbac": false,
+                    "_multitenancy": false,
+                    "validation": false,
+                    "events": false
+                }
+            ],
+            [
+                "log.debug",
+                "Schema group saved for magic mapping",
+                {
+                    "schemaId": 15,
+                    "objectCount": 1,
+                    "saved": 0,
+                    "updated": 1
+                }
+            ],
+            [
+                "db.executeQuery",
+                "SELECT _uuid, identifier FROM oc_openregister_table_7_11 WHERE gemma_type = 'Standaard' AND identifier IS NOT NULL"
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Built identifier->uuid mapping",
+                {
+                    "standaard_count": 0
+                }
+            ],
+            [
+                "log.warning",
+                "fixStandaardVersieUuids: No Standaarden found to map",
+                []
+            ],
+            [
+                "log.info",
+                "[ArchiMate] Using lastSaveResult for statistics",
+                {
+                    "saved_count": 0,
+                    "updated_count": 4,
+                    "unchanged_count": 0,
+                    "invalid_count": 0,
+                    "keys_present": [
+                        "saved",
+                        "updated",
+                        "unchanged",
+                        "invalid",
+                        "countsBySchema"
+                    ]
+                }
+            ],
+            [
+                "log.info",
+                "[ArchiMate] Statistics summary calculated",
+                {
+                    "omschrijving": {
+                        "total_objects_created": 0,
+                        "total_objects_updated": 0,
+                        "total_objects_deleted": 0,
+                        "total_objects_unchanged": 4,
+                        "total_errors": 0
+                    },
+                    "section_counts": {
+                        "elements": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 4,
+                            "errors": 0
+                        },
+                        "organizations": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "relationships": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "views": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        },
+                        "property_definitions": {
+                            "created": 0,
+                            "updated": 0,
+                            "unchanged": 0,
+                            "errors": 0
+                        }
+                    }
+                }
+            ],
+            [
+                "log.info",
+                "ArchiMate XML import completed successfully",
+                {
+                    "model_identifier": "big",
+                    "model_exists": false,
+                    "imported_objects": 0,
+                    "round_trip_fidelity": "enabled"
                 }
             ]
         ]
