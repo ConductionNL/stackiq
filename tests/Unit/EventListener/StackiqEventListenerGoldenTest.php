@@ -99,8 +99,10 @@ class StackiqEventListenerGoldenTest extends TestCase {
 			'updated organisation deactivated'     => ['updated', '1', $inactive, $active, []],
 			'updated organisation, refetch fails'  => ['updated', '1', $active, $inactive, ['findThrows' => true]],
 			'updated organisation, sync fails'     => ['updated', '1', $active, $inactive, ['orgSyncThrows' => true]],
+			'updated organisation, schema \'01\''  => ['updated', '01', $active, $inactive, []],
 			'updated contact person'               => ['updated', '2', ['email' => 'a@a.nl'], ['email' => 'b@a.nl'], []],
 			'updated contact person fails'         => ['updated', '2', ['email' => 'a@a.nl'], null, ['contactThrows' => true]],
+			'updated contact person, Error escapes' => ['updated', '2', ['email' => 'a@a.nl'], null, ['contactThrows' => 'error']],
 			'updated contactgegevens'              => ['updated', '3', ['email' => 'a@a.nl'], null, []],
 			'updated contactgegevens fails'        => ['updated', '3', ['email' => 'a@a.nl'], null, ['contactThrows' => true]],
 			'updated usage'                        => ['updated', '4', $usage, null, []],
@@ -142,7 +144,11 @@ class StackiqEventListenerGoldenTest extends TestCase {
 			'deleted' => fn () => new ObjectDeletedEvent($object),
 		];
 
-		(new StackiqEventListener($this->container()))->handle($events[$kind]());
+		try {
+			(new StackiqEventListener($this->container()))->handle($events[$kind]());
+		} catch (\Throwable $e) {
+			$this->trace[] = ['escaped', get_class($e), $e->getMessage()];
+		}
 
 		$this->check(key: $this->dataName(), value: $this->trace);
 	}//end testHandleMatchesTheRecording()
@@ -194,6 +200,10 @@ class StackiqEventListenerGoldenTest extends TestCase {
 			$contacts->method($method)->willReturnCallback(
 				function (...$args) use ($method) {
 					$this->trace[] = ['contacts.' . $method, array_map(fn ($arg) => is_object($arg) === true ? $arg->getUuid() : $arg, $args)];
+					if (($this->plan['contactThrows'] ?? null) === 'error') {
+						throw new \Error('contact broke');
+					}
+
 					if (isset($this->plan['contactThrows']) === true) {
 						throw new \RuntimeException('contact failed');
 					}
