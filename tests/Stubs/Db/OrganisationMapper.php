@@ -49,4 +49,13 @@ abstract class OrganisationMapper {
 	 */
 	abstract public function save(Organisation $entity): Organisation;
 
+	/**
+	 * Update an organisation entity.
+	 *
+	 * @param Organisation $entity The entity to update.
+	 *
+	 * @return Organisation
+	 */
+	abstract public function update(Organisation $entity): Organisation;
+
 }//end class
