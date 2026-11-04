@@ -8,7 +8,7 @@
  use offers it) or overlap. A thin renderer over the bounded,
  organisation-scoped `GET /api/reference-component-coverage`.
 
- @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
+ @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 -->
 <template>
 	<div class="gemma-plate">
@@ -18,7 +18,12 @@
 					{{ t('stackiq', 'GEMMA plate') }}
 				</h2>
 				<p class="gemma-plate__intro">
-					{{ t('stackiq', 'The GEMMA reference components with the applications an organisation uses for them.') }}
+					{{
+						t(
+							'stackiq',
+							'The GEMMA reference components with the applications an organisation uses for them.',
+						)
+					}}
 				</p>
 			</div>
 			<NcButton
@@ -52,7 +57,12 @@
 		<NcEmptyContent
 			v-else-if="!coverage"
 			:name="t('stackiq', 'Select an organisation')"
-			:description="t('stackiq', 'Pick an organisation above to see its applications on the GEMMA plate.')" />
+			:description="
+				t(
+					'stackiq',
+					'Pick an organisation above to see its applications on the GEMMA plate.',
+				)
+			" />
 
 		<NcEmptyContent
 			v-else-if="!coverage.components.length"
@@ -62,25 +72,55 @@
 
 		<template v-else>
 			<NcNoteCard v-if="coverage.truncated" type="warning">
-				{{ t('stackiq', 'The plate covers the first applications in use of {total}.', { total: coverage.total }) }}
+				{{
+					t(
+						'stackiq',
+						'The plate covers the first applications in use of {total}.',
+						{ total: coverage.total },
+					)
+				}}
 			</NcNoteCard>
 
 			<CnKpiGrid :columns="4" data-testid="gemma-plate-summary">
-				<CnStatsBlock :title="t('stackiq', 'Reference components')" :count="coverage.summary.components" showZeroCount />
-				<CnStatsBlock :title="t('stackiq', 'Covered')" :count="coverage.summary.covered" showZeroCount />
+				<CnStatsBlock
+					:title="t('stackiq', 'Reference components')"
+					:count="coverage.summary.components"
+					showZeroCount />
+				<CnStatsBlock
+					:title="t('stackiq', 'Covered')"
+					:count="coverage.summary.covered"
+					showZeroCount />
 				<CnStatsBlock
 					:title="t('stackiq', 'Gaps')"
 					:count="coverage.summary.gap"
-					:countLabel="t('stackiq', '{count} fillable with an application in use', { count: coverage.summary.fillable })"
+					:countLabel="
+						t('stackiq', '{count} fillable with an application in use', {
+							count: coverage.summary.fillable,
+						})
+					"
 					showZeroCount />
-				<CnStatsBlock :title="t('stackiq', 'Overlap')" :count="coverage.summary.overlap" showZeroCount />
+				<CnStatsBlock
+					:title="t('stackiq', 'Overlap')"
+					:count="coverage.summary.overlap"
+					showZeroCount />
 			</CnKpiGrid>
 
-			<p v-if="coverage.summary.usagesWithoutComponent" class="gemma-plate__hint">
-				{{ t('stackiq', '{count} applications in use name no reference component, so they cover nothing on this plate.', { count: coverage.summary.usagesWithoutComponent }) }}
+			<p
+				v-if="coverage.summary.usagesWithoutComponent"
+				class="gemma-plate__hint">
+				{{
+					t(
+						'stackiq',
+						'{count} applications in use name no reference component, so they cover nothing on this plate.',
+						{ count: coverage.summary.usagesWithoutComponent },
+					)
+				}}
 			</p>
 
-			<div class="gemma-plate__filters" role="group" :aria-label="t('stackiq', 'Show')">
+			<div
+				class="gemma-plate__filters"
+				role="group"
+				:aria-label="t('stackiq', 'Show')">
 				<NcButton
 					v-for="option in filterOptions"
 					:key="option.id"
@@ -94,37 +134,66 @@
 
 			<div class="gemma-plate__body">
 				<div class="gemma-plate__plate" data-testid="gemma-plate-groups">
-					<section v-for="group in groups" :key="group.name" class="gemma-plate__group">
+					<section
+						v-for="group in groups"
+						:key="group.name"
+						class="gemma-plate__group">
 						<h3 class="gemma-plate__group-name">
 							{{ group.name }}
 						</h3>
 						<ul class="gemma-plate__components">
-							<li v-for="component in group.components" :key="component.id">
+							<li
+								v-for="component in group.components"
+								:key="component.id">
 								<button
 									type="button"
 									class="gemma-plate__component"
-									:class="'gemma-plate__component--' + component.state"
-									:aria-pressed="selected && selected.id === component.id ? 'true' : 'false'"
+									:class="
+										'gemma-plate__component--' + component.state
+									"
+									:aria-pressed="
+										selected && selected.id === component.id
+											? 'true'
+											: 'false'
+									"
 									:data-state="component.state"
 									@click="selected = component">
-									<span class="gemma-plate__component-name">{{ component.name }}</span>
-									<span class="gemma-plate__component-apps">{{ applicationNames(component) }}</span>
-									<CnStatusBadge :label="stateLabel(component)" :variant="stateVariant(component.state)" size="small" />
+									<span class="gemma-plate__component-name">{{
+										component.name
+									}}</span>
+									<span class="gemma-plate__component-apps">{{
+										applicationNames(component)
+									}}</span>
+									<CnStatusBadge
+										:label="stateLabel(component)"
+										:variant="stateVariant(component.state)"
+										size="small" />
 								</button>
 							</li>
 						</ul>
 					</section>
 				</div>
 
-				<aside v-if="selected" class="gemma-plate__detail" data-testid="gemma-plate-detail">
+				<aside
+					v-if="selected"
+					class="gemma-plate__detail"
+					data-testid="gemma-plate-detail">
 					<h3>{{ selected.name }}</h3>
 					<p v-if="selected.documentation" class="gemma-plate__hint">
 						{{ selected.documentation }}
 					</p>
-					<CnStatusBadge :label="stateLabel(selected)" :variant="stateVariant(selected.state)" />
+					<CnStatusBadge
+						:label="stateLabel(selected)"
+						:variant="stateVariant(selected.state)" />
 					<p>{{ applicationNames(selected) }}</p>
 					<p v-if="selected.fillable">
-						{{ t('stackiq', 'Applications in use that offer it: {names}', { names: selected.fillableBy.join(', ') }) }}
+						{{
+							t(
+								'stackiq',
+								'Applications in use that offer it: {names}',
+								{ names: selected.fillableBy.join(', ') },
+							)
+						}}
 					</p>
 				</aside>
 			</div>
@@ -148,7 +217,10 @@ import Download from 'vue-material-design-icons/Download.vue'
 import { useLiveCollections } from '../../composables/useLiveCollections.js'
 import { objectStore } from '../../store/store.js'
 import { resolveUuid } from '../../utils/lifecyclePhase.js'
-import { filterCoverage, groupCoverage } from '../../utils/referenceComponentCoverage.js'
+import {
+	filterCoverage,
+	groupCoverage,
+} from '../../utils/referenceComponentCoverage.js'
 
 /**
  * @class GemmaPlate
@@ -156,7 +228,7 @@ import { filterCoverage, groupCoverage } from '../../utils/referenceComponentCov
  * @copyright 2026 Conduction B.V.
  * @license EUPL-1.2
  *
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
+ * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
  */
 export default {
 	name: 'GemmaPlate',
@@ -200,21 +272,25 @@ export default {
 		 * Organisation options for the picker.
 		 *
 		 * @return {Array<{uuid: string, label: string}>} Options.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
+		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 		 */
 		organisationOptions() {
-			return (objectStore.getCollection('organization')?.results || []).map((org) => {
-				const data = org.object || org
-				const uuid = resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org)
-				return { uuid, label: data.name || data.title || uuid }
-			})
+			return (objectStore.getCollection('organization')?.results || []).map(
+				(org) => {
+					const data = org.object || org
+					const uuid = resolveUuid(
+						org.uuid ?? org.id ?? org['@self']?.id ?? org,
+					)
+					return { uuid, label: data.name || data.title || uuid }
+				},
+			)
 		},
 
 		/**
 		 * The filter choices.
 		 *
 		 * @return {Array<{id: string, label: string}>} Options.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
+		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 		 */
 		filterOptions() {
 			return [
@@ -229,7 +305,7 @@ export default {
 		 * The filtered components in their GEMMA groups.
 		 *
 		 * @return {Array<{name: string, components: Array<object>}>} Groups.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
+		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 		 */
 		groups() {
 			return groupCoverage(
@@ -246,7 +322,10 @@ export default {
 		 */
 		csvUrl() {
 			const organisation = encodeURIComponent(this.selectedOrg?.uuid || '')
-			return generateUrl('/apps/stackiq/api/reference-component-coverage') + `?organisation=${organisation}&format=csv`
+			return (
+				generateUrl('/apps/stackiq/api/reference-component-coverage')
+				+ `?organisation=${organisation}&format=csv`
+			)
 		},
 	},
 
@@ -256,7 +335,7 @@ export default {
 		 *
 		 * @param {Array<object>} options The organisation options.
 		 * @return {void}
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
+		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 		 */
 		organisationOptions: {
 			immediate: true,
@@ -276,7 +355,7 @@ export default {
 		 * Load the coverage of the selected organisation.
 		 *
 		 * @return {Promise<void>}
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
+		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 		 */
 		async loadCoverage() {
 			this.selected = null
@@ -287,13 +366,17 @@ export default {
 			this.loading = true
 			this.error = null
 			try {
-				const response = await axios.get(generateUrl('/apps/stackiq/api/reference-component-coverage'), {
-					params: { organisation: this.selectedOrg.uuid },
-				})
+				const response = await axios.get(
+					generateUrl('/apps/stackiq/api/reference-component-coverage'),
+					{
+						params: { organisation: this.selectedOrg.uuid },
+					},
+				)
 				this.coverage = response.data
 			} catch (error) {
 				this.coverage = null
-				this.error = error?.response?.data?.message
+				this.error =
+					error?.response?.data?.message
 					|| error?.response?.data?.error
 					|| t('stackiq', 'The coverage could not be loaded.')
 			} finally {
@@ -306,10 +389,12 @@ export default {
 		 *
 		 * @param {object} component A coverage row.
 		 * @return {string} The names.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
+		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 		 */
 		applicationNames(component) {
-			const names = component.applications.map((app) => app.moduleName).filter(Boolean)
+			const names = component.applications
+				.map((app) => app.moduleName)
+				.filter(Boolean)
 			return names.length ? names.join(', ') : t('stackiq', 'No application')
 		},
 
@@ -318,7 +403,7 @@ export default {
 		 *
 		 * @param {object} component A coverage row.
 		 * @return {string} The label.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
+		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 		 */
 		stateLabel(component) {
 			if (component.state === 'overlap') {
@@ -327,7 +412,9 @@ export default {
 			if (component.state === 'covered') {
 				return t('stackiq', 'Covered')
 			}
-			return component.fillable ? t('stackiq', 'Gap, fillable') : t('stackiq', 'Gap')
+			return component.fillable
+				? t('stackiq', 'Gap, fillable')
+				: t('stackiq', 'Gap')
 		},
 
 		/**
@@ -335,10 +422,13 @@ export default {
 		 *
 		 * @param {string} state gap, covered or overlap.
 		 * @return {string} A CnStatusBadge variant.
-		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-coverage-page-shall-list-the-components-with-filters-for-gaps-and-overlaps
+		 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
 		 */
 		stateVariant(state) {
-			return { gap: 'error', covered: 'success', overlap: 'warning' }[state] || 'default'
+			return (
+				{ gap: 'error', covered: 'success', overlap: 'warning' }[state]
+				|| 'default'
+			)
 		},
 	},
 }

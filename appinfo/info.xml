@@ -344,6 +344,14 @@ Vrij en open source onder de EUPL-licentie.
 		     shared `contractNumber`: a wrong cross-app link is worse than an
 		     empty one. -->
 		<command>OCA\Stackiq\Command\ReferencesAuditCommand</command>
+		<!-- Link an organisatie to an existing OpenRegister organisation. The
+		     organisation sync leaves an organisatie unlinked when another
+		     organisation already has its name; only an administrator links them. -->
+		<command>OCA\Stackiq\Command\OrganisationLinkCommand</command>
+		<!-- Back-fill the GEMMA standard links an import before the link fix
+		     saved without. Writes only link properties that differ; a second run
+		     writes nothing. dry-run reports without writing. -->
+		<command>OCA\Stackiq\Command\GemmaStandardLinksCommand</command>
 	</commands>
 
 	<settings>

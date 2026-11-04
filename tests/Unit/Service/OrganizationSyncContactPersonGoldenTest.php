@@ -40,6 +40,7 @@ use Psr\Log\AbstractLogger;
  * Golden cases for the contact person object sync.
  *
  * @covers \OCA\Stackiq\Service\OrganizationSyncService
+ * @uses   \OCA\Stackiq\Service\OrganisationSlug
  *
  * @spec openspec/specs/organization-sync/spec.md
  */
@@ -301,6 +302,13 @@ class OrganizationSyncContactPersonGoldenTest extends TestCase {
 				}
 
 				return $answer;
+			}
+		);
+
+		$mapper->method('findBySlug')->willReturnCallback(
+			function (string $slug) {
+				$this->trace[] = ['mapper.findBySlug', $slug];
+				return ($this->plan['slugIndex'][$slug] ?? throw new DoesNotExistException('no slug'));
 			}
 		);
 
@@ -602,6 +610,55 @@ class OrganizationSyncContactPersonGoldenTest extends TestCase {
 		);
 
 	}//end testContactPerson()
+
+	/**
+	 * Event path cases: the doubles' answers, and whether a user account is made.
+	 *
+	 * @return array<string, array{0: \Closure, 1: bool}>
+	 */
+	public static function eventCases(): array {
+		$missing = fn () => new DoesNotExistException('none');
+		return [
+			'entity missing, no organisatie object'    => [fn ($t) => ['org' => [$missing()], 'find' => [null]], false],
+			'entity missing, backup lookup fails'      => [fn ($t) => ['org' => [$missing()], 'find' => [new \RuntimeException('find failed')]], false],
+			'entity missing, slug taken, none created' => [
+				fn ($t) => [
+					'org'       => [$missing(), $missing()],
+					'find'      => [$t->entity(['id' => 'org-e', 'name' => 'Gemeente A'], 'org-e'), null],
+					'slugIndex' => ['gemeente-a' => self::organisation(active: true)],
+				],
+				false,
+			],
+			'entity inactive'                          => [fn ($t) => ['org' => [self::organisation(active: false)]], false],
+			'entity active'                            => [fn ($t) => ['org' => [self::organisation(active: true)]], true],
+		];
+
+	}//end eventCases()
+
+	/**
+	 * The event path makes a user account only for an existing, active organisation
+	 * entity, and an organisation without one ends the event normally.
+	 *
+	 * @param \Closure $plan    The doubles' answers.
+	 * @param bool     $created Whether a user account is made.
+	 *
+	 * @dataProvider eventCases
+	 *
+	 * @return void
+	 */
+	public function testTheEventPathNeedsAnActiveOrganisationEntity(\Closure $plan, bool $created): void {
+		$this->plan  = array_merge(['find' => [], 'save' => [], 'org' => []], $plan($this));
+		$this->trace = [];
+		$stats       = $this->service()->processSpecificContactPerson($this->entity(['organization' => 'org-e', 'email' => 'e@x.nl'], 'c-e'));
+
+		self::assertSame(1, $stats['contactPersonsProcessed']);
+		self::assertSame([], $stats['errors']);
+		self::assertSame($created, in_array('handler.createUserAccount', array_column($this->trace, 0), true));
+		$skipped = array_filter($this->trace, fn (array $call) => is_string($call[1] ?? null) === true && str_contains($call[1], 'Skipping user creation'));
+		self::assertSame($created === false, $skipped !== []);
+		self::assertNotContains('organisations.create', array_column($this->trace, 0));
+
+	}//end testTheEventPathNeedsAnActiveOrganisationEntity()
 
 	/**
 	 * The owner-update cases: object data, user, register, schema and override.

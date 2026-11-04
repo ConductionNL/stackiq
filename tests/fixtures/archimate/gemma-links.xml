@@ -1,0 +1,72 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" identifier="id-model-gemma-links">
+  <name xml:lang="nl">GEMMA links</name>
+  <elements>
+    <element identifier="id-rc1" xsi:type="ApplicationComponent">
+      <name>Zaaksysteem</name>
+      <properties>
+        <property propertyDefinitionRef="propid-2"><value>0b1e7c2a-0000-4000-8000-00000000c001</value></property>
+        <property propertyDefinitionRef="propid-3"><value>Referentiecomponent</value></property>
+      </properties>
+    </element>
+    <element identifier="id-rc2" xsi:type="ApplicationComponent">
+      <name>Zonder standaarden</name>
+      <properties>
+        <property propertyDefinitionRef="propid-2"><value>0b1e7c2a-0000-4000-8000-00000000c002</value></property>
+        <property propertyDefinitionRef="propid-3"><value>Referentiecomponent</value></property>
+      </properties>
+    </element>
+    <element identifier="id-s1" xsi:type="ApplicationInterface">
+      <name>ZGW API's</name>
+      <properties>
+        <property propertyDefinitionRef="propid-2"><value>0b1e7c2a-0000-4000-8000-00000000a001</value></property>
+        <property propertyDefinitionRef="propid-3"><value>Standaard</value></property>
+      </properties>
+    </element>
+    <element identifier="id-s2" xsi:type="ApplicationInterface">
+      <name>StUF</name>
+      <properties>
+        <property propertyDefinitionRef="propid-3"><value>Standaard</value></property>
+      </properties>
+    </element>
+    <element identifier="id-v1" xsi:type="ApplicationInterface">
+      <name>ZGW API's 1.5</name>
+      <properties>
+        <property propertyDefinitionRef="propid-2"><value>0b1e7c2a-0000-4000-8000-00000000b001</value></property>
+        <property propertyDefinitionRef="propid-3"><value>Standaardversie</value></property>
+      </properties>
+    </element>
+    <element identifier="id-v2" xsi:type="ApplicationInterface">
+      <name>StUF 3.01</name>
+      <properties>
+        <property propertyDefinitionRef="propid-3"><value>Standaardversie</value></property>
+      </properties>
+    </element>
+  </elements>
+  <relationships>
+    <relationship identifier="id-r1" xsi:type="Association" source="id-rc1" target="id-s1">
+      <properties>
+        <property propertyDefinitionRef="propid-4"><value>Verplicht</value></property>
+      </properties>
+    </relationship>
+    <relationship identifier="id-r2" xsi:type="Association" source="id-s1" target="id-rc1">
+      <properties>
+        <property propertyDefinitionRef="propid-4"><value>Verplicht</value></property>
+      </properties>
+    </relationship>
+    <relationship identifier="id-r3" xsi:type="Association" source="id-s2" target="id-rc1">
+      <properties>
+        <property propertyDefinitionRef="propid-4"><value>Aanbevolen</value></property>
+      </properties>
+    </relationship>
+    <relationship identifier="id-r4" xsi:type="Association" source="id-rc2" target="id-s1"/>
+    <relationship identifier="id-r5" xsi:type="Specialization" source="id-v1" target="id-s1"/>
+    <relationship identifier="id-r6" xsi:type="Specialization" source="id-s2" target="id-v2"/>
+    <relationship identifier="id-r7" xsi:type="Association" source="id-v1" target="id-s2"/>
+  </relationships>
+  <propertyDefinitions>
+    <propertyDefinition identifier="propid-2" type="string"><name>Object ID</name></propertyDefinition>
+    <propertyDefinition identifier="propid-3" type="string"><name>GEMMA type</name></propertyDefinition>
+    <propertyDefinition identifier="propid-4" type="string"><name>Verbindingsrol</name></propertyDefinition>
+  </propertyDefinitions>
+</model>

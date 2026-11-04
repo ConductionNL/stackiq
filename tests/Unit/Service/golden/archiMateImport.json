@@ -295,60 +295,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.debug",
-                "GEMMA Type property found",
+                "GEMMA standard links derived",
                 {
-                    "property_name": "type",
-                    "value": "archimate:BusinessActor",
-                    "object_id": "test-element-1"
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
-                {
-                    "total_elements": 2,
-                    "elements_with_gemma_type": 2,
-                    "gemma_type_variations": {
-                        "archimate:BusinessActor": 1,
-                        "archimate:BusinessRole": 1
-                    },
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -630,13 +583,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ]
         ]
     },
@@ -984,48 +948,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
+                "GEMMA standard links derived",
                 {
-                    "total_elements": 0,
-                    "elements_with_gemma_type": 0,
-                    "gemma_type_variations": [],
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -1307,13 +1236,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ],
             [
                 "log.info",
@@ -2153,63 +2093,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.debug",
-                "GEMMA Type property found",
+                "GEMMA standard links derived",
                 {
-                    "property_name": "type",
-                    "value": "ApplicationComponent",
-                    "object_id": "id-el-1"
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
-                {
-                    "total_elements": 5,
-                    "elements_with_gemma_type": 5,
-                    "gemma_type_variations": {
-                        "ApplicationComponent": 1,
-                        "Capability": 1,
-                        "BusinessActor": 1,
-                        "DataObject": 1,
-                        "Grouping": 1
-                    },
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -3566,13 +3456,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ]
         ]
     },
@@ -4092,48 +3993,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
+                "GEMMA standard links derived",
                 {
-                    "total_elements": 0,
-                    "elements_with_gemma_type": 0,
-                    "gemma_type_variations": [],
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -5365,13 +5231,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ],
             [
                 "log.info",
@@ -6248,63 +6125,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.debug",
-                "GEMMA Type property found",
+                "GEMMA standard links derived",
                 {
-                    "property_name": "type",
-                    "value": "ApplicationComponent",
-                    "object_id": "id-el-1"
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
-                {
-                    "total_elements": 5,
-                    "elements_with_gemma_type": 5,
-                    "gemma_type_variations": {
-                        "ApplicationComponent": 1,
-                        "Capability": 1,
-                        "BusinessActor": 1,
-                        "DataObject": 1,
-                        "Grouping": 1
-                    },
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -7749,13 +7576,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ],
             [
                 "progress.setPhase",
@@ -8507,63 +8345,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.debug",
-                "GEMMA Type property found",
+                "GEMMA standard links derived",
                 {
-                    "property_name": "type",
-                    "value": "ApplicationComponent",
-                    "object_id": "id-el-1"
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
-                {
-                    "total_elements": 5,
-                    "elements_with_gemma_type": 5,
-                    "gemma_type_variations": {
-                        "ApplicationComponent": 1,
-                        "Capability": 1,
-                        "BusinessActor": 1,
-                        "DataObject": 1,
-                        "Grouping": 1
-                    },
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -8714,13 +8502,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ]
         ]
     },
@@ -9488,63 +9287,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.debug",
-                "GEMMA Type property found",
+                "GEMMA standard links derived",
                 {
-                    "property_name": "type",
-                    "value": "ApplicationComponent",
-                    "object_id": "id-el-1"
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
-                {
-                    "total_elements": 5,
-                    "elements_with_gemma_type": 5,
-                    "gemma_type_variations": {
-                        "ApplicationComponent": 1,
-                        "Capability": 1,
-                        "BusinessActor": 1,
-                        "DataObject": 1,
-                        "Grouping": 1
-                    },
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -10900,13 +10649,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ]
         ]
     },
@@ -11754,63 +11514,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.debug",
-                "GEMMA Type property found",
+                "GEMMA standard links derived",
                 {
-                    "property_name": "type",
-                    "value": "ApplicationComponent",
-                    "object_id": "id-el-1"
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
-                {
-                    "total_elements": 5,
-                    "elements_with_gemma_type": 5,
-                    "gemma_type_variations": {
-                        "ApplicationComponent": 1,
-                        "Capability": 1,
-                        "BusinessActor": 1,
-                        "DataObject": 1,
-                        "Grouping": 1
-                    },
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -13167,13 +12877,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ]
         ]
     },
@@ -13693,48 +13414,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
+                "GEMMA standard links derived",
                 {
-                    "total_elements": 0,
-                    "elements_with_gemma_type": 0,
-                    "gemma_type_variations": [],
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -14966,13 +14652,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ],
             [
                 "log.info",
@@ -16496,61 +16193,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.debug",
-                "GEMMA Type property found",
+                "GEMMA standard links derived",
                 {
-                    "property_name": "type",
-                    "value": "Role",
-                    "object_id": "el-00"
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
-                {
-                    "total_elements": 21,
-                    "elements_with_gemma_type": 21,
-                    "gemma_type_variations": {
-                        "Role": 7,
-                        "Actor": 13,
-                        "Second": 1
-                    },
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -18283,13 +17932,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ]
         ]
     },
@@ -19341,48 +19001,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
+                "GEMMA standard links derived",
                 {
-                    "total_elements": 0,
-                    "elements_with_gemma_type": 0,
-                    "gemma_type_variations": [],
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -21115,13 +20740,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ],
             [
                 "log.info",
@@ -21987,63 +21623,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.debug",
-                "GEMMA Type property found",
+                "GEMMA standard links derived",
                 {
-                    "property_name": "type",
-                    "value": "Actor",
-                    "object_id": "el-07"
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
-                {
-                    "total_elements": 20,
-                    "elements_with_gemma_type": 20,
-                    "gemma_type_variations": {
-                        "Actor": 5,
-                        "Changed": 6,
-                        "Role": 2,
-                        "Node": 6,
-                        "Second": 1
-                    },
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -23649,13 +23235,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ]
         ]
     },
@@ -24664,48 +24261,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
+                "GEMMA standard links derived",
                 {
-                    "total_elements": 0,
-                    "elements_with_gemma_type": 0,
-                    "gemma_type_variations": [],
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -26331,13 +25893,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ],
             [
                 "log.info",
@@ -26697,59 +26270,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.debug",
-                "GEMMA Type property found",
+                "GEMMA standard links derived",
                 {
-                    "property_name": "type",
-                    "value": "Role",
-                    "object_id": "el-00"
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
-                {
-                    "total_elements": 1,
-                    "elements_with_gemma_type": 1,
-                    "gemma_type_variations": {
-                        "Role": 1
-                    },
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -26970,13 +26497,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ]
         ]
     },
@@ -27317,48 +26855,13 @@
             ],
             [
                 "log.info",
-                "Processing GEMMA Referentiecomponent-Standaard and StandaardVersie relationships",
-                []
-            ],
-            [
-                "log.info",
-                "GEMMA objects processing complete",
+                "GEMMA standard links derived",
                 {
-                    "total_elements": 0,
-                    "elements_with_gemma_type": 0,
-                    "gemma_type_variations": [],
-                    "referentiecomponenten_count": 0,
-                    "standaarden_count": 0,
-                    "standaardversies_count": 0,
-                    "processed_relationships": 0,
-                    "standaardversie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA Referentiecomponent-Standaard processing completed",
-                {
-                    "referentiecomponenten_enhanced": 0,
-                    "total_referentiecomponenten": 0,
-                    "total_relationships_processed": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA StandaardVersie-Standaard processing completed",
-                {
-                    "standaardversies_enhanced": 0,
-                    "total_standaardversies": 0,
-                    "total_versie_relationships": 0
-                }
-            ],
-            [
-                "log.info",
-                "GEMMA ReferentieComponent-StandaardVersies processing completed",
-                {
-                    "referentiecomponenten_with_versies": 0,
-                    "total_referentiecomponenten": 0,
-                    "standaard_to_versies_mappings": 0
+                    "referentiecomponenten": 0,
+                    "standaarden": 0,
+                    "standaardversies": 0,
+                    "linked_components": 0,
+                    "linked_versions": 0
                 }
             ],
             [
@@ -27576,13 +27079,24 @@
                 "log.info",
                 "fixStandaardVersieUuids: Built identifier->uuid mapping",
                 {
-                    "standaard_count": 0
+                    "standaard_count": 1
                 }
             ],
             [
-                "log.warning",
-                "fixStandaardVersieUuids: No Standaarden found to map",
-                []
+                "db.executeStatement",
+                "UPDATE oc_openregister_table_7_11 SET standard = ? WHERE standard = ? AND gemma_type = 'Standaardversie'",
+                [
+                    "uuid-std-1",
+                    "std-1"
+                ]
+            ],
+            [
+                "log.info",
+                "fixStandaardVersieUuids: Updated StandaardVersie standaard fields",
+                {
+                    "updated_count": 1,
+                    "mapping_count": 1
+                }
             ],
             [
                 "log.info",

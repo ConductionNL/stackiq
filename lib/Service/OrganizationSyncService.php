@@ -56,6 +56,8 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
+ *
+ * @spec openspec/specs/organization-sync/spec.md#requirement-the-system-shall-process-individual-organisationcontact-records-and-ensure-their-openregister-entity-req-002
  */
 class OrganizationSyncService {
 
@@ -428,7 +430,7 @@ class OrganizationSyncService {
 					_multitenancy: false
 				);
 
-				$this->ensureOrganisationEntity(organisationObject: $object, stats: $stats, sendEmails: false);
+				$this->ensureOrganisationEntity(organisationObject: $object, run: ['stats' => &$stats, 'sendEmails' => false]);
 				$stats['organizationsProcessed']++;
 			} catch (\Exception $e) {
 				$this->handleSyncError(operation: 'OrganizationSync', identifier: (string)$row['uuid'], exception: $e, stats: $stats);
@@ -892,7 +894,7 @@ class OrganizationSyncService {
 		);
 
 		// Step 1: Ensure organisation entity exists.
-		$organisationEntity = $this->ensureOrganisationEntity(organisationObject: $organisationObject, stats: $stats);
+		$organisationEntity = $this->ensureOrganisationEntity(organisationObject: $organisationObject, run: ['stats' => &$stats, 'sendEmails' => true]);
 		if ($organisationEntity === null) {
 			$this->logger->warning(
 				'OrganizationSyncService: Could not ensure organisation entity',
@@ -946,8 +948,7 @@ class OrganizationSyncService {
 	public function ensureOrganisationEntityPublic(object $organisationObject, array &$stats, bool $sendEmails = true): ?object {
 		return $this->ensureOrganisationEntity(
 			organisationObject: $organisationObject,
-			stats: $stats,
-			sendEmails: $sendEmails
+			run: ['stats' => &$stats, 'sendEmails' => $sendEmails]
 		);
 
 	}//end ensureOrganisationEntityPublic()
@@ -956,40 +957,16 @@ class OrganizationSyncService {
 	 * Ensures organisation entity exists for organisatie object.
 	 *
 	 * @param object $organisationObject The organisatie object.
-	 * @param array $stats Statistics array (passed by reference).
-	 * @param bool $sendEmails Whether to send emails.
+	 * @param array  $run                The sync run: `stats` (held by reference) and `sendEmails`,
+	 *                                   whether to send registration and activation e-mails.
 	 *
 	 * @return object|null The organisation entity or null on failure.
-	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $sendEmails is a simple notification toggle
 	 */
-	private function ensureOrganisationEntity(object $organisationObject, array &$stats, bool $sendEmails = true): ?object {
+	private function ensureOrganisationEntity(object $organisationObject, array $run): ?object {
 		try {
 			// Get the full object data - the passed object might not have all fields populated.
 			$organisationId = $organisationObject->getUuid();
-
-			// Fetch the complete object from the database to ensure we have all data.
-			try {
-				$fullObject = $this->objectService->find(
-					id: $organisationId,
-					register: $organisationObject->getRegister(),
-					schema: $organisationObject->getSchema(),
-					_rbac: false,
-					_multitenancy: false
-				);
-				if (empty($fullObject) === false) {
-					$organisationObject = $fullObject;
-				}
-			} catch (\Exception $e) {
-				$this->logger->warning(
-					'Could not fetch full organisation object, using provided object',
-					[
-						'organisatieId' => $organisationId,
-						'error' => $e->getMessage(),
-					]
-				);
-			}//end try
-
+			$organisationObject = $this->fullOrganisationObject(organisationObject: $organisationObject);
 			$objectData = $organisationObject->getObject();
 
 			$this->logger->debug(
@@ -1004,181 +981,23 @@ class OrganizationSyncService {
 
 			// Get configuration for object updates.
 			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-			$register = ($voorzieningenConfig['register'] ?? '');
-			$organizationSchema = ($voorzieningenConfig['organisatie_schema'] ?? '');
+			$run['organisationId'] = $organisationId;
+			$run['organisationObject'] = $organisationObject;
+			$run['objectData'] = $objectData;
+			$run['register'] = ($voorzieningenConfig['register'] ?? '');
+			$run['organizationSchema'] = ($voorzieningenConfig['organisatie_schema'] ?? '');
 
 			// Try to find existing organisation entity.
-
 			try {
 				$organisationEntity = $this->organisationMapper->findByUuid($organisationId);
-
-				// Entity exists - update it if needed.
-				$status = strtolower(($objectData['status'] ?? 'actief'));
-				$shouldBeActive = in_array($status, ['actief', 'active']) === true;
-
-				$this->logger->debug(
-					'Existing entity found',
-					[
-						'app' => 'stackiq',
-						'organisatieId' => $organisationId,
-						'entityId' => $organisationEntity->getId(),
-						'shouldBeActive' => $shouldBeActive,
-						'needsUpdate' => $organisationEntity->getActive() !== $shouldBeActive,
-					]
-				);
-
-				if ($organisationEntity->getActive() !== $shouldBeActive) {
-					$this->logger->debug(
-						'Updating entity status',
-						[
-							'app' => 'stackiq',
-							'organisatieId' => $organisationId,
-							'oldActive' => $organisationEntity->getActive(),
-							'newActive' => $shouldBeActive,
-						]
-					);
-
-					$wasActive = $organisationEntity->getActive();
-					$organisationEntity->setActive($shouldBeActive);
-					$this->organisationMapper->save($organisationEntity);
-					$stats['entitiesUpdated']++;
-
-					// Send activation email if organization became active.
-					if ($sendEmails !== false && $shouldBeActive === true && $wasActive === false) {
-						$this->logger->info(
-							'[FLOW] Sending organization activation email',
-							['organisatieId' => $organisationId]
-						);
-						$emailSent = $this->sendOrganizationActivationEmail(organizationData: $objectData);
-						if (empty($emailSent) === false) {
-							$this->logger->info(
-								'📧 Organization activation email sent successfully',
-								['organisatieId' => $organisationId]
-							);
-						}
-
-						if (empty($emailSent) === true) {
-							$this->logger->info(
-								'📧 Organization activation email not sent (disabled or not configured)',
-								['organisatieId' => $organisationId]
-							);
-						}
-					}//end if
-				}//end if
-
-				// Update organisatie object owner to organisation entity UUID.
-				$this->updateOrganisationObjectOwner(
-					organisationObject: $organisationObject,
-					organisationEntity: $organisationEntity,
-					register: $register,
-					organizationSchema: $organizationSchema
-				);
-
-				return $organisationEntity;
+				return $this->refreshOrganisationEntity(organisationEntity: $organisationEntity, run: $run);
 			} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
-				// Entity not found by UUID — try finding by slug before creating.
-				// This handles the case where the entity exists but with a different UUID (e.g. from slug collision).
-				$orgName = ($objectData['name'] ?? '');
-				if (empty($orgName) === false) {
-					$slug = strtolower(preg_replace('/[^a-z0-9]+/', '-', strtolower($orgName)));
-					$slug = trim($slug, '-');
-					try {
-						$organisationEntity = $this->organisationMapper->findBySlug($slug);
-						$this->logger->info(
-							'OrganizationSyncService: Found existing entity by slug, updating UUID to match object',
-							[
-								'app' => 'stackiq',
-								'organisatieId' => $organisationId,
-								'oldEntityUuid' => $organisationEntity->getUuid(),
-								'slug' => $slug,
-							]
-						);
-
-						// Update the entity's UUID to match the object UUID so future lookups work.
-						$organisationEntity->setUuid($organisationId);
-						$this->organisationMapper->save($organisationEntity);
-						$stats['entitiesUpdated']++;
-
-						// Update organisatie object owner to this entity.
-						$this->updateOrganisationObjectOwner(
-							organisationObject: $organisationObject,
-							organisationEntity: $organisationEntity,
-							register: $register,
-							organizationSchema: $organizationSchema
-						);
-
-						return $organisationEntity;
-					} catch (\OCP\AppFramework\Db\DoesNotExistException $slugEx) {
-						// Not found by slug either — proceed with creation.
-					}//end try
-				}//end if
-
-				$this->logger->debug(
-					'Creating new organisation entity',
-					[
-						'app' => 'stackiq',
-						'organisatieId' => $organisationId,
-						'name' => ($objectData['name'] ?? 'Unknown'),
-					]
-				);
-
-				$organisationEntity = $this->organisationService->createOrganisationInOpenRegister($objectData);
-				if (empty($organisationEntity) === false) {
-					$stats['entitiesCreated']++;
-					$this->logger->debug(
-						'New organisation entity created',
-						[
-							'app' => 'stackiq',
-							'organisatieId' => $organisationId,
-							'entityId' => $organisationEntity->getId(),
-							'active' => $organisationEntity->getActive(),
-							'name' => $organisationEntity->getName(),
-						]
-					);
-
-					// Send registration email for new organization (skip for backfill).
-					if (empty($sendEmails) === false) {
-						$this->logger->info(
-							'[FLOW] Sending organization registration email',
-							['organisatieId' => $organisationId]
-						);
-						$emailSent = $this->sendOrganizationRegistrationEmail(organizationData: $objectData);
-						if (empty($emailSent) === false) {
-							$this->logger->info(
-								'📧 Organization registration email sent successfully',
-								['organisatieId' => $organisationId]
-							);
-						}
-
-						if (empty($emailSent) === true) {
-							$this->logger->info(
-								'📧 Organization registration email not sent (disabled or not configured)',
-								['organisatieId' => $organisationId]
-							);
-						}
-					}//end if
-
-					// Update organisatie object owner to organisation entity UUID.
-					$this->updateOrganisationObjectOwner(
-						organisationObject: $organisationObject,
-						organisationEntity: $organisationEntity,
-						register: $register,
-						organizationSchema: $organizationSchema
-					);
-				}//end if
-
-				if (empty($organisationEntity) === true) {
-					$this->logger->error(
-						'❌ ORGANISATION ENTITY CREATION FAILED',
-						[
-							'app' => 'stackiq',
-							'organisatieId' => $organisationId,
-						]
-					);
+				if ($this->slugIsTaken(run: $run) === true) {
+					return null;
 				}
 
-				return $organisationEntity;
-			}//end try
+				return $this->createOrganisationEntity(run: $run);
+			}
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'💥 ENSURE ORGANISATION ENTITY EXCEPTION',
@@ -1195,6 +1014,398 @@ class OrganizationSyncService {
 		}//end try
 
 	}//end ensureOrganisationEntity()
+
+	/**
+	 * The organisatie object as stored, or the one given when it cannot be fetched.
+	 *
+	 * @param object $organisationObject The organisatie object as passed in.
+	 *
+	 * @return object The complete organisatie object
+	 */
+	private function fullOrganisationObject(object $organisationObject): object {
+		$organisationId = $organisationObject->getUuid();
+		try {
+			$fullObject = $this->objectService->find(
+				id: $organisationId,
+				register: $organisationObject->getRegister(),
+				schema: $organisationObject->getSchema(),
+				_rbac: false,
+				_multitenancy: false
+			);
+			if (empty($fullObject) === false) {
+				return $fullObject;
+			}
+		} catch (\Exception $e) {
+			$this->logger->warning(
+				'Could not fetch full organisation object, using provided object',
+				[
+					'organisatieId' => $organisationId,
+					'error' => $e->getMessage(),
+				]
+			);
+		}//end try
+
+		return $organisationObject;
+	}//end fullOrganisationObject()
+
+	/**
+	 * Bring an existing organisation entity's active flag in line with the object's status,
+	 * mail an organisation that became active, and make the entity the object's owner.
+	 *
+	 * @param object $organisationEntity The existing organisation entity.
+	 * @param array  $run                The ensure run (see ensureOrganisationEntity).
+	 *
+	 * @return object The organisation entity
+	 */
+	private function refreshOrganisationEntity(object $organisationEntity, array $run): object {
+		$organisationId = $run['organisationId'];
+
+		// Entity exists - update it if needed.
+		$status = strtolower(($run['objectData']['status'] ?? 'actief'));
+		$shouldBeActive = in_array($status, ['actief', 'active']) === true;
+
+		$this->logger->debug(
+			'Existing entity found',
+			[
+				'app' => 'stackiq',
+				'organisatieId' => $organisationId,
+				'entityId' => $organisationEntity->getId(),
+				'shouldBeActive' => $shouldBeActive,
+				'needsUpdate' => $organisationEntity->getActive() !== $shouldBeActive,
+			]
+		);
+
+		if ($organisationEntity->getActive() !== $shouldBeActive) {
+			$this->logger->debug(
+				'Updating entity status',
+				[
+					'app' => 'stackiq',
+					'organisatieId' => $organisationId,
+					'oldActive' => $organisationEntity->getActive(),
+					'newActive' => $shouldBeActive,
+				]
+			);
+
+			$wasActive = $organisationEntity->getActive();
+			$organisationEntity->setActive($shouldBeActive);
+			$this->organisationMapper->save($organisationEntity);
+			$run['stats']['entitiesUpdated']++;
+
+			// Send activation email if organization became active.
+			if ($run['sendEmails'] !== false && $shouldBeActive === true && $wasActive === false) {
+				$this->mailOrganisation(kind: 'activation', run: $run);
+			}
+		}//end if
+
+		// Update organisatie object owner to organisation entity UUID.
+		$this->makeEntityOwner(organisationEntity: $organisationEntity, run: $run);
+
+		return $organisationEntity;
+	}//end refreshOrganisationEntity()
+
+	/**
+	 * Link an organisatie to an existing OpenRegister organisation, as an administrator decides.
+	 *
+	 * The organisation takes the organisatie's uuid, which is what links the two,
+	 * and becomes the organisatie object's owner. Refused for the reasons
+	 * checkOrganisationLink() gives.
+	 *
+	 * @param string $organisatieUuid The organisatie object's uuid.
+	 * @param string $entityUuid      The OpenRegister organisation's uuid.
+	 *
+	 * @return string linked, or the refusal checkOrganisationLink() gives.
+	 *
+	 * @spec openspec/specs/organisatie-service/spec.md
+	 */
+	public function linkOrganisationEntity(string $organisatieUuid, string $entityUuid): string {
+		$run     = $this->linkRun(organisatieUuid: $organisatieUuid);
+		$outcome = $this->linkRefusal(run: $run, uuids: [$organisatieUuid, $entityUuid]);
+		if ($outcome !== null) {
+			return $outcome;
+		}
+
+		$entity = $this->organisationMapper->findByUuid($entityUuid);
+		$entity->setUuid($organisatieUuid);
+		$this->organisationMapper->save($entity);
+		$this->makeEntityOwner(organisationEntity: $entity, run: $run);
+		$this->logger->info(
+			'OrganizationSyncService: an administrator linked an organisatie to an OpenRegister organisation',
+			['app' => 'stackiq', 'organisatieId' => $organisatieUuid, 'previousOrganisationUuid' => $entityUuid]
+		);
+
+		return 'linked';
+	}//end linkOrganisationEntity()
+
+	/**
+	 * Why an organisatie may not be linked to an OpenRegister organisation, or null when it may.
+	 *
+	 * Refused when the organisatie is unknown or already has an organisation, when
+	 * the organisation is unknown, is OpenRegister's default organisation, or is
+	 * already another organisatie's. Nothing is written.
+	 *
+	 * @param string $organisatieUuid The organisatie object's uuid.
+	 * @param string $entityUuid      The OpenRegister organisation's uuid.
+	 *
+	 * @return string|null no-organisatie, already-linked, no-organisation,
+	 *                     default-organisation, organisation-in-use, or null.
+	 *
+	 * @spec openspec/specs/organisatie-service/spec.md
+	 */
+	public function checkOrganisationLink(string $organisatieUuid, string $entityUuid): ?string {
+		return $this->linkRefusal(
+			run: $this->linkRun(organisatieUuid: $organisatieUuid),
+			uuids: [$organisatieUuid, $entityUuid]
+		);
+	}//end checkOrganisationLink()
+
+	/**
+	 * The register, organisatie schema and organisatie object a link works on.
+	 *
+	 * @param string $organisatieUuid The organisatie object's uuid.
+	 *
+	 * @return array The run: register, organizationSchema and organisationObject (null when unknown).
+	 */
+	private function linkRun(string $organisatieUuid): array {
+		$config = $this->settingsService->getVoorzieningenConfig();
+		$run    = [
+			'register'           => (string) ($config['register'] ?? ''),
+			'organizationSchema' => (string) ($config['organisatie_schema'] ?? ''),
+		];
+		$run['organisationObject'] = $this->findOrganisatie(run: $run, uuid: $organisatieUuid);
+		return $run;
+	}//end linkRun()
+
+	/**
+	 * Why a link may not be made, or null when it may.
+	 *
+	 * @param array                       $run   The link run (see linkRun()).
+	 * @param array{0: string, 1: string} $uuids The organisatie uuid and the organisation uuid.
+	 *
+	 * @return string|null The refusal, or null.
+	 */
+	private function linkRefusal(array $run, array $uuids): ?string {
+		[$organisatieUuid, $entityUuid] = $uuids;
+		if ($run['organisationObject'] === null) {
+			return 'no-organisatie';
+		}
+
+		if ($this->organisationExists(uuid: $organisatieUuid) === true) {
+			return 'already-linked';
+		}
+
+		return $this->organisationRefusal(run: $run, entityUuid: $entityUuid);
+	}//end linkRefusal()
+
+	/**
+	 * Why this OpenRegister organisation may not take an organisatie's uuid, or null when it may.
+	 *
+	 * @param array  $run        The link run (see linkRun()).
+	 * @param string $entityUuid The OpenRegister organisation's uuid.
+	 *
+	 * @return string|null no-organisation, default-organisation, organisation-in-use, or null.
+	 */
+	private function organisationRefusal(array $run, string $entityUuid): ?string {
+		if ($this->organisationExists(uuid: $entityUuid) === false) {
+			return 'no-organisation';
+		}
+
+		if ($this->container->get('OCA\OpenRegister\Service\OrganisationService')->getDefaultOrganisationUuid() === $entityUuid) {
+			return 'default-organisation';
+		}
+
+		if ($this->findOrganisatie(run: $run, uuid: $entityUuid) !== null) {
+			return 'organisation-in-use';
+		}
+
+		return null;
+	}//end organisationRefusal()
+
+	/**
+	 * Whether an OpenRegister organisation has this uuid.
+	 *
+	 * @param string $uuid The uuid.
+	 *
+	 * @return bool
+	 */
+	private function organisationExists(string $uuid): bool {
+		try {
+			$this->organisationMapper->findByUuid($uuid);
+			return true;
+		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+			return false;
+		}
+	}//end organisationExists()
+
+	/**
+	 * The organisatie object with this uuid, or null.
+	 *
+	 * @param array  $run  The register and organisatie schema.
+	 * @param string $uuid The uuid.
+	 *
+	 * @return object|null
+	 */
+	private function findOrganisatie(array $run, string $uuid): ?object {
+		try {
+			return $this->objectService->find(
+				id: $uuid,
+				register: $run['register'],
+				schema: $run['organizationSchema'],
+				_rbac: false,
+				_multitenancy: false
+			);
+		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+			return null;
+		}
+	}//end findOrganisatie()
+
+	/**
+	 * Whether another OpenRegister organisation already has the slug of the name
+	 * OpenRegister would receive for this organisatie (OrganisationSlug::nameFor()).
+	 *
+	 * Such an organisation is never taken over on a name match: the organisatie is
+	 * left without an entity, logged and counted, for an administrator to link
+	 * explicitly (occ stackiq:organisation:link).
+	 *
+	 * @param array $run The ensure run (see ensureOrganisationEntity).
+	 *
+	 * @return bool True when the slug is taken and nothing may be created.
+	 */
+	private function slugIsTaken(array $run): bool {
+		$slug = (new OrganisationSlug())->fromObjectData(objectData: $run['objectData']);
+		try {
+			$existing = $this->organisationMapper->findBySlug($slug);
+		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+			return false;
+		}
+
+		$this->refuseSlugConflict(run: $run, existingUuid: $existing->getUuid());
+		return true;
+	}//end slugIsTaken()
+
+	/**
+	 * Log and count an organisatie left unlinked because its slug is taken.
+	 *
+	 * @param array       $run          The ensure run (see ensureOrganisationEntity).
+	 * @param string|null $existingUuid The uuid of the organisation holding the slug, when known.
+	 *
+	 * @return void
+	 */
+	private function refuseSlugConflict(array $run, ?string $existingUuid): void {
+		$this->logger->warning(
+			'OrganizationSyncService: an organisation with this name already exists; the organisatie is left unlinked for an administrator',
+			[
+				'app' => 'stackiq',
+				'organisatieId' => $run['organisationId'],
+				'existingOrganisationUuid' => $existingUuid,
+			]
+		);
+		$run['stats']['slugConflicts'][] = $run['organisationId'];
+	}//end refuseSlugConflict()
+
+	/**
+	 * Create the organisation entity, mail the new organisation and make the entity the object's owner.
+	 *
+	 * @param array $run The ensure run (see ensureOrganisationEntity).
+	 *
+	 * @return object|null The new entity, or what creation returned when it failed
+	 */
+	private function createOrganisationEntity(array $run): ?object {
+		$organisationId = $run['organisationId'];
+		$this->logger->debug(
+			'Creating new organisation entity',
+			[
+				'app' => 'stackiq',
+				'organisatieId' => $organisationId,
+				'name' => ($run['objectData']['name'] ?? 'Unknown'),
+			]
+		);
+
+		try {
+			$organisationEntity = $this->organisationService->createOrganisationInOpenRegister($run['objectData']);
+		} catch (\RuntimeException $e) {
+			if (is_a($e, OrganisationSlug::CONFLICT_EXCEPTION) === false) {
+				throw $e;
+			}
+
+			$this->refuseSlugConflict(run: $run, existingUuid: null);
+			return null;
+		}
+
+		if (empty($organisationEntity) === true) {
+			$this->logger->error(
+				'❌ ORGANISATION ENTITY CREATION FAILED',
+				[
+					'app' => 'stackiq',
+					'organisatieId' => $organisationId,
+				]
+			);
+			return $organisationEntity;
+		}
+
+		$run['stats']['entitiesCreated']++;
+		$this->logger->debug(
+			'New organisation entity created',
+			[
+				'app' => 'stackiq',
+				'organisatieId' => $organisationId,
+				'entityId' => $organisationEntity->getId(),
+				'active' => $organisationEntity->getActive(),
+				'name' => $organisationEntity->getName(),
+			]
+		);
+
+		// Send registration email for new organization (skip for backfill).
+		if (empty($run['sendEmails']) === false) {
+			$this->mailOrganisation(kind: 'registration', run: $run);
+		}
+
+		// Update organisatie object owner to organisation entity UUID.
+		$this->makeEntityOwner(organisationEntity: $organisationEntity, run: $run);
+
+		return $organisationEntity;
+	}//end createOrganisationEntity()
+
+	/**
+	 * Send an organisation its registration or activation e-mail and log whether it went out.
+	 *
+	 * @param string $kind 'registration' or 'activation'.
+	 * @param array  $run  The ensure run (see ensureOrganisationEntity).
+	 *
+	 * @return void
+	 */
+	private function mailOrganisation(string $kind, array $run): void {
+		$context = ['organisatieId' => $run['organisationId']];
+		$this->logger->info('[FLOW] Sending organization ' . $kind . ' email', $context);
+		if ($kind === 'activation') {
+			$emailSent = $this->sendOrganizationActivationEmail(organizationData: $run['objectData']);
+		} else {
+			$emailSent = $this->sendOrganizationRegistrationEmail(organizationData: $run['objectData']);
+		}
+
+		if (empty($emailSent) === false) {
+			$this->logger->info('📧 Organization ' . $kind . ' email sent successfully', $context);
+			return;
+		}
+
+		$this->logger->info('📧 Organization ' . $kind . ' email not sent (disabled or not configured)', $context);
+	}//end mailOrganisation()
+
+	/**
+	 * Make the organisation entity the owner and organisation of the run's organisatie object.
+	 *
+	 * @param object $organisationEntity The organisation entity.
+	 * @param array  $run                The ensure run (see ensureOrganisationEntity).
+	 *
+	 * @return void
+	 */
+	private function makeEntityOwner(object $organisationEntity, array $run): void {
+		$this->updateOrganisationObjectOwner(
+			organisationObject: $run['organisationObject'],
+			organisationEntity: $organisationEntity,
+			register: $run['register'],
+			organizationSchema: $run['organizationSchema']
+		);
+	}//end makeEntityOwner()
 
 	/**
 	 * Safely sends organization registration email with error handling
@@ -1724,7 +1935,7 @@ class OrganizationSyncService {
 				]
 			);
 
-			$organisationEntity = $this->ensureOrganisationEntity(organisationObject: $organizationObject, stats: $stats);
+			$organisationEntity = $this->ensureOrganisationEntity(organisationObject: $organizationObject, run: ['stats' => &$stats, 'sendEmails' => true]);
 
 			if (empty($organisationEntity) === false) {
 				$stats['organizationsProcessed']++;
@@ -1761,11 +1972,7 @@ class OrganizationSyncService {
 					]
 				);
 
-				$this->processRelatedContactPersons(
-					organizationUuid: $organizationUuid,
-					organizationObject: $organizationObject,
-					stats: $stats
-				);
+				$this->processRelatedContactPersons(organizationUuid: $organizationUuid, stats: $stats);
 			}//end if
 
 			if (empty($organisationEntity) === true) {
@@ -1956,14 +2163,11 @@ class OrganizationSyncService {
 	 * Process related contactpersoon objects that have this organization in their organisation property
 	 *
 	 * @param string $organizationUuid The organization UUID.
-	 * @param \OCA\OpenRegister\Db\ObjectEntity $organizationObject The organization object.
-	 * @param array $stats The statistics array to update.
+	 * @param array  $stats            The statistics array to update.
 	 *
 	 * @return void
-	 *
-	 * @SuppressWarnings(PHPMD.UnusedFormalParameter) $organizationObject reserved for future contact person enrichment
 	 */
-	private function processRelatedContactPersons(string $organizationUuid, $organizationObject, array &$stats): void {
+	private function processRelatedContactPersons(string $organizationUuid, array &$stats): void {
 		try {
 			$this->logger->debug(
 				'Finding related contact persons',
@@ -1975,148 +2179,28 @@ class OrganizationSyncService {
 
 			// Get configuration.
 			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-			$register = ($voorzieningenConfig['register'] ?? '');
-			$contactSchema = ($voorzieningenConfig['contactpersoon_schema'] ?? '');
+			$run = [
+				'organizationUuid' => $organizationUuid,
+				'register' => ($voorzieningenConfig['register'] ?? ''),
+				'contactSchema' => ($voorzieningenConfig['contactpersoon_schema'] ?? ''),
+			];
 
-			if (empty($register) === true || empty($contactSchema) === true) {
+			if (empty($run['register']) === true || empty($run['contactSchema']) === true) {
 				$this->logger->warning(
 					'[FLOW] Related contact processing skipped - configuration missing',
 					[
 						'organizationId' => $organizationUuid,
-						'register' => $register,
-						'contactSchema' => $contactSchema,
+						'register' => $run['register'],
+						'contactSchema' => $run['contactSchema'],
 					]
 				);
 				return;
 			}
 
-			// Find all contactpersoon objects that have this organization in their organisation property.
-
-			// Search for contactpersoon objects with this organization reference.
-			// Try both 'organization' and 'organisation' field names.
-			$query = [
-				'@self' => [
-					'register' => (int)$register,
-					'schema' => (int)$contactSchema,
-				],
-				'organization' => $organizationUuid,
-				'_limit' => 500,
-			];
-
-			$this->logger->info(
-				'[FLOW] Searching for related contact persons with organisatie field',
-				[
-					'organizationId' => $organizationUuid,
-					'register' => $register,
-					'contactSchema' => $contactSchema,
-					'query' => $query,
-				]
-			);
-
-			$relatedContacts = $this->objectService->searchObjects($query);
-
-			// If not found, try with 'organisation' field.
+			$relatedContacts = $this->findRelatedContacts(run: $run);
 			if (empty($relatedContacts) === true) {
-				$query['organisation'] = $organizationUuid;
-				unset($query['organization']);
-
-				$this->logger->info(
-					'[FLOW] Retrying search with organisation field',
-					[
-						'organizationId' => $organizationUuid,
-						'query' => $query,
-					]
-				);
-
-				$relatedContacts = $this->objectService->searchObjects($query);
+				return;
 			}
-
-			if (empty($relatedContacts) === true) {
-				// Fallback: fetch contacts by UUID from the org's contactpersonen array.
-				// This handles the case where contacts were linked via inversedBy (org → contact).
-				// but the contact's own organisatie field was never set.
-				$this->logger->info(
-					'[FLOW] No contacts found by organisatie field, checking org contactpersonen array',
-					['organizationId' => $organizationUuid]
-				);
-
-				// Re-fetch the org object without _extend to get raw UUIDs.
-				try {
-					$voorzieningenConfig2 = $this->settingsService->getVoorzieningenConfig();
-					$orgRegister = ($voorzieningenConfig2['register'] ?? '');
-					$orgSchema = ($voorzieningenConfig2['organisatie_schema'] ?? '');
-
-					$rawOrgObject = $this->objectService->find(
-						id: $organizationUuid,
-						register: $orgRegister,
-						schema: $orgSchema,
-						_rbac: false,
-						_multitenancy: false
-					);
-
-					$rawOrgData = [];
-					if ($rawOrgObject !== null) {
-						$rawOrgData = $rawOrgObject->getObject();
-					}
-
-					$contactUuids = ($rawOrgData['contactpersonen'] ?? []);
-
-					$this->logger->info(
-						'[FLOW] Raw org contactpersonen array',
-						[
-							'organizationId' => $organizationUuid,
-							'contactpersonen' => $contactUuids,
-							'count' => count($contactUuids),
-						]
-					);
-
-					if (empty($contactUuids) === false) {
-						foreach ($contactUuids as $contactUuid) {
-							if (is_string($contactUuid) === false || empty($contactUuid) === true) {
-								continue;
-							}
-
-							try {
-								$contactObj = $this->objectService->find(
-									id: $contactUuid,
-									register: $register,
-									schema: $contactSchema,
-									_rbac: false,
-									_multitenancy: false
-								);
-								if ($contactObj !== null) {
-									$relatedContacts[] = $contactObj;
-								}
-							} catch (\Exception $fetchEx) {
-								$this->logger->warning(
-									'[FLOW] Could not fetch contact from contactpersonen array',
-									[
-										'organizationId' => $organizationUuid,
-										'contactUuid' => $contactUuid,
-										'exception' => $fetchEx->getMessage(),
-									]
-								);
-							}//end try
-						}//end foreach
-					}//end if
-				} catch (\Exception $orgEx) {
-					$this->logger->warning(
-						'[FLOW] Could not re-fetch org for contactpersonen fallback',
-						[
-							'organizationId' => $organizationUuid,
-							'exception' => $orgEx->getMessage(),
-						]
-					);
-				}//end try
-
-				if (empty($relatedContacts) === true) {
-					$this->logger->info(
-						'[FLOW] No related contact persons found (including contactpersonen fallback)',
-						['organizationId' => $organizationUuid]
-					);
-					return;
-				}
-			}//end if
 
 			$this->logger->info(
 				'👥 PROCESSING RELATED CONTACT PERSONS',
@@ -2127,108 +2211,10 @@ class OrganizationSyncService {
 				]
 			);
 
+			$run['stats'] = &$stats;
 			foreach ($relatedContacts as $contactObject) {
-				try {
-					$contactUuid = $contactObject->getUuid();
-					$contactData = $contactObject->getObject();
-
-					// Check if contact data is complete (has email).
-					$email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
-					if (empty($email) === true && empty($contactUuid) === false) {
-						// Re-fetch the full contact object if email is missing.
-						$this->logger->info(
-							'[FLOW] Contact data incomplete, re-fetching full object',
-							[
-								'organizationId' => $organizationUuid,
-								'contactId' => $contactUuid,
-							]
-						);
-
-						try {
-							$fullContactObject = $this->objectService->find(
-								id: $contactUuid,
-								register: $register,
-								schema: $contactSchema,
-								_rbac: false,
-								_multitenancy: false
-							);
-							if ($fullContactObject !== null) {
-								$contactObject = $fullContactObject;
-								$contactData = $contactObject->getObject();
-								$email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
-							}
-						} catch (\Exception $e) {
-							$this->logger->warning(
-								'[FLOW] Failed to re-fetch contact object',
-								[
-									'organizationId' => $organizationUuid,
-									'contactId' => $contactUuid,
-									'exception' => $e->getMessage(),
-								]
-							);
-						}//end try
-					}//end if
-
-					// Ensure the contact has the organisatie field set before processing.
-					// (may be missing when contacts were linked via inversedBy from the org side).
-					if (empty($contactData['organization']) === true) {
-						$contactData['organization'] = $organizationUuid;
-						$contactObject->setObject($contactData);
-						// Published contract instead of OpenRegister's Db layer; see
-						// ContactpersonenController for the reasoning.
-						$this->objectService->saveObject(
-							object: $contactData,
-							register: $contactObject->getRegister(),
-							schema: $contactObject->getSchema(),
-							uuid: $contactObject->getUuid(),
-							silent: true,
-							_validation: false
-						);
-						$this->logger->info(
-							'[FLOW] Set missing organisatie field on related contact',
-							[
-								'contactId' => $contactUuid,
-								'organizationUuid' => $organizationUuid,
-							]
-						);
-					}
-
-					$contactEmailValue = $email;
-					if ($contactEmailValue === false || $contactEmailValue === '' || $contactEmailValue === null) {
-						$contactEmailValue = 'unknown';
-					}
-
-					$this->logger->info(
-						'[FLOW] Processing related contact person',
-						[
-							'organizationId' => $organizationUuid,
-							'contactId' => $contactUuid,
-							'contactEmail' => $contactEmailValue,
-						]
-					);
-
-					// Process the contact person through processSpecificContactPerson.
-					$contactStats = $this->processSpecificContactPerson(contactObject: $contactObject);
-
-					// Merge stats.
-					$stats['contactPersonsProcessed'] += ($contactStats['contactPersonsProcessed'] ?? 0);
-					$stats['usersCreated'] += ($contactStats['usersCreated'] ?? 0);
-					$stats['usersUpdated'] += ($contactStats['usersUpdated'] ?? 0);
-					if (empty($contactStats['errors']) === false) {
-						$stats['errors'] = array_merge($stats['errors'], $contactStats['errors']);
-					}
-				} catch (\Exception $e) {
-					$this->logger->error(
-						'[FLOW] Failed to process related contact person',
-						[
-							'organizationId' => $organizationUuid,
-							'contactId' => $contactObject->getUuid(),
-							'exception' => $e->getMessage(),
-						]
-					);
-					$stats['errors'][] = "Related contact {$contactObject->getUuid()}: " . $e->getMessage();
-				}//end try
-			}//end foreach
+				$this->processRelatedContact(contactObject: $contactObject, run: $run);
+			}
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'[FLOW] Failed to process related contact persons',
@@ -2243,6 +2229,299 @@ class OrganizationSyncService {
 		}//end try
 
 	}//end processRelatedContactPersons()
+
+	/**
+	 * Find the contactpersoon objects of an organisation: by their organization field, then by
+	 * their organisation field, then from the organisation's own contactpersonen array.
+	 *
+	 * @param array $run The sync run: `organizationUuid`, `register` and `contactSchema`.
+	 *
+	 * @return array The related contact objects, empty when none are found
+	 */
+	private function findRelatedContacts(array $run): array {
+		$organizationUuid = $run['organizationUuid'];
+
+		// Search for contactpersoon objects with this organization reference.
+		// Try both 'organization' and 'organisation' field names.
+		$query = [
+			'@self' => [
+				'register' => (int)$run['register'],
+				'schema' => (int)$run['contactSchema'],
+			],
+			'organization' => $organizationUuid,
+			'_limit' => 500,
+		];
+
+		$this->logger->info(
+			'[FLOW] Searching for related contact persons with organisatie field',
+			[
+				'organizationId' => $organizationUuid,
+				'register' => $run['register'],
+				'contactSchema' => $run['contactSchema'],
+				'query' => $query,
+			]
+		);
+
+		$relatedContacts = $this->objectService->searchObjects($query);
+
+		// If not found, try with 'organisation' field.
+		if (empty($relatedContacts) === true) {
+			$query['organisation'] = $organizationUuid;
+			unset($query['organization']);
+
+			$this->logger->info(
+				'[FLOW] Retrying search with organisation field',
+				[
+					'organizationId' => $organizationUuid,
+					'query' => $query,
+				]
+			);
+
+			$relatedContacts = $this->objectService->searchObjects($query);
+		}
+
+		if (empty($relatedContacts) === false) {
+			return $relatedContacts;
+		}
+
+		// Fallback: fetch contacts by UUID from the org's contactpersonen array.
+		// This handles the case where contacts were linked via inversedBy (org → contact).
+		// but the contact's own organisatie field was never set.
+		$this->logger->info(
+			'[FLOW] No contacts found by organisatie field, checking org contactpersonen array',
+			['organizationId' => $organizationUuid]
+		);
+
+		$relatedContacts = $this->contactsFromOrganisationList(run: $run);
+		if (empty($relatedContacts) === true) {
+			$this->logger->info(
+				'[FLOW] No related contact persons found (including contactpersonen fallback)',
+				['organizationId' => $organizationUuid]
+			);
+		}
+
+		return $relatedContacts;
+	}//end findRelatedContacts()
+
+	/**
+	 * The contact objects listed in the organisation's raw contactpersonen array.
+	 *
+	 * @param array $run The sync run: `organizationUuid`, `register` and `contactSchema`.
+	 *
+	 * @return array The contact objects that could be fetched
+	 */
+	private function contactsFromOrganisationList(array $run): array {
+		$organizationUuid = $run['organizationUuid'];
+		$contacts = [];
+
+		// Re-fetch the org object without _extend to get raw UUIDs.
+		try {
+			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+			$rawOrgObject = $this->objectService->find(
+				id: $organizationUuid,
+				register: ($voorzieningenConfig['register'] ?? ''),
+				schema: ($voorzieningenConfig['organisatie_schema'] ?? ''),
+				_rbac: false,
+				_multitenancy: false
+			);
+
+			$rawOrgData = [];
+			if ($rawOrgObject !== null) {
+				$rawOrgData = $rawOrgObject->getObject();
+			}
+
+			$contactUuids = ($rawOrgData['contactpersonen'] ?? []);
+
+			$this->logger->info(
+				'[FLOW] Raw org contactpersonen array',
+				[
+					'organizationId' => $organizationUuid,
+					'contactpersonen' => $contactUuids,
+					'count' => count($contactUuids),
+				]
+			);
+
+			foreach ($contactUuids as $contactUuid) {
+				if (is_string($contactUuid) === false || empty($contactUuid) === true) {
+					continue;
+				}
+
+				$contactObj = $this->fetchListedContact(contactUuid: $contactUuid, run: $run);
+				if ($contactObj !== null) {
+					$contacts[] = $contactObj;
+				}
+			}
+		} catch (\Exception $orgEx) {
+			$this->logger->warning(
+				'[FLOW] Could not re-fetch org for contactpersonen fallback',
+				[
+					'organizationId' => $organizationUuid,
+					'exception' => $orgEx->getMessage(),
+				]
+			);
+		}//end try
+
+		return $contacts;
+	}//end contactsFromOrganisationList()
+
+	/**
+	 * Fetch one contact listed in an organisation's contactpersonen array.
+	 *
+	 * @param string $contactUuid The contact uuid.
+	 * @param array  $run         The sync run: `organizationUuid`, `register` and `contactSchema`.
+	 *
+	 * @return object|null The contact object, or null when it cannot be fetched
+	 */
+	private function fetchListedContact(string $contactUuid, array $run): ?object {
+		try {
+			return $this->objectService->find(
+				id: $contactUuid,
+				register: $run['register'],
+				schema: $run['contactSchema'],
+				_rbac: false,
+				_multitenancy: false
+			);
+		} catch (\Exception $fetchEx) {
+			$this->logger->warning(
+				'[FLOW] Could not fetch contact from contactpersonen array',
+				[
+					'organizationId' => $run['organizationUuid'],
+					'contactUuid' => $contactUuid,
+					'exception' => $fetchEx->getMessage(),
+				]
+			);
+			return null;
+		}//end try
+	}//end fetchListedContact()
+
+	/**
+	 * Process one related contact: complete it, give it its organisation, then sync it.
+	 *
+	 * @param object $contactObject The contact object.
+	 * @param array  $run           The sync run: `organizationUuid`, `register`, `contactSchema` and,
+	 *                              held by reference, `stats`.
+	 *
+	 * @return void
+	 */
+	private function processRelatedContact(object $contactObject, array $run): void {
+		$organizationUuid = $run['organizationUuid'];
+		try {
+			$contactUuid = $contactObject->getUuid();
+			$contactObject = $this->completeRelatedContact(contactObject: $contactObject, run: $run);
+			$contactData = $contactObject->getObject();
+			$email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+
+			// Ensure the contact has the organisatie field set before processing.
+			// (may be missing when contacts were linked via inversedBy from the org side).
+			if (empty($contactData['organization']) === true) {
+				$contactData['organization'] = $organizationUuid;
+				$contactObject->setObject($contactData);
+				// Published contract instead of OpenRegister's Db layer; see
+				// ContactpersonenController for the reasoning.
+				$this->objectService->saveObject(
+					object: $contactData,
+					register: $contactObject->getRegister(),
+					schema: $contactObject->getSchema(),
+					uuid: $contactObject->getUuid(),
+					silent: true,
+					_validation: false
+				);
+				$this->logger->info(
+					'[FLOW] Set missing organisatie field on related contact',
+					[
+						'contactId' => $contactUuid,
+						'organizationUuid' => $organizationUuid,
+					]
+				);
+			}//end if
+
+			if ($email === false || $email === '' || $email === null) {
+				$email = 'unknown';
+			}
+
+			$this->logger->info(
+				'[FLOW] Processing related contact person',
+				[
+					'organizationId' => $organizationUuid,
+					'contactId' => $contactUuid,
+					'contactEmail' => $email,
+				]
+			);
+
+			// Process the contact person through processSpecificContactPerson.
+			$contactStats = $this->processSpecificContactPerson(contactObject: $contactObject);
+
+			// Merge stats.
+			$run['stats']['contactPersonsProcessed'] += ($contactStats['contactPersonsProcessed'] ?? 0);
+			$run['stats']['usersCreated'] += ($contactStats['usersCreated'] ?? 0);
+			$run['stats']['usersUpdated'] += ($contactStats['usersUpdated'] ?? 0);
+			if (empty($contactStats['errors']) === false) {
+				$run['stats']['errors'] = array_merge($run['stats']['errors'], $contactStats['errors']);
+			}
+		} catch (\Exception $e) {
+			$this->logger->error(
+				'[FLOW] Failed to process related contact person',
+				[
+					'organizationId' => $organizationUuid,
+					'contactId' => $contactObject->getUuid(),
+					'exception' => $e->getMessage(),
+				]
+			);
+			$run['stats']['errors'][] = "Related contact {$contactObject->getUuid()}: " . $e->getMessage();
+		}//end try
+	}//end processRelatedContact()
+
+	/**
+	 * A related contact with its full data: one without an email is fetched again by uuid.
+	 *
+	 * @param object $contactObject The contact object as found.
+	 * @param array  $run           The sync run: `organizationUuid`, `register` and `contactSchema`.
+	 *
+	 * @return object The re-fetched contact, or the one given when it is complete or cannot be fetched
+	 */
+	private function completeRelatedContact(object $contactObject, array $run): object {
+		$contactUuid = $contactObject->getUuid();
+		$contactData = $contactObject->getObject();
+
+		// Check if contact data is complete (has email).
+		$email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+		if (empty($email) === false || empty($contactUuid) === true) {
+			return $contactObject;
+		}
+
+		// Re-fetch the full contact object if email is missing.
+		$this->logger->info(
+			'[FLOW] Contact data incomplete, re-fetching full object',
+			[
+				'organizationId' => $run['organizationUuid'],
+				'contactId' => $contactUuid,
+			]
+		);
+
+		try {
+			$fullContactObject = $this->objectService->find(
+				id: $contactUuid,
+				register: $run['register'],
+				schema: $run['contactSchema'],
+				_rbac: false,
+				_multitenancy: false
+			);
+			if ($fullContactObject !== null) {
+				return $fullContactObject;
+			}
+		} catch (\Exception $e) {
+			$this->logger->warning(
+				'[FLOW] Failed to re-fetch contact object',
+				[
+					'organizationId' => $run['organizationUuid'],
+					'contactId' => $contactUuid,
+					'exception' => $e->getMessage(),
+				]
+			);
+		}//end try
+
+		return $contactObject;
+	}//end completeRelatedContact()
 
 	/**
 	 * Create or update a contact person object and its user account.
@@ -2472,11 +2751,11 @@ class OrganizationSyncService {
 		);
 
 		try {
-			if ($organisationEntity !== false && $organisationEntity->getActive() === true) {
+			if ($this->organisationIsActive(organisationEntity: $organisationEntity) === true) {
 				$this->createUserForContact(run: $run);
 			}
 
-			if ($organisationEntity === false || $organisationEntity->getActive() !== true) {
+			if ($this->organisationIsActive(organisationEntity: $organisationEntity) === false) {
 				$this->logSkippedUserCreation(organisationEntity: $organisationEntity, run: $run);
 			}
 		} catch (\Exception $e) {
@@ -2493,6 +2772,17 @@ class OrganizationSyncService {
 		}//end try
 
 	}//end provisionContactUser()
+
+	/**
+	 * Whether a contact person's organisation entity exists and is active.
+	 *
+	 * @param mixed $organisationEntity The organisation entity, or null when there is none.
+	 *
+	 * @return bool
+	 */
+	private function organisationIsActive(mixed $organisationEntity): bool {
+		return $organisationEntity !== null && $organisationEntity->getActive() === true;
+	}//end organisationIsActive()
 
 	/**
 	 * The organisation entity of a contact person's organisation, created from
@@ -2543,7 +2833,7 @@ class OrganizationSyncService {
 				];
 				return $this->ensureOrganisationEntity(
 					organisationObject: $orgObject,
-					stats: $backupStats
+					run: ['stats' => &$backupStats, 'sendEmails' => true]
 				);
 			}
 		} catch (\Exception $backupEx) {
@@ -2834,7 +3124,7 @@ class OrganizationSyncService {
 							];
 							$organisationEntity = $this->ensureOrganisationEntity(
 								organisationObject: $orgObject,
-								stats: $backupStats
+								run: ['stats' => &$backupStats, 'sendEmails' => true]
 							);
 						}
 					} catch (\Exception $backupEx) {
@@ -2850,7 +3140,7 @@ class OrganizationSyncService {
 				}//end try
 
 				try {
-					if ($organisationEntity !== false && $organisationEntity->getActive() === true) {
+					if ($this->organisationIsActive(organisationEntity: $organisationEntity) === true) {
 						// Determine if this is the first contact for the organization.
 						$isFirstContact = $this->contactpersonHandler->isFirstContactForOrganization(
 							$contactObject,
@@ -2933,7 +3223,7 @@ class OrganizationSyncService {
 						}
 					}//end if
 
-					if ($organisationEntity === false || $organisationEntity->getActive() !== true) {
+					if ($this->organisationIsActive(organisationEntity: $organisationEntity) === false) {
 						if ($organisationEntity !== null) {
 							$organizationActiveValue = $organisationEntity->getActive();
 						} else {

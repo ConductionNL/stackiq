@@ -45,6 +45,8 @@ use Psr\Log\AbstractLogger;
  *
  * @covers \OCA\Stackiq\Service\ArchiMateImportService
  * @uses   \OCA\Stackiq\Service\ArchiMate\ArchiMateImportScope
+ * @uses   \OCA\Stackiq\Service\ArchiMate\GemmaStandardLinker
+ * @uses   \OCA\Stackiq\Service\ArchiMate\GemmaObjectReader
  *
  * @spec openspec/specs/archimate-import/spec.md
  */
