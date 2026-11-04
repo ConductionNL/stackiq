@@ -132,7 +132,7 @@ class PublicationFieldRulesTest extends TestCase {
 			$this->assertContains($rule, $after, 'an organisation read rule survived: ' . json_encode($rule));
 		}
 
-		$this->assertContains(['group' => 'public', 'match' => ['publicationDate' => ['$lte' => '$now']]], $after);
+		$this->assertContains(['group' => 'public', 'match' => ['publicationDate' => ['$lte' => '$now']], 'crossOrganisation' => true], $after);
 		$this->assertCount(count($before) + 1, $after);
 	}//end testAUsageIsPublicFromItsPublicationDateAndOrganisationsKeepReading()
 
@@ -146,13 +146,13 @@ class PublicationFieldRulesTest extends TestCase {
 		$module  = $schemas['module']['authorization']['read'];
 		$version = $schemas['moduleVersion']['authorization']['read'];
 
-		$this->assertContains(['group' => 'public', 'match' => ['publicationDate' => ['$lte' => '$now']]], $module);
-		$this->assertContains(['group' => 'public', 'match' => ['registeredBy' => 'Supplier']], $module);
+		$this->assertContains(['group' => 'public', 'match' => ['publicationDate' => ['$lte' => '$now']], 'crossOrganisation' => true], $module);
+		$this->assertContains(['group' => 'public', 'match' => ['registeredBy' => 'Supplier'], 'crossOrganisation' => true], $module);
 		$this->assertSame(
 			[
 				'authenticated',
-				['group' => 'public', 'match' => ['modulePublicationDate' => ['$lte' => '$now']]],
-				['group' => 'public', 'match' => ['moduleRegisteredBy' => 'Supplier']],
+				['group' => 'public', 'match' => ['modulePublicationDate' => ['$lte' => '$now']], 'crossOrganisation' => true],
+				['group' => 'public', 'match' => ['moduleRegisteredBy' => 'Supplier'], 'crossOrganisation' => true],
 			],
 			$version
 		);

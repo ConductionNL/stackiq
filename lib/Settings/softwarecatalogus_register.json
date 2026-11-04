@@ -1091,7 +1091,7 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "public",
+            {"group": "public", "crossOrganisation": true},
             "aanbod-beheerder",
             "ambtenaar",
             "functioneel-beheerder",
@@ -1270,7 +1270,7 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "public",
+            {"group": "public", "crossOrganisation": true},
             "aanbod-beheerder",
             "ambtenaar",
             "functioneel-beheerder",
@@ -1559,7 +1559,8 @@
                 "publicationDate": {
                   "$lte": "$now"
                 }
-              }
+              },
+              "crossOrganisation": true
             },
             "aanbod-beheerder",
             "ambtenaar",
@@ -1735,7 +1736,7 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "public",
+            {"group": "public", "crossOrganisation": true},
             "aanbod-beheerder",
             "ambtenaar",
             "functioneel-beheerder",
@@ -2427,7 +2428,8 @@
                 "publicationDate": {
                   "$lte": "$now"
                 }
-              }
+              },
+              "crossOrganisation": true
             },
             {
               "group": "aanbod-beheerder",
@@ -2440,21 +2442,24 @@
               "match": {
                 "registeredBy": "Supplier",
                 "status": "Active"
-              }
+              },
+              "crossOrganisation": true
             },
             {
               "group": "public",
               "match": {
                 "type": "Municipality",
                 "status": "Active"
-              }
+              },
+              "crossOrganisation": true
             },
             {
               "group": "public",
               "match": {
                 "type": "Collaboration",
                 "status": "Active"
-              }
+              },
+              "crossOrganisation": true
             }
           ],
           "update": [
@@ -3054,7 +3059,8 @@
               "group": "gebruik-beheerder",
               "match": {
                 "consumer": "$organisation"
-              }
+              },
+              "crossOrganisation": true
             },
             {
               "group": "aanbod-beheerder",
@@ -3066,7 +3072,8 @@
               "group": "aanbod-beheerder",
               "match": {
                 "provider": "$organisation"
-              }
+              },
+              "crossOrganisation": true
             }
           ],
           "update": [
@@ -3379,8 +3386,8 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "ambtenaar",
-            "software-catalog-admins",
+            {"group": "ambtenaar", "crossOrganisation": true},
+            {"group": "software-catalog-admins", "crossOrganisation": true},
             {"group": "functioneel-beheerder", "match": {"_organisation": "$organisation"}},
             {"group": "gebruik-beheerder", "match": {"_organisation": "$organisation"}},
             {"group": "vng-raadpleger", "match": {"_organisation": "$organisation"}},
@@ -3772,7 +3779,8 @@
                 "publicationDate": {
                   "$lte": "$now"
                 }
-              }
+              },
+              "crossOrganisation": true
             },
             {
               "group": "aanbod-beheerder",
@@ -3784,7 +3792,8 @@
               "group": "aanbod-beheerder",
               "match": {
                 "provider": "$organisation"
-              }
+              },
+              "crossOrganisation": true
             }
           ],
           "update": [
@@ -4011,7 +4020,7 @@
         "groups": null,
         "authorization": {
           "read": [
-            "public"
+            {"group": "public", "crossOrganisation": true}
           ]
         },
         "configuration": {
@@ -5135,7 +5144,7 @@
         "groups": null,
         "authorization": {
           "read": [
-            "public"
+            {"group": "public", "crossOrganisation": true}
           ]
         },
         "configuration": {
@@ -5458,7 +5467,7 @@
         "groups": null,
         "authorization": {
           "read": [
-            "public"
+            {"group": "public", "crossOrganisation": true}
           ]
         },
         "configuration": {
@@ -5816,7 +5825,7 @@
         "groups": null,
         "authorization": {
           "read": [
-            "public"
+            {"group": "public", "crossOrganisation": true}
           ]
         },
         "configuration": {
@@ -5950,7 +5959,7 @@
         "groups": null,
         "authorization": {
           "read": [
-            "public"
+            {"group": "public", "crossOrganisation": true}
           ]
         },
         "configuration": {
@@ -6353,7 +6362,7 @@
         "groups": null,
         "authorization": {
           "read": [
-            "public"
+            {"group": "public", "crossOrganisation": true}
           ]
         },
         "configuration": {
@@ -6886,7 +6895,8 @@
                 "publicationDate": {
                   "$lte": "$now"
                 }
-              }
+              },
+              "crossOrganisation": true
             },
             {
               "group": "aanbod-beheerder",
@@ -6898,7 +6908,8 @@
               "group": "public",
               "match": {
                 "registeredBy": "Supplier"
-              }
+              },
+              "crossOrganisation": true
             }
           ]
         },
@@ -7080,7 +7091,7 @@
         "groups": null,
         "authorization": {
           "read": [
-            "public"
+            {"group": "public", "crossOrganisation": true}
           ]
         },
         "configuration": {
@@ -7210,7 +7221,7 @@
         "groups": null,
         "authorization": {
           "read": [
-            "public"
+            {"group": "public", "crossOrganisation": true}
           ]
         },
         "configuration": {
@@ -7450,7 +7461,7 @@
         "groups": null,
         "authorization": {
           "read": [
-            "public"
+            {"group": "public", "crossOrganisation": true}
           ]
         },
         "configuration": {
@@ -7619,7 +7630,7 @@
         "groups": null,
         "authorization": {
           "read": [
-            "public"
+            {"group": "public", "crossOrganisation": true}
           ]
         },
         "configuration": {
@@ -7848,7 +7859,7 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "software-catalog-admins",
+            {"group": "software-catalog-admins", "crossOrganisation": true},
             {
               "group": "organisatie-beheerder",
               "match": {
@@ -7883,7 +7894,8 @@
               "group": "aanbod-beheerder",
               "match": {
                 "provider": "$organisation"
-              }
+              },
+              "crossOrganisation": true
             }
           ],
           "update": [
@@ -8197,7 +8209,7 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "public"
+            {"group": "public", "crossOrganisation": true}
           ],
           "update": [
             "software-catalog-admins",

@@ -62,6 +62,11 @@ use Psr\Log\LoggerInterface;
 class OrganizationSyncService {
 
 	/**
+	 * App config key prefix under which an administrator's link is recorded, per organisatie uuid.
+	 */
+	private const LINK_KEY_PREFIX = 'linked_organisation_';
+
+	/**
 	 * OrganisatieService instance
 	 *
 	 * @var OrganisatieService The service for organization operations
@@ -990,6 +995,11 @@ class OrganizationSyncService {
 			// Try to find existing organisation entity.
 			try {
 				$organisationEntity = $this->organisationMapper->findByUuid($organisationId);
+				if ($this->isBoundOrganisation(organisationEntity: $organisationEntity, run: $run) === false) {
+					$this->refuseUuidConflict(run: $run);
+					return null;
+				}
+
 				return $this->refreshOrganisationEntity(organisationEntity: $organisationEntity, run: $run);
 			} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
 				if ($this->slugIsTaken(run: $run) === true) {
@@ -1047,6 +1057,48 @@ class OrganizationSyncService {
 
 		return $organisationObject;
 	}//end fullOrganisationObject()
+
+	/**
+	 * Whether this organisation belongs to the organisatie that carries its uuid.
+	 *
+	 * The sync makes an organisation after the organisatie, so one that is older
+	 * only belongs to it when an administrator linked the two. The organisatie's
+	 * stored organisation cannot answer this: OpenRegister stamps a new object
+	 * with the default or active organisation, which may be the very one asked about.
+	 *
+	 * @param object $organisationEntity The organisation with the organisatie's uuid.
+	 * @param array  $run                The ensure run (see ensureOrganisationEntity).
+	 *
+	 * @return bool False when a creation date is unknown and no link is recorded.
+	 */
+	private function isBoundOrganisation(object $organisationEntity, array $run): bool {
+		$entityCreated = $organisationEntity->getCreated();
+		$objectCreated = $run['organisationObject']->getCreated();
+		if ($entityCreated instanceof \DateTimeInterface
+			&& $objectCreated instanceof \DateTimeInterface
+			&& $entityCreated->getTimestamp() >= $objectCreated->getTimestamp()
+		) {
+			return true;
+		}
+
+		return $this->config->getValueString('stackiq', self::LINK_KEY_PREFIX . $run['organisationId'], '', lazy: true) !== '';
+	}//end isBoundOrganisation()
+
+	/**
+	 * Log and count an organisatie left unlinked because it carries the uuid of an
+	 * organisation that is not its own.
+	 *
+	 * @param array $run The ensure run (see ensureOrganisationEntity).
+	 *
+	 * @return void
+	 */
+	private function refuseUuidConflict(array $run): void {
+		$this->logger->warning(
+			'OrganizationSyncService: an organisatie carries the uuid of an older organisation; nothing is bound, for an administrator to review',
+			['app' => 'stackiq', 'organisatieId' => $run['organisationId']]
+		);
+		$run['stats']['organisationIdConflicts'][] = $run['organisationId'];
+	}//end refuseUuidConflict()
 
 	/**
 	 * Bring an existing organisation entity's active flag in line with the object's status,
@@ -1107,8 +1159,12 @@ class OrganizationSyncService {
 	 * Link an organisatie to an existing OpenRegister organisation, as an administrator decides.
 	 *
 	 * The organisation takes the organisatie's uuid, which is what links the two,
-	 * and becomes the organisatie object's owner. Refused for the reasons
-	 * checkOrganisationLink() gives.
+	 * and becomes the organisatie object's owner. The link is recorded so the sync
+	 * keeps the two together although the organisation is older. Refused for the
+	 * reasons checkOrganisationLink() gives.
+	 *
+	 * With both uuids the same it confirms an organisatie the sync refused for
+	 * carrying the uuid of an older organisation.
 	 *
 	 * @param string $organisatieUuid The organisatie object's uuid.
 	 * @param string $entityUuid      The OpenRegister organisation's uuid.
@@ -1124,6 +1180,7 @@ class OrganizationSyncService {
 			return $outcome;
 		}
 
+		$this->config->setValueString('stackiq', self::LINK_KEY_PREFIX . $organisatieUuid, date('Y-m-d H:i:s'), lazy: true);
 		$entity = $this->organisationMapper->findByUuid($entityUuid);
 		$entity->setUuid($organisatieUuid);
 		$this->organisationMapper->save($entity);
@@ -1141,12 +1198,13 @@ class OrganizationSyncService {
 	 *
 	 * Refused when the organisatie is unknown or already has an organisation, when
 	 * the organisation is unknown, is OpenRegister's default organisation, or is
-	 * already another organisatie's. Nothing is written.
+	 * already another organisatie's, and when OpenRegister cannot say which
+	 * organisation is its default. Nothing is written.
 	 *
 	 * @param string $organisatieUuid The organisatie object's uuid.
 	 * @param string $entityUuid      The OpenRegister organisation's uuid.
 	 *
-	 * @return string|null no-organisatie, already-linked, no-organisation,
+	 * @return string|null no-organisatie, already-linked, no-organisation, default-unknown,
 	 *                     default-organisation, organisation-in-use, or null.
 	 *
 	 * @spec openspec/specs/organisatie-service/spec.md
@@ -1163,11 +1221,12 @@ class OrganizationSyncService {
 	 *
 	 * @param string $organisatieUuid The organisatie object's uuid.
 	 *
-	 * @return array The run: register, organizationSchema and organisationObject (null when unknown).
+	 * @return array The run: organisationId, register, organizationSchema and organisationObject (null when unknown).
 	 */
 	private function linkRun(string $organisatieUuid): array {
 		$config = $this->settingsService->getVoorzieningenConfig();
 		$run    = [
+			'organisationId'     => $organisatieUuid,
 			'register'           => (string) ($config['register'] ?? ''),
 			'organizationSchema' => (string) ($config['organisatie_schema'] ?? ''),
 		];
@@ -1189,7 +1248,7 @@ class OrganizationSyncService {
 			return 'no-organisatie';
 		}
 
-		if ($this->organisationExists(uuid: $organisatieUuid) === true) {
+		if ($this->organisatieHasOrganisation(run: $run, entityUuid: $entityUuid) === true) {
 			return 'already-linked';
 		}
 
@@ -1197,23 +1256,49 @@ class OrganizationSyncService {
 	}//end linkRefusal()
 
 	/**
+	 * Whether the organisatie already has its organisation.
+	 *
+	 * An organisation with the organisatie's uuid that does not belong to it can
+	 * still be confirmed, by naming that same uuid as the organisation to link.
+	 *
+	 * @param array  $run        The link run (see linkRun()).
+	 * @param string $entityUuid The OpenRegister organisation's uuid.
+	 *
+	 * @return bool
+	 */
+	private function organisatieHasOrganisation(array $run, string $entityUuid): bool {
+		try {
+			$holder = $this->organisationMapper->findByUuid($run['organisationId']);
+		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+			return false;
+		}
+
+		return $entityUuid !== $run['organisationId'] || $this->isBoundOrganisation(organisationEntity: $holder, run: $run) === true;
+	}//end organisatieHasOrganisation()
+
+	/**
 	 * Why this OpenRegister organisation may not take an organisatie's uuid, or null when it may.
 	 *
 	 * @param array  $run        The link run (see linkRun()).
 	 * @param string $entityUuid The OpenRegister organisation's uuid.
 	 *
-	 * @return string|null no-organisation, default-organisation, organisation-in-use, or null.
+	 * @return string|null no-organisation, default-unknown, default-organisation, organisation-in-use, or null.
 	 */
 	private function organisationRefusal(array $run, string $entityUuid): ?string {
 		if ($this->organisationExists(uuid: $entityUuid) === false) {
 			return 'no-organisation';
 		}
 
-		if ($this->container->get('OCA\OpenRegister\Service\OrganisationService')->getDefaultOrganisationUuid() === $entityUuid) {
+		$defaultUuid = $this->container->get('OCA\OpenRegister\Service\OrganisationService')->getDefaultOrganisationUuid();
+		if ($defaultUuid === null || $defaultUuid === '') {
+			return 'default-unknown';
+		}
+
+		if ($defaultUuid === $entityUuid) {
 			return 'default-organisation';
 		}
 
-		if ($this->findOrganisatie(run: $run, uuid: $entityUuid) !== null) {
+		if ($entityUuid !== $run['organisationId'] && $this->findOrganisatie(run: $run, uuid: $entityUuid) !== null) {
 			return 'organisation-in-use';
 		}
 

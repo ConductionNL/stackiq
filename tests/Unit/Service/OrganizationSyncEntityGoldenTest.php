@@ -99,6 +99,13 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 			private ?string $organisation = 'org-of-entity';
 
 			/**
+			 * When the object was created.
+			 *
+			 * @var \DateTimeInterface|null
+			 */
+			public ?\DateTimeInterface $createdAt = null;
+
+			/**
 			 * Build the double.
 			 *
 			 * @param array  $object The object data.
@@ -106,6 +113,14 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 			 * @param array  $trace  The shared trace.
 			 */
 			public function __construct(private array $object, private string $uuid, private array &$trace) {
+				$this->createdAt = new \DateTimeImmutable('2020-06-01 10:00:00 UTC');
+			}
+
+			/**
+			 * @return \DateTimeInterface|null
+			 */
+			public function getCreated(): ?\DateTimeInterface {
+				return $this->createdAt;
 			}
 
 			/**
@@ -376,6 +391,7 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 			'organisationService'  => $this->organisationService(),
 			'emailService'         => $this->emailService(),
 			'container'            => $this->container(),
+			'config'               => $this->appConfig(),
 		];
 		foreach ($properties as $name => $value) {
 			$reflection->getProperty($name)->setValue($service, $value);
@@ -384,6 +400,29 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 		return $service;
 
 	}//end service()
+
+	/**
+	 * An app config double whose stored values are the plan's `appConfig`.
+	 *
+	 * @return \OCP\IAppConfig
+	 */
+	private function appConfig(): \OCP\IAppConfig {
+		$config = $this->createMock(originalClassName: \OCP\IAppConfig::class);
+		$config->method('getValueString')->willReturnCallback(
+			function (string $app, string $key, string $default='', bool $lazy=false) {
+				$this->trace[] = ['config.get', $app, $key, $lazy];
+				return ($this->plan['appConfig'][$app . '/' . $key] ?? $default);
+			}
+		);
+		$config->method('setValueString')->willReturnCallback(
+			function (string $app, string $key, string $value, bool $lazy=false) {
+				$this->trace[] = ['config.set', $app, $key, $lazy];
+				return true;
+			}
+		);
+		return $config;
+
+	}//end appConfig()
 
 	/**
 	 * A container that answers OpenRegister's OrganisationService, whose default
@@ -523,11 +562,26 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 		$trace = &$this->trace;
 		return new class($uuid, $active, $trace) extends Organisation {
 			/**
+			 * When the organisation was created.
+			 *
+			 * @var \DateTimeInterface|null
+			 */
+			public ?\DateTimeInterface $createdAt = null;
+
+			/**
 			 * @param string $entityUuid The uuid.
 			 * @param bool   $isActive   Whether it is active.
 			 * @param array  $trace      The shared trace.
 			 */
 			public function __construct(private string $entityUuid, private bool $isActive, private array &$trace) {
+				$this->createdAt = new \DateTimeImmutable('2020-06-01 10:00:05 UTC');
+			}
+
+			/**
+			 * @return \DateTimeInterface|null
+			 */
+			public function getCreated(): ?\DateTimeInterface {
+				return $this->createdAt;
 			}
 
 			/**
@@ -717,6 +771,249 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 	}//end testAFallbackNameWithAFreeSlugIsCreated()
 
 	/**
+	 * An organisation older than the organisatie that carries its uuid was not made
+	 * from that organisatie: nothing is bound, whatever status the organisatie claims.
+	 *
+	 * @return void
+	 */
+	public function testAnOrganisatieDoesNotBindAnOlderOrganisationWithItsUuid(): void {
+		foreach (['Active', 'Inactive', 'Draft'] as $status) {
+			$stats  = ['entitiesCreated' => 0, 'entitiesUpdated' => 0];
+			$entity = $this->ensureWithDates(status: $status, stats: $stats, dates: ['2020-06-01 10:00:01 UTC', '2020-06-01 10:00:00 UTC']);
+
+			self::assertNull($entity, $status);
+			self::assertSame([], $this->writes(), $status);
+			self::assertSame(['o-1'], $stats['organisationIdConflicts'] ?? null, $status);
+			self::assertSame(0, $stats['entitiesUpdated'], $status);
+			self::assertArrayNotHasKey('slugConflicts', $stats, $status);
+			self::assertSame([], array_values(array_filter($this->trace, fn (array $call) => str_starts_with($call[0], 'mail.'))), $status);
+			$warnings = array_values(array_filter($this->trace, fn (array $call) => $call[0] === 'log.warning'));
+			self::assertCount(1, $warnings, $status);
+			self::assertSame('o-1', $warnings[0][2]['organisatieId']);
+		}
+	}//end testAnOrganisatieDoesNotBindAnOlderOrganisationWithItsUuid()
+
+	/**
+	 * The organisation the sync made from this organisatie is at least as new, even
+	 * when the object in hand still carries the sub-second part of its creation.
+	 *
+	 * @return void
+	 */
+	public function testAnOrganisationMadeFromTheOrganisatieStaysBound(): void {
+		foreach ([['2020-06-01 10:00:00.700 UTC', '2020-06-01 10:00:00 UTC'], ['2020-06-01 10:00:00 UTC', '2020-06-01 10:00:09 UTC']] as $dates) {
+			$stats  = ['entitiesCreated' => 0, 'entitiesUpdated' => 0];
+			$entity = $this->ensureWithDates(status: 'Inactive', stats: $stats, dates: $dates);
+
+			self::assertNotNull($entity, $dates[0]);
+			self::assertContains(['mapper.save', 'o-1', false], $this->trace, $dates[0]);
+			self::assertArrayNotHasKey('organisationIdConflicts', $stats, $dates[0]);
+		}
+	}//end testAnOrganisationMadeFromTheOrganisatieStaysBound()
+
+	/**
+	 * Without both creation dates nothing shows the two belong together, so nothing is bound.
+	 *
+	 * @return void
+	 */
+	public function testAnUnknownCreationDateDoesNotBind(): void {
+		foreach ([[null, '2020-06-01 10:00:05 UTC'], ['2020-06-01 10:00:00 UTC', null], [null, null]] as $dates) {
+			$stats  = ['entitiesCreated' => 0, 'entitiesUpdated' => 0];
+			$entity = $this->ensureWithDates(status: 'Active', stats: $stats, dates: $dates);
+
+			self::assertNull($entity);
+			self::assertSame([], $this->writes());
+			self::assertSame(['o-1'], $stats['organisationIdConflicts'] ?? null);
+		}
+	}//end testAnUnknownCreationDateDoesNotBind()
+
+	/**
+	 * An organisation an administrator linked may be older than the organisatie.
+	 *
+	 * @return void
+	 */
+	public function testAnAdministratorsLinkKeepsAnOlderOrganisationBound(): void {
+		$stats  = ['entitiesCreated' => 0, 'entitiesUpdated' => 0];
+		$entity = $this->ensureWithDates(
+			status: 'Inactive',
+			stats: $stats,
+			dates: ['2020-06-01 10:00:01 UTC', '2020-06-01 10:00:00 UTC'],
+			appConfig: ['stackiq/linked_organisation_o-1' => '2026-11-03 10:00:00']
+		);
+
+		self::assertNotNull($entity);
+		self::assertContains(['config.get', 'stackiq', 'linked_organisation_o-1', true], $this->trace);
+		self::assertContains(['mapper.save', 'o-1', false], $this->trace);
+	}//end testAnAdministratorsLinkKeepsAnOlderOrganisationBound()
+
+	/**
+	 * Another organisatie's link says nothing about this one.
+	 *
+	 * @return void
+	 */
+	public function testAnotherOrganisatiesLinkDoesNotBind(): void {
+		$stats  = ['entitiesCreated' => 0, 'entitiesUpdated' => 0];
+		$entity = $this->ensureWithDates(
+			status: 'Active',
+			stats: $stats,
+			dates: ['2020-06-01 10:00:01 UTC', '2020-06-01 10:00:00 UTC'],
+			appConfig: ['stackiq/linked_organisation_o-2' => '2026-11-03 10:00:00', 'other/linked_organisation_o-1' => '2026-11-03 10:00:00']
+		);
+
+		self::assertNull($entity);
+	}//end testAnotherOrganisatiesLinkDoesNotBind()
+
+	/**
+	 * A refused organisatie's contact persons, nested or listed, reach neither a
+	 * user account nor the organisation's members, on the event path.
+	 *
+	 * @return void
+	 */
+	public function testARefusedOrganisatieProcessesNoContactPersons(): void {
+		$object = $this->entity(
+			object: ['name' => 'Chosen', 'status' => 'Active', 'contactpersonen' => [['email' => 'someone@example.org'], 'c-listed']],
+			uuid: 'o-1'
+		);
+		$older            = $this->orgEntity(uuid: 'o-1', active: true);
+		$older->createdAt = new \DateTimeImmutable('2020-01-01 00:00:00 UTC');
+		$this->trace      = [];
+		$this->plan       = ['find' => [null], 'save' => [], 'org' => [$older], 'slug' => []];
+
+		$stats = $this->service()->processSpecificOrganization($object);
+
+		self::assertSame(['o-1'], $stats['organisationIdConflicts'] ?? null);
+		self::assertSame(0, $stats['contactPersonsProcessed']);
+		self::assertSame(0, $stats['organizationsProcessed']);
+		self::assertSame([], $this->writes());
+		self::assertSame([], array_values(array_filter($this->trace, fn (array $call) => str_starts_with($call[0], 'handler.'))));
+		self::assertSame(['objects.find'], array_values(array_unique(array_column(array_filter($this->trace, fn (array $call) => str_starts_with($call[0], 'objects.')), 0))));
+	}//end testARefusedOrganisatieProcessesNoContactPersons()
+
+	/**
+	 * The scheduled sync goes no further than a refused organisatie either.
+	 *
+	 * @return void
+	 */
+	public function testTheScheduledSyncProcessesNoContactPersonsOfARefusedOrganisatie(): void {
+		$older            = $this->orgEntity(uuid: 'o-1', active: true);
+		$older->createdAt = new \DateTimeImmutable('2020-01-01 00:00:00 UTC');
+		$this->trace      = [];
+		$this->plan       = ['find' => [null], 'save' => [], 'org' => [$older], 'slug' => []];
+		$stats            = ['entitiesCreated' => 0, 'entitiesUpdated' => 0, 'usersUpdated' => 0];
+		$method           = new \ReflectionMethod(OrganizationSyncService::class, 'processOrganisationObject');
+
+		$method->invokeArgs($this->service(), [$this->entity(object: ['name' => 'Chosen', 'status' => 'Active'], uuid: 'o-1'), 'reg', 'contact-schema', &$stats]);
+
+		self::assertSame(['o-1'], $stats['organisationIdConflicts'] ?? null);
+		self::assertSame([], $this->writes());
+		self::assertSame(['objects.find'], array_values(array_unique(array_column(array_filter($this->trace, fn (array $call) => str_starts_with($call[0], 'objects.')), 0))));
+	}//end testTheScheduledSyncProcessesNoContactPersonsOfARefusedOrganisatie()
+
+	/**
+	 * Run the ensure with an organisation that has the organisatie's uuid.
+	 *
+	 * @param string                $status    The organisatie's status.
+	 * @param array                 $stats     The stats, written by reference.
+	 * @param array                 $dates     When the object and the organisation were created (null: unknown).
+	 * @param array<string, string> $appConfig The stored app config, keyed app/key.
+	 *
+	 * @return object|null What the ensure returned.
+	 */
+	private function ensureWithDates(string $status, array &$stats, array $dates, array $appConfig=[]): ?object {
+		$object            = $this->entity(object: ['name' => 'Chosen', 'status' => $status], uuid: 'o-1');
+		$object->createdAt = $dates[0] === null ? null : new \DateTimeImmutable($dates[0]);
+		$entity            = $this->orgEntity(uuid: 'o-1', active: true);
+		$entity->createdAt = $dates[1] === null ? null : new \DateTimeImmutable($dates[1]);
+		$this->trace       = [];
+		$this->plan        = ['find' => [null], 'save' => [], 'org' => [$entity], 'slug' => [], 'appConfig' => $appConfig];
+
+		return $this->service()->ensureOrganisationEntityPublic($object, $stats, true);
+	}//end ensureWithDates()
+
+	/**
+	 * The writes in the trace.
+	 *
+	 * @return array<int, array>
+	 */
+	private function writes(): array {
+		return array_values(array_filter($this->trace, fn (array $call) => in_array($call[0], ['entity.setUuid', 'entity.setActive', 'mapper.save', 'organisations.create', 'objects.saveObject', 'entity.setOwner', 'entity.setOrganisation', 'entity.setObject'], true)));
+	}//end writes()
+
+	/**
+	 * A link names what it moved, reads the organisatie and its would-be holder past
+	 * access control and organisation scope, and is remembered before anything moves.
+	 *
+	 * @return void
+	 */
+	public function testALinkIsAuditedAndRemembered(): void {
+		$this->trace = [];
+		$this->plan  = [
+			'find' => [$this->entity(object: ['name' => 'Gemeente A'], uuid: 'o-1'), null],
+			'save' => [],
+			'org'  => [new \OCP\AppFramework\Db\DoesNotExistException('missing'), $this->orgEntity('o-old', true), $this->orgEntity('o-old', true)],
+			'slug' => [],
+		];
+
+		self::assertSame('linked', $this->service()->linkOrganisationEntity('o-1', 'o-old'));
+
+		$finds = array_values(array_filter($this->trace, fn (array $call) => $call[0] === 'objects.find'));
+		self::assertSame(['id' => 'o-1', 'register' => 'reg-v', 'schema' => 'org-schema', '_rbac' => false, '_multitenancy' => false], $finds[0][1]);
+		self::assertSame(['id' => 'o-old', 'register' => 'reg-v', 'schema' => 'org-schema', '_rbac' => false, '_multitenancy' => false], $finds[1][1]);
+
+		$logged = array_values(array_filter($this->trace, fn (array $call) => $call[0] === 'log.info' && str_contains($call[1], 'an administrator linked')));
+		self::assertCount(1, $logged);
+		self::assertSame(['app' => 'stackiq', 'organisatieId' => 'o-1', 'previousOrganisationUuid' => 'o-old'], $logged[0][2]);
+
+		$calls = array_column($this->trace, 0);
+		self::assertContains(['config.set', 'stackiq', 'linked_organisation_o-1', true], $this->trace);
+		self::assertLessThan(array_search('entity.setUuid', $calls, true), array_search('config.set', $calls, true));
+	}//end testALinkIsAuditedAndRemembered()
+
+	/**
+	 * An administrator can confirm an organisatie the sync refused because it
+	 * carries the uuid of an older organisation; the organisation keeps that uuid.
+	 *
+	 * @return void
+	 */
+	public function testAnAdministratorCanConfirmARefusedPair(): void {
+		$object           = $this->entity(object: ['name' => 'Gemeente A'], uuid: 'o-1');
+		$older            = $this->orgEntity(uuid: 'o-1', active: true);
+		$older->createdAt = new \DateTimeImmutable('2020-01-01 00:00:00 UTC');
+		$this->trace      = [];
+		$this->plan       = ['find' => [$object, $object], 'save' => [], 'org' => [$older, $older, $older], 'slug' => []];
+
+		self::assertSame('linked', $this->service()->linkOrganisationEntity('o-1', 'o-1'));
+		self::assertContains(['config.set', 'stackiq', 'linked_organisation_o-1', true], $this->trace);
+		self::assertContains(['entity.setUuid', 'o-1', 'o-1'], $this->trace);
+		self::assertContains('objects.saveObject', array_column($this->trace, 0));
+	}//end testAnAdministratorCanConfirmARefusedPair()
+
+	/**
+	 * A pair that already holds is not linked again, and the default organisation is never confirmed.
+	 *
+	 * @return void
+	 */
+	public function testAPairThatHoldsOrTheDefaultOrganisationIsNotConfirmed(): void {
+		$object       = $this->entity(object: ['name' => 'Gemeente A'], uuid: 'o-1');
+		$this->trace  = [];
+		$this->plan   = ['find' => [$object], 'save' => [], 'org' => [$this->orgEntity('o-1', true)], 'slug' => []];
+		self::assertSame('already-linked', $this->service()->linkOrganisationEntity('o-1', 'o-1'));
+		self::assertSame([], $this->writes());
+
+		$older            = $this->orgEntity(uuid: 'o-1', active: true);
+		$older->createdAt = new \DateTimeImmutable('2020-01-01 00:00:00 UTC');
+		$this->trace      = [];
+		$this->plan       = ['find' => [$object], 'save' => [], 'org' => [$older, $older], 'slug' => [], 'default' => 'o-1'];
+		self::assertSame('default-organisation', $this->service()->linkOrganisationEntity('o-1', 'o-1'));
+		self::assertSame([], $this->writes());
+		self::assertNotContains('config.set', array_column($this->trace, 0));
+
+		$this->trace = [];
+		$this->plan  = ['find' => [$object], 'save' => [], 'org' => [$older], 'slug' => []];
+		self::assertSame('already-linked', $this->service()->linkOrganisationEntity('o-1', 'o-old'));
+		self::assertSame([], $this->writes());
+	}//end testAPairThatHoldsOrTheDefaultOrganisationIsNotConfirmed()
+
+	/**
 	 * Checking a link answers what the link would, and writes nothing.
 	 *
 	 * @param string             $outcome The expected outcome.
@@ -756,7 +1053,8 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 			'no organisation'     => ['no-organisation', fn ($t) => ['find' => [$object($t, 'o-1')], 'org' => [$missing(), $missing()]], []],
 			'organisation in use' => ['organisation-in-use', fn ($t) => ['find' => [$object($t, 'o-1'), $object($t, 'o-old')], 'org' => [$missing(), $t->orgEntity('o-old', true)]], []],
 			'default organisation' => ['default-organisation', fn ($t) => ['find' => [$object($t, 'o-1')], 'org' => [$missing(), $t->orgEntity('o-old', true)], 'default' => 'o-old'], []],
-			'no default set'      => ['linked', fn ($t) => ['find' => [$object($t, 'o-1'), null], 'org' => [$missing(), $t->orgEntity('o-old', true), $t->orgEntity('o-old', true)], 'default' => null], ['entity.setUuid', 'mapper.save', 'objects.saveObject']],
+			'no default set'      => ['default-unknown', fn ($t) => ['find' => [$object($t, 'o-1')], 'org' => [$missing(), $t->orgEntity('o-old', true)], 'default' => null], []],
+			'empty default set'   => ['default-unknown', fn ($t) => ['find' => [$object($t, 'o-1')], 'org' => [$missing(), $t->orgEntity('o-old', true)], 'default' => ''], []],
 		];
 	}//end linkCases()
 

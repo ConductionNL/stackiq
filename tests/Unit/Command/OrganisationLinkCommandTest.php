@@ -46,6 +46,7 @@ class OrganisationLinkCommandTest extends TestCase {
 			'no organisation'      => ['no-organisation', 'No OpenRegister organisation has this uuid.'],
 			'organisation in use'  => ['organisation-in-use', 'belongs to another organisatie'],
 			'default organisation' => ['default-organisation', 'default organisation, which is never linked'],
+			'default unknown'      => ['default-unknown', 'cannot say which organisation is its default'],
 			'failure'              => [new RuntimeException('db down'), 'Could not link: db down'],
 		];
 	}//end refusals()

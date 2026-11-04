@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\EventListener;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Organisation;
+use OCA\OpenRegister\Db\OrganisationMapper;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\Stackiq\EventListener\AnonymousRegistrationListener;
 use OCA\Stackiq\Service\SettingsService;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IUser;
 use OCP\IUserSession;
 use PHPUnit\Framework\TestCase;
@@ -44,6 +47,42 @@ final class AnonymousRegistrationListenerTest extends TestCase {
 		self::assertSame([], $event->getModifiedData());
 	}//end testASignedInCreateKeepsItsValues()
 
+	public function testAnAnonymousCreateCarryingAnOrganisationsUuidIsRefused(): void {
+		$event = $this->event(schema: '30', data: ['name' => 'Chosen'], uuid: 'held-uuid');
+
+		$this->listener(user: null, held: ['held-uuid'])->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+		self::assertSame(['message' => 'This organisation could not be registered.'], $event->getErrors());
+		self::assertSame([], $event->getModifiedData());
+	}//end testAnAnonymousCreateCarryingAnOrganisationsUuidIsRefused()
+
+	public function testAnAnonymousCreateWithAFreeUuidGoesAhead(): void {
+		foreach (['free-uuid', null, ''] as $uuid) {
+			$event = $this->event(schema: '30', data: ['name' => 'Chosen'], uuid: $uuid);
+
+			$this->listener(user: null, held: ['held-uuid', ''])->handle($event);
+
+			self::assertFalse($event->isPropagationStopped());
+			self::assertSame('pending', $event->getModifiedData()['registrationStatus']);
+		}
+	}//end testAnAnonymousCreateWithAFreeUuidGoesAhead()
+
+	public function testOnlyAnAnonymousOrganisationCreateIsRefused(): void {
+		$cases = [
+			[$this->createMock(IUser::class), false, '30'],
+			[null, true, '30'],
+			[null, false, '31'],
+		];
+		foreach ($cases as [$user, $commandLine, $schema]) {
+			$event = $this->event(schema: $schema, data: ['name' => 'Chosen'], uuid: 'held-uuid');
+
+			$this->listener(user: $user, commandLine: $commandLine, held: ['held-uuid'])->handle($event);
+
+			self::assertFalse($event->isPropagationStopped());
+		}
+	}//end testOnlyAnAnonymousOrganisationCreateIsRefused()
+
 	public function testAnotherSchemaIsLeftAlone(): void {
 		$event = $this->event(schema: '31', data: ['name' => 'A module']);
 
@@ -55,10 +94,11 @@ final class AnonymousRegistrationListenerTest extends TestCase {
 	/**
 	 * @param array<string, mixed> $data The object data.
 	 */
-	private function event(string $schema, array $data): ObjectCreatingEvent {
+	private function event(string $schema, array $data, ?string $uuid = null): ObjectCreatingEvent {
 		$entity = $this->createMock(ObjectEntity::class);
 		$entity->method('getSchema')->willReturn($schema);
 		$entity->method('getObject')->willReturn($data);
+		$entity->method('getUuid')->willReturn($uuid);
 
 		return new ObjectCreatingEvent($entity);
 	}//end event()
@@ -71,12 +111,26 @@ final class AnonymousRegistrationListenerTest extends TestCase {
 		self::assertSame([], $event->getModifiedData());
 	}//end testACommandLineCreateKeepsItsValues()
 
-	private function listener(?IUser $user, bool $commandLine = false): AnonymousRegistrationListener {
+	/**
+	 * @param list<string> $held The uuids OpenRegister organisations hold.
+	 */
+	private function listener(?IUser $user, bool $commandLine = false, array $held = []): AnonymousRegistrationListener {
 		$session = $this->createMock(IUserSession::class);
 		$session->method('getUser')->willReturn($user);
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getVoorzieningenConfig')->willReturn(['organisatie_schema' => '30']);
 
-		return new AnonymousRegistrationListener($session, $settings, $commandLine);
+		$organisations = $this->createMock(OrganisationMapper::class);
+		$organisations->method('findByUuid')->willReturnCallback(
+			function (string $uuid) use ($held) {
+				if (in_array($uuid, $held, true) === false) {
+					throw new DoesNotExistException('missing');
+				}
+
+				return $this->createMock(Organisation::class);
+			}
+		);
+
+		return new AnonymousRegistrationListener($session, $settings, $organisations, $commandLine);
 	}//end listener()
 }//end class
