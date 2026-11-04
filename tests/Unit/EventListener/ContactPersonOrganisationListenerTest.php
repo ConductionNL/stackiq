@@ -1,0 +1,305 @@
+<?php
+
+/**
+ * Tests for ContactPersonOrganisationListener and ContactPersonOrganisationGuard.
+ *
+ * @category  Tests
+ * @package   OCA\Stackiq\Tests\Unit\EventListener
+ * @author    Conduction b.v. <info@conduction.nl>
+ * @copyright 2026 Conduction B.V.
+ * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
+ * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
+declare(strict_types=1);
+
+namespace OCA\Stackiq\Tests\Unit\EventListener;
+
+use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Db\Organisation;
+use OCA\OpenRegister\Db\OrganisationMapper;
+use OCA\OpenRegister\Event\ObjectCreatingEvent;
+use OCA\OpenRegister\Event\ObjectUpdatingEvent;
+use OCA\Stackiq\EventListener\ContactPersonOrganisationListener;
+use OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard;
+use OCA\Stackiq\Service\SettingsService;
+use OCP\AppFramework\Db\DoesNotExistException;
+use OCP\IGroupManager;
+use OCP\IUser;
+use OCP\IUserManager;
+use OCP\IUserSession;
+use PHPUnit\Framework\TestCase;
+
+/**
+ * REQ-003: a contact person only from an administrator, or from a member of its
+ * organisation who may add members; an existing account only when it is already a member.
+ *
+ * @covers \OCA\Stackiq\EventListener\ContactPersonOrganisationListener
+ * @covers \OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard
+ */
+final class ContactPersonOrganisationListenerTest extends TestCase {
+	private const SCHEMA = '41';
+
+	private const ORG_X = '6b0c1f8e-0000-4000-8000-00000000000x';
+
+	private const ORG_A = '6b0c1f8e-0000-4000-8000-00000000000a';
+
+	/**
+	 * Organisation uuid => member uids.
+	 *
+	 * @var array<string, array<int, string>>
+	 */
+	private array $organisations = [
+		self::ORG_X => ['beheer-x', 'raadpleger-x', 'victim-x'],
+		self::ORG_A => ['beheer-a', 'victim-a'],
+	];
+
+	/**
+	 * Uid => groups.
+	 *
+	 * @var array<string, array<int, string>>
+	 */
+	private array $groups = [
+		'beheer-x'     => ['gebruik-beheerder'],
+		'raadpleger-x' => ['gebruik-raadpleger'],
+		'beheer-a'     => ['aanbod-beheerder'],
+		'outsider'     => ['software-catalog-users'],
+		'root'         => ['admin'],
+		'victim-x'     => ['gebruik-raadpleger'],
+		'victim-a'     => ['gebruik-beheerder'],
+	];
+
+	public function testASignedInUserOutsideTheOrganisationCannotAddAnAccountToIt(): void {
+		$event = $this->creating(data: ['organisation' => self::ORG_X, 'email' => 'new@example.org']);
+
+		$this->listener(caller: 'outsider')->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+		self::assertSame(['message' => 'This contact person could not be saved.'], $event->getErrors());
+	}//end testASignedInUserOutsideTheOrganisationCannotAddAnAccountToIt()
+
+	public function testAMemberManagerOfAnotherOrganisationCannotAddAnAccountToIt(): void {
+		$event = $this->creating(data: ['organization' => self::ORG_X, 'e-mailadres' => 'new@example.org']);
+
+		$this->listener(caller: 'beheer-a')->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testAMemberManagerOfAnotherOrganisationCannotAddAnAccountToIt()
+
+	public function testAMemberWithoutTheRightToAddMembersIsRefused(): void {
+		$event = $this->creating(data: ['organisation' => self::ORG_X, 'email' => 'new@example.org']);
+
+		$this->listener(caller: 'raadpleger-x')->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testAMemberWithoutTheRightToAddMembersIsRefused()
+
+	public function testAMemberManagerAddsAContactToTheOwnOrganisation(): void {
+		$event = $this->creating(data: ['organisation' => self::ORG_X, 'email' => 'new@example.org']);
+
+		$this->listener(caller: 'beheer-x')->handle($event);
+
+		self::assertFalse($event->isPropagationStopped());
+		self::assertSame([], $event->getErrors());
+	}//end testAMemberManagerAddsAContactToTheOwnOrganisation()
+
+	public function testAnAdministratorMayWriteAnyContact(): void {
+		$event = $this->creating(data: ['organisation' => self::ORG_X, 'email' => 'victim-a']);
+
+		$this->listener(caller: 'root')->handle($event);
+
+		self::assertFalse($event->isPropagationStopped());
+	}//end testAnAdministratorMayWriteAnyContact()
+
+	public function testAContactCannotNameAnExistingAccountOfAnotherOrganisation(): void {
+		$event = $this->creating(data: ['organisation' => self::ORG_X, 'email' => 'victim-a']);
+
+		$this->listener(caller: 'beheer-x')->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testAContactCannotNameAnExistingAccountOfAnotherOrganisation()
+
+	public function testAContactWithoutOrganisationCannotNameSomeoneElsesAccount(): void {
+		$event = $this->creating(data: ['email' => 'victim-a']);
+
+		$this->listener(caller: 'outsider')->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testAContactWithoutOrganisationCannotNameSomeoneElsesAccount()
+
+	public function testAMemberManagerMayNameAnAccountThatIsAlreadyAMember(): void {
+		$event = $this->creating(data: ['organisation' => self::ORG_X, 'email' => 'victim-x']);
+
+		$this->listener(caller: 'beheer-x')->handle($event);
+
+		self::assertFalse($event->isPropagationStopped());
+	}//end testAMemberManagerMayNameAnAccountThatIsAlreadyAMember()
+
+	public function testAnAnonymousContactForAnExistingOrganisationIsRefused(): void {
+		$event = $this->creating(data: ['organisation' => self::ORG_X, 'email' => 'new@example.org']);
+
+		$this->listener(caller: null)->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testAnAnonymousContactForAnExistingOrganisationIsRefused()
+
+	public function testAContactForAnOrganisationThatIsStillBeingRegisteredIsAccepted(): void {
+		$event = $this->creating(data: ['organisation' => 'not-yet-an-organisation', 'email' => 'new@example.org']);
+
+		$this->listener(caller: null)->handle($event);
+
+		self::assertFalse($event->isPropagationStopped());
+	}//end testAContactForAnOrganisationThatIsStillBeingRegisteredIsAccepted()
+
+	public function testAnUpdateThatMovesTheContactToAnotherOrganisationIsChecked(): void {
+		$event = $this->updating(
+			data: ['organisation' => self::ORG_X, 'email' => 'self@example.org'],
+			oldData: ['organisation' => self::ORG_A, 'email' => 'self@example.org']
+		);
+
+		$this->listener(caller: 'beheer-a')->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testAnUpdateThatMovesTheContactToAnotherOrganisationIsChecked()
+
+	public function testAnUpdateThatChangesTheEmailAddressIsChecked(): void {
+		$event = $this->updating(
+			data: ['organisation' => self::ORG_X, 'email' => 'victim-a'],
+			oldData: ['organisation' => self::ORG_X, 'email' => 'new@example.org']
+		);
+
+		$this->listener(caller: 'beheer-x')->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testAnUpdateThatChangesTheEmailAddressIsChecked()
+
+	public function testAnUpdateWithoutAStoredVersionIsChecked(): void {
+		$event = $this->updating(data: ['organisation' => self::ORG_X, 'email' => 'new@example.org'], oldData: null);
+
+		$this->listener(caller: 'outsider')->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testAnUpdateWithoutAStoredVersionIsChecked()
+
+	public function testAnUpdateThatKeepsOrganisationAndEmailIsNotCheckedAgain(): void {
+		$event = $this->updating(
+			data: ['organisation' => self::ORG_X, 'email' => 'raadpleger-x', 'voornaam' => 'Nieuw'],
+			oldData: ['organisation' => self::ORG_X, 'email' => 'raadpleger-x', 'voornaam' => 'Oud']
+		);
+
+		$this->listener(caller: 'raadpleger-x')->handle($event);
+
+		self::assertFalse($event->isPropagationStopped());
+	}//end testAnUpdateThatKeepsOrganisationAndEmailIsNotCheckedAgain()
+
+	public function testDataAnotherListenerChangedIsChecked(): void {
+		$event = $this->creating(data: ['email' => 'new@example.org']);
+		$event->setModifiedData(['organisation' => self::ORG_X]);
+
+		$this->listener(caller: 'outsider')->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testDataAnotherListenerChangedIsChecked()
+
+	public function testTheCommandLineIsNotChecked(): void {
+		$event = $this->creating(data: ['organisation' => self::ORG_X, 'email' => 'victim-a']);
+
+		$this->listener(caller: null, commandLine: true)->handle($event);
+
+		self::assertFalse($event->isPropagationStopped());
+	}//end testTheCommandLineIsNotChecked()
+
+	public function testAnotherSchemaIsLeftAlone(): void {
+		$event = $this->creating(data: ['organisation' => self::ORG_X, 'email' => 'new@example.org'], schema: '30');
+
+		$this->listener(caller: 'outsider')->handle($event);
+
+		self::assertFalse($event->isPropagationStopped());
+	}//end testAnotherSchemaIsLeftAlone()
+
+	public function testTheListenerIsRegisteredForCreatesAndUpdates(): void {
+		$source = (string)file_get_contents(__DIR__ . '/../../../lib/AppInfo/Application.php');
+
+		foreach (['ObjectCreatingEvent', 'ObjectUpdatingEvent'] as $event) {
+			self::assertMatchesRegularExpression(
+				'/registerEventListener\(\s*' . $event . '::class,\s*ContactPersonOrganisationListener::class\s*\)/',
+				$source
+			);
+		}
+	}//end testTheListenerIsRegisteredForCreatesAndUpdates()
+
+	/**
+	 * @param array<string, mixed> $data The object data.
+	 */
+	private function creating(array $data, string $schema = self::SCHEMA): ObjectCreatingEvent {
+		return new ObjectCreatingEvent($this->entity(data: $data, schema: $schema));
+	}//end creating()
+
+	/**
+	 * @param array<string, mixed>      $data    The new object data.
+	 * @param array<string, mixed>|null $oldData The stored object data.
+	 */
+	private function updating(array $data, ?array $oldData): ObjectUpdatingEvent {
+		$old = null;
+		if ($oldData !== null) {
+			$old = $this->entity(data: $oldData, schema: self::SCHEMA);
+		}
+
+		return new ObjectUpdatingEvent($this->entity(data: $data, schema: self::SCHEMA), $old);
+	}//end updating()
+
+	/**
+	 * @param array<string, mixed> $data The object data.
+	 */
+	private function entity(array $data, string $schema): ObjectEntity {
+		$entity = $this->createMock(ObjectEntity::class);
+		$entity->method('getSchema')->willReturn($schema);
+		$entity->method('getObject')->willReturn($data);
+
+		return $entity;
+	}//end entity()
+
+	private function listener(?string $caller, bool $commandLine = false): ContactPersonOrganisationListener {
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($caller === null ? null : $this->user(uid: $caller));
+
+		$groupManager = $this->createMock(IGroupManager::class);
+		$groupManager->method('isAdmin')->willReturnCallback(fn (string $uid): bool => in_array('admin', ($this->groups[$uid] ?? []), true));
+		$groupManager->method('isInGroup')->willReturnCallback(fn (string $uid, string $gid): bool => in_array($gid, ($this->groups[$uid] ?? []), true));
+
+		$userManager = $this->createMock(IUserManager::class);
+		$userManager->method('get')->willReturnCallback(fn (string $uid): ?IUser => isset($this->groups[$uid]) === true ? $this->user(uid: $uid) : null);
+
+		$mapper = $this->createMock(OrganisationMapper::class);
+		$mapper->method('findByUuid')->willReturnCallback(
+			function (string $uuid): Organisation {
+				if (isset($this->organisations[$uuid]) === false) {
+					throw new DoesNotExistException('no organisation');
+				}
+
+				$organisation = new Organisation();
+				$organisation->setUuid($uuid);
+				$organisation->setUsers($this->organisations[$uuid]);
+				return $organisation;
+			}
+		);
+
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getVoorzieningenConfig')->willReturn(['contactpersoon_schema' => self::SCHEMA, 'organisatie_schema' => '30']);
+
+		return new ContactPersonOrganisationListener(
+			new ContactPersonOrganisationGuard($session, $groupManager, $userManager, $mapper),
+			$settings,
+			$commandLine
+		);
+	}//end listener()
+
+	private function user(string $uid): IUser {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn($uid);
+		return $user;
+	}//end user()
+}//end class

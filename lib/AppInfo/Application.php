@@ -25,6 +25,7 @@ use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\OpenRegister\Service\OrganisationService as OpenRegisterOrganisationService;
 use OCA\Stackiq\BackgroundJob\ContractStatusJob;
@@ -38,6 +39,7 @@ use OCA\Stackiq\EventListener\MaintenanceRecipientsListener;
 use OCA\Stackiq\EventListener\ModuleVersionPublicationListener;
 use OCA\Stackiq\EventListener\ModuleComplianceSubscriber;
 use OCA\Stackiq\EventListener\AnonymousRegistrationListener;
+use OCA\Stackiq\EventListener\ContactPersonOrganisationListener;
 use OCA\Stackiq\EventListener\ModuleRegistrationSubscriber;
 use OCA\Stackiq\EventListener\TestEventListener;
 use OCA\Stackiq\EventListener\UserProfileUpdatedEventListener;
@@ -818,6 +820,10 @@ class Application extends App implements IBootstrap {
 
 		// An organisation registered without an account stays pending until reviewed.
 		$context->registerEventListener(ObjectCreatingEvent::class, AnonymousRegistrationListener::class);
+
+		// A contact person only from someone who may add members to its organisation.
+		$context->registerEventListener(ObjectCreatingEvent::class, ContactPersonOrganisationListener::class);
+		$context->registerEventListener(ObjectUpdatingEvent::class, ContactPersonOrganisationListener::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleRegistrationSubscriber::class);
 
 		// Queue the owner resolution when a supplier announces maintenance (lifecycle-maintenance-and-supplier-roadmap).

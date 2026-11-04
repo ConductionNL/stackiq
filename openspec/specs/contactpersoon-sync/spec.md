@@ -34,3 +34,23 @@ Synchronises contact-person records into managed Nextcloud user accounts, creati
 - WHEN `disableUserForContactpersoon(id)` is called
 - THEN the linked account MUST be disabled
 
+
+### Requirement: The system SHALL only accept a contact person from someone who may add members to its organisation (REQ-003)
+The contact sync turns a contact person into an account in the contact's organisation and resets the role group of an existing account named by its e-mail address. A create, or an update that changes the organisation or the e-mail address, SHALL be refused unless the caller is an administrator, or a member of the contact's OpenRegister organisation in `gebruik-beheerder` or `aanbod-beheerder`. A contact person SHALL NOT name an existing account other than the caller's own unless that account already belongs to the contact's organisation. A contact for an organisation that has no OpenRegister organisation yet (a registration under review) is accepted when it names no existing account. Writes from the command line are not checked.
+
+@e2e exclude Enforced in an OpenRegister pre-save listener; tests/Unit/EventListener/ContactPersonOrganisationListenerTest.php drives it with the real guard.
+
+#### Scenario: REQ-003 another organisation
+- GIVEN a signed-in user who is not a member of organisation X
+- WHEN they create a contact person for organisation X
+- THEN the create MUST be refused and no account is made
+
+#### Scenario: REQ-003 an existing account
+- GIVEN an existing account that belongs to organisation A
+- WHEN a member manager of organisation X creates a contact person for X with that account's e-mail address
+- THEN the create MUST be refused and the account's groups are left alone
+
+#### Scenario: REQ-003 own organisation
+- GIVEN a member of organisation X in `gebruik-beheerder`
+- WHEN they create a contact person for X with a new e-mail address
+- THEN the create MUST be accepted
