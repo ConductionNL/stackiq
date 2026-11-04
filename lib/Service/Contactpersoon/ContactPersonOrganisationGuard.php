@@ -99,7 +99,7 @@ class ContactPersonOrganisationGuard {
 	 *
 	 * @spec openspec/specs/contactpersoon-sync/spec.md#requirement-the-system-shall-only-accept-a-contact-person-from-someone-who-may-add-members-to-its-organisation-req-003
 	 */
-	public static function needsCheck(array $contactData, ?array $oldData): bool {
+	public function needsCheck(array $contactData, ?array $oldData): bool {
 		return $oldData === null
 			|| self::organisationUuid(contactData: $contactData) !== self::organisationUuid(contactData: $oldData)
 			|| self::email(contactData: $contactData) !== self::email(contactData: $oldData);
@@ -118,7 +118,11 @@ class ContactPersonOrganisationGuard {
 			$value = ($value['uuid'] ?? $value['id'] ?? '');
 		}
 
-		return is_string($value) === true ? trim($value) : '';
+		if (is_string($value) === false) {
+			return '';
+		}
+
+		return trim($value);
 	}//end organisationUuid()
 
 	/**
@@ -130,7 +134,11 @@ class ContactPersonOrganisationGuard {
 	 */
 	private static function email(array $contactData): string {
 		$value = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
-		return is_string($value) === true ? trim($value) : '';
+		if (is_string($value) === false) {
+			return '';
+		}
+
+		return trim($value);
 	}//end email()
 
 	/**
@@ -182,12 +190,11 @@ class ContactPersonOrganisationGuard {
 	 * @return bool
 	 */
 	private function managesMembers(string $uid): bool {
-		foreach (self::MEMBER_MANAGER_GROUPS as $group) {
-			if ($this->groupManager->isInGroup($uid, $group) === true) {
-				return true;
-			}
-		}
+		$memberOf = array_filter(
+			self::MEMBER_MANAGER_GROUPS,
+			fn (string $group): bool => $this->groupManager->isInGroup($uid, $group)
+		);
 
-		return false;
+		return $memberOf !== [];
 	}//end managesMembers()
 }//end class

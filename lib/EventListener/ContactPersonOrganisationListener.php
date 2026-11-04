@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\EventListener;
 
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard;
@@ -43,14 +44,13 @@ class ContactPersonOrganisationListener implements IEventListener {
 	 *
 	 * @param ContactPersonOrganisationGuard $guard           Decides whether the caller may write the contact person.
 	 * @param SettingsService                $settingsService Names the contact person schema.
-	 * @param bool|null                      $commandLine     Whether this runs from the command line; null reads PHP_SAPI.
+	 * @param bool                           $fromCli         True when PHP runs from the command line.
 	 */
 	public function __construct(
 		private readonly ContactPersonOrganisationGuard $guard,
 		private readonly SettingsService $settingsService,
-		private ?bool $commandLine = null,
+		private readonly bool $fromCli = PHP_SAPI === 'cli',
 	) {
-		$this->commandLine ??= (PHP_SAPI === 'cli');
 	}//end __construct()
 
 	/**
@@ -63,25 +63,37 @@ class ContactPersonOrganisationListener implements IEventListener {
 	 * @spec openspec/specs/contactpersoon-sync/spec.md#requirement-the-system-shall-only-accept-a-contact-person-from-someone-who-may-add-members-to-its-organisation-req-003
 	 */
 	public function handle(Event $event): void {
-		if ($this->commandLine === true) {
+		if ($this->fromCli === true) {
 			return;
 		}
 
-		$object  = null;
-		$oldData = null;
 		if ($event instanceof ObjectCreatingEvent) {
-			$object = $event->getObject();
-		} else if ($event instanceof ObjectUpdatingEvent) {
-			$object  = $event->getNewObject();
-			$oldData = $event->getOldObject()?->getObject();
+			$this->check(event: $event, object: $event->getObject(), oldData: null);
+			return;
 		}
 
-		if ($object === null || $this->isContactPerson(schema: (string)$object->getSchema()) === false) {
+		if ($event instanceof ObjectUpdatingEvent) {
+			$this->check(event: $event, object: $event->getNewObject(), oldData: $event->getOldObject()?->getObject());
+		}
+	}//end handle()
+
+	/**
+	 * Stop the write when it is a contact person the guard does not allow.
+	 *
+	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event   The pre-save event.
+	 * @param ObjectEntity                            $object  The object being written.
+	 * @param array<string, mixed>|null               $oldData The stored data, or null on a create.
+	 *
+	 * @return void
+	 */
+	private function check(ObjectCreatingEvent|ObjectUpdatingEvent $event, ObjectEntity $object, ?array $oldData): void {
+		$configured = (string)($this->settingsService->getVoorzieningenConfig()['contactpersoon_schema'] ?? '');
+		if ($configured === '' || (string)$object->getSchema() !== $configured) {
 			return;
 		}
 
 		$data = array_merge(($object->getObject() ?? []), $event->getModifiedData());
-		if (ContactPersonOrganisationGuard::needsCheck(contactData: $data, oldData: $oldData) === false
+		if ($this->guard->needsCheck(contactData: $data, oldData: $oldData) === false
 			|| $this->guard->allows(contactData: $data) === true
 		) {
 			return;
@@ -89,17 +101,5 @@ class ContactPersonOrganisationListener implements IEventListener {
 
 		$event->setErrors(['message' => 'This contact person could not be saved.']);
 		$event->stopPropagation();
-	}//end handle()
-
-	/**
-	 * Whether this schema id is the contact person schema.
-	 *
-	 * @param string $schema The object's schema id.
-	 *
-	 * @return bool
-	 */
-	private function isContactPerson(string $schema): bool {
-		$configured = (string)($this->settingsService->getVoorzieningenConfig()['contactpersoon_schema'] ?? '');
-		return $configured !== '' && $schema === $configured;
-	}//end isContactPerson()
+	}//end check()
 }//end class
