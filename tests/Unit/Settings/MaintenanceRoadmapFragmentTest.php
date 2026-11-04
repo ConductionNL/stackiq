@@ -145,7 +145,7 @@ class MaintenanceRoadmapFragmentTest extends TestCase {
 		$auth = $this->window()['authorization'];
 
 		$this->assertSame(['software-catalog-admins', 'aanbod-beheerder'], $auth['create']);
-		$this->assertSame(['public'], $auth['read']);
+		$this->assertSame([['group' => 'public', 'crossOrganisation' => true]], $auth['read']);
 		foreach (['update', 'delete'] as $action) {
 			$this->assertSame(
 				['software-catalog-admins', ['group' => 'aanbod-beheerder', 'match' => ['_organisation' => '$organisation']]],

@@ -128,7 +128,7 @@ class ContractRbacTest extends TestCase {
 	}//end testAanbodBeheerderReadIsOrganisationScoped()
 
 	/**
-	 * TC-14 (config-shape form): `ambtenaar` retains an unrestricted read
+	 * TC-14 (config-shape form): `ambtenaar` retains a cross-organisation read
 	 * grant — admin/ambtenaar MUST retain read access regardless of
 	 * counterparty status.
 	 *
@@ -137,7 +137,8 @@ class ContractRbacTest extends TestCase {
 	public function testAmbtenaarRetainsUnrestrictedRead(): void {
 		$authorization = $this->loadContractAuthorization();
 
-		$this->assertContains('ambtenaar', $authorization['read']);
+		$this->assertContains(['group' => 'ambtenaar', 'crossOrganisation' => true], $authorization['read']);
+		$this->assertNotContains('ambtenaar', $authorization['read'], 'a bare group rule reads only the own organisation');
 
 	}//end testAmbtenaarRetainsUnrestrictedRead()
 
@@ -152,7 +153,8 @@ class ContractRbacTest extends TestCase {
 	public function testStackiqAdminsRetainsUnrestrictedRead(): void {
 		$authorization = $this->loadContractAuthorization();
 
-		$this->assertContains('software-catalog-admins', $authorization['read']);
+		$this->assertContains(['group' => 'software-catalog-admins', 'crossOrganisation' => true], $authorization['read']);
+		$this->assertNotContains('software-catalog-admins', $authorization['read'], 'a bare group rule reads only the own organisation');
 
 	}//end testStackiqAdminsRetainsUnrestrictedRead()
 
