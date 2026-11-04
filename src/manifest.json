@@ -182,7 +182,7 @@
 		},
 		{
 		  "id": "StoreMenu",
-		  "label": "Store",
+		  "label": "Marketplace",
 		  "icon": "StoreOutline",
 		  "route": "Store",
 		  "section": "footer",
@@ -218,10 +218,10 @@
 		  "id": "Store",
 		  "route": "/store",
 		  "type": "store",
-		  "title": "Store",
+		  "title": "Marketplace",
 		  "config": {
 		    "app": "stackiq",
-		    "title": "Store",
+		    "title": "Marketplace",
 		    "description": "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current."
 		  },
 		  "_note": "ADR-114 Decision 4 / ADR-080. Declarative: openregister hosts the store plane, so this app writes NO store controller. With no registry configured the page renders the app's built-in items and makes NO network call."

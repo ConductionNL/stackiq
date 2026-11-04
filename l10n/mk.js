@@ -282,7 +282,7 @@ OC.L10N.register(
         "Reports": "Извештаи",
         "Pick a report to open it.": "Изберете извештај за да го отворите.",
         "Overlapping and ageing software across the portfolio.": "Преклопувачки и застарен софтвер во портфолиото.",
-        "Store": "Продавница",
+        "Marketplace": "Продавница",
         "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Инсталирајте регистри, шеми и текови објавени од други организации."
     },
     "nplurals=2; plural=(n != 1);"

@@ -22,7 +22,7 @@ The Features and roadmap page SHALL list the features from `openspec/features.ov
 
 ### Requirement: The Uitbreidingen tab lists the extensions from the store (REQ-FRM-002)
 
-The page SHALL have a second tab, Uitbreidingen, with a count, that lists the store items for stackiq (configuration sets and flows) with name, publisher, what it does and status (installed or install). An administrator SHALL be able to install an item from the tab; other users SHALL see the list without the install action. The footer Store entry SHALL open this tab.
+The page SHALL have a second tab, Uitbreidingen, with a count, that lists the marketplace items for stackiq (configuration sets and flows) with name, publisher, what it does and status (installed or install). An administrator SHALL be able to install an item from the tab; other users SHALL see the list without the install action. The footer Marketplace entry SHALL open this tab.
 
 #### Scenario: An administrator installs an extension
 - GIVEN the store offers a stackiq flow that is not installed
