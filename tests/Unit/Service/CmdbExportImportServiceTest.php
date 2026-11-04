@@ -3795,6 +3795,58 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testTheEngineGetsTheSheetRowNumber()
 
 	/**
+	 * A mapping error on an optional column warns on the row for the module and the
+	 * usage, and stays off the row for the manufacturer and the owner.
+	 *
+	 * @return void
+	 */
+	public function testOnlyTheModuleAndUsageMappingsWarnOnAnOptionalColumn(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$warning = ['Column "Optional": unreadable'];
+		foreach ([1 => $warning, 2 => [], 3 => [], 4 => $warning] as $call => $warnings) {
+			$this->engine = new class($call) {
+				/**
+				 * The calls made so far.
+				 *
+				 * @var int
+				 */
+				private int $calls = 0;
+
+				/**
+				 * Constructor.
+				 *
+				 * @param int $errorOnCall The call that reports the mapping error.
+				 */
+				public function __construct(private int $errorOnCall) {
+				}
+
+				/**
+				 * Map nothing, with a mapping error on one call.
+				 *
+				 * @param array<string, mixed> $pack The pack.
+				 * @param array<string, mixed> $values The values.
+				 * @param int $rowNumber The row number.
+				 *
+				 * @return array{data: array<string, mixed>, errors: array<int, array<string, string>>}
+				 */
+				public function mapRow(array $pack, array $values, int $rowNumber): array {
+					$this->calls++;
+					if ($this->calls !== $this->errorOnCall) {
+						return ['data' => [], 'errors' => []];
+					}
+
+					return ['data' => [], 'errors' => [['source' => 'Optional', 'message' => 'unreadable']]];
+				}
+			};
+
+			$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: (string) $call)]))
+				->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+
+			$this->assertSame($warnings, $report['rows'][0]['warnings'], 'mapping call ' . $call);
+		}
+	}//end testOnlyTheModuleAndUsageMappingsWarnOnAnOptionalColumn()
+
+	/**
 	 * Dates are read in the workbook's own date system.
 	 *
 	 * @return void
