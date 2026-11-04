@@ -3386,8 +3386,8 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "ambtenaar",
-            "software-catalog-admins",
+            {"group": "ambtenaar", "crossOrganisation": true},
+            {"group": "software-catalog-admins", "crossOrganisation": true},
             {"group": "functioneel-beheerder", "match": {"_organisation": "$organisation"}},
             {"group": "gebruik-beheerder", "match": {"_organisation": "$organisation"}},
             {"group": "vng-raadpleger", "match": {"_organisation": "$organisation"}},
@@ -7859,7 +7859,7 @@
             "aanbod-beheerder"
           ],
           "read": [
-            "software-catalog-admins",
+            {"group": "software-catalog-admins", "crossOrganisation": true},
             {
               "group": "organisatie-beheerder",
               "match": {
