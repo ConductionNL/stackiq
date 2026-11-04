@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\BackgroundJob;
 
+use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\StackiqContactSyncService;
@@ -104,6 +105,17 @@ class OrganizationContactSyncJob extends TimedJob {
 	 * @spec                                          openspec/specs/softwarecatalog-contacts-to-nc/spec.md
 	 */
 	protected function run($argument): void {
+		(new SystemContactWrites())->run(fn () => $this->runSync());
+	}//end run()
+
+	/**
+	 * The scheduled sync and link refresh.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+	 */
+	private function runSync(): void {
 		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
 			$this->logger->info('[OrganizationContactSyncJob] OpenRegister not installed, skipping sync');
 			return;
@@ -143,7 +155,7 @@ class OrganizationContactSyncJob extends TimedJob {
 				]
 			);
 		}//end try
-	}//end run()
+	}//end runSync()
 
 	/**
 	 * Refresh the `contactsUid` link on every contactpersoon/organisatie record.
