@@ -231,32 +231,21 @@ thresholds.
 
 ### Requirement: REQ-DECOMP-004 StackiqService Decomposition
 
-`lib/Service/StackiqService.php` (20 suppressions) MUST be
-decomposed by splitting into focused service classes. This core service handles
-VNG Software Catalogus API synchronization with multiple concerns: API
-communication, data mapping, conflict resolution, and progress tracking.
+`lib/Service/StackiqService.php` and the sub-services extracted from it
+(`lib/Service/Stackiq/ApiClient.php`, `DataMapper.php`, `ConflictResolver.php`)
+SHALL NOT exist: nothing in the app referenced them, so they were removed
+rather than decomposed further. Organisation, contact person and usage
+processing lives in OrganisatieService, ContactpersoonService,
+OrganizationSyncService and the `lib/Service/Stackiq/` handlers.
 
-#### Scenario: Concerns extracted into sub-services
+#### Scenario: The unused god-class is gone
 
-- GIVEN `StackiqService` has 7+ class-level suppressions indicating an oversized god-class
-- WHEN decomposed
-- THEN API communication methods MUST move to `lib/Service/Stackiq/ApiClient.php`
-- AND data mapping MUST move to `lib/Service/Stackiq/DataMapper.php`
-- AND conflict resolution MUST move to `lib/Service/Stackiq/ConflictResolver.php`
+- GIVEN no class, registration, route, job, command or other app referenced `StackiqService`
+- WHEN the app is built
+- THEN `lib/Service/StackiqService.php`, `ApiClient.php`, `DataMapper.php` and `ConflictResolver.php` MUST NOT exist
+- AND the `lib/Service/Stackiq/` handlers MUST keep their constructor DI from `Application.php`
 
-#### Scenario: Existing handler pattern reused
-
-- GIVEN the codebase already has a `Stackiq/` subdirectory with handler classes
-- WHEN additional extraction follows this pattern
-- THEN consistency MUST be maintained
-- AND the existing handler injection pattern (constructor DI, delegation from parent service) MUST be reused without modification
-
-#### Scenario: Progress tracking isolated to ProgressTracker
-
-- GIVEN `StackiqService` methods contain progress tracking code interleaved with business logic
-- WHEN decomposed
-- THEN progress tracking calls MUST be isolated to the existing `lib/Service/ProgressTracker.php` wrapper
-- AND business methods MUST contain no inline progress tracking code
+@e2e exclude Code-structure requirement with no runtime behaviour; checked by the file listing and PHPUnit.
 
 ### Requirement: REQ-DECOMP-005 SettingsService Decomposition
 
