@@ -3,14 +3,7 @@
 declare(strict_types=1);
 
 /**
- * Organisation User Workflow Integration Test
- *
- * This test covers the complete workflow of:
- * 1. Creating an organisation via OpenConnector
- * 2. Activating the organisation
- * 3. Adding a contactpersoon
- * 4. Converting the contactpersoon to a user
- * 5. Changing the user's password
+ * Converting a contact person into a user account, through the real controller.
  *
  * @category Test
  * @package  OCA\Stackiq\Tests\Unit
@@ -18,18 +11,19 @@ declare(strict_types=1);
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  1.0.0
  * @link     https://github.com/ConductionNL/stackiq
+ *
+ * @spec openspec/specs/contactpersonen-api/spec.md
  */
 
 namespace OCA\Stackiq\Tests\Unit;
 
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Controller\ContactpersonenController;
 use OCA\Stackiq\Service\ContactpersoonService;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
-use OCP\IGroup;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUser;
@@ -41,491 +35,247 @@ use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 
 /**
- * Test class for complete organisation user workflow
+ * Contactpersonen#convertToUser from the signed-in caller to the saved contact person.
  *
- * @category Test
- * @package  OCA\Stackiq\Tests\Unit
- * @author   Conduction b.v. <info@conduction.nl>
- * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- * @version  1.0.0
- * @link     https://github.com/ConductionNL/stackiq
+ * @covers \OCA\Stackiq\Controller\ContactpersonenController
  */
 class OrganisationUserWorkflowTest extends TestCase {
+
+	private const CONTACT = 'c0000000-0000-4000-8000-000000000001';
+
+	private const ORGANISATION = 'o0000000-0000-4000-8000-000000000001';
+
 	/**
-	 * Mock of the ObjectService
+	 * The object access.
 	 *
 	 * @var ObjectServiceInterface|MockObject
 	 */
-	private ObjectServiceInterface|MockObject $objectService;
+	private ObjectServiceInterface|MockObject $objects;
 
 	/**
-	 * Mock of the IUserManager service
-	 *
-	 * @var IUserManager|MockObject
-	 */
-	private IUserManager|MockObject $userManager;
-
-	/**
-	 * Mock of the IGroupManager service
-	 *
-	 * @var IGroupManager|MockObject
-	 */
-	private IGroupManager|MockObject $groupManager;
-
-	/**
-	 * Mock of the ContactPersonHandler
+	 * The contact person handler.
 	 *
 	 * @var ContactPersonHandler|MockObject
 	 */
-	private ContactPersonHandler|MockObject $contactPersonHandler;
+	private ContactPersonHandler|MockObject $handler;
 
 	/**
-	 * Mock of the SettingsService
+	 * The group manager.
 	 *
-	 * @var SettingsService|MockObject
+	 * @var IGroupManager|MockObject
 	 */
-	private SettingsService|MockObject $settingsService;
+	private IGroupManager|MockObject $groups;
 
 	/**
-	 * Mock of the ContactpersoonService
-	 *
-	 * @var ContactpersoonService|MockObject
-	 */
-	private ContactpersoonService|MockObject $contactPersonService;
-
-	/**
-	 * Mock of the LoggerInterface
-	 *
-	 * @var LoggerInterface|MockObject
-	 */
-	private LoggerInterface|MockObject $logger;
-
-	/**
-	 * The ContactpersonenController instance under test
+	 * The controller under test.
 	 *
 	 * @var ContactpersonenController
 	 */
 	private ContactpersonenController $controller;
 
 	/**
-	 * Test organisation UUID
-	 *
-	 * @var string
-	 */
-	private string $organisationUuid = 'deaf01c4-b449-41c2-97b7-9045d13e3488';
-
-	/**
-	 * Test contactpersoon UUID
-	 *
-	 * @var string
-	 */
-	private string $contactpersoonUuid = 'dedd36c3-e2af-4ecd-a0f9-80306e641c11';
-
-	/**
-	 * Set up the test environment before each test
+	 * Build the controller with a signed-in caller named `caller`.
 	 *
 	 * @return void
 	 */
 	protected function setUp(): void {
 		parent::setUp();
 
-		// ContactpersonenController + collaborators have been refactored since
-		// these tests were written: ContactPersonHandler has new methods
-		// (e.g. findByUuid) that weren't on the mocked class at the time, and
-		// the controller's call sequencing differs. Tests need to be rewritten
-		// against the current dependency surface. Tracked as a follow-up.
-		$this->markTestSkipped(
-			'Stale against current ContactpersonenController surface — '
-			. 'needs rewrite. Tracked as follow-up issue.'
-		);
+		$this->objects = $this->createMock(ObjectServiceInterface::class);
+		$this->handler = $this->createMock(ContactPersonHandler::class);
+		$this->groups  = $this->createMock(IGroupManager::class);
+		$this->groups->method('getUserGroups')->willReturn([]);
+		$session       = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn($this->user(uid: 'caller'));
 
-		// Create mocks
-		$this->objectService = $this->createMock(ObjectServiceInterface::class);
-		$this->userManager = $this->createMock(IUserManager::class);
-		$this->groupManager = $this->createMock(IGroupManager::class);
-		$this->contactPersonHandler = $this->createMock(ContactPersonHandler::class);
-		$this->settingsService = $this->createMock(SettingsService::class);
-		$this->contactPersonService = $this->createMock(ContactpersoonService::class);
-		$this->logger = $this->createMock(LoggerInterface::class);
-
-		// Create controller
 		$this->controller = new ContactpersonenController(
 			'stackiq',
 			$this->createMock(IRequest::class),
-			$this->settingsService,
-			$this->contactPersonHandler,
-			$this->contactPersonService,
-			$this->userManager,
-			$this->groupManager,
-			$this->createMock(IUserSession::class),
+			$this->createMock(SettingsService::class),
+			$this->handler,
+			$this->createMock(ContactpersoonService::class),
+			$this->createMock(IUserManager::class),
+			$this->groups,
+			$session,
 			$this->createMock(ISecureRandom::class),
-			$this->logger,
-			objectService: $this->createMock(ObjectServiceInterface::class),
+			$this->createMock(LoggerInterface::class),
+			objectService: $this->objects,
 			organisationService: $this->createMock(OrganisationService::class),
 		);
-	}
+	}//end setUp()
 
 	/**
-	 * Test the complete workflow from organisation creation to user password change
-	 *
-	 * This test simulates:
-	 * 1. Organisation created via OpenConnector (data preparation)
-	 * 2. Organisation activated (data preparation)
-	 * 3. Contactpersoon added to organisation
-	 * 4. Contactpersoon converted to user
-	 * 5. User password changed
+	 * The account is made, gets its groups and its organisation, and its username is
+	 * saved on the contact person; the contact is looked up within the caller's rights.
 	 *
 	 * @return void
 	 */
-	public function testCompleteOrganisationUserWorkflow(): void {
-		// Step 1 & 2: Organisation exists and is active (preparation phase)
-		$organisationData = [
-			'name' => 'test93',
-			'website' => 'www.test.nl',
-			'links' => '',
-			'oin' => '',
-			'cbs' => '',
-			'telefoonnummer' => '',
-			'rol' => '',
-			'shortDescription' => '',
-			'logo' => null,
-			'contactpersonen' => [
-				[
-					'voornaam' => 'test',
-					'tussenvoegsel' => '',
-					'achternaam' => '93',
-					'telefoonnummer' => '0645536677',
-					'e-mailadres' => 'test93@test.nl',
-					'role' => 'tester'
-				]
-			],
-			'type' => 'Supplier',
-			'e-mailadres' => '',
-			'status' => 'Active'
-		];
+	public function testAConvertedContactPersonGetsItsAccountGroupsOrganisationAndUsername(): void {
+		$this->callerIsAdmin();
+		$data    = ['email' => 'jan@example.org', 'organization' => self::ORGANISATION];
+		$contact = $this->contact(data: $data);
+		$user    = $this->user(uid: 'jan');
 
-		// Step 3: Create contactpersoon
-		$contactPersonData = $this->createContactPerson(
-			voornaam: 'test',
-			lastName: '94',
-			email: 'test94@test.nl',
-			organisationType: 'Supplier'
+		$this->objects->expects($this->once())->method('find')
+			->with(self::CONTACT, [], false, 'stackiq', 'contactPerson', true, true)
+			->willReturn($contact);
+		$this->handler->method('validateEmailForUsername')->with('jan@example.org')->willReturn(null);
+		$this->handler->expects($this->once())->method('createUserAccount')->with($contact)->willReturn($user);
+		$this->handler->expects($this->once())->method('updateUserGroupsFromContactData')->with($user, $data);
+		$this->handler->expects($this->once())->method('addUserToOrganizationEntity')->with($contact, 'jan', self::ORGANISATION);
+
+		$saved = [];
+		$this->objects->expects($this->once())->method('saveObject')->willReturnCallback(
+			function (...$args) use (&$saved, $contact) {
+				$saved = $args;
+				return $contact;
+			}
 		);
 
-		$this->assertNotEmpty($contactPersonData['uuid']);
-		$this->assertEquals('test94@test.nl', $contactPersonData['e-mailadres']);
-		$this->assertEquals($this->organisationUuid, $contactPersonData['organization']);
+		$response = $this->controller->convertToUser(self::CONTACT);
 
-		// Step 4: Convert contactpersoon to user
-		$userCreationResult = $this->convertContactPersonToUser($contactPersonData);
-
-		$this->assertTrue($userCreationResult['success']);
-		$this->assertNotEmpty($userCreationResult['username']);
-		$this->assertContains('aanbod-beheerder', $userCreationResult['groups']);
-
-		// Step 5: Change password
-		$passwordChangeResult = $this->changeUserPassword(
-			username: $userCreationResult['username'],
-			newPassword: 'Test94@test.nl'
-		);
-
-		$this->assertTrue($passwordChangeResult['success']);
-	}
+		self::assertSame(200, $response->getStatus());
+		self::assertTrue($response->getData()['success']);
+		self::assertSame('jan', $response->getData()['username']);
+		self::assertSame('jan', $saved[0]['username']);
+		self::assertSame(['reg-7', 'schema-9', self::CONTACT], array_slice($saved, 2, 3));
+		self::assertSame([true, true, true, false], array_slice($saved, 5, 4));
+	}//end testAConvertedContactPersonGetsItsAccountGroupsOrganisationAndUsername()
 
 	/**
-	 * Test workflow with Gemeente organisation type
+	 * A contact person that names no organisation gets no groups from one.
 	 *
 	 * @return void
 	 */
-	public function testWorkflowWithGemeenteOrganisation(): void {
-		$contactPersonData = $this->createContactPerson(
-			voornaam: 'Jan',
-			lastName: 'de Vries',
-			email: 'jan.devries@gemeente.nl',
-			organisationType: 'Municipality'
-		);
+	public function testAContactPersonWithoutAnOrganisationGetsNoGroupsFromOne(): void {
+		$this->callerIsAdmin();
+		$contact = $this->contact(data: ['email' => 'jan@example.org']);
+		$this->objects->method('find')->willReturn($contact);
+		$this->objects->method('saveObject')->willReturn($contact);
+		$this->handler->method('createUserAccount')->willReturn($this->user(uid: 'jan'));
+		$this->handler->expects($this->never())->method('updateUserGroupsFromContactData');
 
-		$userCreationResult = $this->convertContactPersonToUser($contactPersonData);
-
-		$this->assertTrue($userCreationResult['success']);
-		// Gemeente should map to gebruik-beheerder
-		$this->assertContains('gebruik-beheerder', $userCreationResult['groups']);
-	}
+		self::assertSame(200, $this->controller->convertToUser(self::CONTACT)->getStatus());
+	}//end testAContactPersonWithoutAnOrganisationGetsNoGroupsFromOne()
 
 	/**
-	 * Test workflow with Samenwerking organisation type
+	 * Someone who is neither an administrator nor an organisation administrator is
+	 * refused for who they are, before anything is looked up.
 	 *
 	 * @return void
 	 */
-	public function testWorkflowWithSamenwerkingOrganisation(): void {
-		$contactPersonData = $this->createContactPerson(
-			voornaam: 'Maria',
-			lastName: 'Jansen',
-			email: 'maria.jansen@samenwerking.nl',
-			organisationType: 'Collaboration'
+	public function testAnOrdinaryUserIsRefusedBeforeAnythingIsLookedUp(): void {
+		$this->groups->expects($this->once())->method('isAdmin')->with('caller')->willReturn(false);
+		$this->groups->method('isInGroup')->willReturnCallback(
+			static function (string $uid, string $group): bool {
+				self::assertSame('caller', $uid);
+				return false;
+			}
 		);
+		$this->objects->expects($this->never())->method('find');
+		$this->handler->expects($this->never())->method('createUserAccount');
 
-		$userCreationResult = $this->convertContactPersonToUser($contactPersonData);
-
-		$this->assertTrue($userCreationResult['success']);
-		// Samenwerking should map to gebruik-beheerder
-		$this->assertContains('gebruik-beheerder', $userCreationResult['groups']);
-	}
+		self::assertSame(403, $this->controller->convertToUser(self::CONTACT)->getStatus());
+	}//end testAnOrdinaryUserIsRefusedBeforeAnythingIsLookedUp()
 
 	/**
-	 * Test workflow with Community organisation type
+	 * A contact person the caller cannot find is a 404.
 	 *
 	 * @return void
 	 */
-	public function testWorkflowWithCommunityOrganisation(): void {
-		$contactPersonData = $this->createContactPerson(
-			voornaam: 'Peter',
-			lastName: 'Bakker',
-			email: 'peter.bakker@community.nl',
-			organisationType: 'Community'
-		);
+	public function testAnUnknownContactPersonIs404(): void {
+		$this->callerIsAdmin();
+		$this->objects->method('find')->willReturn(null);
+		$this->handler->expects($this->never())->method('createUserAccount');
 
-		$userCreationResult = $this->convertContactPersonToUser($contactPersonData);
-
-		$this->assertTrue($userCreationResult['success']);
-		// Community should map to aanbod-beheerder
-		$this->assertContains('aanbod-beheerder', $userCreationResult['groups']);
-	}
+		self::assertSame(404, $this->controller->convertToUser(self::CONTACT)->getStatus());
+	}//end testAnUnknownContactPersonIs404()
 
 	/**
-	 * Test converting contactpersoon when user already exists
+	 * A contact person that already has an account does not get a second one.
 	 *
 	 * @return void
 	 */
-	public function testConvertContactpersoonWhenUserAlreadyExists(): void {
-		// Create contactpersoon with existing username
-		$contactPersonData = [
-			'uuid' => $this->contactpersoonUuid,
-			'voornaam' => 'test',
-			'achternaam' => '95',
-			'e-mailadres' => 'test95@test.nl',
-			'name' => 'test 95',
-			'organization' => $this->organisationUuid,
-			'username' => 'test95@test.nl' // User already exists
-		];
+	public function testAContactPersonWithAnAccountIsRefused(): void {
+		$this->callerIsAdmin();
+		$this->objects->method('find')->willReturn($this->contact(data: ['email' => 'jan@example.org', 'username' => 'jan']));
+		$this->handler->expects($this->never())->method('createUserAccount');
+		$this->objects->expects($this->never())->method('saveObject');
 
-		// Mock the ObjectService to return contactpersoon with existing username
-		$contactPersonObject = $this->createMockObjectEntity(
-			uuid: $this->contactpersoonUuid,
-			data: $contactPersonData,
-			register: '1',
-			schema: '6'
-		);
+		$response = $this->controller->convertToUser(self::CONTACT);
 
-		$this->objectService->expects($this->once())
-			->method('findByUuid')
-			->with($this->contactpersoonUuid)
-			->willReturn($contactPersonObject);
-
-		// Attempt to convert
-		// In a real scenario, this would return an error
-		$result = [
-			'success' => false,
-			'message' => 'Contactpersoon already has a user account'
-		];
-
-		$this->assertFalse($result['success']);
-		$this->assertEquals('Contactpersoon already has a user account', $result['message']);
-	}
+		self::assertSame(400, $response->getStatus());
+		self::assertSame('Contactpersoon already has a user account', $response->getData()['message']);
+	}//end testAContactPersonWithAnAccountIsRefused()
 
 	/**
-	 * Test password change with invalid user
+	 * An e-mail address that cannot become a username stops the conversion with the handler's reason.
 	 *
 	 * @return void
 	 */
-	public function testPasswordChangeWithInvalidUser(): void {
-		// Mock user not found
-		$this->userManager->expects($this->once())
-			->method('get')
-			->with('nonexistent@test.nl')
-			->willReturn(null);
+	public function testAnUnusableEmailAddressIsRefused(): void {
+		$this->callerIsAdmin();
+		$this->objects->method('find')->willReturn($this->contact(data: ['e-mailadres' => 'not an address']));
+		$this->handler->method('validateEmailForUsername')->with('not an address')->willReturn('Invalid e-mail');
+		$this->handler->expects($this->never())->method('createUserAccount');
 
-		$result = [
-			'success' => false,
-			'message' => 'User not found'
-		];
+		$response = $this->controller->convertToUser(self::CONTACT);
 
-		$this->assertFalse($result['success']);
-	}
+		self::assertSame(400, $response->getStatus());
+		self::assertSame('Invalid e-mail', $response->getData()['message']);
+	}//end testAnUnusableEmailAddressIsRefused()
 
 	/**
-	 * Helper method to create a contactpersoon
-	 *
-	 * @param string $voornaam First name
-	 * @param string $lastName Last name
-	 * @param string $email Email address
-	 * @param string $organisationType Organisation type (Leverancier, Gemeente, etc.)
-	 *
-	 * @return array The created contactpersoon data
-	 */
-	private function createContactPerson(
-		string $voornaam,
-		string $lastName,
-		string $email,
-		string $organisationType,
-	): array {
-		return [
-			'uuid' => $this->contactpersoonUuid,
-			'voornaam' => $voornaam,
-			'achternaam' => $lastName,
-			'e-mailadres' => $email,
-			'name' => "$voornaam $lastName",
-			'organization' => $this->organisationUuid,
-			'organisationType' => $organisationType
-		];
-	}
-
-	/**
-	 * Helper method to convert contactpersoon to user
-	 *
-	 * @param array $contactPersonData The contactpersoon data
-	 *
-	 * @return array The result of user creation
-	 */
-	private function convertContactPersonToUser(array $contactPersonData): array {
-		// Mock the ObjectServiceInterface
-		$contactPersonObject = $this->createMockObjectEntity(
-			uuid: $contactPersonData['uuid'],
-			data: $contactPersonData,
-			register: '1',
-			schema: '6'
-		);
-
-		$this->objectService->expects($this->once())
-			->method('findByUuid')
-			->with($contactPersonData['uuid'])
-			->willReturn($contactPersonObject);
-
-		// Mock user creation
-		$mockUser = $this->createMock(IUser::class);
-		$mockUser->method('getUID')
-			->willReturn($contactPersonData['e-mailadres']);
-
-		$this->contactPersonHandler->expects($this->once())
-			->method('createUserAccount')
-			->with($contactPersonObject)
-			->willReturn($mockUser);
-
-		// Mock group assignment based on organisation type
-		$expectedGroupName = $this->getExpectedGroupForOrganisationType(
-			$contactPersonData['organisationType']
-		);
-
-		$mockGroup = $this->createMock(IGroup::class);
-		$mockGroup->method('getGID')
-			->willReturn($expectedGroupName);
-
-		$this->groupManager->expects($this->once())
-			->method('getUserGroups')
-			->with($mockUser)
-			->willReturn([$mockGroup]);
-
-		// Mock object save
-		$this->objectService->expects($this->once())
-			->method('saveObject')
-			->willReturn($contactPersonObject);
-
-		return [
-			'success' => true,
-			'username' => $contactPersonData['e-mailadres'],
-			'groups' => [$expectedGroupName]
-		];
-	}
-
-	/**
-	 * Helper method to change user password
-	 *
-	 * @param string $username The username
-	 * @param string $newPassword The new password
-	 *
-	 * @return array The result of password change
-	 */
-	private function changeUserPassword(string $username, string $newPassword): array {
-		// Mock user
-		$mockUser = $this->createMock(IUser::class);
-		$mockUser->method('getUID')
-			->willReturn($username);
-		$mockUser->expects($this->once())
-			->method('setPassword')
-			->with($newPassword)
-			->willReturn(true);
-
-		$this->userManager->expects($this->once())
-			->method('get')
-			->with($username)
-			->willReturn($mockUser);
-
-		return [
-			'success' => true,
-			'message' => 'Password changed successfully'
-		];
-	}
-
-	/**
-	 * Helper method to get expected group for organisation type
-	 *
-	 * @param string $organisationType The organisation type
-	 *
-	 * @return string The expected group name
-	 */
-	private function getExpectedGroupForOrganisationType(string $organisationType): string {
-		$mapping = [
-			'Municipality' => 'gebruik-beheerder',
-			'Collaboration' => 'gebruik-beheerder',
-			'Supplier' => 'aanbod-beheerder',
-			'Community' => 'aanbod-beheerder'
-		];
-
-		return $mapping[$organisationType] ?? '';
-	}
-
-	/**
-	 * Helper method to create a mock ObjectEntity
-	 *
-	 * @param string $uuid The UUID
-	 * @param array $data The object data
-	 * @param string $register The register ID
-	 * @param string $schema The schema ID
-	 *
-	 * @return MockObject The mock object entity
-	 */
-	private function createMockObjectEntity(
-		string $uuid,
-		array $data,
-		string $register,
-		string $schema,
-	): MockObject {
-		$mockObject = $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
-
-		$mockObject->method('getId')
-			->willReturn(1);
-		$mockObject->method('getUuid')
-			->willReturn($uuid);
-		$mockObject->method('getObject')
-			->willReturn($data);
-		$mockObject->method('getRegister')
-			->willReturn($register);
-		$mockObject->method('getSchema')
-			->willReturn($schema);
-		$mockObject->method('setObject')
-			->willReturnSelf();
-		$mockObject->method('jsonSerialize')
-			->willReturn(array_merge(['uuid' => $uuid], $data));
-
-		return $mockObject;
-	}
-
-	/**
-	 * Clean up after each test
+	 * When no account could be made, nothing is linked or saved.
 	 *
 	 * @return void
 	 */
-	protected function tearDown(): void {
-		parent::tearDown();
-	}
-}
+	public function testNoAccountMeansNothingIsLinkedOrSaved(): void {
+		$this->callerIsAdmin();
+		$this->objects->method('find')->willReturn($this->contact(data: ['email' => 'jan@example.org', 'organization' => self::ORGANISATION]));
+		$this->handler->method('createUserAccount')->willReturn(null);
+		$this->handler->expects($this->never())->method('addUserToOrganizationEntity');
+		$this->objects->expects($this->never())->method('saveObject');
+
+		self::assertSame(500, $this->controller->convertToUser(self::CONTACT)->getStatus());
+	}//end testNoAccountMeansNothingIsLinkedOrSaved()
+
+	/**
+	 * The caller is an administrator; the check is asked about the caller.
+	 *
+	 * @return void
+	 */
+	private function callerIsAdmin(): void {
+		$this->groups->method('isAdmin')->with('caller')->willReturn(true);
+	}//end callerIsAdmin()
+
+	/**
+	 * A user double.
+	 *
+	 * @param string $uid The uid.
+	 *
+	 * @return IUser
+	 */
+	private function user(string $uid): IUser {
+		$user = $this->createMock(IUser::class);
+		$user->method('getUID')->willReturn($uid);
+		return $user;
+	}//end user()
+
+	/**
+	 * A stored contact person double.
+	 *
+	 * @param array<string, mixed> $data The object data.
+	 *
+	 * @return ObjectEntityInterface
+	 */
+	private function contact(array $data): ObjectEntityInterface {
+		$contact = $this->createMock(ObjectEntityInterface::class);
+		$contact->method('getObject')->willReturn($data);
+		$contact->method('getUuid')->willReturn(self::CONTACT);
+		$contact->method('getRegister')->willReturn('reg-7');
+		$contact->method('getSchema')->willReturn('schema-9');
+		$contact->method('jsonSerialize')->willReturn($data);
+		return $contact;
+	}//end contact()
+}//end class
