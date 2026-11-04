@@ -28,7 +28,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service\Federation;
 
 use OCA\Stackiq\Service\ConnectionReportService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -62,7 +62,7 @@ class FederationService {
 	 * @param IAppManager $appManager Detects OpenCatalogi availability.
 	 * @param FederationConfig $config The federation configuration.
 	 * @param FederationMerger $merger The merge/staleness reconciler.
-	 * @param SettingsService|null $settingsService Resolves the mirror register/schema (lazy/optional).
+	 * @param ObjectTypeLocatorInterface|null $settingsService Resolves the mirror register/schema (lazy/optional).
 	 * @param LoggerInterface $logger Logger.
 	 * @param ConnectionReportService|null $connectionReports Tells integriq what a peer change or a pull met.
 	 *
@@ -73,7 +73,7 @@ class FederationService {
 		private readonly IAppManager $appManager,
 		private readonly FederationConfig $config,
 		private readonly FederationMerger $merger,
-		private readonly ?SettingsService $settingsService,
+		private readonly ?ObjectTypeLocatorInterface $settingsService,
 		private readonly LoggerInterface $logger,
 		private readonly ?ConnectionReportService $connectionReports = null,
 	) {
@@ -373,13 +373,12 @@ class FederationService {
 		}
 
 		$localMirrors = $this->loadPeerMirrors(peerUrl: $peerUrl, target: $target);
-		$plan = $this->merger->plan(
-			$peerUrl,
-			(string)($fetch['organisation'] ?? $peerUrl),
-			$fetch['entries'],
-			$localMirrors,
-			$this->now()
-		);
+		$peer = [
+			'url' => $peerUrl,
+			'organisation' => (string)($fetch['organisation'] ?? $peerUrl),
+			'syncedAt' => $this->now(),
+		];
+		$plan = $this->merger->plan(peer: $peer, peerEntries: $fetch['entries'], localMirrors: $localMirrors);
 
 		$created = $this->applyMirrors(
 			objectService: $objectService,

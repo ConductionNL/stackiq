@@ -40,6 +40,20 @@ abstract class OrganisationService {
 	abstract public function getActiveOrganisation(): ?Organisation;
 
 	/**
+	 * Get the default organisation, creating it when it does not exist yet.
+	 *
+	 * @return Organisation
+	 */
+	abstract public function ensureDefaultOrganisation(): Organisation;
+
+	/**
+	 * The uuid of the instance's default organisation, or null when none is set.
+	 *
+	 * @return string|null
+	 */
+	abstract public function getDefaultOrganisationUuid(): ?string;
+
+	/**
 	 * Get the caller's own organisations (session-scoped).
 	 *
 	 * @return Organisation[]
@@ -71,5 +85,22 @@ abstract class OrganisationService {
 	 * @throws \Exception When the organisation is not found, or the target would be left with no organisation.
 	 */
 	abstract public function leaveOrganisation(string $organisationUuid, ?string $targetUserId = null): bool;
+
+	/**
+	 * Create an organisation; with addCurrentUser the signed-in user becomes its owner and a member.
+	 *
+	 * @param string $name           The name.
+	 * @param string $description    The description.
+	 * @param bool   $addCurrentUser Whether the signed-in user owns and joins it.
+	 * @param string $uuid           The uuid to use.
+	 *
+	 * @return Organisation
+	 */
+	abstract public function createOrganisation(
+		string $name,
+		string $description = '',
+		bool $addCurrentUser = true,
+		string $uuid = '',
+	): Organisation;
 
 }//end class

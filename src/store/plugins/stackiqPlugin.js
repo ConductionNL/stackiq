@@ -65,6 +65,253 @@ function buildObjectUrl(objectItem, action = null, withLang = false) {
 }
 
 /**
+ * The id a selection entry stands for: selections hold plain ids or objects.
+ *
+ * @param {string|object} entry A selected id or object
+ * @return {string|undefined} The id
+ */
+function selectionId(entry) {
+	return typeof entry === 'string' ? entry : entry.id || entry['@self']?.id
+}
+
+/**
+ * The OpenRegister URL for one kind of related data of an object.
+ *
+ * @param {object} config Schema config with `register` and `schema`
+ * @param {{id: string, dataType: string, params: object}} request The object id, the kind of related data and the query parameters
+ * @return {string} The URL
+ */
+function relatedDataUrl(config, request) {
+	const registerId = extractId(config.register)
+	const schemaId = extractId(config.schema)
+	const actionPath =
+		request.dataType === 'logs' ? 'audit-trails' : request.dataType
+	return withLanguageParam(
+		`/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${request.id}/${actionPath}${buildQueryString(relatedQuery(request))}`,
+	)
+}
+
+/**
+ * The query parameters for a related-data request: relations get their
+ * schema expanded unless the caller asks for another expansion.
+ *
+ * @param {{dataType: string, params: object}} request The kind of related data and the query parameters
+ * @return {object} The query parameters
+ */
+function relatedQuery(request) {
+	const queryParams = { ...request.params }
+	if (request.dataType === 'uses' || request.dataType === 'used') {
+		queryParams._extend = request.params._extend || '@self.schema'
+	}
+	return queryParams
+}
+
+/**
+ * Whether a related-data answer carries pagination fields.
+ *
+ * @param {object} data The answer
+ * @return {boolean} True when it has a total or a page
+ */
+function hasPagination(data) {
+	return data.total !== undefined || data.page !== undefined
+}
+
+/**
+ * The pagination state for a related-data answer.
+ *
+ * @param {object} data The answer
+ * @param {{dataType: string, params: object}} request The kind of related data and the query parameters
+ * @return {object} The pagination state
+ */
+function relatedPagination(data, request) {
+	const limit = relatedPageLimit(data, request)
+	return {
+		total: data.total || 0,
+		page: data.page || 1,
+		pages: relatedPageCount(data, limit),
+		limit,
+		next: data.next || null,
+		prev: data.prev || null,
+	}
+}
+
+/**
+ * The page count of a related-data answer: the server's, else the total
+ * divided by the page size.
+ *
+ * @param {object} data The answer
+ * @param {number} limit The page size
+ * @return {number} The page count
+ */
+function relatedPageCount(data, limit) {
+	return data.pages || Math.ceil((data.total || 0) / limit)
+}
+
+/**
+ * The page size of a related-data answer: the server's, else the requested
+ * one, else 500 for files and 20 for the rest.
+ *
+ * @param {object} data The answer
+ * @param {{dataType: string, params: object}} request The kind of related data and the query parameters
+ * @return {number} The page size
+ */
+function relatedPageLimit(data, request) {
+	const requestedLimit = request.params._limit || request.params.limit
+	const apiLimit = data.limit ? parseInt(data.limit, 10) : null
+	return apiLimit || requestedLimit || (request.dataType === 'files' ? 500 : 20)
+}
+
+/**
+ * What the store keeps for a related-data answer: the result list for audit
+ * logs, the whole answer for the rest.
+ *
+ * @param {object} data The answer
+ * @param {string} dataType The kind of related data
+ * @return {object|Array} The stored value
+ */
+function relatedEntry(data, dataType) {
+	return dataType === 'logs' ? data.results || [] : data
+}
+
+/**
+ * Store a related-data answer: its pagination, when it has any, and the
+ * related data itself under the object type.
+ *
+ * @param {object} store The store
+ * @param {{type: string, dataType: string, params: object, data: object}} answer The object type, the kind of related data, the query parameters and the answer
+ */
+function storeRelatedAnswer(store, answer) {
+	const { type, dataType, data } = answer
+	if (!store.relatedData[type]) {
+		store.relatedData = { ...store.relatedData, [type]: {} }
+	}
+
+	if (hasPagination(data)) {
+		store.pagination = {
+			...store.pagination,
+			[`${type}_${dataType}`]: relatedPagination(data, answer),
+		}
+	}
+
+	const relatedTypeData = { ...store.relatedData[type] }
+	relatedTypeData[dataType] = relatedEntry(data, dataType)
+	store.relatedData = { ...store.relatedData, [type]: relatedTypeData }
+}
+
+/**
+ * The metadata columns GenericObjectTable can show, in order: column, label,
+ * object key, description and whether it is shown by default.
+ *
+ * @type {Array<[string, string, string, string, boolean]>}
+ */
+const METADATA_COLUMNS = [
+	['name', 'Name', 'name', 'Display name of the object', true],
+	[
+		'description',
+		'Description',
+		'description',
+		'Description of the object',
+		false,
+	],
+	['objectId', 'ID', 'id', 'Unique identifier of the object', false],
+	['uri', 'URI', 'uri', 'URI of the object', false],
+	['version', 'Version', 'version', 'Version of the object', false],
+	['register', 'Register', 'register', 'Register of the object', false],
+	['schema', 'Schema', 'schema', 'Schema of the object', false],
+	['files', 'Files', 'files', 'Attached files count', true],
+	['locked', 'Locked', 'locked', 'Whether the object is locked', false],
+	[
+		'organization',
+		'Organization',
+		'organization',
+		'Organization owning the object',
+		false,
+	],
+	[
+		'validation',
+		'Validation',
+		'validation',
+		'Validation status of the object',
+		false,
+	],
+	['owner', 'Owner', 'owner', 'Owner of the object', false],
+	[
+		'application',
+		'Application',
+		'application',
+		'Application of the object',
+		false,
+	],
+	['folder', 'Folder', 'folder', 'Folder of the object', false],
+	['geo', 'Geo', 'geo', 'Geographic information', false],
+	['retention', 'Retention', 'retention', 'Retention policy', false],
+	['size', 'Size', 'size', 'Size of the object', false],
+	['published', 'Published', 'published', 'Publication date', false],
+	['depublished', 'Depublished', 'depublished', 'Depublication date', false],
+	['deleted', 'Deleted', 'deleted', 'Deletion date', false],
+	['created', 'Created', 'created', 'Creation date and time', false],
+	['updated', 'Updated', 'updated', 'Last update date and time', false],
+]
+
+/**
+ * One metadata column definition, keyed by its column name.
+ *
+ * @param {Array} row A row of METADATA_COLUMNS
+ * @return {[string, object]} The column name and a fresh definition
+ */
+function metadataEntry(row) {
+	const [column, label, key, description, enabled] = row
+	return [column, { label, key, description, enabled }]
+}
+
+/**
+ * Fresh column metadata definitions for a new store state.
+ *
+ * @return {object} The definitions by column name
+ */
+function columnMetadata() {
+	return Object.fromEntries(METADATA_COLUMNS.map(metadataEntry))
+}
+
+/**
+ * POST a lifecycle action (publish, depublish) for an object.
+ *
+ * @param {object} objectItem The object
+ * @param {string} action The action
+ * @return {Promise<object>} The updated object
+ * @throws {Error} When the object lacks ids or the request fails.
+ */
+async function requestObjectAction(objectItem, action) {
+	const url = buildObjectUrl(objectItem, action)
+	const response = await fetch(url, { method: 'POST', headers: buildHeaders() })
+	if (!response.ok) {
+		throw new Error(
+			`Failed to ${action} object: ${response.status} ${response.statusText}`,
+		)
+	}
+	return await response.json()
+}
+
+/**
+ * Run a lifecycle action for an object, flagging `<action>_<id>` in the
+ * store's loading map while it runs.
+ *
+ * @param {object} store The object store
+ * @param {{objectItem: object, action: string}} request The object and the action
+ * @return {Promise<object>} The updated object
+ */
+async function postObjectAction(store, request) {
+	const { objectItem, action } = request
+	const flag = `${action}_${objectItem.id || objectItem['@self']?.id}`
+	store.loading = { ...store.loading, [flag]: true }
+	try {
+		return await requestObjectAction(objectItem, action)
+	} finally {
+		store.loading = { ...store.loading, [flag]: false }
+	}
+}
+
+/**
  * Separate Promise.allSettled results into successful and failed arrays.
  *
  * @param {Array} results Promise.allSettled results
@@ -82,6 +329,229 @@ function separateResults(results) {
 		)
 		.map((r) => r.value || { success: false, error: 'Unknown error' })
 	return { successful, failed }
+}
+
+/**
+ * The schema config of a type the object type registry knows, or null.
+ *
+ * @param {object|undefined} registry The object type registry
+ * @param {string} objectType The object type
+ * @return {{source: string, schema: string, register: string}|null} The schema config
+ */
+function registeredSchemaConfig(registry, objectType) {
+	const config = registry?.[objectType]
+	if (!config) {
+		return null
+	}
+	return {
+		source: 'openregister',
+		schema: config.schema,
+		register: config.register,
+	}
+}
+
+/**
+ * The voorzieningen config blob: the settings endpoint returns it under
+ * `voorzieningenConfig`, the focused config fetch stores it under
+ * `voorzieningen`. It carries one register and a `<type>_schema` key per
+ * catalog object type.
+ *
+ * @param {object} settings The loaded settings
+ * @return {object} The blob, empty when neither is loaded
+ */
+function voorzieningenBlob(settings) {
+	return settings.voorzieningen || settings.voorzieningenConfig || {}
+}
+
+/**
+ * The AMEF config blob, with one register and a `<type>_schema` key per
+ * ArchiMate object type (element, relation, view, model, ...).
+ *
+ * @param {object} settings The loaded settings
+ * @return {object} The blob, empty when neither is loaded
+ */
+function amefBlob(settings) {
+	return settings.amef || settings.amefConfig || {}
+}
+
+/**
+ * The schema config of an object type from a register-scoped config blob, or
+ * null when the blob has no register or no schema for the type.
+ *
+ * @param {object} blob The config blob
+ * @param {string} objectType The object type
+ * @return {{source: string, schema: string, register: string}|null} The schema config
+ */
+function registerBlobSchemaConfig(blob, objectType) {
+	const schema = blob[`${objectType}_schema`]
+	if (!blob.register || !schema) {
+		return null
+	}
+	return { source: 'openregister', schema, register: blob.register }
+}
+
+/**
+ * The first truthy value, or the last value when none is truthy (what a
+ * chain of `||` gives).
+ *
+ * @param {Array} values The candidates, in order
+ * @return {string|number|undefined} The chosen value
+ */
+function firstTruthyOrLast(values) {
+	return values.find(Boolean) ?? values[values.length - 1]
+}
+
+/**
+ * The legacy flat config values of one field of an object type: the
+ * `voorzieningen_`-prefixed key first, then the plain one.
+ *
+ * @param {{config: object, objectType: string}} lookup The legacy config and the object type
+ * @param {string} field The field: source, schema or register
+ * @return {Array} The two values
+ */
+function legacyField(lookup, field) {
+	const { config, objectType } = lookup
+	return [
+		config[`voorzieningen_${objectType}_${field}`],
+		config[`${objectType}_${field}`],
+	]
+}
+
+/**
+ * The schema config of an object type from the legacy flat config keys.
+ *
+ * @param {object} settings The loaded settings
+ * @param {string} objectType The object type
+ * @return {{source: string, schema: string, register: string}} The schema config
+ * @throws {Error} When the schema or the register is not configured.
+ */
+function legacySchemaConfig(settings, objectType) {
+	const lookup = { config: settings.configuration || {}, objectType }
+	const source = firstTruthyOrLast([
+		...legacyField(lookup, 'source'),
+		'openregister',
+	])
+	const schema = firstTruthyOrLast(legacyField(lookup, 'schema'))
+	const register = firstTruthyOrLast([
+		...legacyField(lookup, 'register'),
+		lookup.config.voorzieningen_register,
+	])
+	if (!schema || !register) {
+		throw new Error(
+			`Invalid configuration for object type: ${lookup.objectType}. Schema: ${schema}, Register: ${register}`,
+		)
+	}
+	return { source, schema, register }
+}
+
+/**
+ * Put a saved object in the store's object cache when it has an id.
+ *
+ * @param {object} store The object store
+ * @param {{type: string, result: object}} saved The object type and the saved object
+ * @return {void}
+ */
+function cacheSavedObject(store, saved) {
+	const { type: objectType, result } = saved
+	if (!result.id) {
+		return
+	}
+	if (!store.objects[objectType]) {
+		store.objects = { ...store.objects, [objectType]: {} }
+	}
+	store.objects[objectType][result.id] = result
+}
+
+/**
+ * Create or update an object of a registered type, and cache the answer.
+ *
+ * @param {object} store The object store
+ * @param {{type: string, objectData: object}} request The object type and the object data
+ * @return {Promise<object>} The saved object
+ * @throws {Error} When the save fails.
+ */
+async function saveTypedObject(store, request) {
+	const { type: objectType, objectData } = request
+	const id = objectData.id || objectData['@self']?.id
+	const isUpdate = Boolean(id)
+	const response = await fetch(store._buildUrl(objectType, isUpdate ? id : null), {
+		method: isUpdate ? 'PUT' : 'POST',
+		headers: buildWriteHeaders(buildHeaders(), {
+			organisation: getActiveOrganisationUuid(),
+		}),
+		body: JSON.stringify(objectData),
+	})
+	if (!response.ok) {
+		throw new Error(`Failed to save ${objectType} object`)
+	}
+	const result = await response.json()
+	cacheSavedObject(store, { type: objectType, result })
+	return result
+}
+
+/**
+ * The register and schema of a legacy save, checked to be present.
+ *
+ * @param {object} objectItem The object item
+ * @param {object|undefined} config The `{ register, schema }` config
+ * @return {{register: (string|number|object), schema: (string|number|object)}} The register and schema
+ * @throws {Error} When the item, the register or the schema is missing.
+ */
+function requireLegacyConfig(objectItem, config) {
+	const { register, schema } = config || {}
+	if (!objectItem || !register || !schema) {
+		throw new Error('Object item, register and schema are required')
+	}
+	return { register, schema }
+}
+
+/**
+ * The OpenRegister endpoint of a legacy save: the collection for a new
+ * object, the object itself for an existing one.
+ *
+ * @param {object} objectItem The object item
+ * @param {object|undefined} config The `{ register, schema }` config
+ * @return {string} The endpoint
+ * @throws {Error} When the register or schema id cannot be found.
+ */
+function legacyEndpoint(objectItem, config) {
+	const { register, schema } = requireLegacyConfig(objectItem, config)
+	const registerId = extractId(register)
+	const schemaId = extractId(schema)
+	if (!registerId || !schemaId) {
+		throw new Error('Could not extract register or schema ID')
+	}
+	const base = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}`
+	const objectId = objectItem['@self']?.id
+	return objectId ? `${base}/${objectId}` : base
+}
+
+/**
+ * Save an object item with @self metadata straight to OpenRegister,
+ * stamping its update time.
+ *
+ * @param {object} objectItem The object item
+ * @param {object|undefined} config The `{ register, schema }` config
+ * @return {Promise<{response: Response, data: object}>} The answer and its body
+ * @throws {Error} When the config is incomplete or the save fails.
+ */
+async function saveLegacyObject(objectItem, config) {
+	const endpoint = legacyEndpoint(objectItem, config)
+	const isNewObject = !objectItem['@self']?.id
+	if (!objectItem['@self']) objectItem['@self'] = {}
+	objectItem['@self'].updated = new Date().toISOString()
+	const response = await fetch(endpoint, {
+		method: isNewObject ? 'POST' : 'PUT',
+		headers: buildHeaders(),
+		body: JSON.stringify(objectItem),
+	})
+	if (!response.ok) {
+		throw new Error(
+			`Failed to save object: ${response.status} ${response.statusText}`,
+		)
+	}
+	const data = await response.json()
+	return { response, data }
 }
 
 /**
@@ -117,140 +587,7 @@ export function stackiqPlugin() {
 			objectErrors: {},
 
 			// Column metadata definitions for GenericObjectTable
-			metadata: {
-				name: {
-					label: 'Name',
-					key: 'name',
-					description: 'Display name of the object',
-					enabled: true,
-				},
-				description: {
-					label: 'Description',
-					key: 'description',
-					description: 'Description of the object',
-					enabled: false,
-				},
-				objectId: {
-					label: 'ID',
-					key: 'id',
-					description: 'Unique identifier of the object',
-					enabled: false,
-				},
-				uri: {
-					label: 'URI',
-					key: 'uri',
-					description: 'URI of the object',
-					enabled: false,
-				},
-				version: {
-					label: 'Version',
-					key: 'version',
-					description: 'Version of the object',
-					enabled: false,
-				},
-				register: {
-					label: 'Register',
-					key: 'register',
-					description: 'Register of the object',
-					enabled: false,
-				},
-				schema: {
-					label: 'Schema',
-					key: 'schema',
-					description: 'Schema of the object',
-					enabled: false,
-				},
-				files: {
-					label: 'Files',
-					key: 'files',
-					description: 'Attached files count',
-					enabled: true,
-				},
-				locked: {
-					label: 'Locked',
-					key: 'locked',
-					description: 'Whether the object is locked',
-					enabled: false,
-				},
-				organization: {
-					label: 'Organization',
-					key: 'organization',
-					description: 'Organization owning the object',
-					enabled: false,
-				},
-				validation: {
-					label: 'Validation',
-					key: 'validation',
-					description: 'Validation status of the object',
-					enabled: false,
-				},
-				owner: {
-					label: 'Owner',
-					key: 'owner',
-					description: 'Owner of the object',
-					enabled: false,
-				},
-				application: {
-					label: 'Application',
-					key: 'application',
-					description: 'Application of the object',
-					enabled: false,
-				},
-				folder: {
-					label: 'Folder',
-					key: 'folder',
-					description: 'Folder of the object',
-					enabled: false,
-				},
-				geo: {
-					label: 'Geo',
-					key: 'geo',
-					description: 'Geographic information',
-					enabled: false,
-				},
-				retention: {
-					label: 'Retention',
-					key: 'retention',
-					description: 'Retention policy',
-					enabled: false,
-				},
-				size: {
-					label: 'Size',
-					key: 'size',
-					description: 'Size of the object',
-					enabled: false,
-				},
-				published: {
-					label: 'Published',
-					key: 'published',
-					description: 'Publication date',
-					enabled: false,
-				},
-				depublished: {
-					label: 'Depublished',
-					key: 'depublished',
-					description: 'Depublication date',
-					enabled: false,
-				},
-				deleted: {
-					label: 'Deleted',
-					key: 'deleted',
-					description: 'Deletion date',
-					enabled: false,
-				},
-				created: {
-					label: 'Created',
-					key: 'created',
-					description: 'Creation date and time',
-					enabled: false,
-				},
-				updated: {
-					label: 'Updated',
-					key: 'updated',
-					description: 'Last update date and time',
-					enabled: false,
-				},
-			},
+			metadata: columnMetadata(),
 
 			// Schema-derived property columns
 			properties: {},
@@ -296,7 +633,7 @@ export function stackiqPlugin() {
 			hasMorePages: (state) => (type) => {
 				const pagination = state.pagination?.[type]
 				return pagination
-					? pagination.next !== null || pagination.page < pagination.pages
+					? pagination.next !== null || pagination.pages > pagination.page
 					: false
 			},
 
@@ -448,85 +785,26 @@ export function stackiqPlugin() {
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			getSchemaConfig(objectType) {
-				// Check registered types first
-				const objectTypeConfig = this.objectTypeRegistry?.[objectType]
-				if (objectTypeConfig) {
-					return {
-						source: 'openregister',
-						schema: objectTypeConfig.schema,
-						register: objectTypeConfig.register,
-					}
+				const registered = registeredSchemaConfig(
+					this.objectTypeRegistry,
+					objectType,
+				)
+				if (registered) {
+					return registered
 				}
-
-				// Fall back to settings
 				if (!this.settings) {
 					throw new Error('Settings not loaded')
 				}
-
-				// Check for voorzieningen-specific configuration. The settings
-				// endpoint returns the blob under `voorzieningenConfig`; the
-				// secondary `/api/voorzieningen/config` fetch (when it resolves)
-				// stores it under `voorzieningen`. Accept either so the lookup
-				// works whichever populated first.
-				//
-				// The blob carries a single `register` plus a `<type>_schema` key
-				// per object type (organisatie_schema, module_schema,
-				// compliancy_schema, …). Resolve ANY configured type from it — not
-				// just `organisatie` — so the dashboard/settings/compliance
-				// surfaces register their stores even when the settings
-				// `availableRegisters` list does not include the voorzieningen
-				// register (the slug-based auto-registration then finds nothing).
-				const voorzieningenConfig =
-					this.settings.voorzieningen
-					|| this.settings.voorzieningenConfig
-					|| {}
-				if (
-					voorzieningenConfig.register
-					&& voorzieningenConfig[`${objectType}_schema`]
-				) {
-					return {
-						source: 'openregister',
-						schema: voorzieningenConfig[`${objectType}_schema`],
-						register: voorzieningenConfig.register,
-					}
-				}
-
-				// AMEF / ArchiMate types (element, relation, view, model,
-				// property_definition, organization) live in their own register
-				// with a `<type>_schema` key under `amefConfig`. The compliance
-				// matrix and ArchiMate surfaces fetch `element`, which is not part
-				// of the voorzieningen blob.
-				const amefConfig =
-					this.settings.amef || this.settings.amefConfig || {}
-				if (amefConfig.register && amefConfig[`${objectType}_schema`]) {
-					return {
-						source: 'openregister',
-						schema: amefConfig[`${objectType}_schema`],
-						register: amefConfig.register,
-					}
-				}
-
-				// Check legacy settings format
-				const config = this.settings.configuration || {}
-				const source =
-					config[`voorzieningen_${objectType}_source`]
-					|| config[`${objectType}_source`]
-					|| 'openregister'
-				const schema =
-					config[`voorzieningen_${objectType}_schema`]
-					|| config[`${objectType}_schema`]
-				const register =
-					config[`voorzieningen_${objectType}_register`]
-					|| config[`${objectType}_register`]
-					|| config.voorzieningen_register
-
-				if (!schema || !register) {
-					throw new Error(
-						`Invalid configuration for object type: ${objectType}. Schema: ${schema}, Register: ${register}`,
+				// The voorzieningen blob holds every catalog type, the AMEF blob
+				// the ArchiMate types; the legacy flat keys come last.
+				return (
+					registerBlobSchemaConfig(
+						voorzieningenBlob(this.settings),
+						objectType,
 					)
-				}
-
-				return { source, schema, register }
+					|| registerBlobSchemaConfig(amefBlob(this.settings), objectType)
+					|| legacySchemaConfig(this.settings, objectType)
+				)
 			},
 
 			// ==========================================
@@ -655,69 +933,21 @@ export function stackiqPlugin() {
 				try {
 					if (!this.settings) await this.fetchSettings()
 
-					let config = organisatieData
-					if (!config) {
-						config = this.getSchemaConfig(type)
-					}
-
-					const registerId = extractId(config.register)
-					const schemaId = extractId(config.schema)
-
-					// Build the URL
-					let actionPath = dataType
-					if (dataType === 'logs') actionPath = 'audit-trails'
-
-					const queryParams = { ...params }
-					if (dataType === 'uses' || dataType === 'used') {
-						queryParams._extend = params._extend || '@self.schema'
-					}
-
-					const url = withLanguageParam(
-						`/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${id}/${actionPath}${buildQueryString(queryParams)}`,
+					const request = { id, dataType, params }
+					const url = relatedDataUrl(
+						organisatieData || this.getSchemaConfig(type),
+						request,
 					)
 
 					const response = await fetch(url, { headers: buildHeaders() })
 					if (!response.ok)
 						throw new Error(`Failed to fetch ${dataType} for ${type}`)
 
-					const data = await response.json()
-
-					if (!this.relatedData[type]) {
-						this.relatedData = { ...this.relatedData, [type]: {} }
-					}
-
-					// Update pagination for related data
-					if (data.total !== undefined || data.page !== undefined) {
-						const paginationKey = `${type}_${dataType}`
-						const requestedLimit = params._limit || params.limit
-						const apiLimit = data.limit ? parseInt(data.limit, 10) : null
-						const actualLimit =
-							apiLimit
-							|| requestedLimit
-							|| (dataType === 'files' ? 500 : 20)
-						this.pagination = {
-							...this.pagination,
-							[paginationKey]: {
-								total: data.total || 0,
-								page: data.page || 1,
-								pages:
-									data.pages
-									|| Math.ceil((data.total || 0) / actualLimit),
-								limit: actualLimit,
-								next: data.next || null,
-								prev: data.prev || null,
-							},
-						}
-					}
-
-					// Store the data
-					const relatedTypeData = { ...this.relatedData[type] }
-					relatedTypeData[dataType] =
-						dataType === 'logs' ? data.results || [] : data
-					this.relatedData = {
-						...this.relatedData,
-						[type]: relatedTypeData,
-					}
+					storeRelatedAnswer(this, {
+						...request,
+						type,
+						data: await response.json(),
+					})
 				} catch (error) {
 					console.error(`Error fetching ${dataType} for ${type}:`, error)
 				} finally {
@@ -742,73 +972,12 @@ export function stackiqPlugin() {
 			 */
 			async saveObject(typeOrObject, dataOrConfig) {
 				if (typeof typeOrObject === 'string') {
-					// New signature: saveObject(type, objectData)
-					const type = typeOrObject
-					const objectData = dataOrConfig
-					const isUpdate = !!objectData.id || !!objectData['@self']?.id
-					const id = objectData.id || objectData['@self']?.id
-
-					const url = this._buildUrl(type, isUpdate ? id : null)
-					const response = await fetch(url, {
-						method: isUpdate ? 'PUT' : 'POST',
-						headers: buildWriteHeaders(buildHeaders(), {
-							organisation: getActiveOrganisationUuid(),
-						}),
-						body: JSON.stringify(objectData),
+					return saveTypedObject(this, {
+						type: typeOrObject,
+						objectData: dataOrConfig,
 					})
-
-					if (!response.ok)
-						throw new Error(`Failed to save ${type} object`)
-					const result = await response.json()
-
-					// Update cache
-					if (result.id) {
-						if (!this.objects[type])
-							this.objects = { ...this.objects, [type]: {} }
-						this.objects[type][result.id] = result
-					}
-
-					return result
 				}
-
-				// Legacy signature: saveObject(objectItem, { register, schema })
-				const objectItem = typeOrObject
-				const { register, schema } = dataOrConfig || {}
-
-				if (!objectItem || !register || !schema) {
-					throw new Error('Object item, register and schema are required')
-				}
-
-				const registerId = extractId(register)
-				const schemaId = extractId(schema)
-				if (!registerId || !schemaId)
-					throw new Error('Could not extract register or schema ID')
-
-				const isNewObject = !objectItem['@self']?.id
-				const objectId = objectItem['@self']?.id
-
-				let endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}`
-				if (!isNewObject && objectId) {
-					endpoint += `/${objectId}`
-				}
-
-				if (!objectItem['@self']) objectItem['@self'] = {}
-				objectItem['@self'].updated = new Date().toISOString()
-
-				const response = await fetch(endpoint, {
-					method: isNewObject ? 'POST' : 'PUT',
-					headers: buildHeaders(),
-					body: JSON.stringify(objectItem),
-				})
-
-				if (!response.ok) {
-					throw new Error(
-						`Failed to save object: ${response.status} ${response.statusText}`,
-					)
-				}
-
-				const data = await response.json()
-				return { response, data }
+				return saveLegacyObject(typeOrObject, dataOrConfig)
 			},
 
 			/**
@@ -856,18 +1025,12 @@ export function stackiqPlugin() {
 
 					// Remove from selection if selected
 					const isSelected = this.selectedObjects.some(
-						(obj) =>
-							(typeof obj === 'string'
-								? obj
-								: obj.id || obj['@self']?.id) === objectId,
+						(obj) => selectionId(obj) === objectId,
 					)
 					if (isSelected) {
 						this.setSelectedObjects(
 							this.selectedObjects.filter(
-								(obj) =>
-									(typeof obj === 'string'
-										? obj
-										: obj.id || obj['@self']?.id) !== objectId,
+								(obj) => selectionId(obj) !== objectId,
 							),
 						)
 					}
@@ -977,29 +1140,7 @@ export function stackiqPlugin() {
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			async publishObject(objectItem) {
-				const objectId = objectItem.id || objectItem['@self']?.id
-				this.loading = { ...this.loading, [`publish_${objectId}`]: true }
-
-				try {
-					const url = buildObjectUrl(objectItem, 'publish')
-					const response = await fetch(url, {
-						method: 'POST',
-						headers: buildHeaders(),
-					})
-
-					if (!response.ok) {
-						throw new Error(
-							`Failed to publish object: ${response.status} ${response.statusText}`,
-						)
-					}
-
-					return await response.json()
-				} finally {
-					this.loading = {
-						...this.loading,
-						[`publish_${objectId}`]: false,
-					}
-				}
+				return postObjectAction(this, { objectItem, action: 'publish' })
 			},
 
 			/**
@@ -1010,29 +1151,7 @@ export function stackiqPlugin() {
 			 * @spec openspec/specs/fe-stores/spec.md
 			 */
 			async depublishObject(objectItem) {
-				const objectId = objectItem.id || objectItem['@self']?.id
-				this.loading = { ...this.loading, [`depublish_${objectId}`]: true }
-
-				try {
-					const url = buildObjectUrl(objectItem, 'depublish')
-					const response = await fetch(url, {
-						method: 'POST',
-						headers: buildHeaders(),
-					})
-
-					if (!response.ok) {
-						throw new Error(
-							`Failed to depublish object: ${response.status} ${response.statusText}`,
-						)
-					}
-
-					return await response.json()
-				} finally {
-					this.loading = {
-						...this.loading,
-						[`depublish_${objectId}`]: false,
-					}
-				}
+				return postObjectAction(this, { objectItem, action: 'depublish' })
 			},
 
 			/**

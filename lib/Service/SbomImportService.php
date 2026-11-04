@@ -115,38 +115,24 @@ class SbomImportService {
 		string $format,
 		string $fileName,
 	): array {
-		// 1. Parse — pure, no OR/HTTP call. Throws on unsupported format;
-		// nothing has been written yet at this point.
-		$parsed = $this->parseUpload(rawJson: $rawJson, format: $format);
-		$components = $parsed['components'];
-		$vexPairs = $parsed['vulnerabilities'];
-
+		// Parse first: an unsupported document throws before anything is written.
+		$parsed      = $this->parseUpload(rawJson: $rawJson, format: $format);
 		$coordinates = $this->resolveCoordinates();
 		$objectService = $coordinates['objectService'];
-
-		$moduleVersion = $objectService->find(
-			id: $moduleVersieUuid,
-			register: $coordinates['registerId'],
-			schema: $coordinates['moduleVersieSchemaId'],
-			_rbac: false,
-			_multitenancy: false
-		);
-
+		$moduleVersion = $this->findModuleVersion(coordinates: $coordinates, moduleVersieUuid: $moduleVersieUuid);
 		if ($moduleVersion === null) {
 			throw new RuntimeException('moduleVersie not found: ' . $moduleVersieUuid);
 		}
 
-		$componentCount = count($components);
-		$trackProgress = $componentCount > self::PROGRESS_THRESHOLD;
-		$operationId = null;
-
-		if ($trackProgress === true) {
-			$operationId = $this->progressTracker->startOperation(
-				'sbom-import',
-				['total_items' => $componentCount]
-			);
-			$this->progressTracker->setPhase('processing_elements');
-		}
+		$import = [
+			'moduleVersieUuid' => $moduleVersieUuid,
+			'components'       => $parsed['components'],
+			'vexPairs'         => $parsed['vulnerabilities'],
+			'trackProgress'    => count($parsed['components']) > self::PROGRESS_THRESHOLD,
+			'format'           => $format,
+			'fileName'         => $fileName,
+		];
+		$import['operationId'] = $this->startProgress(import: $import);
 
 		$previousUuids = $this->replacePreviousComponentSet(
 			objectService: $objectService,
@@ -157,28 +143,73 @@ class SbomImportService {
 
 		$createdCount = $this->createComponentSet(
 			objectService: $objectService,
-			registerId: $coordinates['registerId'],
-			componentSchemaId: $coordinates['sbomComponentSchemaId'],
-			moduleVersieUuid: $moduleVersieUuid,
-			components: $components,
-			vexPairs: $vexPairs,
-			trackProgress: $trackProgress
+			target: ['register' => $coordinates['registerId'], 'schema' => $coordinates['sbomComponentSchemaId']],
+			import: $import
 		);
 
 		$this->recordProvenance(
 			objectService: $objectService,
-			registerId: $coordinates['registerId'],
-			versionSchemaId: $coordinates['moduleVersieSchemaId'],
+			target: ['register' => $coordinates['registerId'], 'schema' => $coordinates['moduleVersieSchemaId']],
 			moduleVersion: $moduleVersion,
-			format: $format,
-			fileName: $fileName
+			file: ['format' => $format, 'fileName' => $fileName]
 		);
 
-		if ($trackProgress === true) {
+		return $this->completeImport(import: $import, counts: ['created' => $createdCount, 'previous' => count($previousUuids)]);
+	}//end importForModuleVersie()
+
+	/**
+	 * A moduleVersie, read without RBAC or organisation scoping.
+	 *
+	 * @param array<string, mixed> $coordinates      The resolved object service, register and schema ids.
+	 * @param string               $moduleVersieUuid The moduleVersie's uuid.
+	 *
+	 * @return object|null The moduleVersie object, or null when it does not exist.
+	 */
+	private function findModuleVersion(array $coordinates, string $moduleVersieUuid): ?object {
+		return $coordinates['objectService']->find(
+			id: $moduleVersieUuid,
+			register: $coordinates['registerId'],
+			schema: $coordinates['moduleVersieSchemaId'],
+			_rbac: false,
+			_multitenancy: false
+		);
+	}//end findModuleVersion()
+
+	/**
+	 * Start tracking a large import's progress.
+	 *
+	 * @param array<string, mixed> $import The import: components and whether progress is tracked.
+	 *
+	 * @return string|null The operation id, or null when progress is not tracked.
+	 */
+	private function startProgress(array $import): ?string {
+		if ($import['trackProgress'] === false) {
+			return null;
+		}
+
+		$operationId = $this->progressTracker->startOperation(
+			'sbom-import',
+			['total_items' => count($import['components'])]
+		);
+		$this->progressTracker->setPhase('processing_elements');
+
+		return $operationId;
+	}//end startProgress()
+
+	/**
+	 * Complete a tracked import's progress, log the import and summarise it.
+	 *
+	 * @param array<string, mixed> $import The import, with its operation id.
+	 * @param array{created: int, previous: int} $counts The created and replaced component counts.
+	 *
+	 * @return array<string, mixed> The import result summary.
+	 */
+	private function completeImport(array $import, array $counts): array {
+		if ($import['trackProgress'] === true) {
 			$this->progressTracker->completeOperation(
 				[
-					'componentsCreated' => $createdCount,
-					'previousCount' => count($previousUuids),
+					'componentsCreated' => $counts['created'],
+					'previousCount' => $counts['previous'],
 				]
 			);
 		}
@@ -186,25 +217,25 @@ class SbomImportService {
 		$this->logger->info(
 			'SbomImportService: import completed',
 			[
-				'moduleVersieUuid' => $moduleVersieUuid,
-				'format' => $format,
-				'componentCount' => $createdCount,
-				'previousCount' => count($previousUuids),
+				'moduleVersieUuid' => $import['moduleVersieUuid'],
+				'format' => $import['format'],
+				'componentCount' => $counts['created'],
+				'previousCount' => $counts['previous'],
 			]
 		);
 
 		return [
 			'success' => true,
-			'operationId' => $operationId,
-			'moduleVersieUuid' => $moduleVersieUuid,
-			'componentCount' => $createdCount,
-			'previousComponentCount' => count($previousUuids),
-			'distinctLicenseCount' => $this->countDistinctLicenses(components: $components),
-			'vulnerabilityPairCount' => count($vexPairs),
-			'sbomFormat' => $format,
-			'sbomFileName' => $fileName,
+			'operationId' => $import['operationId'],
+			'moduleVersieUuid' => $import['moduleVersieUuid'],
+			'componentCount' => $counts['created'],
+			'previousComponentCount' => $counts['previous'],
+			'distinctLicenseCount' => $this->countDistinctLicenses(components: $import['components']),
+			'vulnerabilityPairCount' => count($import['vexPairs']),
+			'sbomFormat' => $import['format'],
+			'sbomFileName' => $import['fileName'],
 		];
-	}//end importForModuleVersie()
+	}//end completeImport()
 
 	/**
 	 * Select and invoke the parser matching the uploaded `format` (design
@@ -240,20 +271,9 @@ class SbomImportService {
 	 * @spec openspec/specs/sbom-import/spec.md#requirement-uploaded-sbom-files-are-bounded-in-size-and-json-only
 	 */
 	public function resolveParentModuleUuid(string $moduleVersieUuid): ?string {
-		$coordinates = $this->resolveCoordinates();
-		$moduleVersion = $coordinates['objectService']->find(
-			id: $moduleVersieUuid,
-			register: $coordinates['registerId'],
-			schema: $coordinates['moduleVersieSchemaId'],
-			_rbac: false,
-			_multitenancy: false
-		);
+		$moduleVersion = $this->findModuleVersion(coordinates: $this->resolveCoordinates(), moduleVersieUuid: $moduleVersieUuid);
 
-		if ($moduleVersion === null) {
-			return null;
-		}
-
-		return $this->resolveRelationUuid(relation: $moduleVersion->getObject()['module'] ?? null);
+		return $this->resolveRelationUuid(relation: $moduleVersion?->getObject()['module'] ?? null);
 	}//end resolveParentModuleUuid()
 
 	/**
@@ -298,19 +318,8 @@ class SbomImportService {
 	 * @spec openspec/specs/sbom-import/spec.md#requirement-moduleversie-records-sbom-import-provenance
 	 */
 	public function getStatus(string $moduleVersieUuid, ?string $operationId = null): array {
-		$coordinates = $this->resolveCoordinates();
-		$moduleVersion = $coordinates['objectService']->find(
-			id: $moduleVersieUuid,
-			register: $coordinates['registerId'],
-			schema: $coordinates['moduleVersieSchemaId'],
-			_rbac: false,
-			_multitenancy: false
-		);
-
-		$data = [];
-		if ($moduleVersion !== null) {
-			$data = $moduleVersion->getObject();
-		}
+		$moduleVersion = $this->findModuleVersion(coordinates: $this->resolveCoordinates(), moduleVersieUuid: $moduleVersieUuid);
+		$data          = $moduleVersion?->getObject() ?? [];
 
 		$progress = null;
 		if ($operationId !== null) {
@@ -379,50 +388,42 @@ class SbomImportService {
 	 * progress per batch when tracking is active.
 	 *
 	 * @param ObjectServiceInterface $objectService The OR object service.
-	 * @param int $registerId The voorzieningen register id.
-	 * @param int $componentSchemaId The sbomComponent schema id.
-	 * @param string $moduleVersieUuid The target moduleVersie uuid.
-	 * @param array<int,array<string,mixed>> $components The parsed component DTOs.
-	 * @param array<int,array{cveId:string,componentBomRef:string}> $vexPairs The parsed VEX cveId/bom-ref pairs.
-	 * @param bool $trackProgress Whether a progress operation is active.
+	 * @param array                  $target        `register` (the voorzieningen register id) and `schema`
+	 *                                              (the sbomComponent schema id).
+	 * @param array                  $import        `moduleVersieUuid` (the target moduleVersie), `components`
+	 *                                              (the parsed component DTOs), `vexPairs` (the parsed VEX
+	 *                                              cveId/bom-ref pairs) and `trackProgress` (whether a progress
+	 *                                              operation is active).
 	 *
 	 * @return int The number of components created.
 	 *
 	 * @spec openspec/specs/sbom-import/spec.md#requirement-large-imports-run-in-bounded-batches-with-progress-reporting
 	 */
-	private function createComponentSet(
-		ObjectServiceInterface $objectService,
-		int $registerId,
-		int $componentSchemaId,
-		string $moduleVersieUuid,
-		array $components,
-		array $vexPairs,
-		bool $trackProgress,
-	): int {
+	private function createComponentSet(ObjectServiceInterface $objectService, array $target, array $import): int {
 		$created = 0;
-		$vexCveIdsByRef = $this->groupVexCveIdsByBomRef(vexPairs: $vexPairs);
+		$vexCveIdsByRef = $this->groupVexCveIdsByBomRef(vexPairs: $import['vexPairs']);
 
-		foreach (array_chunk($components, self::BATCH_SIZE) as $batch) {
+		foreach (array_chunk($import['components'], self::BATCH_SIZE) as $batch) {
 			$payload = [];
 			foreach ($batch as $component) {
 				$payload[] = $this->componentToObjectData(
 					component: $component,
-					moduleVersieUuid: $moduleVersieUuid,
+					moduleVersieUuid: $import['moduleVersieUuid'],
 					vexCveIdsByRef: $vexCveIdsByRef
 				);
 			}
 
 			$objectService->saveObjects(
 				objects: $payload,
-				register: $registerId,
-				schema: $componentSchemaId,
+				register: $target['register'],
+				schema: $target['schema'],
 				_rbac: false,
 				_multitenancy: false
 			);
 
 			$created += count($batch);
 
-			if ($trackProgress === true) {
+			if ($import['trackProgress'] === true) {
 				$this->progressTracker->updateProgress(processedItems: $created);
 				$this->progressTracker->updateStatistics(['componentsCreated' => $created]);
 			}
@@ -438,11 +439,11 @@ class SbomImportService {
 	 * nulled by `saveObject()`).
 	 *
 	 * @param ObjectServiceInterface $objectService The OR object service.
-	 * @param int $registerId The voorzieningen register id.
-	 * @param int $versionSchemaId The moduleVersie schema id.
-	 * @param object $moduleVersion The current moduleVersie entity.
-	 * @param string $format The import format.
-	 * @param string $fileName The uploaded file's original name.
+	 * @param array                  $target        `register` (the voorzieningen register id) and `schema`
+	 *                                              (the moduleVersie schema id).
+	 * @param object                 $moduleVersion The current moduleVersie entity.
+	 * @param array                  $file          `format` (the import format) and `fileName` (the uploaded
+	 *                                              file's original name).
 	 *
 	 * @return void
 	 *
@@ -450,21 +451,19 @@ class SbomImportService {
 	 */
 	private function recordProvenance(
 		ObjectServiceInterface $objectService,
-		int $registerId,
-		int $versionSchemaId,
+		array $target,
 		object $moduleVersion,
-		string $format,
-		string $fileName,
+		array $file,
 	): void {
 		$data = $moduleVersion->getObject();
 		$data['sbomLastImportedAt'] = (new DateTime())->format(DateTime::ATOM);
-		$data['sbomFormat'] = $format;
-		$data['sbomFileName'] = $fileName;
+		$data['sbomFormat'] = $file['format'];
+		$data['sbomFileName'] = $file['fileName'];
 
 		$objectService->saveObject(
 			object: $data,
-			register: $registerId,
-			schema: $versionSchemaId,
+			register: $target['register'],
+			schema: $target['schema'],
 			uuid: $moduleVersion->getUuid(),
 			_rbac: false,
 			_multitenancy: false

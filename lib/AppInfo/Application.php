@@ -70,6 +70,7 @@ use OCA\Stackiq\Service\ReviewService;
 use OCA\Stackiq\Service\SbomImportService;
 use OCA\Stackiq\Service\SbomParserService;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
 use OCA\Stackiq\Service\Stackiq\HierarchyHandler;
@@ -112,9 +113,9 @@ use Psr\Log\LoggerInterface;
  */
 class Application extends App implements IBootstrap {
 	/**
-	 * The application ID
+	 * The application ID, kept here for code that reads it from the bootstrap class
 	 */
-	public const APP_ID = 'stackiq';
+	public const APP_ID = AppIdentity::APP_ID;
 
 	/**
 	 * Application constructor
@@ -148,6 +149,10 @@ class Application extends App implements IBootstrap {
 		$context->registerServiceAlias(
 			ObjectServiceInterface::class,
 			'OCA\OpenRegister\Service\ObjectService'
+		);
+		$context->registerServiceAlias(
+			ObjectTypeLocatorInterface::class,
+			SettingsService::class
 		);
 		include_once __DIR__ . '/../../vendor/autoload.php';
 
@@ -259,13 +264,9 @@ class Application extends App implements IBootstrap {
 			OrganisatieService::class,
 			function ($container) {
 				return new OrganisatieService(
-					organizationHandler: $container->get(
-						OrganizationHandler::class
-					),
 					logger: $container->get('Psr\Log\LoggerInterface'),
 					container: $container,
 					appManager: $container->get('OCP\App\IAppManager'),
-					config: $container->get(IAppConfig::class),
 					userManager: $container->get(IUserManager::class),
 					emailService: $container->get(SymfonyEmailService::class),
 				);

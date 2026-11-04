@@ -48,7 +48,11 @@ test.beforeAll(async () => {
 	apiCtx = await newApiContext()
 	cfg = await resolveConfig(apiCtx)
 	ids.org = await seed('organization', { name: organisation })
-	ids.owner = await seed('contactPerson', { firstName: 'Marloes', lastName: `${RUN_ID} Bakker`, organization: ids.org })
+	ids.owner = await seed('contactPerson', {
+		firstName: 'Marloes',
+		lastName: `${RUN_ID} Bakker`,
+		organization: ids.org,
+	})
 	ids.complete = await seed('module', { name: `${RUN_ID} complete application` })
 	ids.incomplete = await seed('module', { name: incomplete })
 	await seed('usage', {
@@ -59,7 +63,11 @@ test.beforeAll(async () => {
 		technicalOwner: ids.owner,
 		lastConfirmedAt: new Date().toISOString(),
 	})
-	await seed('usage', { consumer: ids.org, module: ids.incomplete, status: 'In production' })
+	await seed('usage', {
+		consumer: ids.org,
+		module: ids.incomplete,
+		status: 'In production',
+	})
 })
 
 test.afterAll(async () => {
@@ -79,8 +87,13 @@ test('the Data quality page names the least complete application and what it mis
 	await page.getByRole('combobox', { name: 'Organisation' }).fill(organisation)
 	await page.getByRole('option', { name: organisation }).click()
 
-	await expect(page.getByTestId('data-quality-kpis')).toContainText('Register score', { timeout: 30000 })
-	await expect(page.getByTestId('data-quality-rules')).toContainText('of 2 meet it')
+	await expect(page.getByTestId('data-quality-kpis')).toContainText(
+		'Register score',
+		{ timeout: 30000 },
+	)
+	await expect(page.getByTestId('data-quality-rules')).toContainText(
+		'of 2 meet it',
+	)
 	const firstRow = page.getByTestId('data-quality-lowest').getByRole('row').nth(1)
 	await expect(firstRow).toContainText(incomplete)
 	await expect(firstRow).toContainText('Business owner')

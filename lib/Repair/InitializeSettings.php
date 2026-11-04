@@ -16,7 +16,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Repair;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -83,8 +83,8 @@ class InitializeSettings implements IRepairStep {
 		$output->startProgress(1);
 
 		try {
-			$currentAppVersion = $this->appManager->getAppVersion(Application::APP_ID);
-			$lastInitVersion = $this->config->getValueString(Application::APP_ID, 'last_initialized_version', '');
+			$currentAppVersion = $this->appManager->getAppVersion(AppIdentity::APP_ID);
+			$lastInitVersion = $this->config->getValueString(AppIdentity::APP_ID, 'last_initialized_version', '');
 
 			// Only initialize if version changed or never initialized.
 			if ($lastInitVersion === $currentAppVersion) {
@@ -100,15 +100,15 @@ class InitializeSettings implements IRepairStep {
 			// @spec openspec/specs/contract-administration/spec.md
 			// Seed window defaults only when the admin has not set them, so
 			// upgrades never clobber an operator's chosen window.
-			if ($this->config->hasKey(Application::APP_ID, 'contract_expiry_window_days') === false) {
-				$this->config->setValueInt(Application::APP_ID, 'contract_expiry_window_days', 90);
+			if ($this->config->hasKey(AppIdentity::APP_ID, 'contract_expiry_window_days') === false) {
+				$this->config->setValueInt(AppIdentity::APP_ID, 'contract_expiry_window_days', 90);
 			}
 
 			// @spec openspec/specs/application-lifecycle-tracking/spec.md
 			// Seed the EOL warning window default only when unset, so an
 			// operator's chosen window survives upgrades.
-			if ($this->config->hasKey(Application::APP_ID, 'eol_warning_window_days') === false) {
-				$this->config->setValueInt(Application::APP_ID, 'eol_warning_window_days', 180);
+			if ($this->config->hasKey(AppIdentity::APP_ID, 'eol_warning_window_days') === false) {
+				$this->config->setValueInt(AppIdentity::APP_ID, 'eol_warning_window_days', 180);
 			}
 
 			// @spec openspec/changes/portfolio-rationalization-time/specs
@@ -116,22 +116,22 @@ class InitializeSettings implements IRepairStep {
 			//       #requirement-report-aggregation-queries-are-bounded
 			// Seed the portfolio-report page-size ceiling default only when
 			// unset, so an operator's chosen bound survives upgrades.
-			if ($this->config->hasKey(Application::APP_ID, 'portfolio_report_page_size_ceiling') === false) {
-				$this->config->setValueInt(Application::APP_ID, 'portfolio_report_page_size_ceiling', 500);
+			if ($this->config->hasKey(AppIdentity::APP_ID, 'portfolio_report_page_size_ceiling') === false) {
+				$this->config->setValueInt(AppIdentity::APP_ID, 'portfolio_report_page_size_ceiling', 500);
 			}
 
 			// @spec openspec/specs/federated-catalog-sync/spec.md
 			// Seed federation defaults only when unset (admin overrides survive).
-			if ($this->config->hasKey(Application::APP_ID, 'federation_enabled') === false) {
-				$this->config->setValueBool(Application::APP_ID, 'federation_enabled', false);
+			if ($this->config->hasKey(AppIdentity::APP_ID, 'federation_enabled') === false) {
+				$this->config->setValueBool(AppIdentity::APP_ID, 'federation_enabled', false);
 			}
 
-			if ($this->config->hasKey(Application::APP_ID, 'federation_directory_url') === false) {
-				$this->config->setValueString(Application::APP_ID, 'federation_directory_url', 'https://directory.opencatalogi.nl');
+			if ($this->config->hasKey(AppIdentity::APP_ID, 'federation_directory_url') === false) {
+				$this->config->setValueString(AppIdentity::APP_ID, 'federation_directory_url', 'https://directory.opencatalogi.nl');
 			}
 
-			if ($this->config->hasKey(Application::APP_ID, 'federation_sync_interval') === false) {
-				$this->config->setValueInt(Application::APP_ID, 'federation_sync_interval', 3600);
+			if ($this->config->hasKey(AppIdentity::APP_ID, 'federation_sync_interval') === false) {
+				$this->config->setValueInt(AppIdentity::APP_ID, 'federation_sync_interval', 3600);
 			}
 
 			// Get the settings service and initialize.
@@ -140,7 +140,7 @@ class InitializeSettings implements IRepairStep {
 
 			// Mark this version as initialized regardless of partial failures.
 			// This prevents repeated attempts on every request.
-			$this->config->setValueString(Application::APP_ID, 'last_initialized_version', $currentAppVersion);
+			$this->config->setValueString(AppIdentity::APP_ID, 'last_initialized_version', $currentAppVersion);
 
 			if (empty($result['errors']) === false) {
 				foreach ($result['errors'] as $error) {
@@ -153,8 +153,8 @@ class InitializeSettings implements IRepairStep {
 			$this->logger->info('Stackiq repair: Initialization completed', ['result' => $result]);
 		} catch (\Exception $e) {
 			// Still mark as initialized to prevent repeated failures.
-			$currentAppVersion = $this->appManager->getAppVersion(Application::APP_ID);
-			$this->config->setValueString(Application::APP_ID, 'last_initialized_version', $currentAppVersion);
+			$currentAppVersion = $this->appManager->getAppVersion(AppIdentity::APP_ID);
+			$this->config->setValueString(AppIdentity::APP_ID, 'last_initialized_version', $currentAppVersion);
 			$output->warning('Settings initialization failed: ' . $e->getMessage());
 			$this->logger->error('Stackiq repair: Initialization failed', ['exception' => $e->getMessage()]);
 		}//end try

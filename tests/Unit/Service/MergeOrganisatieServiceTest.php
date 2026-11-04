@@ -938,7 +938,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function jsonSerialize() {
+			public function jsonSerialize(): array {
 				return $this->getObject();
 			}//end jsonSerialize()
 		};

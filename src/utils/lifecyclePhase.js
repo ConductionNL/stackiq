@@ -54,19 +54,22 @@ const PHASE_STEPS = [
 ]
 
 /**
- * Read the data bag of a gebruik that may be an OR object envelope or plain data.
+ * Read the data bag of a record that may be an OR object envelope (with the
+ * properties under `object`) or plain data.
  *
- * @param {object} gebruik A gebruik record.
- * @return {object} The property bag.
+ * @param {object} record Any OR object or data bag.
+ * @return {object} The property bag; an empty object for a non-object.
+ *
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
  */
-function dataOf(gebruik) {
-	if (!gebruik || typeof gebruik !== 'object') {
+export function dataOf(record) {
+	if (!record || typeof record !== 'object') {
 		return {}
 	}
-	if (gebruik.object && typeof gebruik.object === 'object') {
-		return gebruik.object
+	if (record.object && typeof record.object === 'object') {
+		return record.object
 	}
-	return gebruik
+	return record
 }
 
 /**

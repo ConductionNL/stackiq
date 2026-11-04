@@ -1,0 +1,1296 @@
+{
+	"import without a file": {
+		"outcome": "resolved",
+		"trace": [],
+		"state": {
+			"importing": false,
+			"operationId": null,
+			"importProgress": null,
+			"importCancelled": null,
+			"cancelling": false,
+			"stopProgressPolling": null,
+			"exporting": false,
+			"exportingOrg": false,
+			"selectedFile": null,
+			"selectedOrganization": null,
+			"importResult": null,
+			"importError": null,
+			"showErrors": false,
+			"includeModules": true,
+			"includeDeelnames": false,
+			"includeGebruik": false,
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			],
+			"bodyChildren": 0
+		}
+	},
+	"import succeeds": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"startProgressPolling",
+				"op-1"
+			],
+			[
+				"withHeartbeat",
+				30000
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/import",
+				{
+					"method": "POST",
+					"headers": {
+						"X-Requested-With": "XMLHttpRequest"
+					},
+					"body": [
+						[
+							"archiMateFile",
+							"(file model.xml)"
+						],
+						[
+							"operationId",
+							"op-1"
+						]
+					]
+				}
+			],
+			[
+				"json"
+			],
+			[
+				"notify",
+				"Successfully imported 12 objects in 1m 15s",
+				{
+					"type": "success"
+				}
+			],
+			[
+				"stopProgressPolling"
+			]
+		],
+		"state": {
+			"importing": false,
+			"operationId": null,
+			"importProgress": {
+				"processed": 1
+			},
+			"importCancelled": null,
+			"cancelling": false,
+			"stopProgressPolling": null,
+			"exporting": false,
+			"exportingOrg": false,
+			"selectedFile": "(file)",
+			"selectedOrganization": null,
+			"importResult": {
+				"success": true,
+				"performance_metrics": {
+					"objects_processed": 12,
+					"total_time_seconds": 75
+				}
+			},
+			"importError": null,
+			"showErrors": false,
+			"includeModules": true,
+			"includeDeelnames": false,
+			"includeGebruik": false,
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			],
+			"bodyChildren": 0
+		}
+	},
+	"import is cancelled": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"startProgressPolling",
+				"op-1"
+			],
+			[
+				"withHeartbeat",
+				30000
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/import",
+				{
+					"method": "POST",
+					"headers": {
+						"X-Requested-With": "XMLHttpRequest"
+					},
+					"body": [
+						[
+							"archiMateFile",
+							"(file model.xml)"
+						],
+						[
+							"operationId",
+							"op-1"
+						]
+					]
+				}
+			],
+			[
+				"json"
+			],
+			[
+				"stopProgressPolling"
+			]
+		],
+		"state": {
+			"importing": false,
+			"operationId": null,
+			"importProgress": {
+				"processed": 1
+			},
+			"importCancelled": {
+				"cancelled": true,
+				"saved": 3
+			},
+			"cancelling": false,
+			"stopProgressPolling": null,
+			"exporting": false,
+			"exportingOrg": false,
+			"selectedFile": "(file)",
+			"selectedOrganization": null,
+			"importResult": null,
+			"importError": null,
+			"showErrors": false,
+			"includeModules": true,
+			"includeDeelnames": false,
+			"includeGebruik": false,
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			],
+			"bodyChildren": 0
+		}
+	},
+	"import fails with an error": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"startProgressPolling",
+				"op-1"
+			],
+			[
+				"withHeartbeat",
+				30000
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/import",
+				{
+					"method": "POST",
+					"headers": {
+						"X-Requested-With": "XMLHttpRequest"
+					},
+					"body": [
+						[
+							"archiMateFile",
+							"(file model.xml)"
+						],
+						[
+							"operationId",
+							"op-1"
+						]
+					]
+				}
+			],
+			[
+				"json"
+			],
+			[
+				"console.error",
+				"Error importing ArchiMate file:",
+				"Error: bad"
+			],
+			[
+				"notify",
+				"Import failed: bad",
+				{
+					"type": "error"
+				}
+			],
+			[
+				"stopProgressPolling"
+			]
+		],
+		"state": {
+			"importing": false,
+			"operationId": null,
+			"importProgress": {
+				"processed": 1
+			},
+			"importCancelled": null,
+			"cancelling": false,
+			"stopProgressPolling": null,
+			"exporting": false,
+			"exportingOrg": false,
+			"selectedFile": "(file)",
+			"selectedOrganization": null,
+			"importResult": null,
+			"importError": {
+				"message": "bad",
+				"details": null
+			},
+			"showErrors": false,
+			"includeModules": true,
+			"includeDeelnames": false,
+			"includeGebruik": false,
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			],
+			"bodyChildren": 0
+		}
+	},
+	"import fails with a message only": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"startProgressPolling",
+				"op-1"
+			],
+			[
+				"withHeartbeat",
+				30000
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/import",
+				{
+					"method": "POST",
+					"headers": {
+						"X-Requested-With": "XMLHttpRequest"
+					},
+					"body": [
+						[
+							"archiMateFile",
+							"(file model.xml)"
+						],
+						[
+							"operationId",
+							"op-1"
+						]
+					]
+				}
+			],
+			[
+				"json"
+			],
+			[
+				"console.error",
+				"Error importing ArchiMate file:",
+				"Error: only message"
+			],
+			[
+				"notify",
+				"Import failed: only message",
+				{
+					"type": "error"
+				}
+			],
+			[
+				"stopProgressPolling"
+			]
+		],
+		"state": {
+			"importing": false,
+			"operationId": null,
+			"importProgress": {
+				"processed": 1
+			},
+			"importCancelled": null,
+			"cancelling": false,
+			"stopProgressPolling": null,
+			"exporting": false,
+			"exportingOrg": false,
+			"selectedFile": "(file)",
+			"selectedOrganization": null,
+			"importResult": null,
+			"importError": {
+				"message": "only message",
+				"details": null
+			},
+			"showErrors": false,
+			"includeModules": true,
+			"includeDeelnames": false,
+			"includeGebruik": false,
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			],
+			"bodyChildren": 0
+		}
+	},
+	"import fails without text": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"startProgressPolling",
+				"op-1"
+			],
+			[
+				"withHeartbeat",
+				30000
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/import",
+				{
+					"method": "POST",
+					"headers": {
+						"X-Requested-With": "XMLHttpRequest"
+					},
+					"body": [
+						[
+							"archiMateFile",
+							"(file model.xml)"
+						],
+						[
+							"operationId",
+							"op-1"
+						]
+					]
+				}
+			],
+			[
+				"json"
+			],
+			[
+				"console.error",
+				"Error importing ArchiMate file:",
+				"Error: Import failed"
+			],
+			[
+				"notify",
+				"Import failed: Import failed",
+				{
+					"type": "error"
+				}
+			],
+			[
+				"stopProgressPolling"
+			]
+		],
+		"state": {
+			"importing": false,
+			"operationId": null,
+			"importProgress": {
+				"processed": 1
+			},
+			"importCancelled": null,
+			"cancelling": false,
+			"stopProgressPolling": null,
+			"exporting": false,
+			"exportingOrg": false,
+			"selectedFile": "(file)",
+			"selectedOrganization": null,
+			"importResult": null,
+			"importError": {
+				"message": "Import failed",
+				"details": null
+			},
+			"showErrors": false,
+			"includeModules": true,
+			"includeDeelnames": false,
+			"includeGebruik": false,
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			],
+			"bodyChildren": 0
+		}
+	},
+	"import succeeds without metrics": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"startProgressPolling",
+				"op-1"
+			],
+			[
+				"withHeartbeat",
+				30000
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/import",
+				{
+					"method": "POST",
+					"headers": {
+						"X-Requested-With": "XMLHttpRequest"
+					},
+					"body": [
+						[
+							"archiMateFile",
+							"(file model.xml)"
+						],
+						[
+							"operationId",
+							"op-1"
+						]
+					]
+				}
+			],
+			[
+				"json"
+			],
+			[
+				"console.error",
+				"Error importing ArchiMate file:",
+				"TypeError: Cannot read properties of undefined (reading 'objects_processed')"
+			],
+			[
+				"notify",
+				"Import failed: Cannot read properties of undefined (reading 'objects_processed')",
+				{
+					"type": "error"
+				}
+			],
+			[
+				"stopProgressPolling"
+			]
+		],
+		"state": {
+			"importing": false,
+			"operationId": null,
+			"importProgress": {
+				"processed": 1
+			},
+			"importCancelled": null,
+			"cancelling": false,
+			"stopProgressPolling": null,
+			"exporting": false,
+			"exportingOrg": false,
+			"selectedFile": "(file)",
+			"selectedOrganization": null,
+			"importResult": {
+				"success": true
+			},
+			"importError": {
+				"message": "Cannot read properties of undefined (reading 'objects_processed')",
+				"details": null
+			},
+			"showErrors": false,
+			"includeModules": true,
+			"includeDeelnames": false,
+			"includeGebruik": false,
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			],
+			"bodyChildren": 0
+		}
+	},
+	"import network failure": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"startProgressPolling",
+				"op-1"
+			],
+			[
+				"withHeartbeat",
+				30000
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/import",
+				{
+					"method": "POST",
+					"headers": {
+						"X-Requested-With": "XMLHttpRequest"
+					},
+					"body": [
+						[
+							"archiMateFile",
+							"(file model.xml)"
+						],
+						[
+							"operationId",
+							"op-1"
+						]
+					]
+				}
+			],
+			[
+				"console.error",
+				"Error importing ArchiMate file:",
+				"TypeError: Failed to fetch"
+			],
+			[
+				"notify",
+				"Import failed: Failed to fetch",
+				{
+					"type": "error"
+				}
+			],
+			[
+				"stopProgressPolling"
+			]
+		],
+		"state": {
+			"importing": false,
+			"operationId": null,
+			"importProgress": {
+				"processed": 1
+			},
+			"importCancelled": null,
+			"cancelling": false,
+			"stopProgressPolling": null,
+			"exporting": false,
+			"exportingOrg": false,
+			"selectedFile": "(file)",
+			"selectedOrganization": null,
+			"importResult": null,
+			"importError": {
+				"message": "Failed to fetch",
+				"details": null
+			},
+			"showErrors": false,
+			"includeModules": true,
+			"includeDeelnames": false,
+			"includeGebruik": false,
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			],
+			"bodyChildren": 0
+		}
+	},
+	"export with a file name": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"withHeartbeat",
+				30000
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/export",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"OCS-APIREQUEST": "true",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"organization\":\"o1\"}"
+				}
+			],
+			[
+				"blob"
+			],
+			[
+				"createObjectURL",
+				"blob-data"
+			],
+			[
+				"headers.get",
+				"content-disposition"
+			],
+			[
+				"click",
+				"blob:1",
+				"model.xml",
+				true
+			],
+			[
+				"revokeObjectURL",
+				"blob:1"
+			],
+			[
+				"notify",
+				"ArchiMate file exported successfully for undefined",
+				{
+					"type": "success"
+				}
+			]
+		],
+		"state": {
+			"importing": false,
+			"operationId": null,
+			"importProgress": null,
+			"importCancelled": null,
+			"cancelling": false,
+			"stopProgressPolling": null,
+			"exporting": false,
+			"exportingOrg": false,
+			"selectedFile": null,
+			"selectedOrganization": {
+				"value": "o1"
+			},
+			"importResult": null,
+			"importError": null,
+			"showErrors": false,
+			"includeModules": true,
+			"includeDeelnames": false,
+			"includeGebruik": false,
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			],
+			"bodyChildren": 0
+		}
+	},
+	"export without a header, generic": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"withHeartbeat",
+				30000
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/export",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"OCS-APIREQUEST": "true",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"organization\":null}"
+				}
+			],
+			[
+				"blob"
+			],
+			[
+				"createObjectURL",
+				"blob-data"
+			],
+			[
+				"headers.get",
+				"content-disposition"
+			],
+			[
+				"click",
+				"blob:1",
+				"archimate_export.xml",
+				true
+			],
+			[
+				"revokeObjectURL",
+				"blob:1"
+			],
+			[
+				"notify",
+				"ArchiMate file exported successfully for Generic",
+				{
+					"type": "success"
+				}
+			]
+		],
+		"state": {
+			"importing": false,
+			"operationId": null,
+			"importProgress": null,
+			"importCancelled": null,
+			"cancelling": false,
+			"stopProgressPolling": null,
+			"exporting": false,
+			"exportingOrg": false,
+			"selectedFile": null,
+			"selectedOrganization": null,
+			"importResult": null,
+			"importError": null,
+			"showErrors": false,
+			"includeModules": true,
+			"includeDeelnames": false,
+			"includeGebruik": false,
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			],
+			"bodyChildren": 0
+		}
+	},
+	"export header without a file name": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"withHeartbeat",
+				30000
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/export",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"OCS-APIREQUEST": "true",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"organization\":null}"
+				}
+			],
+			[
+				"blob"
+			],
+			[
+				"createObjectURL",
+				"blob-data"
+			],
+			[
+				"headers.get",
+				"content-disposition"
+			],
+			[
+				"click",
+				"blob:1",
+				"archimate_export.xml",
+				true
+			],
+			[
+				"revokeObjectURL",
+				"blob:1"
+			],
+			[
+				"notify",
+				"ArchiMate file exported successfully for undefined",
+				{
+					"type": "success"
+				}
+			]
+		],
+		"state": {
+			"importing": false,
+			"operationId": null,
+			"importProgress": null,
+			"importCancelled": null,
+			"cancelling": false,
+			"stopProgressPolling": null,
+			"exporting": false,
+			"exportingOrg": false,
+			"selectedFile": null,
+			"selectedOrganization": {
+				"value": null
+			},
+			"importResult": null,
+			"importError": null,
+			"showErrors": false,
+			"includeModules": true,
+			"includeDeelnames": false,
+			"includeGebruik": false,
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			],
+			"bodyChildren": 0
+		}
+	},
+	"export fails with a message": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"withHeartbeat",
+				30000
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/export",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"OCS-APIREQUEST": "true",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"organization\":null}"
+				}
+			],
+			[
+				"json"
+			],
+			[
+				"console.error",
+				"Error exporting ArchiMate file:",
+				"Error: no access"
+			],
+			[
+				"notify",
+				"Export failed: no access",
+				{
+					"type": "error"
+				}
+			]
+		],
+		"state": {
+			"importing": false,
+			"operationId": null,
+			"importProgress": null,
+			"importCancelled": null,
+			"cancelling": false,
+			"stopProgressPolling": null,
+			"exporting": false,
+			"exportingOrg": false,
+			"selectedFile": null,
+			"selectedOrganization": null,
+			"importResult": null,
+			"importError": null,
+			"showErrors": false,
+			"includeModules": true,
+			"includeDeelnames": false,
+			"includeGebruik": false,
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			],
+			"bodyChildren": 0
+		}
+	},
+	"export fails without a message": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"withHeartbeat",
+				30000
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/export",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"OCS-APIREQUEST": "true",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"organization\":null}"
+				}
+			],
+			[
+				"json"
+			],
+			[
+				"console.error",
+				"Error exporting ArchiMate file:",
+				"Error: Export failed"
+			],
+			[
+				"notify",
+				"Export failed: Export failed",
+				{
+					"type": "error"
+				}
+			]
+		],
+		"state": {
+			"importing": false,
+			"operationId": null,
+			"importProgress": null,
+			"importCancelled": null,
+			"cancelling": false,
+			"stopProgressPolling": null,
+			"exporting": false,
+			"exportingOrg": false,
+			"selectedFile": null,
+			"selectedOrganization": null,
+			"importResult": null,
+			"importError": null,
+			"showErrors": false,
+			"includeModules": true,
+			"includeDeelnames": false,
+			"includeGebruik": false,
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			],
+			"bodyChildren": 0
+		}
+	},
+	"export network failure": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"withHeartbeat",
+				30000
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/export",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"OCS-APIREQUEST": "true",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"organization\":null}"
+				}
+			],
+			[
+				"console.error",
+				"Error exporting ArchiMate file:",
+				"TypeError: Failed to fetch"
+			],
+			[
+				"notify",
+				"Export failed: Failed to fetch",
+				{
+					"type": "error"
+				}
+			]
+		],
+		"state": {
+			"importing": false,
+			"operationId": null,
+			"importProgress": null,
+			"importCancelled": null,
+			"cancelling": false,
+			"stopProgressPolling": null,
+			"exporting": false,
+			"exportingOrg": false,
+			"selectedFile": null,
+			"selectedOrganization": null,
+			"importResult": null,
+			"importError": null,
+			"showErrors": false,
+			"includeModules": true,
+			"includeDeelnames": false,
+			"includeGebruik": false,
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			],
+			"bodyChildren": 0
+		}
+	},
+	"organisation export without an organisation": {
+		"outcome": "resolved",
+		"trace": [],
+		"state": {
+			"importing": false,
+			"operationId": null,
+			"importProgress": null,
+			"importCancelled": null,
+			"cancelling": false,
+			"stopProgressPolling": null,
+			"exporting": false,
+			"exportingOrg": false,
+			"selectedFile": null,
+			"selectedOrganization": null,
+			"importResult": null,
+			"importError": null,
+			"showErrors": false,
+			"includeModules": true,
+			"includeDeelnames": false,
+			"includeGebruik": false,
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			],
+			"bodyChildren": 0
+		}
+	},
+	"organisation export with an option": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"withHeartbeat",
+				30000
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/export/organization/org%201%2Fa?modules=true&deelnames=true&usage=false",
+				{
+					"method": "GET",
+					"headers": {
+						"OCS-APIREQUEST": "true",
+						"requesttoken": "token-1"
+					},
+					"body": "(undefined)"
+				}
+			],
+			[
+				"blob"
+			],
+			[
+				"createObjectURL",
+				"blob-data"
+			],
+			[
+				"headers.get",
+				"content-disposition"
+			],
+			[
+				"click",
+				"blob:1",
+				"org.xml",
+				true
+			],
+			[
+				"revokeObjectURL",
+				"blob:1"
+			],
+			[
+				"notify",
+				"Organization ArchiMate file exported for Org One",
+				{
+					"type": "success"
+				}
+			]
+		],
+		"state": {
+			"importing": false,
+			"operationId": null,
+			"importProgress": null,
+			"importCancelled": null,
+			"cancelling": false,
+			"stopProgressPolling": null,
+			"exporting": false,
+			"exportingOrg": false,
+			"selectedFile": null,
+			"selectedOrganization": {
+				"value": "org 1/a"
+			},
+			"importResult": null,
+			"importError": null,
+			"showErrors": false,
+			"includeModules": true,
+			"includeDeelnames": true,
+			"includeGebruik": false,
+			"organizationOptions": [
+				{
+					"label": "Org One",
+					"value": "org 1/a"
+				}
+			],
+			"bodyChildren": 0
+		}
+	},
+	"organisation export with a bare id": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"withHeartbeat",
+				30000
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/export/organization/plain-id?modules=false&deelnames=false&usage=false",
+				{
+					"method": "GET",
+					"headers": {
+						"OCS-APIREQUEST": "true",
+						"requesttoken": "token-1"
+					},
+					"body": "(undefined)"
+				}
+			],
+			[
+				"blob"
+			],
+			[
+				"createObjectURL",
+				"blob-data"
+			],
+			[
+				"headers.get",
+				"content-disposition"
+			],
+			[
+				"click",
+				"blob:1",
+				"archimate_org_export.xml",
+				true
+			],
+			[
+				"revokeObjectURL",
+				"blob:1"
+			],
+			[
+				"notify",
+				"Organization ArchiMate file exported for Organization",
+				{
+					"type": "success"
+				}
+			]
+		],
+		"state": {
+			"importing": false,
+			"operationId": null,
+			"importProgress": null,
+			"importCancelled": null,
+			"cancelling": false,
+			"stopProgressPolling": null,
+			"exporting": false,
+			"exportingOrg": false,
+			"selectedFile": null,
+			"selectedOrganization": "plain-id",
+			"importResult": null,
+			"importError": null,
+			"showErrors": false,
+			"includeModules": false,
+			"includeDeelnames": false,
+			"includeGebruik": false,
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			],
+			"bodyChildren": 0
+		}
+	},
+	"organisation export fails with a message": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"withHeartbeat",
+				30000
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/export/organization/plain-id?modules=true&deelnames=false&usage=false",
+				{
+					"method": "GET",
+					"headers": {
+						"OCS-APIREQUEST": "true",
+						"requesttoken": "token-1"
+					},
+					"body": "(undefined)"
+				}
+			],
+			[
+				"json"
+			],
+			[
+				"console.error",
+				"Error exporting organization ArchiMate file:",
+				"Error: nope"
+			],
+			[
+				"notify",
+				"Organization export failed: nope",
+				{
+					"type": "error"
+				}
+			]
+		],
+		"state": {
+			"importing": false,
+			"operationId": null,
+			"importProgress": null,
+			"importCancelled": null,
+			"cancelling": false,
+			"stopProgressPolling": null,
+			"exporting": false,
+			"exportingOrg": false,
+			"selectedFile": null,
+			"selectedOrganization": "plain-id",
+			"importResult": null,
+			"importError": null,
+			"showErrors": false,
+			"includeModules": true,
+			"includeDeelnames": false,
+			"includeGebruik": false,
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			],
+			"bodyChildren": 0
+		}
+	},
+	"organisation export fails without a message": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"withHeartbeat",
+				30000
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/archimate/export/organization/plain-id?modules=true&deelnames=false&usage=false",
+				{
+					"method": "GET",
+					"headers": {
+						"OCS-APIREQUEST": "true",
+						"requesttoken": "token-1"
+					},
+					"body": "(undefined)"
+				}
+			],
+			[
+				"json"
+			],
+			[
+				"console.error",
+				"Error exporting organization ArchiMate file:",
+				"Error: Organization export failed"
+			],
+			[
+				"notify",
+				"Organization export failed: Organization export failed",
+				{
+					"type": "error"
+				}
+			]
+		],
+		"state": {
+			"importing": false,
+			"operationId": null,
+			"importProgress": null,
+			"importCancelled": null,
+			"cancelling": false,
+			"stopProgressPolling": null,
+			"exporting": false,
+			"exportingOrg": false,
+			"selectedFile": null,
+			"selectedOrganization": "plain-id",
+			"importResult": null,
+			"importError": null,
+			"showErrors": false,
+			"includeModules": true,
+			"includeDeelnames": false,
+			"includeGebruik": false,
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			],
+			"bodyChildren": 0
+		}
+	}
+}

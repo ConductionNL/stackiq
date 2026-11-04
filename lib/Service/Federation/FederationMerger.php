@@ -55,13 +55,14 @@ class FederationMerger {
 	 *    locally-mirrored entries no longer in the peer catalog are WITHDRAWs
 	 *    (marked withdrawn + stale, never silently deleted).
 	 *
-	 * @param string $peerUrl The peer base URL (provenance instance).
-	 * @param string $peerOrg The peer organisation name (provenance).
+	 * @param array{url: string, organisation: string, syncedAt: string} $peer The peer: its base URL
+	 *                                                                     (provenance instance), its
+	 *                                                                     organisation name (provenance)
+	 *                                                                     and the ISO-8601 sync moment.
 	 * @param array<int,array<string,mixed>> $peerEntries The peer's published entries (each MUST
 	 *                                                    carry a stable id under 'id' or
 	 *                                                    'uuid').
 	 * @param array<int,array<string,mixed>> $localMirrors The locally-stored mirrors of THIS peer.
-	 * @param string $syncedAt The ISO-8601 sync moment.
 	 *
 	 * The reconciliation plan. Each create/update item is a full mirror data bag
 	 * (with `_source`); each withdraw item is the existing local mirror data bag,
@@ -83,14 +84,11 @@ class FederationMerger {
 	 * per-entry guards, each of which exists to keep the plan idempotent and to keep
 	 * locally-owned entries out of it.
 	 */
-	public function plan(
-		string $peerUrl,
-		string $peerOrg,
-		array $peerEntries,
-		array $localMirrors,
-		string $syncedAt,
-	): array {
-		$create = [];
+	public function plan(array $peer, array $peerEntries, array $localMirrors): array {
+		$peerUrl  = $peer['url'];
+		$peerOrg  = $peer['organisation'];
+		$syncedAt = $peer['syncedAt'];
+		$create   = [];
 		$update = [];
 		$withdraw = [];
 

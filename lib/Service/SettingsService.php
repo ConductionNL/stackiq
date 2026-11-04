@@ -18,6 +18,10 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\EmailTemplateDefaults;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
+use OCA\Stackiq\Service\Settings\SettingsObjectCounts;
+use OCA\Stackiq\Service\Settings\VoorzieningenConfigNormalizer;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -65,7 +69,7 @@ use Symfony\Component\Mime\Email;
  *
  * @spec openspec/specs/settings-service/spec.md
  */
-class SettingsService {
+class SettingsService implements ObjectTypeLocatorInterface {
 
 	/**
 	 * The application name for identification and configuration purposes
@@ -145,6 +149,17 @@ class SettingsService {
 	 * `organization`, which has to keep working until every app has migrated.
 	 */
 	private const SHARED_ORGANISATION_SCHEMA = 'nc-organisation';
+
+	/**
+	 * The name each role group list goes by in result messages and logs.
+	 *
+	 * @var array<string, string>
+	 */
+	private const ROLE_GROUP_LABELS = [
+		'generic' => 'generic user groups',
+		'organizationAdmin' => 'organization admin groups',
+		'superUser' => 'super user groups',
+	];
 
 	/**
 	 * SettingsService constructor
@@ -1709,7 +1724,7 @@ class SettingsService {
 							fragmentSig: $fragmentSig
 						);
 
-						$appId = \OCA\Stackiq\AppInfo\Application::APP_ID;
+						$appId = \OCA\Stackiq\AppInfo\AppIdentity::APP_ID;
 
 						// Force-when-stale workaround (register-import-reliability,
 						// https://github.com/ConductionNL/openregister/issues/2075):
@@ -1809,7 +1824,7 @@ class SettingsService {
 								'trace' => $e->getTraceAsString(),
 								'force_flag' => $force,
 								'effective_force' => $effectiveForce,
-								'app_id' => \OCA\Stackiq\AppInfo\Application::APP_ID,
+								'app_id' => \OCA\Stackiq\AppInfo\AppIdentity::APP_ID,
 							]
 						);
 
@@ -2856,52 +2871,7 @@ class SettingsService {
 	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function getDefaultEmailTemplate(string $templateName): string {
-		$templates = [
-			'organization_registration' => '
-<h1>Welkom bij de Software Catalogus!</h1>
-<p>Beste {{ organization.name }},</p>
-<p>Hartelijk welkom bij de Software Catalogus! Uw organisatie is succesvol geregistreerd.</p>
-<p>Met de Software Catalogus kunt u:</p>
-<ul>
-    <li>Uw software overzichtelijk beheren</li>
-    <li>Software delen met andere organisaties</li>
-    <li>Ontdekken welke software andere organisaties gebruiken</li>
-</ul>
-<p>Uw organisatie heeft de status "{{ organization.beoordeling }}" en kan nu gebruik maken van alle functionaliteiten.</p>
-<p>Heeft u vragen? Neem dan contact met ons op.</p>
-<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
-            ',
-			'organization_activation' => '
-<h1>Uw organisatie is geactiveerd!</h1>
-<p>Beste {{ organization.name }},</p>
-<p>Goed nieuws! Uw organisatie is zojuist geactiveerd in de Software Catalogus.</p>
-<p>Dit betekent dat u nu volledig kunt deelnemen aan:</p>
-<ul>
-    <li>Het delen van software informatie</li>
-    <li>Samenwerking met andere organisaties</li>
-    <li>Toegang tot alle catalogus functionaliteiten</li>
-</ul>
-<p>Status: {{ organization.beoordeling }}</p>
-<p>U kunt nu inloggen en gebruik maken van alle beschikbare functionaliteiten.</p>
-<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
-            ',
-			'user_creation' => '
-<h1>Welkom {{ user.name }}!</h1>
-<p>Beste {{ user.name }},</p>
-<p>Er is een gebruikersaccount voor u aangemaakt in de Software Catalogus.</p>
-<p>Uw accountgegevens:</p>
-<ul>
-    <li>E-mailadres: {{ user.email }}</li>
-    <li>Gebruikersnaam: {{ user.username }}</li>
-    <li>Organisatie: {{ user.organization.name if user.organization }}</li>
-</ul>
-<p>U kunt nu inloggen op het platform en gebruik maken van alle functionaliteiten.</p>
-<p>Heeft u vragen over uw account? Neem dan contact met ons op.</p>
-<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
-            ',
-		];
-
-		return $templates[$templateName] ?? '';
+		return (new EmailTemplateDefaults())->template(templateName: $templateName);
 	}//end getDefaultEmailTemplate()
 
 	/**
@@ -2913,28 +2883,7 @@ class SettingsService {
 	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function getEmailTemplateVariables(string $templateName): array {
-		$variables = [
-			'organization_registration' => [
-				'organization.name' => 'Organization name',
-				'organization.beoordeling' => 'Organization status (e.g., Actief)',
-				'organization.type' => 'Organization type (e.g., Leverancier)',
-				'organization.website' => 'Organization website',
-			],
-			'organization_activation' => [
-				'organization.name' => 'Organization name',
-				'organization.beoordeling' => 'Organization status (e.g., Actief)',
-				'organization.type' => 'Organization type',
-				'organization.website' => 'Organization website',
-			],
-			'user_creation' => [
-				'user.name' => 'User display name',
-				'user.email' => 'User email address',
-				'user.username' => 'Username',
-				'user.organization.name' => 'Organization name (if applicable)',
-			],
-		];
-
-		return $variables[$templateName] ?? [];
+		return (new EmailTemplateDefaults())->variables(templateName: $templateName);
 	}//end getEmailTemplateVariables()
 
 	/**
@@ -3584,7 +3533,7 @@ class SettingsService {
 	public function getVersionInfo(): array {
 		try {
 			// Get the current app version.
-			$currentAppVersion = $this->appManager->getAppVersion(\OCA\Stackiq\AppInfo\Application::APP_ID);
+			$currentAppVersion = $this->appManager->getAppVersion(\OCA\Stackiq\AppInfo\AppIdentity::APP_ID);
 
 			$this->logger->debug(
 				'SettingsService: Getting version information',
@@ -3598,7 +3547,7 @@ class SettingsService {
 			$storedConfigVersion = null;
 
 			try {
-				$appId = \OCA\Stackiq\AppInfo\Application::APP_ID;
+				$appId = \OCA\Stackiq\AppInfo\AppIdentity::APP_ID;
 				$storedConfigVersion = $configurationService->getConfiguredAppVersion($appId);
 			} catch (\Exception $e) {
 				$this->logger->warning(
@@ -4606,7 +4555,7 @@ class SettingsService {
 
 		// Normalize to the new, clean structure: no *_source or *_register keys,.
 		// include all known schema keys, and accept legacy 'voorzieningen_*_schema' fallbacks.
-		return $this->normalizeVoorzieningenConfig(input: $decoded);
+		return (new VoorzieningenConfigNormalizer())->normalize(input: $decoded);
 	}//end getVoorzieningenConfig()
 
 	/**
@@ -4622,66 +4571,10 @@ class SettingsService {
 		$this->clearConfigurationCache();
 
 		// Persist only normalized structure.
-		$normalized = $this->normalizeVoorzieningenConfig(input: $config);
+		$normalized = (new VoorzieningenConfigNormalizer())->normalize(input: $config);
 		$jsonConfig = json_encode($normalized, JSON_PRETTY_PRINT);
 		$this->config->setValueString($this->appName, 'voorzieningen_config', $jsonConfig);
 	}//end setVoorzieningenConfig()
-
-	/**
-	 * Normalize voorzieningen configuration to the new, clean format.
-	 * - Keep only 'register' and individual '*_schema' keys
-	 * - Drop any '*_source' and '*_register' keys
-	 * - Ensure all known schema keys are present (null if missing)
-	 *
-	 * @param array $input Raw/legacy configuration.
-	 *
-	 * @return array Normalized configuration.
-	 */
-	private function normalizeVoorzieningenConfig(array $input): array {
-		$normalized = [];
-
-		// Register id.
-		if (isset($input['register']) === true) {
-			$normalized['register'] = (string)$input['register'];
-		} else {
-			$normalized['register'] = '';
-		}
-
-		// Known schema keys to support - updated to match actual schemas from register.
-		$schemaKeys = [
-			'organisatie_schema',
-			'contactpersoon_schema',
-			'suite_schema',
-			'dienst_schema',
-			'kwetsbaarheid_schema',
-			'gebruik_schema',
-			'contract_schema',
-			'koppeling_schema',
-			'beoordeeling_schema',
-			'module_schema',
-			'compliancy_schema',
-			'moduleVersie_schema',
-			'sector_schema',
-			'sbomComponent_schema',
-			'maintenanceWindow_schema',
-		];
-
-		// Copy any present schema keys; ignore sources/registers.
-		foreach ($schemaKeys as $key) {
-			if (array_key_exists($key, $input) === true) {
-				if ($input[$key] === null) {
-					$normalized[$key] = '';
-				} else {
-					$normalized[$key] = (string)$input[$key];
-				}
-			} else {
-				// Accept legacy keys that might be nested under 'voorzieningen_*_schema'.
-				$normalized[$key] = '';
-			}
-		}
-
-		return $normalized;
-	}//end normalizeVoorzieningenConfig()
 
 	/**
 	 * Gets AMEF configuration using ArchiMateService to avoid code duplication
@@ -4859,7 +4752,7 @@ class SettingsService {
 			$exportDecoded = json_decode($exportStatus, true);
 
 			// Get AMEF object counts.
-			$amefObjectCounts = $this->getAmefObjectCounts();
+			$amefObjectCounts = $this->objectCounts()->amefCounts();
 
 			$importValue = [];
 			if (is_array($importDecoded) === true) {
@@ -4882,189 +4775,6 @@ class SettingsService {
 			];
 		}//end try
 	}//end getArchiMateStatus()
-
-	/**
-	 * Get Voorzieningen object counts for statistics
-	 *
-	 * @return array Object counts for Voorzieningen schemas
-	 */
-	private function getVoorzieningenObjectCounts(): array {
-		try {
-			$objectService = $this->getObjectService();
-			if ($objectService === null) {
-				return [
-					'totalOrganisatieObjects' => 0,
-					'totalContactpersoonObjects' => 0,
-					'totalVoorzieningObjects' => 0,
-					'totalVoorzieningAanbodObjects' => 0,
-					'totalVoorzieningVersieObjects' => 0,
-					'totalKwetsbaarheidObjects' => 0,
-					'totalContractObjects' => 0,
-					'totalStandaardObjects' => 0,
-					'totalReviewObjects' => 0,
-					'totalKoppelingObjects' => 0,
-					'totalBeoordeelingObjects' => 0,
-					'totalVoorzieningModuleObjects' => 0,
-					'totalVerklaringObjects' => 0,
-					'totalKoppelingGebruikObjects' => 0,
-					'totalCompliancyObjects' => 0,
-					'totalModuleGebruikObjects' => 0,
-					'totalModuleVersieObjects' => 0,
-					'totalSectorObjects' => 0,
-					'totalGebruikObjects' => 0,
-				];
-			}//end if
-
-			$voorzieningenConfig = $this->getVoorzieningenConfig();
-			$registerId = $voorzieningenConfig['register'] ?? null;
-
-			// Define all schema mappings.
-			$schemaMappings = [
-				'organisatie_schema' => 'totalOrganisatieObjects',
-				'contactpersoon_schema' => 'totalContactpersoonObjects',
-				'voorziening_schema' => 'totalVoorzieningObjects',
-				'voorziening_aanbod_schema' => 'totalVoorzieningAanbodObjects',
-				'voorziening_versie_schema' => 'totalVoorzieningVersieObjects',
-				'kwetsbaarheid_schema' => 'totalKwetsbaarheidObjects',
-				'contract_schema' => 'totalContractObjects',
-				'standaard_schema' => 'totalStandaardObjects',
-				'review_schema' => 'totalReviewObjects',
-				'koppeling_schema' => 'totalKoppelingObjects',
-				'beoordeeling_schema' => 'totalBeoordeelingObjects',
-				'module_schema' => 'totalVoorzieningModuleObjects',
-				'verklaring_schema' => 'totalVerklaringObjects',
-				'koppeling_gebruik_schema' => 'totalKoppelingGebruikObjects',
-				'compliancy_schema' => 'totalCompliancyObjects',
-				'module_gebruik_schema' => 'totalModuleGebruikObjects',
-				'module_versie_schema' => 'totalModuleVersieObjects',
-				'sector_schema' => 'totalSectorObjects',
-				'gebruik_schema' => 'totalGebruikObjects',
-			];
-
-			$counts = [];
-
-			// Initialize all counts to 0.
-			foreach ($schemaMappings as $key => $countKey) {
-				$counts[$countKey] = 0;
-			}
-
-			// Count objects for each configured schema.
-			foreach ($schemaMappings as $configKey => $countKey) {
-				$schemaId = $voorzieningenConfig[$configKey] ?? null;
-
-				if ($registerId !== false && $schemaId === true) {
-					try {
-						$query = [
-							'@self' => [
-								'register' => (int)$registerId,
-								'schema' => (int)$schemaId,
-							],
-						];
-						// A true SQL COUNT via OpenRegister's countSearchObjects()
-						// — NOT count(searchObjects()), which would either
-						// hydrate the entire register into memory (unbounded)
-						// or, if bounded with `_limit`, silently under-report
-						// the total for a register larger than the limit.
-						$counts[$countKey] = $objectService->countSearchObjects($query);
-					} catch (\Exception $e) {
-						$this->logger->warning("Failed to get {$configKey} count", ['error' => $e->getMessage()]);
-					}
-				}
-			}//end foreach
-
-			$this->logger->debug('SettingsService: Retrieved Voorzieningen object counts', $counts);
-
-			return $counts;
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'SettingsService: Failed to get Voorzieningen object counts',
-				[
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			return [
-				'totalOrganisatieObjects' => 0,
-				'totalContactpersoonObjects' => 0,
-				'totalVoorzieningObjects' => 0,
-				'totalVoorzieningAanbodObjects' => 0,
-				'totalVoorzieningVersieObjects' => 0,
-				'totalKwetsbaarheidObjects' => 0,
-				'totalContractObjects' => 0,
-				'totalStandaardObjects' => 0,
-				'totalReviewObjects' => 0,
-				'totalKoppelingObjects' => 0,
-				'totalBeoordeelingObjects' => 0,
-				'totalVoorzieningModuleObjects' => 0,
-				'totalVerklaringObjects' => 0,
-				'totalKoppelingGebruikObjects' => 0,
-				'totalCompliancyObjects' => 0,
-				'totalModuleGebruikObjects' => 0,
-				'totalModuleVersieObjects' => 0,
-				'totalSectorObjects' => 0,
-				'totalGebruikObjects' => 0,
-			];
-		}//end try
-	}//end getVoorzieningenObjectCounts()
-
-	/**
-	 * Gets AMEF object counts for consolidated configuration
-	 *
-	 * This method retrieves counts of all AMEF object types using the ArchiMateService
-	 * and returns them in a format suitable for the consolidated configuration.
-	 *
-	 * @return array AMEF object counts
-	 */
-	private function getAmefObjectCounts(): array {
-		try {
-			// Get ArchiMateService from container to avoid circular dependency.
-			$archiMateService = $this->container->get(\OCA\Stackiq\Service\ArchiMateService::class);
-
-			// Get object counts using ArchiMateService methods.
-			$elementObjects = $archiMateService->getElementObjects();
-			$organizationObjects = $archiMateService->getOrganizationObjects();
-			$viewObjects = $archiMateService->getViewObjects();
-			$relationshipObjects = $archiMateService->getRelationshipObjects();
-			$modelObjects = $archiMateService->getModelObjects();
-
-			$this->logger->debug(
-				'SettingsService: Retrieved AMEF object counts',
-				[
-					'elementObjects' => count($elementObjects),
-					'organizationObjects' => count($organizationObjects),
-					'viewObjects' => count($viewObjects),
-					'relationshipObjects' => count($relationshipObjects),
-					'modelObjects' => count($modelObjects),
-				]
-			);
-
-			return [
-				'totalElementObjects' => count($elementObjects),
-				'totalOrganizationObjects' => count($organizationObjects),
-				'totalViewObjects' => count($viewObjects),
-				'totalRelationshipsObjects' => count($relationshipObjects),
-				'totalModelObjects' => count($modelObjects),
-			];
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'SettingsService: Failed to get AMEF object counts',
-				[
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			// Return zero counts on error to prevent API failures.
-			return [
-				'totalElementObjects' => 0,
-				'totalOrganizationObjects' => 0,
-				'totalViewObjects' => 0,
-				'totalRelationshipsObjects' => 0,
-				'totalModelObjects' => 0,
-			];
-		}//end try
-	}//end getAmefObjectCounts()
 
 	/**
 	 * Set ArchiMate import status
@@ -5278,270 +4988,6 @@ class SettingsService {
 	}//end clearArchiMateExportStatus()
 
 	/**
-	 * Compact existing individual configuration values to JSON format
-	 * This method reorganizes all the scattered config values into organized JSON objects
-	 *
-	 * @return array Compaction results
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function compactToJsonConfiguration(): array {
-		$results = [
-			'success' => true,
-			'migrated' => [],
-			'errors' => [],
-		];
-
-		try {
-			// 1. Migrate Voorzieningen configuration.
-			$an = $this->appName;
-			$voorzieningenConfig = [
-				'register' => $this->config->getValueString(
-					$an,
-					'voorzieningen_register',
-					''
-				),
-				'organisatie_schema' => $this->config->getValueString(
-					$an,
-					'voorzieningen_organisatie_schema',
-					''
-				),
-				'contactpersoon_schema' => $this->config->getValueString(
-					$an,
-					'voorzieningen_contactpersoon_schema',
-					''
-				),
-				'organisatie_source' => $this->config->getValueString(
-					$an,
-					'voorzieningen_organisatie_source',
-					'openregister'
-				),
-				'contactpersoon_source' => $this->config->getValueString(
-					$an,
-					'voorzieningen_contactpersoon_source',
-					'openregister'
-				),
-				'organisatie_register' => $this->config->getValueString(
-					$an,
-					'voorzieningen_organisatie_register',
-					''
-				),
-				'contactpersoon_register' => $this->config->getValueString(
-					$an,
-					'voorzieningen_contactpersoon_register',
-					''
-				),
-			];
-
-			$this->setVoorzieningenConfig(config: $voorzieningenConfig);
-			$results['migrated']['voorzieningen'] = $voorzieningenConfig;
-
-			// 2. Migrate AMEF configuration.
-			$amefConfig = [
-				'register_id' => $this->config->getValueString(
-					$an,
-					'amef_register_id',
-					''
-				),
-				'organizations_schema' => $this->config->getValueString(
-					$an,
-					'amef_organizations_schema',
-					''
-				),
-				'elements_schema' => $this->config->getValueString(
-					$an,
-					'amef_elements_schema',
-					''
-				),
-				'relationships_schema' => $this->config->getValueString(
-					$an,
-					'amef_relationships_schema',
-					''
-				),
-				'views_schema' => $this->config->getValueString(
-					$an,
-					'amef_views_schema',
-					''
-				),
-				'models_schema' => $this->config->getValueString(
-					$an,
-					'amef_models_schema',
-					''
-				),
-				'organization_source' => $this->config->getValueString(
-					$an,
-					'amef_organization_source',
-					'openregister'
-				),
-				'organization_register' => $this->config->getValueString(
-					$an,
-					'amef_organization_register',
-					''
-				),
-				'organization_schema' => $this->config->getValueString(
-					$an,
-					'amef_organization_schema',
-					''
-				),
-				// Note: Duplicated entries with typos kept for backward compatibility.
-				'elementss_schema' => $this->config->getValueString(
-					$an,
-					'amef_elementss_schema',
-					''
-				),
-				'organizationss_schema' => $this->config->getValueString(
-					$an,
-					'amef_organizationss_schema',
-					''
-				),
-				'relationshipss_schema' => $this->config->getValueString(
-					$an,
-					'amef_relationshipss_schema',
-					''
-				),
-			];
-
-			$this->setAmefConfig(config: $amefConfig);
-			$results['migrated']['amef'] = $amefConfig;
-
-			// 3. Migrate Email configuration.
-			$emailConfig = [
-				'enabled' => $this->config->getValueString(
-					$an,
-					'email_enabled',
-					'false'
-				) === 'true',
-				'transport_type' => $this->config->getValueString(
-					$an,
-					'email_transport_type',
-					'smtp'
-				),
-				'smtp_host' => $this->config->getValueString(
-					$an,
-					'email_smtp_host',
-					''
-				),
-				'smtp_port' => $this->config->getValueString(
-					$an,
-					'email_smtp_port',
-					'587'
-				),
-				'smtp_username' => $this->config->getValueString(
-					$an,
-					'email_smtp_username',
-					''
-				),
-				'smtp_password' => $this->config->getValueString(
-					$an,
-					'email_smtp_password',
-					''
-				),
-				'smtp_encryption' => $this->config->getValueString(
-					$an,
-					'email_smtp_encryption',
-					'tls'
-				),
-				'sender_email' => $this->config->getValueString(
-					$an,
-					'sender_email',
-					''
-				),
-				'sender_name' => $this->config->getValueString(
-					$an,
-					'sender_name',
-					''
-				),
-				'mailjet_api_key' => $this->config->getValueString(
-					$an,
-					'email_mailjet_api_key',
-					''
-				),
-				'mailjet_secret_key' => $this->config->getValueString(
-					$an,
-					'email_mailjet_secret_key',
-					''
-				),
-				'sendgrid_api_key' => $this->config->getValueString(
-					$an,
-					'email_sendgrid_api_key',
-					''
-				),
-				'mailgun_api_key' => $this->config->getValueString(
-					$an,
-					'email_mailgun_api_key',
-					''
-				),
-				'mailgun_domain' => $this->config->getValueString(
-					$an,
-					'email_mailgun_domain',
-					''
-				),
-				'postmark_api_key' => $this->config->getValueString(
-					$an,
-					'email_postmark_api_key',
-					''
-				),
-				'ses_access_key' => $this->config->getValueString(
-					$an,
-					'email_ses_access_key',
-					''
-				),
-				'ses_secret_key' => $this->config->getValueString(
-					$an,
-					'email_ses_secret_key',
-					''
-				),
-				'ses_region' => $this->config->getValueString(
-					$an,
-					'email_ses_region',
-					'us-east-1'
-				),
-				'org_registration_enabled' => $this->config->getValueString(
-					$an,
-					'email_org_registration_enabled',
-					'true'
-				) === 'true',
-				'org_activation_enabled' => $this->config->getValueString(
-					$an,
-					'email_org_activation_enabled',
-					'true'
-				) === 'true',
-				'user_creation_enabled' => $this->config->getValueString(
-					$an,
-					'email_user_creation_enabled',
-					'true'
-				) === 'true',
-				'test_receiver_override' => $this->config->getValueString(
-					$an,
-					'test_receiver_override',
-					''
-				),
-			];
-
-			$this->setEmailConfig(config: $emailConfig);
-			$results['migrated']['email'] = $emailConfig;
-
-			$this->logger->info(
-				'Configuration compaction to JSON format completed successfully',
-				[
-					'compacted_sections' => array_keys($results['migrated']),
-				]
-			);
-		} catch (\Exception $e) {
-			$results['success'] = false;
-			$results['errors'][] = 'Compaction failed: ' . $e->getMessage();
-			$this->logger->error(
-				'Configuration compaction to JSON format failed',
-				[
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-		}//end try
-
-		return $results;
-	}//end compactToJsonConfiguration()
-
-	/**
 	 * Clean up old individual configuration values after compaction
 	 * This method removes the old scattered config values after successful compaction
 	 *
@@ -5724,98 +5170,23 @@ class SettingsService {
 	}//end getAllSettings()
 
 	/**
+	 * The counter behind the object counts and statistics.
+	 *
+	 * @return SettingsObjectCounts
+	 */
+	private function objectCounts(): SettingsObjectCounts {
+		return new SettingsObjectCounts(settings: $this, container: $this->container, logger: $this->logger);
+
+	}//end objectCounts()
+
+	/**
 	 * Get object counts statistics for all configured registers
 	 *
 	 * @return array Statistics for all registers with object counts
 	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function getObjectCountsStatistics(): array {
-		try {
-			$statistics = [
-				'voorzieningen' => [],
-				'amef' => [],
-				'timestamp' => time(),
-			];
-
-			// Get Voorzieningen statistics.
-			try {
-				$voorzieningenConfig = $this->getVoorzieningenConfig();
-				$voorzieningenCounts = $this->getVoorzieningenObjectCounts();
-
-				$statistics['voorzieningen'] = [
-					'config' => $voorzieningenConfig,
-					'object_counts' => $voorzieningenCounts,
-					'configured' => empty($voorzieningenConfig['register']) === false
-						&& empty($voorzieningenConfig['organisatie_schema']) === false,
-				];
-			} catch (\Exception $e) {
-				$this->logger->error('Failed to get Voorzieningen statistics', ['error' => $e->getMessage()]);
-				$statistics['voorzieningen'] = [
-					'config' => [],
-					'object_counts' => ['totalOrganisatieObjects' => 0, 'totalContactpersoonObjects' => 0],
-					'configured' => false,
-					'error' => $e->getMessage(),
-				];
-			}
-
-			// Get AMEF statistics.
-			try {
-				$amefConfig = $this->getAmefConfig();
-				$amefCounts = $this->getAmefObjectCounts();
-
-				$statistics['amef'] = [
-					'config' => $amefConfig,
-					'object_counts' => $amefCounts,
-					'configured' => empty($amefConfig['register_id']) === false
-						&& empty($amefConfig['elements_schema']) === false,
-				];
-			} catch (\Exception $e) {
-				$this->logger->error('Failed to get AMEF statistics', ['error' => $e->getMessage()]);
-				$statistics['amef'] = [
-					'config' => [],
-					'object_counts' => [
-						'totalElementObjects' => 0,
-						'totalOrganizationObjects' => 0,
-						'totalViewObjects' => 0,
-						'totalRelationshipsObjects' => 0,
-						'totalModelObjects' => 0,
-					],
-					'configured' => false,
-					'error' => $e->getMessage(),
-				];
-			}//end try
-
-			return $statistics;
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'SettingsService: Failed to get object counts statistics',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return [
-				'voorzieningen' => [
-					'config' => [],
-					'object_counts' => ['totalOrganisatieObjects' => 0, 'totalContactpersoonObjects' => 0],
-					'configured' => false,
-					'error' => $e->getMessage(),
-				],
-				'amef' => [
-					'config' => [],
-					'object_counts' => [
-						'totalElementObjects' => 0,
-						'totalOrganizationObjects' => 0,
-						'totalViewObjects' => 0,
-						'totalRelationshipsObjects' => 0,
-						'totalModelObjects' => 0,
-					],
-					'configured' => false,
-					'error' => $e->getMessage(),
-				],
-				'timestamp' => time(),
-				'error' => $e->getMessage(),
-			];
-		}//end try
+		return $this->objectCounts()->statistics();
 	}//end getObjectCountsStatistics()
 
 	/**
@@ -5855,36 +5226,7 @@ class SettingsService {
 	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function updateGenericUserGroups(array $groups): array {
-		try {
-			$validation = $this->validateGroups(groups: $groups);
-
-			if (empty($validation['invalid']) === false) {
-				return [
-					'success' => false,
-					'message' => 'Invalid group names provided',
-					'validation' => $validation,
-				];
-			}
-
-			$this->setGenericUserGroups(groups: $validation['valid']);
-
-			return [
-				'success' => true,
-				'message' => 'Generic user groups updated successfully',
-				'groups' => $validation['valid'],
-			];
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'SettingsService: Failed to update generic user groups',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return [
-				'success' => false,
-				'message' => 'Failed to update generic user groups: ' . $e->getMessage(),
-			];
-		}//end try
+		return $this->updateRoleGroups(groups: $groups, role: 'generic');
 	}//end updateGenericUserGroups()
 
 	/**
@@ -5896,36 +5238,7 @@ class SettingsService {
 	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function updateOrganizationAdminGroups(array $groups): array {
-		try {
-			$validation = $this->validateGroups(groups: $groups);
-
-			if (empty($validation['invalid']) === false) {
-				return [
-					'success' => false,
-					'message' => 'Invalid group names provided',
-					'validation' => $validation,
-				];
-			}
-
-			$this->setOrganizationAdminGroups(groups: $validation['valid']);
-
-			return [
-				'success' => true,
-				'message' => 'Organization admin groups updated successfully',
-				'groups' => $validation['valid'],
-			];
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'SettingsService: Failed to update organization admin groups',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return [
-				'success' => false,
-				'message' => 'Failed to update organization admin groups: ' . $e->getMessage(),
-			];
-		}//end try
+		return $this->updateRoleGroups(groups: $groups, role: 'organizationAdmin');
 	}//end updateOrganizationAdminGroups()
 
 	/**
@@ -5937,6 +5250,22 @@ class SettingsService {
 	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function updateSuperUserGroups(array $groups): array {
+		return $this->updateRoleGroups(groups: $groups, role: 'superUser');
+	}//end updateSuperUserGroups()
+
+	/**
+	 * Validate a role's group list and store it when every name is valid.
+	 *
+	 * @param array  $groups Groups to set.
+	 * @param string $role   The role: generic, organizationAdmin or superUser.
+	 *
+	 * @psalm-param 'generic'|'organizationAdmin'|'superUser' $role
+	 *
+	 * @return array Update result with validation.
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	private function updateRoleGroups(array $groups, string $role): array {
+		$label = self::ROLE_GROUP_LABELS[$role];
 		try {
 			$validation = $this->validateGroups(groups: $groups);
 
@@ -5948,26 +5277,25 @@ class SettingsService {
 				];
 			}
 
-			$this->setSuperUserGroups(groups: $validation['valid']);
+			match ($role) {
+				'generic' => $this->setGenericUserGroups(groups: $validation['valid']),
+				'organizationAdmin' => $this->setOrganizationAdminGroups(groups: $validation['valid']),
+				'superUser' => $this->setSuperUserGroups(groups: $validation['valid']),
+			};
 
 			return [
 				'success' => true,
-				'message' => 'Super user groups updated successfully',
+				'message' => ucfirst($label) . ' updated successfully',
 				'groups' => $validation['valid'],
 			];
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'SettingsService: Failed to update super user groups',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
+			$this->logger->error('SettingsService: Failed to update ' . $label, ['exception' => $e->getMessage()]);
 			return [
 				'success' => false,
-				'message' => 'Failed to update super user groups: ' . $e->getMessage(),
+				'message' => 'Failed to update ' . $label . ': ' . $e->getMessage(),
 			];
 		}//end try
-	}//end updateSuperUserGroups()
+	}//end updateRoleGroups()
 
 	// ======================================================.
 	// FOCUSED ENDPOINT METHODS FOR PERFORMANCE OPTIMIZATION.
@@ -6341,8 +5669,8 @@ class SettingsService {
 	public function getObjectsCounts(): array {
 		try {
 			$counts = [
-				'voorzieningen' => $this->getVoorzieningenObjectCounts(),
-				'amef' => $this->getAmefObjectCounts(),
+				'voorzieningen' => $this->objectCounts()->voorzieningenCounts(),
+				'amef' => $this->objectCounts()->amefCounts(),
 				'timestamp' => time(),
 			];
 
