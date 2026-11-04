@@ -33,12 +33,17 @@ use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IUser;
 use PHPUnit\Framework\TestCase;
+
+if (class_exists('OCA\\OpenRegister\\Exception\\OrganisationSlugConflictException') === false) {
+	require_once __DIR__ . '/../../Stubs/OpenRegister/Exception/OrganisationSlugConflictException.php';
+}
 use Psr\Log\AbstractLogger;
 
 /**
  * Golden cases for the organisation entity sync.
  *
  * @covers \OCA\Stackiq\Service\OrganizationSyncService
+ * @uses   \OCA\Stackiq\Service\OrganisationSlug
  *
  * @spec openspec/specs/organization-sync/spec.md
  */
@@ -294,6 +299,10 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 		$mapper->method('findBySlug')->willReturnCallback(
 			function (string $slug) {
 				$this->trace[] = ['mapper.findBySlug', $slug];
+				if (array_key_exists('slugIndex', $this->plan) === true) {
+					return $this->plan['slugIndex'][$slug] ?? throw new \OCP\AppFramework\Db\DoesNotExistException('no slug');
+				}
+
 				$answer        = array_shift($this->plan['slug']);
 				if ($answer instanceof \Throwable) {
 					throw $answer;
@@ -366,6 +375,7 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 			'organisationMapper'   => $mapper,
 			'organisationService'  => $this->organisationService(),
 			'emailService'         => $this->emailService(),
+			'container'            => $this->container(),
 		];
 		foreach ($properties as $name => $value) {
 			$reflection->getProperty($name)->setValue($service, $value);
@@ -374,6 +384,26 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 		return $service;
 
 	}//end service()
+
+	/**
+	 * A container that answers OpenRegister's OrganisationService, whose default
+	 * organisation is the plan's `default` (o-default when not set).
+	 *
+	 * @return \Psr\Container\ContainerInterface
+	 */
+	private function container(): \Psr\Container\ContainerInterface {
+		$organisations = $this->createMock(originalClassName: \OCA\OpenRegister\Service\OrganisationService::class);
+		$organisations->method('getDefaultOrganisationUuid')->willReturnCallback(
+			function () {
+				$this->trace[] = ['organisations.getDefaultOrganisationUuid'];
+				return array_key_exists('default', $this->plan) === true ? $this->plan['default'] : 'o-default';
+			}
+		);
+		$container = $this->createMock(originalClassName: \Psr\Container\ContainerInterface::class);
+		$container->method('get')->with('OCA\\OpenRegister\\Service\\OrganisationService')->willReturn($organisations);
+		return $container;
+
+	}//end container()
 
 	/**
 	 * An organisation service double that records the organisations it creates.
@@ -385,6 +415,10 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 		$service->method('createOrganisationInOpenRegister')->willReturnCallback(
 			function (array $data) {
 				$this->trace[] = ['organisations.create', $data];
+				if (($this->plan['created'] ?? null) instanceof \Throwable) {
+					throw $this->plan['created'];
+				}
+
 				return array_key_exists('created', $this->plan) === true ? $this->plan['created'] : $this->orgEntity(uuid: 'new-entity', active: true);
 			}
 		);
@@ -566,11 +600,16 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 			'not found, created with mail'              => [['name' => 'Gemeente H'], true, fn ($t) => ['org' => [$missing()], 'slug' => [$missing()]]],
 			'not found, created, mail not sent'         => [['name' => 'Gemeente H2'], true, fn ($t) => ['org' => [$missing()], 'slug' => [$missing()], 'mail' => false]],
 			'not found, created without mail'           => [['name' => 'Gemeente I'], false, fn ($t) => ['org' => [$missing()], 'slug' => [$missing()]]],
-			'no name, created'                          => [['status' => 'actief'], true, fn ($t) => ['org' => [$missing()]]],
+			'no name, created'                          => [['status' => 'actief'], true, fn ($t) => ['org' => [$missing()], 'slug' => [$missing()]]],
 			'creation fails'                            => [['name' => 'Gemeente J'], true, fn ($t) => ['org' => [$missing()], 'slug' => [$missing()], 'created' => null]],
 			'mapper fails'                              => [['name' => 'Gemeente K'], true, fn ($t) => ['org' => [new \RuntimeException('db down')]]],
 			'owner save fails'                          => [['name' => 'Gemeente L'], true, fn ($t) => ['org' => [$t->orgEntity('o-1', true)], 'save' => [new \RuntimeException('save failed')]]],
 			'settings fail'                             => [['name' => 'Gemeente M'], true, fn ($t) => ['config' => new \RuntimeException('settings down')]],
+			'same name as another organisation'         => [['name' => 'Gemeente A', 'status' => 'actief'], true, fn ($t) => ['org' => [$missing()], 'slugIndex' => ['gemeente-a' => $t->orgEntity('o-other', true)]]],
+			'long name, slug cut at 100'                => [['name' => 'Gemeente aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'status' => 'actief'], true, fn ($t) => ['org' => [$missing()], 'slugIndex' => ['gemeente-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa' => $t->orgEntity('o-other', true)]]],
+			'long name, slug free'                      => [['name' => 'Gemeente aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa', 'status' => 'actief'], true, fn ($t) => ['org' => [$missing()], 'slugIndex' => []]],
+			'OpenRegister refuses the slug'             => [['name' => 'Gemeente P', 'status' => 'actief'], true, fn ($t) => ['org' => [$missing()], 'slugIndex' => [], 'created' => new \OCA\OpenRegister\Exception\OrganisationSlugConflictException(slug: 'gemeente-p')]],
+			'named Unknown'                             => [['name' => 'Unknown', 'status' => 'actief'], true, fn ($t) => ['org' => [$missing()], 'slugIndex' => ['unknown' => $t->orgEntity('o-other', true)]]],
 		];
 
 	}//end entityCases()
@@ -600,6 +639,150 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 		$this->check(key: 'entity: ' . $this->dataName(), value: ['returned' => $returned, 'stats' => $stats, 'trace' => $this->trace]);
 
 	}//end testEnsureEntity()
+
+	/**
+	 * A registration named like an existing organisation neither takes over that
+	 * organisation (its uuid, its owner link) nor creates a second one.
+	 *
+	 * @return void
+	 */
+	public function testASameNamedRegistrationDoesNotCaptureTheExistingOrganisation(): void {
+		foreach (['Gemeente A' => 'gemeente-a', 'Gemeente ' . str_repeat('a', 120) => substr('gemeente-' . str_repeat('a', 120), 0, 100)] as $name => $slug) {
+			$this->trace = [];
+			$this->plan  = [
+				'find'      => [null],
+				'save'      => [],
+				'org'       => [new \OCP\AppFramework\Db\DoesNotExistException('missing')],
+				'slugIndex' => [$slug => $this->orgEntity(uuid: 'o-other', active: true)],
+			];
+			$stats  = ['entitiesCreated' => 0, 'entitiesUpdated' => 0];
+			$entity = $this->service()->ensureOrganisationEntityPublic($this->entity(object: ['name' => $name, 'status' => 'actief'], uuid: 'o-1'), $stats, true);
+
+			$writes = array_values(array_filter($this->trace, fn (array $call) => in_array($call[0], ['entity.setUuid', 'mapper.save', 'organisations.create', 'objects.saveObject', 'entity.setOwner', 'entity.setOrganisation'], true)));
+			self::assertNull($entity, $name);
+			self::assertSame([], $writes, $name);
+			self::assertSame(['o-1'], $stats['slugConflicts'] ?? null, $name);
+		}
+	}//end testASameNamedRegistrationDoesNotCaptureTheExistingOrganisation()
+
+	/**
+	 * A registration with an empty, "Unknown" or "0" name reaches OpenRegister as
+	 * "Organisation <first 8 characters of its id>". When another organisation
+	 * already has that name's slug, nothing is created or taken over.
+	 *
+	 * @return void
+	 */
+	public function testAFallbackNamedRegistrationDoesNotCaptureTheExistingOrganisation(): void {
+		$id = 'abcd1234-5678-4abc-8def-0123456789ab';
+		foreach (['no name' => [], 'empty' => ['name' => ''], 'Unknown' => ['name' => 'Unknown'], 'zero' => ['name' => '0']] as $case => $name) {
+			$this->trace = [];
+			$this->plan  = [
+				'find'      => [null],
+				'save'      => [],
+				'org'       => [new \OCP\AppFramework\Db\DoesNotExistException('missing')],
+				'slugIndex' => ['organisation-abcd1234' => $this->orgEntity(uuid: 'o-other', active: true)],
+			];
+			$stats  = ['entitiesCreated' => 0, 'entitiesUpdated' => 0];
+			$object = array_merge(['id' => $id, 'status' => 'actief'], $name);
+			$entity = $this->service()->ensureOrganisationEntityPublic($this->entity(object: $object, uuid: 'o-1'), $stats, true);
+
+			$writes = array_values(array_filter($this->trace, fn (array $call) => in_array($call[0], ['entity.setUuid', 'mapper.save', 'organisations.create', 'objects.saveObject', 'entity.setOwner', 'entity.setOrganisation'], true)));
+			self::assertNull($entity, $case);
+			self::assertSame([], $writes, $case);
+			self::assertSame(['o-1'], $stats['slugConflicts'] ?? null, $case);
+		}
+	}//end testAFallbackNamedRegistrationDoesNotCaptureTheExistingOrganisation()
+
+	/**
+	 * A fallback name whose slug is free is created, with the data as given.
+	 *
+	 * @return void
+	 */
+	public function testAFallbackNameWithAFreeSlugIsCreated(): void {
+		$this->trace = [];
+		$this->plan  = [
+			'find'      => [null],
+			'save'      => [],
+			'org'       => [new \OCP\AppFramework\Db\DoesNotExistException('missing')],
+			'slugIndex' => ['unknown' => $this->orgEntity(uuid: 'o-other', active: true)],
+		];
+		$stats  = ['entitiesCreated' => 0, 'entitiesUpdated' => 0];
+		$object = ['id' => 'abcd1234-5678-4abc-8def-0123456789ab', 'name' => 'Unknown', 'status' => 'actief'];
+		$entity = $this->service()->ensureOrganisationEntityPublic($this->entity(object: $object, uuid: 'o-1'), $stats, false);
+
+		self::assertNotNull($entity);
+		self::assertContains(['mapper.findBySlug', 'organisation-abcd1234'], $this->trace);
+		self::assertContains(['organisations.create', $object], $this->trace);
+		self::assertArrayNotHasKey('slugConflicts', $stats);
+	}//end testAFallbackNameWithAFreeSlugIsCreated()
+
+	/**
+	 * Checking a link answers what the link would, and writes nothing.
+	 *
+	 * @param string             $outcome The expected outcome.
+	 * @param \Closure           $plan    Builds the doubles' answers.
+	 * @param array<int, string> $writes  The writes a link would make; a check makes none.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider linkCases
+	 */
+	public function testCheckOrganisationLink(string $outcome, \Closure $plan, array $writes): void {
+		$this->trace = [];
+		$this->plan  = array_merge(['find' => [], 'save' => [], 'org' => [], 'slug' => []], $plan($this));
+
+		$expected = $outcome;
+		if ($outcome === 'linked') {
+			$expected = null;
+		}
+
+		self::assertSame($expected, $this->service()->checkOrganisationLink('o-1', 'o-old'));
+		$made = array_filter($this->trace, fn (array $call) => in_array($call[0], ['entity.setUuid', 'mapper.save', 'objects.saveObject'], true));
+		self::assertSame([], array_values($made));
+	}//end testCheckOrganisationLink()
+
+	/**
+	 * The link outcomes, and what a link writes.
+	 *
+	 * @return array<string, array{0: string, 1: \Closure, 2: array<int, string>}>
+	 */
+	public static function linkCases(): array {
+		$missing = fn () => new \OCP\AppFramework\Db\DoesNotExistException('missing');
+		$object  = fn ($t, string $uuid) => $t->entity(object: ['name' => 'Gemeente A'], uuid: $uuid);
+		return [
+			'linked'              => ['linked', fn ($t) => ['find' => [$object($t, 'o-1'), null], 'org' => [$missing(), $t->orgEntity('o-old', true), $t->orgEntity('o-old', true)]], ['entity.setUuid', 'mapper.save', 'objects.saveObject']],
+			'no organisatie'      => ['no-organisatie', fn ($t) => ['find' => [null]], []],
+			'already linked'      => ['already-linked', fn ($t) => ['find' => [$object($t, 'o-1')], 'org' => [$t->orgEntity('o-1', true)]], []],
+			'no organisation'     => ['no-organisation', fn ($t) => ['find' => [$object($t, 'o-1')], 'org' => [$missing(), $missing()]], []],
+			'organisation in use' => ['organisation-in-use', fn ($t) => ['find' => [$object($t, 'o-1'), $object($t, 'o-old')], 'org' => [$missing(), $t->orgEntity('o-old', true)]], []],
+			'default organisation' => ['default-organisation', fn ($t) => ['find' => [$object($t, 'o-1')], 'org' => [$missing(), $t->orgEntity('o-old', true)], 'default' => 'o-old'], []],
+			'no default set'      => ['linked', fn ($t) => ['find' => [$object($t, 'o-1'), null], 'org' => [$missing(), $t->orgEntity('o-old', true), $t->orgEntity('o-old', true)], 'default' => null], ['entity.setUuid', 'mapper.save', 'objects.saveObject']],
+		];
+	}//end linkCases()
+
+	/**
+	 * An administrator's link writes only when every check passes.
+	 *
+	 * @param string             $outcome The expected outcome.
+	 * @param \Closure           $plan    Builds the doubles' answers.
+	 * @param array<int, string> $writes  The writes expected, in order.
+	 *
+	 * @return void
+	 *
+	 * @dataProvider linkCases
+	 */
+	public function testLinkOrganisationEntity(string $outcome, \Closure $plan, array $writes): void {
+		$this->trace = [];
+		$this->plan  = array_merge(['find' => [], 'save' => [], 'org' => [], 'slug' => []], $plan($this));
+
+		self::assertSame($outcome, $this->service()->linkOrganisationEntity('o-1', 'o-old'));
+
+		$made = array_values(array_filter($this->trace, fn (array $call) => in_array($call[0], ['entity.setUuid', 'mapper.save', 'objects.saveObject'], true)));
+		self::assertSame($writes, array_column($made, 0));
+		if ($outcome === 'linked') {
+			self::assertContains(['entity.setUuid', 'o-old', 'o-1'], $this->trace);
+		}
+	}//end testLinkOrganisationEntity()
 
 	/**
 	 * The batch back-fill creates missing organisation entities without mailing them.

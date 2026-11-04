@@ -39,6 +39,7 @@ use Psr\Log\AbstractLogger;
  * Golden cases for the related contact person sync.
  *
  * @covers \OCA\Stackiq\Service\OrganizationSyncService
+ * @uses   \OCA\Stackiq\Service\OrganisationSlug
  *
  * @spec openspec/specs/organization-sync/spec.md
  */

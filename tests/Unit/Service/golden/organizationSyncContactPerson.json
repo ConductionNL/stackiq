@@ -430,6 +430,17 @@
                     "register": "reg-v",
                     "schema": "org-schema"
                 }
+            ],
+            [
+                "log.info",
+                "Skipping user creation - organization not active or not found in entity table",
+                {
+                    "contactId": "c-4",
+                    "organizationId": "org-4",
+                    "organizationFound": false,
+                    "organizationActive": false,
+                    "email": "d@x.nl"
+                }
             ]
         ],
         "stats": {
@@ -437,7 +448,7 @@
             "usersCreated": 0,
             "errors": []
         },
-        "escaped": "Error: Call to a member function getActive() on null"
+        "escaped": null
     },
     "contact: org entity missing, backup lookup fails": {
         "trace": [
@@ -495,6 +506,17 @@
                     "organizationId": "org-5",
                     "error": "no config"
                 }
+            ],
+            [
+                "log.info",
+                "Skipping user creation - organization not active or not found in entity table",
+                {
+                    "contactId": "c-5",
+                    "organizationId": "org-5",
+                    "organizationFound": false,
+                    "organizationActive": false,
+                    "email": "e@x.nl"
+                }
             ]
         ],
         "stats": {
@@ -502,7 +524,7 @@
             "usersCreated": 0,
             "errors": []
         },
-        "escaped": "Error: Call to a member function getActive() on null"
+        "escaped": null
     },
     "contact: org entity missing, backup builds one": {
         "trace": [
@@ -594,6 +616,10 @@
             [
                 "mapper.findByUuid",
                 "org-6"
+            ],
+            [
+                "mapper.findBySlug",
+                "organisation"
             ],
             [
                 "log.debug",

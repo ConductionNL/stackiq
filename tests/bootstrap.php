@@ -203,3 +203,7 @@ if (class_exists('\\OCP\\EventDispatcher\\Event') === true
 ) {
 	require_once __DIR__ . '/Stubs/OpenRegister/Event/ObjectCreatedEvent.php';
 }
+
+// Doctrine and Symfony classes only the server ships, for a run without a
+// booted server. After a boot class_exists() finds the real ones.
+require_once __DIR__ . '/bootstrap-stubs.php';
