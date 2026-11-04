@@ -183,6 +183,23 @@ class ContactPersonHandlerTest extends TestCase {
 	}//end addToGroup()
 
 	/**
+	 * The name sync writes the address under `email` when both keys are set, the same
+	 * key the contact sync uses as the account name.
+	 *
+	 * @return void
+	 */
+	public function testTheNameSyncPrefersTheEmailKey(): void {
+		$user = $this->user();
+		$user->method('getEMailAddress')->willReturn('old@example.org');
+		$user->expects($this->once())->method('setEMailAddress')->with('account@example.org');
+
+		$this->handler->storeContactNameFields(
+			user: $user,
+			contactData: ['email' => 'account@example.org', 'e-mailadres' => 'other@example.org']
+		);
+	}//end testTheNameSyncPrefersTheEmailKey()
+
+	/**
 	 * A user double.
 	 *
 	 * @return IUser

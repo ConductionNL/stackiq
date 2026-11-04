@@ -25,6 +25,7 @@ use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\Stackiq\EventListener\ContactPersonOrganisationListener;
 use OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard;
+use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IGroupManager;
@@ -39,6 +40,7 @@ use PHPUnit\Framework\TestCase;
  *
  * @covers \OCA\Stackiq\EventListener\ContactPersonOrganisationListener
  * @covers \OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard
+ * @covers \OCA\Stackiq\Service\Contactpersoon\SystemContactWrites
  */
 final class ContactPersonOrganisationListenerTest extends TestCase {
 	private const SCHEMA = '41';
@@ -204,13 +206,155 @@ final class ContactPersonOrganisationListenerTest extends TestCase {
 		self::assertTrue($event->isPropagationStopped());
 	}//end testDataAnotherListenerChangedIsChecked()
 
-	public function testTheCommandLineIsNotChecked(): void {
+	public function testAWriteStackiqMarksAsItsOwnIsNotChecked(): void {
 		$event = $this->creating(data: ['organisation' => self::ORG_X, 'email' => 'victim-a']);
 
-		$this->listener(caller: null, commandLine: true)->handle($event);
+		(new SystemContactWrites())->run(fn () => $this->listener(caller: null)->handle($event));
 
 		self::assertFalse($event->isPropagationStopped());
-	}//end testTheCommandLineIsNotChecked()
+	}//end testAWriteStackiqMarksAsItsOwnIsNotChecked()
+
+	public function testTheMarkEndsWithTheSystemWrite(): void {
+		(new SystemContactWrites())->run(fn () => null);
+		$event = $this->creating(data: ['organisation' => self::ORG_X, 'email' => 'victim-a']);
+
+		$this->listener(caller: null)->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testTheMarkEndsWithTheSystemWrite()
+
+	public function testTheMarkEndsWhenTheSystemWriteThrows(): void {
+		try {
+			(new SystemContactWrites())->run(fn () => throw new \RuntimeException('sync failed'));
+		} catch (\RuntimeException $e) {
+		}
+
+		self::assertFalse((new SystemContactWrites())->isActive());
+	}//end testTheMarkEndsWhenTheSystemWriteThrows()
+
+	public function testAnUnmarkedWriteWithoutASessionIsChecked(): void {
+		$event = $this->updating(
+			data: ['organization' => self::ORG_X, 'email' => 'x@example.org'],
+			oldData: ['organization' => self::ORG_A, 'email' => 'x@example.org']
+		);
+
+		$this->listener(caller: null)->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testAnUnmarkedWriteWithoutASessionIsChecked()
+
+	public function testAnEmptyOrganisationKeyDoesNotHideTheOtherKey(): void {
+		$event = $this->creating(data: ['organisation' => '', 'organization' => self::ORG_X, 'email' => 'attacker@example.org']);
+
+		$this->listener(caller: 'outsider')->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testAnEmptyOrganisationKeyDoesNotHideTheOtherKey()
+
+	public function testTwoOrganisationKeysThatDisagreeAreRefused(): void {
+		foreach (['00000000-0000-4000-8000-000000000000', self::ORG_A] as $organisation) {
+			$event = $this->creating(data: ['organisation' => $organisation, 'organization' => self::ORG_X, 'email' => 'attacker@example.org']);
+
+			$this->listener(caller: 'beheer-a')->handle($event);
+
+			self::assertTrue($event->isPropagationStopped(), $organisation);
+		}
+	}//end testTwoOrganisationKeysThatDisagreeAreRefused()
+
+	public function testTwoEmailKeysThatDisagreeAreRefused(): void {
+		$event = $this->creating(data: ['organisation' => self::ORG_X, 'email' => 'new@example.org', 'e-mailadres' => 'other@example.org']);
+
+		$this->listener(caller: 'beheer-x')->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testTwoEmailKeysThatDisagreeAreRefused()
+
+	public function testAnUpdateThatSwapsTheOtherOrganisationKeyIsChecked(): void {
+		$event = $this->updating(
+			data: ['organisation' => self::ORG_A, 'organization' => self::ORG_X, 'email' => 'x@example.org'],
+			oldData: ['organization' => self::ORG_A, 'email' => 'x@example.org']
+		);
+
+		$this->listener(caller: 'outsider')->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testAnUpdateThatSwapsTheOtherOrganisationKeyIsChecked()
+
+	public function testUsernameCannotNameAnotherAccount(): void {
+		$event = $this->updating(
+			data: ['organization' => self::ORG_X, 'e-mailadres' => 'victim-x', 'username' => 'root', 'voornaam' => 'x'],
+			oldData: ['organization' => self::ORG_X, 'e-mailadres' => 'victim-x', 'username' => 'victim-x']
+		);
+
+		$this->listener(caller: 'beheer-x')->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testUsernameCannotNameAnotherAccount()
+
+	public function testAnAdministratorMaySetUsername(): void {
+		$event = $this->creating(data: ['organisation' => self::ORG_X, 'email' => 'victim-x', 'username' => 'victim-x']);
+
+		$this->listener(caller: 'root')->handle($event);
+
+		self::assertFalse($event->isPropagationStopped());
+	}//end testAnAdministratorMaySetUsername()
+
+	public function testAMemberManagesTheirOwnContact(): void {
+		$event = $this->creating(data: ['organisation' => self::ORG_X, 'email' => 'beheer-x', 'username' => 'beheer-x']);
+
+		$this->listener(caller: 'beheer-x')->handle($event);
+
+		self::assertFalse($event->isPropagationStopped());
+	}//end testAMemberManagesTheirOwnContact()
+
+	public function testAMemberChangesTheEmailAddressOfTheirOwnContact(): void {
+		$event = $this->updating(
+			data: ['organisation' => self::ORG_X, 'email' => 'new-address@example.org', 'username' => 'raadpleger-x'],
+			oldData: ['organisation' => self::ORG_X, 'email' => 'raadpleger-x', 'username' => 'raadpleger-x']
+		);
+
+		$this->listener(caller: 'raadpleger-x')->handle($event);
+
+		self::assertFalse($event->isPropagationStopped());
+	}//end testAMemberChangesTheEmailAddressOfTheirOwnContact()
+
+	public function testTheOwnContactCannotNameAnotherAccount(): void {
+		$event = $this->updating(
+			data: ['organisation' => self::ORG_X, 'email' => 'victim-a', 'username' => 'raadpleger-x'],
+			oldData: ['organisation' => self::ORG_X, 'email' => 'raadpleger-x', 'username' => 'raadpleger-x']
+		);
+
+		$this->listener(caller: 'raadpleger-x')->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testTheOwnContactCannotNameAnotherAccount()
+
+	public function testTheOwnContactCannotMoveToAnotherOrganisation(): void {
+		$event = $this->updating(
+			data: ['organisation' => self::ORG_A, 'email' => 'raadpleger-x', 'username' => 'raadpleger-x'],
+			oldData: ['organisation' => self::ORG_X, 'email' => 'raadpleger-x', 'username' => 'raadpleger-x']
+		);
+
+		$this->listener(caller: 'raadpleger-x')->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testTheOwnContactCannotMoveToAnotherOrganisation()
+
+	public function testTheSameUuidInAnotherCaseIsNoConflict(): void {
+		$event = $this->creating(data: ['organisation' => strtoupper(self::ORG_X), 'organization' => self::ORG_X, 'email' => 'new@example.org']);
+
+		$this->listener(caller: 'beheer-x')->handle($event);
+
+		self::assertFalse($event->isPropagationStopped());
+	}//end testTheSameUuidInAnotherCaseIsNoConflict()
+
+	public function testAnAccountNameInAnotherCaseOrWithSpacesIsTheSameAccount(): void {
+		$event = $this->creating(data: ['organisation' => self::ORG_A, 'email' => ' VICTIM-X ']);
+
+		$this->listener(caller: 'beheer-a')->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testAnAccountNameInAnotherCaseOrWithSpacesIsTheSameAccount()
 
 	public function testAnotherSchemaIsLeftAlone(): void {
 		$event = $this->creating(data: ['organisation' => self::ORG_X, 'email' => 'new@example.org'], schema: '30');
@@ -262,7 +406,7 @@ final class ContactPersonOrganisationListenerTest extends TestCase {
 		return $entity;
 	}//end entity()
 
-	private function listener(?string $caller, bool $commandLine = false): ContactPersonOrganisationListener {
+	private function listener(?string $caller): ContactPersonOrganisationListener {
 		$session = $this->createMock(IUserSession::class);
 		$session->method('getUser')->willReturn($caller === null ? null : $this->user(uid: $caller));
 
@@ -271,7 +415,7 @@ final class ContactPersonOrganisationListenerTest extends TestCase {
 		$groupManager->method('isInGroup')->willReturnCallback(fn (string $uid, string $gid): bool => in_array($gid, ($this->groups[$uid] ?? []), true));
 
 		$userManager = $this->createMock(IUserManager::class);
-		$userManager->method('get')->willReturnCallback(fn (string $uid): ?IUser => isset($this->groups[$uid]) === true ? $this->user(uid: $uid) : null);
+		$userManager->method('get')->willReturnCallback(fn (string $uid): ?IUser => isset($this->groups[strtolower($uid)]) === true ? $this->user(uid: strtolower($uid)) : null);
 
 		$mapper = $this->createMock(OrganisationMapper::class);
 		$mapper->method('findByUuid')->willReturnCallback(
@@ -293,7 +437,7 @@ final class ContactPersonOrganisationListenerTest extends TestCase {
 		return new ContactPersonOrganisationListener(
 			new ContactPersonOrganisationGuard($session, $groupManager, $userManager, $mapper),
 			$settings,
-			$commandLine
+			new SystemContactWrites()
 		);
 	}//end listener()
 

@@ -31,6 +31,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Repair;
 
+use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
 use OCA\Stackiq\AppInfo\AppIdentity;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\StackiqContactSyncService;
@@ -105,6 +106,19 @@ class MigrateContactsToNc implements IRepairStep {
 	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
 	 */
 	public function run(IOutput $output): void {
+		(new SystemContactWrites())->run(fn () => $this->migrate(output: $output));
+	}//end run()
+
+	/**
+	 * Migrate the contacts.
+	 *
+	 * @param IOutput $output The output interface for progress reporting.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+	 */
+	private function migrate(IOutput $output): void {
 		$output->startProgress(2);
 
 		// Converged on a previous run — skip quietly. This step is registered
@@ -169,7 +183,7 @@ class MigrateContactsToNc implements IRepairStep {
 		}
 
 		$output->finishProgress();
-	}//end run()
+	}//end migrate()
 
 	/**
 	 * Migrate every object of one type.

@@ -1211,7 +1211,7 @@ class ContactPersonHandler {
 			}//end if
 
 			// Sync e-mailadres to user's email property.
-			$email = $contactData['e-mailadres'] ?? $contactData['email'] ?? '';
+			$email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
 			if (empty($email) === false && $email !== $user->getEMailAddress()) {
 				$user->setEMailAddress($email);
 				$this->_logger->info(

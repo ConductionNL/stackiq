@@ -24,6 +24,7 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard;
+use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -31,8 +32,9 @@ use OCP\EventDispatcher\IEventListener;
 /**
  * On OpenRegister's creating and updating events for a contact person: the write is
  * refused unless {@see ContactPersonOrganisationGuard} allows it. An update that keeps
- * the organisation and the e-mail address is not checked again. A write from the
- * command line (`occ`, cron) is not checked: installs, imports and the sync run there.
+ * every key the guard reads is not checked again. Writes stackiq's own contact sync
+ * and migration make, marked through {@see SystemContactWrites}, are not checked.
+ * Other command line writes, such as OpenRegister bulk jobs, are.
  *
  * @template-implements IEventListener<Event>
  *
@@ -44,12 +46,12 @@ class ContactPersonOrganisationListener implements IEventListener {
 	 *
 	 * @param ContactPersonOrganisationGuard $guard           Decides whether the caller may write the contact person.
 	 * @param SettingsService                $settingsService Names the contact person schema.
-	 * @param bool                           $fromCli         True when PHP runs from the command line.
+	 * @param SystemContactWrites            $systemWrites    Tells whether stackiq itself is writing.
 	 */
 	public function __construct(
 		private readonly ContactPersonOrganisationGuard $guard,
 		private readonly SettingsService $settingsService,
-		private readonly bool $fromCli = PHP_SAPI === 'cli',
+		private readonly SystemContactWrites $systemWrites,
 	) {
 	}//end __construct()
 
@@ -63,7 +65,7 @@ class ContactPersonOrganisationListener implements IEventListener {
 	 * @spec openspec/specs/contactpersoon-sync/spec.md#requirement-the-system-shall-only-accept-a-contact-person-from-someone-who-may-add-members-to-its-organisation-req-003
 	 */
 	public function handle(Event $event): void {
-		if ($this->fromCli === true) {
+		if ($this->systemWrites->isActive() === true) {
 			return;
 		}
 
@@ -94,7 +96,7 @@ class ContactPersonOrganisationListener implements IEventListener {
 
 		$data = array_merge(($object->getObject() ?? []), $event->getModifiedData());
 		if ($this->guard->needsCheck(contactData: $data, oldData: $oldData) === false
-			|| $this->guard->allows(contactData: $data) === true
+			|| $this->guard->allows(contactData: $data, oldData: $oldData) === true
 		) {
 			return;
 		}

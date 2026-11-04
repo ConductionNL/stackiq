@@ -29,10 +29,13 @@ use OCP\IUserSession;
 
 /**
  * The contact sync turns a contact person into an account that joins the contact's
- * organisation, and resets the role group of an existing account named by its e-mail
- * address. So a contact person is accepted only from an administrator, or from a member
- * of its organisation who may add members, and it may name an existing account only
- * when that account already belongs to the same organisation.
+ * organisation, resets the role group of an existing account named by its e-mail
+ * address, and writes names and e-mail address to the account named by `username`.
+ * So a contact person is accepted only from an administrator, or from a member of its
+ * organisation who may add members; it may name an existing account only when that
+ * account already belongs to the same organisation, and `username` only when it is the
+ * caller's own account. The sync reads several keys for the same value, so every key
+ * is checked on its own and two keys that disagree are refused.
  *
  * @spec openspec/specs/contactpersoon-sync/spec.md#requirement-the-system-shall-only-accept-a-contact-person-from-someone-who-may-add-members-to-its-organisation-req-003
  */
@@ -43,11 +46,26 @@ class ContactPersonOrganisationGuard {
 	public const MEMBER_MANAGER_GROUPS = ['gebruik-beheerder', 'aanbod-beheerder'];
 
 	/**
+	 * The keys the sync reads the organisation uuid from.
+	 */
+	public const ORGANISATION_KEYS = ['organisation', 'organization'];
+
+	/**
+	 * The keys the sync reads the e-mail address from.
+	 */
+	public const EMAIL_KEYS = ['email', 'e-mailadres'];
+
+	/**
+	 * The key the name sync reads the target account from.
+	 */
+	public const USERNAME_KEY = 'username';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IUserSession       $userSession        Names the caller.
 	 * @param IGroupManager      $groupManager       Tells administrators and member managers apart.
-	 * @param IUserManager       $userManager        Tells whether the e-mail address names an existing account.
+	 * @param IUserManager       $userManager        Tells whether a name is an existing account.
 	 * @param OrganisationMapper $organisationMapper Finds the OpenRegister organisation and its members.
 	 */
 	public function __construct(
@@ -61,36 +79,69 @@ class ContactPersonOrganisationGuard {
 	/**
 	 * Whether the caller may write this contact person.
 	 *
-	 * @param array<string, mixed> $contactData The contact person's data.
+	 * @param array<string, mixed>      $contactData The contact person's data.
+	 * @param array<string, mixed>|null $oldData     The stored data, or null on a create.
 	 *
 	 * @return bool
 	 *
 	 * @spec openspec/specs/contactpersoon-sync/spec.md#requirement-the-system-shall-only-accept-a-contact-person-from-someone-who-may-add-members-to-its-organisation-req-003
 	 */
-	public function allows(array $contactData): bool {
+	public function allows(array $contactData, ?array $oldData = null): bool {
 		$caller = $this->userSession->getUser()?->getUID();
 		if ($caller !== null && $this->groupManager->isAdmin($caller) === true) {
 			return true;
 		}
 
-		$organisation = $this->findOrganisation(uuid: self::organisationUuid(contactData: $contactData));
-		$account      = $this->existingAccount(contactData: $contactData, caller: $caller);
-
-		if ($organisation === null) {
-			return $account === null;
-		}
-
-		if ($account !== null && $organisation->hasUser($account) === false) {
+		if ($this->isAmbiguousOrForeign(contactData: $contactData, caller: $caller) === true) {
 			return false;
 		}
 
-		return $caller !== null && $organisation->hasUser($caller) === true && $this->managesMembers(uid: $caller) === true;
+		$organisation = $this->findOrganisation(uuid: $this->values(contactData: $contactData, keys: self::ORGANISATION_KEYS)[0] ?? '');
+		$account      = $this->existingAccount(email: $this->values(contactData: $contactData, keys: self::EMAIL_KEYS)[0] ?? '', caller: $caller);
+		if ($account !== null && $organisation?->hasUser($account) !== true) {
+			return false;
+		}
+
+		return $this->mayAddTo(organisation: $organisation, contactData: $contactData, oldData: $oldData, caller: $caller);
 	}//end allows()
+
+	/**
+	 * Whether two keys disagree, or `username` names an account other than the caller's.
+	 *
+	 * @param array<string, mixed> $contactData The contact person's data.
+	 * @param string|null          $caller      The caller's uid.
+	 *
+	 * @return bool
+	 */
+	private function isAmbiguousOrForeign(array $contactData, ?string $caller): bool {
+		return count($this->values(contactData: $contactData, keys: self::ORGANISATION_KEYS)) > 1
+			|| count($this->values(contactData: $contactData, keys: self::EMAIL_KEYS)) > 1
+			|| $this->namesAnotherAccount(name: $this->values(contactData: $contactData, keys: [self::USERNAME_KEY])[0] ?? '', caller: $caller) === true;
+	}//end isAmbiguousOrForeign()
+
+	/**
+	 * Whether the caller may add this contact to the organisation.
+	 *
+	 * @param Organisation|null         $organisation The OpenRegister organisation, or null when it has none yet.
+	 * @param array<string, mixed>      $contactData  The new data.
+	 * @param array<string, mixed>|null $oldData      The stored data, or null on a create.
+	 * @param string|null               $caller       The caller's uid.
+	 *
+	 * @return bool
+	 */
+	private function mayAddTo(?Organisation $organisation, array $contactData, ?array $oldData, ?string $caller): bool {
+		if ($organisation === null || $this->isOwnContactInSameOrganisation(contactData: $contactData, oldData: $oldData, caller: $caller) === true) {
+			return true;
+		}
+
+		return $caller !== null && $organisation->hasUser($caller) === true && $this->managesMembers(uid: $caller) === true;
+	}//end mayAddTo()
 
 	/**
 	 * Whether the change from the stored contact person needs the check again.
 	 *
-	 * Only the organisation and the e-mail address decide which account joins which organisation.
+	 * Every key that decides which account joins which organisation, or which account
+	 * the name sync writes to, is compared on its own.
 	 *
 	 * @param array<string, mixed>      $contactData The new data.
 	 * @param array<string, mixed>|null $oldData     The stored data, or null when there is none.
@@ -100,46 +151,64 @@ class ContactPersonOrganisationGuard {
 	 * @spec openspec/specs/contactpersoon-sync/spec.md#requirement-the-system-shall-only-accept-a-contact-person-from-someone-who-may-add-members-to-its-organisation-req-003
 	 */
 	public function needsCheck(array $contactData, ?array $oldData): bool {
-		return $oldData === null
-			|| self::organisationUuid(contactData: $contactData) !== self::organisationUuid(contactData: $oldData)
-			|| self::email(contactData: $contactData) !== self::email(contactData: $oldData);
+		if ($oldData === null) {
+			return true;
+		}
+
+		foreach ([...self::ORGANISATION_KEYS, ...self::EMAIL_KEYS, self::USERNAME_KEY] as $key) {
+			if ($this->values(contactData: $contactData, keys: [$key]) !== $this->values(contactData: $oldData, keys: [$key])) {
+				return true;
+			}
+		}
+
+		return false;
 	}//end needsCheck()
 
 	/**
-	 * The uuid of the organisation the contact person names, or an empty string.
+	 * The distinct non-empty values under these keys, trimmed and lower-cased.
+	 *
+	 * Account names compare case-insensitively in Nextcloud, and uuids are lower case.
 	 *
 	 * @param array<string, mixed> $contactData The contact person's data.
+	 * @param array<int, string>   $keys        The keys to read.
 	 *
-	 * @return string
+	 * @return array<int, string>
 	 */
-	private static function organisationUuid(array $contactData): string {
-		$value = ($contactData['organisation'] ?? $contactData['organization'] ?? '');
-		if (is_array($value) === true) {
-			$value = ($value['uuid'] ?? $value['id'] ?? '');
+	private function values(array $contactData, array $keys): array {
+		$values = [];
+		foreach ($keys as $key) {
+			$value = ($contactData[$key] ?? '');
+			if (is_array($value) === true) {
+				$value = ($value['uuid'] ?? $value['id'] ?? '');
+			}
+
+			if (is_scalar($value) === true && trim((string)$value) !== '') {
+				$values[] = strtolower(trim((string)$value));
+			}
 		}
 
-		if (is_string($value) === false) {
-			return '';
-		}
-
-		return trim($value);
-	}//end organisationUuid()
+		return array_values(array_unique($values));
+	}//end values()
 
 	/**
-	 * The e-mail address the sync uses as the account name, or an empty string.
+	 * Whether the caller edits their own contact person and keeps its organisation.
 	 *
-	 * @param array<string, mixed> $contactData The contact person's data.
+	 * @param array<string, mixed>      $contactData The new data.
+	 * @param array<string, mixed>|null $oldData     The stored data.
+	 * @param string|null               $caller      The caller's uid.
 	 *
-	 * @return string
+	 * @return bool
 	 */
-	private static function email(array $contactData): string {
-		$value = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
-		if (is_string($value) === false) {
-			return '';
+	private function isOwnContactInSameOrganisation(array $contactData, ?array $oldData, ?string $caller): bool {
+		if ($oldData === null || $caller === null) {
+			return false;
 		}
 
-		return trim($value);
-	}//end email()
+		$own = [strtolower($caller)];
+		return $this->values(contactData: $oldData, keys: [self::USERNAME_KEY]) === $own
+			&& $this->values(contactData: $contactData, keys: [self::USERNAME_KEY]) === $own
+			&& $this->values(contactData: $contactData, keys: self::ORGANISATION_KEYS) === $this->values(contactData: $oldData, keys: self::ORGANISATION_KEYS);
+	}//end isOwnContactInSameOrganisation()
 
 	/**
 	 * The OpenRegister organisation with this uuid, or null.
@@ -161,26 +230,37 @@ class ContactPersonOrganisationGuard {
 	}//end findOrganisation()
 
 	/**
-	 * The uid of the existing account the e-mail address names, when it is not the caller's own.
+	 * The uid of the existing account this e-mail address names, when it is not the caller's own.
 	 *
-	 * @param array<string, mixed> $contactData The contact person's data.
-	 * @param string|null          $caller      The caller's uid.
+	 * @param string      $email  The e-mail address the sync uses as the account name.
+	 * @param string|null $caller The caller's uid.
 	 *
 	 * @return string|null
 	 */
-	private function existingAccount(array $contactData, ?string $caller): ?string {
-		$email = self::email(contactData: $contactData);
+	private function existingAccount(string $email, ?string $caller): ?string {
 		if ($email === '') {
 			return null;
 		}
 
 		$uid = $this->userManager->get($email)?->getUID();
-		if ($uid === null || $uid === $caller) {
+		if ($uid === null || strtolower($uid) === strtolower((string)$caller)) {
 			return null;
 		}
 
 		return $uid;
 	}//end existingAccount()
+
+	/**
+	 * Whether this name is an existing account other than the caller's own.
+	 *
+	 * @param string      $name   The account name.
+	 * @param string|null $caller The caller's uid.
+	 *
+	 * @return bool
+	 */
+	private function namesAnotherAccount(string $name, ?string $caller): bool {
+		return $this->existingAccount(email: $name, caller: $caller) !== null;
+	}//end namesAnotherAccount()
 
 	/**
 	 * Whether this user is in a group that may add members.
