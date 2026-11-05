@@ -100,7 +100,7 @@
     "@types/node": "^26.4.1",
     "@typescript-eslint/parser": "^8.67.0",
     "@vitejs/plugin-vue": "^6.0.8",
-    "@vitest/coverage-v8": "^5.0.0",
+    "@vitest/coverage-v8": "^5.0.1",
     "@vue/compiler-dom": "^3.5.41",
     "@vue/compiler-sfc": "^3.5.40",
     "@vue/devtools-api": "^8.2.1",
