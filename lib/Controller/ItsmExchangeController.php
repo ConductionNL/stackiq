@@ -26,7 +26,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCA\Stackiq\Service\ItsmExchangeService;
 use OCA\Stackiq\Service\ItsmFileImportService;
 use OCA\Stackiq\Settings\StackiqAdmin;
@@ -59,7 +59,7 @@ class ItsmExchangeController extends Controller {
 		private readonly ItsmFileImportService $fileImport,
 		private readonly IUserSession $userSession,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

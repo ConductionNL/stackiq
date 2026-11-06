@@ -90,3 +90,6 @@ foreach (['ConnectionStatusReportedEvent', 'ConnectionRefreshRequestedEvent'] as
 }
 
 unset($integriqStubEvent);
+
+// Doctrine and Symfony classes only the server ships; see bootstrap-stubs.php.
+require_once __DIR__ . '/bootstrap-stubs.php';

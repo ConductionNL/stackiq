@@ -280,6 +280,21 @@ function summaryValue(page: Page, key: string) {
 }
 
 /**
+ * The radio of one missing-records choice. NcCheckboxRadioSwitch puts the
+ * data-testid on the input itself in newer @nextcloud/vue releases and on its
+ * wrapper in older ones, so this finds either.
+ *
+ * @param section The CMDB import section
+ * @param mode The choice: archive or keep
+ */
+function missingRecordsRadio(section: Locator, mode: 'archive' | 'keep') {
+	const testId = `cmdb-import-missing-records-${mode}`
+	return section.locator(
+		`input[data-testid="${testId}"], [data-testid="${testId}"] input`,
+	)
+}
+
+/**
  * The rendered report rows.
  *
  * @param page The page
@@ -505,11 +520,7 @@ test.describe.serial('CMDB import section', () => {
 		// 1. The later export, with the default choice: archive or delete.
 		let section = await gotoCmdbSection(page)
 		await chooseMunicipality(page)
-		await expect(
-			section.locator(
-				'[data-testid="cmdb-import-missing-records-archive"] input',
-			),
-		).toBeChecked()
+		await expect(missingRecordsRadio(section, 'archive')).toBeChecked()
 		let response = await runImport(page, ARCHIVED_FIXTURE)
 		expect(response.status()).toBe(200)
 
@@ -535,20 +546,31 @@ test.describe.serial('CMDB import section', () => {
 		await gotoAppRoute(page, '/modules')
 		await dismissSupportDialog(page)
 		// Not under the default tab. Nextcloud keeps polls open, so no network
-		// idle wait: wait until the list shows a working application (the
-		// export brought more than the two this test took out), then look.
-		expect(
-			working.modules,
-			'the working set must still hold an application the list can show',
-		).toBeGreaterThan(0)
+		// idle wait: wait until the list has rendered, with rows or with its
+		// empty state (the export holds only the two applications this test
+		// took out, so on a clean instance the list is empty), then look.
 		await expect(
-			page.locator('.faceted-catalog-index__list tbody tr').first(),
+			page
+				.locator(
+					'.faceted-catalog-index__list tbody tr, .faceted-catalog-index__list .empty-content',
+				)
+				.first(),
 		).toBeVisible({
 			timeout: 30000,
 		})
-		await expect(page.getByText(ARCHIVED_APPLICATION_NAME)).toHaveCount(0)
+		// Look for the row of this run's module, not for its name: an instance
+		// that holds other data can list a module of another municipality
+		// with the same name.
+		const [archivedModule] = await objectsInLens(ctx, config.module_schema, {
+			archived: 'true',
+			includeDeleted: false,
+		})
+		const archivedRow = page.locator(
+			`.faceted-catalog-index__list [data-testid-row-id="${String(archivedModule?.id ?? '')}"]`,
+		)
+		await expect(archivedRow).toHaveCount(0)
 		await page.getByRole('tab', { name: 'Archived', exact: true }).click()
-		await expect(page.getByText(ARCHIVED_APPLICATION_NAME).first()).toBeVisible({
+		await expect(archivedRow).toContainText(ARCHIVED_APPLICATION_NAME, {
 			timeout: 30000,
 		})
 
@@ -584,22 +606,18 @@ test.describe.serial('CMDB import section', () => {
 		// The same later export as the archive test, which archives 1234 and deletes 2.
 		const section = await gotoCmdbSection(page)
 		await chooseMunicipality(page)
-		const keep = section.locator(
-			'[data-testid="cmdb-import-missing-records-keep"] input',
-		)
-		await keep.check()
+		const keep = missingRecordsRadio(section, 'keep')
+		// The switch hides its input behind a styled label, which Playwright's
+		// check() waits on forever; a native click is what the label does.
+		await keep.evaluate((el: HTMLInputElement) => el.click())
 		await expect(keep).toBeChecked()
-		await expect(
-			section.locator(
-				'[data-testid="cmdb-import-missing-records-archive"] input',
-			),
-		).not.toBeChecked()
+		await expect(missingRecordsRadio(section, 'archive')).not.toBeChecked()
 		const response = await runImport(page, ARCHIVED_FIXTURE)
 		expect(response.status()).toBe(200)
-		// The request carries the choice, not the default.
-		expect(response.request().postData() ?? '').toMatch(
-			/name="missingRecords"\s+keep/,
-		)
+		// The outcome below shows the choice reached the server: the same
+		// export archives and deletes under the default. Chromium does not hand
+		// Playwright a multipart body that carries a file, so the request is
+		// not read here; the jest test of CmdbImport.vue checks the form.
 
 		await expect(summaryValue(page, 'rowsRead')).toHaveText('0')
 		// The archived and deleted tiles only exist when the import did either.

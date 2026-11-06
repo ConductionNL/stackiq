@@ -36,6 +36,7 @@ use Symfony\Component\Console\Tester\CommandTester;
  * test below pins one refusal.
  *
  * @covers \OCA\Stackiq\Command\ReferencesAuditCommand
+ * @uses   \OCA\Stackiq\Command\ObjectPages
  */
 class ReferencesAuditCommandTest extends TestCase {
 	/**

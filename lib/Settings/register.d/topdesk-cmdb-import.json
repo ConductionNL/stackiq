@@ -2,7 +2,7 @@
   "components": {
     "schemas": {
       "module": {
-        "version": "0.3.9",
+        "version": "0.3.10",
         "configuration": {
           "x-openregister-archive": { "enabled": true }
         },
@@ -75,7 +75,7 @@
         }
       },
       "usage": {
-        "version": "1.5.7",
+        "version": "1.5.8",
         "configuration": {
           "x-openregister-archive": { "enabled": true },
           "x-openregister-lifecycle": {

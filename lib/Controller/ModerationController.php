@@ -38,7 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCA\Stackiq\Service\ModerationService;
 use OCA\Stackiq\Settings\StackiqAdmin;
 use OCP\AppFramework\Controller;
@@ -64,7 +64,7 @@ class ModerationController extends Controller {
 		IRequest $request,
 		private readonly ModerationService $moderation,
 	) {
-		parent::__construct(appName: Application::APP_ID, request: $request);
+		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()
 
 	/**

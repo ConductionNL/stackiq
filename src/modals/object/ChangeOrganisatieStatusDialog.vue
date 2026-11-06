@@ -168,19 +168,7 @@ export default {
 			this.error = null
 
 			try {
-				const organisatie = objectStore.getActiveObject('organization')
-				const newStatus = navigationStore.dialogProperties?.newStatus
-
-				if (!organisatie || !organisatie.id || !newStatus) {
-					throw new Error(
-						this.t('stackiq', 'Organisation or new status is missing'),
-					)
-				}
-
-				// Prepare the patch data - only include the status property.
-				const patchData = {
-					status: newStatus,
-				}
+				const { organisatie, newStatus } = this.statusChangeTarget()
 
 				console.info('Changing organisation status:', {
 					organisatieId: organisatie.id,
@@ -189,30 +177,16 @@ export default {
 				})
 
 				// Update only the status using PATCH.
-				await objectStore.patchObject(
-					'organization',
-					organisatie.id,
-					patchData,
-				)
+				await objectStore.patchObject('organization', organisatie.id, {
+					status: newStatus,
+				})
 
 				this.success = true
 
-				// If activating an organisation, store it for search filtering.
+				// Deactivation stores nothing: the organisation leaves a filtered view by itself.
 				if (newStatus === 'Active') {
-					const organisatieNaam =
-						organisatie?.name
-						|| organisatie?.name
-						|| organisatie?.['@self']?.name
-
-					// Store the activated organisation info in navigationStore transferData.
-					navigationStore.setTransferData({
-						action: 'organisationActivated',
-						organisationName: organisatieNaam,
-						status: 'Active',
-					})
+					this.announceActivation(organisatie)
 				}
-				// For deactivation, don't fetch - the organisation will just disappear from
-				// the current view if the user has an active filter, which is the expected behavior.
 
 				// Auto-close after 2 seconds on success.
 				setTimeout(() => {
@@ -229,6 +203,41 @@ export default {
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * The active organisation and the status chosen in the dialog.
+		 *
+		 * @return {{organisatie: object, newStatus: string}} The organisation and its new status
+		 * @throws {Error} When the organisation, its id or the new status is missing
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		statusChangeTarget() {
+			const organisatie = objectStore.getActiveObject('organization')
+			const newStatus = navigationStore.dialogProperties?.newStatus
+
+			if (!organisatie || !organisatie.id || !newStatus) {
+				throw new Error(
+					this.t('stackiq', 'Organisation or new status is missing'),
+				)
+			}
+
+			return { organisatie, newStatus }
+		},
+
+		/**
+		 * Store the activated organisation in the transfer data, for search filtering.
+		 *
+		 * @param {object} organisatie The activated organisation
+		 * @return {void}
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		announceActivation(organisatie) {
+			navigationStore.setTransferData({
+				action: 'organisationActivated',
+				organisationName: organisatie.name || organisatie['@self']?.name,
+				status: 'Active',
+			})
 		},
 	},
 }

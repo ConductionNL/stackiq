@@ -47,7 +47,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Repair;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -152,7 +152,7 @@ class RepointEolSyncConfig implements IRepairStep {
 	 */
 	public function run(IOutput $output): void {
 		try {
-			$raw = $this->appConfig->getValueString(Application::APP_ID, self::CONFIG_KEY, '');
+			$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_KEY, '');
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'RepointEolSyncConfig: could not read the EOL sync configuration; leaving it alone.',
@@ -189,7 +189,7 @@ class RepointEolSyncConfig implements IRepairStep {
 		}
 
 		try {
-			$this->appConfig->setValueString(Application::APP_ID, self::CONFIG_KEY, $encoded);
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::CONFIG_KEY, $encoded);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'RepointEolSyncConfig: could not write the EOL sync configuration.',

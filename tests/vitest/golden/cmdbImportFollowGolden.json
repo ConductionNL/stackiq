@@ -1,0 +1,1006 @@
+{
+	"errors": {
+		"undefined undefined / 0": {
+			"error": "NETWORK_ERROR",
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true
+		},
+		"undefined undefined / 1": {
+			"error": "NETWORK_ERROR",
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true
+		},
+		"undefined undefined / 2": {
+			"error": "NETWORK_ERROR",
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true
+		},
+		"undefined undefined / 3": {
+			"error": "NETWORK_ERROR",
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true
+		},
+		"undefined undefined / 4": {
+			"error": "NETWORK_ERROR",
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true
+		},
+		"undefined undefined / 5": {
+			"error": "SHEET_MISSING",
+			"message": "m",
+			"details": {
+				"sheet": "A"
+			},
+			"status": 0,
+			"interrupted": false
+		},
+		"undefined undefined / 6": {
+			"error": "NETWORK_ERROR",
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true
+		},
+		"undefined undefined / 7": {
+			"error": "NETWORK_ERROR",
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true
+		},
+		"undefined undefined / 8": {
+			"error": "NETWORK_ERROR",
+			"message": "only message",
+			"details": [],
+			"status": 0,
+			"interrupted": true
+		},
+		"number 0 / 0": {
+			"error": "NETWORK_ERROR",
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true
+		},
+		"number 0 / 1": {
+			"error": "NETWORK_ERROR",
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true
+		},
+		"number 0 / 2": {
+			"error": "NETWORK_ERROR",
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true
+		},
+		"number 0 / 3": {
+			"error": "NETWORK_ERROR",
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true
+		},
+		"number 0 / 4": {
+			"error": "NETWORK_ERROR",
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true
+		},
+		"number 0 / 5": {
+			"error": "SHEET_MISSING",
+			"message": "m",
+			"details": {
+				"sheet": "A"
+			},
+			"status": 0,
+			"interrupted": false
+		},
+		"number 0 / 6": {
+			"error": "NETWORK_ERROR",
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true
+		},
+		"number 0 / 7": {
+			"error": "NETWORK_ERROR",
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true
+		},
+		"number 0 / 8": {
+			"error": "NETWORK_ERROR",
+			"message": "only message",
+			"details": [],
+			"status": 0,
+			"interrupted": true
+		},
+		"number 401 / 0": {
+			"error": "NOT_SIGNED_IN",
+			"message": "",
+			"details": {},
+			"status": 401,
+			"interrupted": false
+		},
+		"number 401 / 1": {
+			"error": "NOT_SIGNED_IN",
+			"message": "",
+			"details": {},
+			"status": 401,
+			"interrupted": false
+		},
+		"number 401 / 2": {
+			"error": "NOT_SIGNED_IN",
+			"message": "",
+			"details": {},
+			"status": 401,
+			"interrupted": false
+		},
+		"number 401 / 3": {
+			"error": "NOT_SIGNED_IN",
+			"message": "",
+			"details": {},
+			"status": 401,
+			"interrupted": false
+		},
+		"number 401 / 4": {
+			"error": "NOT_SIGNED_IN",
+			"message": "",
+			"details": {},
+			"status": 401,
+			"interrupted": false
+		},
+		"number 401 / 5": {
+			"error": "SHEET_MISSING",
+			"message": "m",
+			"details": {
+				"sheet": "A"
+			},
+			"status": 401,
+			"interrupted": false
+		},
+		"number 401 / 6": {
+			"error": "NOT_SIGNED_IN",
+			"message": "",
+			"details": {},
+			"status": 401,
+			"interrupted": false
+		},
+		"number 401 / 7": {
+			"error": "NOT_SIGNED_IN",
+			"message": "",
+			"details": {},
+			"status": 401,
+			"interrupted": false
+		},
+		"number 401 / 8": {
+			"error": "NOT_SIGNED_IN",
+			"message": "only message",
+			"details": [],
+			"status": 401,
+			"interrupted": false
+		},
+		"number 403 / 0": {
+			"error": "NOT_ADMIN",
+			"message": "",
+			"details": {},
+			"status": 403,
+			"interrupted": false
+		},
+		"number 403 / 1": {
+			"error": "NOT_ADMIN",
+			"message": "",
+			"details": {},
+			"status": 403,
+			"interrupted": false
+		},
+		"number 403 / 2": {
+			"error": "NOT_ADMIN",
+			"message": "",
+			"details": {},
+			"status": 403,
+			"interrupted": false
+		},
+		"number 403 / 3": {
+			"error": "NOT_ADMIN",
+			"message": "",
+			"details": {},
+			"status": 403,
+			"interrupted": false
+		},
+		"number 403 / 4": {
+			"error": "NOT_ADMIN",
+			"message": "",
+			"details": {},
+			"status": 403,
+			"interrupted": false
+		},
+		"number 403 / 5": {
+			"error": "SHEET_MISSING",
+			"message": "m",
+			"details": {
+				"sheet": "A"
+			},
+			"status": 403,
+			"interrupted": false
+		},
+		"number 403 / 6": {
+			"error": "NOT_ADMIN",
+			"message": "",
+			"details": {},
+			"status": 403,
+			"interrupted": false
+		},
+		"number 403 / 7": {
+			"error": "NOT_ADMIN",
+			"message": "",
+			"details": {},
+			"status": 403,
+			"interrupted": false
+		},
+		"number 403 / 8": {
+			"error": "NOT_ADMIN",
+			"message": "only message",
+			"details": [],
+			"status": 403,
+			"interrupted": false
+		},
+		"number 412 / 0": {
+			"error": "CSRF_FAILED",
+			"message": "",
+			"details": {},
+			"status": 412,
+			"interrupted": false
+		},
+		"number 412 / 1": {
+			"error": "CSRF_FAILED",
+			"message": "",
+			"details": {},
+			"status": 412,
+			"interrupted": false
+		},
+		"number 412 / 2": {
+			"error": "CSRF_FAILED",
+			"message": "",
+			"details": {},
+			"status": 412,
+			"interrupted": false
+		},
+		"number 412 / 3": {
+			"error": "CSRF_FAILED",
+			"message": "",
+			"details": {},
+			"status": 412,
+			"interrupted": false
+		},
+		"number 412 / 4": {
+			"error": "CSRF_FAILED",
+			"message": "",
+			"details": {},
+			"status": 412,
+			"interrupted": false
+		},
+		"number 412 / 5": {
+			"error": "SHEET_MISSING",
+			"message": "m",
+			"details": {
+				"sheet": "A"
+			},
+			"status": 412,
+			"interrupted": false
+		},
+		"number 412 / 6": {
+			"error": "CSRF_FAILED",
+			"message": "",
+			"details": {},
+			"status": 412,
+			"interrupted": false
+		},
+		"number 412 / 7": {
+			"error": "CSRF_FAILED",
+			"message": "",
+			"details": {},
+			"status": 412,
+			"interrupted": false
+		},
+		"number 412 / 8": {
+			"error": "CSRF_FAILED",
+			"message": "only message",
+			"details": [],
+			"status": 412,
+			"interrupted": false
+		},
+		"number 413 / 0": {
+			"error": "FILE_TOO_LARGE",
+			"message": "",
+			"details": {},
+			"status": 413,
+			"interrupted": false
+		},
+		"number 413 / 1": {
+			"error": "FILE_TOO_LARGE",
+			"message": "",
+			"details": {},
+			"status": 413,
+			"interrupted": false
+		},
+		"number 413 / 2": {
+			"error": "FILE_TOO_LARGE",
+			"message": "",
+			"details": {},
+			"status": 413,
+			"interrupted": false
+		},
+		"number 413 / 3": {
+			"error": "FILE_TOO_LARGE",
+			"message": "",
+			"details": {},
+			"status": 413,
+			"interrupted": false
+		},
+		"number 413 / 4": {
+			"error": "FILE_TOO_LARGE",
+			"message": "",
+			"details": {},
+			"status": 413,
+			"interrupted": false
+		},
+		"number 413 / 5": {
+			"error": "SHEET_MISSING",
+			"message": "m",
+			"details": {
+				"sheet": "A"
+			},
+			"status": 413,
+			"interrupted": false
+		},
+		"number 413 / 6": {
+			"error": "FILE_TOO_LARGE",
+			"message": "",
+			"details": {},
+			"status": 413,
+			"interrupted": false
+		},
+		"number 413 / 7": {
+			"error": "FILE_TOO_LARGE",
+			"message": "",
+			"details": {},
+			"status": 413,
+			"interrupted": false
+		},
+		"number 413 / 8": {
+			"error": "FILE_TOO_LARGE",
+			"message": "only message",
+			"details": [],
+			"status": 413,
+			"interrupted": false
+		},
+		"number 500 / 0": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 500,
+			"interrupted": false
+		},
+		"number 500 / 1": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 500,
+			"interrupted": false
+		},
+		"number 500 / 2": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 500,
+			"interrupted": false
+		},
+		"number 500 / 3": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 500,
+			"interrupted": false
+		},
+		"number 500 / 4": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 500,
+			"interrupted": false
+		},
+		"number 500 / 5": {
+			"error": "SHEET_MISSING",
+			"message": "m",
+			"details": {
+				"sheet": "A"
+			},
+			"status": 500,
+			"interrupted": false
+		},
+		"number 500 / 6": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 500,
+			"interrupted": false
+		},
+		"number 500 / 7": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 500,
+			"interrupted": false
+		},
+		"number 500 / 8": {
+			"error": "IMPORT_FAILED",
+			"message": "only message",
+			"details": [],
+			"status": 500,
+			"interrupted": false
+		},
+		"number 502 / 0": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 502,
+			"interrupted": true
+		},
+		"number 502 / 1": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 502,
+			"interrupted": true
+		},
+		"number 502 / 2": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 502,
+			"interrupted": true
+		},
+		"number 502 / 3": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 502,
+			"interrupted": true
+		},
+		"number 502 / 4": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 502,
+			"interrupted": true
+		},
+		"number 502 / 5": {
+			"error": "SHEET_MISSING",
+			"message": "m",
+			"details": {
+				"sheet": "A"
+			},
+			"status": 502,
+			"interrupted": false
+		},
+		"number 502 / 6": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 502,
+			"interrupted": true
+		},
+		"number 502 / 7": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 502,
+			"interrupted": true
+		},
+		"number 502 / 8": {
+			"error": "IMPORT_FAILED",
+			"message": "only message",
+			"details": [],
+			"status": 502,
+			"interrupted": true
+		},
+		"number 503 / 0": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 503,
+			"interrupted": true
+		},
+		"number 503 / 1": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 503,
+			"interrupted": true
+		},
+		"number 503 / 2": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 503,
+			"interrupted": true
+		},
+		"number 503 / 3": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 503,
+			"interrupted": true
+		},
+		"number 503 / 4": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 503,
+			"interrupted": true
+		},
+		"number 503 / 5": {
+			"error": "SHEET_MISSING",
+			"message": "m",
+			"details": {
+				"sheet": "A"
+			},
+			"status": 503,
+			"interrupted": false
+		},
+		"number 503 / 6": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 503,
+			"interrupted": true
+		},
+		"number 503 / 7": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 503,
+			"interrupted": true
+		},
+		"number 503 / 8": {
+			"error": "IMPORT_FAILED",
+			"message": "only message",
+			"details": [],
+			"status": 503,
+			"interrupted": true
+		},
+		"number 504 / 0": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 504,
+			"interrupted": true
+		},
+		"number 504 / 1": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 504,
+			"interrupted": true
+		},
+		"number 504 / 2": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 504,
+			"interrupted": true
+		},
+		"number 504 / 3": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 504,
+			"interrupted": true
+		},
+		"number 504 / 4": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 504,
+			"interrupted": true
+		},
+		"number 504 / 5": {
+			"error": "SHEET_MISSING",
+			"message": "m",
+			"details": {
+				"sheet": "A"
+			},
+			"status": 504,
+			"interrupted": false
+		},
+		"number 504 / 6": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 504,
+			"interrupted": true
+		},
+		"number 504 / 7": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": 504,
+			"interrupted": true
+		},
+		"number 504 / 8": {
+			"error": "IMPORT_FAILED",
+			"message": "only message",
+			"details": [],
+			"status": 504,
+			"interrupted": true
+		},
+		"string 401 / 0": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": "401",
+			"interrupted": false
+		},
+		"string 401 / 1": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": "401",
+			"interrupted": false
+		},
+		"string 401 / 2": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": "401",
+			"interrupted": false
+		},
+		"string 401 / 3": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": "401",
+			"interrupted": false
+		},
+		"string 401 / 4": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": "401",
+			"interrupted": false
+		},
+		"string 401 / 5": {
+			"error": "SHEET_MISSING",
+			"message": "m",
+			"details": {
+				"sheet": "A"
+			},
+			"status": "401",
+			"interrupted": false
+		},
+		"string 401 / 6": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": "401",
+			"interrupted": false
+		},
+		"string 401 / 7": {
+			"error": "IMPORT_FAILED",
+			"message": "",
+			"details": {},
+			"status": "401",
+			"interrupted": false
+		},
+		"string 401 / 8": {
+			"error": "IMPORT_FAILED",
+			"message": "only message",
+			"details": [],
+			"status": "401",
+			"interrupted": false
+		},
+		"no error": {
+			"error": "NETWORK_ERROR",
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true
+		}
+	},
+	"follow": {
+		"completed with report": {
+			"result": {
+				"state": "finished",
+				"report": {
+					"created": 1
+				}
+			},
+			"calls": [
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				],
+				[
+					"progress",
+					"completed"
+				]
+			]
+		},
+		"cancelled with report": {
+			"result": {
+				"state": "finished",
+				"report": {
+					"created": 1
+				}
+			},
+			"calls": [
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				],
+				[
+					"progress",
+					"cancelled"
+				]
+			]
+		},
+		"completed without report": {
+			"result": {
+				"state": "unknown"
+			},
+			"calls": [
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				],
+				[
+					"progress",
+					"completed"
+				]
+			]
+		},
+		"completed with text report": {
+			"result": {
+				"state": "unknown"
+			},
+			"calls": [
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				],
+				[
+					"progress",
+					"completed"
+				]
+			]
+		},
+		"failed": {
+			"result": {
+				"state": "failed"
+			},
+			"calls": [
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				],
+				[
+					"progress",
+					"failed"
+				]
+			]
+		},
+		"running then completed": {
+			"result": {
+				"state": "finished",
+				"report": {
+					"created": 1
+				}
+			},
+			"calls": [
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				],
+				[
+					"progress",
+					"running"
+				],
+				[
+					"wait",
+					10
+				],
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				],
+				[
+					"progress",
+					"running"
+				],
+				[
+					"wait",
+					10
+				],
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				],
+				[
+					"progress",
+					"completed"
+				]
+			]
+		},
+		"other status": {
+			"result": {
+				"state": "unknown"
+			},
+			"calls": [
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				],
+				[
+					"progress",
+					"queued"
+				]
+			]
+		},
+		"no progress": {
+			"result": {
+				"state": "unknown"
+			},
+			"calls": [
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				]
+			]
+		},
+		"progress is text": {
+			"result": {
+				"state": "unknown"
+			},
+			"calls": [
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				]
+			]
+		},
+		"unreachable": {
+			"result": {
+				"state": "unreachable"
+			},
+			"calls": [
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				]
+			]
+		},
+		"error with response": {
+			"result": {
+				"state": "unknown"
+			},
+			"calls": [
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				]
+			]
+		},
+		"running until timeout": {
+			"result": {
+				"state": "unknown"
+			},
+			"calls": [
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				],
+				[
+					"progress",
+					"running"
+				],
+				[
+					"wait",
+					10
+				],
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				],
+				[
+					"progress",
+					"running"
+				],
+				[
+					"wait",
+					10
+				],
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				],
+				[
+					"progress",
+					"running"
+				],
+				[
+					"wait",
+					10
+				],
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				],
+				[
+					"progress",
+					"running"
+				]
+			]
+		},
+		"running until stopped": {
+			"result": {
+				"state": "unknown"
+			},
+			"calls": [
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				],
+				[
+					"progress",
+					"running"
+				],
+				[
+					"wait",
+					10
+				],
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				],
+				[
+					"progress",
+					"running"
+				],
+				[
+					"wait",
+					10
+				],
+				[
+					"get",
+					"/index.php/apps/stackiq/api/progress/{operationId}"
+				],
+				[
+					"progress",
+					"running"
+				]
+			]
+		},
+		"defaults": {
+			"state": "failed"
+		},
+		"defaultsCalls": [
+			"/index.php/apps/stackiq/api/progress/{operationId}"
+		]
+	}
+}

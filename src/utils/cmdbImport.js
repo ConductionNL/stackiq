@@ -67,6 +67,23 @@ export const OUTCOMES = [
 export const MISSING_RECORDS_MODES = Object.freeze(['archive', 'keep'])
 
 /**
+ * The translated label of each import outcome.
+ *
+ * @type {Readonly<Record<string, function(): string>>}
+ */
+const OUTCOME_LABELS = Object.freeze({
+	created: () => t('stackiq', 'Created'),
+	updated: () => t('stackiq', 'Updated'),
+	unchanged: () => t('stackiq', 'Unchanged'),
+	skipped: () => t('stackiq', 'Skipped'),
+	failed: () => t('stackiq', 'Failed'),
+	unarchived: () => t('stackiq', 'Unarchived'),
+	restored: () => t('stackiq', 'Restored'),
+	archived: () => t('stackiq', 'Archived'),
+	deleted: () => t('stackiq', 'Deleted'),
+})
+
+/**
  * The words for one row outcome.
  *
  * @param {string} outcome The outcome key from the report
@@ -75,28 +92,11 @@ export const MISSING_RECORDS_MODES = Object.freeze(['archive', 'keep'])
  * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 export function outcomeLabel(outcome) {
-	switch (outcome) {
-		case 'created':
-			return t('stackiq', 'Created')
-		case 'updated':
-			return t('stackiq', 'Updated')
-		case 'unchanged':
-			return t('stackiq', 'Unchanged')
-		case 'skipped':
-			return t('stackiq', 'Skipped')
-		case 'failed':
-			return t('stackiq', 'Failed')
-		case 'unarchived':
-			return t('stackiq', 'Unarchived')
-		case 'restored':
-			return t('stackiq', 'Restored')
-		case 'archived':
-			return t('stackiq', 'Archived')
-		case 'deleted':
-			return t('stackiq', 'Deleted')
-		default:
-			return String(outcome ?? '')
-	}
+	const label =
+		typeof outcome === 'string' && Object.hasOwn(OUTCOME_LABELS, outcome)
+			? OUTCOME_LABELS[outcome]
+			: null
+	return label ? label() : String(outcome ?? '')
 }
 
 /**
@@ -330,6 +330,53 @@ export function moduleUrl(uuid) {
 const INTERRUPTED_STATUSES = new Set([0, 502, 503, 504])
 
 /**
+ * The CMDB error code of an answer without one in its body, by HTTP status.
+ * Any other status is IMPORT_FAILED.
+ *
+ * @type {Map<number, string>}
+ */
+const STATUS_ERROR_CODES = new Map([
+	[401, 'NOT_SIGNED_IN'],
+	[403, 'NOT_ADMIN'],
+	[412, 'CSRF_FAILED'],
+	[413, 'FILE_TOO_LARGE'],
+	[0, 'NETWORK_ERROR'],
+])
+
+/**
+ * An answer body when it is an object, else null.
+ *
+ * @param {object|string|null|undefined} body The answer body.
+ * @return {object|null} The body.
+ */
+function bodyObject(body) {
+	return body && typeof body === 'object' ? body : null
+}
+
+/**
+ * A string field of an answer body, or an empty string.
+ *
+ * @param {object|null} body The answer body.
+ * @param {string} key The field.
+ * @return {string} The value.
+ */
+function stringField(body, key) {
+	return typeof body?.[key] === 'string' ? body[key] : ''
+}
+
+/**
+ * An object field of an answer body, or an empty object.
+ *
+ * @param {object|null} body The answer body.
+ * @param {string} key The field.
+ * @return {object} The value.
+ */
+function objectField(body, key) {
+	const value = body?.[key]
+	return value && typeof value === 'object' ? value : {}
+}
+
+/**
  * Turn a failed request into the server's error shape.
  *
  * Errors raised by Nextcloud itself (not signed in, not an admin, CSRF) come
@@ -344,42 +391,123 @@ const INTERRUPTED_STATUSES = new Set([0, 502, 503, 504])
  */
 export function normaliseError(error) {
 	const status = error?.response?.status ?? 0
-	const body = error?.response?.data
-	const fromBody =
-		body && typeof body === 'object' && typeof body.error === 'string'
-			? body.error
-			: ''
-	let code = fromBody
-	if (code === '') {
-		if (status === 401) {
-			code = 'NOT_SIGNED_IN'
-		} else if (status === 403) {
-			code = 'NOT_ADMIN'
-		} else if (status === 412) {
-			code = 'CSRF_FAILED'
-		} else if (status === 413) {
-			code = 'FILE_TOO_LARGE'
-		} else if (status === 0) {
-			code = 'NETWORK_ERROR'
-		} else {
-			code = 'IMPORT_FAILED'
-		}
-	}
+	const body = bodyObject(error?.response?.data)
+	const fromBody = stringField(body, 'error')
 	return {
-		error: code,
-		message:
-			body && typeof body === 'object' && typeof body.message === 'string'
-				? body.message
-				: '',
-		details:
-			body
-			&& typeof body === 'object'
-			&& body.details
-			&& typeof body.details === 'object'
-				? body.details
-				: {},
+		error: fromBody || STATUS_ERROR_CODES.get(status) || 'IMPORT_FAILED',
+		message: stringField(body, 'message'),
+		details: objectField(body, 'details'),
 		status,
 		interrupted: fromBody === '' && INTERRUPTED_STATUSES.has(status),
+	}
+}
+
+/**
+ * Marks a progress poll that got no answer at all.
+ *
+ * @type {symbol}
+ */
+const UNREACHABLE = Symbol('unreachable')
+
+/**
+ * Read the import progress once.
+ *
+ * @param {object} http The http client.
+ * @param {string} url The progress endpoint.
+ * @return {Promise<object|null|symbol>} The progress, null when the answer has none, or UNREACHABLE.
+ */
+async function readProgress(http, url) {
+	try {
+		const response = await http.get(url)
+		return response?.data?.progress ?? null
+	} catch (error) {
+		return error?.response ? null : UNREACHABLE
+	}
+}
+
+/**
+ * The outcome of a poll that gave no usable progress, or null when it did.
+ *
+ * @param {object|null|symbol} progress The poll result.
+ * @return {{state: string}|null} The outcome.
+ */
+function unusableProgress(progress) {
+	if (progress === UNREACHABLE) {
+		return { state: 'unreachable' }
+	}
+	if (!progress || typeof progress !== 'object') {
+		return { state: 'unknown' }
+	}
+	return null
+}
+
+/**
+ * Whether a progress status ends the import with a report to read.
+ *
+ * @param {string} status The progress status.
+ * @return {boolean} True for completed and cancelled.
+ */
+function isClosedStatus(status) {
+	return status === 'completed' || status === 'cancelled'
+}
+
+/**
+ * The outcome of a progress that ended the import, or null while it runs on.
+ *
+ * @param {object} progress The progress.
+ * @return {object|null} The outcome.
+ */
+function endedOutcome(progress) {
+	const report = progress.statistics?.report
+	if (isClosedStatus(progress.status) && report && typeof report === 'object') {
+		return { state: 'finished', report }
+	}
+	if (progress.status === 'failed') {
+		return { state: 'failed' }
+	}
+	return null
+}
+
+/**
+ * Whether to poll again: the import still runs, the time is not up and no
+ * stop was asked.
+ *
+ * @param {object} progress The progress.
+ * @param {{run: object, waited: number}} poll The run and the time waited so far.
+ * @return {boolean} True to poll again.
+ */
+function keepPolling(progress, poll) {
+	const { run, waited } = poll
+	const stop =
+		progress.status !== 'running' || waited >= run.timeoutMs || run.shouldStop()
+	return !stop
+}
+
+/**
+ * Poll the progress until the import ends, cannot be read, or polling stops.
+ *
+ * @param {object} run The http client, url, callbacks, interval and timeout.
+ * @param {Function} wait Waits the given milliseconds.
+ * @return {Promise<object>} The outcome.
+ */
+async function pollProgress(run, wait) {
+	let waited = 0
+	for (;;) {
+		const progress = await readProgress(run.http, run.url)
+		const unusable = unusableProgress(progress)
+		if (unusable) {
+			return unusable
+		}
+		run.onProgress(progress)
+		const ended = endedOutcome(progress)
+		if (ended) {
+			return ended
+		}
+		if (!keepPolling(progress, { run, waited })) {
+			return { state: 'unknown' }
+		}
+		await wait(run.intervalMs)
+		waited += run.intervalMs
 	}
 }
 
@@ -413,38 +541,26 @@ export async function followInterruptedImport({
 	const url = generateUrl('/apps/stackiq/api/progress/{operationId}', {
 		operationId,
 	})
-	let waited = 0
-	for (;;) {
-		let progress = null
-		try {
-			const response = await http.get(url)
-			progress = response?.data?.progress ?? null
-		} catch (error) {
-			if (!error?.response) {
-				return { state: 'unreachable' }
-			}
-		}
-		if (!progress || typeof progress !== 'object') {
-			return { state: 'unknown' }
-		}
-		onProgress(progress)
-		const report = progress.statistics?.report
-		if (
-			(progress.status === 'completed' || progress.status === 'cancelled')
-			&& report
-			&& typeof report === 'object'
-		) {
-			return { state: 'finished', report }
-		}
-		if (progress.status === 'failed') {
-			return { state: 'failed' }
-		}
-		if (progress.status !== 'running' || waited >= timeoutMs || shouldStop()) {
-			return { state: 'unknown' }
-		}
-		await wait(intervalMs)
-		waited += intervalMs
+	const run = { http, url, onProgress, shouldStop, intervalMs, timeoutMs }
+	return pollProgress(run, wait)
+}
+
+/**
+ * The error code of an import whose follow-up did not finish: a failure, a
+ * network error when the server was never reached, else an interruption.
+ *
+ * @param {string|undefined} state The follow-up state.
+ * @param {number|string|null} status The HTTP status of the upload error.
+ * @return {string} The error code.
+ */
+function interruptedErrorCode(state, status) {
+	if (state === 'failed') {
+		return 'IMPORT_FAILED'
 	}
+	if (state === 'unreachable' && status === 0) {
+		return 'NETWORK_ERROR'
+	}
+	return 'IMPORT_INTERRUPTED'
 }
 
 /**
@@ -457,24 +573,16 @@ export async function followInterruptedImport({
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-a-running-import-shall-report-its-progress-and-shall-stop-when-cancelled-req-cmdb-013
  */
 export function interruptedImportError(outcome, error) {
-	const base = {
+	const status = error?.status ?? 0
+	if (outcome?.state === 'finished') {
+		return null
+	}
+	return {
 		message: '',
 		details: {},
-		status: error?.status ?? 0,
+		status,
 		interrupted: true,
-	}
-	switch (outcome?.state) {
-		case 'finished':
-			return null
-		case 'failed':
-			return { ...base, error: 'IMPORT_FAILED' }
-		case 'unreachable':
-			if ((error?.status ?? 0) === 0) {
-				return { ...base, error: 'NETWORK_ERROR' }
-			}
-			return { ...base, error: 'IMPORT_INTERRUPTED' }
-		default:
-			return { ...base, error: 'IMPORT_INTERRUPTED' }
+		error: interruptedErrorCode(outcome?.state, status),
 	}
 }
 
@@ -524,16 +632,32 @@ export function isKnownError(code) {
  * to which sheet or part, and what to do about it.
  *
  * @param {object} details The error details: `maxPartBytes`, `part`, `size` and, for a sheet, `sheet`; `maxSharedStrings`; `maxReferencedStringBytes`; or `maxUncompressedBytes`
- * @param {Array<string>} sheetNames The sheets the import reads, for the hint
- * @param {string|null} archiveSheet The archive sheet, of which the import reads the APPID column; null when the profile names none
+ * @param {{sheetNames: Array<string>, archiveSheet: string|null}} names The sheets the import reads, for the hint, and the archive sheet, of which the import reads the APPID column (null when the profile names none)
  * @return {{title: string, hint: string}} The words
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-workbook-shall-be-read-as-stored-data-without-evaluating-formulas-or-following-links-req-cmdb-002
  */
-function workbookTooLarge(details, sheetNames, archiveSheet) {
+function workbookTooLarge(details, names) {
 	const compressed = t(
 		'stackiq',
 		'An .xlsx file is compressed, so a file of a few MB can be much larger once unpacked. Nothing was imported.',
 	)
+	if (Number(details.maxPartBytes) > 0) {
+		return partTooLarge(details, compressed)
+	}
+	return {
+		title: unpackedLimitTitle(details),
+		hint: compressed + ' ' + unreadSheetsHint(names),
+	}
+}
+
+/**
+ * What the page says when one sheet or part of the workbook is too large.
+ *
+ * @param {object} details The error details: `maxPartBytes`, `part`, `size` and, for a sheet, `sheet`
+ * @param {string} compressed The sentence on compression that opens the hint
+ * @return {{title: string, hint: string}} The words
+ */
+function partTooLarge(details, compressed) {
 	const split =
 		compressed
 		+ ' '
@@ -541,82 +665,390 @@ function workbookTooLarge(details, sheetNames, archiveSheet) {
 			'stackiq',
 			'Split the rows over two copies of the export and import both with "Keep them as they are": an import that archives treats the applications of the other copy as missing.',
 		)
-	if (Number(details.maxPartBytes) > 0) {
-		const sizes = {
-			size: formatMegabytes(details.size),
-			limit: formatMegabytes(details.maxPartBytes),
-		}
-		return {
-			title: details.sheet
-				? t(
-						'stackiq',
-						'The sheet "{sheet}" is too large to import: unpacked it is {size}, and the import reads at most {limit} of one sheet.',
-						{ sheet: String(details.sheet), ...sizes },
-						AS_TEXT,
-					)
-				: t(
-						'stackiq',
-						'The part {part} of the workbook is too large to import: unpacked it is {size}, and the import reads at most {limit} of one part.',
-						{ part: String(details.part ?? ''), ...sizes },
-						AS_TEXT,
-					),
-			hint: split,
-		}
+	const sizes = {
+		size: formatMegabytes(details.size),
+		limit: formatMegabytes(details.maxPartBytes),
 	}
-	const unread =
-		compressed
-		+ ' '
-		+ (archiveSheet
+	return {
+		title: details.sheet
 			? t(
 					'stackiq',
-					'Delete the sheets the import does not read from a copy of the export (it reads {sheets}, and the APPID column of "{archive}"), and import that copy.',
-					{ sheets: quotedSheetList(sheetNames), archive: archiveSheet },
+					'The sheet "{sheet}" is too large to import: unpacked it is {size}, and the import reads at most {limit} of one sheet.',
+					{ sheet: String(details.sheet), ...sizes },
 					AS_TEXT,
 				)
 			: t(
 					'stackiq',
-					'Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy.',
-					{ sheets: quotedSheetList(sheetNames) },
+					'The part {part} of the workbook is too large to import: unpacked it is {size}, and the import reads at most {limit} of one part.',
+					{ part: String(details.part ?? ''), ...sizes },
 					AS_TEXT,
-				))
-	if (Number(details.maxSharedStrings) > 0) {
-		return {
-			title: t(
-				'stackiq',
-				'The workbook holds more than {count} different texts, the most the import reads.',
-				{ count: String(details.maxSharedStrings) },
-				AS_TEXT,
-			),
-			hint: unread,
-		}
-	}
-	if (Number(details.maxReferencedStringBytes) > 0) {
-		return {
-			title: t(
-				'stackiq',
-				'Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.',
-				{ size: formatMegabytes(details.maxReferencedStringBytes) },
-				AS_TEXT,
-			),
-			hint: unread,
-		}
-	}
-	if (Number(details.maxUncompressedBytes) > 0) {
-		return {
-			title: t(
-				'stackiq',
-				'Unpacked, the workbook is larger than {size}, the most the import reads.',
-				{ size: formatMegabytes(details.maxUncompressedBytes) },
-				AS_TEXT,
-			),
-			hint: unread,
-		}
-	}
-	return {
-		title: t('stackiq', 'The workbook is too large to read once unpacked.'),
-		hint: unread,
+				),
+		hint: split,
 	}
 }
+
+/**
+ * The hint to delete the sheets the import does not read.
+ *
+ * @param {{sheetNames: Array<string>, archiveSheet: string|null}} names The sheets the import reads and the archive sheet
+ * @return {string} The hint
+ */
+function unreadSheetsHint(names) {
+	return names.archiveSheet
+		? t(
+				'stackiq',
+				'Delete the sheets the import does not read from a copy of the export (it reads {sheets}, and the APPID column of "{archive}"), and import that copy.',
+				{
+					sheets: quotedSheetList(names.sheetNames),
+					archive: names.archiveSheet,
+				},
+				AS_TEXT,
+			)
+		: t(
+				'stackiq',
+				'Delete the sheets the import does not read from a copy of the export (it reads only {sheets}), and import that copy.',
+				{ sheets: quotedSheetList(names.sheetNames) },
+				AS_TEXT,
+			)
+}
+
+/**
+ * The title for a workbook that is too large once unpacked: which limit the
+ * server applied.
+ *
+ * @param {object} details The error details: `maxSharedStrings`, `maxReferencedStringBytes` or `maxUncompressedBytes`
+ * @return {string} The title
+ */
+function unpackedLimitTitle(details) {
+	if (Number(details.maxSharedStrings) > 0) {
+		return t(
+			'stackiq',
+			'The workbook holds more than {count} different texts, the most the import reads.',
+			{ count: String(details.maxSharedStrings) },
+			AS_TEXT,
+		)
+	}
+	if (Number(details.maxReferencedStringBytes) > 0) {
+		return t(
+			'stackiq',
+			'Together, the cells of the workbook reference more than {size} of shared text, the most the import reads.',
+			{ size: formatMegabytes(details.maxReferencedStringBytes) },
+			AS_TEXT,
+		)
+	}
+	if (Number(details.maxUncompressedBytes) > 0) {
+		return t(
+			'stackiq',
+			'Unpacked, the workbook is larger than {size}, the most the import reads.',
+			{ size: formatMegabytes(details.maxUncompressedBytes) },
+			AS_TEXT,
+		)
+	}
+	return t('stackiq', 'The workbook is too large to read once unpacked.')
+}
+
+/**
+ * The words for each error code the page knows: the title and, where the
+ * code has one, a hint. Each entry takes the error details and the sheet
+ * names the hints mention.
+ *
+ * @type {Object<string, function(object, {sheetNames: Array<string>, archiveSheet: string|null}): {title: string, hint: string}>}
+ */
+const ERROR_TEXTS = Object.freeze({
+	NO_FILE_UPLOADED: () => {
+		return {
+			title: t('stackiq', 'No file was uploaded.'),
+			hint: t('stackiq', 'Choose the TOPdesk export and try again.'),
+		}
+	},
+	NOT_XLSX: () => {
+		return {
+			title: t('stackiq', 'This file is not an Excel workbook (.xlsx).'),
+			hint: t(
+				'stackiq',
+				'Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.',
+			),
+		}
+	},
+	FILE_TOO_LARGE: (details) => {
+		return {
+			title:
+				Number(details.maxBytes) > 0
+					? t(
+							'stackiq',
+							'The file is larger than {size}, the most the import accepts.',
+							{ size: formatMegabytes(details.maxBytes) },
+							AS_TEXT,
+						)
+					: t('stackiq', 'The file is larger than the server accepts.'),
+			hint: t(
+				'stackiq',
+				'Remove sheets the import does not read and try again. Or split the export and import every part with "Keep them as they are".',
+			),
+		}
+	},
+	MISSING_RECORDS_UNSUPPORTED: () => {
+		return {
+			title: t(
+				'stackiq',
+				'Applications missing from the export can only be archived or kept.',
+			),
+			hint: '',
+		}
+	},
+	FIELD_INVALID: (details) => {
+		const accepted = Array.isArray(details.accepted)
+			? details.accepted.map((value) => String(value))
+			: []
+		return {
+			title: t(
+				'stackiq',
+				'The request field "{field}" has a value the import does not accept.',
+				{ field: String(details.field ?? '') },
+				AS_TEXT,
+			),
+			hint:
+				accepted.length > 0
+					? t(
+							'stackiq',
+							'Accepted values: {accepted}. Reload the page and try again.',
+							{ accepted: accepted.join(', ') },
+							AS_TEXT,
+						)
+					: t('stackiq', 'Reload the page and try again.'),
+		}
+	},
+	UPLOAD_FAILED: () => {
+		return {
+			title: t('stackiq', 'The server could not store the uploaded file.'),
+			hint: t(
+				'stackiq',
+				'Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.',
+			),
+		}
+	},
+	MUNICIPALITY_REQUIRED: () => {
+		return {
+			title: t('stackiq', 'Choose a municipality first.'),
+			hint: t(
+				'stackiq',
+				'Pick an existing municipality or type the name of a new one.',
+			),
+		}
+	},
+	MUNICIPALITY_INVALID: () => {
+		return {
+			title: t('stackiq', 'The chosen organisation is not a municipality.'),
+			hint: t(
+				'stackiq',
+				'Pick an organisation of type Municipality, or type the name of a new one.',
+			),
+		}
+	},
+	NO_SOURCE_SHEET: (details, names) => {
+		const expected =
+			Array.isArray(details.expected) && details.expected.length > 0
+				? details.expected.map((name) => String(name))
+				: names.sheetNames
+		const values = { sheets: quotedSheetList(expected) }
+		return {
+			title: t(
+				'stackiq',
+				'The workbook has none of the sheets the import reads.',
+			),
+			hint:
+				expected.length === 1
+					? t(
+							'stackiq',
+							'Expected the sheet {sheets}. Sheet names must match exactly.',
+							values,
+							AS_TEXT,
+						)
+					: t(
+							'stackiq',
+							'Expected one of the sheets {sheets}. Sheet names must match exactly.',
+							values,
+							AS_TEXT,
+						),
+		}
+	},
+	MISSING_COLUMN: (details) => {
+		return {
+			title: t(
+				'stackiq',
+				'The sheet "{sheet}" has no column "{column}".',
+				{
+					sheet: String(details.sheet ?? ''),
+					column: String(details.column ?? ''),
+				},
+				AS_TEXT,
+			),
+			hint: t(
+				'stackiq',
+				'The columns "APPID" and "Applicatie Naam" are required on every source sheet. Add the column to the export and try again. Nothing was imported.',
+			),
+		}
+	},
+	TOO_MANY_ROWS: (details) => {
+		return {
+			title: details.sheet
+				? t(
+						'stackiq',
+						'The sheet "{sheet}" has more rows than the import can process.',
+						{ sheet: String(details.sheet) },
+						AS_TEXT,
+					)
+				: t('stackiq', 'A sheet has more rows than the import can process.'),
+			hint:
+				Number(details.limit) > 0
+					? t(
+							'stackiq',
+							'A source sheet may hold at most {limit} rows. Split the export and import the parts one after the other with "Keep them as they are".',
+							{ limit: Number(details.limit).toLocaleString() },
+							AS_TEXT,
+						)
+					: t(
+							'stackiq',
+							'Split the export and import the parts one after the other with "Keep them as they are".',
+						),
+		}
+	},
+	MAPPING_UNAVAILABLE: () => {
+		return {
+			title: t('stackiq', 'The import mapping cannot run.'),
+			hint: t(
+				'stackiq',
+				"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.",
+			),
+		}
+	},
+	READER_UNAVAILABLE: () => {
+		return {
+			title: t('stackiq', 'The Excel reader is not available.'),
+			hint: t(
+				'stackiq',
+				'The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.',
+			),
+		}
+	},
+	NOT_CONFIGURED: () => {
+		return {
+			title: t('stackiq', 'Stackiq is not configured for the import.'),
+			hint: t(
+				'stackiq',
+				'The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.',
+			),
+		}
+	},
+	WORKBOOK_TOO_LARGE: (details, names) => {
+		return workbookTooLarge(details, names)
+	},
+	SCHEMA_OUTDATED: (details) => {
+		return {
+			title: details.schema
+				? t(
+						'stackiq',
+						'The "{schema}" schema of the stackiq register is out of date.',
+						{ schema: String(details.schema) },
+						AS_TEXT,
+					)
+				: t('stackiq', 'The stackiq register is out of date.'),
+			hint: t(
+				'stackiq',
+				'It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.',
+			),
+		}
+	},
+	IMPORT_IN_PROGRESS: () => {
+		return {
+			title: t('stackiq', 'Another CMDB import is running.'),
+			hint: t(
+				'stackiq',
+				'Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.',
+			),
+		}
+	},
+	MUNICIPALITY_AMBIGUOUS: (details) => {
+		return {
+			title:
+				Array.isArray(details.matches) && details.matches.length > 1
+					? t(
+							'stackiq',
+							'{count} municipalities have this name.',
+							{ count: String(details.matches.length) },
+							AS_TEXT,
+						)
+					: t('stackiq', 'Several municipalities have this name.'),
+			hint: t(
+				'stackiq',
+				'Choose the municipality from the list instead of typing its name. Nothing was imported.',
+			),
+		}
+	},
+	ARCHIVE_UNAVAILABLE: () => {
+		return {
+			title: t(
+				'stackiq',
+				'Applications missing from the export cannot be archived.',
+			),
+			hint: t(
+				'stackiq',
+				'OpenRegister is missing or too old to archive objects. Choose "Keep them as they are" and import again, or update OpenRegister. Nothing was imported.',
+			),
+		}
+	},
+	OPERATION_NOT_FOUND: () => {
+		return {
+			title: t('stackiq', 'This import is no longer running.'),
+			hint: '',
+		}
+	},
+	NOT_SIGNED_IN: () => {
+		return {
+			title: t('stackiq', 'You are not signed in.'),
+			hint: t('stackiq', 'Sign in again and retry the import.'),
+		}
+	},
+	NOT_ADMIN: () => {
+		return {
+			title: t(
+				'stackiq',
+				'Only Nextcloud administrators can import a CMDB export.',
+			),
+			hint: '',
+		}
+	},
+	CSRF_FAILED: () => {
+		return {
+			title: t('stackiq', 'Your session has expired.'),
+			hint: t('stackiq', 'Reload the page and try again.'),
+		}
+	},
+	NETWORK_ERROR: () => {
+		return {
+			title: t('stackiq', 'The server could not be reached.'),
+			hint: t('stackiq', 'Check the connection and try again.'),
+		}
+	},
+	IMPORT_INTERRUPTED: () => {
+		return {
+			title: t('stackiq', 'The page got no answer from the import.'),
+			hint: t(
+				'stackiq',
+				'The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.',
+			),
+		}
+	},
+	IMPORT_FAILED: () => {
+		return {
+			title: t('stackiq', 'The import failed unexpectedly.'),
+			hint: t(
+				'stackiq',
+				'Nothing more is known on this page; the Nextcloud log has the details.',
+			),
+		}
+	},
+})
 
 /**
  * What the page says for an error: a title and, where the code has one, a
@@ -635,287 +1067,12 @@ export function errorText(
 	archiveSheet = mappingArchiveSheet(null),
 ) {
 	const details = error?.details || {}
-	switch (error?.error) {
-		case 'NO_FILE_UPLOADED':
-			return {
-				title: t('stackiq', 'No file was uploaded.'),
-				hint: t('stackiq', 'Choose the TOPdesk export and try again.'),
-			}
-		case 'NOT_XLSX':
-			return {
-				title: t('stackiq', 'This file is not an Excel workbook (.xlsx).'),
-				hint: t(
-					'stackiq',
-					'Save the TOPdesk export as an Excel workbook (.xlsx). CSV, .xls and macro-enabled .xlsm files are not accepted.',
-				),
-			}
-		case 'FILE_TOO_LARGE':
-			return {
-				title:
-					Number(details.maxBytes) > 0
-						? t(
-								'stackiq',
-								'The file is larger than {size}, the most the import accepts.',
-								{ size: formatMegabytes(details.maxBytes) },
-								AS_TEXT,
-							)
-						: t(
-								'stackiq',
-								'The file is larger than the server accepts.',
-							),
-				hint: t(
-					'stackiq',
-					'Remove sheets the import does not read and try again. Or split the export and import every part with "Keep them as they are".',
-				),
-			}
-		case 'MISSING_RECORDS_UNSUPPORTED':
-			return {
-				title: t(
-					'stackiq',
-					'Applications missing from the export can only be archived or kept.',
-				),
-				hint: '',
-			}
-		case 'FIELD_INVALID': {
-			const accepted = Array.isArray(details.accepted)
-				? details.accepted.map((value) => String(value))
-				: []
-			return {
-				title: t(
-					'stackiq',
-					'The request field "{field}" has a value the import does not accept.',
-					{ field: String(details.field ?? '') },
-					AS_TEXT,
-				),
-				hint:
-					accepted.length > 0
-						? t(
-								'stackiq',
-								'Accepted values: {accepted}. Reload the page and try again.',
-								{ accepted: accepted.join(', ') },
-								AS_TEXT,
-							)
-						: t('stackiq', 'Reload the page and try again.'),
-			}
-		}
-		case 'UPLOAD_FAILED':
-			return {
-				title: t('stackiq', 'The server could not store the uploaded file.'),
-				hint: t(
-					'stackiq',
-					'Try again. If it keeps failing, the Nextcloud log has the details; check the free space and the upload settings of the server.',
-				),
-			}
-		case 'MUNICIPALITY_REQUIRED':
-			return {
-				title: t('stackiq', 'Choose a municipality first.'),
-				hint: t(
-					'stackiq',
-					'Pick an existing municipality or type the name of a new one.',
-				),
-			}
-		case 'MUNICIPALITY_INVALID':
-			return {
-				title: t(
-					'stackiq',
-					'The chosen organisation is not a municipality.',
-				),
-				hint: t(
-					'stackiq',
-					'Pick an organisation of type Municipality, or type the name of a new one.',
-				),
-			}
-		case 'NO_SOURCE_SHEET': {
-			const expected =
-				Array.isArray(details.expected) && details.expected.length > 0
-					? details.expected.map((name) => String(name))
-					: sheetNames
-			const values = { sheets: quotedSheetList(expected) }
-			return {
-				title: t(
-					'stackiq',
-					'The workbook has none of the sheets the import reads.',
-				),
-				hint:
-					expected.length === 1
-						? t(
-								'stackiq',
-								'Expected the sheet {sheets}. Sheet names must match exactly.',
-								values,
-								AS_TEXT,
-							)
-						: t(
-								'stackiq',
-								'Expected one of the sheets {sheets}. Sheet names must match exactly.',
-								values,
-								AS_TEXT,
-							),
-			}
-		}
-		case 'MISSING_COLUMN':
-			return {
-				title: t(
-					'stackiq',
-					'The sheet "{sheet}" has no column "{column}".',
-					{
-						sheet: String(details.sheet ?? ''),
-						column: String(details.column ?? ''),
-					},
-					AS_TEXT,
-				),
-				hint: t(
-					'stackiq',
-					'The columns "APPID" and "Applicatie Naam" are required on every source sheet. Add the column to the export and try again. Nothing was imported.',
-				),
-			}
-		case 'TOO_MANY_ROWS':
-			return {
-				title: details.sheet
-					? t(
-							'stackiq',
-							'The sheet "{sheet}" has more rows than the import can process.',
-							{ sheet: String(details.sheet) },
-							AS_TEXT,
-						)
-					: t(
-							'stackiq',
-							'A sheet has more rows than the import can process.',
-						),
-				hint:
-					Number(details.limit) > 0
-						? t(
-								'stackiq',
-								'A source sheet may hold at most {limit} rows. Split the export and import the parts one after the other with "Keep them as they are".',
-								{ limit: Number(details.limit).toLocaleString() },
-								AS_TEXT,
-							)
-						: t(
-								'stackiq',
-								'Split the export and import the parts one after the other with "Keep them as they are".',
-							),
-			}
-		case 'MAPPING_UNAVAILABLE':
-			return {
-				title: t('stackiq', 'The import mapping cannot run.'),
-				hint: t(
-					'stackiq',
-					"OpenRegister's mapping engine is missing, or a mapping pack is invalid or breaks a rule of the import. The reason below names the pack: correct it in OpenRegister, or check the Nextcloud log.",
-				),
-			}
-		case 'READER_UNAVAILABLE':
-			return {
-				title: t('stackiq', 'The Excel reader is not available.'),
-				hint: t(
-					'stackiq',
-					'The import reads workbooks with the spreadsheet library that ships with OpenRegister. Make sure OpenRegister is installed and enabled.',
-				),
-			}
-		case 'NOT_CONFIGURED':
-			return {
-				title: t('stackiq', 'Stackiq is not configured for the import.'),
-				hint: t(
-					'stackiq',
-					'The stackiq register or its schemas cannot be found. Run Auto Configure at the top of this page, then try again.',
-				),
-			}
-		case 'WORKBOOK_TOO_LARGE':
-			return workbookTooLarge(details, sheetNames, archiveSheet)
-		case 'SCHEMA_OUTDATED':
-			return {
-				title: details.schema
-					? t(
-							'stackiq',
-							'The "{schema}" schema of the stackiq register is out of date.',
-							{ schema: String(details.schema) },
-							AS_TEXT,
-						)
-					: t('stackiq', 'The stackiq register is out of date.'),
-				hint: t(
-					'stackiq',
-					'It lacks properties the import matches on. Press Force Update at the top of this page to import the register configuration again, then try again. Nothing was imported.',
-				),
-			}
-		case 'IMPORT_IN_PROGRESS':
-			return {
-				title: t('stackiq', 'Another CMDB import is running.'),
-				hint: t(
-					'stackiq',
-					'Only one import runs at a time. Wait until it has finished and try again. Nothing was imported.',
-				),
-			}
-		case 'MUNICIPALITY_AMBIGUOUS':
-			return {
-				title:
-					Array.isArray(details.matches) && details.matches.length > 1
-						? t(
-								'stackiq',
-								'{count} municipalities have this name.',
-								{ count: String(details.matches.length) },
-								AS_TEXT,
-							)
-						: t('stackiq', 'Several municipalities have this name.'),
-				hint: t(
-					'stackiq',
-					'Choose the municipality from the list instead of typing its name. Nothing was imported.',
-				),
-			}
-		case 'ARCHIVE_UNAVAILABLE':
-			return {
-				title: t(
-					'stackiq',
-					'Applications missing from the export cannot be archived.',
-				),
-				hint: t(
-					'stackiq',
-					'OpenRegister is missing or too old to archive objects. Choose "Keep them as they are" and import again, or update OpenRegister. Nothing was imported.',
-				),
-			}
-		case 'OPERATION_NOT_FOUND':
-			return {
-				title: t('stackiq', 'This import is no longer running.'),
-				hint: '',
-			}
-		case 'NOT_SIGNED_IN':
-			return {
-				title: t('stackiq', 'You are not signed in.'),
-				hint: t('stackiq', 'Sign in again and retry the import.'),
-			}
-		case 'NOT_ADMIN':
-			return {
-				title: t(
-					'stackiq',
-					'Only Nextcloud administrators can import a CMDB export.',
-				),
-				hint: '',
-			}
-		case 'CSRF_FAILED':
-			return {
-				title: t('stackiq', 'Your session has expired.'),
-				hint: t('stackiq', 'Reload the page and try again.'),
-			}
-		case 'NETWORK_ERROR':
-			return {
-				title: t('stackiq', 'The server could not be reached.'),
-				hint: t('stackiq', 'Check the connection and try again.'),
-			}
-		case 'IMPORT_INTERRUPTED':
-			return {
-				title: t('stackiq', 'The page got no answer from the import.'),
-				hint: t(
-					'stackiq',
-					'The connection was cut off before the import answered, so it may still be running or may have finished. Wait a few minutes and check the applications of the municipality before you import again. Importing the same file again creates no duplicates.',
-				),
-			}
-		case 'IMPORT_FAILED':
-		default:
-			return {
-				title: t('stackiq', 'The import failed unexpectedly.'),
-				hint: t(
-					'stackiq',
-					'Nothing more is known on this page; the Nextcloud log has the details.',
-				),
-			}
-	}
+	const code = error?.error
+	const words =
+		typeof code === 'string' && Object.hasOwn(ERROR_TEXTS, code)
+			? ERROR_TEXTS[code]
+			: ERROR_TEXTS.IMPORT_FAILED
+	return words(details, { sheetNames, archiveSheet })
 }
 
 /**
@@ -943,6 +1100,51 @@ export function cancelFailureText(error) {
 }
 
 /**
+ * The processed and total row counts of an import progress, zero when unset.
+ *
+ * @param {object} progress The progress.
+ * @return {{processed: number, total: number}} The counts.
+ */
+function progressCounts(progress) {
+	return {
+		processed: Number(progress.processed_items) || 0,
+		total: Number(progress.total_items) || 0,
+	}
+}
+
+/**
+ * The progress percentage: from the row counts when there is a total,
+ * capped at 100, else the reported percentage.
+ *
+ * @param {object} progress The progress.
+ * @param {{processed: number, total: number}} counts The row counts.
+ * @return {number} The percentage.
+ */
+function progressPercentage(progress, counts) {
+	const { processed, total } = counts
+	if (total > 0) {
+		return Math.min(100, Math.round((processed / total) * 100))
+	}
+	return Number(progress.percentage) || 0
+}
+
+/**
+ * The rows-processed line of an import progress.
+ *
+ * @param {{processed: number, total: number}} counts The row counts.
+ * @return {string} The line.
+ */
+function rowsProcessedText(counts) {
+	const { processed, total } = counts
+	return t(
+		'stackiq',
+		'{processed} of {total} rows processed',
+		{ processed, total },
+		AS_TEXT,
+	)
+}
+
+/**
  * What the page shows for a progress snapshot of the running import.
  *
  * The percentage comes from the processed and total row counts when the
@@ -965,12 +1167,6 @@ export function cmdbProgressView(progress) {
 	if (!progress) {
 		return null
 	}
-	const processed = Number(progress.processed_items) || 0
-	const total = Number(progress.total_items) || 0
-	const percentage =
-		total > 0
-			? Math.min(100, Math.round((processed / total) * 100))
-			: Number(progress.percentage) || 0
 	if (progress.phase === 'reconciling') {
 		return {
 			percentage: 100,
@@ -982,20 +1178,10 @@ export function cmdbProgressView(progress) {
 			),
 		}
 	}
+	const counts = progressCounts(progress)
 	return {
-		percentage,
-		detail:
-			total > 0
-				? t(
-						'stackiq',
-						'{processed} of {total} rows processed',
-						{
-							processed,
-							total,
-						},
-						AS_TEXT,
-					)
-				: '',
+		percentage: progressPercentage(progress, counts),
+		detail: counts.total > 0 ? rowsProcessedText(counts) : '',
 	}
 }
 
@@ -1405,6 +1591,39 @@ export function packSourceLabel(source) {
 }
 
 /**
+ * The shipped and stored version of a register pack, as text.
+ *
+ * @param {object|null} pack The pack.
+ * @return {{shipped: string, stored: string}} The versions, empty when unknown.
+ */
+function packVersions(pack) {
+	return {
+		shipped: String(pack?.shippedVersion ?? pack?.version ?? ''),
+		stored: String(pack?.storedVersion ?? ''),
+	}
+}
+
+/**
+ * The version line of a pack stored in OpenRegister, naming the shipped
+ * version when it differs.
+ *
+ * @param {{shipped: string, stored: string}} versions The versions.
+ * @return {string} The line.
+ */
+function storedPackVersionText(versions) {
+	const { shipped, stored } = versions
+	if (shipped !== '' && shipped !== stored) {
+		return t(
+			'stackiq',
+			'Version {version} (shipped: {shipped})',
+			{ version: stored, shipped },
+			AS_TEXT,
+		)
+	}
+	return t('stackiq', 'Version {version}', { version: stored }, AS_TEXT)
+}
+
+/**
  * The version of a pack as the import runs it: the stored version for a
  * pack from OpenRegister, with the shipped version next to it when the two
  * differ, and the shipped version for a pack read from the file.
@@ -1414,23 +1633,14 @@ export function packSourceLabel(source) {
  * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
 export function packVersionText(pack) {
-	const shipped = String(pack?.shippedVersion ?? pack?.version ?? '')
-	const stored = String(pack?.storedVersion ?? '')
-	if (pack?.source === 'openregister' && stored !== '') {
-		if (shipped !== '' && shipped !== stored) {
-			return t(
-				'stackiq',
-				'Version {version} (shipped: {shipped})',
-				{ version: stored, shipped },
-				AS_TEXT,
-			)
-		}
-		return t('stackiq', 'Version {version}', { version: stored }, AS_TEXT)
+	const versions = packVersions(pack)
+	if (pack?.source === 'openregister' && versions.stored !== '') {
+		return storedPackVersionText(versions)
 	}
-	if (shipped === '') {
+	if (versions.shipped === '') {
 		return ''
 	}
-	return t('stackiq', 'Version {version}', { version: shipped }, AS_TEXT)
+	return t('stackiq', 'Version {version}', { version: versions.shipped }, AS_TEXT)
 }
 
 /**

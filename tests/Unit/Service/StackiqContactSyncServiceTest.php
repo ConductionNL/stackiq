@@ -215,7 +215,7 @@ class StackiqContactSyncServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function testANewContactTakesTheGivenUid(): void {
 		$backend = $this->backend();
@@ -243,7 +243,7 @@ class StackiqContactSyncServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function testAnExistingCardWithTheGivenUidIsReused(): void {
 		$backend = $this->backend();
@@ -266,7 +266,7 @@ class StackiqContactSyncServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function testAGivenUidIsNotOverriddenByAnEmailMatch(): void {
 		$backend = $this->backend();
@@ -317,7 +317,7 @@ class StackiqContactSyncServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function testASearchResultListsEveryEmailAddress(): void {
 		$backend = $this->backend();

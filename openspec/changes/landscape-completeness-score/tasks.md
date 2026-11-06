@@ -4,12 +4,12 @@
 
 ### Task 1: Rule set and fields
 - **spec_ref**: openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-001-every-application-and-usage-carries-a-data-quality-score-from-a-declared-rule-set
-- **files**: `lib/Settings/register.d/data-quality.json`, `lib/Settings/stackiq_mock_register.json`
+- **files**: `lib/Settings/register.d/data-quality.json` (the module schema already declared its rules; it gets the score fields)
 - **acceptance_criteria**:
   - GIVEN an application with every weighted field filled and confirmed today WHEN it is saved THEN its status is good
   - GIVEN an application without reference components and never confirmed WHEN it is saved THEN its status is poor or fair
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Settings/DataQualityFragmentTest.php`: annotation passes OpenRegister's shape rules, every rule field exists on its schema)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Settings/DataQualityFragmentTest.php`: annotation passes OpenRegister's shape rules, every rule field exists on its schema)
 
 ### Task 2: Score on lists and the application page, and the confirm action
 - **spec_ref**: openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-002-a-user-confirms-an-entry-is-current-and-its-freshness-resets
@@ -20,13 +20,14 @@
 - [ ] Implement
 - [ ] Test (Playwright `tests/e2e/workflows/data-quality.spec.ts`)
 
-### Task 3: Data quality report
-- **spec_ref**: openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-report-shows-the-spread-and-the-weakest-entries
-- **files**: `src/views/DataQualityReportView.vue`, `src/customComponents.js`, `src/manifest.json` (Reports card, DataQualityReport page)
+### Task 3: Data quality page (board SkDatakwaliteit)
+- **spec_ref**: openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+- **files**: `lib/Service/DataQualityDerivation.php`, `lib/Service/DataQualityReportService.php`, `lib/Service/OrganisationReportAccess.php`, `lib/Controller/DataQualityReportController.php`, `lib/Controller/PortfolioReportController.php`, `appinfo/routes.php`, `src/views/organisaties/DataQualityReport.vue`, `src/manifest.d/data-quality.json`, `src/customComponents.js`
 - **acceptance_criteria**:
-  - GIVEN applications with mixed scores WHEN the information manager opens Reports, Data quality THEN the page shows the good, fair and poor counts and the weakest entries first
-- [ ] Implement
-- [ ] Test (vitest `tests/vitest/dataQualityReport.spec.js` for the view model; Playwright case in `tests/e2e/workflows/data-quality.spec.ts`)
+  - GIVEN usages with mixed scores WHEN the information manager opens Data quality THEN the page shows the register score, average completeness, not-confirmed count, the per-rule counts and the lowest completeness first
+  - GIVEN a user of another organisation WHEN they request the report THEN it is refused before any query
+- [x] Implement
+- [ ] Test (PHPUnit `tests/Unit/Service/DataQualityDerivationTest.php`, `tests/Unit/Service/OrganisationReportAccessTest.php`; Playwright case in `tests/e2e/workflows/data-quality.spec.ts`)
 
 ### Task 4: Rescore existing rows
 - **spec_ref**: openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-001-every-application-and-usage-carries-a-data-quality-score-from-a-declared-rule-set

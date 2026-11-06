@@ -132,7 +132,7 @@ class PublicationFieldRulesTest extends TestCase {
 			$this->assertContains($rule, $after, 'an organisation read rule survived: ' . json_encode($rule));
 		}
 
-		$this->assertContains(['group' => 'public', 'match' => ['publicationDate' => ['$lte' => '$now']]], $after);
+		$this->assertContains(['group' => 'public', 'match' => ['publicationDate' => ['$lte' => '$now']], 'crossOrganisation' => true], $after);
 		$this->assertCount(count($before) + 1, $after);
 	}//end testAUsageIsPublicFromItsPublicationDateAndOrganisationsKeepReading()
 
@@ -146,13 +146,13 @@ class PublicationFieldRulesTest extends TestCase {
 		$module  = $schemas['module']['authorization']['read'];
 		$version = $schemas['moduleVersion']['authorization']['read'];
 
-		$this->assertContains(['group' => 'public', 'match' => ['publicationDate' => ['$lte' => '$now']]], $module);
-		$this->assertContains(['group' => 'public', 'match' => ['registeredBy' => 'Supplier']], $module);
+		$this->assertContains(['group' => 'public', 'match' => ['publicationDate' => ['$lte' => '$now']], 'crossOrganisation' => true], $module);
+		$this->assertContains(['group' => 'public', 'match' => ['registeredBy' => 'Supplier'], 'crossOrganisation' => true], $module);
 		$this->assertSame(
 			[
 				'authenticated',
-				['group' => 'public', 'match' => ['modulePublicationDate' => ['$lte' => '$now']]],
-				['group' => 'public', 'match' => ['moduleRegisteredBy' => 'Supplier']],
+				['group' => 'public', 'match' => ['modulePublicationDate' => ['$lte' => '$now']], 'crossOrganisation' => true],
+				['group' => 'public', 'match' => ['moduleRegisteredBy' => 'Supplier'], 'crossOrganisation' => true],
 			],
 			$version
 		);
@@ -173,7 +173,7 @@ class PublicationFieldRulesTest extends TestCase {
 		$this->assertSame('1.5.5', $merged['components']['schemas']['usage']['version']);
 
 		$schemas = $this->register()['components']['schemas'];
-		$this->assertSame('1.5.7', $schemas['usage']['version'], 'topdesk-cmdb-import.json bumps it past publication-field-rules.json; value-assessment.json, sorting last, does not lower it');
+		$this->assertTrue(version_compare($schemas['usage']['version'], '1.5.8', '>='), 'topdesk-cmdb-import.json bumps it past publication-field-rules.json; value-assessment.json, sorting last, does not lower it');
 		$this->assertSame('0.3.5', $schemas['connection']['version']);
 		$this->assertSame('0.1.6', $schemas['moduleVersion']['version']);
 	}//end testAFragmentNeverLowersAVersion()

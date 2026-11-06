@@ -49,8 +49,10 @@ function allSchemas() {
  */
 function staleKeys(man, schemas) {
 	const problems = []
+	// `id` is OpenRegister's own object id, on every object whatever its schema.
 	const plainKey = (key) =>
 		typeof key === 'string'
+		&& key !== 'id'
 		&& !key.includes('.')
 		&& !key.startsWith('@')
 		&& !key.startsWith('_')

@@ -115,13 +115,15 @@
                 "modulePublicationDate": {
                   "$lte": "$now"
                 }
-              }
+              },
+              "crossOrganisation": true
             },
             {
               "group": "public",
               "match": {
                 "moduleRegisteredBy": "Supplier"
-              }
+              },
+              "crossOrganisation": true
             }
           ]
         }
@@ -139,7 +141,7 @@
         }
       },
       "catalogService": {
-        "version": "0.2.2",
+        "version": "0.2.3",
         "properties": {
           "contactPerson": {
             "authorization": {
@@ -451,7 +453,8 @@
               "group": "gebruik-beheerder",
               "match": {
                 "consumer": "$organisation"
-              }
+              },
+              "crossOrganisation": true
             },
             {
               "group": "aanbod-beheerder",
@@ -463,7 +466,8 @@
               "group": "aanbod-beheerder",
               "match": {
                 "provider": "$organisation"
-              }
+              },
+              "crossOrganisation": true
             },
             {
               "group": "public",
@@ -471,13 +475,14 @@
                 "publicationDate": {
                   "$lte": "$now"
                 }
-              }
+              },
+              "crossOrganisation": true
             }
           ]
         }
       },
       "organization": {
-        "version": "0.5.3",
+        "version": "0.5.4",
         "properties": {
           "contactsUid": {
             "authorization": {

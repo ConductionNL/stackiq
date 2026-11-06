@@ -40,7 +40,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Repair;
 
 use Closure;
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCP\IConfig;
 use OCP\IUser;
 use OCP\IUserManager;
@@ -141,7 +141,7 @@ class MigrateUserPreferences implements IRepairStep {
 			$this->logger->error(
 				'Stackiq: failed to migrate user preferences from the legacy app id: ' . $e->getMessage(),
 				[
-					'app' => Application::APP_ID,
+					'app' => AppIdentity::APP_ID,
 					'exception' => $e,
 				]
 			);
@@ -178,12 +178,12 @@ class MigrateUserPreferences implements IRepairStep {
 			}
 
 			// Never clobber a value the new namespace already holds.
-			$current = $this->config->getUserValue($userId, Application::APP_ID, $key, '');
+			$current = $this->config->getUserValue($userId, AppIdentity::APP_ID, $key, '');
 			if ($current !== '') {
 				continue;
 			}
 
-			$this->config->setUserValue($userId, Application::APP_ID, $key, $legacy);
+			$this->config->setUserValue($userId, AppIdentity::APP_ID, $key, $legacy);
 			$this->copied++;
 			$touched = true;
 		}

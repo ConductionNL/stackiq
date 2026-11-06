@@ -22,8 +22,10 @@ namespace OCA\Stackiq\AppInfo;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
+use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\OpenRegister\Service\OrganisationService as OpenRegisterOrganisationService;
 use OCA\Stackiq\BackgroundJob\ContractStatusJob;
@@ -36,6 +38,8 @@ use OCA\Stackiq\EventListener\DecisionConcludedListener;
 use OCA\Stackiq\EventListener\MaintenanceRecipientsListener;
 use OCA\Stackiq\EventListener\ModuleVersionPublicationListener;
 use OCA\Stackiq\EventListener\ModuleComplianceSubscriber;
+use OCA\Stackiq\EventListener\AnonymousRegistrationListener;
+use OCA\Stackiq\EventListener\ContactPersonOrganisationListener;
 use OCA\Stackiq\EventListener\ModuleRegistrationSubscriber;
 use OCA\Stackiq\EventListener\TestEventListener;
 use OCA\Stackiq\EventListener\UserProfileUpdatedEventListener;
@@ -68,6 +72,7 @@ use OCA\Stackiq\Service\ReviewService;
 use OCA\Stackiq\Service\SbomImportService;
 use OCA\Stackiq\Service\SbomParserService;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
 use OCA\Stackiq\Service\Stackiq\HierarchyHandler;
@@ -110,9 +115,9 @@ use Psr\Log\LoggerInterface;
  */
 class Application extends App implements IBootstrap {
 	/**
-	 * The application ID
+	 * The application ID, kept here for code that reads it from the bootstrap class
 	 */
-	public const APP_ID = 'stackiq';
+	public const APP_ID = AppIdentity::APP_ID;
 
 	/**
 	 * Application constructor
@@ -146,6 +151,10 @@ class Application extends App implements IBootstrap {
 		$context->registerServiceAlias(
 			ObjectServiceInterface::class,
 			'OCA\OpenRegister\Service\ObjectService'
+		);
+		$context->registerServiceAlias(
+			ObjectTypeLocatorInterface::class,
+			SettingsService::class
 		);
 		include_once __DIR__ . '/../../vendor/autoload.php';
 
@@ -257,13 +266,9 @@ class Application extends App implements IBootstrap {
 			OrganisatieService::class,
 			function ($container) {
 				return new OrganisatieService(
-					organizationHandler: $container->get(
-						OrganizationHandler::class
-					),
 					logger: $container->get('Psr\Log\LoggerInterface'),
 					container: $container,
 					appManager: $container->get('OCP\App\IAppManager'),
-					config: $container->get(IAppConfig::class),
 					userManager: $container->get(IUserManager::class),
 					emailService: $container->get(SymfonyEmailService::class),
 				);
@@ -812,6 +817,13 @@ class Application extends App implements IBootstrap {
 
 		// Module registration — sets registeredBy on each save.
 		$context->registerEventListener(ObjectCreatedEvent::class, ModuleRegistrationSubscriber::class);
+
+		// An organisation registered without an account stays pending until reviewed.
+		$context->registerEventListener(ObjectCreatingEvent::class, AnonymousRegistrationListener::class);
+
+		// A contact person only from someone who may add members to its organisation.
+		$context->registerEventListener(ObjectCreatingEvent::class, ContactPersonOrganisationListener::class);
+		$context->registerEventListener(ObjectUpdatingEvent::class, ContactPersonOrganisationListener::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleRegistrationSubscriber::class);
 
 		// Queue the owner resolution when a supplier announces maintenance (lifecycle-maintenance-and-supplier-roadmap).

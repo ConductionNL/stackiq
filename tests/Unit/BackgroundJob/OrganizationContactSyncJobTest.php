@@ -29,6 +29,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\BackgroundJob;
 
 use OCA\Stackiq\BackgroundJob\OrganizationContactSyncJob;
+use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\StackiqContactSyncService;
@@ -86,6 +87,30 @@ class OrganizationContactSyncJobTest extends TestCase {
 			$this->runJob($sync, $contacts, $settings);
 		}
 	}//end testAnEnabledOrUnsavedJobSyncs()
+
+	/**
+	 * The sync writes as stackiq itself, so the contact person check lets them through,
+	 * and the mark is gone once the job returns.
+	 *
+	 * @return void
+	 */
+	public function testTheSyncRunsAsASystemWrite(): void {
+		$store = [];
+		$active = null;
+		$sync = $this->createMock(OrganizationSyncService::class);
+		$sync->method('performScheduledSync')->willReturnCallback(
+			function () use (&$active): void {
+				$active = (new SystemContactWrites())->isActive();
+			}
+		);
+		$contacts = $this->createMock(StackiqContactSyncService::class);
+		$contacts->method('isAvailable')->willReturn(false);
+
+		$this->runJob($sync, $contacts, $this->settings($store));
+
+		$this->assertTrue($active);
+		$this->assertFalse((new SystemContactWrites())->isActive());
+	}//end testTheSyncRunsAsASystemWrite()
 
 	/**
 	 * Run the job's protected run() once.

@@ -19,9 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\Service\Stackiq\OrganizationHandler;
 use OCP\App\IAppManager;
-use OCP\IAppConfig;
 use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -40,25 +38,29 @@ use Psr\Log\LoggerInterface;
  * @link     https://github.com/ConductionNL/stackiq
  *
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
+ *
+ * @spec openspec/specs/organisatie-service/spec.md
  */
 class OrganisatieService {
 	/**
+	 * OpenRegister's exception for a taken slug, by name (OrganisationSlug::CONFLICT_EXCEPTION;
+	 * not imported, to keep this class's coupling down).
+	 */
+	private const SLUG_CONFLICT = 'OCA\\OpenRegister\\Exception\\OrganisationSlugConflictException';
+
+	/**
 	 * OrganisatieService constructor.
 	 *
-	 * @param OrganizationHandler $organizationHandler Organization handler
 	 * @param LoggerInterface $logger Logger interface
 	 * @param ContainerInterface $container Container interface
 	 * @param IAppManager $appManager App manager
-	 * @param IAppConfig $config Configuration service
 	 * @param IUserManager $userManager User manager service
 	 * @param SymfonyEmailService $emailService Email service
 	 */
 	public function __construct(
-		private readonly OrganizationHandler $organizationHandler,
 		private readonly LoggerInterface $logger,
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
-		private readonly IAppConfig $config,
 		private readonly IUserManager $userManager,
 		private readonly SymfonyEmailService $emailService,
 	) {
@@ -70,6 +72,8 @@ class OrganisatieService {
 	 * @param array $objectData The organization object data
 	 *
 	 * @return object|null The created organisation entity or null on failure
+	 *
+	 * OpenRegister's OrganisationSlugConflictException (another organisation has the name's slug) is passed on.
 	 *
 	 * @spec openspec/specs/organisatie-service/spec.md
 	 */
@@ -118,6 +122,11 @@ class OrganisatieService {
 
 			return $organisationEntity;
 		} catch (\Exception $e) {
+			// The caller decides what a taken slug means; every other failure ends here.
+			if (is_a($e, self::SLUG_CONFLICT) === true) {
+				throw $e;
+			}
+
 			$this->logger->error(
 				'OrganisatieService: Error creating organization entity',
 				[
@@ -209,17 +218,8 @@ class OrganisatieService {
 	 * @spec openspec/specs/organisatie-service/spec.md
 	 */
 	private function mapOrganizationDataForOpenRegister(array $objectData): array {
-		// Get the organization name - try 'name' first, then 'name', then use UUID as fallback.
-		$name = $objectData['name'] ?? null;
-
-		// If still no name, create a unique one using the ID to avoid slug conflicts.
-		if (empty($name) === true || $name === 'Unknown') {
-			$orgId = $objectData['id'] ?? uniqid(prefix: 'org-');
-			$name = 'Organisation ' . substr($orgId, 0, 8);
-		}
-
 		return [
-			'name' => $name,
+			'name' => (new OrganisationSlug())->nameFor(objectData: $objectData),
 			'type' => $objectData['type'] ?? '',
 			'website' => $objectData['website'] ?? '',
 			'active' => $this->mapStatus(status: $objectData['status'] ?? $objectData['beoordeling'] ?? 'actief'),

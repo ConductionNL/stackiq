@@ -80,7 +80,7 @@ class BioComplianceRegisterShapeTest extends TestCase {
 		}
 
 		$this->assertSame(expected: ['BBN1', 'BBN2', 'BBN3'], actual: $props['bbnLevel']['items']['enum'] ?? null);
-		$this->assertContains(needle: 'public', haystack: $bioMeasure['authorization']['read'] ?? []);
+		$this->assertContains(needle: ['group' => 'public', 'crossOrganisation' => true], haystack: $bioMeasure['authorization']['read'] ?? []);
 	}//end testBioMaatregelSchemaExists()
 
 	/**

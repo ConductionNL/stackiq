@@ -193,7 +193,7 @@ class ContactpersoonService {
 										'entitiesUpdated' => 0,
 									];
 									$organisationEntity = $organizationSyncService->ensureOrganisationEntityPublic(
-										orgObject: $orgObject,
+										organisationObject: $orgObject,
 										stats: $backupStats
 									);
 									$this->logger->info(

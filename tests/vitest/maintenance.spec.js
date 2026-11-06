@@ -238,7 +238,9 @@ describe('the pages', () => {
 		expect(
 			register.components.schemas.moduleVersion.properties.status.enum,
 		).toContain(planned.filter.status)
-		expect(index.columns).toContain('dateInDevelopment')
+		expect(
+			index.columns.map((c) => (typeof c === 'string' ? c : c.key)),
+		).toContain('dateInDevelopment')
 	})
 })
 

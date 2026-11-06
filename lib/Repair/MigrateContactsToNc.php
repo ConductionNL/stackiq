@@ -31,7 +31,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Repair;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\StackiqContactSyncService;
 use OCP\App\IAppManager;
@@ -105,13 +106,26 @@ class MigrateContactsToNc implements IRepairStep {
 	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
 	 */
 	public function run(IOutput $output): void {
+		(new SystemContactWrites())->run(fn () => $this->migrate(output: $output));
+	}//end run()
+
+	/**
+	 * Migrate the contacts.
+	 *
+	 * @param IOutput $output The output interface for progress reporting.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
+	 */
+	private function migrate(IOutput $output): void {
 		$output->startProgress(2);
 
 		// Converged on a previous run — skip quietly. This step is registered
 		// as a post-migration repair step and therefore re-runs on every
 		// upgrade; once every object migrated cleanly there is nothing left
 		// to do.
-		if ($this->appConfig->getValueString(Application::APP_ID, self::CONVERGED_CONFIG_KEY, '') === '1') {
+		if ($this->appConfig->getValueString(AppIdentity::APP_ID, self::CONVERGED_CONFIG_KEY, '') === '1') {
 			$output->advance(2);
 			$output->finishProgress();
 			return;
@@ -164,12 +178,12 @@ class MigrateContactsToNc implements IRepairStep {
 		// Converge: when both types were read successfully and no per-object
 		// migration failed, mark the step done so future upgrades skip it.
 		if ($totalFailed === 0 && $totalReadFailed === 0) {
-			$this->appConfig->setValueString(Application::APP_ID, self::CONVERGED_CONFIG_KEY, '1');
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::CONVERGED_CONFIG_KEY, '1');
 			$output->info('Contacts migration converged — future runs will skip.');
 		}
 
 		$output->finishProgress();
-	}//end run()
+	}//end migrate()
 
 	/**
 	 * Migrate every object of one type.

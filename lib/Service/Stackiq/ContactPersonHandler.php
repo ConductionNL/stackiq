@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Stackiq;
 
+use OCA\Stackiq\Service\OrganisationSlug;
 use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -1210,7 +1211,7 @@ class ContactPersonHandler {
 			}//end if
 
 			// Sync e-mailadres to user's email property.
-			$email = $contactData['e-mailadres'] ?? $contactData['email'] ?? '';
+			$email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
 			if (empty($email) === false && $email !== $user->getEMailAddress()) {
 				$user->setEMailAddress($email);
 				$this->_logger->info(
@@ -2396,9 +2397,10 @@ class ContactPersonHandler {
 
 					$organisation = $this->ensureOrganizationEntity(organizationUuid: $organizationUuid);
 
+					// The reason there is none is logged by ensureOrganizationEntity().
 					if ($organisation === null) {
-						$this->_logger->error(
-							'ContactPersonHandler: Failed to create organization entity',
+						$this->_logger->info(
+							'ContactPersonHandler: No organization entity, user not added',
 							[
 								'organizationUuid' => $organizationUuid,
 							]
@@ -2522,23 +2524,14 @@ class ContactPersonHandler {
 			$description = $organizationData['description'] ?? $organizationData['longDescription'] ?? null;
 			$organizationDescription = $description ?? $organizationData['description'] ?? '';
 
-			// Check if an entity with the same slug already exists (prevents unique constraint violation).
+			// Another organisation with this name's slug is never taken over: the
+			// organisatie stays without an entity until an administrator links it.
 			try {
-				$slug = strtolower(preg_replace('/[^a-z0-9]+/', '-', strtolower($organizationName)));
-				$slug = trim($slug, '-');
-				$existingBySlug = $organisationMapper->findBySlug($slug);
-				$this->_logger->info(
-					'ContactPersonHandler: Organization entity already exists (found by slug)',
-					[
-						'organizationUuid' => $organizationUuid,
-						'slug' => $slug,
-						'existingUuid' => $existingBySlug->getUuid(),
-						'existingName' => $existingBySlug->getName(),
-					]
-				);
-				return $existingBySlug;
+				$existingBySlug = $organisationMapper->findBySlug((new OrganisationSlug())->fromName(name: $organizationName));
+				$this->logSlugConflict(organizationUuid: $organizationUuid, existingUuid: $existingBySlug->getUuid());
+				return null;
 			} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
-				// No existing entity by slug — proceed with creation.
+				// No organisation has this slug: create one.
 			}
 
 			$this->_logger->info(
@@ -2572,6 +2565,11 @@ class ContactPersonHandler {
 
 			return $organisation;
 		} catch (\Exception $e) {
+			if (is_a($e, OrganisationSlug::CONFLICT_EXCEPTION) === true) {
+				$this->logSlugConflict(organizationUuid: $organizationUuid, existingUuid: null);
+				return null;
+			}
+
 			$this->_logger->error(
 				'ContactPersonHandler: Failed to ensure organization entity',
 				[
@@ -2585,6 +2583,24 @@ class ContactPersonHandler {
 			return null;
 		}//end try
 	}//end ensureOrganizationEntity()
+
+	/**
+	 * Log an organisatie left without an entity because its name's slug is taken.
+	 *
+	 * @param string      $organizationUuid The organisatie uuid.
+	 * @param string|null $existingUuid     The uuid of the organisation holding the slug, when known.
+	 *
+	 * @return void
+	 */
+	private function logSlugConflict(string $organizationUuid, ?string $existingUuid): void {
+		$this->_logger->warning(
+			'ContactPersonHandler: an organisation with this name already exists; the organisatie is left unlinked for an administrator',
+			[
+				'organizationUuid' => $organizationUuid,
+				'existingOrganisationUuid' => $existingUuid,
+			]
+		);
+	}//end logSlugConflict()
 
 	/**
 	 * Strips spaces and non-alphanumeric characters from voornaam/achternaam

@@ -1,0 +1,1610 @@
+{
+	"fetchViews / 0 / full": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": false,
+			"views": [
+				{
+					"id": 1
+				}
+			],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchView / 0 / full": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": false,
+			"views": [],
+			"activeView": {
+				"id": "v1"
+			},
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchViews / 0 / empty": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchView / 0 / empty": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchViews / 0 / failure": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch views"
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "offline"
+		}
+	},
+	"fetchView / 0 / failure": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch view"
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "offline"
+		}
+	},
+	"fetchViews / 0 / failure without message": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch views"
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "Failed to fetch views"
+		}
+	},
+	"fetchView / 0 / failure without message": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch view"
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "Failed to fetch view"
+		}
+	},
+	"fetchViews / 1 / full": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_gebruik": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": false,
+			"views": [
+				{
+					"id": 1
+				}
+			],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchView / 1 / full": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_gebruik": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": false,
+			"views": [],
+			"activeView": {
+				"id": "v1"
+			},
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchViews / 1 / empty": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_gebruik": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchView / 1 / empty": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_gebruik": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchViews / 1 / failure": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_gebruik": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch views"
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "offline"
+		}
+	},
+	"fetchView / 1 / failure": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_gebruik": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch view"
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "offline"
+		}
+	},
+	"fetchViews / 1 / failure without message": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_gebruik": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch views"
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "Failed to fetch views"
+		}
+	},
+	"fetchView / 1 / failure without message": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_gebruik": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch view"
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "Failed to fetch view"
+		}
+	},
+	"fetchViews / 2 / full": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_deelnames_gebruik": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": false,
+			"views": [
+				{
+					"id": 1
+				}
+			],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchView / 2 / full": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_deelnames_gebruik": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": false,
+			"views": [],
+			"activeView": {
+				"id": "v1"
+			},
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchViews / 2 / empty": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_deelnames_gebruik": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchView / 2 / empty": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_deelnames_gebruik": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchViews / 2 / failure": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_deelnames_gebruik": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch views"
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "offline"
+		}
+	},
+	"fetchView / 2 / failure": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_deelnames_gebruik": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch view"
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "offline"
+		}
+	},
+	"fetchViews / 2 / failure without message": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_deelnames_gebruik": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch views"
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "Failed to fetch views"
+		}
+	},
+	"fetchView / 2 / failure without message": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_deelnames_gebruik": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch view"
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "Failed to fetch view"
+		}
+	},
+	"fetchViews / 3 / full": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_deelnames_gebruik": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": false,
+			"views": [
+				{
+					"id": 1
+				}
+			],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchView / 3 / full": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_deelnames_gebruik": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": false,
+			"views": [],
+			"activeView": {
+				"id": "v1"
+			},
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchViews / 3 / empty": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_deelnames_gebruik": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchView / 3 / empty": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_deelnames_gebruik": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchViews / 3 / failure": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_deelnames_gebruik": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch views"
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "offline"
+		}
+	},
+	"fetchView / 3 / failure": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_deelnames_gebruik": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch view"
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "offline"
+		}
+	},
+	"fetchViews / 3 / failure without message": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_deelnames_gebruik": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch views"
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "Failed to fetch views"
+		}
+	},
+	"fetchView / 3 / failure without message": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_deelnames_gebruik": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch view"
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": false,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "Failed to fetch view"
+		}
+	},
+	"fetchViews / 4 / full": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_products": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": true,
+			"views": [
+				{
+					"id": 1
+				}
+			],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchView / 4 / full": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_products": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": true,
+			"views": [],
+			"activeView": {
+				"id": "v1"
+			},
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchViews / 4 / empty": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_products": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchView / 4 / empty": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_products": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchViews / 4 / failure": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_products": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch views"
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "offline"
+		}
+	},
+	"fetchView / 4 / failure": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_products": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch view"
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "offline"
+		}
+	},
+	"fetchViews / 4 / failure without message": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_products": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch views"
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "Failed to fetch views"
+		}
+	},
+	"fetchView / 4 / failure without message": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_products": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch view"
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "Failed to fetch view"
+		}
+	},
+	"fetchViews / 5 / full": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_products": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": true,
+			"views": [
+				{
+					"id": 1
+				}
+			],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchView / 5 / full": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_products": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": true,
+			"views": [],
+			"activeView": {
+				"id": "v1"
+			},
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchViews / 5 / empty": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_products": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchView / 5 / empty": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_products": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchViews / 5 / failure": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_products": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch views"
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "offline"
+		}
+	},
+	"fetchView / 5 / failure": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_products": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch view"
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "offline"
+		}
+	},
+	"fetchViews / 5 / failure without message": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_products": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch views"
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "Failed to fetch views"
+		}
+	},
+	"fetchView / 5 / failure without message": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_products": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch view"
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": false,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "Failed to fetch view"
+		}
+	},
+	"fetchViews / 6 / full": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_deelnames_gebruik": true,
+						"include_products": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": true,
+			"views": [
+				{
+					"id": 1
+				}
+			],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchView / 6 / full": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_deelnames_gebruik": true,
+						"include_products": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": true,
+			"views": [],
+			"activeView": {
+				"id": "v1"
+			},
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchViews / 6 / empty": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_deelnames_gebruik": true,
+						"include_products": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchView / 6 / empty": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_deelnames_gebruik": true,
+						"include_products": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchViews / 6 / failure": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_deelnames_gebruik": true,
+						"include_products": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch views"
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "offline"
+		}
+	},
+	"fetchView / 6 / failure": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_deelnames_gebruik": true,
+						"include_products": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch view"
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "offline"
+		}
+	},
+	"fetchViews / 6 / failure without message": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_deelnames_gebruik": true,
+						"include_products": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch views"
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "Failed to fetch views"
+		}
+	},
+	"fetchView / 6 / failure without message": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_deelnames_gebruik": true,
+						"include_products": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch view"
+			]
+		],
+		"state": {
+			"includeGebruik": false,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "Failed to fetch view"
+		}
+	},
+	"fetchViews / 7 / full": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_deelnames_gebruik": true,
+						"include_products": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": true,
+			"views": [
+				{
+					"id": 1
+				}
+			],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchView / 7 / full": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_deelnames_gebruik": true,
+						"include_products": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": true,
+			"views": [],
+			"activeView": {
+				"id": "v1"
+			},
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchViews / 7 / empty": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_deelnames_gebruik": true,
+						"include_products": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchView / 7 / empty": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_deelnames_gebruik": true,
+						"include_products": true
+					}
+				}
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": null
+		}
+	},
+	"fetchViews / 7 / failure": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_deelnames_gebruik": true,
+						"include_products": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch views"
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "offline"
+		}
+	},
+	"fetchView / 7 / failure": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_deelnames_gebruik": true,
+						"include_products": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch view"
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "offline"
+		}
+	},
+	"fetchViews / 7 / failure without message": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_deelnames_gebruik": true,
+						"include_products": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch views"
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "Failed to fetch views"
+		}
+	},
+	"fetchView / 7 / failure without message": {
+		"trace": [
+			[
+				"get",
+				"/index.php/apps/stackiq/api/views/v%201%2Fx",
+				{
+					"params": {
+						"include_gebruik": true,
+						"include_deelnames_gebruik": true,
+						"include_products": true
+					}
+				}
+			],
+			[
+				"console.error",
+				"ViewStore: failed to fetch view"
+			]
+		],
+		"state": {
+			"includeGebruik": true,
+			"includeDeelnamesGebruik": true,
+			"includeProducts": true,
+			"views": [],
+			"activeView": null,
+			"loading": false,
+			"error": "Failed to fetch view"
+		}
+	}
+}

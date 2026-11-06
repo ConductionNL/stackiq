@@ -21,6 +21,8 @@
  * @spec openspec/specs/contract-administration/spec.md
  */
 
+import { dataOf } from './lifecyclePhase.js'
+
 /**
  * Period constants matching the contract schema's `kostenPeriode` enum.
  *
@@ -31,22 +33,6 @@ export const PERIOD = Object.freeze({
 	YEARLY: 'Annually',
 	ONEOFF: 'One-off',
 })
-
-/**
- * Read the data bag of a contract that may be an OR object envelope or plain data.
- *
- * @param {object} contract A contract record.
- * @return {object} The property bag.
- */
-function dataOf(contract) {
-	if (!contract || typeof contract !== 'object') {
-		return {}
-	}
-	if (contract.object && typeof contract.object === 'object') {
-		return contract.object
-	}
-	return contract
-}
 
 /**
  * Coerce a cost value to a finite number, or null when not derivable.

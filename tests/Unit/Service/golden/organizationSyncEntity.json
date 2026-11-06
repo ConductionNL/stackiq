@@ -1,0 +1,2254 @@
+{
+    "entity: full fetch fails, entity in sync": {
+        "returned": [
+            "o-1",
+            true
+        ],
+        "stats": {
+            "entitiesCreated": 0,
+            "entitiesUpdated": 0
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.warning",
+                "Could not fetch full organisation object, using provided object",
+                {
+                    "organisatieId": "o-1",
+                    "error": "find failed"
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente A",
+                    "status": "actief"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "log.debug",
+                "Existing entity found",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "entityId": 41,
+                    "shouldBeActive": true,
+                    "needsUpdate": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Updating organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "o-1",
+                    "register": "reg-v",
+                    "schema": "org-schema"
+                }
+            ],
+            [
+                "entity.setObject",
+                "o-1",
+                {
+                    "name": "Gemeente A",
+                    "status": "actief",
+                    "organisation": "o-1",
+                    "@self": {
+                        "owner": "o-1",
+                        "organisation": "o-1"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "o-1",
+                "o-1"
+            ],
+            [
+                "entity.setOrganisation",
+                "o-1",
+                "o-1"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "name": "Gemeente A",
+                        "status": "actief",
+                        "organisation": "o-1",
+                        "@self": {
+                            "organisation": "o-1"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "o-1",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "o-1",
+                    "ownerSet": "o-1",
+                    "organisationSet": "o-1"
+                }
+            ]
+        ]
+    },
+    "entity: full object replaces the given one": {
+        "returned": [
+            "o-1",
+            true
+        ],
+        "stats": {
+            "entitiesCreated": 0,
+            "entitiesUpdated": 0
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente B",
+                    "status": "Active"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "log.debug",
+                "Existing entity found",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "entityId": 41,
+                    "shouldBeActive": true,
+                    "needsUpdate": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Updating organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "o-1",
+                    "register": "reg-v",
+                    "schema": "org-schema"
+                }
+            ],
+            [
+                "log.debug",
+                "OrganizationSyncService: Owner and organisation already set correctly, skipping update",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "o-1"
+                }
+            ]
+        ]
+    },
+    "entity: existing entity deactivated": {
+        "returned": [
+            "o-1",
+            false
+        ],
+        "stats": {
+            "entitiesCreated": 0,
+            "entitiesUpdated": 1
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente C",
+                    "status": "inactief"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "log.debug",
+                "Existing entity found",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "entityId": 41,
+                    "shouldBeActive": false,
+                    "needsUpdate": true
+                }
+            ],
+            [
+                "log.debug",
+                "Updating entity status",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "oldActive": true,
+                    "newActive": false
+                }
+            ],
+            [
+                "entity.setActive",
+                "o-1",
+                false
+            ],
+            [
+                "mapper.save",
+                "o-1",
+                false
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Updating organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "o-1",
+                    "register": "reg-v",
+                    "schema": "org-schema"
+                }
+            ],
+            [
+                "entity.setObject",
+                "o-1",
+                {
+                    "name": "Gemeente C",
+                    "status": "inactief",
+                    "organisation": "o-1",
+                    "@self": {
+                        "owner": "o-1",
+                        "organisation": "o-1"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "o-1",
+                "o-1"
+            ],
+            [
+                "entity.setOrganisation",
+                "o-1",
+                "o-1"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "name": "Gemeente C",
+                        "status": "inactief",
+                        "organisation": "o-1",
+                        "@self": {
+                            "organisation": "o-1"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "o-1",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "o-1",
+                    "ownerSet": "o-1",
+                    "organisationSet": "o-1"
+                }
+            ]
+        ]
+    },
+    "entity: existing entity activated, mail sent": {
+        "returned": [
+            "o-1",
+            true
+        ],
+        "stats": {
+            "entitiesCreated": 0,
+            "entitiesUpdated": 1
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente D",
+                    "status": "Unknown"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "log.debug",
+                "Existing entity found",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "entityId": 41,
+                    "shouldBeActive": true,
+                    "needsUpdate": true
+                }
+            ],
+            [
+                "log.debug",
+                "Updating entity status",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "oldActive": false,
+                    "newActive": true
+                }
+            ],
+            [
+                "entity.setActive",
+                "o-1",
+                true
+            ],
+            [
+                "mapper.save",
+                "o-1",
+                true
+            ],
+            [
+                "log.info",
+                "[FLOW] Sending organization activation email",
+                {
+                    "organisatieId": "o-1"
+                }
+            ],
+            [
+                "mail.sendOrganizationActivationEmail",
+                "Gemeente D"
+            ],
+            [
+                "log.info",
+                "📧 Organization activation email sent successfully",
+                {
+                    "organisatieId": "o-1"
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Updating organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "o-1",
+                    "register": "reg-v",
+                    "schema": "org-schema"
+                }
+            ],
+            [
+                "entity.setObject",
+                "o-1",
+                {
+                    "name": "Gemeente D",
+                    "organisation": "o-1",
+                    "@self": {
+                        "owner": "o-1",
+                        "organisation": "o-1"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "o-1",
+                "o-1"
+            ],
+            [
+                "entity.setOrganisation",
+                "o-1",
+                "o-1"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "name": "Gemeente D",
+                        "organisation": "o-1",
+                        "@self": {
+                            "organisation": "o-1"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "o-1",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "o-1",
+                    "ownerSet": "o-1",
+                    "organisationSet": "o-1"
+                }
+            ]
+        ]
+    },
+    "entity: existing entity activated, mail not sent": {
+        "returned": [
+            "o-1",
+            true
+        ],
+        "stats": {
+            "entitiesCreated": 0,
+            "entitiesUpdated": 1
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente E",
+                    "status": "ACTIVE"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "log.debug",
+                "Existing entity found",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "entityId": 41,
+                    "shouldBeActive": true,
+                    "needsUpdate": true
+                }
+            ],
+            [
+                "log.debug",
+                "Updating entity status",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "oldActive": false,
+                    "newActive": true
+                }
+            ],
+            [
+                "entity.setActive",
+                "o-1",
+                true
+            ],
+            [
+                "mapper.save",
+                "o-1",
+                true
+            ],
+            [
+                "log.info",
+                "[FLOW] Sending organization activation email",
+                {
+                    "organisatieId": "o-1"
+                }
+            ],
+            [
+                "mail.sendOrganizationActivationEmail",
+                "Gemeente E"
+            ],
+            [
+                "log.info",
+                "📧 Organization activation email not sent (disabled or not configured)",
+                {
+                    "organisatieId": "o-1"
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Updating organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "o-1",
+                    "register": "reg-v",
+                    "schema": "org-schema"
+                }
+            ],
+            [
+                "entity.setObject",
+                "o-1",
+                {
+                    "name": "Gemeente E",
+                    "status": "ACTIVE",
+                    "organisation": "o-1",
+                    "@self": {
+                        "owner": "o-1",
+                        "organisation": "o-1"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "o-1",
+                "o-1"
+            ],
+            [
+                "entity.setOrganisation",
+                "o-1",
+                "o-1"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "name": "Gemeente E",
+                        "status": "ACTIVE",
+                        "organisation": "o-1",
+                        "@self": {
+                            "organisation": "o-1"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "o-1",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "o-1",
+                    "ownerSet": "o-1",
+                    "organisationSet": "o-1"
+                }
+            ]
+        ]
+    },
+    "entity: existing entity activated, mail throws": {
+        "returned": [
+            "o-1",
+            true
+        ],
+        "stats": {
+            "entitiesCreated": 0,
+            "entitiesUpdated": 1
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente E2",
+                    "status": "Unknown"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "log.debug",
+                "Existing entity found",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "entityId": 41,
+                    "shouldBeActive": true,
+                    "needsUpdate": true
+                }
+            ],
+            [
+                "log.debug",
+                "Updating entity status",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "oldActive": false,
+                    "newActive": true
+                }
+            ],
+            [
+                "entity.setActive",
+                "o-1",
+                true
+            ],
+            [
+                "mapper.save",
+                "o-1",
+                true
+            ],
+            [
+                "log.info",
+                "[FLOW] Sending organization activation email",
+                {
+                    "organisatieId": "o-1"
+                }
+            ],
+            [
+                "mail.sendOrganizationActivationEmail",
+                "Gemeente E2"
+            ],
+            [
+                "log.warning",
+                "OrganizationSyncService: Organization activation email failed",
+                {
+                    "organizationId": "unknown",
+                    "organizationName": "Gemeente E2",
+                    "error": "smtp down"
+                }
+            ],
+            [
+                "log.info",
+                "📧 Organization activation email not sent (disabled or not configured)",
+                {
+                    "organisatieId": "o-1"
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Updating organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "o-1",
+                    "register": "reg-v",
+                    "schema": "org-schema"
+                }
+            ],
+            [
+                "entity.setObject",
+                "o-1",
+                {
+                    "name": "Gemeente E2",
+                    "organisation": "o-1",
+                    "@self": {
+                        "owner": "o-1",
+                        "organisation": "o-1"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "o-1",
+                "o-1"
+            ],
+            [
+                "entity.setOrganisation",
+                "o-1",
+                "o-1"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "name": "Gemeente E2",
+                        "organisation": "o-1",
+                        "@self": {
+                            "organisation": "o-1"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "o-1",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "o-1",
+                    "ownerSet": "o-1",
+                    "organisationSet": "o-1"
+                }
+            ]
+        ]
+    },
+    "entity: existing entity activated, no mails": {
+        "returned": [
+            "o-1",
+            true
+        ],
+        "stats": {
+            "entitiesCreated": 0,
+            "entitiesUpdated": 1
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente F",
+                    "status": "Unknown"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "log.debug",
+                "Existing entity found",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "entityId": 41,
+                    "shouldBeActive": true,
+                    "needsUpdate": true
+                }
+            ],
+            [
+                "log.debug",
+                "Updating entity status",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "oldActive": false,
+                    "newActive": true
+                }
+            ],
+            [
+                "entity.setActive",
+                "o-1",
+                true
+            ],
+            [
+                "mapper.save",
+                "o-1",
+                true
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Updating organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "o-1",
+                    "register": "reg-v",
+                    "schema": "org-schema"
+                }
+            ],
+            [
+                "entity.setObject",
+                "o-1",
+                {
+                    "name": "Gemeente F",
+                    "organisation": "o-1",
+                    "@self": {
+                        "owner": "o-1",
+                        "organisation": "o-1"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "o-1",
+                "o-1"
+            ],
+            [
+                "entity.setOrganisation",
+                "o-1",
+                "o-1"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "name": "Gemeente F",
+                        "organisation": "o-1",
+                        "@self": {
+                            "organisation": "o-1"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "o-1",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "o-1",
+                    "ownerSet": "o-1",
+                    "organisationSet": "o-1"
+                }
+            ]
+        ]
+    },
+    "entity: adopted by slug": {
+        "returned": null,
+        "stats": {
+            "entitiesCreated": 0,
+            "entitiesUpdated": 0,
+            "slugConflicts": [
+                "o-1"
+            ]
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente  G & Zn!",
+                    "status": "actief"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "mapper.findBySlug",
+                "gemeente-g-zn"
+            ],
+            [
+                "log.warning",
+                "OrganizationSyncService: an organisation with this name already exists; the organisatie is left unlinked for an administrator",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "existingOrganisationUuid": "o-old"
+                }
+            ]
+        ]
+    },
+    "entity: not found, created with mail": {
+        "returned": [
+            "new-entity",
+            true
+        ],
+        "stats": {
+            "entitiesCreated": 1,
+            "entitiesUpdated": 0
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente H",
+                    "status": "Unknown"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "mapper.findBySlug",
+                "gemeente-h"
+            ],
+            [
+                "log.debug",
+                "Creating new organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente H"
+                }
+            ],
+            [
+                "organisations.create",
+                {
+                    "name": "Gemeente H"
+                }
+            ],
+            [
+                "log.debug",
+                "New organisation entity created",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "entityId": 41,
+                    "active": true,
+                    "name": "Entity new-entity"
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Sending organization registration email",
+                {
+                    "organisatieId": "o-1"
+                }
+            ],
+            [
+                "mail.sendOrganizationRegistrationEmail",
+                "Gemeente H"
+            ],
+            [
+                "log.info",
+                "📧 Organization registration email sent successfully",
+                {
+                    "organisatieId": "o-1"
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Updating organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "new-entity",
+                    "register": "reg-v",
+                    "schema": "org-schema"
+                }
+            ],
+            [
+                "entity.setObject",
+                "o-1",
+                {
+                    "name": "Gemeente H",
+                    "organisation": "new-entity",
+                    "@self": {
+                        "owner": "new-entity",
+                        "organisation": "new-entity"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "o-1",
+                "new-entity"
+            ],
+            [
+                "entity.setOrganisation",
+                "o-1",
+                "new-entity"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "name": "Gemeente H",
+                        "organisation": "new-entity",
+                        "@self": {
+                            "organisation": "new-entity"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "o-1",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "new-entity",
+                    "ownerSet": "new-entity",
+                    "organisationSet": "new-entity"
+                }
+            ]
+        ]
+    },
+    "entity: not found, created, mail not sent": {
+        "returned": [
+            "new-entity",
+            true
+        ],
+        "stats": {
+            "entitiesCreated": 1,
+            "entitiesUpdated": 0
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente H2",
+                    "status": "Unknown"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "mapper.findBySlug",
+                "gemeente-h2"
+            ],
+            [
+                "log.debug",
+                "Creating new organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente H2"
+                }
+            ],
+            [
+                "organisations.create",
+                {
+                    "name": "Gemeente H2"
+                }
+            ],
+            [
+                "log.debug",
+                "New organisation entity created",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "entityId": 41,
+                    "active": true,
+                    "name": "Entity new-entity"
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Sending organization registration email",
+                {
+                    "organisatieId": "o-1"
+                }
+            ],
+            [
+                "mail.sendOrganizationRegistrationEmail",
+                "Gemeente H2"
+            ],
+            [
+                "log.info",
+                "📧 Organization registration email not sent (disabled or not configured)",
+                {
+                    "organisatieId": "o-1"
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Updating organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "new-entity",
+                    "register": "reg-v",
+                    "schema": "org-schema"
+                }
+            ],
+            [
+                "entity.setObject",
+                "o-1",
+                {
+                    "name": "Gemeente H2",
+                    "organisation": "new-entity",
+                    "@self": {
+                        "owner": "new-entity",
+                        "organisation": "new-entity"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "o-1",
+                "new-entity"
+            ],
+            [
+                "entity.setOrganisation",
+                "o-1",
+                "new-entity"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "name": "Gemeente H2",
+                        "organisation": "new-entity",
+                        "@self": {
+                            "organisation": "new-entity"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "o-1",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "new-entity",
+                    "ownerSet": "new-entity",
+                    "organisationSet": "new-entity"
+                }
+            ]
+        ]
+    },
+    "entity: not found, created without mail": {
+        "returned": [
+            "new-entity",
+            true
+        ],
+        "stats": {
+            "entitiesCreated": 1,
+            "entitiesUpdated": 0
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente I",
+                    "status": "Unknown"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "mapper.findBySlug",
+                "gemeente-i"
+            ],
+            [
+                "log.debug",
+                "Creating new organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente I"
+                }
+            ],
+            [
+                "organisations.create",
+                {
+                    "name": "Gemeente I"
+                }
+            ],
+            [
+                "log.debug",
+                "New organisation entity created",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "entityId": 41,
+                    "active": true,
+                    "name": "Entity new-entity"
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Updating organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "new-entity",
+                    "register": "reg-v",
+                    "schema": "org-schema"
+                }
+            ],
+            [
+                "entity.setObject",
+                "o-1",
+                {
+                    "name": "Gemeente I",
+                    "organisation": "new-entity",
+                    "@self": {
+                        "owner": "new-entity",
+                        "organisation": "new-entity"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "o-1",
+                "new-entity"
+            ],
+            [
+                "entity.setOrganisation",
+                "o-1",
+                "new-entity"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "name": "Gemeente I",
+                        "organisation": "new-entity",
+                        "@self": {
+                            "organisation": "new-entity"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "o-1",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "new-entity",
+                    "ownerSet": "new-entity",
+                    "organisationSet": "new-entity"
+                }
+            ]
+        ]
+    },
+    "entity: no name, created": {
+        "returned": [
+            "new-entity",
+            true
+        ],
+        "stats": {
+            "entitiesCreated": 1,
+            "entitiesUpdated": 0
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Unknown",
+                    "status": "actief"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "mapper.findBySlug",
+                "organisation"
+            ],
+            [
+                "log.debug",
+                "Creating new organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Unknown"
+                }
+            ],
+            [
+                "organisations.create",
+                {
+                    "status": "actief"
+                }
+            ],
+            [
+                "log.debug",
+                "New organisation entity created",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "entityId": 41,
+                    "active": true,
+                    "name": "Entity new-entity"
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Sending organization registration email",
+                {
+                    "organisatieId": "o-1"
+                }
+            ],
+            [
+                "mail.sendOrganizationRegistrationEmail",
+                null
+            ],
+            [
+                "log.info",
+                "📧 Organization registration email sent successfully",
+                {
+                    "organisatieId": "o-1"
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Updating organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "new-entity",
+                    "register": "reg-v",
+                    "schema": "org-schema"
+                }
+            ],
+            [
+                "entity.setObject",
+                "o-1",
+                {
+                    "status": "actief",
+                    "organisation": "new-entity",
+                    "@self": {
+                        "owner": "new-entity",
+                        "organisation": "new-entity"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "o-1",
+                "new-entity"
+            ],
+            [
+                "entity.setOrganisation",
+                "o-1",
+                "new-entity"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "status": "actief",
+                        "organisation": "new-entity",
+                        "@self": {
+                            "organisation": "new-entity"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "o-1",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "new-entity",
+                    "ownerSet": "new-entity",
+                    "organisationSet": "new-entity"
+                }
+            ]
+        ]
+    },
+    "entity: creation fails": {
+        "returned": null,
+        "stats": {
+            "entitiesCreated": 0,
+            "entitiesUpdated": 0
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente J",
+                    "status": "Unknown"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "mapper.findBySlug",
+                "gemeente-j"
+            ],
+            [
+                "log.debug",
+                "Creating new organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente J"
+                }
+            ],
+            [
+                "organisations.create",
+                {
+                    "name": "Gemeente J"
+                }
+            ],
+            [
+                "log.error",
+                "❌ ORGANISATION ENTITY CREATION FAILED",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1"
+                }
+            ]
+        ]
+    },
+    "entity: mapper fails": {
+        "returned": null,
+        "stats": {
+            "entitiesCreated": 0,
+            "entitiesUpdated": 0
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente K",
+                    "status": "Unknown"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "log.error",
+                "💥 ENSURE ORGANISATION ENTITY EXCEPTION",
+                {
+                    "app": "stackiq",
+                    "organisatieId": 7,
+                    "exception": "db down",
+                    "file": "(file)",
+                    "line": "(line)",
+                    "trace": "(trace)"
+                }
+            ]
+        ]
+    },
+    "entity: owner save fails": {
+        "returned": [
+            "o-1",
+            true
+        ],
+        "stats": {
+            "entitiesCreated": 0,
+            "entitiesUpdated": 0
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente L",
+                    "status": "Unknown"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "log.debug",
+                "Existing entity found",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "entityId": 41,
+                    "shouldBeActive": true,
+                    "needsUpdate": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Updating organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "o-1",
+                    "register": "reg-v",
+                    "schema": "org-schema"
+                }
+            ],
+            [
+                "entity.setObject",
+                "o-1",
+                {
+                    "name": "Gemeente L",
+                    "organisation": "o-1",
+                    "@self": {
+                        "owner": "o-1",
+                        "organisation": "o-1"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "o-1",
+                "o-1"
+            ],
+            [
+                "entity.setOrganisation",
+                "o-1",
+                "o-1"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "name": "Gemeente L",
+                        "organisation": "o-1",
+                        "@self": {
+                            "organisation": "o-1"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "o-1",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.error",
+                "OrganizationSyncService: Failed to update organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "o-1",
+                    "exception": "save failed",
+                    "file": "(file)",
+                    "line": "(line)"
+                }
+            ]
+        ]
+    },
+    "entity: settings fail": {
+        "returned": null,
+        "stats": {
+            "entitiesCreated": 0,
+            "entitiesUpdated": 0
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente M",
+                    "status": "Unknown"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.error",
+                "💥 ENSURE ORGANISATION ENTITY EXCEPTION",
+                {
+                    "app": "stackiq",
+                    "organisatieId": 7,
+                    "exception": "settings down",
+                    "file": "(file)",
+                    "line": "(line)",
+                    "trace": "(trace)"
+                }
+            ]
+        ]
+    },
+    "entity: same name as another organisation": {
+        "returned": null,
+        "stats": {
+            "entitiesCreated": 0,
+            "entitiesUpdated": 0,
+            "slugConflicts": [
+                "o-1"
+            ]
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente A",
+                    "status": "actief"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "mapper.findBySlug",
+                "gemeente-a"
+            ],
+            [
+                "log.warning",
+                "OrganizationSyncService: an organisation with this name already exists; the organisatie is left unlinked for an administrator",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "existingOrganisationUuid": "o-other"
+                }
+            ]
+        ]
+    },
+    "entity: long name, slug cut at 100": {
+        "returned": null,
+        "stats": {
+            "entitiesCreated": 0,
+            "entitiesUpdated": 0,
+            "slugConflicts": [
+                "o-1"
+            ]
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "status": "actief"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "mapper.findBySlug",
+                "gemeente-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            ],
+            [
+                "log.warning",
+                "OrganizationSyncService: an organisation with this name already exists; the organisatie is left unlinked for an administrator",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "existingOrganisationUuid": "o-other"
+                }
+            ]
+        ]
+    },
+    "entity: long name, slug free": {
+        "returned": [
+            "new-entity",
+            true
+        ],
+        "stats": {
+            "entitiesCreated": 1,
+            "entitiesUpdated": 0
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "status": "actief"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "mapper.findBySlug",
+                "gemeente-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            ],
+            [
+                "log.debug",
+                "Creating new organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+                }
+            ],
+            [
+                "organisations.create",
+                {
+                    "name": "Gemeente aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "status": "actief"
+                }
+            ],
+            [
+                "log.debug",
+                "New organisation entity created",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "entityId": 41,
+                    "active": true,
+                    "name": "Entity new-entity"
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Sending organization registration email",
+                {
+                    "organisatieId": "o-1"
+                }
+            ],
+            [
+                "mail.sendOrganizationRegistrationEmail",
+                "Gemeente aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa"
+            ],
+            [
+                "log.info",
+                "📧 Organization registration email sent successfully",
+                {
+                    "organisatieId": "o-1"
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Updating organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "new-entity",
+                    "register": "reg-v",
+                    "schema": "org-schema"
+                }
+            ],
+            [
+                "entity.setObject",
+                "o-1",
+                {
+                    "name": "Gemeente aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                    "status": "actief",
+                    "organisation": "new-entity",
+                    "@self": {
+                        "owner": "new-entity",
+                        "organisation": "new-entity"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "o-1",
+                "new-entity"
+            ],
+            [
+                "entity.setOrganisation",
+                "o-1",
+                "new-entity"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "name": "Gemeente aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+                        "status": "actief",
+                        "organisation": "new-entity",
+                        "@self": {
+                            "organisation": "new-entity"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "o-1",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "new-entity",
+                    "ownerSet": "new-entity",
+                    "organisationSet": "new-entity"
+                }
+            ]
+        ]
+    },
+    "entity: OpenRegister refuses the slug": {
+        "returned": null,
+        "stats": {
+            "entitiesCreated": 0,
+            "entitiesUpdated": 0,
+            "slugConflicts": [
+                "o-1"
+            ]
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente P",
+                    "status": "actief"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "mapper.findBySlug",
+                "gemeente-p"
+            ],
+            [
+                "log.debug",
+                "Creating new organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Gemeente P"
+                }
+            ],
+            [
+                "organisations.create",
+                {
+                    "name": "Gemeente P",
+                    "status": "actief"
+                }
+            ],
+            [
+                "log.warning",
+                "OrganizationSyncService: an organisation with this name already exists; the organisatie is left unlinked for an administrator",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "existingOrganisationUuid": null
+                }
+            ]
+        ]
+    },
+    "entity: named Unknown": {
+        "returned": [
+            "new-entity",
+            true
+        ],
+        "stats": {
+            "entitiesCreated": 1,
+            "entitiesUpdated": 0
+        },
+        "trace": [
+            [
+                "objects.find",
+                {
+                    "id": "o-1",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Unknown",
+                    "status": "actief"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "o-1"
+            ],
+            [
+                "mapper.findBySlug",
+                "organisation"
+            ],
+            [
+                "log.debug",
+                "Creating new organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "name": "Unknown"
+                }
+            ],
+            [
+                "organisations.create",
+                {
+                    "name": "Unknown",
+                    "status": "actief"
+                }
+            ],
+            [
+                "log.debug",
+                "New organisation entity created",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "o-1",
+                    "entityId": 41,
+                    "active": true,
+                    "name": "Entity new-entity"
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Sending organization registration email",
+                {
+                    "organisatieId": "o-1"
+                }
+            ],
+            [
+                "mail.sendOrganizationRegistrationEmail",
+                "Unknown"
+            ],
+            [
+                "log.info",
+                "📧 Organization registration email sent successfully",
+                {
+                    "organisatieId": "o-1"
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Updating organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "new-entity",
+                    "register": "reg-v",
+                    "schema": "org-schema"
+                }
+            ],
+            [
+                "entity.setObject",
+                "o-1",
+                {
+                    "name": "Unknown",
+                    "status": "actief",
+                    "organisation": "new-entity",
+                    "@self": {
+                        "owner": "new-entity",
+                        "organisation": "new-entity"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "o-1",
+                "new-entity"
+            ],
+            [
+                "entity.setOrganisation",
+                "o-1",
+                "new-entity"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "name": "Unknown",
+                        "status": "actief",
+                        "organisation": "new-entity",
+                        "@self": {
+                            "organisation": "new-entity"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "o-1",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated organisatie object owner and organisation",
+                {
+                    "organisatieId": "o-1",
+                    "organisationEntityUuid": "new-entity",
+                    "ownerSet": "new-entity",
+                    "organisationSet": "new-entity"
+                }
+            ]
+        ]
+    }
+}

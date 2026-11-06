@@ -12,7 +12,7 @@
  *   - a REGISTER by slug alone      -> RegisterMapper::find(slug)
  *   - a SCHEMA by the PAIR          -> SchemaMapper::findByApplicationAndSlug(slug, application)
  *
- * `SettingsService` passes `appId: Application::APP_ID`, which is now
+ * `SettingsService` passes `appId: AppIdentity::APP_ID`, which is now
  * `stackiq`. Every schema this app already owns still carries
  * `application = 'softwarecatalog'`, so the pair matches nothing — and
  * ImportHandler's not-found branch is not an error path, it is the "create a

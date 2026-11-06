@@ -1,0 +1,75 @@
+{
+  "_comment": "landscape-completeness-score (board SkDatakwaliteit). The rules OpenRegister scores a usage by on every save, and the body fields it writes the score to. The Data quality page (GET /api/data-quality) reads these same rules to count, per rule, how many of an organisation's usages meet them. The module schema already declared its rules; it gets the body fields so its score can be listed too.",
+  "components": {
+    "schemas": {
+      "usage": {
+        "version": "1.5.9",
+        "configuration": {
+          "x-openregister-quality": {
+            "field": "qualityScore",
+            "statusField": "qualityStatus",
+            "rules": [
+              { "type": "required", "field": "module", "weight": 2 },
+              { "type": "required", "field": "moduleVersion", "weight": 1 },
+              { "type": "required", "field": "status", "weight": 1 },
+              { "type": "required", "field": "businessOwner", "weight": 2 },
+              { "type": "required", "field": "technicalOwner", "weight": 2 },
+              { "type": "required", "field": "usedForReferenceComponents", "weight": 2 },
+              { "type": "freshness", "field": "lastConfirmedAt", "halfLifeDays": 365, "weight": 3 }
+            ],
+            "thresholds": { "good": 0.8, "fair": 0.5 }
+          }
+        },
+        "properties": {
+          "lastConfirmedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last confirmed",
+            "description": "When someone last confirmed this entry is current. The freshness rule halves its weight every year after.",
+            "visible": true,
+            "order": 90
+          },
+          "qualityScore": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "title": "Data quality score",
+            "description": "Written by OpenRegister on save from the declared rules.",
+            "hideOnForm": true,
+            "facetable": false
+          },
+          "qualityStatus": {
+            "type": "string",
+            "enum": ["good", "fair", "poor"],
+            "title": "Data quality",
+            "description": "Written by OpenRegister on save: good from 0.8, fair from 0.5.",
+            "hideOnForm": true,
+            "facetable": true
+          }
+        }
+      },
+      "module": {
+        "version": "0.3.11",
+        "properties": {
+          "qualityScore": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1,
+            "title": "Data quality score",
+            "description": "Written by OpenRegister on save from the declared rules.",
+            "hideOnForm": true,
+            "facetable": false
+          },
+          "qualityStatus": {
+            "type": "string",
+            "enum": ["good", "fair", "poor"],
+            "title": "Data quality",
+            "description": "Written by OpenRegister on save: good from 0.8, fair from 0.5.",
+            "hideOnForm": true,
+            "facetable": true
+          }
+        }
+      }
+    }
+  }
+}

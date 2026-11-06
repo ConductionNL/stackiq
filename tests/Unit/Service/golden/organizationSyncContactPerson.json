@@ -1,0 +1,2153 @@
+{
+    "contact: no email": {
+        "trace": [
+            [
+                "log.warning",
+                "[FLOW] Contact person has no email, skipping",
+                {
+                    "organizationId": "org-1",
+                    "contactData": [
+                        "voornaam"
+                    ]
+                }
+            ]
+        ],
+        "stats": {
+            "contactPersonsProcessed": 0,
+            "usersCreated": 0,
+            "errors": []
+        },
+        "escaped": null
+    },
+    "contact: new contact, active org, user created": {
+        "trace": [
+            [
+                "log.info",
+                "📧 CREATING NEW CONTACT PERSON OBJECT",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-1",
+                    "email": "a@x.nl",
+                    "name": "A B"
+                }
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "e-mailadres": "a@x.nl",
+                        "voornaam": "A",
+                        "achternaam": "B"
+                    },
+                    "register": "reg-1",
+                    "schema": "contact-schema",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "email": "a@x.nl",
+                        "organization": "org-1",
+                        "@self": {
+                            "organisation": "org-1"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-1",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Set missing organisatie field on contact person",
+                {
+                    "contactId": "c-1",
+                    "organizationUuid": "org-1"
+                }
+            ],
+            [
+                "log.info",
+                "✅ CONTACT PERSON OBJECT READY",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-1",
+                    "contactId": "c-1",
+                    "email": "a@x.nl",
+                    "wasExisting": false
+                }
+            ],
+            [
+                "mapper.findByUuid",
+                "org-1"
+            ],
+            [
+                "handler.isFirst",
+                "c-1",
+                {
+                    "email": "a@x.nl",
+                    "organization": "org-1"
+                }
+            ],
+            [
+                "log.info",
+                "Creating user account for contact person (org is active)",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-1",
+                    "organizationId": "org-1",
+                    "email": "a@x.nl",
+                    "isFirstContact": true
+                }
+            ],
+            [
+                "handler.createUserAccount",
+                "c-1",
+                true
+            ],
+            [
+                "log.debug",
+                "Saving contact with username via direct mapper update",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-1",
+                    "username": "u-1",
+                    "hasOrganisatie": false
+                }
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "email": "a@x.nl",
+                        "username": "u-1",
+                        "@self": {
+                            "organisation": "org-of-entity"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-1",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "Contact saved with username",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-1",
+                    "username": "u-1"
+                }
+            ],
+            [
+                "handler.addUserToOrganizationEntity",
+                [
+                    "c-1",
+                    "u-1",
+                    "org-1"
+                ]
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Updating contactpersoon object owner",
+                {
+                    "contactId": "c-1",
+                    "userUID": "u-1",
+                    "register": "reg-1",
+                    "schema": "contact-schema",
+                    "organizationUuidOverride": "org-1"
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Setting @self.organisation metadata",
+                {
+                    "contactId": "c-1",
+                    "organizationUuid": "org-1",
+                    "source": "override"
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Restored missing organisatie field on contact person",
+                {
+                    "contactId": "c-1",
+                    "organizationUuid": "org-1"
+                }
+            ],
+            [
+                "entity.setObject",
+                "c-1",
+                {
+                    "email": "a@x.nl",
+                    "organization": "org-1",
+                    "@self": {
+                        "owner": "u-1",
+                        "organisation": "org-1"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "c-1",
+                "u-1"
+            ],
+            [
+                "entity.setOrganisation",
+                "c-1",
+                "org-1"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "email": "a@x.nl",
+                        "organization": "org-1",
+                        "@self": {
+                            "organisation": "org-1"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-1",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated contactpersoon object owner and organisation",
+                {
+                    "contactId": "c-1",
+                    "userUID": "u-1",
+                    "ownerSet": "u-1",
+                    "organisationSet": "org-1"
+                }
+            ],
+            [
+                "log.info",
+                "User account created",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-1",
+                    "username": "u-1"
+                }
+            ]
+        ],
+        "stats": {
+            "contactPersonsProcessed": 1,
+            "usersCreated": 1,
+            "errors": []
+        },
+        "escaped": null
+    },
+    "contact: existing contact with org and username": {
+        "trace": [
+            [
+                "log.info",
+                "📧 FETCHING EXISTING CONTACT PERSON",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-1",
+                    "contactId": "c-2",
+                    "email": "b@x.nl"
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "c-2",
+                    "register": "reg-1",
+                    "schema": "contact-schema",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.info",
+                "✅ CONTACT PERSON OBJECT READY",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-1",
+                    "contactId": "c-2",
+                    "email": "b@x.nl",
+                    "wasExisting": true
+                }
+            ]
+        ],
+        "stats": {
+            "contactPersonsProcessed": 1,
+            "usersCreated": 0,
+            "errors": []
+        },
+        "escaped": null
+    },
+    "contact: uuid fetch fails, create restores org": {
+        "trace": [
+            [
+                "log.info",
+                "📧 CREATING NEW CONTACT PERSON OBJECT",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-3",
+                    "email": "c@x.nl",
+                    "name": " "
+                }
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "email": "c@x.nl"
+                    },
+                    "register": "reg-1",
+                    "schema": "contact-schema",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "email": "c@x.nl",
+                        "username": "cee",
+                        "organization": "org-3",
+                        "@self": {
+                            "organisation": "org-of-entity"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-3b",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "email": "c@x.nl",
+                        "username": "cee",
+                        "organization": "org-3",
+                        "@self": {
+                            "organisation": "org-3"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-3b",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Set missing organisatie field on contact person",
+                {
+                    "contactId": "c-3b",
+                    "organizationUuid": "org-3"
+                }
+            ],
+            [
+                "log.info",
+                "✅ CONTACT PERSON OBJECT READY",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-3",
+                    "contactId": "c-3b",
+                    "email": "c@x.nl",
+                    "wasExisting": false
+                }
+            ]
+        ],
+        "stats": {
+            "contactPersonsProcessed": 1,
+            "usersCreated": 0,
+            "errors": []
+        },
+        "escaped": null
+    },
+    "contact: org entity missing, backup finds none": {
+        "trace": [
+            [
+                "log.info",
+                "📧 FETCHING EXISTING CONTACT PERSON",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-4",
+                    "contactId": "c-4",
+                    "email": "d@x.nl"
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "c-4",
+                    "register": "reg-1",
+                    "schema": "contact-schema",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.info",
+                "✅ CONTACT PERSON OBJECT READY",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-4",
+                    "contactId": "c-4",
+                    "email": "d@x.nl",
+                    "wasExisting": true
+                }
+            ],
+            [
+                "mapper.findByUuid",
+                "org-4"
+            ],
+            [
+                "log.info",
+                "Organisation entity missing for org-4, creating backup entity",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-4"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "org-4",
+                    "register": "reg-v",
+                    "schema": "org-schema"
+                }
+            ],
+            [
+                "log.info",
+                "Skipping user creation - organization not active or not found in entity table",
+                {
+                    "contactId": "c-4",
+                    "organizationId": "org-4",
+                    "organizationFound": false,
+                    "organizationActive": false,
+                    "email": "d@x.nl"
+                }
+            ]
+        ],
+        "stats": {
+            "contactPersonsProcessed": 1,
+            "usersCreated": 0,
+            "errors": []
+        },
+        "escaped": null
+    },
+    "contact: org entity missing, backup lookup fails": {
+        "trace": [
+            [
+                "log.info",
+                "📧 FETCHING EXISTING CONTACT PERSON",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-5",
+                    "contactId": "c-5",
+                    "email": "e@x.nl"
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "c-5",
+                    "register": "reg-1",
+                    "schema": "contact-schema",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.info",
+                "✅ CONTACT PERSON OBJECT READY",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-5",
+                    "contactId": "c-5",
+                    "email": "e@x.nl",
+                    "wasExisting": true
+                }
+            ],
+            [
+                "mapper.findByUuid",
+                "org-5"
+            ],
+            [
+                "log.info",
+                "Organisation entity missing for org-5, creating backup entity",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-5"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.error",
+                "Backup org entity creation failed",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-5",
+                    "error": "no config"
+                }
+            ],
+            [
+                "log.info",
+                "Skipping user creation - organization not active or not found in entity table",
+                {
+                    "contactId": "c-5",
+                    "organizationId": "org-5",
+                    "organizationFound": false,
+                    "organizationActive": false,
+                    "email": "e@x.nl"
+                }
+            ]
+        ],
+        "stats": {
+            "contactPersonsProcessed": 1,
+            "usersCreated": 0,
+            "errors": []
+        },
+        "escaped": null
+    },
+    "contact: org entity missing, backup builds one": {
+        "trace": [
+            [
+                "log.info",
+                "📧 FETCHING EXISTING CONTACT PERSON",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-6",
+                    "contactId": "c-6",
+                    "email": "f@x.nl"
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "c-6",
+                    "register": "reg-1",
+                    "schema": "contact-schema",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.info",
+                "✅ CONTACT PERSON OBJECT READY",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-6",
+                    "contactId": "c-6",
+                    "email": "f@x.nl",
+                    "wasExisting": true
+                }
+            ],
+            [
+                "mapper.findByUuid",
+                "org-6"
+            ],
+            [
+                "log.info",
+                "Organisation entity missing for org-6, creating backup entity",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-6"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "org-6",
+                    "register": "reg-v",
+                    "schema": "org-schema"
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "org-6",
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.warning",
+                "Could not fetch full organisation object, using provided object",
+                {
+                    "organisatieId": "org-6",
+                    "error": "full fetch fails"
+                }
+            ],
+            [
+                "log.debug",
+                "Ensuring organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "org-6",
+                    "name": "Unknown",
+                    "status": "Unknown"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "mapper.findByUuid",
+                "org-6"
+            ],
+            [
+                "mapper.findBySlug",
+                "organisation"
+            ],
+            [
+                "log.debug",
+                "Creating new organisation entity",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "org-6",
+                    "name": "Unknown"
+                }
+            ],
+            [
+                "organisations.create",
+                {
+                    "naam": "Org six"
+                }
+            ],
+            [
+                "log.debug",
+                "New organisation entity created",
+                {
+                    "app": "stackiq",
+                    "organisatieId": "org-6",
+                    "entityId": null,
+                    "active": true,
+                    "name": "Org"
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Sending organization registration email",
+                {
+                    "organisatieId": "org-6"
+                }
+            ],
+            [
+                "log.info",
+                "📧 Organization registration email not sent (disabled or not configured)",
+                {
+                    "organisatieId": "org-6"
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Updating organisatie object owner and organisation",
+                {
+                    "organisatieId": "org-6",
+                    "organisationEntityUuid": "",
+                    "register": "reg-v",
+                    "schema": "org-schema"
+                }
+            ],
+            [
+                "entity.setObject",
+                "org-6",
+                {
+                    "naam": "Org six",
+                    "organisation": "",
+                    "@self": {
+                        "owner": "",
+                        "organisation": ""
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "org-6",
+                ""
+            ],
+            [
+                "entity.setOrganisation",
+                "org-6",
+                ""
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "naam": "Org six",
+                        "organisation": "",
+                        "@self": {
+                            "organisation": ""
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "org-6",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated organisatie object owner and organisation",
+                {
+                    "organisatieId": "org-6",
+                    "organisationEntityUuid": "",
+                    "ownerSet": "",
+                    "organisationSet": ""
+                }
+            ],
+            [
+                "handler.isFirst",
+                "c-6",
+                {
+                    "organization": "org-6"
+                }
+            ],
+            [
+                "log.info",
+                "Creating user account for contact person (org is active)",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-6",
+                    "organizationId": "org-6",
+                    "email": "f@x.nl",
+                    "isFirstContact": false
+                }
+            ],
+            [
+                "handler.createUserAccount",
+                "c-6",
+                false
+            ],
+            [
+                "log.error",
+                "User account creation failed",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-6",
+                    "email": "f@x.nl"
+                }
+            ]
+        ],
+        "stats": {
+            "contactPersonsProcessed": 1,
+            "usersCreated": 0,
+            "errors": [
+                "Failed to create user account for f@x.nl"
+            ]
+        },
+        "escaped": null
+    },
+    "contact: org inactive": {
+        "trace": [
+            [
+                "log.info",
+                "📧 FETCHING EXISTING CONTACT PERSON",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-7",
+                    "contactId": "c-7",
+                    "email": "g@x.nl"
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "c-7",
+                    "register": "reg-1",
+                    "schema": "contact-schema",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.info",
+                "✅ CONTACT PERSON OBJECT READY",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-7",
+                    "contactId": "c-7",
+                    "email": "g@x.nl",
+                    "wasExisting": true
+                }
+            ],
+            [
+                "mapper.findByUuid",
+                "org-7"
+            ],
+            [
+                "log.info",
+                "Skipping user creation - organization not active or not found in entity table",
+                {
+                    "contactId": "c-7",
+                    "organizationId": "org-7",
+                    "organizationFound": true,
+                    "organizationActive": false,
+                    "email": "g@x.nl"
+                }
+            ]
+        ],
+        "stats": {
+            "contactPersonsProcessed": 1,
+            "usersCreated": 0,
+            "errors": []
+        },
+        "escaped": null
+    },
+    "contact: org active is not true": {
+        "trace": [
+            [
+                "log.info",
+                "📧 FETCHING EXISTING CONTACT PERSON",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-7",
+                    "contactId": "c-7b",
+                    "email": "g2@x.nl"
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "c-7b",
+                    "register": "reg-1",
+                    "schema": "contact-schema",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.info",
+                "✅ CONTACT PERSON OBJECT READY",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-7",
+                    "contactId": "c-7b",
+                    "email": "g2@x.nl",
+                    "wasExisting": true
+                }
+            ],
+            [
+                "mapper.findByUuid",
+                "org-7"
+            ],
+            [
+                "log.info",
+                "Skipping user creation - organization not active or not found in entity table",
+                {
+                    "contactId": "c-7b",
+                    "organizationId": "org-7",
+                    "organizationFound": true,
+                    "organizationActive": 1,
+                    "email": "g2@x.nl"
+                }
+            ]
+        ],
+        "stats": {
+            "contactPersonsProcessed": 1,
+            "usersCreated": 0,
+            "errors": []
+        },
+        "escaped": null
+    },
+    "contact: org active check throws": {
+        "trace": [
+            [
+                "log.info",
+                "📧 FETCHING EXISTING CONTACT PERSON",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-8",
+                    "contactId": "c-8",
+                    "email": "h@x.nl"
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "c-8",
+                    "register": "reg-1",
+                    "schema": "contact-schema",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.info",
+                "✅ CONTACT PERSON OBJECT READY",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-8",
+                    "contactId": "c-8",
+                    "email": "h@x.nl",
+                    "wasExisting": true
+                }
+            ],
+            [
+                "mapper.findByUuid",
+                "org-8"
+            ],
+            [
+                "log.info",
+                "Skipping user creation - organization not found in entity table (not active)",
+                {
+                    "contactId": "c-8",
+                    "organizationId": "org-8",
+                    "reason": "Organization not found in entity table",
+                    "email": "h@x.nl"
+                }
+            ]
+        ],
+        "stats": {
+            "contactPersonsProcessed": 1,
+            "usersCreated": 0,
+            "errors": []
+        },
+        "escaped": null
+    },
+    "contact: org lookup throws generic": {
+        "trace": [
+            [
+                "log.info",
+                "📧 FETCHING EXISTING CONTACT PERSON",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-9",
+                    "contactId": "c-9",
+                    "email": "i@x.nl"
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "c-9",
+                    "register": "reg-1",
+                    "schema": "contact-schema",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.info",
+                "✅ CONTACT PERSON OBJECT READY",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-9",
+                    "contactId": "c-9",
+                    "email": "i@x.nl",
+                    "wasExisting": true
+                }
+            ],
+            [
+                "mapper.findByUuid",
+                "org-9"
+            ],
+            [
+                "log.error",
+                "[FLOW] Failed to create/update contact person object",
+                {
+                    "organizationId": "org-9",
+                    "email": "i@x.nl",
+                    "exception": "mapper broke",
+                    "trace": "(trace)"
+                }
+            ]
+        ],
+        "stats": {
+            "contactPersonsProcessed": 1,
+            "usersCreated": 0,
+            "errors": [
+                "Contact person creation failed: mapper broke"
+            ]
+        },
+        "escaped": null
+    },
+    "contact: user creation fails": {
+        "trace": [
+            [
+                "log.info",
+                "📧 FETCHING EXISTING CONTACT PERSON",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-10",
+                    "contactId": "c-10",
+                    "email": "j@x.nl"
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "c-10",
+                    "register": "reg-1",
+                    "schema": "contact-schema",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.info",
+                "✅ CONTACT PERSON OBJECT READY",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-10",
+                    "contactId": "c-10",
+                    "email": "j@x.nl",
+                    "wasExisting": true
+                }
+            ],
+            [
+                "mapper.findByUuid",
+                "org-10"
+            ],
+            [
+                "handler.isFirst",
+                "c-10",
+                {
+                    "organization": "org-10"
+                }
+            ],
+            [
+                "log.info",
+                "Creating user account for contact person (org is active)",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-10",
+                    "organizationId": "org-10",
+                    "email": "j@x.nl",
+                    "isFirstContact": false
+                }
+            ],
+            [
+                "handler.createUserAccount",
+                "c-10",
+                false
+            ],
+            [
+                "log.error",
+                "User account creation failed",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-10",
+                    "email": "j@x.nl"
+                }
+            ]
+        ],
+        "stats": {
+            "contactPersonsProcessed": 1,
+            "usersCreated": 0,
+            "errors": [
+                "Failed to create user account for j@x.nl"
+            ]
+        },
+        "escaped": null
+    },
+    "contact: username save fails": {
+        "trace": [
+            [
+                "log.info",
+                "📧 FETCHING EXISTING CONTACT PERSON",
+                {
+                    "app": "stackiq",
+                    "organizationId": "",
+                    "contactId": "c-11",
+                    "email": "k@x.nl"
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "c-11",
+                    "register": "reg-1",
+                    "schema": "contact-schema",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.info",
+                "✅ CONTACT PERSON OBJECT READY",
+                {
+                    "app": "stackiq",
+                    "organizationId": "",
+                    "contactId": "c-11",
+                    "email": "k@x.nl",
+                    "wasExisting": true
+                }
+            ],
+            [
+                "mapper.findByUuid",
+                ""
+            ],
+            [
+                "handler.isFirst",
+                "c-11",
+                {
+                    "organisation": "org-11b"
+                }
+            ],
+            [
+                "log.info",
+                "Creating user account for contact person (org is active)",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-11",
+                    "organizationId": "",
+                    "email": "k@x.nl",
+                    "isFirstContact": false
+                }
+            ],
+            [
+                "handler.createUserAccount",
+                "c-11",
+                false
+            ],
+            [
+                "log.debug",
+                "Saving contact with username via direct mapper update",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-11",
+                    "username": "u-11",
+                    "hasOrganisatie": false
+                }
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "organisation": "org-11b",
+                        "username": "u-11",
+                        "@self": {
+                            "organisation": "org-of-entity"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-11",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.warning",
+                "Failed to save username to contact object (user was created)",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-11",
+                    "username": "u-11",
+                    "error": "save broke"
+                }
+            ],
+            [
+                "handler.addUserToOrganizationEntity",
+                [
+                    "c-11",
+                    "u-11",
+                    ""
+                ]
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Updating contactpersoon object owner",
+                {
+                    "contactId": "c-11",
+                    "userUID": "u-11",
+                    "register": "reg-1",
+                    "schema": "contact-schema",
+                    "organizationUuidOverride": ""
+                }
+            ],
+            [
+                "entity.setObject",
+                "c-11",
+                {
+                    "organisation": "org-11b",
+                    "@self": {
+                        "owner": "u-11"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "c-11",
+                "u-11"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "organisation": "org-11b",
+                        "@self": {
+                            "organisation": "org-of-entity"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-11",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated contactpersoon object owner and organisation",
+                {
+                    "contactId": "c-11",
+                    "userUID": "u-11",
+                    "ownerSet": "u-11",
+                    "organisationSet": "not set"
+                }
+            ],
+            [
+                "log.info",
+                "User account created",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-11",
+                    "username": "u-11"
+                }
+            ]
+        ],
+        "stats": {
+            "contactPersonsProcessed": 1,
+            "usersCreated": 1,
+            "errors": []
+        },
+        "escaped": null
+    },
+    "contact: owner update save fails": {
+        "trace": [
+            [
+                "log.info",
+                "📧 FETCHING EXISTING CONTACT PERSON",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-12",
+                    "contactId": "c-12",
+                    "email": "l@x.nl"
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "c-12",
+                    "register": "reg-1",
+                    "schema": "contact-schema",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.info",
+                "✅ CONTACT PERSON OBJECT READY",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-12",
+                    "contactId": "c-12",
+                    "email": "l@x.nl",
+                    "wasExisting": true
+                }
+            ],
+            [
+                "mapper.findByUuid",
+                "org-12"
+            ],
+            [
+                "handler.isFirst",
+                "c-12",
+                {
+                    "organization": "org-12",
+                    "@self": {
+                        "owner": "old",
+                        "x": 1
+                    }
+                }
+            ],
+            [
+                "log.info",
+                "Creating user account for contact person (org is active)",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-12",
+                    "organizationId": "org-12",
+                    "email": "l@x.nl",
+                    "isFirstContact": false
+                }
+            ],
+            [
+                "handler.createUserAccount",
+                "c-12",
+                false
+            ],
+            [
+                "log.debug",
+                "Saving contact with username via direct mapper update",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-12",
+                    "username": "u-12",
+                    "hasOrganisatie": true
+                }
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "organization": "org-12",
+                        "@self": {
+                            "organisation": "org-of-entity"
+                        },
+                        "username": "u-12"
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-12",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "Contact saved with username",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-12",
+                    "username": "u-12"
+                }
+            ],
+            [
+                "handler.addUserToOrganizationEntity",
+                [
+                    "c-12",
+                    "u-12",
+                    "org-12"
+                ]
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Updating contactpersoon object owner",
+                {
+                    "contactId": "c-12",
+                    "userUID": "u-12",
+                    "register": "reg-1",
+                    "schema": "contact-schema",
+                    "organizationUuidOverride": "org-12"
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Setting @self.organisation metadata",
+                {
+                    "contactId": "c-12",
+                    "organizationUuid": "org-12",
+                    "source": "override"
+                }
+            ],
+            [
+                "entity.setObject",
+                "c-12",
+                {
+                    "organization": "org-12",
+                    "@self": {
+                        "owner": "u-12",
+                        "x": 1,
+                        "organisation": "org-12"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "c-12",
+                "u-12"
+            ],
+            [
+                "entity.setOrganisation",
+                "c-12",
+                "org-12"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "organization": "org-12",
+                        "@self": {
+                            "organisation": "org-12"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-12",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.error",
+                "OrganizationSyncService: Failed to update contactpersoon object owner",
+                {
+                    "contactId": "c-12",
+                    "userUID": "u-12",
+                    "exception": "owner save broke",
+                    "file": "(file)",
+                    "line": "(line)"
+                }
+            ],
+            [
+                "log.info",
+                "User account created",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-12",
+                    "username": "u-12"
+                }
+            ]
+        ],
+        "stats": {
+            "contactPersonsProcessed": 1,
+            "usersCreated": 1,
+            "errors": []
+        },
+        "escaped": null
+    },
+    "contact: create fails": {
+        "trace": [
+            [
+                "log.info",
+                "📧 CREATING NEW CONTACT PERSON OBJECT",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-13",
+                    "email": "m@x.nl",
+                    "name": " "
+                }
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "email": "m@x.nl"
+                    },
+                    "register": "reg-1",
+                    "schema": "contact-schema",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.error",
+                "[FLOW] Failed to create/update contact person object",
+                {
+                    "organizationId": "org-13",
+                    "email": "m@x.nl",
+                    "exception": "create broke",
+                    "trace": "(trace)"
+                }
+            ]
+        ],
+        "stats": {
+            "contactPersonsProcessed": 0,
+            "usersCreated": 0,
+            "errors": [
+                "Contact person creation failed: create broke"
+            ]
+        },
+        "escaped": null
+    },
+    "contact: no org uuid and none on contact": {
+        "trace": [
+            [
+                "log.info",
+                "📧 FETCHING EXISTING CONTACT PERSON",
+                {
+                    "app": "stackiq",
+                    "organizationId": "",
+                    "contactId": "c-14",
+                    "email": "n@x.nl"
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "c-14",
+                    "register": "reg-1",
+                    "schema": "contact-schema",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.info",
+                "✅ CONTACT PERSON OBJECT READY",
+                {
+                    "app": "stackiq",
+                    "organizationId": "",
+                    "contactId": "c-14",
+                    "email": "n@x.nl",
+                    "wasExisting": true
+                }
+            ],
+            [
+                "mapper.findByUuid",
+                ""
+            ],
+            [
+                "handler.isFirst",
+                "c-14",
+                []
+            ],
+            [
+                "log.info",
+                "Creating user account for contact person (org is active)",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-14",
+                    "organizationId": "",
+                    "email": "n@x.nl",
+                    "isFirstContact": false
+                }
+            ],
+            [
+                "handler.createUserAccount",
+                "c-14",
+                false
+            ],
+            [
+                "log.debug",
+                "Saving contact with username via direct mapper update",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-14",
+                    "username": "u-14",
+                    "hasOrganisatie": false
+                }
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "username": "u-14",
+                        "@self": {
+                            "organisation": "org-of-entity"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-14",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "Contact saved with username",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-14",
+                    "username": "u-14"
+                }
+            ],
+            [
+                "handler.addUserToOrganizationEntity",
+                [
+                    "c-14",
+                    "u-14",
+                    ""
+                ]
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Updating contactpersoon object owner",
+                {
+                    "contactId": "c-14",
+                    "userUID": "u-14",
+                    "register": "reg-1",
+                    "schema": "contact-schema",
+                    "organizationUuidOverride": ""
+                }
+            ],
+            [
+                "entity.setObject",
+                "c-14",
+                {
+                    "@self": {
+                        "owner": "u-14"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "c-14",
+                "u-14"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "@self": {
+                            "organisation": "org-of-entity"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-14",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated contactpersoon object owner and organisation",
+                {
+                    "contactId": "c-14",
+                    "userUID": "u-14",
+                    "ownerSet": "u-14",
+                    "organisationSet": "not set"
+                }
+            ],
+            [
+                "log.info",
+                "User account created",
+                {
+                    "app": "stackiq",
+                    "contactId": "c-14",
+                    "username": "u-14"
+                }
+            ]
+        ],
+        "stats": {
+            "contactPersonsProcessed": 1,
+            "usersCreated": 1,
+            "errors": []
+        },
+        "escaped": null
+    },
+    "owner: override set": {
+        "trace": [
+            [
+                "log.info",
+                "OrganizationSyncService: Updating contactpersoon object owner",
+                {
+                    "contactId": "c-owner",
+                    "userUID": "u-1",
+                    "register": "r",
+                    "schema": "s",
+                    "organizationUuidOverride": "org-o"
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Setting @self.organisation metadata",
+                {
+                    "contactId": "c-owner",
+                    "organizationUuid": "org-o",
+                    "source": "override"
+                }
+            ],
+            [
+                "entity.setObject",
+                "c-owner",
+                {
+                    "organization": "org-a",
+                    "@self": {
+                        "owner": "u-1",
+                        "organisation": "org-o"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "c-owner",
+                "u-1"
+            ],
+            [
+                "entity.setOrganisation",
+                "c-owner",
+                "org-o"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "organization": "org-a",
+                        "@self": {
+                            "organisation": "org-o"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-owner",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated contactpersoon object owner and organisation",
+                {
+                    "contactId": "c-owner",
+                    "userUID": "u-1",
+                    "ownerSet": "u-1",
+                    "organisationSet": "org-o"
+                }
+            ]
+        ],
+        "owner": "u-1",
+        "organisation": "org-o",
+        "escaped": null
+    },
+    "owner: organisation from object": {
+        "trace": [
+            [
+                "log.info",
+                "OrganizationSyncService: Updating contactpersoon object owner",
+                {
+                    "contactId": "c-owner",
+                    "userUID": "u-2",
+                    "register": "r",
+                    "schema": "s",
+                    "organizationUuidOverride": null
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Setting @self.organisation metadata",
+                {
+                    "contactId": "c-owner",
+                    "organizationUuid": "org-b",
+                    "source": "object"
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Restored missing organisatie field on contact person",
+                {
+                    "contactId": "c-owner",
+                    "organizationUuid": "org-b"
+                }
+            ],
+            [
+                "entity.setObject",
+                "c-owner",
+                {
+                    "organisation": "org-b",
+                    "organization": "org-b",
+                    "@self": {
+                        "owner": "u-2",
+                        "organisation": "org-b"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "c-owner",
+                "u-2"
+            ],
+            [
+                "entity.setOrganisation",
+                "c-owner",
+                "org-b"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "organisation": "org-b",
+                        "organization": "org-b",
+                        "@self": {
+                            "organisation": "org-b"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-owner",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated contactpersoon object owner and organisation",
+                {
+                    "contactId": "c-owner",
+                    "userUID": "u-2",
+                    "ownerSet": "u-2",
+                    "organisationSet": "org-b"
+                }
+            ]
+        ],
+        "owner": "u-2",
+        "organisation": "org-b",
+        "escaped": null
+    },
+    "owner: organization from object": {
+        "trace": [
+            [
+                "log.info",
+                "OrganizationSyncService: Updating contactpersoon object owner",
+                {
+                    "contactId": "c-owner",
+                    "userUID": "u-3",
+                    "register": "r",
+                    "schema": "s",
+                    "organizationUuidOverride": null
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Setting @self.organisation metadata",
+                {
+                    "contactId": "c-owner",
+                    "organizationUuid": "org-c",
+                    "source": "object"
+                }
+            ],
+            [
+                "entity.setObject",
+                "c-owner",
+                {
+                    "organization": "org-c",
+                    "@self": {
+                        "owner": "u-3",
+                        "organisation": "org-c"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "c-owner",
+                "u-3"
+            ],
+            [
+                "entity.setOrganisation",
+                "c-owner",
+                "org-c"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "organization": "org-c",
+                        "@self": {
+                            "organisation": "org-c"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-owner",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated contactpersoon object owner and organisation",
+                {
+                    "contactId": "c-owner",
+                    "userUID": "u-3",
+                    "ownerSet": "u-3",
+                    "organisationSet": "org-c"
+                }
+            ]
+        ],
+        "owner": "u-3",
+        "organisation": "org-c",
+        "escaped": null
+    },
+    "owner: empty override falls back": {
+        "trace": [
+            [
+                "log.info",
+                "OrganizationSyncService: Updating contactpersoon object owner",
+                {
+                    "contactId": "c-owner",
+                    "userUID": "u-4",
+                    "register": "r",
+                    "schema": "s",
+                    "organizationUuidOverride": ""
+                }
+            ],
+            [
+                "entity.setObject",
+                "c-owner",
+                {
+                    "organization": "org-d",
+                    "@self": {
+                        "owner": "u-4"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "c-owner",
+                "u-4"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "organization": "org-d",
+                        "@self": {
+                            "organisation": "org-of-entity"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-owner",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated contactpersoon object owner and organisation",
+                {
+                    "contactId": "c-owner",
+                    "userUID": "u-4",
+                    "ownerSet": "u-4",
+                    "organisationSet": "not set"
+                }
+            ]
+        ],
+        "owner": "u-4",
+        "organisation": "org-of-entity",
+        "escaped": null
+    },
+    "owner: no organisation anywhere": {
+        "trace": [
+            [
+                "log.info",
+                "OrganizationSyncService: Updating contactpersoon object owner",
+                {
+                    "contactId": "c-owner",
+                    "userUID": "u-5",
+                    "register": "r",
+                    "schema": "s",
+                    "organizationUuidOverride": null
+                }
+            ],
+            [
+                "entity.setObject",
+                "c-owner",
+                {
+                    "@self": {
+                        "owner": "u-5"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "c-owner",
+                "u-5"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "@self": {
+                            "organisation": "org-of-entity"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-owner",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated contactpersoon object owner and organisation",
+                {
+                    "contactId": "c-owner",
+                    "userUID": "u-5",
+                    "ownerSet": "u-5",
+                    "organisationSet": "not set"
+                }
+            ]
+        ],
+        "owner": "u-5",
+        "organisation": "org-of-entity",
+        "escaped": null
+    },
+    "owner: override fills missing org": {
+        "trace": [
+            [
+                "log.info",
+                "OrganizationSyncService: Updating contactpersoon object owner",
+                {
+                    "contactId": "c-owner",
+                    "userUID": "u-6",
+                    "register": "r",
+                    "schema": "s",
+                    "organizationUuidOverride": "org-f"
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Setting @self.organisation metadata",
+                {
+                    "contactId": "c-owner",
+                    "organizationUuid": "org-f",
+                    "source": "override"
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Restored missing organisatie field on contact person",
+                {
+                    "contactId": "c-owner",
+                    "organizationUuid": "org-f"
+                }
+            ],
+            [
+                "entity.setObject",
+                "c-owner",
+                {
+                    "organization": "org-f",
+                    "@self": {
+                        "owner": "u-6",
+                        "organisation": "org-f"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "c-owner",
+                "u-6"
+            ],
+            [
+                "entity.setOrganisation",
+                "c-owner",
+                "org-f"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "organization": "org-f",
+                        "@self": {
+                            "organisation": "org-f"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-owner",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Successfully updated contactpersoon object owner and organisation",
+                {
+                    "contactId": "c-owner",
+                    "userUID": "u-6",
+                    "ownerSet": "u-6",
+                    "organisationSet": "org-f"
+                }
+            ]
+        ],
+        "owner": "u-6",
+        "organisation": "org-f",
+        "escaped": null
+    },
+    "owner: save fails": {
+        "trace": [
+            [
+                "log.info",
+                "OrganizationSyncService: Updating contactpersoon object owner",
+                {
+                    "contactId": "c-owner",
+                    "userUID": "u-7",
+                    "register": "r",
+                    "schema": "s",
+                    "organizationUuidOverride": null
+                }
+            ],
+            [
+                "log.info",
+                "OrganizationSyncService: Setting @self.organisation metadata",
+                {
+                    "contactId": "c-owner",
+                    "organizationUuid": "org-g",
+                    "source": "object"
+                }
+            ],
+            [
+                "entity.setObject",
+                "c-owner",
+                {
+                    "organization": "org-g",
+                    "@self": {
+                        "owner": "u-7",
+                        "organisation": "org-g"
+                    }
+                }
+            ],
+            [
+                "entity.setOwner",
+                "c-owner",
+                "u-7"
+            ],
+            [
+                "entity.setOrganisation",
+                "c-owner",
+                "org-g"
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "organization": "org-g",
+                        "@self": {
+                            "organisation": "org-g"
+                        }
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-owner",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.error",
+                "OrganizationSyncService: Failed to update contactpersoon object owner",
+                {
+                    "contactId": "c-owner",
+                    "userUID": "u-7",
+                    "exception": "nope",
+                    "file": "(file)",
+                    "line": "(line)"
+                }
+            ]
+        ],
+        "owner": "u-7",
+        "organisation": "org-g",
+        "escaped": null
+    }
+}

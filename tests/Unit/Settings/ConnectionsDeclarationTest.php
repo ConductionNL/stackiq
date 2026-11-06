@@ -343,7 +343,7 @@ class ConnectionsDeclarationTest extends TestCase {
 
 		$service = (string) file_get_contents($this->root() . '/lib/Service/ItsmExchangeService.php');
 		$this->assertStringContainsString(needle: "ENABLED_KEY = 'itsm_exchange_enabled'", haystack: $service);
-		$this->assertStringContainsString(needle: 'setValueBool(Application::APP_ID, self::ENABLED_KEY, true)', haystack: $service);
+		$this->assertStringContainsString(needle: 'setValueBool(AppIdentity::APP_ID, self::ENABLED_KEY, true)', haystack: $service);
 		$this->assertStringContainsString(needle: 'connectionReports?->itsmSetUp(', haystack: $service);
 
 		$section = (string) file_get_contents($this->root() . '/src/views/settings/sections/ItsmExchange.vue');
@@ -371,7 +371,7 @@ class ConnectionsDeclarationTest extends TestCase {
 		}
 
 		$federation = (string) file_get_contents($this->root() . '/lib/Service/Federation/FederationConfig.php');
-		$this->assertStringContainsString(needle: "getValueBool(Application::APP_ID, 'federation_enabled', false)", haystack: $federation);
+		$this->assertStringContainsString(needle: "getValueBool(AppIdentity::APP_ID, 'federation_enabled', false)", haystack: $federation);
 
 		$settings = (string) file_get_contents($this->root() . '/lib/Service/SettingsService.php');
 		$this->assertStringContainsString(needle: "EOL_SYNC_CONFIG_KEY = 'eol_sync_config'", haystack: $settings);

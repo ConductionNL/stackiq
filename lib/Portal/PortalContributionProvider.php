@@ -44,6 +44,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Portal;
 
+use OCA\Stackiq\Service\PublicCatalogueRecords;
+
 /**
  * Declares what an external portal subject may see in Stackiq.
  *
@@ -78,6 +80,55 @@ class PortalContributionProvider {
 	 * @var string
 	 */
 	private const ORG_CLAIM = 'organisationId';
+
+	/**
+	 * Constructor.
+	 *
+	 * @param PublicCatalogueRecords|null $catalogue The published applications; null leaves the public list empty.
+	 */
+	public function __construct(
+		private readonly ?PublicCatalogueRecords $catalogue = null,
+	) {
+	}//end __construct()
+
+	/**
+	 * The record lists a visitor reads without signing in (portaliq's public
+	 * records block). What they return is stackiq's publication rule, never the
+	 * caller's rights.
+	 *
+	 * @return list<array<string, string>> The declared lists.
+	 *
+	 * @spec openspec/changes/portal-public-software-catalogue/specs/portal-contribution/spec.md#requirement-req-port-005-stackiq-offers-the-published-applications-as-a-public-record-list
+	 */
+	private function publicRecords(): array {
+		return [
+			['id' => 'softwareCatalogue', 'label' => 'Software catalogue', 'listProvider' => 'publicCatalogue', 'recordProvider' => 'publicCatalogueEntry'],
+		];
+	}//end publicRecords()
+
+	/**
+	 * The published applications (softwareCatalogue list).
+	 *
+	 * @return list<array<string, string>> `{id, title, subtitle}` per application.
+	 *
+	 * @spec openspec/changes/portal-public-software-catalogue/specs/portal-contribution/spec.md#requirement-req-port-005-stackiq-offers-the-published-applications-as-a-public-record-list
+	 */
+	public function publicCatalogue(): array {
+		return ($this->catalogue?->entries() ?? []);
+	}//end publicCatalogue()
+
+	/**
+	 * One published application.
+	 *
+	 * @param string $id The application id.
+	 *
+	 * @return array<string, mixed>|null The record, null when it is not published.
+	 *
+	 * @spec openspec/changes/portal-public-software-catalogue/specs/portal-contribution/spec.md#requirement-req-port-005-stackiq-offers-the-published-applications-as-a-public-record-list
+	 */
+	public function publicCatalogueEntry(string $id): ?array {
+		return $this->catalogue?->record(id: $id);
+	}//end publicCatalogueEntry()
 
 	/**
 	 * The audiences this provider contributes to (contract v2, preferred).
@@ -241,6 +292,7 @@ class PortalContributionProvider {
 			],
 			'actions' => [],
 			'notifications' => [],
+			'publicRecords' => $this->publicRecords(),
 		];
 
 	}//end vendorContribution()
@@ -312,6 +364,7 @@ class PortalContributionProvider {
 			],
 			'actions' => [],
 			'notifications' => [],
+			'publicRecords' => $this->publicRecords(),
 		];
 
 	}//end participantContribution()

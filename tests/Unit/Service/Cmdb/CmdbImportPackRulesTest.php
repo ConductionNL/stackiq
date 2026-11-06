@@ -140,7 +140,7 @@ class CmdbImportPackRulesTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-1
 	 */
 	public function testTheOwnerPackMayMapAnEmailAddressAndAnEmployeeNumber(): void {
 		$profile = $this->shipped(file: 'topdesk-profile.json');
@@ -205,11 +205,6 @@ class CmdbImportPackRulesTest extends TestCase {
 				$pack = $this->shipped(file: $profile['packs'][$target]);
 				$pack['fieldMappings'][] = ['source' => 'Opmerking', 'target' => $field];
 				$violations = $rules->violations(target: $target, pack: $pack, profile: $profile);
-				if ($target === 'manufacturer' && $field === 'website') {
-					$this->assertSame(['"website" is not a field the manufacturer pack may map'], $violations, 'organization has no website');
-					continue;
-				}
-
 				$this->assertSame([], $violations, $target . '.' . $field);
 			}
 		}

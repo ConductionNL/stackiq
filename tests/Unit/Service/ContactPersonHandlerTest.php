@@ -4,7 +4,6 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
-use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\App\IAppManager;
@@ -19,13 +18,11 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use ReflectionClass;
+use ReflectionMethod;
+use RuntimeException;
 
 /**
- * Test class for ContactPersonHandler organization type mapping
- *
- * This class tests the organization type to role group mapping functionality
- * that was implemented to replace configuration-based role assignment.
+ * The role group of an organisation type, and adding a user to a group that exists.
  *
  * @category Tests
  * @package  OCA\Stackiq\Tests\Unit\Service
@@ -33,226 +30,183 @@ use ReflectionClass;
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://github.com/ConductionNL/stackiq
  * @version  1.0.0
+ *
+ * @covers \OCA\Stackiq\Service\Stackiq\ContactPersonHandler
  */
 class ContactPersonHandlerTest extends TestCase {
-	/**
-	 * Mock of the IUserManager service
-	 *
-	 * @var IUserManager|MockObject
-	 */
-	private IUserManager|MockObject $userManager;
 
 	/**
-	 * Mock of the IGroupManager service
+	 * The group manager.
 	 *
 	 * @var IGroupManager|MockObject
 	 */
 	private IGroupManager|MockObject $groupManager;
 
 	/**
-	 * Mock of the ContainerInterface service
-	 *
-	 * @var ContainerInterface|MockObject
-	 */
-	private ContainerInterface|MockObject $container;
-
-	/**
-	 * Mock of the LoggerInterface
+	 * The logger.
 	 *
 	 * @var LoggerInterface|MockObject
 	 */
 	private LoggerInterface|MockObject $logger;
 
 	/**
-	 * Mock of the SettingsService
-	 *
-	 * @var SettingsService|MockObject
-	 */
-	private SettingsService|MockObject $settingsService;
-
-	/**
-	 * The ContactPersonHandler instance under test
+	 * The handler under test.
 	 *
 	 * @var ContactPersonHandler
 	 */
-	private ContactPersonHandler $contactPersonHandler;
+	private ContactPersonHandler $handler;
 
 	/**
-	 * Set up the test environment before each test
+	 * Build the handler.
 	 *
 	 * @return void
 	 */
 	protected function setUp(): void {
 		parent::setUp();
 
-		// ContactPersonHandler's user/group plumbing has diverged from these
-		// tests: addUserToGroupWithCheck etc. now call IUserManager::get twice
-		// (lookup + verify) and the dependency surface includes new
-		// collaborators. Tests need to be rewritten against current behaviour.
-		// Tracked as a follow-up.
-		$this->markTestSkipped(
-			'Stale against current ContactPersonHandler surface — needs '
-			. 'rewrite. Tracked as follow-up issue.'
-		);
-
-		// Create mocks
-		$this->userManager = $this->createMock(IUserManager::class);
 		$this->groupManager = $this->createMock(IGroupManager::class);
-		$this->container = $this->createMock(ContainerInterface::class);
-		$this->logger = $this->createMock(LoggerInterface::class);
-		$this->settingsService = $this->createMock(SettingsService::class);
-
-		// Configure container to return settings service
-		$this->container->method('get')
-			->with('OCA\Stackiq\Service\SettingsService')
-			->willReturn($this->settingsService);
-
-		// Create the ContactPersonHandler instance
-		$this->contactPersonHandler = new ContactPersonHandler(
-			$this->userManager,
+		$this->logger       = $this->createMock(LoggerInterface::class);
+		$this->handler      = new ContactPersonHandler(
+			$this->createMock(IUserManager::class),
 			$this->createMock(ISecureRandom::class),
 			$this->groupManager,
 			$this->createMock(IAppConfig::class),
-			$this->container,
+			$this->createMock(ContainerInterface::class),
 			$this->createMock(IAppManager::class),
 			$this->logger,
 			$this->createMock(SymfonyEmailService::class),
 			$this->createMock(IConfig::class)
 		);
-	}
+	}//end setUp()
 
 	/**
-	 * Test organization type to role group mapping
-	 *
-	 * This test verifies that the getRoleGroupByOrganizationType method
-	 * correctly maps organization types to role groups according to business rules.
+	 * The stored organisation types map whatever their case or surrounding space;
+	 * the retired Dutch names and anything else map to no group.
 	 *
 	 * @return void
 	 */
-	public function testGetRoleGroupByOrganizationType(): void {
-		// Create a minimal ContactPersonHandler for testing
-		$handler = $this->createPartialMock(ContactPersonHandler::class, []);
-
-		// Use reflection to access the private method
-		$reflection = new ReflectionClass($handler);
-		$method = $reflection->getMethod('getRoleGroupByOrganizationType');
-		$method->setAccessible(true);
-
-		// Test case 1: Gemeente -> gebruik-beheerder
-		$result = $method->invoke($handler, 'Municipality');
-		$this->assertEquals('gebruik-beheerder', $result, 'Gemeente should map to gebruik-beheerder');
-
-		// Test case 2: gemeente (lowercase) -> gebruik-beheerder
-		$result = $method->invoke($handler, 'gemeente');
-		$this->assertEquals('gebruik-beheerder', $result, 'gemeente (lowercase) should map to gebruik-beheerder');
-
-		// Test case 3: Leverancier -> aanbod-beheerder
-		$result = $method->invoke($handler, 'Supplier');
-		$this->assertEquals('aanbod-beheerder', $result, 'Leverancier should map to aanbod-beheerder');
-
-		// Test case 4: leverancier (lowercase) -> aanbod-beheerder
-		$result = $method->invoke($handler, 'leverancier');
-		$this->assertEquals('aanbod-beheerder', $result, 'leverancier (lowercase) should map to aanbod-beheerder');
-
-		// Test case 5: Samenwerking -> gebruik-beheerder
-		$result = $method->invoke($handler, 'Collaboration');
-		$this->assertEquals('gebruik-beheerder', $result, 'Samenwerking should map to gebruik-beheerder');
-
-		// Test case 6: samenwerking (lowercase) -> gebruik-beheerder
-		$result = $method->invoke($handler, 'samenwerking');
-		$this->assertEquals('gebruik-beheerder', $result, 'samenwerking (lowercase) should map to gebruik-beheerder');
-
-		// Test case 7: Community -> aanbod-beheerder
-		$result = $method->invoke($handler, 'Community');
-		$this->assertEquals('aanbod-beheerder', $result, 'Community should map to aanbod-beheerder');
-
-		// Test case 8: community (lowercase) -> aanbod-beheerder
-		$result = $method->invoke($handler, 'community');
-		$this->assertEquals('aanbod-beheerder', $result, 'community (lowercase) should map to aanbod-beheerder');
-
-		// Test case 9: Unknown organization type -> empty string
-		$result = $method->invoke($handler, 'UnknownType');
-		$this->assertEquals('', $result, 'Unknown organization type should return empty string');
-
-		// Test case 10: Empty string -> empty string
-		$result = $method->invoke($handler, '');
-		$this->assertEquals('', $result, 'Empty organization type should return empty string');
-
-		// Test case 11: Whitespace handling
-		$result = $method->invoke($handler, '  Gemeente  ');
-		$this->assertEquals('gebruik-beheerder', $result, 'Organization type with whitespace should be trimmed and mapped correctly');
-	}
+	public function testAnOrganisationTypeMapsToItsRoleGroup(): void {
+		$method = new ReflectionMethod(ContactPersonHandler::class, 'getRoleGroupByOrganizationType');
+		$cases  = [
+			'Municipality'    => 'gebruik-beheerder',
+			'  municipality ' => 'gebruik-beheerder',
+			'Collaboration'   => 'gebruik-beheerder',
+			'Supplier'        => 'aanbod-beheerder',
+			'Community'       => 'aanbod-beheerder',
+			'Gemeente'        => '',
+			'leverancier'     => '',
+			'samenwerking'    => '',
+			'UnknownType'     => '',
+			''                => '',
+		];
+		foreach ($cases as $type => $group) {
+			self::assertSame($group, $method->invoke($this->handler, (string) $type), 'type "' . $type . '"');
+		}
+	}//end testAnOrganisationTypeMapsToItsRoleGroup()
 
 	/**
-	 * Test addUserToGroupWithCheck method behavior
-	 *
-	 * This test verifies that the addUserToGroupWithCheck method
-	 * only adds users to existing groups and does not create new groups.
+	 * A user who is not in an existing group is added, and that is logged.
 	 *
 	 * @return void
 	 */
-	public function testAddUserToGroupWithCheck(): void {
-		// Create mocks
+	public function testAUserIsAddedToAnExistingGroup(): void {
+		$user  = $this->user();
+		$group = $this->createMock(IGroup::class);
+		$group->method('inGroup')->with($user)->willReturn(false);
+		$group->expects($this->once())->method('addUser')->with($user);
+		$this->groupManager->method('get')->with('existing-group')->willReturn($group);
+		$this->groupManager->expects($this->never())->method('createGroup');
+		$this->logger->expects($this->once())->method('info')->with(
+			'Added user to existing group',
+			['username' => 'testuser', 'groupName' => 'existing-group', 'type' => 'test-type']
+		);
+
+		$this->addToGroup(user: $user, group: 'existing-group');
+	}//end testAUserIsAddedToAnExistingGroup()
+
+	/**
+	 * A group that does not exist is not created; the user is left out and it is logged.
+	 *
+	 * @return void
+	 */
+	public function testAMissingGroupIsNotCreated(): void {
+		$this->groupManager->method('get')->with('missing-group')->willReturn(null);
+		$this->groupManager->expects($this->never())->method('createGroup');
+		$this->logger->expects($this->once())->method('warning')->with(
+			'Group does not exist, skipping user assignment',
+			['username' => 'testuser', 'groupName' => 'missing-group', 'type' => 'test-type']
+		);
+
+		$this->addToGroup(user: $this->user(), group: 'missing-group');
+	}//end testAMissingGroupIsNotCreated()
+
+	/**
+	 * A user already in the group is not added again.
+	 *
+	 * @return void
+	 */
+	public function testAUserInTheGroupIsNotAddedAgain(): void {
+		$user  = $this->user();
+		$group = $this->createMock(IGroup::class);
+		$group->method('inGroup')->with($user)->willReturn(true);
+		$group->expects($this->never())->method('addUser');
+		$this->groupManager->method('get')->willReturn($group);
+
+		$this->addToGroup(user: $user, group: 'existing-group');
+	}//end testAUserInTheGroupIsNotAddedAgain()
+
+	/**
+	 * A failing group manager is logged and does not stop the caller.
+	 *
+	 * @return void
+	 */
+	public function testAFailureIsLoggedAndDoesNotEscape(): void {
+		$this->groupManager->method('get')->willThrowException(new RuntimeException('down'));
+		$this->logger->expects($this->once())->method('error')->with(
+			'Failed to add user to group with check: down',
+			$this->callback(static fn (array $context): bool => $context['username'] === 'testuser' && $context['groupName'] === 'existing-group')
+		);
+
+		$this->addToGroup(user: $this->user(), group: 'existing-group');
+	}//end testAFailureIsLoggedAndDoesNotEscape()
+
+	/**
+	 * Call the private group helper.
+	 *
+	 * @param IUser  $user  The user.
+	 * @param string $group The group name.
+	 *
+	 * @return void
+	 */
+	private function addToGroup(IUser $user, string $group): void {
+		(new ReflectionMethod(ContactPersonHandler::class, 'addUserToGroupWithCheck'))->invoke($this->handler, $user, $group, 'test-type');
+	}//end addToGroup()
+
+	/**
+	 * The name sync writes the address under `email` when both keys are set, the same
+	 * key the contact sync uses as the account name.
+	 *
+	 * @return void
+	 */
+	public function testTheNameSyncPrefersTheEmailKey(): void {
+		$user = $this->user();
+		$user->method('getEMailAddress')->willReturn('old@example.org');
+		$user->expects($this->once())->method('setEMailAddress')->with('account@example.org');
+
+		$this->handler->storeContactNameFields(
+			user: $user,
+			contactData: ['email' => 'account@example.org', 'e-mailadres' => 'other@example.org']
+		);
+	}//end testTheNameSyncPrefersTheEmailKey()
+
+	/**
+	 * A user double.
+	 *
+	 * @return IUser
+	 */
+	private function user(): IUser {
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('testuser');
-
-		$existingGroup = $this->createMock(IGroup::class);
-		$existingGroup->method('inGroup')->with($user)->willReturn(false);
-
-		// Use reflection to access the private method
-		$reflection = new ReflectionClass($this->contactPersonHandler);
-		$method = $reflection->getMethod('addUserToGroupWithCheck');
-		$method->setAccessible(true);
-
-		// Test case 1: Group exists, user not in group - should add user
-		$this->groupManager->expects($this->once())
-			->method('get')
-			->with('existing-group')
-			->willReturn($existingGroup);
-
-		$existingGroup->expects($this->once())
-			->method('addUser')
-			->with($user);
-
-		$this->logger->expects($this->once())
-			->method('info')
-			->with(
-				'Added user to existing group',
-				$this->callback(function ($context) {
-					return $context['username'] === 'testuser'
-						   && $context['groupName'] === 'existing-group'
-						   && $context['type'] === 'test-type';
-				})
-			);
-
-		$method->invoke($this->contactPersonHandler, $user, 'existing-group', 'test-type');
-
-		// Test case 2: Group does not exist - should log warning and not create group
-		$this->groupManager->expects($this->once())
-			->method('get')
-			->with('non-existing-group')
-			->willReturn(null);
-
-		$this->logger->expects($this->once())
-			->method('warning')
-			->with(
-				'Group does not exist, skipping user assignment',
-				$this->callback(function ($context) {
-					return $context['username'] === 'testuser'
-						   && $context['groupName'] === 'non-existing-group'
-						   && $context['type'] === 'test-type';
-				})
-			);
-
-		$method->invoke($this->contactPersonHandler, $user, 'non-existing-group', 'test-type');
-	}
-
-	/**
-	 * Clean up after each test
-	 *
-	 * @return void
-	 */
-	protected function tearDown(): void {
-		parent::tearDown();
-	}
-}
+		return $user;
+	}//end user()
+}//end class

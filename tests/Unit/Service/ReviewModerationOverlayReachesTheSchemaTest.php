@@ -140,8 +140,13 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 			$read,
 			'a bare public read makes every pending and rejected review world-readable'
 		);
+		$this->assertNotContains(
+			['group' => 'public', 'crossOrganisation' => true],
+			$read,
+			'an unconditional public read makes every pending and rejected review world-readable'
+		);
 		$this->assertContains(
-			['group' => 'public', 'match' => ['status' => 'approved']],
+			['group' => 'public', 'match' => ['status' => 'approved'], 'crossOrganisation' => true],
 			$read,
 			'anonymous readers must see approved reviews and only those'
 		);
@@ -165,9 +170,9 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 		$read = $base['components']['schemas'][ReviewService::REVIEW_TYPE]['authorization']['read'];
 
 		$this->assertContains(
-			'public',
+			['group' => 'public', 'crossOrganisation' => true],
 			$read,
-			'the base is expected to carry the bare public read that the fragment removes; '
+			'the base is expected to carry the unconditional public read that the fragment removes; '
 			.'if the base has been gated directly, this test and the fragment are now redundant'
 		);
 

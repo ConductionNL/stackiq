@@ -39,7 +39,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Repair;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\AppInfo\AppIdentity;
 use OCP\BackgroundJob\IJobList;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -135,7 +135,7 @@ class MigrateBackgroundJobClasses implements IRepairStep {
 			$this->logger->error(
 				'Stackiq: failed to deregister legacy background jobs: ' . $e->getMessage(),
 				[
-					'app' => Application::APP_ID,
+					'app' => AppIdentity::APP_ID,
 					'exception' => $e,
 				]
 			);
