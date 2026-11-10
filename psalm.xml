@@ -49,6 +49,11 @@
              stub already existed for PHPUnit mock generation and mirrors the real
              signature in openregister/lib/Service/RegisterResolverService.php. -->
         <file name="tests/Stubs/Service/RegisterResolverService.php" preloadClasses="true" />
+        <!-- Its lookup value object, and the list query OrganisationMapper::findList()
+             takes. Copies of openregister/lib/Service/ConfigLookup.php and
+             openregister/lib/Db/ListQuery.php, shared with the PHPUnit stubs. -->
+        <file name="tests/Stubs/Service/ConfigLookup.php" preloadClasses="true" />
+        <file name="tests/Stubs/Db/ListQuery.php" preloadClasses="true" />
         <!-- ObjectSaveOptions with its ObjectFindTarget, SavePolicy and SaveActor, which
              ObjectService::saveObject() takes since openregister #9123. Copies of
              openregister/lib/Service/Object/, shared with the PHPUnit stubs. -->

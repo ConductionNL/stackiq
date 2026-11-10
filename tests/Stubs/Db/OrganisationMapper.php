@@ -4,7 +4,7 @@
  * Test stub for OCA\OpenRegister\Db\OrganisationMapper.
  *
  * Declares the narrow surface Stackiq unit tests mock
- * (findByUuid + save), so PHPUnit can create mocks without the real
+ * (findByUuid, findBySlug, findList, save, update), so PHPUnit can create mocks without the real
  * OpenRegister mapper being autoloadable.
  *
  * SPDX-License-Identifier: EUPL-1.2
@@ -41,13 +41,22 @@ abstract class OrganisationMapper {
 	abstract public function findBySlug(string $slug): Organisation;
 
 	/**
+	 * Find the organisations one list query asks for, ordered by name.
+	 *
+	 * @param ListQuery $query The limit, offset and column filters.
+	 *
+	 * @return Organisation[]
+	 */
+	abstract public function findList(ListQuery $query): array;
+
+	/**
 	 * Persist an organisation entity.
 	 *
-	 * @param Organisation $entity The entity to save.
+	 * @param Organisation $organisation The entity to save.
 	 *
 	 * @return Organisation
 	 */
-	abstract public function save(Organisation $entity): Organisation;
+	abstract public function save(Organisation $organisation): Organisation;
 
 	/**
 	 * Update an organisation entity.
