@@ -551,10 +551,7 @@ class FederationService {
 			try {
 				$objectService->saveObject(
 					object: $mirror,
-					options: new ObjectSaveOptions(
-						target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']),
-						uuid: $uuid
-					)
+					options: new ObjectSaveOptions(new ObjectFindTarget($target['register'], $target['schema']), $uuid)
 				);
 				$count++;
 			} catch (\Throwable $e) {

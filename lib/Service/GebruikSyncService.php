@@ -520,10 +520,7 @@ class GebruikSyncService {
 			// Update the object.
 			$this->objectService->saveObject(
 				object: $updatedData,
-				options: new ObjectSaveOptions(
-					target: new ObjectFindTarget(register: (int)$register, schema: (int)$gebruikSchema),
-					uuid: $gebruikObject->getUuid()
-				)
+				options: new ObjectSaveOptions(new ObjectFindTarget((int)$register, (int)$gebruikSchema), $gebruikObject->getUuid())
 			);
 
 			$this->logger->info(

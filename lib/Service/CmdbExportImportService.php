@@ -1956,10 +1956,7 @@ class CmdbExportImportService {
 		$coordinates = $this->coordinates();
 		$entity = $coordinates['objectService']->saveObject(
 			object: $data,
-			options: new ObjectSaveOptions(
-				target: new ObjectFindTarget(register: $coordinates['register'], schema: $coordinates[$schemaKey]),
-				uuid: $uuid
-			),
+			options: new ObjectSaveOptions(new ObjectFindTarget($coordinates['register'], $coordinates[$schemaKey]), $uuid),
 			_rbac: false,
 			_multitenancy: false
 		);

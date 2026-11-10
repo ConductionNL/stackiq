@@ -2216,10 +2216,7 @@ class ContactPersonHandler {
 					// Update the organization object.
 					$updatedOrganization = $objectService->saveObject(
 						object: $organizationData,
-						options: new ObjectSaveOptions(
-							target: new ObjectFindTarget(register: $registerId, schema: $organisationSchemaId),
-							uuid: $organizationUuid
-						)
+						options: new ObjectSaveOptions(new ObjectFindTarget($registerId, $organisationSchemaId), $organizationUuid)
 					);
 
 					$this->_logger->info(

@@ -488,10 +488,7 @@ class ModuleComplianceService {
 			// Save the updated module.
 			$savedObject = $objectService->saveObject(
 				object: $moduleData,
-				options: new ObjectSaveOptions(
-					target: new ObjectFindTarget(register: $registerId, schema: $moduleObject->getSchema()),
-					uuid: $moduleObject->getUuid()
-				)
+				options: new ObjectSaveOptions(new ObjectFindTarget($registerId, $moduleObject->getSchema()), $moduleObject->getUuid())
 			);
 
 			$this->logger->info(

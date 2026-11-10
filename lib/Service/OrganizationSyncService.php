@@ -571,10 +571,7 @@ class OrganizationSyncService {
 				// $contactEntityObject already carries every unchanged field.
 				$this->objectService->saveObject(
 					object: $contactEntityObject,
-					options: new ObjectSaveOptions(
-						target: new ObjectFindTarget(register: $register, schema: $contactSchema),
-						uuid: $contactEntity->getUuid()
-					),
+					options: new ObjectSaveOptions(new ObjectFindTarget($register, $contactSchema), $contactEntity->getUuid()),
 					_rbac: false,
 					_multitenancy: false
 				);
@@ -3268,10 +3265,7 @@ class OrganizationSyncService {
 								// carries every unchanged field.
 								$this->objectService->saveObject(
 									object: $contactEntityObject,
-									options: new ObjectSaveOptions(
-										target: new ObjectFindTarget(register: $register, schema: $contactSchema),
-										uuid: $contactObject->getUuid()
-									),
+									options: new ObjectSaveOptions(new ObjectFindTarget($register, $contactSchema), $contactObject->getUuid()),
 									_rbac: false,
 									_multitenancy: false
 								);

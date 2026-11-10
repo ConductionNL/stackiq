@@ -255,10 +255,7 @@ class ModuleRegistrationService {
 
 		$objectService->saveObject(
 			object: $moduleData,
-			options: new ObjectSaveOptions(
-				target: new ObjectFindTarget(register: $moduleObject->getRegister(), schema: $moduleObject->getSchema()),
-				uuid: $moduleObject->getUuid()
-			),
+			options: new ObjectSaveOptions(new ObjectFindTarget($moduleObject->getRegister(), $moduleObject->getSchema()), $moduleObject->getUuid()),
 			_rbac: false,
 			_multitenancy: false
 		);

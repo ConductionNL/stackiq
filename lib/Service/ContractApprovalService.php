@@ -637,10 +637,7 @@ class ContractApprovalService {
 
 		$objectService->saveObject(
 			object: $data,
-			options: new ObjectSaveOptions(
-				target: new ObjectFindTarget(register: $contract->getRegister(), schema: $contract->getSchema()),
-				uuid: $contract->getUuid()
-			)
+			options: new ObjectSaveOptions(new ObjectFindTarget($contract->getRegister(), $contract->getSchema()), $contract->getUuid())
 		);
 
 	}//end persistContract()

@@ -464,10 +464,7 @@ class SbomImportService {
 
 		$objectService->saveObject(
 			object: $data,
-			options: new ObjectSaveOptions(
-				target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']),
-				uuid: $moduleVersion->getUuid()
-			),
+			options: new ObjectSaveOptions(new ObjectFindTarget($target['register'], $target['schema']), $moduleVersion->getUuid()),
 			_rbac: false,
 			_multitenancy: false
 		);

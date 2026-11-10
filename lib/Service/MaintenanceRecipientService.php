@@ -189,10 +189,7 @@ class MaintenanceRecipientService {
 	private function saveWindow(ObjectServiceInterface $objectService, ObjectEntityInterface $window, array $data): void {
 		$objectService->saveObject(
 			object: $data,
-			options: new ObjectSaveOptions(
-				target: new ObjectFindTarget(register: $window->getRegister(), schema: $window->getSchema()),
-				uuid: $window->getUuid()
-			),
+			options: new ObjectSaveOptions(new ObjectFindTarget($window->getRegister(), $window->getSchema()), $window->getUuid()),
 			_rbac: false,
 			_multitenancy: false
 		);
