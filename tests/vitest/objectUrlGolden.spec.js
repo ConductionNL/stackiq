@@ -34,8 +34,16 @@ const GOLDEN = path.resolve(import.meta.dirname, 'golden/objectUrl.json')
 const OBJECTS = {
 	'top-level ids': { id: 'o1', register: 3, schema: 7 },
 	'@self ids': { '@self': { id: 'o2', register: 4, schema: 8 } },
-	'ids as objects': { id: 'o3', '@self': { register: { id: 5 }, schema: { uuid: 's-uuid' } } },
-	'@self wins over top level': { id: 'o4', register: 1, schema: 2, '@self': { id: 'x', register: 9, schema: 10 } },
+	'ids as objects': {
+		id: 'o3',
+		'@self': { register: { id: 5 }, schema: { uuid: 's-uuid' } },
+	},
+	'@self wins over top level': {
+		id: 'o4',
+		register: 1,
+		schema: 2,
+		'@self': { id: 'x', register: 9, schema: 10 },
+	},
 	'_id reference': { id: 'o5', register: { _id: 'r_' }, schema: 6 },
 	'missing schema': { id: 'o6', register: 3 },
 	'missing id': { register: 3, schema: 7 },
@@ -57,14 +65,24 @@ const ACTIONS = {
  */
 function clientUrls() {
 	const out = {}
-	const ids = { 'numbers': { register: 7, schema: 21 }, 'zero ids': { register: 0, schema: 0 }, 'no register': { schema: 21 }, 'null schema': { register: 7, schema: null } }
+	const ids = {
+		numbers: { register: 7, schema: 21 },
+		'zero ids': { register: 0, schema: 0 },
+		'no register': { schema: 21 },
+		'null schema': { register: 7, schema: null },
+	}
 	for (const [idName, idValues] of Object.entries(ids)) {
 		for (const uuid of [undefined, '', 'abc']) {
 			for (const action of [undefined, '', 'logs', 'lock']) {
 				for (const withLang of [undefined, true, false]) {
 					const key = `${idName} | uuid ${uuid} | action ${action} | lang ${withLang}`
 					try {
-						out[key] = buildObjectUrl({ ...idValues, uuid, action, withLang })
+						out[key] = buildObjectUrl({
+							...idValues,
+							uuid,
+							action,
+							withLang,
+						})
 					} catch (error) {
 						out[key] = `error: ${error.message}`
 					}
@@ -86,7 +104,13 @@ async function pluginRequests(run, item) {
 	const calls = []
 	vi.stubGlobal('fetch', async (url, init) => {
 		calls.push([url, init?.method ?? 'GET'])
-		return { ok: true, status: 200, statusText: 'OK', json: async () => ({}), blob: async () => 'blob' }
+		return {
+			ok: true,
+			status: 200,
+			statusText: 'OK',
+			json: async () => ({}),
+			blob: async () => 'blob',
+		}
 	})
 	const store = { loading: {}, ...stackiqPlugin().actions }
 	for (const [name, fn] of Object.entries(stackiqPlugin().actions)) {
@@ -110,7 +134,10 @@ describe('object URLs golden', () => {
 		const out = { client: clientUrls(), plugin: {} }
 		for (const [actionName, run] of Object.entries(ACTIONS)) {
 			for (const [objectName, item] of Object.entries(OBJECTS)) {
-				out.plugin[`${actionName} | ${objectName}`] = await pluginRequests(run, item)
+				out.plugin[`${actionName} | ${objectName}`] = await pluginRequests(
+					run,
+					item,
+				)
 			}
 		}
 		if (process.env.RECORD_GOLDEN === '1') {
