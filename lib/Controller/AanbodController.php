@@ -304,27 +304,9 @@ class AanbodController extends Controller {
 	 * @spec openspec/specs/aanbod-listings/spec.md
 	 */
 	private function parseQueryOptions(): array {
-		$options = [];
-
-		// Parse pagination parameters.
-		$limit = $this->request->getParam('_limit') ?? $this->request->getParam('limit');
-		if ($limit !== null && is_numeric($limit) === true) {
-			$options['_limit'] = (int)$limit;
-			// Keep both for compatibility.
-			$options['limit'] = (int)$limit;
-		}
-
-		$offset = $this->request->getParam('_offset') ?? $this->request->getParam('offset');
-		if ($offset !== null && is_numeric($offset) === true) {
-			$options['_offset'] = (int)$offset;
-			// Keep both for compatibility.
-			$options['offset'] = (int)$offset;
-		}
-
-		$page = $this->request->getParam('_page') ?? $this->request->getParam('page');
-		if ($page !== null && is_numeric($page) === true) {
-			$options['_page'] = (int)$page;
-		}
+		$pagination = new ListingPagination(request: $this->request);
+		$raw        = $pagination->rawParams();
+		$options    = $pagination->options(raw: $raw);
 
 		// Force database source for real-time data.
 		$options['_source'] = 'database';
@@ -332,11 +314,7 @@ class AanbodController extends Controller {
 		$this->logger->debug(
 			'Parsed query options for Aanbod',
 			[
-				'raw_params' => [
-					'limit' => $limit,
-					'offset' => $offset,
-					'page' => $page,
-				],
+				'raw_params' => $raw,
 				'parsed_options' => $options,
 			]
 		);

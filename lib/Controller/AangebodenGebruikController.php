@@ -928,48 +928,12 @@ class AangebodenGebruikController extends Controller {
 	 * pagination, and other options. Always forces database source for real-time data.
 	 *
 	 * @return array Parsed options array with database source
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 * @SuppressWarnings(PHPMD.NPathComplexity)
 	 */
 	private function parseQueryOptions(): array {
-		$options = [];
-
-		// Parse pagination parameters (with and without underscore for compatibility).
-		$limit = $this->request->getParam('_limit') ?? $this->request->getParam('limit');
-		if ($limit !== null && is_numeric($limit) === true) {
-			$options['_limit'] = (int)$limit;
-			// Keep both for compatibility.
-			$options['limit'] = (int)$limit;
-		}
-
-		$offset = $this->request->getParam('_offset') ?? $this->request->getParam('offset');
-		if ($offset !== null && is_numeric($offset) === true) {
-			$options['_offset'] = (int)$offset;
-			// Keep both for compatibility.
-			$options['offset'] = (int)$offset;
-		}
-
-		$page = $this->request->getParam('_page') ?? $this->request->getParam('page');
-		if ($page !== null && is_numeric($page) === true) {
-			$options['_page'] = (int)$page;
-		}
-
-		// Parse filter parameters.
-		$status = $this->request->getParam('status');
-		if ($status !== null && empty(trim($status) === true) === false) {
-			$options['status'] = trim($status);
-		}
-
-		$startDate = $this->request->getParam('startDate');
-		if ($startDate !== null && empty(trim($startDate) === true) === false) {
-			$options['startDate'] = trim($startDate);
-		}
-
-		$endDate = $this->request->getParam('endDate');
-		if ($endDate !== null && empty(trim($endDate) === true) === false) {
-			$options['endDate'] = trim($endDate);
-		}
+		$pagination = new ListingPagination(request: $this->request);
+		$raw        = $pagination->rawParams();
+		$filters    = $this->textFilterParams();
+		$options    = $this->applyTextFilters(options: $pagination->options(raw: $raw), filters: $filters);
 
 		// Force database source for all custom endpoints to ensure real-time data.
 		$options['_source'] = 'database';
@@ -977,17 +941,42 @@ class AangebodenGebruikController extends Controller {
 		$this->logger->debug(
 			'Parsed query options for AangebodenGebruik',
 			[
-				'raw_params' => [
-					'limit' => $limit,
-					'offset' => $offset,
-					'status' => $status,
-					'startDate' => $startDate,
-					'endDate' => $endDate,
-				],
+				'raw_params' => ['limit' => $raw['limit'], 'offset' => $raw['offset']] + $filters,
 				'parsed_options' => $options,
 			]
 		);
 
 		return $options;
 	}//end parseQueryOptions()
+
+	/**
+	 * The raw status, startDate and endDate filter parameters.
+	 *
+	 * @return array{status: mixed, startDate: mixed, endDate: mixed}
+	 */
+	private function textFilterParams(): array {
+		return [
+			'status' => $this->request->getParam('status'),
+			'startDate' => $this->request->getParam('startDate'),
+			'endDate' => $this->request->getParam('endDate'),
+		];
+	}//end textFilterParams()
+
+	/**
+	 * Add the filter parameters that pass the filter check, trimmed.
+	 *
+	 * @param array $options The options so far.
+	 * @param array $filters The raw filter parameters.
+	 *
+	 * @return array The options with the filters added.
+	 */
+	private function applyTextFilters(array $options, array $filters): array {
+		foreach ($filters as $name => $value) {
+			if ($value !== null && empty(trim($value) === true) === false) {
+				$options[$name] = trim($value);
+			}
+		}
+
+		return $options;
+	}//end applyTextFilters()
 }//end class
