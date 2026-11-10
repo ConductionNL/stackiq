@@ -27,6 +27,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Federation;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\App\IAppManager;
@@ -549,9 +551,10 @@ class FederationService {
 			try {
 				$objectService->saveObject(
 					object: $mirror,
-					register: $target['register'],
-					schema: $target['schema'],
-					uuid: $uuid
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']),
+						uuid: $uuid
+					)
 				);
 				$count++;
 			} catch (\Throwable $e) {

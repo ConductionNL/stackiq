@@ -21,6 +21,9 @@ namespace OCA\Stackiq\EventListener;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Service\Object\SavePolicy;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -294,11 +297,11 @@ class UserProfileUpdatedEventListener implements IEventListener {
 	): void {
 		$this->objectService->saveObject(
 			object: $object,
-			register: $contactPerson->getRegister(),
-			schema: $contactPerson->getSchema(),
-			uuid: $contactPerson->getUuid(),
-			silent: true,
-			_validation: false
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $contactPerson->getRegister(), schema: $contactPerson->getSchema()),
+				uuid: $contactPerson->getUuid(),
+				policy: new SavePolicy(silent: true, validation: false)
+			)
 		);
 
 	}//end persistContactPersonPatch()

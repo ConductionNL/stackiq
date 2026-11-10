@@ -34,6 +34,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCP\AppFramework\Utility\ITimeFactory;
 use Psr\Log\LoggerInterface;
 
@@ -431,9 +433,7 @@ class EolSyncService {
 		try {
 			$objectService->saveObject(
 				object: $stampedVersion,
-				register: $moduleRegisterId,
-				schema: $versionSchemaId,
-				uuid: $uuid,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $moduleRegisterId, schema: $versionSchemaId), uuid: $uuid),
 				_rbac: false,
 				_multitenancy: false
 			);

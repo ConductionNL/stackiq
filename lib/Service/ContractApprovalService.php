@@ -38,6 +38,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\EventDispatcher\IEventDispatcher;
 use Psr\Container\ContainerInterface;
@@ -635,10 +637,10 @@ class ContractApprovalService {
 
 		$objectService->saveObject(
 			object: $data,
-			extend: [],
-			register: $contract->getRegister(),
-			schema: $contract->getSchema(),
-			uuid: $contract->getUuid()
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $contract->getRegister(), schema: $contract->getSchema()),
+				uuid: $contract->getUuid()
+			)
 		);
 
 	}//end persistContract()

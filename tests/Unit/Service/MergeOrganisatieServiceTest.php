@@ -27,6 +27,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Stackiq\Service\MergeOrganisatieService;
 use OCA\Stackiq\Service\OrganisatieService;
 use OCA\Stackiq\Service\ProgressTracker;
@@ -751,19 +752,16 @@ class MergeOrganisatieServiceTest extends TestCase {
 		// The callback's parameter LIST must mirror
 		// `ObjectServiceInterface::saveObject()` position for position. PHPUnit
 		// resolves the subject's named arguments against the generated mock's own
-		// signature and then invokes this callback POSITIONALLY, so a callback
-		// that omits `$extend` — the contract's second parameter — silently
-		// receives register in `$schema` and schema in `$uuid`. Nothing throws:
-		// the capture just records the wrong coordinates, and every assertion
-		// that looks a save up by (schema, uuid) reports "no such save".
+		// signature and then invokes this callback POSITIONALLY; since
+		// openregister #9123 the coordinates arrive in the ObjectSaveOptions.
 		$objectService->method('saveObject')->willReturnCallback(
 			function (
 				array|ObjectEntity $object,
-				?array $extend = [],
-				$register = null,
-				$schema = null,
-				$uuid = null,
+				?ObjectSaveOptions $options = null,
 			) {
+				$register = $options?->target->register;
+				$schema   = $options?->target->schema;
+				$uuid     = $options?->uuid;
 				$data = ($object instanceof ObjectEntity) === true ? $object->getObject() : $object;
 				$this->savedCalls[] = [
 					'object' => $data,

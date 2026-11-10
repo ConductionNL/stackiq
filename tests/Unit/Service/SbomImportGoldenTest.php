@@ -23,6 +23,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Stackiq\Service\ProgressTracker;
 use OCA\Stackiq\Service\SbomImportService;
 use OCA\Stackiq\Service\SbomParserService;
@@ -217,7 +218,9 @@ class SbomImportGoldenTest extends TestCase {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, $extend = null, $register = null, $schema = null) use ($version) {
+			function (array $object, ?ObjectSaveOptions $options = null) use ($version) {
+				$register = $options?->target->register;
+				$schema   = $options?->target->schema;
 				if (isset($object['sbomLastImportedAt']) === true) {
 					$object['sbomLastImportedAt'] = '(time)';
 				}

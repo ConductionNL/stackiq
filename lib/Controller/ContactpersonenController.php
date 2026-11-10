@@ -23,6 +23,9 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Service\Object\SavePolicy;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Service\ContactpersoonService;
 use OCA\Stackiq\Service\SettingsService;
@@ -540,11 +543,11 @@ class ContactpersonenController extends Controller {
 			// written exactly as before.
 			$this->objectService->saveObject(
 				object: $contactData,
-				register: $registerId,
-				schema: $schemaId,
-				uuid: $contactPersonObject->getUuid(),
-				silent: true,
-				_validation: false
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $registerId, schema: $schemaId),
+					uuid: $contactPersonObject->getUuid(),
+					policy: new SavePolicy(silent: true, validation: false)
+				)
 			);
 
 			$this->logger->info(

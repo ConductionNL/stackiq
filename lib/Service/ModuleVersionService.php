@@ -23,6 +23,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -219,8 +221,7 @@ class ModuleVersionService {
 
 		$savedVersion = $context['objectService']->saveObject(
 			object: $versionData,
-			register: $context['registerId'],
-			schema: $context['schemaId'],
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $context['registerId'], schema: $context['schemaId'])),
 			_rbac: false,
 			_multitenancy: false
 		);

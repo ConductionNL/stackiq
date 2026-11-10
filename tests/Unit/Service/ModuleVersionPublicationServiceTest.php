@@ -18,6 +18,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+require_once __DIR__ . '/../Support/SaveCallShape.php';
+
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
@@ -27,6 +29,7 @@ use OCA\Stackiq\BackgroundJob\ModuleVersionPublicationJob;
 use OCA\Stackiq\EventListener\ModuleVersionPublicationListener;
 use OCA\Stackiq\Service\ModuleVersionPublicationService;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Tests\Unit\Support\SaveCallShape;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJobList;
@@ -240,7 +243,7 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 		$written = [];
 		$this->objects->expects($this->once())->method('saveObject')->willReturnCallback(
 			function (...$args) use (&$written, $stale) {
-				$written[] = $args;
+				$written[] = SaveCallShape::flat(args: $args);
 				return $stale;
 			}
 		);

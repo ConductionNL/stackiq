@@ -40,6 +40,8 @@ namespace OCA\Stackiq\Service;
 
 use DateTime;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -462,9 +464,10 @@ class SbomImportService {
 
 		$objectService->saveObject(
 			object: $data,
-			register: $target['register'],
-			schema: $target['schema'],
-			uuid: $moduleVersion->getUuid(),
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']),
+				uuid: $moduleVersion->getUuid()
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

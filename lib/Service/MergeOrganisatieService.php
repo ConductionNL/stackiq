@@ -63,6 +63,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Stackiq\Service\Stackiq\OrganizationHandler;
 use OCP\App\IAppManager;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -559,10 +561,7 @@ class MergeOrganisatieService {
 
 		$objectService->saveObject(
 			object: $data,
-			extend: [],
-			register: (int)$registerId,
-			schema: (int)$schemaId,
-			uuid: $entity->getUuid()
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: (int)$registerId, schema: (int)$schemaId), uuid: $entity->getUuid())
 		);
 	}//end saveFull()
 

@@ -65,6 +65,8 @@ use DateTimeImmutable;
 use DateTimeZone;
 use JsonSerializable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\Cmdb\CmdbImportReport;
@@ -1954,9 +1956,10 @@ class CmdbExportImportService {
 		$coordinates = $this->coordinates();
 		$entity = $coordinates['objectService']->saveObject(
 			object: $data,
-			register: $coordinates['register'],
-			schema: $coordinates[$schemaKey],
-			uuid: $uuid,
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $coordinates['register'], schema: $coordinates[$schemaKey]),
+				uuid: $uuid
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

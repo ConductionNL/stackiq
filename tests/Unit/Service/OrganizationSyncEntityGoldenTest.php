@@ -21,6 +21,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+require_once __DIR__ . '/../Support/SaveCallShape.php';
+
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\Organisation;
@@ -30,6 +32,7 @@ use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\SymfonyEmailService;
+use OCA\Stackiq\Tests\Unit\Support\SaveCallShape;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IUser;
 use PHPUnit\Framework\TestCase;
@@ -232,6 +235,15 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 	 * @return array<string, mixed>
 	 */
 	private static function named(string $method, array $args): array {
+		if ($method === 'saveObject') {
+			$named = SaveCallShape::named(args: $args);
+			if ($named['object'] instanceof ObjectEntityInterface) {
+				$named['object'] = 'entity:' . $named['object']->getUuid();
+			}
+
+			return $named;
+		}
+
 		$named = [];
 		foreach ((new \ReflectionMethod(ObjectServiceInterface::class, $method))->getParameters() as $i => $param) {
 			if (array_key_exists($i, $args) === false) {

@@ -31,6 +31,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Repair;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
 use OCA\Stackiq\AppInfo\AppIdentity;
 use OCA\Stackiq\Service\SettingsService;
@@ -311,13 +313,10 @@ class MigrateContactsToNc implements IRepairStep {
 			// with released OR versions that do not ship runAsSystem() yet.
 			$saveObject = function () use ($objectService, $data, $registerId, $schemaId, $uuid) {
 				return $objectService->saveObject(
-					$data,
-					[],
-					$registerId,
-					$schemaId,
-					$uuid,
-					false,
-					false
+					object: $data,
+					options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $schemaId), uuid: $uuid),
+					_rbac: false,
+					_multitenancy: false
 				);
 			};
 

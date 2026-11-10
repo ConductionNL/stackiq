@@ -19,6 +19,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\BackgroundJob;
 
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
+use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
 use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\SettingsService;
@@ -263,7 +265,12 @@ class OrganizationContactSyncJob extends TimedJob {
 				$uuidArg = $uuid;
 			}
 
-			$objectService->saveObject($data, [], $registerId, $schemaId, $uuidArg, false, false);
+			$objectService->saveObject(
+				object: $data,
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $schemaId), uuid: $uuidArg),
+				_rbac: false,
+				_multitenancy: false
+			);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'[OrganizationContactSyncJob] Could not refresh contactsUid link — record left intact',
