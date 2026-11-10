@@ -1960,6 +1960,10 @@ import Upload from 'vue-material-design-icons/Upload.vue'
 import PaginationComponent from '../../components/PaginationComponent.vue'
 import PublishedIcon from '../../components/PublishedIcon.vue'
 import { getTheme } from '../../services/getTheme.js'
+import {
+	orderedPropertyRows,
+	schemaPropertyRows,
+} from './objectPropertyRows.js'
 
 import '@toast-ui/editor/dist/toastui-editor.css'
 
@@ -2086,121 +2090,12 @@ export default {
 			const objectData = this.currentObject || {}
 			const schemaProperties = this.getSchemaProperties()
 
-			const propertiesWithOrder = []
-			const propertiesWithoutOrder = []
-
-			// First, add all schema properties in their defined order
-			for (const [schemaKey, schemaProperty] of Object.entries(
-				schemaProperties,
-			)) {
-				let propertyValue
-				if (Object.hasOwn(objectData, schemaKey)) {
-					// Property exists in object, use its value
-					propertyValue = objectData[schemaKey]
-				} else {
-					// Property doesn't exist in object, use appropriate default value
-					let defaultValue = ''
-					switch (schemaProperty.type) {
-						case 'string':
-							defaultValue = schemaProperty.const || ''
-							break
-						case 'number':
-						case 'integer':
-							defaultValue = 0
-							break
-						case 'boolean':
-							defaultValue = false
-							break
-						case 'array':
-							defaultValue = []
-							break
-						case 'object':
-							defaultValue = {}
-							break
-						default:
-							defaultValue = ''
-					}
-					propertyValue = defaultValue
-				}
-
-				const propertyData = [schemaKey, propertyValue, schemaProperty]
-
-				// Check if property has an order value
-				if (
-					schemaProperty.order !== undefined
-					&& schemaProperty.order !== null
-				) {
-					propertiesWithOrder.push(propertyData)
-				} else {
-					propertiesWithoutOrder.push(propertyData)
-				}
-			}
-
-			// Then, add any additional properties from the object that aren't in the schema
-			const additionalProperties = []
-			for (const [objectKey, objectValue] of Object.entries(objectData)) {
-				// Skip metadata and properties already handled by schema
-				// Also skip properties that have been marked for deletion (undefined in formData)
-				if (
-					objectKey !== '@self'
-					&& objectKey !== 'id'
-					&& !Object.hasOwn(schemaProperties, objectKey)
-					&& !(this.formData[objectKey] === undefined)
-				) {
-					additionalProperties.push([objectKey, objectValue, null])
-				}
-			}
-
-			// Sort properties with order: ascending by order value, then alphabetically by key
-			propertiesWithOrder.sort((a, b) => {
-				const [keyA, , schemaA] = a
-				const [keyB, , schemaB] = b
-
-				// First sort by order (ascending)
-				const orderA = schemaA?.order || 0
-				const orderB = schemaB?.order || 0
-
-				if (orderA !== orderB) {
-					return orderA - orderB // Ascending order
-				}
-
-				// If same order, sort alphabetically
-				return keyA.localeCompare(keyB)
-			})
-
-			// Sort properties without order alphabetically by key
-			propertiesWithoutOrder.sort((a, b) => {
-				const [keyA] = a
-				const [keyB] = b
-				return keyA.localeCompare(keyB)
-			})
-
-			// Sort additional properties alphabetically for consistency
-			additionalProperties.sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
-
-			// If we have no properties to show (new object with no schema), provide some basic ones
-			if (
-				propertiesWithoutOrder.length === 0
-				&& propertiesWithOrder.length === 0
-				&& additionalProperties.length === 0
-			) {
-				return [
-					['title', ''],
-					['description', ''],
-					['omschrijving', ''],
-					['category', ''],
-					['status', 'draft'],
-				]
-			}
-
-			// Combine: properties with order first (descending order), then properties without order, then additional properties
-			const combinedProperties = [
-				...propertiesWithOrder.map(([key, value]) => [key, value]),
-				...propertiesWithoutOrder.map(([key, value]) => [key, value]),
-				...additionalProperties,
-			]
-
-			return combinedProperties
+			// The schema properties in their defined order, then the object's own;
+			// basic rows when there are none (new object with no schema)
+			return orderedPropertyRows(
+				schemaPropertyRows(objectData, schemaProperties),
+				this.additionalPropertyRows(objectData, schemaProperties),
+			)
 		},
 
 		/**
@@ -4900,6 +4795,28 @@ export default {
 		},
 
 		// Schema handling methods
+		/**
+		 * The object's own properties that are not in the schema, as rows
+		 * `[key, value, null]`: never the metadata, and only those the form holds
+		 * a value for (a property marked for deletion is undefined in the form).
+		 *
+		 * @param {object} objectData The object.
+		 * @param {object} schemaProperties The schema properties.
+		 * @return {Array} The rows.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		additionalPropertyRows(objectData, schemaProperties) {
+			return Object.entries(objectData)
+				.filter(
+					([objectKey]) =>
+						objectKey !== '@self'
+						&& objectKey !== 'id'
+						&& !Object.hasOwn(schemaProperties, objectKey)
+						&& !(this.formData[objectKey] === undefined),
+				)
+				.map(([objectKey, objectValue]) => [objectKey, objectValue, null])
+		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
