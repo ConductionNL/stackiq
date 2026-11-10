@@ -30,20 +30,35 @@ namespace OCA\Stackiq\Service;
  */
 final class NamedAddressBookSync {
 	/**
+	 * The address book's URI, stable across languages.
+	 *
+	 * @var string
+	 */
+	public string $addressBookUri = '';
+
+	/**
+	 * The display name for a new address book.
+	 *
+	 * @var string
+	 */
+	public string $displayName = '';
+
+	/**
+	 * The UID for a new contact; a random one when null.
+	 *
+	 * @var string|null
+	 */
+	public ?string $fixedUid = null;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param string               $objectType     The relationship type ('contactPerson'|'organization').
-	 * @param array<string, mixed> $record         The relationship record.
-	 * @param string               $addressBookUri The address book's URI, stable across languages.
-	 * @param string               $displayName    The display name for a new address book.
-	 * @param string|null          $fixedUid       The UID for a new contact; a random one when null.
+	 * @param string               $objectType The relationship type ('contactPerson'|'organization').
+	 * @param array<string, mixed> $record     The relationship record.
 	 */
 	public function __construct(
 		public readonly string $objectType,
 		public readonly array $record,
-		public readonly string $addressBookUri,
-		public readonly string $displayName,
-		public readonly ?string $fixedUid=null,
 	) {
 	}//end __construct()
 }//end class

@@ -210,15 +210,11 @@ class StackiqContactSyncService {
 		string $displayName,
 		?string $fixedUid = null,
 	): ?string {
-		return $this->syncRecordToNamedAddressBook(
-			sync: new NamedAddressBookSync(
-				objectType: $objectType,
-				record: $record,
-				addressBookUri: $addressBookUri,
-				displayName: $displayName,
-				fixedUid: $fixedUid
-			)
-		);
+		$sync = new NamedAddressBookSync(objectType: $objectType, record: $record);
+		$sync->addressBookUri = $addressBookUri;
+		$sync->displayName    = $displayName;
+		$sync->fixedUid       = $fixedUid;
+		return $this->syncRecordToNamedAddressBook(sync: $sync);
 	}//end syncToNamedAddressBook()
 
 	/**
