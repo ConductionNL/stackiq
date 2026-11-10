@@ -44,6 +44,7 @@ const objects = {
 		id: 'obj-2',
 		'@self': { register: { id: null, uuid: 'reg-uuid' }, schema: { id: 9 } },
 	},
+	'no object': null,
 }
 
 const bulk = ['publishSelectedFiles', 'depublishSelectedFiles', 'deleteSelectedFiles']
@@ -93,6 +94,7 @@ function instance(currentObject) {
 		editedTags: ['a'],
 		success: null,
 		error: null,
+		filesCurrentPageSize: 20,
 	}
 	for (const [name, fn] of Object.entries(ViewObject.methods)) {
 		vm[name] = fn.bind(vm)
@@ -156,7 +158,11 @@ function runs() {
 		for (const method of bulk) {
 			out.push({ method, object, answer: 'ok', selection: [] })
 		}
+		out.push({ method: 'onFilesPageChanged', object, answer: 'ok', args: [3] })
+		out.push({ method: 'onFilesPageSizeChanged', object, answer: 'ok', args: [50] })
 	}
+	out.push({ method: 'onFilesPageChanged', object: 'no object', answer: 'ok', args: [3] })
+	out.push({ method: 'onFilesPageSizeChanged', object: 'no object', answer: 'ok', args: [50] })
 	return out
 }
 

@@ -1196,6 +1196,86 @@
 			"error": null
 		}
 	},
+	"onFilesPageChanged | ids as values | ok": {
+		"trace": [
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-1",
+				"files",
+				{
+					"_page": 3,
+					"_limit": 20
+				},
+				{
+					"source": "openregister",
+					"schema": 7,
+					"register": 4
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"onFilesPageSizeChanged | ids as values | ok": {
+		"trace": [
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-1",
+				"files",
+				{
+					"_page": 1,
+					"_limit": 50
+				},
+				{
+					"source": "openregister",
+					"schema": 7,
+					"register": 4
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
 	"publishSelectedFiles | ids as objects | ok": {
 		"trace": [
 			[
@@ -2376,6 +2456,1013 @@
 		"trace": [],
 		"state": {
 			"selectedAttachments": [],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"onFilesPageChanged | ids as objects | ok": {
+		"trace": [
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-2",
+				"files",
+				{
+					"_page": 3,
+					"_limit": 20
+				},
+				{
+					"source": "openregister",
+					"schema": 9,
+					"register": "reg-uuid"
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"onFilesPageSizeChanged | ids as objects | ok": {
+		"trace": [
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-2",
+				"files",
+				{
+					"_page": 1,
+					"_limit": 50
+				},
+				{
+					"source": "openregister",
+					"schema": 9,
+					"register": "reg-uuid"
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"publishSelectedFiles | no object | ok": {
+		"trace": [
+			[
+				"console.error",
+				"Error publishing files:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishSelectedFiles | no object | ok": {
+		"trace": [
+			[
+				"console.error",
+				"Error depublishing files:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteSelectedFiles | no object | ok": {
+		"trace": [
+			[
+				"console.error",
+				"Failed to delete selected files:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"publishFile | no object | ok": {
+		"trace": [
+			[
+				"console.error",
+				"Failed to publish file:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishFile | no object | ok": {
+		"trace": [
+			[
+				"console.error",
+				"Failed to depublish file:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteFile | no object | ok": {
+		"trace": [
+			[
+				"console.error",
+				"Failed to delete file:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"saveTags | no object | ok": {
+		"trace": [
+			[
+				"console.error",
+				"Error saving tags:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": "Failed to save file labels: Cannot read properties of null (reading '@self')"
+		}
+	},
+	"publishSelectedFiles | no object | refused on the second request": {
+		"trace": [
+			[
+				"console.error",
+				"Error publishing files:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishSelectedFiles | no object | refused on the second request": {
+		"trace": [
+			[
+				"console.error",
+				"Error depublishing files:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteSelectedFiles | no object | refused on the second request": {
+		"trace": [
+			[
+				"console.error",
+				"Failed to delete selected files:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"publishFile | no object | refused on the second request": {
+		"trace": [
+			[
+				"console.error",
+				"Failed to publish file:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishFile | no object | refused on the second request": {
+		"trace": [
+			[
+				"console.error",
+				"Failed to depublish file:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteFile | no object | refused on the second request": {
+		"trace": [
+			[
+				"console.error",
+				"Failed to delete file:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"saveTags | no object | refused on the second request": {
+		"trace": [
+			[
+				"console.error",
+				"Error saving tags:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": "Failed to save file labels: Cannot read properties of null (reading '@self')"
+		}
+	},
+	"publishSelectedFiles | no object | refused": {
+		"trace": [
+			[
+				"console.error",
+				"Error publishing files:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishSelectedFiles | no object | refused": {
+		"trace": [
+			[
+				"console.error",
+				"Error depublishing files:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteSelectedFiles | no object | refused": {
+		"trace": [
+			[
+				"console.error",
+				"Failed to delete selected files:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"publishFile | no object | refused": {
+		"trace": [
+			[
+				"console.error",
+				"Failed to publish file:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishFile | no object | refused": {
+		"trace": [
+			[
+				"console.error",
+				"Failed to depublish file:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteFile | no object | refused": {
+		"trace": [
+			[
+				"console.error",
+				"Failed to delete file:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"saveTags | no object | refused": {
+		"trace": [
+			[
+				"console.error",
+				"Error saving tags:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": "Failed to save file labels: Cannot read properties of null (reading '@self')"
+		}
+	},
+	"publishSelectedFiles | no object | network failure": {
+		"trace": [
+			[
+				"console.error",
+				"Error publishing files:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishSelectedFiles | no object | network failure": {
+		"trace": [
+			[
+				"console.error",
+				"Error depublishing files:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteSelectedFiles | no object | network failure": {
+		"trace": [
+			[
+				"console.error",
+				"Failed to delete selected files:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"publishFile | no object | network failure": {
+		"trace": [
+			[
+				"console.error",
+				"Failed to publish file:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishFile | no object | network failure": {
+		"trace": [
+			[
+				"console.error",
+				"Failed to depublish file:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteFile | no object | network failure": {
+		"trace": [
+			[
+				"console.error",
+				"Failed to delete file:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"saveTags | no object | network failure": {
+		"trace": [
+			[
+				"console.error",
+				"Error saving tags:",
+				"TypeError: Cannot read properties of null (reading '@self')"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": "Failed to save file labels: Cannot read properties of null (reading '@self')"
+		}
+	},
+	"publishSelectedFiles | no object | ok | nothing selected": {
+		"trace": [],
+		"state": {
+			"selectedAttachments": [],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishSelectedFiles | no object | ok | nothing selected": {
+		"trace": [],
+		"state": {
+			"selectedAttachments": [],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteSelectedFiles | no object | ok | nothing selected": {
+		"trace": [],
+		"state": {
+			"selectedAttachments": [],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"onFilesPageChanged | no object | ok": {
+		"trace": [],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"onFilesPageSizeChanged | no object | ok": {
+		"trace": [],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
 			"publishLoading": [
 				5
 			],
