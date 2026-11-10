@@ -22,12 +22,15 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+require_once __DIR__ . '/../Support/FindCallShape.php';
+
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Db\Organisation;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Service\AangebodenGebruikService;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Tests\Unit\Support\FindCallShape;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUser;
@@ -223,7 +226,8 @@ class AangebodenGebruikKoppelingenGoldenTest extends TestCase {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('find')->willReturnCallback(
 			function (...$args) {
-				$this->trace[] = ['objects.find', $args[0], $args[5] ?? null, $args[6] ?? null];
+				$flat          = FindCallShape::find(args: $args);
+				$this->trace[] = ['objects.find', $flat[0], $flat[5], $flat[6]];
 				if (isset($this->plan['findThrows']) === true) {
 					throw new \RuntimeException('find failed');
 				}

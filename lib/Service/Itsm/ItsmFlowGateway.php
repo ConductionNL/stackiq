@@ -26,6 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Itsm;
 
+use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Container\ContainerInterface;
 use RuntimeException;
 use Throwable;
@@ -57,13 +59,6 @@ class ItsmFlowGateway {
 	 * @var string
 	 */
 	private const VERSIONS = 'OCA\OpenRegister\Service\Flow\FlowVersionService';
-
-	/**
-	 * OpenRegister's object service.
-	 *
-	 * @var string
-	 */
-	private const OBJECTS = 'OCA\OpenRegister\Service\ObjectService';
 
 	/**
 	 * Constructor.
@@ -166,7 +161,12 @@ class ItsmFlowGateway {
 	 */
 	public function findObject(string $register, string $schema, string $id): ?array {
 		try {
-			$found = $this->service(class: self::OBJECTS)->find($id, [], false, $register, $schema, false, false);
+			$found = $this->objectService()->find(
+				id: $id,
+				options: new ObjectFindOptions(register: $register, schema: $schema),
+				_rbac: false,
+				_multitenancy: false
+			);
 		} catch (Throwable $e) {
 			return null;
 		}
@@ -220,4 +220,20 @@ class ItsmFlowGateway {
 
 		return $service;
 	}//end service()
+
+	/**
+	 * OpenRegister's object service, typed by its contract.
+	 *
+	 * @return ObjectServiceInterface The object service.
+	 *
+	 * @throws RuntimeException When OpenRegister does not provide it.
+	 */
+	private function objectService(): ObjectServiceInterface {
+		$service = $this->service(class: ObjectServiceInterface::class);
+		if (($service instanceof ObjectServiceInterface) === false) {
+			throw new RuntimeException('OpenRegister does not provide ' . ObjectServiceInterface::class . '.');
+		}
+
+		return $service;
+	}//end objectService()
 }//end class

@@ -169,8 +169,7 @@ class SbomImportService {
 	private function findModuleVersion(array $coordinates, string $moduleVersieUuid): ?object {
 		return $coordinates['objectService']->find(
 			id: $moduleVersieUuid,
-			register: $coordinates['registerId'],
-			schema: $coordinates['moduleVersieSchemaId'],
+			options: new ObjectFindOptions(register: $coordinates['registerId'], schema: $coordinates['moduleVersieSchemaId']),
 			_rbac: false,
 			_multitenancy: false
 		);

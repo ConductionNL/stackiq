@@ -19,6 +19,7 @@ namespace OCA\Stackiq\Tests\Unit;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Controller\ContactpersonenController;
 use OCA\Stackiq\Service\ContactpersoonService;
@@ -117,7 +118,18 @@ class OrganisationUserWorkflowTest extends TestCase {
 		$user    = $this->user(uid: 'jan');
 
 		$this->objects->expects($this->once())->method('find')
-			->with(self::CONTACT, [], false, 'stackiq', 'contactPerson', true, true)
+			->with(
+				self::CONTACT,
+				$this->callback(
+					static fn (?ObjectFindOptions $options): bool => $options !== null
+						&& $options->register === 'stackiq'
+						&& $options->schema === 'contactPerson'
+						&& $options->extend === []
+						&& $options->files === false
+				),
+				true,
+				true
+			)
 			->willReturn($contact);
 		$this->handler->method('validateEmailForUsername')->with('jan@example.org')->willReturn(null);
 		$this->handler->expects($this->once())->method('createUserAccount')->with($contact)->willReturn($user);

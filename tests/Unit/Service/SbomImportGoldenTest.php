@@ -21,12 +21,15 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+require_once __DIR__ . '/../Support/FindCallShape.php';
+
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\Stackiq\Service\ProgressTracker;
 use OCA\Stackiq\Service\SbomImportService;
 use OCA\Stackiq\Service\SbomParserService;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Tests\Unit\Support\FindCallShape;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
@@ -186,7 +189,7 @@ class SbomImportGoldenTest extends TestCase {
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
 			function (...$args) use ($version) {
-				$this->trace[] = ['objects.find', $args];
+				$this->trace[] = ['objects.find', FindCallShape::find(args: $args)];
 				return isset($this->plan['missing']) === true ? null : $version;
 			}
 		);
