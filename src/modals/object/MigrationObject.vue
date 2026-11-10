@@ -410,6 +410,19 @@ import DatabaseExport from 'vue-material-design-icons/DatabaseExport.vue'
 import DatabaseOutline from 'vue-material-design-icons/DatabaseOutline.vue'
 import FileTreeOutline from 'vue-material-design-icons/FileTreeOutline.vue'
 
+/**
+ * The result a failed migration shows.
+ *
+ * @param {Error} error The failure.
+ * @return {{success: boolean, errors: Array<string>}} The result.
+ */
+function failedMigration(error) {
+	return {
+		success: false,
+		errors: [error.message || 'An error occurred during migration'],
+	}
+}
+
 export default {
 	name: 'MigrationObject',
 	components: {
@@ -712,43 +725,51 @@ export default {
 
 			this.loading = true
 			try {
-				const response = await fetch(
-					'/index.php/apps/openregister/api/migrate',
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-						},
-						body: JSON.stringify({
-							sourceRegister: this.sourceRegister.id,
-							sourceSchema: this.sourceSchema.id,
-							targetRegister: this.targetRegister.id,
-							targetSchema: this.targetSchema.id,
-							objects: this.selectedObjects.map((obj) => obj.id),
-							mapping: this.mapping,
-						}),
-					},
-				)
-
-				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`)
-				}
-
-				this.migrationResult = await response.json()
+				this.migrationResult = await this.postMigration()
 				this.step = 4
 
 				// Refresh the object list
 				objectStore.refreshObjectList()
 			} catch (error) {
 				console.error('Error performing migration:', error)
-				this.migrationResult = {
-					success: false,
-					errors: [error.message || 'An error occurred during migration'],
-				}
+				this.migrationResult = failedMigration(error)
 				this.step = 4
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Ask OpenRegister to migrate the selected objects from the source to the target with the mapping.
+		 *
+		 * @return {Promise<object>} The migration result.
+		 * @throws {Error} When the request fails.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		async postMigration() {
+			const response = await fetch(
+				'/index.php/apps/openregister/api/migrate',
+				{
+					method: 'POST',
+					headers: {
+						'Content-Type': 'application/json',
+					},
+					body: JSON.stringify({
+						sourceRegister: this.sourceRegister.id,
+						sourceSchema: this.sourceSchema.id,
+						targetRegister: this.targetRegister.id,
+						targetSchema: this.targetSchema.id,
+						objects: this.selectedObjects.map((obj) => obj.id),
+						mapping: this.mapping,
+					}),
+				},
+			)
+
+			if (!response.ok) {
+				throw new Error(`HTTP error! status: ${response.status}`)
+			}
+
+			return await response.json()
 		},
 
 		/**
