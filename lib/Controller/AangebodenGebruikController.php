@@ -27,6 +27,7 @@ use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
+use OCP\IUser;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -368,26 +369,7 @@ class AangebodenGebruikController extends Controller {
 				return false;
 			}
 
-			$userId = $user->getUID();
-
-			$group = $this->groupManager->get($groupName);
-			if ($group === null) {
-				$this->logger->warning('Group does not exist', ['group' => $groupName]);
-				return false;
-			}
-
-			$isInGroup = $group->inGroup($user);
-
-			$this->logger->debug(
-				'User group membership check',
-				[
-					'user' => $userId,
-					'group' => $groupName,
-					'isMember' => $isInGroup,
-				]
-			);
-
-			return $isInGroup;
+			return $this->isMemberOf(user: $user, groupName: $groupName);
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'Failed to check user group membership',
@@ -399,6 +381,37 @@ class AangebodenGebruikController extends Controller {
 			return false;
 		}//end try
 	}//end isUserInGroup()
+
+	/**
+	 * Check if a user is in a group; a group that does not exist has no members.
+	 *
+	 * @param IUser  $user      The user.
+	 * @param string $groupName The name of the group to check
+	 *
+	 * @return bool True if user is in the group, false otherwise
+	 */
+	private function isMemberOf(IUser $user, string $groupName): bool {
+		$userId = $user->getUID();
+
+		$group = $this->groupManager->get($groupName);
+		if ($group === null) {
+			$this->logger->warning('Group does not exist', ['group' => $groupName]);
+			return false;
+		}
+
+		$isInGroup = $group->inGroup($user);
+
+		$this->logger->debug(
+			'User group membership check',
+			[
+				'user' => $userId,
+				'group' => $groupName,
+				'isMember' => $isInGroup,
+			]
+		);
+
+		return $isInGroup;
+	}//end isMemberOf()
 
 	/**
 	 * Get all gebruiks objects where the active organization is in deelnemers (participants).
