@@ -119,27 +119,32 @@ class RepointEolSyncConfig implements IRepairStep {
 	public function repoint(array $config): array {
 		$changed = 0;
 
-		foreach (self::SLUG_MAP as $field => $map) {
-			if (array_key_exists($field, $config) === false) {
-				continue;
+		foreach (array_keys(self::SLUG_MAP) as $field) {
+			$replacement = self::replacementFor(config: $config, field: $field);
+			if ($replacement !== null) {
+				$config[$field] = $replacement;
+				$changed++;
 			}
-
-			$current = $config[$field];
-			if (is_string($current) === false) {
-				continue;
-			}
-
-			$replacement = ($map[$current] ?? null);
-			if ($replacement === null) {
-				continue;
-			}
-
-			$config[$field] = $replacement;
-			$changed++;
 		}
 
 		return ['config' => $config, 'changed' => $changed];
 	}//end repoint()
+
+	/**
+	 * The current slug a field's stale slug maps to; null when the field is absent, not a string or not stale.
+	 *
+	 * @param array $config The configuration.
+	 * @param string $field The field.
+	 *
+	 * @return string|null
+	 */
+	private static function replacementFor(array $config, string $field): ?string {
+		if (array_key_exists($field, $config) === false || is_string($config[$field]) === false) {
+			return null;
+		}
+
+		return (self::SLUG_MAP[$field][$config[$field]] ?? null);
+	}//end replacementFor()
 
 	/**
 	 * Re-point a stored configuration, if there is one and it is stale.
@@ -151,43 +156,117 @@ class RepointEolSyncConfig implements IRepairStep {
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-products-are-mapped-to-endoflife-date-via-per-module-config
 	 */
 	public function run(IOutput $output): void {
-		try {
-			$raw = $this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_KEY, '');
-		} catch (\Throwable $e) {
-			$this->logger->warning(
-				'RepointEolSyncConfig: could not read the EOL sync configuration; leaving it alone.',
-				['exception' => $e->getMessage()]
-			);
+		$config = $this->storedConfig(output: $output);
+		if ($config === null) {
 			return;
 		}
 
-		if ($raw === '') {
-			$output->info('RepointEolSyncConfig: no stored configuration; the defaults already name the current slugs.');
-			return;
-		}
-
-		$decoded = json_decode($raw, true);
-		if (is_array($decoded) === false) {
-			$this->logger->warning(
-				'RepointEolSyncConfig: the stored EOL sync configuration is not a JSON object; leaving it alone.'
-			);
-			return;
-		}
-
-		$result = $this->repoint(config: $decoded);
+		$result = $this->repoint(config: $config);
 		if ($result['changed'] === 0) {
 			$output->info('RepointEolSyncConfig: the stored configuration already names the current slugs.');
 			return;
 		}
 
-		$encoded = json_encode($result['config']);
-		if (is_string($encoded) === false) {
-			$this->logger->warning(
-				'RepointEolSyncConfig: could not re-encode the EOL sync configuration; leaving it alone.'
-			);
-			return;
+		if ($this->store(config: $result['config']) === true) {
+			$output->info($this->repointedMessage(changed: $result['changed']));
+		}
+	}//end run()
+
+	/**
+	 * The report of a re-pointed configuration.
+	 *
+	 * @param int $changed How many slugs were re-pointed.
+	 *
+	 * @return string
+	 */
+	private function repointedMessage(int $changed): string {
+		return sprintf(
+			'RepointEolSyncConfig: %d stale slug(s) re-pointed in the stored configuration.',
+			$changed
+		);
+	}//end repointedMessage()
+
+	/**
+	 * The stored configuration as an array; null (reported or logged) when it cannot be read, is absent or is no JSON object.
+	 *
+	 * @param IOutput $output The repair output.
+	 *
+	 * @return array|null
+	 */
+	private function storedConfig(IOutput $output): ?array {
+		$raw = $this->readStored();
+		if ($raw === null) {
+			return null;
 		}
 
+		if ($raw === '') {
+			$output->info('RepointEolSyncConfig: no stored configuration; the defaults already name the current slugs.');
+			return null;
+		}
+
+		return $this->decodeStored(raw: $raw);
+	}//end storedConfig()
+
+	/**
+	 * The stored text as an array; null (logged) when it is no JSON object.
+	 *
+	 * @param string $raw The stored text.
+	 *
+	 * @return array|null
+	 */
+	private function decodeStored(string $raw): ?array {
+		$decoded = json_decode($raw, true);
+		if (is_array($decoded) === false) {
+			$this->logger->warning(
+				'RepointEolSyncConfig: the stored EOL sync configuration is not a JSON object; leaving it alone.'
+			);
+			return null;
+		}
+
+		return $decoded;
+	}//end decodeStored()
+
+	/**
+	 * The stored configuration as text; null (logged) when it cannot be read.
+	 *
+	 * @return string|null
+	 */
+	private function readStored(): ?string {
+		try {
+			return $this->appConfig->getValueString(AppIdentity::APP_ID, self::CONFIG_KEY, '');
+		} catch (\Throwable $e) {
+			$this->logger->warning(
+				'RepointEolSyncConfig: could not read the EOL sync configuration; leaving it alone.',
+				['exception' => $e->getMessage()]
+			);
+			return null;
+		}
+	}//end readStored()
+
+	/**
+	 * Store the re-pointed configuration; a failure to encode or to write is logged.
+	 *
+	 * @param array $config The re-pointed configuration.
+	 *
+	 * @return bool Whether it was stored.
+	 */
+	private function store(array $config): bool {
+		$encoded = $this->encode(config: $config);
+		if ($encoded === null) {
+			return false;
+		}
+
+		return $this->write(encoded: $encoded);
+	}//end store()
+
+	/**
+	 * Write the encoded configuration; a failure is logged.
+	 *
+	 * @param string $encoded The configuration as JSON.
+	 *
+	 * @return bool Whether it was written.
+	 */
+	private function write(string $encoded): bool {
 		try {
 			$this->appConfig->setValueString(AppIdentity::APP_ID, self::CONFIG_KEY, $encoded);
 		} catch (\Throwable $e) {
@@ -195,14 +274,28 @@ class RepointEolSyncConfig implements IRepairStep {
 				'RepointEolSyncConfig: could not write the EOL sync configuration.',
 				['exception' => $e->getMessage()]
 			);
-			return;
+			return false;
 		}
 
-		$output->info(
-			sprintf(
-				'RepointEolSyncConfig: %d stale slug(s) re-pointed in the stored configuration.',
-				$result['changed']
-			)
-		);
-	}//end run()
+		return true;
+	}//end write()
+
+	/**
+	 * The configuration as JSON; null (logged) when it cannot be encoded.
+	 *
+	 * @param array $config The configuration.
+	 *
+	 * @return string|null
+	 */
+	private function encode(array $config): ?string {
+		$encoded = json_encode($config);
+		if (is_string($encoded) === false) {
+			$this->logger->warning(
+				'RepointEolSyncConfig: could not re-encode the EOL sync configuration; leaving it alone.'
+			);
+			return null;
+		}
+
+		return $encoded;
+	}//end encode()
 }//end class
