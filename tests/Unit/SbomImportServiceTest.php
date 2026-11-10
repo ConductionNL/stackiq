@@ -30,6 +30,7 @@ namespace OCA\Stackiq\Tests\Unit;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\BulkSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Stackiq\Exception\UnsupportedSbomFormatException;
 use OCA\Stackiq\Service\ProgressTracker;
@@ -171,8 +172,8 @@ class SbomImportServiceTest extends TestCase {
 		);
 
 		$this->objectService->method('saveObjects')->willReturnCallback(
-			function (array $objects, $register=null, $schema=null) {
-				$this->savedTargets[] = ['saveObjects', $register, $schema];
+			function (array $objects, ?BulkSaveOptions $options=null) {
+				$this->savedTargets[] = ['saveObjects', $options?->defaults->register, $options?->defaults->schema];
 				$this->savedBatches[] = $objects;
 				return ['statistics' => ['objectsCreated' => count($objects)]];
 			}

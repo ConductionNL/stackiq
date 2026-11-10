@@ -40,6 +40,8 @@ namespace OCA\Stackiq\Service;
 
 use DateTime;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\BulkBatchDefaults;
+use OCA\OpenRegister\Service\Object\BulkSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -415,8 +417,7 @@ class SbomImportService {
 
 			$objectService->saveObjects(
 				objects: $payload,
-				register: $target['register'],
-				schema: $target['schema'],
+				options: new BulkSaveOptions(defaults: new BulkBatchDefaults(register: $target['register'], schema: $target['schema'])),
 				_rbac: false,
 				_multitenancy: false
 			);
