@@ -129,6 +129,11 @@ import {
 } from '@nextcloud/vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
 import { navigationStore, objectStore } from '../store/store.js'
+import {
+	emptyOrganisationForm,
+	organisationFormData,
+	organisationTypeOptions,
+} from './organisationForm.js'
 
 export default {
 	name: 'OrganisationModal',
@@ -160,19 +165,7 @@ export default {
 
 	data() {
 		return {
-			formData: {
-				name: '',
-				website: '',
-				type: '',
-				shortDescription: '',
-				'e-mailadres': '',
-				telefoonnummer: '',
-				oin: '',
-				cbs: '',
-				status: 'Draft',
-				participants: [],
-				contactpersonen: [],
-			},
+			formData: emptyOrganisationForm(),
 
 			selectedType: null,
 			loading: false,
@@ -180,12 +173,7 @@ export default {
 			successMessage: '',
 			countdown: 3,
 			countdownInterval: null,
-			organisationTypes: [
-				{ value: 'Municipality', label: 'Municipality' },
-				{ value: 'Supplier', label: 'Supplier' },
-				{ value: 'Collaboration', label: 'Collaboration' },
-				{ value: 'Community', label: 'Community' },
-			],
+			organisationTypes: organisationTypeOptions(),
 		}
 	},
 
@@ -258,19 +246,7 @@ export default {
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		resetForm() {
-			this.formData = {
-				name: '',
-				website: '',
-				type: '',
-				shortDescription: '',
-				'e-mailadres': '',
-				telefoonnummer: '',
-				oin: '',
-				cbs: '',
-				status: 'Draft',
-				participants: [],
-				contactpersonen: [],
-			}
+			this.formData = emptyOrganisationForm()
 			this.selectedType = null
 			this.loading = false
 			this.success = false
@@ -289,21 +265,7 @@ export default {
 			if (!this.organisation) return
 
 			// Load organisation data into form
-			this.formData = {
-				name: this.organisation.name || '',
-				website: this.organisation.website || '',
-				type: this.organisation.type || '',
-				shortDescription: this.organisation.shortDescription || '',
-				'e-mailadres': this.organisation['e-mailadres'] || '',
-				telefoonnummer: this.organisation.telefoonnummer || '',
-				oin: this.organisation.oin || '',
-				cbs: this.organisation.cbs || '',
-				status: this.organisation.status || 'Draft',
-				participants: this.organisation.participants || [],
-				contactpersonen: this.isCopyMode
-					? []
-					: this.organisation.contactpersonen || [],
-			}
+			this.formData = organisationFormData(this.organisation, this.isCopyMode)
 
 			// Set selected type
 			if (this.formData.type) {
@@ -376,85 +338,161 @@ export default {
 				return
 			}
 
+			await this.runSave()
+		},
+
+		/**
+		 * Save the organisation with the loading state on; show the outcome.
+		 *
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		async runSave() {
 			this.loading = true
 			this.success = false
 
 			try {
-				// Get schema configuration for organisatie
-				const schemaConfig = objectStore.getSchemaConfig('organization')
-
-				if (this.isEditMode) {
-					// Get only the changed properties for PATCH request
-					const changes = this.getChangedProperties()
-
-					if (Object.keys(changes).length === 0) {
-						// No changes detected
-						this.successMessage = this.t('stackiq', 'No changes to save')
-						this.success = true
-						setTimeout(() => {
-							this.closeModal()
-						}, 1500)
-						return
-					}
-
-					// Update existing organisation using PATCH - only send changed properties
-					await objectStore.patchObject(
-						'organization',
-						this.organisation.id,
-						changes,
-					)
-					this.successMessage = this.t(
-						'stackiq',
-						'Organisation updated successfully',
-					)
-
-					// Signal that an organization was updated so parent can refresh with current filters.
-					navigationStore.setTransferData({
-						action: 'organisationUpdated',
-						organisationId: this.organisation.id,
-					})
-				} else {
-					// Create new organisation (both create and copy modes)
-					await objectStore.saveObject(this.formData, {
-						register: schemaConfig.register,
-						schema: schemaConfig.schema,
-					})
-					this.successMessage = this.t(
-						'stackiq',
-						'Organisation created successfully',
-					)
-
-					// Signal that a new organization was created so parent can refresh.
-					navigationStore.setTransferData({
-						action: 'organisationCreated',
-					})
+				if (await this.storeOrganisation()) {
+					this.showSavedAndClose()
 				}
-
-				// Show success state
-				this.success = true
-
-				// NOTE: We don't fetch here anymore. Instead, we use transferData to signal the parent component
-				// (OrganisatieIndex) so it can refresh with the current search/filter parameters preserved.
-
-				// Start countdown timer
-				this.countdown = 3
-				this.countdownInterval = setInterval(() => {
-					this.countdown--
-					if (this.countdown <= 0) {
-						clearInterval(this.countdownInterval)
-						this.closeModal()
-					}
-				}, 1000)
 			} catch (error) {
-				console.error('Error saving organisation:', error)
-				showError(
-					this.t('stackiq', 'Failed to save organisation: {error}', {
-						error: error.message,
-					}),
-				)
+				this.reportSaveFailure(error)
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Update the organisation in edit mode, otherwise create it.
+		 *
+		 * @return {Promise<boolean>} Whether anything was saved.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		async storeOrganisation() {
+			// Get schema configuration for organisatie
+			const schemaConfig = objectStore.getSchemaConfig('organization')
+
+			if (this.isEditMode) {
+				return await this.updateOrganisation()
+			}
+
+			await this.createOrganisation(schemaConfig)
+			return true
+		},
+
+		/**
+		 * PATCH only the changed properties; with none, say so and close.
+		 *
+		 * @return {Promise<boolean>} Whether anything was saved.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		async updateOrganisation() {
+			// Get only the changed properties for PATCH request
+			const changes = this.getChangedProperties()
+
+			if (Object.keys(changes).length === 0) {
+				this.confirmNothingToSave()
+				return false
+			}
+
+			await this.patchOrganisation(changes)
+			return true
+		},
+
+		/**
+		 * PATCH the changed properties and signal the parent.
+		 *
+		 * @param {object} changes The changed properties.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		async patchOrganisation(changes) {
+			// Update existing organisation using PATCH - only send changed properties
+			await objectStore.patchObject(
+				'organization',
+				this.organisation.id,
+				changes,
+			)
+			this.successMessage = this.t(
+				'stackiq',
+				'Organisation updated successfully',
+			)
+
+			// Signal that an organization was updated so parent can refresh with current filters.
+			navigationStore.setTransferData({
+				action: 'organisationUpdated',
+				organisationId: this.organisation.id,
+			})
+		},
+
+		/**
+		 * Create a new organisation (both create and copy modes).
+		 *
+		 * @param {{register: string, schema: string}} schemaConfig The register and schema of organisations.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		async createOrganisation(schemaConfig) {
+			await objectStore.saveObject(this.formData, {
+				register: schemaConfig.register,
+				schema: schemaConfig.schema,
+			})
+			this.successMessage = this.t(
+				'stackiq',
+				'Organisation created successfully',
+			)
+
+			// Signal that a new organization was created so parent can refresh.
+			navigationStore.setTransferData({
+				action: 'organisationCreated',
+			})
+		},
+
+		/**
+		 * Show the success state, then count down from 3 seconds and close the modal.
+		 *
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		showSavedAndClose() {
+			// Show success state
+			this.success = true
+
+			// NOTE: We don't fetch here anymore. Instead, we use transferData to signal the parent component
+			// (OrganisatieIndex) so it can refresh with the current search/filter parameters preserved.
+			this.countdown = 3
+			this.countdownInterval = setInterval(() => {
+				this.countdown--
+				if (this.countdown <= 0) {
+					clearInterval(this.countdownInterval)
+					this.closeModal()
+				}
+			}, 1000)
+		},
+
+		/**
+		 * Log a failed save and show it.
+		 *
+		 * @param {Error} error The failure.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		reportSaveFailure(error) {
+			console.error('Error saving organisation:', error)
+			showError(
+				this.t('stackiq', 'Failed to save organisation: {error}', {
+					error: error.message,
+				}),
+			)
+		},
+
+		/**
+		 * Say there is nothing to save, then close the modal.
+		 *
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		confirmNothingToSave() {
+			// No changes detected
+			this.successMessage = this.t('stackiq', 'No changes to save')
+			this.success = true
+			setTimeout(() => {
+				this.closeModal()
+			}, 1500)
 		},
 	},
 }
