@@ -21,7 +21,6 @@ namespace OCA\Stackiq\Service;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\Mailer;
-use Symfony\Component\Mailer\Transport;
 use Symfony\Component\Mailer\Transport\TransportInterface;
 use Symfony\Component\Mime\Address;
 use Symfony\Component\Mime\Email;
@@ -50,7 +49,6 @@ use Symfony\Component\Mime\Email;
  * @SuppressWarnings(PHPMD.MissingImport)
  * @SuppressWarnings(PHPMD.UnusedLocalVariable)
  * @SuppressWarnings(PHPMD.UnusedPrivateMethod)
- * @SuppressWarnings(PHPMD.StaticAccess)             — Transport::fromDsn is Symfony Mailer's static factory pattern
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
@@ -211,6 +209,24 @@ class SymfonyEmailService {
 	];
 
 	/**
+	 * The settings each transport type needs to be non-empty; a type with an
+	 * empty list needs no credentials, and an unknown type has no valid ones.
+	 *
+	 * @var array<string, string[]> Required setting keys per transport type
+	 */
+	private const TRANSPORT_CREDENTIAL_KEYS = [
+		'mailjet' => ['mailjetApiKey', 'mailjetSecretKey'],
+		'sendgrid' => ['sendgridApiKey'],
+		'mailgun' => ['mailgunApiKey', 'mailgunDomain'],
+		'postmark' => ['postmarkApiKey'],
+		'ses' => ['sesAccessKey', 'sesSecretKey'],
+		'smtp' => ['smtpHost'],
+		'sendmail' => [],
+		'native' => [],
+		'null' => [],
+	];
+
+	/**
 	 * The settings service for accessing email configuration
 	 *
 	 * @var SettingsService Settings service instance
@@ -263,194 +279,9 @@ class SymfonyEmailService {
 	 * @throws \Exception If transport configuration is invalid.
 	 */
 	private function createTransport(): TransportInterface {
-		$emailSettings = $this->settingsService->getEmailSettings();
-		$transportType = $emailSettings['transportType'] ?? 'smtp';
-
-		try {
-			switch ($transportType) {
-				case 'smtp':
-					return $this->createSmtpTransport(settings: $emailSettings);
-				case 'sendmail':
-					return Transport::fromDsn('sendmail://default');
-				case 'native':
-					return Transport::fromDsn('native://default');
-				case 'null':
-					return Transport::fromDsn('null://null');
-				case 'sendgrid':
-					return $this->createSendGridTransport(settings: $emailSettings);
-				case 'mailgun':
-					return $this->createMailgunTransport(settings: $emailSettings);
-				case 'postmark':
-					return $this->createPostmarkTransport(settings: $emailSettings);
-				case 'ses':
-					return $this->createSesTransport(settings: $emailSettings);
-				case 'mailjet':
-					return $this->createMailjetTransport(settings: $emailSettings);
-				default:
-					$this->logger->warning(
-						'Unknown transport type, falling back to SMTP',
-						[
-							'transportType' => $transportType,
-						]
-					);
-					return $this->createSmtpTransport(settings: $emailSettings);
-			}//end switch
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to create email transport',
-				[
-					'transportType' => $transportType,
-					'error' => $e->getMessage(),
-				]
-			);
-			throw $e;
-		}//end try
+		$factory = new MailTransportFactory(logger: $this->logger);
+		return $factory->create(emailSettings: $this->settingsService->getEmailSettings());
 	}//end createTransport()
-
-	/**
-	 * Creates an SMTP transport.
-	 *
-	 * @param array $settings Email settings.
-	 *
-	 * @return TransportInterface SMTP transport.
-	 */
-	private function createSmtpTransport(array $settings): TransportInterface {
-		$host = $settings['smtpHost'] ?? 'localhost';
-		$port = $settings['smtpPort'] ?? 587;
-		$encryption = $settings['smtpEncryption'] ?? 'tls';
-		$username = $settings['smtpUsername'] ?? '';
-		$password = $settings['smtpPassword'] ?? '';
-
-		$dsn = sprintf(
-			'smtp://%s:%s@%s:%d',
-			rawurlencode($username),
-			rawurlencode($password),
-			$host,
-			$port
-		);
-
-		if ($encryption === 'ssl') {
-			$dsn = str_replace('smtp://', 'smtps://', $dsn);
-		}
-
-		try {
-			return Transport::fromDsn($dsn);
-		} catch (\Exception $e) {
-			// Strip credentials from exception message before logging.
-			$safeMessage = preg_replace(
-				'~(smtp[s]?://)[^:]+:[^@]+@~i',
-				'$1***:***@',
-				$e->getMessage()
-			) ?? $e->getMessage();
-			throw new \RuntimeException('Failed to create SMTP transport: ' . $safeMessage, 0, $e);
-		}
-	}//end createSmtpTransport()
-
-	/**
-	 * Creates a SendGrid transport.
-	 *
-	 * @param array $settings Email settings.
-	 *
-	 * @return TransportInterface SendGrid transport.
-	 */
-	private function createSendGridTransport(array $settings): TransportInterface {
-		$apiKey = ($settings['sendgridApiKey'] ?? '');
-		if (empty($apiKey) === true) {
-			throw new \InvalidArgumentException('SendGrid API key is required');
-		}
-
-		return Transport::fromDsn('sendgrid+api://' . rawurlencode($apiKey) . '@default');
-	}//end createSendGridTransport()
-
-	/**
-	 * Creates a Mailgun transport.
-	 *
-	 * @param array $settings Email settings.
-	 *
-	 * @return TransportInterface Mailgun transport.
-	 */
-	private function createMailgunTransport(array $settings): TransportInterface {
-		$apiKey = ($settings['mailgunApiKey'] ?? '');
-		$domain = ($settings['mailgunDomain'] ?? '');
-
-		if (empty($apiKey) === true || empty($domain) === true) {
-			throw new \InvalidArgumentException('Mailgun API key and domain are required');
-		}
-
-		return Transport::fromDsn(
-			sprintf(
-				'mailgun+api://%s:%s@default',
-				rawurlencode($apiKey),
-				rawurlencode($domain)
-			)
-		);
-	}//end createMailgunTransport()
-
-	/**
-	 * Creates a Postmark transport.
-	 *
-	 * @param array $settings Email settings.
-	 *
-	 * @return TransportInterface Postmark transport.
-	 */
-	private function createPostmarkTransport(array $settings): TransportInterface {
-		$apiKey = ($settings['postmarkApiKey'] ?? '');
-		if (empty($apiKey) === true) {
-			throw new \InvalidArgumentException('Postmark API key is required');
-		}
-
-		return Transport::fromDsn('postmark+api://' . rawurlencode($apiKey) . '@default');
-	}//end createPostmarkTransport()
-
-	/**
-	 * Creates an Amazon SES transport.
-	 *
-	 * @param array $settings Email settings.
-	 *
-	 * @return TransportInterface SES transport.
-	 */
-	private function createSesTransport(array $settings): TransportInterface {
-		$accessKey = ($settings['sesAccessKey'] ?? '');
-		$secretKey = ($settings['sesSecretKey'] ?? '');
-		$region = ($settings['sesRegion'] ?? 'us-east-1');
-
-		if (empty($accessKey) === true || empty($secretKey) === true) {
-			throw new \InvalidArgumentException('Amazon SES access key and secret key are required');
-		}
-
-		return Transport::fromDsn(
-			sprintf(
-				'ses+api://%s:%s@default?region=%s',
-				rawurlencode($accessKey),
-				rawurlencode($secretKey),
-				rawurlencode($region)
-			)
-		);
-	}//end createSesTransport()
-
-	/**
-	 * Creates a Mailjet transport.
-	 *
-	 * @param array $settings Email settings.
-	 *
-	 * @return TransportInterface Mailjet transport.
-	 */
-	private function createMailjetTransport(array $settings): TransportInterface {
-		$apiKey = ($settings['mailjetApiKey'] ?? '');
-		$secretKey = ($settings['mailjetSecretKey'] ?? '');
-
-		if (empty($apiKey) === true || empty($secretKey) === true) {
-			throw new \InvalidArgumentException('Mailjet API key and secret key are required');
-		}
-
-		return Transport::fromDsn(
-			sprintf(
-				'mailjet+api://%s:%s@default',
-				rawurlencode($apiKey),
-				rawurlencode($secretKey)
-			)
-		);
-	}//end createMailjetTransport()
 
 	/**
 	 * Sends an organization registration email.
@@ -988,25 +819,61 @@ class SymfonyEmailService {
 			return $testReceiver;
 		}
 
-		// Try to get email from various fields.
+		// Try to get email from various fields; if no direct email, try to get from contactpersonen.
 		$email = ($data['e-mailadres'] ?? null);
-
-		// If no direct email, try to get from contactpersonen.
-		if ($email === null && isset($data['contactpersonen']) === true && is_array($data['contactpersonen']) === true) {
-			foreach ($data['contactpersonen'] as $contact) {
-				if (is_array($contact) === true && empty($contact['e-mailadres']) === false) {
-					$email = $contact['e-mailadres'];
-					break;
-				}
-			}
+		if ($email === null) {
+			$email = $this->contactPersonEmail(data: $data);
 		}
 
+		return $this->validRecipient(email: $email);
+	}//end getRecipientEmail()
+
+	/**
+	 * The address when it is a valid email address, else null.
+	 *
+	 * @param mixed $email The candidate address.
+	 *
+	 * @return string|null
+	 */
+	private function validRecipient(mixed $email): ?string {
 		if ($email !== null && $this->validateEmail(email: $email) === true) {
 			return $email;
 		}
 
 		return null;
-	}//end getRecipientEmail()
+	}//end validRecipient()
+
+	/**
+	 * The first non-empty email address among the contact persons.
+	 *
+	 * @param array $data The organization or user data.
+	 *
+	 * @return mixed The address, or null when no contact person has one.
+	 */
+	private function contactPersonEmail(array $data): mixed {
+		foreach ($this->contactPersons(data: $data) as $contact) {
+			if (is_array($contact) === true && empty($contact['e-mailadres']) === false) {
+				return $contact['e-mailadres'];
+			}
+		}
+
+		return null;
+	}//end contactPersonEmail()
+
+	/**
+	 * The contact persons of the data, or an empty list when it has none.
+	 *
+	 * @param array $data The organization or user data.
+	 *
+	 * @return array
+	 */
+	private function contactPersons(array $data): array {
+		if (isset($data['contactpersonen']) === true && is_array($data['contactpersonen']) === true) {
+			return $data['contactpersonen'];
+		}
+
+		return [];
+	}//end contactPersons()
 
 	/**
 	 * Gets the test receiver override email address.
@@ -1359,29 +1226,19 @@ class SymfonyEmailService {
 	 */
 	private function hasValidTransportCredentials(array $emailSettings): bool {
 		$transportType = ($emailSettings['transportType'] ?? 'smtp');
+		$requiredKeys  = (self::TRANSPORT_CREDENTIAL_KEYS[$transportType] ?? null);
+		if ($requiredKeys === null) {
+			return false;
+		}
 
-		switch ($transportType) {
-			case 'mailjet':
-				return empty($emailSettings['mailjetApiKey']) === false
-					&& empty($emailSettings['mailjetSecretKey']) === false;
-			case 'sendgrid':
-				return empty($emailSettings['sendgridApiKey']) === false;
-			case 'mailgun':
-				return empty($emailSettings['mailgunApiKey']) === false && empty($emailSettings['mailgunDomain']) === false;
-			case 'postmark':
-				return empty($emailSettings['postmarkApiKey']) === false;
-			case 'ses':
-				return empty($emailSettings['sesAccessKey']) === false && empty($emailSettings['sesSecretKey']) === false;
-			case 'smtp':
-				return empty($emailSettings['smtpHost']) === false;
-			case 'sendmail':
-			case 'native':
-			case 'null':
-				// These don't require credentials.
-				return true;
-			default:
+		// Sendmail, native and null don't require credentials.
+		foreach ($requiredKeys as $key) {
+			if (empty($emailSettings[$key]) === true) {
 				return false;
-		}//end switch
+			}
+		}
+
+		return true;
 	}//end hasValidTransportCredentials()
 
 	/**
