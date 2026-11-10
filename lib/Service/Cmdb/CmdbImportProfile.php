@@ -316,15 +316,26 @@ class CmdbImportProfile {
 			return;
 		}
 
-		$origin = new CmdbPackOrigin(
-			label: 'OpenRegister migration pack ' . $stored['slug'] . ' (id ' . $stored['id'] . ')',
-			details: ['pack' => $stored['slug'], 'packId' => $stored['id']]
-		);
+		$origin = $this->storedOrigin(stored: $stored);
 		$this->assertValidPack(validator: $run->validator, pack: $stored['pack'], label: $origin->label, details: $origin->details);
 		$run->packs[$target] = $stored['pack'];
 		$run->origins[$target] = $origin;
 		$run->sources[$target] = $this->storedSource(source: $run->sources[$target], stored: $stored);
 	}//end takeStoredPack()
+
+	/**
+	 * Where a stored pack came from: its OpenRegister slug and id.
+	 *
+	 * @param array<string, mixed> $stored The stored pack as the store answers it.
+	 *
+	 * @return CmdbPackOrigin
+	 */
+	private function storedOrigin(array $stored): CmdbPackOrigin {
+		return new CmdbPackOrigin(
+			label: 'OpenRegister migration pack ' . $stored['slug'] . ' (id ' . $stored['id'] . ')',
+			details: ['pack' => $stored['slug'], 'packId' => $stored['id']]
+		);
+	}//end storedOrigin()
 
 	/**
 	 * Where a pack taken from its shipped file came from, as the mapping overview shows it.
