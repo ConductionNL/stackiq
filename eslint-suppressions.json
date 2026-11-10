@@ -388,7 +388,7 @@
   },
   "src/store/modules/settings.js": {
     "no-console": {
-      "count": 16
+      "count": 15
     },
     "no-unused-vars": {
       "count": 8
