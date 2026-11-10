@@ -47,6 +47,7 @@ use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IURLGenerator;
+use OCP\IUser;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -1398,8 +1399,7 @@ class SettingsController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 *
-	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength) framework-required: SSE loop in anonymous Response subclass
-	 * @spec                                          openspec/specs/method-decomposition/spec.md
+	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
 	public function streamProgress(string $operationId): Response {
 		$currentUser = $this->userSession->getUser();
@@ -1407,117 +1407,41 @@ class SettingsController extends Controller {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		// Verify the caller may read this operation before streaming. An
-		// unknown operation streams one error event and closes.
+		$refusal = $this->streamRefusal(operationId: $operationId, user: $currentUser);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		// Stream Server-Sent Events.
+		return new ProgressStreamResponse(
+			operationId: $operationId,
+			stream: new ProgressEventStream(progressTracker: $this->progressTracker, logger: $this->logger)
+		);
+	}//end streamProgress()
+
+	/**
+	 * The 404 for a caller who may not read the operation; null when the stream may open.
+	 *
+	 * Verifies the caller may read this operation before streaming. An
+	 * unknown operation streams one error event and closes.
+	 *
+	 * @param string $operationId The operation ID.
+	 * @param IUser $user The signed-in caller.
+	 *
+	 * @return JSONResponse|null
+	 *
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 */
+	private function streamRefusal(string $operationId, IUser $user): ?JSONResponse {
 		$progress = $this->progressTracker->getProgress($operationId);
 		if ($progress !== null
-			&& $this->mayReadProgress(progress: $progress, uid: $currentUser->getUID()) === false
+			&& $this->mayReadProgress(progress: $progress, uid: $user->getUID()) === false
 		) {
 			return new JSONResponse(['message' => 'Operation not found', 'error' => 'OPERATION_NOT_FOUND'], 404);
 		}
 
-		// Set headers for Server-Sent Events.
-		$response = new class($operationId, $this->progressTracker, $this->logger) extends Response {
-			/**
-			 * Constructor for the SSE response.
-			 *
-			 * @param string $operationId The operation ID to stream.
-			 * @param ProgressTracker $progressTracker The progress tracker service.
-			 * @param LoggerInterface $logger The logger instance.
-			 */
-			public function __construct(
-				private string $operationId,
-				private ProgressTracker $progressTracker,
-				private LoggerInterface $logger,
-			) {
-				parent::__construct();
-				$this->addHeader(name: 'Content-Type', value: 'text/event-stream');
-				$this->addHeader(name: 'Cache-Control', value: 'no-cache');
-				$this->addHeader(name: 'Connection', value: 'keep-alive');
-				$this->addHeader(name: 'Access-Control-Allow-Headers', value: 'Cache-Control');
-			}//end __construct()
-
-			/**
-			 * Render the SSE stream.
-			 *
-			 * @return string Empty string (output is streamed directly).
-			 *
-			 * @spec openspec/specs/settings-admin-controller/spec.md
-			 */
-			public function render(): string {
-				// Enable output buffering and turn off compression.
-				if (ob_get_level() !== 0) {
-					ob_end_clean();
-				}
-
-				ob_implicit_flush(true);
-
-				// Stream progress updates.
-				$lastProgress = null;
-				$maxAttempts = 300;
-				// 5 minutes with 1-second intervals.
-				$attempts = 0;
-
-				while ($attempts < $maxAttempts) {
-					try {
-						$progress = $this->progressTracker->getProgress($this->operationId);
-
-						if ($progress === null) {
-							// Operation not found, send error and close.
-							echo "event: error\n";
-							echo 'data: ' . json_encode(['error' => 'Operation not found']) . "\n\n";
-							break;
-						}
-
-						// Only send update if progress changed.
-						if ($progress !== $lastProgress) {
-							echo "event: progress\n";
-							echo 'data: ' . json_encode($progress) . "\n\n";
-							$lastProgress = $progress;
-
-							// If operation completed, send final event and close.
-							if ($progress['phase'] === 'completed') {
-								echo "event: completed\n";
-								echo 'data: ' . json_encode($progress) . "\n\n";
-								break;
-							}
-						}
-
-						// Send heartbeat every 10 seconds.
-						if ($attempts % 10 === 0) {
-							echo "event: heartbeat\n";
-							echo 'data: ' . json_encode(['timestamp' => time()]) . "\n\n";
-						}
-
-						flush();
-						sleep(1);
-						$attempts++;
-					} catch (\Exception $e) {
-						$this->logger->error(
-							'Progress streaming error',
-							[
-								'operation_id' => $this->operationId,
-								'error' => $e->getMessage(),
-							]
-						);
-
-						echo "event: error\n";
-						echo 'data: ' . json_encode(['error' => $e->getMessage()]) . "\n\n";
-						break;
-					}//end try
-				}//end while
-
-				// Send final close event.
-				echo "event: close\n";
-				echo 'data: ' . json_encode(['reason' => 'Stream ended']) . "\n\n";
-				flush();
-
-				return '';
-			}//end render()
-		};
-
-		return $response;
-	}//end streamProgress()
+		return null;
+	}//end streamRefusal()
 
 	/**
 	 * Import ArchiMate file.
