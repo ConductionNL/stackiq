@@ -27,6 +27,8 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\ObjectSelection;
+use OCA\OpenRegister\Kernel\Contracts\SearchOptions;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
@@ -224,7 +226,7 @@ class MaintenanceRecipientService {
 			query: ['register' => $register, 'schema' => $schema, '_limit' => count($contactIds)],
 			_rbac: false,
 			_multitenancy: false,
-			ids: $contactIds
+			options: new SearchOptions(selection: new ObjectSelection(ids: $contactIds))
 		);
 
 		$userIds = [];

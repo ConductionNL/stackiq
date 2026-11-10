@@ -22,6 +22,8 @@ namespace OCA\Stackiq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\ObjectSelection;
+use OCA\OpenRegister\Kernel\Contracts\SearchOptions;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -486,8 +488,7 @@ class AangebodenGebruikService {
 			return $request['objectService']->searchObjectsPaginated(
 				query: $searchQuery,
 				_rbac: false,
-				_multitenancy: false,
-				deleted: false
+				_multitenancy: false
 			);
 		}//end if
 
@@ -502,8 +503,7 @@ class AangebodenGebruikService {
 			query: $searchQuery,
 			_rbac: false,
 			_multitenancy: false,
-			deleted: false,
-			uses: $uuid
+			options: new SearchOptions(selection: new ObjectSelection(uses: $uuid))
 		);
 	}//end searchKoppelingen()
 

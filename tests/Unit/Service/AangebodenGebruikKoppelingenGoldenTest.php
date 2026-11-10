@@ -253,8 +253,8 @@ class AangebodenGebruikKoppelingenGoldenTest extends TestCase {
 						'query'         => $args[0],
 						'_rbac'         => $args[1],
 						'_multitenancy' => $args[2],
-						'deleted'       => $args[3],
-						'uses'          => $args[5] ?? null,
+						'deleted'       => $args[3]->deleted,
+						'uses'          => $args[3]->selection->uses,
 					],
 				];
 				if (isset($this->plan['searchThrows']) === true) {
