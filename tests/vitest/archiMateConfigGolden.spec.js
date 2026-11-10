@@ -105,7 +105,10 @@ async function load(answers) {
 		trace.push(['console.warn', ...args]),
 	)
 	const vm = { organizationOptions: [{ label: 'Generic', value: null }] }
-	await ArchiMateImportExport.methods.loadOrganizations.call(vm)
+	for (const [name, fn] of Object.entries(ArchiMateImportExport.methods)) {
+		vm[name] = fn.bind(vm)
+	}
+	await vm.loadOrganizations()
 	return { trace, organizationOptions: vm.organizationOptions }
 }
 
