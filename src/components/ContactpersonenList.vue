@@ -546,11 +546,7 @@ export default {
 			)
 
 			const contactpersoonIds = this.contactpersoonIds()
-			console.info(
-				'Loading user info for contactpersons:',
-				contactpersoonIds.length,
-			)
-			console.info('Contactpersoon IDs:', contactpersoonIds)
+			this.logContactpersoonIds(contactpersoonIds)
 
 			// Load available groups and bulk user info in parallel - but only once
 			const [, bulkUserInfo] = await Promise.all([
@@ -558,6 +554,31 @@ export default {
 				this.bulkUserInfoFor(contactpersoonIds),
 			])
 
+			this.applyBulkUserInfo(bulkUserInfo)
+			this.userInfoLoaded = true
+		},
+
+		/**
+		 * Log the contact persons whose user info is loaded.
+		 *
+		 * @param {Array<string>} contactpersoonIds The contact person ids.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		logContactpersoonIds(contactpersoonIds) {
+			console.info(
+				'Loading user info for contactpersons:',
+				contactpersoonIds.length,
+			)
+			console.info('Contactpersoon IDs:', contactpersoonIds)
+		},
+
+		/**
+		 * Update the contact persons with the bulk user info, when there is any.
+		 *
+		 * @param {object|null} bulkUserInfo The user info keyed by contact person id.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		applyBulkUserInfo(bulkUserInfo) {
 			console.info('Received bulk user info:', bulkUserInfo)
 
 			// Update contactpersonen with user info
@@ -568,7 +589,6 @@ export default {
 			console.info(
 				'Completed SINGLE parallel loading of user info and available groups',
 			)
-			this.userInfoLoaded = true
 		},
 
 		/**
