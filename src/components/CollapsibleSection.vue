@@ -139,6 +139,7 @@ import Save from 'vue-material-design-icons/ContentSave.vue'
 import Information from 'vue-material-design-icons/Information.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import CollapsibleSectionInfoModal from '../modals/CollapsibleSectionInfoModal.vue'
+import { settingsSectionProps } from './settingsSectionProps.js'
 
 export default {
 	name: 'CollapsibleSection',
@@ -156,106 +157,12 @@ export default {
 	},
 
 	props: {
-		/**
-		 * Section name
-		 */
-		name: {
-			type: String,
-			required: true,
-		},
-
-		/**
-		 * Section description
-		 */
-		description: {
-			type: String,
-			default: '',
-		},
-
-		/**
-		 * Documentation URL
-		 */
-		docUrl: {
-			type: String,
-			default: '',
-		},
-
-		/**
-		 * Whether the section is loading
-		 */
-		loading: {
-			type: Boolean,
-			default: false,
-		},
-
-		/**
-		 * Whether to show the save button
-		 */
-		showSaveButton: {
-			type: Boolean,
-			default: false,
-		},
-
-		/**
-		 * Whether to show the refresh button
-		 */
-		showRefreshButton: {
-			type: Boolean,
-			default: false,
-		},
-
-		/**
-		 * Whether saving is in progress
-		 */
-		saving: {
-			type: Boolean,
-			default: false,
-		},
-
-		/**
-		 * Whether refreshing is in progress
-		 */
-		refreshing: {
-			type: Boolean,
-			default: false,
-		},
-
-		/**
-		 * Whether the save button should be enabled
-		 */
-		canSave: {
-			type: Boolean,
-			default: true,
-		},
-
-		/**
-		 * Save button text
-		 */
-		saveButtonText: {
-			type: String,
-			default: 'Save',
-		},
-
-		/**
-		 * Refresh button text
-		 */
-		refreshButtonText: {
-			type: String,
-			default: 'Refresh',
-		},
+		...settingsSectionProps,
 
 		/**
 		 * Whether the section should be expanded by default
 		 */
 		defaultExpanded: {
-			type: Boolean,
-			default: false,
-		},
-
-		/**
-		 * Whether the section has info content
-		 */
-		hasInfoContent: {
 			type: Boolean,
 			default: false,
 		},
