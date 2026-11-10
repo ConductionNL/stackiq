@@ -65,6 +65,8 @@ use DateTimeImmutable;
 use DateTimeZone;
 use JsonSerializable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Service\Object\ObjectFindTarget;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\Cmdb\CmdbImportReport;
@@ -2774,9 +2776,10 @@ class CmdbExportImportService {
 		if ($step === 'delete') {
 			$coordinates = $this->coordinates();
 			$deleted = $coordinates['objectService']->deleteObject(
-				uuid: $uuid,
-				register: $coordinates['register'],
-				schema: $coordinates[$item['schemaKey']],
+				deletion: new ObjectDeletion(
+					uuid: $uuid,
+					target: new ObjectFindTarget(register: $coordinates['register'], schema: $coordinates[$item['schemaKey']])
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

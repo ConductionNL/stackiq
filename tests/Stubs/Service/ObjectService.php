@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OCA\OpenRegister\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Service\Object\ObjectDeletion;
 
 /**
  * Stub for ObjectService with the surface used by Stackiq tests.
@@ -173,16 +174,18 @@ abstract class ObjectService {
 	/**
 	 * Delete an object.
 	 *
-	 * @param string $uuid Object uuid.
-	 * @param bool $_rbac Apply RBAC.
-	 * @param bool $_multitenancy Apply multitenancy.
+	 * @param ObjectDeletion $deletion        The uuid, register/schema target, acting user and permanence.
+	 * @param bool           $_rbac           Apply RBAC.
+	 * @param bool           $_multitenancy   Apply multitenancy.
+	 * @param bool           $_retentionSweep Whether the retention sweep deletes it.
 	 *
 	 * @return bool
 	 */
 	abstract public function deleteObject(
-		string $uuid,
+		ObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_retentionSweep = false,
 	): bool;
 
 	/**
