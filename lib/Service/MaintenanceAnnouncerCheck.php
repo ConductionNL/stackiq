@@ -92,7 +92,10 @@ class MaintenanceAnnouncerCheck {
 		try {
 			$module = $objectService->find(
 				id: $moduleId,
-				options: new ObjectFindOptions(register: $this->settingsService->getRegisterIdForObjectType('module'), schema: $this->settingsService->getSchemaIdForObjectType('module')),
+				options: new ObjectFindOptions(
+					register: $this->settingsService->getRegisterIdForObjectType('module'),
+					schema: $this->settingsService->getSchemaIdForObjectType('module')
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
