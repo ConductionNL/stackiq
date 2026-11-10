@@ -12,6 +12,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 use OCA\Stackiq\Service\ArchiMateExportService;
 use PHPUnit\Framework\TestCase;
 use ReflectionClass;
+use ReflectionMethod;
 
 /**
  * Pins the array to XML conversion of the AMEF export: attributes from
@@ -167,5 +168,81 @@ class ArchiMateExportArrayToXmlTest extends TestCase {
 			"<?xml version=\"1.0\"?>\n<root><properties><kept>yes</kept><deep><ok>fine</ok></deep></properties><viewNodes>scalar-is-not-filtered</viewNodes></root>\n",
 			$out
 		);
+	}
+
+	/**
+	 * Call a private helper of the service.
+	 *
+	 * @param string $method The helper name.
+	 * @param array  $args   The positional arguments.
+	 *
+	 * @return mixed
+	 */
+	private function callHelper(string $method, array $args): mixed {
+		$ref = new ReflectionMethod(ArchiMateExportService::class, $method);
+		$ref->setAccessible(true);
+		return $ref->invokeArgs($this->makeService(), $args);
+	}
+
+	/**
+	 * Namespaced keys split on the first `__`, then on the first `:`.
+	 *
+	 * @return void
+	 */
+	public function testSplitNamespacedKey(): void {
+		$cases = [
+			'xsi__type'  => ['xsi', 'type'],
+			'xml:lang'   => ['xml', 'lang'],
+			'a__b__c'    => ['a', 'b__c'],
+			'a:b:c'      => ['a', 'b:c'],
+			'a__b:c'     => ['a', 'b:c'],
+			'__type'     => [null, '__type'],
+			'xsi__'      => [null, 'xsi__'],
+			':lang'      => [null, ':lang'],
+			'xml:'       => [null, 'xml:'],
+			'__a:b'      => ['__a', 'b'],
+			'plain'      => [null, 'plain'],
+			''           => [null, ''],
+		];
+		foreach ($cases as $key => $expected) {
+			$this->assertSame($expected, $this->callHelper('splitNamespacedKey', [(string)$key]), (string)$key);
+		}
+	}
+
+	/**
+	 * Problematic fields are dropped by exact name, by prefix and by invalid
+	 * tag characters, recursively; numeric keys are dropped too.
+	 *
+	 * @return void
+	 */
+	public function testFilterProblematicFields(): void {
+		$data   = [
+			'availability'        => 'exact',
+			'availabilityReason'  => 'prefix',
+			'myavailability'      => 'kept',
+			'a(b'                 => 'paren',
+			'a,b'                 => 'comma',
+			'a<b'                 => 'lt',
+			'a>b'                 => 'gt',
+			'a/b'                 => 'slash',
+			'a\b'                => 'backslash',
+			'a)b'                 => 'close',
+			'a.b'                 => 'kept-dot',
+			3                     => 'numeric',
+			'nested'              => ['integrityLevel' => 'x', 'ok' => ['deep' => 1, 'objectId' => 2], 7 => 'n'],
+			'scalar'              => null,
+		];
+		$result = $this->callHelper('filterProblematicFields', [$data, ['availability', 'integrity', 'objectId']]);
+		$this->assertSame(
+			[
+				'myavailability' => 'kept',
+				'a.b'            => 'kept-dot',
+				'nested'         => ['ok' => ['deep' => 1]],
+				'scalar'         => null,
+			],
+			$result
+		);
+		// An empty pattern is a prefix of every name.
+		$this->assertSame([], $this->callHelper('filterProblematicFields', [['x' => 1, 'y' => 2], ['']]));
 	}
 }
