@@ -64,6 +64,17 @@ class SbomController extends Controller {
 	private const MAX_UPLOAD_BYTES = 10485760;
 
 	/**
+	 * Import failures answered with the exception's own message: error code
+	 * and status per exception class, the first match winning.
+	 *
+	 * @var array<class-string,array{0:string,1:int}>
+	 */
+	private const MESSAGE_FAILURES = [
+		UnsupportedSbomFormatException::class => ['UNSUPPORTED_SBOM_FORMAT', Http::STATUS_UNPROCESSABLE_ENTITY],
+		\RuntimeException::class => ['MODULE_VERSION_NOT_FOUND', Http::STATUS_NOT_FOUND],
+	];
+
+	/**
 	 * Groups (beyond admin) allowed to import an SBOM, subject to the
 	 * per-object manage-ACL check on the target module (design: "admin
 	 * group membership OR manage-ACL on the target moduleVersie's parent
@@ -128,50 +139,78 @@ class SbomController extends Controller {
 	#[NoCSRFRequired]
 	public function importSbom(string $moduleVersieUuid): JSONResponse {
 		try {
-			$guard = $this->authorizeManage(moduleVersieUuid: $moduleVersieUuid);
-			if ($guard instanceof JSONResponse) {
-				return $guard;
-			}
-
-			$validated = $this->validateUpload(moduleVersieUuid: $moduleVersieUuid);
-			if ($validated instanceof JSONResponse) {
-				return $validated;
-			}
-
-			$result = $this->importService->importForModuleVersie(
-				moduleVersieUuid: $moduleVersieUuid,
-				rawJson: $validated['contents'],
-				format: $validated['format'],
-				fileName: $validated['fileName']
-			);
-		} catch (DoesNotExistException $e) {
-			return new JSONResponse(
-				data: ['message' => 'moduleVersie not found: ' . $moduleVersieUuid, 'error' => 'MODULE_VERSION_NOT_FOUND'],
-				statusCode: Http::STATUS_NOT_FOUND
-			);
-		} catch (UnsupportedSbomFormatException $e) {
-			return new JSONResponse(
-				data: ['message' => $e->getMessage(), 'error' => 'UNSUPPORTED_SBOM_FORMAT'],
-				statusCode: Http::STATUS_UNPROCESSABLE_ENTITY
-			);
-		} catch (\RuntimeException $e) {
-			return new JSONResponse(
-				data: ['message' => $e->getMessage(), 'error' => 'MODULE_VERSION_NOT_FOUND'],
-				statusCode: Http::STATUS_NOT_FOUND
-			);
+			$result = $this->authorizedImport(moduleVersieUuid: $moduleVersieUuid);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'SbomController: import failed',
-				['moduleVersieUuid' => $moduleVersieUuid, 'error' => $e->getMessage()]
-			);
-			return new JSONResponse(
-				data: ['message' => 'Import failed: ' . $e->getMessage(), 'error' => 'IMPORT_FAILED'],
-				statusCode: Http::STATUS_INTERNAL_SERVER_ERROR
-			);
-		}//end try
+			return $this->importFailureResponse(error: $e, moduleVersieUuid: $moduleVersieUuid);
+		}
+
+		if ($result instanceof JSONResponse) {
+			return $result;
+		}
 
 		return new JSONResponse(data: $result);
 	}//end importSbom()
+
+	/**
+	 * Check the caller's manage access and the upload, then import.
+	 *
+	 * @param string $moduleVersieUuid The target moduleVersie's uuid.
+	 *
+	 * @return array|JSONResponse The import result summary, or the refusal.
+	 */
+	private function authorizedImport(string $moduleVersieUuid): array|JSONResponse {
+		$validated = $this->authorizeManage(moduleVersieUuid: $moduleVersieUuid)
+			?? $this->validateUpload(moduleVersieUuid: $moduleVersieUuid);
+		if ($validated instanceof JSONResponse) {
+			return $validated;
+		}
+
+		return $this->importService->importForModuleVersie(
+			moduleVersieUuid: $moduleVersieUuid,
+			rawJson: $validated['contents'],
+			format: $validated['format'],
+			fileName: $validated['fileName']
+		);
+	}//end authorizedImport()
+
+	/**
+	 * The response for a failed import: 404 for an unknown moduleVersie, 422
+	 * for an unsupported format, else a logged 500.
+	 *
+	 * @param \Exception $error            The failure.
+	 * @param string     $moduleVersieUuid The target moduleVersie's uuid.
+	 *
+	 * @return JSONResponse
+	 */
+	private function importFailureResponse(\Exception $error, string $moduleVersieUuid): JSONResponse {
+		if ($error instanceof DoesNotExistException) {
+			return $this->notFound(moduleVersieUuid: $moduleVersieUuid);
+		}
+
+		foreach (self::MESSAGE_FAILURES as $class => [$code, $status]) {
+			if ($error instanceof $class) {
+				return new JSONResponse(data: ['message' => $error->getMessage(), 'error' => $code], statusCode: $status);
+			}
+		}
+
+		$this->logger->error('SbomController: import failed', ['moduleVersieUuid' => $moduleVersieUuid, 'error' => $error->getMessage()]);
+		$data = ['message' => 'Import failed: ' . $error->getMessage(), 'error' => 'IMPORT_FAILED'];
+		return new JSONResponse(data: $data, statusCode: Http::STATUS_INTERNAL_SERVER_ERROR);
+	}//end importFailureResponse()
+
+	/**
+	 * The 404 for an unknown (or unreadable) moduleVersie.
+	 *
+	 * @param string $moduleVersieUuid The target moduleVersie's uuid.
+	 *
+	 * @return JSONResponse
+	 */
+	private function notFound(string $moduleVersieUuid): JSONResponse {
+		return new JSONResponse(
+			data: ['message' => 'moduleVersie not found: ' . $moduleVersieUuid, 'error' => 'MODULE_VERSION_NOT_FOUND'],
+			statusCode: Http::STATUS_NOT_FOUND
+		);
+	}//end notFound()
 
 	/**
 	 * Validate the multipart upload (present, bounded size, readable, valid
@@ -189,36 +228,56 @@ class SbomController extends Controller {
 	private function validateUpload(string $moduleVersieUuid): array|JSONResponse {
 		$upload = $this->parseUploadedFile();
 		if ($upload === null) {
-			return new JSONResponse(
-				data: ['message' => 'No SBOM file uploaded', 'error' => 'NO_FILE_UPLOADED'],
-				statusCode: Http::STATUS_BAD_REQUEST
-			);
+			return $this->badRequest(message: 'No SBOM file uploaded', error: 'NO_FILE_UPLOADED');
 		}
 
+		$contents = $this->uploadContents(upload: $upload, moduleVersieUuid: $moduleVersieUuid);
+		if ($contents instanceof JSONResponse) {
+			return $contents;
+		}
+
+		return $this->withRequestedFormat(contents: $contents, fileName: $upload['fileName']);
+	}//end validateUpload()
+
+	/**
+	 * The validated upload with the requested `format` param, which defaults
+	 * to the first supported format.
+	 *
+	 * @param string $contents The upload's contents.
+	 * @param string $fileName The upload's file name.
+	 *
+	 * @return array{contents:string,format:string,fileName:string}|JSONResponse
+	 *                                                                           The validated upload, or a 400 for an unknown format.
+	 */
+	private function withRequestedFormat(string $contents, string $fileName): array|JSONResponse {
+		$format = (string)$this->request->getParam('format', SbomImportService::SUPPORTED_FORMATS[0]);
+		if (in_array($format, SbomImportService::SUPPORTED_FORMATS, true) === false) {
+			return $this->badRequest(message: 'Unknown SBOM format: ' . $format, error: 'UNKNOWN_FORMAT');
+		}
+
+		return [
+			'contents' => $contents,
+			'format' => $format,
+			'fileName' => $fileName,
+		];
+	}//end withRequestedFormat()
+
+	/**
+	 * The upload's contents once it is within the size limit, readable and valid JSON.
+	 *
+	 * @param array{tmpName:string,fileName:string,fileSize:int} $upload           The upload.
+	 * @param string                                             $moduleVersieUuid The target moduleVersie's uuid (for the size-rejection log line).
+	 *
+	 * @return string|JSONResponse The contents, or a 400 JSONResponse on the first failed check.
+	 */
+	private function uploadContents(array $upload, string $moduleVersieUuid): string|JSONResponse {
 		if ($upload['fileSize'] > self::MAX_UPLOAD_BYTES) {
-			$this->logger->warning(
-				'SbomController: upload rejected (too large)',
-				['moduleVersieUuid' => $moduleVersieUuid, 'fileSize' => $upload['fileSize']]
-			);
-			return new JSONResponse(
-				data: [
-					'message' => sprintf('File exceeds the maximum allowed size of %d bytes', self::MAX_UPLOAD_BYTES),
-					'error' => 'FILE_TOO_LARGE',
-				],
-				statusCode: Http::STATUS_BAD_REQUEST
-			);
+			return $this->tooLargeResponse(fileSize: $upload['fileSize'], moduleVersieUuid: $moduleVersieUuid);
 		}
 
-		$contents = false;
-		if (is_readable($upload['tmpName']) === true) {
-			$contents = file_get_contents($upload['tmpName']);
-		}
-
+		$contents = $this->readUpload(tmpName: $upload['tmpName']);
 		if ($contents === false) {
-			return new JSONResponse(
-				data: ['message' => 'Uploaded file could not be read', 'error' => 'FILE_UNREADABLE'],
-				statusCode: Http::STATUS_BAD_REQUEST
-			);
+			return $this->badRequest(message: 'Uploaded file could not be read', error: 'FILE_UNREADABLE');
 		}
 
 		// JSON-only gate BEFORE the parser is invoked (semantic bomFormat/
@@ -230,29 +289,60 @@ class SbomController extends Controller {
 		// immediately discarded, and without the peak-memory cost of decoding
 		// an SBOM that is about to be re-parsed by SbomParserService anyway.
 		if (json_validate($contents) === false) {
-			return new JSONResponse(
-				data: [
-					'message' => 'Uploaded file is not valid JSON: ' . json_last_error_msg(),
-					'error' => 'INVALID_JSON',
-				],
-				statusCode: Http::STATUS_BAD_REQUEST
-			);
+			return $this->badRequest(message: 'Uploaded file is not valid JSON: ' . json_last_error_msg(), error: 'INVALID_JSON');
 		}
 
-		$format = (string)$this->request->getParam('format', SbomImportService::SUPPORTED_FORMATS[0]);
-		if (in_array($format, SbomImportService::SUPPORTED_FORMATS, true) === false) {
-			return new JSONResponse(
-				data: ['message' => 'Unknown SBOM format: ' . $format, 'error' => 'UNKNOWN_FORMAT'],
-				statusCode: Http::STATUS_BAD_REQUEST
-			);
+		return $contents;
+	}//end uploadContents()
+
+	/**
+	 * The uploaded temporary file's contents, false when it cannot be read.
+	 *
+	 * @param string $tmpName The temporary file path.
+	 *
+	 * @return string|false
+	 */
+	private function readUpload(string $tmpName): string|false {
+		if (is_readable($tmpName) === true) {
+			return file_get_contents($tmpName);
 		}
 
-		return [
-			'contents' => $contents,
-			'format' => $format,
-			'fileName' => $upload['fileName'],
-		];
-	}//end validateUpload()
+		return false;
+	}//end readUpload()
+
+	/**
+	 * Log and refuse an upload over the size limit.
+	 *
+	 * @param int    $fileSize         The upload size in bytes.
+	 * @param string $moduleVersieUuid The target moduleVersie's uuid.
+	 *
+	 * @return JSONResponse
+	 */
+	private function tooLargeResponse(int $fileSize, string $moduleVersieUuid): JSONResponse {
+		$this->logger->warning(
+			'SbomController: upload rejected (too large)',
+			['moduleVersieUuid' => $moduleVersieUuid, 'fileSize' => $fileSize]
+		);
+		return $this->badRequest(
+			message: sprintf('File exceeds the maximum allowed size of %d bytes', self::MAX_UPLOAD_BYTES),
+			error: 'FILE_TOO_LARGE'
+		);
+	}//end tooLargeResponse()
+
+	/**
+	 * A 400 response with a message and an error code.
+	 *
+	 * @param string $message The message.
+	 * @param string $error   The error code.
+	 *
+	 * @return JSONResponse
+	 */
+	private function badRequest(string $message, string $error): JSONResponse {
+		return new JSONResponse(
+			data: ['message' => $message, 'error' => $error],
+			statusCode: Http::STATUS_BAD_REQUEST
+		);
+	}//end badRequest()
 
 	/**
 	 * Read SBOM import status/provenance for a `moduleVersie`, optionally
@@ -281,15 +371,7 @@ class SbomController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function getSbomImportStatus(string $moduleVersieUuid): JSONResponse {
-		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
-		}
-
-		$operationId = $this->request->getParam('operationId');
-		if (is_string($operationId) === false) {
-			$operationId = null;
-		}
-
+		// The read guard, authorizeRead(), answers the 401 for a caller without a session.
 		// The guard goes INSIDE the try, for the reason importSbom()'s docblock
 		// already records: authorizeRead() reaches
 		// SbomImportService::resolveParentModuleUuid(), and OpenRegister's real
@@ -299,24 +381,34 @@ class SbomController extends Controller {
 		// 500 for exactly the callers the guard was added for — non-admins
 		// passing an unknown id.
 		try {
-			$readError = $this->authorizeRead(moduleVersieUuid: $moduleVersieUuid);
-			if ($readError !== null) {
-				return $readError;
-			}
-
-			return new JSONResponse(
-				data: $this->importService->getStatus(
-					moduleVersieUuid: $moduleVersieUuid,
-					operationId: $operationId
-				)
-			);
+			return $this->authorizeRead(moduleVersieUuid: $moduleVersieUuid)
+				?? $this->statusResponse(moduleVersieUuid: $moduleVersieUuid);
 		} catch (DoesNotExistException $e) {
-			return new JSONResponse(
-				data: ['message' => 'moduleVersie not found: ' . $moduleVersieUuid, 'error' => 'MODULE_VERSION_NOT_FOUND'],
-				statusCode: Http::STATUS_NOT_FOUND
-			);
+			return $this->notFound(moduleVersieUuid: $moduleVersieUuid);
 		}
 	}//end getSbomImportStatus()
+
+	/**
+	 * The import status for a moduleVersie, with the `operationId` progress
+	 * snapshot when that param is a string.
+	 *
+	 * @param string $moduleVersieUuid The target moduleVersie's uuid.
+	 *
+	 * @return JSONResponse
+	 */
+	private function statusResponse(string $moduleVersieUuid): JSONResponse {
+		$operationId = $this->request->getParam('operationId');
+		if (is_string($operationId) === false) {
+			$operationId = null;
+		}
+
+		return new JSONResponse(
+			data: $this->importService->getStatus(
+				moduleVersieUuid: $moduleVersieUuid,
+				operationId: $operationId
+			)
+		);
+	}//end statusResponse()
 
 	/**
 	 * Read-ACL authorization guard (IDOR guard) for the import-status read.
@@ -347,31 +439,20 @@ class SbomController extends Controller {
 	 * @spec openspec/specs/sbom-import/spec.md#requirement-moduleversie-records-sbom-import-provenance
 	 */
 	private function authorizeRead(string $moduleVersieUuid): ?JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
+		$uid = $this->userSession->getUser()?->getUID();
+		if ($uid === null) {
 			return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
 		}
 
-		if ($this->groupManager->isAdmin($user->getUID()) === true) {
+		if ($this->groupManager->isAdmin($uid) === true || $this->canReadParentModule(moduleVersieUuid: $moduleVersieUuid) === true) {
 			return null;
 		}
 
-		$moduleUuid = $this->importService->resolveParentModuleUuid($moduleVersieUuid);
-		if ($moduleUuid === null || $this->importService->userCanReadModule($moduleUuid) === false) {
-			$this->logger->warning(
-				'SbomController: status read refused (no read access to the parent module)',
-				['moduleVersieUuid' => $moduleVersieUuid, 'uid' => $user->getUID()]
-			);
-			return new JSONResponse(
-				data: [
-					'message' => 'moduleVersie not found: ' . $moduleVersieUuid,
-					'error' => 'MODULE_VERSION_NOT_FOUND',
-				],
-				statusCode: Http::STATUS_NOT_FOUND
-			);
-		}
-
-		return null;
+		$this->logger->warning(
+			'SbomController: status read refused (no read access to the parent module)',
+			['moduleVersieUuid' => $moduleVersieUuid, 'uid' => $uid]
+		);
+		return $this->notFound(moduleVersieUuid: $moduleVersieUuid);
 	}//end authorizeRead()
 
 	/**
@@ -391,48 +472,72 @@ class SbomController extends Controller {
 	 * @spec openspec/specs/sbom-import/spec.md#requirement-uploaded-sbom-files-are-bounded-in-size-and-json-only
 	 */
 	private function authorizeManage(string $moduleVersieUuid): ?JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
+		$uid = $this->userSession->getUser()?->getUID();
+		if ($uid === null) {
 			return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
 		}
 
-		if ($this->groupManager->isAdmin($user->getUID()) === true) {
+		if ($this->groupManager->isAdmin($uid) === true) {
 			return null;
 		}
 
-		$inManageGroup = false;
-		foreach (self::MANAGE_GROUPS as $group) {
-			if ($this->groupManager->isInGroup($user->getUID(), $group) === true) {
-				$inManageGroup = true;
-				break;
-			}
+		return $this->nonAdminManageRefusal(moduleVersieUuid: $moduleVersieUuid, uid: $uid);
+	}//end authorizeManage()
+
+	/**
+	 * The refusal for a non-admin import: 403 without a manage group, 403
+	 * without read access to the parent module, else null.
+	 *
+	 * @param string $moduleVersieUuid The target moduleVersie's uuid.
+	 * @param string $uid              The caller's uid.
+	 *
+	 * @return JSONResponse|null
+	 */
+	private function nonAdminManageRefusal(string $moduleVersieUuid, string $uid): ?JSONResponse {
+		$context = ['moduleVersieUuid' => $moduleVersieUuid, 'uid' => $uid];
+		if ($this->isInManageGroup(uid: $uid) === false) {
+			$this->logger->warning('SbomController: import refused (not admin, no manage group)', $context);
+			$message = 'Admin privileges or a manage role are required to import an SBOM';
+			return new JSONResponse(data: ['message' => $message], statusCode: Http::STATUS_FORBIDDEN);
 		}
 
-		if ($inManageGroup === false) {
-			$this->logger->warning(
-				'SbomController: import refused (not admin, no manage group)',
-				['moduleVersieUuid' => $moduleVersieUuid, 'uid' => $user->getUID()]
-			);
-			return new JSONResponse(
-				data: ['message' => 'Admin privileges or a manage role are required to import an SBOM'],
-				statusCode: Http::STATUS_FORBIDDEN
-			);
-		}
-
-		$moduleUuid = $this->importService->resolveParentModuleUuid($moduleVersieUuid);
-		if ($moduleUuid === null || $this->importService->userCanReadModule($moduleUuid) === false) {
-			$this->logger->warning(
-				'SbomController: import refused (no manage-ACL on target module)',
-				['moduleVersieUuid' => $moduleVersieUuid, 'uid' => $user->getUID()]
-			);
-			return new JSONResponse(
-				data: ['message' => 'You do not have manage access to this application'],
-				statusCode: Http::STATUS_FORBIDDEN
-			);
+		if ($this->canReadParentModule(moduleVersieUuid: $moduleVersieUuid) === false) {
+			$this->logger->warning('SbomController: import refused (no manage-ACL on target module)', $context);
+			$message = 'You do not have manage access to this application';
+			return new JSONResponse(data: ['message' => $message], statusCode: Http::STATUS_FORBIDDEN);
 		}
 
 		return null;
-	}//end authorizeManage()
+	}//end nonAdminManageRefusal()
+
+	/**
+	 * Whether the user is a member of one of the manage groups.
+	 *
+	 * @param string $uid The caller's uid.
+	 *
+	 * @return bool
+	 */
+	private function isInManageGroup(string $uid): bool {
+		foreach (self::MANAGE_GROUPS as $group) {
+			if ($this->groupManager->isInGroup($uid, $group) === true) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end isInManageGroup()
+
+	/**
+	 * Whether the caller can read the moduleVersie's parent module under normal RBAC.
+	 *
+	 * @param string $moduleVersieUuid The target moduleVersie's uuid.
+	 *
+	 * @return bool False when the parent module is unknown or not readable.
+	 */
+	private function canReadParentModule(string $moduleVersieUuid): bool {
+		$moduleUuid = $this->importService->resolveParentModuleUuid($moduleVersieUuid);
+		return $moduleUuid !== null && $this->importService->userCanReadModule($moduleUuid) === true;
+	}//end canReadParentModule()
 
 	/**
 	 * Parse the uploaded SBOM file from the multipart request.
@@ -453,25 +558,28 @@ class SbomController extends Controller {
 			return null;
 		}
 
-		$fileData = $filesArray;
-		if ($uploadedFiles !== null) {
-			$fileData = $uploadedFiles;
-		}
-
+		$fileData = $uploadedFiles ?? $filesArray;
 		$tmpName = $fileData['tmp_name'] ?? '';
-
-		$fileSize = $fileData['size'] ?? null;
-		if ($fileSize === null) {
-			$fileSize = 0;
-			if (is_string($tmpName) === true && $tmpName !== '') {
-				$fileSize = (int)filesize($tmpName);
-			}
-		}
 
 		return [
 			'tmpName' => $tmpName,
 			'fileName' => $fileData['name'] ?? 'sbom.json',
-			'fileSize' => (int)$fileSize,
+			'fileSize' => (int)($fileData['size'] ?? $this->fileSizeOnDisk(tmpName: $tmpName)),
 		];
 	}//end parseUploadedFile()
+
+	/**
+	 * The size of the uploaded temporary file, 0 when there is none.
+	 *
+	 * @param mixed $tmpName The temporary file path.
+	 *
+	 * @return int
+	 */
+	private function fileSizeOnDisk(mixed $tmpName): int {
+		if (is_string($tmpName) === true && $tmpName !== '') {
+			return (int)filesize($tmpName);
+		}
+
+		return 0;
+	}//end fileSizeOnDisk()
 }//end class
