@@ -288,7 +288,7 @@ class CmdbImportProfile {
 	private function loadTarget(CmdbPackLoadRun $run, string $target): void {
 		$shipped = $this->readShippedPack(profile: $run->profile, target: $target, validator: $run->validator);
 		$run->packs[$target] = $shipped;
-		$run->origins[$target] = CmdbPackOrigin::file(fileName: (string)($run->profile['packs'][$target] ?? ''));
+		$run->origins[$target] = new CmdbPackOrigin(label: 'CMDB mapping pack ' . (string)($run->profile['packs'][$target] ?? ''));
 		$run->sources[$target] = $this->fileSource(shipped: $shipped);
 		$this->takeStoredPack(run: $run, target: $target);
 		$this->assertImportRules(run: $run, target: $target);
@@ -316,7 +316,10 @@ class CmdbImportProfile {
 			return;
 		}
 
-		$origin = CmdbPackOrigin::stored(stored: $stored);
+		$origin = new CmdbPackOrigin(
+			label: 'OpenRegister migration pack ' . $stored['slug'] . ' (id ' . $stored['id'] . ')',
+			details: ['pack' => $stored['slug'], 'packId' => $stored['id']]
+		);
 		$this->assertValidPack(validator: $run->validator, pack: $stored['pack'], label: $origin->label, details: $origin->details);
 		$run->packs[$target] = $stored['pack'];
 		$run->origins[$target] = $origin;
@@ -1434,9 +1437,9 @@ class CmdbImportProfile {
 			if ($this->container->has($class) === true) {
 				return $this->usableValidator(validator: $this->container->get($class));
 			}
-		} catch (Throwable $e) {
+		} catch (Throwable) {
 			// Fall through to the class check.
-			$validator = null;
+			return null;
 		}
 
 		return null;

@@ -37,33 +37,4 @@ final class CmdbPackOrigin {
 		public readonly array $details = [],
 	) {
 	}//end __construct()
-
-	/**
-	 * A pack read from its shipped file.
-	 *
-	 * @param string $fileName The file name the profile names.
-	 *
-	 * @return self
-	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
-	 */
-	public static function file(string $fileName): self {
-		return new self(label: 'CMDB mapping pack ' . $fileName);
-	}//end file()
-
-	/**
-	 * A pack read from OpenRegister's pack store.
-	 *
-	 * @param array<string, mixed> $stored The stored pack as the store answers it.
-	 *
-	 * @return self
-	 *
-	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
-	 */
-	public static function stored(array $stored): self {
-		return new self(
-			label: 'OpenRegister migration pack ' . $stored['slug'] . ' (id ' . $stored['id'] . ')',
-			details: ['pack' => $stored['slug'], 'packId' => $stored['id']]
-		);
-	}//end stored()
 }//end class
