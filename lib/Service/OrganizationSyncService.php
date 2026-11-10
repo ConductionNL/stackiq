@@ -22,6 +22,7 @@ namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\OrganisationMapper;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
@@ -429,8 +430,7 @@ class OrganizationSyncService {
 			try {
 				$object = $this->objectService->find(
 					id: $row['uuid'],
-					register: $register,
-					schema: $organizationSchema,
+					options: new ObjectFindOptions(register: $register, schema: $organizationSchema),
 					_rbac: false,
 					_multitenancy: false
 				);
@@ -551,8 +551,7 @@ class OrganizationSyncService {
 			try {
 				$contactEntity = $this->objectService->find(
 					id: $contact['uuid'],
-					register: $register,
-					schema: $contactSchema,
+					options: new ObjectFindOptions(register: $register, schema: $contactSchema),
 					_rbac: false
 				);
 				$contactEntityObject = $contactEntity->getObject();
@@ -1037,8 +1036,7 @@ class OrganizationSyncService {
 		try {
 			$fullObject = $this->objectService->find(
 				id: $organisationId,
-				register: $organisationObject->getRegister(),
-				schema: $organisationObject->getSchema(),
+				options: new ObjectFindOptions(register: $organisationObject->getRegister(), schema: $organisationObject->getSchema()),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -1333,8 +1331,7 @@ class OrganizationSyncService {
 		try {
 			return $this->objectService->find(
 				id: $uuid,
-				register: $run['register'],
-				schema: $run['organizationSchema'],
+				options: new ObjectFindOptions(register: $run['register'], schema: $run['organizationSchema']),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -2171,8 +2168,7 @@ class OrganizationSyncService {
 						// Fetch the contact person object using the UUID.
 						$contactObject = $this->objectService->find(
 							id: $contactData,
-							register: $register,
-							schema: $contactSchema,
+							options: new ObjectFindOptions(register: $register, schema: $contactSchema),
 							_rbac: false,
 							_multitenancy: false
 						);
@@ -2404,8 +2400,7 @@ class OrganizationSyncService {
 			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 			$rawOrgObject = $this->objectService->find(
 				id: $organizationUuid,
-				register: ($voorzieningenConfig['register'] ?? ''),
-				schema: ($voorzieningenConfig['organisatie_schema'] ?? ''),
+				options: new ObjectFindOptions(register: ($voorzieningenConfig['register'] ?? ''), schema: ($voorzieningenConfig['organisatie_schema'] ?? '')),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -2461,8 +2456,7 @@ class OrganizationSyncService {
 		try {
 			return $this->objectService->find(
 				id: $contactUuid,
-				register: $run['register'],
-				schema: $run['contactSchema'],
+				options: new ObjectFindOptions(register: $run['register'], schema: $run['contactSchema']),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -2586,8 +2580,7 @@ class OrganizationSyncService {
 		try {
 			$fullContactObject = $this->objectService->find(
 				id: $contactUuid,
-				register: $run['register'],
-				schema: $run['contactSchema'],
+				options: new ObjectFindOptions(register: $run['register'], schema: $run['contactSchema']),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -2685,8 +2678,7 @@ class OrganizationSyncService {
 		try {
 			return $this->objectService->find(
 				id: $contactId,
-				register: $run['register'],
-				schema: $run['contactSchema'],
+				options: new ObjectFindOptions(register: $run['register'], schema: $run['contactSchema']),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -2908,8 +2900,7 @@ class OrganizationSyncService {
 			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 			$orgObject = $this->objectService->find(
 				id: $organizationUuid,
-				register: ($voorzieningenConfig['register'] ?? ''),
-				schema: ($voorzieningenConfig['organisatie_schema'] ?? '')
+				options: new ObjectFindOptions(register: ($voorzieningenConfig['register'] ?? ''), schema: ($voorzieningenConfig['organisatie_schema'] ?? ''))
 			);
 			if (empty($orgObject) === false) {
 				$backupStats = [
@@ -3199,8 +3190,7 @@ class OrganizationSyncService {
 						$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 						$orgObject = $this->objectService->find(
 							id: $organizationUuid,
-							register: ($voorzieningenConfig['register'] ?? ''),
-							schema: ($voorzieningenConfig['organisatie_schema'] ?? '')
+							options: new ObjectFindOptions(register: ($voorzieningenConfig['register'] ?? ''), schema: ($voorzieningenConfig['organisatie_schema'] ?? ''))
 						);
 						if (empty($orgObject) === false) {
 							$backupStats = [

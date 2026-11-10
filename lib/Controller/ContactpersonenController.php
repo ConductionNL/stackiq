@@ -23,6 +23,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Service\ContactpersoonService;
 use OCA\Stackiq\Service\SettingsService;
@@ -402,8 +403,7 @@ class ContactpersonenController extends Controller {
 			// Find the contactpersoon object — bind to current tenant.
 			$contactPersonObject = $this->objectService->find(
 				id: $contactPersonId,
-				register: 'stackiq',
-				schema: 'contactPerson',
+				options: new ObjectFindOptions(register: 'stackiq', schema: 'contactPerson'),
 				_rbac: true,
 				_multitenancy: true
 			);
@@ -1217,8 +1217,7 @@ class ContactpersonenController extends Controller {
 		try {
 			$contactObject = $this->objectService->find(
 				id: $contactPersonId,
-				register: 'stackiq',
-				schema: 'contactPerson'
+				options: new ObjectFindOptions(register: 'stackiq', schema: 'contactPerson')
 			);
 
 			if ($contactObject === null) {

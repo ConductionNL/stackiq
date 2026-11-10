@@ -45,6 +45,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -261,8 +262,7 @@ class ModerationService {
 		try {
 			$entity = $objectService->find(
 				id: $uuid,
-				register: (string)$target['register'],
-				schema: (string)$target['schema'],
+				options: new ObjectFindOptions(register: (string)$target['register'], schema: (string)$target['schema']),
 				_rbac: false,
 				_multitenancy: false
 			);

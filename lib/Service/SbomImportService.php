@@ -40,6 +40,7 @@ namespace OCA\Stackiq\Service;
 
 use DateTime;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -298,8 +299,7 @@ class SbomImportService {
 
 		$module = $objectService->find(
 			id: $moduleUuid,
-			register: (int)$registerId,
-			schema: (int)$moduleSchemaId,
+			options: new ObjectFindOptions(register: (int)$registerId, schema: (int)$moduleSchemaId),
 			_rbac: true,
 			_multitenancy: true
 		);

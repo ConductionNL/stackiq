@@ -24,6 +24,7 @@ namespace OCA\Stackiq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -624,8 +625,7 @@ class AanbodService {
 			try {
 				$object = $objectService->find(
 					id: $aanbodId,
-					register: $registerId,
-					schema: $schemaId,
+					options: new ObjectFindOptions(register: $registerId, schema: $schemaId),
 					_rbac: false,
 					_multitenancy: false
 				);
@@ -772,8 +772,7 @@ class AanbodService {
 
 			$organisationObject = $objectService->find(
 				id: $organisationUuid,
-				register: (int)$registerId,
-				schema: (int)$organisationSchemaId,
+				options: new ObjectFindOptions(register: (int)$registerId, schema: (int)$organisationSchemaId),
 				_rbac: false,
 				_multitenancy: false
 			);

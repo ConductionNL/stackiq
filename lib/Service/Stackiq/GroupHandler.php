@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service\Stackiq;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroup;
@@ -415,7 +416,7 @@ class GroupHandler {
 			return null;
 		}
 
-		$organizationObject = $objectService->find($organisationUuid, [], false, $registerId, $organisationSchemaId);
+		$organizationObject = $objectService->find($organisationUuid, options: new ObjectFindOptions(register: $registerId, schema: $organisationSchemaId));
 		if ($organizationObject === null) {
 			return null;
 		}

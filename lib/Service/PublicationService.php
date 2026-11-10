@@ -35,6 +35,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -113,8 +114,7 @@ class PublicationService {
 		try {
 			$entity = $objectService->find(
 				id: $uuid,
-				register: (string)$registerId,
-				schema: (string)$schemaId
+				options: new ObjectFindOptions(register: (string)$registerId, schema: (string)$schemaId)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->debug(

@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -667,8 +668,7 @@ class ModuleComplianceService {
 					// Find the module object (must specify register and schema for magic table lookup).
 					$moduleObject = $objectService->find(
 						id: $moduleUuid,
-						register: (int)$registerId,
-						schema: (int)$moduleSchemaId
+						options: new ObjectFindOptions(register: (int)$registerId, schema: (int)$moduleSchemaId)
 					);
 					if ($moduleObject === null) {
 						$results['modulesNotFound']++;

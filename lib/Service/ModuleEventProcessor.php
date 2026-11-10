@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -205,9 +206,7 @@ class ModuleEventProcessor {
 			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
 			$orgWithContacts = $objectService->find(
 				id: $objectId,
-				register: $register,
-				schema: $organizationSchema,
-				_extend: ['contactpersonen'],
+				options: new ObjectFindOptions(register: $register, schema: $organizationSchema, extend: ['contactpersonen']),
 				_rbac: false,
 				_multitenancy: false
 			);

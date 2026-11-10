@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Stackiq;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Service\OrganisationSlug;
 use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\App\IAppManager;
@@ -994,7 +995,7 @@ class ContactPersonHandler {
 			}
 
 			// Use find() method with proper register/schema context.
-			$organizationObject = $objectService->find($organizationId, [], false, $registerId, $organisationSchemaId);
+			$organizationObject = $objectService->find($organizationId, options: new ObjectFindOptions(register: $registerId, schema: $organisationSchemaId));
 
 			if (empty($organizationObject) === false) {
 				$organizationData = $organizationObject->getObject();
@@ -1550,8 +1551,7 @@ class ContactPersonHandler {
 			// Find by UUID - use find() with register and schema.
 			$organizationObject = $objectService->find(
 				id: $organizationId,
-				register: $register,
-				schema: $organizationSchema,
+				options: new ObjectFindOptions(register: $register, schema: $organizationSchema),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -1667,10 +1667,7 @@ class ContactPersonHandler {
 
 					$organizationObject = $objectService->find(
 						$organizationId,
-						[],
-						false,
-						$registerId,
-						$organisationSchemaId
+						options: new ObjectFindOptions(register: $registerId, schema: $organisationSchemaId)
 					);
 					if (empty($organizationObject) === false) {
 						$organizationData = $organizationObject->getObject();
@@ -2114,7 +2111,7 @@ class ContactPersonHandler {
 			}
 
 			try {
-				$organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisationSchemaId);
+				$organizationObject = $objectService->find($organizationUuid, options: new ObjectFindOptions(register: $registerId, schema: $organisationSchemaId));
 				$organizationData = $organizationObject->getObject();
 
 				// Check if the username is already in the organization's users.
@@ -2198,7 +2195,7 @@ class ContactPersonHandler {
 			}
 
 			try {
-				$organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisationSchemaId);
+				$organizationObject = $objectService->find($organizationUuid, options: new ObjectFindOptions(register: $registerId, schema: $organisationSchemaId));
 				$organizationData = $organizationObject->getObject();
 
 				// Add the username to the organization's users list.
@@ -2500,8 +2497,7 @@ class ContactPersonHandler {
 			// Find the organization object by UUID - use find() with register and schema.
 			$organizationObject = $objectService->find(
 				id: $organizationUuid,
-				register: $register,
-				schema: $organizationSchema,
+				options: new ObjectFindOptions(register: $register, schema: $organizationSchema),
 				_rbac: false,
 				_multitenancy: false
 			);
