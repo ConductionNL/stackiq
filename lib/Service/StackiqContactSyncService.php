@@ -53,6 +53,7 @@ use Throwable;
  * guard. Both are breadth of mapping rather than depth of logic.
  */
 class StackiqContactSyncService {
+
 	/**
 	 * Nextcloud's CardDAV backend, which creates an address book (not part of OCP).
 	 */
@@ -106,6 +107,7 @@ class StackiqContactSyncService {
 			['limit' => 50]
 		);
 
+		$vCard    = new RecordVCard();
 		$contacts = [];
 		foreach ($results as $result) {
 			$uid = ($result['UID'] ?? null);
@@ -115,10 +117,10 @@ class StackiqContactSyncService {
 
 			$contacts[] = [
 				'uid' => $uid,
-				'name' => $this->firstValue(value: ($result['FN'] ?? '')),
-				'email' => $this->firstValue(value: ($result['EMAIL'] ?? '')),
-				'phone' => $this->firstValue(value: ($result['TEL'] ?? '')),
-				'org' => $this->firstValue(value: ($result['ORG'] ?? '')),
+				'name' => $vCard->firstValue(value: ($result['FN'] ?? '')),
+				'email' => $vCard->firstValue(value: ($result['EMAIL'] ?? '')),
+				'phone' => $vCard->firstValue(value: ($result['TEL'] ?? '')),
+				'org' => $vCard->firstValue(value: ($result['ORG'] ?? '')),
 				'addressBookKey' => ($result['addressbook-key'] ?? ''),
 			];
 		}
@@ -208,52 +210,107 @@ class StackiqContactSyncService {
 		string $displayName,
 		?string $fixedUid = null,
 	): ?string {
+		return $this->syncRecordToNamedAddressBook(
+			sync: new NamedAddressBookSync(
+				objectType: $objectType,
+				record: $record,
+				addressBookUri: $addressBookUri,
+				displayName: $displayName,
+				fixedUid: $fixedUid
+			)
+		);
+	}//end syncToNamedAddressBook()
+
+	/**
+	 * Resolve the contact of a record in a dedicated address book of the
+	 * signed-in user, as syncToNamedAddressBook() describes.
+	 *
+	 * @param NamedAddressBookSync $sync The record, the address book and the optional fixed UID.
+	 *
+	 * @return ?string The contacts UID, or null when it could not be resolved or created.
+	 */
+	private function syncRecordToNamedAddressBook(NamedAddressBookSync $sync): ?string {
 		if ($this->isAvailable() === false) {
 			return null;
 		}
 
-		$existingUid = (string)($record['contactsUid'] ?? '');
+		$knownUid = $this->knownNamedAddressBookUid(sync: $sync);
+		if ($knownUid !== null) {
+			return $knownUid;
+		}
+
+		$properties = (new RecordVCard())->properties(objectType: $sync->objectType, record: $sync->record);
+		if (($properties['FN'] ?? '') === '') {
+			$this->logger->warning('[StackiqContactSync] Record has no identity to create a contact from', ['objectType' => $sync->objectType]);
+			return null;
+		}
+
+		return $this->createNamedAddressBookContact(sync: $sync, properties: $properties);
+	}//end syncRecordToNamedAddressBook()
+
+	/**
+	 * The contact the record already links, else the one its e-mail address
+	 * matches in the named address book.
+	 *
+	 * @param NamedAddressBookSync $sync The sync request.
+	 *
+	 * @return string|null The contacts UID, or null when neither exists.
+	 */
+	private function knownNamedAddressBookUid(NamedAddressBookSync $sync): ?string {
+		$existingUid = (string)($sync->record['contactsUid'] ?? '');
 		if ($existingUid !== '' && $this->findContactByUid(uid: $existingUid) !== null) {
 			return $existingUid;
 		}
 
-		$matched = $this->namedAddressBookContactByEmail(record: $record, addressBookUri: $addressBookUri, fixedUid: $fixedUid);
-		if ($matched !== null) {
-			return $matched;
-		}
+		return $this->namedAddressBookContactByEmail(record: $sync->record, addressBookUri: $sync->addressBookUri, fixedUid: $sync->fixedUid);
+	}//end knownNamedAddressBookUid()
 
-		$properties = $this->recordToVCard(objectType: $objectType, record: $record);
-		if (($properties['FN'] ?? '') === '') {
-			$this->logger->warning('[StackiqContactSync] Record has no identity to create a contact from', ['objectType' => $objectType]);
-			return null;
-		}
-
+	/**
+	 * Create the contact in the named address book; a failure is logged and resolves nothing.
+	 *
+	 * @param NamedAddressBookSync  $sync       The sync request.
+	 * @param array<string, mixed>  $properties The vCard properties.
+	 *
+	 * @return string|null The new contacts UID, or null.
+	 */
+	private function createNamedAddressBookContact(NamedAddressBookSync $sync, array $properties): ?string {
 		try {
-			$backend = $this->container?->get(static::CARDDAV_BACKEND_CLASS);
-			$uid = $this->userSession?->getUser()?->getUID();
-			if (is_object($backend) === false || $uid === null) {
-				$this->logger->warning('[StackiqContactSync] No CardDAV backend or no user; cannot create the contact', ['objectType' => $objectType]);
-				return null;
-			}
-
-			$addressBookId = $this->namedAddressBookId(
-				backend: $backend,
-				principal: 'principals/users/' . $uid,
-				uri: $addressBookUri,
-				displayName: $displayName
-			);
-			$contactUid = ($fixedUid ?? self::newUid());
-			$backend->createCard($addressBookId, $contactUid . '.vcf', self::serialiseVCard(uid: $contactUid, properties: $properties));
+			return $this->createCardInNamedAddressBook(sync: $sync, properties: $properties);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'[StackiqContactSync] The contact could not be created in the named address book',
-				['objectType' => $objectType, 'exception' => get_class($e)]
+				['objectType' => $sync->objectType, 'exception' => get_class($e)]
 			);
 			return null;
 		}
+	}//end createNamedAddressBookContact()
 
+	/**
+	 * Write the card into the user's named address book, creating the book when needed.
+	 *
+	 * @param NamedAddressBookSync  $sync       The sync request.
+	 * @param array<string, mixed>  $properties The vCard properties.
+	 *
+	 * @return string|null The new contacts UID, or null without a CardDAV backend or user.
+	 */
+	private function createCardInNamedAddressBook(NamedAddressBookSync $sync, array $properties): ?string {
+		$backend = $this->container?->get(static::CARDDAV_BACKEND_CLASS);
+		$uid     = $this->userSession?->getUser()?->getUID();
+		if (is_object($backend) === false || $uid === null) {
+			$this->logger->warning('[StackiqContactSync] No CardDAV backend or no user; cannot create the contact', ['objectType' => $sync->objectType]);
+			return null;
+		}
+
+		$addressBookId = $this->namedAddressBookId(
+			backend: $backend,
+			principal: 'principals/users/' . $uid,
+			uri: $sync->addressBookUri,
+			displayName: $sync->displayName
+		);
+		$contactUid    = ($sync->fixedUid ?? self::newUid());
+		$backend->createCard($addressBookId, $contactUid . '.vcf', self::serialiseVCard(uid: $contactUid, properties: $properties));
 		return $contactUid;
-	}//end syncToNamedAddressBook()
+	}//end createCardInNamedAddressBook()
 
 	/**
 	 * Search the signed-in user's address book with this URI, and no other.
@@ -270,14 +327,15 @@ class StackiqContactSyncService {
 	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function searchNamedAddressBook(string $query, string $addressBookUri, array $properties): array {
+		$vCard    = new RecordVCard();
 		$contacts = [];
 		foreach ($this->namedAddressBookResults(query: $query, addressBookUri: $addressBookUri, properties: $properties) as $result) {
 			$contacts[] = [
 				'uid' => (string)$result['UID'],
-				'name' => $this->firstValue(value: ($result['FN'] ?? '')),
-				'email' => $this->firstValue(value: ($result['EMAIL'] ?? '')),
+				'name' => $vCard->firstValue(value: ($result['FN'] ?? '')),
+				'email' => $vCard->firstValue(value: ($result['EMAIL'] ?? '')),
 				'emails' => array_map(
-					fn (mixed $email): string => $this->firstValue(value: [$email]),
+					fn (mixed $email): string => $vCard->firstValue(value: [$email]),
 					array_values((array)($result['EMAIL'] ?? []))
 				),
 				'addressBookKey' => (string)($result['addressbook-key'] ?? ''),
@@ -323,7 +381,7 @@ class StackiqContactSyncService {
 
 		$email = trim((string)($record['e-mailadres'] ?? $record['email'] ?? ''));
 		foreach ($this->namedAddressBookResults(query: $email, addressBookUri: $addressBookUri, properties: ['EMAIL']) as $result) {
-			if ($this->valueMatches(value: ($result['EMAIL'] ?? ''), needle: $email) === true) {
+			if ((new RecordVCard())->valueMatches(value: ($result['EMAIL'] ?? ''), needle: $email) === true) {
 				return (string)$result['UID'];
 			}
 		}
@@ -412,7 +470,7 @@ class StackiqContactSyncService {
 	}//end namedAddressBookId()
 
 	/**
-	 * A vCard 3.0 for a new contact, from the property set recordToVCard() builds.
+	 * A vCard 3.0 for a new contact, from the property set RecordVCard::properties() builds.
 	 *
 	 * Text values are escaped as RFC 6350 requires; `N` is structured, so only
 	 * its components are escaped. Lines are folded at 75 octets.
@@ -597,45 +655,70 @@ class StackiqContactSyncService {
 	 * @return ?array<string, mixed> The matched contact, or null.
 	 *
 	 * @spec openspec/specs/softwarecatalog-contacts-to-nc/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Complexity 10, exactly at the threshold. The
-	 * branches are the documented identity-match cascade: Contacts API availability, then e-mail,
-	 * then — for organisations only — CBS and KvK code as fallbacks, each with an
-	 * empty/absent-value guard so a blank legacy field can never match an unrelated contact. The
-	 * cascade order is the specified behaviour and is clearer read top-to-bottom in one method.
 	 */
 	public function findContactForRecord(string $objectType, array $record): ?array {
 		if ($this->isAvailable() === false) {
 			return null;
 		}
 
-		$email = trim((string)($record['e-mailadres'] ?? $record['email'] ?? ''));
-		if ($email !== '') {
-			$results = $this->contactsManager->search($email, ['EMAIL'], ['limit' => 25]);
-			foreach ($results as $result) {
-				if ($this->valueMatches(value: ($result['EMAIL'] ?? ''), needle: $email) === true) {
-					return $result;
-				}
-			}
-		}
+		$match = $this->contactByEmail(record: $record);
 
 		// Organisations: fall back to CBS/KvK code stored in the ORG/X-KvK field.
-		if ($objectType === 'organization') {
-			$cbsCode = trim((string)($record['cbsCode'] ?? ''));
-			if ($cbsCode !== '') {
-				$results = $this->contactsManager->search($cbsCode, ['ORG', 'X-KVK', 'NICKNAME'], ['limit' => 25]);
-				foreach ($results as $result) {
-					if ($this->valueMatches(value: ($result['X-KVK'] ?? ''), needle: $cbsCode) === true
-						|| $this->valueMatches(value: ($result['NICKNAME'] ?? ''), needle: $cbsCode) === true
-					) {
-						return $result;
-					}
-				}
+		if ($match === null && $objectType === 'organization') {
+			$match = $this->organisationContactByCode(record: $record);
+		}
+
+		return $match;
+	}//end findContactForRecord()
+
+	/**
+	 * The contact whose e-mail address equals the record's.
+	 *
+	 * @param array<string, mixed> $record The relationship record.
+	 *
+	 * @return ?array<string, mixed> The matched contact, or null.
+	 */
+	private function contactByEmail(array $record): ?array {
+		$email = trim((string)($record['e-mailadres'] ?? $record['email'] ?? ''));
+		if ($email === '') {
+			return null;
+		}
+
+		$results = $this->contactsManager->search($email, ['EMAIL'], ['limit' => 25]);
+		foreach ($results as $result) {
+			if ((new RecordVCard())->valueMatches(value: ($result['EMAIL'] ?? ''), needle: $email) === true) {
+				return $result;
 			}
 		}
 
 		return null;
-	}//end findContactForRecord()
+	}//end contactByEmail()
+
+	/**
+	 * The organisation contact whose KvK field or nickname equals the record's CBS code.
+	 *
+	 * @param array<string, mixed> $record The relationship record.
+	 *
+	 * @return ?array<string, mixed> The matched contact, or null.
+	 */
+	private function organisationContactByCode(array $record): ?array {
+		$cbsCode = trim((string)($record['cbsCode'] ?? ''));
+		if ($cbsCode === '') {
+			return null;
+		}
+
+		$vCard   = new RecordVCard();
+		$results = $this->contactsManager->search($cbsCode, ['ORG', 'X-KVK', 'NICKNAME'], ['limit' => 25]);
+		foreach ($results as $result) {
+			if ($vCard->valueMatches(value: ($result['X-KVK'] ?? ''), needle: $cbsCode) === true
+				|| $vCard->valueMatches(value: ($result['NICKNAME'] ?? ''), needle: $cbsCode) === true
+			) {
+				return $result;
+			}
+		}
+
+		return null;
+	}//end organisationContactByCode()
 
 	/**
 	 * Create a Nextcloud contact from a relationship record's legacy identity
@@ -663,7 +746,7 @@ class StackiqContactSyncService {
 			return null;
 		}
 
-		$properties = $this->recordToVCard(objectType: $objectType, record: $record);
+		$properties = (new RecordVCard())->properties(objectType: $objectType, record: $record);
 		if (($properties['FN'] ?? '') === '') {
 			$this->logger->warning('[StackiqContactSync] Record has no identity to create a contact from', ['objectType' => $objectType]);
 			return null;
@@ -676,104 +759,6 @@ class StackiqContactSyncService {
 
 		return (string)($created['UID'] ?? ($properties['UID'] ?? ''));
 	}//end createContactForRecord()
-
-	/**
-	 * Map a relationship record's legacy identity fields to vCard properties.
-	 *
-	 * @param string $objectType The relationship type.
-	 * @param array<string, mixed> $record The relationship record.
-	 *
-	 * @return array<string, mixed> The vCard property set.
-	 */
-	private function recordToVCard(string $objectType, array $record): array {
-		// The identity block differs per kind; the contact channels below are
-		// shared by both.
-		$properties = $this->identityProperties(objectType: $objectType, record: $record);
-
-		$email = trim((string)($record['e-mailadres'] ?? $record['email'] ?? ''));
-		if ($email !== '') {
-			$properties['EMAIL'] = $email;
-		}
-
-		$phone = trim((string)($record['telefoonnummer'] ?? ''));
-		if ($phone !== '') {
-			$properties['TEL'] = $phone;
-		}
-
-		return $properties;
-	}//end recordToVCard()
-
-	/**
-	 * Select and build the kind-specific vCard identity properties.
-	 *
-	 * @param string $objectType The relationship type.
-	 * @param array<string, mixed> $record The relationship record.
-	 *
-	 * @return array<string, mixed> The identity property set.
-	 */
-	private function identityProperties(string $objectType, array $record): array {
-		if ($objectType === 'organization') {
-			return $this->organisationIdentityProperties(record: $record);
-		}
-
-		return $this->personIdentityProperties(record: $record);
-	}//end identityProperties()
-
-	/**
-	 * Build the organisation-kind vCard identity properties.
-	 *
-	 * @param array<string, mixed> $record The relationship record.
-	 *
-	 * @return array<string, mixed> The identity property set.
-	 */
-	private function organisationIdentityProperties(array $record): array {
-		$name = trim((string)($record['name'] ?? ''));
-		$properties = [
-			'FN' => $name,
-			'ORG' => $name,
-			'KIND' => 'org',
-		];
-
-		$cbsCode = trim((string)($record['cbsCode'] ?? ''));
-		if ($cbsCode !== '') {
-			$properties['X-KVK'] = $cbsCode;
-			$properties['NICKNAME'] = $cbsCode;
-		}
-
-		$website = trim((string)($record['website'] ?? ''));
-		if ($website !== '') {
-			$properties['URL'] = $website;
-		}
-
-		return $properties;
-	}//end organisationIdentityProperties()
-
-	/**
-	 * Build the person-kind vCard identity properties.
-	 *
-	 * @param array<string, mixed> $record The relationship record.
-	 *
-	 * @return array<string, mixed> The identity property set.
-	 */
-	private function personIdentityProperties(array $record): array {
-		$voornaam = trim((string)($record['voornaam'] ?? ''));
-		$tussenvoegsel = trim((string)($record['tussenvoegsel'] ?? ''));
-		$lastName = trim((string)($record['achternaam'] ?? ''));
-		$family = trim(trim($tussenvoegsel . ' ' . $lastName));
-
-		$properties = [
-			'FN' => trim($voornaam . ' ' . $family),
-			// N = Family;Given;Additional;Prefix;Suffix.
-			'N' => $family . ';' . $voornaam . ';;;',
-		];
-
-		$role = trim((string)($record['role'] ?? ''));
-		if ($role !== '') {
-			$properties['TITLE'] = $role;
-		}
-
-		return $properties;
-	}//end personIdentityProperties()
 
 	/**
 	 * Return the key of the first writable addressbook, or null when none is
@@ -792,57 +777,4 @@ class StackiqContactSyncService {
 
 		return null;
 	}//end firstWritableAddressBookKey()
-
-	/**
-	 * Whether a (possibly multi-valued) vCard property contains the given
-	 * needle, case-insensitively.
-	 *
-	 * @param mixed $value The raw vCard property value.
-	 * @param string $needle The needle to compare against.
-	 *
-	 * @return boolean True when the value equals the needle.
-	 */
-	private function valueMatches(mixed $value, string $needle): bool {
-		$needle = strtolower(trim($needle));
-		if ($needle === '') {
-			return false;
-		}
-
-		if (is_array($value) === true) {
-			foreach ($value as $candidate) {
-				if (is_array($candidate) === true) {
-					$candidate = ($candidate['value'] ?? '');
-				}
-
-				if (strtolower(trim((string)$candidate)) === $needle) {
-					return true;
-				}
-			}
-
-			return false;
-		}
-
-		return strtolower(trim((string)$value)) === $needle;
-	}//end valueMatches()
-
-	/**
-	 * Extract the first scalar value from a vCard property that may be an
-	 * array (multi-valued / typed) or a string.
-	 *
-	 * @param mixed $value The raw property value.
-	 *
-	 * @return string The first scalar value as a string.
-	 */
-	private function firstValue(mixed $value): string {
-		if (is_array($value) === true) {
-			$first = ($value[0] ?? '');
-			if (is_array($first) === true) {
-				return (string)($first['value'] ?? '');
-			}
-
-			return (string)$first;
-		}
-
-		return (string)$value;
-	}//end firstValue()
 }//end class
