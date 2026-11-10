@@ -297,6 +297,54 @@ class SymfonyEmailServiceDeliveryTest extends TestCase {
 	}
 
 	/**
+	 * SMTP DSN: encoded credentials, SSL scheme, and the wrapped failure.
+	 *
+	 * @return void
+	 */
+	public function testSmtpTransport(): void {
+		$cases = [
+			'tls'        => ['smtpHost' => 'mail.example.org', 'smtpPort' => 25, 'smtpEncryption' => 'tls', 'smtpUsername' => 'u:x', 'smtpPassword' => 'p@w'],
+			'ssl'        => ['smtpHost' => 'mail.example.org', 'smtpPort' => 25, 'smtpEncryption' => 'ssl'],
+			'defaults'   => [],
+			'none'       => ['smtpHost' => 'relay.example.org', 'smtpEncryption' => ''],
+			'empty-host' => ['smtpHost' => '', 'smtpUsername' => 'user', 'smtpPassword' => 'secret'],
+			'garbage'    => ['smtpHost' => 'ho st', 'smtpUsername' => 'user', 'smtpPassword' => 'secret'],
+		];
+		$results = [];
+		foreach ($cases as $name => $settings) {
+			$service = $this->makeService(['transportType' => 'smtp'] + $settings);
+			try {
+				$transport      = $this->callPrivate($service, 'createTransport');
+				$results[$name] = [get_class($transport), (string)$transport, $this->log->records];
+			} catch (\Throwable $e) {
+				$results[$name] = [get_class($e), $e->getMessage(), get_class($e->getPrevious()), $this->log->records];
+			}
+		}
+
+		$this->assertSame(
+			[
+				'tls'        => ['Symfony\\Component\\Mailer\\Transport\\Smtp\\EsmtpTransport', 'smtp://mail.example.org', []],
+				'ssl'        => ['Symfony\\Component\\Mailer\\Transport\\Smtp\\EsmtpTransport', 'smtps://mail.example.org', []],
+				'defaults'   => ['Symfony\\Component\\Mailer\\Transport\\Smtp\\EsmtpTransport', 'smtp://localhost:587', []],
+				'none'       => ['Symfony\\Component\\Mailer\\Transport\\Smtp\\EsmtpTransport', 'smtp://relay.example.org:587', []],
+				'empty-host' => [
+					'RuntimeException',
+					'Failed to create SMTP transport: The mailer DSN is invalid.',
+					'Symfony\\Component\\Mailer\\Exception\\InvalidArgumentException',
+					[['error', 'Failed to create email transport', ['transportType' => 'smtp', 'error' => 'Failed to create SMTP transport: The mailer DSN is invalid.']]],
+				],
+				'garbage'    => [
+					'RuntimeException',
+					'Failed to create SMTP transport: The mailer DSN has some garbage at the end.',
+					'Symfony\\Component\\Mailer\\Exception\\InvalidArgumentException',
+					[['error', 'Failed to create email transport', ['transportType' => 'smtp', 'error' => 'Failed to create SMTP transport: The mailer DSN has some garbage at the end.']]],
+				],
+			],
+			$results
+		);
+	}
+
+	/**
 	 * The four send methods across their skip, failure and success paths.
 	 *
 	 * @return void
