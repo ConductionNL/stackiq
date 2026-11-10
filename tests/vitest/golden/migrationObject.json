@@ -1,0 +1,128 @@
+{
+	"cannot migrate": {
+		"trace": [],
+		"loading": "before",
+		"step": 3,
+		"migrationResult": null
+	},
+	"succeeds": {
+		"trace": [
+			[
+				"convertUIToMapping"
+			],
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/migrate",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json"
+					},
+					"body": "{\"sourceRegister\":1,\"sourceSchema\":2,\"targetRegister\":3,\"targetSchema\":4,\"objects\":[\"o1\",\"o2\"],\"mapping\":{\"title\":\"name\"}}"
+				}
+			],
+			[
+				"refreshObjectList"
+			]
+		],
+		"loading": false,
+		"step": 4,
+		"migrationResult": {
+			"success": true,
+			"migrated": 2
+		}
+	},
+	"refused": {
+		"trace": [
+			[
+				"convertUIToMapping"
+			],
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/migrate",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json"
+					},
+					"body": "{\"sourceRegister\":1,\"sourceSchema\":2,\"targetRegister\":3,\"targetSchema\":4,\"objects\":[\"o1\",\"o2\"],\"mapping\":{\"title\":\"name\"}}"
+				}
+			],
+			[
+				"console.error",
+				"Error performing migration:",
+				"Error: HTTP error! status: 409"
+			]
+		],
+		"loading": false,
+		"step": 4,
+		"migrationResult": {
+			"success": false,
+			"errors": [
+				"HTTP error! status: 409"
+			]
+		}
+	},
+	"network failure": {
+		"trace": [
+			[
+				"convertUIToMapping"
+			],
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/migrate",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json"
+					},
+					"body": "{\"sourceRegister\":1,\"sourceSchema\":2,\"targetRegister\":3,\"targetSchema\":4,\"objects\":[\"o1\",\"o2\"],\"mapping\":{\"title\":\"name\"}}"
+				}
+			],
+			[
+				"console.error",
+				"Error performing migration:",
+				"TypeError: Failed to fetch"
+			]
+		],
+		"loading": false,
+		"step": 4,
+		"migrationResult": {
+			"success": false,
+			"errors": [
+				"Failed to fetch"
+			]
+		}
+	},
+	"failure without a message": {
+		"trace": [
+			[
+				"convertUIToMapping"
+			],
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/migrate",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json"
+					},
+					"body": "{\"sourceRegister\":1,\"sourceSchema\":2,\"targetRegister\":3,\"targetSchema\":4,\"objects\":[\"o1\",\"o2\"],\"mapping\":{\"title\":\"name\"}}"
+				}
+			],
+			[
+				"console.error",
+				"Error performing migration:",
+				"Error"
+			]
+		],
+		"loading": false,
+		"step": 4,
+		"migrationResult": {
+			"success": false,
+			"errors": [
+				"An error occurred during migration"
+			]
+		}
+	}
+}
