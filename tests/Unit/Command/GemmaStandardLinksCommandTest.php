@@ -17,6 +17,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Command;
 
+use OCA\OpenRegister\Service\Object\ObjectPatch;
 use OCA\Stackiq\Command\GemmaStandardLinksCommand;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -265,26 +266,25 @@ class GemmaStandardLinksCommandTest extends TestCase {
 			}
 
 			/**
-			 * @param string      $objectId      The object id.
-			 * @param array       $data          The patch.
-			 * @param string|null $register      The register.
-			 * @param string|null $schema        The schema.
+			 * @param ObjectPatch $patch         The id, properties and target.
 			 * @param bool        $_rbac         RBAC flag.
 			 * @param bool        $_multitenancy Multitenancy flag.
 			 *
 			 * @return array<string, mixed> The patch, echoed.
 			 */
 			public function patchObject(
-				string $objectId,
-				array $data,
-				?string $register = null,
-				?string $schema = null,
+				ObjectPatch $patch,
 				bool $_rbac = true,
 				bool $_multitenancy = true,
 			): array {
 				if ($this->test->failWrites === true) {
 					throw new RuntimeException('write refused');
 				}
+
+				$objectId = $patch->objectId;
+				$data     = $patch->data;
+				$register = $patch->target->register;
+				$schema   = $patch->target->schema;
 
 				$this->test->writes[] = ['id' => $objectId] + compact('data', 'register', 'schema', '_rbac', '_multitenancy');
 				foreach ($this->test->rows[$schema] as $index => $row) {
