@@ -6048,16 +6048,10 @@ class SettingsService implements ObjectTypeLocatorInterface {
 
 					// BULK OPERATION: Create entire batch in single operation.
 					// Validation and events are skipped for performance.
+					$defaults   = new BulkBatchDefaults(register: $voorzieningenConfig['register'], schema: $voorzieningenConfig['organisatie_schema']);
 					$bulkResult = $objectService->saveObjects(
 						objects: $batch,
-						options: new BulkSaveOptions(
-							defaults: new BulkBatchDefaults(
-								register: $voorzieningenConfig['register'],
-								schema: $voorzieningenConfig['organisatie_schema']
-							),
-							validation: false,
-							events: false
-						),
+						options: new BulkSaveOptions(defaults: $defaults, validation: false, events: false),
 						_rbac: false,
 						_multitenancy: false
 					);
