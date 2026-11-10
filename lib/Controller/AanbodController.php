@@ -44,6 +44,44 @@ use Psr\Log\LoggerInterface;
  */
 class AanbodController extends Controller {
 	/**
+	 * The object the accept and deny actions work on.
+	 *
+	 * @var array<string, string>
+	 */
+	private const ACTION_OBJECT = [
+		'idParam' => 'uuid',
+		'idLabel' => 'Aanbod UUID',
+		'logIdKey' => 'aanbod_id',
+		'notFoundError' => 'Aanbod object not found',
+	];
+
+	/**
+	 * The accept and deny actions: route, log messages and error body fields.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	private const ACTIONS = [
+		'accept' => [
+			'endpoint' => '/api/aanbod/%s/accept',
+			'method' => 'PUT',
+			'started' => 'API: Accepting aanbod object',
+			'completed' => 'API: Accept aanbod request completed',
+			'failed' => 'API: Failed to accept aanbod object',
+			'emptyResult' => ['aanbod' => null],
+			'reportsDeleted' => false,
+		],
+		'deny' => [
+			'endpoint' => '/api/aanbod/%s/deny',
+			'method' => 'DELETE',
+			'started' => 'API: Denying aanbod object',
+			'completed' => 'API: Deny aanbod request completed',
+			'failed' => 'API: Failed to deny aanbod object',
+			'emptyResult' => ['deleted' => false],
+			'reportsDeleted' => true,
+		],
+	];
+
+	/**
 	 * Constructor for AanbodController.
 	 *
 	 * @param string $appName The name of the app
@@ -202,84 +240,10 @@ class AanbodController extends Controller {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$this->logger->info(
-			'API: Accepting aanbod object',
-			[
-				'endpoint' => "/api/aanbod/{$uuid}/accept",
-				'method' => 'PUT',
-				'aanbod_id' => $uuid,
-			]
+		return $this->actionResponder()->respond(
+			action: $this->objectAction(id: $uuid, name: 'accept'),
+			perform: fn (array $options): array => $this->aanbodService->acceptAanbod(aanbodId: $uuid, options: $options)
 		);
-
-		try {
-			// Validate input.
-			if (empty($uuid) === true) {
-				return new JSONResponse(
-					[
-						'success' => false,
-						'error' => 'Aanbod UUID is required',
-						'aanbod' => null,
-					],
-					400
-				);
-			}
-
-			// Parse any additional options from request body.
-			$options = [];
-			$requestBody = $this->request->getParams();
-			if (empty($requestBody) === false) {
-				$options = array_filter(
-					$requestBody,
-					function ($key) {
-						// Exclude path parameters.
-						return in_array(needle: $key, haystack: ['uuid']) === false;
-					},
-					ARRAY_FILTER_USE_KEY
-				);
-			}
-
-			// Accept aanbod object via service.
-			$result = $this->aanbodService->acceptAanbod(aanbodId: $uuid, options: $options);
-
-			// Determine appropriate HTTP status code.
-			$statusCode = 500;
-			if ($result['success'] === true) {
-				$statusCode = 200;
-			} elseif ($result['error'] === 'Aanbod object not found') {
-				$statusCode = 404;
-			} elseif (strpos(haystack: ($result['error'] ?? ''), needle: 'Operation not allowed') !== false) {
-				$statusCode = 403;
-			}
-
-			$this->logger->info(
-				'API: Accept aanbod request completed',
-				[
-					'aanbod_id' => $uuid,
-					'success' => $result['success'],
-					'status_code' => $statusCode,
-				]
-			);
-
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to accept aanbod object',
-				[
-					'aanbod_id' => $uuid,
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'success' => false,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-					'aanbod' => null,
-				],
-				500
-			);
-		}//end try
 	}//end acceptAanbod()
 
 	/**
@@ -305,86 +269,32 @@ class AanbodController extends Controller {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$this->logger->info(
-			'API: Denying aanbod object',
-			[
-				'endpoint' => "/api/aanbod/{$uuid}/deny",
-				'method' => 'DELETE',
-				'aanbod_id' => $uuid,
-			]
+		return $this->actionResponder()->respond(
+			action: $this->objectAction(id: $uuid, name: 'deny'),
+			perform: fn (array $options): array => $this->aanbodService->denyAanbod(aanbodId: $uuid, options: $options)
 		);
-
-		try {
-			// Validate input.
-			if (empty($uuid) === true) {
-				return new JSONResponse(
-					[
-						'success' => false,
-						'error' => 'Aanbod UUID is required',
-						'deleted' => false,
-					],
-					400
-				);
-			}
-
-			// Parse any additional options from request body.
-			$options = [];
-			$requestBody = $this->request->getParams();
-			if (empty($requestBody) === false) {
-				$options = array_filter(
-					$requestBody,
-					function ($key) {
-						// Exclude path parameters.
-						return in_array(needle: $key, haystack: ['uuid']) === false;
-					},
-					ARRAY_FILTER_USE_KEY
-				);
-			}
-
-			// Deny aanbod object via service.
-			$result = $this->aanbodService->denyAanbod(aanbodId: $uuid, options: $options);
-
-			// Determine appropriate HTTP status code.
-			$statusCode = 500;
-			if ($result['success'] === true) {
-				$statusCode = 200;
-			} elseif ($result['error'] === 'Aanbod object not found') {
-				$statusCode = 404;
-			} elseif (strpos(haystack: ($result['error'] ?? ''), needle: 'Operation not allowed') !== false) {
-				$statusCode = 403;
-			}
-
-			$this->logger->info(
-				'API: Deny aanbod request completed',
-				[
-					'aanbod_id' => $uuid,
-					'success' => $result['success'],
-					'deleted' => $result['deleted'] ?? false,
-					'status_code' => $statusCode,
-				]
-			);
-
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to deny aanbod object',
-				[
-					'aanbod_id' => $uuid,
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'success' => false,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-					'deleted' => false,
-				],
-				500
-			);
-		}//end try
 	}//end denyAanbod()
+
+	/**
+	 * The responder that runs this controller's object actions.
+	 *
+	 * @return ObjectActionResponder
+	 */
+	private function actionResponder(): ObjectActionResponder {
+		return new ObjectActionResponder(logger: $this->logger, request: $this->request);
+	}//end actionResponder()
+
+	/**
+	 * Build an object action from the action table.
+	 *
+	 * @param string $id   The object id from the route.
+	 * @param string $name The action name in the action table.
+	 *
+	 * @return ObjectAction
+	 */
+	private function objectAction(string $id, string $name): ObjectAction {
+		return new ObjectAction(id: $id, definition: self::ACTIONS[$name] + self::ACTION_OBJECT);
+	}//end objectAction()
 
 	/**
 	 * Parse query parameters into options array.
