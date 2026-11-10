@@ -708,28 +708,8 @@ class FacetService {
 	 */
 	private function buildDimensionValueMap(array $modulesByObjectId): array {
 		// Pass 1: direct fields (referenceComponent identifiers + standard identifiers).
-		$refCompIdsByObjId = [];
-		$stdValsByObjId = [];
-		$allRefCompIds = [];
-
-		foreach ($modulesByObjectId as $objectId => $modules) {
-			$refCompIds = [];
-			$standards = [];
-
-			foreach ($modules as $module) {
-				$refCompIds = array_merge($refCompIds, $this->extractRelatedIdentifiers(object: $module, field: 'referenceComponents'));
-				$standards = array_merge($standards, $this->extractRelatedNames(object: $module, field: 'standardVersions'));
-			}
-
-			$refCompIds = array_values(array_unique($refCompIds));
-			$standards = array_values(array_unique(array_filter($standards)));
-
-			$refCompIdsByObjId[$objectId] = $refCompIds;
-			$stdValsByObjId[$objectId] = $standards;
-			$allRefCompIds = array_merge($allRefCompIds, $refCompIds);
-		}
-
-		$allRefCompIds = array_values(array_unique($allRefCompIds));
+		$direct = array_map(fn (array $modules): array => $this->directDimensions(modules: $modules), $modulesByObjectId);
+		$allRefCompIds = array_values(array_unique(array_merge([], ...array_values(array_column($direct, 'refCompIds')))));
 
 		// Pass 2: resolve referenceComponent elements themselves (for the
 		// referenceComponent facet's display value + the `domain` field).
@@ -737,51 +717,84 @@ class FacetService {
 
 		// Pass 3: resolve applicationService elements reachable via a `relation`
 		// touching one of the referenceComponent elements.
-		$appSvcNmByRefComp = $this->resolveApplicatieservicesForReferentiecomponenten(
-			refCompIds: $allRefCompIds
+		$resolution = new DimensionResolution(
+			elementsById: $elementsById,
+			applicationServices: $this->resolveApplicatieservicesForReferentiecomponenten(refCompIds: $allRefCompIds)
 		);
 
 		// Assemble the final per-object dimension map.
-		$dimValsByObjId = [];
-
-		foreach ($modulesByObjectId as $objectId => $modules) {
-			$refCompIds = $refCompIdsByObjId[$objectId] ?? [];
-
-			$refCompNames = [];
-			$domeinValues = [];
-			$appSvcValues = [];
-
-			foreach ($refCompIds as $refCompId) {
-				$element = $elementsById[$refCompId] ?? null;
-
-				// `elementDisplayName()` itself falls back to `$refCompId` when
-				// `$element` carries no usable `name` — pass an empty element
-				// array when unresolved so the same call covers both cases.
-				$refCompNames[] = $this->elementDisplayName(
-					element: $element ?? [],
-					fallbackIdentifier: $refCompId
-				);
-
-				$domain = $element[self::ELEMENT_DOMAIN_PROPERTY] ?? null;
-				if (is_string($domain) === true && trim($domain) !== '') {
-					$domeinValues[] = trim($domain);
-				}
-
-				foreach (($appSvcNmByRefComp[$refCompId] ?? []) as $appSvcName) {
-					$appSvcValues[] = $appSvcName;
-				}
-			}
-
-			$dimValsByObjId[$objectId] = [
-				'referenceComponent' => array_values(array_unique($refCompNames)),
-				'standard' => $stdValsByObjId[$objectId] ?? [],
-				'domain' => array_values(array_unique($domeinValues)),
-				'applicationService' => array_values(array_unique($appSvcValues)),
-			];
-		}//end foreach
-
-		return $dimValsByObjId;
+		return array_map(fn (array $values): array => $this->objectDimensions(resolution: $resolution, direct: $values), $direct);
 	}//end buildDimensionValueMap()
+
+	/**
+	 * The referenceComponent identifiers and the standard names an object's modules carry, each distinct.
+	 *
+	 * @param array<int, array> $modules The object's modules.
+	 *
+	 * @return array{refCompIds: array<int, string>, standards: array<int, string>}
+	 */
+	private function directDimensions(array $modules): array {
+		$refCompIds = [];
+		$standards = [];
+
+		foreach ($modules as $module) {
+			$refCompIds = array_merge($refCompIds, $this->extractRelatedIdentifiers(object: $module, field: 'referenceComponents'));
+			$standards = array_merge($standards, $this->extractRelatedNames(object: $module, field: 'standardVersions'));
+		}
+
+		return [
+			'refCompIds' => array_values(array_unique($refCompIds)),
+			'standards' => array_values(array_unique(array_filter($standards))),
+		];
+	}//end directDimensions()
+
+	/**
+	 * The four dimension values of one object.
+	 *
+	 * @param DimensionResolution $resolution The resolved elements and application services.
+	 * @param array{refCompIds: array<int, string>, standards: array<int, string>} $direct The object's direct values.
+	 *
+	 * @return array<string, array<int, string>>
+	 */
+	private function objectDimensions(DimensionResolution $resolution, array $direct): array {
+		// `elementDisplayName()` itself falls back to the identifier when the
+		// element carries no usable `name` — pass an empty element array when
+		// unresolved so the same call covers both cases.
+		$refCompNames = array_map(
+			fn ($refCompId): string => $this->elementDisplayName(element: ($resolution->elementsById[$refCompId] ?? []), fallbackIdentifier: $refCompId),
+			$direct['refCompIds']
+		);
+
+		$domeinValues = [];
+		$appSvcValues = [];
+		foreach ($direct['refCompIds'] as $refCompId) {
+			$domeinValues = array_merge($domeinValues, self::elementDomain(element: ($resolution->elementsById[$refCompId] ?? null)));
+			$appSvcValues = array_merge($appSvcValues, array_values($resolution->applicationServices[$refCompId] ?? []));
+		}
+
+		return [
+			'referenceComponent' => array_values(array_unique($refCompNames)),
+			'standard' => $direct['standards'],
+			'domain' => array_values(array_unique($domeinValues)),
+			'applicationService' => array_values(array_unique($appSvcValues)),
+		];
+	}//end objectDimensions()
+
+	/**
+	 * The trimmed domain of an element, as a list of none or one.
+	 *
+	 * @param array|null $element The element, or null when unresolved.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function elementDomain(?array $element): array {
+		$domain = $element[self::ELEMENT_DOMAIN_PROPERTY] ?? null;
+		if (is_string($domain) === true && trim($domain) !== '') {
+			return [trim($domain)];
+		}
+
+		return [];
+	}//end elementDomain()
 
 	/**
 	 * Resolve `element` objects by identifier, bounded by an explicit `_limit`.
