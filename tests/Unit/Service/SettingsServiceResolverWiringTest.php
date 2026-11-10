@@ -5,8 +5,8 @@
  *
  * Covers stackiq-adopt-or-abstractions Phase 2.5 (resolver-injection unit tests).
  * Confirms that getSchemaIdForObjectType / getRegisterIdForObjectType route the
- * generic-fallback path through `RegisterResolverService::resolveSchemaId` /
- * `resolveRegisterId` when the resolver is available, and gracefully degrade to
+ * generic-fallback path through `RegisterResolverService::lookupId(ConfigLookup)`
+ * when the resolver is available, and gracefully degrade to
  * the legacy `IAppConfig::getValueString` read when it is not.
  *
  * @category  Test
@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+use OCA\OpenRegister\Service\ConfigLookup;
 use OCA\OpenRegister\Service\RegisterResolverService;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
@@ -158,11 +159,12 @@ class SettingsServiceResolverWiringTest extends TestCase {
 
 		$resolver = $this->createMock(RegisterResolverService::class);
 		$resolver->expects($this->once())
-			->method('resolveSchemaId')
+			->method('lookupId')
 			->willReturnCallback(
-				function (string $appId, string $configKey, ?string $default = null, ?string $organisationUuid = null): string {
-					$this->assertSame('stackiq', $appId);
-					$this->assertSame('wijktypeXyz_schema', $configKey);
+				function (ConfigLookup $lookup): string {
+					$this->assertSame('stackiq', $lookup->appId);
+					$this->assertSame('wijktypeXyz_schema', $lookup->configKey);
+					$this->assertNull($lookup->organisationUuid);
 					return '42';
 				}
 			);
@@ -191,7 +193,7 @@ class SettingsServiceResolverWiringTest extends TestCase {
 		$this->appManager->method('getInstalledApps')->willReturn(['openregister']);
 
 		$resolver = $this->createMock(RegisterResolverService::class);
-		$resolver->method('resolveSchemaId')->willReturn('');
+		$resolver->method('lookupId')->willReturn('');
 
 		$this->container->method('get')->willReturn($resolver);
 
@@ -231,11 +233,12 @@ class SettingsServiceResolverWiringTest extends TestCase {
 
 		$resolver = $this->createMock(RegisterResolverService::class);
 		$resolver->expects($this->once())
-			->method('resolveRegisterId')
+			->method('lookupId')
 			->willReturnCallback(
-				function (string $appId, string $configKey, ?string $default = null, ?string $organisationUuid = null): string {
-					$this->assertSame('stackiq', $appId);
-					$this->assertSame('wijktype_register', $configKey);
+				function (ConfigLookup $lookup): string {
+					$this->assertSame('stackiq', $lookup->appId);
+					$this->assertSame('wijktype_register', $lookup->configKey);
+					$this->assertNull($lookup->organisationUuid);
 					return '7';
 				}
 			);
