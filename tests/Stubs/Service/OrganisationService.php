@@ -35,9 +35,11 @@ abstract class OrganisationService {
 	 * Get the caller's active organisation, or null when none is set /
 	 * resolvable.
 	 *
+	 * @param array|null $preloadedOrgs Organisations already loaded for the caller.
+	 *
 	 * @return Organisation|null
 	 */
-	abstract public function getActiveOrganisation(): ?Organisation;
+	abstract public function getActiveOrganisation(?array $preloadedOrgs = null): ?Organisation;
 
 	/**
 	 * Get the default organisation, creating it when it does not exist yet.
@@ -56,9 +58,11 @@ abstract class OrganisationService {
 	/**
 	 * Get the caller's own organisations (session-scoped).
 	 *
+	 * @param bool $_useCache Whether to use the session cache.
+	 *
 	 * @return Organisation[]
 	 */
-	abstract public function getUserOrganisations(): array;
+	abstract public function getUserOrganisations(bool $_useCache = true): array;
 
 	/**
 	 * Add a user to an organisation. Real implementation performs no
