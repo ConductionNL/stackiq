@@ -997,10 +997,12 @@ class SettingsService implements ObjectTypeLocatorInterface {
 
 			if ($resolver !== null) {
 				try {
-					$schemaId = $resolver->resolveSchemaId(
-						appId: $this->appName,
-						configKey: "{$objectType}_schema",
-						default: '',
+					$schemaId = $resolver->lookupId(
+						lookup: new \OCA\OpenRegister\Service\ConfigLookup(
+							appId: $this->appName,
+							configKey: "{$objectType}_schema",
+							default: '',
+						)
 					);
 				} catch (\Throwable $e) {
 					// MissingConfigException or transient resolver failure — fall through to legacy read.
@@ -1167,10 +1169,12 @@ class SettingsService implements ObjectTypeLocatorInterface {
 
 			if ($resolver !== null) {
 				try {
-					$registerId = $resolver->resolveRegisterId(
-						appId: $this->appName,
-						configKey: "{$objectType}_register",
-						default: '',
+					$registerId = $resolver->lookupId(
+						lookup: new \OCA\OpenRegister\Service\ConfigLookup(
+							appId: $this->appName,
+							configKey: "{$objectType}_register",
+							default: '',
+						)
 					);
 				} catch (\Throwable $e) {
 					// MissingConfigException or transient resolver failure — fall through to legacy read.
@@ -6477,8 +6481,9 @@ class SettingsService implements ObjectTypeLocatorInterface {
 
 			$organisationMapper = $this->container->get(\OCA\OpenRegister\Db\OrganisationMapper::class);
 
-			// Get all organisations (bypass RBAC for admin access).
-			$organisations = $organisationMapper->findAll(null, null, [], [], [], [], null, false, false);
+			// Get all organisations. The mapper applies no RBAC; an unbounded ListQuery
+			// asks for every row (findAll() is paged and takes int limit/offset).
+			$organisations = $organisationMapper->findList(query: \OCA\OpenRegister\Db\ListQuery::unbounded());
 
 			$result = [];
 			foreach ($organisations as $org) {
