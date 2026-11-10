@@ -3,108 +3,44 @@
 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 */
 
 <script setup>
-import { navigationStore, objectStore } from '../../store/store.js'
+import { objectStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog
-		:name="dialogTitle"
-		:canClose="true"
-		size="normal"
-		class="mass-action-dialog"
-		@update:open="handleDialogClose">
-		<!-- Object Selection Review -->
-		<div v-if="success === null" class="depublish-step">
-			<NcNoteCard type="warning">
+	<MassObjectDialog
+		:title="dialogTitle"
+		stepClass="depublish-step"
+		noteType="warning"
+		:singleTitle="t('stackiq', 'Publication to Depublish')"
+		:successOne="t('stackiq', 'Object successfully depublished')"
+		:successMany="t('stackiq', 'Objects successfully depublished')"
+		buttonVariant="error"
+		:buttonLabel="t('stackiq', 'Depublish')"
+		:action="massAction">
+		<template #note>
 				{{
 					t(
 						'stackiq',
 						'Objects will be depublished with the current date and time. This will make them unavailable to the public while keeping their published date intact.',
 					)
 				}}
-			</NcNoteCard>
-
-			<SelectedObjectsList
-				:title="
-					(objectStore.selectedObjects?.length || 0) === 1
-						? t('stackiq', 'Publication to Depublish')
-						: t('stackiq', 'Selected Publications')
-				"
-				:showRemove="true" />
-		</div>
-
-		<NcNoteCard v-if="success" type="success">
-			<p>
-				{{
-					originalSelectedCount > 1
-						? t('stackiq', 'Objects successfully depublished')
-						: t('stackiq', 'Object successfully depublished')
-				}}
-			</p>
-		</NcNoteCard>
-		<NcNoteCard v-if="error" type="error">
-			<p>{{ error }}</p>
-		</NcNoteCard>
-
-		<template #actions>
-			<NcButton @click="closeDialog">
-				<template #icon>
-					<Cancel :size="20" />
-				</template>
-				{{
-					success === null ? t('stackiq', 'Cancel') : t('stackiq', 'Close')
-				}}
-			</NcButton>
-			<NcButton
-				v-if="success === null"
-				:disabled="
-					loading || (objectStore.selectedObjects?.length || 0) === 0
-				"
-				variant="error"
-				@click="depublishObjects()">
-				<template #icon>
-					<NcLoadingIcon v-if="loading" :size="20" />
-					<PublishOff v-if="!loading" :size="20" />
-				</template>
-				{{ t('stackiq', 'Depublish') }}
-			</NcButton>
 		</template>
-	</NcDialog>
+		<template #icon>
+			<PublishOff :size="20" />
+		</template>
+	</MassObjectDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-import Cancel from 'vue-material-design-icons/Cancel.vue'
 import PublishOff from 'vue-material-design-icons/PublishOff.vue'
-import SelectedObjectsList from '../../components/SelectedObjectsList.vue'
-import { runMassObjectAction } from '../../utils/massObjectAction.js'
+import MassObjectDialog from './MassObjectDialog.vue'
 
 export default {
 	name: 'MassDepublishObjects',
 	components: {
-		NcDialog,
-		NcButton,
-		NcLoadingIcon,
-		NcNoteCard,
-		SelectedObjectsList,
+		MassObjectDialog,
 		// Icons
 		PublishOff,
-		Cancel,
-	},
-
-	props: {
-		// No props needed - always uses selected objects from store
-	},
-
-	data() {
-		return {
-			success: null,
-			loading: false,
-			error: false,
-			result: null,
-			closeModalTimeout: null,
-			originalSelectedCount: 0,
-		}
 	},
 
 	computed: {
@@ -133,80 +69,30 @@ export default {
 				count,
 			})
 		},
-	},
-
-	mounted() {
-		this.initializeSelection()
-	},
-
-	methods: {
-		/**
-		 * @spec openspec/specs/fe-object-modals/spec.md
-		 */
-		initializeSelection() {
-			// Store the original count for success message
-			this.originalSelectedCount = objectStore.selectedObjects?.length || 0
-		},
 
 		/**
+		 * The store call and the texts of this mass action.
+		 *
+		 * @return {object} The action, as runMassObjectAction takes it
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
-		closeDialog() {
-			// Clear any pending timeout that might reopen the dialog
-			if (this.closeModalTimeout) {
-				clearTimeout(this.closeModalTimeout)
-				this.closeModalTimeout = null
-			}
-			navigationStore.setDialog(false)
-		},
-
-		/**
-		 * @param isOpen
-		 * @spec openspec/specs/fe-object-modals/spec.md
-		 */
-		handleDialogClose(isOpen) {
-			if (!isOpen) {
-				this.closeDialog()
-			}
-		},
-
-		/**
-		 * @spec openspec/specs/fe-object-modals/spec.md
-		 */
-		async depublishObjects() {
-			await runMassObjectAction(this, {
+		massAction() {
+			return {
 				run: () =>
 					objectStore.massDepublishObjects([...this.objectsToDepublish]),
+
 				failedText: (count) =>
 					this.t('stackiq', 'Failed to depublish {count} objects', {
 						count,
 					}),
+
 				errorText: () =>
 					this.t(
 						'stackiq',
 						'An error occurred while depublishing objects',
 					),
-			})
+			}
 		},
 	},
 }
 </script>
-
-<style scoped>
-.depublish-step {
-	padding: 0;
-}
-
-.step-title {
-	margin-top: 0 !important;
-	margin-bottom: 16px;
-	color: var(--color-main-text);
-}
-</style>
-
-<style scoped>
-/* Ensure mass action dialogs appear on top of other modals */
-.mass-action-dialog {
-	z-index: 10000 !important;
-}
-</style>
