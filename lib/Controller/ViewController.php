@@ -43,6 +43,136 @@ use Psr\Log\LoggerInterface;
  */
 class ViewController extends Controller {
 	/**
+	 * The `include_products` parameter as documented on several endpoints.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private const DOC_PARAM_INCLUDE_PRODUCTS = [
+		'name' => 'include_products',
+		'type' => 'boolean',
+		'required' => false,
+		'description' => 'Include product data in view nodes',
+	];
+
+	/**
+	 * The `include_gebruik` parameter as documented on several endpoints.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private const DOC_PARAM_INCLUDE_GEBRUIK = [
+		'name' => 'include_gebruik',
+		'type' => 'boolean',
+		'required' => false,
+		'description' => 'Include usage data in view nodes',
+	];
+
+	/**
+	 * The `include_deelnames_gebruik` parameter as documented on several endpoints.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private const DOC_PARAM_INCLUDE_DEELNAMES_GEBRUIK = [
+		'name' => 'include_deelnames_gebruik',
+		'type' => 'boolean',
+		'required' => false,
+		'description' => 'Include participation usage data in view nodes',
+	];
+
+	/**
+	 * The static documentation of the View API endpoints.
+	 *
+	 * @var array<string, mixed>
+	 */
+	private const API_DOCUMENTATION = [
+		'api_version' => '1.0.0',
+		'description' => 'Stackiq View API - Query and enrich ArchiMate views',
+		'base_url' => '/api/views',
+		'endpoints' => [
+			[
+				'method' => 'GET',
+				'path' => '/api/views',
+				'description' => 'Get all views with optional enrichment',
+				'parameters' => [
+					self::DOC_PARAM_INCLUDE_PRODUCTS,
+					self::DOC_PARAM_INCLUDE_GEBRUIK,
+					self::DOC_PARAM_INCLUDE_DEELNAMES_GEBRUIK,
+				],
+				'response_example' => [
+					'success' => true,
+					'views' => [
+						[
+							'id' => 'view-lv01',
+							'name' => 'LV01 BGT basisregistratie en SVB view',
+							'documentation' => 'Mocked from GEMMA LV01.',
+							'viewNodes' => [],
+							'viewRelationships' => [],
+						],
+					],
+					'count' => 1,
+					'enrichments_applied' => [],
+				],
+			],
+			[
+				'method' => 'GET',
+				'path' => '/api/views/{viewId}',
+				'description' => 'Get a specific view by ID with optional enrichment',
+				'parameters' => [
+					[
+						'name' => 'viewId',
+						'type' => 'string',
+						'required' => true,
+						'description' => 'The view identifier (in URL path)',
+					],
+					self::DOC_PARAM_INCLUDE_PRODUCTS,
+					self::DOC_PARAM_INCLUDE_GEBRUIK,
+					self::DOC_PARAM_INCLUDE_DEELNAMES_GEBRUIK,
+				],
+				'response_example' => [
+					'success' => true,
+					'view' => [
+						'id' => 'view-lv01',
+						'name' => 'LV01 BGT basisregistratie en SVB view',
+						'documentation' => 'Mocked from GEMMA LV01.',
+						'viewNodes' => [],
+						'viewRelationships' => [],
+					],
+					'enrichments_applied' => [],
+				],
+			],
+			[
+				'method' => 'GET',
+				'path' => '/api/views/docs',
+				'description' => 'Get this API documentation',
+				'parameters' => [],
+				'response_example' => '(this response)',
+			],
+		],
+		'enrichment_options' => [
+			[
+				'name' => 'products',
+				'description' => 'Adds product information to nodes with product associations',
+			],
+			[
+				'name' => 'usage',
+				'description' => 'Adds usage/usage statistics to view nodes',
+			],
+			[
+				'name' => 'deelnames_gebruik',
+				'description' => 'Adds participation-based usage data to view nodes created from participation records',
+			],
+		],
+		'boolean_parameter_formats' => [
+			'accepted_true_values' => ['true', '1', 'yes', 'on', true, 1],
+			'accepted_false_values' => ['false', '0', 'no', 'off', false, 0],
+			'examples' => [
+				'/api/views?include_products=true',
+				'/api/views?include_gebruik=1&include_products=false',
+				'/api/views/view-123?include_deelnames_gebruik=yes',
+			],
+		],
+	];
+
+	/**
 	 * Constructor for ViewController
 	 *
 	 * @param string $appName The app name
@@ -367,133 +497,13 @@ class ViewController extends Controller {
 	 *
 	 * @return JSONResponse JSON response with API documentation
 	 *
-	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-	 * @spec                                          openspec/specs/dashboard-views-api/spec.md
+	 * @spec openspec/specs/dashboard-views-api/spec.md
 	 */
 	public function getApiDocumentation(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$documentation = [
-			'api_version' => '1.0.0',
-			'description' => 'Stackiq View API - Query and enrich ArchiMate views',
-			'base_url' => '/api/views',
-			'endpoints' => [
-				[
-					'method' => 'GET',
-					'path' => '/api/views',
-					'description' => 'Get all views with optional enrichment',
-					'parameters' => [
-						[
-							'name' => 'include_products',
-							'type' => 'boolean',
-							'required' => false,
-							'description' => 'Include product data in view nodes',
-						],
-						[
-							'name' => 'include_gebruik',
-							'type' => 'boolean',
-							'required' => false,
-							'description' => 'Include usage data in view nodes',
-						],
-						[
-							'name' => 'include_deelnames_gebruik',
-							'type' => 'boolean',
-							'required' => false,
-							'description' => 'Include participation usage data in view nodes',
-						],
-					],
-					'response_example' => [
-						'success' => true,
-						'views' => [
-							[
-								'id' => 'view-lv01',
-								'name' => 'LV01 BGT basisregistratie en SVB view',
-								'documentation' => 'Mocked from GEMMA LV01.',
-								'viewNodes' => [],
-								'viewRelationships' => [],
-							],
-						],
-						'count' => 1,
-						'enrichments_applied' => [],
-					],
-				],
-				[
-					'method' => 'GET',
-					'path' => '/api/views/{viewId}',
-					'description' => 'Get a specific view by ID with optional enrichment',
-					'parameters' => [
-						[
-							'name' => 'viewId',
-							'type' => 'string',
-							'required' => true,
-							'description' => 'The view identifier (in URL path)',
-						],
-						[
-							'name' => 'include_products',
-							'type' => 'boolean',
-							'required' => false,
-							'description' => 'Include product data in view nodes',
-						],
-						[
-							'name' => 'include_gebruik',
-							'type' => 'boolean',
-							'required' => false,
-							'description' => 'Include usage data in view nodes',
-						],
-						[
-							'name' => 'include_deelnames_gebruik',
-							'type' => 'boolean',
-							'required' => false,
-							'description' => 'Include participation usage data in view nodes',
-						],
-					],
-					'response_example' => [
-						'success' => true,
-						'view' => [
-							'id' => 'view-lv01',
-							'name' => 'LV01 BGT basisregistratie en SVB view',
-							'documentation' => 'Mocked from GEMMA LV01.',
-							'viewNodes' => [],
-							'viewRelationships' => [],
-						],
-						'enrichments_applied' => [],
-					],
-				],
-				[
-					'method' => 'GET',
-					'path' => '/api/views/docs',
-					'description' => 'Get this API documentation',
-					'parameters' => [],
-					'response_example' => '(this response)',
-				],
-			],
-			'enrichment_options' => [
-				[
-					'name' => 'products',
-					'description' => 'Adds product information to nodes with product associations',
-				],
-				[
-					'name' => 'usage',
-					'description' => 'Adds usage/usage statistics to view nodes',
-				],
-				[
-					'name' => 'deelnames_gebruik',
-					'description' => 'Adds participation-based usage data to view nodes created from participation records',
-				],
-			],
-			'boolean_parameter_formats' => [
-				'accepted_true_values' => ['true', '1', 'yes', 'on', true, 1],
-				'accepted_false_values' => ['false', '0', 'no', 'off', false, 0],
-				'examples' => [
-					'/api/views?include_products=true',
-					'/api/views?include_gebruik=1&include_products=false',
-					'/api/views/view-123?include_deelnames_gebruik=yes',
-				],
-			],
-		];
-
-		return new JSONResponse($documentation, 200);
+		return new JSONResponse(self::API_DOCUMENTATION, 200);
 	}//end getApiDocumentation()
 }//end class
