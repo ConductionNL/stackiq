@@ -29,6 +29,7 @@ use OCA\OpenRegister\Event\SchemaUpdatedEvent;
 use OCA\Stackiq\EventListener\OpenRegisterEventsDebugListener;
 use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\TestCase;
+use Psr\Log\AbstractLogger;
 use Psr\Log\NullLogger;
 
 /**
@@ -105,5 +106,78 @@ class OpenRegisterEventsDebugListenerGoldenTest extends TestCase {
 
 		$path = dirname(__DIR__, 2) . '/fixtures/debug-listener/payloads.json';
 		$this->assertSame(json_decode((string)file_get_contents($path), true, 512, JSON_THROW_ON_ERROR), $out);
+	}
+
+	/**
+	 * The log lines of handle(), with debugging on and off.
+	 *
+	 * @return void
+	 */
+	public function testHandleLogLines(): void {
+		$out = [];
+		foreach ([true, false] as $enabled) {
+			$logger = new class extends AbstractLogger {
+				/**
+				 * Recorded log calls; the timestamp is replaced by a marker.
+				 *
+				 * @var array
+				 */
+				public array $records = [];
+
+				/**
+				 * Record one log call.
+				 *
+				 * @param mixed              $level   The level.
+				 * @param string|\Stringable $message The message.
+				 * @param array              $context The context.
+				 *
+				 * @return void
+				 */
+				public function log($level, string|\Stringable $message, array $context=[]): void {
+					if (isset($context['timestamp']) === true) {
+						$context['timestamp'] = '<timestamp>';
+					}
+
+					$this->records[] = [(string)$level, (string)$message, $context];
+				}
+			};
+			(new OpenRegisterEventsDebugListener($logger, $enabled))->handle(new ObjectDeletedEvent($this->entity('h', ['k' => 'v'])));
+			$out[] = $logger->records;
+		}
+
+		$this->assertSame(
+			[
+				[
+					['debug', 'OpenRegister debug listener triggered', ['app' => 'stackiq', 'eventType' => 'ObjectDeleted', 'eventClass' => ObjectDeletedEvent::class, 'debugEnabled' => true]],
+					[
+						'info',
+						'[Stackiq] OPENREGISTER EVENT: {eventType} received from OpenRegister',
+						[
+							'app' => 'stackiq',
+							'eventType' => 'ObjectDeleted',
+							'eventClass' => ObjectDeletedEvent::class,
+							'listenerClass' => OpenRegisterEventsDebugListener::class,
+							'eventData' => [
+								'eventClass' => ObjectDeletedEvent::class,
+								'eventType' => 'ObjectDeleted',
+								'objectId' => 'id-h',
+								'objectUuid' => 'uuid-h',
+								'registerId' => 'reg-h',
+								'schemaId' => 'sch-h',
+								'owner' => 'owner-h',
+								'objectData' => ['k' => 'v'],
+							],
+							'timestamp' => '<timestamp>',
+							'source' => 'OpenRegister',
+						],
+					],
+				],
+				[
+					['debug', 'OpenRegister debug listener triggered', ['app' => 'stackiq', 'eventType' => 'ObjectDeleted', 'eventClass' => ObjectDeletedEvent::class, 'debugEnabled' => false]],
+					['warning', 'Stackiq OpenRegister Debug: Debug disabled, skipping detailed logging.', []],
+				],
+			],
+			$out
+		);
 	}
 }
