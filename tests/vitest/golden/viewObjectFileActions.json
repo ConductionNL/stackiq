@@ -1,0 +1,2396 @@
+{
+	"publishSelectedFiles | ids as values | ok": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-1",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 7,
+					"register": 4
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [],
+			"publishLoading": [],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishSelectedFiles | ids as values | ok": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-1",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 7,
+					"register": 4
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteSelectedFiles | ids as values | ok": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-1",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 7,
+					"register": 4
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"publishFile | ids as values | ok": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-1",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 7,
+					"register": 4
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishFile | ids as values | ok": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-1",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 7,
+					"register": 4
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteFile | ids as values | ok": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-1",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 7,
+					"register": 4
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"saveTags | ids as values | ok": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11",
+				{
+					"method": "PUT",
+					"headers": {
+						"Content-Type": "application/json"
+					},
+					"body": "{\"tags\":[\"x\",\"y\"]}"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-1",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 7,
+					"register": 4
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": null,
+			"editedTags": [],
+			"success": "File labels updated successfully",
+			"error": null
+		}
+	},
+	"publishSelectedFiles | ids as values | refused on the second request": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Error publishing files:",
+				"Error: Failed to publish file notes.txt: Forbidden"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishSelectedFiles | ids as values | refused on the second request": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Error depublishing files:",
+				"Error: Failed to depublish file notes.txt: Forbidden"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteSelectedFiles | ids as values | refused on the second request": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"console.error",
+				"Failed to delete selected files:",
+				"Error: Failed to delete file notes.txt: Forbidden"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"publishFile | ids as values | refused on the second request": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-1",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 7,
+					"register": 4
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishFile | ids as values | refused on the second request": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-1",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 7,
+					"register": 4
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteFile | ids as values | refused on the second request": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-1",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 7,
+					"register": 4
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"saveTags | ids as values | refused on the second request": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11",
+				{
+					"method": "PUT",
+					"headers": {
+						"Content-Type": "application/json"
+					},
+					"body": "{\"tags\":[\"x\",\"y\"]}"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-1",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 7,
+					"register": 4
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": null,
+			"editedTags": [],
+			"success": "File labels updated successfully",
+			"error": null
+		}
+	},
+	"publishSelectedFiles | ids as values | refused": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Error publishing files:",
+				"Error: Failed to publish file Plan: Bad Request"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishSelectedFiles | ids as values | refused": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Error depublishing files:",
+				"Error: Failed to depublish file Plan: Bad Request"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteSelectedFiles | ids as values | refused": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"console.error",
+				"Failed to delete selected files:",
+				"Error: Failed to delete file Plan: Bad Request"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"publishFile | ids as values | refused": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Failed to publish file:",
+				"Error: Failed to publish file: Bad Request"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishFile | ids as values | refused": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Failed to depublish file:",
+				"Error: Failed to depublish file: Bad Request"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteFile | ids as values | refused": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"console.error",
+				"Failed to delete file:",
+				"Error: Failed to delete file: Bad Request"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"saveTags | ids as values | refused": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11",
+				{
+					"method": "PUT",
+					"headers": {
+						"Content-Type": "application/json"
+					},
+					"body": "{\"tags\":[\"x\",\"y\"]}"
+				}
+			],
+			[
+				"console.error",
+				"Error saving tags:",
+				"Error: Failed to update file tags: Bad Request"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": "Failed to save file labels: Failed to update file tags: Bad Request"
+		}
+	},
+	"publishSelectedFiles | ids as values | network failure": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Error publishing files:",
+				"TypeError: Failed to fetch"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishSelectedFiles | ids as values | network failure": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Error depublishing files:",
+				"TypeError: Failed to fetch"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteSelectedFiles | ids as values | network failure": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"console.error",
+				"Failed to delete selected files:",
+				"TypeError: Failed to fetch"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"publishFile | ids as values | network failure": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Failed to publish file:",
+				"TypeError: Failed to fetch"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishFile | ids as values | network failure": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Failed to depublish file:",
+				"TypeError: Failed to fetch"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteFile | ids as values | network failure": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"console.error",
+				"Failed to delete file:",
+				"TypeError: Failed to fetch"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"saveTags | ids as values | network failure": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11",
+				{
+					"method": "PUT",
+					"headers": {
+						"Content-Type": "application/json"
+					},
+					"body": "{\"tags\":[\"x\",\"y\"]}"
+				}
+			],
+			[
+				"console.error",
+				"Error saving tags:",
+				"TypeError: Failed to fetch"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": "Failed to save file labels: Failed to fetch"
+		}
+	},
+	"publishSelectedFiles | ids as values | ok | nothing selected": {
+		"trace": [],
+		"state": {
+			"selectedAttachments": [],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishSelectedFiles | ids as values | ok | nothing selected": {
+		"trace": [],
+		"state": {
+			"selectedAttachments": [],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteSelectedFiles | ids as values | ok | nothing selected": {
+		"trace": [],
+		"state": {
+			"selectedAttachments": [],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"publishSelectedFiles | ids as objects | ok": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-2",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 9,
+					"register": "reg-uuid"
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [],
+			"publishLoading": [],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishSelectedFiles | ids as objects | ok": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-2",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 9,
+					"register": "reg-uuid"
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteSelectedFiles | ids as objects | ok": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-2",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 9,
+					"register": "reg-uuid"
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"publishFile | ids as objects | ok": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-2",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 9,
+					"register": "reg-uuid"
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishFile | ids as objects | ok": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-2",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 9,
+					"register": "reg-uuid"
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteFile | ids as objects | ok": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-2",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 9,
+					"register": "reg-uuid"
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"saveTags | ids as objects | ok": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11",
+				{
+					"method": "PUT",
+					"headers": {
+						"Content-Type": "application/json"
+					},
+					"body": "{\"tags\":[\"x\",\"y\"]}"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-2",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 9,
+					"register": "reg-uuid"
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": null,
+			"editedTags": [],
+			"success": "File labels updated successfully",
+			"error": null
+		}
+	},
+	"publishSelectedFiles | ids as objects | refused on the second request": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Error publishing files:",
+				"Error: Failed to publish file notes.txt: Forbidden"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishSelectedFiles | ids as objects | refused on the second request": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Error depublishing files:",
+				"Error: Failed to depublish file notes.txt: Forbidden"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteSelectedFiles | ids as objects | refused on the second request": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"console.error",
+				"Failed to delete selected files:",
+				"Error: Failed to delete file notes.txt: Forbidden"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"publishFile | ids as objects | refused on the second request": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-2",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 9,
+					"register": "reg-uuid"
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishFile | ids as objects | refused on the second request": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-2",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 9,
+					"register": "reg-uuid"
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteFile | ids as objects | refused on the second request": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-2",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 9,
+					"register": "reg-uuid"
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"saveTags | ids as objects | refused on the second request": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11",
+				{
+					"method": "PUT",
+					"headers": {
+						"Content-Type": "application/json"
+					},
+					"body": "{\"tags\":[\"x\",\"y\"]}"
+				}
+			],
+			[
+				"fetchRelatedData",
+				"publication",
+				"obj-2",
+				"files",
+				{},
+				{
+					"source": "openregister",
+					"schema": 9,
+					"register": "reg-uuid"
+				}
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": null,
+			"editedTags": [],
+			"success": "File labels updated successfully",
+			"error": null
+		}
+	},
+	"publishSelectedFiles | ids as objects | refused": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Error publishing files:",
+				"Error: Failed to publish file Plan: Bad Request"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishSelectedFiles | ids as objects | refused": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Error depublishing files:",
+				"Error: Failed to depublish file Plan: Bad Request"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteSelectedFiles | ids as objects | refused": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"console.error",
+				"Failed to delete selected files:",
+				"Error: Failed to delete file Plan: Bad Request"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"publishFile | ids as objects | refused": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Failed to publish file:",
+				"Error: Failed to publish file: Bad Request"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishFile | ids as objects | refused": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Failed to depublish file:",
+				"Error: Failed to depublish file: Bad Request"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteFile | ids as objects | refused": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"console.error",
+				"Failed to delete file:",
+				"Error: Failed to delete file: Bad Request"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"saveTags | ids as objects | refused": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11",
+				{
+					"method": "PUT",
+					"headers": {
+						"Content-Type": "application/json"
+					},
+					"body": "{\"tags\":[\"x\",\"y\"]}"
+				}
+			],
+			[
+				"console.error",
+				"Error saving tags:",
+				"Error: Failed to update file tags: Bad Request"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": "Failed to save file labels: Failed to update file tags: Bad Request"
+		}
+	},
+	"publishSelectedFiles | ids as objects | network failure": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Error publishing files:",
+				"TypeError: Failed to fetch"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishSelectedFiles | ids as objects | network failure": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Error depublishing files:",
+				"TypeError: Failed to fetch"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteSelectedFiles | ids as objects | network failure": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"console.error",
+				"Failed to delete selected files:",
+				"TypeError: Failed to fetch"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"publishFile | ids as objects | network failure": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/publish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Failed to publish file:",
+				"TypeError: Failed to fetch"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishFile | ids as objects | network failure": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/depublish",
+				{
+					"method": "POST"
+				}
+			],
+			[
+				"console.error",
+				"Failed to depublish file:",
+				"TypeError: Failed to fetch"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteFile | ids as objects | network failure": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12",
+				{
+					"method": "DELETE"
+				}
+			],
+			[
+				"console.error",
+				"Failed to delete file:",
+				"TypeError: Failed to fetch"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"saveTags | ids as objects | network failure": {
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11",
+				{
+					"method": "PUT",
+					"headers": {
+						"Content-Type": "application/json"
+					},
+					"body": "{\"tags\":[\"x\",\"y\"]}"
+				}
+			],
+			[
+				"console.error",
+				"Error saving tags:",
+				"TypeError: Failed to fetch"
+			]
+		],
+		"state": {
+			"selectedAttachments": [
+				11,
+				12
+			],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": "Failed to save file labels: Failed to fetch"
+		}
+	},
+	"publishSelectedFiles | ids as objects | ok | nothing selected": {
+		"trace": [],
+		"state": {
+			"selectedAttachments": [],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"depublishSelectedFiles | ids as objects | ok | nothing selected": {
+		"trace": [],
+		"state": {
+			"selectedAttachments": [],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	},
+	"deleteSelectedFiles | ids as objects | ok | nothing selected": {
+		"trace": [],
+		"state": {
+			"selectedAttachments": [],
+			"publishLoading": [
+				5
+			],
+			"depublishLoading": [
+				5
+			],
+			"fileIdsLoading": [
+				5
+			],
+			"editingTags": 11,
+			"editedTags": [
+				"a"
+			],
+			"success": null,
+			"error": null
+		}
+	}
+}
