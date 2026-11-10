@@ -2111,10 +2111,7 @@ class ContactPersonHandler {
 			}
 
 			try {
-				$organizationObject = $objectService->find(
-					id: $organizationUuid,
-					options: new ObjectFindOptions(register: $registerId, schema: $organisationSchemaId)
-				);
+				$organizationObject = $objectService->find($organizationUuid, new ObjectFindOptions($registerId, $organisationSchemaId));
 				$organizationData = $organizationObject->getObject();
 
 				// Check if the username is already in the organization's users.
@@ -2198,10 +2195,7 @@ class ContactPersonHandler {
 			}
 
 			try {
-				$organizationObject = $objectService->find(
-					id: $organizationUuid,
-					options: new ObjectFindOptions(register: $registerId, schema: $organisationSchemaId)
-				);
+				$organizationObject = $objectService->find($organizationUuid, new ObjectFindOptions($registerId, $organisationSchemaId));
 				$organizationData = $organizationObject->getObject();
 
 				// Add the username to the organization's users list.

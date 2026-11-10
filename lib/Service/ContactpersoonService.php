@@ -178,10 +178,7 @@ class ContactpersoonService {
 							$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 							$orgObject = $objectService->find(
 								id: $organizationUuid,
-								options: new ObjectFindOptions(
-									register: ($voorzieningenConfig['register'] ?? ''),
-									schema: ($voorzieningenConfig['organisatie_schema'] ?? '')
-								),
+								options: new ObjectFindOptions($voorzieningenConfig['register'] ?? '', $voorzieningenConfig['organisatie_schema'] ?? ''),
 								_rbac: false,
 								_multitenancy: false
 							);
