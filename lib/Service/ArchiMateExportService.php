@@ -365,24 +365,34 @@ class ArchiMateExportService {
 	 * @return array Array of [prefix, localName].
 	 */
 	private function splitNamespacedKey(string $key): array {
-		// Convert `xsi__type` to ['xsi', 'type'].
-		if (str_contains($key, '__') === true) {
-			$parts = explode('__', $key, 2);
-			if (count($parts) === 2 && $parts[0] !== '' && $parts[1] !== '') {
-				return [$parts[0], $parts[1]];
-			}
-		}
-
-		// Also handle already-converted colon notation (e.g., 'xml:lang').
-		if (str_contains($key, ':') === true) {
-			$parts = explode(':', $key, 2);
-			if (count($parts) === 2 && $parts[0] !== '' && $parts[1] !== '') {
-				return [$parts[0], $parts[1]];
+		// Convert `xsi__type` to ['xsi', 'type'], and also handle already-converted
+		// colon notation (e.g., 'xml:lang').
+		foreach (['__', ':'] as $separator) {
+			$parts = $this->splitOnSeparator(key: $key, separator: $separator);
+			if ($parts !== null) {
+				return $parts;
 			}
 		}
 
 		return [null, $key];
 	}//end splitNamespacedKey()
+
+	/**
+	 * Split a key on the first occurrence of a separator into two non-empty parts.
+	 *
+	 * @param string $key       The key to split.
+	 * @param string $separator The separator.
+	 *
+	 * @return array|null Array of [prefix, localName], or null when the key does not split.
+	 */
+	private function splitOnSeparator(string $key, string $separator): ?array {
+		$parts = explode($separator, $key, 2);
+		if (count($parts) === 2 && $parts[0] !== '' && $parts[1] !== '') {
+			return [$parts[0], $parts[1]];
+		}
+
+		return null;
+	}//end splitOnSeparator()
 
 	/**
 	 * Recursively filter out problematic fields from nested data structures.
@@ -396,31 +406,7 @@ class ArchiMateExportService {
 		$filtered = [];
 
 		foreach ($data as $key => $value) {
-			if (is_string($key) === false) {
-				continue;
-			}
-
-			$shouldSkip = false;
-
-			// Skip exact matches.
-			if (in_array($key, $fieldsToRemove, true) === true) {
-				$shouldSkip = true;
-			}
-
-			// Skip fields that start with problematic patterns (e.g., "availabilityPrimaryReason").
-			foreach ($fieldsToRemove as $fieldPattern) {
-				if (str_starts_with($key, $fieldPattern) === true) {
-					$shouldSkip = true;
-					break;
-				}
-			}
-
-			// Skip fields with invalid XML tag name characters (parentheses, etc.).
-			if (preg_match('/[(),<>\/\\\]/', $key) === 1) {
-				$shouldSkip = true;
-			}
-
-			if ($shouldSkip === true) {
+			if (is_string($key) === false || $this->isProblematicField(key: $key, fieldsToRemove: $fieldsToRemove) === true) {
 				continue;
 			}
 
@@ -430,10 +416,30 @@ class ArchiMateExportService {
 			} else {
 				$filtered[$key] = $value;
 			}
-		}//end foreach
+		}
 
 		return $filtered;
 	}//end filterProblematicFields()
+
+	/**
+	 * Whether a field is problematic: it matches or starts with one of the fields
+	 * to remove (e.g., "availabilityPrimaryReason"), or it holds characters that
+	 * are invalid in an XML tag name (parentheses, etc.).
+	 *
+	 * @param string $key            The field name.
+	 * @param array  $fieldsToRemove List of field names to remove.
+	 *
+	 * @return bool
+	 */
+	private function isProblematicField(string $key, array $fieldsToRemove): bool {
+		foreach ($fieldsToRemove as $fieldPattern) {
+			if (str_starts_with($key, $fieldPattern) === true) {
+				return true;
+			}
+		}
+
+		return preg_match('/[(),<>\/\\\]/', $key) === 1;
+	}//end isProblematicField()
 
 	/**
 	 * Get the namespace URI for a given prefix from an XML element.
@@ -455,13 +461,11 @@ class ArchiMateExportService {
 		}
 
 		$docNamespaces = $xml->getDocNamespaces(true);
-		if ($docNamespaces !== false) {
-			$namespaces = $docNamespaces;
-		} else {
-			$namespaces = [];
+		if ($docNamespaces === false) {
+			return '';
 		}
 
-		return $namespaces[$prefix] ?? '';
+		return $docNamespaces[$prefix] ?? '';
 	}//end getNamespaceUri()
 
 	/**
