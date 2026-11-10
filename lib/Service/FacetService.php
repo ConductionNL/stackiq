@@ -251,12 +251,7 @@ class FacetService {
 		$startTime = microtime(true);
 		$schema    = $request['schema'];
 
-		$baseObjects = $this->fetchBaseObjects(
-			objectService: $objectService,
-			schema: $schema,
-			search: $request['search'],
-			organization: $request['organization']
-		);
+		$baseObjects = $this->fetchBaseObjects(objectService: $objectService, request: $request);
 
 		$modulesByObjectId = $this->resolveModulesPerObject(
 			objectService: $objectService,
@@ -393,16 +388,64 @@ class FacetService {
 	 * unbounded `searchObjects()` call.
 	 *
 	 * @param ObjectServiceInterface $objectService OpenRegister object service.
-	 * @param string $schema `module` or `dienst`.
-	 * @param string|null $search Free-text query.
-	 * @param string|null $organization Organisation override.
+	 * @param array $request The request: `schema` (`module` or `dienst`), `search` (the free-text
+	 *                       query or null) and `organization` (the organisation override or null).
 	 *
 	 * @return array<int,array> The candidate objects.
 	 *
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-queries-must-be-bounded
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-counts-must-respect-the-callers-rbactenant-context
 	 */
-	private function fetchBaseObjects(ObjectServiceInterface $objectService, string $schema, ?string $search, ?string $organization): array {
+	private function fetchBaseObjects(ObjectServiceInterface $objectService, array $request): array {
+		$baseQuery = $this->baseObjectQuery(request: $request);
+		if ($baseQuery === null) {
+			return [];
+		}
+
+		$fetched = $this->fetchBasePages(objectService: $objectService, baseQuery: $baseQuery);
+		if ($fetched['page'] > self::MAX_BASE_PAGES) {
+			$this->logPagingCeiling(schema: $request['schema']);
+		}
+
+		return $fetched['objects'];
+	}//end fetchBaseObjects()
+
+	/**
+	 * The base query of a facet request: the configured register and schema,
+	 * the organisation scope and the search filter; null (logged) when the
+	 * register or schema is not configured.
+	 *
+	 * @param array $request The request: `schema`, `search` and `organization`.
+	 *
+	 * @return array|null
+	 */
+	private function baseObjectQuery(array $request): ?array {
+		$ids = $this->configuredRegisterSchema(schema: $request['schema']);
+		if ($ids === null) {
+			return null;
+		}
+
+		$baseQuery = ['@self' => ['register' => (int)$ids['register'], 'schema' => (int)$ids['schema']]];
+
+		// RBAC/tenant scoping: identical convention to ViewService — an explicit
+		// organisation filter, `_rbac`/`_multitenancy` left at their `true`
+		// defaults (no separate unscoped counting path).
+		$orgToApply = $request['organization'] ?? $this->getCurrentOrganisation();
+		if ($orgToApply !== null) {
+			$baseQuery['@self']['organisation'] = $orgToApply;
+		}
+
+		return $this->queryBuilder->applySearchFilter(baseQuery: $baseQuery, search: $request['search']);
+	}//end baseObjectQuery()
+
+	/**
+	 * The voorzieningen register and the schema's id, or null (logged) when either is not configured.
+	 *
+	 * @param string $schema The facet schema.
+	 *
+	 * @return array{register: mixed, schema: mixed}|null
+	 */
+	private function configuredRegisterSchema(string $schema): ?array {
 		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 		// NOT `$schema . '_schema'`: the slugs are English now and the stored
@@ -422,60 +465,73 @@ class FacetService {
 				message: 'FacetService: voorzieningen register/schema not configured',
 				context: ['schema' => $schema]
 			);
-			return [];
+			return null;
 		}
 
-		$baseQuery = [
-			'@self' => [
-				'register' => (int)$registerId,
-				'schema' => (int)$schemaId,
-			],
-		];
+		return ['register' => $registerId, 'schema' => $schemaId];
+	}//end configuredRegisterSchema()
 
-		// RBAC/tenant scoping: identical convention to ViewService — an explicit
-		// organisation filter, `_rbac`/`_multitenancy` left at their `true`
-		// defaults (no separate unscoped counting path).
-		$orgToApply = $organization ?? $this->getCurrentOrganisation();
-		if ($orgToApply !== null) {
-			$baseQuery['@self']['organisation'] = $orgToApply;
-		}
-
-		$baseQuery = $this->queryBuilder->applySearchFilter(baseQuery: $baseQuery, search: $search);
-
+	/**
+	 * Read the base query page by page until a short or the last page, or the paging ceiling.
+	 *
+	 * @param ObjectServiceInterface $objectService OpenRegister object service.
+	 * @param array $baseQuery The base query.
+	 *
+	 * @return array{objects: array<int, array>, page: int} The objects, and the page paging stopped at.
+	 */
+	private function fetchBasePages(ObjectServiceInterface $objectService, array $baseQuery): array {
 		$allObjects = [];
 		$page = 1;
 
 		while ($page <= self::MAX_BASE_PAGES) {
-			$pagedQuery = $baseQuery;
-			$pagedQuery['_limit'] = self::BASE_OBJECT_LIMIT;
-			$pagedQuery['_page'] = $page;
-
-			$paginated = $objectService->searchObjectsPaginated($pagedQuery);
+			$paginated = $objectService->searchObjectsPaginated($this->pagedQuery(baseQuery: $baseQuery, page: $page));
 			$results = array_map(fn (mixed $entry): array => $this->normalizeObject(object: $entry), ($paginated['results'] ?? []));
 			$allObjects = array_merge($allObjects, $results);
 
-			$totalPages = (int)($paginated['pages'] ?? 1);
-			if (count($results) < self::BASE_OBJECT_LIMIT || $page >= $totalPages) {
+			if (count($results) < self::BASE_OBJECT_LIMIT || $page >= (int)($paginated['pages'] ?? 1)) {
 				break;
 			}
 
 			$page++;
 		}
 
-		if ($page > self::MAX_BASE_PAGES) {
-			$this->logger->warning(
-				message: 'FacetService: base object set exceeded the documented paging ceiling — '
-					. 'facet counts are computed over a bounded subset, not the full register',
-				context: [
-					'schema' => $schema,
-					'maxPages' => self::MAX_BASE_PAGES,
-					'limitPerPage' => self::BASE_OBJECT_LIMIT,
-				]
-			);
-		}
+		return ['objects' => $allObjects, 'page' => $page];
+	}//end fetchBasePages()
 
-		return $allObjects;
-	}//end fetchBaseObjects()
+	/**
+	 * One page of the base query.
+	 *
+	 * @param array $baseQuery The base query.
+	 * @param int $page The page.
+	 *
+	 * @return array
+	 */
+	private function pagedQuery(array $baseQuery, int $page): array {
+		$pagedQuery = $baseQuery;
+		$pagedQuery['_limit'] = self::BASE_OBJECT_LIMIT;
+		$pagedQuery['_page'] = $page;
+
+		return $pagedQuery;
+	}//end pagedQuery()
+
+	/**
+	 * Warn that the base object set was cut at the paging ceiling.
+	 *
+	 * @param string $schema The facet schema.
+	 *
+	 * @return void
+	 */
+	private function logPagingCeiling(string $schema): void {
+		$this->logger->warning(
+			message: 'FacetService: base object set exceeded the documented paging ceiling — '
+				. 'facet counts are computed over a bounded subset, not the full register',
+			context: [
+				'schema' => $schema,
+				'maxPages' => self::MAX_BASE_PAGES,
+				'limitPerPage' => self::BASE_OBJECT_LIMIT,
+			]
+		);
+	}//end logPagingCeiling()
 
 	/**
 	 * Normalize a single OpenRegister search result into a plain data-bag
