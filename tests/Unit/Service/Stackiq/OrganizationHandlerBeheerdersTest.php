@@ -184,4 +184,63 @@ class OrganizationHandlerBeheerdersTest extends TestCase {
 			$this->logger->records
 		);
 	}//end testFailureListsNobody()
+	/**
+	 * Membership: the organisation group admits its members; without it a group naming the
+	 * organisation admits; anything else is refused.
+	 *
+	 * @return void
+	 */
+	public function testMembershipAllowedAndRefused(): void {
+		$member = $this->user('member', 1);
+		$named = $this->user('named', 1);
+		$outsider = $this->user('outsider', 1);
+		$orgGroup = $this->group('org-2');
+		$orgGroup->method('inGroup')->willReturnCallback(fn (IUser $user): bool => $user->getUID() === 'member');
+		$this->groupManager->method('get')->willReturnCallback(
+			fn (string $gid): ?IGroup => ['org-2' => $orgGroup][$gid] ?? null
+		);
+		$this->groupManager->method('getUserGroups')->willReturnCallback(
+			fn (IUser $user): array => ['named' => [$this->group('x-Org-2-y')], 'outsider' => [$this->group('org-2'), $this->group('Org-3')]][$user->getUID()] ?? []
+		);
+
+		$handler = $this->handler();
+		$this->assertTrue($handler->userBelongsToOrganization($member, 'Org-2'));
+		$this->assertTrue($handler->userBelongsToOrganization($named, 'Org-2'));
+		$this->assertFalse($handler->userBelongsToOrganization($outsider, 'Org-2'), 'the GID match is case-sensitive on the raw uuid');
+		$this->assertSame([], $this->logger->records);
+	}//end testMembershipAllowedAndRefused()
+
+	/**
+	 * Without the organisation group only a group naming the organisation admits.
+	 *
+	 * @return void
+	 */
+	public function testMembershipWithoutOrganisationGroup(): void {
+		$named = $this->user('named', 1);
+		$outsider = $this->user('outsider', 1);
+		$this->groupManager->method('get')->willReturn(null);
+		$this->groupManager->method('getUserGroups')->willReturnCallback(
+			fn (IUser $user): array => ['named' => [$this->group('Org-2')]][$user->getUID()] ?? []
+		);
+
+		$handler = $this->handler();
+		$this->assertTrue($handler->userBelongsToOrganization($named, 'Org-2'));
+		$this->assertFalse($handler->userBelongsToOrganization($outsider, 'Org-2'));
+	}//end testMembershipWithoutOrganisationGroup()
+
+	/**
+	 * A failure while checking refuses membership and logs an error.
+	 *
+	 * @return void
+	 */
+	public function testMembershipFailureRefuses(): void {
+		$this->groupManager->method('get')->willReturn(null);
+		$this->groupManager->method('getUserGroups')->willThrowException(new RuntimeException('ldap down'));
+
+		$this->assertFalse($this->handler()->userBelongsToOrganization($this->user('someone', 1), 'Org-2'));
+		$this->assertSame(
+			[['error', 'Failed to check user organization membership: ldap down', ['username' => 'someone', 'organization' => 'Org-2']]],
+			$this->logger->records
+		);
+	}//end testMembershipFailureRefuses()
 }//end class
