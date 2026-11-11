@@ -802,11 +802,21 @@ export default {
 			}
 			const selectedValue = defaultSelection(targetValue, sourceValue)
 			this.mergedData[property] = selectedValue
+			this.selectOption(property, selectedValue)
+		},
 
-			// Set up the selection object for the dropdown
+		/**
+		 * Set up the selection object for a property's dropdown.
+		 *
+		 * @param {string} property The property name.
+		 * @param {unknown} value The selected value.
+		 * @return {void}
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		selectOption(property, value) {
 			const options = this.getMergeOptions(property)
 			this.propertySelections[property] =
-				options.find((opt) => opt.value === selectedValue) || null
+				options.find((opt) => opt.value === value) || null
 		},
 
 		/**
@@ -814,29 +824,33 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getMergeOptions(property) {
-			const options = []
+			return [
+				...this.valueOption('From Source', this.sourceObject[property]),
+				...this.valueOption(
+					'From Target',
+					this.selectedTargetObject[property],
+				),
+				// Always add the custom option
+				{
+					label: 'Other/Custom',
+					value: 'custom',
+				},
+			]
+		},
 
-			if (hasValue(this.sourceObject[property])) {
-				options.push({
-					label: `From Source: ${this.displayValue(this.sourceObject[property])}`,
-					value: this.sourceObject[property],
-				})
+		/**
+		 * The dropdown option for one side's value, when that side has one.
+		 *
+		 * @param {string} prefix Which side the value comes from.
+		 * @param {unknown} value The side's value.
+		 * @return {Array<{label: string, value: unknown}>} One option, or none.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		valueOption(prefix, value) {
+			if (!hasValue(value)) {
+				return []
 			}
-
-			if (hasValue(this.selectedTargetObject[property])) {
-				options.push({
-					label: `From Target: ${this.displayValue(this.selectedTargetObject[property])}`,
-					value: this.selectedTargetObject[property],
-				})
-			}
-
-			// Always add the custom option
-			options.push({
-				label: 'Other/Custom',
-				value: 'custom',
-			})
-
-			return options
+			return [{ label: `${prefix}: ${this.displayValue(value)}`, value }]
 		},
 
 		/**
