@@ -48,6 +48,7 @@ use OCA\Stackiq\Service\ArchiMateImportService;
 use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\ContactpersoonService;
+use OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard;
 use OCA\Stackiq\Service\ContractApprovalService;
 use OCA\Stackiq\Service\ContractStatusService;
 use OCA\Stackiq\Service\EolMatcherService;
@@ -764,7 +765,8 @@ class Application extends App implements IBootstrap {
 					// request time and nothing catches it before then — see
 					// tests/Unit/AppInfo/CompositionRootArgumentsTest.php.
 					objectService: $container->get(ObjectServiceInterface::class),
-					organisationService: $container->get(OpenRegisterOrganisationService::class)
+					organisationService: $container->get(OpenRegisterOrganisationService::class),
+					organisationGuard: $container->get(ContactPersonOrganisationGuard::class)
 				);
 			}
 		);
