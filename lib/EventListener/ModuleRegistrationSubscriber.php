@@ -19,8 +19,6 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\EventListener;
 
-use OCA\OpenRegister\Event\ObjectCreatedEvent;
-use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\Stackiq\Service\ModuleRegistrationService;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\EventDispatcher\Event;
@@ -36,6 +34,8 @@ use Psr\Log\LoggerInterface;
  * @package  OCA\Stackiq\EventListener
  */
 class ModuleRegistrationSubscriber implements IEventListener {
+	use ObjectEventPayload;
+
 	/**
 	 * Constructor for ModuleRegistrationSubscriber.
 	 *
@@ -54,32 +54,13 @@ class ModuleRegistrationSubscriber implements IEventListener {
 	 * @return void
 	 */
 	public function handle(Event $event): void {
-		$object = self::eventObject(event: $event);
+		$object = $this->extractObjectFromEvent(event: $event);
 		if ($object === null || $this->isModuleObject(object: $object) === false) {
 			return;
 		}
 
 		$this->registerModule(object: $object);
 	}//end handle()
-
-	/**
-	 * The object a created or updated event carries, or null for any other event.
-	 *
-	 * @param Event $event The event to handle
-	 *
-	 * @return object|null The created object, the new version of an updated one, or null.
-	 */
-	private static function eventObject(Event $event): ?object {
-		if ($event instanceof ObjectCreatedEvent) {
-			return $event->getObject();
-		}
-
-		if ($event instanceof ObjectUpdatedEvent) {
-			return $event->getNewObject();
-		}
-
-		return null;
-	}//end eventObject()
 
 	/**
 	 * Whether an object belongs to the configured module schema.
