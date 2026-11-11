@@ -121,32 +121,39 @@ class SyncSettingsHandler {
 			$this->setSyncTimeWindow(minutes: (string)$data['syncTimeWindow']);
 		}
 
-		if (isset($data['syncEnabled']) === true) {
-			$syncEnabledStr = 'false';
-			if ($data['syncEnabled'] === true) {
-				$syncEnabledStr = 'true';
-			}
-
-			$this->config->setValueString(self::APP_NAME, 'syncEnabled', $syncEnabledStr);
-		}
+		$this->storeCronjobFlag(data: $data, key: 'syncEnabled');
 
 		if (isset($data['cronjobInterval']) === true) {
 			$this->config->setValueString(self::APP_NAME, 'cronjobInterval', (string)$data['cronjobInterval']);
 		}
 
-		if (isset($data['organizationSyncEnabled']) === true) {
-			$orgSyncEnabledStr = 'false';
-			if ($data['organizationSyncEnabled'] === true) {
-				$orgSyncEnabledStr = 'true';
-			}
-
-			$this->config->setValueString(self::APP_NAME, 'organizationSyncEnabled', $orgSyncEnabledStr);
-		}
+		$this->storeCronjobFlag(data: $data, key: 'organizationSyncEnabled');
 
 		$this->logger->info('SyncSettingsHandler: Updated cron-job configuration', ['data' => $data]);
 
 		return $this->getCronjobConfig();
 	}//end updateCronjobConfig()
+
+	/**
+	 * Store a cron-job flag the update carries: 'true' for a strict true, 'false' otherwise.
+	 *
+	 * @param array<string,mixed> $data Cron-job config fields to update.
+	 * @param string              $key  The flag.
+	 *
+	 * @return void
+	 */
+	private function storeCronjobFlag(array $data, string $key): void {
+		if (isset($data[$key]) === false) {
+			return;
+		}
+
+		$value = 'false';
+		if ($data[$key] === true) {
+			$value = 'true';
+		}
+
+		$this->config->setValueString(self::APP_NAME, $key, $value);
+	}//end storeCronjobFlag()
 
 	/**
 	 * Validate sync configuration values.
