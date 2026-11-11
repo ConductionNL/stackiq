@@ -24,6 +24,8 @@ return [
         ['name' => 'setup#saveConfig', 'url' => '/api/setup/config',           'verb' => 'POST'],
         ['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
         ['name' => 'dashboard#index', 'url' => '/api/dashboard', 'verb' => 'GET'],
+        // The OpenAPI document, public (spec api-contract).
+        ['name' => 'openApi#show', 'url' => '/api/openapi.json', 'verb' => 'GET'],
 
         // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g. CnSupportDialog).
         ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
