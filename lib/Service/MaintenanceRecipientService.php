@@ -149,10 +149,6 @@ class MaintenanceRecipientService {
 			return null;
 		}
 
-		if (empty($recording->data['recipientsResolvedAt']) === false) {
-			return null;
-		}
-
 		return $this->recordOwners(recording: $recording, now: $now);
 	}//end recordRecipients()
 
@@ -201,16 +197,20 @@ class MaintenanceRecipientService {
 	}//end refuseForeignWindow()
 
 	/**
-	 * Record the owners of every usage of the product, and the moment of resolution, on the window.
+	 * Record the owners of every usage of the product, and the moment of resolution, on a window not resolved yet.
 	 *
 	 * @param RecipientRecording     $recording The recording.
 	 * @param DateTimeImmutable|null $now       The moment of resolution (defaults to now).
 	 *
-	 * @return array<int, string> The user ids written.
+	 * @return array<int, string>|null The user ids written, or null when the window already carries a resolved time.
 	 *
 	 * @throws \Throwable When the owners cannot be read, or the window cannot be written.
 	 */
-	private function recordOwners(RecipientRecording $recording, ?DateTimeImmutable $now): array {
+	private function recordOwners(RecipientRecording $recording, ?DateTimeImmutable $now): ?array {
+		if (empty($recording->data['recipientsResolvedAt']) === false) {
+			return null;
+		}
+
 		$userIds = $this->ownerUserIds(objectService: $recording->objectService, moduleId: $recording->moduleId);
 
 		$data                         = $recording->data;
