@@ -391,28 +391,48 @@ export default {
 			try {
 				const response = await axios.post(
 					generateUrl('/apps/stackiq/api/settings/cronjobs'),
-					{
-						jobId: job.id,
-						organisationUuid: job.selectedOrganisation?.value || null,
-						enabled: job.enabled,
-					},
+					this.jobConfigPayload(job),
 				)
-
-				if (response.data.success) {
-					// Update local state.
-					job.organisationUuid = job.selectedOrganisation?.value || null
-					showSuccess('Cronjob configuration saved')
-				} else {
-					showError(
-						response.data.message || 'Failed to save configuration',
-					)
-				}
+				this.applySavedJobConfig(job, response.data)
 			} catch (error) {
 				console.error('Failed to save job config:', error)
 				showError('Failed to save cronjob configuration')
 			} finally {
 				this.savingJob = null
 			}
+		},
+
+		/**
+		 * The configuration of a job as the cronjobs endpoint takes it.
+		 *
+		 * @param {object} job The job
+		 * @return {object} The request body
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		jobConfigPayload(job) {
+			return {
+				jobId: job.id,
+				organisationUuid: job.selectedOrganisation?.value || null,
+				enabled: job.enabled,
+			}
+		},
+
+		/**
+		 * Keeps the saved organisation on the job and reports the save, or
+		 * reports why it was refused.
+		 *
+		 * @param {object} job The job
+		 * @param {object} data The response data
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		applySavedJobConfig(job, data) {
+			if (data.success) {
+				// Update local state.
+				job.organisationUuid = job.selectedOrganisation?.value || null
+				showSuccess('Cronjob configuration saved')
+				return
+			}
+			showError(data.message || 'Failed to save configuration')
 		},
 
 		/**
@@ -430,25 +450,54 @@ export default {
 
 			this.runningJob = job.id
 			try {
-				// Trigger the organization sync endpoint.
-				const response = await axios.post(
-					generateUrl('/apps/stackiq/api/settings/sync'),
-				)
-
-				if (response.data.success) {
-					showSuccess('Background job executed successfully')
-				} else {
-					showError(response.data.message || 'Job execution failed')
-				}
+				await this.triggerOrganisationSync()
 			} catch (error) {
-				console.error('Failed to run job:', error)
-				showError(
-					'Failed to run background job: '
-						+ (error.response?.data?.message || error.message),
-				)
+				this.reportJobRunFailure(error)
 			} finally {
 				this.runningJob = null
 			}
+		},
+
+		/**
+		 * Triggers the organisation sync endpoint and reports the outcome.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		async triggerOrganisationSync() {
+			const response = await axios.post(
+				generateUrl('/apps/stackiq/api/settings/sync'),
+			)
+			this.reportJobRun(response.data)
+		},
+
+		/**
+		 * Reports the outcome of a manual job run.
+		 *
+		 * @param {object} data The response data
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		reportJobRun(data) {
+			if (data.success) {
+				showSuccess('Background job executed successfully')
+				return
+			}
+			showError(data.message || 'Job execution failed')
+		},
+
+		/**
+		 * Reports a manual job run that failed, with the server's message or
+		 * else the error's own.
+		 *
+		 * @param {Error} error The error
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		reportJobRunFailure(error) {
+			console.error('Failed to run job:', error)
+			showError(
+				'Failed to run background job: '
+					+ (error.response?.data?.message || error.message),
+			)
 		},
 
 		/**
