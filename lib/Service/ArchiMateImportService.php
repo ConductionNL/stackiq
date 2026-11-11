@@ -2065,7 +2065,7 @@ class ArchiMateImportService {
 	 */
 	private function convertToCamelCase(string $propertyName): string {
 		$this->camelCaseNames ??= new ArchiMate\CamelCaseNames();
-		return $this->camelCaseNames->of(propertyName: $propertyName);
+		return $this->camelCaseNames->convertName(propertyName: $propertyName);
 	}//end convertToCamelCase()
 
 	/**

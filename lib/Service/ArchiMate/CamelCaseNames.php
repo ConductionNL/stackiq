@@ -47,7 +47,7 @@ final class CamelCaseNames {
 	 *
 	 * @spec openspec/specs/archimate-import/spec.md
 	 */
-	public function of(string $propertyName): string {
+	public function convertName(string $propertyName): string {
 		// OPTIMIZATION: Check cache first to avoid redundant conversions.
 		if (isset($this->cache[$propertyName]) === true) {
 			return $this->cache[$propertyName];
@@ -61,7 +61,7 @@ final class CamelCaseNames {
 		$this->cache[$propertyName] = $result;
 
 		return $result;
-	}//end of()
+	}//end convertName()
 
 	/**
 	 * Join the words of a label as camelCase.
@@ -78,8 +78,8 @@ final class CamelCaseNames {
 
 		// First word is lowercase, subsequent words are capitalized.
 		$camelCase = strtolower($words[0]);
-		for ($i = 1; $i < count($words); $i++) {
-			$camelCase .= ucfirst(strtolower($words[$i]));
+		foreach (array_slice($words, 1) as $word) {
+			$camelCase .= ucfirst(strtolower($word));
 		}
 
 		return $camelCase;
