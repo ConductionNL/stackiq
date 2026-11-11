@@ -1,0 +1,154 @@
+{
+	"approve by id": {
+		"trace": [
+			[
+				"apiRequest",
+				"moderation/a%2F1/approve?type=review",
+				{
+					"method": "POST"
+				},
+				"busy",
+				"a/1",
+				"approve"
+			],
+			[
+				"showSuccess",
+				"[{label} approved and published {\"label\":\"Review\"}]"
+			],
+			[
+				"loadPending"
+			]
+		],
+		"busyId": null,
+		"busyAction": null
+	},
+	"approve by uuid": {
+		"trace": [
+			[
+				"apiRequest",
+				"moderation/u%202/approve?type=review",
+				{
+					"method": "POST"
+				},
+				"busy",
+				"u 2",
+				"approve"
+			],
+			[
+				"showSuccess",
+				"[{label} approved and published {\"label\":\"Review\"}]"
+			],
+			[
+				"loadPending"
+			]
+		],
+		"busyId": null,
+		"busyAction": null
+	},
+	"reject by id": {
+		"trace": [
+			[
+				"apiRequest",
+				"moderation/r-3/reject?type=review",
+				{
+					"method": "POST"
+				},
+				"busy",
+				"r-3",
+				"reject"
+			],
+			[
+				"showSuccess",
+				"[{label} rejected {\"label\":\"Review\"}]"
+			],
+			[
+				"loadPending"
+			]
+		],
+		"busyId": null,
+		"busyAction": null
+	},
+	"approve without id": {
+		"trace": [
+			[
+				"showError",
+				"[{label} has no identifier {\"label\":\"Review\"}]"
+			]
+		],
+		"busyId": "unchanged",
+		"busyAction": "unchanged"
+	},
+	"reject without id": {
+		"trace": [
+			[
+				"showError",
+				"[{label} has no identifier {\"label\":\"Review\"}]"
+			]
+		],
+		"busyId": "unchanged",
+		"busyAction": "unchanged"
+	},
+	"approve fails": {
+		"trace": [
+			[
+				"apiRequest",
+				"moderation/f-1/approve?type=review",
+				{
+					"method": "POST"
+				},
+				"busy",
+				"f-1",
+				"approve"
+			],
+			[
+				"showError",
+				"[Could not update the {label} {\"label\":\"review\"}]: conflict"
+			]
+		],
+		"busyId": null,
+		"busyAction": null
+	},
+	"reject fails": {
+		"trace": [
+			[
+				"apiRequest",
+				"moderation/f-2/reject?type=review",
+				{
+					"method": "POST"
+				},
+				"busy",
+				"f-2",
+				"reject"
+			],
+			[
+				"showError",
+				"[Could not update the {label} {\"label\":\"review\"}]: conflict"
+			]
+		],
+		"busyId": null,
+		"busyAction": null
+	},
+	"empty label": {
+		"trace": [
+			[
+				"apiRequest",
+				"moderation/e-1/reject?type=review",
+				{
+					"method": "POST"
+				},
+				"busy",
+				"e-1",
+				"reject"
+			],
+			[
+				"showSuccess",
+				"[{label} rejected {\"label\":\"\"}]"
+			],
+			[
+				"loadPending"
+			]
+		],
+		"busyId": null,
+		"busyAction": null
+	}
+}
