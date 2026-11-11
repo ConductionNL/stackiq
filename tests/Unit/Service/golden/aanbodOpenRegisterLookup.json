@@ -1,0 +1,250 @@
+{
+    "{\"noOpenRegister\":true}": {
+        "result": {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "error": "Failed to retrieve aanbod: OpenRegister app is not installed"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting aanbod objects for active organisation",
+                {
+                    "options": {
+                        "_limit": 5
+                    }
+                }
+            ],
+            [
+                "log.error",
+                "Failed to get aanbod objects",
+                {
+                    "error": "OpenRegister app is not installed"
+                }
+            ]
+        ]
+    },
+    "{\"objectServiceThrows\":true}": {
+        "result": {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "error": "Failed to retrieve aanbod: Failed to get OpenRegister service: object service down"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting aanbod objects for active organisation",
+                {
+                    "options": {
+                        "_limit": 5
+                    }
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "log.error",
+                "Failed to get aanbod objects",
+                {
+                    "error": "Failed to get OpenRegister service: object service down"
+                }
+            ]
+        ]
+    },
+    "{\"noUser\":true}": {
+        "result": {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "message": "No current organization available"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting aanbod objects for active organisation",
+                {
+                    "options": {
+                        "_limit": 5
+                    }
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "log.warning",
+                "No current organization available for aanbod filtering",
+                []
+            ]
+        ]
+    },
+    "{\"orgThrows\":true}": {
+        "result": {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "message": "No current organization available"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting aanbod objects for active organisation",
+                {
+                    "options": {
+                        "_limit": 5
+                    }
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
+            ],
+            [
+                "log.error",
+                "Failed to get current organisation from OpenRegister",
+                {
+                    "error": "organisation service down"
+                }
+            ],
+            [
+                "log.warning",
+                "No current organization available for aanbod filtering",
+                []
+            ]
+        ]
+    },
+    "{\"noActiveOrg\":true}": {
+        "result": {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "message": "No current organization available"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting aanbod objects for active organisation",
+                {
+                    "options": {
+                        "_limit": 5
+                    }
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
+            ],
+            [
+                "organisations.getActiveOrganisation"
+            ],
+            [
+                "log.warning",
+                "No current organization available for aanbod filtering",
+                []
+            ]
+        ]
+    },
+    "[]": {
+        "result": {
+            "results": [
+                {
+                    "id": "offered",
+                    "@self": {
+                        "organisation": "org-other"
+                    },
+                    "_aanbod_type": "usage"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1,
+            "limit": 5,
+            "offset": 0
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting aanbod objects for active organisation",
+                {
+                    "options": {
+                        "_limit": 5
+                    }
+                }
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\ObjectService"
+            ],
+            [
+                "container.get",
+                "OCA\\OpenRegister\\Service\\OrganisationService"
+            ],
+            [
+                "organisations.getActiveOrganisation"
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.debug",
+                "Searching aanbod objects",
+                {
+                    "schema": "schema-gebruik",
+                    "type": "usage",
+                    "filter_field": "consumer",
+                    "current_org": "org-acting"
+                }
+            ],
+            [
+                "objects.searchObjectsPaginated",
+                {
+                    "@self": {
+                        "register": "reg-1",
+                        "schema": "schema-gebruik"
+                    },
+                    "consumer": "org-acting",
+                    "_limit": 5
+                },
+                false,
+                false
+            ],
+            [
+                "log.debug",
+                "Found aanbod objects for schema",
+                {
+                    "schema": "schema-gebruik",
+                    "type": "usage",
+                    "count": 2
+                }
+            ]
+        ]
+    }
+}
