@@ -89,6 +89,42 @@ import { NcButton, NcSelect } from '@nextcloud/vue'
  * @license EUPL-1.2
  * @version 1.0.0
  */
+/**
+ * The page numbers from one page to another, inclusive.
+ *
+ * @param {number} from The first page.
+ * @param {number} to The last page.
+ * @return {Array<number>} The pages.
+ */
+function pageRange(from, to) {
+	const pages = []
+	for (let i = from; i <= to; i++) {
+		pages.push(i)
+	}
+	return pages
+}
+
+/**
+ * The pages after the first one in a collapsed pagination, around the
+ * current page, with ellipses for the pages left out.
+ *
+ * @param {number} current The current page.
+ * @param {number} total The number of pages, more than 7.
+ * @return {Array<number|string>} The pages and ellipses after page 1.
+ */
+function pageWindow(current, total) {
+	if (current <= 4) {
+		// Current page is near the beginning
+		return [...pageRange(2, 5), '...', total]
+	}
+	if (current >= total - 3) {
+		// Current page is near the end
+		return ['...', ...pageRange(total - 4, total)]
+	}
+	// Current page is in the middle
+	return ['...', ...pageRange(current - 1, current + 1), '...', total]
+}
+
 export default {
 	name: 'PaginationComponent',
 	components: {
@@ -194,44 +230,13 @@ export default {
 		 * @spec openspec/specs/fe-shell-navigation/spec.md
 		 */
 		visiblePages() {
-			const current = this.currentPage
 			const total = this.totalPages
-			const pages = []
-
 			if (total <= 7) {
 				// Show all pages if 7 or fewer
-				for (let i = 1; i <= total; i++) {
-					pages.push(i)
-				}
-			} else {
-				// Always show first page
-				pages.push(1)
-
-				if (current <= 4) {
-					// Current page is near the beginning
-					for (let i = 2; i <= 5; i++) {
-						pages.push(i)
-					}
-					pages.push('...')
-					pages.push(total)
-				} else if (current >= total - 3) {
-					// Current page is near the end
-					pages.push('...')
-					for (let i = total - 4; i <= total; i++) {
-						pages.push(i)
-					}
-				} else {
-					// Current page is in the middle
-					pages.push('...')
-					for (let i = current - 1; i <= current + 1; i++) {
-						pages.push(i)
-					}
-					pages.push('...')
-					pages.push(total)
-				}
+				return pageRange(1, total)
 			}
-
-			return pages
+			// Always show first page
+			return [1, ...pageWindow(this.currentPage, total)]
 		},
 	},
 
