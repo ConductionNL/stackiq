@@ -262,27 +262,51 @@ class ContactPersonOrganisationGuard {
 		}
 
 		try {
-			$config = $this->settingsService->getVoorzieningenConfig();
-			$object = $this->objectService->find(
-				id: $uuid,
-				register: ($config['register'] ?? ''),
-				schema: ($config['organisatie_schema'] ?? ''),
-				_rbac: false,
-				_multitenancy: false
-			);
+			$object = $this->findOrganisatie(uuid: $uuid);
 		} catch (DoesNotExistException $e) {
 			return false;
 		} catch (Throwable $e) {
 			return true;
 		}
 
+		return $this->mayBeActive(object: $object);
+	}//end organisatieMayBecomeActive()
+
+	/**
+	 * The organisatie object with this uuid, read without RBAC or organisation scoping.
+	 *
+	 * @param string $uuid The organisatie uuid.
+	 *
+	 * @return mixed The object, or null.
+	 *
+	 * @throws DoesNotExistException When there is no such object.
+	 */
+	private function findOrganisatie(string $uuid): mixed {
+		$config = $this->settingsService->getVoorzieningenConfig();
+		return $this->objectService->find(
+			id: $uuid,
+			register: ($config['register'] ?? ''),
+			schema: ($config['organisatie_schema'] ?? ''),
+			_rbac: false,
+			_multitenancy: false
+		);
+	}//end findOrganisatie()
+
+	/**
+	 * Whether a found organisatie counts as active: an active status, or one that is not text.
+	 *
+	 * @param mixed $object The organisatie object, or null when there is none.
+	 *
+	 * @return bool
+	 */
+	private function mayBeActive(mixed $object): bool {
 		if ($object === null) {
 			return false;
 		}
 
 		$status = ($object->getObject()['status'] ?? '');
 		return is_string($status) === false || in_array(strtolower(trim($status)), self::ACTIVE_STATUSES, true) === true;
-	}//end organisatieMayBecomeActive()
+	}//end mayBeActive()
 
 	/**
 	 * The uid of the existing account this e-mail address names, when it is not the caller's own.
@@ -298,12 +322,24 @@ class ContactPersonOrganisationGuard {
 		}
 
 		$uid = $this->userManager->get($email)?->getUID();
-		if ($uid === null || strtolower($uid) === strtolower((string)$caller)) {
+		if ($this->isNoneOrCaller(uid: $uid, caller: $caller) === true) {
 			return null;
 		}
 
 		return $uid;
 	}//end existingAccount()
+
+	/**
+	 * Whether no account was found, or the account is the caller's own (in any case).
+	 *
+	 * @param string|null $uid    The account's uid, or null when there is none.
+	 * @param string|null $caller The caller's uid.
+	 *
+	 * @return bool
+	 */
+	private function isNoneOrCaller(?string $uid, ?string $caller): bool {
+		return $uid === null || strtolower($uid) === strtolower((string)$caller);
+	}//end isNoneOrCaller()
 
 	/**
 	 * Whether this name is an existing account other than the caller's own.
