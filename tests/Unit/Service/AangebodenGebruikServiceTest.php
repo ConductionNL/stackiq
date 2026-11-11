@@ -41,6 +41,7 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Db\Organisation;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Service\AangebodenGebruikService;
+use OCA\Stackiq\Service\OpenRegisterLookup;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IUser;
@@ -123,11 +124,11 @@ class AangebodenGebruikServiceTest extends TestCase {
 			$this->organisationService->method('getActiveOrganisation')->willReturn($org);
 		}
 
+		$logger        = $this->createMock(LoggerInterface::class);
 		$this->service = new AangebodenGebruikService(
 			$this->createMock(\OCP\IAppConfig::class),
-			$this->appManager,
-			$this->container,
-			$this->createMock(LoggerInterface::class),
+			new OpenRegisterLookup($this->appManager, $this->container, $this->userSession, $logger),
+			$logger,
 			$this->settingsService,
 			$this->userSession
 		);

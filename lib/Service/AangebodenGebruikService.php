@@ -64,16 +64,14 @@ class AangebodenGebruikService {
 	 * Constructor for AangebodenGebruikService
 	 *
 	 * @param IAppConfig $config Nextcloud app configuration service
-	 * @param IAppManager $appManager App manager service for checking available apps
-	 * @param ContainerInterface $container PSR-11 container interface for dependency injection
+	 * @param OpenRegisterLookup $openRegister Resolves OpenRegister's object service and the active organisation
 	 * @param LoggerInterface $logger Logger service for debugging and error reporting
 	 * @param SettingsService $settingsService Settings service for retrieving configuration
 	 * @param IUserSession $userSession User session service for current user context
 	 */
 	public function __construct(
 		private readonly IAppConfig $config,
-		private readonly IAppManager $appManager,
-		private readonly ContainerInterface $container,
+		private readonly OpenRegisterLookup $openRegister,
 		private readonly LoggerInterface $logger,
 		private readonly SettingsService $settingsService,
 		private readonly IUserSession $userSession,
@@ -1138,30 +1136,7 @@ class AangebodenGebruikService {
 	 * @return string|null Current organisation identifier or null if no user session
 	 */
 	private function getCurrentOrganisation(): ?string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return null;
-		}
-
-		try {
-			// Get the OpenRegister OrganisationService to get the active organisation.
-			$organisationService = $this->container->get('OCA\OpenRegister\Service\OrganisationService');
-			$activeOrg = $organisationService->getActiveOrganisation();
-
-			if ($activeOrg !== null) {
-				return $activeOrg->getUuid();
-			}
-
-			return null;
-		} catch (Exception $e) {
-			$this->logger->error(
-				'Failed to get current organisation from OpenRegister',
-				[
-					'error' => $e->getMessage(),
-				]
-			);
-			return null;
-		}
+		return $this->openRegister->activeOrganisationUuid();
 	}//end getCurrentOrganisation()
 
 	/**
@@ -1171,15 +1146,7 @@ class AangebodenGebruikService {
 	 * @throws Exception When OpenRegister service is not available
 	 */
 	private function getObjectService(): ObjectServiceInterface {
-		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === false) {
-			throw new Exception('OpenRegister app is not installed');
-		}
-
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Exception $e) {
-			throw new Exception('Failed to get OpenRegister service: ' . $e->getMessage());
-		}
+		return $this->openRegister->objectService();
 	}//end getObjectService()
 
 	/**

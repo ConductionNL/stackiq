@@ -27,6 +27,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\Organisation;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Service\AanbodService;
+use OCA\Stackiq\Service\OpenRegisterLookup;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -151,11 +152,11 @@ class AanbodServiceOpenRegisterLookupGoldenTest extends TestCase {
 		$user->method('getUID')->willReturn('acting-user');
 		$userSession->method('getUser')->willReturn(isset($this->plan['noUser']) === true ? null : $user);
 
+		$logger = $this->logger();
 		return new AanbodService(
 			config: $this->createMock(originalClassName: IAppConfig::class),
-			appManager: $appManager,
-			container: $container,
-			logger: $this->logger(),
+			openRegister: new OpenRegisterLookup(appManager: $appManager, container: $container, userSession: $userSession, logger: $logger),
+			logger: $logger,
 			settingsService: $settings,
 			userSession: $userSession
 		);
