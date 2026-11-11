@@ -26,18 +26,11 @@ namespace OCA\Stackiq\Service\Settings;
  * @spec openspec/specs/settings-service/spec.md
  */
 final class EmailTemplateDefaults {
-
 	/**
-	 * The default content of a template, empty for an unknown template.
-	 *
-	 * @param string $templateName The template name.
-	 *
-	 * @return string
-	 * @spec   openspec/specs/settings-service/spec.md
+	 * The default content of each template, by template name.
 	 */
-	public function template(string $templateName): string {
-		$templates = [
-			'organization_registration' => '
+	private const TEMPLATES = [
+		'organization_registration' => '
 <h1>Welkom bij de Software Catalogus!</h1>
 <p>Beste {{ organization.name }},</p>
 <p>Hartelijk welkom bij de Software Catalogus! Uw organisatie is succesvol geregistreerd.</p>
@@ -51,7 +44,7 @@ final class EmailTemplateDefaults {
 <p>Heeft u vragen? Neem dan contact met ons op.</p>
 <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
             ',
-			'organization_activation' => '
+		'organization_activation' => '
 <h1>Uw organisatie is geactiveerd!</h1>
 <p>Beste {{ organization.name }},</p>
 <p>Goed nieuws! Uw organisatie is zojuist geactiveerd in de Software Catalogus.</p>
@@ -65,7 +58,7 @@ final class EmailTemplateDefaults {
 <p>U kunt nu inloggen en gebruik maken van alle beschikbare functionaliteiten.</p>
 <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
             ',
-			'user_creation' => '
+		'user_creation' => '
 <h1>Welkom {{ user.name }}!</h1>
 <p>Beste {{ user.name }},</p>
 <p>Er is een gebruikersaccount voor u aangemaakt in de Software Catalogus.</p>
@@ -79,9 +72,43 @@ final class EmailTemplateDefaults {
 <p>Heeft u vragen over uw account? Neem dan contact met ons op.</p>
 <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>
             ',
-		];
+	];
 
-		return $templates[$templateName] ?? '';
+	/**
+	 * The variables each template offers, by template name.
+	 */
+	private const VARIABLES = [
+		'organization_registration' => [
+			'organization.name' => 'Organization name',
+			'organization.beoordeling' => 'Organization status (e.g., Actief)',
+			'organization.type' => 'Organization type (e.g., Leverancier)',
+			'organization.website' => 'Organization website',
+		],
+		'organization_activation' => [
+			'organization.name' => 'Organization name',
+			'organization.beoordeling' => 'Organization status (e.g., Actief)',
+			'organization.type' => 'Organization type',
+			'organization.website' => 'Organization website',
+		],
+		'user_creation' => [
+			'user.name' => 'User display name',
+			'user.email' => 'User email address',
+			'user.username' => 'Username',
+			'user.organization.name' => 'Organization name (if applicable)',
+		],
+	];
+
+
+	/**
+	 * The default content of a template, empty for an unknown template.
+	 *
+	 * @param string $templateName The template name.
+	 *
+	 * @return string
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	public function template(string $templateName): string {
+		return self::TEMPLATES[$templateName] ?? '';
 	}//end template()
 
 	/**
@@ -93,28 +120,7 @@ final class EmailTemplateDefaults {
 	 * @spec   openspec/specs/settings-service/spec.md
 	 */
 	public function variables(string $templateName): array {
-		$variables = [
-			'organization_registration' => [
-				'organization.name' => 'Organization name',
-				'organization.beoordeling' => 'Organization status (e.g., Actief)',
-				'organization.type' => 'Organization type (e.g., Leverancier)',
-				'organization.website' => 'Organization website',
-			],
-			'organization_activation' => [
-				'organization.name' => 'Organization name',
-				'organization.beoordeling' => 'Organization status (e.g., Actief)',
-				'organization.type' => 'Organization type',
-				'organization.website' => 'Organization website',
-			],
-			'user_creation' => [
-				'user.name' => 'User display name',
-				'user.email' => 'User email address',
-				'user.username' => 'Username',
-				'user.organization.name' => 'Organization name (if applicable)',
-			],
-		];
-
-		return $variables[$templateName] ?? [];
+		return self::VARIABLES[$templateName] ?? [];
 	}//end variables()
 
 }//end class
