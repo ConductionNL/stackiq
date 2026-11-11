@@ -176,4 +176,25 @@ describe('uuid lookups', () => {
 			}),
 		).toBe(null)
 	})
+	it('builds the exposure panel index of a display field', () => {
+		store.collections = { module: { results: RECORDS } }
+		const vm = {}
+		const buildIndex =
+			views.VulnerabilityExposurePanel.methods.buildIndex.bind(vm)
+		expect(buildIndex('module', 'name')).toEqual({
+			u1: 'Named',
+			i2: 'Only title',
+			s3: 'Object name',
+			nested: 'nested',
+			'plain-uuid': 'plain-uuid',
+		})
+		expect(buildIndex('module', 'missing')).toEqual({
+			u1: 'Titled',
+			i2: 'Only title',
+			s3: 's3',
+			nested: 'nested',
+			'plain-uuid': 'plain-uuid',
+		})
+		expect(buildIndex('absent', 'name')).toEqual({})
+	})
 })
