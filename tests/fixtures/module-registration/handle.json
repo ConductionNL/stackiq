@@ -1,0 +1,214 @@
+{
+    "plain event": [],
+    "deleted event": [],
+    "created module": [
+        [
+            "getSchema"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "getSchemaIdForObjectType",
+            "module"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ModuleRegistrationService"
+        ],
+        [
+            "handleModuleRegistration",
+            true
+        ]
+    ],
+    "updated module": [
+        [
+            "getSchema"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "getSchemaIdForObjectType",
+            "module"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ModuleRegistrationService"
+        ],
+        [
+            "handleModuleRegistration",
+            true
+        ]
+    ],
+    "created other schema": [
+        [
+            "getSchema"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "getSchemaIdForObjectType",
+            "module"
+        ]
+    ],
+    "updated other schema": [
+        [
+            "getSchema"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "getSchemaIdForObjectType",
+            "module"
+        ]
+    ],
+    "no module schema": [
+        [
+            "getSchema"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "getSchemaIdForObjectType",
+            "module"
+        ]
+    ],
+    "null schema, module 0": [
+        [
+            "getSchema"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "getSchemaIdForObjectType",
+            "module"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ModuleRegistrationService"
+        ],
+        [
+            "handleModuleRegistration",
+            true
+        ]
+    ],
+    "slug schema, module 0": [
+        [
+            "getSchema"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "getSchemaIdForObjectType",
+            "module"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ModuleRegistrationService"
+        ],
+        [
+            "handleModuleRegistration",
+            true
+        ]
+    ],
+    "padded schema": [
+        [
+            "getSchema"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "getSchemaIdForObjectType",
+            "module"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ModuleRegistrationService"
+        ],
+        [
+            "handleModuleRegistration",
+            true
+        ]
+    ],
+    "registration fails": [
+        [
+            "getSchema"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "getSchemaIdForObjectType",
+            "module"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ModuleRegistrationService"
+        ],
+        [
+            "handleModuleRegistration",
+            true
+        ],
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "error",
+            "ModuleRegistrationSubscriber: Failed to handle module registration",
+            {
+                "objectId": 42,
+                "exception": "registration down"
+            }
+        ]
+    ],
+    "update registration fails": [
+        [
+            "getSchema"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\SettingsService"
+        ],
+        [
+            "getSchemaIdForObjectType",
+            "module"
+        ],
+        [
+            "container.get",
+            "OCA\\Stackiq\\Service\\ModuleRegistrationService"
+        ],
+        [
+            "handleModuleRegistration",
+            true
+        ],
+        [
+            "container.get",
+            "Psr\\Log\\LoggerInterface"
+        ],
+        [
+            "error",
+            "ModuleRegistrationSubscriber: Failed to handle module registration",
+            {
+                "objectId": 42,
+                "exception": "registration down"
+            }
+        ]
+    ]
+}
