@@ -58,6 +58,25 @@ final class DataQualityDerivationTest extends TestCase {
 		self::assertNull($summary['completeness']);
 	}//end testNoEntriesGivesNoScore()
 
+	public function testAFormatRuleMatchesItsPatternItsNamedFormatOrNothing(): void {
+		$rules = [
+			['type' => 'format', 'field' => 'code', 'pattern' => '^[A-Z]{2}/[0-9]+$'],
+			['type' => 'format', 'field' => 'code', 'format' => 'url', 'pattern' => 'AB'],
+			['type' => 'format', 'field' => 'code', 'format' => 'no-such-format'],
+			['type' => 'format', 'field' => 'list'],
+			['type' => 'format', 'field' => 'list', 'pattern' => 'x'],
+			['type' => 'unknown', 'field' => 'code'],
+		];
+		$objects = [
+			['id' => 'slash', 'code' => 'AB/12', 'list' => ['x']],
+			['id' => 'plain', 'code' => 'ab12', 'list' => []],
+		];
+
+		$result = (new DataQualityDerivation())->evaluate(rules: $rules, objects: $objects, now: $this->now());
+
+		self::assertSame([1, 1, 2, 1, 0, 2], array_column($result['rules'], 'met'));
+	}//end testAFormatRuleMatchesItsPatternItsNamedFormatOrNothing()
+
 	private function now(): DateTimeImmutable {
 		return new DateTimeImmutable('2026-10-23T00:00:00+00:00');
 	}//end now()
