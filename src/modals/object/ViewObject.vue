@@ -1913,6 +1913,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 </template>
 
 <script>
+import { getRequestToken } from '@nextcloud/auth'
 import {
 	NcActionButton,
 	NcActions,
@@ -2798,6 +2799,7 @@ export default {
 					method,
 					headers: {
 						'Content-Type': 'application/json',
+						requesttoken: getRequestToken(),
 					},
 					body: JSON.stringify(objectData),
 				})
@@ -4043,8 +4045,9 @@ export default {
 					headers: this.showPublishModal
 						? {
 								'Content-Type': 'application/json',
+								requesttoken: getRequestToken(),
 							}
-						: undefined,
+						: { requesttoken: getRequestToken() },
 					body: this.showPublishModal ? JSON.stringify(body) : undefined,
 				})
 
@@ -4124,8 +4127,9 @@ export default {
 					headers: this.showDepublishModal
 						? {
 								'Content-Type': 'application/json',
+								requesttoken: getRequestToken(),
 							}
-						: undefined,
+						: { requesttoken: getRequestToken() },
 					body: this.showDepublishModal ? JSON.stringify(body) : undefined,
 				})
 

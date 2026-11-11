@@ -393,6 +393,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 </template>
 
 <script>
+import { getRequestToken } from '@nextcloud/auth'
 import {
 	NcButton,
 	NcDialog,
@@ -718,6 +719,7 @@ export default {
 						method: 'POST',
 						headers: {
 							'Content-Type': 'application/json',
+							requesttoken: getRequestToken(),
 						},
 						body: JSON.stringify({
 							sourceRegister: this.sourceRegister.id,
