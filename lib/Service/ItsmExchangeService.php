@@ -202,20 +202,34 @@ class ItsmExchangeService {
 		$exchange = $this->exchangeOf(request: $request);
 		$flows    = [];
 		foreach (self::FLOWS as $key => $flow) {
-			$flow['key']  = $key;
-			$template     = $this->template(file: self::templateFile(exchange: $exchange, flow: $flow));
-			$flows[$key] = self::fill(value: $template, values: self::flowValues(exchange: $exchange, flow: $flow));
+			$flow['key'] = $key;
+			$flows[$key] = $this->filledFlow(exchange: $exchange, flow: $flow);
 		}
 
 		return $flows;
 	}//end buildFlows()
 
 	/**
+	 * One flow's template, filled with the set-up's values.
+	 *
+	 * @param array<string, mixed> $exchange What every flow of the set-up shares, with the filler.
+	 * @param array<string, mixed> $flow     The flow, with its key.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function filledFlow(array $exchange, array $flow): array {
+		$filler   = $exchange['filler'];
+		$template = $this->template(file: $filler->templateFile(exchange: $exchange, flow: $flow));
+
+		return $filler->fill(value: $template, values: $filler->flowValues(exchange: $exchange, flow: $flow));
+	}//end filledFlow()
+
+	/**
 	 * What every flow of one set-up shares: the request, the desk's profile, the catalogue link and the desk base.
 	 *
 	 * @param ItsmFlowRequest $request The set-up, for a known desk.
 	 *
-	 * @return array<string, mixed> The request, the desk's profile, the catalogue link and the desk base.
+	 * @return array<string, mixed> The request, the desk's profile, the catalogue link, the desk base and the filler.
 	 */
 	private function exchangeOf(ItsmFlowRequest $request): array {
 		return [
@@ -223,123 +237,9 @@ class ItsmExchangeService {
 			'profile' => self::DESKS[$request->desk],
 			'appUrl'  => rtrim($this->urlGenerator->getAbsoluteURL('/index.php/apps/' . AppIdentity::APP_ID), '/'),
 			'base'    => self::baseOf(location: $request->location),
+			'filler'  => new ItsmFlowFiller(),
 		];
 	}//end exchangeOf()
-
-	/**
-	 * The template file of one flow: the desk's own for the relations, the flow's for every other.
-	 *
-	 * @param array<string, mixed> $exchange What every flow of the set-up shares.
-	 * @param array<string, mixed> $flow     The flow, with its key.
-	 *
-	 * @return string
-	 */
-	private static function templateFile(array $exchange, array $flow): string {
-		if ($flow['key'] === 'relations') {
-			return $exchange['profile']['relationsTemplate'];
-		}
-
-		return $flow['template'];
-	}//end templateFile()
-
-	/**
-	 * The placeholder values of one flow, in the order they are filled.
-	 *
-	 * @param array<string, mixed> $exchange What every flow of the set-up shares.
-	 * @param array<string, mixed> $flow     The flow, with its key.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private static function flowValues(array $exchange, array $flow): array {
-		$flow['deskKey'] = self::deskKeyOf(desk: $exchange['request']->desk, flowKey: $flow['key']);
-		$values = self::runValues(exchange: $exchange, flow: $flow) + self::feedValues(exchange: $exchange, flow: $flow);
-		$values += self::deskEndpoints(exchange: $exchange);
-		if ($flow['key'] === 'file') {
-			$values['SYNC']   = 'itsm-file-applications';
-			$values['PRESET'] = 'itsm-file-application-inbound';
-		}
-
-		return $values;
-	}//end flowValues()
-
-	/**
-	 * The desk key a flow names: `file` for the file flow, the desk for every other.
-	 *
-	 * @param string $desk    The desk key.
-	 * @param string $flowKey The flow key.
-	 *
-	 * @return string
-	 */
-	private static function deskKeyOf(string $desk, string $flowKey): string {
-		if ($flowKey === 'file') {
-			return 'file';
-		}
-
-		return $desk;
-	}//end deskKeyOf()
-
-	/**
-	 * Who and what the flow runs for: the register, the consumer, the run-as user, the schedule and the desk.
-	 *
-	 * @param array<string, mixed> $exchange What every flow of the set-up shares.
-	 * @param array<string, mixed> $flow     The flow, with its desk key.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private static function runValues(array $exchange, array $flow): array {
-		$request = $exchange['request'];
-
-		return [
-			'REGISTER'   => self::REGISTER,
-			'CONSUMER'   => $request->organisation,
-			'RUN_AS'     => $request->runAs,
-			'CRON'       => self::CRON,
-			'DESK'       => $flow['deskKey'],
-			'DESK_LABEL' => $exchange['profile']['label'],
-			'SOURCE'     => $exchange['profile']['source'],
-		];
-	}//end runValues()
-
-	/**
-	 * What the flow exchanges: its synchronization, preset, contract type and feed label, and the catalogue link.
-	 *
-	 * @param array<string, mixed> $exchange What every flow of the set-up shares.
-	 * @param array<string, mixed> $flow     The flow, with its desk key.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private static function feedValues(array $exchange, array $flow): array {
-		return [
-			'SYNC'          => 'itsm-' . $flow['deskKey'] . '-' . $flow['feed'],
-			'PRESET'        => 'itsm-' . $flow['deskKey'] . '-' . $flow['preset'],
-			'CONTRACT_TYPE' => ($flow['contractType'] ?? 'Licence'),
-			'FEED_LABEL'    => ($flow['feedLabel'] ?? $flow['feed']),
-			'APP_URL'       => $exchange['appUrl'],
-		];
-	}//end feedValues()
-
-	/**
-	 * How the flow talks to the desk: its endpoints and methods, the record link and base, the asset template.
-	 *
-	 * @param array<string, mixed> $exchange What every flow of the set-up shares.
-	 *
-	 * @return array<string, mixed>
-	 */
-	private static function deskEndpoints(array $exchange): array {
-		$profile = $exchange['profile'];
-
-		return [
-			'CREATE_ENDPOINT' => $profile['createEndpoint'],
-			'CREATE_METHOD'   => $profile['createMethod'],
-			'UPDATE_ENDPOINT' => $profile['updateEndpoint'],
-			'UPDATE_METHOD'   => $profile['updateMethod'],
-			'RESPONSE_ID'     => $profile['responseId'],
-			'RECORD_URL'      => str_replace('%BASE%', $exchange['base'], $profile['recordUrl']),
-			'DESK_BASE'       => $exchange['base'],
-			'TEMPLATE_ID'     => $exchange['request']->templateId,
-			'CALL_QUERY'      => $profile['callQuery'],
-		];
-	}//end deskEndpoints()
 
 	/**
 	 * Set up the exchange: check every flow, then create or update them all.
@@ -555,54 +455,8 @@ class ItsmExchangeService {
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
 	 */
 	public static function fill(mixed $value, array $values): mixed {
-		if (is_array($value) === true) {
-			return array_map(static fn (mixed $item): mixed => self::fill(value: $item, values: $values), $value);
-		}
-
-		if (is_string($value) === false) {
-			return $value;
-		}
-
-		return self::fillText(text: $value, values: $values);
+		return (new ItsmFlowFiller())->fill(value: $value, values: $values);
 	}//end fill()
-
-	/**
-	 * Fill the placeholders of one string.
-	 *
-	 * @param string               $text   The string.
-	 * @param array<string, mixed> $values The placeholder values, by key without the percent signs.
-	 *
-	 * @return mixed The value itself for a string that is exactly one known placeholder, else the filled text.
-	 */
-	private static function fillText(string $text, array $values): mixed {
-		if (preg_match('/^%([A-Z_]+)%$/', $text, $whole) === 1 && array_key_exists($whole[1], $values) === true) {
-			return $values[$whole[1]];
-		}
-
-		[$search, $replace] = self::textReplacements(values: $values);
-
-		return str_replace($search, $replace, $text);
-	}//end fillText()
-
-	/**
-	 * The placeholders that take text, and their texts; list and object values are left out.
-	 *
-	 * @param array<string, mixed> $values The placeholder values, by key without the percent signs.
-	 *
-	 * @return array{0: array<int, string>, 1: array<int, string>} The placeholders and their texts.
-	 */
-	private static function textReplacements(array $values): array {
-		$search  = [];
-		$replace = [];
-		foreach ($values as $key => $text) {
-			if (is_array($text) === false) {
-				$search[]  = '%' . $key . '%';
-				$replace[] = (string) $text;
-			}
-		}
-
-		return [$search, $replace];
-	}//end textReplacements()
 
 	/**
 	 * The scheme, host and port of a location, without its path.
