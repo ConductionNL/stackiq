@@ -312,29 +312,62 @@ export default {
 			this.error = ''
 			const path = isRenewal ? 'renewal' : 'submit'
 			try {
-				const url = generateUrl(
-					'/apps/stackiq/api/contracts/{id}/approval/{path}',
-					{ id: String(this.objectId), path },
-				)
-				const { data } = await axios.post(url)
-				this.approvalState = data.approvalState || 'pending'
-				this.decisionId = data.decisionId || this.decisionId
-				showSuccess(
-					t('stackiq', 'Contract submitted to decidesk for a decision.'),
-				)
+				this.applySubmission(await this.postApproval(path))
 			} catch (e) {
-				// Fail-closed: the contract stays In onderhandeling.
-				const msg =
-					e?.response?.data?.message
-					|| t(
-						'stackiq',
-						'Submitting the contract failed; it remains in negotiation.',
-					)
-				this.error = msg
-				showError(msg)
+				this.failSubmission(e)
 			} finally {
 				this.busy = false
 			}
+		},
+
+		/**
+		 * Post the approval or renewal submission for the contract.
+		 *
+		 * @param {string} path The submission path: submit or renewal.
+		 * @return {Promise<object>} The response body.
+		 * @spec openspec/specs/contract-decision-delegation/spec.md
+		 */
+		async postApproval(path) {
+			const url = generateUrl(
+				'/apps/stackiq/api/contracts/{id}/approval/{path}',
+				{ id: String(this.objectId), path },
+			)
+			const { data } = await axios.post(url)
+			return data
+		},
+
+		/**
+		 * Keep the submitted approval state and decision and report it.
+		 *
+		 * @param {object} data The response body.
+		 * @return {void}
+		 * @spec openspec/specs/contract-decision-delegation/spec.md
+		 */
+		applySubmission(data) {
+			this.approvalState = data.approvalState || 'pending'
+			this.decisionId = data.decisionId || this.decisionId
+			showSuccess(
+				t('stackiq', 'Contract submitted to decidesk for a decision.'),
+			)
+		},
+
+		/**
+		 * Show a failed submission. Fail-closed: the contract stays In
+		 * onderhandeling.
+		 *
+		 * @param {Error} e The error.
+		 * @return {void}
+		 * @spec openspec/specs/contract-decision-delegation/spec.md
+		 */
+		failSubmission(e) {
+			const msg =
+				e?.response?.data?.message
+				|| t(
+					'stackiq',
+					'Submitting the contract failed; it remains in negotiation.',
+				)
+			this.error = msg
+			showError(msg)
 		},
 	},
 }
