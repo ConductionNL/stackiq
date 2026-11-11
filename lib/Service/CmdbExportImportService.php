@@ -1337,8 +1337,24 @@ class CmdbExportImportService {
 	private function upsertUsage(CmdbImportRow $row, array $data): array {
 		$municipalityUuid = $row->run->municipalityUuid();
 		$moduleUuid = (string) $row->moduleUuid;
-		$providerUuid = $row->providerUuid;
-		$owners = $row->owners;
+		$data = $this->withUsageRelations(row: $row, data: $this->withoutEmptyAnnotationParts(data: $data));
+
+		$existing = $this->findInAnyState(schemaKey: 'usage', filters: ['consumer' => $municipalityUuid, 'module' => $moduleUuid]);
+		if ($existing === null) {
+			return ['uuid' => $this->save(schemaKey: 'usage', data: $data, uuid: null), 'outcome' => CmdbImportReport::CREATED];
+		}
+
+		return $this->updateUsage(existing: $existing, data: $data);
+	}//end upsertUsage()
+
+	/**
+	 * Drop the empty parts the concat mapping leaves in a usage's interneAnnotation.
+	 *
+	 * @param array<string, mixed> $data The mapped usage fields.
+	 *
+	 * @return array<string, mixed> The fields, interneAnnotation without empty parts.
+	 */
+	private function withoutEmptyAnnotationParts(array $data): array {
 		$separator = $this->profile->concatSeparator(target: 'usage', field: 'interneAnnotation');
 		if ($separator !== null && isset($data['interneAnnotation']) === true && is_string($data['interneAnnotation']) === true) {
 			// The concat mapping leaves an empty part for every empty column; drop those.
@@ -1349,23 +1365,44 @@ class CmdbExportImportService {
 			$data['interneAnnotation'] = implode($separator, $parts);
 		}
 
-		$data['consumer'] = $municipalityUuid;
-		$data['module'] = $moduleUuid;
-		if ($providerUuid !== null) {
-			$data['provider'] = $providerUuid;
+		return $data;
+	}//end withoutEmptyAnnotationParts()
+
+	/**
+	 * Set a usage's consumer, module, supplier and owner contact persons from its row.
+	 *
+	 * @param CmdbImportRow        $row  The row: its module, the supplier when there is one, the owner contact
+	 *                                   persons and the run's consumer.
+	 * @param array<string, mixed> $data The mapped usage fields.
+	 *
+	 * @return array<string, mixed> The fields with the relations set.
+	 */
+	private function withUsageRelations(CmdbImportRow $row, array $data): array {
+		$data['consumer'] = $row->run->municipalityUuid();
+		$data['module'] = (string) $row->moduleUuid;
+		if ($row->providerUuid !== null) {
+			$data['provider'] = $row->providerUuid;
 		}
 
-		foreach ($owners as $field => $contactPersonUuid) {
+		foreach ($row->owners as $field => $contactPersonUuid) {
 			if ($contactPersonUuid !== null) {
 				$data[$field] = $contactPersonUuid;
 			}
 		}
 
-		$existing = $this->findInAnyState(schemaKey: 'usage', filters: ['consumer' => $municipalityUuid, 'module' => $moduleUuid]);
-		if ($existing === null) {
-			return ['uuid' => $this->save(schemaKey: 'usage', data: $data, uuid: null), 'outcome' => CmdbImportReport::CREATED];
-		}
+		return $data;
+	}//end withUsageRelations()
 
+	/**
+	 * Revive a stored usage when needed and merge the mapped fields onto it.
+	 *
+	 * @param array{entity: object, state: array{archived: bool, deleted: bool}} $existing The stored usage, as findInAnyState() found it.
+	 * @param array<string, mixed>                                               $data     The usage fields.
+	 *
+	 * @return array{uuid: string, outcome: string} Outcome updated or unchanged, or restored or unarchived when
+	 *                                            the stored usage was revived first.
+	 */
+	private function updateUsage(array $existing, array $data): array {
 		$uuid = (string)$existing['entity']->getUuid();
 		$revived = $this->revive(found: $existing);
 		$merged = $this->merge(target: 'usage', stored: $revived['entity']->getObject(), mapped: $data);
@@ -1375,7 +1412,7 @@ class CmdbExportImportService {
 
 		$this->save(schemaKey: 'usage', data: $merged, uuid: $uuid);
 		return ['uuid' => $uuid, 'outcome' => ($revived['outcome'] ?? CmdbImportReport::UPDATED)];
-	}//end upsertUsage()
+	}//end updateUsage()
 
 	/**
 	 * Merge mapped fields onto a stored object.
@@ -2103,31 +2140,58 @@ class CmdbExportImportService {
 			return $this->archiveServices;
 		}
 
-		$previous = null;
-		try {
-			$handler = $this->container->get(static::ARCHIVE_HANDLER_CLASS);
-			$mapper = $this->container->get(static::OBJECT_MAPPER_CLASS);
-		} catch (Throwable $e) {
-			$this->logger->warning('CmdbExportImportService: OpenRegister archive services could not be resolved', ['exception' => get_class($e)]);
-			$previous = $e;
-			$handler = null;
-			$mapper = null;
-		}
-
-		if (is_object($handler) === false || method_exists($handler, 'archiveWith') === false || method_exists($handler, 'unarchiveWith') === false
-			|| is_object($mapper) === false || method_exists($mapper, 'restoreObject') === false
-			|| method_exists($mapper, 'findDeletedAcrossAllMagicTables') === false
-		) {
+		$resolved = $this->resolveArchiveServices();
+		if (self::isArchiveHandler(handler: $resolved['handler']) === false || self::isObjectMapper(mapper: $resolved['mapper']) === false) {
 			throw new CmdbImportException(
 				errorCode: CmdbImportException::ARCHIVE_UNAVAILABLE,
 				message: 'OpenRegister ArchiveHandler or MagicMapper is not available',
-				previous: $previous
+				previous: $resolved['previous']
 			);
 		}
 
-		$this->archiveServices = ['handler' => $handler, 'mapper' => $mapper];
+		$this->archiveServices = ['handler' => $resolved['handler'], 'mapper' => $resolved['mapper']];
 		return $this->archiveServices;
 	}//end archiveServices()
+
+	/**
+	 * Get OpenRegister's archive handler and object mapper from the container.
+	 *
+	 * @return array{handler: mixed, mapper: mixed, previous: Throwable|null} Both services, or nulls and the
+	 *                                                                        failure when the container could not give them.
+	 */
+	private function resolveArchiveServices(): array {
+		try {
+			$handler = $this->container->get(static::ARCHIVE_HANDLER_CLASS);
+			$mapper = $this->container->get(static::OBJECT_MAPPER_CLASS);
+			return ['handler' => $handler, 'mapper' => $mapper, 'previous' => null];
+		} catch (Throwable $e) {
+			$this->logger->warning('CmdbExportImportService: OpenRegister archive services could not be resolved', ['exception' => get_class($e)]);
+			return ['handler' => null, 'mapper' => null, 'previous' => $e];
+		}
+	}//end resolveArchiveServices()
+
+	/**
+	 * Whether a service is an archive handler, with `archiveWith()` and `unarchiveWith()`.
+	 *
+	 * @param mixed $handler The service.
+	 *
+	 * @return bool
+	 */
+	private static function isArchiveHandler(mixed $handler): bool {
+		return is_object($handler) === true && method_exists($handler, 'archiveWith') === true && method_exists($handler, 'unarchiveWith') === true;
+	}//end isArchiveHandler()
+
+	/**
+	 * Whether a service is an object mapper, with `restoreObject()` and `findDeletedAcrossAllMagicTables()`.
+	 *
+	 * @param mixed $mapper The service.
+	 *
+	 * @return bool
+	 */
+	private static function isObjectMapper(mixed $mapper): bool {
+		return is_object($mapper) === true && method_exists($mapper, 'restoreObject') === true
+			&& method_exists($mapper, 'findDeletedAcrossAllMagicTables') === true;
+	}//end isObjectMapper()
 
 	/**
 	 * Whether an object as OpenRegister's mapper reads it by uuid is archived and whether it is in the trash.
@@ -2362,10 +2426,32 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function reconciliationScope(string $municipalityUuid): array {
-		$usages = $this->usagesInEveryState(municipalityUuid: $municipalityUuid);
+		$owned = $this->ownedUsages(municipalityUuid: $municipalityUuid);
 
+		$prefix = $this->profile->externalKeyPrefix() . ':' . $municipalityUuid . ':';
+		$modules = $this->modulesByUuid(uuids: array_values(array_unique(array_column($owned, 'module'))));
+		$scope = [];
+		foreach ($owned as $usage) {
+			$module = ($modules[$usage['module']] ?? null);
+			$key = self::importKeyOf(module: $module, prefix: $prefix);
+			if ($key !== null) {
+				$scope[] = ['key' => $key] + self::scopeObjects(usage: $usage, module: $module);
+			}
+		}
+
+		return self::onePerKey(scope: $scope);
+	}//end reconciliationScope()
+
+	/**
+	 * The usages of the municipality, in every state, that relate to a module, each with that module's uuid.
+	 *
+	 * @param string $municipalityUuid The consumer of this import.
+	 *
+	 * @return array<int, array{entity: object, state: array{archived: bool, deleted: bool}, module: string}>
+	 */
+	private function ownedUsages(string $municipalityUuid): array {
 		$owned = [];
-		foreach ($usages as $usage) {
+		foreach ($this->usagesInEveryState(municipalityUuid: $municipalityUuid) as $usage) {
 			$data = $usage['entity']->getObject();
 			$moduleUuid = self::relationUuid(value: ($data['module'] ?? null));
 			// The filter is checked again: a filter OpenRegister cannot apply must not widen the scope.
@@ -2374,28 +2460,47 @@ class CmdbExportImportService {
 			}
 		}
 
-		$prefix = $this->profile->externalKeyPrefix() . ':' . $municipalityUuid . ':';
-		$modules = $this->modulesByUuid(uuids: array_values(array_unique(array_column($owned, 'module'))));
-		$scope = [];
-		foreach ($owned as $usage) {
-			$module = ($modules[$usage['module']] ?? null);
-			if ($module === null) {
-				continue;
-			}
+		return $owned;
+	}//end ownedUsages()
 
-			$externalKey = (string)($module['entity']->getObject()['externalKey'] ?? '');
-			if (str_starts_with($externalKey, $prefix) === true && strlen($externalKey) > strlen($prefix)) {
-				$scope[] = [
-					'key' => substr($externalKey, strlen($prefix)),
-					'usage' => $usage['entity'],
-					'module' => $module['entity'],
-					'states' => ['usage' => $usage['state'], 'module' => $module['state']],
-				];
-			}
+	/**
+	 * The APPID match key of a module this municipality's import created, or null for any other module.
+	 *
+	 * @param array{entity: object, state: array{archived: bool, deleted: bool}}|null $module The module, or null
+	 *                                                                                       when it was not found.
+	 * @param string                                                                 $prefix The external-key
+	 *                                                                                       prefix of this import.
+	 *
+	 * @return string|null
+	 */
+	private static function importKeyOf(?array $module, string $prefix): ?string {
+		if ($module === null) {
+			return null;
 		}
 
-		return self::onePerKey(scope: $scope);
-	}//end reconciliationScope()
+		$externalKey = (string)($module['entity']->getObject()['externalKey'] ?? '');
+		if (str_starts_with($externalKey, $prefix) === true && strlen($externalKey) > strlen($prefix)) {
+			return substr($externalKey, strlen($prefix));
+		}
+
+		return null;
+	}//end importKeyOf()
+
+	/**
+	 * The usage and module of one application in the reconciliation scope, with the state of both.
+	 *
+	 * @param array{entity: object, state: array{archived: bool, deleted: bool}} $usage  The owned usage.
+	 * @param array{entity: object, state: array{archived: bool, deleted: bool}} $module The usage's module.
+	 *
+	 * @return array{usage: object, module: object, states: array<string, array{archived: bool, deleted: bool}>}
+	 */
+	private static function scopeObjects(array $usage, array $module): array {
+		return [
+			'usage' => $usage['entity'],
+			'module' => $module['entity'],
+			'states' => ['usage' => $usage['state'], 'module' => $module['state']],
+		];
+	}//end scopeObjects()
 
 	/**
 	 * One application per import key: the entry the import would match, with the other usages of the key as extras.
