@@ -26,6 +26,7 @@ namespace OCA\Stackiq\Tests\Unit\Controller;
 use OCA\Stackiq\Controller\DataQualityReportController;
 use OCA\Stackiq\Controller\PortfolioReportController;
 use OCA\Stackiq\Controller\ReferenceComponentCoverageController;
+use OCA\Stackiq\Controller\OrganisationReportRequest;
 use OCA\Stackiq\Service\DataQualityReportService;
 use OCA\Stackiq\Service\OrganisationReportAccess;
 use OCA\Stackiq\Service\PortfolioReportService;
@@ -160,9 +161,8 @@ class OrganisationReportGateGoldenTest extends TestCase {
 		return new $controller(
 			appName: 'stackiq',
 			request: $request,
-			userSession: $session,
 			reportService: $service,
-			access: new OrganisationReportAccess(groupManager: $groupManager, config: $config)
+			reportRequest: new OrganisationReportRequest(userSession: $session, request: $request, access: new OrganisationReportAccess(groupManager: $groupManager, config: $config))
 		);
 
 	}//end controller()
