@@ -52,6 +52,44 @@ use Psr\Log\LoggerInterface;
  */
 class AangebodenGebruikController extends Controller {
 	/**
+	 * The object the set-self and deny actions work on.
+	 *
+	 * @var array<string, string>
+	 */
+	private const ACTION_OBJECT = [
+		'idParam' => 'gebruikId',
+		'idLabel' => 'Gebruik ID',
+		'logIdKey' => 'gebruik_id',
+		'notFoundError' => 'Gebruik object not found',
+	];
+
+	/**
+	 * The set-self and deny actions: route, log messages and error body fields.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	private const ACTIONS = [
+		'set-self' => [
+			'endpoint' => '/api/aangeboden-gebruik/%s/set-self',
+			'method' => 'PUT',
+			'started' => 'API: Setting gebruik @self property to active org',
+			'completed' => 'API: Set gebruik @self property request completed',
+			'failed' => 'API: Failed to set gebruik @self property',
+			'emptyResult' => ['usage' => null],
+			'reportsDeleted' => false,
+		],
+		'deny' => [
+			'endpoint' => '/api/aangeboden-gebruik/%s/deny',
+			'method' => 'DELETE',
+			'started' => 'API: Deleting gebruik object as afnemer',
+			'completed' => 'API: Delete gebruik as afnemer request completed',
+			'failed' => 'API: Failed to delete gebruik as afnemer',
+			'emptyResult' => ['deleted' => false],
+			'reportsDeleted' => true,
+		],
+	];
+
+	/**
 	 * Constructor for AangebodenGebruikController.
 	 *
 	 * @param string $appName The name of the app
@@ -656,87 +694,10 @@ class AangebodenGebruikController extends Controller {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$this->logger->info(
-			'API: Setting gebruik @self property to active org',
-			[
-				'endpoint' => "/api/aangeboden-gebruik/{$gebruikId}/set-self",
-				'method' => 'PUT',
-				'gebruik_id' => $gebruikId,
-			]
+		return $this->actionResponder()->respond(
+			action: $this->objectAction(id: $gebruikId, name: 'set-self'),
+			perform: fn (array $options): array => $this->gebruikSvc->setGebruikSelfToActiveOrg(gebruikId: $gebruikId, options: $options)
 		);
-
-		try {
-			// Validate input.
-			if (empty($gebruikId) === true) {
-				return new JSONResponse(
-					[
-						'success' => false,
-						'error' => 'Gebruik ID is required',
-						'usage' => null,
-					],
-					400
-				);
-			}
-
-			// Parse any additional options from request body.
-			$options = [];
-			$requestBody = $this->request->getParams();
-			if (empty($requestBody) === false) {
-				$options = array_filter(
-					$requestBody,
-					function ($key) {
-						// Exclude path parameters.
-						return in_array(needle: $key, haystack: ['gebruikId']) === false;
-					},
-					ARRAY_FILTER_USE_KEY
-				);
-			}
-
-			// Update gebruik @self property via service.
-			$result = $this->gebruikSvc->setGebruikSelfToActiveOrg(
-				gebruikId: $gebruikId,
-				options: $options
-			);
-
-			// Determine appropriate HTTP status code.
-			$statusCode = 500;
-			if ($result['success'] === true) {
-				$statusCode = 200;
-			} elseif ($result['error'] === 'Gebruik object not found') {
-				$statusCode = 404;
-			} elseif (strpos(haystack: ($result['error'] ?? ''), needle: 'Operation not allowed') !== false) {
-				$statusCode = 403;
-			}
-
-			$this->logger->info(
-				'API: Set gebruik @self property request completed',
-				[
-					'gebruik_id' => $gebruikId,
-					'success' => $result['success'],
-					'status_code' => $statusCode,
-				]
-			);
-
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to set gebruik @self property',
-				[
-					'gebruik_id' => $gebruikId,
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'success' => false,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-					'usage' => null,
-				],
-				500
-			);
-		}//end try
 	}//end setGebruikSelfToActiveOrg()
 
 	/**
@@ -765,89 +726,32 @@ class AangebodenGebruikController extends Controller {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$this->logger->info(
-			'API: Deleting gebruik object as afnemer',
-			[
-				'endpoint' => "/api/aangeboden-gebruik/{$gebruikId}/deny",
-				'method' => 'DELETE',
-				'gebruik_id' => $gebruikId,
-			]
+		return $this->actionResponder()->respond(
+			action: $this->objectAction(id: $gebruikId, name: 'deny'),
+			perform: fn (array $options): array => $this->gebruikSvc->deleteGebruikAsAfnemer(gebruikId: $gebruikId, options: $options)
 		);
-
-		try {
-			// Validate input.
-			if (empty($gebruikId) === true) {
-				return new JSONResponse(
-					[
-						'success' => false,
-						'error' => 'Gebruik ID is required',
-						'deleted' => false,
-					],
-					400
-				);
-			}
-
-			// Parse any additional options from request body.
-			$options = [];
-			$requestBody = $this->request->getParams();
-			if (empty($requestBody) === false) {
-				$options = array_filter(
-					$requestBody,
-					function ($key) {
-						// Exclude path parameters.
-						return in_array(needle: $key, haystack: ['gebruikId']) === false;
-					},
-					ARRAY_FILTER_USE_KEY
-				);
-			}
-
-			// Delete gebruik object via service.
-			$result = $this->gebruikSvc->deleteGebruikAsAfnemer(
-				gebruikId: $gebruikId,
-				options: $options
-			);
-
-			// Determine appropriate HTTP status code.
-			$statusCode = 500;
-			if ($result['success'] === true) {
-				$statusCode = 200;
-			} elseif ($result['error'] === 'Gebruik object not found') {
-				$statusCode = 404;
-			} elseif (strpos(haystack: ($result['error'] ?? ''), needle: 'Operation not allowed') !== false) {
-				$statusCode = 403;
-			}
-
-			$this->logger->info(
-				'API: Delete gebruik as afnemer request completed',
-				[
-					'gebruik_id' => $gebruikId,
-					'success' => $result['success'],
-					'deleted' => $result['deleted'] ?? false,
-					'status_code' => $statusCode,
-				]
-			);
-
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to delete gebruik as afnemer',
-				[
-					'gebruik_id' => $gebruikId,
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'success' => false,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-					'deleted' => false,
-				],
-				500
-			);
-		}//end try
 	}//end deleteGebruikAsAfnemer()
+
+	/**
+	 * The responder that runs this controller's object actions.
+	 *
+	 * @return ObjectActionResponder
+	 */
+	private function actionResponder(): ObjectActionResponder {
+		return new ObjectActionResponder(logger: $this->logger, request: $this->request);
+	}//end actionResponder()
+
+	/**
+	 * Build an object action from the action table.
+	 *
+	 * @param string $id   The object id from the route.
+	 * @param string $name The action name in the action table.
+	 *
+	 * @return ObjectAction
+	 */
+	private function objectAction(string $id, string $name): ObjectAction {
+		return new ObjectAction(id: $id, definition: self::ACTIONS[$name] + self::ACTION_OBJECT);
+	}//end objectAction()
 
 	/**
 	 * Get API documentation for AangebodenGebruik endpoints.
@@ -1024,48 +928,12 @@ class AangebodenGebruikController extends Controller {
 	 * pagination, and other options. Always forces database source for real-time data.
 	 *
 	 * @return array Parsed options array with database source
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 * @SuppressWarnings(PHPMD.NPathComplexity)
 	 */
 	private function parseQueryOptions(): array {
-		$options = [];
-
-		// Parse pagination parameters (with and without underscore for compatibility).
-		$limit = $this->request->getParam('_limit') ?? $this->request->getParam('limit');
-		if ($limit !== null && is_numeric($limit) === true) {
-			$options['_limit'] = (int)$limit;
-			// Keep both for compatibility.
-			$options['limit'] = (int)$limit;
-		}
-
-		$offset = $this->request->getParam('_offset') ?? $this->request->getParam('offset');
-		if ($offset !== null && is_numeric($offset) === true) {
-			$options['_offset'] = (int)$offset;
-			// Keep both for compatibility.
-			$options['offset'] = (int)$offset;
-		}
-
-		$page = $this->request->getParam('_page') ?? $this->request->getParam('page');
-		if ($page !== null && is_numeric($page) === true) {
-			$options['_page'] = (int)$page;
-		}
-
-		// Parse filter parameters.
-		$status = $this->request->getParam('status');
-		if ($status !== null && empty(trim($status) === true) === false) {
-			$options['status'] = trim($status);
-		}
-
-		$startDate = $this->request->getParam('startDate');
-		if ($startDate !== null && empty(trim($startDate) === true) === false) {
-			$options['startDate'] = trim($startDate);
-		}
-
-		$endDate = $this->request->getParam('endDate');
-		if ($endDate !== null && empty(trim($endDate) === true) === false) {
-			$options['endDate'] = trim($endDate);
-		}
+		$pagination = new ListingPagination(request: $this->request);
+		$raw        = $pagination->rawParams();
+		$filters    = $this->textFilterParams();
+		$options    = $this->applyTextFilters(options: $pagination->options(raw: $raw), filters: $filters);
 
 		// Force database source for all custom endpoints to ensure real-time data.
 		$options['_source'] = 'database';
@@ -1073,17 +941,42 @@ class AangebodenGebruikController extends Controller {
 		$this->logger->debug(
 			'Parsed query options for AangebodenGebruik',
 			[
-				'raw_params' => [
-					'limit' => $limit,
-					'offset' => $offset,
-					'status' => $status,
-					'startDate' => $startDate,
-					'endDate' => $endDate,
-				],
+				'raw_params' => ['limit' => $raw['limit'], 'offset' => $raw['offset']] + $filters,
 				'parsed_options' => $options,
 			]
 		);
 
 		return $options;
 	}//end parseQueryOptions()
+
+	/**
+	 * The raw status, startDate and endDate filter parameters.
+	 *
+	 * @return array{status: mixed, startDate: mixed, endDate: mixed}
+	 */
+	private function textFilterParams(): array {
+		return [
+			'status' => $this->request->getParam('status'),
+			'startDate' => $this->request->getParam('startDate'),
+			'endDate' => $this->request->getParam('endDate'),
+		];
+	}//end textFilterParams()
+
+	/**
+	 * Add the filter parameters that pass the filter check, trimmed.
+	 *
+	 * @param array $options The options so far.
+	 * @param array $filters The raw filter parameters.
+	 *
+	 * @return array The options with the filters added.
+	 */
+	private function applyTextFilters(array $options, array $filters): array {
+		foreach ($filters as $name => $value) {
+			if ($value !== null && empty(trim($value) === true) === false) {
+				$options[$name] = trim($value);
+			}
+		}
+
+		return $options;
+	}//end applyTextFilters()
 }//end class
