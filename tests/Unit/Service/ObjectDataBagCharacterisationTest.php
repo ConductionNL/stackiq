@@ -110,7 +110,7 @@ class ObjectDataBagCharacterisationTest extends TestCase {
 	 * @dataProvider inputs
 	 */
 	public function testEveryServiceBuildsTheSameBag(mixed $input, array $expected): void {
-		$this->assertSame(expected: $expected, actual: $this->bag(build: static fn () => ObjectDataBag::of(object: $input)));
+		$this->assertSame(expected: $expected, actual: $this->bag(build: static fn () => (new ObjectDataBag())->fromItem(object: $input)));
 		$moderation = (new \ReflectionClass(objectOrClass: ModerationService::class))->newInstanceWithoutConstructor();
 		$delegate   = new \ReflectionMethod(objectOrMethod: ModerationService::class, method: 'toDataBag');
 		$this->assertSame(expected: $expected, actual: $this->bag(build: static fn () => $delegate->invoke($moderation, $input)));

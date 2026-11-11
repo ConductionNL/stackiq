@@ -32,6 +32,7 @@ use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Stackiq\Service\ObjectDataBag;
 
 /**
  * Orchestrates federation by delegating to OpenCatalogi services.
@@ -517,7 +518,7 @@ class FederationService {
 
 		$mirrors = [];
 		foreach ($items as $object) {
-			$data = \OCA\Stackiq\Service\ObjectDataBag::of(object: $object);
+			$data = (new ObjectDataBag())->fromItem(object: $object);
 			if ($this->isPeerSourced(objectData: $data) === true
 				&& (string)($data['_source']['instance'] ?? '') === $peerUrl
 			) {

@@ -157,7 +157,7 @@ class ReviewAggregateService {
 		// so this is the actual enforcement point, not defensive redundancy.
 		$items = [];
 		foreach ($objectList as $object) {
-			$data = ObjectDataBag::of(object: $object);
+			$data = (new ObjectDataBag())->fromItem(object: $object);
 			if (($data['status'] ?? null) === self::STATUS_APPROVED) {
 				$items[] = $data;
 			}

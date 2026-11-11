@@ -35,7 +35,7 @@ final class ObjectDataBag {
 	 *
 	 * @spec openspec/specs/catalog-ratings/spec.md
 	 */
-	public static function of(mixed $object): array {
+	public function fromItem(mixed $object): array {
 		if (is_array($object) === true) {
 			return $object;
 		}
@@ -54,5 +54,5 @@ final class ObjectDataBag {
 		}
 
 		return [];
-	}//end of()
+	}//end fromItem()
 }//end class

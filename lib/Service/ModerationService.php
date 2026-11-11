@@ -329,7 +329,7 @@ class ModerationService {
 	 * @return array<string,mixed> The data bag.
 	 */
 	private function toDataBag(mixed $object): array {
-		return ObjectDataBag::of(object: $object);
+		return (new ObjectDataBag())->fromItem(object: $object);
 	}//end toDataBag()
 
 	/**
