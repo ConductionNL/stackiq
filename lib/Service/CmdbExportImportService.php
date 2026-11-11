@@ -2940,6 +2940,8 @@ class CmdbExportImportService {
 	 * @param mixed $engine The candidate.
 	 *
 	 * @return bool
+	 *
+	 * @psalm-assert-if-true object $engine
 	 */
 	private static function isMappingEngine(mixed $engine): bool {
 		return is_object($engine) === true && method_exists($engine, 'mapRow') === true;
