@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service\Stackiq;
 
+use OCA\Stackiq\Service\Stackiq\BeheerderAssignment;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\HierarchyHandler;
 use OCA\Stackiq\Service\Stackiq\OrganizationHandler;
@@ -187,8 +188,9 @@ class HierarchyHandlerBeheerderGoldenTest extends TestCase {
 		$this->calls = [];
 		$handler     = $this->handler();
 		$this->contactPersons->method('setUserManager')->willThrowException(new \RuntimeException('no user'));
-		$handler->setupManagerRelationships('ann', ['bob'], 'org-4');
-		$handler->setupManagerRelationships('ann', [], 'org-4');
+		$assignment = new BeheerderAssignment(username: 'ann', organizationUuid: 'org-4');
+		$handler->setupManagerRelationships($assignment, ['bob']);
+		$handler->setupManagerRelationships($assignment, []);
 		$this->assertSame(
 			[
 				['setUserManager', 'ann', 'bob'],

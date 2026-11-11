@@ -78,34 +78,7 @@ class HierarchyHandler {
 	 */
 	public function ensureOrganizationBeheerder(object $contactgegevensObject, string $username): void {
 		try {
-			$objectData = $contactgegevensObject->getObject();
-			$organizationUuid = (string)($objectData['organisation'] ?? $objectData['organization'] ?? '');
-
-			if (empty($organizationUuid) === true) {
-				$this->_logger->debug('No organization linked to contactgegevens.');
-				return;
-			}
-
-			// Get organization and check for existing beheerders.
-			$organizationBeheerders = $this->_organizationHandler->getOrganizationBeheerders($organizationUuid);
-
-			if (empty($organizationBeheerders) === true) {
-				// No beheerders found - make this user the beheerder.
-				$this->_contactPersonHandler->assignBeheerderRole(
-					contactPersonObject: $contactgegevensObject,
-					username: $username,
-					organizationUuid: $organizationUuid
-				);
-				$organizationBeheerders = [$username];
-				// Update our list.
-			}
-
-			// Set up manager relationships.
-			$this->setupManagerRelationships(
-				username: $username,
-				organizationBeheerders: $organizationBeheerders,
-				organizationUuid: $organizationUuid
-			);
+			$this->ensureBeheerderFor(contactgegevensObject: $contactgegevensObject, username: $username);
 		} catch (\Exception $e) {
 			$this->_logger->error(
 				'Failed to ensure organization beheerder: ' . $e->getMessage(),
@@ -118,49 +91,122 @@ class HierarchyHandler {
 	}//end ensureOrganizationBeheerder()
 
 	/**
+	 * Make the user beheerder of their organisation when it has none, then set
+	 * up the manager relationships; nothing happens without a linked organisation.
+	 *
+	 * @param object $contactgegevensObject The contactgegevens object
+	 * @param string $username The username being processed
+	 *
+	 * @return void
+	 */
+	private function ensureBeheerderFor(object $contactgegevensObject, string $username): void {
+		$objectData = $contactgegevensObject->getObject();
+		$organizationUuid = (string)($objectData['organisation'] ?? $objectData['organization'] ?? '');
+
+		if (empty($organizationUuid) === true) {
+			$this->_logger->debug('No organization linked to contactgegevens.');
+			return;
+		}
+
+		$assignment = new BeheerderAssignment(username: $username, organizationUuid: $organizationUuid);
+		$organizationBeheerders = $this->beheerdersOrFirst(contactgegevensObject: $contactgegevensObject, assignment: $assignment);
+
+		// Set up manager relationships.
+		$this->setupManagerRelationships(assignment: $assignment, organizationBeheerders: $organizationBeheerders);
+	}//end ensureBeheerderFor()
+
+	/**
+	 * The organisation's beheerders; when it has none, the user is made its
+	 * beheerder and is the only one.
+	 *
+	 * @param object              $contactgegevensObject The contactgegevens object
+	 * @param BeheerderAssignment $assignment            The user and their organisation
+	 *
+	 * @return array<int,string> Beheerder usernames
+	 */
+	private function beheerdersOrFirst(object $contactgegevensObject, BeheerderAssignment $assignment): array {
+		// Get organization and check for existing beheerders.
+		$organizationBeheerders = $this->_organizationHandler->getOrganizationBeheerders($assignment->organizationUuid);
+		if (empty($organizationBeheerders) === false) {
+			return $organizationBeheerders;
+		}
+
+		// No beheerders found - make this user the beheerder.
+		$this->_contactPersonHandler->assignBeheerderRole(
+			contactPersonObject: $contactgegevensObject,
+			username: $assignment->username,
+			organizationUuid: $assignment->organizationUuid
+		);
+		return [$assignment->username];
+	}//end beheerdersOrFirst()
+
+	/**
 	 * Sets up manager relationships for users in an organization
 	 *
-	 * @param string $username The current username being processed
-	 * @param array $organizationBeheerders Array of beheerder usernames
-	 * @param string $organizationUuid The organization UUID
+	 * @param BeheerderAssignment $assignment             The user being processed and their organisation
+	 * @param array               $organizationBeheerders Array of beheerder usernames
 	 *
 	 * @return void
 	 * @spec   openspec/specs/sc-handlers/spec.md
 	 */
-	public function setupManagerRelationships(
-		string $username,
-		array $organizationBeheerders,
-		string $organizationUuid,
-	): void {
+	public function setupManagerRelationships(BeheerderAssignment $assignment, array $organizationBeheerders): void {
 		try {
-			if (empty($organizationBeheerders) === true) {
-				return;
-			}
-
-			$primaryManager = $this->resolvePrimaryManager(organizationBeheerders: $organizationBeheerders);
-			$this->assignManagerForCurrentUser(username: $username, organizationBeheerders: $organizationBeheerders, primaryManager: $primaryManager);
-			$this->assignManagerForOtherBeheerders(organizationBeheerders: $organizationBeheerders, primaryManager: $primaryManager);
-
-			$this->_logger->info(
-				'Set up manager relationships',
-				[
-					'organization' => $organizationUuid,
-					'primaryManager' => $primaryManager,
-					'allBeheerders' => $organizationBeheerders,
-					'processedUser' => $username,
-				]
-			);
+			$this->linkManagers(assignment: $assignment, organizationBeheerders: $organizationBeheerders);
 		} catch (\Exception $e) {
 			$this->_logger->error(
 				'Failed to setup manager relationships: ' . $e->getMessage(),
 				[
-					'username' => $username,
-					'organization' => $organizationUuid,
+					'username' => $assignment->username,
+					'organization' => $assignment->organizationUuid,
 					'exception' => $e,
 				]
 			);
 		}//end try
 	}//end setupManagerRelationships()
+
+	/**
+	 * Point the user and the other beheerders at the primary manager, and log it.
+	 *
+	 * @param BeheerderAssignment $assignment             The user being processed and their organisation
+	 * @param array<int,string>   $organizationBeheerders Beheerder usernames
+	 *
+	 * @return void
+	 */
+	private function linkManagers(BeheerderAssignment $assignment, array $organizationBeheerders): void {
+		if (empty($organizationBeheerders) === true) {
+			return;
+		}
+
+		$primaryManager = $this->resolvePrimaryManager(organizationBeheerders: $organizationBeheerders);
+		$this->assignManagerForCurrentUser(
+			username: $assignment->username,
+			organizationBeheerders: $organizationBeheerders,
+			primaryManager: $primaryManager
+		);
+		$this->assignManagerForOtherBeheerders(organizationBeheerders: $organizationBeheerders, primaryManager: $primaryManager);
+
+		$this->logManagersLinked(assignment: $assignment, organizationBeheerders: $organizationBeheerders);
+	}//end linkManagers()
+
+	/**
+	 * Log the manager relationships that were set up.
+	 *
+	 * @param BeheerderAssignment $assignment             The user being processed and their organisation
+	 * @param array<int,string>   $organizationBeheerders Beheerder usernames
+	 *
+	 * @return void
+	 */
+	private function logManagersLinked(BeheerderAssignment $assignment, array $organizationBeheerders): void {
+		$this->_logger->info(
+			'Set up manager relationships',
+			[
+				'organization' => $assignment->organizationUuid,
+				'primaryManager' => $this->resolvePrimaryManager(organizationBeheerders: $organizationBeheerders),
+				'allBeheerders' => $organizationBeheerders,
+				'processedUser' => $assignment->username,
+			]
+		);
+	}//end logManagersLinked()
 
 	/**
 	 * Pick the primary manager from the list of beheerders.
