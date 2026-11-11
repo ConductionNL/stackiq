@@ -951,6 +951,30 @@ function applyEssentialSettings(store, data) {
 }
 
 /**
+ * Load the registers for the OpenRegister dropdowns, then both focused
+ * configs in parallel, then map the selections from them.
+ *
+ * @param {object} store The settings store.
+ * @return {Promise<void>} Resolves once the selections are mapped.
+ */
+async function loadEssentialData(store) {
+	// Load available registers first (needed for register dropdowns)
+	store.loadingRegisters = true
+	const settingsData = await fetchJson('/index.php/apps/stackiq/api/settings')
+	applyEssentialSettings(store, settingsData)
+	store.loadingRegisters = false
+
+	// Load config data in parallel (don't wait for each other)
+	await Promise.allSettled([
+		store.loadVoorzieningenConfigFocused(),
+		store.loadAmefConfigFocused(),
+	])
+
+	// After both configs loaded, populate selections
+	populateFocusedSelections(store)
+}
+
+/**
  * Settings store for managing all settings-related state and business logic
  *
  * This store handles:
@@ -1195,20 +1219,7 @@ export const useSettingsStore = defineStore('settings', {
 			this.clearError()
 
 			try {
-				// Load available registers first (needed for register dropdowns)
-				this.loadingRegisters = true
-				const settingsData = await fetchJson('/index.php/apps/stackiq/api/settings')
-				applyEssentialSettings(this, settingsData)
-				this.loadingRegisters = false
-
-				// Load config data in parallel (don't wait for each other)
-				await Promise.allSettled([
-					this.loadVoorzieningenConfigFocused(),
-					this.loadAmefConfigFocused(),
-				])
-
-				// After both configs loaded, populate selections
-				populateFocusedSelections(this)
+				await loadEssentialData(this)
 			} catch (error) {
 				console.error('Failed to load OpenRegister essentials:', error)
 				this.setError(
