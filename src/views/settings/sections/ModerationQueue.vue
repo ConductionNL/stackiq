@@ -103,6 +103,16 @@ import {
  * @spec openspec/specs/open-data-publishing/spec.md
  * @spec openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
  */
+/**
+ * A label with its first letter in upper case.
+ *
+ * @param {string} label The label.
+ * @return {string} The capitalised label.
+ */
+function capitalized(label) {
+	return label.charAt(0).toUpperCase() + label.slice(1)
+}
+
 export default defineComponent({
 	name: 'ModerationQueue',
 	components: {
@@ -225,13 +235,7 @@ export default defineComponent({
 		 * @spec openspec/specs/open-data-publishing/spec.md
 		 */
 		async approve(item) {
-			const label =
-				this.entityLabel.charAt(0).toUpperCase() + this.entityLabel.slice(1)
-			await this.decide(
-				item,
-				'approve',
-				t('stackiq', '{label} approved and published', { label }),
-			)
+			await this.decide(item, 'approve')
 		},
 
 		/**
@@ -242,57 +246,93 @@ export default defineComponent({
 		 * @spec openspec/specs/open-data-publishing/spec.md
 		 */
 		async reject(item) {
-			const label =
-				this.entityLabel.charAt(0).toUpperCase() + this.entityLabel.slice(1)
-			await this.decide(
-				item,
-				'reject',
-				t('stackiq', '{label} rejected', { label }),
-			)
+			await this.decide(item, 'reject')
 		},
 
 		/**
-		 * Shared approve/reject path: POST the decision, toast, then refresh.
+		 * Shared approve/reject path: check the entry has an identifier, then decide.
 		 *
-		 * @param {object} item       - The entry data bag.
-		 * @param {string} action     - 'approve' or 'reject'.
-		 * @param {string} successMsg - Success toast message.
+		 * @param {object} item   - The entry data bag.
+		 * @param {string} action - 'approve' or 'reject'.
 		 * @return {Promise<void>}
 		 * @spec openspec/specs/open-data-publishing/spec.md
 		 */
-		async decide(item, action, successMsg) {
+		async decide(item, action) {
 			const uuid = item.id || item.uuid
 			if (!uuid) {
 				showError(
 					t('stackiq', '{label} has no identifier', {
-						label:
-							this.entityLabel.charAt(0).toUpperCase()
-							+ this.entityLabel.slice(1),
+						label: capitalized(this.entityLabel),
 					}),
 				)
 				return
 			}
+			await this.postDecision(uuid, action)
+		},
+
+		/**
+		 * POST the decision, toast, then refresh; the entry is busy meanwhile.
+		 *
+		 * @param {string} uuid The entry's identifier.
+		 * @param {string} action 'approve' or 'reject'.
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/open-data-publishing/spec.md
+		 */
+		async postDecision(uuid, action) {
 			this.busyId = uuid
 			this.busyAction = action
 			try {
-				await apiRequest(
-					`moderation/${encodeURIComponent(uuid)}/${action}?type=${encodeURIComponent(this.type)}`,
-					{ method: 'POST' },
-				)
-				showSuccess(successMsg)
+				const route = this.decisionRoute(uuid, action)
+				await apiRequest(route, { method: 'POST' })
+				showSuccess(this.decisionMessage(action))
 				await this.loadPending()
 			} catch (error) {
-				showError(
-					t('stackiq', 'Could not update the {label}', {
-						label: this.entityLabel,
-					})
-						+ ': '
-						+ error.message,
-				)
+				this.decisionFailed(error)
 			} finally {
 				this.busyId = null
 				this.busyAction = null
 			}
+		},
+
+		/**
+		 * The moderation route for a decision on one entry.
+		 *
+		 * @param {string} uuid The entry's identifier.
+		 * @param {string} action 'approve' or 'reject'.
+		 * @return {string} The route, relative to the admin API.
+		 */
+		decisionRoute(uuid, action) {
+			return `moderation/${encodeURIComponent(uuid)}/${action}?type=${encodeURIComponent(this.type)}`
+		},
+
+		/**
+		 * The success toast for a decision.
+		 *
+		 * @param {string} action 'approve' or 'reject'.
+		 * @return {string} The translated message.
+		 */
+		decisionMessage(action) {
+			const label = capitalized(this.entityLabel)
+			if (action === 'approve') {
+				return t('stackiq', '{label} approved and published', { label })
+			}
+			return t('stackiq', '{label} rejected', { label })
+		},
+
+		/**
+		 * Show that the decision could not be saved.
+		 *
+		 * @param {Error} error What went wrong.
+		 * @return {void}
+		 */
+		decisionFailed(error) {
+			showError(
+				t('stackiq', 'Could not update the {label}', {
+					label: this.entityLabel,
+				})
+					+ ': '
+					+ error.message,
+			)
 		},
 	},
 })
