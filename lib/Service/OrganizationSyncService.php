@@ -2301,66 +2301,138 @@ class OrganizationSyncService {
 	 */
 	private function processRelatedContactPersons(string $organizationUuid, array &$stats): void {
 		try {
-			$this->logger->debug(
-				'Finding related contact persons',
-				[
-					'app' => 'stackiq',
-					'organizationId' => $organizationUuid,
-				]
-			);
-
-			// Get configuration.
-			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-			$run = [
-				'organizationUuid' => $organizationUuid,
-				'register' => ($voorzieningenConfig['register'] ?? ''),
-				'contactSchema' => ($voorzieningenConfig['contactpersoon_schema'] ?? ''),
-			];
-
-			if (empty($run['register']) === true || empty($run['contactSchema']) === true) {
-				$this->logger->warning(
-					'[FLOW] Related contact processing skipped - configuration missing',
-					[
-						'organizationId' => $organizationUuid,
-						'register' => $run['register'],
-						'contactSchema' => $run['contactSchema'],
-					]
-				);
-				return;
-			}
-
-			$relatedContacts = $this->findRelatedContacts(run: $run);
-			if (empty($relatedContacts) === true) {
-				return;
-			}
-
-			$this->logger->info(
-				'👥 PROCESSING RELATED CONTACT PERSONS',
-				[
-					'app' => 'stackiq',
-					'organizationId' => $organizationUuid,
-					'contactCount' => count($relatedContacts),
-				]
-			);
-
-			$run['stats'] = &$stats;
-			foreach ($relatedContacts as $contactObject) {
-				$this->processRelatedContact(contactObject: $contactObject, run: $run);
-			}
+			$this->processRelatedContactPersonsOf(organizationUuid: $organizationUuid, stats: $stats);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'[FLOW] Failed to process related contact persons',
-				[
-					'organizationId' => $organizationUuid,
-					'exception' => $e->getMessage(),
-					'file' => $e->getFile(),
-					'line' => $e->getLine(),
-				]
-			);
-			$stats['errors'][] = 'Failed to process related contact persons: ' . $e->getMessage();
+			$stats['errors'][] = $this->logRelatedContactPersonsFailure(organizationUuid: $organizationUuid, exception: $e);
 		}//end try
 
 	}//end processRelatedContactPersons()
+
+	/**
+	 * Find the related contactpersoon objects of an organisation and process each.
+	 *
+	 * @param string $organizationUuid The organization UUID.
+	 * @param array  $stats            The statistics array to update.
+	 *
+	 * @return void
+	 */
+	private function processRelatedContactPersonsOf(string $organizationUuid, array &$stats): void {
+		$run = $this->relatedContactPersonsRun(organizationUuid: $organizationUuid);
+		if ($run === null) {
+			return;
+		}
+
+		$relatedContacts = $this->findRelatedContacts(run: $run);
+		if (empty($relatedContacts) === true) {
+			return;
+		}
+
+		$this->logProcessingRelatedContactPersons(run: $run, relatedContacts: $relatedContacts);
+		$run['stats'] = &$stats;
+		foreach ($relatedContacts as $contactObject) {
+			$this->processRelatedContact(contactObject: $contactObject, run: $run);
+		}
+	}//end processRelatedContactPersonsOf()
+
+	/**
+	 * The related contact run of an organisation: its uuid and the configured register and contact schema.
+	 *
+	 * @param string $organizationUuid The organization UUID.
+	 *
+	 * @return array|null The run, or null when the register or contact schema is not configured.
+	 */
+	private function relatedContactPersonsRun(string $organizationUuid): ?array {
+		$this->logFindingRelatedContactPersons(organizationUuid: $organizationUuid);
+
+		// Get configuration.
+		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+		$run = [
+			'organizationUuid' => $organizationUuid,
+			'register' => ($voorzieningenConfig['register'] ?? ''),
+			'contactSchema' => ($voorzieningenConfig['contactpersoon_schema'] ?? ''),
+		];
+		if (empty($run['register']) === true || empty($run['contactSchema']) === true) {
+			$this->logRelatedContactPersonsUnconfigured(run: $run);
+			return null;
+		}
+
+		return $run;
+	}//end relatedContactPersonsRun()
+
+	/**
+	 * Log that the related contact persons of an organisation are looked up.
+	 *
+	 * @param string $organizationUuid The organization UUID.
+	 *
+	 * @return void
+	 */
+	private function logFindingRelatedContactPersons(string $organizationUuid): void {
+		$this->logger->debug(
+			'Finding related contact persons',
+			[
+				'app' => 'stackiq',
+				'organizationId' => $organizationUuid,
+			]
+		);
+	}//end logFindingRelatedContactPersons()
+
+	/**
+	 * Log that related contact processing is skipped for a missing configuration.
+	 *
+	 * @param array $run The related contact run.
+	 *
+	 * @return void
+	 */
+	private function logRelatedContactPersonsUnconfigured(array $run): void {
+		$this->logger->warning(
+			'[FLOW] Related contact processing skipped - configuration missing',
+			[
+				'organizationId' => $run['organizationUuid'],
+				'register' => $run['register'],
+				'contactSchema' => $run['contactSchema'],
+			]
+		);
+	}//end logRelatedContactPersonsUnconfigured()
+
+	/**
+	 * Log the related contact persons about to be processed.
+	 *
+	 * @param array $run             The related contact run.
+	 * @param array $relatedContacts The related contactpersoon objects.
+	 *
+	 * @return void
+	 */
+	private function logProcessingRelatedContactPersons(array $run, array $relatedContacts): void {
+		$this->logger->info(
+			'👥 PROCESSING RELATED CONTACT PERSONS',
+			[
+				'app' => 'stackiq',
+				'organizationId' => $run['organizationUuid'],
+				'contactCount' => count($relatedContacts),
+			]
+		);
+	}//end logProcessingRelatedContactPersons()
+
+	/**
+	 * Log that processing the related contact persons failed.
+	 *
+	 * @param string     $organizationUuid The organization UUID.
+	 * @param \Exception $exception        What failed.
+	 *
+	 * @return string The error recorded in the statistics
+	 */
+	private function logRelatedContactPersonsFailure(string $organizationUuid, \Exception $exception): string {
+		$this->logger->error(
+			'[FLOW] Failed to process related contact persons',
+			[
+				'organizationId' => $organizationUuid,
+				'exception' => $exception->getMessage(),
+				'file' => $exception->getFile(),
+				'line' => $exception->getLine(),
+			]
+		);
+		return 'Failed to process related contact persons: ' . $exception->getMessage();
+	}//end logRelatedContactPersonsFailure()
 
 	/**
 	 * Find the contactpersoon objects of an organisation: by their organization field, then by
