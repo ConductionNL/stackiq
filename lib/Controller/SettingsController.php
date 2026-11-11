@@ -34,6 +34,7 @@ use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -105,6 +106,7 @@ class SettingsController extends Controller {
 	 * @param ArchiMateService $archiMateService The ArchiMate import/export service.
 	 * @param ProgressTracker $progressTracker The progress tracking service.
 	 * @param EolSyncService $eolSyncService The EOL feed sync orchestration service.
+	 * @param EmailSettings $emailSettings The stored e-mail settings and templates.
 	 * @param LoggerInterface $logger The logger instance.
 	 * @param ConnectionReportService|null $connectionReports Asks integriq to look again after an email settings save.
 	 * @param CmdbImportProfile|null $cmdbImportProfile The CMDB import profile and packs; null builds the shipped one.
@@ -129,6 +131,7 @@ class SettingsController extends Controller {
 		private readonly ArchiMateService $archiMateService,
 		private readonly ProgressTracker $progressTracker,
 		private readonly EolSyncService $eolSyncService,
+		private readonly EmailSettings $emailSettings,
 		private readonly LoggerInterface $logger,
 		private readonly ?ConnectionReportService $connectionReports = null,
 		private readonly ?CmdbImportProfile $cmdbImportProfile = null,
@@ -514,7 +517,7 @@ class SettingsController extends Controller {
 			return;
 		}
 
-		$result['emailSettings'] = $this->settingsService->updateEmailSettings($data['emailSettings']);
+		$result['emailSettings'] = $this->emailSettings->updateEmailSettings($data['emailSettings']);
 		$this->connectionReports?->emailSettingsSaved();
 
 	}//end applyEmailSettingsUpdate()
@@ -2035,8 +2038,8 @@ class SettingsController extends Controller {
 			// Redaction lives in SettingsService so this route and /api/email/config share
 			// one secret list — they had drifted, and the other one was returning the
 			// secrets in the clear.
-			$emailSettings = $this->settingsService->redactEmailSecrets(
-				$this->settingsService->getEmailSettings()
+			$emailSettings = $this->emailSettings->redactEmailSecrets(
+				$this->emailSettings->getEmailSettings()
 			);
 
 			return new JSONResponse(
@@ -2081,7 +2084,7 @@ class SettingsController extends Controller {
 			$data = $this->request->getParams();
 			$emailSettings = $data['emailSettings'] ?? $data;
 
-			$updatedSettings = $this->settingsService->updateEmailSettings($emailSettings);
+			$updatedSettings = $this->emailSettings->updateEmailSettings($emailSettings);
 			$this->connectionReports?->emailSettingsSaved();
 
 			return new JSONResponse(
@@ -2129,7 +2132,7 @@ class SettingsController extends Controller {
 
 		try {
 			// Delegate all business logic to service.
-			$templates = $this->settingsService->getAllEmailTemplates();
+			$templates = $this->emailSettings->getAllEmailTemplates();
 
 			return new JSONResponse(
 				[
@@ -2176,7 +2179,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$template = $this->settingsService->getEmailTemplate($templateName);
+			$template = $this->emailSettings->getEmailTemplate($templateName);
 
 			return new JSONResponse(
 				[
@@ -2239,7 +2242,7 @@ class SettingsController extends Controller {
 				);
 			}
 
-			$success = $this->settingsService->updateEmailTemplate(
+			$success = $this->emailSettings->updateEmailTemplate(
 				templateName: $templateName,
 				templateContent: $templateContent
 			);
@@ -2287,7 +2290,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$defaultTemplate = $this->settingsService->getDefaultEmailTemplate($templateName);
+			$defaultTemplate = $this->emailSettings->getDefaultEmailTemplate($templateName);
 
 			return new JSONResponse(
 				[
@@ -2332,7 +2335,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$variables = $this->settingsService->getEmailTemplateVariables($templateName);
+			$variables = $this->emailSettings->getEmailTemplateVariables($templateName);
 
 			return new JSONResponse(
 				[

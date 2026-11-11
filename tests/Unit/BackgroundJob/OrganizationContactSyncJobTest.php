@@ -31,6 +31,7 @@ namespace OCA\Stackiq\Tests\Unit\BackgroundJob;
 use OCA\Stackiq\BackgroundJob\OrganizationContactSyncJob;
 use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
 use OCA\Stackiq\Service\OrganizationSyncService;
+use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\StackiqContactSyncService;
 use OCP\App\IAppManager;
@@ -166,7 +167,8 @@ class OrganizationContactSyncJobTest extends TestCase {
 			appManager: $this->createMock(IAppManager::class),
 			logger: $this->createMock(LoggerInterface::class),
 			groupManager: $this->createMock(IGroupManager::class),
-			l10n: $this->createMock(IL10N::class)
+			l10n: $this->createMock(IL10N::class),
+			emailSettings: $this->createMock(EmailSettings::class)
 		);
 	}//end settings()
 }//end class

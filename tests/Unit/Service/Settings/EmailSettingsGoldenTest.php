@@ -22,14 +22,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service\Settings;
 
-use OCA\Stackiq\Service\SettingsService;
-use OCP\App\IAppManager;
+use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCP\IAppConfig;
-use OCP\IGroupManager;
-use OCP\IL10N;
-use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -117,10 +112,10 @@ class EmailSettingsGoldenTest extends TestCase {
 				'enabled' => true,
 				'userCreationEnabled' => false,
 				'smtpPort' => 587,
-				'smtpPassword' => SettingsService::SECRET_MASK,
-				'sendgridApiKey' => SettingsService::SECRET_MASK,
+				'smtpPassword' => EmailSettings::SECRET_MASK,
+				'sendgridApiKey' => EmailSettings::SECRET_MASK,
 				'mailjetSecretKey' => 'new-secret',
-				'senderName' => SettingsService::SECRET_MASK,
+				'senderName' => EmailSettings::SECRET_MASK,
 				'unknown' => 'ignored',
 			]
 		);
@@ -150,15 +145,15 @@ class EmailSettingsGoldenTest extends TestCase {
 
 		$out = $service->redactEmailSecrets($in);
 
-		$this->assertSame(SettingsService::SECRET_MASK, $out['smtpPassword']);
+		$this->assertSame(EmailSettings::SECRET_MASK, $out['smtpPassword']);
 		$this->assertSame('user', $out['smtpUsername']);
 		$this->assertArrayNotHasKey('mailjetSecretKey', $out);
 		$this->check(
 			key: 'redaction',
 			value: [
 				'out' => $out,
-				'mask' => SettingsService::SECRET_MASK,
-				'fields' => SettingsService::SECRET_EMAIL_FIELDS,
+				'mask' => EmailSettings::SECRET_MASK,
+				'fields' => EmailSettings::SECRET_EMAIL_FIELDS,
 				'allRedacted' => $service->redactEmailSecrets($service->getEmailSettings()),
 			]
 		);
@@ -192,9 +187,9 @@ class EmailSettingsGoldenTest extends TestCase {
 	/**
 	 * Build the service over the in-memory store and the recording logger.
 	 *
-	 * @return SettingsService
+	 * @return EmailSettings
 	 */
-	private function service(): SettingsService {
+	private function service(): EmailSettings {
 		$config = $this->createMock(IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
 			function (string $app, string $key, string $default = ''): string {
@@ -223,15 +218,7 @@ class EmailSettingsGoldenTest extends TestCase {
 			);
 		}
 
-		return new SettingsService(
-			config: $config,
-			request: $this->createMock(IRequest::class),
-			container: $this->createMock(ContainerInterface::class),
-			appManager: $this->createMock(IAppManager::class),
-			logger: $logger,
-			groupManager: $this->createMock(IGroupManager::class),
-			l10n: $this->createMock(IL10N::class)
-		);
+		return new EmailSettings(config: $config, logger: $logger);
 	}//end service()
 
 	/**

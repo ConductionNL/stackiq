@@ -1,8 +1,8 @@
 <?php
 
 /**
- * Golden test for the SettingsService e-mail template defaults and the
- * voorzieningen config normalisation.
+ * Golden test for the e-mail template defaults (EmailSettings) and the
+ * SettingsService voorzieningen config normalisation.
  *
  * Records what getDefaultEmailTemplate(), getEmailTemplateVariables() and
  * getVoorzieningenConfig() return, and what setVoorzieningenConfig() stores,
@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -31,6 +32,7 @@ use Psr\Log\NullLogger;
  * Golden cases for the template defaults and the config normalisation.
  *
  * @covers \OCA\Stackiq\Service\SettingsService
+ * @covers \OCA\Stackiq\Service\Settings\EmailSettings
  * @uses   \OCA\Stackiq\Service\Settings\EmailTemplateDefaults
  * @uses   \OCA\Stackiq\Service\Settings\VoorzieningenConfigNormalizer
  *
@@ -44,7 +46,7 @@ class SettingsServiceTemplatesConfigGoldenTest extends TestCase {
 	 * @return void
 	 */
 	public function testTemplates(): void {
-		$service = $this->service(stored: []);
+		$service = new EmailSettings(config: $this->createMock(originalClassName: IAppConfig::class), logger: new NullLogger());
 		$out     = [];
 		foreach (['organization_registration', 'organization_activation', 'user_creation', 'welcome', ''] as $name) {
 			$out[($name === '' ? '(empty)' : $name)] = [
