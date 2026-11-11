@@ -247,31 +247,54 @@ class MaintenanceRecipientService {
 	 * @return array<int, string> Unique contact person ids.
 	 */
 	private function ownerContactIds(ObjectServiceInterface $objectService, string $moduleId): array {
+		$ids = [];
+		foreach ((array) $this->usagesOfProduct(objectService: $objectService, moduleId: $moduleId) as $usage) {
+			$ids = self::withOwnerIds(ids: $ids, usage: $usage->getObject());
+		}
+
+		return $ids;
+	}//end ownerContactIds()
+
+	/**
+	 * The usages of a product.
+	 *
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
+	 * @param string                 $moduleId      The product's id.
+	 *
+	 * @return array|int The usages, or [] when the usage register or schema is not configured.
+	 */
+	private function usagesOfProduct(ObjectServiceInterface $objectService, string $moduleId): array|int {
 		$register = $this->settingsService->getRegisterIdForObjectType('usage');
 		$schema   = $this->settingsService->getSchemaIdForObjectType('usage');
 		if ($register === null || $schema === null) {
 			return [];
 		}
 
-		$usages = $objectService->searchObjects(
+		return $objectService->searchObjects(
 			query: ['register' => $register, 'schema' => $schema, 'module' => $moduleId, '_limit' => self::USAGE_LIMIT],
 			_rbac: false,
 			_multitenancy: false
 		);
+	}//end usagesOfProduct()
 
-		$ids = [];
-		foreach ((array) $usages as $usage) {
-			$data = $usage->getObject();
-			foreach (self::OWNER_FIELDS as $field) {
-				$id = self::referenceId(value: ($data[$field] ?? null));
-				if ($id !== null && in_array($id, $ids, true) === false) {
-					$ids[] = $id;
-				}
+	/**
+	 * Add the contact person ids a usage names as owner, skipping those already listed.
+	 *
+	 * @param array<int, string>   $ids   The contact person ids so far.
+	 * @param array<string, mixed> $usage The usage data.
+	 *
+	 * @return array<int, string> The ids, in the order found.
+	 */
+	private static function withOwnerIds(array $ids, array $usage): array {
+		foreach (self::OWNER_FIELDS as $field) {
+			$id = self::referenceId(value: ($usage[$field] ?? null));
+			if ($id !== null && in_array($id, $ids, true) === false) {
+				$ids[] = $id;
 			}
 		}
 
 		return $ids;
-	}//end ownerContactIds()
+	}//end withOwnerIds()
 
 	/**
 	 * The Nextcloud user a contact person stands for.
@@ -326,15 +349,28 @@ class MaintenanceRecipientService {
 		}
 
 		if (is_array($value) === true) {
-			foreach (['id', 'uuid'] as $key) {
-				if (is_string($value[$key] ?? null) === true && $value[$key] !== '') {
-					return $value[$key];
-				}
-			}
+			return self::relationObjectId(relation: $value);
 		}
 
 		return null;
 	}//end referenceId()
+
+	/**
+	 * The id a relation object carries: its non-empty string `id`, else its non-empty string `uuid`.
+	 *
+	 * @param array<string, mixed> $relation The stored relation object.
+	 *
+	 * @return string|null The id, or null when the object carries none.
+	 */
+	private static function relationObjectId(array $relation): ?string {
+		foreach (['id', 'uuid'] as $key) {
+			if (is_string($relation[$key] ?? null) === true && $relation[$key] !== '') {
+				return $relation[$key];
+			}
+		}
+
+		return null;
+	}//end relationObjectId()
 
 	/**
 	 * Lazily resolve OpenRegister's ObjectService.
