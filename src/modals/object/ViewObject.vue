@@ -1963,8 +1963,17 @@ import { getTheme } from '../../services/getTheme.js'
 import { FILE_ACTIONS } from './objectFileActions.js'
 import {
 	orderedPropertyRows,
+	schemaDefaultValue,
 	schemaPropertyRows,
 } from './objectPropertyRows.js'
+import {
+	editabilityWarning,
+	isControlClick,
+	isEditable,
+	isImmutableByName,
+	schemaLockFlags,
+	themeIdList,
+} from './propertyEditing.js'
 
 import '@toast-ui/editor/dist/toastui-editor.css'
 
@@ -3106,26 +3115,7 @@ export default {
 		isPropertyEditable(key, value) {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-
-			// If no schema property, allow editing (it's a free-form property)
-			if (!schemaProperty) return true
-
-			// Check if property is const
-			if (schemaProperty.const !== undefined) {
-				return false // Const properties cannot be edited
-			}
-
-			// Check if property is immutable and already has a value
-			if (
-				schemaProperty.immutable
-				&& value !== null
-				&& value !== undefined
-				&& value !== ''
-			) {
-				return false // Immutable properties with values cannot be edited
-			}
-
-			return true
+			return isEditable(schemaProperty, value)
 		},
 
 		/**
@@ -3136,21 +3126,7 @@ export default {
 		getEditabilityWarning(key, value) {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-
-			if (schemaProperty?.const !== undefined) {
-				return `This property is constant and must always be '${schemaProperty.const}'. Const properties cannot be modified to maintain data integrity.`
-			}
-
-			if (
-				schemaProperty?.immutable
-				&& value !== null
-				&& value !== undefined
-				&& value !== ''
-			) {
-				return `This property is immutable and cannot be changed once it has a value. Current value: '${value}'. Immutable properties preserve data consistency.`
-			}
-
-			return null
+			return editabilityWarning(schemaProperty, value)
 		},
 
 		/**
@@ -3160,11 +3136,7 @@ export default {
 		 */
 		handleRowClick(key, event) {
 			// Don't select if clicking on an input or button
-			if (
-				event.target.tagName === 'INPUT'
-				|| event.target.tagName === 'BUTTON'
-				|| event.target.closest('.value-input-container')
-			) {
+			if (isControlClick(event)) {
 				return
 			}
 
@@ -3174,15 +3146,27 @@ export default {
 			}
 
 			// Check if property is editable
-			const value =
-				this.formData[key] !== undefined
-					? this.formData[key]
-					: this.objectProperties.find(([k]) => k === key)?.[1]
+			const value = this.rowValue(key)
 			if (!this.isPropertyEditable(key, value)) {
 				return
 			}
 
 			this.selectProperty(key)
+		},
+
+		/**
+		 * The value of a property row: the edited value, else the shown one.
+		 *
+		 * @param {string} key The property key.
+		 * @return {*} The value.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		rowValue(key) {
+			if (this.formData[key] !== undefined) {
+				return this.formData[key]
+			}
+			const row = this.objectProperties.find(([k]) => k === key)
+			return row?.[1]
 		},
 
 		/**
@@ -3221,11 +3205,7 @@ export default {
 
 			// Special handling for themes: extract IDs from selected objects
 			if (key === 'themes' && Array.isArray(newValue)) {
-				// Extract just the IDs from the selected theme objects
-				const themeIds = newValue.map((theme) =>
-					typeof theme === 'object' ? theme.id : theme,
-				)
-				this.formData[key] = themeIds
+				this.formData[key] = themeIdList(newValue)
 				return
 			}
 
@@ -4857,14 +4837,20 @@ export default {
 				return false
 			}
 
-			// Show drop button if:
-			// 1. Property has a value (either in formData or original object)
-			// 2. Property exists in current object or has been edited
-			const hasFormValue = this.formData[key] !== undefined
-			const hasOriginalValue =
-				this.currentObject && Object.hasOwn(this.currentObject, key)
+			// Show drop button if the property was edited or the object has it
+			return this.formData[key] !== undefined || this.hasOwnObjectKey(key)
+		},
 
-			return hasFormValue || hasOriginalValue
+		/**
+		 * Whether the object shown has a property of its own; the object
+		 * itself when there is none.
+		 *
+		 * @param {string} key The property key.
+		 * @return {*} Truthy when it has.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		hasOwnObjectKey(key) {
+			return this.currentObject && Object.hasOwn(this.currentObject, key)
 		},
 
 		/**
@@ -4879,32 +4865,33 @@ export default {
 			const schemaProperty = schemaProperties[key]
 
 			// Check by property name patterns (case insensitive)
-			const immutablePatterns = ['immutable', 'readonly', 'constant']
-			const isImmutableByName = immutablePatterns.some((pattern) =>
-				key.toLowerCase().includes(pattern),
-			)
-
-			if (schemaProperty) {
-				const isConstant = schemaProperty.const !== undefined
-				const isImmutable =
-					schemaProperty.readOnly === true
-					|| schemaProperty.immutable === true
-
-				// Debug: Log all detection methods
-				if (process.env.NODE_ENV === 'development') {
-					// eslint-disable-next-line no-console
-					console.log(`Property ${key} detection:`, {
-						isConstant,
-						isImmutable,
-						isImmutableByName,
-						schemaProperty,
-					})
-				}
-
-				return isConstant || isImmutable || isImmutableByName
+			const immutableByName = isImmutableByName(key)
+			if (!schemaProperty) {
+				return immutableByName
 			}
 
-			return isImmutableByName
+			const flags = schemaLockFlags(schemaProperty)
+			this.logImmutability(key, {
+				...flags,
+				isImmutableByName: immutableByName,
+				schemaProperty,
+			})
+			return flags.isConstant || flags.isImmutable || immutableByName
+		},
+
+		/**
+		 * Logs how a property was found constant or immutable, in development.
+		 *
+		 * @param {string} key The property key.
+		 * @param {object} detection The detection results.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		logImmutability(key, detection) {
+			// Debug: Log all detection methods
+			if (process.env.NODE_ENV === 'development') {
+				// eslint-disable-next-line no-console
+				console.log(`Property ${key} detection:`, detection)
+			}
 		},
 
 		/**
@@ -4928,52 +4915,36 @@ export default {
 		 */
 		dropProperty(key) {
 			const schemaProperties = this.getSchemaProperties()
-			const isSchemaProperty = Object.hasOwn(schemaProperties, key)
-
-			if (isSchemaProperty) {
+			if (Object.hasOwn(schemaProperties, key)) {
 				// For schema properties, reset to appropriate default/null value
 				const schemaProperty = schemaProperties[key]
-				let defaultValue = null
-
-				switch (schemaProperty.type) {
-					case 'string':
-						defaultValue = schemaProperty.const || ''
-						break
-					case 'number':
-					case 'integer':
-						defaultValue = 0
-						break
-					case 'boolean':
-						defaultValue = false
-						break
-					case 'array':
-						defaultValue = []
-						break
-					case 'object':
-						defaultValue = {}
-						break
-					default:
-						defaultValue = ''
-				}
-
-				// Set the default value in formData
-				this.formData[key] = defaultValue
+				this.formData[key] = schemaDefaultValue(schemaProperty)
 			} else {
-				// For non-schema properties, remove completely from formData
-				if (this.formData[key] !== undefined) {
-					delete this.formData[key]
-				}
-
-				// If it was in the original object, we need to track its removal
-				// We'll set it to a special marker that indicates deletion
-				if (this.currentObject && Object.hasOwn(this.currentObject, key)) {
-					this.formData[key] = undefined
-				}
+				this.removeExtraProperty(key)
 			}
 
 			// Clear selection if this property was selected
 			if (this.selectedProperty === key) {
 				this.selectedProperty = null
+			}
+		},
+
+		/**
+		 * Removes a property outside the schema from the form data, and marks
+		 * it as deleted (undefined) when the object has it.
+		 *
+		 * @param {string} key The property key.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		removeExtraProperty(key) {
+			if (this.formData[key] !== undefined) {
+				delete this.formData[key]
+			}
+
+			// If it was in the original object, we need to track its removal
+			// We'll set it to a special marker that indicates deletion
+			if (this.hasOwnObjectKey(key)) {
+				this.formData[key] = undefined
 			}
 		},
 
