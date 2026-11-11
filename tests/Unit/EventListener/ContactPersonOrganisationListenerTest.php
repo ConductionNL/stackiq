@@ -23,6 +23,7 @@ use OCA\OpenRegister\Db\Organisation;
 use OCA\OpenRegister\Db\OrganisationMapper;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\Stackiq\EventListener\ContactPersonOrganisationListener;
 use OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard;
 use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
@@ -73,6 +74,21 @@ final class ContactPersonOrganisationListenerTest extends TestCase {
 		'victim-x'     => ['gebruik-raadpleger'],
 		'victim-a'     => ['gebruik-beheerder'],
 	];
+
+	/**
+	 * Organisatie object uuid => status, for organisaties without an OpenRegister organisation.
+	 *
+	 * @var array<string, string>
+	 */
+	private array $organisaties = [
+		'not-yet-an-organisation' => 'pending',
+		'active-without-entity'   => 'Actief',
+	];
+
+	/**
+	 * Whether reading an organisatie object fails.
+	 */
+	private bool $organisatieLookupFails = false;
 
 	public function testASignedInUserOutsideTheOrganisationCannotAddAnAccountToIt(): void {
 		$event = $this->creating(data: ['organisation' => self::ORG_X, 'email' => 'new@example.org']);
@@ -155,6 +171,47 @@ final class ContactPersonOrganisationListenerTest extends TestCase {
 
 		self::assertFalse($event->isPropagationStopped());
 	}//end testAContactForAnOrganisationThatIsStillBeingRegisteredIsAccepted()
+
+	public function testAnActiveOrganisatieWithoutOrganisationYetIsRefused(): void {
+		$event = $this->creating(data: ['organisation' => 'active-without-entity', 'email' => 'new@example.org']);
+
+		$this->listener(caller: 'outsider')->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testAnActiveOrganisatieWithoutOrganisationYetIsRefused()
+
+	public function testAnAnonymousContactForAnActiveOrganisatieWithoutOrganisationIsRefused(): void {
+		$event = $this->creating(data: ['organisation' => 'active-without-entity', 'email' => 'new@example.org']);
+
+		$this->listener(caller: null)->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testAnAnonymousContactForAnActiveOrganisatieWithoutOrganisationIsRefused()
+
+	public function testAnAdministratorMayAddAContactToAnActiveOrganisatieWithoutOrganisation(): void {
+		$event = $this->creating(data: ['organisation' => 'active-without-entity', 'email' => 'new@example.org']);
+
+		$this->listener(caller: 'root')->handle($event);
+
+		self::assertFalse($event->isPropagationStopped());
+	}//end testAnAdministratorMayAddAContactToAnActiveOrganisatieWithoutOrganisation()
+
+	public function testAContactForAnUnknownOrganisatieIsAccepted(): void {
+		$event = $this->creating(data: ['organisation' => 'no-such-organisatie', 'email' => 'new@example.org']);
+
+		$this->listener(caller: 'outsider')->handle($event);
+
+		self::assertFalse($event->isPropagationStopped());
+	}//end testAContactForAnUnknownOrganisatieIsAccepted()
+
+	public function testAFailedOrganisatieLookupIsRefused(): void {
+		$this->organisatieLookupFails = true;
+		$event = $this->creating(data: ['organisation' => 'not-yet-an-organisation', 'email' => 'new@example.org']);
+
+		$this->listener(caller: null)->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+	}//end testAFailedOrganisatieLookupIsRefused()
 
 	public function testAnUpdateThatMovesTheContactToAnotherOrganisationIsChecked(): void {
 		$event = $this->updating(
@@ -434,8 +491,23 @@ final class ContactPersonOrganisationListenerTest extends TestCase {
 		$settings = $this->createMock(SettingsService::class);
 		$settings->method('getVoorzieningenConfig')->willReturn(['contactpersoon_schema' => self::SCHEMA, 'organisatie_schema' => '30']);
 
+		$objectService = $this->createMock(ObjectService::class);
+		$objectService->method('find')->willReturnCallback(
+			function (string|int $id): ?ObjectEntity {
+				if ($this->organisatieLookupFails === true) {
+					throw new \RuntimeException('lookup failed');
+				}
+
+				if (isset($this->organisaties[$id]) === false) {
+					return null;
+				}
+
+				return $this->entity(data: ['status' => $this->organisaties[$id]], schema: '30');
+			}
+		);
+
 		return new ContactPersonOrganisationListener(
-			new ContactPersonOrganisationGuard($session, $groupManager, $userManager, $mapper),
+			new ContactPersonOrganisationGuard($session, $groupManager, $userManager, $mapper, $objectService, $settings),
 			$settings,
 			new SystemContactWrites()
 		);
