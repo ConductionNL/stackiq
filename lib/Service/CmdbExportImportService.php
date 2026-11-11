@@ -2434,7 +2434,7 @@ class CmdbExportImportService {
 		foreach ($owned as $usage) {
 			$module = ($modules[$usage['module']] ?? null);
 			$key = self::importKeyOf(module: $module, prefix: $prefix);
-			if ($key !== null) {
+			if ($key !== '') {
 				$scope[] = ['key' => $key] + self::scopeObjects(usage: $usage, module: $module);
 			}
 		}
@@ -2464,18 +2464,18 @@ class CmdbExportImportService {
 	}//end ownedUsages()
 
 	/**
-	 * The APPID match key of a module this municipality's import created, or null for any other module.
+	 * The APPID match key of a module this municipality's import created, or '' for any other module.
 	 *
 	 * @param array{entity: object, state: array{archived: bool, deleted: bool}}|null $module The module, or null
 	 *                                                                                       when it was not found.
 	 * @param string                                                                 $prefix The external-key
 	 *                                                                                       prefix of this import.
 	 *
-	 * @return string|null
+	 * @return string The key; never '' for a module in scope, as the key follows the prefix.
 	 */
-	private static function importKeyOf(?array $module, string $prefix): ?string {
+	private static function importKeyOf(?array $module, string $prefix): string {
 		if ($module === null) {
-			return null;
+			return '';
 		}
 
 		$externalKey = (string)($module['entity']->getObject()['externalKey'] ?? '');
@@ -2483,7 +2483,7 @@ class CmdbExportImportService {
 			return substr($externalKey, strlen($prefix));
 		}
 
-		return null;
+		return '';
 	}//end importKeyOf()
 
 	/**
