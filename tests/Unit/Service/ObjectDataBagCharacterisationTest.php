@@ -1,11 +1,10 @@
 <?php
 
 /**
- * Characterisation test for the object-to-data-bag normalisation of the
- * federation, moderation and review aggregate services.
+ * Characterisation test for the object-to-data-bag normalisation the
+ * federation, moderation and review aggregate services share.
  *
- * Pins, for every service that normalises an ObjectService result item, the
- * bag it returns for an array, an entity with and without an id in its data,
+ * Pins, for ObjectDataBag and ModerationService's delegate, the bag returned for an array, an entity with and without an id in its data,
  * an entity whose data is not an array, an object without data and a scalar.
  *
  * @category  Test
@@ -22,9 +21,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
-use OCA\Stackiq\Service\Federation\FederationService;
 use OCA\Stackiq\Service\ModerationService;
-use OCA\Stackiq\Service\ReviewAggregateService;
+use OCA\Stackiq\Service\ObjectDataBag;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -102,7 +100,7 @@ class ObjectDataBagCharacterisationTest extends TestCase {
 	}//end inputs()
 
 	/**
-	 * Every normalising service turns each input into the same bag.
+	 * The shared helper and the moderation delegate turn each input into the same bag.
 	 *
 	 * @param mixed $input    The result item.
 	 * @param array $expected The bag.
@@ -112,24 +110,23 @@ class ObjectDataBagCharacterisationTest extends TestCase {
 	 * @dataProvider inputs
 	 */
 	public function testEveryServiceBuildsTheSameBag(mixed $input, array $expected): void {
-		foreach ([FederationService::class, ModerationService::class, ReviewAggregateService::class] as $class) {
-			$this->assertSame(expected: $expected, actual: $this->bag(class: $class, input: $input), message: $class);
-		}
+		$this->assertSame(expected: $expected, actual: $this->bag(build: static fn () => ObjectDataBag::of(object: $input)));
+		$moderation = (new \ReflectionClass(objectOrClass: ModerationService::class))->newInstanceWithoutConstructor();
+		$delegate   = new \ReflectionMethod(objectOrMethod: ModerationService::class, method: 'toDataBag');
+		$this->assertSame(expected: $expected, actual: $this->bag(build: static fn () => $delegate->invoke($moderation, $input)));
 
 	}//end testEveryServiceBuildsTheSameBag()
 
 	/**
-	 * The bag one service builds.
+	 * The bag one builder returns.
 	 *
-	 * @param class-string $class The service.
-	 * @param mixed        $input The result item.
+	 * @param \Closure $build Builds the bag.
 	 *
 	 * @return array The bag, or `['throws' => class]` when building it throws.
 	 */
-	private function bag(string $class, mixed $input): array {
-		$service = (new \ReflectionClass(objectOrClass: $class))->newInstanceWithoutConstructor();
+	private function bag(\Closure $build): array {
 		try {
-			return (new \ReflectionMethod(objectOrMethod: $class, method: 'toDataBag'))->invoke($service, $input);
+			return $build();
 		} catch (\Throwable $e) {
 			return ['throws' => get_class($e)];
 		}
