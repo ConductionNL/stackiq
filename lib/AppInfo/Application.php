@@ -43,6 +43,7 @@ use OCA\Stackiq\EventListener\ContactPersonOrganisationListener;
 use OCA\Stackiq\EventListener\ModuleRegistrationSubscriber;
 use OCA\Stackiq\EventListener\TestEventListener;
 use OCA\Stackiq\EventListener\UserProfileUpdatedEventListener;
+use OCA\Stackiq\Middleware\ApiContractMiddleware;
 use OCA\Stackiq\Service\ArchiMateExportService;
 use OCA\Stackiq\Service\ArchiMateImportService;
 use OCA\Stackiq\Service\ArchiMateService;
@@ -168,6 +169,9 @@ class Application extends App implements IBootstrap {
 		$this->registerEventListeners(context: $context);
 
 		$this->registerDomainServices(context: $context);
+
+		// API-Version header and problem details on the JSON API (spec api-contract).
+		$context->registerMiddleware(ApiContractMiddleware::class);
 	}//end register()
 
 	/**
