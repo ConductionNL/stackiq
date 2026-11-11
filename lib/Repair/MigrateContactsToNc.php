@@ -121,40 +121,83 @@ class MigrateContactsToNc implements IRepairStep {
 	private function migrate(IOutput $output): void {
 		$output->startProgress(2);
 
+		$registerId = $this->readyRegisterId(output: $output);
+		if ($registerId === null) {
+			$output->advance(2);
+			$output->finishProgress();
+			return;
+		}
+
+		// Converge: when both types were read successfully and no per-object
+		// migration failed, mark the step done so future upgrades skip it.
+		if ($this->migrateTypes(output: $output, registerId: $registerId) === true) {
+			$this->appConfig->setValueString(AppIdentity::APP_ID, self::CONVERGED_CONFIG_KEY, '1');
+			$output->info('Contacts migration converged — future runs will skip.');
+		}
+
+		$output->finishProgress();
+	}//end migrate()
+
+	/**
+	 * The register to migrate, or null when the migration is skipped.
+	 *
+	 * A converged step skips quietly; every other skip says why.
+	 *
+	 * @param IOutput $output The output interface for progress reporting.
+	 *
+	 * @return integer|null The voorzieningen register id, or null to skip.
+	 */
+	private function readyRegisterId(IOutput $output): ?int {
 		// Converged on a previous run — skip quietly. This step is registered
 		// as a post-migration repair step and therefore re-runs on every
 		// upgrade; once every object migrated cleanly there is nothing left
 		// to do.
 		if ($this->appConfig->getValueString(AppIdentity::APP_ID, self::CONVERGED_CONFIG_KEY, '') === '1') {
-			$output->advance(2);
-			$output->finishProgress();
-			return;
+			return null;
 		}
 
-		// OpenRegister must be present to read the objects.
-		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
-			$output->info('OpenRegister not installed — skipping contacts migration');
-			$output->advance(2);
-			$output->finishProgress();
-			return;
-		}
-
-		// Nextcloud Contacts must be available to resolve/create UIDs.
-		if ($this->contactSync->isAvailable() === false) {
-			$output->info('Nextcloud Contacts not available — skipping contacts migration (will retry on next upgrade)');
-			$output->advance(2);
-			$output->finishProgress();
-			return;
+		$skipReason = $this->missingDependency();
+		if ($skipReason !== null) {
+			$output->info($skipReason);
+			return null;
 		}
 
 		$registerId = $this->settingsService->getVoorzieningenRegisterId();
 		if ($registerId === null) {
 			$output->info('Voorzieningen register not configured — skipping contacts migration');
-			$output->advance(2);
-			$output->finishProgress();
-			return;
 		}
 
+		return $registerId;
+	}//end readyRegisterId()
+
+	/**
+	 * Why the migration cannot run yet: a missing OpenRegister or Contacts.
+	 *
+	 * @return string|null The skip message, or null when both are available.
+	 */
+	private function missingDependency(): ?string {
+		// OpenRegister must be present to read the objects.
+		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
+			return 'OpenRegister not installed — skipping contacts migration';
+		}
+
+		// Nextcloud Contacts must be available to resolve/create UIDs.
+		if ($this->contactSync->isAvailable() === false) {
+			return 'Nextcloud Contacts not available — skipping contacts migration (will retry on next upgrade)';
+		}
+
+		return null;
+	}//end missingDependency()
+
+	/**
+	 * Migrate both object types and report each.
+	 *
+	 * @param IOutput $output The output interface for progress reporting.
+	 * @param integer $registerId The voorzieningen register id.
+	 *
+	 * @return bool True when both types were read and no object failed.
+	 */
+	private function migrateTypes(IOutput $output, int $registerId): bool {
 		$totalFailed = 0;
 		$totalReadFailed = 0;
 
@@ -162,28 +205,31 @@ class MigrateContactsToNc implements IRepairStep {
 			$stats = $this->migrateType(output: $output, registerId: $registerId, objectType: $objectType);
 			$totalFailed += $stats['failed'];
 			$totalReadFailed += $stats['readFailed'];
-			$output->info(
-				sprintf(
-					'Contacts migration [%s]: %d linked, %d created, %d already-linked, %d skipped',
-					$objectType,
-					$stats['linked'],
-					$stats['created'],
-					$stats['skipped'],
-					$stats['failed']
-				)
-			);
+			$output->info($this->typeSummary(objectType: $objectType, stats: $stats));
 			$output->advance(1);
 		}
 
-		// Converge: when both types were read successfully and no per-object
-		// migration failed, mark the step done so future upgrades skip it.
-		if ($totalFailed === 0 && $totalReadFailed === 0) {
-			$this->appConfig->setValueString(AppIdentity::APP_ID, self::CONVERGED_CONFIG_KEY, '1');
-			$output->info('Contacts migration converged — future runs will skip.');
-		}
+		return $totalFailed === 0 && $totalReadFailed === 0;
+	}//end migrateTypes()
 
-		$output->finishProgress();
-	}//end migrate()
+	/**
+	 * The summary line of one migrated object type.
+	 *
+	 * @param string $objectType The object type ('contactPerson'|'organization').
+	 * @param array{linked:int,created:int,skipped:int,failed:int,readFailed:int} $stats The per-type counters.
+	 *
+	 * @return string The summary line.
+	 */
+	private function typeSummary(string $objectType, array $stats): string {
+		return sprintf(
+			'Contacts migration [%s]: %d linked, %d created, %d already-linked, %d skipped',
+			$objectType,
+			$stats['linked'],
+			$stats['created'],
+			$stats['skipped'],
+			$stats['failed']
+		);
+	}//end typeSummary()
 
 	/**
 	 * Migrate every object of one type.
@@ -390,21 +436,47 @@ class MigrateContactsToNc implements IRepairStep {
 	 * @return ?string The UUID, or null when unavailable.
 	 */
 	private function extractUuid(mixed $object, array $data): ?string {
-		if (is_object($object) === true && method_exists($object, 'getUuid') === true) {
-			$uuid = $object->getUuid();
-			if ($uuid !== null && $uuid !== '') {
-				return (string)$uuid;
-			}
-		}
-
-		if (isset($data['id']) === true && $data['id'] !== '') {
-			return (string)$data['id'];
-		}
-
-		if (isset($data['@self']['id']) === true && $data['@self']['id'] !== '') {
-			return (string)$data['@self']['id'];
-		}
-
-		return null;
+		return $this->entityUuid(object: $object) ?? $this->dataUuid(data: $data);
 	}//end extractUuid()
+
+	/**
+	 * The UUID an OpenRegister entity reports, when it reports a non-empty one.
+	 *
+	 * @param mixed $object The OpenRegister object.
+	 *
+	 * @return ?string The UUID, or null.
+	 */
+	private function entityUuid(mixed $object): ?string {
+		if (is_object($object) === false || method_exists($object, 'getUuid') === false) {
+			return null;
+		}
+
+		return $this->nonEmptyId(id: $object->getUuid());
+	}//end entityUuid()
+
+	/**
+	 * The UUID in the object data: its `id`, else its `@self.id`.
+	 *
+	 * @param array<string, mixed> $data The extracted object data.
+	 *
+	 * @return ?string The UUID, or null when neither is set and non-empty.
+	 */
+	private function dataUuid(array $data): ?string {
+		return $this->nonEmptyId(id: $data['id'] ?? null) ?? $this->nonEmptyId(id: $data['@self']['id'] ?? null);
+	}//end dataUuid()
+
+	/**
+	 * An id as a string, or null when it is null or empty.
+	 *
+	 * @param mixed $id The id.
+	 *
+	 * @return ?string The id, or null.
+	 */
+	private function nonEmptyId(mixed $id): ?string {
+		if ($id === null || $id === '') {
+			return null;
+		}
+
+		return (string)$id;
+	}//end nonEmptyId()
 }//end class
