@@ -329,24 +329,7 @@ class ModerationService {
 	 * @return array<string,mixed> The data bag.
 	 */
 	private function toDataBag(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (method_exists($object, 'getUuid') === true && empty($data['id']) === true) {
-				$data['id'] = $object->getUuid();
-			}
-
-			if (is_array($data) === true) {
-				return $data;
-			}
-
-			return [];
-		}
-
-		return [];
+		return (new ObjectDataBag())->fromItem(object: $object);
 	}//end toDataBag()
 
 	/**
