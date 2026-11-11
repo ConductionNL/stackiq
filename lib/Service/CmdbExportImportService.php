@@ -71,6 +71,7 @@ use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\Cmdb\CmdbImportReport;
 use OCA\Stackiq\Service\Cmdb\CmdbImportRow;
 use OCA\Stackiq\Service\Cmdb\CmdbImportRun;
+use OCA\Stackiq\Service\Cmdb\CmdbMatchSchema;
 use OCA\Stackiq\Service\Cmdb\CmdbOwnerIdentity;
 use OCA\Stackiq\Service\Cmdb\OpenRegisterInstance;
 use OCA\Stackiq\Service\Cmdb\CmdbRowNormaliser;
@@ -2551,20 +2552,9 @@ class CmdbExportImportService {
 	 */
 	private function modulesInChunk(array $chunk, array $coordinates): array {
 		$modules = [];
+		$query = ['@self' => ['register' => $coordinates['register'], 'schema' => $coordinates['module']], '_ids' => $chunk, '_limit' => count($chunk)];
 		foreach ([[[], self::STATE_WORKING], [self::ARCHIVED_LENS, self::STATE_ARCHIVED]] as [$lens, $state]) {
-			$results = $coordinates['objectService']->searchObjects(
-				query: array_merge(
-					['@self' => ['register' => $coordinates['register'], 'schema' => $coordinates['module']], '_ids' => $chunk, '_limit' => count($chunk)],
-					$lens
-				),
-				_rbac: false,
-				_multitenancy: false
-			);
-			if (is_array($results) === false) {
-				continue;
-			}
-
-			foreach ($results as $entity) {
+			foreach ($this->lensResults(coordinates: $coordinates, query: array_merge($query, $lens)) as $entity) {
 				$uuid = (string)$entity->getUuid();
 				if (in_array($uuid, $chunk, true) === true && isset($modules[$uuid]) === false) {
 					$modules[$uuid] = ['entity' => $entity, 'state' => $state];
@@ -2574,6 +2564,27 @@ class CmdbExportImportService {
 
 		return $modules;
 	}//end modulesInChunk()
+
+	/**
+	 * What one unscoped search finds; nothing when OpenRegister answers no list.
+	 *
+	 * @param array<string, mixed> $coordinates The object service, from coordinates().
+	 * @param array<string, mixed> $query The search, with its lens.
+	 *
+	 * @return array<int, object>
+	 */
+	private function lensResults(array $coordinates, array $query): array {
+		$results = $coordinates['objectService']->searchObjects(
+			query: $query,
+			_rbac: false,
+			_multitenancy: false
+		);
+		if (is_array($results) === false) {
+			return [];
+		}
+
+		return $results;
+	}//end lensResults()
 
 	/**
 	 * Archive or soft-delete one application that left the CMDB sheets, usage first, in its own error boundary.
@@ -2886,6 +2897,21 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 */
 	private function assertMatchProperties(array $schemas): void {
+		$mapper = $this->schemaMapper();
+		foreach (array_keys(self::MATCH_PROPERTIES) as $type) {
+			$schema = new CmdbMatchSchema(type: $type, id: $schemas[$type]);
+			self::assertDeclares(schema: $schema, properties: $this->declaredProperties(mapper: $mapper, schema: $schema));
+		}
+	}//end assertMatchProperties()
+
+	/**
+	 * OpenRegister's schema mapper, failing closed.
+	 *
+	 * @return object The mapper, with `find()`.
+	 *
+	 * @throws CmdbImportException NOT_CONFIGURED when it is not available.
+	 */
+	private function schemaMapper(): object {
 		try {
 			$mapper = $this->container->get(static::SCHEMA_MAPPER_CLASS);
 		} catch (Throwable $e) {
@@ -2896,29 +2922,54 @@ class CmdbExportImportService {
 			throw new CmdbImportException(errorCode: CmdbImportException::NOT_CONFIGURED, message: 'OpenRegister SchemaMapper is not available');
 		}
 
-		foreach (self::MATCH_PROPERTIES as $type => $required) {
-			try {
-				$properties = $mapper->find(id: $schemas[$type], _rbac: false, _multitenancy: false)->getProperties();
-			} catch (Throwable $e) {
-				throw new CmdbImportException(
-					errorCode: CmdbImportException::NOT_CONFIGURED,
-					message: 'The ' . $type . ' schema cannot be read: ' . get_class($e),
-					previous: $e
-				);
-			}
+		return $mapper;
+	}//end schemaMapper()
 
-			$properties = (array)$properties;
-			$missing = array_values(array_diff($required, array_keys($properties)));
-			array_push($missing, ...self::missingUpdateRules(type: $type, properties: $properties));
-			if ($missing !== []) {
-				throw new CmdbImportException(
-					errorCode: CmdbImportException::SCHEMA_OUTDATED,
-					message: 'The ' . $type . ' schema does not declare the properties the import matches on',
-					details: ['schema' => $type, 'missing' => $missing]
-				);
-			}
+	/**
+	 * The property definitions a schema declares, read unscoped.
+	 *
+	 * @param object $mapper OpenRegister's schema mapper.
+	 * @param CmdbMatchSchema $schema The schema.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @throws CmdbImportException NOT_CONFIGURED when the schema cannot be read.
+	 */
+	private function declaredProperties(object $mapper, CmdbMatchSchema $schema): array {
+		try {
+			$properties = $mapper->find(id: $schema->id, _rbac: false, _multitenancy: false)->getProperties();
+		} catch (Throwable $e) {
+			throw new CmdbImportException(
+				errorCode: CmdbImportException::NOT_CONFIGURED,
+				message: 'The ' . $schema->type . ' schema cannot be read: ' . get_class($e),
+				previous: $e
+			);
 		}
-	}//end assertMatchProperties()
+
+		return (array)$properties;
+	}//end declaredProperties()
+
+	/**
+	 * Refuse a schema that lacks a property the import matches on, or the update rule it relies on.
+	 *
+	 * @param CmdbMatchSchema $schema The schema.
+	 * @param array<string, mixed> $properties The schema's property definitions.
+	 *
+	 * @return void
+	 *
+	 * @throws CmdbImportException SCHEMA_OUTDATED when something is missing.
+	 */
+	private static function assertDeclares(CmdbMatchSchema $schema, array $properties): void {
+		$missing = array_values(array_diff(self::MATCH_PROPERTIES[$schema->type], array_keys($properties)));
+		array_push($missing, ...self::missingUpdateRules(type: $schema->type, properties: $properties));
+		if ($missing !== []) {
+			throw new CmdbImportException(
+				errorCode: CmdbImportException::SCHEMA_OUTDATED,
+				message: 'The ' . $schema->type . ' schema does not declare the properties the import matches on',
+				details: ['schema' => $schema->type, 'missing' => $missing]
+			);
+		}
+	}//end assertDeclares()
 
 	/**
 	 * The declared properties of a schema that lack the update rule the import relies on.
