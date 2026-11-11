@@ -302,7 +302,7 @@ class OrganizationUserSyncTest extends TestCase {
 			$this->assertSame([['getVoorzieningenConfig'], $missing], $trace);
 		}
 
-		foreach ([['register' => '-3', 'contactpersoon_schema' => '9'], ['register' => '3', 'contactpersoon_schema' => 'abc'], ['register' => '3; DROP', 'contactpersoon_schema' => '-1']] as $config) {
+		foreach ([['register' => 'abc', 'contactpersoon_schema' => '9'], ['register' => '-3', 'contactpersoon_schema' => '9'], ['register' => '3', 'contactpersoon_schema' => 'abc'], ['register' => '3; DROP', 'contactpersoon_schema' => '-1']] as $config) {
 			[$result, $trace] = $this->runCase(plan: ['config' => $config]);
 			$this->assertSame([], $result);
 			$this->assertSame(
