@@ -53,6 +53,7 @@ final class ContractApprovalGuardGoldenTest extends TestCase {
 			'not the owner'       => ['user' => 'vera', 'groups' => ['aanbod-beheerder'], 'org' => 'org-2', 'authorized' => false],
 			'no groups'           => ['user' => 'piet', 'groups' => [], 'org' => 'org-1', 'authorized' => false],
 			'numeric org setting' => ['user' => 'piet', 'groups' => ['users'], 'org' => 7, 'authorized' => false],
+			'other contract'      => ['user' => 'vera', 'groups' => ['aanbod-beheerder'], 'org' => 'org-1', 'authorized' => false, 'contract' => 'contract-2'],
 		];
 	}//end cases()
 
@@ -100,7 +101,7 @@ final class ContractApprovalGuardGoldenTest extends TestCase {
 		$controller = new ContractApprovalController($this->createMock(IRequest::class), $approvals, $session, $groups, $config, $logger);
 		$method     = new \ReflectionMethod($controller, 'authorizeContract');
 		$method->setAccessible(true);
-		$response = $method->invoke($controller, 'contract-1');
+		$response = $method->invoke($controller, ($case['contract'] ?? 'contract-1'));
 
 		$outcome = ['allowed' => true];
 		if ($response !== null) {
