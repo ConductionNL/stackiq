@@ -73,6 +73,7 @@ use OCA\Stackiq\Service\ReviewService;
 use OCA\Stackiq\Service\SbomImportService;
 use OCA\Stackiq\Service\SbomParserService;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\EolSyncSettings;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
@@ -723,6 +724,7 @@ class Application extends App implements IBootstrap {
 			function ($container) {
 				return new EolSyncService(
 					settingsService: $container->get(SettingsService::class),
+					eolSyncSettings: $container->get(EolSyncSettings::class),
 					matcher: $container->get(EolMatcherService::class),
 					timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
 					logger: $container->get(LoggerInterface::class),
