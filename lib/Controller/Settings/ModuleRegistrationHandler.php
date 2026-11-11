@@ -122,22 +122,32 @@ class ModuleRegistrationHandler {
 	private function persistModules(array $resolved): array {
 		try {
 			$registered = $this->registerModules(modules: $resolved['resolvedModules'] ?? []);
-
-			$this->logger->info(
-				'ModuleRegistrationHandler: Modules registered',
-				['count' => $registered]
-			);
-
-			return [
-				'success' => true,
-				'message' => sprintf('%d module(s) registered successfully.', $registered),
-				'registered' => $registered,
-			];
+			return $this->registrationSuccess(registered: $registered);
 		} catch (\Exception $e) {
 			return $this->registrationFailure(error: $e);
 		}//end try
 
 	}//end persistModules()
+
+	/**
+	 * Log a successful registration and answer the success result.
+	 *
+	 * @param int $registered Number of modules registered.
+	 *
+	 * @return array<string,mixed> Result with 'success', 'message', and 'registered' count.
+	 */
+	private function registrationSuccess(int $registered): array {
+		$this->logger->info(
+			'ModuleRegistrationHandler: Modules registered',
+			['count' => $registered]
+		);
+
+		return [
+			'success' => true,
+			'message' => sprintf('%d module(s) registered successfully.', $registered),
+			'registered' => $registered,
+		];
+	}//end registrationSuccess()
 
 	/**
 	 * Register each module through ModuleRegistrationService.
