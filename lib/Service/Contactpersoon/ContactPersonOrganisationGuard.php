@@ -133,7 +133,7 @@ class ContactPersonOrganisationGuard {
 
 		$organisationUuid = ($this->values(contactData: $write->contactData, keys: self::ORGANISATION_KEYS)[0] ?? '');
 		$organisation     = $this->findOrganisation(uuid: $organisationUuid);
-		$account          = $this->existingAccount(email: $this->values(contactData: $write->contactData, keys: self::EMAIL_KEYS)[0] ?? '', caller: $write->caller);
+		$account          = $this->namedAccount(write: $write);
 		if ($this->isAccountOutside(account: $account, organisation: $organisation) === true) {
 			return false;
 		}
@@ -144,6 +144,20 @@ class ContactPersonOrganisationGuard {
 
 		return $this->mayAddTo(organisation: $organisation, write: $write);
 	}//end allowsMember()
+
+	/**
+	 * The uid of the existing account the write's e-mail address names, when it is not the caller's own.
+	 *
+	 * @param ContactPersonWrite $write The write.
+	 *
+	 * @return string|null
+	 */
+	private function namedAccount(ContactPersonWrite $write): ?string {
+		return $this->existingAccount(
+			email: $this->values(contactData: $write->contactData, keys: self::EMAIL_KEYS)[0] ?? '',
+			caller: $write->caller
+		);
+	}//end namedAccount()
 
 	/**
 	 * Whether an existing account is named that is not a member of the organisation.
@@ -264,10 +278,12 @@ class ContactPersonOrganisationGuard {
 			return false;
 		}
 
-		$own = [strtolower($write->caller)];
-		return $this->values(contactData: $write->oldData, keys: [self::USERNAME_KEY]) === $own
-			&& $this->values(contactData: $write->contactData, keys: [self::USERNAME_KEY]) === $own
-			&& $this->values(contactData: $write->contactData, keys: self::ORGANISATION_KEYS) === $this->values(contactData: $write->oldData, keys: self::ORGANISATION_KEYS);
+		$own     = [strtolower($write->caller)];
+		$oldData = $write->oldData;
+		$newData = $write->contactData;
+		return $this->values(contactData: $oldData, keys: [self::USERNAME_KEY]) === $own
+			&& $this->values(contactData: $newData, keys: [self::USERNAME_KEY]) === $own
+			&& $this->values(contactData: $newData, keys: self::ORGANISATION_KEYS) === $this->values(contactData: $oldData, keys: self::ORGANISATION_KEYS);
 	}//end isOwnContactInSameOrganisation()
 
 	/**
