@@ -655,30 +655,7 @@ class AanbodService {
 	 * @return string|null Current organisation identifier or null if no user session
 	 */
 	private function getCurrentOrganisation(): ?string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return null;
-		}
-
-		try {
-			// Get the OpenRegister OrganisationService to get the active organisation.
-			$organisationService = $this->container->get('OCA\OpenRegister\Service\OrganisationService');
-			$activeOrg = $organisationService->getActiveOrganisation();
-
-			if ($activeOrg !== null) {
-				return $activeOrg->getUuid();
-			}
-
-			return null;
-		} catch (Exception $e) {
-			$this->logger->error(
-				'Failed to get current organisation from OpenRegister',
-				[
-					'error' => $e->getMessage(),
-				]
-			);
-			return null;
-		}
+		return $this->openRegisterLookup()->activeOrganisationUuid();
 	}//end getCurrentOrganisation()
 
 	/**
@@ -689,16 +666,22 @@ class AanbodService {
 	 * @throws Exception When OpenRegister service is not available
 	 */
 	private function getObjectService(): ObjectServiceInterface {
-		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === false) {
-			throw new Exception('OpenRegister app is not installed');
-		}
-
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Exception $e) {
-			throw new Exception('Failed to get OpenRegister service: ' . $e->getMessage());
-		}
+		return $this->openRegisterLookup()->objectService();
 	}//end getObjectService()
+
+	/**
+	 * The OpenRegister lookups, built from this service's app manager, container, session and logger.
+	 *
+	 * @return OpenRegisterLookup
+	 */
+	private function openRegisterLookup(): OpenRegisterLookup {
+		return new OpenRegisterLookup(
+			appManager: $this->appManager,
+			container: $this->container,
+			userSession: $this->userSession,
+			logger: $this->logger
+		);
+	}//end openRegisterLookup()
 
 	/**
 	 * Add query filters from options to the base query.
