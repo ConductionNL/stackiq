@@ -98,7 +98,7 @@ class SettingsControllerConfigEndpointsGoldenTest extends TestCase {
 	 */
 	private function makeController(?string $uid, array $scenario): array {
 		$calls    = new \ArrayObject();
-		$settings = $this->createMock(SettingsService::class);
+		$settings = $this->createMock(originalClassName: SettingsService::class);
 		foreach ($scenario['service'] as $method => $result) {
 			$settings->method($method)->willReturnCallback(
 				function (...$args) use ($calls, $method, $result) {
@@ -112,11 +112,11 @@ class SettingsControllerConfigEndpointsGoldenTest extends TestCase {
 			);
 		}
 
-		$groups  = $this->createMock(IGroupManager::class);
-		$session = $this->createMock(IUserSession::class);
+		$groups  = $this->createMock(originalClassName: IGroupManager::class);
+		$session = $this->createMock(originalClassName: IUserSession::class);
 		$user    = null;
 		if ($uid !== null) {
-			$user = $this->createMock(IUser::class);
+			$user = $this->createMock(originalClassName: IUser::class);
 			$user->method('getUID')->willReturn($uid);
 			$groups->method('isAdmin')->willReturnCallback(
 				function (string $id) use ($calls, $scenario) {
@@ -127,24 +127,24 @@ class SettingsControllerConfigEndpointsGoldenTest extends TestCase {
 		}
 
 		$session->method('getUser')->willReturn($user);
-		$request = $this->createMock(IRequest::class);
+		$request = $this->createMock(originalClassName: IRequest::class);
 		$request->method('getParams')->willReturn(['mode' => 'm', 'smtpPassword' => 'secret']);
 		$log = new SettingsConfigLogSpy();
 
 		$controller = new SettingsController(
-			'stackiq',
-			$request,
-			$this->createMock(IAppConfig::class),
-			$this->createMock(ContainerInterface::class),
-			$this->createMock(IAppManager::class),
-			$groups,
-			$session,
-			$settings,
-			$this->createMock(OrganizationSyncService::class),
-			$this->createMock(ArchiMateService::class),
-			$this->createMock(ProgressTracker::class),
-			$this->createMock(EolSyncService::class),
-			$log
+			appName: 'stackiq',
+			request: $request,
+			config: $this->createMock(originalClassName: IAppConfig::class),
+			container: $this->createMock(originalClassName: ContainerInterface::class),
+			appManager: $this->createMock(originalClassName: IAppManager::class),
+			groupManager: $groups,
+			userSession: $session,
+			settingsService: $settings,
+			orgSyncSvc: $this->createMock(originalClassName: OrganizationSyncService::class),
+			archiMateService: $this->createMock(originalClassName: ArchiMateService::class),
+			progressTracker: $this->createMock(originalClassName: ProgressTracker::class),
+			eolSyncService: $this->createMock(originalClassName: EolSyncService::class),
+			logger: $log
 		);
 		return [$controller, $log, $calls];
 	}
@@ -183,6 +183,9 @@ class SettingsControllerConfigEndpointsGoldenTest extends TestCase {
 	 */
 	public function testConfigActionsForEveryCaller(): void {
 		$path = dirname(__DIR__, 2) . '/fixtures/settings/config-endpoints.json';
-		$this->assertSame(json_decode((string)file_get_contents($path), true, 512, JSON_THROW_ON_ERROR), $this->outcomes());
+		$this->assertSame(
+			expected: json_decode(json: (string) file_get_contents(filename: $path), associative: true, depth: 512, flags: JSON_THROW_ON_ERROR),
+			actual: $this->outcomes()
+		);
 	}
 }
