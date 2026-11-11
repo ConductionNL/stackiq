@@ -171,6 +171,7 @@ import PackageVariantClosed from 'vue-material-design-icons/PackageVariantClosed
 import TrayArrowUp from 'vue-material-design-icons/TrayArrowUp.vue'
 import { objectStore } from '../../store/store.js'
 import { resolveUuid } from '../../utils/lifecyclePhase.js'
+import { fetchObjectTypeCollection } from '../../utils/objectTypeCollection.js'
 import { matchComponents } from '../../utils/sbomVulnerabilityMatch.js'
 
 /**
@@ -503,23 +504,7 @@ export default {
 		 * @spec openspec/specs/sbom-import/spec.md#requirement-the-module-version-detail-page-shows-imported-components-with-summary-counts
 		 */
 		async fetchType(type) {
-			if (
-				typeof objectStore.registerObjectType === 'function'
-				&& !objectStore.objectTypeRegistry?.[type]
-			) {
-				let cfg = null
-				try {
-					cfg = objectStore.getSchemaConfig?.(type)
-				} catch (cfgError) {
-					// getSchemaConfig throws when no schema/register resolves; fall through.
-				}
-				if (cfg?.register && cfg?.schema) {
-					objectStore.registerObjectType(type, cfg.schema, cfg.register)
-				}
-			}
-			if (typeof objectStore.fetchCollection === 'function') {
-				await objectStore.fetchCollection(type, { _limit: 1000 })
-			}
+			await fetchObjectTypeCollection(objectStore, type)
 		},
 
 		/**

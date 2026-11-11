@@ -1069,19 +1069,28 @@ class OrganizationSyncService {
 	 * @param object $organisationEntity The organisation with the organisatie's uuid.
 	 * @param array  $run                The ensure run (see ensureOrganisationEntity).
 	 *
-	 * @return bool False when a creation date is unknown and no link is recorded.
+	 * A recorded link only counts for the organisatie object that existed when it was
+	 * made, so an organisatie re-created later with the same uuid is not bound by it.
+	 *
+	 * @return bool False when the organisatie's creation date is unknown.
 	 */
 	private function isBoundOrganisation(object $organisationEntity, array $run): bool {
 		$entityCreated = $organisationEntity->getCreated();
 		$objectCreated = $run['organisationObject']->getCreated();
+		if ($objectCreated instanceof \DateTimeInterface === false) {
+			return false;
+		}
+
 		if ($entityCreated instanceof \DateTimeInterface
-			&& $objectCreated instanceof \DateTimeInterface
 			&& $entityCreated->getTimestamp() >= $objectCreated->getTimestamp()
 		) {
 			return true;
 		}
 
-		return $this->config->getValueString('stackiq', self::LINK_KEY_PREFIX . $run['organisationId'], '', lazy: true) !== '';
+		$linked   = $this->config->getValueString('stackiq', self::LINK_KEY_PREFIX . $run['organisationId'], '', lazy: true);
+		$linkedAt = strtotime($linked);
+
+		return $linked !== '' && $linkedAt !== false && $linkedAt >= $objectCreated->getTimestamp();
 	}//end isBoundOrganisation()
 
 	/**
@@ -1180,7 +1189,7 @@ class OrganizationSyncService {
 			return $outcome;
 		}
 
-		$this->config->setValueString('stackiq', self::LINK_KEY_PREFIX . $organisatieUuid, date('Y-m-d H:i:s'), lazy: true);
+		$this->config->setValueString('stackiq', self::LINK_KEY_PREFIX . $organisatieUuid, date(DATE_ATOM), lazy: true);
 		$entity = $this->organisationMapper->findByUuid($entityUuid);
 		$entity->setUuid($organisatieUuid);
 		$this->organisationMapper->save($entity);
@@ -2046,7 +2055,7 @@ class OrganizationSyncService {
 					]
 				);
 
-				$this->processNestedContactPersons(organizationObject: $organizationObject, stats: $stats);
+				$this->processNestedContactPersons(organizationObject: $organizationObject, organisationEntity: $organisationEntity, stats: $stats);
 
 				// Step 2: Find and process related contactpersonen objects (separate objects, not nested).
 				$this->logger->info(
@@ -2108,12 +2117,17 @@ class OrganizationSyncService {
 	/**
 	 * Process nested contact persons within an organization object
 	 *
+	 * An inline contact person was never written as a contact person object, so it
+	 * passed no contact person check; one that names an existing account outside the
+	 * organisation is skipped.
+	 *
 	 * @param \OCA\OpenRegister\Db\ObjectEntity $organizationObject The organization object.
+	 * @param object $organisationEntity The OpenRegister organisation of the organisatie.
 	 * @param array $stats The statistics array to update.
 	 *
 	 * @return void
 	 */
-	private function processNestedContactPersons($organizationObject, array &$stats): void {
+	private function processNestedContactPersons($organizationObject, object $organisationEntity, array &$stats): void {
 		try {
 			$objectData = $organizationObject->getObject();
 			$organizationUuid = $organizationObject->getUuid();
@@ -2200,6 +2214,14 @@ class OrganizationSyncService {
 						if (isset($contactData['id']) === false) {
 							$contactData['id'] = $contactObject->getUuid();
 						}
+					} else if (is_array($contactData) === true
+						&& $this->namesAccountOutside(contactData: $contactData, organisationEntity: $organisationEntity) === true
+					) {
+						$this->logger->warning(
+							'[FLOW] Nested contact person names an account outside the organisation, skipped',
+							['organizationId' => $organizationUuid, 'contactIndex' => $index]
+						);
+						continue;
 					}//end if
 
 					$this->logger->info(
@@ -2243,6 +2265,31 @@ class OrganizationSyncService {
 		}//end try
 
 	}//end processNestedContactPersons()
+
+	/**
+	 * Whether this contact data names an existing account that is not a member of the organisation.
+	 *
+	 * @param array  $contactData        The inline contact person data.
+	 * @param object $organisationEntity The OpenRegister organisation.
+	 *
+	 * @return bool
+	 */
+	private function namesAccountOutside(array $contactData, object $organisationEntity): bool {
+		$userManager = $this->container->get('OCP\IUserManager');
+		foreach (['email', 'e-mailadres', 'username'] as $key) {
+			$name = ($contactData[$key] ?? '');
+			if (is_string($name) === false || trim($name) === '') {
+				continue;
+			}
+
+			$uid = $userManager->get(trim($name))?->getUID();
+			if ($uid !== null && (method_exists($organisationEntity, 'hasUser') === false || $organisationEntity->hasUser($uid) !== true)) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end namesAccountOutside()
 
 	/**
 	 * Process related contactpersoon objects that have this organization in their organisation property

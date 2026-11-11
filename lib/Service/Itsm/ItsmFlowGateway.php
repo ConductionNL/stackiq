@@ -166,7 +166,15 @@ class ItsmFlowGateway {
 	 */
 	public function findObject(string $register, string $schema, string $id): ?array {
 		try {
-			$found = $this->service(class: self::OBJECTS)->find($id, [], false, $register, $schema, false, false);
+			$found = $this->service(class: self::OBJECTS)->find(
+				id: $id,
+				_extend: [],
+				files: false,
+				register: $register,
+				schema: $schema,
+				_rbac: false,
+				_multitenancy: false
+			);
 		} catch (Throwable $e) {
 			return null;
 		}

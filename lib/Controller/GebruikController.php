@@ -214,62 +214,120 @@ class GebruikController extends Controller {
 	 * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-aanbod-beheerder-vendor-reads-of-gebruik-koppeling-objects-must-be-scoped-to-the-vendor-s-own-offered-products-req-002
 	 * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-gebruik-beheerder-reads-of-gebruik-objects-must-be-scoped-to-the-caller-s-own-organisation-req-003
 	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Complexity 12 (threshold 10). This method IS
-	 * the RBAC decision table: one explicit branch per caller role (admin/ambtenaar bypass,
-	 * aanbod-beheerder vendor scope, gebruik-beheerder organisation scope) plus the empty-scope
-	 * guards that make each branch fail closed. Splitting the table across helpers would move the
-	 * branches out of sight of the reader auditing that no role falls through to an unscoped
-	 * query — which is exactly the bug (`discovery.md` finding 2) this method was written to fix.
+	 * The decision table stays in this method: one explicit branch per caller
+	 * role, so a reader can check that no role falls through to an unscoped
+	 * query (`discovery.md` finding 2). The empty-scope guards that make each
+	 * scoped branch fail closed live in that branch's own helper.
 	 */
 	private function applyAanbodScopeToOptions(array $roles, array $options): ?array {
-		$isAmbtenaar = $roles['isAmbtenaar'] ?? false;
-
 		// Admin / ambtenaar: unrestricted read (unchanged, existing bypass).
-		if ($roles['isAdmin'] === true || $isAmbtenaar === true) {
+		if (self::isUnrestrictedReader(roles: $roles) === true) {
 			return $options;
 		}
 
 		// Aanbod-beheerder (vendor, REQ-002): scope to the vendor's own
 		// offered applications. Unchanged from pre-existing behaviour.
-		if ($roles['isAanbod'] === true && $roles['isBeheerder'] !== true) {
-			$applicatieIds = $this->gebruikService->getApplicationIds(
-				options: ['provider' => $roles['orgUuid']]
-			);
-
-			if ($applicatieIds === []) {
-				return null;
-			}
-
-			if (isset($options['module']) === true && in_array($options['module'], $applicatieIds) === false) {
-				return null;
-			}
-
-			if (isset($options['module']) === false) {
-				$options['module'] = $applicatieIds;
-			}
-
-			return $options;
+		if (self::isVendorOnly(roles: $roles) === true) {
+			return $this->scopeToVendorApplications(roles: $roles, options: $options);
 		}
 
 		// Gebruik-beheerder (municipality/samenwerking, REQ-003): scope to
-		// the caller's own organisation's applicatielandschap via the
-		// `afnemer` relationship — the same field that defines "this
-		// gebruik record is used by my organisation" throughout the rest of
-		// this codebase (AangebodenGebruikService::getGebruiksWhereAfnemer).
-		// Deny (return null) rather than silently widening if the caller
-		// already asked for a different organisation's afnemer filter.
+		// the caller's own organisation's applicatielandschap.
 		if ($roles['isBeheerder'] === true) {
-			if (isset($options['consumer']) === true && $options['consumer'] !== $roles['orgUuid']) {
-				return null;
-			}
-
-			$options['consumer'] = $roles['orgUuid'];
-
-			return $options;
+			return self::scopeToOwnOrganisation(roles: $roles, options: $options);
 		}
 
 		return $options;
 	}//end applyAanbodScopeToOptions()
+
+	/**
+	 * Whether the caller may read gebruik data without any scope.
+	 *
+	 * @param array<string,mixed> $roles Role flags.
+	 *
+	 * @return bool True for admins and ambtenaren.
+	 */
+	private static function isUnrestrictedReader(array $roles): bool {
+		return $roles['isAdmin'] === true || ($roles['isAmbtenaar'] ?? false) === true;
+	}//end isUnrestrictedReader()
+
+	/**
+	 * Whether the caller is a vendor (aanbod) without the gebruik-beheerder role.
+	 *
+	 * @param array<string,mixed> $roles Role flags.
+	 *
+	 * @return bool True for a pure aanbod-beheerder.
+	 */
+	private static function isVendorOnly(array $roles): bool {
+		return $roles['isAanbod'] === true && $roles['isBeheerder'] !== true;
+	}//end isVendorOnly()
+
+	/**
+	 * Whether the request asks for a module the vendor does not offer.
+	 *
+	 * @param array<string,mixed>    $options       Current request params.
+	 * @param array<int, string|int> $applicatieIds The vendor's applicatie ids.
+	 *
+	 * @return bool True when a module filter is set and not one of the vendor's.
+	 */
+	private static function asksForeignModule(array $options, array $applicatieIds): bool {
+		return isset($options['module']) === true && in_array($options['module'], $applicatieIds) === false;
+	}//end asksForeignModule()
+
+	/**
+	 * Scope a vendor's read to the applicaties the vendor itself offers.
+	 *
+	 * Refuses (null) when the vendor offers nothing, or when the request
+	 * already asks for a module the vendor does not offer.
+	 *
+	 * @param array<string,mixed> $roles   Role flags.
+	 * @param array<string,mixed> $options Current request params.
+	 *
+	 * @return array<string,mixed>|null The scoped options, or null to refuse.
+	 */
+	private function scopeToVendorApplications(array $roles, array $options): ?array {
+		$applicatieIds = $this->gebruikService->getApplicationIds(
+			options: ['provider' => $roles['orgUuid']]
+		);
+
+		if ($applicatieIds === []) {
+			return null;
+		}
+
+		if (self::asksForeignModule(options: $options, applicatieIds: $applicatieIds) === true) {
+			return null;
+		}
+
+		if (isset($options['module']) === false) {
+			$options['module'] = $applicatieIds;
+		}
+
+		return $options;
+	}//end scopeToVendorApplications()
+
+	/**
+	 * Scope a gebruik-beheerder's read to their own organisation as afnemer.
+	 *
+	 * Uses the `afnemer` relationship, the same field that defines "this
+	 * gebruik record is used by my organisation" throughout the rest of this
+	 * codebase (AangebodenGebruikService::getGebruiksWhereAfnemer). Refuses
+	 * (null) rather than silently widening when the request already asks for
+	 * a different organisation's afnemer filter.
+	 *
+	 * @param array<string,mixed> $roles   Role flags.
+	 * @param array<string,mixed> $options Current request params.
+	 *
+	 * @return array<string,mixed>|null The scoped options, or null to refuse.
+	 */
+	private static function scopeToOwnOrganisation(array $roles, array $options): ?array {
+		if (isset($options['consumer']) === true && $options['consumer'] !== $roles['orgUuid']) {
+			return null;
+		}
+
+		$options['consumer'] = $roles['orgUuid'];
+
+		return $options;
+	}//end scopeToOwnOrganisation()
 
 	/**
 	 * Fetch gebruiken for a deelnemer.

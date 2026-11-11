@@ -1,0 +1,157 @@
+{
+    "vendor-org": {
+        "label": "Stackiq",
+        "collections": [
+            {
+                "id": "vendorDiensten",
+                "register": "stackiq",
+                "schema": "catalogService",
+                "scopeField": "provider",
+                "scopeClaim": "organisationId",
+                "label": "My services",
+                "listable": true,
+                "fields": [
+                    "name",
+                    "shortDescription",
+                    "longDescription",
+                    "website",
+                    "type",
+                    "modules"
+                ]
+            },
+            {
+                "id": "vendorGebruik",
+                "register": "stackiq",
+                "schema": "usage",
+                "scopeField": "provider",
+                "scopeClaim": "organisationId",
+                "label": "Deployments of my offerings",
+                "listable": true,
+                "fields": [
+                    "status",
+                    "startDateAcquisition",
+                    "startDatePlanned",
+                    "startDateInProduction",
+                    "startDateOutPhasing",
+                    "startDateOutPhased",
+                    "consumer",
+                    "module",
+                    "moduleVersion"
+                ]
+            },
+            {
+                "id": "vendorContracts",
+                "register": "stackiq",
+                "schema": "catalogContract",
+                "scopeField": "provider",
+                "via": "service",
+                "scopeClaim": "organisationId",
+                "minTrust": "substantial",
+                "label": "Contracts for my services",
+                "listable": true,
+                "fields": [
+                    "service",
+                    "usage",
+                    "startDate",
+                    "endDate",
+                    "contractNumber",
+                    "contractType",
+                    "cost",
+                    "costPeriod",
+                    "contactPersonProvider",
+                    "documentReference",
+                    "status"
+                ]
+            },
+            {
+                "id": "vendorCompliancy",
+                "register": "stackiq",
+                "schema": "compliancy",
+                "scopeField": "provider",
+                "via": "module",
+                "scopeClaim": "organisationId",
+                "label": "Compliance of my modules",
+                "listable": true,
+                "fields": [
+                    "standardVersion",
+                    "standardGemma",
+                    "module",
+                    "url"
+                ]
+            }
+        ],
+        "actions": [],
+        "notifications": [],
+        "publicRecords": [
+            {
+                "id": "softwareCatalogue",
+                "label": "Software catalogue",
+                "listProvider": "publicCatalogue",
+                "recordProvider": "publicCatalogueEntry"
+            }
+        ]
+    },
+    "participant-org": {
+        "label": "Stackiq",
+        "collections": [
+            {
+                "id": "participantGebruik",
+                "register": "stackiq",
+                "schema": "usage",
+                "scopeField": "consumer",
+                "scopeClaim": "organisationId",
+                "label": "Software we use",
+                "listable": true,
+                "fields": [
+                    "status",
+                    "startDateAcquisition",
+                    "startDatePlanned",
+                    "startDateInProduction",
+                    "startDateOutPhasing",
+                    "startDateOutPhased",
+                    "provider",
+                    "module",
+                    "moduleVersion",
+                    "diensten"
+                ]
+            },
+            {
+                "id": "participantContracts",
+                "register": "stackiq",
+                "schema": "catalogContract",
+                "scopeField": "consumer",
+                "via": "usage",
+                "scopeClaim": "organisationId",
+                "minTrust": "substantial",
+                "label": "Our contracts",
+                "listable": true,
+                "fields": [
+                    "service",
+                    "usage",
+                    "startDate",
+                    "endDate",
+                    "contractNumber",
+                    "contractType",
+                    "cost",
+                    "costPeriod",
+                    "contactPersonUser",
+                    "documentReference",
+                    "status"
+                ]
+            }
+        ],
+        "actions": [],
+        "notifications": [],
+        "publicRecords": [
+            {
+                "id": "softwareCatalogue",
+                "label": "Software catalogue",
+                "listProvider": "publicCatalogue",
+                "recordProvider": "publicCatalogueEntry"
+            }
+        ]
+    },
+    "citizen": null,
+    "": null,
+    "no-audience": null
+}

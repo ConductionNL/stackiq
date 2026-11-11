@@ -3,19 +3,21 @@
 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 */
 
 <script setup>
-import { navigationStore, objectStore } from '../../store/store.js'
+import { objectStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog
-		:name="dialogTitle"
-		:canClose="true"
-		size="normal"
-		class="mass-action-dialog"
-		@update:open="handleDialogClose">
-		<!-- Object Selection Review -->
-		<div v-if="success === null" class="validate-step">
-			<NcNoteCard type="info">
+	<MassObjectDialog
+		:title="dialogTitle"
+		stepClass="validate-step"
+		noteType="info"
+		:singleTitle="t('stackiq', 'Publication to Validate')"
+		:successOne="t('stackiq', 'Publication successfully validated')"
+		:successMany="t('stackiq', 'Publications successfully validated')"
+		buttonVariant="primary"
+		:buttonLabel="t('stackiq', 'Validate')"
+		:action="massAction">
+		<template #note>
 				<strong>{{ t('stackiq', 'When to use mass validation:') }}</strong
 				><br />
 				{{
@@ -48,89 +50,23 @@ import { navigationStore, objectStore } from '../../store/store.js'
 						'Publications will be saved without modification to trigger validation and enrichment processes against the current schema.',
 					)
 				}}
-			</NcNoteCard>
-
-			<SelectedObjectsList
-				:title="
-					(objectStore.selectedObjects?.length || 0) === 1
-						? t('stackiq', 'Publication to Validate')
-						: t('stackiq', 'Selected Publications')
-				"
-				:showRemove="true" />
-		</div>
-
-		<NcNoteCard v-if="success" type="success">
-			<p>
-				{{
-					originalSelectedCount > 1
-						? t('stackiq', 'Publications successfully validated')
-						: t('stackiq', 'Publication successfully validated')
-				}}
-			</p>
-		</NcNoteCard>
-		<NcNoteCard v-if="error" type="error">
-			<p>{{ error }}</p>
-		</NcNoteCard>
-
-		<template #actions>
-			<NcButton @click="closeDialog">
-				<template #icon>
-					<Cancel :size="20" />
-				</template>
-				{{
-					success === null ? t('stackiq', 'Cancel') : t('stackiq', 'Close')
-				}}
-			</NcButton>
-			<NcButton
-				v-if="success === null"
-				:disabled="
-					loading || (objectStore.selectedObjects?.length || 0) === 0
-				"
-				variant="primary"
-				@click="validateObjects()">
-				<template #icon>
-					<NcLoadingIcon v-if="loading" :size="20" />
-					<CheckCircle v-if="!loading" :size="20" />
-				</template>
-				{{ t('stackiq', 'Validate') }}
-			</NcButton>
 		</template>
-	</NcDialog>
+		<template #icon>
+			<CheckCircle :size="20" />
+		</template>
+	</MassObjectDialog>
 </template>
 
 <script>
-import { NcButton, NcDialog, NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
-import Cancel from 'vue-material-design-icons/Cancel.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
-import SelectedObjectsList from '../../components/SelectedObjectsList.vue'
-import { runMassObjectAction } from '../../utils/massObjectAction.js'
+import MassObjectDialog from './MassObjectDialog.vue'
 
 export default {
 	name: 'MassValidateObjects',
 	components: {
-		NcDialog,
-		NcButton,
-		NcLoadingIcon,
-		NcNoteCard,
-		SelectedObjectsList,
+		MassObjectDialog,
 		// Icons
 		CheckCircle,
-		Cancel,
-	},
-
-	props: {
-		// No props needed - always uses selected objects from store
-	},
-
-	data() {
-		return {
-			success: null,
-			loading: false,
-			error: false,
-			result: null,
-			closeModalTimeout: null,
-			originalSelectedCount: 0,
-		}
 	},
 
 	computed: {
@@ -159,77 +95,27 @@ export default {
 				count,
 			})
 		},
-	},
-
-	mounted() {
-		this.initializeSelection()
-	},
-
-	methods: {
-		/**
-		 * @spec openspec/specs/fe-object-modals/spec.md
-		 */
-		initializeSelection() {
-			// Store the original count for success message
-			this.originalSelectedCount = objectStore.selectedObjects?.length || 0
-		},
 
 		/**
+		 * The store call and the texts of this mass action.
+		 *
+		 * @return {object} The action, as runMassObjectAction takes it
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
-		closeDialog() {
-			// Clear any pending timeout that might reopen the dialog
-			if (this.closeModalTimeout) {
-				clearTimeout(this.closeModalTimeout)
-				this.closeModalTimeout = null
-			}
-			navigationStore.setDialog(false)
-		},
-
-		/**
-		 * @param isOpen
-		 * @spec openspec/specs/fe-object-modals/spec.md
-		 */
-		handleDialogClose(isOpen) {
-			if (!isOpen) {
-				this.closeDialog()
-			}
-		},
-
-		/**
-		 * @spec openspec/specs/fe-object-modals/spec.md
-		 */
-		async validateObjects() {
-			await runMassObjectAction(this, {
+		massAction() {
+			return {
 				run: () =>
 					objectStore.massValidateObjects([...this.objectsToValidate]),
+
 				failedText: (count) =>
 					this.t('stackiq', 'Failed to validate {count} objects', {
 						count,
 					}),
+
 				errorText: () =>
 					this.t('stackiq', 'An error occurred while validating objects'),
-			})
+			}
 		},
 	},
 }
 </script>
-
-<style scoped>
-.validate-step {
-	padding: 0;
-}
-
-.step-title {
-	margin-top: 0 !important;
-	margin-bottom: 16px;
-	color: var(--color-main-text);
-}
-</style>
-
-<style scoped>
-/* Ensure mass action dialogs appear on top of other modals */
-.mass-action-dialog {
-	z-index: 10000 !important;
-}
-</style>

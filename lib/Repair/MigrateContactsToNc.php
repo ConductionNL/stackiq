@@ -224,7 +224,7 @@ class MigrateContactsToNc implements IRepairStep {
 			$readObjects = function () use ($objectService, $registerId, $schemaId) {
 				return $objectService->setRegister($registerId)
 					->setSchema($schemaId)
-					->findAll([], false, false);
+					->findAll(config: [], _rbac: false, _multitenancy: false);
 			};
 
 			$objects = $this->runElevated(objectService: $objectService, work: $readObjects);
@@ -311,13 +311,13 @@ class MigrateContactsToNc implements IRepairStep {
 			// with released OR versions that do not ship runAsSystem() yet.
 			$saveObject = function () use ($objectService, $data, $registerId, $schemaId, $uuid) {
 				return $objectService->saveObject(
-					$data,
-					[],
-					$registerId,
-					$schemaId,
-					$uuid,
-					false,
-					false
+					object: $data,
+					extend: [],
+					register: $registerId,
+					schema: $schemaId,
+					uuid: $uuid,
+					_rbac: false,
+					_multitenancy: false
 				);
 			};
 

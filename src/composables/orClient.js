@@ -172,24 +172,60 @@ export function buildObjectUrl({
 	action = null,
 	withLang = true,
 }) {
-	if (
-		register === undefined
-		|| register === null
-		|| schema === undefined
-		|| schema === null
-	) {
+	assertObjectType(register, schema)
+	const url =
+		`${OR_API_BASE}/objects/${register}/${schema}`
+		+ objectIdPath(uuid)
+		+ objectActionPath(action)
+
+	return withLang ? withLanguageParam(url) : url
+}
+
+/**
+ * Refuse a register or schema that is undefined or null (0 and '' are ids).
+ *
+ * @param {string|number|null|undefined} register Register ID.
+ * @param {string|number|null|undefined} schema Schema ID.
+ * @throws {Error} When either is missing.
+ */
+function assertObjectType(register, schema) {
+	if (isAbsent(register) || isAbsent(schema)) {
 		throw new Error(
 			'register and schema are required to build an OpenRegister URL',
 		)
 	}
+}
 
-	let url = `${OR_API_BASE}/objects/${register}/${schema}`
-	if (uuid) {
-		url += `/${uuid}`
-	}
-	if (action) {
-		url += action === 'logs' ? '/audit-trails' : `/${action}`
-	}
+/**
+ * Whether a URL part is absent: undefined or null (0 and '' are present).
+ *
+ * @param {*} value The value.
+ * @return {boolean} Whether it is absent.
+ */
+function isAbsent(value) {
+	return value === undefined || value === null
+}
 
-	return withLang ? withLanguageParam(url) : url
+/**
+ * The sub-path of an object id: none without one.
+ *
+ * @param {string|null} uuid The object UUID/ID, or none for collection operations.
+ * @return {string} The sub-path.
+ */
+function objectIdPath(uuid) {
+	return uuid ? `/${uuid}` : ''
+}
+
+/**
+ * The sub-path of an object action: none without an action, `/audit-trails`
+ * for the logs, otherwise `/<action>`.
+ *
+ * @param {string|null} action The action (publish, lock, logs…), or none.
+ * @return {string} The sub-path.
+ */
+export function objectActionPath(action) {
+	if (!action) {
+		return ''
+	}
+	return action === 'logs' ? '/audit-trails' : `/${action}`
 }

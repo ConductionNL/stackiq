@@ -111,6 +111,7 @@ import Save from 'vue-material-design-icons/ContentSave.vue'
 import Information from 'vue-material-design-icons/Information.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 import AlwaysVisibleSectionInfoModal from '../modals/AlwaysVisibleSectionInfoModal.vue'
+import { settingsSectionProps } from './settingsSectionProps.js'
 
 /**
  * Always Visible Section component
@@ -134,101 +135,7 @@ export default defineComponent({
 	},
 
 	props: {
-		/**
-		 * Section name
-		 */
-		name: {
-			type: String,
-			required: true,
-		},
-
-		/**
-		 * Section description
-		 */
-		description: {
-			type: String,
-			default: '',
-		},
-
-		/**
-		 * Documentation URL
-		 */
-		docUrl: {
-			type: String,
-			default: '',
-		},
-
-		/**
-		 * Loading state
-		 */
-		loading: {
-			type: Boolean,
-			default: false,
-		},
-
-		/**
-		 * Show save button
-		 */
-		showSaveButton: {
-			type: Boolean,
-			default: false,
-		},
-
-		/**
-		 * Show refresh button
-		 */
-		showRefreshButton: {
-			type: Boolean,
-			default: false,
-		},
-
-		/**
-		 * Save button text
-		 */
-		saveButtonText: {
-			type: String,
-			default: 'Save',
-		},
-
-		/**
-		 * Refresh button text
-		 */
-		refreshButtonText: {
-			type: String,
-			default: 'Refresh',
-		},
-
-		/**
-		 * Can save state
-		 */
-		canSave: {
-			type: Boolean,
-			default: true,
-		},
-
-		/**
-		 * Saving state
-		 */
-		saving: {
-			type: Boolean,
-			default: false,
-		},
-
-		/**
-		 * Refreshing state
-		 */
-		refreshing: {
-			type: Boolean,
-			default: false,
-		},
-
-		/**
-		 * Has info content
-		 */
-		hasInfoContent: {
-			type: Boolean,
-			default: false,
-		},
+		...settingsSectionProps,
 
 		/**
 		 * Optional loading text shown below the spinner

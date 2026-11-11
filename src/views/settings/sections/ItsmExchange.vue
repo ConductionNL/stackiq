@@ -123,6 +123,28 @@ import { apiRequest } from '../../../utils/adminApi.js'
  *
  * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
  */
+/**
+ * The organisations in the organisation register the exchange can run for: every one but suppliers.
+ *
+ * @param {{register: string, schema: string}} source The register and organisation schema.
+ * @return {Promise<Array<{id: string, name: string}>>} The organisations.
+ */
+async function listExchangeOrganisations(source) {
+	const response = await axios.get(
+		generateUrl('/apps/openregister/api/objects/{register}/{schema}', {
+			register: source.register,
+			schema: source.schema,
+		}),
+		{ params: { _limit: 500 } },
+	)
+	return (response?.data?.results || [])
+		.filter((org) => org.type !== 'Supplier')
+		.map((org) => ({
+			id: org['@self']?.id || org.id,
+			name: org.name || org['@self']?.name || org.id,
+		}))
+}
+
 export default defineComponent({
 	name: 'ItsmExchange',
 	components: {
@@ -216,34 +238,7 @@ export default defineComponent({
 			this.loadingOrganisations = true
 			this.organisationLoadError = ''
 			try {
-				const configResponse = await axios.get(
-					generateUrl('/apps/stackiq/api/voorzieningen/config'),
-				)
-				const register = configResponse?.data?.config?.register
-				const schema = configResponse?.data?.config?.organisatie_schema
-				if (!register || !schema) {
-					this.organisationLoadError = t(
-						'stackiq',
-						'The organisation register is not configured, so there are no organisations to choose from.',
-					)
-					return
-				}
-				const response = await axios.get(
-					generateUrl(
-						'/apps/openregister/api/objects/{register}/{schema}',
-						{
-							register,
-							schema,
-						},
-					),
-					{ params: { _limit: 500 } },
-				)
-				this.organisations = (response?.data?.results || [])
-					.filter((org) => org.type !== 'Supplier')
-					.map((org) => ({
-						id: org['@self']?.id || org.id,
-						name: org.name || org['@self']?.name || org.id,
-					}))
+				await this.fetchOrganisations()
 			} catch {
 				this.organisationLoadError = t(
 					'stackiq',
@@ -252,6 +247,32 @@ export default defineComponent({
 			} finally {
 				this.loadingOrganisations = false
 			}
+		},
+
+		/**
+		 * Read the organisation register from the voorzieningen config and list its organisations.
+		 *
+		 * @return {Promise<void>}
+		 * @throws {Error} When the config or the list cannot be loaded.
+		 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
+		 */
+		async fetchOrganisations() {
+			const configResponse = await axios.get(
+				generateUrl('/apps/stackiq/api/voorzieningen/config'),
+			)
+			const register = configResponse?.data?.config?.register
+			const schema = configResponse?.data?.config?.organisatie_schema
+			if (!register || !schema) {
+				this.organisationLoadError = t(
+					'stackiq',
+					'The organisation register is not configured, so there are no organisations to choose from.',
+				)
+				return
+			}
+			this.organisations = await listExchangeOrganisations({
+				register,
+				schema,
+			})
 		},
 
 		/**

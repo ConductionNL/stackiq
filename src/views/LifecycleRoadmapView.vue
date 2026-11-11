@@ -139,6 +139,7 @@ import {
 	phaseOrder,
 	resolveUuid,
 } from '../utils/lifecyclePhase.js'
+import { fetchObjectTypeCollection } from '../utils/objectTypeCollection.js'
 
 const EOL_WINDOW_DAYS = 180
 
@@ -356,31 +357,7 @@ export default {
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		async fetchType(type) {
-			// Register the object type from the resolved config before fetching —
-			// the slug-based auto-registration only fires when the settings
-			// `availableRegisters` carries a register slugged exactly
-			// 'stackiq', which is not guaranteed on every instance. Without
-			// this the nc-vue object store throws "Object type <type> is not
-			// registered".
-			if (
-				typeof objectStore.registerObjectType === 'function'
-				&& !objectStore.objectTypeRegistry?.[type]
-			) {
-				let cfg = null
-				try {
-					cfg = objectStore.getSchemaConfig?.(type)
-				} catch (cfgError) {
-					// getSchemaConfig throws when no schema/register resolves;
-					// fall through so fetchCollection surfaces its own error.
-				}
-				if (cfg?.register && cfg?.schema) {
-					objectStore.registerObjectType(type, cfg.schema, cfg.register)
-				}
-			}
-
-			if (typeof objectStore.fetchCollection === 'function') {
-				await objectStore.fetchCollection(type, { _limit: 1000 })
-			}
+			await fetchObjectTypeCollection(objectStore, type)
 		},
 
 		/**

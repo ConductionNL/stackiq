@@ -132,57 +132,79 @@ class PublicationController extends Controller {
 	 * aanbod-beheerder whose organisation owns the entry. A peer-sourced
 	 * (federated) entry is never publishable locally.
 	 *
+	 * The guards run in this order, each fail-closed with its own response:
+	 * not logged in (401); then the entry (entryRefusal): type not publishable
+	 * (400), entry not found (404), peer-sourced (403); then the caller
+	 * (callerRefusal): admin passes, anyone else must be an aanbod-beheerder of
+	 * the owning organisation (403 otherwise).
+	 *
 	 * @param string $objectType The catalog object type.
 	 * @param string $uuid The entry uuid.
 	 *
 	 * @return JSONResponse|null Error response, or null when authorized.
 	 *
 	 * @spec openspec/specs/open-data-publishing/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Complexity 11 (threshold 10). Every branch is
-	 * an independent fail-closed IDOR guard — not logged in, entry not found, entry is a
-	 * federated peer mirror, caller is not admin, caller's organisation does not own the entry —
-	 * each returning its own JSONResponse. Collapsing them would either merge distinct refusal
-	 * reasons or hide a guard behind a helper, both of which make the authorization path harder
-	 * to audit than the complexity score is worth.
-	 *
-	 * @SuppressWarnings(PHPMD.NPathComplexity) NPath 384 (threshold 200) is the product of those
-	 * same independent guard clauses; the guards are sequential and flat, not deeply nested.
 	 */
 	private function authorizeEntry(string $objectType, string $uuid): ?JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
+		$check = new PublicationAccessCheck(objectType: $objectType, uuid: $uuid);
+		$check->user = $this->userSession->getUser();
+		if ($check->user === null) {
+			return $this->refusal(message: 'Not logged in', statusCode: Http::STATUS_UNAUTHORIZED);
 		}
 
-		if ($this->publicationService->isPublishableType($objectType) === false) {
-			return new JSONResponse(
-				data: ['message' => 'Object type is not publishable'],
-				statusCode: Http::STATUS_BAD_REQUEST
-			);
+		$refusal = $this->entryRefusal(check: $check);
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
-		$entry = $this->publicationService->resolveEntry($objectType, $uuid);
+		return $this->callerRefusal(check: $check);
+	}//end authorizeEntry()
+
+	/**
+	 * Refuse an entry that cannot be published: its type is not publishable,
+	 * it does not exist, or it is peer-sourced. Keeps the entry data on the check.
+	 *
+	 * @param PublicationAccessCheck $check The check.
+	 *
+	 * @return JSONResponse|null Error response, or null when the entry may be published.
+	 *
+	 * @spec openspec/specs/open-data-publishing/spec.md
+	 */
+	private function entryRefusal(PublicationAccessCheck $check): ?JSONResponse {
+		if ($this->publicationService->isPublishableType($check->objectType) === false) {
+			return $this->refusal(message: 'Object type is not publishable', statusCode: Http::STATUS_BAD_REQUEST);
+		}
+
+		$entry = $this->publicationService->resolveEntry($check->objectType, $check->uuid);
 		if ($entry === null) {
-			return new JSONResponse(data: ['message' => 'Entry not found'], statusCode: Http::STATUS_NOT_FOUND);
+			return $this->refusal(message: 'Entry not found', statusCode: Http::STATUS_NOT_FOUND);
 		}
 
-		$data = $entry['data'];
+		$check->data = $entry['data'];
 
 		// Peer-sourced (federated) entries are read-only locally.
-		$source = $data['_source'] ?? null;
-		if (is_array($source) === true && trim((string)($source['instance'] ?? '')) !== '') {
-			return new JSONResponse(
-				data: ['message' => 'Peer-sourced entries cannot be published locally'],
-				statusCode: Http::STATUS_FORBIDDEN
-			);
+		if ($this->isPeerSourced(data: $check->data) === true) {
+			return $this->refusal(message: 'Peer-sourced entries cannot be published locally', statusCode: Http::STATUS_FORBIDDEN);
 		}
 
+		return null;
+	}//end entryRefusal()
+
+	/**
+	 * Refuse a caller who is neither an admin nor an aanbod-beheerder of the organisation that owns the entry.
+	 *
+	 * @param PublicationAccessCheck $check The check, with the caller and the entry data.
+	 *
+	 * @return JSONResponse|null The logged 403, or null when the caller may publish.
+	 *
+	 * @spec openspec/specs/open-data-publishing/spec.md
+	 */
+	private function callerRefusal(PublicationAccessCheck $check): ?JSONResponse {
 		$groupNames = array_map(
 			static function (IGroup $group) {
 				return $group->getGID();
 			},
-			$this->groupManager->getUserGroups(user: $user)
+			$this->groupManager->getUserGroups(user: $check->user)
 		);
 
 		if (in_array('admin', $groupNames, true) === true) {
@@ -190,41 +212,71 @@ class PublicationController extends Controller {
 		}
 
 		// Non-admins must be an aanbod-beheerder that owns the entry.
-		if (in_array('aanbod-beheerder', $groupNames, true) === false) {
-			return $this->forbidden(objectType: $objectType, uuid: $uuid, uid: $user->getUID());
+		if (in_array('aanbod-beheerder', $groupNames, true) === false || $this->ownsEntry(check: $check) === false) {
+			return $this->forbidden(check: $check);
 		}
 
+		return null;
+	}//end callerRefusal()
+
+	/**
+	 * Whether the caller's organisation is the entry's owner (`_organisation`, else `provider`); both must be set.
+	 *
+	 * @param PublicationAccessCheck $check The check, with the caller and the entry data.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/open-data-publishing/spec.md
+	 */
+	private function ownsEntry(PublicationAccessCheck $check): bool {
 		$orgUuid = (string)$this->config->getUserValue(
-			userId: $user->getUID(),
+			userId: $check->user->getUID(),
 			appName: 'core',
 			key: 'organisation'
 		);
 
-		$ownerOrg = (string)($data['_organisation'] ?? $data['provider'] ?? '');
-		if ($orgUuid === '' || $ownerOrg === '' || $orgUuid !== $ownerOrg) {
-			return $this->forbidden(objectType: $objectType, uuid: $uuid, uid: $user->getUID());
-		}
+		$ownerOrg = (string)($check->data['_organisation'] ?? $check->data['provider'] ?? '');
+		return $orgUuid !== '' && $ownerOrg !== '' && $orgUuid === $ownerOrg;
+	}//end ownsEntry()
 
-		return null;
-	}//end authorizeEntry()
+	/**
+	 * Whether an entry comes from a peer: its `_source` names a non-blank instance.
+	 *
+	 * @param array<string, mixed> $data The entry data.
+	 *
+	 * @return bool
+	 *
+	 * @spec openspec/specs/open-data-publishing/spec.md
+	 */
+	private function isPeerSourced(array $data): bool {
+		$source = $data['_source'] ?? null;
+		return is_array($source) === true && trim((string)($source['instance'] ?? '')) !== '';
+	}//end isPeerSourced()
+
+	/**
+	 * A refusal with a message.
+	 *
+	 * @param string $message The message.
+	 * @param int $statusCode The HTTP status.
+	 *
+	 * @return JSONResponse
+	 */
+	private function refusal(string $message, int $statusCode): JSONResponse {
+		return new JSONResponse(data: ['message' => $message], statusCode: $statusCode);
+	}//end refusal()
 
 	/**
 	 * Build a logged 403 forbidden response.
 	 *
-	 * @param string $objectType The object type.
-	 * @param string $uuid The entry uuid.
-	 * @param string $uid The caller uid.
+	 * @param PublicationAccessCheck $check The check, with the entry and the caller.
 	 *
 	 * @return JSONResponse The 403 response.
 	 */
-	private function forbidden(string $objectType, string $uuid, string $uid): JSONResponse {
+	private function forbidden(PublicationAccessCheck $check): JSONResponse {
 		$this->logger->warning(
 			'PublicationController: publish refused (not entry owner)',
-			['objectType' => $objectType, 'uuid' => $uuid, 'uid' => $uid]
+			['objectType' => $check->objectType, 'uuid' => $check->uuid, 'uid' => $check->user->getUID()]
 		);
-		return new JSONResponse(
-			data: ['message' => 'You do not have permission to publish this entry'],
-			statusCode: Http::STATUS_FORBIDDEN
-		);
+		return $this->refusal(message: 'You do not have permission to publish this entry', statusCode: Http::STATUS_FORBIDDEN);
 	}//end forbidden()
 }//end class

@@ -415,7 +415,7 @@ class GroupHandler {
 			return null;
 		}
 
-		$organizationObject = $objectService->find($organisationUuid, [], false, $registerId, $organisationSchemaId);
+		$organizationObject = $objectService->find(id: $organisationUuid, _extend: [], files: false, register: $registerId, schema: $organisationSchemaId);
 		if ($organizationObject === null) {
 			return null;
 		}

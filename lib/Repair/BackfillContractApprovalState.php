@@ -112,7 +112,7 @@ class BackfillContractApprovalState implements IRepairStep {
 		try {
 			$contracts = $objectService->setRegister($registerId)
 				->setSchema($schemaId)
-				->findAll([], false, false);
+				->findAll(config: [], _rbac: false, _multitenancy: false);
 		} catch (\Throwable $e) {
 			$output->warning(sprintf('Could not read contract objects: %s', $e->getMessage()));
 			$this->logger->error('[BackfillContractApprovalState] Failed to read contracts', ['error' => $e->getMessage()]);
