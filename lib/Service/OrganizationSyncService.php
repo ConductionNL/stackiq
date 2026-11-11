@@ -1780,20 +1780,7 @@ class OrganizationSyncService {
 	 */
 	private function getAdminUsers(): array {
 		try {
-			$groupManager = $this->container->get('OCP\IGroupManager');
-			$adminGroup = $groupManager->get('admin');
-
-			if (empty($adminGroup) === false) {
-				$adminUsers = $adminGroup->getUsers();
-				$adminUsernames = [];
-				foreach ($adminUsers as $user) {
-					$adminUsernames[] = $user->getUID();
-				}
-
-				return $adminUsernames;
-			}
-
-			return [];
+			return AdminGroupUids::of(groupManager: $this->container->get('OCP\IGroupManager'));
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'OrganizationSyncService: Failed to get admin users',

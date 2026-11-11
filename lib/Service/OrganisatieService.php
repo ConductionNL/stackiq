@@ -571,20 +571,7 @@ class OrganisatieService {
 	 */
 	public function getAdminGroupUsernames(): array {
 		try {
-			$groupManager = $this->container->get('OCP\IGroupManager');
-			$adminGroup = $groupManager->get('admin');
-
-			if ($adminGroup !== null) {
-				$adminUsers = $adminGroup->getUsers();
-				$adminUsernames = [];
-				foreach ($adminUsers as $user) {
-					$adminUsernames[] = $user->getUID();
-				}
-
-				return $adminUsernames;
-			}
-
-			return [];
+			return AdminGroupUids::of(groupManager: $this->container->get('OCP\IGroupManager'));
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'OrganisatieService: Failed to get admin users',
