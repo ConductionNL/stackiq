@@ -214,7 +214,7 @@ import Refresh from 'vue-material-design-icons/Refresh.vue'
 import { useLiveCollections } from '../composables/useLiveCollections.js'
 import { objectStore } from '../store/store.js'
 import {
-	LICENSE_TYPE,
+	licenceMixCounts,
 	perOrganisationPosture,
 	perVendorRollup,
 	portfolioPosture,
@@ -224,21 +224,6 @@ import {
 import { resolveUuid } from '../utils/lifecyclePhase.js'
 import { fetchObjectTypeCollection } from '../utils/objectTypeCollection.js'
 import { licenceMetricLabel, seatStateLabel } from '../utils/seatLabels.js'
-
-/**
- * The open, closed and unknown counts of a vendor's licence mix.
- *
- * @param {object} mix Licence type → count.
- * @return {{openCount: number, closedCount: number, unknownCount: number}} The counts.
- * @spec openspec/specs/software-license-posture/spec.md
- */
-function licenceMixCounts(mix) {
-	return {
-		openCount: mix[LICENSE_TYPE.OPEN] || 0,
-		closedCount: mix[LICENSE_TYPE.CLOSED] || 0,
-		unknownCount: mix[LICENSE_TYPE.UNKNOWN] || 0,
-	}
-}
 
 /**
  * @class LicensePostureView

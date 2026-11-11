@@ -464,3 +464,19 @@ export function seatRows(contracts, usages) {
 	const rank = (row) => (row.state === SEAT_STATE.OVER ? 0 : 1)
 	return rows.sort((a, b) => rank(a) - rank(b) || b.over - a.over)
 }
+
+/**
+ * The open, closed and unknown counts of a vendor's licence mix.
+ *
+ * @param {object} mix Licence type → count.
+ * @return {{openCount: number, closedCount: number, unknownCount: number}} The counts.
+ *
+ * @spec openspec/specs/software-license-posture/spec.md
+ */
+export function licenceMixCounts(mix) {
+	return {
+		openCount: mix[LICENSE_TYPE.OPEN] || 0,
+		closedCount: mix[LICENSE_TYPE.CLOSED] || 0,
+		unknownCount: mix[LICENSE_TYPE.UNKNOWN] || 0,
+	}
+}
