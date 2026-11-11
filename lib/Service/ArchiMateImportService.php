@@ -86,11 +86,11 @@ class ArchiMateImportService {
 	private array $lastSaveTiming = [];
 
 	/**
-	 * Cache for camelCase property name conversions to avoid redundant processing
+	 * CamelCase property names, with their conversion cache; created on first use.
 	 *
-	 * @var array<string, string>
+	 * @var ArchiMate\CamelCaseNames|null
 	 */
-	private array $camelCaseCache = [];
+	private ?ArchiMate\CamelCaseNames $camelCaseNames = null;
 
 	/**
 	 * Cache for identifier extraction patterns by section type
@@ -1979,35 +1979,8 @@ class ArchiMateImportService {
 	 * @return string CamelCase version of the property name
 	 */
 	private function convertToCamelCase(string $propertyName): string {
-		// OPTIMIZATION: Check cache first to avoid redundant conversions.
-		if (isset($this->camelCaseCache[$propertyName]) === true) {
-			return $this->camelCaseCache[$propertyName];
-		}
-
-		// Remove any leading/trailing whitespace.
-		$propertyName = trim($propertyName);
-
-		// Split by spaces and convert to camelCase.
-		$words = explode(' ', $propertyName);
-
-		if (count($words) === 1) {
-			// Single word, just lowercase it.
-			$result = strtolower($words[0]);
-		} else {
-			// First word is lowercase, subsequent words are capitalized.
-			$camelCase = strtolower($words[0]);
-
-			for ($i = 1; $i < count($words); $i++) {
-				$camelCase .= ucfirst(strtolower($words[$i]));
-			}
-
-			$result = $camelCase;
-		}
-
-		// OPTIMIZATION: Cache the result for future use.
-		$this->camelCaseCache[$propertyName] = $result;
-
-		return $result;
+		$this->camelCaseNames ??= new ArchiMate\CamelCaseNames();
+		return $this->camelCaseNames->convertName(propertyName: $propertyName);
 	}//end convertToCamelCase()
 
 	/**
@@ -3104,7 +3077,7 @@ class ArchiMateImportService {
 		// MEMORY CLEANUP: Free all intermediate lookups and caches before database operations.
 		$memoryBeforeCleanup = memory_get_usage(true);
 		unset($allLookups, $elementsLookup, $propDefMap, $scope);
-		$this->camelCaseCache = [];
+		$this->camelCaseNames = null;
 		// Clear property name cache.
 		$this->idPatternCache = [];
 		// Clear identifier pattern cache.
