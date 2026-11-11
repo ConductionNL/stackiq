@@ -404,35 +404,53 @@ class ItsmExchangeService {
 	 */
 	public static function fill(mixed $value, array $values): mixed {
 		if (is_array($value) === true) {
-			$filled = [];
-			foreach ($value as $key => $item) {
-				$filled[$key] = self::fill(value: $item, values: $values);
-			}
-
-			return $filled;
+			return array_map(static fn (mixed $item): mixed => self::fill(value: $item, values: $values), $value);
 		}
 
 		if (is_string($value) === false) {
 			return $value;
 		}
 
-		if (preg_match('/^%([A-Z_]+)%$/', $value, $whole) === 1 && array_key_exists($whole[1], $values) === true) {
+		return self::fillText(text: $value, values: $values);
+	}//end fill()
+
+	/**
+	 * Fill the placeholders of one string.
+	 *
+	 * @param string               $text   The string.
+	 * @param array<string, mixed> $values The placeholder values, by key without the percent signs.
+	 *
+	 * @return mixed The value itself for a string that is exactly one known placeholder, else the filled text.
+	 */
+	private static function fillText(string $text, array $values): mixed {
+		if (preg_match('/^%([A-Z_]+)%$/', $text, $whole) === 1 && array_key_exists($whole[1], $values) === true) {
 			return $values[$whole[1]];
 		}
 
+		[$search, $replace] = self::textReplacements(values: $values);
+
+		return str_replace($search, $replace, $text);
+	}//end fillText()
+
+	/**
+	 * The placeholders that take text, and their texts; list and object values are left out.
+	 *
+	 * @param array<string, mixed> $values The placeholder values, by key without the percent signs.
+	 *
+	 * @return array{0: array<int, string>, 1: array<int, string>} The placeholders and their texts.
+	 */
+	private static function textReplacements(array $values): array {
 		$search  = [];
 		$replace = [];
 		foreach ($values as $key => $text) {
-			if (is_array($text) === true) {
-				continue;
+			if (is_array($text) === false) {
+				$search[]  = '%' . $key . '%';
+				$replace[] = (string) $text;
 			}
-
-			$search[]  = '%' . $key . '%';
-			$replace[] = (string) $text;
 		}
 
-		return str_replace($search, $replace, $value);
-	}//end fill()
+		return [$search, $replace];
+	}//end textReplacements()
 
 	/**
 	 * The scheme, host and port of a location, without its path.
