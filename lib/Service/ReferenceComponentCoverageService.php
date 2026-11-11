@@ -73,7 +73,7 @@ class ReferenceComponentCoverageService {
 	public function build(string $organisationUuid): array {
 		$source   = $this->usageSource();
 		$page     = $this->organisationUsages(organisationUuid: $organisationUuid, source: $source);
-		$modules  = $this->modules(usages: $page['usages'], registerId: $source['register'], schemaId: $source['module']);
+		$modules  = $this->modules(usages: $page['usages'], source: $source);
 		$coverage = $this->coverage(usages: $page['usages'], modules: $modules);
 
 		return [
@@ -227,26 +227,47 @@ class ReferenceComponentCoverageService {
 	 * The modules the usages name, by id.
 	 *
 	 * @param array<int,array<string,mixed>> $usages The usages.
-	 * @param int $registerId The voorzieningen register.
-	 * @param int $schemaId The module schema.
+	 * @param array{register:int,usage:int,module:int} $source The voorzieningen register and its schemas.
 	 *
 	 * @return array<string,array<string,mixed>> Modules by id.
 	 */
-	private function modules(array $usages, int $registerId, int $schemaId): array {
-		$ids = array_values(array_unique(array_filter(array_map(
-			fn (array $usage): string => $this->relations->resolveRelationId(value: $usage['module'] ?? null),
-			$usages
-		))));
-		if ($ids === [] || $schemaId === 0) {
+	private function modules(array $usages, array $source): array {
+		$ids = $this->moduleIds(usages: $usages);
+		if ($ids === [] || $source['module'] === 0) {
 			return [];
 		}
 
 		$modules = $this->lookup(query: [
-			'@self' => ['register' => $registerId, 'schema' => $schemaId],
+			'@self' => ['register' => $source['register'], 'schema' => $source['module']],
 			'id' => $ids,
 			'_limit' => count($ids),
 		]);
 
+		return $this->modulesById(modules: $modules);
+	}//end modules()
+
+	/**
+	 * The distinct module ids the usages name.
+	 *
+	 * @param array<int,array<string,mixed>> $usages The usages.
+	 *
+	 * @return array<int,string>
+	 */
+	private function moduleIds(array $usages): array {
+		return array_values(array_unique(array_filter(array_map(
+			fn (array $usage): string => $this->relations->resolveRelationId(value: $usage['module'] ?? null),
+			$usages
+		))));
+	}//end moduleIds()
+
+	/**
+	 * The modules keyed by their id.
+	 *
+	 * @param array<int,array<string,mixed>> $modules The modules.
+	 *
+	 * @return array<string,array<string,mixed>>
+	 */
+	private function modulesById(array $modules): array {
 		$byId = [];
 		foreach ($modules as $module) {
 			$id = $this->relations->resolveRelationId(value: $module['id'] ?? ($module['@self']['id'] ?? null));
@@ -254,7 +275,7 @@ class ReferenceComponentCoverageService {
 		}
 
 		return $byId;
-	}//end modules()
+	}//end modulesById()
 
 	/**
 	 * One bounded OpenRegister search, RBAC off after the controller's organisation check.
