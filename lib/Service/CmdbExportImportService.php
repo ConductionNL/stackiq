@@ -1481,47 +1481,95 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	private function resolveContactUid(array $identity, string $municipalityUuid): ?string {
-		$parts = self::splitPersonName(name: (string)$identity['name']);
-		$displayName = trim($parts['voornaam'] . ' ' . $parts['achternaam']);
-		$email = trim((string)($identity['email'] ?? ''));
-		$numberUid = $this->ownerIdentity->contactUid(
+		$owner = self::ownerNames(identity: $identity);
+		$owner['numberUid'] = $this->ownerIdentity->contactUid(
 			employeeNumber: (string)($identity['employeeNumber'] ?? ''),
 			municipalityUuid: $municipalityUuid
 		);
 
-		$cacheKey = $this->ownerIdentity->cacheKey(contactUid: $numberUid, email: $email, displayName: $displayName);
-		if (array_key_exists($cacheKey, $this->contactUids) === true) {
-			return $this->contactUids[$cacheKey];
+		$cacheKey = $this->ownerIdentity->cacheKey(contactUid: $owner['numberUid'], email: $owner['email'], displayName: $owner['displayName']);
+		if (array_key_exists($cacheKey, $this->contactUids) === false) {
+			$this->contactUids[$cacheKey] = $this->ownerContactUid(owner: $owner);
 		}
 
-		$uid = $this->existingOwnerContact(numberUid: $numberUid, email: $email, displayName: $displayName);
-
-		if ($uid === null) {
-			$record = ['voornaam' => $parts['voornaam'], 'achternaam' => $parts['achternaam']];
-			if ($email !== '') {
-				$record['email'] = $email;
-			}
-
-			$role = trim((string)($identity['role'] ?? ''));
-			if ($role !== '') {
-				$record['role'] = $role;
-			}
-
-			$uid = $this->contactSync->syncToNamedAddressBook(
-				objectType: 'contactPerson',
-				record: $record,
-				addressBookUri: self::OWNER_ADDRESS_BOOK_URI,
-				displayName: $this->l10n->t('Stackiq CMDB owners'),
-				fixedUid: ($numberUid ?? $this->ownerIdentity->newContactUid())
-			);
-			if ($uid === '') {
-				$uid = null;
-			}
-		}
-
-		$this->contactUids[$cacheKey] = $uid;
-		return $uid;
+		return $this->contactUids[$cacheKey];
 	}//end resolveContactUid()
+
+	/**
+	 * An owner identity's name parts, display name, e-mail address and role, trimmed.
+	 *
+	 * @param array<string, mixed> $identity The owner pack's mapped fields.
+	 *
+	 * @return array{parts: array{voornaam: string, achternaam: string}, displayName: string, email: string, role: string}
+	 */
+	private static function ownerNames(array $identity): array {
+		$parts = self::splitPersonName(name: (string)$identity['name']);
+
+		return [
+			'parts' => $parts,
+			'displayName' => trim($parts['voornaam'] . ' ' . $parts['achternaam']),
+			'email' => trim((string)($identity['email'] ?? '')),
+			'role' => trim((string)($identity['role'] ?? '')),
+		];
+	}//end ownerNames()
+
+	/**
+	 * The owner's existing contact in the owners' address book, or a new one.
+	 *
+	 * @param array<string, mixed> $owner The owner's names, e-mail address, role and employee-number UID.
+	 *
+	 * @return string|null Null when Contacts did not create the contact.
+	 */
+	private function ownerContactUid(array $owner): ?string {
+		$uid = $this->existingOwnerContact(numberUid: $owner['numberUid'], email: $owner['email'], displayName: $owner['displayName']);
+		if ($uid !== null) {
+			return $uid;
+		}
+
+		return $this->createOwnerContact(owner: $owner);
+	}//end ownerContactUid()
+
+	/**
+	 * Create the owner's contact in the owners' address book, with the employee-number UID or a new one.
+	 *
+	 * @param array<string, mixed> $owner The owner's names, e-mail address, role and employee-number UID.
+	 *
+	 * @return string|null Null when Contacts did not create the contact.
+	 */
+	private function createOwnerContact(array $owner): ?string {
+		$uid = $this->contactSync->syncToNamedAddressBook(
+			objectType: 'contactPerson',
+			record: self::ownerRecord(owner: $owner),
+			addressBookUri: self::OWNER_ADDRESS_BOOK_URI,
+			displayName: $this->l10n->t('Stackiq CMDB owners'),
+			fixedUid: ($owner['numberUid'] ?? $this->ownerIdentity->newContactUid())
+		);
+		if ($uid === '') {
+			return null;
+		}
+
+		return $uid;
+	}//end createOwnerContact()
+
+	/**
+	 * The contact record of a new owner: the name parts, and the e-mail address and role when there are.
+	 *
+	 * @param array<string, mixed> $owner The owner's names, e-mail address and role.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function ownerRecord(array $owner): array {
+		$record = ['voornaam' => $owner['parts']['voornaam'], 'achternaam' => $owner['parts']['achternaam']];
+		if ($owner['email'] !== '') {
+			$record['email'] = $owner['email'];
+		}
+
+		if ($owner['role'] !== '') {
+			$record['role'] = $owner['role'];
+		}
+
+		return $record;
+	}//end ownerRecord()
 
 	/**
 	 * The contact an owner already has: by the UID from the employee number, else by e-mail address, else by exact name.
@@ -2933,32 +2981,41 @@ class CmdbExportImportService {
 	private static function missingUpdateRules(string $type, array $properties): array {
 		$missing = [];
 		foreach ((self::REQUIRED_UPDATE_RULES[$type] ?? []) as $property => $group) {
-			if (array_key_exists($property, $properties) === false) {
-				continue;
-			}
-
-			$definition = json_decode((string)json_encode($properties[$property]), true);
-			$update = ($definition['authorization']['update'] ?? null);
-			if (is_array($update) === false) {
-				$update = [];
-			}
-
-			$groups = [];
-			foreach ($update as $rule) {
-				if (is_array($rule) === true) {
-					$rule = ($rule['group'] ?? null);
-				}
-
-				$groups[] = $rule;
-			}
-
-			if (in_array($group, $groups, true) === false) {
+			if (array_key_exists($property, $properties) === true
+				&& in_array($group, self::updateRuleGroups(definition: $properties[$property]), true) === false
+			) {
 				$missing[] = $property . '.authorization.update';
 			}
 		}
 
 		return $missing;
 	}//end missingUpdateRules()
+
+	/**
+	 * The groups a property definition's update rule names: a group name, or a rule's `group`.
+	 *
+	 * @param mixed $definition The property definition, as an array or an object.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private static function updateRuleGroups(mixed $definition): array {
+		$definition = json_decode((string)json_encode($definition), true);
+		$update = ($definition['authorization']['update'] ?? null);
+		if (is_array($update) === false) {
+			return [];
+		}
+
+		$groups = [];
+		foreach ($update as $rule) {
+			if (is_array($rule) === true) {
+				$rule = ($rule['group'] ?? null);
+			}
+
+			$groups[] = $rule;
+		}
+
+		return $groups;
+	}//end updateRuleGroups()
 
 	/**
 	 * The coordinates of the current run.
