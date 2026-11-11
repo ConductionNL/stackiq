@@ -343,28 +343,32 @@ class ContractApprovalService {
 	 * @spec openspec/changes/contract-approval-ownership-guard/specs/contract-decision-delegation/spec.md
 	 */
 	public function authorizeSubmit(string $contractUuid, array $groupNames, string $activeOrgUuid): bool {
-		if (in_array('admin', $groupNames, true) === true) {
+		$request = new SubmitAuthorisation();
+		$request->contractUuid = $contractUuid;
+		$request->groupNames = $groupNames;
+		$request->activeOrgUuid = $activeOrgUuid;
+		return $this->maySubmit(request: $request);
+	}//end authorizeSubmit()
+
+	/**
+	 * Whether the caller may submit/submitRenewal the contract: an admin always, an
+	 * aanbod-beheerder only for a contract of its active organisation.
+	 *
+	 * @param SubmitAuthorisation $request The contract, the caller's groups and active organisation.
+	 *
+	 * @return bool True when the caller may submit/submitRenewal this contract.
+	 */
+	private function maySubmit(SubmitAuthorisation $request): bool {
+		if (in_array('admin', $request->groupNames, true) === true) {
 			return true;
 		}
 
-		if (in_array('aanbod-beheerder', $groupNames, true) === false) {
+		if (in_array('aanbod-beheerder', $request->groupNames, true) === false) {
 			return false;
 		}
 
-		$contract = $this->loadContract(contractUuid: $contractUuid);
-		if ($contract === null) {
-			return false;
-		}
-
-		$data = $contract->getObject();
-		$ownerOrg = (string)($data['_organisation'] ?? $data['provider'] ?? '');
-
-		if ($activeOrgUuid === '' || $ownerOrg === '' || $activeOrgUuid !== $ownerOrg) {
-			return false;
-		}
-
-		return true;
-	}//end authorizeSubmit()
+		return $request->isOwnerOf(contract: $this->loadContract(contractUuid: $request->contractUuid));
+	}//end maySubmit()
 
 	/**
 	 * IDOR guard: whether the given decision id is the one this contract carries.
