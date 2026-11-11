@@ -3782,6 +3782,19 @@ export default {
 			if (format === 'time' && isTimeString(value)) {
 				return value.substring(0, 5) // Remove seconds if present
 			}
+			return this.formattedOriginalValue(value)
+		},
+
+		/**
+		 * An original value that is set and not a time, as shown: a date
+		 * string in the local format, arrays and objects as JSON, anything
+		 * else as it is.
+		 *
+		 * @param {*} value The original value.
+		 * @return {*} The text.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		formattedOriginalValue(value) {
 			if (this.isValidDate(value) && startsLikeDate(value)) {
 				return new Date(value).toLocaleString()
 			}
