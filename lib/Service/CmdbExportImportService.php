@@ -65,6 +65,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use JsonSerializable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectStateRequest;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\Cmdb\CmdbImportReport;
@@ -2058,7 +2059,7 @@ class CmdbExportImportService {
 	/**
 	 * Resolve OpenRegister's archive handler and object mapper, failing closed.
 	 *
-	 * @return array{handler: object, mapper: object} The handler, with `archive()` and `unarchive()`, and the
+	 * @return array{handler: object, mapper: object} The handler, with `archiveWith()` and `unarchiveWith()`, and the
 	 *                                                mapper, with `restoreObject()` and `findDeletedAcrossAllMagicTables()`.
 	 *
 	 * @throws CmdbImportException ARCHIVE_UNAVAILABLE.
@@ -2081,7 +2082,7 @@ class CmdbExportImportService {
 			$mapper = null;
 		}
 
-		if (is_object($handler) === false || method_exists($handler, 'archive') === false || method_exists($handler, 'unarchive') === false
+		if (is_object($handler) === false || method_exists($handler, 'archiveWith') === false || method_exists($handler, 'unarchiveWith') === false
 			|| is_object($mapper) === false || method_exists($mapper, 'restoreObject') === false
 			|| method_exists($mapper, 'findDeletedAcrossAllMagicTables') === false
 		) {
@@ -2162,7 +2163,9 @@ class CmdbExportImportService {
 		}
 
 		if ($archived === true) {
-			$this->archiveServices()['handler']->unarchive(identifier: $uuid, reason: self::REASON_PREFIX . 'back in the export');
+			$this->archiveServices()['handler']->unarchiveWith(
+				request: new ObjectStateRequest(identifier: $uuid, reason: self::REASON_PREFIX . 'back in the export', register: null, schema: null)
+			);
 			$outcome = ($outcome ?? CmdbImportReport::UNARCHIVED);
 		}
 
@@ -2792,7 +2795,9 @@ class CmdbExportImportService {
 			return;
 		}
 
-		$this->archiveServices()['handler']->archive(identifier: $uuid, reason: $item['reason']);
+		$this->archiveServices()['handler']->archiveWith(
+			request: new ObjectStateRequest(identifier: $uuid, reason: $item['reason'], register: null, schema: null)
+		);
 	}//end transition()
 
 	/**

@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Stackiq;
 
+use OCA\OpenRegister\Service\Organisation\NewOrganisation;
 use OCA\Stackiq\Service\OrganisationSlug;
 use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\App\IAppManager;
@@ -2547,11 +2548,13 @@ class ContactPersonHandler {
 
 			// Create organisation with specific UUID, without adding current user (as we're in admin context).
 			$organisation = $organisationService->createOrganisation(
-				name: $organizationName,
-				description: $organizationDescription,
-				addCurrentUser: false,
+				details: new NewOrganisation(
+					name: $organizationName,
+					description: $organizationDescription,
+					uuid: $organizationUuid
+				),
 				// Don't add current user (admin) to this organisation.
-				uuid: $organizationUuid
+				addCurrentUser: false
 			);
 
 			$this->_logger->info(
