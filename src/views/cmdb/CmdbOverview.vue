@@ -145,6 +145,25 @@ import Upload from 'vue-material-design-icons/Upload.vue'
  *
  * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-007-the-cmdb-page-says-what-stackiq-is
  */
+/**
+ * Send an ITSM exchange file to the import endpoint.
+ *
+ * @param {File} file The file the administrator picked.
+ * @return {Promise<{ok: boolean, body: object}>} Whether the request succeeded, and its body.
+ */
+async function postImportFile(file) {
+	const form = new FormData()
+	form.append('file', file)
+	const response = await fetch(generateUrl('/apps/stackiq/api/itsm/import'), {
+		method: 'POST',
+		headers: { requesttoken: getRequestToken() },
+		body: form,
+	})
+	// A proxy or server error page is not JSON; it still gets an answer below.
+	const body = await response.json().catch(() => ({}))
+	return { ok: response.ok, body }
+}
+
 export default defineComponent({
 	name: 'CmdbOverview',
 	components: { NcButton, NcLoadingIcon, NcNoteCard, Upload },
@@ -277,35 +296,42 @@ export default defineComponent({
 			this.importing = true
 			this.importMessage = ''
 			try {
-				const form = new FormData()
-				form.append('file', file)
-				const response = await fetch(
-					generateUrl('/apps/stackiq/api/itsm/import'),
-					{
-						method: 'POST',
-						headers: { requesttoken: getRequestToken() },
-						body: form,
-					},
-				)
-				// A proxy or server error page is not JSON; it still gets an answer below.
-				const body = await response.json().catch(() => ({}))
-				this.importOk = response.ok && body.started === true
-				this.importMessage = this.importOk
-					? t(
-							'stackiq',
-							'The import of {rows} rows has started. The applications appear as the run goes.',
-							{ rows: body.rows },
-						)
-					: body.message || t('stackiq', 'The import did not start.')
+				this.showImportReply(await postImportFile(file))
 			} catch {
-				this.importOk = false
-				this.importMessage = t(
-					'stackiq',
-					'The file could not be sent. Check your connection and try again.',
-				)
+				this.showImportFailure()
 			} finally {
 				this.importing = false
 			}
+		},
+
+		/**
+		 * Show that the file could not be sent.
+		 *
+		 * @return {void}
+		 */
+		showImportFailure() {
+			this.importOk = false
+			this.importMessage = t(
+				'stackiq',
+				'The file could not be sent. Check your connection and try again.',
+			)
+		},
+
+		/**
+		 * Show whether the import started, from the endpoint's reply.
+		 *
+		 * @param {{ok: boolean, body: object}} reply Whether the request succeeded, and its body.
+		 * @return {void}
+		 */
+		showImportReply({ ok, body }) {
+			this.importOk = ok && body.started === true
+			this.importMessage = this.importOk
+				? t(
+						'stackiq',
+						'The import of {rows} rows has started. The applications appear as the run goes.',
+						{ rows: body.rows },
+					)
+				: body.message || t('stackiq', 'The import did not start.')
 		},
 	},
 })
