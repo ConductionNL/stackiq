@@ -260,13 +260,7 @@ class ReviewAggregateService {
 	 * @return array{register:int, schema:int}|null The target, or null.
 	 */
 	private function resolveTarget(): ?array {
-		$register = $this->settingsService->getRegisterIdForObjectType(self::REVIEW_TYPE);
-		$schema = $this->settingsService->getSchemaIdForObjectType(self::REVIEW_TYPE);
-		if ($register === null || $schema === null) {
-			return null;
-		}
-
-		return ['register' => (int)$register, 'schema' => (int)$schema];
+		return ObjectTypeTarget::of(locator: $this->settingsService, type: self::REVIEW_TYPE);
 	}//end resolveTarget()
 
 	/**

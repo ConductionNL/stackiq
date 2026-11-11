@@ -253,13 +253,7 @@ class IntakeService {
 	 * @return array{register:int, schema:int}|null The target, or null.
 	 */
 	private function resolveTarget(): ?array {
-		$register = $this->settingsService->getRegisterIdForObjectType(self::INTAKE_TYPE);
-		$schema = $this->settingsService->getSchemaIdForObjectType(self::INTAKE_TYPE);
-		if ($register === null || $schema === null) {
-			return null;
-		}
-
-		return ['register' => (int)$register, 'schema' => (int)$schema];
+		return ObjectTypeTarget::of(locator: $this->settingsService, type: self::INTAKE_TYPE);
 	}//end resolveTarget()
 
 	/**

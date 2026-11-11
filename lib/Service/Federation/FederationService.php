@@ -623,13 +623,7 @@ class FederationService {
 			return null;
 		}
 
-		$register = $this->settingsService->getRegisterIdForObjectType(self::PEER_MIRROR_TYPE);
-		$schema = $this->settingsService->getSchemaIdForObjectType(self::PEER_MIRROR_TYPE);
-		if ($register === null || $schema === null) {
-			return null;
-		}
-
-		return ['register' => (int)$register, 'schema' => (int)$schema];
+		return \OCA\Stackiq\Service\ObjectTypeTarget::of(locator: $this->settingsService, type: self::PEER_MIRROR_TYPE);
 	}//end resolveMirrorTarget()
 
 	/**
