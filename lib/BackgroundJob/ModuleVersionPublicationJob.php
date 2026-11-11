@@ -91,11 +91,7 @@ class ModuleVersionPublicationJob extends QueuedJob {
 	 * @spec openspec/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
 	 */
 	protected function run($argument): void {
-		$moduleUuid = '';
-		if (is_array($argument) === true && is_string($argument['module'] ?? null) === true) {
-			$moduleUuid = $argument['module'];
-		}
-
+		$moduleUuid = self::moduleOf(argument: $argument);
 		if ($moduleUuid === '') {
 			return;
 		}
@@ -105,6 +101,33 @@ class ModuleVersionPublicationJob extends QueuedJob {
 			return;
 		}
 
+		$this->copyPublication(argument: $argument, moduleUuid: $moduleUuid);
+	}//end run()
+
+	/**
+	 * The module id the job's argument names.
+	 *
+	 * @param mixed $argument The job's argument.
+	 *
+	 * @return string The module id, or '' when the argument names none.
+	 */
+	private static function moduleOf(mixed $argument): string {
+		if (is_array($argument) === true && is_string($argument['module'] ?? null) === true) {
+			return $argument['module'];
+		}
+
+		return '';
+	}//end moduleOf()
+
+	/**
+	 * Copy the publication of a module that was not deleted, or clear it when the module is gone.
+	 *
+	 * @param array<string, mixed> $argument   The job's argument.
+	 * @param string               $moduleUuid The module.
+	 *
+	 * @return void
+	 */
+	private function copyPublication(array $argument, string $moduleUuid): void {
 		try {
 			$module = $this->findModule(moduleUuid: $moduleUuid);
 		} catch (DoesNotExistException $e) {
@@ -118,17 +141,24 @@ class ModuleVersionPublicationJob extends QueuedJob {
 			return;
 		}
 
-		$result = ['failed' => 0];
-		if ($module !== null) {
-			$result = $this->publication->backfillModule(module: $module);
-		}
+		$this->retryOnFailure(argument: $argument, failed: $this->publishOrClear(module: $module, moduleUuid: $moduleUuid)['failed']);
+	}//end copyPublication()
 
+	/**
+	 * Copy the publication of an existing module onto its versions, or clear the versions of a module that is gone.
+	 *
+	 * @param ObjectEntityInterface|null $module     The module as it is now, or null when it no longer exists.
+	 * @param string                     $moduleUuid The module.
+	 *
+	 * @return array{failed: int} The result of the copy or the clear.
+	 */
+	private function publishOrClear(?ObjectEntityInterface $module, string $moduleUuid): array {
 		if ($module === null) {
-			$result = $this->publication->clearVersions(moduleUuid: $moduleUuid);
+			return $this->publication->clearVersions(moduleUuid: $moduleUuid);
 		}
 
-		$this->retryOnFailure(argument: $argument, failed: $result['failed']);
-	}//end run()
+		return $this->publication->backfillModule(module: $module);
+	}//end publishOrClear()
 
 	/**
 	 * Queue the copy again after a failure, until MAX_ATTEMPTS tries were made.
