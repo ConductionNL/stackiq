@@ -67,6 +67,11 @@ describe('LicensePostureView vendorRows', () => {
 			organisatieIndex: { v1: 'Vendor One' },
 			formatCurrency: (amount) => '€' + amount,
 		}
+		for (const [name, fn] of Object.entries(LicensePostureView.methods)) {
+			if (typeof fn === 'function' && !(name in vm)) {
+				vm[name] = fn.bind(vm)
+			}
+		}
 		expect(LicensePostureView.computed.vendorRows.call(vm)).toEqual([
 			{
 				vendorId: 'v2',
