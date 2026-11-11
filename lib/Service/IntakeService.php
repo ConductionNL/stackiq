@@ -281,33 +281,7 @@ class IntakeService {
 	 * @return string|null The uuid, or null.
 	 */
 	private function entityUuid(mixed $entity): ?string {
-		if (is_object($entity) === true
-			&& (property_exists($entity, 'uuid') === true || method_exists($entity, 'getUuid') === true)
-		) {
-			try {
-				$uuid = $entity->getUuid();
-			} catch (\Throwable $e) {
-				$this->logger->warning('IntakeService: could not read uuid from saved entity', ['exception' => $e->getMessage()]);
-				return null;
-			}
-
-			if (is_string($uuid) === true && $uuid !== '') {
-				return $uuid;
-			}
-
-			return null;
-		}
-
-		if (is_array($entity) === true) {
-			$uuid = $entity['id'] ?? $entity['uuid'] ?? null;
-			if (is_string($uuid) === true) {
-				return $uuid;
-			}
-
-			return null;
-		}
-
-		return null;
+		return (new SavedEntityUuid(logger: $this->logger, owner: 'IntakeService'))->of(entity: $entity);
 	}//end entityUuid()
 
 	/**
