@@ -136,7 +136,12 @@ class GebruikControllerScopeGoldenTest extends TestCase {
 	public function testDecisionTableMatchesGolden(): void {
 		$table = $this->table();
 		if (getenv('GOLDEN_WRITE') === '1') {
-			file_put_contents(self::FIXTURE, json_encode($table, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES)) . "\n");
+			$lines = [];
+			foreach ($table as $case => $row) {
+				$lines[] = json_encode($case) . ': ' . json_encode($row, JSON_UNESCAPED_SLASHES);
+			}
+
+			file_put_contents(self::FIXTURE, "{\n" . implode(",\n", $lines) . "\n}\n");
 		}
 
 		$golden = json_decode((string) file_get_contents(self::FIXTURE), true);
