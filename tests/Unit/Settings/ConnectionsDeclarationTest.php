@@ -298,8 +298,10 @@ class ConnectionsDeclarationTest extends TestCase {
 
 		$emailService = (string) file_get_contents($this->root() . '/lib/Service/SymfonyEmailService.php');
 		$this->assertStringContainsString(needle: "'null' => 'Null (No Emails)'", haystack: $emailService);
-		$this->assertMatchesRegularExpression(pattern: "/case 'null':\s+return Transport::fromDsn\('null:\/\/null'\);/", string: $emailService);
-		$this->assertMatchesRegularExpression(pattern: '/default:.*?return \$this->createSmtpTransport/s', string: $emailService);
+		$transportFactory = (string) file_get_contents($this->root() . '/lib/Service/MailTransportFactory.php');
+		$this->assertMatchesRegularExpression(pattern: "/'null' => 'null:\/\/null',/", string: $transportFactory);
+		$this->assertMatchesRegularExpression(pattern: '/default => \$this->createFallbackSmtpTransport/', string: $transportFactory);
+		$this->assertMatchesRegularExpression(pattern: '/function createFallbackSmtpTransport.*?return \$this->createSmtpTransport/s', string: $transportFactory);
 	}//end testOnlyTheNullTransportReadsSimulated()
 
 	/**
