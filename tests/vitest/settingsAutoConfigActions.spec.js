@@ -58,6 +58,9 @@ async function run(component, action, answer) {
 		consolidatedResult: 'old',
 		resetAutoConfigResult: 'old',
 	}
+	for (const [name, fn] of Object.entries(component.methods)) {
+		vm[name] = fn.bind(vm)
+	}
 	const busy = []
 	store.loadVersionInfo.mockImplementation(async () => {
 		busy.push(vm.autoConfiguring)
