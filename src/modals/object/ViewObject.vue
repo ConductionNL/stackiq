@@ -1960,6 +1960,14 @@ import Upload from 'vue-material-design-icons/Upload.vue'
 import PaginationComponent from '../../components/PaginationComponent.vue'
 import PublishedIcon from '../../components/PublishedIcon.vue'
 import { getTheme } from '../../services/getTheme.js'
+import {
+	formatForDisplay,
+	inputValueFor,
+	isTimeString,
+	pickerDateFor,
+	startsLikeDate,
+	themeLabel,
+} from './dateTimeDisplay.js'
 import { FILE_ACTIONS } from './objectFileActions.js'
 import {
 	orderedPropertyRows,
@@ -2948,37 +2956,7 @@ export default {
 
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-			const format = schemaProperty?.format
-
-			try {
-				switch (format) {
-					case 'date':
-						// For date-only, show as date without time
-						if (
-							typeof value === 'string'
-							&& value.match(/^\d{4}-\d{2}-\d{2}$/)
-						) {
-							return new Date(value + 'T12:00:00').toLocaleDateString()
-						}
-						return new Date(value).toLocaleDateString()
-					case 'time':
-						// For time-only, show just the time part
-						if (
-							typeof value === 'string'
-							&& value.match(/^\d{2}:\d{2}(:\d{2})?$/)
-						) {
-							return value
-						}
-						return new Date(value).toLocaleTimeString()
-					case 'date-time':
-						// For date-time, show full date and time
-						return new Date(value).toLocaleString()
-					default:
-						return value
-				}
-			} catch (e) {
-				return value
-			}
+			return formatForDisplay(value, schemaProperty?.format)
 		},
 
 		/**
@@ -3735,17 +3713,7 @@ export default {
 		 */
 		getDisplayValue(key, value) {
 			if (key === 'themes') {
-				const themes = objectStore.getCollection('theme').results || []
-				const idToLabel = (id) => {
-					const themeObj = themes.find((t) => t.id === id)
-					return themeObj ? themeObj.title || `#${themeObj.id}` : id
-				}
-				const currentVal =
-					this.formData[key] !== undefined ? this.formData[key] : value
-				if (Array.isArray(currentVal)) {
-					return currentVal.map(idToLabel).join(', ')
-				}
-				return idToLabel(currentVal)
+				return this.themesDisplayValue(key, value)
 			}
 			// Get the schema information to determine format
 			const schemaProperties = this.getSchemaProperties()
@@ -3754,63 +3722,96 @@ export default {
 
 			// If we have an edited value in formData, use that
 			if (this.formData[key] !== undefined) {
-				const editedValue = this.formData[key]
-
-				// Handle specific format display
-				if (format === 'time' && typeof editedValue === 'string') {
-					// For time format, ensure we show HH:MM without seconds
-					if (editedValue.match(/^\d{2}:\d{2}(:\d{2})?$/)) {
-						return editedValue.substring(0, 5) // Remove seconds if present
-					}
-				}
-
-				// Handle date formatting for edited values
-				if (
-					this.isValidDate(editedValue)
-					&& typeof editedValue === 'string'
-					&& editedValue.includes('T')
-				) {
-					return new Date(editedValue).toLocaleString()
-				}
-				return editedValue
+				return this.editedDisplayValue(this.formData[key], format)
 			}
+			return this.originalDisplayValue(value, format)
+		},
 
-			// Handle original value
+		/**
+		 * The themes of the object by title: the edited value when there is
+		 * one, else the original.
+		 *
+		 * @param {string} key The property key.
+		 * @param {Array|string} value The original value.
+		 * @return {string} The text.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		themesDisplayValue(key, value) {
+			const themes = objectStore.getCollection('theme').results || []
+			const label = (id) => themeLabel(themes, id)
+			const currentVal = this.currentFormValue(key, value)
+			if (Array.isArray(currentVal)) {
+				return currentVal.map(label).join(', ')
+			}
+			return label(currentVal)
+		},
+
+		/**
+		 * An edited value as shown: a time without seconds, a date-time
+		 * string in the local format, anything else as it is.
+		 *
+		 * @param {*} editedValue The edited value.
+		 * @param {string|undefined} format The schema format.
+		 * @return {*} The text.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		editedDisplayValue(editedValue, format) {
+			if (format === 'time' && isTimeString(editedValue)) {
+				return editedValue.substring(0, 5) // Remove seconds if present
+			}
+			if (this.isDateTimeText(editedValue)) {
+				return new Date(editedValue).toLocaleString()
+			}
+			return editedValue
+		},
+
+		/**
+		 * An original value as shown: '' when missing, a time without
+		 * seconds, a date string in the local format, arrays and objects as
+		 * JSON, anything else as it is.
+		 *
+		 * @param {*} value The original value.
+		 * @param {string|undefined} format The schema format.
+		 * @return {*} The text.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		originalDisplayValue(value, format) {
 			if (value === null || value === undefined) {
 				return ''
 			}
-
-			// Handle specific format display for original values
-			if (format === 'time' && typeof value === 'string') {
-				// For time format, ensure we show HH:MM without seconds
-				if (value.match(/^\d{2}:\d{2}(:\d{2})?$/)) {
-					return value.substring(0, 5) // Remove seconds if present
-				}
+			if (format === 'time' && isTimeString(value)) {
+				return value.substring(0, 5) // Remove seconds if present
 			}
+			if (this.isValidDate(value) && startsLikeDate(value)) {
+				return new Date(value).toLocaleString()
+			}
+			return typeof value === 'object' ? JSON.stringify(value) : value
+		},
 
-			// Handle date formatting for original values - only if it's actually a date string
-			if (
-				this.isValidDate(value)
+		/**
+		 * Whether a value is a valid date string with a time part.
+		 *
+		 * @param {*} value The value.
+		 * @return {boolean} Whether it is.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		isDateTimeText(value) {
+			return this.isValidDate(value)
 				&& typeof value === 'string'
-				&& (value.includes('T') || value.includes('-'))
-			) {
-				// Check if it looks like a date (has date separators)
-				const datePattern = /^\d{4}-\d{2}-\d{2}|^\d{1,2}-\d{1,2}-\d{4}/
-				if (datePattern.test(value)) {
-					return new Date(value).toLocaleString()
-				}
-			}
+				&& value.includes('T')
+		},
 
-			// For arrays and objects, format them nicely
-			if (Array.isArray(value)) {
-				return JSON.stringify(value)
-			}
-			if (typeof value === 'object' && value !== null) {
-				return JSON.stringify(value)
-			}
-
-			// Return the value as-is for everything else
-			return value
+		/**
+		 * The edited value of a property when there is one, else the given
+		 * value.
+		 *
+		 * @param {string} key The property key.
+		 * @param {*} value The original value.
+		 * @return {*} The current value.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		currentFormValue(key, value) {
+			return this.formData[key] !== undefined ? this.formData[key] : value
 		},
 
 		/**
@@ -3820,41 +3821,14 @@ export default {
 		 */
 		getDateTimeValue(key, value) {
 			// Get the current value (either from formData or original value)
-			const currentValue =
-				this.formData[key] !== undefined ? this.formData[key] : value
-
+			const currentValue = this.currentFormValue(key, value)
 			if (!currentValue) {
 				return ''
 			}
 
 			// Get the input type to determine the expected format
 			const inputType = this.getPropertyInputType(key)
-
-			// Convert to appropriate format for the input type
-			try {
-				const date = new Date(currentValue)
-				if (isNaN(date.getTime())) {
-					return ''
-				}
-
-				switch (inputType) {
-					case 'date':
-						// Format as YYYY-MM-DD
-						return date.toISOString().split('T')[0]
-					case 'time':
-						// Format as HH:MM for HTML time input
-						return date.toTimeString().split(' ')[0].substring(0, 5)
-					case 'datetime-local': {
-						// Format as YYYY-MM-DDTHH:MM
-						const isoString = date.toISOString()
-						return isoString.substring(0, 16) // Remove seconds and timezone
-					}
-					default:
-						return currentValue
-				}
-			} catch (e) {
-				return currentValue
-			}
+			return inputValueFor(currentValue, inputType)
 		},
 
 		/**
@@ -3864,9 +3838,7 @@ export default {
 		 */
 		getDateTimePickerValue(key, value) {
 			// Get the current value (either from formData or original value)
-			const currentValue =
-				this.formData[key] !== undefined ? this.formData[key] : value
-
+			const currentValue = this.currentFormValue(key, value)
 			if (!currentValue) {
 				return null
 			}
@@ -3874,48 +3846,7 @@ export default {
 			// Get schema information to handle different date formats properly
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-			const format = schemaProperty?.format
-
-			// NcDateTimePicker expects a Date object or null
-			try {
-				let date
-
-				if (format === 'date') {
-					// For date-only fields, ensure we create the date correctly
-					// to avoid timezone issues
-					if (
-						typeof currentValue === 'string'
-						&& currentValue.match(/^\d{4}-\d{2}-\d{2}$/)
-					) {
-						// Create date at noon to avoid timezone issues
-						date = new Date(currentValue + 'T12:00:00')
-					} else {
-						date = new Date(currentValue)
-					}
-				} else if (format === 'time') {
-					// For time-only fields, create a date with today's date
-					if (
-						typeof currentValue === 'string'
-						&& currentValue.match(/^\d{2}:\d{2}(:\d{2})?$/)
-					) {
-						const today = new Date().toISOString().split('T')[0]
-						date = new Date(today + 'T' + currentValue)
-					} else {
-						date = new Date(currentValue)
-					}
-				} else {
-					// For datetime fields, use as-is
-					date = new Date(currentValue)
-				}
-
-				if (isNaN(date.getTime())) {
-					return null
-				}
-
-				return date
-			} catch (e) {
-				return null
-			}
+			return pickerDateFor(currentValue, schemaProperty?.format)
 		},
 
 		/**
