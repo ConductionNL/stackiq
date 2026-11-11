@@ -262,7 +262,7 @@ class ItsmFileImportService {
 	private function readTable(string $path, string $name): iterable {
 		$extension = strtolower(pathinfo($name, PATHINFO_EXTENSION));
 		if ($extension === 'csv') {
-			return $this->readCsv(path: $path);
+			return (new ItsmCsvReader())->rows(path: $path);
 		}
 
 		if ($extension === 'xlsx') {
@@ -309,64 +309,6 @@ class ItsmFileImportService {
 
 		return null;
 	}//end missingKeyReason()
-
-	/**
-	 * Read a CSV file into rows of cells. Comma or semicolon, whichever the header uses.
-	 *
-	 * @param string $path The file.
-	 *
-	 * @return \Generator<int, list<string>> The cells, row by row; the file closes when reading stops.
-	 */
-	private function readCsv(string $path): \Generator {
-		$handle = fopen($path, 'r');
-		if ($handle === false) {
-			throw new RuntimeException('cannot open the uploaded file');
-		}
-
-		try {
-			$delimiter = self::csvDelimiter(header: (string) fgets($handle));
-			rewind($handle);
-			yield from self::csvRows(handle: $handle, delimiter: $delimiter);
-		} finally {
-			fclose($handle);
-		}
-	}//end readCsv()
-
-	/**
-	 * The delimiter a CSV header uses: a semicolon when it has more semicolons than commas, else a comma.
-	 *
-	 * @param string $header The first line of the file.
-	 *
-	 * @return string
-	 */
-	private static function csvDelimiter(string $header): string {
-		if (substr_count($header, ';') > substr_count($header, ',')) {
-			return ';';
-		}
-
-		return ',';
-	}//end csvDelimiter()
-
-	/**
-	 * Read the rows of cells of an open CSV file, without the byte order mark before the first cell.
-	 *
-	 * @param resource $handle    The open file, at its start.
-	 * @param string   $delimiter The delimiter.
-	 *
-	 * @return \Generator<int, list<string>> The cells, row by row.
-	 */
-	private static function csvRows(mixed $handle, string $delimiter): \Generator {
-		$isFirst = true;
-		while (($cells = fgetcsv($handle, null, $delimiter, '"', '\\')) !== false) {
-			$cells = array_map(static fn ($cell): string => (string) $cell, $cells);
-			if ($isFirst === true && isset($cells[0]) === true) {
-				$cells[0] = (string) preg_replace('/^\xEF\xBB\xBF/', '', $cells[0]);
-			}
-
-			$isFirst = false;
-			yield $cells;
-		}
-	}//end csvRows()
 
 	/**
 	 * Read the first sheet of an XLSX file into rows of cells, with PhpSpreadsheet as OpenRegister ships it.
