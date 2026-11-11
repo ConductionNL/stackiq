@@ -718,7 +718,7 @@ class ArchiMateService {
 	 */
 	private function getAmefRegisterId(): ?int {
 		// Retrieve AMEF configuration (use SettingsService for consistency).
-		return ArchiMate\AmefRegisterId::from(amefConfig: $this->settingsService->getAmefConfig(), config: $this->config);
+		return (new ArchiMate\AmefRegisterId(config: $this->config))->resolve(amefConfig: $this->settingsService->getAmefConfig());
 	}//end getAmefRegisterId()
 
 	/**

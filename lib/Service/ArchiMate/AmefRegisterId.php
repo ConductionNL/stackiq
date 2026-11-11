@@ -29,17 +29,26 @@ use OCP\IAppConfig;
  */
 final class AmefRegisterId {
 	/**
+	 * Constructor.
+	 *
+	 * @param IAppConfig $config The app configuration holding the legacy keys.
+	 */
+	public function __construct(
+		private readonly IAppConfig $config,
+	) {
+	}//end __construct()
+
+	/**
 	 * The AMEF register id as a positive int.
 	 *
 	 * @param array<string, mixed> $amefConfig The AMEF configuration.
-	 * @param IAppConfig           $config     The app configuration holding the legacy keys.
 	 *
 	 * @return int|null The register id, or null when none is configured or it is not a positive number.
 	 *
 	 * @spec openspec/specs/archimate-import/spec.md
 	 */
-	public static function from(array $amefConfig, IAppConfig $config): ?int {
-		$rawRegisterId = self::raw(amefConfig: $amefConfig, config: $config);
+	public function resolve(array $amefConfig): ?int {
+		$rawRegisterId = $this->rawId(amefConfig: $amefConfig);
 
 		// Validate and normalize to positive int.
 		if ($rawRegisterId !== '' && is_numeric((string)$rawRegisterId) === true) {
@@ -50,29 +59,28 @@ final class AmefRegisterId {
 		}
 
 		return null;
-	}//end from()
+	}//end resolve()
 
 	/**
 	 * The configured register id, before validation.
 	 *
 	 * @param array<string, mixed> $amefConfig The AMEF configuration.
-	 * @param IAppConfig           $config     The app configuration holding the legacy keys.
 	 *
 	 * @return mixed The raw id.
 	 */
-	private static function raw(array $amefConfig, IAppConfig $config): mixed {
+	private function rawId(array $amefConfig): mixed {
 		// Try JSON config keys first: support both 'register_id' and 'register'.
 		$rawRegisterId = $amefConfig['register_id'] ?? $amefConfig['register'] ?? null;
 
 		// Fallback to legacy individual app config keys if not present in JSON.
 		if ($rawRegisterId === null || $rawRegisterId === '') {
-			$rawRegisterId = $config->getValueString('stackiq', 'amef_register_id', '');
-			if ($config->getValueString('stackiq', 'amef_register', '') !== '') {
+			$rawRegisterId = $this->config->getValueString('stackiq', 'amef_register_id', '');
+			if ($this->config->getValueString('stackiq', 'amef_register', '') !== '') {
 				// If only the plain register key is configured, use it as the ID.
-				$rawRegisterId = $config->getValueString('stackiq', 'amef_register', '');
+				$rawRegisterId = $this->config->getValueString('stackiq', 'amef_register', '');
 			}
 		}
 
 		return $rawRegisterId;
-	}//end raw()
+	}//end rawId()
 }//end class

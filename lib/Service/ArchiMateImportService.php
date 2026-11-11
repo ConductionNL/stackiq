@@ -1844,7 +1844,7 @@ class ArchiMateImportService {
 	 */
 	private function getAmefRegisterId(): ?int {
 		// Retrieve AMEF configuration.
-		return ArchiMate\AmefRegisterId::from(amefConfig: $this->getAmefConfig(), config: $this->config);
+		return (new ArchiMate\AmefRegisterId(config: $this->config))->resolve(amefConfig: $this->getAmefConfig());
 	}//end getAmefRegisterId()
 
 	/**
