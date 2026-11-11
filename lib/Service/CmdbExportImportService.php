@@ -664,51 +664,83 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function addRunWarnings(CmdbImportRun $run): void {
-		$report         = $run->report;
-		$municipality   = $run->municipality;
-		$archive        = $run->archive;
-		$missingRecords = $run->missingRecords;
 		if ($this->profile->usesShippedFallback() === true) {
-			$report->addImportWarnings(
-				warnings: [
-					[
-						'sheet' => '',
-						'message' => $this->l10n->t('OpenRegister\'s migration pack store is not available, so this import used the mapping that ships with stackiq.'),
-					],
-				]
-			);
+			$this->addShippedFallbackWarning(report: $run->report);
 		}
 
-		if ($missingRecords === 'archive' && ($archive['present'] === false || $archive['uncachedRows'] !== [])) {
+		if ($run->missingRecords === 'archive') {
+			$this->addArchiveWarnings(run: $run);
+		}
+
+		if ($run->municipality['created'] === true) {
+			$this->addCreatedMunicipalityWarning(run: $run);
+		}
+	}//end addRunWarnings()
+
+	/**
+	 * Warn that the import used the mapping that ships with stackiq.
+	 *
+	 * @param CmdbImportReport $report The run's report
+	 *
+	 * @return void
+	 */
+	private function addShippedFallbackWarning(CmdbImportReport $report): void {
+		$report->addImportWarnings(
+			warnings: [
+				[
+					'sheet' => '',
+					'message' => $this->l10n->t('OpenRegister\'s migration pack store is not available, so this import used the mapping that ships with stackiq.'),
+				],
+			]
+		);
+	}//end addShippedFallbackWarning()
+
+	/**
+	 * Warn about every sheet that keeps an archiving run from deleting: a missing or partly unreadable
+	 * archive sheet, a missing source sheet, and source-sheet rows whose APPID has no cached value.
+	 *
+	 * @param CmdbImportRun $run The run, with missingRecords 'archive'
+	 *
+	 * @return void
+	 */
+	private function addArchiveWarnings(CmdbImportRun $run): void {
+		$report  = $run->report;
+		$archive = $run->archive;
+		if ($archive['present'] === false || $archive['uncachedRows'] !== []) {
 			$report->addImportWarnings(warnings: [['sheet' => $archive['sheet'], 'message' => $this->archiveSheetWarning(archive: $archive)]]);
 		}
 
-		if ($missingRecords === 'archive') {
-			foreach ($this->absentSheets as $sheet) {
-				$absent = ['sheet' => $sheet, 'keyColumnMissing' => false, 'uncachedRows' => []];
-				$report->addImportWarnings(warnings: [['sheet' => $sheet, 'message' => $this->archiveSheetWarning(archive: $absent)]]);
-			}
-
-			foreach ($this->unreadableKeyRows as $sheet => $rowNumbers) {
-				$cmdbSheet = ['sheet' => $sheet, 'keyColumnMissing' => false, 'uncachedRows' => $rowNumbers];
-				$report->addImportWarnings(warnings: [['sheet' => $sheet, 'message' => $this->archiveSheetWarning(archive: $cmdbSheet)]]);
-			}
+		foreach ($this->absentSheets as $sheet) {
+			$absent = ['sheet' => $sheet, 'keyColumnMissing' => false, 'uncachedRows' => []];
+			$report->addImportWarnings(warnings: [['sheet' => $sheet, 'message' => $this->archiveSheetWarning(archive: $absent)]]);
 		}
 
-		if ($municipality['created'] === true) {
-			$report->addImportWarnings(
-				warnings: [
-					[
-						'sheet' => '',
-						'message' => $this->l10n->t(
-							'No municipality named "%s" was found, so it was created. Check the name if you meant an existing one.',
-							[$municipality['name']]
-						),
-					],
-				]
-			);
+		foreach ($this->unreadableKeyRows as $sheet => $rowNumbers) {
+			$cmdbSheet = ['sheet' => $sheet, 'keyColumnMissing' => false, 'uncachedRows' => $rowNumbers];
+			$report->addImportWarnings(warnings: [['sheet' => $sheet, 'message' => $this->archiveSheetWarning(archive: $cmdbSheet)]]);
 		}
-	}//end addRunWarnings()
+	}//end addArchiveWarnings()
+
+	/**
+	 * Warn that the run created the municipality it was given by name.
+	 *
+	 * @param CmdbImportRun $run The run, whose municipality was created
+	 *
+	 * @return void
+	 */
+	private function addCreatedMunicipalityWarning(CmdbImportRun $run): void {
+		$run->report->addImportWarnings(
+			warnings: [
+				[
+					'sheet' => '',
+					'message' => $this->l10n->t(
+						'No municipality named "%s" was found, so it was created. Check the name if you meant an existing one.',
+						[$run->municipality['name']]
+					),
+				],
+			]
+		);
+	}//end addCreatedMunicipalityWarning()
 
 	/**
 	 * The CMDB-sheet rows whose key column is a formula without a cached value, per sheet.
