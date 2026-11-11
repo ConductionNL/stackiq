@@ -228,33 +228,7 @@ class HierarchyHandler {
 	 */
 	public function getUserHierarchy(string $username): array {
 		try {
-			$hierarchy = [
-				'username' => $username,
-				'manager' => null,
-				'subordinates' => [],
-				'organization' => null,
-				'isBeheerder' => false,
-				'isPrimaryManager' => false,
-			];
-
-			// Get user's manager.
-			$manager = $this->_contactPersonHandler->getUserManager($username);
-			if ($manager !== null) {
-				$hierarchy['manager'] = $manager;
-			}
-
-			// Find subordinates (users who have this user as manager).
-			$subordinates = $this->findSubordinates(username: $username);
-			$hierarchy['subordinates'] = $subordinates;
-
-			// Check if user is a beheerder.
-			$hierarchy['isBeheerder'] = $this->isUserMaintainer(username: $username);
-
-			// Check if user is primary manager (has subordinates and no manager).
-			$hierarchy['isPrimaryManager'] = empty($hierarchy['manager']) === true
-				&& empty($hierarchy['subordinates']) === false;
-
-			return $hierarchy;
+			return $this->buildUserHierarchy(username: $username);
 		} catch (\Exception $e) {
 			$this->_logger->error(
 				'Failed to get user hierarchy: ' . $e->getMessage(),
@@ -268,6 +242,54 @@ class HierarchyHandler {
 	}//end getUserHierarchy()
 
 	/**
+	 * Build the hierarchy information of a user: manager, subordinates and roles.
+	 *
+	 * @param string $username The username to get hierarchy for
+	 *
+	 * @return array Array containing hierarchy information
+	 */
+	private function buildUserHierarchy(string $username): array {
+		$hierarchy = $this->emptyHierarchy(username: $username);
+
+		// Get user's manager.
+		$manager = $this->_contactPersonHandler->getUserManager($username);
+		if ($manager !== null) {
+			$hierarchy['manager'] = $manager;
+		}
+
+		// Find subordinates (users who have this user as manager).
+		$subordinates = $this->findSubordinates(username: $username);
+		$hierarchy['subordinates'] = $subordinates;
+
+		// Check if user is a beheerder.
+		$hierarchy['isBeheerder'] = $this->isUserMaintainer(username: $username);
+
+		// Check if user is primary manager (has subordinates and no manager).
+		$hierarchy['isPrimaryManager'] = empty($hierarchy['manager']) === true
+			&& empty($hierarchy['subordinates']) === false;
+
+		return $hierarchy;
+	}//end buildUserHierarchy()
+
+	/**
+	 * The hierarchy of a user before anything is looked up.
+	 *
+	 * @param string $username The username
+	 *
+	 * @return array The hierarchy with no manager, subordinates or roles
+	 */
+	private function emptyHierarchy(string $username): array {
+		return [
+			'username' => $username,
+			'manager' => null,
+			'subordinates' => [],
+			'organization' => null,
+			'isBeheerder' => false,
+			'isPrimaryManager' => false,
+		];
+	}//end emptyHierarchy()
+
+	/**
 	 * Finds all subordinates for a given user
 	 *
 	 * @param string $username The username to find subordinates for
@@ -278,18 +300,7 @@ class HierarchyHandler {
 		$subordinates = [];
 
 		try {
-			// Get all users and check their managers.
-			$userManager = $this->_userManager;
-			$users = $userManager->search('');
-
-			foreach ($users as $user) {
-				$userUsername = $user->getUID();
-				$manager = $this->_contactPersonHandler->getUserManager($userUsername);
-
-				if ($manager === $username) {
-					$subordinates[] = $userUsername;
-				}
-			}
+			$this->collectSubordinates(username: $username, subordinates: $subordinates);
 		} catch (\Exception $e) {
 			$this->_logger->error(
 				'Failed to find subordinates: ' . $e->getMessage(),
@@ -304,6 +315,32 @@ class HierarchyHandler {
 	}//end findSubordinates()
 
 	/**
+	 * Append every user whose manager is the given user to the list.
+	 *
+	 * Appends in place, so when a lookup fails part-way the subordinates
+	 * found before the failure are kept.
+	 *
+	 * @param string $username     The username to find subordinates for
+	 * @param array  $subordinates The list to append subordinate usernames to
+	 *
+	 * @return void
+	 */
+	private function collectSubordinates(string $username, array &$subordinates): void {
+		// Get all users and check their managers.
+		$userManager = $this->_userManager;
+		$users = $userManager->search('');
+
+		foreach ($users as $user) {
+			$userUsername = $user->getUID();
+			$manager = $this->_contactPersonHandler->getUserManager($userUsername);
+
+			if ($manager === $username) {
+				$subordinates[] = $userUsername;
+			}
+		}
+	}//end collectSubordinates()
+
+	/**
 	 * Checks if a user is a beheerder
 	 *
 	 * @param string $username The username to check
@@ -312,21 +349,7 @@ class HierarchyHandler {
 	 */
 	private function isUserMaintainer(string $username): bool {
 		try {
-			$groupManager = $this->_groupManager;
-			$maintainerGroup = $groupManager->get('maintainer');
-
-			if ($maintainerGroup === null) {
-				return false;
-			}
-
-			$userManager = $this->_userManager;
-			$user = $userManager->get($username);
-
-			if ($user === null) {
-				return false;
-			}
-
-			return $maintainerGroup->inGroup($user);
+			return $this->isInMaintainerGroup(username: $username);
 		} catch (\Exception $e) {
 			$this->_logger->error(
 				'Failed to check if user is beheerder: ' . $e->getMessage(),
@@ -340,6 +363,32 @@ class HierarchyHandler {
 	}//end isUserBeheerder()
 
 	/**
+	 * Whether the user is a member of the maintainer group; a missing group
+	 * or an unknown user is not.
+	 *
+	 * @param string $username The username to check
+	 *
+	 * @return bool True if the user is in the maintainer group
+	 */
+	private function isInMaintainerGroup(string $username): bool {
+		$groupManager = $this->_groupManager;
+		$maintainerGroup = $groupManager->get('maintainer');
+
+		if ($maintainerGroup === null) {
+			return false;
+		}
+
+		$userManager = $this->_userManager;
+		$user = $userManager->get($username);
+
+		if ($user === null) {
+			return false;
+		}
+
+		return $maintainerGroup->inGroup($user);
+	}//end isInMaintainerGroup()
+
+	/**
 	 * Gets complete organizational structure
 	 *
 	 * @param string $organizationUuid The organization UUID
@@ -350,28 +399,7 @@ class HierarchyHandler {
 	 */
 	public function getOrganizationStructure(string $organizationUuid): array {
 		try {
-			$structure = [
-				'organization' => $organizationUuid,
-				'beheerders' => [],
-				'primaryManager' => null,
-				'hierarchy' => [],
-			];
-
-			// Get all beheerders for this organization.
-			$beheerders = $this->_organizationHandler->getOrganizationBeheerders($organizationUuid);
-			$structure['beheerders'] = $beheerders;
-
-			if (empty($beheerders) === false) {
-				$structure['primaryManager'] = $beheerders[0];
-			}
-
-			// Build hierarchy tree.
-			foreach ($beheerders as $maintainer) {
-				$hierarchy = $this->getUserHierarchy(username: $maintainer);
-				$structure['hierarchy'][] = $hierarchy;
-			}
-
-			return $structure;
+			return $this->buildOrganizationStructure(organizationUuid: $organizationUuid);
 		} catch (\Exception $e) {
 			$this->_logger->error(
 				'Failed to get organization structure: ' . $e->getMessage(),
@@ -383,4 +411,48 @@ class HierarchyHandler {
 			return [];
 		}//end try
 	}//end getOrganizationStructure()
+
+	/**
+	 * Build the structure of an organisation: its beheerders, the primary
+	 * manager and the hierarchy of each beheerder.
+	 *
+	 * @param string $organizationUuid The organization UUID
+	 *
+	 * @return array Array containing organizational structure
+	 */
+	private function buildOrganizationStructure(string $organizationUuid): array {
+		$structure = $this->emptyStructure(organizationUuid: $organizationUuid);
+
+		// Get all beheerders for this organization.
+		$beheerders = $this->_organizationHandler->getOrganizationBeheerders($organizationUuid);
+		$structure['beheerders'] = $beheerders;
+
+		if (empty($beheerders) === false) {
+			$structure['primaryManager'] = $beheerders[0];
+		}
+
+		// Build hierarchy tree.
+		foreach ($beheerders as $maintainer) {
+			$hierarchy = $this->getUserHierarchy(username: $maintainer);
+			$structure['hierarchy'][] = $hierarchy;
+		}
+
+		return $structure;
+	}//end buildOrganizationStructure()
+
+	/**
+	 * The structure of an organisation before anything is looked up.
+	 *
+	 * @param string $organizationUuid The organization UUID
+	 *
+	 * @return array The structure with no beheerders, manager or hierarchy
+	 */
+	private function emptyStructure(string $organizationUuid): array {
+		return [
+			'organization' => $organizationUuid,
+			'beheerders' => [],
+			'primaryManager' => null,
+			'hierarchy' => [],
+		];
+	}//end emptyStructure()
 }//end class
