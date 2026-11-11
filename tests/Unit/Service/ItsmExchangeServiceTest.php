@@ -296,4 +296,33 @@ class ItsmExchangeServiceTest extends TestCase {
 		$this->assertCount(12, $saved);
 		$this->assertSame((string) file_get_contents($file), $json . "\n");
 	}//end testTheSavedFlowsMatchTheGolden()
+	/**
+	 * A save that fails part-way keeps the flows already saved, next to what an earlier set-up stored, and is
+	 * refused naming how far it got; the exchange is not switched on.
+	 *
+	 * @return void
+	 */
+	public function testAFailedSaveKeepsWhatWasSaved(): void {
+		$this->settings['itsm_exchange'] = (string) json_encode(['desk' => 'topdesk', 'organisation' => self::ORG, 'flows' => ['outbound' => 'old-outbound']]);
+		$this->gateway->method('inspect')->willReturn(['blocking' => [], 'warnings' => []]);
+		$calls = 0;
+		$this->gateway->method('saveAndPublish')->willReturnCallback(
+			static function (array $flow, ?string $uuid) use (&$calls): string {
+				$calls++;
+				if ($calls === 3) {
+					throw new \RuntimeException('store full');
+				}
+
+				return 'flow-' . $calls;
+			}
+		);
+		$this->reports->expects($this->once())->method('itsmSetUp')->with(false, 'Saving the flows failed after 2 of 6: store full');
+
+		$result = $this->service()->setUp(desk: 'topdesk', organisation: self::ORG, runAs: 'admin');
+
+		$this->assertSame(['created' => false, 'message' => 'Saving the flows failed after 2 of 6: store full', 'blocking' => []], $result);
+		$stored = json_decode((string) $this->settings['itsm_exchange'], true);
+		$this->assertSame(['outbound' => 'old-outbound', 'applications' => 'flow-1', 'relations' => 'flow-2'], $stored['flows']);
+		$this->assertArrayNotHasKey('itsm_exchange_enabled', $this->settings);
+	}//end testAFailedSaveKeepsWhatWasSaved()
 }//end class
