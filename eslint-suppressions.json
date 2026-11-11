@@ -312,7 +312,7 @@
       "count": 12
     },
     "no-useless-assignment": {
-      "count": 6
+      "count": 5
     },
     "vue/prefer-define-options": {
       "count": 1
