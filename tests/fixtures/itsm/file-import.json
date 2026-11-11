@@ -1,0 +1,279 @@
+{
+    "config not json": {
+        "result": {
+            "started": false,
+            "message": "Set up the exchange first. The file import uses the flow the set-up creates."
+        },
+        "trace": [
+            [
+                "getValueString",
+                "stackiq",
+                "itsm_exchange",
+                "{}",
+                false
+            ]
+        ]
+    },
+    "config not object": {
+        "result": {
+            "started": false,
+            "message": "Set up the exchange first. The file import uses the flow the set-up creates."
+        },
+        "trace": [
+            [
+                "getValueString",
+                "stackiq",
+                "itsm_exchange",
+                "{}",
+                false
+            ]
+        ]
+    },
+    "no flows": {
+        "result": {
+            "started": false,
+            "message": "Set up the exchange first. The file import uses the flow the set-up creates."
+        },
+        "trace": [
+            [
+                "getValueString",
+                "stackiq",
+                "itsm_exchange",
+                "{}",
+                false
+            ]
+        ]
+    },
+    "flows a string": {
+        "result": {
+            "started": false,
+            "message": "Set up the exchange first. The file import uses the flow the set-up creates."
+        },
+        "trace": [
+            [
+                "getValueString",
+                "stackiq",
+                "itsm_exchange",
+                "{}",
+                false
+            ]
+        ]
+    },
+    "empty flow": {
+        "result": {
+            "started": false,
+            "message": "Set up the exchange first. The file import uses the flow the set-up creates."
+        },
+        "trace": [
+            [
+                "getValueString",
+                "stackiq",
+                "itsm_exchange",
+                "{}",
+                false
+            ]
+        ]
+    },
+    "numeric flow": {
+        "result": {
+            "started": false,
+            "message": "Set up the exchange first. The file import uses the flow the set-up creates."
+        },
+        "trace": [
+            [
+                "getValueString",
+                "stackiq",
+                "itsm_exchange",
+                "{}",
+                false
+            ]
+        ]
+    },
+    "too large": {
+        "result": {
+            "started": false,
+            "message": "The file is larger than 10 MB; one import takes at most that."
+        },
+        "trace": [
+            [
+                "getValueString",
+                "stackiq",
+                "itsm_exchange",
+                "{}",
+                false
+            ]
+        ]
+    },
+    "exactly the limit": {
+        "result": {
+            "started": false,
+            "message": "The file holds no rows under its header."
+        },
+        "trace": [
+            [
+                "getValueString",
+                "stackiq",
+                "itsm_exchange",
+                "{}",
+                false
+            ]
+        ]
+    },
+    "missing file": {
+        "result": {
+            "started": false,
+            "message": "The file could not be read: cannot open the uploaded file"
+        },
+        "trace": [
+            [
+                "getValueString",
+                "stackiq",
+                "itsm_exchange",
+                "{}",
+                false
+            ]
+        ]
+    },
+    "unknown extension": {
+        "result": {
+            "started": false,
+            "message": "The file could not be read: only .csv and .xlsx files can be imported, not .txt"
+        },
+        "trace": [
+            [
+                "getValueString",
+                "stackiq",
+                "itsm_exchange",
+                "{}",
+                false
+            ]
+        ]
+    },
+    "header only": {
+        "result": {
+            "started": false,
+            "message": "The file holds no rows under its header."
+        },
+        "trace": [
+            [
+                "getValueString",
+                "stackiq",
+                "itsm_exchange",
+                "{}",
+                false
+            ]
+        ]
+    },
+    "row without key": {
+        "result": {
+            "started": false,
+            "message": "Row 3 has no recordId. Every row needs one, so a second import updates instead of adding."
+        },
+        "trace": [
+            [
+                "getValueString",
+                "stackiq",
+                "itsm_exchange",
+                "{}",
+                false
+            ]
+        ]
+    },
+    "semicolon file": {
+        "result": {
+            "started": true,
+            "run": "run-1",
+            "rows": 1
+        },
+        "trace": [
+            [
+                "getValueString",
+                "stackiq",
+                "itsm_exchange",
+                "{}",
+                false
+            ],
+            [
+                "run",
+                "flow-1",
+                {
+                    "rows": [
+                        {
+                            "recordId": "r1",
+                            "name": "A"
+                        }
+                    ]
+                }
+            ]
+        ]
+    },
+    "starts": {
+        "result": {
+            "started": true,
+            "run": "run-1",
+            "rows": 2
+        },
+        "trace": [
+            [
+                "getValueString",
+                "stackiq",
+                "itsm_exchange",
+                "{}",
+                false
+            ],
+            [
+                "run",
+                "flow-1",
+                {
+                    "rows": [
+                        {
+                            "recordId": "r1",
+                            "name": "Alpha"
+                        },
+                        {
+                            "recordId": "r2",
+                            "name": "Beta"
+                        }
+                    ]
+                }
+            ]
+        ]
+    },
+    "gateway fails": {
+        "result": {
+            "started": false,
+            "message": "The file import flow could not be started: engine down"
+        },
+        "trace": [
+            [
+                "getValueString",
+                "stackiq",
+                "itsm_exchange",
+                "{}",
+                false
+            ],
+            [
+                "run",
+                "flow-1",
+                {
+                    "rows": [
+                        {
+                            "recordId": "r1",
+                            "name": "Alpha"
+                        },
+                        {
+                            "recordId": "r2",
+                            "name": "Beta"
+                        }
+                    ]
+                }
+            ],
+            [
+                "error",
+                "[ItsmFileImportService] Starting the file import flow failed",
+                "RuntimeException",
+                "engine down"
+            ]
+        ]
+    }
+}
