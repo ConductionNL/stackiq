@@ -125,11 +125,7 @@ class AangebodenGebruikService {
 			// Get configuration for gebruiks register/schema.
 			$gebruiksConfig = $this->getGebruiksConfiguration();
 
-			// Use the first schema for now (can be extended for multi-schema support).
-			$schemaId = $gebruiksConfig['schemas'][0] ?? null;
-			if ($schemaId === null) {
-				throw new Exception('No gebruik schema configured');
-			}
+			$schemaId = $this->firstGebruikSchema(gebruiksConfig: $gebruiksConfig);
 
 			// Build query for afnemer filtering - search for objects where current org is afnemer.
 			// Note: We don't filter by organisation in @self since the objects are owned by leveranciers.
@@ -292,15 +288,7 @@ class AangebodenGebruikService {
 				]
 			);
 
-			return [
-				'results' => [],
-				'total' => 0,
-				'page' => 1,
-				'pages' => 0,
-				'limit' => 20,
-				'offset' => 0,
-				'error' => 'Failed to retrieve gebruiks: ' . $e->getMessage(),
-			];
+			return $this->emptyKoppelingenPage(error: 'Failed to retrieve gebruiks: ' . $e->getMessage());
 		}//end try
 	}//end getGebruiksWhereAfnemer()
 
@@ -559,6 +547,26 @@ class AangebodenGebruikService {
 	}//end emptyKoppelingenPage()
 
 	/**
+	 * The first gebruik schema of the gebruiks configuration.
+	 *
+	 * Uses the first schema for now (can be extended for multi-schema support).
+	 *
+	 * @param array<string, mixed> $gebruiksConfig The gebruiks register and schemas.
+	 *
+	 * @return mixed The schema id.
+	 *
+	 * @throws Exception When no gebruik schema is configured.
+	 */
+	private function firstGebruikSchema(array $gebruiksConfig): mixed {
+		$schemaId = $gebruiksConfig['schemas'][0] ?? null;
+		if ($schemaId === null) {
+			throw new Exception('No gebruik schema configured');
+		}
+
+		return $schemaId;
+	}//end firstGebruikSchema()
+
+	/**
 	 * Get all gebruiks objects (ignoring RBAC and multitenancy) - restricted to ambtenaar group
 	 *
 	 * This method retrieves all gebruiks objects regardless of ownership or organization,
@@ -589,11 +597,7 @@ class AangebodenGebruikService {
 			// Get configuration for gebruiks register/schema.
 			$gebruiksConfig = $this->getGebruiksConfiguration();
 
-			// Use the first schema for now (can be extended for multi-schema support).
-			$schemaId = $gebruiksConfig['schemas'][0] ?? null;
-			if ($schemaId === null) {
-				throw new Exception('No gebruik schema configured');
-			}
+			$schemaId = $this->firstGebruikSchema(gebruiksConfig: $gebruiksConfig);
 
 			// Build query for all gebruiks - no organization filtering.
 			$query = [
@@ -647,15 +651,7 @@ class AangebodenGebruikService {
 				]
 			);
 
-			return [
-				'results' => [],
-				'total' => 0,
-				'page' => 1,
-				'pages' => 0,
-				'limit' => 20,
-				'offset' => 0,
-				'error' => 'Failed to retrieve gebruiks: ' . $e->getMessage(),
-			];
+			return $this->emptyKoppelingenPage(error: 'Failed to retrieve gebruiks: ' . $e->getMessage());
 		}//end try
 	}//end getAllGebruiksForAmbtenaar()
 
@@ -686,15 +682,7 @@ class AangebodenGebruikService {
 		try {
 			// Validate input.
 			if (empty($suiteId) === true) {
-				return [
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'error' => 'Suite ID is required',
-				];
+				return $this->emptyKoppelingenPage(error: 'Suite ID is required');
 			}
 
 			// Get ObjectService from OpenRegister.
@@ -703,11 +691,7 @@ class AangebodenGebruikService {
 			// Get configuration for gebruiks register/schema.
 			$gebruiksConfig = $this->getGebruiksConfiguration();
 
-			// Use the first schema for now (can be extended for multi-schema support).
-			$schemaId = $gebruiksConfig['schemas'][0] ?? null;
-			if ($schemaId === null) {
-				throw new Exception('No gebruik schema configured');
-			}
+			$schemaId = $this->firstGebruikSchema(gebruiksConfig: $gebruiksConfig);
 
 			// Build query for all gebruiks that reference the specified UUID in their relations.
 			// Follow the same pattern as PublicationsController.php used() method.
@@ -767,15 +751,7 @@ class AangebodenGebruikService {
 				]
 			);
 
-			return [
-				'results' => [],
-				'total' => 0,
-				'page' => 1,
-				'pages' => 0,
-				'limit' => 20,
-				'offset' => 0,
-				'error' => 'Failed to retrieve usage: ' . $e->getMessage(),
-			];
+			return $this->emptyKoppelingenPage(error: 'Failed to retrieve usage: ' . $e->getMessage());
 		}//end try
 	}//end getSingleGebruikForAmbtenaar()
 
