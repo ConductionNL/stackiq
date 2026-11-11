@@ -280,6 +280,57 @@ function columnMetadata() {
 }
 
 /**
+ * Delete an object by its @self metadata (the legacy deleteObject signature),
+ * with its delete loading flag on, and drop it from the selection.
+ *
+ * @param {object} store The store.
+ * @param {object} objectItem The object with @self metadata.
+ * @return {Promise<boolean>} True once deleted.
+ * @throws {Error} When the object lacks ids or the request fails.
+ */
+async function deleteObjectItem(store, objectItem) {
+	const endpoint = buildObjectUrl(objectItem)
+
+	const objectId = objectItem.id || objectItem['@self']?.id
+	store.loading = { ...store.loading, [`delete_${objectId}`]: true }
+
+	try {
+		const response = await fetch(endpoint, {
+			method: 'DELETE',
+			headers: buildHeaders(),
+		})
+
+		if (!response.ok) {
+			throw new Error(
+				`Failed to delete object: ${response.status} ${response.statusText}`,
+			)
+		}
+
+		deselectObject(store, objectId)
+		return true
+	} finally {
+		store.loading = { ...store.loading, [`delete_${objectId}`]: false }
+	}
+}
+
+/**
+ * Remove an object from the selection if it is selected.
+ *
+ * @param {object} store The store.
+ * @param {string} objectId The object id.
+ */
+function deselectObject(store, objectId) {
+	const isSelected = store.selectedObjects.some(
+		(obj) => selectionId(obj) === objectId,
+	)
+	if (isSelected) {
+		store.setSelectedObjects(
+			store.selectedObjects.filter((obj) => selectionId(obj) !== objectId),
+		)
+	}
+}
+
+/**
  * POST a lifecycle action (publish, depublish) for an object.
  *
  * @param {object} objectItem The object
@@ -1011,40 +1062,7 @@ export function stackiqPlugin() {
 				}
 
 				// Legacy signature: deleteObject(objectItem)
-				const objectItem = typeOrObject
-				const endpoint = buildObjectUrl(objectItem)
-
-				const objectId = objectItem.id || objectItem['@self']?.id
-				this.loading = { ...this.loading, [`delete_${objectId}`]: true }
-
-				try {
-					const response = await fetch(endpoint, {
-						method: 'DELETE',
-						headers: buildHeaders(),
-					})
-
-					if (!response.ok) {
-						throw new Error(
-							`Failed to delete object: ${response.status} ${response.statusText}`,
-						)
-					}
-
-					// Remove from selection if selected
-					const isSelected = this.selectedObjects.some(
-						(obj) => selectionId(obj) === objectId,
-					)
-					if (isSelected) {
-						this.setSelectedObjects(
-							this.selectedObjects.filter(
-								(obj) => selectionId(obj) !== objectId,
-							),
-						)
-					}
-
-					return true
-				} finally {
-					this.loading = { ...this.loading, [`delete_${objectId}`]: false }
-				}
+				return await deleteObjectItem(this, typeOrObject)
 			},
 
 			/**
