@@ -91,43 +91,29 @@ class CmdbImportReport {
 	}//end __construct()
 
 	/**
-	 * Add one row outcome.
+	 * Add one row outcome, with the row's warnings and objects.
 	 *
-	 * @param string $sheet The sheet name.
-	 * @param int $row The 1-based sheet row number, or 0 for an application the reconciliation archived or deleted.
-	 * @param string $appId The APPID ('' when missing).
-	 * @param string $name The application name ('' when missing).
-	 * @param string $outcome One of the outcome constants.
-	 * @param array<int, string> $reasons Why the row was skipped or failed.
-	 * @param array<int, string> $warnings Row warnings.
-	 * @param string|null $moduleUuid The module, when there is one.
-	 * @param string|null $usageUuid The usage, when there is one.
+	 * The row is the 1-based sheet row, or row 0 for an application the
+	 * reconciliation archived or deleted; its APPID and name are '' when missing.
+	 *
+	 * @param CmdbImportRow  $row     The row: where it is, its warnings, its module and usage.
+	 * @param CmdbRowOutcome $outcome The outcome and its reasons.
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
 	 */
-	public function addRow(
-		string $sheet,
-		int $row,
-		string $appId,
-		string $name,
-		string $outcome,
-		array $reasons = [],
-		array $warnings = [],
-		?string $moduleUuid = null,
-		?string $usageUuid = null,
-	): void {
+	public function addRow(CmdbImportRow $row, CmdbRowOutcome $outcome): void {
 		$this->rows[] = [
-			'sheet' => $sheet,
-			'row' => $row,
-			'appId' => $appId,
-			'name' => $name,
-			'outcome' => $outcome,
-			'reasons' => array_values($reasons),
-			'warnings' => array_values($warnings),
-			'moduleUuid' => $moduleUuid,
-			'usageUuid' => $usageUuid,
+			'sheet' => $row->entry['sheet'],
+			'row' => $row->entry['row'],
+			'appId' => $row->entry['appId'],
+			'name' => $row->entry['name'],
+			'outcome' => $outcome->outcome,
+			'reasons' => array_values($outcome->reasons),
+			'warnings' => array_values($row->warnings),
+			'moduleUuid' => $row->moduleUuid,
+			'usageUuid' => $row->usageUuid,
 		];
 	}//end addRow()
 

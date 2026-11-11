@@ -21,6 +21,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Service\Cmdb;
 
 use OCA\Stackiq\Service\Cmdb\CmdbImportReport;
+use OCA\Stackiq\Service\Cmdb\CmdbImportRow;
+use OCA\Stackiq\Service\Cmdb\CmdbRowOutcome;
 use PHPUnit\Framework\TestCase;
 
 /**
@@ -28,17 +30,31 @@ use PHPUnit\Framework\TestCase;
  */
 class CmdbImportReportTest extends TestCase {
 	/**
+	 * A row outside a run, at the given place, with the given warnings.
+	 *
+	 * @param array{sheet: string, row: int, appId: string, name: string} $entry    Where the row is.
+	 * @param array<int, string>                                          $warnings The row's warnings.
+	 *
+	 * @return CmdbImportRow
+	 */
+	private function row(array $entry, array $warnings): CmdbImportRow {
+		$row           = new CmdbImportRow(run: null, entry: $entry);
+		$row->warnings = $warnings;
+		return $row;
+	}//end row()
+
+	/**
 	 * A report of five rows, one of each kind that matters.
 	 *
 	 * @return CmdbImportReport
 	 */
 	private function report(): CmdbImportReport {
 		$report = new CmdbImportReport(operationId: 'cmdb-report-01', rowsRead: 5);
-		$report->addRow(sheet: 'S', row: 2, appId: '1', name: 'Een', outcome: CmdbImportReport::CREATED);
-		$report->addRow(sheet: 'S', row: 3, appId: '2', name: 'Twee', outcome: CmdbImportReport::UPDATED, warnings: ['let op']);
-		$report->addRow(sheet: 'S', row: 4, appId: '3', name: 'Drie', outcome: CmdbImportReport::SKIPPED, reasons: ['exists']);
-		$report->addRow(sheet: 'S', row: 5, appId: '4', name: 'Vier', outcome: CmdbImportReport::FAILED, reasons: ['step "module" failed (RuntimeException)']);
-		$report->addRow(sheet: 'S', row: 6, appId: '5', name: 'Vijf', outcome: CmdbImportReport::FAILED, reasons: ['step "usage" failed (RuntimeException)']);
+		$report->addRow(row: $this->row(entry: ['sheet' => 'S', 'row' => 2, 'appId' => '1', 'name' => 'Een'], warnings: []), outcome: new CmdbRowOutcome(outcome: CmdbImportReport::CREATED, reasons: []));
+		$report->addRow(row: $this->row(entry: ['sheet' => 'S', 'row' => 3, 'appId' => '2', 'name' => 'Twee'], warnings: ['let op']), outcome: new CmdbRowOutcome(outcome: CmdbImportReport::UPDATED, reasons: []));
+		$report->addRow(row: $this->row(entry: ['sheet' => 'S', 'row' => 4, 'appId' => '3', 'name' => 'Drie'], warnings: []), outcome: new CmdbRowOutcome(outcome: CmdbImportReport::SKIPPED, reasons: ['exists']));
+		$report->addRow(row: $this->row(entry: ['sheet' => 'S', 'row' => 5, 'appId' => '4', 'name' => 'Vier'], warnings: []), outcome: new CmdbRowOutcome(outcome: CmdbImportReport::FAILED, reasons: ['step "module" failed (RuntimeException)']));
+		$report->addRow(row: $this->row(entry: ['sheet' => 'S', 'row' => 6, 'appId' => '5', 'name' => 'Vijf'], warnings: []), outcome: new CmdbRowOutcome(outcome: CmdbImportReport::FAILED, reasons: ['step "usage" failed (RuntimeException)']));
 		return $report;
 	}//end report()
 
@@ -79,10 +95,10 @@ class CmdbImportReportTest extends TestCase {
 	 */
 	public function testTheReconciliationOutcomesAreCounted(): void {
 		$report = new CmdbImportReport(operationId: 'cmdb-report-02', rowsRead: 2);
-		$report->addRow(sheet: 'S', row: 2, appId: '1', name: 'Een', outcome: CmdbImportReport::UNARCHIVED);
-		$report->addRow(sheet: 'S', row: 3, appId: '2', name: 'Twee', outcome: CmdbImportReport::RESTORED);
-		$report->addRow(sheet: 'Gearchiveerde Applicaties', row: 0, appId: '7', name: 'Zeven', outcome: CmdbImportReport::ARCHIVED);
-		$report->addRow(sheet: '', row: 0, appId: '8', name: 'Acht', outcome: CmdbImportReport::DELETED);
+		$report->addRow(row: $this->row(entry: ['sheet' => 'S', 'row' => 2, 'appId' => '1', 'name' => 'Een'], warnings: []), outcome: new CmdbRowOutcome(outcome: CmdbImportReport::UNARCHIVED, reasons: []));
+		$report->addRow(row: $this->row(entry: ['sheet' => 'S', 'row' => 3, 'appId' => '2', 'name' => 'Twee'], warnings: []), outcome: new CmdbRowOutcome(outcome: CmdbImportReport::RESTORED, reasons: []));
+		$report->addRow(row: $this->row(entry: ['sheet' => 'Gearchiveerde Applicaties', 'row' => 0, 'appId' => '7', 'name' => 'Zeven'], warnings: []), outcome: new CmdbRowOutcome(outcome: CmdbImportReport::ARCHIVED, reasons: []));
+		$report->addRow(row: $this->row(entry: ['sheet' => '', 'row' => 0, 'appId' => '8', 'name' => 'Acht'], warnings: []), outcome: new CmdbRowOutcome(outcome: CmdbImportReport::DELETED, reasons: []));
 
 		$summary = $report->summary();
 		$this->assertSame(2, $summary['processed']);
