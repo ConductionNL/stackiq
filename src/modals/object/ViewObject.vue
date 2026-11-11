@@ -1962,6 +1962,12 @@ import PublishedIcon from '../../components/PublishedIcon.vue'
 import { getTheme } from '../../services/getTheme.js'
 import { FILE_ACTIONS } from './objectFileActions.js'
 import {
+	editorContent,
+	isUsableTitle,
+	sharedSchemaIds,
+	titleOption,
+} from './objectFormOptions.js'
+import {
 	orderedPropertyRows,
 	schemaPropertyRows,
 } from './objectPropertyRows.js'
@@ -2327,15 +2333,9 @@ export default {
 			}
 
 			const selectedCatalogRegisterIds = fullCatalog.registers || []
-
 			return objectStore.availableRegisters
-				.filter((register) =>
-					selectedCatalogRegisterIds.includes(register.id),
-				)
-				.map((register) => ({
-					id: register.id,
-					label: register.title,
-				}))
+				.filter((register) => selectedCatalogRegisterIds.includes(register.id))
+				.map((register) => titleOption(register))
 		},
 
 		/**
@@ -2352,26 +2352,10 @@ export default {
 			const catalog = objectStore
 				.getCollection('catalog')
 				.results.find((catalog) => catalog.id === this.selectedCatalog.id)
-
 			if (!register || !catalog) {
 				return []
 			}
-
-			const registerSchemaIds =
-				register.schemas?.map((schema) => schema.id) || []
-			const catalogSchemaIds = catalog.schemas || []
-
-			// only get schema ids where the id is in both registerSchemaIds and catalogSchemaIds
-			const validSchemaIds = registerSchemaIds.filter((id) =>
-				catalogSchemaIds.includes(id),
-			)
-
-			return objectStore.availableSchemas
-				.filter((schema) => validSchemaIds.includes(schema.id))
-				.map((schema) => ({
-					id: schema.id,
-					label: schema.title,
-				}))
+			return this.schemaOptionsOf(sharedSchemaIds(register, catalog))
 		},
 
 		hasSelectedSchema() {
@@ -2573,6 +2557,19 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * The available schemas with the given ids, as select options.
+		 *
+		 * @param {Array<string>} schemaIds The schema ids.
+		 * @return {Array<{id: string, label: string}>} The options.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		schemaOptionsOf(schemaIds) {
+			return objectStore.availableSchemas
+				.filter((schema) => schemaIds.includes(schema.id))
+				.map((schema) => titleOption(schema))
+		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -3476,16 +3473,7 @@ export default {
 
 			// Return the title if it exists and is not empty or just "new" (placeholder)
 			const title = schemaProperty?.title
-			if (
-				title
-				&& typeof title === 'string'
-				&& title.trim() !== ''
-				&& title.trim().toLowerCase() !== 'new'
-			) {
-				return title
-			}
-
-			return key
+			return isUsableTitle(title) ? title : key
 		},
 
 		/**
@@ -3699,26 +3687,9 @@ export default {
 		 */
 		updateMarkdownValue(key, editorInstance) {
 			// Get the current content from the editor as MARKDOWN
-			let content = ''
-
+			let content
 			try {
-				// Always prefer markdown output over HTML
-				if (
-					editorInstance
-					&& typeof editorInstance.getMarkdown === 'function'
-				) {
-					content = editorInstance.getMarkdown()
-				} else if (
-					editorInstance
-					&& typeof editorInstance.getHTML === 'function'
-				) {
-					// Fallback to HTML if markdown not available
-					content = editorInstance.getHTML()
-				} else {
-					// Fallback: if it's a string, use it directly
-					content =
-						typeof editorInstance === 'string' ? editorInstance : ''
-				}
+				content = editorContent(editorInstance)
 			} catch (error) {
 				console.warn('Error getting content from markdown editor:', error)
 				content = ''
