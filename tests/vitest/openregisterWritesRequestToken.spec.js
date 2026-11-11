@@ -14,6 +14,7 @@ import { describe, expect, it } from 'vitest'
 
 const SRC = path.resolve(__dirname, '../../src')
 const WRITE = /method\s*:\s*[^,}]*\b(POST|PUT|PATCH|DELETE)\b/i
+const DYNAMIC_METHOD = /method\s*:\s*(?!['"`])[\w.[\]]+/
 const TOKEN = /requesttoken|getRequestToken|OCS-APIRequest|buildHeaders\(/i
 
 /**
@@ -59,14 +60,35 @@ function fetchCalls(text) {
 	return calls
 }
 
+/**
+ * Names of the methods and functions in a source that build an OpenRegister API URL.
+ *
+ * @param {string} text - The source
+ * @return {string[]} The helper names
+ */
+function urlHelpers(text) {
+	const names = []
+	const re = /(?:^|\n)\s*(?:function\s+)?(\w+)\s*\([^)]*\)\s*\{([^}]*)\}/g
+	let match
+	while ((match = re.exec(text)) !== null) {
+		if (match[2].includes('/apps/openregister/api')) {
+			names.push(match[1])
+		}
+	}
+	return names
+}
+
 describe('fetch() writes to OpenRegister send the request token', () => {
 	it('has no token-less write call', () => {
 		const missing = []
 		for (const file of sourceFiles(SRC)) {
 			const text = fs.readFileSync(file, 'utf8')
 			for (const { line, call, before } of fetchCalls(text)) {
-				const targetsOpenRegister = call.includes('openregister') || before.includes('openregister/api')
-				if (targetsOpenRegister && WRITE.test(call) && !TOKEN.test(call)) {
+				const targetsOpenRegister = call.includes('openregister')
+					|| before.includes('openregister/api')
+					|| urlHelpers(text).some((name) => call.includes(`${name}(`))
+				const writes = WRITE.test(call) || DYNAMIC_METHOD.test(call)
+				if (targetsOpenRegister && writes && !TOKEN.test(call)) {
 					missing.push(`${path.relative(SRC, file)}:${line}`)
 				}
 			}

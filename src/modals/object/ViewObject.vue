@@ -4346,6 +4346,7 @@ export default {
 				const ids = this.getRegisterSchemaIds(this.currentObject)
 				const response = await fetch(this.fileUrl(file, ids) + action.suffix, {
 					method: action.method,
+					headers: { requesttoken: getRequestToken() },
 				})
 
 				if (!response.ok) {
@@ -4370,6 +4371,7 @@ export default {
 				const ids = this.getRegisterSchemaIds(this.currentObject)
 				const response = await fetch(this.fileUrl(file, ids) + action.suffix, {
 					method: action.method,
+					headers: { requesttoken: getRequestToken() },
 				})
 
 				if (!response.ok) {
@@ -4475,6 +4477,7 @@ export default {
 					method: 'PUT',
 					headers: {
 						'Content-Type': 'application/json',
+						requesttoken: getRequestToken(),
 					},
 					body: JSON.stringify({
 						tags: editedTags,
