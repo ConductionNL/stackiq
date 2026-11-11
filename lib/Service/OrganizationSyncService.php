@@ -591,8 +591,7 @@ class OrganizationSyncService {
 	 *
 	 * @return array The sync statistics.
 	 *
-	 * @psalm-suppress UndefinedClass
-	 * @spec           openspec/specs/organization-sync/spec.md
+	 * @spec openspec/specs/organization-sync/spec.md
 	 */
 	public function performUserSync(): array {
 		$contactTableName = $this->userSyncContactTable();
@@ -683,6 +682,8 @@ class OrganizationSyncService {
 	 * Build JSON contains check - platform-specific.
 	 *
 	 * @return string The condition that the contact's username is not in its organisation's users.
+	 *
+	 * @psalm-suppress UndefinedClass
 	 */
 	private function usernameNotInUsersCheck(): string {
 		$platform = $this->db->getDatabasePlatform();
