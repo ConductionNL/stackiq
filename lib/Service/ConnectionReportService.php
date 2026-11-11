@@ -257,21 +257,33 @@ class ConnectionReportService {
 			return false;
 		}
 
-		$available = ($status['available'] ?? false) === true;
-		if ($available === true && ($status['enabled'] ?? false) !== true) {
-			return false;
-		}
-
-		$blocked = $this->federationBlocker(
-			available: $available,
-			peerCount: count((array) ($status['peers'] ?? []))
-		);
+		$blocked = $this->blockingFederationState(status: $status);
 		if ($blocked === null) {
 			return false;
 		}
 
 		return $this->report(key: self::KEY_FEDERATION, status: $blocked[0], message: $blocked[1]);
 	}//end federationPeersChanged()
+
+	/**
+	 * The state that blocks federation after a peer change, or null when there
+	 * is nothing to report (switched off while available, or ready).
+	 *
+	 * @param array<string, mixed> $status The result of FederationService::getStatus().
+	 *
+	 * @return array{0: string, 1: string}|null Status and message.
+	 */
+	private function blockingFederationState(array $status): ?array {
+		$available = ($status['available'] ?? false) === true;
+		if ($available === true && ($status['enabled'] ?? false) !== true) {
+			return null;
+		}
+
+		return $this->federationBlocker(
+			available: $available,
+			peerCount: count((array) ($status['peers'] ?? []))
+		);
+	}//end blockingFederationState()
 
 	/**
 	 * After a federation pull: report what the peers answered.
@@ -605,13 +617,7 @@ class ConnectionReportService {
 	 */
 	private function send(string $key, callable $build): bool {
 		try {
-			$event = $build();
-			if (($event instanceof Event) === false) {
-				return false;
-			}
-
-			$this->eventDispatcher->dispatchTyped($event);
-			return true;
+			return $this->dispatchBuilt(build: $build);
 		} catch (Throwable $e) {
 			$this->logger->warning(
 				'Stackiq: could not send a connection event to integriq',
@@ -620,4 +626,21 @@ class ConnectionReportService {
 			return false;
 		}
 	}//end send()
+
+	/**
+	 * Build the event and dispatch it when it is one.
+	 *
+	 * @param callable(): object $build Builds the event.
+	 *
+	 * @return bool True when an event was dispatched.
+	 */
+	private function dispatchBuilt(callable $build): bool {
+		$event = $build();
+		if (($event instanceof Event) === false) {
+			return false;
+		}
+
+		$this->eventDispatcher->dispatchTyped($event);
+		return true;
+	}//end dispatchBuilt()
 }//end class
