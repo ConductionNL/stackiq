@@ -83,6 +83,34 @@ final class AnonymousRegistrationListenerTest extends TestCase {
 		}
 	}//end testOnlyAnAnonymousOrganisationCreateIsRefused()
 
+	public function testAnotherEventOrAnUnconfiguredSchemaIsLeftAlone(): void {
+		$other = $this->createMock(\OCP\EventDispatcher\Event::class);
+		$this->listener(user: null, held: ['held-uuid'])->handle($other);
+
+		$session = $this->createMock(IUserSession::class);
+		$session->method('getUser')->willReturn(null);
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getVoorzieningenConfig')->willReturn([]);
+		$organisations = $this->createMock(OrganisationMapper::class);
+		$organisations->expects($this->never())->method('findByUuid');
+		$event = $this->event(schema: '', data: ['name' => 'Chosen'], uuid: 'held-uuid');
+
+		(new AnonymousRegistrationListener($session, $settings, $organisations, false))->handle($event);
+
+		self::assertFalse($event->isPropagationStopped());
+		self::assertSame([], $event->getModifiedData());
+	}//end testAnotherEventOrAnUnconfiguredSchemaIsLeftAlone()
+
+	public function testTheRefusalSaysOnlyThatTheOrganisationCouldNotBeRegistered(): void {
+		$event = $this->event(schema: '30', data: ['name' => 'Chosen'], uuid: 'held-uuid');
+
+		$this->listener(user: null, held: ['held-uuid'])->handle($event);
+
+		self::assertTrue($event->isPropagationStopped());
+		self::assertSame(['message' => 'This organisation could not be registered.'], $event->getErrors());
+		self::assertSame([], $event->getModifiedData());
+	}//end testTheRefusalSaysOnlyThatTheOrganisationCouldNotBeRegistered()
+
 	public function testAnotherSchemaIsLeftAlone(): void {
 		$event = $this->event(schema: '31', data: ['name' => 'A module']);
 
