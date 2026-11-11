@@ -317,6 +317,30 @@ class ConnectionReportServiceTest extends TestCase {
 	}//end testAPullWithFailingPeersIsNeverConfigured()
 
 	/**
+	 * A peer entry that is not an array is not counted as failed, and a pull without `ok` reads failed.
+	 *
+	 * @return void
+	 */
+	public function testAPullCountsOnlyArrayPeersAsFailedAndReadsAMissingOkAsFailed(): void {
+		$service = $this->service();
+		$good    = ['peer' => 'https://good.example/catalog', 'ok' => true];
+		$bad     = ['peer' => 'https://bad.example/catalog', 'reason' => 'Timeout'];
+
+		$this->assertSame(
+			expected: ['configured', 'All 2 peer catalogs answered the last pull.'],
+			actual: $service->describePull(pull: ['ok' => true, 'peers' => ['a' => $good, 'b' => 'not-an-array']])
+		);
+		$this->assertSame(
+			expected: ['limited', '2 of 3 peer catalogs answered the last pull. bad.example did not: Timeout'],
+			actual: $service->describePull(pull: ['ok' => true, 'peers' => [$good, $bad, $good]])
+		);
+		$this->assertSame(
+			expected: ['error', 'The last federation pull failed: '],
+			actual: $service->describePull(pull: ['peers' => [$good]])
+		);
+	}//end testAPullCountsOnlyArrayPeersAsFailedAndReadsAMissingOkAsFailed()
+
+	/**
 	 * A message names a peer by host, never by path, query or credentials, and cuts a long reason.
 	 *
 	 * Every admin reads the row, and a peer URL can carry a token.
