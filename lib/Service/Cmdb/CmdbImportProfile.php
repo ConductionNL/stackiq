@@ -42,6 +42,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Cmdb;
 
+use Closure;
 use OCA\Stackiq\Exception\CmdbImportException;
 use Psr\Container\ContainerInterface;
 use Throwable;
@@ -233,65 +234,149 @@ class CmdbImportProfile {
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function loadPacks(callable $storedPack): void {
-		$validator = $this->resolveValidator();
-		$profile = $this->decodeFile(fileName: $this->profileFile);
-		$store = $this->packStore();
-		$storeAvailable = $store->isAvailable();
-		if ($storeAvailable === false) {
-			$store->assertShippedFallbackAllowed();
+		$run = new CmdbPackLoadRun(
+			validator: $this->resolveValidator(),
+			profile: $this->decodeFile(fileName: $this->profileFile)
+		);
+		$run->readStored = $this->storeReader(storedPack: $storedPack);
+		foreach (self::TARGETS as $target) {
+			$this->loadTarget(run: $run, target: $target);
 		}
 
-		$packs = [];
-		$sources = [];
-		foreach (self::TARGETS as $target) {
-			$fileName = (string)($profile['packs'][$target] ?? '');
-			$shipped = $this->readShippedPack(profile: $profile, target: $target, validator: $validator);
-			$pack = $shipped;
-			$label = 'CMDB mapping pack ' . $fileName;
-			$details = [];
-			$source = [
-				'source' => 'file',
-				'packId' => null,
-				'storedVersion' => null,
-				'shippedVersion' => (string)($shipped['version'] ?? ''),
-				'edited' => null,
-				'newerShipped' => false,
-				'updatePending' => false,
-			];
-
-			$stored = null;
-			if ($storeAvailable === true && in_array($target, self::EDITABLE_TARGETS, true) === true) {
-				$stored = $storedPack($store, $shipped);
-			}
-
-			if ($stored !== null) {
-				$pack = $stored['pack'];
-				$label = 'OpenRegister migration pack ' . $stored['slug'] . ' (id ' . $stored['id'] . ')';
-				$details = ['pack' => $stored['slug'], 'packId' => $stored['id']];
-				$this->assertValidPack(validator: $validator, pack: $pack, label: $label, details: $details);
-				$source = array_merge(
-					$source,
-					[
-						'source' => 'openregister',
-						'packId' => $stored['id'],
-						'storedVersion' => $stored['storedVersion'],
-						'edited' => $stored['edited'],
-						'newerShipped' => $stored['newerShipped'],
-						'updatePending' => $stored['updatePending'],
-					]
-				);
-			}
-
-			$this->assertImportRules(target: $target, pack: $pack, profile: $profile, label: $label, details: $details);
-			$packs[$target] = $pack;
-			$sources[$target] = $source;
-		}//end foreach
-
-		$this->profile = $profile;
-		$this->packs = $packs;
-		$this->sources = $sources;
-		$this->storeAvailable = $storeAvailable;
+		$this->profile = $run->profile;
+		$this->packs = $run->packs;
+		$this->sources = $run->sources;
+		$this->storeAvailable = ($run->readStored !== null);
 	}//end loadPacks()
+
+	/**
+	 * The reader of the stored pack for a shipped one, or null when the store is not available.
+	 *
+	 * A store that is not available is allowed only when no pack was ever
+	 * stored there; otherwise the load fails closed.
+	 *
+	 * @param callable $storedPack (store, shipped pack) => the stored pack, or null to use the shipped file.
+	 *
+	 * @return Closure|null (shipped pack) => the stored pack or null; null without a store.
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the store is gone after the packs were stored there.
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	private function storeReader(callable $storedPack): ?Closure {
+		$store = $this->packStore();
+		if ($store->isAvailable() === false) {
+			$store->assertShippedFallbackAllowed();
+			return null;
+		}
+
+		return static fn (array $shipped): ?array => $storedPack($store, $shipped);
+	}//end storeReader()
+
+	/**
+	 * Take the pack of one target: the shipped file, or the stored pack when the store holds one, and check its import rules.
+	 *
+	 * @param CmdbPackLoadRun $run The load.
+	 * @param string $target The target.
+	 *
+	 * @return void
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE when a pack is unreadable, invalid or breaks an import rule.
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	private function loadTarget(CmdbPackLoadRun $run, string $target): void {
+		$shipped = $this->readShippedPack(profile: $run->profile, target: $target, validator: $run->validator);
+		$run->packs[$target] = $shipped;
+		$run->origins[$target] = new CmdbPackOrigin(label: 'CMDB mapping pack ' . (string)($run->profile['packs'][$target] ?? ''));
+		$run->sources[$target] = $this->fileSource(shipped: $shipped);
+		$this->takeStoredPack(run: $run, target: $target);
+		$this->assertImportRules(run: $run, target: $target);
+	}//end loadTarget()
+
+	/**
+	 * Replace the shipped pack of a target by the validated stored pack, when the store holds one for an editable target.
+	 *
+	 * @param CmdbPackLoadRun $run The load, holding the shipped pack of the target.
+	 * @param string $target The target.
+	 *
+	 * @return void
+	 *
+	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the stored pack is invalid.
+	 *
+	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
+	 */
+	private function takeStoredPack(CmdbPackLoadRun $run, string $target): void {
+		if ($run->readStored === null || in_array($target, self::EDITABLE_TARGETS, true) === false) {
+			return;
+		}
+
+		$stored = ($run->readStored)($run->packs[$target]);
+		if ($stored === null) {
+			return;
+		}
+
+		$origin = $this->storedOrigin(stored: $stored);
+		$this->assertValidPack(validator: $run->validator, pack: $stored['pack'], label: $origin->label, details: $origin->details);
+		$run->packs[$target] = $stored['pack'];
+		$run->origins[$target] = $origin;
+		$run->sources[$target] = $this->storedSource(source: $run->sources[$target], stored: $stored);
+	}//end takeStoredPack()
+
+	/**
+	 * Where a stored pack came from: its OpenRegister slug and id.
+	 *
+	 * @param array<string, mixed> $stored The stored pack as the store answers it.
+	 *
+	 * @return CmdbPackOrigin
+	 */
+	private function storedOrigin(array $stored): CmdbPackOrigin {
+		return new CmdbPackOrigin(
+			label: 'OpenRegister migration pack ' . $stored['slug'] . ' (id ' . $stored['id'] . ')',
+			details: ['pack' => $stored['slug'], 'packId' => $stored['id']]
+		);
+	}//end storedOrigin()
+
+	/**
+	 * Where a pack taken from its shipped file came from, as the mapping overview shows it.
+	 *
+	 * @param array<string, mixed> $shipped The shipped pack.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function fileSource(array $shipped): array {
+		return [
+			'source' => 'file',
+			'packId' => null,
+			'storedVersion' => null,
+			'shippedVersion' => (string)($shipped['version'] ?? ''),
+			'edited' => null,
+			'newerShipped' => false,
+			'updatePending' => false,
+		];
+	}//end fileSource()
+
+	/**
+	 * Where a pack taken from OpenRegister's store came from, as the mapping overview shows it.
+	 *
+	 * @param array<string, mixed> $source The source of the shipped pack.
+	 * @param array<string, mixed> $stored The stored pack as the store answers it.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function storedSource(array $source, array $stored): array {
+		return array_merge(
+			$source,
+			[
+				'source' => 'openregister',
+				'packId' => $stored['id'],
+				'storedVersion' => $stored['storedVersion'],
+				'edited' => $stored['edited'],
+				'newerShipped' => $stored['newerShipped'],
+				'updatePending' => $stored['updatePending'],
+			]
+		);
+	}//end storedSource()
 
 	/**
 	 * The shipped packs an administrator edits in OpenRegister, validated, per target.
@@ -468,25 +553,51 @@ class CmdbImportProfile {
 				continue;
 			}
 
-			$constants = [];
-			if (is_array($sheet['constants'] ?? null) === true) {
-				foreach ($sheet['constants'] as $column => $value) {
-					if (is_scalar($value) === true) {
-						$constants[(string)$column] = (string)$value;
-					}
-				}
-			}
-
-			$absent = [];
-			if (is_array($sheet['absentColumns'] ?? null) === true) {
-				$absent = array_values(array_map('strval', $sheet['absentColumns']));
-			}
-
-			$sheets[] = ['name' => $sheet['name'], 'constants' => $constants, 'absentColumns' => $absent];
-		}//end foreach
+			$sheets[] = $this->sheetEntry(sheet: $sheet);
+		}
 
 		return $sheets;
 	}//end sheets()
+
+	/**
+	 * One named sheet of the profile: its name, its scalar constants and the columns it lacks.
+	 *
+	 * @param array<string, mixed> $sheet The sheet as the profile holds it.
+	 *
+	 * @return array{name: string, constants: array<string, string>, absentColumns: array<int, string>}
+	 */
+	private function sheetEntry(array $sheet): array {
+		$constants = $this->scalarConstants(sheet: $sheet);
+
+		$absent = [];
+		if (is_array($sheet['absentColumns'] ?? null) === true) {
+			$absent = array_values(array_map('strval', $sheet['absentColumns']));
+		}
+
+		return ['name' => $sheet['name'], 'constants' => $constants, 'absentColumns' => $absent];
+	}//end sheetEntry()
+
+	/**
+	 * The scalar constants of a sheet, as strings per column.
+	 *
+	 * @param array<string, mixed> $sheet The sheet as the profile holds it.
+	 *
+	 * @return array<string, string>
+	 */
+	private function scalarConstants(array $sheet): array {
+		$constants = [];
+		if (is_array($sheet['constants'] ?? null) === false) {
+			return $constants;
+		}
+
+		foreach ($sheet['constants'] as $column => $value) {
+			if (is_scalar($value) === true) {
+				$constants[(string)$column] = (string)$value;
+			}
+		}
+
+		return $constants;
+	}//end scalarConstants()
 
 	/**
 	 * The names of the source sheets.
@@ -690,13 +801,20 @@ class CmdbImportProfile {
 				continue;
 			}
 
-			foreach (($this->pack(target: $target)['fieldMappings'] ?? []) as $mapping) {
-				if (is_array($mapping) === true && ($mapping['transform']['type'] ?? null) === 'date') {
-					$columns[] = (string)($mapping['source'] ?? '');
-				}
-			}
+			$columns = array_merge($columns, $this->packDateColumns(target: $target));
 		}
 
+		return $this->withoutConstantColumns(columns: $columns);
+	}//end dateColumns()
+
+	/**
+	 * The distinct non-empty columns that are not filled from a sheet constant.
+	 *
+	 * @param array<int, string> $columns The columns.
+	 *
+	 * @return array<int, string>
+	 */
+	private function withoutConstantColumns(array $columns): array {
 		$constants = $this->constantColumns();
 		return array_values(
 			array_unique(
@@ -706,7 +824,25 @@ class CmdbImportProfile {
 				)
 			)
 		);
-	}//end dateColumns()
+	}//end withoutConstantColumns()
+
+	/**
+	 * The source columns a pack maps with a date transform.
+	 *
+	 * @param string $target The target.
+	 *
+	 * @return array<int, string>
+	 */
+	private function packDateColumns(string $target): array {
+		$columns = [];
+		foreach (($this->pack(target: $target)['fieldMappings'] ?? []) as $mapping) {
+			if (is_array($mapping) === true && ($mapping['transform']['type'] ?? null) === 'date') {
+				$columns[] = (string)($mapping['source'] ?? '');
+			}
+		}
+
+		return $columns;
+	}//end packDateColumns()
 
 	/**
 	 * Columns that hold identifiers which must not carry a decimal part.
@@ -822,22 +958,43 @@ class CmdbImportProfile {
 	public function concatSeparator(string $target, string $field): ?string {
 		$separator = null;
 		foreach (($this->pack(target: $target)['fieldMappings'] ?? []) as $mapping) {
-			if (is_array($mapping) === false || ($mapping['target'] ?? null) !== $field) {
-				continue;
-			}
-
-			if (($mapping['transform']['type'] ?? null) !== 'concat') {
-				continue;
-			}
-
-			$separator = ($mapping['transform']['separator'] ?? self::DEFAULT_CONCAT_SEPARATOR);
-			if (is_string($separator) === false || $separator === '') {
-				$separator = self::DEFAULT_CONCAT_SEPARATOR;
+			if ($this->isConcatMappingOf(mapping: $mapping, field: $field) === true) {
+				$separator = $this->mappingSeparator(mapping: $mapping);
 			}
 		}
 
 		return $separator;
 	}//end concatSeparator()
+
+	/**
+	 * The separator of a concat mapping; the default when it names none or an empty one.
+	 *
+	 * @param array<string, mixed> $mapping The concat field mapping.
+	 *
+	 * @return string
+	 */
+	private function mappingSeparator(array $mapping): string {
+		$separator = ($mapping['transform']['separator'] ?? self::DEFAULT_CONCAT_SEPARATOR);
+		if (is_string($separator) === false || $separator === '') {
+			$separator = self::DEFAULT_CONCAT_SEPARATOR;
+		}
+
+		return $separator;
+	}//end mappingSeparator()
+
+	/**
+	 * Whether a field mapping writes the field with a concat transform.
+	 *
+	 * @param mixed $mapping The field mapping.
+	 * @param string $field The target field.
+	 *
+	 * @return bool
+	 */
+	private function isConcatMappingOf(mixed $mapping, string $field): bool {
+		return is_array($mapping) === true
+			&& ($mapping['target'] ?? null) === $field
+			&& ($mapping['transform']['type'] ?? null) === 'concat';
+	}//end isConcatMappingOf()
 
 	/**
 	 * The accepted values of the missingRecords option, readable without validating the packs.
@@ -875,20 +1032,9 @@ class CmdbImportProfile {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-3
 	 */
 	public function referencedColumns(): array {
-		$columns = array_merge(
-			[$this->keyColumn(), $this->nameColumn()],
-			$this->requiredColumns(),
-			$this->dateColumns(),
-			$this->idColumns()
-		);
-
+		$columns = $this->profileColumns();
 		foreach (self::TARGETS as $target) {
-			foreach (($this->pack(target: $target)['fieldMappings'] ?? []) as $mapping) {
-				$columns[] = (string)($mapping['source'] ?? '');
-				foreach (($mapping['transform']['fields'] ?? []) as $extra) {
-					$columns[] = (string)$extra;
-				}
-			}
+			$columns = array_merge($columns, $this->packColumns(target: $target));
 		}
 
 		$excluded = array_merge(self::OPTION_SOURCES, $this->constantColumns());
@@ -899,6 +1045,39 @@ class CmdbImportProfile {
 
 		return array_values(array_unique($columns));
 	}//end referencedColumns()
+
+	/**
+	 * The columns the profile itself names: the key, the name, the required, date and id columns.
+	 *
+	 * @return array<int, string>
+	 */
+	private function profileColumns(): array {
+		return array_merge(
+			[$this->keyColumn(), $this->nameColumn()],
+			$this->requiredColumns(),
+			$this->dateColumns(),
+			$this->idColumns()
+		);
+	}//end profileColumns()
+
+	/**
+	 * The columns a pack reads: each mapping's source and the extra fields of its transform.
+	 *
+	 * @param string $target The target.
+	 *
+	 * @return array<int, string>
+	 */
+	private function packColumns(string $target): array {
+		$columns = [];
+		foreach (($this->pack(target: $target)['fieldMappings'] ?? []) as $mapping) {
+			$columns[] = (string)($mapping['source'] ?? '');
+			foreach (($mapping['transform']['fields'] ?? []) as $extra) {
+				$columns[] = (string)$extra;
+			}
+		}
+
+		return $columns;
+	}//end packColumns()
 
 	/**
 	 * The profile and the packs as the admin settings show them: what the next import runs.
@@ -926,64 +1105,30 @@ class CmdbImportProfile {
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-3
 	 */
 	public function mappingOverview(): array {
-		$profile = $this->profile();
+		$this->profile();
 
 		$packs = [];
 		foreach (self::TARGETS as $target) {
-			$pack = $this->pack(target: $target);
-			$mappings = [];
-			foreach (($pack['fieldMappings'] ?? []) as $mapping) {
-				if (is_array($mapping) === false) {
-					continue;
-				}
-
-				$transform = $mapping['transform'] ?? null;
-				if (is_array($transform) === false) {
-					$transform = null;
-				}
-
-				$mappings[] = [
-					'source' => (string)($mapping['source'] ?? ''),
-					'target' => (string)($mapping['target'] ?? ''),
-					'required' => (bool)($mapping['required'] ?? false),
-					'transform' => $transform,
-				];
-			}
-
-			// A create-only default that is not a mapped field (the module type) is a
-			// value the import sets on create; merge() never reads it on update, so it
-			// is listed under createOnlyDefaults only. A mapped field keeps its place
-			// in createOnlyFields, since merge() guards it on update.
-			$createOnlyDefaults = $this->createOnlyDefaults(target: $target);
-			$unmappedDefaults = array_diff(array_map('strval', array_keys($createOnlyDefaults)), array_column($mappings, 'target'));
-			$createOnlyFields = array_values(array_diff($this->createOnlyFields(target: $target), $unmappedDefaults));
-
-			$defaults = $pack['defaults'] ?? [];
-			if (is_array($defaults) === false) {
-				$defaults = [];
-			}
-
-			$packs[] = array_merge(
-				[
-					'target' => $target,
-					'file' => (string)($profile['packs'][$target] ?? ''),
-					'id' => (string)($pack['id'] ?? ''),
-					'name' => (string)($pack['name'] ?? ''),
-					'version' => (string)($pack['version'] ?? ''),
-					'description' => (string)($pack['description'] ?? ''),
-					'fieldMappings' => $mappings,
-					'defaults' => $defaults,
-					'createOnlyDefaults' => $createOnlyDefaults,
-					'createOnlyFields' => $createOnlyFields,
-					'neverWritten' => $this->neverWrittenOnUpdate(target: $target),
-				],
-				$this->sources[$target],
-				['editable' => in_array($target, self::EDITABLE_TARGETS, true)]
-			);
-		}//end foreach
+			$packs[] = $this->packOverview(target: $target);
+		}
 
 		return [
-			'profile' => [
+			'profile' => $this->profileOverview(),
+			'packs' => $packs,
+			'openRegisterPacks' => $this->storeAvailable,
+		];
+	}//end mappingOverview()
+
+	/**
+	 * The profile as the mapping overview shows it.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function profileOverview(): array {
+		$profile = $this->profile();
+
+		return array_merge(
+			[
 				'id' => (string)($profile['id'] ?? ''),
 				'name' => (string)($profile['name'] ?? ''),
 				'version' => (string)($profile['version'] ?? ''),
@@ -991,19 +1136,151 @@ class CmdbImportProfile {
 				'sheets' => $this->sheets(),
 				'archiveSheet' => $this->archiveSheetName(),
 				'sheetPrecedence' => $this->stringList(key: 'sheetPrecedence'),
-				'keyColumn' => $this->keyColumn(),
-				'nameColumn' => $this->nameColumn(),
-				'requiredColumns' => $this->requiredColumns(),
-				'dateColumns' => $this->dateColumns(),
-				'idColumns' => $this->idColumns(),
-				'emptyValues' => $this->emptyValues(),
-				'externalKeyPrefix' => $this->externalKeyPrefix(),
-				'missingRecords' => $this->missingRecordsModes(),
 			],
-			'packs' => $packs,
-			'openRegisterPacks' => $this->storeAvailable,
+			$this->columnOverview()
+		);
+	}//end profileOverview()
+
+	/**
+	 * The columns of the profile and how the import reads them, as the mapping overview shows them.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function columnOverview(): array {
+		return [
+			'keyColumn' => $this->keyColumn(),
+			'nameColumn' => $this->nameColumn(),
+			'requiredColumns' => $this->requiredColumns(),
+			'dateColumns' => $this->dateColumns(),
+			'idColumns' => $this->idColumns(),
+			'emptyValues' => $this->emptyValues(),
+			'externalKeyPrefix' => $this->externalKeyPrefix(),
+			'missingRecords' => $this->missingRecordsModes(),
 		];
-	}//end mappingOverview()
+	}//end columnOverview()
+
+	/**
+	 * One pack as the mapping overview shows it: what it is, its write rules, where it came from and whether it is edited in OpenRegister.
+	 *
+	 * @param string $target The target.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function packOverview(string $target): array {
+		$pack = $this->pack(target: $target);
+
+		return array_merge(
+			$this->packIdentity(target: $target, pack: $pack),
+			$this->writeRuleOverview(target: $target, pack: $pack),
+			$this->sources[$target],
+			['editable' => in_array($target, self::EDITABLE_TARGETS, true)]
+		);
+	}//end packOverview()
+
+	/**
+	 * What a pack is: its target, its file and its own id, name, version and description.
+	 *
+	 * @param string $target The target.
+	 * @param array<string, mixed> $pack The pack.
+	 *
+	 * @return array<string, string>
+	 */
+	private function packIdentity(string $target, array $pack): array {
+		return [
+			'target' => $target,
+			'file' => (string)($this->profile()['packs'][$target] ?? ''),
+			'id' => (string)($pack['id'] ?? ''),
+			'name' => (string)($pack['name'] ?? ''),
+			'version' => (string)($pack['version'] ?? ''),
+			'description' => (string)($pack['description'] ?? ''),
+		];
+	}//end packIdentity()
+
+	/**
+	 * The field mappings of a pack and the write rules the import applies on top of them.
+	 *
+	 * @param string $target The target.
+	 * @param array<string, mixed> $pack The pack.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function writeRuleOverview(string $target, array $pack): array {
+		$mappings = $this->fieldMappingOverview(pack: $pack);
+
+		$defaults = $pack['defaults'] ?? [];
+		if (is_array($defaults) === false) {
+			$defaults = [];
+		}
+
+		return [
+			'fieldMappings' => $mappings,
+			'defaults' => $defaults,
+			'createOnlyDefaults' => $this->createOnlyDefaults(target: $target),
+			'createOnlyFields' => $this->guardedCreateOnlyFields(target: $target, mappings: $mappings),
+			'neverWritten' => $this->neverWrittenOnUpdate(target: $target),
+		];
+	}//end writeRuleOverview()
+
+	/**
+	 * The field mappings of a pack, with `required` as a boolean and the transform as the pack stores it.
+	 *
+	 * @param array<string, mixed> $pack The pack.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function fieldMappingOverview(array $pack): array {
+		$mappings = [];
+		foreach (($pack['fieldMappings'] ?? []) as $mapping) {
+			if (is_array($mapping) === false) {
+				continue;
+			}
+
+			$mappings[] = $this->mappingRow(mapping: $mapping);
+		}
+
+		return $mappings;
+	}//end fieldMappingOverview()
+
+	/**
+	 * One field mapping as the overview shows it.
+	 *
+	 * @param array<string, mixed> $mapping The field mapping of the pack.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function mappingRow(array $mapping): array {
+		$transform = $mapping['transform'] ?? null;
+		if (is_array($transform) === false) {
+			$transform = null;
+		}
+
+		return [
+			'source' => (string)($mapping['source'] ?? ''),
+			'target' => (string)($mapping['target'] ?? ''),
+			'required' => (bool)($mapping['required'] ?? false),
+			'transform' => $transform,
+		];
+	}//end mappingRow()
+
+	/**
+	 * The create-only fields merge() guards on update: the mapped ones.
+	 *
+	 * A create-only default that is not a mapped field (the module type) is a
+	 * value the import sets on create; merge() never reads it on update, so it
+	 * is listed under createOnlyDefaults only. A mapped field keeps its place
+	 * in createOnlyFields, since merge() guards it on update.
+	 *
+	 * @param string $target The target.
+	 * @param array<int, array<string, mixed>> $mappings The field mappings of its pack.
+	 *
+	 * @return array<int, string>
+	 */
+	private function guardedCreateOnlyFields(string $target, array $mappings): array {
+		$createOnlyDefaults = $this->createOnlyDefaults(target: $target);
+		$unmappedDefaults = array_diff(array_map('strval', array_keys($createOnlyDefaults)), array_column($mappings, 'target'));
+
+		return array_values(array_diff($this->createOnlyFields(target: $target), $unmappedDefaults));
+	}//end guardedCreateOnlyFields()
 
 	/**
 	 * The loaded profile; loaded read only when nothing loaded it yet.
@@ -1117,11 +1394,8 @@ class CmdbImportProfile {
 	 * dates or an admin field, and must keep the mappings the
 	 * import matches records on (REQ-CMDB-021, CmdbImportPackRules).
 	 *
+	 * @param CmdbPackLoadRun $run The load, holding the validated pack of the target and where it came from.
 	 * @param string $target The target.
-	 * @param array<string, mixed> $pack The validated pack.
-	 * @param array<string, mixed> $profile The decoded profile.
-	 * @param string $label The pack as the message names it.
-	 * @param array<string, mixed> $details The exception details: the OpenRegister pack and its id, for a stored pack.
 	 *
 	 * @return void
 	 *
@@ -1129,13 +1403,14 @@ class CmdbImportProfile {
 	 *
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
-	private function assertImportRules(string $target, array $pack, array $profile, string $label, array $details): void {
-		$violations = $this->rules->violations(target: $target, pack: $pack, profile: $profile);
+	private function assertImportRules(CmdbPackLoadRun $run, string $target): void {
+		$origin = $run->origins[$target];
+		$violations = $this->rules->violations(target: $target, pack: $run->packs[$target], profile: $run->profile);
 		if ($violations !== []) {
 			throw new CmdbImportException(
 				errorCode: CmdbImportException::MAPPING_UNAVAILABLE,
-				message: $label . ' breaks a rule of the CMDB import: ' . implode('; ', $violations),
-				details: $details
+				message: $origin->label . ' breaks a rule of the CMDB import: ' . implode('; ', $violations),
+				details: $origin->details
 			);
 		}
 	}//end assertImportRules()
@@ -1150,23 +1425,9 @@ class CmdbImportProfile {
 	private function resolveValidator(): object {
 		$class = static::VALIDATOR_CLASS;
 
-		try {
-			if ($this->container->has($class) === true) {
-				$validator = $this->container->get($class);
-				if (is_object($validator) === true && method_exists($validator, 'validate') === true) {
-					return $validator;
-				}
-			}
-		} catch (Throwable $e) {
-			// Fall through to the class check below.
-			$validator = null;
-		}
-
-		if (class_exists($class) === true) {
-			$validator = (new OpenRegisterInstance(container: $this->container))->build(class: $class);
-			if ($validator !== null && method_exists($validator, 'validate') === true) {
-				return $validator;
-			}
+		$validator = ($this->containerValidator(class: $class) ?? $this->builtValidator(class: $class));
+		if ($validator !== null) {
+			return $validator;
 		}
 
 		throw new CmdbImportException(
@@ -1174,6 +1435,56 @@ class CmdbImportProfile {
 			message: 'OpenRegister PackDefinitionValidator is not available'
 		);
 	}//end resolveValidator()
+
+	/**
+	 * The validator as the container holds it, when it has one with a `validate` method.
+	 *
+	 * @param string $class The validator class.
+	 *
+	 * @return object|null
+	 */
+	private function containerValidator(string $class): ?object {
+		try {
+			if ($this->container->has($class) === true) {
+				return $this->usableValidator(validator: $this->container->get($class));
+			}
+		} catch (Throwable) {
+			// Fall through to the class check.
+			return null;
+		}
+
+		return null;
+	}//end containerValidator()
+
+	/**
+	 * The validator built from its class, when the class exists and has a `validate` method.
+	 *
+	 * @param string $class The validator class.
+	 *
+	 * @return object|null
+	 */
+	private function builtValidator(string $class): ?object {
+		if (class_exists($class) === false) {
+			return null;
+		}
+
+		return $this->usableValidator(validator: (new OpenRegisterInstance(container: $this->container))->build(class: $class));
+	}//end builtValidator()
+
+	/**
+	 * The validator when it is an object with a `validate` method, otherwise null.
+	 *
+	 * @param mixed $validator The candidate.
+	 *
+	 * @return object|null
+	 */
+	private function usableValidator(mixed $validator): ?object {
+		if (is_object($validator) === true && method_exists($validator, 'validate') === true) {
+			return $validator;
+		}
+
+		return null;
+	}//end usableValidator()
 
 	/**
 	 * Read and decode one JSON file from the profile directory.
@@ -1185,11 +1496,7 @@ class CmdbImportProfile {
 	 * @throws CmdbImportException MAPPING_UNAVAILABLE when the file is missing or not a JSON object.
 	 */
 	private function decodeFile(string $fileName): array {
-		$path = $this->directory . '/' . $fileName;
-		$content = false;
-		if (is_readable($path) === true) {
-			$content = file_get_contents($path);
-		}
+		$content = $this->readFile(path: $this->directory . '/' . $fileName);
 
 		$decoded = null;
 		if (is_string($content) === true) {
@@ -1205,4 +1512,20 @@ class CmdbImportProfile {
 
 		return $decoded;
 	}//end decodeFile()
+
+	/**
+	 * The content of a readable file, or false.
+	 *
+	 * @param string $path The path.
+	 *
+	 * @return string|false
+	 */
+	private function readFile(string $path): string|false {
+		$content = false;
+		if (is_readable($path) === true) {
+			$content = file_get_contents($path);
+		}
+
+		return $content;
+	}//end readFile()
 }//end class
