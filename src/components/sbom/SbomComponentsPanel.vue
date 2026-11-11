@@ -554,58 +554,113 @@ export default {
 				return
 			}
 
-			this.uploading = true
-			this.uploadError = null
-			this.uploadSuccessMessage = null
-
+			this.startUpload()
 			try {
-				const formData = new FormData()
-				formData.append('sbomFile', this.selectedFile)
-				formData.append('format', this.format)
-
-				const url = generateUrl(
-					'/apps/stackiq/api/moduleversies/{moduleVersieUuid}/sbom',
-					{
-						moduleVersieUuid: String(this.objectId),
-					},
-				)
-
-				// Multipart upload: no Content-Type header — the browser sets
-				// the correct boundary (mirrors ArchiMate import's upload path).
-				const response = await fetch(url, {
-					method: 'POST',
-					headers: { 'X-Requested-With': 'XMLHttpRequest' },
-					body: formData,
-				})
-				const result = await response.json()
-
-				if (!response.ok || result.success === false) {
-					throw new Error(
-						result.message || t('stackiq', 'SBOM import failed'),
-					)
-				}
-
-				this.uploadSuccessMessage = t(
-					'stackiq',
-					'Imported {count} components.',
-					{ count: result.componentCount ?? 0 },
-				)
-				this.selectedFile = null
-				if (this.$refs.fileInput) {
-					this.$refs.fileInput.value = ''
-				}
-
+				this.applyImport(await this.uploadSbom())
 				// Re-fetch so the replaced set (and provenance) render immediately.
-				await Promise.all([
-					objectStore.fetchCollection('sbomComponent', { _limit: 1000 }),
-					objectStore.fetchCollection('moduleVersion', { _limit: 1000 }),
-				])
+				await this.refetchImported()
 			} catch (error) {
 				this.uploadError =
 					error.message || t('stackiq', 'SBOM import failed')
 			} finally {
 				this.uploading = false
 			}
+		},
+
+		/**
+		 * Mark the upload as running and clear the previous outcome.
+		 *
+		 * @return {void}
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-uploaded-sbom-files-are-bounded-in-size-and-json-only
+		 */
+		startUpload() {
+			this.uploading = true
+			this.uploadError = null
+			this.uploadSuccessMessage = null
+		},
+
+		/**
+		 * Post the selected file and format to the module version's SBOM
+		 * endpoint, and throw the server's message (or the default) unless the
+		 * import succeeded.
+		 *
+		 * @return {Promise<object>} The import result.
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-re-import-replaces-the-previous-component-set-and-is-soft-delete-aware
+		 */
+		async uploadSbom() {
+			const body = this.sbomFormData()
+			// Multipart upload: no Content-Type header — the browser sets
+			// the correct boundary (mirrors ArchiMate import's upload path).
+			const response = await fetch(this.sbomUploadUrl(), {
+				method: 'POST',
+				headers: { 'X-Requested-With': 'XMLHttpRequest' },
+				body,
+			})
+			const result = await response.json()
+			if (!response.ok || result.success === false) {
+				throw new Error(result.message || t('stackiq', 'SBOM import failed'))
+			}
+			return result
+		},
+
+		/**
+		 * The multipart body of an upload: the selected file and its format.
+		 *
+		 * @return {FormData} The body.
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-uploaded-sbom-files-are-bounded-in-size-and-json-only
+		 */
+		sbomFormData() {
+			const formData = new FormData()
+			formData.append('sbomFile', this.selectedFile)
+			formData.append('format', this.format)
+			return formData
+		},
+
+		/**
+		 * The SBOM endpoint of this module version.
+		 *
+		 * @return {string} The URL.
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-re-import-replaces-the-previous-component-set-and-is-soft-delete-aware
+		 */
+		sbomUploadUrl() {
+			return generateUrl(
+				'/apps/stackiq/api/moduleversies/{moduleVersieUuid}/sbom',
+				{
+					moduleVersieUuid: String(this.objectId),
+				},
+			)
+		},
+
+		/**
+		 * Report the imported component count and clear the selected file.
+		 *
+		 * @param {object} result The import result.
+		 * @return {void}
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-re-import-replaces-the-previous-component-set-and-is-soft-delete-aware
+		 */
+		applyImport(result) {
+			this.uploadSuccessMessage = t(
+				'stackiq',
+				'Imported {count} components.',
+				{ count: result.componentCount ?? 0 },
+			)
+			this.selectedFile = null
+			if (this.$refs.fileInput) {
+				this.$refs.fileInput.value = ''
+			}
+		},
+
+		/**
+		 * Re-fetch the components and module versions after an import.
+		 *
+		 * @return {Promise<void>} Resolves once both are fetched.
+		 * @spec openspec/specs/sbom-import/spec.md#requirement-re-import-replaces-the-previous-component-set-and-is-soft-delete-aware
+		 */
+		async refetchImported() {
+			await Promise.all([
+				objectStore.fetchCollection('sbomComponent', { _limit: 1000 }),
+				objectStore.fetchCollection('moduleVersion', { _limit: 1000 }),
+			])
 		},
 	},
 }
