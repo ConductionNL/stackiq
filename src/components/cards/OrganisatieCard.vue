@@ -182,6 +182,30 @@ import Phone from 'vue-material-design-icons/Phone.vue'
 import Globe from 'vue-material-design-icons/Web.vue'
 import ContactpersonenList from '../ContactpersonenList.vue'
 
+/**
+ * Whether a view change switches to the contact person view from another
+ * view.
+ *
+ * @param {string} newView The new view.
+ * @param {string} oldView The old view.
+ * @return {*} Truthy when it does.
+ */
+function isSwitchToContactpersonen(newView, oldView) {
+	return newView === 'contactpersonen' && oldView && oldView !== 'contactpersonen'
+}
+
+/**
+ * The summary of an organisation from its type: "<type> organisatie" when it
+ * also has a name, else the type, else ''.
+ *
+ * @param {object|null} item The organisation.
+ * @return {string} The summary.
+ */
+function typeSummary(item) {
+	if (item?.type && item?.name) return `${item.type} organisatie`
+	return item?.type || ''
+}
+
 export default {
 	name: 'OrganisatieCard',
 	components: {
@@ -241,33 +265,21 @@ export default {
 			 */
 			async handler(newView, oldView) {
 				// Only trigger when actually switching TO contactpersonen view from a different view
-				if (
-					newView === 'contactpersonen'
-					&& oldView
-					&& oldView !== 'contactpersonen'
-				) {
-					console.info(
-						'Switched to contactpersonen view, loading user info and groups...',
-					)
-					// Use nextTick to ensure the component is fully rendered
-					await this.$nextTick()
-					if (
-						this.$refs.contactpersonenList
-						&& this.$refs.contactpersonenList.loadUserInfoAndGroups
-					) {
-						// Add a small delay to prevent rapid successive calls
-						setTimeout(async () => {
-							if (
-								this.$refs.contactpersonenList
-								&& this.$refs.contactpersonenList
-									.loadUserInfoAndGroups
-							) {
-								await this.$refs.contactpersonenList.loadUserInfoAndGroups()
-							}
-						}, 100)
-					}
+				if (!isSwitchToContactpersonen(newView, oldView)) {
+					return
 				}
+				console.info(
+					'Switched to contactpersonen view, loading user info and groups...',
+				)
+				// Use nextTick to ensure the component is fully rendered
+				await this.$nextTick()
+				if (!this.canLoadContactUserInfo()) {
+					return
+				}
+				// Add a small delay to prevent rapid successive calls
+				setTimeout(() => this.loadContactUserInfo(), 100)
 			},
+
 
 			immediate: false,
 		},
@@ -314,9 +326,33 @@ export default {
 		getOrganisatieSummary(item) {
 			if (item?.shortDescription) return item.shortDescription
 			if (item?.longDescription) return item.longDescription
-			if (item?.type && item?.name) return `${item.type} organisatie`
-			if (item?.type) return item.type
-			return ''
+			return typeSummary(item)
+		},
+
+		/**
+		 * Whether the contact person list is there and can load user info.
+		 *
+		 * @return {*} Truthy when it can.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		canLoadContactUserInfo() {
+			return (
+				this.$refs.contactpersonenList
+				&& this.$refs.contactpersonenList.loadUserInfoAndGroups
+			)
+		},
+
+		/**
+		 * Load the contact person list's user info and groups, if the list
+		 * can still load them.
+		 *
+		 * @return {Promise<void>} Resolves once loaded.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		async loadContactUserInfo() {
+			if (this.canLoadContactUserInfo()) {
+				await this.$refs.contactpersonenList.loadUserInfoAndGroups()
+			}
 		},
 
 		/**
