@@ -54,31 +54,57 @@ class ModuleRegistrationSubscriber implements IEventListener {
 	 * @return void
 	 */
 	public function handle(Event $event): void {
-		if (($event instanceof ObjectCreatedEvent) === false && ($event instanceof ObjectUpdatedEvent) === false) {
+		$object = self::eventObject(event: $event);
+		if ($object === null || $this->isModuleObject(object: $object) === false) {
 			return;
 		}
 
-		$object = null;
+		$this->registerModule(object: $object);
+	}//end handle()
+
+	/**
+	 * The object a created or updated event carries, or null for any other event.
+	 *
+	 * @param Event $event The event to handle
+	 *
+	 * @return object|null The created object, the new version of an updated one, or null.
+	 */
+	private static function eventObject(Event $event): ?object {
 		if ($event instanceof ObjectCreatedEvent) {
-			$object = $event->getObject();
-		} elseif ($event instanceof ObjectUpdatedEvent) {
-			$object = $event->getNewObject();
+			return $event->getObject();
 		}
 
-		if ($object === null) {
-			return;
+		if ($event instanceof ObjectUpdatedEvent) {
+			return $event->getNewObject();
 		}
 
+		return null;
+	}//end eventObject()
+
+	/**
+	 * Whether an object belongs to the configured module schema.
+	 *
+	 * @param object $object The created or updated object
+	 *
+	 * @return bool True when a module schema is configured and the object's schema is it.
+	 */
+	private function isModuleObject(object $object): bool {
 		$objectSchemaId = $object->getSchema();
 
-		// Check if this is a module object.
 		$settingsService = $this->container->get(SettingsService::class);
-		$moduleSchemaId = $settingsService->getSchemaIdForObjectType('module');
+		$moduleSchemaId  = $settingsService->getSchemaIdForObjectType('module');
 
-		if ($moduleSchemaId === null || (int)$objectSchemaId !== (int)$moduleSchemaId) {
-			return;
-		}
+		return $moduleSchemaId !== null && (int)$objectSchemaId === (int)$moduleSchemaId;
+	}//end isModuleObject()
 
+	/**
+	 * Run the module registration, logging rather than throwing on failure.
+	 *
+	 * @param object $object The module object
+	 *
+	 * @return void
+	 */
+	private function registerModule(object $object): void {
 		try {
 			$registrationSvc = $this->container->get(ModuleRegistrationService::class);
 			$registrationSvc->handleModuleRegistration($object);
@@ -92,5 +118,5 @@ class ModuleRegistrationSubscriber implements IEventListener {
 				]
 			);
 		}
-	}//end handle()
+	}//end registerModule()
 }//end class
