@@ -115,7 +115,7 @@ class BackfillModuleVersionPublication implements IRepairStep {
 	 */
 	private function backfillFrom(IOutput $output, array $source): void {
 		try {
-			$result = $this->backfillAll(objects: $source['objects'], register: $source['register'], schema: $source['schema']);
+			$result = $this->backfillAll(source: $source);
 		} catch (Throwable $e) {
 			$output->warning('Could not read the applications: ' . $e->getMessage());
 			return;
@@ -182,31 +182,18 @@ class BackfillModuleVersionPublication implements IRepairStep {
 	/**
 	 * Backfill every module, page by page.
 	 *
-	 * @param ObjectServiceInterface $objects  The object service.
-	 * @param int|string             $register The module register.
-	 * @param int|string             $schema   The module schema.
+	 * @param array{objects: ObjectServiceInterface, register: int|string, schema: int|string} $source Where the modules live.
 	 *
 	 * @return array{written: int, failed: int} The versions written, and the versions or searches that failed.
 	 *
 	 * @throws Throwable When a page of modules cannot be read.
 	 */
-	private function backfillAll(ObjectServiceInterface $objects, int|string $register, int|string $schema): array {
+	private function backfillAll(array $source): array {
 		$total  = ['written' => 0, 'failed' => 0];
 		$offset = 0;
 		do {
-			$modules = (array) $objects->setRegister($register)->setSchema($schema)->findAll(
-				config: ['limit' => self::PAGE_SIZE, 'offset' => $offset],
-				_rbac: false,
-				_multitenancy: false
-			);
-
-			foreach ($modules as $module) {
-				if (($module instanceof ObjectEntityInterface) === true) {
-					$result            = $this->publication->backfillModule(module: $module);
-					$total['written'] += $result['written'];
-					$total['failed']  += $result['failed'];
-				}
-			}
+			$modules = $this->modulePage(source: $source, offset: $offset);
+			$total   = $this->addBackfilled(total: $total, modules: $modules);
 
 			$offset  += self::PAGE_SIZE;
 			$pageSize = count($modules);
@@ -214,4 +201,42 @@ class BackfillModuleVersionPublication implements IRepairStep {
 
 		return $total;
 	}//end backfillAll()
+
+	/**
+	 * One page of modules, read without RBAC or multitenancy.
+	 *
+	 * @param array{objects: ObjectServiceInterface, register: int|string, schema: int|string} $source Where the modules live.
+	 * @param int                                                                              $offset The page offset.
+	 *
+	 * @return array The modules on the page.
+	 *
+	 * @throws Throwable When the page cannot be read.
+	 */
+	private function modulePage(array $source, int $offset): array {
+		return (array) $source['objects']->setRegister($source['register'])->setSchema($source['schema'])->findAll(
+			config: ['limit' => self::PAGE_SIZE, 'offset' => $offset],
+			_rbac: false,
+			_multitenancy: false
+		);
+	}//end modulePage()
+
+	/**
+	 * Backfill the modules of one page and add their counts to the total.
+	 *
+	 * @param array{written: int, failed: int} $total   The counts so far.
+	 * @param array                            $modules The modules on the page.
+	 *
+	 * @return array{written: int, failed: int} The counts with this page added.
+	 */
+	private function addBackfilled(array $total, array $modules): array {
+		foreach ($modules as $module) {
+			if (($module instanceof ObjectEntityInterface) === true) {
+				$result            = $this->publication->backfillModule(module: $module);
+				$total['written'] += $result['written'];
+				$total['failed']  += $result['failed'];
+			}
+		}
+
+		return $total;
+	}//end addBackfilled()
 }//end class
