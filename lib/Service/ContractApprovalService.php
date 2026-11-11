@@ -253,11 +253,34 @@ class ContractApprovalService {
 	 * It is a payload discriminator, not a second responsibility.
 	 */
 	public function submitForApproval(string $contractUuid, bool $isRenewal = false): string {
-		// Resolve ONCE and narrow here, rather than calling
-		// isDelegationConfigured() and resolving again below. Two lookups of the
-		// same thing can disagree — and the second one has no guard, so a null
-		// would reach `new $eventClass(...)` as a call on null. Psalm caught
-		// exactly that shape.
+		$eventClass = $this->requestEventClassOrFail();
+
+		$request = $this->approvalRequestFor(contractUuid: $contractUuid);
+		if ($isRenewal === true) {
+			$request->decisionType = self::DECISION_TYPE_RENEWAL;
+		}
+
+		$event = $this->newDecisionRequestEvent(eventClass: $eventClass, request: $request);
+		$this->dispatchDecisionRequest(event: $event, contractUuid: $contractUuid);
+		$decisionId = self::answeredDecisionId(event: $event);
+		$this->recordPendingApproval(request: $request, decisionId: $decisionId);
+		return $decisionId;
+	}//end submitForApproval()
+
+	/**
+	 * The decision app's request event class.
+	 *
+	 * Resolve ONCE and narrow here, rather than calling
+	 * isDelegationConfigured() and resolving again below. Two lookups of the
+	 * same thing can disagree — and the second one has no guard, so a null
+	 * would reach `new $eventClass(...)` as a call on null. Psalm caught
+	 * exactly that shape.
+	 *
+	 * @return string The event class.
+	 *
+	 * @throws RuntimeException When delegation is not available.
+	 */
+	private function requestEventClassOrFail(): string {
 		$eventClass = $this->resolveRequestEventClass();
 		if ($eventClass === null) {
 			// Fail closed — never auto-approve when the decision app is absent.
@@ -266,31 +289,79 @@ class ContractApprovalService {
 			);
 		}
 
+		return $eventClass;
+	}//end requestEventClassOrFail()
+
+	/**
+	 * The approval request for a contract: the contract, its data and the approval decision type.
+	 *
+	 * @param string $contractUuid The contract uuid.
+	 *
+	 * @return ContractApprovalRequest The request.
+	 *
+	 * @throws RuntimeException When the contract cannot be loaded.
+	 */
+	private function approvalRequestFor(string $contractUuid): ContractApprovalRequest {
+		$request = new ContractApprovalRequest();
+		$request->contractUuid = $contractUuid;
+		$request->contract = $this->contractOrFail(contractUuid: $contractUuid);
+		$request->data = $request->contract->getObject();
+		$request->decisionType = self::DECISION_TYPE_APPROVAL;
+		return $request;
+	}//end approvalRequestFor()
+
+	/**
+	 * The contract to submit.
+	 *
+	 * @param string $contractUuid The contract uuid.
+	 *
+	 * @return object The contract entity.
+	 *
+	 * @throws RuntimeException When the contract cannot be loaded.
+	 */
+	private function contractOrFail(string $contractUuid): object {
 		$contract = $this->loadContract(contractUuid: $contractUuid);
 		if ($contract === null) {
 			throw new RuntimeException('Contract not found: ' . $contractUuid);
 		}
 
-		$data = $contract->getObject();
+		return $contract;
+	}//end contractOrFail()
 
-		$decisionType = self::DECISION_TYPE_APPROVAL;
-		if ($isRenewal === true) {
-			$decisionType = self::DECISION_TYPE_RENEWAL;
-		}
-
-		$event = new $eventClass(
+	/**
+	 * The decision request event for a submission.
+	 *
+	 * @param string                  $eventClass The decision app's request event class.
+	 * @param ContractApprovalRequest $request    The submission.
+	 *
+	 * @return object The event.
+	 */
+	private function newDecisionRequestEvent(string $eventClass, ContractApprovalRequest $request): object {
+		return new $eventClass(
 			self::SOURCE_APP,
 			self::SUBJECT_REGISTER,
 			self::SUBJECT_SCHEMA,
-			$contractUuid,
-			$this->buildSubjectLabel(data: $data),
-			$decisionType,
+			$request->contractUuid,
+			$this->buildSubjectLabel(data: $request->data),
+			$request->decisionType,
 			'',
-			['title' => $this->buildSubjectLabel(data: $data)],
-			(string)($data['contractNumber'] ?? ''),
-			$contractUuid
+			['title' => $this->buildSubjectLabel(data: $request->data)],
+			(string)($request->data['contractNumber'] ?? ''),
+			$request->contractUuid
 		);
+	}//end newDecisionRequestEvent()
 
+	/**
+	 * Dispatch the decision request in-process.
+	 *
+	 * @param object $event        The decision request event.
+	 * @param string $contractUuid The contract uuid.
+	 *
+	 * @return void
+	 *
+	 * @throws RuntimeException When a listener fails.
+	 */
+	private function dispatchDecisionRequest(object $event, string $contractUuid): void {
 		try {
 			$this->eventDispatcher->dispatchTyped($event);
 		} catch (\Throwable $e) {
@@ -301,7 +372,18 @@ class ContractApprovalService {
 			);
 			throw new RuntimeException('Failed to raise the approval decision in decidesk.', 0, $e);
 		}//end try
+	}//end dispatchDecisionRequest()
 
+	/**
+	 * The decision id the decision app answered the request with.
+	 *
+	 * @param object $event The dispatched decision request event.
+	 *
+	 * @return string The decision id.
+	 *
+	 * @throws RuntimeException When the request was not handled or no decision id came back.
+	 */
+	private static function answeredDecisionId(object $event): string {
 		if ($event->isHandled() === false) {
 			throw new RuntimeException('decidesk did not handle the approval request; contract left in negotiation.');
 		}
@@ -311,18 +393,29 @@ class ContractApprovalService {
 			throw new RuntimeException('decidesk did not return a decision id; contract left in negotiation.');
 		}
 
+		return $decisionId;
+	}//end answeredDecisionId()
+
+	/**
+	 * Store the decision id and the pending state on the contract.
+	 *
+	 * @param ContractApprovalRequest $request    The submission.
+	 * @param string                  $decisionId The decision id.
+	 *
+	 * @return void
+	 */
+	private function recordPendingApproval(ContractApprovalRequest $request, string $decisionId): void {
+		$data = $request->data;
 		$data['approvalDecisionId'] = $decisionId;
 		$data['approvalState'] = self::APPROVAL_PENDING;
 		// NOTE: status is intentionally NOT touched here — it stays In onderhandeling.
-		$this->persistContract(contract: $contract, data: $data);
+		$this->persistContract(contract: $request->contract, data: $data);
 
 		$this->logger->info(
 			'ContractApprovalService: contract submitted for approval',
-			['contractUuid' => $contractUuid, 'decisionId' => $decisionId, 'decisionType' => $decisionType]
+			['contractUuid' => $request->contractUuid, 'decisionId' => $decisionId, 'decisionType' => $request->decisionType]
 		);
-
-		return $decisionId;
-	}//end submitForApproval()
+	}//end recordPendingApproval()
 
 	/**
 	 * Per-object ownership guard (IDOR guard) for the submit / submitRenewal seam.
