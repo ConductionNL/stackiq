@@ -1,0 +1,8 @@
+{
+"anonymous": {"allowed":false,"status":401,"data":{"message":"Not logged in"},"trace":[]},
+"owner": {"allowed":true,"trace":[["getUserGroups"],["getUserValue",["vera","core","organisation",""]],["authorizeSubmit",["contract-1",["aanbod-beheerder"],"org-1"]]]},
+"admin": {"allowed":true,"trace":[["getUserGroups"],["getUserValue",["admin","core","organisation",""]],["authorizeSubmit",["contract-1",["admin","users"],""]]]},
+"not the owner": {"allowed":false,"status":403,"data":{"message":"You do not have permission to submit this contract for approval"},"trace":[["getUserGroups"],["getUserValue",["vera","core","organisation",""]],["authorizeSubmit",["contract-1",["aanbod-beheerder"],"org-2"]],["warning","ContractApprovalController: submit refused (not contract owner)",{"contractUuid":"contract-1","uid":"vera"}]]},
+"no groups": {"allowed":false,"status":403,"data":{"message":"You do not have permission to submit this contract for approval"},"trace":[["getUserGroups"],["getUserValue",["piet","core","organisation",""]],["authorizeSubmit",["contract-1",[],"org-1"]],["warning","ContractApprovalController: submit refused (not contract owner)",{"contractUuid":"contract-1","uid":"piet"}]]},
+"numeric org setting": {"allowed":false,"status":403,"data":{"message":"You do not have permission to submit this contract for approval"},"trace":[["getUserGroups"],["getUserValue",["piet","core","organisation",""]],["authorizeSubmit",["contract-1",["users"],"7"]],["warning","ContractApprovalController: submit refused (not contract owner)",{"contractUuid":"contract-1","uid":"piet"}]]}
+}
