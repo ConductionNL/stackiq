@@ -76,22 +76,7 @@ class SbomParserService {
 	 */
 	public function parse(string $json): array {
 		$data = $this->decode(json: $json);
-
-		$bomFormat = $data['bomFormat'] ?? null;
-		$specVersion = $data['specVersion'] ?? null;
-		$isCycloneDx = $bomFormat === 'CycloneDX';
-		$isSupportedVersion = is_string($specVersion) === true
-			&& in_array($specVersion, self::SUPPORTED_CYCLONEDX_VERSIONS, true) === true;
-
-		if ($isCycloneDx === false || $isSupportedVersion === false) {
-			throw new UnsupportedSbomFormatException(
-				message: sprintf(
-					'Unsupported SBOM format/version: bomFormat=%s, specVersion=%s (expected CycloneDX 1.5 or 1.6)',
-					$this->describe(value: $bomFormat),
-					$this->describe(value: $specVersion)
-				)
-			);
-		}
+		$this->assertSupportedCycloneDx(data: $data);
 
 		$components = [];
 		foreach (($data['components'] ?? []) as $componentData) {
@@ -107,6 +92,44 @@ class SbomParserService {
 			'vulnerabilities' => $this->extractVexPairs(vulnerabilities: $data['vulnerabilities'] ?? []),
 		];
 	}//end parse()
+
+	/**
+	 * Refuse a document that is not CycloneDX in a supported spec version.
+	 *
+	 * @param array<string, mixed> $data The decoded document.
+	 *
+	 * @return void
+	 *
+	 * @throws UnsupportedSbomFormatException When `bomFormat`/`specVersion` is not supported.
+	 */
+	private function assertSupportedCycloneDx(array $data): void {
+		$bomFormat = $data['bomFormat'] ?? null;
+		$specVersion = $data['specVersion'] ?? null;
+		$isCycloneDx = $bomFormat === 'CycloneDX';
+		$isSupportedVersion = $this->isSupportedCycloneDxVersion(specVersion: $specVersion);
+
+		if ($isCycloneDx === false || $isSupportedVersion === false) {
+			throw new UnsupportedSbomFormatException(
+				message: sprintf(
+					'Unsupported SBOM format/version: bomFormat=%s, specVersion=%s (expected CycloneDX 1.5 or 1.6)',
+					$this->describe(value: $bomFormat),
+					$this->describe(value: $specVersion)
+				)
+			);
+		}
+	}//end assertSupportedCycloneDx()
+
+	/**
+	 * Whether a CycloneDX spec version is one this parser reads.
+	 *
+	 * @param mixed $specVersion The document's `specVersion`.
+	 *
+	 * @return bool True for a supported version string.
+	 */
+	private function isSupportedCycloneDxVersion(mixed $specVersion): bool {
+		return is_string($specVersion) === true
+			&& in_array($specVersion, self::SUPPORTED_CYCLONEDX_VERSIONS, true) === true;
+	}//end isSupportedCycloneDxVersion()
 
 	/**
 	 * Parse an SPDX 2.x JSON document into the same normalized component DTO
@@ -184,32 +207,8 @@ class SbomParserService {
 	 * @return array<string, mixed> The normalized component DTO.
 	 */
 	private function normalizeCycloneDxComponent(array $component): array {
-		$licenses = [];
-		foreach (($component['licenses'] ?? []) as $licenseEntry) {
-			if (is_array($licenseEntry) === false) {
-				continue;
-			}
-
-			if (isset($licenseEntry['license']['id']) === true) {
-				$licenses[] = (string)$licenseEntry['license']['id'];
-			} elseif (isset($licenseEntry['license']['name']) === true) {
-				$licenses[] = (string)$licenseEntry['license']['name'];
-			} elseif (isset($licenseEntry['expression']) === true) {
-				$licenses[] = (string)$licenseEntry['expression'];
-			}
-		}
-
-		$hashes = [];
-		foreach (($component['hashes'] ?? []) as $hashEntry) {
-			if (is_array($hashEntry) === false) {
-				continue;
-			}
-
-			$hashes[] = [
-				'alg' => (string)($hashEntry['alg'] ?? ''),
-				'value' => (string)($hashEntry['content'] ?? ''),
-			];
-		}
+		$licenses = $this->cycloneDxLicenses(licenseEntries: $component['licenses'] ?? []);
+		$hashes = $this->cycloneDxHashes(hashEntries: $component['hashes'] ?? []);
 
 		return [
 			'name' => (string)($component['name'] ?? ''),
@@ -223,6 +222,68 @@ class SbomParserService {
 	}//end normalizeCycloneDxComponent()
 
 	/**
+	 * The licences of a CycloneDX component, one per entry that names one.
+	 *
+	 * @param mixed $licenseEntries The raw `licenses[]` of the component.
+	 *
+	 * @return array<int, string> The licence ids, names or expressions.
+	 */
+	private function cycloneDxLicenses(mixed $licenseEntries): array {
+		$licenses = [];
+		foreach ($licenseEntries as $licenseEntry) {
+			if (is_array($licenseEntry) === false) {
+				continue;
+			}
+
+			$license = $this->cycloneDxLicense(licenseEntry: $licenseEntry);
+			if ($license !== null) {
+				$licenses[] = $license;
+			}
+		}
+
+		return $licenses;
+	}//end cycloneDxLicenses()
+
+	/**
+	 * The licence an entry names: its licence id, else its licence name, else its expression.
+	 *
+	 * @param array<string, mixed> $licenseEntry One raw `licenses[]` entry.
+	 *
+	 * @return string|null The licence, or null when the entry names none.
+	 */
+	private function cycloneDxLicense(array $licenseEntry): ?string {
+		$license = $licenseEntry['license']['id'] ?? $licenseEntry['license']['name'] ?? $licenseEntry['expression'] ?? null;
+		if ($license === null) {
+			return null;
+		}
+
+		return (string)$license;
+	}//end cycloneDxLicense()
+
+	/**
+	 * The hashes of a CycloneDX component.
+	 *
+	 * @param mixed $hashEntries The raw `hashes[]` of the component.
+	 *
+	 * @return array<int, array{alg: string, value: string}> The hashes.
+	 */
+	private function cycloneDxHashes(mixed $hashEntries): array {
+		$hashes = [];
+		foreach ($hashEntries as $hashEntry) {
+			if (is_array($hashEntry) === false) {
+				continue;
+			}
+
+			$hashes[] = [
+				'alg' => (string)($hashEntry['alg'] ?? ''),
+				'value' => (string)($hashEntry['content'] ?? ''),
+			];
+		}
+
+		return $hashes;
+	}//end cycloneDxHashes()
+
+	/**
 	 * Normalize one SPDX `packages[]` entry into the shared component DTO
 	 * shape.
 	 *
@@ -231,19 +292,8 @@ class SbomParserService {
 	 * @return array<string, mixed> The normalized component DTO.
 	 */
 	private function normalizeSpdxPackage(array $package): array {
-		$purl = '';
-		foreach (($package['externalRefs'] ?? []) as $externalRef) {
-			if (is_array($externalRef) === true && ($externalRef['referenceType'] ?? '') === 'purl') {
-				$purl = (string)($externalRef['referenceLocator'] ?? '');
-				break;
-			}
-		}
-
-		$license = $package['licenseConcluded'] ?? ($package['licenseDeclared'] ?? '');
-		$licenses = [];
-		if (is_string($license) === true && $license !== '' && strtoupper($license) !== 'NOASSERTION') {
-			$licenses[] = $license;
-		}
+		$purl = $this->spdxPurl(externalRefs: $package['externalRefs'] ?? []);
+		$licenses = $this->spdxLicenses(package: $package);
 
 		return [
 			'name' => (string)($package['name'] ?? ''),
@@ -255,6 +305,40 @@ class SbomParserService {
 			'bomRef' => (string)($package['SPDXID'] ?? ''),
 		];
 	}//end normalizeSpdxPackage()
+
+	/**
+	 * The locator of the first purl reference of an SPDX package.
+	 *
+	 * @param mixed $externalRefs The raw `externalRefs[]` of the package.
+	 *
+	 * @return string The purl, or '' when the package has none.
+	 */
+	private function spdxPurl(mixed $externalRefs): string {
+		foreach ($externalRefs as $externalRef) {
+			if (is_array($externalRef) === true && ($externalRef['referenceType'] ?? '') === 'purl') {
+				return (string)($externalRef['referenceLocator'] ?? '');
+			}
+		}
+
+		return '';
+	}//end spdxPurl()
+
+	/**
+	 * The licence of an SPDX package: concluded, else declared, unless NOASSERTION.
+	 *
+	 * @param array<string, mixed> $package One raw SPDX package.
+	 *
+	 * @return array<int, string> The licence, or no licence.
+	 */
+	private function spdxLicenses(array $package): array {
+		$license = $package['licenseConcluded'] ?? ($package['licenseDeclared'] ?? '');
+		$licenses = [];
+		if (is_string($license) === true && $license !== '' && strtoupper($license) !== 'NOASSERTION') {
+			$licenses[] = $license;
+		}
+
+		return $licenses;
+	}//end spdxLicenses()
 
 	/**
 	 * Extract `{cveId, componentBomRef}` pairs from a CycloneDX top-level
