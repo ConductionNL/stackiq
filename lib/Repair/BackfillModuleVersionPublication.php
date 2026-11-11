@@ -99,26 +99,77 @@ class BackfillModuleVersionPublication implements IRepairStep {
 			return;
 		}
 
-		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
-			$output->info('OpenRegister not installed, so there are no versions to update.');
-			return;
+		$source = $this->moduleSource(output: $output);
+		if ($source !== null) {
+			$this->backfillFrom(output: $output, source: $source);
 		}
+	}//end run()
 
-		$register = $this->settingsService->getRegisterIdForObjectType('module');
-		$schema   = $this->settingsService->getSchemaIdForObjectType('module');
-		$objects  = $this->settingsService->getObjectService();
-		if ($register === null || $schema === null || $objects === null) {
-			$output->info('The module schema is not configured yet, so there are no versions to update.');
-			return;
-		}
-
+	/**
+	 * Backfill from the module source and report the pass.
+	 *
+	 * @param IOutput                                                                         $output The output.
+	 * @param array{objects: ObjectServiceInterface, register: int|string, schema: int|string} $source Where the modules live.
+	 *
+	 * @return void
+	 */
+	private function backfillFrom(IOutput $output, array $source): void {
 		try {
-			$result = $this->backfillAll(objects: $objects, register: $register, schema: $schema);
+			$result = $this->backfillAll(objects: $source['objects'], register: $source['register'], schema: $source['schema']);
 		} catch (Throwable $e) {
 			$output->warning('Could not read the applications: ' . $e->getMessage());
 			return;
 		}
 
+		$this->report(output: $output, result: $result);
+	}//end backfillFrom()
+
+	/**
+	 * Where the modules live, or null after saying why there is nothing to update.
+	 *
+	 * @param IOutput $output The output.
+	 *
+	 * @return array{objects: ObjectServiceInterface, register: int|string, schema: int|string}|null
+	 */
+	private function moduleSource(IOutput $output): ?array {
+		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
+			$output->info('OpenRegister not installed, so there are no versions to update.');
+			return null;
+		}
+
+		$source = $this->configuredSource();
+		if ($source === null) {
+			$output->info('The module schema is not configured yet, so there are no versions to update.');
+		}
+
+		return $source;
+	}//end moduleSource()
+
+	/**
+	 * The configured module register, schema and object service, or null when one is missing.
+	 *
+	 * @return array{objects: ObjectServiceInterface, register: int|string, schema: int|string}|null
+	 */
+	private function configuredSource(): ?array {
+		$register = $this->settingsService->getRegisterIdForObjectType('module');
+		$schema   = $this->settingsService->getSchemaIdForObjectType('module');
+		$objects  = $this->settingsService->getObjectService();
+		if ($register === null || $schema === null || $objects === null) {
+			return null;
+		}
+
+		return ['objects' => $objects, 'register' => $register, 'schema' => $schema];
+	}//end configuredSource()
+
+	/**
+	 * Report the pass, and mark it done when nothing failed.
+	 *
+	 * @param IOutput                         $output The output.
+	 * @param array{written: int, failed: int} $result The versions written, and the versions or searches that failed.
+	 *
+	 * @return void
+	 */
+	private function report(IOutput $output, array $result): void {
 		$output->info($result['written'] . ' versions now follow their application\'s publication.');
 		if ($result['failed'] > 0) {
 			$output->warning($result['failed'] . ' versions or searches failed; the next upgrade tries again.');
@@ -126,7 +177,7 @@ class BackfillModuleVersionPublication implements IRepairStep {
 		}
 
 		$this->appConfig->setValueBool(AppIdentity::APP_ID, self::DONE_CONFIG_KEY, true);
-	}//end run()
+	}//end report()
 
 	/**
 	 * Backfill every module, page by page.
