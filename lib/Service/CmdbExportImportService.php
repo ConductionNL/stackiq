@@ -69,6 +69,7 @@ use OCA\OpenRegister\Service\Object\ObjectStateRequest;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\Cmdb\CmdbImportReport;
+use OCA\Stackiq\Service\Cmdb\CmdbImportRequest;
 use OCA\Stackiq\Service\Cmdb\CmdbImportRow;
 use OCA\Stackiq\Service\Cmdb\CmdbImportRun;
 use OCA\Stackiq\Service\Cmdb\CmdbOwnerIdentity;
@@ -476,7 +477,27 @@ class CmdbExportImportService {
 		$this->resetRun();
 		$this->keepRunning();
 		$startedAt = (new DateTimeImmutable('now', new DateTimeZone('UTC')))->format(DATE_ATOM);
+		$this->prepareImport(options: $options);
 
+		$lock = $this->acquireImportLock(register: $this->coordinates['register']);
+		try {
+			return $this->runImport(request: new CmdbImportRequest(path: $path, options: $options, startedAt: $startedAt));
+		} finally {
+			$this->lockingProvider->releaseLock($lock, ILockingProvider::LOCK_EXCLUSIVE);
+		}
+	}//end import()
+
+	/**
+	 * Load the profile and resolve OpenRegister's services, before the lock and the file.
+	 *
+	 * @param array<string, mixed> $options The import options.
+	 *
+	 * @return void
+	 *
+	 * @throws CmdbImportException When the mapping, the register or, for an archiving import, the archive
+	 *                             services are not available.
+	 */
+	private function prepareImport(array $options): void {
 		$this->profile->load();
 		$this->engine = $this->resolveEngine();
 		$this->coordinates = $this->resolveCoordinates();
@@ -484,14 +505,7 @@ class CmdbExportImportService {
 			// Refused before the lock and the file: an import that cannot reconcile must not half-run.
 			$this->archiveServices();
 		}
-
-		$lock = $this->acquireImportLock(register: $this->coordinates['register']);
-		try {
-			return $this->runImport(path: $path, options: $options, startedAt: $startedAt);
-		} finally {
-			$this->lockingProvider->releaseLock($lock, ILockingProvider::LOCK_EXCLUSIVE);
-		}
-	}//end import()
+	}//end prepareImport()
 
 	/**
 	 * Let the import finish when the browser goes away, within a bounded time.
@@ -548,9 +562,7 @@ class CmdbExportImportService {
 	 * file's base name, the municipality and updateExisting, and at the end
 	 * the counts. No owner name or e-mail address is logged.
 	 *
-	 * @param string $path The xlsx file.
-	 * @param array<string, mixed> $options The import options.
-	 * @param string $startedAt ISO start time of the import.
+	 * @param CmdbImportRequest $request The file, the import options and the ISO start time of the import.
 	 *
 	 * @return array<string, mixed> The report.
 	 *
@@ -558,86 +570,14 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
-	private function runImport(string $path, array $options, string $startedAt): array {
-		$workbook = $this->reader->read(path: $path, profile: $this->profile);
-		$municipality = $this->resolveMunicipality(options: $options);
-
-		$operationId = $this->operationIdFrom(options: $options);
-		$missingRecords = self::missingRecordsFrom(options: $options);
-		$rows = array_values($workbook['rows']);
-		$report = new CmdbImportReport(operationId: $operationId, rowsRead: count($rows));
-		$report->setMunicipality(uuid: $municipality['uuid'], name: $municipality['name'], created: $municipality['created']);
-		$report->addImportWarnings(warnings: $this->translateImportWarnings(warnings: $workbook['importWarnings']));
-		$archive = $this->archiveSheet(workbook: $workbook);
-		$this->unreadableKeyRows = $this->unreadableKeyRows(rows: $rows, droppedRows: (array)($workbook['uncachedKeyRows'] ?? []));
-		$this->absentSheets = array_values(array_map('strval', (array)($workbook['absentSheets'] ?? [])));
-
-		$this->progressTracker->startOperation(
-			operationType: self::OPERATION_TYPE,
-			options: ['total_items' => count($rows)],
-			operationId: $operationId
-		);
-		$this->progressTracker->setPhase(phase: 'processing_elements', data: ['total_items' => count($rows)]);
-
-		$this->winningSheets = $this->winningSheets(rows: $rows);
-		$updateExisting = (($options['updateExisting'] ?? true) !== false);
-		$publish = (($options['publish'] ?? true) !== false);
-		$publicationDate = null;
-		if ($publish === true) {
-			$publicationDate = $startedAt;
-		}
-
-		$run = new CmdbImportRun(
-			report: $report,
-			settings: [
-				'municipality'    => $municipality,
-				'archive'         => $archive,
-				'operationId'     => $operationId,
-				'missingRecords'  => $missingRecords,
-				'updateExisting'  => $updateExisting,
-				'publicationDate' => $publicationDate,
-				'date1904'        => $workbook['date1904'],
-			]
-		);
-		$audit = [
-			'operationId' => $operationId,
-			'uid' => $this->userSession->getUser()?->getUID(),
-			'fileName' => basename(str_replace('\\', '/', (string)($options['fileName'] ?? ''))),
-			'municipality' => $municipality['uuid'],
-			'municipalityCreated' => $municipality['created'],
-			'updateExisting' => $updateExisting,
-			'publish' => $publish,
-			'missingRecords' => $missingRecords,
-		];
+	private function runImport(CmdbImportRequest $request): array {
+		$import = $this->readImport(request: $request);
+		$run = $this->newRun(import: $import, request: $request);
+		$audit = $this->auditOf(run: $run, request: $request);
 		$this->addRunWarnings(run: $run);
-		$this->logger->info('CmdbExportImportService: import started', array_merge($audit, ['rows' => count($rows)]));
-		try {
-			foreach ($rows as $index => $row) {
-				if ($this->progressTracker->isCancelRequested(operationId: $operationId) === true) {
-					$report->markCancelled();
-					break;
-				}
+		$this->logger->info('CmdbExportImportService: import started', array_merge($audit, ['rows' => count($import['rows'])]));
 
-				$this->processRow(row: $row, run: $run);
-				$this->progressTracker->updateProgress(processedItems: ($index + 1));
-			}
-
-			if ($missingRecords === 'archive' && $report->isCancelled() === false) {
-				$this->reconcile(run: $run, processedItems: count($rows));
-			}
-
-			$result = $report->toArray();
-			$this->finishOperation(report: $report->toStoredArray(maxRows: self::STORED_REPORT_ROWS));
-		} catch (Throwable $e) {
-			// Rows catch their own errors; this is the run itself failing, so the
-			// operation stops as failed instead of staying running until it expires.
-			$this->logger->error(
-				'CmdbExportImportService: import failed',
-				['operationId' => $operationId, 'exception' => get_class($e), 'error' => self::logSafeMessage(step: 'import', e: $e, values: [])]
-			);
-			$this->progressTracker->failOperation(message: self::FAILED_RUN_MESSAGE);
-			throw $e;
-		}//end try
+		$result = $this->importRows(run: $run, rows: $import['rows']);
 
 		$this->logger->info(
 			'CmdbExportImportService: import finished',
@@ -646,6 +586,211 @@ class CmdbExportImportService {
 
 		return $result;
 	}//end runImport()
+
+	/**
+	 * Read the workbook and resolve the municipality, the operation id and the missing-records mode.
+	 *
+	 * @param CmdbImportRequest $request The file and the import options.
+	 *
+	 * @return array<string, mixed> The workbook, the municipality, the operation id, the missing-records mode and the rows.
+	 */
+	private function readImport(CmdbImportRequest $request): array {
+		$workbook = $this->reader->read(path: $request->path, profile: $this->profile);
+		$municipality = $this->resolveMunicipality(options: $request->options);
+
+		return [
+			'workbook' => $workbook,
+			'municipality' => $municipality,
+			'operationId' => $this->operationIdFrom(options: $request->options),
+			'missingRecords' => self::missingRecordsFrom(options: $request->options),
+			'rows' => array_values($workbook['rows']),
+		];
+	}//end readImport()
+
+	/**
+	 * Start the run: its report, the workbook's gaps, the progress operation and the winning sheets.
+	 *
+	 * @param array<string, mixed> $import What readImport() found.
+	 * @param CmdbImportRequest $request The import options and the start time.
+	 *
+	 * @return CmdbImportRun
+	 */
+	private function newRun(array $import, CmdbImportRequest $request): CmdbImportRun {
+		$report = $this->newReport(import: $import);
+		$import['archive'] = $this->archiveSheet(workbook: $import['workbook']);
+		$this->rememberWorkbookGaps(import: $import);
+		$this->startProgress(import: $import);
+		$this->winningSheets = $this->winningSheets(rows: $import['rows']);
+
+		return new CmdbImportRun(report: $report, settings: self::runSettings(import: $import, request: $request));
+	}//end newRun()
+
+	/**
+	 * The run's report, with its municipality and the workbook's import warnings.
+	 *
+	 * @param array<string, mixed> $import What readImport() found.
+	 *
+	 * @return CmdbImportReport
+	 */
+	private function newReport(array $import): CmdbImportReport {
+		$report = new CmdbImportReport(operationId: $import['operationId'], rowsRead: count($import['rows']));
+		$municipality = $import['municipality'];
+		$report->setMunicipality(uuid: $municipality['uuid'], name: $municipality['name'], created: $municipality['created']);
+		$report->addImportWarnings(warnings: $this->translateImportWarnings(warnings: $import['workbook']['importWarnings']));
+
+		return $report;
+	}//end newReport()
+
+	/**
+	 * Remember the rows whose key could not be read and the source sheets the workbook lacks.
+	 *
+	 * @param array<string, mixed> $import What readImport() found.
+	 *
+	 * @return void
+	 */
+	private function rememberWorkbookGaps(array $import): void {
+		$workbook = $import['workbook'];
+		$this->unreadableKeyRows = $this->unreadableKeyRows(rows: $import['rows'], droppedRows: (array)($workbook['uncachedKeyRows'] ?? []));
+		$this->absentSheets = array_values(array_map('strval', (array)($workbook['absentSheets'] ?? [])));
+	}//end rememberWorkbookGaps()
+
+	/**
+	 * Start the progress operation of the run.
+	 *
+	 * @param array<string, mixed> $import What readImport() found.
+	 *
+	 * @return void
+	 */
+	private function startProgress(array $import): void {
+		$this->progressTracker->startOperation(
+			operationType: self::OPERATION_TYPE,
+			options: ['total_items' => count($import['rows'])],
+			operationId: $import['operationId']
+		);
+		$this->progressTracker->setPhase(phase: 'processing_elements', data: ['total_items' => count($import['rows'])]);
+	}//end startProgress()
+
+	/**
+	 * The settings of the run: municipality, archive sheet, operation id, modes, publication date, date system.
+	 *
+	 * @param array<string, mixed> $import What readImport() found, with the archive sheet.
+	 * @param CmdbImportRequest $request The import options and the start time.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function runSettings(array $import, CmdbImportRequest $request): array {
+		$publicationDate = null;
+		if (self::publishes(options: $request->options) === true) {
+			$publicationDate = $request->startedAt;
+		}
+
+		return [
+			'municipality'    => $import['municipality'],
+			'archive'         => $import['archive'],
+			'operationId'     => $import['operationId'],
+			'missingRecords'  => $import['missingRecords'],
+			'updateExisting'  => (($request->options['updateExisting'] ?? true) !== false),
+			'publicationDate' => $publicationDate,
+			'date1904'        => $import['workbook']['date1904'],
+		];
+	}//end runSettings()
+
+	/**
+	 * Whether the import publishes the modules it creates.
+	 *
+	 * @param array<string, mixed> $options The import options.
+	 *
+	 * @return bool
+	 */
+	private static function publishes(array $options): bool {
+		return (($options['publish'] ?? true) !== false);
+	}//end publishes()
+
+	/**
+	 * What the "import started" and "import finished" log lines name; no owner name or e-mail address.
+	 *
+	 * @param CmdbImportRun $run The run.
+	 * @param CmdbImportRequest $request The import options.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function auditOf(CmdbImportRun $run, CmdbImportRequest $request): array {
+		return [
+			'operationId' => $run->operationId,
+			'uid' => $this->userSession->getUser()?->getUID(),
+			'fileName' => basename(str_replace('\\', '/', (string)($request->options['fileName'] ?? ''))),
+			'municipality' => $run->municipality['uuid'],
+			'municipalityCreated' => $run->municipality['created'],
+			'updateExisting' => $run->updateExisting,
+			'publish' => self::publishes(options: $request->options),
+			'missingRecords' => $run->missingRecords,
+		];
+	}//end auditOf()
+
+	/**
+	 * Import every row, reconcile what left the export, and finish the operation; a failing run fails it.
+	 *
+	 * @param CmdbImportRun $run The run.
+	 * @param array<int, array<string, mixed>> $rows The workbook's rows.
+	 *
+	 * @return array<string, mixed> The report.
+	 *
+	 * @throws Throwable When the run itself fails; rows catch their own errors.
+	 */
+	private function importRows(CmdbImportRun $run, array $rows): array {
+		try {
+			$this->processRows(run: $run, rows: $rows);
+			if ($run->missingRecords === 'archive' && $run->report->isCancelled() === false) {
+				$this->reconcile(run: $run, processedItems: count($rows));
+			}
+
+			$result = $run->report->toArray();
+			$this->finishOperation(report: $run->report->toStoredArray(maxRows: self::STORED_REPORT_ROWS));
+			return $result;
+		} catch (Throwable $e) {
+			$this->failRun(run: $run, e: $e);
+			throw $e;
+		}
+	}//end importRows()
+
+	/**
+	 * Import the rows one by one, until the admin cancels the operation.
+	 *
+	 * @param CmdbImportRun $run The run.
+	 * @param array<int, array<string, mixed>> $rows The workbook's rows.
+	 *
+	 * @return void
+	 */
+	private function processRows(CmdbImportRun $run, array $rows): void {
+		foreach ($rows as $index => $row) {
+			if ($this->progressTracker->isCancelRequested(operationId: $run->operationId) === true) {
+				$run->report->markCancelled();
+				break;
+			}
+
+			$this->processRow(row: $row, run: $run);
+			$this->progressTracker->updateProgress(processedItems: ($index + 1));
+		}
+	}//end processRows()
+
+	/**
+	 * Log a failing run and fail its operation.
+	 *
+	 * Rows catch their own errors; this is the run itself failing, so the
+	 * operation stops as failed instead of staying running until it expires.
+	 *
+	 * @param CmdbImportRun $run The run.
+	 * @param Throwable $e The failure.
+	 *
+	 * @return void
+	 */
+	private function failRun(CmdbImportRun $run, Throwable $e): void {
+		$this->logger->error(
+			'CmdbExportImportService: import failed',
+			['operationId' => $run->operationId, 'exception' => get_class($e), 'error' => self::logSafeMessage(step: 'import', e: $e, values: [])]
+		);
+		$this->progressTracker->failOperation(message: self::FAILED_RUN_MESSAGE);
+	}//end failRun()
 
 	/**
 	 * Add the run's own warnings.
