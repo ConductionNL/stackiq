@@ -172,8 +172,6 @@ class ReferenceComponentCoverageService {
 	 * @throws Exception When OpenRegister or the register configuration is unavailable.
 	 *
 	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) csvSafeCell() is the portfolio report's pure cell guard, shared so both CSVs escape alike.
 	 */
 	public function buildCsv(string $organisationUuid): string {
 		$coverage = $this->build(organisationUuid: $organisationUuid);
@@ -181,19 +179,7 @@ class ReferenceComponentCoverageService {
 		$handle = fopen('php://temp', 'r+');
 		fputcsv($handle, ['group', 'referenceComponent', 'state', 'fillable', 'applications']);
 		foreach ($coverage['components'] as $row) {
-			$fillable = 'no';
-			if ($row['fillable'] === true) {
-				$fillable = 'yes';
-			}
-
-			$cells = [
-				$row['group'],
-				$row['name'],
-				$row['state'],
-				$fillable,
-				implode(' | ', array_column($row['applications'], 'moduleName')),
-			];
-			fputcsv($handle, array_map(static fn (string $cell): string => PortfolioReportService::csvSafeCell(value: $cell), $cells));
+			fputcsv($handle, self::csvCells(row: $row));
 		}
 
 		rewind($handle);
@@ -202,6 +188,31 @@ class ReferenceComponentCoverageService {
 
 		return $csv;
 	}//end buildCsv()
+
+	/**
+	 * The CSV cells of one reference component row, each through the formula guard.
+	 *
+	 * @param array<string,mixed> $row One component row of the coverage.
+	 *
+	 * @return array<int,string> The cells: group, name, state, fillable, applications.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) csvSafeCell() is the portfolio report's pure cell guard, shared so both CSVs escape alike.
+	 */
+	private static function csvCells(array $row): array {
+		$fillable = 'no';
+		if ($row['fillable'] === true) {
+			$fillable = 'yes';
+		}
+
+		$cells = [
+			$row['group'],
+			$row['name'],
+			$row['state'],
+			$fillable,
+			implode(' | ', array_column($row['applications'], 'moduleName')),
+		];
+		return array_map(static fn (string $cell): string => PortfolioReportService::csvSafeCell(value: $cell), $cells);
+	}//end csvCells()
 
 	/**
 	 * The GEMMA reference components, bounded.
