@@ -3264,8 +3264,9 @@ export default {
 			}
 
 			// Get schema information to determine the correct format
-			const format = this.getSchemaProperties()[key]?.format
-			this.formData[key] = pickerValueToStorage(newValue, format)
+			const schemaProperties = this.getSchemaProperties()
+			const schemaProperty = schemaProperties[key]
+			this.formData[key] = pickerValueToStorage(newValue, schemaProperty?.format)
 		},
 
 		/**
@@ -3274,7 +3275,9 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		processDateTimeValue(key, value) {
-			const format = dateTimeFormatOf(this.getSchemaProperties()[key])
+			const schemaProperties = this.getSchemaProperties()
+			const schemaProperty = schemaProperties[key]
+			const format = dateTimeFormatOf(schemaProperty)
 			if (!format) {
 				return value
 			}
