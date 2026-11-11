@@ -355,7 +355,7 @@ class ModuleComplianceService {
 	 * @return array Array of standaardversie UUIDs
 	 */
 	private function extractStandaardversieUuids(array $complianceObjects): array {
-		$collected = $this->collectStandardVersions($complianceObjects);
+		$collected = $this->collectStandardVersions(complianceObjects: $complianceObjects);
 
 		// Remove duplicates and empty values.
 		$standaardversieUuids = array_unique(array_filter($collected['uuids']));
@@ -384,7 +384,7 @@ class ModuleComplianceService {
 		$collected = ['tracking' => self::STANDARD_VERSION_TRACKING, 'uuids' => []];
 
 		foreach ($complianceObjects as $complianceObject) {
-			[$shape, $uuid] = $this->classifyStandardVersion($complianceObject);
+			[$shape, $uuid] = $this->classifyStandardVersion(complianceObject: $complianceObject);
 			$collected['tracking'][$shape]++;
 			if ($shape !== 'withoutStandaardversie') {
 				$collected['tracking']['withStandaardversie']++;
@@ -410,17 +410,17 @@ class ModuleComplianceService {
 		$standardVersion = $complianceData['standardVersion'] ?? null;
 
 		if ($standardVersion === null) {
-			$this->logMissingStandardVersion($complianceObject, $complianceData);
+			$this->logMissingStandardVersion(complianceObject: $complianceObject, complianceData: $complianceData);
 			return ['withoutStandaardversie', null];
 		}
 
-		$found = $this->standardVersionShape($standardVersion);
+		$found = $this->standardVersionShape(standardVersion: $standardVersion);
 		if ($found[1] === null) {
-			$this->logInvalidStandardVersion($complianceObject, $standardVersion);
+			$this->logInvalidStandardVersion(complianceObject: $complianceObject, standardVersion: $standardVersion);
 			return $found;
 		}
 
-		$this->logFoundStandardVersion($complianceObject, $found);
+		$this->logFoundStandardVersion(complianceObject: $complianceObject, found: $found);
 		return $found;
 	}//end classifyStandardVersion()
 
@@ -451,7 +451,7 @@ class ModuleComplianceService {
 			return ['stringType', $standardVersion];
 		}
 
-		$uuid = $this->nestedStandardVersionUuid($standardVersion);
+		$uuid = $this->nestedStandardVersionUuid(standardVersion: $standardVersion);
 		if ($uuid === null) {
 			return ['invalidType', null];
 		}
