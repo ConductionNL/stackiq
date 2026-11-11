@@ -676,21 +676,60 @@ class OrganizationSyncService {
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
 	public function performFullSync(int $minutesBack = 10): array {
-		if ($minutesBack === 0) {
-			$syncModeValue = 'full';
-		} else {
-			$syncModeValue = 'incremental';
-		}
+		$run = $this->startFullSync(minutesBack: $minutesBack);
 
+		try {
+			return $this->runFullSync(run: $run);
+		} catch (\Exception $e) {
+			return $this->failFullSync(run: $run, exception: $e);
+		}//end try
+
+	}//end performFullSync()
+
+	/**
+	 * Log the start of a full sync and set up its statistics.
+	 *
+	 * @param int $minutesBack Number of minutes to look back for changes (0 = all objects)
+	 *
+	 * @return FullSyncRun The run
+	 */
+	private function startFullSync(int $minutesBack): FullSyncRun {
 		$this->logger->info(
 			'OrganizationSyncService: Starting comprehensive organization synchronization',
 			[
 				'minutesBack' => $minutesBack,
-				'syncMode' => $syncModeValue,
+				'syncMode' => self::fullSyncModeOf(minutesBack: $minutesBack),
 			]
 		);
 
-		$stats = [
+		$run = new FullSyncRun();
+		$run->minutesBack = $minutesBack;
+		$run->stats = self::newFullSyncStats();
+		return $run;
+	}//end startFullSync()
+
+	/**
+	 * The sync mode of a time window.
+	 *
+	 * @param int $minutesBack Number of minutes to look back (0 = all objects)
+	 *
+	 * @return string 'full' for a window of 0, 'incremental' otherwise
+	 */
+	private static function fullSyncModeOf(int $minutesBack): string {
+		if ($minutesBack === 0) {
+			return 'full';
+		}
+
+		return 'incremental';
+	}//end fullSyncModeOf()
+
+	/**
+	 * The statistics of a full sync that starts now.
+	 *
+	 * @return array<string, mixed> The statistics
+	 */
+	private static function newFullSyncStats(): array {
+		return [
 			'organizationsProcessed' => 0,
 			'entitiesCreated' => 0,
 			'entitiesUpdated' => 0,
@@ -702,84 +741,161 @@ class OrganizationSyncService {
 			'endTime' => null,
 			'duration' => null,
 		];
+	}//end newFullSyncStats()
 
+	/**
+	 * Sync every organisatie object of the window with its organisation entity.
+	 *
+	 * @param FullSyncRun $run The run
+	 *
+	 * @return array Synchronization results and statistics
+	 */
+	private function runFullSync(FullSyncRun $run): array {
+		// Check configuration.
+		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+		$run->register = ($voorzieningenConfig['register'] ?? '');
+		$run->organizationSchema = ($voorzieningenConfig['organisatie_schema'] ?? '');
+		$run->contactSchema = ($voorzieningenConfig['contactpersoon_schema'] ?? '');
+		if (empty($run->register) === true || empty($run->organizationSchema) === true) {
+			return $this->refuseUnconfiguredFullSync(run: $run);
+		}
+
+		// Process each organisatie object.
+		foreach ($this->fullSyncObjects(run: $run) as $organisationObject) {
+			$this->syncOrganisationObject(run: $run, organisationObject: $organisationObject);
+		}
+
+		return $this->completeFullSync(run: $run);
+	}//end runFullSync()
+
+	/**
+	 * Record that the sync is not configured.
+	 *
+	 * @param FullSyncRun $run The run
+	 *
+	 * @return array The statistics, with the error
+	 */
+	private function refuseUnconfiguredFullSync(FullSyncRun $run): array {
+		$error = 'Missing configuration: register or organization schema not configured';
+		$this->logger->error('OrganizationSyncService: ' . $error);
+		$run->stats['errors'][] = $error;
+		return $run->stats;
+	}//end refuseUnconfiguredFullSync()
+
+	/**
+	 * Get organisatie objects based on time window.
+	 *
+	 * @param FullSyncRun $run The run, with the register and organisatie schema
+	 *
+	 * @return array The organisatie objects
+	 */
+	private function fullSyncObjects(FullSyncRun $run): array {
+		$organisationObjects = $this->getOrganisationObjectsByTimeWindow(
+			register: $run->register,
+			organizationSchema: $run->organizationSchema,
+			minutesBack: $run->minutesBack
+		);
+		$this->logFullSyncObjects(run: $run, organisationObjects: $organisationObjects);
+		return $organisationObjects;
+	}//end fullSyncObjects()
+
+	/**
+	 * Log the organisatie objects found for the window.
+	 *
+	 * @param FullSyncRun $run                 The run
+	 * @param array       $organisationObjects The organisatie objects
+	 *
+	 * @return void
+	 */
+	private function logFullSyncObjects(FullSyncRun $run, array $organisationObjects): void {
+		$this->logger->info(
+			'OrganizationSyncService: Found organisatie objects',
+			[
+				'count' => count($organisationObjects),
+				'minutesBack' => $run->minutesBack,
+				'syncMode' => self::fullSyncModeOf(minutesBack: $run->minutesBack),
+			]
+		);
+	}//end logFullSyncObjects()
+
+	/**
+	 * Sync one organisatie object, recording a failure and going on with the next.
+	 *
+	 * @param FullSyncRun $run                The run
+	 * @param object      $organisationObject The organisatie object
+	 *
+	 * @return void
+	 */
+	private function syncOrganisationObject(FullSyncRun $run, object $organisationObject): void {
 		try {
-			// Check configuration.
-			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-			$register = ($voorzieningenConfig['register'] ?? '');
-			$organizationSchema = ($voorzieningenConfig['organisatie_schema'] ?? '');
-			$contactSchema = ($voorzieningenConfig['contactpersoon_schema'] ?? '');
-
-			if (empty($register) === true || empty($organizationSchema) === true) {
-				$error = 'Missing configuration: register or organization schema not configured';
-				$this->logger->error('OrganizationSyncService: ' . $error);
-				$stats['errors'][] = $error;
-				return $stats;
-			}
-
-			// Get organisatie objects based on time window.
-			$organisationObjects = $this->getOrganisationObjectsByTimeWindow(
-				register: $register,
-				organizationSchema: $organizationSchema,
-				minutesBack: $minutesBack
+			$this->processOrganisationObject(
+				organisationObject: $organisationObject,
+				register: $run->register,
+				contactSchema: $run->contactSchema,
+				stats: $run->stats
 			);
-			$syncModeValue = 'incremental';
-			if ($minutesBack === 0) {
-				$syncModeValue = 'full';
-			}
-
-			$this->logger->info(
-				'OrganizationSyncService: Found organisatie objects',
-				[
-					'count' => count($organisationObjects),
-					'minutesBack' => $minutesBack,
-					'syncMode' => $syncModeValue,
-				]
-			);
-
-			// Process each organisatie object.
-			foreach ($organisationObjects as $organisationObject) {
-				try {
-					$this->processOrganisationObject(
-						organisationObject: $organisationObject,
-						register: $register,
-						contactSchema: $contactSchema,
-						stats: $stats
-					);
-					$stats['organizationsProcessed']++;
-				} catch (\Exception $e) {
-					$error = 'Failed to process organisatie object ' . $organisationObject->getId() . ': ' . $e->getMessage();
-					$this->logger->error(
-						'OrganizationSyncService: ' . $error,
-						[
-							'exception' => $e,
-							'objectId' => $organisationObject->getId(),
-						]
-					);
-					$stats['errors'][] = $error;
-				}
-			}//end foreach
-
-			$stats['endTime'] = date('Y-m-d H:i:s');
-			$startTime = new \DateTime($stats['startTime']);
-			$endTime = new \DateTime($stats['endTime']);
-			$stats['duration'] = $endTime->diff($startTime)->format('%H:%I:%S');
-
-			$this->logger->info('OrganizationSyncService: Completed comprehensive synchronization', $stats);
-
-			return $stats;
+			$run->stats['organizationsProcessed']++;
 		} catch (\Exception $e) {
-			$error = 'Synchronization failed: ' . $e->getMessage();
-			$this->logger->error(
-				'OrganizationSyncService: ' . $error,
-				['exception' => $e]
-			);
-			$stats['errors'][] = $error;
-			$stats['endTime'] = date('Y-m-d H:i:s');
-			return $stats;
-		}//end try
+			$run->stats['errors'][] = $this->logFailedOrganisationObject(organisationObject: $organisationObject, exception: $e);
+		}
+	}//end syncOrganisationObject()
 
-	}//end performFullSync()
+	/**
+	 * Log that an organisatie object could not be processed.
+	 *
+	 * @param object     $organisationObject The organisatie object
+	 * @param \Exception $exception          What failed
+	 *
+	 * @return string The error recorded in the statistics
+	 */
+	private function logFailedOrganisationObject(object $organisationObject, \Exception $exception): string {
+		$error = 'Failed to process organisatie object ' . $organisationObject->getId() . ': ' . $exception->getMessage();
+		$this->logger->error(
+			'OrganizationSyncService: ' . $error,
+			[
+				'exception' => $exception,
+				'objectId' => $organisationObject->getId(),
+			]
+		);
+		return $error;
+	}//end logFailedOrganisationObject()
+
+	/**
+	 * Record the end time and duration of a full sync, and log its statistics.
+	 *
+	 * @param FullSyncRun $run The run
+	 *
+	 * @return array Synchronization results and statistics
+	 */
+	private function completeFullSync(FullSyncRun $run): array {
+		$run->stats['endTime'] = date('Y-m-d H:i:s');
+		$startTime = new \DateTime($run->stats['startTime']);
+		$endTime = new \DateTime($run->stats['endTime']);
+		$run->stats['duration'] = $endTime->diff($startTime)->format('%H:%I:%S');
+
+		$this->logger->info('OrganizationSyncService: Completed comprehensive synchronization', $run->stats);
+
+		return $run->stats;
+	}//end completeFullSync()
+
+	/**
+	 * Record that the sync failed.
+	 *
+	 * @param FullSyncRun $run       The run
+	 * @param \Exception  $exception What failed
+	 *
+	 * @return array The statistics, with the error and the end time
+	 */
+	private function failFullSync(FullSyncRun $run, \Exception $exception): array {
+		$error = 'Synchronization failed: ' . $exception->getMessage();
+		$this->logger->error(
+			'OrganizationSyncService: ' . $error,
+			['exception' => $exception]
+		);
+		$run->stats['errors'][] = $error;
+		$run->stats['endTime'] = date('Y-m-d H:i:s');
+		return $run->stats;
+	}//end failFullSync()
 
 	/**
 	 * Gets organisatie objects filtered by time window
