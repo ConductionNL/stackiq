@@ -21,12 +21,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service\Settings;
 
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
-use OCP\IGroupManager;
-use OCP\IL10N;
-use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -67,9 +64,9 @@ class CronjobSettingsTest extends TestCase {
 	/**
 	 * Build the service under test over the in-memory store.
 	 *
-	 * @return SettingsService
+	 * @return CronjobSettings
 	 */
-	private function service(): SettingsService {
+	private function service(): CronjobSettings {
 		$config = $this->createMock(IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
 			function (string $app, string $key, string $default = ''): string {
@@ -91,14 +88,11 @@ class CronjobSettingsTest extends TestCase {
 
 		$this->logger = $this->createMock(LoggerInterface::class);
 
-		return new SettingsService(
+		return new CronjobSettings(
 			config: $config,
-			request: $this->createMock(IRequest::class),
-			container: $this->createMock(ContainerInterface::class),
 			appManager: $this->createMock(IAppManager::class),
-			logger: $this->logger,
-			groupManager: $this->createMock(IGroupManager::class),
-			l10n: $this->createMock(IL10N::class)
+			container: $this->createMock(ContainerInterface::class),
+			logger: $this->logger
 		);
 	}//end service()
 

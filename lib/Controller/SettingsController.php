@@ -34,6 +34,7 @@ use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -101,6 +102,7 @@ class SettingsController extends Controller {
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param IUserSession $userSession The user session.
 	 * @param SettingsService $settingsService The settings service.
+	 * @param CronjobSettings $cronjobSettings The cronjob configuration.
 	 * @param OrganizationSyncService $orgSyncSvc The organization sync service.
 	 * @param ArchiMateService $archiMateService The ArchiMate import/export service.
 	 * @param ProgressTracker $progressTracker The progress tracking service.
@@ -125,6 +127,7 @@ class SettingsController extends Controller {
 		private readonly IGroupManager $groupManager,
 		private readonly IUserSession $userSession,
 		private readonly SettingsService $settingsService,
+		private readonly CronjobSettings $cronjobSettings,
 		private readonly OrganizationSyncService $orgSyncSvc,
 		private readonly ArchiMateService $archiMateService,
 		private readonly ProgressTracker $progressTracker,
@@ -3497,7 +3500,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$config = $this->settingsService->getCronjobConfig();
+			$config = $this->cronjobSettings->getCronjobConfig();
 			return new JSONResponse($config);
 		} catch (\Exception $e) {
 			$this->logger->error(
@@ -3529,7 +3532,7 @@ class SettingsController extends Controller {
 	public function updateCronjobConfig(): JSONResponse {
 		try {
 			$data = $this->request->getParams();
-			$result = $this->settingsService->updateCronjobConfig($data);
+			$result = $this->cronjobSettings->updateCronjobConfig($data);
 			$statusCode = 400;
 			if ($result['success'] === true) {
 				$statusCode = 200;
