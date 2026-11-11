@@ -53,6 +53,7 @@ final class OrganisatieServiceAddUsersGoldenTest extends TestCase {
 			'no organisation'  => ['current' => ['anne'], 'add' => ['bob'], 'findFails' => true],
 			'mail fails'       => ['current' => ['anne'], 'add' => ['bob', 'carla'], 'mailFails' => 'carla'],
 			'save fails'       => ['current' => ['anne'], 'add' => ['bob'], 'saveFails' => true],
+			'other organisation' => ['current' => ['anne'], 'add' => ['bob'], 'organisation' => 'org-2'],
 		];
 	}//end cases()
 
@@ -189,7 +190,7 @@ final class OrganisatieServiceAddUsersGoldenTest extends TestCase {
 
 		$service = new OrganisatieService($logger, $container, $this->createMock(IAppManager::class), $users, $email);
 		try {
-			$outcome = ['result' => $service->addUsersToOrganization('org-1', $case['add'])];
+			$outcome = ['result' => $service->addUsersToOrganization(($case['organisation'] ?? 'org-1'), $case['add'])];
 		} catch (\Throwable $e) {
 			$outcome = ['escaped' => get_class($e)];
 		}
