@@ -2145,32 +2145,57 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private function revive(array $found): array {
-		$entity = $found['entity'];
-		$archived = $found['state']['archived'];
-		if ($found['state']['deleted'] === false && $archived === false) {
-			return ['outcome' => null, 'entity' => $entity];
+		if ($found['state']['deleted'] === false && $found['state']['archived'] === false) {
+			return ['outcome' => null, 'entity' => $found['entity']];
 		}
 
-		$uuid = (string)$entity->getUuid();
-		$outcome = null;
-		if ($found['state']['deleted'] === true) {
-			$restored = $this->restore(uuid: $uuid);
-			$outcome = CmdbImportReport::RESTORED;
-			if (is_object($restored) === true && method_exists($restored, 'getObject') === true) {
-				$entity = $restored;
-				$archived = self::objectState(entity: $restored)['archived'];
-			}
+		$revived = $this->restoredIfDeleted(found: $found);
+		if ($revived['archived'] === true) {
+			$this->unarchiveReturned(uuid: (string)$found['entity']->getUuid());
+			$revived['outcome'] = ($revived['outcome'] ?? CmdbImportReport::UNARCHIVED);
 		}
 
-		if ($archived === true) {
-			$this->archiveServices()['handler']->unarchiveWith(
-				request: new ObjectStateRequest(identifier: $uuid, reason: self::REASON_PREFIX . 'back in the export', register: null, schema: null)
-			);
-			$outcome = ($outcome ?? CmdbImportReport::UNARCHIVED);
-		}
-
-		return ['outcome' => $outcome, 'entity' => $entity];
+		return ['outcome' => $revived['outcome'], 'entity' => $revived['entity']];
 	}//end revive()
+
+	/**
+	 * Take a matched object out of the trash when it is in it.
+	 *
+	 * @param array{entity: object, state: array{archived: bool, deleted: bool}} $found The matched entity and its state.
+	 *
+	 * @return array{outcome: string|null, entity: object, archived: bool} restored or null, the entity the update
+	 *                                                                     starts from, and whether it is archived.
+	 */
+	private function restoredIfDeleted(array $found): array {
+		$revived = ['outcome' => null, 'entity' => $found['entity'], 'archived' => $found['state']['archived']];
+		if ($found['state']['deleted'] === false) {
+			return $revived;
+		}
+
+		$restored = $this->restore(uuid: (string)$found['entity']->getUuid());
+		$revived['outcome'] = CmdbImportReport::RESTORED;
+		if (is_object($restored) === true && method_exists($restored, 'getObject') === true) {
+			$revived['entity'] = $restored;
+			$revived['archived'] = self::objectState(entity: $restored)['archived'];
+		}
+
+		return $revived;
+	}//end restoredIfDeleted()
+
+	/**
+	 * Unarchive an object that is back in the export.
+	 *
+	 * @param string $uuid The object's uuid.
+	 *
+	 * @return void
+	 *
+	 * @throws CmdbImportException ARCHIVE_UNAVAILABLE when the archive services are missing.
+	 */
+	private function unarchiveReturned(string $uuid): void {
+		$this->archiveServices()['handler']->unarchiveWith(
+			request: new ObjectStateRequest(identifier: $uuid, reason: self::REASON_PREFIX . 'back in the export', register: null, schema: null)
+		);
+	}//end unarchiveReturned()
 
 	/**
 	 * Take one object out of the trash, and out of this run's copy of the trash.
@@ -2656,28 +2681,50 @@ class CmdbExportImportService {
 		$archive = $run->archive;
 		$operationId = $run->operationId;
 		if ($archive['present'] === true && isset($archive['keys'][$key]) === true) {
-			return [
-				'target' => CmdbImportReport::ARCHIVED,
-				'reason' => self::REASON_PREFIX . 'on sheet "' . $archive['sheet'] . '" (' . $operationId . ')',
-				'sheet' => $archive['sheet'],
-				'onArchiveSheet' => true,
-			];
-		}
-
-		$target = CmdbImportReport::ARCHIVED;
-		if ($archive['present'] === true && $archive['uncachedRows'] === [] && $this->unreadableKeyRows === [] && $this->absentSheets === []) {
-			// A sheet with an unreadable key (the archive sheet or a CMDB sheet), or a source sheet the workbook
-			// lacks, may list this application, so the workbook is not authoritative for a deletion.
-			$target = CmdbImportReport::DELETED;
+			return self::archiveSheetTarget(archive: $archive, operationId: $operationId);
 		}
 
 		return [
-			'target' => $target,
+			'target' => $this->missingApplicationTarget(archive: $archive),
 			'reason' => self::REASON_PREFIX . 'not in the export (' . $operationId . ')',
 			'sheet' => '',
 			'onArchiveSheet' => false,
 		];
 	}//end reconcileTarget()
+
+	/**
+	 * The target of an application the archive sheet lists: archived, with that sheet as the reason.
+	 *
+	 * @param array<string, mixed> $archive The run's archive sheet.
+	 * @param string $operationId The run's operation id.
+	 *
+	 * @return array{target: string, reason: string, sheet: string, onArchiveSheet: bool}
+	 */
+	private static function archiveSheetTarget(array $archive, string $operationId): array {
+		return [
+			'target' => CmdbImportReport::ARCHIVED,
+			'reason' => self::REASON_PREFIX . 'on sheet "' . $archive['sheet'] . '" (' . $operationId . ')',
+			'sheet' => $archive['sheet'],
+			'onArchiveSheet' => true,
+		];
+	}//end archiveSheetTarget()
+
+	/**
+	 * Deleted when the workbook is authoritative for a deletion, else archived.
+	 *
+	 * @param array<string, mixed> $archive The run's archive sheet.
+	 *
+	 * @return string
+	 */
+	private function missingApplicationTarget(array $archive): string {
+		if ($archive['present'] === true && $archive['uncachedRows'] === [] && $this->unreadableKeyRows === [] && $this->absentSheets === []) {
+			// A sheet with an unreadable key (the archive sheet or a CMDB sheet), or a source sheet the workbook
+			// lacks, may list this application, so the workbook is not authoritative for a deletion.
+			return CmdbImportReport::DELETED;
+		}
+
+		return CmdbImportReport::ARCHIVED;
+	}//end missingApplicationTarget()
 
 	/**
 	 * What one application brings to the state the export asks for: its usage and the other usages of its key, then its module and the other modules.
@@ -2737,19 +2784,11 @@ class CmdbExportImportService {
 		$state = $item['state'];
 		$restoreDeleted = $item['restore'];
 		if ($target === CmdbImportReport::DELETED) {
-			if ($state['deleted'] === true) {
-				return [];
-			}
-
-			return ['delete'];
+			return self::deleteTransitions(state: $state);
 		}
 
 		if ($state['deleted'] === true) {
-			if ($restoreDeleted === true) {
-				return ['restore', 'archive'];
-			}
-
-			return [];
+			return self::archiveFromTrashTransitions(restoreDeleted: $restoreDeleted);
 		}
 
 		if ($state['archived'] === true) {
@@ -2758,6 +2797,36 @@ class CmdbExportImportService {
 
 		return ['archive'];
 	}//end transitions()
+
+	/**
+	 * The steps that soft-delete an object: none when it is in the trash already.
+	 *
+	 * @param array{archived: bool, deleted: bool} $state The object's state.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function deleteTransitions(array $state): array {
+		if ($state['deleted'] === true) {
+			return [];
+		}
+
+		return ['delete'];
+	}//end deleteTransitions()
+
+	/**
+	 * The steps that archive an object in the trash: restore it first, but only when the archive sheet lists it.
+	 *
+	 * @param bool $restoreDeleted Whether an object in the trash is restored to be archived.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function archiveFromTrashTransitions(bool $restoreDeleted): array {
+		if ($restoreDeleted === true) {
+			return ['restore', 'archive'];
+		}
+
+		return [];
+	}//end archiveFromTrashTransitions()
 
 	/**
 	 * Run one step through OpenRegister: soft delete, restore from the trash, or archive.
