@@ -111,15 +111,7 @@ class AangebodenGebruikService {
 			$currentOrg = $this->getCurrentOrganisation();
 			if ($currentOrg === null) {
 				$this->logger->warning('No current organization available for afnemer filtering');
-				return [
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'message' => 'No current organization available',
-				];
+				return (new EmptyListing())->page() + ['message' => 'No current organization available'];
 			}
 
 			// Get configuration for gebruiks register/schema.
@@ -531,14 +523,7 @@ class AangebodenGebruikService {
 	 * @return array The empty page
 	 */
 	private function emptyKoppelingenPage(?string $error): array {
-		$page = [
-			'results' => [],
-			'total' => 0,
-			'page' => 1,
-			'pages' => 0,
-			'limit' => 20,
-			'offset' => 0,
-		];
+		$page = (new EmptyListing())->page();
 		if ($error !== null) {
 			$page['error'] = $error;
 		}
