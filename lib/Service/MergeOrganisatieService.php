@@ -119,6 +119,19 @@ class MergeOrganisatieService {
 	];
 
 	/**
+	 * The message of each merge request blocker, by blocker type.
+	 *
+	 * @var array<string, string>
+	 */
+	private const BLOCKER_MESSAGES = [
+		'self-merge' => 'Source and target organisation cannot be the same.',
+		'source-not-found' => 'Source organisation not found.',
+		'target-not-found' => 'Target organisation not found.',
+		'source-already-merged' => 'Source organisation has already been merged into a different target.',
+		'target-already-merged' => 'Target organisation has already been merged into another organisation.',
+	];
+
+	/**
 	 * Relation types re-pointed via the OpenRegister system-level `@self.organisation` field,
 	 * as count key => schema slug. Modules and services carry a `provider`
 	 * field too, so their ownership counts under its own key.
@@ -169,38 +182,54 @@ class MergeOrganisatieService {
 	 * @spec openspec/specs/organisation-merge/spec.md#requirement-the-system-shall-preview-a-merge-with-per-relation-type-counts-before-any-write
 	 */
 	public function dryRun(string $sourceUuid, string $targetUuid): array {
-		$sourceEntity = $this->findOrganisation(uuid: $sourceUuid);
-		$targetEntity = $this->findOrganisation(uuid: $targetUuid);
-		$blockers = $this->validateMergeRequest(
-			sourceUuid: $sourceUuid,
-			targetUuid: $targetUuid,
-			sourceEntity: $sourceEntity,
-			targetEntity: $targetEntity
-		);
+		$run = $this->mergeRun(sourceUuid: $sourceUuid, targetUuid: $targetUuid);
+		$blockers = $this->validateMergeRequest(run: $run);
 
-		$counts = $this->emptyCounts();
-		if (empty($blockers) === true) {
-			$counts = $this->walkRelations(sourceUuid: $sourceUuid, targetUuid: $targetUuid, commit: false);
-			$counts['groupMembers'] = $this->countGroupMembers(sourceUuid: $sourceUuid);
-		}
-
-		$this->auditLog(
-			action: 'organisation-merge.dry-run',
-			context: [
-				'sourceUuid' => $sourceUuid,
-				'targetUuid' => $targetUuid,
-				'counts' => $counts,
-				'blockers' => $blockers,
-			]
-		);
-
-		return [
+		$preview = [
 			'sourceUuid' => $sourceUuid,
 			'targetUuid' => $targetUuid,
-			'counts' => $counts,
+			'counts' => $this->previewCounts(run: $run, blockers: $blockers),
 			'blockers' => $blockers,
 		];
+		$this->auditLog(action: 'organisation-merge.dry-run', context: $preview);
+
+		return $preview;
 	}//end dryRun()
+
+	/**
+	 * The counts a dry run previews: zero when the merge is blocked.
+	 *
+	 * @param MergeRun                                       $run      The dry run.
+	 * @param array<int, array{type: string, message: string}> $blockers The blockers found.
+	 *
+	 * @return array<string, int> Per-relation-type counts, with the source group's members.
+	 */
+	private function previewCounts(MergeRun $run, array $blockers): array {
+		$counts = $this->emptyCounts();
+		if (empty($blockers) === true) {
+			$counts = $this->walkRelations(run: $run);
+			$counts['groupMembers'] = $this->countGroupMembers(sourceUuid: $run->sourceUuid);
+		}
+
+		return $counts;
+	}//end previewCounts()
+
+	/**
+	 * A merge run with its source and target organisations resolved.
+	 *
+	 * @param string $sourceUuid The source organisation UUID.
+	 * @param string $targetUuid The target organisation UUID.
+	 *
+	 * @return MergeRun The run (counting only, until an execution switches on writing).
+	 */
+	private function mergeRun(string $sourceUuid, string $targetUuid): MergeRun {
+		$run = new MergeRun();
+		$run->sourceUuid = $sourceUuid;
+		$run->targetUuid = $targetUuid;
+		$run->sourceEntity = $this->findOrganisation(uuid: $sourceUuid);
+		$run->targetEntity = $this->findOrganisation(uuid: $targetUuid);
+		return $run;
+	}//end mergeRun()
 
 	/**
 	 * Execute a merge: re-point every relation type, migrate group
@@ -219,130 +248,182 @@ class MergeOrganisatieService {
 	 * @spec openspec/specs/organisation-merge/spec.md#requirement-execute-must-re-point-every-relation-type-while-preserving-every-unrelated-field-on-each-object
 	 */
 	public function execute(string $sourceUuid, string $targetUuid, ?string $actorUid = null): array {
-		$sourceEntity = $this->findOrganisation(uuid: $sourceUuid);
-		$targetEntity = $this->findOrganisation(uuid: $targetUuid);
-		$blockers = $this->validateMergeRequest(
-			sourceUuid: $sourceUuid,
-			targetUuid: $targetUuid,
-			sourceEntity: $sourceEntity,
-			targetEntity: $targetEntity
-		);
+		$run = $this->mergeRun(sourceUuid: $sourceUuid, targetUuid: $targetUuid);
+		$run->actorUid = $actorUid;
+		return $this->executeMerge(run: $run);
+	}//end execute()
 
+	/**
+	 * Execute a merge run: refuse it with its blockers, or re-point, migrate and tombstone.
+	 *
+	 * @param MergeRun $run The run, with its organisations resolved and its actor.
+	 *
+	 * @return array The execute result (see execute()).
+	 */
+	private function executeMerge(MergeRun $run): array {
+		$blockers = $this->validateMergeRequest(run: $run);
 		if (empty($blockers) === false) {
-			$this->auditLog(
-				action: 'organisation-merge.execute.blocked',
-				context: [
-					'sourceUuid' => $sourceUuid,
-					'targetUuid' => $targetUuid,
-					'blockers' => $blockers,
-					'actor' => $actorUid,
-				]
-			);
-
-			return [
-				'ok' => false,
-				'sourceUuid' => $sourceUuid,
-				'targetUuid' => $targetUuid,
-				'blockers' => $blockers,
-			];
+			return $this->refuseMerge(run: $run, blockers: $blockers);
 		}
 
-		$wasAlreadyTombstoned = $sourceEntity !== null
-			&& (($sourceEntity->getObject()['status'] ?? null) === self::TOMBSTONE_STATUS);
+		$run->wasAlreadyTombstoned = $this->isTombstoned(organisation: $run->sourceEntity);
+		$run->operationId = $this->startMergeOperation(run: $run);
 
+		$run->commit = true;
+		$run->counts = $this->walkRelations(run: $run);
+		$run->counts['groupMembers'] = $this->migrateGroupMembership(sourceUuid: $run->sourceUuid, targetUuid: $run->targetUuid);
+		$this->tombstoneSource(sourceUuid: $run->sourceUuid, targetUuid: $run->targetUuid);
+		$this->progressTracker->completeOperation(finalStatistics: ['counts' => $run->counts]);
+
+		return $this->completeMerge(run: $run);
+	}//end executeMerge()
+
+	/**
+	 * Audit a blocked execution and answer its blockers.
+	 *
+	 * @param MergeRun                                         $run      The run.
+	 * @param array<int, array{type: string, message: string}> $blockers The blockers found.
+	 *
+	 * @return array The refused execute result.
+	 */
+	private function refuseMerge(MergeRun $run, array $blockers): array {
+		$this->auditLog(
+			action: 'organisation-merge.execute.blocked',
+			context: [
+				'sourceUuid' => $run->sourceUuid,
+				'targetUuid' => $run->targetUuid,
+				'blockers' => $blockers,
+				'actor' => $run->actorUid,
+			]
+		);
+
+		return ['ok' => false, 'sourceUuid' => $run->sourceUuid, 'targetUuid' => $run->targetUuid, 'blockers' => $blockers];
+	}//end refuseMerge()
+
+	/**
+	 * Start the progress operation of an execution, and audit the start.
+	 *
+	 * @param MergeRun $run The run.
+	 *
+	 * @return string The progress operation id.
+	 */
+	private function startMergeOperation(MergeRun $run): string {
 		$operationId = $this->progressTracker->startOperation(
 			operationType: 'org_merge',
 			options: [
 				'total_items' => count(self::FIELD_RELATION_TYPES) + count(self::SELF_ORGANISATION_RELATION_TYPES),
 				'statistics' => [],
 			],
-			ownerUid: $actorUid
+			ownerUid: $run->actorUid
 		);
 
 		$this->auditLog(
 			action: 'organisation-merge.execute.start',
-			context: ['sourceUuid' => $sourceUuid, 'targetUuid' => $targetUuid, 'actor' => $actorUid, 'operationId' => $operationId]
+			context: ['sourceUuid' => $run->sourceUuid, 'targetUuid' => $run->targetUuid, 'actor' => $run->actorUid, 'operationId' => $operationId]
 		);
 
-		$counts = $this->walkRelations(sourceUuid: $sourceUuid, targetUuid: $targetUuid, commit: true);
-		$counts['groupMembers'] = $this->migrateGroupMembership(sourceUuid: $sourceUuid, targetUuid: $targetUuid);
+		return $operationId;
+	}//end startMergeOperation()
 
-		$this->tombstoneSource(sourceUuid: $sourceUuid, targetUuid: $targetUuid);
-
-		$this->progressTracker->completeOperation(finalStatistics: ['counts' => $counts]);
-
-		$relationSum = 0;
-		foreach (array_merge(array_keys(self::FIELD_RELATION_TYPES), array_keys(self::SELF_ORGANISATION_RELATION_TYPES)) as $type) {
-			$relationSum += ($counts[$type] ?? 0);
-		}
-
-		$status = 'completed';
-		if ($wasAlreadyTombstoned === true && $relationSum === 0) {
-			$status = 'already_completed';
-		}
-
-		$this->auditLog(
-			action: 'organisation-merge.execute.omschrijving',
-			context: [
-				'sourceUuid' => $sourceUuid,
-				'targetUuid' => $targetUuid,
-				'actor' => $actorUid,
-				'operationId' => $operationId,
-				'status' => $status,
-				'counts' => $counts,
-			]
-		);
+	/**
+	 * Audit a finished execution and answer its result.
+	 *
+	 * @param MergeRun $run The run, with its operation and counts.
+	 *
+	 * @return array The execute result.
+	 */
+	private function completeMerge(MergeRun $run): array {
+		$status = $this->mergeStatus(run: $run);
+		$this->logCompletedMerge(run: $run, status: $status);
 
 		return [
 			'ok' => true,
-			'operationId' => $operationId,
-			'sourceUuid' => $sourceUuid,
-			'targetUuid' => $targetUuid,
+			'operationId' => $run->operationId,
+			'sourceUuid' => $run->sourceUuid,
+			'targetUuid' => $run->targetUuid,
 			'status' => $status,
-			'counts' => $counts,
+			'counts' => $run->counts,
 		];
-	}//end execute()
+	}//end completeMerge()
 
 	/**
-	 * The shared relation-enumeration routine. `commit: false` (dry-run)
-	 * enumerates and counts without writing; `commit: true` (execute)
-	 * enumerates AND re-points. Both callers run the identical per-type
-	 * logic below, which is what guarantees dry-run/execute parity.
+	 * Whether the execution only found a merge that was already complete.
 	 *
-	 * @param string $sourceUuid The source organisation UUID.
-	 * @param string $targetUuid The target organisation UUID.
-	 * @param bool $commit Whether to write (true) or only count (false).
+	 * @param MergeRun $run The run, with its counts.
+	 *
+	 * @return string already_completed when the source was tombstoned and nothing was re-pointed, completed otherwise.
+	 */
+	private function mergeStatus(MergeRun $run): string {
+		$relationSum = 0;
+		foreach (array_merge(array_keys(self::FIELD_RELATION_TYPES), array_keys(self::SELF_ORGANISATION_RELATION_TYPES)) as $type) {
+			$relationSum += ($run->counts[$type] ?? 0);
+		}
+
+		if ($run->wasAlreadyTombstoned === true && $relationSum === 0) {
+			return 'already_completed';
+		}
+
+		return 'completed';
+	}//end mergeStatus()
+
+	/**
+	 * Audit a finished execution.
+	 *
+	 * @param MergeRun $run    The run, with its operation and counts.
+	 * @param string   $status The execution status.
+	 *
+	 * @return void
+	 */
+	private function logCompletedMerge(MergeRun $run, string $status): void {
+		$this->auditLog(
+			action: 'organisation-merge.execute.omschrijving',
+			context: [
+				'sourceUuid' => $run->sourceUuid,
+				'targetUuid' => $run->targetUuid,
+				'actor' => $run->actorUid,
+				'operationId' => $run->operationId,
+				'status' => $status,
+				'counts' => $run->counts,
+			]
+		);
+	}//end logCompletedMerge()
+
+	/**
+	 * Whether an organisation is tombstoned.
+	 *
+	 * @param object|null $organisation The organisation entity, or null.
+	 *
+	 * @return bool False when there is no organisation.
+	 */
+	private function isTombstoned(?object $organisation): bool {
+		return $organisation !== null
+			&& (($organisation->getObject()['status'] ?? null) === self::TOMBSTONE_STATUS);
+	}//end isTombstoned()
+
+	/**
+	 * The shared relation-enumeration routine. A dry run (`commit` false)
+	 * enumerates and counts without writing; an execution (`commit` true)
+	 * enumerates AND re-points. Both run the identical per-type logic below,
+	 * which is what guarantees dry-run/execute parity.
+	 *
+	 * @param MergeRun $run The run: source, target and whether to write.
 	 *
 	 * @return array<string, int> Per-relation-type counts.
 	 *
 	 * @spec openspec/specs/organisation-merge/spec.md#requirement-dry-run-and-execute-must-report-structurally-identical-counts-for-the-same-unchanged-input
-	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `commit` is the documented dry-run/execute parity gate, not a generic flag.
 	 */
-	private function walkRelations(string $sourceUuid, string $targetUuid, bool $commit): array {
+	private function walkRelations(MergeRun $run): array {
 		$counts = $this->emptyCounts();
 
 		foreach (self::FIELD_RELATION_TYPES as $type => $mapping) {
-			$schemaType = $mapping['schema'] ?? $type;
-			$counts[$type] = $this->repointByField(
-				objectType: $schemaType,
-				field: $mapping['field'],
-				arrayField: $mapping['arrayField'],
-				source: $sourceUuid,
-				target: $targetUuid,
-				commit: $commit
-			);
-			$this->reportTypeProgress(type: $type, count: $counts[$type], commit: $commit);
+			$repoint = $run->fieldRepoint(objectType: ($mapping['schema'] ?? $type), mapping: $mapping);
+			$counts[$type] = $this->repointByField(run: $run, repoint: $repoint);
+			$this->reportTypeProgress(type: $type, count: $counts[$type], commit: $run->commit);
 		}
 
 		foreach (self::SELF_ORGANISATION_RELATION_TYPES as $type => $schemaType) {
-			$counts[$type] = $this->repointBySelfOrganisation(
-				objectType: $schemaType,
-				source: $sourceUuid,
-				target: $targetUuid,
-				commit: $commit
-			);
-			$this->reportTypeProgress(type: $type, count: $counts[$type], commit: $commit);
+			$counts[$type] = $this->repointBySelfOrganisation(run: $run, objectType: $schemaType);
+			$this->reportTypeProgress(type: $type, count: $counts[$type], commit: $run->commit);
 		}
 
 		return $counts;
@@ -370,67 +451,29 @@ class MergeOrganisatieService {
 	/**
 	 * Re-point objects of a schema via a business-level scalar field and/or array field.
 	 *
-	 * @param string $objectType The OpenRegister object type/schema slug.
-	 * @param string $field The scalar organisation-reference field name.
-	 * @param string|null $arrayField An additional array-of-uuid field name, or null.
-	 * @param string $source The source organisation UUID.
-	 * @param string $target The target organisation UUID.
-	 * @param bool $commit Whether to write (true) or only count (false).
+	 * @param MergeRun     $run     The run: whether to write (true) or only count (false).
+	 * @param FieldRepoint $repoint The schema, its fields, and the source and target organisations.
 	 *
 	 * @return int The number of distinct objects that reference (or referenced) the source.
 	 *
 	 * @spec openspec/specs/organisation-merge/spec.md#requirement-execute-must-re-point-every-relation-type-while-preserving-every-unrelated-field-on-each-object
-	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `commit` is the documented dry-run/execute parity gate.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Complexity 10, exactly at the threshold. The
-	 * branches are the two reference shapes a schema may use (a scalar organisation field and/or
-	 * an array-of-uuid field, either of which may be absent on a given object), crossed with the
-	 * dry-run/execute gate above. Splitting the scalar and array paths would duplicate the
-	 * count-vs-write logic that must stay identical for dry-run/execute parity to hold.
 	 */
-	private function repointByField(string $objectType, string $field, ?string $arrayField, string $source, string $target, bool $commit): int {
-		$entities = $this->findAllForType(objectType: $objectType);
+	private function repointByField(MergeRun $run, FieldRepoint $repoint): int {
+		$entities = $this->findAllForType(objectType: $repoint->objectType);
 		$count = 0;
 
 		foreach ($entities as $entity) {
-			$data = $entity->getObject();
-			$isMatched = false;
-
-			if (($data[$field] ?? null) === $source) {
-				$isMatched = true;
-				$data[$field] = $target;
-			}
-
-			if ($arrayField !== null && is_array($data[$arrayField] ?? null) === true) {
-				$arrayMatched = false;
-				$newArray = [];
-				foreach ($data[$arrayField] as $entry) {
-					$replacement = $entry;
-					if ($entry === $source) {
-						$arrayMatched = true;
-						$replacement = $target;
-					}
-
-					$newArray[] = $replacement;
-				}
-
-				if ($arrayMatched === true) {
-					$isMatched = true;
-					$data[$arrayField] = $newArray;
-				}
-			}
-
-			if ($isMatched === false) {
+			$data = $repoint->apply(data: $entity->getObject());
+			if ($data === null) {
 				continue;
 			}
 
 			$count++;
 
-			if ($commit === true) {
-				$this->saveFull(entity: $entity, data: $data, objectType: $objectType);
+			if ($run->commit === true) {
+				$this->saveFull(entity: $entity, data: $data, objectType: $repoint->objectType);
 			}
-		}//end foreach
+		}
 
 		return $count;
 	}//end repointByField()
@@ -439,39 +482,46 @@ class MergeOrganisatieService {
 	 * Re-point objects of a schema via the OpenRegister system-level
 	 * `@self.organisation` (owning organisation) field.
 	 *
-	 * @param string $objectType The OpenRegister object type/schema slug.
-	 * @param string $source The source organisation UUID.
-	 * @param string $target The target organisation UUID.
-	 * @param bool $commit Whether to write (true) or only count (false).
+	 * @param MergeRun $run        The run: source, target and whether to write (true) or only count (false).
+	 * @param string   $objectType The OpenRegister object type/schema slug.
 	 *
 	 * @return int The number of distinct objects that reference (or referenced) the source.
 	 *
 	 * @spec openspec/specs/organisation-merge/spec.md#requirement-execute-must-re-point-every-relation-type-while-preserving-every-unrelated-field-on-each-object
-	 *
-	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) `commit` is the documented dry-run/execute parity gate.
 	 */
-	private function repointBySelfOrganisation(string $objectType, string $source, string $target, bool $commit): int {
+	private function repointBySelfOrganisation(MergeRun $run, string $objectType): int {
 		$entities = $this->findAllForType(objectType: $objectType);
 		$count = 0;
 
 		foreach ($entities as $entity) {
 			$owningOrganisation = $this->readOwningOrganisation(entity: $entity);
 
-			if ($owningOrganisation !== $source) {
+			if ($owningOrganisation !== $run->sourceUuid) {
 				continue;
 			}
 
 			$count++;
 
-			if ($commit === true) {
-				$data = $entity->getObject();
-				$data['@self'] = ($data['@self'] ?? []) + ['organisation' => $target];
-				$this->saveFull(entity: $entity, data: $data, objectType: $objectType);
+			if ($run->commit === true) {
+				$this->saveFull(entity: $entity, data: self::ownedBy(data: $entity->getObject(), organisation: $run->targetUuid), objectType: $objectType);
 			}
 		}
 
 		return $count;
 	}//end repointBySelfOrganisation()
+
+	/**
+	 * An object's data with its `@self.organisation` set to an organisation.
+	 *
+	 * @param array<string, mixed> $data         The object's data.
+	 * @param string               $organisation The owning organisation UUID.
+	 *
+	 * @return array<string, mixed> The data.
+	 */
+	private static function ownedBy(array $data, string $organisation): array {
+		$data['@self'] = ($data['@self'] ?? []) + ['organisation' => $organisation];
+		return $data;
+	}//end ownedBy()
 
 	/**
 	 * Read an OpenRegister object's system-level owning organisation
@@ -715,55 +765,87 @@ class MergeOrganisatieService {
 	 * deliberately NOT a blocker — it is the idempotent re-run case
 	 * (execute reports `already_completed`; dry-run reports zero counts).
 	 *
-	 * @param string $sourceUuid The source organisation UUID.
-	 * @param string $targetUuid The target organisation UUID.
-	 * @param object|null $sourceEntity The resolved source organisation entity, or null.
-	 * @param object|null $targetEntity The resolved target organisation entity, or null.
+	 * @param MergeRun $run The run, with its source and target organisations resolved.
 	 *
 	 * @return array<int, array{type: string, message: string}> Blockers (empty when the merge may proceed).
 	 *
 	 * @spec openspec/specs/organisation-merge/spec.md#requirement-merge-requests-must-be-validated-and-rejected-with-blockers-before-any-write
 	 */
-	private function validateMergeRequest(string $sourceUuid, string $targetUuid, ?object $sourceEntity, ?object $targetEntity): array {
+	private function validateMergeRequest(MergeRun $run): array {
+		if ($run->sourceUuid === $run->targetUuid) {
+			return [self::blocker(type: 'self-merge')];
+		}
+
+		return array_merge(self::missingOrganisationBlockers(run: $run), $this->tombstoneBlockers(run: $run));
+	}//end validateMergeRequest()
+
+	/**
+	 * The blockers for a source or target organisation that cannot be found.
+	 *
+	 * @param MergeRun $run The run, with its source and target organisations resolved.
+	 *
+	 * @return array<int, array{type: string, message: string}> The blockers.
+	 */
+	private static function missingOrganisationBlockers(MergeRun $run): array {
 		$blockers = [];
-
-		if ($sourceUuid === $targetUuid) {
-			$blockers[] = ['type' => 'self-merge', 'message' => 'Source and target organisation cannot be the same.'];
-			return $blockers;
+		if ($run->sourceEntity === null) {
+			$blockers[] = self::blocker(type: 'source-not-found');
 		}
 
-		if ($sourceEntity === null) {
-			$blockers[] = ['type' => 'source-not-found', 'message' => 'Source organisation not found.'];
-		}
-
-		if ($targetEntity === null) {
-			$blockers[] = ['type' => 'target-not-found', 'message' => 'Target organisation not found.'];
-		}
-
-		if ($sourceEntity !== null) {
-			$sourceData = $sourceEntity->getObject();
-			if (($sourceData['status'] ?? null) === self::TOMBSTONE_STATUS
-				&& ($sourceData['mergedInto'] ?? null) !== $targetUuid
-			) {
-				$blockers[] = [
-					'type' => 'source-already-merged',
-					'message' => 'Source organisation has already been merged into a different target.',
-				];
-			}
-		}
-
-		if ($targetEntity !== null) {
-			$targetData = $targetEntity->getObject();
-			if (($targetData['status'] ?? null) === self::TOMBSTONE_STATUS) {
-				$blockers[] = [
-					'type' => 'target-already-merged',
-					'message' => 'Target organisation has already been merged into another organisation.',
-				];
-			}
+		if ($run->targetEntity === null) {
+			$blockers[] = self::blocker(type: 'target-not-found');
 		}
 
 		return $blockers;
-	}//end validateMergeRequest()
+	}//end missingOrganisationBlockers()
+
+	/**
+	 * The blockers for a source merged into a different target, and a target that was merged itself.
+	 *
+	 * @param MergeRun $run The run, with its source and target organisations resolved.
+	 *
+	 * @return array<int, array{type: string, message: string}> The blockers.
+	 */
+	private function tombstoneBlockers(MergeRun $run): array {
+		$blockers = [];
+		if (self::isMergedElsewhere(run: $run) === true) {
+			$blockers[] = self::blocker(type: 'source-already-merged');
+		}
+
+		if ($this->isTombstoned(organisation: $run->targetEntity) === true) {
+			$blockers[] = self::blocker(type: 'target-already-merged');
+		}
+
+		return $blockers;
+	}//end tombstoneBlockers()
+
+	/**
+	 * A blocker of a merge request.
+	 *
+	 * @param string $type The blocker type, a key of BLOCKER_MESSAGES.
+	 *
+	 * @return array{type: string, message: string} The blocker.
+	 */
+	private static function blocker(string $type): array {
+		return ['type' => $type, 'message' => self::BLOCKER_MESSAGES[$type]];
+	}//end blocker()
+
+	/**
+	 * Whether the source was already merged into another organisation than the target.
+	 *
+	 * @param MergeRun $run The run, with its source organisation resolved.
+	 *
+	 * @return bool False when there is no source.
+	 */
+	private static function isMergedElsewhere(MergeRun $run): bool {
+		if ($run->sourceEntity === null) {
+			return false;
+		}
+
+		$sourceData = $run->sourceEntity->getObject();
+		return ($sourceData['status'] ?? null) === self::TOMBSTONE_STATUS
+			&& ($sourceData['mergedInto'] ?? null) !== $run->targetUuid;
+	}//end isMergedElsewhere()
 
 	/**
 	 * Find an organisatie object by UUID.
