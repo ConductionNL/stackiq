@@ -17,6 +17,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\Organisation;
 use OCA\OpenRegister\Service\OrganisationService;
+use OCA\OpenRegister\Service\Organisation\NewOrganisation;
 use OCA\Stackiq\Service\OrganisatieService;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
@@ -84,15 +85,15 @@ final class OrganisatieServiceCreateGoldenTest extends TestCase {
 			$active->method('getUuid')->willReturn($case['active']);
 			return $active;
 		});
-		$organisations->method('createOrganisation')->willReturnCallback(function (...$args) use (&$trace, $case): Organisation {
-			$trace[] = ['createOrganisation', $args];
+		$organisations->method('createOrganisation')->willReturnCallback(function (NewOrganisation $details, bool $addCurrentUser) use (&$trace, $case): Organisation {
+			$trace[] = ['createOrganisation', [$details->name, $details->description, $addCurrentUser, $details->uuid]];
 			if (isset($case['createFails']) === true) {
 				throw $case['createFails'];
 			}
 
 			$entity = $this->createMock(Organisation::class);
 			$entity->method('getId')->willReturn(7);
-			$entity->method('getUuid')->willReturn($args[3]);
+			$entity->method('getUuid')->willReturn($details->uuid);
 			return $entity;
 		});
 
