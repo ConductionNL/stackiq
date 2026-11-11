@@ -2,7 +2,9 @@
 
 /**
  * Unit tests for relaying the ArchiMate import and export status to
- * ArchiMateService, and the config fallbacks used when it cannot be resolved.
+ * ArchiMateService (ArchiMateImportControl for the writes and the cancel,
+ * SettingsService for the read), and the config fallbacks used when it
+ * cannot be resolved.
  *
  * The status read fallback is pinned by SettingsServiceArchiMateStatusFallbackTest
  * and SettingsServiceObjectCountsGoldenTest.
@@ -25,6 +27,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Service\Settings;
 
 use OCA\Stackiq\Service\ArchiMateService;
+use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -42,7 +45,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/settings-service/spec.md
  */
-class ArchiMateStatusRelayTest extends TestCase {
+class ArchiMateImportControlTest extends TestCase {
 
 	/**
 	 * Every config call, in order.
@@ -69,10 +72,8 @@ class ArchiMateStatusRelayTest extends TestCase {
 		$archiMate->expects($this->once())->method('getArchiMateStatus')->willReturn(['import' => ['s' => 1]]);
 		$archiMate->expects($this->once())->method('cancelArchiMateImport')->with('op-1')->willReturn(['cancelled' => true]);
 
-		$service = $this->service($archiMate);
-
-		$this->assertSame(['import' => ['s' => 1]], $service->getArchiMateStatus());
-		$this->assertSame(['cancelled' => true], $service->cancelArchiMateImport('op-1'));
+		$this->assertSame(['import' => ['s' => 1]], $this->settings($archiMate)->getArchiMateStatus());
+		$this->assertSame(['cancelled' => true], $this->service($archiMate)->cancelArchiMateImport('op-1'));
 		$this->assertSame([], $this->configCalls);
 		$this->assertSame([], $this->errors);
 	}//end testTheReadAndTheCancelAreHandedToArchiMateService()
@@ -170,13 +171,45 @@ class ArchiMateStatusRelayTest extends TestCase {
 	}//end testWithoutArchiMateServiceTheConfigIsUsed()
 
 	/**
-	 * Build the service over a container that answers ArchiMateService, or throws.
+	 * Build the import control over a container that answers ArchiMateService, or throws.
+	 *
+	 * @param ArchiMateService|null $archiMate The ArchiMate service, or null to throw.
+	 *
+	 * @return ArchiMateImportControl
+	 */
+	private function service(?ArchiMateService $archiMate): ArchiMateImportControl {
+		return new ArchiMateImportControl(
+			config: $this->config(),
+			container: $this->container($archiMate),
+			logger: $this->logger()
+		);
+	}//end service()
+
+	/**
+	 * Build the settings service, which still reads the status, over the same doubles.
 	 *
 	 * @param ArchiMateService|null $archiMate The ArchiMate service, or null to throw.
 	 *
 	 * @return SettingsService
 	 */
-	private function service(?ArchiMateService $archiMate): SettingsService {
+	private function settings(?ArchiMateService $archiMate): SettingsService {
+		return new SettingsService(
+			config: $this->config(),
+			request: $this->createMock(IRequest::class),
+			container: $this->container($archiMate),
+			appManager: $this->createMock(IAppManager::class),
+			logger: $this->logger(),
+			groupManager: $this->createMock(IGroupManager::class),
+			l10n: $this->createMock(IL10N::class)
+		);
+	}//end settings()
+
+	/**
+	 * An app config double that records writes and deletes.
+	 *
+	 * @return IAppConfig
+	 */
+	private function config(): IAppConfig {
 		$config = $this->createMock(IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(fn (string $app, string $key, string $default = ''): string => $default);
 		$config->method('setValueString')->willReturnCallback(
@@ -193,6 +226,17 @@ class ArchiMateStatusRelayTest extends TestCase {
 			}
 		);
 
+		return $config;
+	}//end config()
+
+	/**
+	 * A container that answers ArchiMateService, or throws.
+	 *
+	 * @param ArchiMateService|null $archiMate The ArchiMate service, or null to throw.
+	 *
+	 * @return ContainerInterface
+	 */
+	private function container(?ArchiMateService $archiMate): ContainerInterface {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			function (string $id) use ($archiMate) {
@@ -204,6 +248,15 @@ class ArchiMateStatusRelayTest extends TestCase {
 			}
 		);
 
+		return $container;
+	}//end container()
+
+	/**
+	 * A logger that records the error logs.
+	 *
+	 * @return LoggerInterface
+	 */
+	private function logger(): LoggerInterface {
 		$logger = $this->createMock(LoggerInterface::class);
 		$logger->method('error')->willReturnCallback(
 			function (string $message, array $context = []): void {
@@ -211,14 +264,6 @@ class ArchiMateStatusRelayTest extends TestCase {
 			}
 		);
 
-		return new SettingsService(
-			config: $config,
-			request: $this->createMock(IRequest::class),
-			container: $container,
-			appManager: $this->createMock(IAppManager::class),
-			logger: $logger,
-			groupManager: $this->createMock(IGroupManager::class),
-			l10n: $this->createMock(IL10N::class)
-		);
-	}//end service()
+		return $logger;
+	}//end logger()
 }//end class

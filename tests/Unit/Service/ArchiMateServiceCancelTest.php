@@ -21,7 +21,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\ProgressTracker;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -32,7 +32,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * The real ArchiMateService and SettingsService path the cancel endpoint takes.
+ * The real ArchiMateService and ArchiMateImportControl path the cancel endpoint takes.
  */
 class ArchiMateServiceCancelTest extends TestCase {
 
@@ -122,23 +122,24 @@ class ArchiMateServiceCancelTest extends TestCase {
 	}//end testAnIdOutsideThePatternIsRefused()
 
 	/**
-	 * SettingsService, which the endpoint calls, reaches the method and passes the id on.
+	 * ArchiMateImportControl, which the endpoint calls, reaches the method and passes the id on.
 	 *
 	 * @return void
 	 */
-	public function testTheSettingsServicePathReachesTheCancel(): void {
+	public function testTheImportControlPathReachesTheCancel(): void {
 		$service   = $this->archiMateService();
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->with(ArchiMateService::class)->willReturn($service);
 
-		$settings = (new \ReflectionClass(SettingsService::class))->newInstanceWithoutConstructor();
-		foreach (['container' => $container, 'logger' => $this->createMock(LoggerInterface::class)] as $prop => $value) {
-			(new \ReflectionProperty(SettingsService::class, $prop))->setValue($settings, $value);
-		}
+		$settings = new ArchiMateImportControl(
+			config: $this->createMock(IAppConfig::class),
+			container: $container,
+			logger: $this->createMock(LoggerInterface::class)
+		);
 
 		$result = $settings->cancelArchiMateImport('archimate_import_abc12345');
 
 		$this->assertTrue($result['cancelled']);
 		$this->assertTrue($this->tracker()->isCancelRequested('archimate_import_abc12345'));
-	}//end testTheSettingsServicePathReachesTheCancel()
+	}//end testTheImportControlPathReachesTheCancel()
 }//end class

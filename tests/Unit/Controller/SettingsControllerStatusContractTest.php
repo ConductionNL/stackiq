@@ -34,6 +34,7 @@ use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http;
@@ -122,6 +123,7 @@ class SettingsControllerStatusContractTest extends TestCase {
 			$this->orgSyncService,
 			$this->createMock(ArchiMateService::class),
 			$this->progressTracker,
+			$this->createMock(ArchiMateImportControl::class),
 			$this->createMock(EolSyncService::class),
 			$this->createMock(LoggerInterface::class)
 		);

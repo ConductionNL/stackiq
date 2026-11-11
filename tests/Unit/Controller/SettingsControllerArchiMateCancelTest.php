@@ -24,6 +24,7 @@ use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http;
@@ -44,12 +45,12 @@ class SettingsControllerArchiMateCancelTest extends TestCase {
 	/**
 	 * Build the controller for an admin posting the given operation id.
 	 *
-	 * @param mixed           $operationId     The posted id.
-	 * @param SettingsService $settingsService The settings service.
+	 * @param mixed                  $operationId   The posted id.
+	 * @param ArchiMateImportControl $importControl The ArchiMate import control.
 	 *
 	 * @return SettingsController The controller.
 	 */
-	private function controller(mixed $operationId, SettingsService $settingsService): SettingsController {
+	private function controller(mixed $operationId, ArchiMateImportControl $importControl): SettingsController {
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('admin');
 		$userSession = $this->createMock(IUserSession::class);
@@ -69,22 +70,23 @@ class SettingsControllerArchiMateCancelTest extends TestCase {
 			$this->createMock(IAppManager::class),
 			$groupManager,
 			$userSession,
-			$settingsService,
+			$this->createMock(SettingsService::class),
 			$this->createMock(OrganizationSyncService::class),
 			$this->createMock(ArchiMateService::class),
 			$this->createMock(ProgressTracker::class),
+			$importControl,
 			$this->createMock(EolSyncService::class),
 			$this->createMock(LoggerInterface::class)
 		);
 	}//end controller()
 
 	/**
-	 * A well-formed id reaches the settings service and the answer is 200.
+	 * A well-formed id reaches the import control and the answer is 200.
 	 *
 	 * @return void
 	 */
 	public function testAWellFormedIdIsPassedOn(): void {
-		$settings = $this->createMock(SettingsService::class);
+		$settings = $this->createMock(ArchiMateImportControl::class);
 		$settings->expects($this->once())->method('cancelArchiMateImport')
 			->with('archimate_import_abc12345')
 			->willReturn(['cancelled' => true]);
@@ -101,7 +103,7 @@ class SettingsControllerArchiMateCancelTest extends TestCase {
 	 * @return void
 	 */
 	public function testAnotherIdIsRefused(): void {
-		$settings = $this->createMock(SettingsService::class);
+		$settings = $this->createMock(ArchiMateImportControl::class);
 		$settings->expects($this->never())->method('cancelArchiMateImport');
 
 		$response = $this->controller('sbom-import_abc', $settings)->cancelArchiMateImport();
