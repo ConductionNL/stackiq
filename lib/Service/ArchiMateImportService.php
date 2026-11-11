@@ -1145,33 +1145,8 @@ class ArchiMateImportService {
 
 		$schemaId = $modelSchemaIds;
 
-		// Extract a plain string name (schema column expects string, not array).
-		$nameString = null;
-		if (isset($metadata['name']) === true) {
-			if (is_array($metadata['name']) === true && isset($metadata['name']['_value']) === true) {
-				$nameString = (string)$metadata['name']['_value'];
-			} elseif (is_string($metadata['name']) === true) {
-				$nameString = $metadata['name'];
-			}
-		}
-
-		// Build xml field preserving full array structure for round-trip fidelity.
-		$xmlData = [];
-		if (isset($metadata['name']) === true) {
-			$xmlData['name'] = $metadata['name'];
-		}
-
-		if (isset($metadata['documentation']) === true) {
-			$xmlData['documentation'] = $metadata['documentation'];
-		}
-
-		if (isset($metadata['properties']) === true) {
-			$xmlData['properties'] = $metadata['properties'];
-		}
-
-		if (isset($metadata['propertyDefinitionMap']) === true) {
-			$xmlData['propertyDefinitionMap'] = $metadata['propertyDefinitionMap'];
-		}
+		$nameString = $this->plainModelName(metadata: $metadata);
+		$xmlData = $this->modelXmlFields(metadata: $metadata);
 
 		// Create object with @self structure and metadata at root level (no JSON serialization).
 		$object = [
@@ -1197,6 +1172,44 @@ class ArchiMateImportService {
 
 		return $merged;
 	}//end createModelObject()
+
+	/**
+	 * The plain string name of a model (the schema column expects a string, not an array).
+	 *
+	 * @param array<string, mixed> $metadata The model metadata.
+	 *
+	 * @return string|null The XML value or plain string name, or null when there is neither.
+	 */
+	private function plainModelName(array $metadata): ?string {
+		$nameString = null;
+		if (isset($metadata['name']) === true) {
+			if (is_array($metadata['name']) === true && isset($metadata['name']['_value']) === true) {
+				$nameString = (string)$metadata['name']['_value'];
+			} elseif (is_string($metadata['name']) === true) {
+				$nameString = $metadata['name'];
+			}
+		}
+
+		return $nameString;
+	}//end plainModelName()
+
+	/**
+	 * The xml field of a model, preserving the full array structure for round-trip fidelity.
+	 *
+	 * @param array<string, mixed> $metadata The model metadata.
+	 *
+	 * @return array<string, mixed> The name, documentation, properties and property definition map that are set.
+	 */
+	private function modelXmlFields(array $metadata): array {
+		$xmlData = [];
+		foreach (['name', 'documentation', 'properties', 'propertyDefinitionMap'] as $field) {
+			if (isset($metadata[$field]) === true) {
+				$xmlData[$field] = $metadata[$field];
+			}
+		}
+
+		return $xmlData;
+	}//end modelXmlFields()
 
 	/**
 	 * Create section object with @self structure and flattened XML data
@@ -3352,33 +3365,8 @@ class ArchiMateImportService {
 	private function createModelObjectDirect(array $metadata, string $modelIdentifier): array {
 		$organisation = $this->getCurrentOrganisation();
 
-		// Extract a plain string name (schema column expects string, not array).
-		$nameString = null;
-		if (isset($metadata['name']) === true) {
-			if (is_array($metadata['name']) === true && isset($metadata['name']['_value']) === true) {
-				$nameString = (string)$metadata['name']['_value'];
-			} elseif (is_string($metadata['name']) === true) {
-				$nameString = $metadata['name'];
-			}
-		}
-
-		// Build xml field preserving full array structure for round-trip fidelity.
-		$xmlData = [];
-		if (isset($metadata['name']) === true) {
-			$xmlData['name'] = $metadata['name'];
-		}
-
-		if (isset($metadata['documentation']) === true) {
-			$xmlData['documentation'] = $metadata['documentation'];
-		}
-
-		if (isset($metadata['properties']) === true) {
-			$xmlData['properties'] = $metadata['properties'];
-		}
-
-		if (isset($metadata['propertyDefinitionMap']) === true) {
-			$xmlData['propertyDefinitionMap'] = $metadata['propertyDefinitionMap'];
-		}
+		$nameString = $this->plainModelName(metadata: $metadata);
+		$xmlData = $this->modelXmlFields(metadata: $metadata);
 
 		$regId = $this->cachedConfig['registerId'] ?? throw new \RuntimeException('No register ID.');
 		$schemaId = $this->cachedConfig['schemaIds']['model'] ?? throw new \RuntimeException('No model schema ID.');
