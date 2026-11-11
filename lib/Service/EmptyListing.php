@@ -33,7 +33,7 @@ final class EmptyListing {
 	 *
 	 * @spec openspec/specs/aangeboden-gebruik-api/spec.md
 	 */
-	public static function page(): array {
+	public function page(): array {
 		return [
 			'results' => [],
 			'total' => 0,

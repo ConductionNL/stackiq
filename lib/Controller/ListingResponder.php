@@ -59,7 +59,7 @@ final class ListingResponder {
 	 * @spec openspec/specs/aangeboden-gebruik-api/spec.md
 	 */
 	public function emptyListing(): array {
-		return EmptyListing::page();
+		return (new EmptyListing())->page();
 	}//end emptyListing()
 
 	/**

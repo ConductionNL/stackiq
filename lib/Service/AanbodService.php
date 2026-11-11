@@ -111,7 +111,7 @@ class AanbodService {
 			$currentOrg = $this->getCurrentOrganisation();
 			if ($currentOrg === null) {
 				$this->logger->warning('No current organization available for aanbod filtering');
-				return EmptyListing::page() + ['message' => 'No current organization available'];
+				return (new EmptyListing())->page() + ['message' => 'No current organization available'];
 			}
 
 			// Get voorzieningen configuration.
@@ -250,7 +250,7 @@ class AanbodService {
 				]
 			);
 
-			return EmptyListing::page() + ['error' => 'Failed to retrieve aanbod: ' . $e->getMessage()];
+			return (new EmptyListing())->page() + ['error' => 'Failed to retrieve aanbod: ' . $e->getMessage()];
 		}//end try
 	}//end getAanbod()
 
