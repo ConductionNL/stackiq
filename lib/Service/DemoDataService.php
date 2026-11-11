@@ -162,44 +162,22 @@ class DemoDataService {
 	 * @return integer|null The object count, or null when there is no usable descriptor.
 	 */
 	private function shippedObjectCount(): ?int {
-		$path = $this->descriptorPath();
-		if (is_file($path) === false) {
+		try {
+			return self::objectCount(data: $this->readDescriptor());
+		} catch (RuntimeException) {
 			return null;
 		}
-
-		$raw = file_get_contents($path);
-		if ($raw === false) {
-			return null;
-		}
-
-		$data = json_decode($raw, true);
-		if (is_array($data) === false) {
-			return null;
-		}
-
-		$components = ($data['components'] ?? []);
-		if (is_array($components) === false || is_array(($components['objects'] ?? null)) === false) {
-			return 0;
-		}
-
-		return count($components['objects']);
 
 	}//end shippedObjectCount()
 
 	/**
-	 * Import the demo dataset.
+	 * Read and decode the shipped demo descriptor.
 	 *
-	 * 🔴 THROWS RATHER THAN RETURNING A QUIET FAILURE. The caller reports the
-	 * outcome to an operator who just asked for this, so "nothing happened" must
-	 * not be presentable as success.
+	 * @return array<string, mixed> The decoded descriptor.
 	 *
-	 * @return array{objects: integer, registers: integer, schemas: integer} What was imported.
-	 *
-	 * @throws RuntimeException When the descriptor is missing, unreadable, or OpenRegister is absent.
-	 *
-	 * @spec exclude Demo-data import; ADR-111 rule 1 has no per-app behavioural spec.
+	 * @throws RuntimeException When the descriptor is missing, unreadable or not valid JSON.
 	 */
-	public function install(): array {
+	private function readDescriptor(): array {
 		$path = $this->descriptorPath();
 		if (is_file($path) === false) {
 			throw new RuntimeException('No demo dataset ships with this app (' . self::DESCRIPTOR . ' not found).');
@@ -215,32 +193,89 @@ class DemoDataService {
 			throw new RuntimeException('The demo dataset is not valid JSON: ' . $path);
 		}
 
+		return $data;
+
+	}//end readDescriptor()
+
+	/**
+	 * How many objects a decoded descriptor carries.
+	 *
+	 * @param array<string, mixed> $data The decoded descriptor.
+	 *
+	 * @return integer The number of objects in `components.objects`, 0 when absent.
+	 */
+	private static function objectCount(array $data): int {
+		$components = ($data['components'] ?? []);
+		if (is_array($components) === false || is_array(($components['objects'] ?? null)) === false) {
+			return 0;
+		}
+
+		return count($components['objects']);
+
+	}//end objectCount()
+
+	/**
+	 * Import the demo dataset.
+	 *
+	 * 🔴 THROWS RATHER THAN RETURNING A QUIET FAILURE. The caller reports the
+	 * outcome to an operator who just asked for this, so "nothing happened" must
+	 * not be presentable as success.
+	 *
+	 * @return array{objects: integer, registers: integer, schemas: integer} What was imported.
+	 *
+	 * @throws RuntimeException When the descriptor is missing, unreadable, or OpenRegister is absent.
+	 *
+	 * @spec exclude Demo-data import; ADR-111 rule 1 has no per-app behavioural spec.
+	 */
+	public function install(): array {
+		$data = $this->readDescriptor();
+
 		// Counted from the FILE, not the importer's reply, so the number reported
 		// is the number ASKED FOR. An object whose schema does not resolve is
 		// SKIPPED rather than errored, so a discrepancy here is a real condition
 		// an operator should be able to see.
-		$objects = 0;
-		$components = ($data['components'] ?? []);
-		if (is_array($components) === true && is_array(($components['objects'] ?? null)) === true) {
-			$objects = count($components['objects']);
-		}
+		$result = $this->runImport(data: $data);
 
+		$imported = [
+			'objects'   => self::objectCount(data: $data),
+			'registers' => count((array)($result['registers'] ?? [])),
+			'schemas'   => count((array)($result['schemas'] ?? [])),
+		];
+		$this->logImported(imported: $imported);
+
+		return $imported;
+
+	}//end install()
+
+	/**
+	 * Hand the descriptor to OpenRegister's importer, schemas pinned first.
+	 *
+	 * @param array<string, mixed> $data The decoded descriptor.
+	 *
+	 * @return mixed The importer's reply.
+	 *
+	 * @throws RuntimeException When OpenRegister is absent.
+	 */
+	private function runImport(array $data): mixed {
 		$importer = $this->configurationService();
-		$data     = $this->pinSchemasToTheirRegisters(data: $data);
 
-		$result = $importer->importFromApp(
+		return $importer->importFromApp(
 			appId: self::CONFIG_APP_ID,
-			data: $data,
+			data: $this->pinSchemasToTheirRegisters(data: $data),
 			version: $this->appManager->getAppVersion(AppIdentity::APP_ID),
 			force: true
 		);
 
-		$imported = [
-			'objects'   => $objects,
-			'registers' => count((array)($result['registers'] ?? [])),
-			'schemas'   => count((array)($result['schemas'] ?? [])),
-		];
+	}//end runImport()
 
+	/**
+	 * Log what an import brought in.
+	 *
+	 * @param array{objects: integer, registers: integer, schemas: integer} $imported The counts.
+	 *
+	 * @return void
+	 */
+	private function logImported(array $imported): void {
 		$this->logger->info(
 			'[DemoDataService] imported demo data: '
 			. $imported['objects'] . ' object(s), '
@@ -249,8 +284,7 @@ class DemoDataService {
 			['app' => AppIdentity::APP_ID]
 		);
 
-		return $imported;
-	}//end install()
+	}//end logImported()
 
 	/**
 	 * Point every demo object at its schema in its own register, by id.
