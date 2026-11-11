@@ -130,23 +130,28 @@ class RenameDutchSchemaSlugDecisions {
 	 * @return array{archimate: array<string, mixed>|null, catalogue: array<string, mixed>|null}
 	 */
 	public function organisationPair(array $rows): array {
-		$archimate = null;
-		$catalogue = null;
+		return [
+			'archimate' => $this->lastRowWithSlug(rows: $rows, slug: 'organization'),
+			'catalogue' => $this->lastRowWithSlug(rows: $rows, slug: 'organisatie'),
+		];
+	}//end organisationPair()
 
+	/**
+	 * The last row carrying exactly the given slug, or null when none does.
+	 *
+	 * @param array<int, array<string, mixed>> $rows Schema rows with at least `id` and `slug`.
+	 * @param string                           $slug The slug to look for.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function lastRowWithSlug(array $rows, string $slug): ?array {
+		$found = null;
 		foreach ($rows as $row) {
-			$slug = (string)($row['slug'] ?? '');
-			if ($slug === 'organization') {
-				$archimate = $row;
-			}
-
-			if ($slug === 'organisatie') {
-				$catalogue = $row;
+			if ((string)($row['slug'] ?? '') === $slug) {
+				$found = $row;
 			}
 		}
 
-		return [
-			'archimate' => $archimate,
-			'catalogue' => $catalogue,
-		];
-	}//end organisationPair()
+		return $found;
+	}//end lastRowWithSlug()
 }//end class
