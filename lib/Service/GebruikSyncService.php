@@ -205,19 +205,35 @@ class GebruikSyncService {
 			return;
 		}
 
-		$target = $this->amefSearchTarget(stats: $stats);
-		if ($target === null) {
+		$amefElements = $this->searchReferencedAmefElements(referenceIds: $referenceIds, stats: $stats);
+		if ($amefElements === null) {
 			return;
 		}
 
-		$amefElements = $this->searchAmefElementsByIds(
+		$amefSlugs = $this->amefSlugsOf(amefElements: $amefElements, stats: $stats);
+		$this->storeAmefSlugs(gebruikObject: $gebruikObject, amefSlugs: $amefSlugs);
+	}//end linkAmefElements()
+
+	/**
+	 * Search the configured AMEF register for the referenced elements.
+	 *
+	 * @param array $referenceIds The referenced ids
+	 * @param array $stats        Processing statistics, updated in place
+	 *
+	 * @return array|null The found AMEF elements, or null when the register is not configured.
+	 */
+	private function searchReferencedAmefElements(array $referenceIds, array &$stats): ?array {
+		$target = $this->amefSearchTarget(stats: $stats);
+		if ($target === null) {
+			return null;
+		}
+
+		return $this->searchAmefElementsByIds(
 			ids: $referenceIds,
 			register: $target['register'],
 			schema: $target['schema']
 		);
-		$amefSlugs = $this->amefSlugsOf(amefElements: $amefElements, stats: $stats);
-		$this->storeAmefSlugs(gebruikObject: $gebruikObject, amefSlugs: $amefSlugs);
-	}//end linkAmefElements()
+	}//end searchReferencedAmefElements()
 
 	/**
 	 * Read the referentiecomponenten of a gebruik object.
@@ -262,6 +278,18 @@ class GebruikSyncService {
 			]
 		);
 
+		return $this->validReferenceIds(referenceComponents: $referenceComponents, gebruikUuid: $gebruikUuid);
+	}//end referenceComponentIds()
+
+	/**
+	 * Collect the referentiecomponent ids, warning when there are none.
+	 *
+	 * @param mixed       $referenceComponents The referentiecomponenten (not empty)
+	 * @param string|null $gebruikUuid         The gebruik object's UUID
+	 *
+	 * @return array The ids; empty when no component carries one.
+	 */
+	private function validReferenceIds(mixed $referenceComponents, ?string $gebruikUuid): array {
 		$referenceIds = $this->idsOf(referenceComponents: $referenceComponents);
 		if (empty($referenceIds) === true) {
 			$this->logger->warning(
@@ -273,7 +301,7 @@ class GebruikSyncService {
 		}
 
 		return $referenceIds;
-	}//end referenceComponentIds()
+	}//end validReferenceIds()
 
 	/**
 	 * Collect the id of every referentiecomponent that has one.
