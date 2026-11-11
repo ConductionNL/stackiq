@@ -317,6 +317,43 @@ class SettingsController extends Controller {
 	}//end buildConfigErrorResponse()
 
 	/**
+	 * Log a failed operation with the exception message and the exception itself.
+	 *
+	 * @param string     $logMessage "SettingsController: Manual import failed" / …
+	 * @param \Exception $exception  The caught exception.
+	 *
+	 * @return void
+	 */
+	private function logOperationFailure(string $logMessage, \Exception $exception): void {
+		$this->logger->error(
+			$logMessage,
+			[
+				'exception_message' => $exception->getMessage(),
+				'exception' => $exception,
+			]
+		);
+	}//end logOperationFailure()
+
+	/**
+	 * Log a failed status read and answer the 500 with the error and the time.
+	 *
+	 * @param string     $logMessage "SettingsController: Failed to get version info" / …
+	 * @param \Exception $exception  The caught exception.
+	 *
+	 * @return JSONResponse
+	 */
+	private function statusFailure(string $logMessage, \Exception $exception): JSONResponse {
+		$this->logOperationFailure(logMessage: $logMessage, exception: $exception);
+		return new JSONResponse(
+			[
+				'error' => $exception->getMessage(),
+				'timestamp' => time(),
+			],
+			500
+		);
+	}//end statusFailure()
+
+	/**
 	 * Retrieve the current settings.
 	 *
 	 * @return JSONResponse JSON response containing the current settings.
@@ -721,20 +758,7 @@ class SettingsController extends Controller {
 
 			return new JSONResponse($responseData);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'SettingsController: Failed to get configuration status',
-				[
-					'exception_message' => $e->getMessage(),
-					'exception' => $e,
-				]
-			);
-			return new JSONResponse(
-				[
-					'error' => $e->getMessage(),
-					'timestamp' => time(),
-				],
-				500
-			);
+			return $this->statusFailure(logMessage: 'SettingsController: Failed to get configuration status', exception: $e);
 		}//end try
 	}//end status()
 
@@ -1071,20 +1095,7 @@ class SettingsController extends Controller {
 
 			return new JSONResponse($data);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'SettingsController: Failed to get version info',
-				[
-					'exception_message' => $e->getMessage(),
-					'exception' => $e,
-				]
-			);
-			return new JSONResponse(
-				[
-					'error' => $e->getMessage(),
-					'timestamp' => time(),
-				],
-				500
-			);
+			return $this->statusFailure(logMessage: 'SettingsController: Failed to get version info', exception: $e);
 		}//end try
 	}//end getVersionInfo()
 
@@ -1200,13 +1211,7 @@ class SettingsController extends Controller {
 
 			return new JSONResponse($result, $importStatusCode);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'SettingsController: Manual import failed',
-				[
-					'exception_message' => $e->getMessage(),
-					'exception' => $e,
-				]
-			);
+			$this->logOperationFailure(logMessage: 'SettingsController: Manual import failed', exception: $e);
 			return new JSONResponse(
 				[
 					'success' => false,
@@ -1319,13 +1324,7 @@ class SettingsController extends Controller {
 
 			return new JSONResponse($results, $httpStatus);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'SettingsController: Consolidated auto-configuration failed',
-				[
-					'exception_message' => $e->getMessage(),
-					'exception' => $e,
-				]
-			);
+			$this->logOperationFailure(logMessage: 'SettingsController: Consolidated auto-configuration failed', exception: $e);
 			return new JSONResponse(
 				[
 					'success' => false,
