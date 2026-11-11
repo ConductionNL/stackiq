@@ -82,6 +82,17 @@ class MaintenanceRecipientsJob extends QueuedJob {
 			return;
 		}
 
+		$this->recordOwners(argument: $argument);
+	}//end run()
+
+	/**
+	 * Record the owners of the window, queueing the job again after a failure.
+	 *
+	 * @param array<string, mixed> $argument `{uuid, register, schema, attempt?}` of the window.
+	 *
+	 * @return void
+	 */
+	private function recordOwners(array $argument): void {
 		try {
 			$this->recipients->recordRecipientsFor(
 				uuid: $argument['uuid'],
@@ -92,16 +103,28 @@ class MaintenanceRecipientsJob extends QueuedJob {
 			// The window was deleted before its owners were resolved: nothing to do.
 			return;
 		} catch (Throwable $e) {
-			$attempt = (int) ($argument['attempt'] ?? 1);
-			$context = ['uuid' => $argument['uuid'], 'attempt' => $attempt, 'error' => $e->getMessage()];
-			if ($attempt >= self::MAX_ATTEMPTS) {
-				$this->logger->critical('MaintenanceRecipientsJob: gave up recording the owners to notify; nothing was written', $context);
-				return;
-			}
-
-			$this->logger->error('MaintenanceRecipientsJob: could not record the owners to notify; tried again later', $context);
-			$argument['attempt'] = ($attempt + 1);
-			$this->jobList->scheduleAfter(self::class, $this->time->getTime() + self::RETRY_DELAY, $argument);
+			$this->retryAfterFailure(argument: $argument, exception: $e);
 		}
-	}//end run()
+	}//end recordOwners()
+
+	/**
+	 * Queue the resolution again after a failure, until MAX_ATTEMPTS tries were made.
+	 *
+	 * @param array<string, mixed> $argument  The job's argument.
+	 * @param Throwable            $exception Why the resolution failed.
+	 *
+	 * @return void
+	 */
+	private function retryAfterFailure(array $argument, Throwable $exception): void {
+		$attempt = (int) ($argument['attempt'] ?? 1);
+		$context = ['uuid' => $argument['uuid'], 'attempt' => $attempt, 'error' => $exception->getMessage()];
+		if ($attempt >= self::MAX_ATTEMPTS) {
+			$this->logger->critical('MaintenanceRecipientsJob: gave up recording the owners to notify; nothing was written', $context);
+			return;
+		}
+
+		$this->logger->error('MaintenanceRecipientsJob: could not record the owners to notify; tried again later', $context);
+		$argument['attempt'] = ($attempt + 1);
+		$this->jobList->scheduleAfter(self::class, $this->time->getTime() + self::RETRY_DELAY, $argument);
+	}//end retryAfterFailure()
 }//end class
