@@ -20,7 +20,10 @@
 			</div>
 		</NcNoteCard>
 
-		<div class="statisticsTableContainer">
+		<div
+			v-for="(tableStats, tableIndex) in statisticsTables"
+			:key="tableIndex"
+			class="statisticsTableContainer">
 			<div class="statisticsTableHeader">
 				<span class="lastUpdated"
 					>Laatst bijgewerkt: {{ formatDate(new Date()) }}</span
@@ -37,57 +40,7 @@
 				</thead>
 				<tbody>
 					<tr
-						v-for="stat in firstTableStats"
-						:key="stat.objectType"
-						style="cursor: pointer"
-						@click="navigateToSchema(stat.slug)">
-						<td>{{ stat.objectType }}</td>
-						<td class="countCell">
-							{{ stat.count.toLocaleString() }}
-						</td>
-						<td class="manageCell">
-							<NcButton
-								v-if="stat.slug === 'organization'"
-								size="small"
-								variant="tertiary"
-								@click.stop="navigateToObjectType(stat.slug)">
-								<template #icon>
-									<component
-										:is="getIconForObjectType(stat.slug)"
-										:size="16" />
-								</template>
-								Manage
-							</NcButton>
-							<span v-else class="disabledManage">
-								<component
-									:is="getIconForObjectType(stat.slug)"
-									:size="16" />
-								<span class="strikethrough">Manage</span>
-							</span>
-						</td>
-					</tr>
-				</tbody>
-			</table>
-		</div>
-
-		<div class="statisticsTableContainer">
-			<div class="statisticsTableHeader">
-				<span class="lastUpdated"
-					>Laatst bijgewerkt: {{ formatDate(new Date()) }}</span
-				>
-			</div>
-
-			<table class="objectStatisticsTable">
-				<thead>
-					<tr>
-						<th scope="col">Object Type</th>
-						<th scope="col" class="countHeader">Count</th>
-						<th scope="col" class="manageHeader">Manage</th>
-					</tr>
-				</thead>
-				<tbody>
-					<tr
-						v-for="stat in secondTableStats"
+						v-for="stat in tableStats"
 						:key="stat.objectType"
 						style="cursor: pointer"
 						@click="navigateToSchema(stat.slug)">
@@ -235,6 +188,16 @@ export default {
 			const stats = this.objectStatistics
 			const midPoint = Math.ceil(stats.length / 2)
 			return stats.slice(midPoint)
+		},
+
+		/**
+		 * The two statistics tables, in display order
+		 *
+		 * @return {Array<Array>} The rows of the first and the second table
+		 * @spec openspec/specs/fe-shell-navigation/spec.md
+		 */
+		statisticsTables() {
+			return [this.firstTableStats, this.secondTableStats]
 		},
 	},
 

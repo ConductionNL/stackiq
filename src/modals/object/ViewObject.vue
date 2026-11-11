@@ -1960,6 +1960,7 @@ import Upload from 'vue-material-design-icons/Upload.vue'
 import PaginationComponent from '../../components/PaginationComponent.vue'
 import PublishedIcon from '../../components/PublishedIcon.vue'
 import { getTheme } from '../../services/getTheme.js'
+import { FILE_ACTIONS } from './objectFileActions.js'
 
 import '@toast-ui/editor/dist/toastui-editor.css'
 
@@ -4342,24 +4343,10 @@ export default {
 		async onFilesPageChanged(page) {
 			if (!this.currentObject) return
 
-			const publication = this.currentObject
-			const { registerId, schemaId } = this.getRegisterSchemaIds(publication)
-			const publicationData = {
-				source: 'openregister',
-				schema: schemaId,
-				register: registerId,
-			}
-
-			await objectStore.fetchRelatedData(
-				'publication',
-				this.currentObject.id,
-				'files',
-				{
-					_page: page,
-					_limit: this.filesCurrentPageSize,
-				},
-				publicationData,
-			)
+			await this.refreshFiles(this.getRegisterSchemaIds(this.currentObject), {
+				_page: page,
+				_limit: this.filesCurrentPageSize,
+			})
 		},
 
 		/**
@@ -4369,198 +4356,31 @@ export default {
 		async onFilesPageSizeChanged(pageSize) {
 			if (!this.currentObject) return
 
-			const publication = this.currentObject
-			const { registerId, schemaId } = this.getRegisterSchemaIds(publication)
-			const publicationData = {
-				source: 'openregister',
-				schema: schemaId,
-				register: registerId,
-			}
-
-			await objectStore.fetchRelatedData(
-				'publication',
-				this.currentObject.id,
-				'files',
-				{
-					_page: 1,
-					_limit: pageSize,
-				},
-				publicationData,
-			)
+			await this.refreshFiles(this.getRegisterSchemaIds(this.currentObject), {
+				_page: 1,
+				_limit: pageSize,
+			})
 		},
 
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async publishSelectedFiles() {
-			if (this.selectedAttachments.length === 0) return
-
-			try {
-				this.publishLoading = [...this.selectedAttachments]
-
-				// Get the selected files
-				const selectedFiles = this.paginatedFiles.filter((file) =>
-					this.selectedAttachments.includes(file.id),
-				)
-
-				// Publish each file individually
-				for (const file of selectedFiles) {
-					const publication = this.currentObject
-					const { registerId, schemaId } =
-						this.getRegisterSchemaIds(publication)
-					const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}/publish`
-
-					const response = await fetch(endpoint, {
-						method: 'POST',
-					})
-
-					if (!response.ok) {
-						throw new Error(
-							`Failed to publish file ${file.title || file.name}: ${response.statusText}`,
-						)
-					}
-				}
-
-				// Refresh files list once after all operations with publication data
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
-
-				// Clear selection after successful operation
-				this.selectedAttachments = []
-			} catch (error) {
-				console.error('Error publishing files:', error)
-			} finally {
-				this.publishLoading = []
-			}
+			await this.runSelectedFileAction(FILE_ACTIONS.publish)
 		},
 
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async depublishSelectedFiles() {
-			if (this.selectedAttachments.length === 0) return
-
-			try {
-				this.depublishLoading = [...this.selectedAttachments]
-
-				// Get the selected files
-				const selectedFiles = this.paginatedFiles.filter((file) =>
-					this.selectedAttachments.includes(file.id),
-				)
-
-				// Depublish each file individually
-				for (const file of selectedFiles) {
-					const publication = this.currentObject
-					const { registerId, schemaId } =
-						this.getRegisterSchemaIds(publication)
-					const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}/depublish`
-
-					const response = await fetch(endpoint, {
-						method: 'POST',
-					})
-
-					if (!response.ok) {
-						throw new Error(
-							`Failed to depublish file ${file.title || file.name}: ${response.statusText}`,
-						)
-					}
-				}
-
-				// Refresh files list once after all operations with publication data
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
-
-				// Clear selection after successful operation
-				this.selectedAttachments = []
-			} catch (error) {
-				console.error('Error depublishing files:', error)
-			} finally {
-				this.depublishLoading = []
-			}
+			await this.runSelectedFileAction(FILE_ACTIONS.depublish)
 		},
 
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async deleteSelectedFiles() {
-			if (this.selectedAttachments.length === 0) return
-
-			try {
-				this.fileIdsLoading = [...this.selectedAttachments]
-
-				// Get the selected files
-				const selectedFiles = this.paginatedFiles.filter((item) =>
-					this.selectedAttachments.includes(item.id),
-				)
-
-				// Delete each selected file
-				for (const file of selectedFiles) {
-					const publication = this.currentObject
-					const { registerId, schemaId } =
-						this.getRegisterSchemaIds(publication)
-					const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}`
-
-					const response = await fetch(endpoint, {
-						method: 'DELETE',
-					})
-
-					if (!response.ok) {
-						throw new Error(
-							`Failed to delete file ${file.title || file.name}: ${response.statusText}`,
-						)
-					}
-				}
-
-				// Refresh files list once after all operations with publication data
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
-
-				// Clear selection - files list is automatically refreshed by the store methods
-				this.selectedAttachments = []
-			} catch (error) {
-				console.error('Failed to delete selected files:', error)
-			} finally {
-				this.fileIdsLoading = []
-			}
+			await this.runSelectedFileAction(FILE_ACTIONS.delete)
 		},
 
 		/**
@@ -4568,42 +4388,7 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async publishFile(file) {
-			try {
-				this.publishLoading.push(file.id)
-
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
-				const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}/publish`
-
-				const response = await fetch(endpoint, {
-					method: 'POST',
-				})
-
-				if (!response.ok) {
-					throw new Error(`Failed to publish file: ${response.statusText}`)
-				}
-
-				// Refresh files list with publication data
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
-			} catch (error) {
-				console.error('Failed to publish file:', error)
-			} finally {
-				this.publishLoading = this.publishLoading.filter(
-					(id) => id !== file.id,
-				)
-			}
+			await this.runFileAction(file, FILE_ACTIONS.publish)
 		},
 
 		/**
@@ -4611,44 +4396,7 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async depublishFile(file) {
-			try {
-				this.depublishLoading.push(file.id)
-
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
-				const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}/depublish`
-
-				const response = await fetch(endpoint, {
-					method: 'POST',
-				})
-
-				if (!response.ok) {
-					throw new Error(
-						`Failed to depublish file: ${response.statusText}`,
-					)
-				}
-
-				// Refresh files list with publication data
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
-			} catch (error) {
-				console.error('Failed to depublish file:', error)
-			} finally {
-				this.depublishLoading = this.depublishLoading.filter(
-					(id) => id !== file.id,
-				)
-			}
+			await this.runFileAction(file, FILE_ACTIONS.depublish)
 		},
 
 		/**
@@ -4656,42 +4404,121 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async deleteFile(file) {
+			await this.runFileAction(file, FILE_ACTIONS.delete)
+		},
+
+		/**
+		 * Run a file action on every selected file, one request at a time, then refresh the files list once.
+		 *
+		 * @param {object} action The file action (FILE_ACTIONS).
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		async runSelectedFileAction(action) {
+			if (this.selectedAttachments.length === 0) return
+
 			try {
-				this.fileIdsLoading.push(file.id)
+				this[action.loading] = [...this.selectedAttachments]
+				await this.sendSelectedFileAction(action)
 
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
-				const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}`
+				// Refresh files list once after all operations with publication data
+				await this.refreshFiles(this.getRegisterSchemaIds(this.currentObject))
 
-				const response = await fetch(endpoint, {
-					method: 'DELETE',
+				// Clear selection after successful operation
+				this.selectedAttachments = []
+			} catch (error) {
+				console.error(action.bulkError, error)
+			} finally {
+				this[action.loading] = []
+			}
+		},
+
+		/**
+		 * Send a file action for each selected file; stop at the first refused request.
+		 *
+		 * @param {object} action The file action (FILE_ACTIONS).
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		async sendSelectedFileAction(action) {
+			const selectedFiles = this.paginatedFiles.filter((file) =>
+				this.selectedAttachments.includes(file.id),
+			)
+
+			for (const file of selectedFiles) {
+				const ids = this.getRegisterSchemaIds(this.currentObject)
+				const response = await fetch(this.fileUrl(file, ids) + action.suffix, {
+					method: action.method,
 				})
 
 				if (!response.ok) {
-					throw new Error(`Failed to delete file: ${response.statusText}`)
+					throw new Error(
+						`Failed to ${action.verb} file ${file.title || file.name}: ${response.statusText}`,
+					)
+				}
+			}
+		},
+
+		/**
+		 * Run a file action on one file, then refresh the files list.
+		 *
+		 * @param {object} file The file.
+		 * @param {object} action The file action (FILE_ACTIONS).
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		async runFileAction(file, action) {
+			try {
+				this[action.loading].push(file.id)
+
+				const ids = this.getRegisterSchemaIds(this.currentObject)
+				const response = await fetch(this.fileUrl(file, ids) + action.suffix, {
+					method: action.method,
+				})
+
+				if (!response.ok) {
+					throw new Error(`Failed to ${action.verb} file: ${response.statusText}`)
 				}
 
-				// Refresh files list with publication data
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
+				await this.refreshFiles(ids)
 			} catch (error) {
-				console.error('Failed to delete file:', error)
+				console.error(`Failed to ${action.verb} file:`, error)
 			} finally {
-				this.fileIdsLoading = this.fileIdsLoading.filter(
+				this[action.loading] = this[action.loading].filter(
 					(id) => id !== file.id,
 				)
 			}
+		},
+
+		/**
+		 * The API URL of a file of the current object.
+		 *
+		 * @param {object} file The file.
+		 * @param {{registerId: string|number, schemaId: string|number}} ids The register and schema ids of the object.
+		 * @return {string} The URL.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		fileUrl(file, ids) {
+			return `/index.php/apps/openregister/api/objects/${ids.registerId}/${ids.schemaId}/${this.currentObject.id}/files/${file.id}`
+		},
+
+		/**
+		 * Refresh the files list of the current object with its publication data.
+		 *
+		 * @param {{registerId: string|number, schemaId: string|number}} ids The register and schema ids of the object.
+		 * @param {object} query The page query; none refreshes the default page.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		async refreshFiles(ids, query = {}) {
+			const publicationData = {
+				source: 'openregister',
+				schema: ids.schemaId,
+				register: ids.registerId,
+			}
+			await objectStore.fetchRelatedData(
+				'publication',
+				this.currentObject.id,
+				'files',
+				query,
+				publicationData,
+			)
 		},
 
 		/**
@@ -4742,14 +4569,10 @@ export default {
 		 */
 		async saveTags(file, editedTags) {
 			try {
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
+				const ids = this.getRegisterSchemaIds(this.currentObject)
 
 				// Update file tags using the same approach as PublicationDetail.vue
-				const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}`
-
-				const response = await fetch(endpoint, {
+				const response = await fetch(this.fileUrl(file, ids), {
 					method: 'PUT',
 					headers: {
 						'Content-Type': 'application/json',
@@ -4766,18 +4589,7 @@ export default {
 				}
 
 				// Refresh files list with publication data
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
+				await this.refreshFiles(ids)
 
 				this.editingTags = null
 				this.editedTags = []
@@ -5301,6 +5113,11 @@ export default {
 }
 </script>
 
+<!-- Tab strip: the app-wide tab look of StandardTabs, included here because
+     the Files tab needs a component-rendered title (spinner / counter bubble)
+     and StandardTabs only accepts plain title strings. -->
+<style scoped src="../../components/standardTabs.css"></style>
+
 <style scoped>
 /* ViewObject-specific overrides only */
 
@@ -5493,103 +5310,6 @@ export default {
 
 .publishedIcon {
 	color: var(--color-success);
-}
-
-/* Tab strip. Mirrors src/components/StandardTabs.vue so the modal keeps the
-   app-wide tab look, but written out here because the Files tab needs a
-   component-rendered title (spinner / counter bubble) and StandardTabs only
-   accepts plain title strings. */
-.standard-tabs {
-	width: 100%;
-}
-
-.tab-navigation {
-	display: flex;
-	border: 1px solid var(--color-border);
-	border-bottom: none;
-	margin-bottom: 0;
-	background-color: var(--color-background-hover);
-	border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
-	padding: 0 8px;
-}
-
-.tab-button {
-	flex: 1;
-	padding: 12px 16px;
-	background: none;
-	border: none;
-	color: var(--color-text-lighter);
-	font-weight: 500;
-	font-size: 14px;
-	cursor: pointer;
-	transition: all 0.2s ease;
-	position: relative;
-	min-height: 48px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.tab-button:hover {
-	color: var(--color-main-text);
-	background-color: var(--color-background-hover);
-}
-
-.tab-button.active {
-	color: var(--color-primary);
-	background-color: var(--color-background);
-	font-weight: 600;
-	border: 1px solid var(--color-border);
-	border-bottom: 2px solid var(--color-background);
-	border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
-}
-
-.tab-button.active::after {
-	content: '';
-	position: absolute;
-	bottom: -2px;
-	left: 0;
-	right: 0;
-	height: 2px;
-	background-color: var(--color-primary);
-}
-
-.tab-content {
-	padding: 8px 0 0 0;
-	border: none;
-	border-top: none;
-	border-radius: 0;
-	background-color: transparent;
-}
-
-@media (max-width: 768px) {
-	.tab-navigation {
-		flex-direction: column;
-		border-bottom: none;
-		border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
-		padding: 8px;
-	}
-
-	.tab-button {
-		border-bottom: none;
-		border-radius: var(--border-radius);
-		margin-bottom: 4px;
-		min-height: 40px;
-	}
-
-	.tab-button.active {
-		background-color: var(--color-primary);
-		color: white;
-		border-bottom-color: transparent;
-	}
-
-	.tab-button.active::after {
-		display: none;
-	}
-
-	.tab-content {
-		border-top: 1px solid var(--color-border);
-	}
 }
 
 .tab-title {

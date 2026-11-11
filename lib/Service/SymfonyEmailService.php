@@ -192,6 +192,62 @@ class SymfonyEmailService {
 	private const DEFAULT_SENDER_NAME = 'Software Catalogus';
 
 	/**
+	 * The organisation notices: the log prefix, the settings key that enables each,
+	 * the words its log lines use, the default review state, the subject and the template.
+	 *
+	 * @var array<string, array<string, string>>
+	 */
+	private const ORGANIZATION_NOTICES = [
+		'registration' => [
+			'readyPrefix' => 'OrganizationRegistrationEmail',
+			'messagePrefix' => 'OrganizationRegistrationEmail',
+			'settingsKey' => 'organizationRegistrationEnabled',
+			'sendingKind' => 'registration',
+			'sentKind' => 'registration',
+			'beoordeling' => 'Geregistreerd',
+			'subject' => 'Welkom bij de Software Catalogus - Organisatie Geregistreerd',
+			'template' => 'organization_registration',
+		],
+		'activation' => [
+			'readyPrefix' => 'OrganizationActivationEmail',
+			'messagePrefix' => 'OrganizationActivationEmail',
+			'settingsKey' => 'organizationActivationEnabled',
+			'sendingKind' => 'activation',
+			'sentKind' => 'activation',
+			'beoordeling' => 'Active',
+			'subject' => 'Software Catalogus - Organisatie Geactiveerd',
+			'template' => 'organization_activation',
+		],
+	];
+
+	/**
+	 * The user notices: the readiness log prefix and the prefix of the other log lines,
+	 * the settings key that enables each, the words its log lines use, the subject and the template.
+	 *
+	 * @var array<string, array<string, string>>
+	 */
+	private const USER_NOTICES = [
+		'creation' => [
+			'readyPrefix' => 'UserCreationEmail',
+			'messagePrefix' => 'UserCreationEmail',
+			'settingsKey' => 'userCreationEnabled',
+			'sendingKind' => 'user creation',
+			'sentKind' => 'user creation',
+			'subject' => 'Welkom bij de Software Catalogus - Account Aangemaakt',
+			'template' => 'user_creation',
+		],
+		'organisation' => [
+			'readyPrefix' => 'UserOrganisationEmail',
+			'messagePrefix' => 'UserCreationEmail',
+			'settingsKey' => 'userOrganisationEnabled',
+			'sendingKind' => 'user creation',
+			'sentKind' => 'user organisation',
+			'subject' => 'Welkom bij de Software Catalogus - Account toegevoegd aan organisatie',
+			'template' => 'user_organisation',
+		],
+	];
+
+	/**
 	 * Available Symfony Mailer transport types
 	 *
 	 * @var array<string, string> Transport type labels
@@ -295,80 +351,9 @@ class SymfonyEmailService {
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
 	public function sendOrganizationRegistrationEmail(array $organization): bool {
-		$configStatus = $this->ensureEmailDeliveryReady(
-			logPrefix: 'OrganizationRegistrationEmail',
-			settingsKey: 'organizationRegistrationEnabled',
-			extraLogContext: ['organizationName' => $organization['name'] ?? 'Unknown']
+		return $this->sendOrganizationNotice(
+			notice: new NoticeEmail(notice: self::ORGANIZATION_NOTICES['registration'], data: $organization)
 		);
-		if ($configStatus === null) {
-			return false;
-		}
-
-		$organizationName = $organization['name'] ?? 'Onbekende Organisatie';
-
-		// Determine recipient email.
-		$recipientEmail = $this->getRecipientEmail(data: $organization);
-		if ($recipientEmail === null) {
-			$this->logger->warning(
-				'OrganizationRegistrationEmail: Cannot send without valid email address',
-				[
-					'organization' => $organization,
-					'organizationName' => $organizationName,
-				]
-			);
-			return false;
-		}
-
-		$this->logger->info(
-			'OrganizationRegistrationEmail: Sending registration email',
-			[
-				'organizationName' => $organizationName,
-				'recipientEmail' => $recipientEmail,
-				'transportType' => $configStatus['transportType'],
-			]
-		);
-
-		// Prepare template data.
-		$templateData = [
-			'organization' => [
-				'name' => $organizationName,
-				'beoordeling' => ($organization['beoordeling'] ?? 'Geregistreerd'),
-				'type' => ($organization['type'] ?? 'Organisatie'),
-				'website' => ($organization['website'] ?? ''),
-			],
-		];
-
-		try {
-			$success = $this->sendTemplatedEmail(
-				recipientEmail: $recipientEmail,
-				recipientName: $organizationName,
-				subject: 'Welkom bij de Software Catalogus - Organisatie Geregistreerd',
-				templateName: 'organization_registration',
-				templateData: $templateData
-			);
-
-			if ($success === true) {
-				$this->logger->info(
-					'OrganizationRegistrationEmail: Successfully sent registration email',
-					[
-						'organizationName' => $organizationName,
-						'recipientEmail' => $recipientEmail,
-					]
-				);
-			}
-
-			return $success;
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'OrganizationRegistrationEmail: Failed to send registration email',
-				[
-					'organizationName' => $organizationName,
-					'recipientEmail' => $recipientEmail,
-					'error' => $e->getMessage(),
-				]
-			);
-			return false;
-		}//end try
 	}//end sendOrganizationRegistrationEmail()
 
 	/**
@@ -382,80 +367,9 @@ class SymfonyEmailService {
 	 * @spec   openspec/specs/email-delivery/spec.md
 	 */
 	public function sendOrganizationActivationEmail(array $organization): bool {
-		$configStatus = $this->ensureEmailDeliveryReady(
-			logPrefix: 'OrganizationActivationEmail',
-			settingsKey: 'organizationActivationEnabled',
-			extraLogContext: ['organizationName' => $organization['name'] ?? 'Unknown']
+		return $this->sendOrganizationNotice(
+			notice: new NoticeEmail(notice: self::ORGANIZATION_NOTICES['activation'], data: $organization)
 		);
-		if ($configStatus === null) {
-			return false;
-		}
-
-		$organizationName = ($organization['name'] ?? 'Onbekende Organisatie');
-
-		// Determine recipient email.
-		$recipientEmail = $this->getRecipientEmail(data: $organization);
-		if ($recipientEmail === null) {
-			$this->logger->warning(
-				'OrganizationActivationEmail: Cannot send without valid email address',
-				[
-					'organization' => $organization,
-					'organizationName' => $organizationName,
-				]
-			);
-			return false;
-		}
-
-		$this->logger->info(
-			'OrganizationActivationEmail: Sending activation email',
-			[
-				'organizationName' => $organizationName,
-				'recipientEmail' => $recipientEmail,
-				'transportType' => $configStatus['transportType'],
-			]
-		);
-
-		// Prepare template data.
-		$templateData = [
-			'organization' => [
-				'name' => $organizationName,
-				'beoordeling' => ($organization['beoordeling'] ?? 'Active'),
-				'type' => ($organization['type'] ?? 'Organisatie'),
-				'website' => ($organization['website'] ?? ''),
-			],
-		];
-
-		try {
-			$success = $this->sendTemplatedEmail(
-				recipientEmail: $recipientEmail,
-				recipientName: $organizationName,
-				subject: 'Software Catalogus - Organisatie Geactiveerd',
-				templateName: 'organization_activation',
-				templateData: $templateData
-			);
-
-			if ($success === true) {
-				$this->logger->info(
-					'OrganizationActivationEmail: Successfully sent activation email',
-					[
-						'organizationName' => $organizationName,
-						'recipientEmail' => $recipientEmail,
-					]
-				);
-			}
-
-			return $success;
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'OrganizationActivationEmail: Failed to send activation email',
-				[
-					'organizationName' => $organizationName,
-					'recipientEmail' => $recipientEmail,
-					'error' => $e->getMessage(),
-				]
-			);
-			return false;
-		}//end try
 	}//end sendOrganizationActivationEmail()
 
 	/**
@@ -470,88 +384,10 @@ class SymfonyEmailService {
 	 * @spec   openspec/specs/email-delivery/spec.md
 	 */
 	public function sendUserCreationEmail(array $user, array $organization = []): bool {
-		$configStatus = $this->ensureEmailDeliveryReady(
-			logPrefix: 'UserCreationEmail',
-			settingsKey: 'userCreationEnabled',
-			extraLogContext: ['userEmail' => $user['email'] ?? 'Unknown']
-		);
-		if ($configStatus === null) {
-			return false;
-		}
+		$notice = new NoticeEmail(notice: self::USER_NOTICES['creation'], data: $user);
+		$notice->organizationName = ($organization['name'] ?? 'Software Catalogus');
 
-		$userEmail = $user['email'] ?? '';
-		$userName = $user['name'] ?? ($user['voornaam'] ?? '') . ' ' . ($user['achternaam'] ?? '');
-		$userName = trim($userName);
-
-		if (empty($userEmail) === true) {
-			$this->logger->warning(
-				'UserCreationEmail: Cannot send without email address',
-				[
-					'user' => $user,
-					'userName' => $userName,
-				]
-			);
-			return false;
-		}
-
-		$this->logger->info(
-			'UserCreationEmail: Sending user creation email',
-			[
-				'userName' => $userName,
-				'userEmail' => $userEmail,
-				'organizationName' => $organization['name'] ?? 'Software Catalogus',
-				'transportType' => $configStatus['transportType'],
-			]
-		);
-
-		// Prepare template data.
-		$displayName = 'Gebruiker';
-		if (empty($userName) === false) {
-			$displayName = $userName;
-		}
-
-		$templateData = [
-			'user' => [
-				'name' => $displayName,
-				'email' => $userEmail,
-				'role' => ($user['role'] ?? ''),
-			],
-			'organization' => [
-				'name' => ($organization['name'] ?? 'Software Catalogus'),
-			],
-		];
-
-		try {
-			$success = $this->sendTemplatedEmail(
-				recipientEmail: $userEmail,
-				recipientName: $displayName,
-				subject: 'Welkom bij de Software Catalogus - Account Aangemaakt',
-				templateName: 'user_creation',
-				templateData: $templateData
-			);
-
-			if ($success === true) {
-				$this->logger->info(
-					'UserCreationEmail: Successfully sent user creation email',
-					[
-						'userName' => $userName,
-						'userEmail' => $userEmail,
-					]
-				);
-			}
-
-			return $success;
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'UserCreationEmail: Failed to send user creation email',
-				[
-					'userName' => $userName,
-					'userEmail' => $userEmail,
-					'error' => $e->getMessage(),
-				]
-			);
-			return false;
-		}//end try
+		return $this->sendUserNotice(notice: $notice);
 	}//end sendUserCreationEmail()
 
 	/**
@@ -566,98 +402,111 @@ class SymfonyEmailService {
 	 * @spec   openspec/specs/email-delivery/spec.md
 	 */
 	public function sendUserUpdateEmail(array $user, array $organization = []): bool {
-		$configStatus = $this->ensureEmailDeliveryReady(
-			logPrefix: 'UserOrganisationEmail',
-			settingsKey: 'userOrganisationEnabled',
-			extraLogContext: ['userEmail' => $user['email'] ?? 'Unknown']
-		);
+		$notice = new NoticeEmail(notice: self::USER_NOTICES['organisation'], data: $user);
+		$notice->organizationName = ($organization['name'] ?? 'Software Catalogus');
+
+		return $this->sendUserNotice(notice: $notice);
+	}//end sendUserUpdateEmail()
+
+	/**
+	 * Send an organisation notice: check delivery is ready, address the organisation, log and deliver.
+	 *
+	 * @param NoticeEmail $notice The notice and the organization data.
+	 *
+	 * @return bool True if the email was sent, false otherwise.
+	 *
+	 * @spec openspec/specs/email-delivery/spec.md
+	 */
+	private function sendOrganizationNotice(NoticeEmail $notice): bool {
+		$configStatus = $this->getReadyConfigStatus(notice: $notice, extraLogContext: ['organizationName' => $notice->data['name'] ?? 'Unknown']);
 		if ($configStatus === null) {
 			return false;
 		}
 
-		$userEmail = $user['email'] ?? '';
-		$userName = $user['name'] ?? ($user['voornaam'] ?? '') . ' ' . ($user['achternaam'] ?? '');
-		$userName = trim($userName);
-
-		if (empty($userEmail) === true) {
-			$this->logger->warning(
-				'UserCreationEmail: Cannot send without email address',
-				[
-					'user' => $user,
-					'userName' => $userName,
-				]
-			);
+		$notice->recipientName = ($notice->data['name'] ?? 'Onbekende Organisatie');
+		if ($notice->addressOrganization(logger: $this->logger, recipientEmail: $this->getRecipientEmail(data: $notice->data)) === false) {
 			return false;
 		}
 
-		$this->logger->info(
-			'UserCreationEmail: Sending user creation email',
-			[
-				'userName' => $userName,
-				'userEmail' => $userEmail,
-				'organizationName' => $organization['name'] ?? 'Software Catalogus',
-				'transportType' => $configStatus['transportType'],
-			]
-		);
+		$notice->logSending(logger: $this->logger, configStatus: $configStatus);
+		$notice->templateData = $notice->organizationTemplateData();
 
-		// Prepare template data.
-		$displayName = 'Gebruiker';
-		if (empty($userName) === false) {
-			$displayName = $userName;
+		return $this->deliverNotice(notice: $notice);
+	}//end sendOrganizationNotice()
+
+	/**
+	 * Send a user notice: check delivery is ready, address the user, log and deliver.
+	 *
+	 * @param NoticeEmail $notice The notice, the user data and the organisation name.
+	 *
+	 * @return bool True if the email was sent, false otherwise.
+	 *
+	 * @spec openspec/specs/email-delivery/spec.md
+	 */
+	private function sendUserNotice(NoticeEmail $notice): bool {
+		$configStatus = $this->getReadyConfigStatus(notice: $notice, extraLogContext: ['userEmail' => $notice->data['email'] ?? 'Unknown']);
+		if ($configStatus === null) {
+			return false;
 		}
 
-		$templateData = [
-			'user' => [
-				'name' => $displayName,
-				'email' => $userEmail,
-				'role' => ($user['role'] ?? ''),
-			],
-			'organization' => [
-				'name' => ($organization['name'] ?? 'Software Catalogus'),
-			],
-		];
+		if ($notice->addressUser(logger: $this->logger) === false) {
+			return false;
+		}
 
+		$notice->logSending(logger: $this->logger, configStatus: $configStatus);
+		$notice->describeUserNotice();
+
+		return $this->deliverNotice(notice: $notice);
+	}//end sendUserNotice()
+
+	/**
+	 * The configuration status when the email system is configured and this notice type is enabled; logs why not.
+	 *
+	 * @param NoticeEmail $notice The notice.
+	 * @param array $extraLogContext The context the readiness log lines add.
+	 *
+	 * @return array|null The configuration status, or null when the notice is not sent.
+	 *
+	 * @spec openspec/specs/email-delivery/spec.md
+	 */
+	private function getReadyConfigStatus(NoticeEmail $notice, array $extraLogContext): ?array {
+		return $this->ensureEmailDeliveryReady(
+			logPrefix: $notice->notice['readyPrefix'],
+			settingsKey: $notice->notice['settingsKey'],
+			extraLogContext: $extraLogContext
+		);
+	}//end getReadyConfigStatus()
+
+	/**
+	 * Send the templated email of a notice and log the outcome; a failure is logged and answered with false.
+	 *
+	 * @param NoticeEmail $notice The addressed and described notice.
+	 *
+	 * @return bool True if the email was sent, false otherwise.
+	 *
+	 * @spec openspec/specs/email-delivery/spec.md
+	 */
+	private function deliverNotice(NoticeEmail $notice): bool {
 		try {
-			$success = $this->sendTemplatedEmail(
-				recipientEmail: $userEmail,
-				recipientName: $displayName,
-				subject: 'Welkom bij de Software Catalogus - Account toegevoegd aan organisatie',
-				templateName: 'user_organisation',
-				templateData: $templateData
-			);
-
+			$success = $this->sendTemplatedEmail(notice: $notice);
 			if ($success === true) {
-				$this->logger->info(
-					'UserCreationEmail: Successfully sent user organisation email',
-					[
-						'userName' => $userName,
-						'userEmail' => $userEmail,
-					]
-				);
+				$this->logger->info($notice->notice['messagePrefix'] . ': Successfully sent ' . $notice->notice['sentKind'] . ' email', $notice->logContext);
 			}
 
 			return $success;
 		} catch (\Exception $e) {
 			$this->logger->error(
-				'UserCreationEmail: Failed to send user organisation email',
-				[
-					'userName' => $userName,
-					'userEmail' => $userEmail,
-					'error' => $e->getMessage(),
-				]
+				$notice->notice['messagePrefix'] . ': Failed to send ' . $notice->notice['sentKind'] . ' email',
+				array_merge($notice->logContext, ['error' => $e->getMessage()])
 			);
 			return false;
 		}//end try
-	}//end sendUserUpdateEmail()
+	}//end deliverNotice()
 
 	/**
-	 * Sends a templated email using the configured templates.
+	 * Sends the templated email of a notice using the configured templates.
 	 *
-	 * @param string $recipientEmail The recipient email address.
-	 * @param string $recipientName The recipient name.
-	 * @param string $subject The email subject.
-	 * @param string $templateName The template name.
-	 * @param array $templateData The template data.
+	 * @param NoticeEmail $notice The addressed and described notice: recipient, subject, template and its data.
 	 *
 	 * @return bool True if email was sent successfully, false otherwise.
 	 *
@@ -665,38 +514,39 @@ class SymfonyEmailService {
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
-	private function sendTemplatedEmail(
-		string $recipientEmail,
-		string $recipientName,
-		string $subject,
-		string $templateName,
-		array $templateData,
-	): bool {
+	private function sendTemplatedEmail(NoticeEmail $notice): bool {
 		try {
-			$htmlBody = $this->renderTemplate(
-				templateName: $templateName,
-				templateData: $templateData
-			);
-
-			return $this->sendEmail(
-				recipientEmail: $recipientEmail,
-				recipientName: $recipientName,
-				subject: $subject,
-				htmlBody: $htmlBody
-			);
+			return $this->sendRenderedNotice(notice: $notice);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to send templated email',
-				[
-					'recipient' => $recipientEmail,
-					'template' => $templateName,
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
+			$notice->logTemplatedFailure(logger: $this->logger, error: $e);
 			throw $e;
-		}//end try
+		}
 	}//end sendTemplatedEmail()
+
+	/**
+	 * Render the template of a notice and send it.
+	 *
+	 * @param NoticeEmail $notice The addressed and described notice.
+	 *
+	 * @return bool True if email was sent successfully.
+	 *
+	 * @throws \Exception If email sending fails.
+	 *
+	 * @spec openspec/specs/method-decomposition/spec.md
+	 */
+	private function sendRenderedNotice(NoticeEmail $notice): bool {
+		$htmlBody = $this->renderTemplate(
+			templateName: $notice->notice['template'],
+			templateData: $notice->templateData
+		);
+
+		return $this->sendEmail(
+			recipientEmail: $notice->recipientEmail,
+			recipientName: $notice->recipientName,
+			subject: $notice->notice['subject'],
+			htmlBody: $htmlBody
+		);
+	}//end sendRenderedNotice()
 
 	/**
 	 * Render a named template against the provided data.
