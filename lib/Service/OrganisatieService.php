@@ -20,6 +20,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCP\App\IAppManager;
+use OCP\IUser;
 use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -430,68 +431,112 @@ class OrganisatieService {
 		try {
 			$this->logger->info(
 				'OrganisatieService: Adding users to organization',
-				[
-					'organizationUuid' => $organizationUuid,
-					'userCount' => count($usernames),
-				]
+				['organizationUuid' => $organizationUuid, 'userCount' => count($usernames)]
 			);
-
-			// Get the organization entity.
-			$organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
-			$organisationEntity = $organisationMapper->findByUuid($organizationUuid);
-
-			// Get current users and merge with new ones.
-			$currentUsers = $organisationEntity->getUsers() ?? [];
-			$allUsers = array_unique(array_merge($currentUsers, $usernames));
-
-			foreach ($usernames as $username) {
-				$user = $this->userManager->get($username);
-
-				$userData = [
-					'username' => $user->getUID(),
-					'email' => $user->getEMailAddress(),
-					'name' => $user->getDisplayName(),
-				];
-
-				$this->emailService->sendUserUpdateEmail(
-					user: $userData,
-					organization: $organisationEntity->jsonSerialize()
-				);
-			}
-
-			// Update the entity.
-			$organisationEntity->setUsers($allUsers);
-			$organisationMapper->save($organisationEntity);
-
-			$this->logger->info(
-				'OrganisatieService: Successfully added users to organization',
-				[
-					'organizationUuid' => $organizationUuid,
-					'totalUsers' => count($allUsers),
-					'addedUsers' => array_diff($allUsers, $currentUsers),
-				]
-			);
-
+			$users = $this->mergeUsers(organizationUuid: $organizationUuid, usernames: $usernames);
+			$this->logAddedUsers(organizationUuid: $organizationUuid, users: $users);
 			return true;
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'OrganisatieService: Failed to add users to organization',
-				[
-					'organizationUuid' => $organizationUuid,
-					'error' => $e->getMessage(),
-				]
-			);
-			// Log detailed error information using PSR-3 logger.
-			$this->logger->error(
-				'OrganisatieService: Exception details',
-				[
-					'message' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
+			$this->logAddUsersFailure(organizationUuid: $organizationUuid, exception: $e);
 			return false;
-		}//end try
+		}
 	}//end addUsersToOrganization()
+
+	/**
+	 * Merge users into an organisation entity, mailing each added user.
+	 *
+	 * @param string $organizationUuid The organization UUID
+	 * @param array  $usernames        Array of usernames to add
+	 *
+	 * @return array{all: array, current: array} The users after and before the merge.
+	 */
+	private function mergeUsers(string $organizationUuid, array $usernames): array {
+		// Get the organization entity.
+		$organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
+		$organisationEntity = $organisationMapper->findByUuid($organizationUuid);
+
+		// Get current users and merge with new ones.
+		$currentUsers = $organisationEntity->getUsers() ?? [];
+		$allUsers     = array_unique(array_merge($currentUsers, $usernames));
+		$this->mailAddedUsers(usernames: $usernames, organisationEntity: $organisationEntity);
+
+		// Update the entity.
+		$organisationEntity->setUsers($allUsers);
+		$organisationMapper->save($organisationEntity);
+
+		return ['all' => $allUsers, 'current' => $currentUsers];
+	}//end mergeUsers()
+
+	/**
+	 * Log the users an organisation holds after adding.
+	 *
+	 * @param string                             $organizationUuid The organization UUID
+	 * @param array{all: array, current: array} $users            The users after and before the merge.
+	 *
+	 * @return void
+	 */
+	private function logAddedUsers(string $organizationUuid, array $users): void {
+		$this->logger->info(
+			'OrganisatieService: Successfully added users to organization',
+			[
+				'organizationUuid' => $organizationUuid,
+				'totalUsers' => count($users['all']),
+				'addedUsers' => array_diff($users['all'], $users['current']),
+			]
+		);
+	}//end logAddedUsers()
+
+	/**
+	 * Send each added user the user update mail.
+	 *
+	 * @param array  $usernames          Array of usernames to add
+	 * @param object $organisationEntity The organisation entity
+	 *
+	 * @return void
+	 */
+	private function mailAddedUsers(array $usernames, object $organisationEntity): void {
+		foreach ($usernames as $username) {
+			$this->emailService->sendUserUpdateEmail(
+				user: self::userMailData(user: $this->userManager->get($username)),
+				organization: $organisationEntity->jsonSerialize()
+			);
+		}
+	}//end mailAddedUsers()
+
+	/**
+	 * The user fields the update mail needs.
+	 *
+	 * @param IUser|null $user The user.
+	 *
+	 * @return array{username: string, email: string|null, name: string}
+	 */
+	private static function userMailData(?IUser $user): array {
+		return [
+			'username' => $user->getUID(),
+			'email' => $user->getEMailAddress(),
+			'name' => $user->getDisplayName(),
+		];
+	}//end userMailData()
+
+	/**
+	 * Log why adding users to an organisation failed.
+	 *
+	 * @param string     $organizationUuid The organization UUID
+	 * @param \Exception $exception        What went wrong
+	 *
+	 * @return void
+	 */
+	private function logAddUsersFailure(string $organizationUuid, \Exception $exception): void {
+		$this->logger->error(
+			'OrganisatieService: Failed to add users to organization',
+			['organizationUuid' => $organizationUuid, 'error' => $exception->getMessage()]
+		);
+		// Log detailed error information using PSR-3 logger.
+		$this->logger->error(
+			'OrganisatieService: Exception details',
+			['message' => $exception->getMessage(), 'trace' => $exception->getTraceAsString()]
+		);
+	}//end logAddUsersFailure()
 
 	/**
 	 * Gets admin group usernames.
