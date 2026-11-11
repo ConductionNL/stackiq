@@ -1962,6 +1962,15 @@ import PublishedIcon from '../../components/PublishedIcon.vue'
 import { getTheme } from '../../services/getTheme.js'
 import { FILE_ACTIONS } from './objectFileActions.js'
 import {
+	assertSaved,
+	createEndpoint,
+	editableProperties,
+	formDataOf,
+	jsonRequest,
+	themeIds,
+	updateEndpoint,
+} from './objectFormData.js'
+import {
 	orderedPropertyRows,
 	schemaPropertyRows,
 } from './objectPropertyRows.js'
@@ -2676,76 +2685,69 @@ export default {
 		 */
 		initializeData() {
 			if (!this.currentObject) {
-				// For new objects, initialize with empty form data and auto-select if possible
-				this.formData = {}
-				this.jsonData = JSON.stringify({}, null, 2)
-
-				// Auto-select catalog if there's only one
-				const catalogs = objectStore.getCollection('catalog').results
-				if (catalogs.length === 1) {
-					this.selectedCatalog = {
-						id: catalogs[0].id,
-						label: catalogs[0].title,
-					}
-
-					// Use nextTick to ensure the computed properties are updated
-					this.$nextTick(() => {
-						// Auto-select register if there's only one
-						if (this.registerOptions.length === 1) {
-							this.selectedRegister = this.registerOptions[0]
-
-							this.$nextTick(() => {
-								// Auto-select schema if there's only one
-								if (this.schemaOptions.length === 1) {
-									this.selectedSchema = this.schemaOptions[0]
-								}
-							})
-						}
-					})
-				}
-
+				this.initializeNewObject()
 				return
 			}
 
-			const initial = this.currentObject
-			const filtered = {}
-			for (const key in initial) {
-				if (key !== '@self' && key !== 'id') {
-					// Ensure we have a safe copy of the value
-					try {
-						filtered[key] = JSON.parse(JSON.stringify(initial[key]))
-					} catch (e) {
-						// If JSON serialization fails, use the original value
-						filtered[key] = initial[key]
-					}
-				}
-			}
+			const filtered = editableProperties(this.currentObject)
 
 			// Ensure formData is always an object, never an array
 			this.formData = {}
-			// Create a safe copy for formData
-			try {
-				const parsedData = JSON.parse(JSON.stringify(filtered))
-				// Explicitly ensure it's an object
-				if (typeof parsedData === 'object' && !Array.isArray(parsedData)) {
-					this.formData = parsedData
-				} else {
-					this.formData = { ...filtered }
-				}
-			} catch (e) {
-				// Fallback if JSON serialization fails
-				this.formData = { ...filtered }
-			}
+			this.formData = formDataOf(filtered)
 
 			// Ensure themes are properly initialized as an array of IDs
-			if (this.formData.themes && Array.isArray(this.formData.themes)) {
-				// Convert any theme objects back to IDs if needed
-				this.formData.themes = this.formData.themes.map((theme) =>
-					typeof theme === 'object' ? theme.id : theme,
-				)
+			if (Array.isArray(this.formData.themes)) {
+				this.formData.themes = themeIds(this.formData.themes)
 			}
 
 			this.jsonData = JSON.stringify(filtered, null, 2)
+		},
+
+		/**
+		 * Empty form data for a new object, with the catalog selected when
+		 * there is only one.
+		 *
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		initializeNewObject() {
+			this.formData = {}
+			this.jsonData = JSON.stringify({}, null, 2)
+
+			// Auto-select catalog if there's only one
+			const catalogs = objectStore.getCollection('catalog').results
+			if (catalogs.length !== 1) {
+				return
+			}
+			this.selectedCatalog = {
+				id: catalogs[0].id,
+				label: catalogs[0].title,
+			}
+			// Use nextTick to ensure the computed properties are updated
+			this.$nextTick(() => this.autoSelectRegister())
+		},
+
+		/**
+		 * Selects the register when there is only one, then the schema.
+		 *
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		autoSelectRegister() {
+			if (this.registerOptions.length !== 1) {
+				return
+			}
+			this.selectedRegister = this.registerOptions[0]
+			this.$nextTick(() => this.autoSelectSchema())
+		},
+
+		/**
+		 * Selects the schema when there is only one.
+		 *
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		autoSelectSchema() {
+			if (this.schemaOptions.length === 1) {
+				this.selectedSchema = this.schemaOptions[0]
+			}
 		},
 
 		/**
@@ -2756,88 +2758,7 @@ export default {
 			this.error = null
 
 			try {
-				const isCreating = this.isNewObject
-
-				// For new objects, validate we have the required selections
-				if (
-					isCreating
-					&& (!this.selectedSchema
-						|| !this.selectedRegister
-						|| !this.selectedCatalog)
-				) {
-					this.error =
-						'Please select catalog, register, and schema before saving'
-					return
-				}
-
-				let objectData
-				let endpoint
-				let method
-
-				if (isCreating) {
-					// Create a new object using openregister API
-					// For new objects, build complete object with all schema properties
-					objectData = this.buildCompleteObjectData()
-					endpoint = `/index.php/apps/openregister/api/objects/${this.selectedRegister.id}/${this.selectedSchema.id}`
-					method = 'POST'
-				} else {
-					// Update existing object using openregister API
-					// For existing objects, merge current object with all schema properties
-					objectData = this.buildCompleteObjectData()
-					// Get register and schema info from the current object
-					const { registerId, schemaId } = this.getRegisterSchemaIds(
-						this.currentObject,
-					)
-					const objectId =
-						this.currentObject['@self']?.id || this.currentObject.id
-					endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${objectId}`
-					method = 'PUT'
-				}
-
-				const response = await fetch(endpoint, {
-					method,
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify(objectData),
-				})
-
-				if (!response.ok) {
-					const errorText = await response.text()
-					throw new Error(
-						`Failed to ${isCreating ? 'create' : 'update'} publication: ${response.status} ${response.statusText} - ${errorText}`,
-					)
-				}
-
-				const result = await response.json()
-				const schema = objectStore.availableSchemas.find(
-					(schema) => schema.id === Number(result['@self'].schema),
-				)
-				// Set the newly created/updated object as active in the object store
-				objectStore.setActiveObject('publication', {
-					...result,
-					'@self': { ...result['@self'], schema },
-				})
-
-				// Clear form data since we now have the saved object
-				this.formData = {}
-
-				this.success = `Publication ${isCreating ? 'created' : 'updated'} successfully`
-
-				// Refresh the publications list
-				catalogStore.fetchPublications()
-
-				// Close modal for edit mode, keep open for create mode (which transitions to edit mode)
-				if (!isCreating) {
-					// For existing objects (edit mode), close the modal after save
-					setTimeout(() => {
-						this.closeModal()
-					}, 1000) // Give time for success message to show
-				}
-
-				setTimeout(() => {
-					this.success = null
-				}, 3000)
+				await this.submitObject()
 			} catch (e) {
 				console.error('Save error:', e)
 				this.error = e.message || 'Failed to save object'
@@ -2845,6 +2766,107 @@ export default {
 			} finally {
 				this.isSaving = false
 			}
+		},
+
+		/**
+		 * Sends the object to the API (POST for a new object, PUT for an
+		 * existing one) and applies the saved result.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		async submitObject() {
+			const isCreating = this.isNewObject
+
+			// For new objects, validate we have the required selections
+			if (isCreating && this.missingSelection()) {
+				this.error =
+					'Please select catalog, register, and schema before saving'
+				return
+			}
+
+			const objectData = this.buildCompleteObjectData()
+			const { endpoint, method } = this.saveTarget(isCreating)
+			const response = await fetch(endpoint, jsonRequest(method, objectData))
+			await assertSaved(response, isCreating)
+			this.applySavedObject(await response.json(), isCreating)
+		},
+
+		/**
+		 * Whether the catalog, register or schema of a new object is missing.
+		 *
+		 * @return {boolean} Whether one is.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		missingSelection() {
+			return !this.selectedSchema
+				|| !this.selectedRegister
+				|| !this.selectedCatalog
+		},
+
+		/**
+		 * The endpoint and method that save the object.
+		 *
+		 * @param {boolean} isCreating Whether the object is new.
+		 * @return {{endpoint: string, method: string}} The target.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		saveTarget(isCreating) {
+			if (isCreating) {
+				const registerId = this.selectedRegister.id
+				const endpoint = createEndpoint(registerId, this.selectedSchema.id)
+				return { endpoint, method: 'POST' }
+			}
+			// Get register and schema info from the current object
+			const ids = this.getRegisterSchemaIds(this.currentObject)
+			const objectId = this.currentObject['@self']?.id || this.currentObject.id
+			return { endpoint: updateEndpoint(ids, objectId), method: 'PUT' }
+		},
+
+		/**
+		 * Makes the saved object the active one, clears the form, reports the
+		 * save, refreshes the publications and schedules the follow-up.
+		 *
+		 * @param {object} result The saved object.
+		 * @param {boolean} isCreating Whether it was created.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		applySavedObject(result, isCreating) {
+			const schema = objectStore.availableSchemas.find(
+				(schema) => schema.id === Number(result['@self'].schema),
+			)
+			// Set the newly created/updated object as active in the object store
+			objectStore.setActiveObject('publication', {
+				...result,
+				'@self': { ...result['@self'], schema },
+			})
+
+			// Clear form data since we now have the saved object
+			this.formData = {}
+			this.success = `Publication ${isCreating ? 'created' : 'updated'} successfully`
+
+			// Refresh the publications list
+			catalogStore.fetchPublications()
+			this.scheduleAfterSave(isCreating)
+		},
+
+		/**
+		 * Closes the modal a second after an update (a created object stays
+		 * open in edit mode) and clears the success message after three.
+		 *
+		 * @param {boolean} isCreating Whether the object was created.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		scheduleAfterSave(isCreating) {
+			if (!isCreating) {
+				setTimeout(() => {
+					this.closeModal()
+				}, 1000) // Give time for success message to show
+			}
+
+			setTimeout(() => {
+				this.success = null
+			}, 3000)
 		},
 
 		/**

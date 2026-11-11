@@ -303,7 +303,7 @@
       "count": 1
     },
     "@typescript-eslint/no-unused-vars": {
-      "count": 16
+      "count": 14
     },
     "jsdoc/require-param-type": {
       "count": 74
