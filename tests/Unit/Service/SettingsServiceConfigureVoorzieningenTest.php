@@ -45,15 +45,21 @@ final class SettingsServiceConfigureVoorzieningenTest extends TestCase {
 	private ?array $persisted = null;
 
 	/**
+	 * Whether OpenRegister's object service is available.
+	 *
+	 * @var boolean
+	 */
+	private bool $objectServiceAvailable = true;
+
+	/**
 	 * Run configureVoorzieningen() against the given registers and schema rows.
 	 *
 	 * @param array<int, mixed>|\Throwable $registers What findAll() returns or throws.
 	 * @param array<int, array<string, mixed>>|null $schemasById Rows the schema mapper finds, null for no mapper.
-	 * @param bool $withObjectService Whether OpenRegister's object service is available.
 	 *
 	 * @return array<string, mixed> The result of configureVoorzieningen().
 	 */
-	private function configure($registers, ?array $schemasById = [], bool $withObjectService = true): array {
+	private function configure($registers, ?array $schemasById = []): array {
 		$mapper = new class($schemasById ?? []) {
 			/**
 			 * @param array<int, array<string, mixed>> $rows Schema rows by id.
@@ -127,7 +133,7 @@ final class SettingsServiceConfigureVoorzieningenTest extends TestCase {
 			->getMock();
 
 		$objectService = null;
-		if ($withObjectService === true) {
+		if ($this->objectServiceAvailable === true) {
 			$objectService = $this->createMock(ObjectServiceInterface::class);
 		}
 
@@ -150,7 +156,8 @@ final class SettingsServiceConfigureVoorzieningenTest extends TestCase {
 	 * @return void
 	 */
 	public function testWithoutObjectServiceReportsUnavailable(): void {
-		$result = $this->configure([], [], false);
+		$this->objectServiceAvailable = false;
+		$result = $this->configure([], []);
 
 		$this->assertSame(['success' => false, 'message' => 'OpenRegister service not available'], $result);
 		$this->assertNull($this->persisted);

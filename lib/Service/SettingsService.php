@@ -4156,16 +4156,24 @@ class SettingsService implements ObjectTypeLocatorInterface {
 
 			$schemas = $register['schemas'] ?? [];
 			if (strtolower($register['slug'] ?? '') === 'stackiq') {
-				$register['schemas'] = $this->voorzieningenSchemaDetails(schemas: $schemas, schemaMapper: $schemaMapper, logFailures: true);
+				[$details, $failures] = $this->voorzieningenSchemaDetails(schemas: $schemas, schemaMapper: $schemaMapper);
+				foreach ($failures as [$schemaId, $error]) {
+					$this->logger->warning(
+						'Failed to fetch schema details',
+						['schemaId' => $schemaId, 'error' => $error]
+					);
+				}
+
+				$register['schemas'] = $details;
 				return $register;
 			}
 
 			$schemaSlugs = array_map(
 				static fn (array $schema): string => strtolower($schema['slug'] ?? ''),
-				$this->voorzieningenSchemaDetails(schemas: $schemas, schemaMapper: $schemaMapper, logFailures: false)
+				$this->voorzieningenSchemaDetails(schemas: $schemas, schemaMapper: $schemaMapper)[0]
 			);
 			if (count(array_intersect(self::VOORZIENINGEN_EXPECTED_SLUGS, $schemaSlugs)) >= 6) {
-				$register['schemas'] = $this->voorzieningenSchemaDetails(schemas: $schemas, schemaMapper: $schemaMapper, logFailures: false);
+				$register['schemas'] = $this->voorzieningenSchemaDetails(schemas: $schemas, schemaMapper: $schemaMapper)[0];
 				$targetRegister = $register;
 			}
 		}
@@ -4180,12 +4188,12 @@ class SettingsService implements ObjectTypeLocatorInterface {
 	 *
 	 * @param array       $schemas      The register's schemas, as objects or ids.
 	 * @param object|null $schemaMapper The schema mapper, if available.
-	 * @param bool        $logFailures  Whether to log a schema that cannot be fetched.
 	 *
-	 * @return array The schema objects.
+	 * @return array{0: array, 1: list<array{0: int|string, 1: string}>} The schema objects, and each schema id that failed with its error.
 	 */
-	private function voorzieningenSchemaDetails(array $schemas, ?object $schemaMapper, bool $logFailures): array {
-		$details = [];
+	private function voorzieningenSchemaDetails(array $schemas, ?object $schemaMapper): array {
+		$details  = [];
+		$failures = [];
 		foreach ($schemas as $schema) {
 			if (is_array($schema) === true && isset($schema['slug']) === true) {
 				$details[] = $schema;
@@ -4202,16 +4210,11 @@ class SettingsService implements ObjectTypeLocatorInterface {
 					$details[] = $schemaEntity->jsonSerialize();
 				}
 			} catch (\Exception $e) {
-				if ($logFailures === true) {
-					$this->logger->warning(
-						'Failed to fetch schema details',
-						['schemaId' => $schema, 'error' => $e->getMessage()]
-					);
-				}
+				$failures[] = [$schema, $e->getMessage()];
 			}
 		}//end foreach
 
-		return $details;
+		return [$details, $failures];
 	}//end voorzieningenSchemaDetails()
 
 	/**
