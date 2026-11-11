@@ -586,6 +586,35 @@ import ChevronUp from 'vue-material-design-icons/ChevronUp.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import Merge from 'vue-material-design-icons/Merge.vue'
 
+/**
+ * Whether a property value counts as present for merging.
+ *
+ * @param {unknown} value The value.
+ * @return {boolean} False for undefined, null and the empty string.
+ */
+function hasValue(value) {
+	return value !== undefined && value !== null && value !== ''
+}
+
+/**
+ * The default merged value of a property: the target's value if it has
+ * one, else the source's, else 'custom'. Always the actual value, never
+ * the option object.
+ *
+ * @param {unknown} targetValue The target object's value.
+ * @param {unknown} sourceValue The source object's value.
+ * @return {unknown} The selected value.
+ */
+function defaultSelection(targetValue, sourceValue) {
+	if (hasValue(targetValue)) {
+		return targetValue
+	}
+	if (hasValue(sourceValue)) {
+		return sourceValue
+	}
+	return 'custom'
+}
+
 export default {
 	name: 'MergeObject',
 	components: {
@@ -740,45 +769,9 @@ export default {
 			this.customValues = {}
 			this.propertySelections = {}
 
-			this.mergeableProperties.forEach((property) => {
-				if (property === 'id') {
-					// ID always uses target value
-					this.mergedData[property] = this.selectedTargetObject[property]
-				} else {
-					// Default selection logic:
-					// 1. Target value if it exists
-					// 2. Source value if target doesn't exist but source does
-					// 3. 'custom' if neither exists
-					const targetValue = this.selectedTargetObject[property]
-					const sourceValue = this.sourceObject[property]
-
-					let selectedValue
-					// Always store the actual value, never the option object
-					if (
-						targetValue !== undefined
-						&& targetValue !== null
-						&& targetValue !== ''
-					) {
-						selectedValue = targetValue
-					} else if (
-						sourceValue !== undefined
-						&& sourceValue !== null
-						&& sourceValue !== ''
-					) {
-						selectedValue = sourceValue
-					} else {
-						selectedValue = 'custom'
-						this.customValues[property] = ''
-					}
-
-					this.mergedData[property] = selectedValue
-
-					// Set up the selection object for the dropdown
-					const options = this.getMergeOptions(property)
-					this.propertySelections[property] =
-						options.find((opt) => opt.value === selectedValue) || null
-				}
-			})
+			this.mergeableProperties.forEach((property) =>
+				this.initializeProperty(property),
+			)
 
 			// eslint-disable-next-line no-console
 			console.log('Initial mergedData after setup:', this.mergedData)
@@ -790,28 +783,47 @@ export default {
 		},
 
 		/**
+		 * Set the default merged value and dropdown selection of one property.
+		 *
+		 * @param {string} property The property name.
+		 * @return {void}
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		initializeProperty(property) {
+			if (property === 'id') {
+				// ID always uses target value
+				this.mergedData[property] = this.selectedTargetObject[property]
+				return
+			}
+			const targetValue = this.selectedTargetObject[property]
+			const sourceValue = this.sourceObject[property]
+			if (!hasValue(targetValue) && !hasValue(sourceValue)) {
+				this.customValues[property] = ''
+			}
+			const selectedValue = defaultSelection(targetValue, sourceValue)
+			this.mergedData[property] = selectedValue
+
+			// Set up the selection object for the dropdown
+			const options = this.getMergeOptions(property)
+			this.propertySelections[property] =
+				options.find((opt) => opt.value === selectedValue) || null
+		},
+
+		/**
 		 * @param property
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getMergeOptions(property) {
 			const options = []
 
-			if (
-				this.sourceObject[property] !== undefined
-				&& this.sourceObject[property] !== null
-				&& this.sourceObject[property] !== ''
-			) {
+			if (hasValue(this.sourceObject[property])) {
 				options.push({
 					label: `From Source: ${this.displayValue(this.sourceObject[property])}`,
 					value: this.sourceObject[property],
 				})
 			}
 
-			if (
-				this.selectedTargetObject[property] !== undefined
-				&& this.selectedTargetObject[property] !== null
-				&& this.selectedTargetObject[property] !== ''
-			) {
+			if (hasValue(this.selectedTargetObject[property])) {
 				options.push({
 					label: `From Target: ${this.displayValue(this.selectedTargetObject[property])}`,
 					value: this.selectedTargetObject[property],
