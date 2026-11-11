@@ -4005,6 +4005,49 @@ class SettingsService implements ObjectTypeLocatorInterface {
 	}//end loadConfiguration()
 
 	/**
+	 * Schema slugs that identify the catalog register when its slug is not `stackiq`.
+	 */
+	private const VOORZIENINGEN_EXPECTED_SLUGS = [
+		'sector',
+		'suite',
+		'catalogService',
+		'vulnerability',
+		'contactPerson',
+		'organization',
+		'usage',
+		'catalogContract',
+		'connection',
+		'software-review',
+		'module',
+		'compliancy',
+		'moduleversie',
+		'moduleVersion',
+	];
+
+	/**
+	 * Voorzieningen configuration key per schema slug. Both moduleversie and
+	 * moduleVersion map to the same key.
+	 */
+	private const VOORZIENINGEN_SLUG_TO_KEY = [
+		'organization' => 'organisatie_schema',
+		'contactPerson' => 'contactpersoon_schema',
+		'suite' => 'suite_schema',
+		'catalogService' => 'dienst_schema',
+		'vulnerability' => 'kwetsbaarheid_schema',
+		'usage' => 'gebruik_schema',
+		'catalogContract' => 'contract_schema',
+		'connection' => 'koppeling_schema',
+		'software-review' => 'beoordeeling_schema',
+		'module' => 'module_schema',
+		'compliancy' => 'compliancy_schema',
+		'moduleversie' => 'moduleVersie_schema',
+		'moduleVersion' => 'moduleVersie_schema',
+		'sector' => 'sector_schema',
+		'sbomComponent' => 'sbomComponent_schema',
+		'maintenanceWindow' => 'maintenanceWindow_schema',
+	];
+
+	/**
 	 * Configure Voorzieningen register and schemas
 	 *
 	 * @return array Voorzieningen configuration result
@@ -4044,119 +4087,7 @@ class SettingsService implements ObjectTypeLocatorInterface {
 				];
 			}
 
-			// Get schema mapper to fetch schema details if needed.
-			$schemaMapper = null;
-			try {
-				$schemaMapper = $this->container->get(\OCA\OpenRegister\Db\SchemaMapper::class);
-			} catch (\Exception $e) {
-				$this->logger->warning(
-					'SchemaMapper not available for Voorzieningen detection',
-					['error' => $e->getMessage()]
-				);
-			}
-
-			// Find the catalog register by slug OR by presence of expected schema slugs.
-			// The slug moved `voorzieningen` -> `stackiq`; MigrateRegisterSlug renames
-			// the row before this ever runs, and the schema-slug fallback below still
-			// finds the register on an install where that rename was refused.
-			$targetRegister = null;
-			$expectedSlugs = [
-				'sector',
-				'suite',
-				'catalogService',
-				'vulnerability',
-				'contactPerson',
-				'organization',
-				'usage',
-				'catalogContract',
-				'connection',
-				'software-review',
-				'module',
-				'compliancy',
-				'moduleversie',
-				'moduleVersion',
-			];
-
-			foreach ($registers as $register) {
-				// Convert Register entity to array if needed.
-				if ($register instanceof \OCA\OpenRegister\Db\Register) {
-					$register = $register->jsonSerialize();
-				}
-
-				$slug = strtolower($register['slug'] ?? '');
-				if ($slug === 'stackiq') {
-					// Fetch full schema details for the register.
-					$schemas = $register['schemas'] ?? [];
-					$schemaDetails = [];
-					foreach ($schemas as $schema) {
-						if (is_array($schema) === true && isset($schema['slug']) === true) {
-							// Schema is already a full object.
-							$schemaDetails[] = $schema;
-						} elseif ((is_int($schema) === true || is_numeric($schema) === true) && $schemaMapper !== null) {
-							// Schema is an ID - fetch details using SchemaMapper.
-							try {
-								$schemaEntity = $schemaMapper->find((int)$schema);
-								if ($schemaEntity !== null) {
-									$schemaDetails[] = $schemaEntity->jsonSerialize();
-								}
-							} catch (\Exception $e) {
-								$this->logger->warning(
-									'Failed to fetch schema details',
-									['schemaId' => $schema, 'error' => $e->getMessage()]
-								);
-							}
-						}
-					}
-
-					$register['schemas'] = $schemaDetails;
-					$targetRegister = $register;
-					break;
-				}//end if
-
-				// Heuristic: count matching schemas.
-				$schemaSlugs = [];
-				foreach (($register['schemas'] ?? []) as $schema) {
-					if (is_array($schema) === true && isset($schema['slug']) === true) {
-						$schemaSlugs[] = strtolower($schema['slug']);
-					} elseif ((is_int($schema) === true || is_numeric($schema) === true) && $schemaMapper !== null) {
-						try {
-							$schemaEntity = $schemaMapper->find((int)$schema);
-							if ($schemaEntity !== null) {
-								$schemaArray = $schemaEntity->jsonSerialize();
-								$schemaSlugs[] = strtolower($schemaArray['slug'] ?? '');
-							}
-						} catch (\Exception $e) {
-							// Skip schemas that can't be fetched.
-						}
-					}
-				}
-
-				$matches = array_intersect($expectedSlugs, $schemaSlugs);
-				if (count($matches) >= 6) {
-					// Good confidence.
-					// Fetch full schema details.
-					$schemas = $register['schemas'] ?? [];
-					$schemaDetails = [];
-					foreach ($schemas as $schema) {
-						if (is_array($schema) === true && isset($schema['slug']) === true) {
-							$schemaDetails[] = $schema;
-						} elseif ((is_int($schema) === true || is_numeric($schema) === true) && $schemaMapper !== null) {
-							try {
-								$schemaEntity = $schemaMapper->find((int)$schema);
-								if ($schemaEntity !== null) {
-									$schemaDetails[] = $schemaEntity->jsonSerialize();
-								}
-							} catch (\Exception $e) {
-								// Skip.
-							}
-						}
-					}
-
-					$register['schemas'] = $schemaDetails;
-					$targetRegister = $register;
-				}//end if
-			}//end foreach
-
+			$targetRegister = $this->findVoorzieningenRegister(registers: $registers, schemaMapper: $this->voorzieningenSchemaMapper());
 			if ($targetRegister === null) {
 				return [
 					'success' => false,
@@ -4164,95 +4095,7 @@ class SettingsService implements ObjectTypeLocatorInterface {
 				];
 			}
 
-			// Map schema slugs to configuration keys based on actual register schemas.
-			$slugToKey = [
-				'organization' => 'organisatie_schema',
-				'contactPerson' => 'contactpersoon_schema',
-				'suite' => 'suite_schema',
-				'catalogService' => 'dienst_schema',
-				'vulnerability' => 'kwetsbaarheid_schema',
-				'usage' => 'gebruik_schema',
-				'catalogContract' => 'contract_schema',
-				'connection' => 'koppeling_schema',
-				'software-review' => 'beoordeeling_schema',
-				'module' => 'module_schema',
-				'compliancy' => 'compliancy_schema',
-				'moduleversie' => 'moduleVersie_schema',
-				// Handle both moduleversie and moduleVersie.
-				'moduleVersion' => 'moduleVersie_schema',
-				'sector' => 'sector_schema',
-				'sbomComponent' => 'sbomComponent_schema',
-				'maintenanceWindow' => 'maintenanceWindow_schema',
-			];
-
-			$config = [ 'register' => (string)($targetRegister['id'] ?? '') ];
-
-			$this->logger->info(
-				'DEBUG: About to process schemas',
-				[
-					'register_id' => $targetRegister['id'],
-					'schemas_count' => count($targetRegister['schemas'] ?? []),
-					'slugToKey_map' => $slugToKey,
-				]
-			);
-
-			foreach (($targetRegister['schemas'] ?? []) as $schema) {
-				$originalSlug = $schema['slug'] ?? '';
-				$lowercaseSlug = strtolower($originalSlug);
-
-				$hasMappingOriginalValue = 'NO';
-				if (isset($slugToKey[$originalSlug]) === true) {
-					$hasMappingOriginalValue = 'YES';
-				}
-
-				$hasMappingLowercaseValue = 'NO';
-				if (isset($slugToKey[$lowercaseSlug]) === true) {
-					$hasMappingLowercaseValue = 'YES';
-				}
-
-				$this->logger->info(
-					'DEBUG: Processing schema',
-					[
-						'original_slug' => $originalSlug,
-						'lowercase_slug' => $lowercaseSlug,
-						'schema_id' => $schema['id'] ?? 'NO_ID',
-						'has_mapping_original' => $hasMappingOriginalValue,
-						'has_mapping_lowercase' => $hasMappingLowercaseValue,
-					]
-				);
-
-				$mappingKey = null;
-				$usedSlug = null;
-
-				// Try original case first, then lowercase.
-				if (isset($slugToKey[$originalSlug]) === true) {
-					$mappingKey = $slugToKey[$originalSlug];
-					$usedSlug = $originalSlug;
-				} elseif (isset($slugToKey[$lowercaseSlug]) === true) {
-					$mappingKey = $slugToKey[$lowercaseSlug];
-					$usedSlug = $lowercaseSlug;
-				}
-
-				if ($mappingKey !== null) {
-					$config[$mappingKey] = (string)$schema['id'];
-					$this->logger->info(
-						'DEBUG: Mapped schema successfully',
-						[
-							'used_slug' => $usedSlug,
-							'config_key' => $mappingKey,
-							'schema_id' => $schema['id'],
-						]
-					);
-				} else {
-					$this->logger->debug(
-						'DEBUG: No mapping found for schema slug',
-						[
-							'original_slug' => $originalSlug,
-							'lowercase_slug' => $lowercaseSlug,
-						]
-					);
-				}
-			}//end foreach
+			$config = $this->mapVoorzieningenSchemas(targetRegister: $targetRegister);
 
 			$this->logger->info('DEBUG: Final config before persist', ['config' => $config]);
 
@@ -4272,6 +4115,190 @@ class SettingsService implements ObjectTypeLocatorInterface {
 			];
 		}//end try
 	}//end configureVoorzieningen()
+
+	/**
+	 * The OpenRegister schema mapper, or null when it is not available.
+	 *
+	 * @return object|null The schema mapper.
+	 */
+	private function voorzieningenSchemaMapper(): ?object {
+		try {
+			return $this->container->get(\OCA\OpenRegister\Db\SchemaMapper::class);
+		} catch (\Exception $e) {
+			$this->logger->warning(
+				'SchemaMapper not available for Voorzieningen detection',
+				['error' => $e->getMessage()]
+			);
+			return null;
+		}
+	}//end voorzieningenSchemaMapper()
+
+	/**
+	 * Find the catalog register by slug, or by the presence of expected schema slugs.
+	 *
+	 * The slug moved `voorzieningen` -> `stackiq`; MigrateRegisterSlug renames the
+	 * row before this ever runs, and the schema-slug fallback still finds the
+	 * register on an install where that rename was refused. The `stackiq` register
+	 * wins at once; otherwise the last register with six or more expected schema
+	 * slugs is used.
+	 *
+	 * @param iterable    $registers    The registers, as entities or arrays.
+	 * @param object|null $schemaMapper The schema mapper, if available.
+	 *
+	 * @return array|null The register with full schema details, or null.
+	 */
+	private function findVoorzieningenRegister(iterable $registers, ?object $schemaMapper): ?array {
+		$targetRegister = null;
+		foreach ($registers as $register) {
+			if ($register instanceof \OCA\OpenRegister\Db\Register) {
+				$register = $register->jsonSerialize();
+			}
+
+			$schemas = $register['schemas'] ?? [];
+			if (strtolower($register['slug'] ?? '') === 'stackiq') {
+				[$details, $failures] = $this->voorzieningenSchemaDetails(schemas: $schemas, schemaMapper: $schemaMapper);
+				foreach ($failures as [$schemaId, $error]) {
+					$this->logger->warning(
+						'Failed to fetch schema details',
+						['schemaId' => $schemaId, 'error' => $error]
+					);
+				}
+
+				$register['schemas'] = $details;
+				return $register;
+			}
+
+			$schemaSlugs = array_map(
+				static fn (array $schema): string => strtolower($schema['slug'] ?? ''),
+				$this->voorzieningenSchemaDetails(schemas: $schemas, schemaMapper: $schemaMapper)[0]
+			);
+			if (count(array_intersect(self::VOORZIENINGEN_EXPECTED_SLUGS, $schemaSlugs)) >= 6) {
+				$register['schemas'] = $this->voorzieningenSchemaDetails(schemas: $schemas, schemaMapper: $schemaMapper)[0];
+				$targetRegister = $register;
+			}
+		}
+
+		return $targetRegister;
+	}//end findVoorzieningenRegister()
+
+	/**
+	 * Full schema objects for a register's schemas: inline objects with a slug
+	 * are kept, numeric ids are fetched through the schema mapper, and anything
+	 * else or anything that cannot be fetched is skipped.
+	 *
+	 * @param array       $schemas      The register's schemas, as objects or ids.
+	 * @param object|null $schemaMapper The schema mapper, if available.
+	 *
+	 * @return array{0: array, 1: list<array{0: int|string, 1: string}>} The schema objects, and each schema id that failed with its error.
+	 */
+	private function voorzieningenSchemaDetails(array $schemas, ?object $schemaMapper): array {
+		$details  = [];
+		$failures = [];
+		foreach ($schemas as $schema) {
+			if (is_array($schema) === true && isset($schema['slug']) === true) {
+				$details[] = $schema;
+				continue;
+			}
+
+			if ((is_int($schema) === false && is_numeric($schema) === false) || $schemaMapper === null) {
+				continue;
+			}
+
+			try {
+				$schemaEntity = $schemaMapper->find((int)$schema);
+				if ($schemaEntity !== null) {
+					$details[] = $schemaEntity->jsonSerialize();
+				}
+			} catch (\Exception $e) {
+				$failures[] = [$schema, $e->getMessage()];
+			}
+		}//end foreach
+
+		return [$details, $failures];
+	}//end voorzieningenSchemaDetails()
+
+	/**
+	 * Map the register's schemas to Voorzieningen configuration keys, trying
+	 * each slug in its original case before lowercase.
+	 *
+	 * @param array $targetRegister The register with full schema details.
+	 *
+	 * @return array<string, string> The configuration.
+	 */
+	private function mapVoorzieningenSchemas(array $targetRegister): array {
+		$slugToKey = self::VOORZIENINGEN_SLUG_TO_KEY;
+		$config    = [ 'register' => (string)($targetRegister['id'] ?? '') ];
+
+		$this->logger->info(
+			'DEBUG: About to process schemas',
+			[
+				'register_id' => $targetRegister['id'],
+				'schemas_count' => count($targetRegister['schemas'] ?? []),
+				'slugToKey_map' => $slugToKey,
+			]
+		);
+
+		foreach (($targetRegister['schemas'] ?? []) as $schema) {
+			$originalSlug  = $schema['slug'] ?? '';
+			$lowercaseSlug = strtolower($originalSlug);
+
+			$this->logger->info(
+				'DEBUG: Processing schema',
+				[
+					'original_slug' => $originalSlug,
+					'lowercase_slug' => $lowercaseSlug,
+					'schema_id' => $schema['id'] ?? 'NO_ID',
+					'has_mapping_original' => $this->yesNo(flag: isset($slugToKey[$originalSlug])),
+					'has_mapping_lowercase' => $this->yesNo(flag: isset($slugToKey[$lowercaseSlug])),
+				]
+			);
+
+			$usedSlug = null;
+			if (isset($slugToKey[$originalSlug]) === true) {
+				$usedSlug = $originalSlug;
+			} elseif (isset($slugToKey[$lowercaseSlug]) === true) {
+				$usedSlug = $lowercaseSlug;
+			}
+
+			if ($usedSlug === null) {
+				$this->logger->debug(
+					'DEBUG: No mapping found for schema slug',
+					[
+						'original_slug' => $originalSlug,
+						'lowercase_slug' => $lowercaseSlug,
+					]
+				);
+				continue;
+			}
+
+			$config[$slugToKey[$usedSlug]] = (string)$schema['id'];
+			$this->logger->info(
+				'DEBUG: Mapped schema successfully',
+				[
+					'used_slug' => $usedSlug,
+					'config_key' => $slugToKey[$usedSlug],
+					'schema_id' => $schema['id'],
+				]
+			);
+		}//end foreach
+
+		return $config;
+	}//end mapVoorzieningenSchemas()
+
+	/**
+	 * 'YES' or 'NO' for a log context flag.
+	 *
+	 * @param bool $flag The flag.
+	 *
+	 * @return string 'YES' or 'NO'.
+	 */
+	private function yesNo(bool $flag): string {
+		if ($flag === true) {
+			return 'YES';
+		}
+
+		return 'NO';
+	}//end yesNo()
 
 	/**
 	 * Configure AMEF register and schemas
