@@ -312,20 +312,39 @@ class DemoDataService {
 
 		$bySlug = [];
 		foreach ($objects as $index => $object) {
-			$register = (string) ($object['@self']['register'] ?? '');
-			$schema   = (string) ($object['@self']['schema'] ?? '');
-			if ($register === '' || $schema === '') {
-				continue;
-			}
-
-			$bySlug[$register] ??= $this->schemaIdsOfRegister(registerSlug: $register);
-			if (isset($bySlug[$register][$schema]) === true) {
-				$data['components']['objects'][$index]['@self']['schema'] = (string) $bySlug[$register][$schema];
+			$schemaId = $this->schemaIdInOwnRegister(object: $object, bySlug: $bySlug);
+			if ($schemaId !== '') {
+				$data['components']['objects'][$index]['@self']['schema'] = $schemaId;
 			}
 		}
 
 		return $data;
 	}//end pinSchemasToTheirRegisters()
+
+	/**
+	 * The id of a demo object's schema in the register it names, or '' when it names none or the register does
+	 * not list it.
+	 *
+	 * @param mixed                            $object The demo object.
+	 * @param array<string, array<string, int>> $bySlug The schema ids per register read so far; a register read
+	 *                                                 here is added.
+	 *
+	 * @return string
+	 */
+	private function schemaIdInOwnRegister(mixed $object, array &$bySlug): string {
+		$register = (string) ($object['@self']['register'] ?? '');
+		$schema   = (string) ($object['@self']['schema'] ?? '');
+		if ($register === '' || $schema === '') {
+			return '';
+		}
+
+		$bySlug[$register] ??= $this->schemaIdsOfRegister(registerSlug: $register);
+		if (isset($bySlug[$register][$schema]) === false) {
+			return '';
+		}
+
+		return (string) $bySlug[$register][$schema];
+	}//end schemaIdInOwnRegister()
 
 	/**
 	 * The schemas a register lists, as slug => id.
