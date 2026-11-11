@@ -252,4 +252,45 @@ class ItsmExchangeServiceTest extends TestCase {
 		$this->assertFalse($result['created']);
 		$this->assertStringContainsString('Nothing was created', $result['message']);
 	}//end testAPreflightThatThrowsIsARefusal()
+	/**
+	 * The preconditions in their order, with their exact messages: the engine, the desk, the organisation
+	 * (also one found without a uuid) and the integriq source; met, they give the source and the uuid.
+	 *
+	 * @return void
+	 */
+	public function testThePreconditionsInOrder(): void {
+		$preconditions = new \ReflectionMethod(ItsmExchangeService::class, 'preconditions');
+		$preconditions->setAccessible(true);
+		$service = $this->service();
+
+		$this->assertSame('Unknown service desk "jira".', $preconditions->invoke($service, 'jira', self::ORG));
+		$this->assertSame('The organisation nope does not exist in stackiq.', $preconditions->invoke($service, 'topdesk', 'nope'));
+		$this->assertSame(
+			'Integriq has no source "servicenow". Add the ServiceNow source in integriq first.',
+			$preconditions->invoke($service, 'servicenow', 'gemeente-rotterdam')
+		);
+		$this->assertSame(
+			['source' => ['uuid' => 'src-1', 'slug' => 'topdesk', 'location' => 'https://rotterdam.topdesk.net/tas/api'], 'organisation' => self::ORG],
+			$preconditions->invoke($service, 'topdesk', 'gemeente-rotterdam')
+		);
+
+		$this->gateway = $this->getMockBuilder(ItsmFlowGateway::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['available', 'inspect', 'saveAndPublish', 'run', 'findObject'])
+			->getMock();
+		$this->gateway->method('available')->willReturn(true);
+		$this->gateway->method('findObject')->willReturn(['name' => 'no uuid']);
+		$this->assertSame('The organisation org-x does not exist in stackiq.', $preconditions->invoke($this->service(), 'topdesk', 'org-x'));
+
+		$this->gateway = $this->getMockBuilder(ItsmFlowGateway::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['available', 'inspect', 'saveAndPublish', 'run', 'findObject'])
+			->getMock();
+		$this->gateway->method('available')->willReturn(false);
+		$this->gateway->expects($this->never())->method('findObject');
+		$this->assertSame(
+			'OpenRegister\'s flow engine is not available, so no exchange can be set up.',
+			$preconditions->invoke($this->service(), 'jira', self::ORG)
+		);
+	}//end testThePreconditionsInOrder()
 }//end class
