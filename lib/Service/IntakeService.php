@@ -281,7 +281,7 @@ class IntakeService {
 	 * @return string|null The uuid, or null.
 	 */
 	private function entityUuid(mixed $entity): ?string {
-		return (new SavedEntityUuid(logger: $this->logger, owner: 'IntakeService'))->of(entity: $entity);
+		return (new SavedEntityUuid(logger: $this->logger, owner: 'IntakeService'))->read(entity: $entity);
 	}//end entityUuid()
 
 	/**

@@ -370,7 +370,7 @@ class ReviewService {
 	 * @return string|null The uuid, or null.
 	 */
 	private function entityUuid(mixed $entity): ?string {
-		return (new SavedEntityUuid(logger: $this->logger, owner: 'ReviewService'))->of(entity: $entity);
+		return (new SavedEntityUuid(logger: $this->logger, owner: 'ReviewService'))->read(entity: $entity);
 	}//end entityUuid()
 
 	/**

@@ -60,7 +60,7 @@ final class SavedEntityUuid {
 	 *
 	 * @spec openspec/specs/catalog-ratings/spec.md
 	 */
-	public function of(mixed $entity): ?string {
+	public function read(mixed $entity): ?string {
 		if (is_object($entity) === true
 			&& (property_exists($entity, 'uuid') === true || method_exists($entity, 'getUuid') === true)
 		) {
@@ -72,7 +72,7 @@ final class SavedEntityUuid {
 		}
 
 		return null;
-	}//end of()
+	}//end read()
 
 	/**
 	 * The uuid of a saved entity, read through its getUuid().
