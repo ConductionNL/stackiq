@@ -72,6 +72,7 @@ use OCA\Stackiq\Service\Cmdb\CmdbImportReport;
 use OCA\Stackiq\Service\Cmdb\CmdbImportRow;
 use OCA\Stackiq\Service\Cmdb\CmdbImportRun;
 use OCA\Stackiq\Service\Cmdb\CmdbOwnerIdentity;
+use OCA\Stackiq\Service\Cmdb\CmdbOwnerLookup;
 use OCA\Stackiq\Service\Cmdb\OpenRegisterInstance;
 use OCA\Stackiq\Service\Cmdb\CmdbRowNormaliser;
 use OCA\Stackiq\Service\Cmdb\CmdbWorkbookReader;
@@ -1406,18 +1407,8 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-6
 	 */
 	private function resolveOwners(CmdbImportRow $row): array {
-		$rowNumber = $row->entry['row'];
-		$municipalityUuid = $row->run->municipalityUuid();
 		$owners = ['businessOwner' => null];
-		$identities = [];
-		foreach (array_keys($owners) as $target) {
-			$mapped = $this->map(target: $target, row: $row);
-			$name = trim((string)($mapped['data']['name'] ?? ''));
-			if ($mapped['missing'] === [] && $name !== '') {
-				$identities[$target] = $mapped['data'];
-			}
-		}
-
+		$identities = $this->ownerIdentities(row: $row, targets: array_keys($owners));
 		if ($identities === []) {
 			return $owners;
 		}
@@ -1427,31 +1418,92 @@ class CmdbExportImportService {
 			return $owners;
 		}
 
-		foreach ($identities as $target => $identity) {
-			$column = $this->ownerColumn(target: $target);
-			try {
-				$contactsUid = $this->resolveContactUid(identity: $identity, municipalityUuid: $municipalityUuid);
-				if ($contactsUid === null) {
-					$row->warnings[] = $this->l10n->t('Owner from column "%s" could not be resolved in Nextcloud Contacts', [$column]);
-					continue;
-				}
-
-				$owners[$target] = $this->resolveContactPerson(
-					contactsUid: $contactsUid,
-					municipalityUuid: $municipalityUuid,
-					role: trim((string)($identity['role'] ?? ''))
-				);
-			} catch (Throwable $e) {
-				$this->logger->warning(
-					'CmdbExportImportService: owner could not be resolved',
-					['row' => $rowNumber, 'column' => $column, 'exception' => get_class($e)]
-				);
-				$row->warnings[] = $this->l10n->t('Owner from column "%s" could not be resolved', [$column]);
-			}
-		}//end foreach
-
-		return $owners;
+		return array_replace($owners, $this->resolveOwnerContacts(row: $row, identities: $identities));
 	}//end resolveOwners()
+
+	/**
+	 * The mapped identity of every owner the row names, by target; an owner without a name or with a
+	 * missing required column is left out.
+	 *
+	 * @param CmdbImportRow $row The row.
+	 * @param array<int, string> $targets The owner targets.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function ownerIdentities(CmdbImportRow $row, array $targets): array {
+		$identities = [];
+		foreach ($targets as $target) {
+			$mapped = $this->map(target: $target, row: $row);
+			$name = trim((string)($mapped['data']['name'] ?? ''));
+			if ($mapped['missing'] === [] && $name !== '') {
+				$identities[$target] = $mapped['data'];
+			}
+		}
+
+		return $identities;
+	}//end ownerIdentities()
+
+	/**
+	 * The contact person of every owner identity, by target; null for one that could not be resolved.
+	 *
+	 * @param CmdbImportRow $row The row: its warnings (appended to) and the run's municipality.
+	 * @param array<string, array<string, mixed>> $identities The owner identities, by target.
+	 *
+	 * @return array<string, string|null>
+	 */
+	private function resolveOwnerContacts(CmdbImportRow $row, array $identities): array {
+		$contacts = [];
+		foreach ($identities as $target => $identity) {
+			$lookup = new CmdbOwnerLookup(column: $this->ownerColumn(target: $target), identity: $identity);
+			$contacts[$target] = $this->resolveOwner(row: $row, lookup: $lookup);
+		}
+
+		return $contacts;
+	}//end resolveOwnerContacts()
+
+	/**
+	 * The contact person of one owner, or null after a warning (and a log line on a failure).
+	 *
+	 * @param CmdbImportRow $row The row: its sheet row number and its warnings (appended to).
+	 * @param CmdbOwnerLookup $lookup The owner's column and identity.
+	 *
+	 * @return string|null
+	 */
+	private function resolveOwner(CmdbImportRow $row, CmdbOwnerLookup $lookup): ?string {
+		try {
+			return $this->resolveOwnerContact(row: $row, lookup: $lookup);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'CmdbExportImportService: owner could not be resolved',
+				['row' => $row->entry['row'], 'column' => $lookup->column, 'exception' => get_class($e)]
+			);
+			$row->warnings[] = $this->l10n->t('Owner from column "%s" could not be resolved', [$lookup->column]);
+			return null;
+		}
+	}//end resolveOwner()
+
+	/**
+	 * The contact person of one owner, found or created; null after a warning when Contacts has no contact.
+	 *
+	 * @param CmdbImportRow $row The row: its warnings (appended to) and the run's municipality.
+	 * @param CmdbOwnerLookup $lookup The owner's column and identity.
+	 *
+	 * @return string|null
+	 */
+	private function resolveOwnerContact(CmdbImportRow $row, CmdbOwnerLookup $lookup): ?string {
+		$municipalityUuid = $row->run->municipalityUuid();
+		$contactsUid = $this->resolveContactUid(identity: $lookup->identity, municipalityUuid: $municipalityUuid);
+		if ($contactsUid === null) {
+			$row->warnings[] = $this->l10n->t('Owner from column "%s" could not be resolved in Nextcloud Contacts', [$lookup->column]);
+			return null;
+		}
+
+		return $this->resolveContactPerson(
+			contactsUid: $contactsUid,
+			municipalityUuid: $municipalityUuid,
+			role: trim((string)($lookup->identity['role'] ?? ''))
+		);
+	}//end resolveOwnerContact()
 
 	/**
 	 * Resolve the Nextcloud contact of an owner identity.
