@@ -261,4 +261,45 @@ class ItsmFileImportServiceTest extends TestCase {
 		$csv = $this->csv("recordId\nA-1\n");
 		$this->assertStringContainsString('could not be read', $this->service(flow: 'file-flow')->import(path: $csv, name: 'landscape.xlsx')['message']);
 	}//end testAnXlsxGivesCachedFormulaValuesAndOnlyXlsxIsRead()
+	/**
+	 * A column without a header is left out, a short row reads the cells it has, a tie between commas and
+	 * semicolons reads as commas, and a byte order mark only comes off the first cell of the first row.
+	 *
+	 * @return void
+	 */
+	public function testHeaderlessColumnsShortRowsAndDelimiterTie(): void {
+		$path = $this->csv("\xEF\xBB\xBFrecordId,,name;x;y\nA-1,dropped,Zaak;1;2\nA-2\n\xEF\xBB\xBFB-3,,Burger;2;3\n");
+
+		$rows = $this->service(flow: null)->readRows(path: $path, name: 'tie.CSV');
+
+		$this->assertSame(
+			[
+				['recordId' => 'A-1', 'name;x;y' => 'Zaak;1;2'],
+				['recordId' => 'A-2'],
+				['recordId' => "\xEF\xBB\xBFB-3", 'name;x;y' => 'Burger;2;3'],
+			],
+			$rows
+		);
+	}//end testHeaderlessColumnsShortRowsAndDelimiterTie()
+
+	/**
+	 * A file with only a header holds no rows; a row whose key is missing or empty is named.
+	 *
+	 * @return void
+	 */
+	public function testCheckRowsReasons(): void {
+		$service = $this->service(flow: null);
+
+		$this->assertSame('The file holds no rows under its header.', $service->checkRows([]));
+		$this->assertSame(
+			'Row 2 has no recordId. Every row needs one, so a second import updates instead of adding.',
+			$service->checkRows([['name' => 'x']])
+		);
+		$this->assertSame(
+			'Row 3 has no recordId. Every row needs one, so a second import updates instead of adding.',
+			$service->checkRows([['recordId' => 'A-1'], ['recordId' => '']])
+		);
+		$this->assertNull($service->checkRows([['recordId' => 'A-1']]));
+		$this->assertSame([], $service->readRows(path: $this->csv("recordId;name\n"), name: 'empty.csv'));
+	}//end testCheckRowsReasons()
 }//end class
