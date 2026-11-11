@@ -1828,7 +1828,8 @@ class CmdbExportImportService {
 			}
 
 			$offset += self::PAGE_SIZE;
-		} while (count($page) === self::PAGE_SIZE);
+			$pageSize = count($page);
+		} while ($pageSize === self::PAGE_SIZE);
 
 		return $found;
 	}//end allPages()
