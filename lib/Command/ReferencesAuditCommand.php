@@ -134,24 +134,13 @@ class ReferencesAuditCommand extends Command {
 	 * @spec openspec/specs/contract-administration/spec.md
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
-		$write = (bool)$input->getOption('write');
-
-		try {
-			$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-			$satellites = (new ObjectPages(objectService: $objectService))->all(register: self::REGISTER, schema: self::SATELLITE_SCHEMA);
-		} catch (Throwable $e) {
-			$output->writeln('<error>could not read '.self::SATELLITE_SCHEMA.': '.$e->getMessage().'</error>');
+		$run = $this->prepareAudit(input: $input, output: $output);
+		if ($run === null) {
 			return 1;
 		}
 
-		[$owners, $ownerIds] = $this->ownerIndex($objectService, $output);
-		$counts = $this->auditRows(
-			objectService: $objectService,
-			satellites: $satellites,
-			index: ['owners' => $owners, 'ownerIds' => $ownerIds],
-			run: ['write' => $write, 'output' => $output]
-		);
-		$this->report($output, $counts, $write);
+		$counts = $this->auditRows(run: $run);
+		$this->report($output, $counts, $run->write);
 
 		if ($counts['dangling'] > 0) {
 			return 1;
@@ -161,6 +150,44 @@ class ReferencesAuditCommand extends Command {
 	}//end execute()
 
 	/**
+	 * Read the satellite rows and index the owners they are audited against.
+	 *
+	 * @param InputInterface  $input  Console input, for the write option.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return ReferenceAuditRun|null The run, or null when the satellite rows cannot be read.
+	 */
+	private function prepareAudit(InputInterface $input, OutputInterface $output): ?ReferenceAuditRun {
+		$run         = new ReferenceAuditRun();
+		$run->write  = (bool)$input->getOption('write');
+		$run->output = $output;
+
+		try {
+			$run->objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
+			$run->satellites    = (new ObjectPages(objectService: $run->objectService))->all(register: self::REGISTER, schema: self::SATELLITE_SCHEMA);
+		} catch (Throwable $e) {
+			$output->writeln('<error>could not read '.self::SATELLITE_SCHEMA.': '.$e->getMessage().'</error>');
+			return null;
+		}
+
+		$this->indexOwners(run: $run);
+		return $run;
+	}//end prepareAudit()
+
+	/**
+	 * Index the owner records of the run.
+	 *
+	 * @param ReferenceAuditRun $run The run.
+	 *
+	 * @return void
+	 */
+	private function indexOwners(ReferenceAuditRun $run): void {
+		$index         = $this->ownerIndex($run->objectService, $run->output);
+		$run->owners   = $index[0];
+		$run->ownerIds = $index[1];
+	}//end indexOwners()
+
+	/**
 	 * Classify every satellite row, writing the unambiguous ones when allowed.
 	 *
 	 * EXTRACTED FROM execute() alongside classifyRow(), because phpmd measured
@@ -168,42 +195,48 @@ class ReferencesAuditCommand extends Command {
 	 * Splitting the loop out is not cosmetic: execute() now reads as "read,
 	 * index, audit, report", and each of those four is separately testable.
 	 *
-	 * @param mixed $objectService The OpenRegister object service.
-	 * @param array<int, mixed> $satellites The satellite rows.
-	 * @param array{owners: array<string, array<int, string>>, ownerIds: array<string, bool>} $index
-	 *        `owners` (identity key to owner ids) and `ownerIds` (every known owner id).
-	 * @param array{write: bool, output: OutputInterface} $run
-	 *        `write` (whether this run may write) and `output` (console output).
+	 * @param ReferenceAuditRun $run The run: its rows, owner index, write flag and output.
 	 *
 	 * @return array<string, int> The per-outcome tally.
 	 */
-	private function auditRows(mixed $objectService, array $satellites, array $index, array $run): array {
-		$output = $run['output'];
-		$counts = ['set' => 0, 'dangling' => 0, 'backfillable' => 0, 'ambiguous' => 0, 'unmatched' => 0, 'written' => 0];
+	private function auditRows(ReferenceAuditRun $run): array {
+		$run->counts = ['set' => 0, 'dangling' => 0, 'backfillable' => 0, 'ambiguous' => 0, 'unmatched' => 0, 'written' => 0];
 
-		foreach ($satellites as $row) {
+		foreach ($run->satellites as $row) {
 			if ($row === []) {
 				continue;
 			}
 
-			$verdict = $this->classifyRow($row, $index['owners'], $index['ownerIds']);
-			$counts[$verdict['outcome']]++;
+			$this->auditRow(run: $run, row: $row);
+		}
 
-			if ($verdict['message'] !== '') {
-				$output->writeln($verdict['message']);
-			}
-
-			if ($verdict['outcome'] !== 'backfillable' || $run['write'] === false) {
-				continue;
-			}
-
-			if ($this->backfill($objectService, $verdict['id'], $verdict['owner'], $output) === true) {
-				$counts['written']++;
-			}
-		}//end foreach
-
-		return $counts;
+		return $run->counts;
 	}//end auditRows()
+
+	/**
+	 * Classify one satellite row, report it, and write it when it is unambiguous and the run may write.
+	 *
+	 * @param ReferenceAuditRun    $run The run.
+	 * @param array<string, mixed> $row One satellite row's payload.
+	 *
+	 * @return void
+	 */
+	private function auditRow(ReferenceAuditRun $run, array $row): void {
+		$verdict = $this->classifyRow(row: $row, run: $run);
+		$run->counts[$verdict['outcome']]++;
+
+		if ($verdict['message'] !== '') {
+			$run->output->writeln($verdict['message']);
+		}
+
+		if ($verdict['outcome'] !== 'backfillable' || $run->write === false) {
+			return;
+		}
+
+		if ($this->backfill($run->objectService, $verdict['id'], $verdict['owner'], $run->output) === true) {
+			$run->counts['written']++;
+		}
+	}//end auditRow()
 
 	/**
 	 * Decide what one satellite row is, against the index of owners.
@@ -216,49 +249,88 @@ class ReferencesAuditCommand extends Command {
 	 * candidate, regardless of what its identity key would have matched.
 	 *
 	 * @param array<string, mixed> $row One satellite row's payload.
-	 * @param array<string, array<int, string>> $owners Identity key to owner ids.
-	 * @param array<string, bool> $ownerIds Every known owner id.
+	 * @param ReferenceAuditRun    $run The run, with the owner index.
 	 *
 	 * @return array{outcome: string, id: string, owner: string, message: string} The verdict.
 	 */
-	private function classifyRow(array $row, array $owners, array $ownerIds): array {
-		$id = (string)($row['id'] ?? '');
+	private function classifyRow(array $row, ReferenceAuditRun $run): array {
 		$reference = trim((string)($row[self::REFERENCE_PROPERTY] ?? ''));
-		$identity = trim((string)($row[self::IDENTITY_KEY] ?? ''));
-
 		if ($reference !== '') {
-			// An empty owner index means the owner could not be read at all.
-			// That is reported as presence, never as a dangling link, or an
-			// outage would look like data loss.
-			if ($ownerIds === [] || isset($ownerIds[$reference]) === true) {
-				return ['outcome' => 'set', 'id' => $id, 'owner' => '', 'message' => ''];
-			}
-
-			return [
-				'outcome' => 'dangling',
-				'id' => $id,
-				'owner' => '',
-				'message' => '  <error>dangling</error>  '.$id.' -> '.$reference,
-			];
+			return self::referenceVerdict(row: $row, ownerIds: $run->ownerIds);
 		}
 
+		return self::identityVerdict(row: $row, owners: $run->owners);
+	}//end classifyRow()
+
+	/**
+	 * The verdict on a row that carries a reference: set, or dangling.
+	 *
+	 * An empty owner index means the owner could not be read at all. That is
+	 * reported as presence, never as a dangling link, or an outage would look
+	 * like data loss.
+	 *
+	 * @param array<string, mixed> $row      One satellite row's payload.
+	 * @param array<string, bool>  $ownerIds Every known owner id.
+	 *
+	 * @return array{outcome: string, id: string, owner: string, message: string} The verdict.
+	 */
+	private static function referenceVerdict(array $row, array $ownerIds): array {
+		$id = (string)($row['id'] ?? '');
+		$reference = trim((string)($row[self::REFERENCE_PROPERTY] ?? ''));
+		if ($ownerIds === [] || isset($ownerIds[$reference]) === true) {
+			return ['outcome' => 'set', 'id' => $id, 'owner' => '', 'message' => ''];
+		}
+
+		return [
+			'outcome' => 'dangling',
+			'id' => $id,
+			'owner' => '',
+			'message' => '  <error>dangling</error>  '.$id.' -> '.$reference,
+		];
+	}//end referenceVerdict()
+
+	/**
+	 * The verdict on a row without a reference, by its identity key: unmatched, ambiguous, or backfillable.
+	 *
+	 * @param array<string, mixed>              $row    One satellite row's payload.
+	 * @param array<string, array<int, string>> $owners Identity key to owner ids.
+	 *
+	 * @return array{outcome: string, id: string, owner: string, message: string} The verdict.
+	 */
+	private static function identityVerdict(array $row, array $owners): array {
+		$id = (string)($row['id'] ?? '');
+		$identity = trim((string)($row[self::IDENTITY_KEY] ?? ''));
 		$candidates = ($owners[$identity] ?? []);
 		if ($identity === '' || $candidates === []) {
 			return ['outcome' => 'unmatched', 'id' => $id, 'owner' => '', 'message' => ''];
 		}
 
 		if (count($candidates) > 1) {
-			return [
-				'outcome' => 'ambiguous',
-				'id' => $id,
-				'owner' => '',
-				'message' => '  <comment>ambiguous</comment> '.$id.' '.self::IDENTITY_KEY.'='.$identity
-					.' matches '.count($candidates).' owners',
-			];
+			return self::ambiguousVerdict(row: $row, candidates: $candidates);
 		}
 
 		return ['outcome' => 'backfillable', 'id' => $id, 'owner' => $candidates[0], 'message' => ''];
-	}//end classifyRow()
+	}//end identityVerdict()
+
+	/**
+	 * The verdict on a row whose identity key several owners share.
+	 *
+	 * @param array<string, mixed> $row        One satellite row's payload.
+	 * @param array<int, string>   $candidates The owner ids sharing its identity key.
+	 *
+	 * @return array{outcome: string, id: string, owner: string, message: string} The verdict.
+	 */
+	private static function ambiguousVerdict(array $row, array $candidates): array {
+		$id = (string)($row['id'] ?? '');
+		$identity = trim((string)($row[self::IDENTITY_KEY] ?? ''));
+		return [
+			'outcome' => 'ambiguous',
+			'id' => $id,
+			'owner' => '',
+			'message' => '  <comment>ambiguous</comment> '.$id.' '.self::IDENTITY_KEY.'='.$identity
+				.' matches '.count($candidates).' owners',
+		];
+	}//end ambiguousVerdict()
 
 	/**
 	 * Write one unambiguous owner reference onto a satellite row.
