@@ -386,33 +386,71 @@ export default defineComponent({
 		async triggerSync() {
 			this.syncing = true
 			try {
-				const data = await apiRequest('eol-sync/trigger', { method: 'POST' })
-				if (data && data.status) {
-					this.status = { ...this.status, ...data.status }
-				}
-				if (this.status.available) {
-					showSuccess(
-						t(
-							'stackiq',
-							'EOL sync completed: {matched} matched, {skipped} skipped.',
-							{
-								matched: this.status.matched,
-								skipped: this.status.skipped,
-							},
-						),
-					)
-				} else {
-					showError(
-						t('stackiq', 'EOL sync did not run: {reason}', {
-							reason: this.unavailableReasonLabel,
-						}),
-					)
-				}
+				this.mergeSyncStatus(
+					await apiRequest('eol-sync/trigger', { method: 'POST' }),
+				)
+				this.reportSyncOutcome()
 			} catch (error) {
 				showError(t('stackiq', 'EOL sync failed') + ': ' + error.message)
 			} finally {
 				this.syncing = false
 			}
+		},
+
+		/**
+		 * Merge the status a sync run returned into the shown status.
+		 *
+		 * @param {object|null} data The trigger endpoint's reply.
+		 * @return {void}
+		 */
+		mergeSyncStatus(data) {
+			if (data && data.status) {
+				this.status = { ...this.status, ...data.status }
+			}
+		},
+
+		/**
+		 * Tell the administrator what the sync run did, or why it did not run.
+		 *
+		 * @return {void}
+		 */
+		reportSyncOutcome() {
+			if (!this.status.available) {
+				this.showSyncUnavailable()
+				return
+			}
+			this.showSyncCompleted()
+		},
+
+		/**
+		 * Say why the sync did not run.
+		 *
+		 * @return {void}
+		 */
+		showSyncUnavailable() {
+			showError(
+				t('stackiq', 'EOL sync did not run: {reason}', {
+					reason: this.unavailableReasonLabel,
+				}),
+			)
+		},
+
+		/**
+		 * Say how many products the sync matched and skipped.
+		 *
+		 * @return {void}
+		 */
+		showSyncCompleted() {
+			showSuccess(
+				t(
+					'stackiq',
+					'EOL sync completed: {matched} matched, {skipped} skipped.',
+					{
+						matched: this.status.matched,
+						skipped: this.status.skipped,
+					},
+				),
+			)
 		},
 	},
 })

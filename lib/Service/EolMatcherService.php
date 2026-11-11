@@ -72,29 +72,8 @@ class EolMatcherService {
 			return null;
 		}
 
-		$bestDepth = 0;
-		$candidates = [];
-
-		foreach ($cycles as $cycle) {
-			$cycleValue = trim((string)($cycle['cycle'] ?? ''));
-			if ($cycleValue === '') {
-				continue;
-			}
-
-			$depth = $this->matchDepth(version: $version, cycle: $cycleValue);
-			if ($depth === null) {
-				continue;
-			}
-
-			if ($depth > $bestDepth) {
-				$bestDepth = $depth;
-				$candidates = [$cycle];
-			} elseif ($depth === $bestDepth) {
-				$candidates[] = $cycle;
-			}
-		}//end foreach
-
-		if ($bestDepth === 0 || count($candidates) !== 1) {
+		$candidates = $this->deepestCandidates(version: $version, cycles: $cycles);
+		if (count($candidates) !== 1) {
 			// Zero candidates, or an ambiguous tie at the most-specific
 			// level — never guess (design.md Decision 2).
 			return null;
@@ -102,6 +81,48 @@ class EolMatcherService {
 
 		return $candidates[0];
 	}//end matchVersion()
+
+	/**
+	 * The cycles that match the version at the most specific level, in their order; none when no cycle matches beyond depth 0.
+	 *
+	 * @param string $version The trimmed, non-empty version.
+	 * @param array<int, array<string, mixed>> $cycles The cycles.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function deepestCandidates(string $version, array $cycles): array {
+		$scored = [];
+		foreach ($cycles as $cycle) {
+			$depth = $this->cycleDepth(version: $version, cycle: $cycle);
+			if ($depth !== null) {
+				$scored[] = [$depth, $cycle];
+			}
+		}
+
+		$bestDepth = max(array_merge([0], array_column($scored, 0)));
+		if ($bestDepth === 0) {
+			return [];
+		}
+
+		return array_values(array_column(array_filter($scored, static fn (array $entry): bool => $entry[0] === $bestDepth), 1));
+	}//end deepestCandidates()
+
+	/**
+	 * How deep a cycle matches the version, or null when it names no cycle or does not match.
+	 *
+	 * @param string $version The version.
+	 * @param array<string, mixed> $cycle The cycle.
+	 *
+	 * @return int|null
+	 */
+	private function cycleDepth(string $version, array $cycle): ?int {
+		$cycleValue = trim((string)($cycle['cycle'] ?? ''));
+		if ($cycleValue === '') {
+			return null;
+		}
+
+		return $this->matchDepth(version: $version, cycle: $cycleValue);
+	}//end cycleDepth()
 
 	/**
 	 * Compute the number of matching leading dot-separated segments between

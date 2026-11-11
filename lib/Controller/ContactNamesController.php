@@ -175,43 +175,95 @@ class ContactNamesController extends Controller {
 	 * @return array<string, string> uuid => contactsUid.
 	 */
 	private function contactsUidsOf(array $ids): array {
-		$config = $this->settingsService->getVoorzieningenConfig();
-		$register = ($config['register'] ?? null);
-		$schema = ($config[SettingsService::LEGACY_SCHEMA_KEY['contactPerson']] ?? null);
-		if (empty($register) === true || empty($schema) === true) {
-			$this->logger->warning('[ContactNames] The register or the contact person schema is not configured; no names are given');
+		$source = $this->contactPersonSource();
+		if ($source === null) {
 			return [];
 		}
 
+		$results = $this->readContactPersons(source: $source, ids: $ids);
+		if ($results === null) {
+			return [];
+		}
+
+		return self::requestedUids(results: $results, ids: $ids);
+	}//end contactsUidsOf()
+
+	/**
+	 * The register and contact person schema, or null after warning that they are not configured.
+	 *
+	 * @return array{register: int, schema: int}|null
+	 */
+	private function contactPersonSource(): ?array {
+		$config   = $this->settingsService->getVoorzieningenConfig();
+		$register = ($config['register'] ?? null);
+		$schema   = ($config[SettingsService::LEGACY_SCHEMA_KEY['contactPerson']] ?? null);
+		if (empty($register) === true || empty($schema) === true) {
+			$this->logger->warning('[ContactNames] The register or the contact person schema is not configured; no names are given');
+			return null;
+		}
+
+		return ['register' => (int)$register, 'schema' => (int)$schema];
+	}//end contactPersonSource()
+
+	/**
+	 * Read the requested contact persons with the caller's own rights.
+	 *
+	 * @param array{register: int, schema: int} $source The register and contact person schema.
+	 * @param array<int, string>                $ids    Contact person uuids, lower case.
+	 *
+	 * @return array<int, mixed>|null The records, or null when OpenRegister cannot be read.
+	 */
+	private function readContactPersons(array $source, array $ids): ?array {
 		try {
 			// RBAC and multitenancy stay at their defaults: the caller's own rights.
 			// The ids go in the query as `_ids`: OpenRegister's single
 			// register+schema path reads that key and ignores the `ids` argument.
 			$result = $this->objectService->searchObjectsPaginated(
-				query: [
-					'@self' => ['register' => (int)$register, 'schema' => (int)$schema],
-					'_ids' => $ids,
-					'_limit' => self::MAX_IDS,
-				]
+				query: ['@self' => $source, '_ids' => $ids, '_limit' => self::MAX_IDS]
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning('[ContactNames] The contact persons could not be read', ['exception' => $e]);
-			return [];
+			return null;
 		}
 
+		return ($result['results'] ?? []);
+	}//end readContactPersons()
+
+	/**
+	 * The contactsUid of each requested contact person among the records.
+	 *
+	 * The ids filter is OpenRegister's; a record it did not ask for is never named.
+	 *
+	 * @param iterable<mixed>    $results The records read.
+	 * @param array<int, string> $ids     Contact person uuids, lower case.
+	 *
+	 * @return array<string, string> uuid => contactsUid.
+	 */
+	private static function requestedUids(iterable $results, array $ids): array {
 		$uids = [];
-		foreach (($result['results'] ?? []) as $entry) {
-			$data = self::objectData(entry: $entry);
-			$uuid = strtolower((string)($data['id'] ?? ($data['@self']['id'] ?? '')));
-			$contactsUid = trim((string)($data['contactsUid'] ?? ''));
-			// The ids filter is OpenRegister's; a record it did not ask for is never named.
+		foreach ($results as $entry) {
+			[$uuid, $contactsUid] = self::uuidAndContactsUid(data: self::objectData(entry: $entry));
 			if ($contactsUid !== '' && in_array($uuid, $ids, true) === true) {
 				$uids[$uuid] = $contactsUid;
 			}
 		}
 
 		return $uids;
-	}//end contactsUidsOf()
+	}//end requestedUids()
+
+	/**
+	 * A contact person record's uuid, lower case, and its trimmed contactsUid.
+	 *
+	 * @param array<string, mixed> $data The record.
+	 *
+	 * @return array{0: string, 1: string}
+	 */
+	private static function uuidAndContactsUid(array $data): array {
+		return [
+			strtolower((string)($data['id'] ?? ($data['@self']['id'] ?? ''))),
+			trim((string)($data['contactsUid'] ?? '')),
+		];
+	}//end uuidAndContactsUid()
 
 	/**
 	 * The data of one search result, an entity or an array.

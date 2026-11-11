@@ -19,6 +19,61 @@ async function fetchJson(url, options) {
 }
 
 /**
+ * What an email test says: on success, on a refusal (before the reason), in
+ * the console and on a failed request (before the error).
+ */
+const EMAIL_TEST_TEXTS = Object.freeze({
+	connection: Object.freeze({
+		ok: 'Email connection test successful',
+		refused: 'Email connection test failed: ',
+		logged: 'Connection test failed:',
+		failed: 'Connection test failed: ',
+	}),
+	send: Object.freeze({
+		ok: 'Test email sent successfully',
+		refused: 'Failed to send test email: ',
+		logged: 'Failed to send test email:',
+		failed: 'Failed to send test email: ',
+	}),
+})
+
+/**
+ * Ask the email endpoint for a test and show its outcome.
+ *
+ * @param {object} body The test request: its type, settings and, to send, the address.
+ * @param {object} texts What the test says (EMAIL_TEST_TEXTS).
+ * @return {Promise<object>} The result, or `{success: false, message}` when the request failed.
+ */
+async function runEmailTest(body, texts) {
+	try {
+		const result = await fetchJson('/index.php/apps/stackiq/api/email/test', {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json',
+				'X-Requested-With': 'XMLHttpRequest',
+			},
+			body: JSON.stringify(body),
+		})
+
+		if (result.success) {
+			showSuccess(texts.ok)
+		} else {
+			showError(texts.refused + (result.message || 'Unknown error'))
+		}
+
+		return result
+	} catch (error) {
+		console.error(texts.logged, error)
+		const errorResult = {
+			success: false,
+			message: texts.failed + error.message,
+		}
+		showError(errorResult.message)
+		return errorResult
+	}
+}
+
+/**
  * The schema choices a configuration holds, AMEF first, then voorzieningen.
  *
  * @type {Array<string>}
@@ -1822,41 +1877,13 @@ export const useSettingsStore = defineStore('settings', {
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async testEmailConnection() {
-			try {
-				const result = await fetchJson(
-					'/index.php/apps/stackiq/api/email/test',
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							'X-Requested-With': 'XMLHttpRequest',
-						},
-						body: JSON.stringify({
-							type: 'connection',
-							settings: this.emailSettings,
-						}),
-					},
-				)
-
-				if (result.success) {
-					showSuccess('Email connection test successful')
-				} else {
-					showError(
-						'Email connection test failed: '
-							+ (result.message || 'Unknown error'),
-					)
-				}
-
-				return result
-			} catch (error) {
-				console.error('Connection test failed:', error)
-				const errorResult = {
-					success: false,
-					message: 'Connection test failed: ' + error.message,
-				}
-				showError(errorResult.message)
-				return errorResult
-			}
+			return await runEmailTest(
+				{
+					type: 'connection',
+					settings: this.emailSettings,
+				},
+				EMAIL_TEST_TEXTS.connection,
+			)
 		},
 
 		/**
@@ -1867,43 +1894,14 @@ export const useSettingsStore = defineStore('settings', {
 		 * @spec openspec/specs/fe-stores/spec.md
 		 */
 		async sendTestEmail(testEmail = '') {
-			try {
-				const result = await fetchJson(
-					'/index.php/apps/stackiq/api/email/test',
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-							'X-Requested-With': 'XMLHttpRequest',
-						},
-						body: JSON.stringify({
-							type: 'send',
-							testEmail:
-								testEmail || this.emailSettings.testReceiverOverride,
-							settings: this.emailSettings,
-						}),
-					},
-				)
-
-				if (result.success) {
-					showSuccess('Test email sent successfully')
-				} else {
-					showError(
-						'Failed to send test email: '
-							+ (result.message || 'Unknown error'),
-					)
-				}
-
-				return result
-			} catch (error) {
-				console.error('Failed to send test email:', error)
-				const errorResult = {
-					success: false,
-					message: 'Failed to send test email: ' + error.message,
-				}
-				showError(errorResult.message)
-				return errorResult
-			}
+			return await runEmailTest(
+				{
+					type: 'send',
+					testEmail: testEmail || this.emailSettings.testReceiverOverride,
+					settings: this.emailSettings,
+				},
+				EMAIL_TEST_TEXTS.send,
+			)
 		},
 
 		/**

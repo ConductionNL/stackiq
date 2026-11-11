@@ -212,36 +212,69 @@ export default {
 			if (!this.isFormValid) {
 				return
 			}
+			await this.sendReview()
+		},
 
+		/**
+		 * Send the review in the form, with the loading flag up meanwhile.
+		 *
+		 * @return {Promise<void>}
+		 */
+		async sendReview() {
 			this.loading = true
 			this.error = ''
 			try {
-				const body = buildReviewSubmission(
-					this.formData.name,
-					this.selectedRating,
-					this.formData.longDescription,
-					this.subjectType,
-					this.subjectId,
-				)
+				const body = this.reviewSubmission()
 				await apiRequest('reviews', { method: 'POST', body })
-				showSuccess(
-					t(
-						'stackiq',
-						'Thank you — your review was submitted for moderation',
-					),
-				)
-				this.$emit('review-submitted')
-				this.closeModal()
+				this.confirmSubmitted()
 			} catch (submitError) {
-				this.error = submitError.message
-				showError(
-					t('stackiq', 'Could not submit your review')
-						+ ': '
-						+ submitError.message,
-				)
+				this.failSubmit(submitError)
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * The request body for the review in the form.
+		 *
+		 * @return {object} The review submission.
+		 */
+		reviewSubmission() {
+			return buildReviewSubmission(
+				this.formData.name,
+				this.selectedRating,
+				this.formData.longDescription,
+				this.subjectType,
+				this.subjectId,
+			)
+		},
+
+		/**
+		 * Thank the reviewer, tell the parent and close.
+		 *
+		 * @return {void}
+		 */
+		confirmSubmitted() {
+			showSuccess(
+				t('stackiq', 'Thank you — your review was submitted for moderation'),
+			)
+			this.$emit('review-submitted')
+			this.closeModal()
+		},
+
+		/**
+		 * Show why the review could not be submitted.
+		 *
+		 * @param {Error} submitError What went wrong.
+		 * @return {void}
+		 */
+		failSubmit(submitError) {
+			this.error = submitError.message
+			showError(
+				t('stackiq', 'Could not submit your review')
+					+ ': '
+					+ submitError.message,
+			)
 		},
 	},
 }

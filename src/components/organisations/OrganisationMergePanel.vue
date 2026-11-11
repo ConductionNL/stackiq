@@ -121,6 +121,16 @@ import MergeOrganisationConfirmDialog from '../../modals/object/MergeOrganisatio
 import { organisatieStore, settingsStore } from '../../store/store.js'
 
 /**
+ * Unwrap an OpenRegister object reply to the object itself.
+ *
+ * @param {object} data The reply body.
+ * @return {object} The object: the body itself when it carries `@self`, else its `object`, else the body.
+ */
+function sourceObject(data) {
+	return data && data['@self'] !== undefined ? data : data.object || data
+}
+
+/**
  * @class OrganisationMergePanel
  * @module Components/Organisations
  * @copyright 2026 Conduction B.V.
@@ -234,21 +244,7 @@ export default {
 				return
 			}
 			try {
-				const url = generateUrl(
-					'/apps/openregister/api/objects/{register}/{schema}/{id}',
-					{
-						register: this.register,
-						schema: this.schema,
-						id: String(this.objectId),
-					},
-				)
-				const { data } = await axios.get(url)
-				const obj =
-					data && data['@self'] !== undefined ? data : data.object || data
-				this.sourceName =
-					obj.name || obj.name || t('stackiq', 'Unknown organisation')
-				this.status = obj.status || ''
-				this.mergedInto = obj.mergedInto || ''
+				this.applySource(await this.fetchSource())
 			} catch (e) {
 				// Non-fatal — the panel still renders merge controls with an
 				// empty source name rather than failing the whole detail page.
@@ -256,6 +252,36 @@ export default {
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Fetch the source organisation object from OpenRegister.
+		 *
+		 * @return {Promise<object>} The organisation object, unwrapped from its envelope.
+		 */
+		async fetchSource() {
+			const url = generateUrl(
+				'/apps/openregister/api/objects/{register}/{schema}/{id}',
+				{
+					register: this.register,
+					schema: this.schema,
+					id: String(this.objectId),
+				},
+			)
+			const { data } = await axios.get(url)
+			return sourceObject(data)
+		},
+
+		/**
+		 * Copy the source organisation's name, status and merge target.
+		 *
+		 * @param {object} obj The organisation object.
+		 * @return {void}
+		 */
+		applySource(obj) {
+			this.sourceName = obj.name || t('stackiq', 'Unknown organisation')
+			this.status = obj.status || ''
+			this.mergedInto = obj.mergedInto || ''
 		},
 
 		/**

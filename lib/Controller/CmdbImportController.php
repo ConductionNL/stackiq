@@ -252,6 +252,52 @@ class CmdbImportController extends Controller {
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
 	 */
 	private function readOptions(string $path, string $fileName): array|JSONResponse {
+		$read = $this->missingRecordsOption();
+		if ($read instanceof JSONResponse === false) {
+			$read = $this->withWriteFlags(read: $read);
+		}
+
+		if ($read instanceof JSONResponse === false) {
+			$read = $this->withMunicipality(read: $read);
+		}
+
+		if ($read instanceof JSONResponse) {
+			return $read;
+		}
+
+		return ['path' => $path, 'options' => $this->importOptions(read: $read, fileName: $fileName)];
+	}//end readOptions()
+
+	/**
+	 * The import options from the checked fields, the operation id and the upload's base name.
+	 *
+	 * @param array<string, mixed> $read The checked fields.
+	 * @param string $fileName The upload's name as the client sent it.
+	 *
+	 * @return array<string, mixed>
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
+	 */
+	private function importOptions(array $read, string $fileName): array {
+		return [
+			'municipalityUuid' => $read['municipalityUuid'],
+			'municipalityName' => $read['municipalityName'],
+			'updateExisting' => $read['updateExisting'],
+			'publish' => $read['publish'],
+			'missingRecords' => $read['missingRecords'],
+			'operationId' => $this->request->getParam('operationId'),
+			'fileName' => basename(str_replace('\\', '/', $fileName)),
+		];
+	}//end importOptions()
+
+	/**
+	 * The missingRecords mode, which must be one the import supports.
+	 *
+	 * @return array{missingRecords: string}|JSONResponse The option, or the error.
+	 *
+	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
+	 */
+	private function missingRecordsOption(): array|JSONResponse {
 		$missingRecords = $this->stringParam(name: 'missingRecords', default: CmdbExportImportService::DEFAULT_MISSING_RECORDS);
 		if ($missingRecords === null) {
 			return $this->invalidField(field: 'missingRecords');
@@ -266,6 +312,19 @@ class CmdbImportController extends Controller {
 			);
 		}
 
+		return ['missingRecords' => $missingRecords];
+	}//end missingRecordsOption()
+
+	/**
+	 * The fields read so far with the updateExisting and publish flags; an unrecognised value is refused.
+	 *
+	 * @param array<string, mixed> $read The fields read so far.
+	 *
+	 * @return array<string, mixed>|JSONResponse The fields, or the error.
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
+	 */
+	private function withWriteFlags(array $read): array|JSONResponse {
 		// An unrecognised value is refused rather than read as true: true is the mode that overwrites.
 		$updateExisting = $this->booleanParam(name: 'updateExisting', default: true);
 		if ($updateExisting === null) {
@@ -278,35 +337,53 @@ class CmdbImportController extends Controller {
 			return $this->invalidField(field: 'publish', accepted: ['true', 'false']);
 		}
 
-		$municipalityUuid = $this->stringParam(name: 'municipalityUuid', default: '');
-		$municipalityName = $this->stringParam(name: 'municipalityName', default: '');
-		if ($municipalityUuid === null) {
-			return $this->invalidField(field: 'municipalityUuid');
+		return $read + ['updateExisting' => $updateExisting, 'publish' => $publish];
+	}//end withWriteFlags()
+
+	/**
+	 * The fields read so far with the municipality the export belongs to: its uuid or its name; one is required.
+	 *
+	 * @param array<string, mixed> $read The fields read so far.
+	 *
+	 * @return array<string, mixed>|JSONResponse The fields, or the error.
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
+	 */
+	private function withMunicipality(array $read): array|JSONResponse {
+		$municipalityUuid = $this->trimmedField(name: 'municipalityUuid');
+		if ($municipalityUuid instanceof JSONResponse) {
+			return $municipalityUuid;
 		}
 
-		if ($municipalityName === null) {
-			return $this->invalidField(field: 'municipalityName');
+		$municipalityName = $this->trimmedField(name: 'municipalityName');
+		if ($municipalityName instanceof JSONResponse) {
+			return $municipalityName;
 		}
 
-		$municipalityUuid = trim($municipalityUuid);
-		$municipalityName = trim($municipalityName);
 		if ($municipalityUuid === '' && $municipalityName === '') {
 			return $this->error(code: CmdbImportException::MUNICIPALITY_REQUIRED, status: Http::STATUS_UNPROCESSABLE_ENTITY);
 		}
 
-		return [
-			'path' => $path,
-			'options' => [
-				'municipalityUuid' => $municipalityUuid,
-				'municipalityName' => $municipalityName,
-				'updateExisting' => $updateExisting,
-				'publish' => $publish,
-				'missingRecords' => $missingRecords,
-				'operationId' => $this->request->getParam('operationId'),
-				'fileName' => basename(str_replace('\\', '/', $fileName)),
-			],
-		];
-	}//end readOptions()
+		return $read + ['municipalityUuid' => $municipalityUuid, 'municipalityName' => $municipalityName];
+	}//end withMunicipality()
+
+	/**
+	 * A text field, trimmed; empty when it was not sent.
+	 *
+	 * @param string $name The field.
+	 *
+	 * @return string|JSONResponse The value, or the error for a field that is not text.
+	 *
+	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
+	 */
+	private function trimmedField(string $name): string|JSONResponse {
+		$value = $this->stringParam(name: $name, default: '');
+		if ($value === null) {
+			return $this->invalidField(field: $name);
+		}
+
+		return trim($value);
+	}//end trimmedField()
 
 
 	/**
@@ -528,8 +605,8 @@ class CmdbImportController extends Controller {
 	 * @return array{tmpName: string, name: string, size: int, tooLarge: bool, serverError: int|null}|null
 	 */
 	private function uploadedFile(): ?array {
-		$file = $this->request->getUploadedFile(self::FILE_FIELD);
-		if (is_array($file) === false || $file === []) {
+		$file = $this->uploadEntry();
+		if ($file === null) {
 			return null;
 		}
 
@@ -539,6 +616,35 @@ class CmdbImportController extends Controller {
 			return null;
 		}
 
+		if ($error !== UPLOAD_ERR_OK) {
+			return $this->failedUpload(error: $error);
+		}
+
+		return $this->storedUpload(file: $file);
+	}//end uploadedFile()
+
+	/**
+	 * The upload entry of the export field, or null when none was sent.
+	 *
+	 * @return array<string, mixed>|null
+	 */
+	private function uploadEntry(): ?array {
+		$file = $this->request->getUploadedFile(self::FILE_FIELD);
+		if (is_array($file) === false || $file === []) {
+			return null;
+		}
+
+		return $file;
+	}//end uploadEntry()
+
+	/**
+	 * An upload PHP refused: too large, or a server-side error; null for any other error.
+	 *
+	 * @param int $error The PHP upload error.
+	 *
+	 * @return array{tmpName: string, name: string, size: int, tooLarge: bool, serverError: int|null}|null
+	 */
+	private function failedUpload(int $error): ?array {
 		if (in_array($error, [UPLOAD_ERR_INI_SIZE, UPLOAD_ERR_FORM_SIZE], true) === true) {
 			return ['tmpName' => '', 'name' => '', 'size' => 0, 'tooLarge' => true, 'serverError' => null];
 		}
@@ -547,8 +653,19 @@ class CmdbImportController extends Controller {
 			return ['tmpName' => '', 'name' => '', 'size' => 0, 'tooLarge' => false, 'serverError' => $error];
 		}
 
+		return null;
+	}//end failedUpload()
+
+	/**
+	 * An upload PHP stored, or null when it has no temporary file.
+	 *
+	 * @param array<string, mixed> $file The upload entry.
+	 *
+	 * @return array{tmpName: string, name: string, size: int, tooLarge: bool, serverError: int|null}|null
+	 */
+	private function storedUpload(array $file): ?array {
 		$tmpName = $file['tmp_name'] ?? '';
-		if ($error !== UPLOAD_ERR_OK || is_string($tmpName) === false || $tmpName === '') {
+		if (is_string($tmpName) === false || $tmpName === '') {
 			return null;
 		}
 
@@ -559,7 +676,7 @@ class CmdbImportController extends Controller {
 			'tooLarge' => false,
 			'serverError' => null,
 		];
-	}//end uploadedFile()
+	}//end storedUpload()
 
 	/**
 	 * The client's file name of an upload, or '' when it is not a single name.

@@ -100,6 +100,7 @@ class ContactpersonenControllerUpdateUserGroupsTest extends TestCase {
 			$this->logger,
 			objectService: $this->objectService,
 			organisationService: $this->createMock(OrganisationService::class),
+			organisationGuard: $this->createMock(\OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard::class),
 		);
 
 	}//end setUp()

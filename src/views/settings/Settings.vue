@@ -313,55 +313,129 @@ export default defineComponent({
 		initializeConfiguration() {
 			// Create empty configuration for each object type
 			this.settings.objectTypes.forEach((type) => {
-				const registerId =
-					this.settings.configuration[`${type}_register`] || ''
-				const schemaId = this.settings.configuration[`${type}_schema`] || ''
-
-				this.configuration = {
-					...this.configuration,
-					[type]: {
-						schema: null,
-					},
-				}
-
-				// If we have existing configuration, use it to set the selected register
-				if (registerId && !this.selectedRegister) {
-					const register = this.settings.availableRegisters.find(
-						(r) => r.id.toString() === registerId,
-					)
-					if (register) {
-						this.selectedRegister = {
-							label: register.title,
-							value: register.id.toString(),
-						}
-						this.updateSchemaOptions(register.id.toString())
-					}
-				}
-
-				// If we have a schema configured, set it
-				if (schemaId && this.selectedRegister) {
-					const register = this.settings.availableRegisters.find(
-						(r) => r.id.toString() === this.selectedRegister.value,
-					)
-					if (register && Array.isArray(register.schemas)) {
-						const schema = register.schemas.find(
-							(s) => s.id.toString() === schemaId,
-						)
-						if (schema) {
-							this.configuration = {
-								...this.configuration,
-								[type]: {
-									...this.configuration[type],
-									schema: {
-										label: schema.title,
-										value: schema.id.toString(),
-									},
-								},
-							}
-						}
-					}
-				}
+				this.initializeTypeConfiguration(type)
 			})
+		},
+
+		/**
+		 * Give an object type an empty configuration, then take its stored register and schema.
+		 *
+		 * @param {string} type The object type.
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		initializeTypeConfiguration(type) {
+			const registerId = this.storedConfigurationId(type, 'register')
+			const schemaId = this.storedConfigurationId(type, 'schema')
+			this.resetTypeConfiguration(type)
+
+			// If we have existing configuration, use it to set the selected register
+			if (registerId && !this.selectedRegister) {
+				this.selectConfiguredRegister(registerId)
+			}
+
+			// If we have a schema configured, set it
+			if (schemaId && this.selectedRegister) {
+				this.selectConfiguredSchema(type, schemaId)
+			}
+		},
+
+		/**
+		 * The stored register or schema id of an object type, or '' without one.
+		 *
+		 * @param {string} type The object type.
+		 * @param {string} key 'register' or 'schema'.
+		 * @return {string} The id.
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		storedConfigurationId(type, key) {
+			return this.settings.configuration[`${type}_${key}`] || ''
+		},
+
+		/**
+		 * Select a stored register, when it is available, and load its schema options.
+		 *
+		 * @param {string} registerId The stored register id.
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		selectConfiguredRegister(registerId) {
+			const register = this.settings.availableRegisters.find(
+				(r) => r.id.toString() === registerId,
+			)
+			if (!register) {
+				return
+			}
+
+			this.selectedRegister = {
+				label: register.title,
+				value: register.id.toString(),
+			}
+			this.updateSchemaOptions(register.id.toString())
+		},
+
+		/**
+		 * Select a type's stored schema, when the selected register lists it.
+		 *
+		 * @param {string} type The object type.
+		 * @param {string} schemaId The stored schema id.
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		selectConfiguredSchema(type, schemaId) {
+			const schema = this.selectedRegisterSchema(schemaId)
+			if (schema) {
+				this.setTypeSchema(type, {
+					label: schema.title,
+					value: schema.id.toString(),
+				})
+			}
+		},
+
+		/**
+		 * Replace an object type's configuration with an empty one.
+		 *
+		 * @param {string} type The object type.
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		resetTypeConfiguration(type) {
+			this.configuration = {
+				...this.configuration,
+				[type]: {
+					schema: null,
+				},
+			}
+		},
+
+		/**
+		 * Set the selected schema of an object type, keeping its other configuration.
+		 *
+		 * @param {string} type The object type.
+		 * @param {{label: string, value: string}} schema The schema option.
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		setTypeSchema(type, schema) {
+			this.configuration = {
+				...this.configuration,
+				[type]: {
+					...this.configuration[type],
+					schema,
+				},
+			}
+		},
+
+		/**
+		 * A schema of the selected register, when the register lists its schemas.
+		 *
+		 * @param {string} schemaId The schema id.
+		 * @return {object|undefined} The schema.
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		selectedRegisterSchema(schemaId) {
+			const register = this.settings.availableRegisters.find(
+				(r) => r.id.toString() === this.selectedRegister.value,
+			)
+			if (!register || !Array.isArray(register.schemas)) {
+				return undefined
+			}
+			return register.schemas.find((s) => s.id.toString() === schemaId)
 		},
 
 		/**

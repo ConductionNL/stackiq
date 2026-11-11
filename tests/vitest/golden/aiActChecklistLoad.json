@@ -1,0 +1,141 @@
+{
+	"no object id": {
+		"calls": [],
+		"loading": false,
+		"error": false,
+		"system": "unchanged",
+		"files": "unchanged"
+	},
+	"object wrapper": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/reg/ai/uuid-1"
+			],
+			[
+				"get",
+				"/apps/openregister/api/objects/reg/ai/uuid-1/files"
+			]
+		],
+		"loading": false,
+		"error": false,
+		"system": {
+			"name": "Chatbot",
+			"riskLevel": "high"
+		},
+		"files": [
+			{
+				"id": "f1"
+			}
+		]
+	},
+	"plain object": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/reg/ai/uuid-1"
+			],
+			[
+				"get",
+				"/apps/openregister/api/objects/reg/ai/uuid-1/files"
+			]
+		],
+		"loading": false,
+		"error": false,
+		"system": {
+			"name": "Chatbot",
+			"riskLevel": "high"
+		},
+		"files": []
+	},
+	"empty object wrapper": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/reg/ai/uuid-1"
+			],
+			[
+				"get",
+				"/apps/openregister/api/objects/reg/ai/uuid-1/files"
+			]
+		],
+		"loading": false,
+		"error": false,
+		"system": {
+			"object": null,
+			"name": "outer"
+		},
+		"files": []
+	},
+	"null replies": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/reg/ai/uuid-1"
+			],
+			[
+				"get",
+				"/apps/openregister/api/objects/reg/ai/uuid-1/files"
+			]
+		],
+		"loading": false,
+		"error": false,
+		"system": {},
+		"files": []
+	},
+	"numeric id": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/reg/ai/9"
+			],
+			[
+				"get",
+				"/apps/openregister/api/objects/reg/ai/9/files"
+			]
+		],
+		"loading": false,
+		"error": false,
+		"system": {
+			"name": "Chatbot",
+			"riskLevel": "high"
+		},
+		"files": [
+			{
+				"id": "f2"
+			}
+		]
+	},
+	"object request fails": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/reg/ai/uuid-1"
+			],
+			[
+				"get",
+				"/apps/openregister/api/objects/reg/ai/uuid-1/files"
+			]
+		],
+		"loading": false,
+		"error": true,
+		"system": "unchanged",
+		"files": "unchanged"
+	},
+	"files request fails": {
+		"calls": [
+			[
+				"get",
+				"/apps/openregister/api/objects/reg/ai/uuid-1"
+			],
+			[
+				"get",
+				"/apps/openregister/api/objects/reg/ai/uuid-1/files"
+			]
+		],
+		"loading": false,
+		"error": true,
+		"system": "unchanged",
+		"files": "unchanged"
+	}
+}

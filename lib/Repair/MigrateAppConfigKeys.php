@@ -115,69 +115,102 @@ class MigrateAppConfigKeys implements IRepairStep {
 	 */
 	public function run(IOutput $output): void {
 		try {
-			// Exhaustive enumeration. getKeys() lists every key stored under the
-			// old app id regardless of value — the alternative shapes
-			// (searchValues, getUsersForUserValue) all match on a VALUE, so over
-			// an open value set they migrate nothing and report success.
-			$keys = $this->appConfig->getKeys(self::LEGACY_APP_ID);
-
-			// Values come from getAllValues() rather than the typed getters
-			// because it returns each row in its STORED type without asserting
-			// one. getValueString() on a key stored as MIXED or INT raises
-			// AppConfigTypeConflictException, which would abort the whole copy
-			// on the first typed key it met.
-			$values = $this->appConfig->getAllValues(self::LEGACY_APP_ID);
-
-			$copied = 0;
-			$skipped = 0;
-
-			foreach ($keys as $key) {
-				if (in_array($key, self::RESERVED_KEYS, true) === true) {
-					$skipped++;
-					continue;
-				}
-
-				// Never clobber a value the new namespace already holds — either
-				// a previous run copied it, or an admin has since changed it.
-				if ($this->appConfig->hasKey(AppIdentity::APP_ID, $key) === true) {
-					$skipped++;
-					continue;
-				}
-
-				if (array_key_exists($key, $values) === false) {
-					$skipped++;
-					continue;
-				}
-
-				if ($this->copyValue(key: $key, value: $values[$key]) === true) {
-					$copied++;
-					continue;
-				}
-
-				$skipped++;
-			}
-
-			$output->info(
-				sprintf(
-					'Stackiq: migrated %d app config key(s) from "%s" (skipped %d)',
-					$copied,
-					self::LEGACY_APP_ID,
-					$skipped
-				)
-			);
+			$this->reportCopied(output: $output, counts: $this->copyLegacyKeys());
 		} catch (Throwable $e) {
 			// Swallowed deliberately — see the docblock. Logged at error level so
 			// the reverted-settings symptom has a cause to find.
-			$this->logger->error(
-				'Stackiq: failed to migrate app config from the legacy app id: ' . $e->getMessage(),
-				[
-					'app' => AppIdentity::APP_ID,
-					'exception' => $e,
-				]
-			);
-			$output->warning('Stackiq: app config migration failed; see the log. Settings may have reverted to defaults.');
-		}//end try
+			$this->reportFailure(output: $output, exception: $e);
+		}
 	}//end run()
+
+	/**
+	 * Report how many keys were copied and skipped.
+	 *
+	 * @param IOutput             $output The output interface for progress reporting.
+	 * @param array{0: int, 1: int} $counts The number of keys copied and skipped.
+	 *
+	 * @return void
+	 */
+	private function reportCopied(IOutput $output, array $counts): void {
+		$output->info(
+			sprintf(
+				'Stackiq: migrated %d app config key(s) from "%s" (skipped %d)',
+				$counts[0],
+				self::LEGACY_APP_ID,
+				$counts[1]
+			)
+		);
+	}//end reportCopied()
+
+	/**
+	 * Log and report a migration that failed.
+	 *
+	 * @param IOutput   $output    The output interface for progress reporting.
+	 * @param Throwable $exception What went wrong.
+	 *
+	 * @return void
+	 */
+	private function reportFailure(IOutput $output, Throwable $exception): void {
+		$this->logger->error(
+			'Stackiq: failed to migrate app config from the legacy app id: ' . $exception->getMessage(),
+			[
+				'app' => AppIdentity::APP_ID,
+				'exception' => $exception,
+			]
+		);
+		$output->warning('Stackiq: app config migration failed; see the log. Settings may have reverted to defaults.');
+	}//end reportFailure()
+
+	/**
+	 * Copy every eligible legacy key and count what was copied and skipped.
+	 *
+	 * @return array{0: int, 1: int} The number of keys copied and skipped.
+	 */
+	private function copyLegacyKeys(): array {
+		// Exhaustive enumeration. getKeys() lists every key stored under the
+		// old app id regardless of value — the alternative shapes
+		// (searchValues, getUsersForUserValue) all match on a VALUE, so over
+		// an open value set they migrate nothing and report success.
+		$keys = $this->appConfig->getKeys(self::LEGACY_APP_ID);
+
+		// Values come from getAllValues() rather than the typed getters
+		// because it returns each row in its STORED type without asserting
+		// one. getValueString() on a key stored as MIXED or INT raises
+		// AppConfigTypeConflictException, which would abort the whole copy
+		// on the first typed key it met.
+		$values = $this->appConfig->getAllValues(self::LEGACY_APP_ID);
+
+		$copied = 0;
+		foreach ($keys as $key) {
+			if ($this->copyKey(key: $key, values: $values) === true) {
+				$copied++;
+			}
+		}
+
+		return [$copied, (count($keys) - $copied)];
+	}//end copyLegacyKeys()
+
+	/**
+	 * Copy one legacy key unless it is reserved, already held or absent.
+	 *
+	 * @param string              $key    The config key.
+	 * @param array<string,mixed> $values Every legacy value, in its stored type.
+	 *
+	 * @return bool True when a value was written.
+	 */
+	private function copyKey(string $key, array $values): bool {
+		if (in_array($key, self::RESERVED_KEYS, true) === true) {
+			return false;
+		}
+
+		// Never clobber a value the new namespace already holds — either
+		// a previous run copied it, or an admin has since changed it.
+		if ($this->appConfig->hasKey(AppIdentity::APP_ID, $key) === true) {
+			return false;
+		}
+
+		return array_key_exists($key, $values) === true && $this->copyValue(key: $key, value: $values[$key]) === true;
+	}//end copyKey()
 
 	/**
 	 * Write one legacy value into the new namespace in its own type.

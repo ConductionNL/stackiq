@@ -492,71 +492,130 @@ export default {
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async loadUserInfoAndGroups() {
-			// Prevent multiple simultaneous calls
-			if (this.userStatusRefreshInProgress) {
-				console.info('User info loading already in progress, skipping...')
-				return
-			}
-
-			// Prevent multiple calls per session
-			if (this.userInfoLoaded) {
-				console.info('User info already loaded in this session, skipping...')
-				return
-			}
-
-			if (!this.organisationData || !this.organisationData.contactpersonen) {
-				console.info('No organisation data available for user info loading')
+			if (this.skipsUserInfoLoading()) {
 				return
 			}
 
 			this.userStatusRefreshInProgress = true
 
 			try {
-				console.info(
-					'Starting SINGLE parallel loading of user info and available groups',
-				)
-
-				// Get all contact person IDs, filter out empty ones
-				const contactpersoonIds = this.organisationData.contactpersonen
-					.map((cp) => cp.id || cp.uuid)
-					.filter((id) => id && id.trim() !== '')
-
-				console.info(
-					'Loading user info for contactpersons:',
-					contactpersoonIds.length,
-				)
-				console.info('Contactpersoon IDs:', contactpersoonIds)
-
-				// Load available groups and bulk user info in parallel - but only once
-				const promises = [this.organisatieStore.fetchAvailableGroups()]
-
-				// Only add bulk user info request if we have contactpersonen
-				if (contactpersoonIds.length > 0) {
-					promises.push(
-						this.organisatieStore.getBulkUserInfo(contactpersoonIds),
-					)
-				} else {
-					promises.push(Promise.resolve({}))
-				}
-
-				const [availableGroups, bulkUserInfo] = await Promise.all(promises)
-
-				console.info('Received bulk user info:', bulkUserInfo)
-
-				// Update contactpersonen with user info
-				if (bulkUserInfo && Object.keys(bulkUserInfo).length > 0) {
-					this.updateContactpersonenWithUserInfo(bulkUserInfo)
-				}
-
-				console.info(
-					'Completed SINGLE parallel loading of user info and available groups',
-				)
-				this.userInfoLoaded = true
+				await this.fetchUserInfoAndGroups()
 			} catch (error) {
 				console.error('Error loading user info and groups:', error)
 			} finally {
 				this.userStatusRefreshInProgress = false
 			}
+		},
+
+		/**
+		 * Whether to skip loading: it is running, it ran this session, or there are no contact persons.
+		 *
+		 * @return {boolean} Whether to skip.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		skipsUserInfoLoading() {
+			// Prevent multiple simultaneous calls
+			if (this.userStatusRefreshInProgress) {
+				console.info('User info loading already in progress, skipping...')
+				return true
+			}
+
+			// Prevent multiple calls per session
+			if (this.userInfoLoaded) {
+				console.info('User info already loaded in this session, skipping...')
+				return true
+			}
+
+			if (!this.organisationData || !this.organisationData.contactpersonen) {
+				console.info('No organisation data available for user info loading')
+				return true
+			}
+
+			return false
+		},
+
+		/**
+		 * Load the available groups and the contact persons' user info in parallel, once, and apply the info.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		async fetchUserInfoAndGroups() {
+			console.info(
+				'Starting SINGLE parallel loading of user info and available groups',
+			)
+
+			const contactpersoonIds = this.contactpersoonIds()
+			this.logContactpersoonIds(contactpersoonIds)
+
+			// Load available groups and bulk user info in parallel - but only once
+			const [, bulkUserInfo] = await Promise.all([
+				this.organisatieStore.fetchAvailableGroups(),
+				this.bulkUserInfoFor(contactpersoonIds),
+			])
+
+			this.applyBulkUserInfo(bulkUserInfo)
+			this.userInfoLoaded = true
+		},
+
+		/**
+		 * Log the contact persons whose user info is loaded.
+		 *
+		 * @param {Array<string>} contactpersoonIds The contact person ids.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		logContactpersoonIds(contactpersoonIds) {
+			console.info(
+				'Loading user info for contactpersons:',
+				contactpersoonIds.length,
+			)
+			console.info('Contactpersoon IDs:', contactpersoonIds)
+		},
+
+		/**
+		 * Update the contact persons with the bulk user info, when there is any.
+		 *
+		 * @param {object|null} bulkUserInfo The user info keyed by contact person id.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		applyBulkUserInfo(bulkUserInfo) {
+			console.info('Received bulk user info:', bulkUserInfo)
+
+			// Update contactpersonen with user info
+			if (bulkUserInfo && Object.keys(bulkUserInfo).length > 0) {
+				this.updateContactpersonenWithUserInfo(bulkUserInfo)
+			}
+
+			console.info(
+				'Completed SINGLE parallel loading of user info and available groups',
+			)
+		},
+
+		/**
+		 * The ids of the organisation's contact persons, without empty ones.
+		 *
+		 * @return {Array<string>} The ids.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		contactpersoonIds() {
+			return this.organisationData.contactpersonen
+				.map((cp) => cp.id || cp.uuid)
+				.filter((id) => id && id.trim() !== '')
+		},
+
+		/**
+		 * The bulk user info of contact persons; none to ask for without ids.
+		 *
+		 * @param {Array<string>} contactpersoonIds The contact person ids.
+		 * @return {Promise<object>} The user info keyed by contact person id.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		bulkUserInfoFor(contactpersoonIds) {
+			// Only add bulk user info request if we have contactpersonen
+			if (contactpersoonIds.length > 0) {
+				return this.organisatieStore.getBulkUserInfo(contactpersoonIds)
+			}
+			return Promise.resolve({})
 		},
 
 		/**
