@@ -395,6 +395,46 @@ import {
  *
  * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
  */
+/**
+ * The non-empty texts of a list; anything that is not a list gives none.
+ *
+ * @param {unknown} values The list
+ * @return {string[]} The texts
+ */
+function textList(values) {
+	return (Array.isArray(values) ? values : [])
+		.map(String)
+		.filter((value) => value !== '')
+}
+
+/**
+ * The names of the sheets an import profile reads.
+ *
+ * @param {unknown} sheets The profile's sheets, as names or `{name}` objects
+ * @return {string[]} The non-empty names
+ */
+function sheetNames(sheets) {
+	return (Array.isArray(sheets) ? sheets : [])
+		.map((sheet) => String(sheet?.name ?? sheet ?? ''))
+		.filter((name) => name !== '')
+}
+
+/**
+ * The values of each fact about an import profile, by fact key.
+ *
+ * @param {object} profile The import profile
+ * @return {{[key: string]: string[]}} The values per fact
+ */
+function profileFactValues(profile) {
+	return {
+		sheets: sheetNames(profile.sheets),
+		keyColumn: textList([profile.keyColumn ?? '']),
+		nameColumn: textList([profile.nameColumn ?? '']),
+		requiredColumns: textList(profile.requiredColumns),
+		dateColumns: textList(profile.dateColumns),
+	}
+}
+
 export default {
 	name: 'CmdbImportMapping',
 
@@ -430,42 +470,19 @@ export default {
 		 * @spec openspec/changes/cmdb-import-mapping-view/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-show-the-mapping-the-import-uses-req-cmdb-020
 		 */
 		profileFacts() {
-			const profile = this.mapping?.profile || {}
-			const list = (values) =>
-				(Array.isArray(values) ? values : [])
-					.map(String)
-					.filter((value) => value !== '')
-			const one = (value) => list([value ?? ''])
-			const sheets = (Array.isArray(profile.sheets) ? profile.sheets : [])
-				.map((sheet) => String(sheet?.name ?? sheet ?? ''))
-				.filter((name) => name !== '')
-			return [
-				{
-					key: 'sheets',
-					label: t('stackiq', 'Sheets read'),
-					values: sheets,
-				},
-				{
-					key: 'keyColumn',
-					label: t('stackiq', 'Match column'),
-					values: one(profile.keyColumn),
-				},
-				{
-					key: 'nameColumn',
-					label: t('stackiq', 'Name column'),
-					values: one(profile.nameColumn),
-				},
-				{
-					key: 'requiredColumns',
-					label: t('stackiq', 'Required columns'),
-					values: list(profile.requiredColumns),
-				},
-				{
-					key: 'dateColumns',
-					label: t('stackiq', 'Date columns'),
-					values: list(profile.dateColumns),
-				},
-			]
+			const labels = {
+				sheets: t('stackiq', 'Sheets read'),
+				keyColumn: t('stackiq', 'Match column'),
+				nameColumn: t('stackiq', 'Name column'),
+				requiredColumns: t('stackiq', 'Required columns'),
+				dateColumns: t('stackiq', 'Date columns'),
+			}
+			const values = profileFactValues(this.mapping?.profile || {})
+			return Object.entries(labels).map(([key, label]) => ({
+				key,
+				label,
+				values: values[key],
+			}))
 		},
 
 		/**
