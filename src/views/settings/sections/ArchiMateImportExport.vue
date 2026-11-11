@@ -706,6 +706,11 @@ import {
 	startProgressPolling,
 } from '../../../utils/archiMateImportProgress.js'
 import { withHeartbeat } from '../../../utils/heartbeat.js'
+import {
+	fetchOrganizationOptions,
+	missingConfigItems,
+	organisationSource,
+} from './archiMateConfig.js'
 
 // The file name in a Content-Disposition header, quoted or not. The double
 // quote is written as \x22 because lizard reads a lone one as a string start.
@@ -1324,53 +1329,7 @@ export default {
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		getMissingConfigItems(errorMessage) {
-			if (!errorMessage) return []
-
-			// Handle new error format from updated validation
-			if (errorMessage.includes('is not configured')) {
-				const schemaMatch = errorMessage.match(
-					/Schema ID for (\w+) '([^']+)' is not configured/,
-				)
-				if (schemaMatch) {
-					return [
-						`${schemaMatch[2]} schema ID (for ${schemaMatch[1]} objects)`,
-					]
-				}
-
-				// Check for register ID configuration error
-				if (errorMessage.includes('register ID is not configured')) {
-					return ['AMEF Register ID']
-				}
-
-				return ['AMEF schema configuration']
-			}
-
-			// Handle legacy error format
-			const lines = errorMessage.split('\n')
-			const missingItems = []
-			let inMissingSection = false
-
-			for (const line of lines) {
-				if (line.includes('Missing configuration:')) {
-					inMissingSection = true
-					continue
-				}
-
-				if (inMissingSection && line.trim().startsWith('-')) {
-					// Clean up the item text
-					const item = line.replace(/^-\s*/, '').trim()
-					missingItems.push(item)
-				} else if (
-					inMissingSection
-					&& !line.trim().startsWith('-')
-					&& line.trim() !== ''
-				) {
-					// End of missing items list
-					break
-				}
-			}
-
-			return missingItems
+			return missingConfigItems(errorMessage)
 		},
 
 		/**
@@ -1382,79 +1341,55 @@ export default {
 		 */
 		async loadOrganizations() {
 			try {
-				const response = await fetch(
-					'/index.php/apps/stackiq/api/voorzieningen/config',
-					{
-						headers: {
-							'OCS-APIREQUEST': 'true',
-							requesttoken: OC.requestToken,
-						},
-					},
-				)
-				if (!response.ok) throw new Error('Failed to load config')
-				const data = await response.json()
-
-				// Get voorzieningen register and organisatie schema from config
-				const voorzRegister = data?.config?.register
-				const orgSchema = data?.config?.organisatie_schema
-				if (!voorzRegister || !orgSchema) {
-					console.debug(
-						'Voorzieningen config not available, using default Generic option',
-					)
-					return
-				}
-
-				// Load organizations from OpenRegister.
-				//
-				// ⚠️ This used to request `_fields=id,naam` and then
-				// `.filter(org => org.name || org.name)`. `naam` was DROPPED from the
-				// organisatie schema when contact/organisation identity moved to the
-				// Nextcloud addressbook — the schema is now a relationship record
-				// (contactsUid / type / status / …) and its `objectNameField` is
-				// `contactsUid`. So every row came back without a `naam`, the filter
-				// discarded all of them, and `organizationOptions` stayed empty: the
-				// Organization select offered nothing but the built-in "Generic"
-				// placeholder and the whole per-organisation export was unreachable.
-				//
-				// Nothing errored — the fetch succeeded, the array was simply empty —
-				// which is why this survived unnoticed. Found by the e2e suite the
-				// first time it ran against a FRESH install carrying the current
-				// register (an older instance still had the pre-migration table).
-				//
-				// Fixed by asking for whole objects and labelling by the object's own
-				// name (`@self.name`, which OpenRegister derives from the schema's
-				// configured objectNameField), with the legacy identity fields kept as
-				// fallbacks so an instance that has not yet been re-imported still
-				// renders its organisations.
-				const orgResponse = await fetch(
-					`/index.php/apps/openregister/api/objects/${voorzRegister}/${orgSchema}?_limit=5000`,
-					{
-						headers: {
-							'OCS-APIREQUEST': 'true',
-							requesttoken: OC.requestToken,
-						},
-					},
-				)
-				if (!orgResponse.ok) throw new Error('Failed to load organizations')
-				const orgData = await orgResponse.json()
-
-				const orgs = orgData?.results || orgData || []
-				if (Array.isArray(orgs) && orgs.length > 0) {
-					this.organizationOptions = orgs
-						.map((org) => ({
-							label:
-								org['@self']?.name
-								|| org.name
-								|| org.name
-								|| org.contactsUid
-								|| '',
-							value: org.id || org['@self']?.id,
-						}))
-						.filter((option) => option.label !== '' && option.value)
-						.sort((a, b) => a.label.localeCompare(b.label))
-				}
+				await this.loadOrganizationOptions()
 			} catch (error) {
 				console.warn('Could not load organizations:', error.message)
+			}
+		},
+
+		/**
+		 * Replace the organization options with the organisations of the
+		 * voorzieningen register, when it is configured and lists any.
+		 *
+		 * @async
+		 * @return {Promise<void>}
+		 * @throws {Error} When the config or the organisations cannot be loaded.
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		async loadOrganizationOptions() {
+			const source = await organisationSource()
+			if (!source) {
+				console.debug(
+					'Voorzieningen config not available, using default Generic option',
+				)
+				return
+			}
+
+			// Load organizations from OpenRegister.
+			//
+			// ⚠️ This used to request `_fields=id,naam` and then
+			// `.filter(org => org.name || org.name)`. `naam` was DROPPED from the
+			// organisatie schema when contact/organisation identity moved to the
+			// Nextcloud addressbook — the schema is now a relationship record
+			// (contactsUid / type / status / …) and its `objectNameField` is
+			// `contactsUid`. So every row came back without a `naam`, the filter
+			// discarded all of them, and `organizationOptions` stayed empty: the
+			// Organization select offered nothing but the built-in "Generic"
+			// placeholder and the whole per-organisation export was unreachable.
+			//
+			// Nothing errored — the fetch succeeded, the array was simply empty —
+			// which is why this survived unnoticed. Found by the e2e suite the
+			// first time it ran against a FRESH install carrying the current
+			// register (an older instance still had the pre-migration table).
+			//
+			// Fixed by asking for whole objects and labelling by the object's own
+			// name (`@self.name`, which OpenRegister derives from the schema's
+			// configured objectNameField), with the legacy identity fields kept as
+			// fallbacks so an instance that has not yet been re-imported still
+			// renders its organisations.
+			const options = await fetchOrganizationOptions(source)
+			if (options) {
+				this.organizationOptions = options
 			}
 		},
 	},

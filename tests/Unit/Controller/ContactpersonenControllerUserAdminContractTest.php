@@ -122,6 +122,7 @@ class ContactpersonenControllerUserAdminContractTest extends TestCase {
 			$this->createMock(LoggerInterface::class),
 			objectService: $this->objectService,
 			organisationService: $this->createMock(OrganisationService::class),
+			organisationGuard: $this->createMock(\OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard::class),
 		);
 
 	}//end makeController()

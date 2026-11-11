@@ -1500,28 +1500,50 @@ export function packTargetLabel(target) {
  */
 export function packFieldRows(pack) {
 	const mappings = Array.isArray(pack?.fieldMappings) ? pack.fieldMappings : []
-	return mappings.map((mapping) => {
-		const transform = mapping?.transform
-		let text = ''
-		if (typeof transform === 'string') {
-			text = transform
-		} else if (transform && typeof transform === 'object') {
-			text = String(transform.type ?? '')
-			if (
-				text === 'lookup'
-				&& transform.map
-				&& typeof transform.map === 'object'
-			) {
-				text += ' (' + Object.keys(transform.map).length + ')'
-			}
-		}
-		return {
-			source: String(mapping?.source ?? ''),
-			target: String(mapping?.target ?? ''),
-			required: mapping?.required === true,
-			transform: text,
-		}
-	})
+	return mappings.map((mapping) => ({
+		source: String(mapping?.source ?? ''),
+		target: String(mapping?.target ?? ''),
+		required: mapping?.required === true,
+		transform: transformText(mapping?.transform),
+	}))
+}
+
+/**
+ * What a mapping's transform does, as text: a string transform as is, a
+ * typed one by its type, a lookup also with the size of its map.
+ *
+ * @param {string|object|undefined} transform The mapping's transform
+ * @return {string} The transform's text, empty when it has none
+ */
+function transformText(transform) {
+	if (typeof transform === 'string') {
+		return transform
+	}
+	if (!transform || typeof transform !== 'object') {
+		return ''
+	}
+	return typedTransformText(transform)
+}
+
+/**
+ * The text of a typed transform: its type, a lookup also with its map's size.
+ *
+ * @param {object} transform The mapping's transform
+ * @return {string} The transform's text
+ */
+function typedTransformText(transform) {
+	const text = String(transform.type ?? '')
+	return text === 'lookup' ? text + lookupSize(transform.map) : text
+}
+
+/**
+ * The size suffix of a lookup transform's map.
+ *
+ * @param {object|undefined} map The lookup's map
+ * @return {string} ` (n)` for a map of n entries, empty when there is no map
+ */
+function lookupSize(map) {
+	return map && typeof map === 'object' ? ' (' + Object.keys(map).length + ')' : ''
 }
 
 /**

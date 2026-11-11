@@ -268,34 +268,61 @@ class SbomParserService {
 	private function extractVexPairs(array $vulnerabilities): array {
 		$pairs = [];
 		foreach ($vulnerabilities as $vulnerability) {
-			if (is_array($vulnerability) === false) {
+			$cveId = self::vexCveId(vulnerability: $vulnerability);
+			if ($cveId === '') {
 				continue;
 			}
 
-			$cveId = $vulnerability['id'] ?? null;
-			if (is_string($cveId) === false || $cveId === '') {
-				continue;
+			foreach (self::vexRefs(affects: ($vulnerability['affects'] ?? [])) as $ref) {
+				$pairs[] = ['cveId' => $cveId, 'componentBomRef' => $ref];
 			}
-
-			foreach (($vulnerability['affects'] ?? []) as $affects) {
-				if (is_array($affects) === false) {
-					continue;
-				}
-
-				$ref = $affects['ref'] ?? null;
-				if (is_string($ref) === false || $ref === '') {
-					continue;
-				}
-
-				$pairs[] = [
-					'cveId' => $cveId,
-					'componentBomRef' => $ref,
-				];
-			}
-		}//end foreach
+		}
 
 		return $pairs;
 	}//end extractVexPairs()
+
+	/**
+	 * The CVE id of one VEX entry, or '' when the entry has none.
+	 *
+	 * @param mixed $vulnerability One raw `vulnerabilities[]` entry.
+	 *
+	 * @return string The id.
+	 */
+	private static function vexCveId(mixed $vulnerability): string {
+		if (is_array($vulnerability) === false) {
+			return '';
+		}
+
+		$cveId = $vulnerability['id'] ?? null;
+		if (is_string($cveId) === false) {
+			return '';
+		}
+
+		return $cveId;
+	}//end vexCveId()
+
+	/**
+	 * The component refs one VEX entry affects, skipping malformed ones.
+	 *
+	 * @param mixed $affects The raw `affects[]` of one entry.
+	 *
+	 * @return array<int, string> The non-empty refs, in order.
+	 */
+	private static function vexRefs(mixed $affects): array {
+		$refs = [];
+		foreach ($affects as $entry) {
+			$ref = null;
+			if (is_array($entry) === true) {
+				$ref = ($entry['ref'] ?? null);
+			}
+
+			if (is_string($ref) === true && $ref !== '') {
+				$refs[] = $ref;
+			}
+		}
+
+		return $refs;
+	}//end vexRefs()
 
 	/**
 	 * Render an arbitrary value for an error message.

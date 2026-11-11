@@ -51,6 +51,7 @@ use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
+use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -211,45 +212,96 @@ class OrganisationMembersController extends Controller {
 		}
 
 		if ($this->groupManager->isInGroup($user->getUID(), self::BEHEERDER_GROUP) === false) {
-			$this->logger->warning(
-				'[OrganisationMembersController] Access refused (not a beheerder)',
-				['uid' => $user->getUID(), 'organisationUuid' => $organisationUuid]
-			);
-			return new JSONResponse(
-				data: ['error' => 'Only a beheerder of this organisation may grant or revoke access'],
-				statusCode: Http::STATUS_FORBIDDEN
-			);
+			return $this->refuseMaintainer(reason: 'not a beheerder', context: ['uid' => $user->getUID(), 'organisationUuid' => $organisationUuid]);
 		}
 
+		return $this->membershipRefusal(user: $user, organisationUuid: $organisationUuid);
+	}//end authorizeMaintainer()
+
+	/**
+	 * Refuse a beheerder whose own organisations do not include the target.
+	 *
+	 * @param IUser  $user             The authenticated beheerder.
+	 * @param string $organisationUuid The organisation the caller is trying to manage.
+	 *
+	 * @return JSONResponse|null Error response, or null when the caller belongs to the organisation.
+	 */
+	private function membershipRefusal(IUser $user, string $organisationUuid): ?JSONResponse {
+		$callerOrganisations = $this->callerOrganisations(user: $user);
+		if ($callerOrganisations === null) {
+			return self::forbidden(error: 'Unable to verify organisation membership');
+		}
+
+		if (self::includesOrganisation(organisations: $callerOrganisations, organisationUuid: $organisationUuid) === true) {
+			return null;
+		}
+
+		return $this->refuseMaintainer(
+			reason: 'beheerder of a different organisation',
+			context: ['uid' => $user->getUID(), 'organisationUuid' => $organisationUuid]
+		);
+	}//end membershipRefusal()
+
+	/**
+	 * The caller's own organisation memberships, or null when they cannot be resolved.
+	 *
+	 * @param IUser $user The authenticated beheerder.
+	 *
+	 * @return iterable<object>|null The organisations, from OpenRegister's session-scoped lookup.
+	 */
+	private function callerOrganisations(IUser $user): ?iterable {
 		try {
-			$organisationService = $this->getOrganisationService();
-			$callerOrganisations = $organisationService->getUserOrganisations();
+			return $this->getOrganisationService()->getUserOrganisations();
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'[OrganisationMembersController] Failed to resolve caller organisations',
 				['uid' => $user->getUID(), 'error' => $e->getMessage()]
 			);
-			return new JSONResponse(
-				data: ['error' => 'Unable to verify organisation membership'],
-				statusCode: Http::STATUS_FORBIDDEN
-			);
+			return null;
 		}
+	}//end callerOrganisations()
 
-		foreach ($callerOrganisations as $organisation) {
+	/**
+	 * Whether a list of organisations includes the one with the given uuid.
+	 *
+	 * @param iterable<object> $organisations    The caller's organisations.
+	 * @param string           $organisationUuid The organisation uuid.
+	 *
+	 * @return bool True when one of them has exactly that uuid.
+	 */
+	private static function includesOrganisation(iterable $organisations, string $organisationUuid): bool {
+		foreach ($organisations as $organisation) {
 			if ($organisation->getUuid() === $organisationUuid) {
-				return null;
+				return true;
 			}
 		}
 
-		$this->logger->warning(
-			'[OrganisationMembersController] Access refused (beheerder of a different organisation)',
-			['uid' => $user->getUID(), 'organisationUuid' => $organisationUuid]
-		);
-		return new JSONResponse(
-			data: ['error' => 'Only a beheerder of this organisation may grant or revoke access'],
-			statusCode: Http::STATUS_FORBIDDEN
-		);
-	}//end authorizeBeheerder()
+		return false;
+	}//end includesOrganisation()
+
+	/**
+	 * Log and refuse a caller who may not manage the organisation's members.
+	 *
+	 * @param string               $reason  Why access is refused, for the log.
+	 * @param array<string, mixed> $context The caller and the organisation, for the log.
+	 *
+	 * @return JSONResponse The 403 response.
+	 */
+	private function refuseMaintainer(string $reason, array $context): JSONResponse {
+		$this->logger->warning('[OrganisationMembersController] Access refused (' . $reason . ')', $context);
+		return self::forbidden(error: 'Only a beheerder of this organisation may grant or revoke access');
+	}//end refuseMaintainer()
+
+	/**
+	 * A 403 response with an error message.
+	 *
+	 * @param string $error The message.
+	 *
+	 * @return JSONResponse
+	 */
+	private static function forbidden(string $error): JSONResponse {
+		return new JSONResponse(data: ['error' => $error], statusCode: Http::STATUS_FORBIDDEN);
+	}//end forbidden()
 
 	/**
 	 * Resolve OpenRegister's OrganisationService via the DI container.

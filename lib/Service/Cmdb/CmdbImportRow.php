@@ -116,16 +116,6 @@ final class CmdbImportRow {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
 	 */
 	public function report(string $outcome, array $reasons = []): void {
-		$this->run?->report->addRow(
-			sheet: $this->entry['sheet'],
-			row: $this->entry['row'],
-			appId: $this->entry['appId'],
-			name: $this->entry['name'],
-			outcome: $outcome,
-			reasons: $reasons,
-			warnings: $this->warnings,
-			moduleUuid: $this->moduleUuid,
-			usageUuid: $this->usageUuid
-		);
+		$this->run?->report->addRow(row: $this, outcome: new CmdbRowOutcome(outcome: $outcome, reasons: $reasons));
 	}//end report()
 }//end class

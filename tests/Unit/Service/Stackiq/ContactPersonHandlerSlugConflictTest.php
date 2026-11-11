@@ -186,12 +186,12 @@ class ContactPersonHandlerSlugConflictTest extends TestCase {
 			}
 
 			/**
-			 * @param mixed ...$args The organisation, by name.
+			 * @param mixed ...$args The organisation details, then whether the caller joins.
 			 *
 			 * @return Organisation
 			 */
 			public function createOrganisation(...$args): Organisation {
-				return $this->test->create(name: (string) ($args['name'] ?? $args[0]), refuse: $this->refuse);
+				return $this->test->create(name: ($args['details'] ?? $args[0])->name, refuse: $this->refuse);
 			}
 		};
 

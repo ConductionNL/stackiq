@@ -1,0 +1,83 @@
+{
+    "no user": {
+        "json": [
+            401,
+            {
+                "message": "Not authenticated"
+            }
+        ]
+    },
+    "another user": {
+        "json": [
+            404,
+            {
+                "message": "Operation not found",
+                "error": "OPERATION_NOT_FOUND"
+            }
+        ]
+    },
+    "an admin, completed at once": {
+        "headers": {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Headers": "Cache-Control"
+        },
+        "returned": "",
+        "output": "event: progress\ndata: {\"operation_id\":\"op-1\",\"owner_uid\":\"alice\",\"phase\":\"completed\",\"percentage\":100}\n\nevent: completed\ndata: {\"operation_id\":\"op-1\",\"owner_uid\":\"alice\",\"phase\":\"completed\",\"percentage\":100}\n\nevent: close\ndata: {\"reason\":\"Stream ended\"}\n\n",
+        "log": []
+    },
+    "the owner, unknown operation": {
+        "headers": {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Headers": "Cache-Control"
+        },
+        "returned": "",
+        "output": "event: error\ndata: {\"error\":\"Operation not found\"}\n\nevent: close\ndata: {\"reason\":\"Stream ended\"}\n\n",
+        "log": []
+    },
+    "the owner, completed at once": {
+        "headers": {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Headers": "Cache-Control"
+        },
+        "returned": "",
+        "output": "event: progress\ndata: {\"operation_id\":\"op-1\",\"owner_uid\":\"alice\",\"phase\":\"completed\",\"percentage\":100}\n\nevent: completed\ndata: {\"operation_id\":\"op-1\",\"owner_uid\":\"alice\",\"phase\":\"completed\",\"percentage\":100}\n\nevent: close\ndata: {\"reason\":\"Stream ended\"}\n\n",
+        "log": []
+    },
+    "the owner, runs, repeats and completes": {
+        "headers": {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Headers": "Cache-Control"
+        },
+        "returned": "",
+        "output": "event: progress\ndata: {\"operation_id\":\"op-1\",\"owner_uid\":\"alice\",\"phase\":\"processing\",\"percentage\":40}\n\nevent: heartbeat\ndata: {\"timestamp\":\"<time>\"}\n\nevent: progress\ndata: {\"operation_id\":\"op-1\",\"owner_uid\":\"alice\",\"phase\":\"completed\",\"percentage\":100}\n\nevent: completed\ndata: {\"operation_id\":\"op-1\",\"owner_uid\":\"alice\",\"phase\":\"completed\",\"percentage\":100}\n\nevent: close\ndata: {\"reason\":\"Stream ended\"}\n\n",
+        "log": []
+    },
+    "the owner, lookup fails": {
+        "headers": {
+            "Content-Type": "text/event-stream",
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "Access-Control-Allow-Headers": "Cache-Control"
+        },
+        "returned": "",
+        "output": "event: error\ndata: {\"error\":\"tracker down\"}\n\nevent: close\ndata: {\"reason\":\"Stream ended\"}\n\n",
+        "log": [
+            [
+                "error",
+                "Progress streaming error",
+                {
+                    "operation_id": "op-1",
+                    "error": "tracker down"
+                }
+            ]
+        ]
+    }
+}

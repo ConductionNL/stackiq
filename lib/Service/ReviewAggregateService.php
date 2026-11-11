@@ -205,20 +205,33 @@ class ReviewAggregateService {
 		}
 
 		foreach ($relationValue as $entry) {
-			if (is_string($entry) === true && $entry === $subjectId) {
+			if ($entry === $subjectId || self::nestedEntryId(entry: $entry) === $subjectId) {
 				return true;
-			}
-
-			if (is_array($entry) === true) {
-				$entryId = $entry['id'] ?? $entry['uuid'] ?? null;
-				if (is_string($entryId) === true && $entryId === $subjectId) {
-					return true;
-				}
 			}
 		}
 
 		return false;
 	}//end relationContainsSubject()
+
+	/**
+	 * The id a nested-object relation entry carries: its `id`, else its `uuid`.
+	 *
+	 * @param mixed $entry One entry of a related-object array.
+	 *
+	 * @return string|null The id, or null when the entry is no object or its id is no string.
+	 */
+	private static function nestedEntryId(mixed $entry): ?string {
+		if (is_array($entry) === false) {
+			return null;
+		}
+
+		$entryId = $entry['id'] ?? $entry['uuid'] ?? null;
+		if (is_string($entryId) === false) {
+			return null;
+		}
+
+		return $entryId;
+	}//end nestedEntryId()
 
 	/**
 	 * The average `waardering` across a review list, or null when empty.
