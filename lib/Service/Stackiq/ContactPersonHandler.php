@@ -1885,42 +1885,49 @@ class ContactPersonHandler {
 	 * @spec   openspec/specs/sc-handlers/spec.md
 	 */
 	public function setUserInactive(string $username): bool {
+		return $this->setUserEnabled(username: $username, enabled: false);
+	}//end setUserInactive()
+
+	/**
+	 * Enable or disable a user account.
+	 *
+	 * @param string $username The username.
+	 * @param bool   $enabled  Whether the account is enabled.
+	 *
+	 * @return bool True when the account was changed, false when the user is unknown or the change failed.
+	 */
+	private function setUserEnabled(string $username, bool $enabled): bool {
+		$state = self::enabledState(enabled: $enabled);
 		try {
 			$user = $this->_userManager->get($username);
-
 			if (empty($user) === true) {
-				$this->_logger->warning(
-					'User not found when trying to set inactive',
-					[
-						'username' => $username,
-					]
-				);
-
+				$this->_logger->warning('User not found when trying to set ' . $state, ['username' => $username]);
 				return false;
 			}
 
-			$user->setEnabled(false);
-
-			$this->_logger->info(
-				'Set user account to inactive',
-				[
-					'username' => $username,
-				]
-			);
-
+			$user->setEnabled($enabled);
+			$this->_logger->info('Set user account to ' . $state, ['username' => $username]);
 			return true;
 		} catch (\Exception $e) {
-			$this->_logger->error(
-				'Failed to set user inactive: ' . $e->getMessage(),
-				[
-					'username' => $username,
-					'exception' => $e,
-				]
-			);
-
+			$this->_logger->error('Failed to set user ' . $state . ': ' . $e->getMessage(), ['username' => $username, 'exception' => $e]);
 			return false;
-		}//end try
-	}//end setUserInactive()
+		}
+	}//end setUserEnabled()
+
+	/**
+	 * The word the log lines use for an account state.
+	 *
+	 * @param bool $enabled Whether the account is enabled.
+	 *
+	 * @return string "active" or "inactive".
+	 */
+	private static function enabledState(bool $enabled): string {
+		if ($enabled === true) {
+			return 'active';
+		}
+
+		return 'inactive';
+	}//end enabledState()
 
 	/**
 	 * Sets a user account to active
@@ -1931,41 +1938,7 @@ class ContactPersonHandler {
 	 * @spec   openspec/specs/sc-handlers/spec.md
 	 */
 	public function setUserActive(string $username): bool {
-		try {
-			$user = $this->_userManager->get($username);
-
-			if (empty($user) === true) {
-				$this->_logger->warning(
-					'User not found when trying to set active',
-					[
-						'username' => $username,
-					]
-				);
-
-				return false;
-			}
-
-			$user->setEnabled(true);
-
-			$this->_logger->info(
-				'Set user account to active',
-				[
-					'username' => $username,
-				]
-			);
-
-			return true;
-		} catch (\Exception $e) {
-			$this->_logger->error(
-				'Failed to set user active: ' . $e->getMessage(),
-				[
-					'username' => $username,
-					'exception' => $e,
-				]
-			);
-
-			return false;
-		}//end try
+		return $this->setUserEnabled(username: $username, enabled: true);
 	}//end setUserActive()
 
 	/**
