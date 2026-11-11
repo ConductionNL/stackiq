@@ -24,6 +24,21 @@ const { default: ContactpersonenList } =
 
 let info
 
+/**
+ * A stand-in for the component with the given state and every method bound
+ * to it.
+ *
+ * @param {object} state The component state.
+ * @return {object} The stand-in.
+ */
+function viewModel(state = {}) {
+	const vm = { ...state }
+	for (const [name, fn] of Object.entries(ContactpersonenList.methods)) {
+		vm[name] = fn.bind(vm)
+	}
+	return vm
+}
+
 beforeEach(() => {
 	info = vi.spyOn(console, 'info').mockImplementation(() => {})
 })
@@ -41,7 +56,7 @@ describe('ContactpersonenList processContactpersonen', () => {
 			{ id: 'c3', data: { name: 'No user' }, user: { disabled: true } },
 			{ data: {} },
 		]
-		const out = ContactpersonenList.methods.processContactpersonen.call({}, raw)
+		const out = viewModel().processContactpersonen(raw)
 		expect(out).toEqual([
 			{
 				id: 'c1',
@@ -119,8 +134,8 @@ describe('ContactpersonenList updateContactpersonenWithUserInfo', () => {
 		const withoutUser = { uuid: 'u2' }
 		const untouched = { id: 'c3', data: { name: 'C' } }
 		const contactpersonen = [withData, withoutUser, untouched]
-		const vm = { organisationData: { contactpersonen } }
-		ContactpersonenList.methods.updateContactpersonenWithUserInfo.call(vm, {
+		const vm = viewModel({ organisationData: { contactpersonen } })
+		vm.updateContactpersonenWithUserInfo({
 			c1: {
 				hasUser: true,
 				username: 'ann',
@@ -174,8 +189,8 @@ describe('ContactpersonenList updateContactpersonenWithUserInfo', () => {
 	})
 
 	it('does nothing without contact persons', () => {
-		const vm = { organisationData: {} }
-		ContactpersonenList.methods.updateContactpersonenWithUserInfo.call(vm, {
+		const vm = viewModel({ organisationData: {} })
+		vm.updateContactpersonenWithUserInfo({
 			c1: {},
 		})
 		expect(vm.organisationData).toEqual({})
