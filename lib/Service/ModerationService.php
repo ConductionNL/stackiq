@@ -3,6 +3,9 @@
 /**
  * Registration / review moderation / approval queue.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The admin-only counterpart to IntakeService (organisatie) and
  * ReviewService (beoordeeling) — a single generalised mechanism, not two
  * parallel ones (catalog-ratings, stackiq#375: "reuse the
@@ -36,9 +39,6 @@
  *
  * @spec openspec/specs/open-data-publishing/spec.md
  * @spec openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

@@ -3,6 +3,9 @@
 /**
  * SBOM Parser Service.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * A PURE parser: it turns the bytes of an uploaded Software Bill of
  * Materials document into a normalized, format-agnostic component list.
  * It has no dependency on OpenRegister's `ObjectService`, no HTTP client,
@@ -27,9 +30,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/sbom-import/spec.md#requirement-cyclonedx-sbom-files-are-parsed-into-a-normalized-component-list
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

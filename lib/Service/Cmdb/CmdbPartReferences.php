@@ -3,6 +3,9 @@
 /**
  * The per-part size bound of a CMDB workbook, applied only to the parts the import can parse.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * PhpSpreadsheet builds the whole XML tree of every part it parses, so a part
  * that unpacks to more than the profile's `maxPartBytes` is refused before
  * anything is parsed. An export carries sheets the import never reads (an
@@ -30,9 +33,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

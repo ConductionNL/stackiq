@@ -3,6 +3,9 @@
 /**
  * Renames this app's Dutch SCHEMA SLUGS in place, before the register import.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * OpenRegister's ImportHandler matches an incoming schema to an existing one by
  * SLUG (`SchemaMapper::findBySlugInIds()`). So changing a slug in the register
  * JSON does not rename anything: the import finds no match, CREATES a second
@@ -33,9 +36,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.conduction.nl
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

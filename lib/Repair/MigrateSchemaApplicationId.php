@@ -3,6 +3,9 @@
 /**
  * Re-points this app's OpenRegister SCHEMAS at the new application id.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * A DIFFERENT COLUMN FROM RenameDutchSchemaSlugs, AND NEITHER COVERS THE
  * OTHER: that step rewrites `openregister_schemas.slug`, this one rewrites
  * `openregister_schemas.application`. A register-slug rename would not cover
@@ -48,9 +51,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://conduction.nl
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  */
 
 declare(strict_types=1);

@@ -3,6 +3,9 @@
 /**
  * CMDB export import service.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Turns a TOPdesk CMDB export (xlsx) into stackiq objects for one
  * municipality (openspec/changes/cmdb-export-import). Every application row
  * of the CMDB sheets ("Onbeh Applicaties CMDB", "Beheerde Applicaties
@@ -52,9 +55,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

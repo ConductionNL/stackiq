@@ -3,6 +3,9 @@
 /**
  * Contract Approval Delegation Service.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Delegates the contract approval / sign-off / renewal DECISION (the
  * `In onderhandeling -> Actief` transition, and the re-approval of an
  * expiring/`Verlopen` contract) to decidesk — the canonical fleet decision
@@ -28,9 +31,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/contract-decision-delegation/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
