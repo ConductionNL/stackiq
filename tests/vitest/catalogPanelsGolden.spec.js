@@ -6,7 +6,7 @@
  *
  * Golden test for CatalogPanels: the two statistics tables (the object types
  * split in halves), and where a row click and a Manage button navigate to.
- * The clock is frozen. Recorded with RECORD_GOLDEN=1.
+ * The clock and the time zone (UTC) are frozen. Recorded with RECORD_GOLDEN=1.
  *
  * @spec openspec/specs/fe-shell-navigation/spec.md
  */
@@ -73,12 +73,14 @@ async function run(slugs) {
 
 describe('CatalogPanels', () => {
 	beforeEach(() => {
+		vi.stubEnv('TZ', 'UTC')
 		vi.useFakeTimers({ toFake: ['Date'] })
 		vi.setSystemTime(new Date('2026-03-04T05:06:07Z'))
 	})
 
 	afterEach(() => {
 		vi.useRealTimers()
+		vi.unstubAllEnvs()
 	})
 
 	for (const [name, slugs] of Object.entries(schemaSets)) {
