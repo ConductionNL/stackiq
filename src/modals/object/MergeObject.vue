@@ -615,6 +615,16 @@ function defaultSelection(targetValue, sourceValue) {
 	return 'custom'
 }
 
+/**
+ * Whether a chosen value is a label/value option with a value.
+ *
+ * @param {*} value The chosen value.
+ * @return {boolean} Whether it is.
+ */
+function isOptionValue(value) {
+	return Boolean(value) && typeof value === 'object' && value.value !== undefined
+}
+
 export default {
 	name: 'MergeObject',
 	components: {
@@ -893,19 +903,12 @@ export default {
 				return 'N/A'
 			}
 
-			let displayText = ''
-			if (typeof value === 'object') {
-				displayText = JSON.stringify(value, null, 2)
-			} else {
-				displayText = String(value)
-			}
-
+			const displayText =
+				typeof value === 'object'
+					? JSON.stringify(value, null, 2)
+					: String(value)
 			// Truncate if too long
-			if (displayText.length > maxLength) {
-				return displayText.substring(0, maxLength) + '...'
-			}
-
-			return displayText
+			return this.truncateText(displayText, maxLength)
 		},
 
 		/**
@@ -929,67 +932,117 @@ export default {
 
 			this.loading = true
 			try {
-				// Prepare merged data with custom values resolved - ensure no ID is included
-				const finalMergedData = {}
-				// eslint-disable-next-line no-console
-				console.log('Raw mergedData before processing:', this.mergedData)
-
-				Object.keys(this.mergedData).forEach((property) => {
-					// Skip any ID-related properties
-					if (property === 'id' || property === '@self') {
-						return
-					}
-
-					if (this.mergedData[property] === 'custom') {
-						finalMergedData[property] = this.customValues[property] || ''
-					} else {
-						// Ensure we extract the actual value if it's an object with label/value structure
-						const value = this.mergedData[property]
-						if (
-							value
-							&& typeof value === 'object'
-							&& value.value !== undefined
-						) {
-							// eslint-disable-next-line no-console
-							console.log(
-								'Extracting value from object for',
-								property,
-								':',
-								value.value,
-							)
-							finalMergedData[property] = value.value
-						} else {
-							finalMergedData[property] = value
-						}
-					}
-				})
-
-				// eslint-disable-next-line no-console
-				console.log('Final merged data to send:', finalMergedData)
-
-				// Use the object store method for consistent API handling
-				const result = await objectStore.mergeObjects({
-					register: catalogStore.catalogiItem.id,
-					schema: catalogStore.schemaItem.id,
-					sourceObjectId: this.sourceObject['@self'].id,
-					target: this.selectedTargetObject['@self'].id,
-					object: finalMergedData,
-					fileAction: this.fileAction,
-					relationAction: this.relationAction,
-				})
-
+				const result = await this.submitMerge()
 				this.mergeResult = result.data
 				this.step = 3
 			} catch (error) {
-				console.error('Error performing merge:', error)
-				this.mergeResult = {
-					success: false,
-					errors: [error.message || 'An error occurred during merge'],
-				}
-				this.step = 3
+				this.reportMergeFailure(error)
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Sends the merge to the object store.
+		 *
+		 * @return {Promise<object>} The store's response.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		submitMerge() {
+			// Use the object store method for consistent API handling
+			return objectStore.mergeObjects(
+				this.mergeRequest(this.preparedMergeData()),
+			)
+		},
+
+		/**
+		 * The merged object to send, logged before and after it is built.
+		 *
+		 * @return {object} The merged object.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		preparedMergeData() {
+			// eslint-disable-next-line no-console
+			console.log('Raw mergedData before processing:', this.mergedData)
+			const finalMergedData = this.finalMergedData()
+			// eslint-disable-next-line no-console
+			console.log('Final merged data to send:', finalMergedData)
+			return finalMergedData
+		},
+
+		/**
+		 * The merged object to send: every chosen property except the ids,
+		 * with custom values and option values resolved.
+		 *
+		 * @return {object} The merged object.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		finalMergedData() {
+			const finalMergedData = {}
+			Object.keys(this.mergedData).forEach((property) => {
+				// Skip any ID-related properties
+				if (property === 'id' || property === '@self') {
+					return
+				}
+				finalMergedData[property] = this.resolvedMergeValue(property)
+			})
+			return finalMergedData
+		},
+
+		/**
+		 * The value chosen for a property: the custom value, the value of a
+		 * label/value option, or the chosen value itself.
+		 *
+		 * @param {string} property The property.
+		 * @return {*} The value.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		resolvedMergeValue(property) {
+			if (this.mergedData[property] === 'custom') {
+				return this.customValues[property] || ''
+			}
+			// Ensure we extract the actual value if it's an object with label/value structure
+			const value = this.mergedData[property]
+			if (!isOptionValue(value)) {
+				return value
+			}
+			// eslint-disable-next-line no-console
+			console.log('Extracting value from object for', property, ':', value.value)
+			return value.value
+		},
+
+		/**
+		 * The merge request for the store.
+		 *
+		 * @param {object} finalMergedData The merged object.
+		 * @return {object} The request.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		mergeRequest(finalMergedData) {
+			return {
+				register: catalogStore.catalogiItem.id,
+				schema: catalogStore.schemaItem.id,
+				sourceObjectId: this.sourceObject['@self'].id,
+				target: this.selectedTargetObject['@self'].id,
+				object: finalMergedData,
+				fileAction: this.fileAction,
+				relationAction: this.relationAction,
+			}
+		},
+
+		/**
+		 * Shows a failed merge on the result step.
+		 *
+		 * @param {Error} error The error.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		reportMergeFailure(error) {
+			console.error('Error performing merge:', error)
+			this.mergeResult = {
+				success: false,
+				errors: [error.message || 'An error occurred during merge'],
+			}
+			this.step = 3
 		},
 
 		/**

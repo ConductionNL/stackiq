@@ -229,9 +229,6 @@
     "no-console": {
       "count": 3
     },
-    "no-useless-assignment": {
-      "count": 1
-    },
     "vue/prefer-define-options": {
       "count": 1
     }
