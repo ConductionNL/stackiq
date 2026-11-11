@@ -79,48 +79,7 @@ class OrganisatieService {
 	 */
 	public function createOrganisationInOpenRegister(array $objectData): ?object {
 		try {
-			$organizationUuid = $objectData['id'] ?? null;
-			if (empty($organizationUuid) === true) {
-				$this->logger->error('OrganisatieService: No organization UUID provided for creation');
-				return null;
-			}
-
-			$this->logger->info(
-				'OrganisatieService: Creating organization entity in OpenRegister',
-				[
-					'organizationUuid' => $organizationUuid,
-					'name' => $objectData['name'] ?? 'Unknown',
-				]
-			);
-
-			// Map the data for OpenRegister.
-			$mappedData = $this->mapOrganizationDataForOpenRegister(objectData: $objectData);
-
-			// Get organisation service.
-			$organisationService = $this->getOrganisationService();
-			if ($organisationService === null) {
-				$this->logger->error('OrganisatieService: OrganisationService not available');
-				return null;
-			}
-
-			// Create the organization entity.
-			$organisationEntity = $this->createOrganisationEntityInternal(
-				organisationService: $organisationService,
-				mappedData: $mappedData,
-				organizationUuid: $organizationUuid
-			);
-
-			// The createOrganisationEntityInternal() helper is declared non-nullable and
-			// throws on failure — the catch below is the real failure path.
-			$this->logger->info(
-				'OrganisatieService: Successfully created organization entity',
-				[
-					'organizationUuid' => $organizationUuid,
-					'entityId' => $organisationEntity->getId(),
-				]
-			);
-
-			return $organisationEntity;
+			return $this->createOrganisation(objectData: $objectData);
 		} catch (\Exception $e) {
 			// The caller decides what a taken slug means; every other failure ends here.
 			if (is_a($e, self::SLUG_CONFLICT) === true) {
@@ -129,14 +88,76 @@ class OrganisatieService {
 
 			$this->logger->error(
 				'OrganisatieService: Error creating organization entity',
-				[
-					'error' => $e->getMessage(),
-					'organizationUuid' => $objectData['id'] ?? 'unknown',
-				]
+				['error' => $e->getMessage(), 'organizationUuid' => $objectData['id'] ?? 'unknown']
 			);
 			return null;
-		}//end try
+		}
 	}//end createOrganisationInOpenRegister()
+
+	/**
+	 * Create the organisation when its data carries a uuid.
+	 *
+	 * @param array $objectData The organization object data
+	 *
+	 * @return object|null The created organisation entity, or null without a uuid or OrganisationService.
+	 */
+	private function createOrganisation(array $objectData): ?object {
+		$organizationUuid = $objectData['id'] ?? null;
+		if (empty($organizationUuid) === true) {
+			$this->logger->error('OrganisatieService: No organization UUID provided for creation');
+			return null;
+		}
+
+		$this->logger->info(
+			'OrganisatieService: Creating organization entity in OpenRegister',
+			['organizationUuid' => $organizationUuid, 'name' => $objectData['name'] ?? 'Unknown']
+		);
+
+		return $this->createMappedOrganisation(objectData: $objectData, organizationUuid: $organizationUuid);
+	}//end createOrganisation()
+
+	/**
+	 * Map the data for OpenRegister and create the organisation entity there.
+	 *
+	 * @param array $objectData       The organization object data
+	 * @param mixed $organizationUuid The organisation's uuid, as given
+	 *
+	 * @return object|null The created organisation entity, or null when OrganisationService is unavailable.
+	 */
+	private function createMappedOrganisation(array $objectData, mixed $organizationUuid): ?object {
+		$mappedData          = $this->mapOrganizationDataForOpenRegister(objectData: $objectData);
+		$organisationService = $this->getOrganisationService();
+		if ($organisationService === null) {
+			$this->logger->error('OrganisatieService: OrganisationService not available');
+			return null;
+		}
+
+		// The helper is declared non-nullable and throws on failure — the
+		// caller's catch is the real failure path.
+		$organisationEntity = $this->createOrganisationEntityInternal(
+			organisationService: $organisationService,
+			mappedData: $mappedData,
+			organizationUuid: $organizationUuid
+		);
+		$this->logCreated(organizationUuid: $organizationUuid, organisationEntity: $organisationEntity);
+
+		return $organisationEntity;
+	}//end createMappedOrganisation()
+
+	/**
+	 * Log a created organisation entity.
+	 *
+	 * @param mixed  $organizationUuid   The organisation's uuid, as given
+	 * @param object $organisationEntity The created organisation entity
+	 *
+	 * @return void
+	 */
+	private function logCreated(mixed $organizationUuid, object $organisationEntity): void {
+		$this->logger->info(
+			'OrganisatieService: Successfully created organization entity',
+			['organizationUuid' => $organizationUuid, 'entityId' => $organisationEntity->getId()]
+		);
+	}//end logCreated()
 
 	/**
 	 * Updates organization entity status based on object data.
