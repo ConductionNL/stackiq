@@ -3,7 +3,7 @@
 /**
  * Email Settings for Stackiq
  *
- * Moved out of SettingsService: the stored e-mail settings (sender,
+ * Moved out of the general settings service: the stored e-mail settings (sender,
  * notification switches, transport and provider credentials), the
  * redaction of their secrets for HTTP responses, and the stored e-mail
  * templates.
