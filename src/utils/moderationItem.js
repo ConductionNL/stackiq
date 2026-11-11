@@ -24,6 +24,27 @@ const SUBTITLE_FIELDS = [
 ]
 
 /**
+ * A field value as trimmed text, or '' when it is not a filled string.
+ *
+ * @param {*} value The field value.
+ * @return {string} The text.
+ */
+function filledText(value) {
+	return typeof value === 'string' && value.trim() !== '' ? value.trim() : ''
+}
+
+/**
+ * The trimmed texts of a set of fields, in field order.
+ *
+ * @param {object} bag The registration data bag.
+ * @param {Array<string>} fields The fields.
+ * @return {Array<string>} The texts ('' for an unfilled field).
+ */
+function fieldTexts(bag, fields) {
+	return fields.map((field) => filledText(bag[field]))
+}
+
+/**
  * Pick the best human-readable title for a moderation item.
  *
  * @param {object} item - The registration data bag.
@@ -32,11 +53,9 @@ const SUBTITLE_FIELDS = [
  */
 export function moderationItemTitle(item) {
 	const bag = item || {}
-	for (const field of TITLE_FIELDS) {
-		const value = bag[field]
-		if (typeof value === 'string' && value.trim() !== '') {
-			return value.trim()
-		}
+	const title = fieldTexts(bag, TITLE_FIELDS).find((text) => text !== '')
+	if (title) {
+		return title
 	}
 	const id = bag.id || bag.uuid
 	return id ? String(id) : 'Untitled registration'
@@ -53,15 +72,8 @@ export function moderationItemTitle(item) {
 export function moderationItemSubtitle(item) {
 	const bag = item || {}
 	const title = moderationItemTitle(bag)
-	for (const field of SUBTITLE_FIELDS) {
-		const value = bag[field]
-		if (
-			typeof value === 'string'
-			&& value.trim() !== ''
-			&& value.trim() !== title
-		) {
-			return value.trim()
-		}
-	}
-	return ''
+	const subtitle = fieldTexts(bag, SUBTITLE_FIELDS).find(
+		(text) => text !== '' && text !== title,
+	)
+	return subtitle || ''
 }
