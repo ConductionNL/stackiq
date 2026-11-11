@@ -1640,6 +1640,28 @@ class CmdbExportImportServiceTest extends TestCase {
 	}//end testAModuleSchemaFromBefore038StopsTheImport()
 
 	/**
+	 * The admin-only update rule on externalKey is found as a group name or as a rule naming the group, in an
+	 * array or an object definition; anything else, and a missing rule, is reported. An undeclared property
+	 * is not reported here.
+	 *
+	 * @return void
+	 */
+	public function testMissingUpdateRulesReadEveryRuleShape(): void {
+		$missing = new \ReflectionMethod(CmdbExportImportService::class, 'missingUpdateRules');
+		$missing->setAccessible(true);
+		$rule = static fn (mixed $update): array => ['externalKey' => ['type' => 'string', 'authorization' => ['update' => $update]]];
+
+		$this->assertSame([], $missing->invoke(null, 'module', []));
+		$this->assertSame([], $missing->invoke(null, 'usage', ['externalKey' => []]));
+		$this->assertSame([], $missing->invoke(null, 'module', $rule(['admin'])));
+		$this->assertSame([], $missing->invoke(null, 'module', $rule([['group' => 'admin']])));
+		$this->assertSame([], $missing->invoke(null, 'module', ['externalKey' => (object)['authorization' => (object)['update' => [(object)['group' => 'admin']]]]]));
+		$this->assertSame(['externalKey.authorization.update'], $missing->invoke(null, 'module', ['externalKey' => ['type' => 'string']]));
+		$this->assertSame(['externalKey.authorization.update'], $missing->invoke(null, 'module', $rule('admin')));
+		$this->assertSame(['externalKey.authorization.update'], $missing->invoke(null, 'module', $rule([['group' => 'editors'], ['name' => 'admin'], 'Admin'])));
+	}//end testMissingUpdateRulesReadEveryRuleShape()
+
+	/**
 	 * A search on a property the schema does not declare yields nothing, as in OpenRegister.
 	 *
 	 * Guards the double itself: without this, a test could pass on a filter OpenRegister would never apply.
