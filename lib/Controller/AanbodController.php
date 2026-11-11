@@ -101,6 +101,22 @@ class AanbodController extends Controller {
 	}//end __construct()
 
 	/**
+	 * The aanbod listing: endpoint and log messages.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	private const LISTINGS = [
+		'aanbod' => [
+			'endpoint' => '/api/aanbod',
+			'rejected' => 'API: Rejecting unauthenticated aanbod request',
+			'started' => 'API: Getting aanbod objects',
+			'completed' => 'API: Aanbod request completed',
+			'failed' => 'API: Failed to get aanbod objects',
+			'failureLogsEndpoint' => false,
+		],
+	];
+
+	/**
 	 * Get all aanbod objects (modules, diensten, koppelingen, gebruiks).
 	 *
 	 * API Endpoint: GET /api/aanbod
@@ -138,84 +154,37 @@ class AanbodController extends Controller {
 		// getCurrentOrganisation() resolving to null for an anonymous session
 		// as the sole safeguard — reject before the service is ever invoked
 		// (deny-before-grant, REQ-001).
+		$listing = $this->objectListing(name: 'aanbod', idContext: []);
 		if ($this->userSession->getUser() === null) {
-			$this->logger->info(
-				'API: Rejecting unauthenticated aanbod request',
-				[
-					'endpoint' => '/api/aanbod',
-					'method' => 'GET',
-				]
-			);
+			return $this->listingResponder()->rejectUnauthenticated(listing: $listing);
+		}
 
-			return new JSONResponse(
-				[
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'message' => 'Not authenticated',
-				],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}//end if
-
-		$this->logger->info(
-			'API: Getting aanbod objects',
-			[
-				'endpoint' => '/api/aanbod',
-				'method' => 'GET',
-				'query_params' => $this->request->getParams(),
-			]
+		return $this->listingResponder()->respond(
+			listing: $listing,
+			fetch: fn (): array => $this->aanbodService->getAanbod($this->parseQueryOptions())
 		);
-
-		try {
-			// Parse query parameters for filtering options.
-			$options = $this->parseQueryOptions();
-
-			// Get aanbod objects from service.
-			$result = $this->aanbodService->getAanbod($options);
-
-			// Determine HTTP status code based on whether there's an error.
-			$statusCode = 200;
-			if (isset($result['error']) === true) {
-				$statusCode = 500;
-			}
-
-			$this->logger->info(
-				'API: Aanbod request completed',
-				[
-					'total' => $result['total'] ?? 0,
-					'results_count' => count($result['results'] ?? []),
-					'has_error' => isset($result['error']) === true,
-				]
-			);
-
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to get aanbod objects',
-				[
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
 	}//end getAanbod()
+
+	/**
+	 * The responder that runs this controller's listing reads.
+	 *
+	 * @return ListingResponder
+	 */
+	private function listingResponder(): ListingResponder {
+		return new ListingResponder(logger: $this->logger, request: $this->request);
+	}//end listingResponder()
+
+	/**
+	 * Build a listing from the listing table.
+	 *
+	 * @param string $name      The listing name in the listing table.
+	 * @param array  $idContext Identifying fields of the log lines.
+	 *
+	 * @return ObjectListing
+	 */
+	private function objectListing(string $name, array $idContext): ObjectListing {
+		return new ObjectListing(idContext: $idContext, definition: self::LISTINGS[$name]);
+	}//end objectListing()
 
 	/**
 	 * Accept an aanbod object (set @self.organisation to current organisation).

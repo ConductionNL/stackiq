@@ -27,6 +27,7 @@ use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
+use OCP\IUser;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -111,6 +112,43 @@ class AangebodenGebruikController extends Controller {
 	}//end __construct()
 
 	/**
+	 * The listing reads: endpoint as logged and log messages.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	private const LISTINGS = [
+		'afnemer' => [
+			'endpoint' => '/api/aangeboden-gebruik/afnemer',
+			'rejected' => 'API: Rejecting unauthenticated afnemer gebruiks request',
+			'started' => 'API: Getting gebruiks where active org is afnemer',
+			'completed' => 'API: Afnemer gebruiks request completed',
+			'failed' => 'API: Failed to get afnemer gebruiks',
+			'failureLogsEndpoint' => false,
+		],
+		'koppelingen' => [
+			'endpoint' => '/api/koppelingen-gebruik/{uuid}',
+			'started' => 'API: Getting koppelingen and gebruiks for specific UUID',
+			'completed' => 'API: Koppelingen-gebruik by UUID request completed',
+			'failed' => 'API: Failed to get koppelingen-gebruik by UUID',
+			'failureLogsEndpoint' => false,
+		],
+		'ambtenaar' => [
+			'endpoint' => '/api/aangeboden-gebruik/ambtenaar',
+			'started' => 'API: Getting all gebruiks for ambtenaar (ignoring RBAC/multitenancy)',
+			'completed' => 'API: Ambtenaar all gebruiks request completed',
+			'failed' => 'API: Failed to get all gebruiks for ambtenaar',
+			'failureLogsEndpoint' => true,
+		],
+		'ambtenaarSingle' => [
+			'endpoint' => '/api/aangeboden-gebruik/ambtenaar/{gebruikId}',
+			'started' => 'API: Getting single gebruik for ambtenaar (ignoring RBAC/multitenancy)',
+			'completed' => 'API: Ambtenaar single gebruik request completed',
+			'failed' => 'API: Failed to get single gebruik for ambtenaar',
+			'failureLogsEndpoint' => true,
+		],
+	];
+
+	/**
 	 * Get all gebruiks objects where the active organization is the afnemer (consumer).
 	 *
 	 * API Endpoint: GET /api/aangeboden-gebruik/afnemer
@@ -145,84 +183,16 @@ class AangebodenGebruikController extends Controller {
 		// implicit, unstated invariant of a downstream helper, not an
 		// explicit guard at the entry point. Reject before the service is
 		// ever invoked (deny-before-grant, REQ-001).
+		$listing = $this->objectListing(name: 'afnemer', idContext: []);
 		if ($this->userSession->getUser() === null) {
-			$this->logger->info(
-				'API: Rejecting unauthenticated afnemer gebruiks request',
-				[
-					'endpoint' => '/api/aangeboden-gebruik/afnemer',
-					'method' => 'GET',
-				]
-			);
+			return $this->listingResponder()->rejectUnauthenticated(listing: $listing);
+		}
 
-			return new JSONResponse(
-				[
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'message' => 'Not authenticated',
-				],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}//end if
-
-		$this->logger->info(
-			'API: Getting gebruiks where active org is afnemer',
-			[
-				'endpoint' => '/api/aangeboden-gebruik/afnemer',
-				'method' => 'GET',
-				'query_params' => $this->request->getParams(),
-			]
+		// Don't include product filter for "get all" endpoint.
+		return $this->listingResponder()->respond(
+			listing: $listing,
+			fetch: fn (): array => $this->gebruikSvc->getGebruiksWhereAfnemer($this->parseQueryOptions())
 		);
-
-		try {
-			// Parse query parameters for filtering options (force database source).
-			// Don't include product filter for "get all" endpoint.
-			$options = $this->parseQueryOptions();
-
-			// Get gebruiks from service where org is afnemer.
-			$result = $this->gebruikSvc->getGebruiksWhereAfnemer($options);
-
-			// Determine HTTP status code based on whether there's an error.
-			$statusCode = 200;
-			if (isset($result['error']) === true) {
-				$statusCode = 500;
-			}
-
-			$this->logger->info(
-				'API: Afnemer gebruiks request completed',
-				[
-					'total' => $result['total'] ?? 0,
-					'results_count' => count($result['results'] ?? []),
-					'has_error' => isset($result['error']) === true,
-				]
-			);
-
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to get afnemer gebruiks',
-				[
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
 	}//end getGebruiksWhereAfnemer()
 
 	/**
@@ -244,79 +214,37 @@ class AangebodenGebruikController extends Controller {
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getKoppelingenGebruikByUuid(string $uuid): JSONResponse {
-		$this->logger->info(
-			'API: Getting koppelingen and gebruiks for specific UUID',
-			[
-				'endpoint' => '/api/koppelingen-gebruik/{uuid}',
-				'method' => 'GET',
-				'uuid' => $uuid,
-				'query_params' => $this->request->getParams(),
-			]
+		return $this->listingResponder()->respond(
+			listing: $this->objectListing(name: 'koppelingen', idContext: ['uuid' => $uuid]),
+			fetch: fn (): array => $this->fetchKoppelingenGebruik(uuid: $uuid)
 		);
-
-		try {
-			// Check if user is in admin or ambtenaar group.
-			$isAmbtenaar = $this->isUserInGroup(groupName: 'admin') || $this->isUserInGroup(groupName: 'ambtenaar');
-
-			// Get organization filter if provided (only for ambtenaar users).
-			$organisationFilter = $this->request->getParam('organisation');
-
-			// Parse query parameters for filtering options.
-			$options = $this->parseQueryOptions();
-
-			// Add organization filter if provided and user is ambtenaar.
-			if ($isAmbtenaar === true && $organisationFilter !== null) {
-				$options['organisation'] = $organisationFilter;
-			}
-
-			// Get koppelingen and gebruiks for UUID from service.
-			$result = $this->gebruikSvc->getKoppelingenGebruikByUuid(
-				uuid: $uuid,
-				options: $options,
-				isAmbtenaar: $isAmbtenaar
-			);
-
-			// Determine HTTP status code based on whether there's an error.
-			$statusCode = 200;
-			if (isset($result['error']) === true) {
-				$statusCode = 500;
-			}
-
-			$this->logger->info(
-				'API: Koppelingen-gebruik by UUID request completed',
-				[
-					'uuid' => $uuid,
-					'total' => $result['total'] ?? 0,
-					'results_count' => count($result['results'] ?? []),
-					'has_error' => isset($result['error']) === true,
-				]
-			);
-
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to get koppelingen-gebruik by UUID',
-				[
-					'uuid' => $uuid,
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
 	}//end getKoppelingenGebruikByUuid()
+
+	/**
+	 * Read the koppelingen and gebruiks of one application/module; the
+	 * organisation filter applies only for admin or ambtenaar users.
+	 *
+	 * @param string $uuid The UUID of the application/module
+	 *
+	 * @return array The service result.
+	 */
+	private function fetchKoppelingenGebruik(string $uuid): array {
+		// Check if user is in admin or ambtenaar group.
+		$isAmbtenaar = $this->isUserInGroup(groupName: 'admin') || $this->isUserInGroup(groupName: 'ambtenaar');
+
+		// Get organization filter if provided (only for ambtenaar users).
+		$organisationFilter = $this->request->getParam('organisation');
+		$options            = $this->parseQueryOptions();
+		if ($isAmbtenaar === true && $organisationFilter !== null) {
+			$options['organisation'] = $organisationFilter;
+		}
+
+		return $this->gebruikSvc->getKoppelingenGebruikByUuid(
+			uuid: $uuid,
+			options: $options,
+			isAmbtenaar: $isAmbtenaar
+		);
+	}//end fetchKoppelingenGebruik()
 
 	/**
 	 * Get all gebruiks objects (ignoring RBAC and multitenancy) - restricted to ambtenaar group.
@@ -335,95 +263,28 @@ class AangebodenGebruikController extends Controller {
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getAllGebruiksForAmbtenaar(): JSONResponse {
-		$this->logger->info(
-			'API: Getting all gebruiks for ambtenaar (ignoring RBAC/multitenancy)',
-			[
-				'endpoint' => '/api/aangeboden-gebruik/ambtenaar',
-				'method' => 'GET',
-				'query_params' => $this->request->getParams(),
-			]
+		$listing = $this->objectListing(name: 'ambtenaar', idContext: []);
+		return $this->listingResponder()->respond(
+			listing: $listing,
+			fetch: fn (): array|JSONResponse => $this->fetchAllForAmbtenaar(listing: $listing)
 		);
-
-		try {
-			// Check if user is in admin or ambtenaar group.
-			$isAdmin = $this->isUserInGroup(groupName: 'admin');
-			$isAmbtenaar = $this->isUserInGroup(groupName: 'ambtenaar');
-			if ($isAdmin === false && $isAmbtenaar === false) {
-				// Get user ID for logging (may be null if not authenticated).
-				$user = $this->userSession->getUser();
-				$userId = 'null';
-				if ($user !== null) {
-					$userId = $user->getUID();
-				}
-
-				$this->logger->info(
-					'API: Returning empty results - user not in admin or ambtenaar group',
-					[
-						'endpoint' => '/api/aangeboden-gebruik/ambtenaar',
-						'user' => $userId,
-					]
-				);
-
-				// Return empty results with 200 status (not an error).
-				return new JSONResponse(
-					[
-						'results' => [],
-						'total' => 0,
-						'page' => 1,
-						'pages' => 1,
-						'limit' => 20,
-						'offset' => 0,
-					],
-					200
-				);
-			}//end if
-
-			// Parse query parameters for filtering options (force database source).
-			// Don't include product filter for "get all" endpoint.
-			$options = $this->parseQueryOptions();
-
-			// Get all gebruiks from service (ignoring RBAC/multitenancy).
-			$result = $this->gebruikSvc->getAllGebruiksForAmbtenaar($options);
-
-			// Determine HTTP status code based on whether there's an error.
-			$statusCode = 200;
-			if (isset($result['error']) === true) {
-				$statusCode = Http::STATUS_INTERNAL_SERVER_ERROR;
-			}
-
-			$this->logger->info(
-				'API: Ambtenaar all gebruiks request completed',
-				[
-					'total' => $result['total'] ?? 0,
-					'results_count' => count($result['results'] ?? []),
-					'has_error' => isset($result['error']) === true,
-				]
-			);
-
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to get all gebruiks for ambtenaar',
-				[
-					'error' => $e->getMessage(),
-					'endpoint' => '/api/aangeboden-gebruik/ambtenaar',
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
 	}//end getAllGebruiksForAmbtenaar()
+
+	/**
+	 * Read all gebruiks for an admin or ambtenaar user; anyone else gets the empty listing.
+	 *
+	 * @param ObjectListing $listing The listing.
+	 *
+	 * @return array|JSONResponse The service result, or the empty listing response.
+	 */
+	private function fetchAllForAmbtenaar(ObjectListing $listing): array|JSONResponse {
+		if ($this->isAdminOrAmbtenaar() === false) {
+			return $this->outsiderListing(listing: $listing);
+		}
+
+		// Don't include product filter for "get all" endpoint.
+		return $this->gebruikSvc->getAllGebruiksForAmbtenaar($this->parseQueryOptions());
+	}//end fetchAllForAmbtenaar()
 
 	/**
 	 * Get a single gebruiks object by ID (ignoring RBAC and multitenancy) - restricted to ambtenaar group.
@@ -438,107 +299,92 @@ class AangebodenGebruikController extends Controller {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 *
-	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-	 * @spec                                          openspec/specs/aangeboden-gebruik-api/spec.md
+	 * @spec openspec/specs/aangeboden-gebruik-api/spec.md
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getSingleGebruikForAmbtenaar(string $gebruikId): JSONResponse {
+		$listing = $this->objectListing(name: 'ambtenaarSingle', idContext: ['gebruik_id' => $gebruikId]);
+		return $this->listingResponder()->respond(
+			listing: $listing,
+			fetch: fn (): array|JSONResponse => $this->fetchSingleForAmbtenaar(listing: $listing, gebruikId: $gebruikId)
+		);
+	}//end getSingleGebruikForAmbtenaar()
+
+	/**
+	 * Read one gebruik for an admin or ambtenaar user; anyone else gets the empty listing.
+	 *
+	 * @param ObjectListing $listing   The listing.
+	 * @param string        $gebruikId The ID of the gebruik object to retrieve
+	 *
+	 * @return array|JSONResponse The service result, or the empty listing response.
+	 */
+	private function fetchSingleForAmbtenaar(ObjectListing $listing, string $gebruikId): array|JSONResponse {
+		if ($this->isAdminOrAmbtenaar() === false) {
+			return $this->outsiderListing(listing: $listing);
+		}
+
+		// Don't include product filter - we use uses parameter instead.
+		return $this->gebruikSvc->getSingleGebruikForAmbtenaar(
+			suiteId: $gebruikId,
+			options: $this->parseQueryOptions()
+		);
+	}//end fetchSingleForAmbtenaar()
+
+	/**
+	 * Whether the current user is in the admin or the ambtenaar group; both
+	 * memberships are checked.
+	 *
+	 * @return bool
+	 */
+	private function isAdminOrAmbtenaar(): bool {
+		$isAdmin     = $this->isUserInGroup(groupName: 'admin');
+		$isAmbtenaar = $this->isUserInGroup(groupName: 'ambtenaar');
+		return $isAdmin === true || $isAmbtenaar === true;
+	}//end isAdminOrAmbtenaar()
+
+	/**
+	 * The empty listing (200, not an error) for a user outside the admin and ambtenaar groups.
+	 *
+	 * @param ObjectListing $listing The listing.
+	 *
+	 * @return JSONResponse
+	 */
+	private function outsiderListing(ObjectListing $listing): JSONResponse {
+		// Get user ID for logging (may be null if not authenticated).
+		$user   = $this->userSession->getUser();
+		$userId = 'null';
+		if ($user !== null) {
+			$userId = $user->getUID();
+		}
+
 		$this->logger->info(
-			'API: Getting single gebruik for ambtenaar (ignoring RBAC/multitenancy)',
-			[
-				'endpoint' => '/api/aangeboden-gebruik/ambtenaar/{gebruikId}',
-				'method' => 'GET',
-				'gebruik_id' => $gebruikId,
-				'query_params' => $this->request->getParams(),
-			]
+			'API: Returning empty results - user not in admin or ambtenaar group',
+			['endpoint' => $listing->definition['endpoint']] + $listing->idContext + ['user' => $userId]
 		);
 
-		try {
-			// Check if user is in admin or ambtenaar group.
-			$isAdmin = $this->isUserInGroup(groupName: 'admin');
-			$isAmbtenaar = $this->isUserInGroup(groupName: 'ambtenaar');
-			if ($isAdmin === false && $isAmbtenaar === false) {
-				// Get user ID for logging (may be null if not authenticated).
-				$user = $this->userSession->getUser();
-				$userId = 'null';
-				if ($user !== null) {
-					$userId = $user->getUID();
-				}
+		return new JSONResponse(array_replace($this->listingResponder()->emptyListing(), ['pages' => 1]), 200);
+	}//end outsiderListing()
 
-				$this->logger->info(
-					'API: Returning empty results - user not in admin or ambtenaar group',
-					[
-						'endpoint' => '/api/aangeboden-gebruik/ambtenaar/{gebruikId}',
-						'gebruik_id' => $gebruikId,
-						'user' => $userId,
-					]
-				);
+	/**
+	 * The responder that runs this controller's listing reads.
+	 *
+	 * @return ListingResponder
+	 */
+	private function listingResponder(): ListingResponder {
+		return new ListingResponder(logger: $this->logger, request: $this->request);
+	}//end listingResponder()
 
-				// Return empty results with 200 status (not an error).
-				return new JSONResponse(
-					[
-						'results' => [],
-						'total' => 0,
-						'page' => 1,
-						'pages' => 1,
-						'limit' => 20,
-						'offset' => 0,
-					],
-					200
-				);
-			}//end if
-
-			// Parse query parameters for filtering options (force database source).
-			// Don't include product filter - we use uses parameter instead.
-			$options = $this->parseQueryOptions();
-
-			// Get single gebruik from service (ignoring RBAC/multitenancy).
-			$result = $this->gebruikSvc->getSingleGebruikForAmbtenaar(
-				suiteId: $gebruikId,
-				options: $options
-			);
-
-			// Determine HTTP status code based on whether there's an error.
-			$statusCode = 200;
-			if (isset($result['error']) === true) {
-				$statusCode = Http::STATUS_INTERNAL_SERVER_ERROR;
-			}
-
-			$this->logger->info(
-				'API: Ambtenaar single gebruik request completed',
-				[
-					'gebruik_id' => $gebruikId,
-					'total' => $result['total'] ?? 0,
-					'results_count' => count($result['results'] ?? []),
-					'has_error' => isset($result['error']) === true,
-				]
-			);
-
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to get single gebruik for ambtenaar',
-				[
-					'gebruik_id' => $gebruikId,
-					'error' => $e->getMessage(),
-					'endpoint' => '/api/aangeboden-gebruik/ambtenaar/{gebruikId}',
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
-	}//end getSingleGebruikForAmbtenaar()
+	/**
+	 * Build a listing from the listing table.
+	 *
+	 * @param string $name      The listing name in the listing table.
+	 * @param array  $idContext Identifying fields of the log lines.
+	 *
+	 * @return ObjectListing
+	 */
+	private function objectListing(string $name, array $idContext): ObjectListing {
+		return new ObjectListing(idContext: $idContext, definition: self::LISTINGS[$name]);
+	}//end objectListing()
 
 	/**
 	 * Check if the current user is in a specific group.
@@ -561,26 +407,7 @@ class AangebodenGebruikController extends Controller {
 				return false;
 			}
 
-			$userId = $user->getUID();
-
-			$group = $this->groupManager->get($groupName);
-			if ($group === null) {
-				$this->logger->warning('Group does not exist', ['group' => $groupName]);
-				return false;
-			}
-
-			$isInGroup = $group->inGroup($user);
-
-			$this->logger->debug(
-				'User group membership check',
-				[
-					'user' => $userId,
-					'group' => $groupName,
-					'isMember' => $isInGroup,
-				]
-			);
-
-			return $isInGroup;
+			return $this->isMemberOf(user: $user, groupName: $groupName);
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'Failed to check user group membership',
@@ -592,6 +419,37 @@ class AangebodenGebruikController extends Controller {
 			return false;
 		}//end try
 	}//end isUserInGroup()
+
+	/**
+	 * Check if a user is in a group; a group that does not exist has no members.
+	 *
+	 * @param IUser  $user      The user.
+	 * @param string $groupName The name of the group to check
+	 *
+	 * @return bool True if user is in the group, false otherwise
+	 */
+	private function isMemberOf(IUser $user, string $groupName): bool {
+		$userId = $user->getUID();
+
+		$group = $this->groupManager->get($groupName);
+		if ($group === null) {
+			$this->logger->warning('Group does not exist', ['group' => $groupName]);
+			return false;
+		}
+
+		$isInGroup = $group->inGroup($user);
+
+		$this->logger->debug(
+			'User group membership check',
+			[
+				'user' => $userId,
+				'group' => $groupName,
+				'isMember' => $isInGroup,
+			]
+		);
+
+		return $isInGroup;
+	}//end isMemberOf()
 
 	/**
 	 * Get all gebruiks objects where the active organization is in deelnemers (participants).
