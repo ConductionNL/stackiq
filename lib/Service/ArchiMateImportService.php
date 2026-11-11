@@ -1663,21 +1663,7 @@ class ArchiMateImportService {
 	 * @return ObjectServiceInterface|null ObjectService instance or null if not available
 	 */
 	private function getObjectService(): ?ObjectServiceInterface {
-		if ($this->appManager->isInstalled(appId: 'openregister') === false) {
-			return null;
-		}
-
-		try {
-			return $this->container->get(ObjectService::class);
-		} catch (\Exception $e) {
-			$this->logger->warning(
-				'Failed to get ObjectService',
-				[
-					'error' => $e->getMessage(),
-				]
-			);
-			return null;
-		}
+		return (new ArchiMate\ObjectServiceLookup(appManager: $this->appManager, container: $this->container, logger: $this->logger))->find();
 	}//end getObjectService()
 
 	/**
