@@ -266,30 +266,7 @@ class OrganizationHandler {
 	 * @spec   openspec/specs/sc-handlers/spec.md
 	 */
 	public function createGroupIfNotExists(string $groupName): ?IGroup {
-		$group = $this->_groupManager->get($groupName);
-
-		if ($group === null) {
-			try {
-				$group = $this->_groupManager->createGroup($groupName);
-				$this->_logger->info(
-					'Created new group',
-					[
-						'groupName' => $groupName,
-					]
-				);
-			} catch (\Exception $e) {
-				$this->_logger->error(
-					'Failed to create group: ' . $e->getMessage(),
-					[
-						'groupName' => $groupName,
-						'exception' => $e,
-					]
-				);
-				return null;
-			}
-		}
-
-		return $group;
+		return (new GroupCreation(groupManager: $this->_groupManager, logger: $this->_logger))->createIfNotExists(groupName: $groupName);
 	}//end createGroupIfNotExists()
 
 	/**
