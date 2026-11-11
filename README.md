@@ -208,6 +208,12 @@ Every commit runs through the [Conduction quality workflow](https://github.com/C
 
 All checks must pass before a release. Run locally with `composer check:strict` (full PHP pipeline) or `npm run lint` (frontend).
 
+### Test coverage
+
+<!-- coverage:start -->
+Measured test coverage: 44.4% of statements (PHP 46.7% of 31,545 statements, JavaScript 36.8% of 9,929 statements), at commit `3028649e` on 2026-11-11. The figures come from [`coverage-summary.json`](coverage-summary.json); refresh them with `composer coverage:publish`.
+<!-- coverage:end -->
+
 ### API Tests (454 Assertions)
 
 A dedicated Newman/Postman collection validates the entire API surface with **454 automated assertions** across 334 requests organized in 11 test folders:
