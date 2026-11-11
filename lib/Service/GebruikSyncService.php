@@ -210,7 +210,7 @@ class GebruikSyncService {
 			return;
 		}
 
-		$amefSlugs = $this->amefSlugsOf(amefElements: $amefElements, stats: $stats);
+		$amefSlugs = (new AmefReferences())->slugsOf(amefElements: $amefElements, stats: $stats);
 		$this->storeAmefSlugs(gebruikObject: $gebruikObject, amefSlugs: $amefSlugs);
 	}//end linkAmefElements()
 
@@ -290,7 +290,7 @@ class GebruikSyncService {
 	 * @return array The ids; empty when no component carries one.
 	 */
 	private function validReferenceIds(mixed $referenceComponents, ?string $gebruikUuid): array {
-		$referenceIds = $this->idsOf(referenceComponents: $referenceComponents);
+		$referenceIds = (new AmefReferences())->idsOf(referenceComponents: $referenceComponents);
 		if (empty($referenceIds) === true) {
 			$this->logger->warning(
 				'No valid IDs found in referentiecomponenten',
@@ -302,24 +302,6 @@ class GebruikSyncService {
 
 		return $referenceIds;
 	}//end validReferenceIds()
-
-	/**
-	 * Collect the id of every referentiecomponent that has one.
-	 *
-	 * @param mixed $referenceComponents The referentiecomponenten
-	 *
-	 * @return array The ids.
-	 */
-	private function idsOf(mixed $referenceComponents): array {
-		$referenceIds = [];
-		foreach ($referenceComponents as $component) {
-			if (isset($component['id']) === true) {
-				$referenceIds[] = $component['id'];
-			}
-		}
-
-		return $referenceIds;
-	}//end idsOf()
 
 	/**
 	 * Read the AMEF register and element schema to search in.
@@ -362,27 +344,6 @@ class GebruikSyncService {
 			]
 		);
 	}//end reportMissingAmefConfig()
-
-	/**
-	 * Collect the slugs of the found AMEF elements.
-	 *
-	 * @param array $amefElements The found AMEF elements
-	 * @param array $stats        Processing statistics, updated in place
-	 *
-	 * @return array The slugs, in element order.
-	 */
-	private function amefSlugsOf(array $amefElements, array &$stats): array {
-		$amefSlugs = [];
-		foreach ($amefElements as $amefElement) {
-			$amefData = $amefElement->getObject();
-			if (isset($amefData['slug']) === true) {
-				$amefSlugs[] = $amefData['slug'];
-				$stats['amefElementsProcessed']++;
-			}
-		}
-
-		return $amefSlugs;
-	}//end amefSlugsOf()
 
 	/**
 	 * Store the AMEF slugs on the gebruik object, or log that there are none.
