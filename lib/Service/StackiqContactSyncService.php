@@ -258,7 +258,7 @@ class StackiqContactSyncService {
 			return $existingUid;
 		}
 
-		return $this->namedAddressBookContactByEmail(record: $sync->record, addressBookUri: $sync->addressBookUri, fixedUid: $sync->fixedUid);
+		return $this->namedAddressBookContactByEmail(sync: $sync);
 	}//end knownNamedAddressBookUid()
 
 	/**
@@ -323,23 +323,48 @@ class StackiqContactSyncService {
 	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function searchNamedAddressBook(string $query, string $addressBookUri, array $properties): array {
+		$search = new NamedAddressBookSearch(query: $query, addressBookUri: $addressBookUri);
+		$search->properties = $properties;
+		return $this->namedAddressBookContacts(search: $search);
+	}//end searchNamedAddressBook()
+
+	/**
+	 * The contacts one named address book search finds, as searchNamedAddressBook() returns them.
+	 *
+	 * @param NamedAddressBookSearch $search The search.
+	 *
+	 * @return array<int, array<string, mixed>> The matching contacts.
+	 */
+	private function namedAddressBookContacts(NamedAddressBookSearch $search): array {
 		$vCard    = new RecordVCard();
 		$contacts = [];
-		foreach ($this->namedAddressBookResults(query: $query, addressBookUri: $addressBookUri, properties: $properties) as $result) {
-			$contacts[] = [
-				'uid' => (string)$result['UID'],
-				'name' => $vCard->firstValue(value: ($result['FN'] ?? '')),
-				'email' => $vCard->firstValue(value: ($result['EMAIL'] ?? '')),
-				'emails' => array_map(
-					fn (mixed $email): string => $vCard->firstValue(value: [$email]),
-					array_values((array)($result['EMAIL'] ?? []))
-				),
-				'addressBookKey' => (string)($result['addressbook-key'] ?? ''),
-			];
+		foreach ($this->namedAddressBookResults(search: $search) as $result) {
+			$contacts[] = $this->contactSummary(vCard: $vCard, result: $result);
 		}
 
 		return $contacts;
-	}//end searchNamedAddressBook()
+	}//end namedAddressBookContacts()
+
+	/**
+	 * One search result as a contact: uid, name, first and every e-mail address, address book key.
+	 *
+	 * @param RecordVCard          $vCard  The vCard value reader.
+	 * @param array<string, mixed> $result The search result.
+	 *
+	 * @return array<string, mixed> The contact.
+	 */
+	private function contactSummary(RecordVCard $vCard, array $result): array {
+		return [
+			'uid' => (string)$result['UID'],
+			'name' => $vCard->firstValue(value: ($result['FN'] ?? '')),
+			'email' => $vCard->firstValue(value: ($result['EMAIL'] ?? '')),
+			'emails' => array_map(
+				fn (mixed $email): string => $vCard->firstValue(value: [$email]),
+				array_values((array)($result['EMAIL'] ?? []))
+			),
+			'addressBookKey' => (string)($result['addressbook-key'] ?? ''),
+		];
+	}//end contactSummary()
 
 	/**
 	 * The contact in the named address book with the record's e-mail address, or null.
@@ -349,34 +374,21 @@ class StackiqContactSyncService {
 	 * not merge two of them. Only a card that already has that UID (by URI)
 	 * is returned.
 	 *
-	 * @param array<string, mixed> $record The relationship record.
-	 * @param string $addressBookUri The address book's URI.
-	 * @param string|null $fixedUid The UID the caller gives a new contact, or null.
+	 * @param NamedAddressBookSync $sync The sync request.
 	 *
 	 * @return string|null The contact UID.
 	 *
 	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
-	private function namedAddressBookContactByEmail(array $record, string $addressBookUri, ?string $fixedUid): ?string {
-		if ($fixedUid !== null) {
-			// A card that already has the fixed UID is the contact: Nextcloud
-			// refuses a second one (UidConflict), and the contacts search may not
-			// show it yet. Looked up by URI, not by search.
-			$key = $this->existingNamedAddressBookKey(addressBookUri: $addressBookUri);
-			$backend = null;
-			if ($key !== null) {
-				$backend = $this->container?->get(static::CARDDAV_BACKEND_CLASS);
-			}
-
-			if (is_object($backend) === true && is_array($backend->getCard((int)$key, $fixedUid . '.vcf')) === true) {
-				return $fixedUid;
-			}
-
-			return null;
+	private function namedAddressBookContactByEmail(NamedAddressBookSync $sync): ?string {
+		if ($sync->fixedUid !== null) {
+			return $this->namedAddressBookCardUid(addressBookUri: $sync->addressBookUri, fixedUid: $sync->fixedUid);
 		}
 
-		$email = trim((string)($record['e-mailadres'] ?? $record['email'] ?? ''));
-		foreach ($this->namedAddressBookResults(query: $email, addressBookUri: $addressBookUri, properties: ['EMAIL']) as $result) {
+		$email = trim((string)($sync->record['e-mailadres'] ?? $sync->record['email'] ?? ''));
+		$search = new NamedAddressBookSearch(query: $email, addressBookUri: $sync->addressBookUri);
+		$search->properties = ['EMAIL'];
+		foreach ($this->namedAddressBookResults(search: $search) as $result) {
 			if ((new RecordVCard())->valueMatches(value: ($result['EMAIL'] ?? ''), needle: $email) === true) {
 				return (string)$result['UID'];
 			}
@@ -386,37 +398,74 @@ class StackiqContactSyncService {
 	}//end namedAddressBookContactByEmail()
 
 	/**
+	 * The fixed UID, when the named address book already has a card with it.
+	 *
+	 * A card that already has the fixed UID is the contact: Nextcloud refuses a
+	 * second one (UidConflict), and the contacts search may not show it yet.
+	 * Looked up by URI, not by search.
+	 *
+	 * @param string $addressBookUri The address book's URI.
+	 * @param string $fixedUid       The UID the caller gives the contact.
+	 *
+	 * @return string|null The fixed UID, or null when there is no such card.
+	 */
+	private function namedAddressBookCardUid(string $addressBookUri, string $fixedUid): ?string {
+		$key = $this->existingNamedAddressBookKey(addressBookUri: $addressBookUri);
+		$backend = null;
+		if ($key !== null) {
+			$backend = $this->container?->get(static::CARDDAV_BACKEND_CLASS);
+		}
+
+		if (is_object($backend) === true && is_array($backend->getCard((int)$key, $fixedUid . '.vcf')) === true) {
+			return $fixedUid;
+		}
+
+		return null;
+	}//end namedAddressBookCardUid()
+
+	/**
 	 * The raw search results that lie in the user's address book with this URI.
 	 *
 	 * The contacts manager searches every address book of the user and tags
 	 * each result with its address book's key, the CardDAV address book id;
 	 * only results with the named address book's id are kept.
 	 *
-	 * @param string $query The search query.
-	 * @param string $addressBookUri The address book's URI.
-	 * @param array<int, string> $properties The vCard properties to search.
+	 * @param NamedAddressBookSearch $search The search.
 	 *
 	 * @return array<int, array<string, mixed>>
 	 */
-	private function namedAddressBookResults(string $query, string $addressBookUri, array $properties): array {
-		if ($this->isAvailable() === false || trim($query) === '') {
+	private function namedAddressBookResults(NamedAddressBookSearch $search): array {
+		if ($this->isAvailable() === false || trim($search->query) === '') {
 			return [];
 		}
 
-		$key = $this->existingNamedAddressBookKey(addressBookUri: $addressBookUri);
+		$key = $this->existingNamedAddressBookKey(addressBookUri: $search->addressBookUri);
 		if ($key === null) {
 			return [];
 		}
 
+		$results = $this->contactsManager->search($search->query, $search->properties, ['limit' => 50]);
+		return $this->resultsInAddressBook(results: $results, key: $key);
+	}//end namedAddressBookResults()
+
+	/**
+	 * The results with a UID that come from the address book with this key.
+	 *
+	 * @param iterable $results The contacts search results.
+	 * @param string   $key     The CardDAV address book id.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function resultsInAddressBook(iterable $results, string $key): array {
 		$found = [];
-		foreach ($this->contactsManager->search($query, $properties, ['limit' => 50]) as $result) {
+		foreach ($results as $result) {
 			if (isset($result['UID']) === true && (string)($result['addressbook-key'] ?? '') === $key) {
 				$found[] = $result;
 			}
 		}
 
 		return $found;
-	}//end namedAddressBookResults()
+	}//end resultsInAddressBook()
 
 	/**
 	 * The key of the signed-in user's address book with this URI, without creating it.
