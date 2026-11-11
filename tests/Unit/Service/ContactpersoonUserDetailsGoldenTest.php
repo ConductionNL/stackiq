@@ -162,8 +162,8 @@ class ContactpersoonUserDetailsGoldenTest extends TestCase {
 		$avatar = $this->createMock(IImage::class);
 		$avatar->method('data')->willReturn('avatar-' . $uid);
 
-		// The account object of a running server answers getFreeQuota(), which
-		// the published IUser interface does not declare.
+		// The code under test also reads getFreeQuota(), which the published
+		// IUser interface does not declare, so the double declares it.
 		$user = $this->createMock(ContactpersoonUserWithFreeQuota::class);
 		$user->method('getUID')->willReturn($uid);
 		$user->method('getEMailAddress')->willReturn($uid . '@example.org');
