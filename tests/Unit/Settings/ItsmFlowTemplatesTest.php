@@ -26,6 +26,7 @@ namespace OCA\Stackiq\Tests\Unit\Settings;
 
 use OCA\Stackiq\Service\Itsm\ItsmFlowGateway;
 use OCA\Stackiq\Service\ItsmExchangeService;
+use OCA\Stackiq\Service\ItsmFlowRequest;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
@@ -93,7 +94,15 @@ class ItsmFlowTemplatesTest extends TestCase {
 			logger: $this->createMock(LoggerInterface::class)
 		);
 
-		return $service->buildFlows(desk: $desk, organisation: '0f6c3a8e-1111-4c2b-9d6a-2a1b3c4d5e6f', runAs: 'admin', location: 'https://desk.example.nl/tas/api', templateId: 'tpl-application');
+		return $service->buildFlows(
+			request: new ItsmFlowRequest(
+				desk: $desk,
+				organisation: '0f6c3a8e-1111-4c2b-9d6a-2a1b3c4d5e6f',
+				runAs: 'admin',
+				location: 'https://desk.example.nl/tas/api',
+				templateId: 'tpl-application'
+			)
+		);
 	}//end flows()
 
 	/**

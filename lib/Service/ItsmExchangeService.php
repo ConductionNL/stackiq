@@ -183,11 +183,8 @@ class ItsmExchangeService {
 	/**
 	 * Fill every template for one desk and one organisation.
 	 *
-	 * @param string $desk         The desk key (topdesk, servicenow).
-	 * @param string $organisation The uuid of the organisation whose applications are exchanged.
-	 * @param string $runAs        The user the scheduled imports run as.
-	 * @param string $location     The desk source's location; its scheme and host make the record links.
-	 * @param string $templateId   The desk's asset template for a new record (TOPdesk needs one), or empty.
+	 * @param ItsmFlowRequest $request The desk, the organisation's uuid, the run-as user, the desk source's
+	 *                                 location and the asset template.
 	 *
 	 * @return array<string, array<string, mixed>> The filled flow documents, by flow key.
 	 *
@@ -195,59 +192,154 @@ class ItsmExchangeService {
 	 *
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
 	 */
-	public function buildFlows(string $desk, string $organisation, string $runAs, string $location, string $templateId = ''): array {
-		if (isset(self::DESKS[$desk]) === false) {
-			throw new InvalidArgumentException('Unknown service desk "' . $desk . '". Choose one of: ' . implode(', ', array_keys(self::DESKS)) . '.');
+	public function buildFlows(ItsmFlowRequest $request): array {
+		if (isset(self::DESKS[$request->desk]) === false) {
+			throw new InvalidArgumentException(
+				'Unknown service desk "' . $request->desk . '". Choose one of: ' . implode(', ', array_keys(self::DESKS)) . '.'
+			);
 		}
 
-		$profile = self::DESKS[$desk];
-		$appUrl  = rtrim($this->urlGenerator->getAbsoluteURL('/index.php/apps/' . AppIdentity::APP_ID), '/');
-		$base    = self::baseOf(location: $location);
-		$flows   = [];
+		$exchange = $this->exchangeOf(request: $request);
+		$flows    = [];
 		foreach (self::FLOWS as $key => $flow) {
-			$deskKey = $desk;
-			if ($key === 'file') {
-				$deskKey = 'file';
-			}
-
-			$values = [
-				'REGISTER'        => self::REGISTER,
-				'CONSUMER'        => $organisation,
-				'RUN_AS'          => $runAs,
-				'CRON'            => self::CRON,
-				'DESK'            => $deskKey,
-				'DESK_LABEL'      => $profile['label'],
-				'SOURCE'          => $profile['source'],
-				'SYNC'            => 'itsm-' . $deskKey . '-' . $flow['feed'],
-				'PRESET'          => 'itsm-' . $deskKey . '-' . $flow['preset'],
-				'CONTRACT_TYPE'   => ($flow['contractType'] ?? 'Licence'),
-				'FEED_LABEL'      => ($flow['feedLabel'] ?? $flow['feed']),
-				'APP_URL'         => $appUrl,
-				'CREATE_ENDPOINT' => $profile['createEndpoint'],
-				'CREATE_METHOD'   => $profile['createMethod'],
-				'UPDATE_ENDPOINT' => $profile['updateEndpoint'],
-				'UPDATE_METHOD'   => $profile['updateMethod'],
-				'RESPONSE_ID'     => $profile['responseId'],
-				'RECORD_URL'      => str_replace('%BASE%', $base, $profile['recordUrl']),
-				'DESK_BASE'       => $base,
-				'TEMPLATE_ID'     => $templateId,
-				'CALL_QUERY'      => $profile['callQuery'],
-			];
-			if ($key === 'file') {
-				$values['SYNC']   = 'itsm-file-applications';
-				$values['PRESET'] = 'itsm-file-application-inbound';
-			}
-
-			$template = $flow['template'];
-			if ($key === 'relations') {
-				$template = $profile['relationsTemplate'];
-			}
-
-			$flows[$key] = self::fill(value: $this->template(file: $template), values: $values);
-		}//end foreach
+			$flow['key']  = $key;
+			$template     = $this->template(file: self::templateFile(exchange: $exchange, flow: $flow));
+			$flows[$key] = self::fill(value: $template, values: self::flowValues(exchange: $exchange, flow: $flow));
+		}
 
 		return $flows;
 	}//end buildFlows()
+
+	/**
+	 * What every flow of one set-up shares: the request, the desk's profile, the catalogue link and the desk base.
+	 *
+	 * @param ItsmFlowRequest $request The set-up, for a known desk.
+	 *
+	 * @return array<string, mixed> The request, the desk's profile, the catalogue link and the desk base.
+	 */
+	private function exchangeOf(ItsmFlowRequest $request): array {
+		return [
+			'request' => $request,
+			'profile' => self::DESKS[$request->desk],
+			'appUrl'  => rtrim($this->urlGenerator->getAbsoluteURL('/index.php/apps/' . AppIdentity::APP_ID), '/'),
+			'base'    => self::baseOf(location: $request->location),
+		];
+	}//end exchangeOf()
+
+	/**
+	 * The template file of one flow: the desk's own for the relations, the flow's for every other.
+	 *
+	 * @param array<string, mixed> $exchange What every flow of the set-up shares.
+	 * @param array<string, mixed> $flow     The flow, with its key.
+	 *
+	 * @return string
+	 */
+	private static function templateFile(array $exchange, array $flow): string {
+		if ($flow['key'] === 'relations') {
+			return $exchange['profile']['relationsTemplate'];
+		}
+
+		return $flow['template'];
+	}//end templateFile()
+
+	/**
+	 * The placeholder values of one flow, in the order they are filled.
+	 *
+	 * @param array<string, mixed> $exchange What every flow of the set-up shares.
+	 * @param array<string, mixed> $flow     The flow, with its key.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function flowValues(array $exchange, array $flow): array {
+		$flow['deskKey'] = self::deskKeyOf(desk: $exchange['request']->desk, flowKey: $flow['key']);
+		$values = self::runValues(exchange: $exchange, flow: $flow) + self::feedValues(exchange: $exchange, flow: $flow);
+		$values += self::deskEndpoints(exchange: $exchange);
+		if ($flow['key'] === 'file') {
+			$values['SYNC']   = 'itsm-file-applications';
+			$values['PRESET'] = 'itsm-file-application-inbound';
+		}
+
+		return $values;
+	}//end flowValues()
+
+	/**
+	 * The desk key a flow names: `file` for the file flow, the desk for every other.
+	 *
+	 * @param string $desk    The desk key.
+	 * @param string $flowKey The flow key.
+	 *
+	 * @return string
+	 */
+	private static function deskKeyOf(string $desk, string $flowKey): string {
+		if ($flowKey === 'file') {
+			return 'file';
+		}
+
+		return $desk;
+	}//end deskKeyOf()
+
+	/**
+	 * Who and what the flow runs for: the register, the consumer, the run-as user, the schedule and the desk.
+	 *
+	 * @param array<string, mixed> $exchange What every flow of the set-up shares.
+	 * @param array<string, mixed> $flow     The flow, with its desk key.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function runValues(array $exchange, array $flow): array {
+		$request = $exchange['request'];
+
+		return [
+			'REGISTER'   => self::REGISTER,
+			'CONSUMER'   => $request->organisation,
+			'RUN_AS'     => $request->runAs,
+			'CRON'       => self::CRON,
+			'DESK'       => $flow['deskKey'],
+			'DESK_LABEL' => $exchange['profile']['label'],
+			'SOURCE'     => $exchange['profile']['source'],
+		];
+	}//end runValues()
+
+	/**
+	 * What the flow exchanges: its synchronization, preset, contract type and feed label, and the catalogue link.
+	 *
+	 * @param array<string, mixed> $exchange What every flow of the set-up shares.
+	 * @param array<string, mixed> $flow     The flow, with its desk key.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function feedValues(array $exchange, array $flow): array {
+		return [
+			'SYNC'          => 'itsm-' . $flow['deskKey'] . '-' . $flow['feed'],
+			'PRESET'        => 'itsm-' . $flow['deskKey'] . '-' . $flow['preset'],
+			'CONTRACT_TYPE' => ($flow['contractType'] ?? 'Licence'),
+			'FEED_LABEL'    => ($flow['feedLabel'] ?? $flow['feed']),
+			'APP_URL'       => $exchange['appUrl'],
+		];
+	}//end feedValues()
+
+	/**
+	 * How the flow talks to the desk: its endpoints and methods, the record link and base, the asset template.
+	 *
+	 * @param array<string, mixed> $exchange What every flow of the set-up shares.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function deskEndpoints(array $exchange): array {
+		$profile = $exchange['profile'];
+
+		return [
+			'CREATE_ENDPOINT' => $profile['createEndpoint'],
+			'CREATE_METHOD'   => $profile['createMethod'],
+			'UPDATE_ENDPOINT' => $profile['updateEndpoint'],
+			'UPDATE_METHOD'   => $profile['updateMethod'],
+			'RESPONSE_ID'     => $profile['responseId'],
+			'RECORD_URL'      => str_replace('%BASE%', $exchange['base'], $profile['recordUrl']),
+			'DESK_BASE'       => $exchange['base'],
+			'TEMPLATE_ID'     => $exchange['request']->templateId,
+			'CALL_QUERY'      => $profile['callQuery'],
+		];
+	}//end deskEndpoints()
 
 	/**
 	 * Set up the exchange: check every flow, then create or update them all.
@@ -265,39 +357,87 @@ class ItsmExchangeService {
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
 	 */
 	public function setUp(string $desk, string $organisation, string $runAs, string $templateId = ''): array {
-		$found = $this->preconditions(desk: $desk, organisation: $organisation);
+		return $this->setUpExchange(
+			request: new ItsmFlowRequest(desk: $desk, organisation: $organisation, runAs: $runAs, location: '', templateId: $templateId)
+		);
+	}//end setUp()
+
+	/**
+	 * Set up the exchange for one request: check every flow, then create or update them all.
+	 *
+	 * @param ItsmFlowRequest $request The desk, the organisation as given, the run-as user and the asset template.
+	 *
+	 * @return array<string, mixed> `created`, and either `flows` or `blocking` per flow key.
+	 */
+	private function setUpExchange(ItsmFlowRequest $request): array {
+		$found = $this->preconditions(desk: $request->desk, organisation: $request->organisation);
 		if (is_string($found) === true) {
 			return $this->refuse(message: $found);
 		}
 
 		// The flows compare this with a usage's consumer uuid, so store the uuid
 		// even when the admin gave an id or a slug.
-		$organisation = $found['organisation'];
+		$location = (string) ($found['source']['location'] ?? '');
+		$request  = $request->withSource(organisation: $found['organisation'], location: $location);
+		$checked = $this->checkedFlows(request: $request);
+		if (isset($checked['refusal']) === true) {
+			return $checked['refusal'];
+		}
+
+		return $this->publishFlows(request: $request, flows: $checked['flows']);
+	}//end setUpExchange()
+
+	/**
+	 * Build every flow and preflight it.
+	 *
+	 * @param ItsmFlowRequest $request The set-up, with the organisation's uuid and the desk source's location.
+	 *
+	 * @return array<string, array<string, mixed>> The flows (`flows`), or the refusal (`refusal`) when one cannot be
+	 *                                             checked or OpenRegister refuses one.
+	 */
+	private function checkedFlows(ItsmFlowRequest $request): array {
 		try {
-			$flows = $this->buildFlows(
-				desk: $desk,
-				organisation: $organisation,
-				runAs: $runAs,
-				location: (string) ($found['source']['location'] ?? ''),
-				templateId: $templateId
-			);
+			$flows = $this->buildFlows(request: $request);
 
 			$blocking = $this->blockingFindings(flows: $flows);
 		} catch (Throwable $e) {
 			$this->logger->error('[ItsmExchangeService] Checking the exchange flows failed', ['exception' => $e]);
-			return $this->refuse(message: 'Nothing was created. The flows could not be checked: ' . $e->getMessage());
+			return ['refusal' => $this->refuse(message: 'Nothing was created. The flows could not be checked: ' . $e->getMessage())];
 		}
 
 		if ($blocking !== []) {
-			$first = (array) reset($blocking);
-			$entry = (array) ($first[0] ?? []);
-			return $this->refuse(
-				message: 'Nothing was created. OpenRegister refused flow "' . (string) array_key_first($blocking) . '": step '
-					. (string) ($entry['step'] ?? '?') . ', ' . (string) ($entry['reason'] ?? 'unknown reason') . '.',
-				blocking: $blocking
-			);
+			return ['refusal' => $this->blockedRefusal(blocking: $blocking)];
 		}
 
+		return ['flows' => $flows];
+	}//end checkedFlows()
+
+	/**
+	 * The refusal naming the first flow OpenRegister refused, its step and its reason.
+	 *
+	 * @param array<string, mixed> $blocking The blocking findings by flow key.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function blockedRefusal(array $blocking): array {
+		$first = (array) reset($blocking);
+		$entry = (array) ($first[0] ?? []);
+		return $this->refuse(
+			message: 'Nothing was created. OpenRegister refused flow "' . (string) array_key_first($blocking) . '": step '
+				. (string) ($entry['step'] ?? '?') . ', ' . (string) ($entry['reason'] ?? 'unknown reason') . '.',
+			blocking: $blocking
+		);
+	}//end blockedRefusal()
+
+	/**
+	 * Save and publish every checked flow, updating the ones an earlier set-up created; a failure keeps what was saved.
+	 *
+	 * @param ItsmFlowRequest $request The set-up.
+	 * @param array<string, array<string, mixed>> $flows The checked flows by key.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function publishFlows(ItsmFlowRequest $request, array $flows): array {
 		$stored = (array) ($this->config()['flows'] ?? []);
 		$saved  = [];
 		try {
@@ -306,19 +446,31 @@ class ItsmExchangeService {
 			}
 		} catch (Throwable $e) {
 			$this->logger->error('[ItsmExchangeService] Saving the exchange flows failed', ['exception' => $e]);
-			$this->storeConfig(desk: $desk, organisation: $organisation, flows: array_merge($stored, $saved));
+			$this->storeConfig(desk: $request->desk, organisation: $request->organisation, flows: array_merge($stored, $saved));
 			return $this->refuse(message: 'Saving the flows failed after ' . count($saved) . ' of ' . count($flows) . ': ' . $e->getMessage());
 		}
 
-		$this->storeConfig(desk: $desk, organisation: $organisation, flows: $saved);
+		return $this->enableExchange(request: $request, saved: $saved);
+	}//end publishFlows()
+
+	/**
+	 * Store the saved flows, switch the exchange on and tell integriq.
+	 *
+	 * @param ItsmFlowRequest $request The set-up.
+	 * @param array<string, string> $saved The saved flow uuids by key.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function enableExchange(ItsmFlowRequest $request, array $saved): array {
+		$this->storeConfig(desk: $request->desk, organisation: $request->organisation, flows: $saved);
 		$this->appConfig->setValueBool(AppIdentity::APP_ID, self::ENABLED_KEY, true);
 		$this->connectionReports?->itsmSetUp(
 			created: true,
-			message: count($saved) . ' flows set up for ' . self::DESKS[$desk]['label'] . '. The first import runs tonight.'
+			message: count($saved) . ' flows set up for ' . self::DESKS[$request->desk]['label'] . '. The first import runs tonight.'
 		);
 
-		return ['created' => true, 'desk' => $desk, 'flows' => $saved];
-	}//end setUp()
+		return ['created' => true, 'desk' => $request->desk, 'flows' => $saved];
+	}//end enableExchange()
 
 	/**
 	 * What must be there before any flow is built: the engine, the desk, the organisation and integriq's source.
