@@ -1965,6 +1965,11 @@ import {
 	orderedPropertyRows,
 	schemaPropertyRows,
 } from './objectPropertyRows.js'
+import {
+	inputComponentOf,
+	inputTypeOf,
+	pickerTypeOf,
+} from './propertyInputKind.js'
 
 import '@toast-ui/editor/dist/toastui-editor.css'
 
@@ -3391,31 +3396,7 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyInputType(key) {
-			const schemaProperties = this.getSchemaProperties()
-			const schemaProperty = schemaProperties[key]
-			if (!schemaProperty) return 'text'
-
-			const type = schemaProperty.type
-			const format = schemaProperty.format
-
-			// Handle different types and formats
-			switch (type) {
-				case 'string':
-					if (format === 'date') return 'date'
-					if (format === 'time') return 'time'
-					if (format === 'date-time') return 'datetime-local'
-					if (format === 'email') return 'email'
-					if (format === 'url' || format === 'uri') return 'url'
-					if (format === 'password') return 'password'
-					return 'text'
-				case 'number':
-				case 'integer':
-					return 'number'
-				case 'boolean':
-					return 'checkbox'
-				default:
-					return 'text'
-			}
+			return inputTypeOf(this.getSchemaProperties()[key])
 		},
 
 		/**
@@ -3423,41 +3404,7 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyInputComponent(key) {
-			const schemaProperties = this.getSchemaProperties()
-			const schemaProperty = schemaProperties[key]
-			if (!schemaProperty) return 'NcTextField'
-
-			const type = schemaProperty.type
-			const format = schemaProperty.format
-
-			// Handle different types and formats
-			switch (type) {
-				case 'boolean':
-					return 'NcCheckboxRadioSwitch'
-				case 'string':
-					if (
-						format === 'date'
-						|| format === 'date-time'
-						|| format === 'time'
-					) {
-						return 'NcDateTimePicker'
-					}
-					if (format === 'text') {
-						return 'NcTextArea'
-					}
-					if (format === 'markdown') {
-						return 'Editor'
-					}
-					return 'NcTextField'
-				case 'number':
-				case 'integer':
-					return 'NcTextField'
-				case 'array':
-					return 'NcTextFieldArray'
-
-				default:
-					return 'NcTextField'
-			}
+			return inputComponentOf(this.getSchemaProperties()[key])
 		},
 
 		/**
@@ -3923,37 +3870,7 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getDateTimePickerType(key) {
-			const schemaProperties = this.getSchemaProperties()
-			const schemaProperty = schemaProperties[key]
-
-			if (!schemaProperty || !schemaProperty.format) {
-				return 'datetime'
-			}
-
-			let pickerType = 'datetime'
-
-			// Map schema formats to NcDateTimePicker types
-			switch (schemaProperty.format) {
-				case 'date':
-					pickerType = 'date'
-					break
-				case 'date-time':
-					pickerType = 'datetime'
-					break
-				case 'time':
-					pickerType = 'time'
-					break
-				default:
-					// For string type with no specific format, default to datetime
-					if (schemaProperty.type === 'string') {
-						pickerType = 'datetime'
-					} else {
-						pickerType = 'datetime'
-					}
-					break
-			}
-
-			return pickerType
+			return pickerTypeOf(this.getSchemaProperties()[key])
 		},
 
 		// Publish/Depublish methods
