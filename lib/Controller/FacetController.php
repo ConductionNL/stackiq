@@ -82,60 +82,121 @@ class FacetController extends Controller {
 	 */
 	public function getFacets(string $schema): JSONResponse {
 		$filters = $this->parseFilters();
-		$search = $this->request->getParam('search');
-		if (is_string($search) === false) {
-			$search = null;
-		}
-
-		$organization = $this->request->getParam('organization');
-		if (is_string($organization) === false) {
-			$organization = null;
-		}
 
 		try {
-			$result = $this->facetService->getFacets(
-				schema: $schema,
-				filters: $filters,
-				search: $search,
-				organization: $organization
-			);
+			return $this->facetsResponse(schema: $schema, filters: $filters);
+		} catch (\Exception $e) {
+			return $this->failureResponse(schema: $schema, error: $e);
+		}
+	}//end getFacets()
 
-			return new JSONResponse($result, 200);
-		} catch (\InvalidArgumentException $e) {
+	/**
+	 * The facets for a schema, the selected filters and the search and organisation parameters.
+	 *
+	 * @param string $schema The requested schema.
+	 * @param array $filters The selected filters.
+	 *
+	 * @return JSONResponse The 200 with the facets.
+	 *
+	 * @throws \Exception When the aggregation fails.
+	 */
+	private function facetsResponse(string $schema, array $filters): JSONResponse {
+		$result = $this->facetService->getFacets(
+			schema: $schema,
+			filters: $filters,
+			search: $this->stringParam(name: 'search'),
+			organization: $this->stringParam(name: 'organization')
+		);
+
+		return new JSONResponse($result, 200);
+	}//end facetsResponse()
+
+	/**
+	 * A request parameter when it is a string, otherwise null.
+	 *
+	 * @param string $name The parameter.
+	 *
+	 * @return string|null
+	 */
+	private function stringParam(string $name): ?string {
+		$value = $this->request->getParam($name);
+		if (is_string($value) === false) {
+			return null;
+		}
+
+		return $value;
+	}//end stringParam()
+
+	/**
+	 * The response to a failed aggregation: 400 for an unsupported schema, 503 when
+	 * OpenRegister is unavailable, otherwise 500; the last two are logged.
+	 *
+	 * @param string $schema The requested schema.
+	 * @param \Exception $error The failure.
+	 *
+	 * @return JSONResponse
+	 */
+	private function failureResponse(string $schema, \Exception $error): JSONResponse {
+		if ($error instanceof \InvalidArgumentException) {
 			return new JSONResponse(
 				[
-					'message' => $e->getMessage(),
+					'message' => $error->getMessage(),
 					'supportedSchemas' => ['module', 'catalogService'],
 				],
 				400
 			);
-		} catch (\RuntimeException $e) {
-			$this->logger->error(
-				message: 'FacetController: ObjectService unavailable',
-				context: ['schema' => $schema, 'error' => $e->getMessage()]
-			);
+		}
 
-			return new JSONResponse(
-				['message' => 'Facet aggregation is temporarily unavailable: ' . $e->getMessage()],
-				503
-			);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				message: 'FacetController: failed to compute facets',
-				context: [
-					'schema' => $schema,
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
+		if ($error instanceof \RuntimeException) {
+			return $this->unavailableResponse(schema: $schema, error: $error);
+		}
 
-			return new JSONResponse(
-				['message' => 'Internal server error: ' . $e->getMessage()],
-				500
-			);
-		}//end try
+		return $this->unexpectedFailureResponse(schema: $schema, error: $error);
+	}//end failureResponse()
 
-	}//end getFacets()
+	/**
+	 * The logged 503 when OpenRegister's object service is unavailable.
+	 *
+	 * @param string $schema The requested schema.
+	 * @param \RuntimeException $error The failure.
+	 *
+	 * @return JSONResponse
+	 */
+	private function unavailableResponse(string $schema, \RuntimeException $error): JSONResponse {
+		$this->logger->error(
+			message: 'FacetController: ObjectService unavailable',
+			context: ['schema' => $schema, 'error' => $error->getMessage()]
+		);
+
+		return new JSONResponse(
+			['message' => 'Facet aggregation is temporarily unavailable: ' . $error->getMessage()],
+			503
+		);
+	}//end unavailableResponse()
+
+	/**
+	 * The logged 500 for any other failure.
+	 *
+	 * @param string $schema The requested schema.
+	 * @param \Exception $error The failure.
+	 *
+	 * @return JSONResponse
+	 */
+	private function unexpectedFailureResponse(string $schema, \Exception $error): JSONResponse {
+		$this->logger->error(
+			message: 'FacetController: failed to compute facets',
+			context: [
+				'schema' => $schema,
+				'error' => $error->getMessage(),
+				'trace' => $error->getTraceAsString(),
+			]
+		);
+
+		return new JSONResponse(
+			['message' => 'Internal server error: ' . $error->getMessage()],
+			500
+		);
+	}//end unexpectedFailureResponse()
 
 	/**
 	 * Parse the per-dimension facet filter query parameters into
