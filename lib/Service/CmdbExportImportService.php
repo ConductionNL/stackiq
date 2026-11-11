@@ -1086,25 +1086,11 @@ class CmdbExportImportService {
 		$pack = $this->profile->pack(target: $target);
 		$result = $this->engine->mapRow($pack, $row->values, $row->entry['row']);
 
-		$required = [];
-		foreach (($pack['fieldMappings'] ?? []) as $mapping) {
-			if (($mapping['required'] ?? false) === true) {
-				$required[] = (string)($mapping['source'] ?? '');
-			}
-		}
-
-		$silent = in_array($target, ['manufacturer', 'businessOwner', 'municipality'], true);
-		$missing = [];
-		foreach (($result['errors'] ?? []) as $error) {
-			$source = (string)($error['source'] ?? '');
-			if (in_array($source, $required, true) === true) {
-				$missing[] = $source;
-				continue;
-			}
-
-			if ($silent === false) {
-				$row->warnings[] = $this->l10n->t('Column "%1$s": %2$s', [$source, (string)($error['message'] ?? '')]);
-			}
+		$required = self::requiredSources(pack: $pack);
+		$errors = ($result['errors'] ?? []);
+		$missing = self::missingSources(errors: $errors, required: $required);
+		if (in_array($target, ['manufacturer', 'businessOwner', 'municipality'], true) === false) {
+			array_push($row->warnings, ...$this->columnWarnings(errors: $errors, required: $required));
 		}
 
 		// A lookup whose default is null maps a known "no value" (an Applicatiesoort
@@ -1115,6 +1101,64 @@ class CmdbExportImportService {
 
 		return ['data' => $data, 'missing' => array_values(array_unique($missing))];
 	}//end map()
+
+	/**
+	 * The source columns a pack requires.
+	 *
+	 * @param array<string, mixed> $pack The profile pack.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function requiredSources(array $pack): array {
+		$required = [];
+		foreach (($pack['fieldMappings'] ?? []) as $mapping) {
+			if (($mapping['required'] ?? false) === true) {
+				$required[] = (string)($mapping['source'] ?? '');
+			}
+		}
+
+		return $required;
+	}//end requiredSources()
+
+	/**
+	 * The required source columns the mapping engine reported an error for, in error order.
+	 *
+	 * @param array<int, array<string, mixed>> $errors The engine's errors.
+	 * @param array<int, string> $required The required source columns.
+	 *
+	 * @return array<int, string>
+	 */
+	private static function missingSources(array $errors, array $required): array {
+		$missing = [];
+		foreach ($errors as $error) {
+			$source = (string)($error['source'] ?? '');
+			if (in_array($source, $required, true) === true) {
+				$missing[] = $source;
+			}
+		}
+
+		return $missing;
+	}//end missingSources()
+
+	/**
+	 * A row warning for every engine error on a column the pack does not require, in error order.
+	 *
+	 * @param array<int, array<string, mixed>> $errors The engine's errors.
+	 * @param array<int, string> $required The required source columns.
+	 *
+	 * @return array<int, string>
+	 */
+	private function columnWarnings(array $errors, array $required): array {
+		$warnings = [];
+		foreach ($errors as $error) {
+			$source = (string)($error['source'] ?? '');
+			if (in_array($source, $required, true) === false) {
+				$warnings[] = $this->l10n->t('Column "%1$s": %2$s', [$source, (string)($error['message'] ?? '')]);
+			}
+		}
+
+		return $warnings;
+	}//end columnWarnings()
 
 	/**
 	 * Find or create the organisation of the row's manufacturer.
@@ -1665,22 +1709,61 @@ class CmdbExportImportService {
 			return $this->municipalityByUuid(uuid: $uuid);
 		}
 
-		$lookup = new CmdbImportRow(run: null, entry: ['sheet' => '', 'row' => 0, 'appId' => '', 'name' => '']);
-		$lookup->values = ['municipalityName' => trim((string)($options['municipalityName'] ?? ''))];
-		$mapped = $this->map(target: 'municipality', row: $lookup);
+		return $this->municipalityByName(options: $options);
+	}//end resolveMunicipality()
+
+	/**
+	 * The municipality the import options name: the one existing municipality with that name, or a new one.
+	 *
+	 * @param array<string, mixed> $options The import options, with `municipalityName`.
+	 *
+	 * @return array{uuid: string, name: string, created: bool}
+	 *
+	 * @throws CmdbImportException MUNICIPALITY_REQUIRED without a name, MUNICIPALITY_AMBIGUOUS when several match.
+	 */
+	private function municipalityByName(array $options): array {
+		$mapped = $this->mappedMunicipality(options: $options);
 		$name = trim((string)preg_replace('/\s+/u', ' ', (string)($mapped['data']['name'] ?? '')));
 		if ($mapped['missing'] !== [] || $name === '') {
 			throw new CmdbImportException(errorCode: CmdbImportException::MUNICIPALITY_REQUIRED, message: 'No municipality given');
 		}
 
-		$key = self::normaliseName(name: $name);
-		$matches = array_values(
-			array_filter(
-				$this->organisationsOfType(type: 'Municipality'),
-				static fn (array $organisation): bool => self::normaliseName(name: (string)($organisation['name'] ?? '')) === $key
-			)
-		);
+		$existing = $this->existingMunicipality(name: $name);
+		if ($existing !== null) {
+			return $existing;
+		}
 
+		$data = $mapped['data'];
+		$data['name'] = $name;
+
+		return ['uuid' => $this->save(schemaKey: 'organization', data: $data, uuid: null), 'name' => $name, 'created' => true];
+	}//end municipalityByName()
+
+	/**
+	 * The municipality pack mapped over the name in the import options.
+	 *
+	 * @param array<string, mixed> $options The import options, with `municipalityName`.
+	 *
+	 * @return array{data: array<string, mixed>, missing: array<int, string>}
+	 */
+	private function mappedMunicipality(array $options): array {
+		$lookup = new CmdbImportRow(run: null, entry: ['sheet' => '', 'row' => 0, 'appId' => '', 'name' => '']);
+		$lookup->values = ['municipalityName' => trim((string)($options['municipalityName'] ?? ''))];
+
+		return $this->map(target: 'municipality', row: $lookup);
+	}//end mappedMunicipality()
+
+	/**
+	 * The one municipality with this name, or null when there is none.
+	 *
+	 * @param string $name The municipality name.
+	 *
+	 * @return array{uuid: string, name: string, created: bool}|null
+	 *
+	 * @throws CmdbImportException MUNICIPALITY_AMBIGUOUS when several municipalities have the name.
+	 */
+	private function existingMunicipality(string $name): ?array {
+		$matches = $this->municipalitiesNamed(name: $name);
 		if (count($matches) > 1) {
 			throw new CmdbImportException(
 				errorCode: CmdbImportException::MUNICIPALITY_AMBIGUOUS,
@@ -1689,16 +1772,30 @@ class CmdbExportImportService {
 			);
 		}
 
-		if ($matches !== []) {
-			return ['uuid' => $matches[0]['uuid'], 'name' => (string)$matches[0]['name'], 'created' => false];
+		if ($matches === []) {
+			return null;
 		}
 
-		$data = $mapped['data'];
-		$data['name'] = $name;
-		$created = $this->save(schemaKey: 'organization', data: $data, uuid: null);
+		return ['uuid' => $matches[0]['uuid'], 'name' => (string)$matches[0]['name'], 'created' => false];
+	}//end existingMunicipality()
 
-		return ['uuid' => $created, 'name' => $name, 'created' => true];
-	}//end resolveMunicipality()
+	/**
+	 * The municipalities whose name normalises to the same as this one.
+	 *
+	 * @param string $name The municipality name.
+	 *
+	 * @return array<int, array{uuid: string, name: mixed}>
+	 */
+	private function municipalitiesNamed(string $name): array {
+		$key = self::normaliseName(name: $name);
+
+		return array_values(
+			array_filter(
+				$this->organisationsOfType(type: 'Municipality'),
+				static fn (array $organisation): bool => self::normaliseName(name: (string)($organisation['name'] ?? '')) === $key
+			)
+		);
+	}//end municipalitiesNamed()
 
 	/**
 	 * Resolve a municipality uuid, which must be an organisation of type Municipality that was not merged away.
@@ -1872,6 +1969,18 @@ class CmdbExportImportService {
 			return ['entity' => $entity, 'state' => self::STATE_ARCHIVED];
 		}
 
+		return $this->findInTrash(schemaKey: $schemaKey, filters: $filters);
+	}//end findInAnyState()
+
+	/**
+	 * The first soft-deleted object of this schema that matches the filters.
+	 *
+	 * @param string $schemaKey The schema key.
+	 * @param array<string, mixed> $filters The filters.
+	 *
+	 * @return array{entity: object, state: array{archived: bool, deleted: bool}}|null
+	 */
+	private function findInTrash(string $schemaKey, array $filters): ?array {
 		foreach (($this->trash()[$schemaKey] ?? []) as $entity) {
 			if (self::matchesFilters(entity: $entity, filters: $filters) === true) {
 				return ['entity' => $entity, 'state' => self::STATE_DELETED];
@@ -1879,7 +1988,7 @@ class CmdbExportImportService {
 		}
 
 		return null;
-	}//end findInAnyState()
+	}//end findInTrash()
 
 	/**
 	 * The first object a search with one lens returns that matches every filter, or null.
@@ -2844,18 +2953,9 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 */
 	private function resolveCoordinates(): array {
-		try {
-			$objectService = $this->container->get(ObjectServiceInterface::class);
-		} catch (Throwable $e) {
-			$objectService = null;
-		}
-
+		$objectService = $this->containerObjectService();
 		$register = (int)($this->settingsService->getVoorzieningenConfig()['register'] ?? 0);
-		$schemas = [];
-		foreach (array_keys(self::MATCH_PROPERTIES) as $type) {
-			$schemas[$type] = (int)($this->settingsService->getSchemaIdForObjectType($type) ?? 0);
-		}
-
+		$schemas = $this->matchSchemaIds();
 		if ($objectService instanceof ObjectServiceInterface === false || $register <= 0 || in_array(0, $schemas, true) === true) {
 			throw new CmdbImportException(
 				errorCode: CmdbImportException::NOT_CONFIGURED,
@@ -2867,6 +2967,33 @@ class CmdbExportImportService {
 
 		return array_merge(['objectService' => $objectService, 'register' => $register], $schemas);
 	}//end resolveCoordinates()
+
+	/**
+	 * OpenRegister's object service from the container, or null when it cannot give one.
+	 *
+	 * @return mixed
+	 */
+	private function containerObjectService(): mixed {
+		try {
+			return $this->container->get(ObjectServiceInterface::class);
+		} catch (Throwable $e) {
+			return null;
+		}
+	}//end containerObjectService()
+
+	/**
+	 * The configured schema id of every schema the import matches on, 0 when one is not configured.
+	 *
+	 * @return array<string, int> Schema key => schema id.
+	 */
+	private function matchSchemaIds(): array {
+		$schemas = [];
+		foreach (array_keys(self::MATCH_PROPERTIES) as $type) {
+			$schemas[$type] = (int)($this->settingsService->getSchemaIdForObjectType($type) ?? 0);
+		}
+
+		return $schemas;
+	}//end matchSchemaIds()
 
 	/**
 	 * Refuse the import when a schema does not declare the properties and write rules the import relies on.
