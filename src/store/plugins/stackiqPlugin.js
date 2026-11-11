@@ -17,6 +17,8 @@ import { buildHeaders, buildQueryString } from '@conduction/nextcloud-vue'
 import {
 	buildWriteHeaders,
 	getActiveOrganisationUuid,
+	objectActionPath,
+	OR_API_BASE,
 	withLanguageParam,
 } from '../../composables/orClient.js'
 
@@ -35,33 +37,37 @@ function extractId(value) {
 /**
  * Build an API URL for an object using its @self metadata.
  *
- * Read-side callers (GET) pass `withLang: true` so the user's preferred
- * language variant is served (ADR-025 i18n negotiation). Write/action callers
- * leave it false because the language target is communicated via the
- * `X-Translation-Target-Language` header instead.
+ * Write/action callers use it as is, because the language target is
+ * communicated via the `X-Translation-Target-Language` header. Read-side
+ * callers (GET) wrap it in withLanguageParam so the user's preferred language
+ * variant is served (ADR-025 i18n negotiation).
  *
  * @param {object} objectItem Object with @self metadata
  * @param {string} [action] Optional action endpoint (publish, lock, etc.). Defaults to null.
- * @param {boolean} [withLang] Whether to append the `_lang` query param. Defaults false.
  * @return {string} The constructed URL
  */
-function buildObjectUrl(objectItem, action = null, withLang = false) {
-	const objectId = objectItem.id || objectItem['@self']?.id
-	const register = objectItem['@self']?.register || objectItem.register
-	const schema = objectItem['@self']?.schema || objectItem.schema
-
-	const registerId = extractId(register)
-	const schemaId = extractId(schema)
-
+function buildObjectUrl(objectItem, action = null) {
+	const { objectId, registerId, schemaId } = objectUrlIds(objectItem)
 	if (!objectId || !registerId || !schemaId) {
 		throw new Error('Object must have id, register, and schema information')
 	}
 
-	let url = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${objectId}`
-	if (action) {
-		url += action === 'logs' ? '/audit-trails' : `/${action}`
-	}
-	return withLang ? withLanguageParam(url) : url
+	return `${OR_API_BASE}/objects/${registerId}/${schemaId}/${objectId}${objectActionPath(action)}`
+}
+
+/**
+ * The object, register and schema ids of an object: the object id at the top
+ * level or in @self, the register and schema in @self or at the top level.
+ *
+ * @param {object} objectItem Object with @self metadata
+ * @return {{objectId: *, registerId: *, schemaId: *}} The ids.
+ */
+function objectUrlIds(objectItem) {
+	const objectId = objectItem.id || objectItem['@self']?.id
+	const register = objectItem['@self']?.register || objectItem.register
+	const schema = objectItem['@self']?.schema || objectItem.schema
+
+	return { objectId, registerId: extractId(register), schemaId: extractId(schema) }
 }
 
 /**
@@ -885,7 +891,7 @@ export function stackiqPlugin() {
 				const objectId = objectItem.id || objectItem['@self']?.id
 				if (!objectId) throw new Error('Object ID is required for download')
 
-				const endpoint = buildObjectUrl(objectItem, null, true)
+				const endpoint = withLanguageParam(buildObjectUrl(objectItem))
 				const response = await fetch(endpoint, {
 					headers: buildHeaders(),
 				})
