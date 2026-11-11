@@ -93,39 +93,89 @@ class ItsmFileImportService {
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-006-a-file-feeds-the-same-import
 	 */
 	public function import(string $path, string $name): array {
-		$config = json_decode($this->appConfig->getValueString(AppIdentity::APP_ID, ItsmExchangeService::CONFIG_KEY, '{}'), true);
-		$flow   = null;
-		if (is_array($config) === true) {
-			$flow = ($config['flows']['file'] ?? null);
-		}
-		if (is_string($flow) === false || $flow === '') {
-			return ['started' => false, 'message' => 'Set up the exchange first. The file import uses the flow the set-up creates.'];
+		$flow = $this->fileFlow();
+		if ($flow === null) {
+			return self::refused(message: 'Set up the exchange first. The file import uses the flow the set-up creates.');
 		}
 
+		$rows = $this->rowsOrProblem(path: $path, name: $name);
+		if (is_string($rows) === true) {
+			return self::refused(message: $rows);
+		}
+
+		return $this->startImport(flow: $flow, rows: $rows);
+	}//end import()
+
+	/**
+	 * The uuid of the file import flow the exchange set-up created.
+	 *
+	 * @return string|null The flow uuid, or null when the exchange is not set up.
+	 */
+	private function fileFlow(): ?string {
+		$config = json_decode($this->appConfig->getValueString(AppIdentity::APP_ID, ItsmExchangeService::CONFIG_KEY, '{}'), true);
+		if (is_array($config) === false) {
+			return null;
+		}
+
+		$flow = ($config['flows']['file'] ?? null);
+		if (is_string($flow) === false || $flow === '') {
+			return null;
+		}
+
+		return $flow;
+	}//end fileFlow()
+
+	/**
+	 * The checked rows of a file, or the reason it cannot be imported.
+	 *
+	 * @param string $path The uploaded file on disk.
+	 * @param string $name The name it was uploaded with.
+	 *
+	 * @return array<int, array<string, string>>|string The rows, or the problem.
+	 */
+	private function rowsOrProblem(string $path, string $name): array|string {
 		if (is_file($path) === true && filesize($path) > self::MAX_FILE_BYTES) {
-			return ['started' => false, 'message' => 'The file is larger than ' . (self::MAX_FILE_BYTES / 1048576) . ' MB; one import takes at most that.'];
+			return 'The file is larger than ' . (self::MAX_FILE_BYTES / 1048576) . ' MB; one import takes at most that.';
 		}
 
 		try {
 			$rows = $this->readRows(path: $path, name: $name);
 		} catch (Throwable $e) {
-			return ['started' => false, 'message' => 'The file could not be read: ' . $e->getMessage()];
+			return 'The file could not be read: ' . $e->getMessage();
 		}
 
-		$problem = $this->checkRows(rows: $rows);
-		if ($problem !== null) {
-			return ['started' => false, 'message' => $problem];
-		}
+		return ($this->checkRows(rows: $rows) ?? $rows);
+	}//end rowsOrProblem()
 
+	/**
+	 * Start the file import flow with the rows.
+	 *
+	 * @param string                             $flow The flow uuid.
+	 * @param array<int, array<string, string>> $rows The checked rows.
+	 *
+	 * @return array<string, mixed> `started` with the run and the row count, or `started: false` with the reason.
+	 */
+	private function startImport(string $flow, array $rows): array {
 		try {
 			$run = $this->gateway->run(uuid: $flow, payload: ['rows' => $rows]);
 		} catch (Throwable $e) {
 			$this->logger->error('[ItsmFileImportService] Starting the file import flow failed', ['exception' => $e]);
-			return ['started' => false, 'message' => 'The file import flow could not be started: ' . $e->getMessage()];
+			return self::refused(message: 'The file import flow could not be started: ' . $e->getMessage());
 		}
 
 		return ['started' => true, 'run' => $run, 'rows' => count($rows)];
-	}//end import()
+	}//end startImport()
+
+	/**
+	 * The result of an import that did not start.
+	 *
+	 * @param string $message Why it did not start.
+	 *
+	 * @return array{started: false, message: string}
+	 */
+	private static function refused(string $message): array {
+		return ['started' => false, 'message' => $message];
+	}//end refused()
 
 	/**
 	 * Read the rows of a CSV or XLSX file, keyed by the header row.
