@@ -1965,6 +1965,12 @@ import {
 	orderedPropertyRows,
 	schemaPropertyRows,
 } from './objectPropertyRows.js'
+import {
+	isValidDateString,
+	isValidPropertyValue,
+	presenceClass,
+	propertyErrorMessage,
+} from './propertyValidation.js'
 
 import '@toast-ui/editor/dist/toastui-editor.css'
 
@@ -2894,24 +2900,7 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		isValidDate(value) {
-			if (!value || typeof value !== 'string') return false
-
-			// Don't treat simple strings like "test 12" as dates
-			if (value.length < 8) return false
-
-			// Check if it looks like a date format
-			const datePatterns = [
-				/^\d{4}-\d{2}-\d{2}/, // YYYY-MM-DD
-				/^\d{1,2}-\d{1,2}-\d{4}/, // M-D-YYYY or MM-DD-YYYY
-				/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/, // ISO datetime
-			]
-
-			const looksLikeDate = datePatterns.some((pattern) => pattern.test(value))
-			if (!looksLikeDate) return false
-
-			// Try to parse it
-			const date = new Date(value)
-			return date instanceof Date && !isNaN(date) && date.getFullYear() > 1900
+			return isValidDateString(value)
 		},
 
 		/**
@@ -3021,30 +3010,26 @@ export default {
 			// Get schema properties
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-			const existsInObject =
-				this.currentObject && Object.hasOwn(this.currentObject, key)
-
-			if (!schemaProperty) {
-				// Property exists in object but not in schema - warning (yellow)
-				if (existsInObject) {
-					return 'property-warning'
-				}
-				return ''
-			}
-
-			if (!existsInObject) {
-				// Property exists in schema but not in object yet - neutral (no special class)
-				return 'property-new'
+			const existsInObject = this.hasObjectProperty(key)
+			if (!schemaProperty || !existsInObject) {
+				return presenceClass(schemaProperty, existsInObject)
 			}
 
 			// Property exists in both schema and object, validate the value
-			if (this.isValidPropertyValue(key, value, schemaProperty)) {
-				// Valid property - success (green)
-				return 'property-valid'
-			} else {
-				// Invalid property - error (red)
-				return 'property-invalid'
-			}
+			return isValidPropertyValue(value, schemaProperty)
+				? 'property-valid'
+				: 'property-invalid'
+		},
+
+		/**
+		 * Whether the object shown holds a property of its own.
+		 *
+		 * @param {string} key The property key.
+		 * @return {boolean} Whether it does.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		hasObjectProperty(key) {
+			return Boolean(this.currentObject) && Object.hasOwn(this.currentObject, key)
 		},
 
 		/**
@@ -3054,40 +3039,8 @@ export default {
 		 */
 		getPropertyErrorMessage(key, value) {
 			const schemaProperties = this.getSchemaProperties()
-			const schemaProperty = schemaProperties[key]
-
-			if (!schemaProperty) {
-				return `Property '${key}' is not defined in the current schema. This property exists in the object but is not part of the schema definition.`
-			}
-
-			// Check if required but empty
-			const isRequired = schemaProperty.required
-			if (
-				(value === null || value === undefined || value === '')
-				&& isRequired
-			) {
-				return `Required property '${key}' is missing or empty`
-			}
-
-			// Check type mismatch
-			const expectedType = schemaProperty.type
-			const actualType = Array.isArray(value) ? 'array' : typeof value
-
-			if (expectedType !== actualType) {
-				return `Property '${key}' should be ${expectedType} but is ${actualType}`
-			}
-
-			// Check format constraints
-			if (schemaProperty.format === 'date-time' && !this.isValidDate(value)) {
-				return `Property '${key}' should be a valid date-time format`
-			}
-
-			// Check const constraint
-			if (schemaProperty.const && value !== schemaProperty.const) {
-				return `Property '${key}' should be '${schemaProperty.const}' but is '${value}'`
-			}
-
-			return `Property '${key}' has an invalid value`
+			const property = schemaProperties[key]
+			return propertyErrorMessage({ key, value, property })
 		},
 
 		getPropertyWarningMessage(key, value) {
@@ -4978,54 +4931,6 @@ export default {
 		},
 
 		// Enhanced property validation and editing methods (from openregister version)
-		/**
-		 * @param key
-		 * @param value
-		 * @param schemaProperty
-		 * @spec openspec/specs/fe-object-modals/spec.md
-		 */
-		isValidPropertyValue(key, value, schemaProperty) {
-			// Handle null/undefined values
-			if (value === null || value === undefined || value === '') {
-				// Check if property is required
-				const isRequired = schemaProperty.required
-				return !isRequired // Valid if not required, invalid if required
-			}
-
-			// Validate based on schema type
-			switch (schemaProperty.type) {
-				case 'string':
-					if (typeof value !== 'string') return false
-					// Check format constraints
-					if (schemaProperty.format === 'date-time') {
-						return this.isValidDate(value)
-					}
-					// Check const constraint
-					if (schemaProperty.const && value !== schemaProperty.const) {
-						return false
-					}
-					return true
-
-				case 'number':
-					return typeof value === 'number' && !isNaN(value)
-
-				case 'boolean':
-					return typeof value === 'boolean'
-
-				case 'array':
-					return Array.isArray(value)
-
-				case 'object':
-					return (
-						typeof value === 'object'
-						&& value !== null
-						&& !Array.isArray(value)
-					)
-
-				default:
-					return true // Unknown type, assume valid
-			}
-		},
 	},
 }
 </script>
