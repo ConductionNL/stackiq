@@ -864,6 +864,93 @@ function applyConfigurationState(store, data) {
 }
 
 /**
+ * Mark the main settings and OpenRegister configuration as loading, or done.
+ *
+ * @param {object} store The settings store.
+ * @param {boolean} loading Whether they are loading.
+ * @return {void}
+ */
+function setSettingsLoading(store, loading) {
+	store.loading = loading
+	store.loadingMainSettings = loading
+	store.loadingOpenRegisterConfig = loading
+}
+
+/**
+ * Map the register selections and schema choices from the focused configs.
+ *
+ * @param {object} store The settings store.
+ * @return {void}
+ */
+function populateFocusedSelections(store) {
+	store.populateRegisterSelectionsFromFocused()
+	store.populateSchemaSelectionsFromFocused()
+}
+
+/**
+ * Apply a settings answer: the basic settings and configuration state, then
+ * the focused endpoints in the background; an unsuccessful answer sets the
+ * error instead.
+ *
+ * @param {object} store The settings store.
+ * @param {object} data The settings answer.
+ * @return {void}
+ */
+function applyLoadedSettings(store, data) {
+	if (data.success === false) {
+		store.setError(data.error || 'Failed to load settings')
+		return
+	}
+	applyBasicSettings(store, data)
+	applyConfigurationState(store, data)
+	// Initialize base configuration containers
+	store.initializeConfiguration()
+	loadFocusedSettings(store)
+}
+
+/**
+ * Load the focused settings endpoints in parallel without waiting for them,
+ * then map the selections from their configs.
+ *
+ * @param {object} store The settings store.
+ * @return {void}
+ */
+function loadFocusedSettings(store) {
+	Promise.all([
+		store.loadVersionInfo(),
+		store.loadArchiMateStatus(),
+		store.loadObjectCounts(),
+		store.loadEmailConfig(),
+		store.loadUserGroupsConfig(),
+		store.loadAmefConfig(),
+		store.loadVoorzieningenConfig(),
+		store.loadGeneralConfig(),
+		store.loadSyncConfig(),
+	])
+		.then(() => populateFocusedSelections(store))
+		.catch((error) => {
+			console.error('Some focused endpoints failed to load:', error)
+		})
+}
+
+/**
+ * Apply the registers and version of a settings answer for the
+ * OpenRegister dropdowns; an unsuccessful answer changes nothing.
+ *
+ * @param {object} store The settings store.
+ * @param {object} data The settings answer.
+ * @return {void}
+ */
+function applyEssentialSettings(store, data) {
+	if (data.success === false) {
+		return
+	}
+	store.settings.availableRegisters = data.availableRegisters || []
+	store.versionInfo = data.versionInfo || {}
+	store.initializeConfiguration()
+}
+
+/**
  * Settings store for managing all settings-related state and business logic
  *
  * This store handles:
@@ -1084,51 +1171,17 @@ export const useSettingsStore = defineStore('settings', {
 			if (this.loading) {
 				return
 			}
-			this.loading = true
-			this.loadingMainSettings = true
-			this.loadingOpenRegisterConfig = true
+			setSettingsLoading(this, true)
 			this.clearError()
 
 			try {
 				// Load basic settings first (minimal data)
 				const data = await fetchJson('/index.php/apps/stackiq/api/settings')
-				if (data.success !== false) {
-					applyBasicSettings(this, data)
-					applyConfigurationState(this, data)
-					// Initialize base configuration containers
-					this.initializeConfiguration()
-					// Load focused data from separate endpoints in parallel (don't wait for them)
-					Promise.all([
-						this.loadVersionInfo(),
-						this.loadArchiMateStatus(),
-						this.loadObjectCounts(),
-						this.loadEmailConfig(),
-						this.loadUserGroupsConfig(),
-						this.loadAmefConfig(),
-						this.loadVoorzieningenConfig(),
-						this.loadGeneralConfig(),
-						this.loadSyncConfig(),
-					])
-						.then(() => {
-							// After focused loads, map register selections and schema choices from their configs
-							this.populateRegisterSelectionsFromFocused()
-							this.populateSchemaSelectionsFromFocused()
-						})
-						.catch((error) => {
-							console.error(
-								'Some focused endpoints failed to load:',
-								error,
-							)
-						})
-				} else {
-					this.setError(data.error || 'Failed to load settings')
-				}
+				applyLoadedSettings(this, data)
 			} catch (error) {
 				this.setError('Failed to load settings: ' + error.message)
 			} finally {
-				this.loading = false
-				this.loadingMainSettings = false
-				this.loadingOpenRegisterConfig = false
+				setSettingsLoading(this, false)
 			}
 		},
 
@@ -1144,34 +1197,18 @@ export const useSettingsStore = defineStore('settings', {
 			try {
 				// Load available registers first (needed for register dropdowns)
 				this.loadingRegisters = true
-				const settingsResponse = await fetch(
-					'/index.php/apps/stackiq/api/settings',
-				)
-				if (!settingsResponse.ok) {
-					throw new Error(
-						`HTTP ${settingsResponse.status}: ${settingsResponse.statusText}`,
-					)
-				}
-				const settingsData = await settingsResponse.json()
-				if (settingsData.success !== false) {
-					this.settings.availableRegisters =
-						settingsData.availableRegisters || []
-					this.versionInfo = settingsData.versionInfo || {}
-					this.initializeConfiguration()
-				}
+				const settingsData = await fetchJson('/index.php/apps/stackiq/api/settings')
+				applyEssentialSettings(this, settingsData)
 				this.loadingRegisters = false
 
 				// Load config data in parallel (don't wait for each other)
-				const configPromises = [
+				await Promise.allSettled([
 					this.loadVoorzieningenConfigFocused(),
 					this.loadAmefConfigFocused(),
-				]
-
-				await Promise.allSettled(configPromises)
+				])
 
 				// After both configs loaded, populate selections
-				this.populateRegisterSelectionsFromFocused()
-				this.populateSchemaSelectionsFromFocused()
+				populateFocusedSelections(this)
 			} catch (error) {
 				console.error('Failed to load OpenRegister essentials:', error)
 				this.setError(
