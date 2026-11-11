@@ -2157,17 +2157,13 @@ export default {
 
 			const obj = this.currentObject
 			const self = obj['@self']
+			const registers = objectStore.availableRegisters
+			const schemas = objectStore.availableSchemas
 			return [
 				['ID', obj.id || 'Not set'],
 				['Version', self?.version || 'Not set'],
-				[
-					'Register',
-					referenceTitle(self?.register, objectStore.availableRegisters),
-				],
-				[
-					'Schema',
-					referenceTitle(self?.schema, objectStore.availableSchemas),
-				],
+				['Register', referenceTitle(self?.register, registers)],
+				['Schema', referenceTitle(self?.schema, schemas)],
 				['Locked', lockDescription(self?.locked)],
 				...timestampRows(self),
 			]
