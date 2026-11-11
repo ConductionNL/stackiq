@@ -144,6 +144,7 @@ import ShieldAlert from 'vue-material-design-icons/ShieldAlert.vue'
 import { useLiveCollections } from '../composables/useLiveCollections.js'
 import { navigationStore, objectStore } from '../store/store.js'
 import { resolveUuid } from '../utils/lifecyclePhase.js'
+import { fetchObjectTypeCollection } from '../utils/objectTypeCollection.js'
 import { exposureCount } from '../utils/vulnerabilityExposure.js'
 import {
 	deriveSeverity,
@@ -330,23 +331,7 @@ export default {
 		 * @spec openspec/specs/module-vulnerability-tracking/spec.md
 		 */
 		async fetchType(type) {
-			if (
-				typeof objectStore.registerObjectType === 'function'
-				&& !objectStore.objectTypeRegistry?.[type]
-			) {
-				let cfg = null
-				try {
-					cfg = objectStore.getSchemaConfig?.(type)
-				} catch (cfgError) {
-					// getSchemaConfig throws when no schema/register resolves; fall through.
-				}
-				if (cfg?.register && cfg?.schema) {
-					objectStore.registerObjectType(type, cfg.schema, cfg.register)
-				}
-			}
-			if (typeof objectStore.fetchCollection === 'function') {
-				await objectStore.fetchCollection(type, { _limit: 1000 })
-			}
+			await fetchObjectTypeCollection(objectStore, type)
 		},
 
 		/**

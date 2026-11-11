@@ -61,15 +61,7 @@
       "count": 2
     }
   },
-  "src/components/sbom/SbomComponentsPanel.vue": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    }
-  },
   "src/components/vulnerabilities/VulnerabilityExposurePanel.vue": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    },
     "no-console": {
       "count": 1
     }
@@ -398,33 +390,24 @@
     "@nextcloud/no-deprecated-library-props": {
       "count": 1
     },
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    },
     "no-console": {
       "count": 2
     }
   },
   "src/views/KwetsbaarhedenView.vue": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    },
     "no-console": {
       "count": 1
     }
   },
   "src/views/LicensePostureView.vue": {
     "@typescript-eslint/no-unused-vars": {
-      "count": 2
+      "count": 1
     },
     "no-console": {
       "count": 1
     }
   },
   "src/views/LifecycleRoadmapView.vue": {
-    "@typescript-eslint/no-unused-vars": {
-      "count": 1
-    },
     "no-console": {
       "count": 1
     }
