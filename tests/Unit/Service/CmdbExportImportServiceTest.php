@@ -171,6 +171,13 @@ class CmdbExportImportServiceTest extends TestCase {
 	private bool $contactsEnabled = true;
 
 	/**
+	 * The records the import handed to Contacts for new owner contacts, in order (not part of the golden).
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	private array $ownerRecords = [];
+
+	/**
 	 * The in-memory distributed cache behind the ProgressTracker.
 	 *
 	 * @var array<string, mixed>
@@ -295,6 +302,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->contacts = [];
 		$this->addressBooks = [];
 		$this->contactsEnabled = true;
+		$this->ownerRecords = [];
 		$this->cache = [];
 		$this->cacheFailure = null;
 		$this->logLines = [];
@@ -956,6 +964,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$sync->method('syncToContacts')->willThrowException(new \LogicException('owners go into the named address book, not the first writable one'));
 		$sync->method('syncToNamedAddressBook')->willReturnCallback(
 			function (string $objectType, array $record, string $addressBookUri, string $displayName, ?string $fixedUid = null): ?string {
+				$this->ownerRecords[] = $record;
 				$this->addressBooks[$addressBookUri] = $displayName;
 				$email = (string)($record['email'] ?? '');
 				foreach ($this->contacts as $uid => $contact) {
@@ -1660,6 +1669,32 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame(['externalKey.authorization.update'], $missing->invoke(null, 'module', $rule('admin')));
 		$this->assertSame(['externalKey.authorization.update'], $missing->invoke(null, 'module', $rule([['group' => 'editors'], ['name' => 'admin'], 'Admin'])));
 	}//end testMissingUpdateRulesReadEveryRuleShape()
+
+	/**
+	 * A new owner contact gets the name parts, and the e-mail address and role when the row has them; an owner
+	 * named twice in one run is written to Contacts once.
+	 *
+	 * @return void
+	 */
+	public function testANewOwnerContactCarriesItsEmailAndRole(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$full = ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'Applicatie Eigenaar (E-mail)' => ' v.achternaam@example.org ', 'Applicatie Eigenaar (Functie)' => ' Afdelingshoofd '];
+		$rows = [
+			$this->row(appId: '1', cells: $full, row: 2),
+			$this->row(appId: '2', cells: $full, row: 3),
+			$this->row(appId: '3', cells: ['Applicatie Eigenaar (Persoon)' => 'Tweede, Iemand'], row: 4),
+		];
+
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(
+			[
+				['voornaam' => 'Voornaam', 'achternaam' => 'Achternaam', 'email' => 'v.achternaam@example.org', 'role' => 'Afdelingshoofd'],
+				['voornaam' => 'Iemand', 'achternaam' => 'Tweede'],
+			],
+			$this->ownerRecords
+		);
+	}//end testANewOwnerContactCarriesItsEmailAndRole()
 
 	/**
 	 * A search on a property the schema does not declare yields nothing, as in OpenRegister.
