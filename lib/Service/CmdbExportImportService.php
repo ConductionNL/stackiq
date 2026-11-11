@@ -1379,26 +1379,54 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 */
 	private function merge(string $target, array $stored, array $mapped): ?array {
-		$kept = $this->keptFields(target: $target, stored: $stored);
-		$merged = $stored;
-		unset($merged['@self']);
-		$changed = false;
-
-		foreach ($mapped as $field => $value) {
-			if (in_array($field, $kept, true) === true || self::sameValue(stored: ($stored[$field] ?? null), value: $value) === true) {
-				continue;
-			}
-
-			$merged[$field] = $value;
-			$changed = true;
-		}
-
-		if ($changed === false) {
+		$writable = self::withoutKeptFields(mapped: $mapped, kept: $this->keptFields(target: $target, stored: $stored));
+		$changes = self::changedFields(stored: $stored, mapped: $writable);
+		if ($changes === []) {
 			return null;
 		}
 
-		return $merged;
+		$merged = $stored;
+		unset($merged['@self']);
+
+		return array_replace($merged, $changes);
 	}//end merge()
+
+	/**
+	 * The mapped fields without the ones an update leaves as they are.
+	 *
+	 * @param array<string, mixed> $mapped The mapped fields.
+	 * @param array<int, string> $kept The fields an update leaves as they are, from keptFields().
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function withoutKeptFields(array $mapped, array $kept): array {
+		foreach (array_keys($mapped) as $field) {
+			if (in_array($field, $kept, true) === true) {
+				unset($mapped[$field]);
+			}
+		}
+
+		return $mapped;
+	}//end withoutKeptFields()
+
+	/**
+	 * The mapped fields whose value differs from the stored one.
+	 *
+	 * @param array<string, mixed> $stored The stored object data.
+	 * @param array<string, mixed> $mapped The mapped fields.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function changedFields(array $stored, array $mapped): array {
+		$changes = [];
+		foreach ($mapped as $field => $value) {
+			if (self::sameValue(stored: ($stored[$field] ?? null), value: $value) === false) {
+				$changes[$field] = $value;
+			}
+		}
+
+		return $changes;
+	}//end changedFields()
 
 	/**
 	 * The fields an update leaves as they are: the never-written ones, and the create-only ones that hold a value.
@@ -2298,7 +2326,7 @@ class CmdbExportImportService {
 	 * @return array<int, string>
 	 */
 	private static function trashSchemaKeys(mixed $entity, array $coordinates): array {
-		if (is_object($entity) === false || (string)$entity->getRegister() !== (string)$coordinates['register'] || $entity->getUuid() === null) {
+		if (self::isRegisterTrash(entity: $entity, coordinates: $coordinates) === false) {
 			return [];
 		}
 
@@ -2311,6 +2339,18 @@ class CmdbExportImportService {
 
 		return $schemaKeys;
 	}//end trashSchemaKeys()
+
+	/**
+	 * Whether a soft-deleted entry is an object of this register with a uuid.
+	 *
+	 * @param mixed $entity One entry of what MagicMapper::findDeletedAcrossAllMagicTables() answered.
+	 * @param array<string, mixed> $coordinates The register and schema ids, from coordinates().
+	 *
+	 * @return bool
+	 */
+	private static function isRegisterTrash(mixed $entity, array $coordinates): bool {
+		return is_object($entity) === true && (string)$entity->getRegister() === (string)$coordinates['register'] && $entity->getUuid() !== null;
+	}//end isRegisterTrash()
 
 	/**
 	 * Archive or soft-delete every application of the municipality whose APPID left the CMDB sheets.
