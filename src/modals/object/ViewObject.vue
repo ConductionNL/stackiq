@@ -3396,7 +3396,9 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyInputType(key) {
-			return inputTypeOf(this.getSchemaProperties()[key])
+			const schemaProperties = this.getSchemaProperties()
+			const schemaProperty = schemaProperties[key]
+			return inputTypeOf(schemaProperty)
 		},
 
 		/**
@@ -3404,7 +3406,9 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getPropertyInputComponent(key) {
-			return inputComponentOf(this.getSchemaProperties()[key])
+			const schemaProperties = this.getSchemaProperties()
+			const schemaProperty = schemaProperties[key]
+			return inputComponentOf(schemaProperty)
 		},
 
 		/**
@@ -3870,7 +3874,9 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getDateTimePickerType(key) {
-			return pickerTypeOf(this.getSchemaProperties()[key])
+			const schemaProperties = this.getSchemaProperties()
+			const schemaProperty = schemaProperties[key]
+			return pickerTypeOf(schemaProperty)
 		},
 
 		// Publish/Depublish methods
