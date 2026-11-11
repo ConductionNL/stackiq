@@ -414,18 +414,30 @@ class ModuleComplianceService {
 			return ['withoutStandaardversie', null];
 		}
 
-		[$shape, $uuid] = $this->standardVersionShape($standardVersion);
-		if ($uuid === null) {
+		$found = $this->standardVersionShape($standardVersion);
+		if ($found[1] === null) {
 			$this->logInvalidStandardVersion($complianceObject, $standardVersion);
-			return [$shape, null];
+			return $found;
 		}
 
-		$this->logger->debug(
-			self::FOUND_STANDARD_VERSION_MESSAGES[$shape],
-			['complianceId' => $complianceObject->getId(), 'standardVersion' => $uuid]
-		);
-		return [$shape, $uuid];
+		$this->logFoundStandardVersion($complianceObject, $found);
+		return $found;
 	}//end classifyStandardVersion()
+
+	/**
+	 * Log a standaardversie UUID found on a compliance object
+	 *
+	 * @param object $complianceObject The compliance object
+	 * @param array  $found            The tracking shape and the UUID
+	 *
+	 * @return void
+	 */
+	private function logFoundStandardVersion(object $complianceObject, array $found): void {
+		$this->logger->debug(
+			self::FOUND_STANDARD_VERSION_MESSAGES[$found[0]],
+			['complianceId' => $complianceObject->getId(), 'standardVersion' => $found[1]]
+		);
+	}//end logFoundStandardVersion()
 
 	/**
 	 * Determine the shape of a standaardversie value: a string UUID, or an array or object with a UUID
