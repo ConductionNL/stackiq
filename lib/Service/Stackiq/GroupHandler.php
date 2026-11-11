@@ -60,6 +60,22 @@ class GroupHandler {
 	private const APP_NAME = 'stackiq';
 
 	/**
+	 * The role-based groups ensured next to the generic user groups.
+	 */
+	private const ROLE_BASED_GROUPS = [
+		'aanbod-beheerder',
+		'gebruik-beheerder',
+		'gebruik-raadpleger',
+		'functioneel-beheerder',
+		'vng-raadpleger',
+		'organisatie-beheerder',
+		// Plural form for organization contacts.
+		'organisaties-beheerder',
+		// For users from Gemeente organizations.
+		'ambtenaar',
+	];
+
+	/**
 	 * GroupHandler constructor
 	 *
 	 * @param IGroupManager $_groupManager Group manager interface
@@ -147,50 +163,58 @@ class GroupHandler {
 	 */
 	public function ensureGenericUserGroupsExist(): array {
 		$genericGroups = $genericGroups = $this->getGenericUserGroups();
-		$createdGroups = [];
-
-		foreach ($genericGroups as $groupName) {
-			if ($this->_groupManager->get($groupName) === null) {
-				$group = $this->_groupManager->createGroup($groupName);
-				if ($group !== null) {
-					$createdGroups[] = $groupName;
-					$this->_logger->info(
-						'Created generic user group',
-						['groupName' => $groupName]
-					);
-				}
-			}
-		}
+		$createdGroups = $this->createMissingGroups(groupNames: $genericGroups, logMessage: 'Created generic user group');
 
 		// Also ensure role-based groups exist.
-		$roleBasedGroups = [
-			'aanbod-beheerder',
-			'gebruik-beheerder',
-			'gebruik-raadpleger',
-			'functioneel-beheerder',
-			'vng-raadpleger',
-			'organisatie-beheerder',
-			// Plural form for organization contacts.
-			'organisaties-beheerder',
-			// For users from Gemeente organizations.
-			'ambtenaar',
-		];
+		return array_merge(
+			$createdGroups,
+			$this->createMissingGroups(groupNames: self::ROLE_BASED_GROUPS, logMessage: 'Created role-based group')
+		);
+	}//end ensureGenericUserGroupsExist()
 
-		foreach ($roleBasedGroups as $groupName) {
-			if ($this->_groupManager->get($groupName) === null) {
-				$group = $this->_groupManager->createGroup($groupName);
-				if ($group !== null) {
-					$createdGroups[] = $groupName;
-					$this->_logger->info(
-						'Created role-based group',
-						['groupName' => $groupName]
-					);
-				}
+	/**
+	 * Create the groups that do not exist yet.
+	 *
+	 * @param array  $groupNames The groups to ensure.
+	 * @param string $logMessage The message logged for each group created.
+	 *
+	 * @return array The groups that were created, in order.
+	 */
+	private function createMissingGroups(array $groupNames, string $logMessage): array {
+		$createdGroups = [];
+		foreach ($groupNames as $groupName) {
+			if ($this->createMissingGroup(groupName: $groupName, logMessage: $logMessage) === true) {
+				$createdGroups[] = $groupName;
 			}
 		}
 
 		return $createdGroups;
-	}//end ensureGenericUserGroupsExist()
+	}//end createMissingGroups()
+
+	/**
+	 * Create a group when it does not exist yet.
+	 *
+	 * @param mixed  $groupName  The group to ensure.
+	 * @param string $logMessage The message logged when the group is created.
+	 *
+	 * @return bool True when the group was created.
+	 */
+	private function createMissingGroup($groupName, string $logMessage): bool {
+		if ($this->_groupManager->get($groupName) !== null) {
+			return false;
+		}
+
+		$group = $this->_groupManager->createGroup($groupName);
+		if ($group === null) {
+			return false;
+		}
+
+		$this->_logger->info(
+			$logMessage,
+			['groupName' => $groupName]
+		);
+		return true;
+	}//end createMissingGroup()
 
 	/**
 	 * Creates a group if it doesn't exist
