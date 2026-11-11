@@ -312,7 +312,7 @@ class ModerationService {
 	 * @return array{register:int, schema:int}|null The target, or null.
 	 */
 	private function resolveTarget(string $type): ?array {
-		return ObjectTypeTarget::of(locator: $this->settingsService, type: $type);
+		return (new ObjectTypeTarget(locator: $this->settingsService))->resolve(type: $type);
 	}//end resolveTarget()
 
 	/**

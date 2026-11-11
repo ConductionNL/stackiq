@@ -29,22 +29,31 @@ use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
  */
 final class ObjectTypeTarget {
 	/**
-	 * Resolve the register/schema for a given object type.
+	 * Constructor.
 	 *
 	 * @param ObjectTypeLocatorInterface $locator Resolves register/schema ids.
-	 * @param string                     $type    The object type.
+	 */
+	public function __construct(
+		private readonly ObjectTypeLocatorInterface $locator,
+	) {
+	}//end __construct()
+
+	/**
+	 * Resolve the register/schema for a given object type.
+	 *
+	 * @param string $type The object type.
 	 *
 	 * @return array{register:int, schema:int}|null The target, or null when either id is not configured.
 	 *
 	 * @spec openspec/specs/catalog-ratings/spec.md
 	 */
-	public static function of(ObjectTypeLocatorInterface $locator, string $type): ?array {
-		$register = $locator->getRegisterIdForObjectType($type);
-		$schema = $locator->getSchemaIdForObjectType($type);
+	public function resolve(string $type): ?array {
+		$register = $this->locator->getRegisterIdForObjectType($type);
+		$schema = $this->locator->getSchemaIdForObjectType($type);
 		if ($register === null || $schema === null) {
 			return null;
 		}
 
 		return ['register' => (int)$register, 'schema' => (int)$schema];
-	}//end of()
+	}//end resolve()
 }//end class

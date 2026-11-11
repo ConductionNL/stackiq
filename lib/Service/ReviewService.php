@@ -342,7 +342,7 @@ class ReviewService {
 	 * @return array{register:int, schema:int}|null The target, or null.
 	 */
 	private function resolveTarget(): ?array {
-		return ObjectTypeTarget::of(locator: $this->settingsService, type: self::REVIEW_TYPE);
+		return (new ObjectTypeTarget(locator: $this->settingsService))->resolve(type: self::REVIEW_TYPE);
 	}//end resolveTarget()
 
 	/**
