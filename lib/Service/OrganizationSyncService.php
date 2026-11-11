@@ -595,15 +595,50 @@ class OrganizationSyncService {
 	 * @spec           openspec/specs/organization-sync/spec.md
 	 */
 	public function performUserSync(): array {
+		$contactTableName = $this->userSyncContactTable();
+		if ($contactTableName === null) {
+			return [];
+		}
+
+		$users = $this->contactsMissingFromTheirOrganisation(contactTableName: $contactTableName);
+		if (empty($users) === false) {
+			$this->logger->info('UserSync: adding ' . count($users) . ' users to their org entities');
+		}
+
+		foreach ($users as $user) {
+			$this->addContactUserToOrganisation(user: $user);
+		}
+
+		return [];
+	}//end performUserSync()
+
+	/**
+	 * The per-schema contact table of the configured register and contactpersoon schema.
+	 *
+	 * @return string|null The table name, or null when the configuration is missing or invalid.
+	 */
+	private function userSyncContactTable(): ?string {
 		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 		$register = ($voorzieningenConfig['register'] ?? '');
 		$contactSchema = ($voorzieningenConfig['contactpersoon_schema'] ?? '');
 
 		if (empty($register) === true || empty($contactSchema) === true) {
 			$this->logger->warning('UserSync: voorzieningen config missing register or contactpersoon_schema');
-			return [];
+			return null;
 		}
 
+		return $this->validContactTableName(register: $register, contactSchema: $contactSchema);
+	}//end userSyncContactTable()
+
+	/**
+	 * Name the per-schema contact table, after validating its ids as positive integers.
+	 *
+	 * @param mixed $register      The configured register.
+	 * @param mixed $contactSchema The configured contactpersoon schema.
+	 *
+	 * @return string|null The table name, or null when an id is not a positive integer.
+	 */
+	private function validContactTableName(mixed $register, mixed $contactSchema): ?string {
 		// Cast to int and validate before using in a table name to prevent injection.
 		$registerId = (int)$register;
 		$schemaId = (int)$contactSchema;
@@ -615,23 +650,23 @@ class OrganizationSyncService {
 					'contactSchema' => $contactSchema,
 				]
 			);
-			return [];
+			return null;
 		}
 
 		// Query per-schema magic table directly (NOT the empty openregister_objects blob table).
-		$contactTableName = 'openregister_table_' . $registerId . '_' . $schemaId;
+		return 'openregister_table_' . $registerId . '_' . $schemaId;
+	}//end validContactTableName()
 
-		// Build JSON contains check - platform-specific.
-		$platform = $this->db->getDatabasePlatform();
-		$isPostgres = $platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+	/**
+	 * Find contacts with a username whose username is NOT in their org's users array.
+	 *
+	 * @param string $contactTableName The per-schema contact table.
+	 *
+	 * @return array The rows: uuid, username, organization and the organisation's users.
+	 */
+	private function contactsMissingFromTheirOrganisation(string $contactTableName): array {
+		$jsonContainsCheck = $this->usernameNotInUsersCheck();
 
-		if ($isPostgres === true) {
-			$jsonContainsCheck = 'NOT (oo.users::jsonb @> to_jsonb(o.username::text))';
-		} else {
-			$jsonContainsCheck = "JSON_CONTAINS(oo.users, CONCAT('\"', o.username, '\"')) = 0";
-		}
-
-		// Find contacts with a username whose username is NOT in their org's users array.
 		$qb = $this->db->getQueryBuilder();
 		$qb->select('o._uuid as uuid', 'o.username', 'o.organization', 'oo.users')
 			->from($contactTableName, 'o')
@@ -641,27 +676,44 @@ class OrganizationSyncService {
 			->andWhere($qb->createFunction('o.organization IS NOT NULL'))
 			->andWhere($qb->createFunction($jsonContainsCheck));
 
-		$users = $qb->executeQuery()->fetchAll();
+		return $qb->executeQuery()->fetchAll();
+	}//end contactsMissingFromTheirOrganisation()
 
-		if (empty($users) === false) {
-			$this->logger->info('UserSync: adding ' . count($users) . ' users to their org entities');
+	/**
+	 * Build JSON contains check - platform-specific.
+	 *
+	 * @return string The condition that the contact's username is not in its organisation's users.
+	 */
+	private function usernameNotInUsersCheck(): string {
+		$platform = $this->db->getDatabasePlatform();
+		$isPostgres = $platform instanceof \Doctrine\DBAL\Platforms\PostgreSQLPlatform;
+
+		if ($isPostgres === true) {
+			return 'NOT (oo.users::jsonb @> to_jsonb(o.username::text))';
 		}
 
-		foreach ($users as $user) {
-			try {
-				$this->organisationService->addUsersToOrganization($user['organization'], [$user['username']]);
-			} catch (\Exception $e) {
-				$this->logger->error(
-					'UserSync: failed to add user ' . $user['username'] . ' to org ' . $user['organization'],
-					[
-						'error' => $e->getMessage(),
-					]
-				);
-			}
-		}
+		return "JSON_CONTAINS(oo.users, CONCAT('\"', o.username, '\"')) = 0";
+	}//end usernameNotInUsersCheck()
 
-		return [];
-	}//end performUserSync()
+	/**
+	 * Add a contact's user to its organisation entity, logging a failure.
+	 *
+	 * @param array $user The contact row: username and organization.
+	 *
+	 * @return void
+	 */
+	private function addContactUserToOrganisation(array $user): void {
+		try {
+			$this->organisationService->addUsersToOrganization($user['organization'], [$user['username']]);
+		} catch (\Exception $e) {
+			$this->logger->error(
+				'UserSync: failed to add user ' . $user['username'] . ' to org ' . $user['organization'],
+				[
+					'error' => $e->getMessage(),
+				]
+			);
+		}
+	}//end addContactUserToOrganisation()
 
 	/**
 	 * Performs comprehensive organization and contact person synchronization
