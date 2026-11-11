@@ -466,6 +466,83 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 	}//end testTheBackfillCountsFailures()
 
 	/**
+	 * A version search that fails on a later page keeps the earlier writes, counts one failure and stops.
+	 *
+	 * @return void
+	 */
+	public function testAFailedLaterPageKeepsTheEarlierWrites(): void {
+		$service = $this->service();
+		$page    = [];
+		for ($i = 0; $i < ModuleVersionPublicationService::VERSION_LIMIT; $i++) {
+			$page[] = self::entity('v-' . $i, '46', ['module' => 'm-1']);
+		}
+
+		$calls = [];
+		$this->objects->method('searchObjects')->willReturnCallback(
+			static function (array $query, bool $_rbac = true, bool $_multitenancy = true) use (&$calls, $page): array {
+				$calls[] = [$query, $_rbac, $_multitenancy];
+				if ($query['_offset'] > 0) {
+					throw new \RuntimeException('index offline');
+				}
+
+				return $page;
+			}
+		);
+		$this->objects->method('saveObject')->willReturn($page[0]);
+		$this->logger->expects($this->never())->method('critical');
+		$this->logger->expects($this->once())->method('error')->with(
+			'ModuleVersionPublicationService: could not read the versions',
+			['module' => 'm-1', 'error' => 'index offline']
+		);
+
+		$result = $service->backfillModule(module: self::entity('m-1', '43', ['registeredBy' => 'Supplier']));
+
+		$this->assertSame(['written' => ModuleVersionPublicationService::VERSION_LIMIT, 'failed' => 1], $result);
+		$this->assertSame(
+			[
+				[['register' => 20, 'schema' => 46, 'module' => 'm-1', '_limit' => 500, '_offset' => 0], false, false],
+				[['register' => 20, 'schema' => 46, 'module' => 'm-1', '_limit' => 500, '_offset' => 500], false, false],
+			],
+			$calls
+		);
+	}//end testAFailedLaterPageKeepsTheEarlierWrites()
+
+	/**
+	 * A version search that fails while clearing a module is critical: its versions stay public.
+	 *
+	 * @return void
+	 */
+	public function testAFailedSearchWhileClearingIsCritical(): void {
+		$service = $this->service();
+		$this->objects->method('searchObjects')->willThrowException(new \RuntimeException('index offline'));
+		$this->logger->expects($this->never())->method('error');
+		$this->logger->expects($this->once())->method('critical')->with(
+			'ModuleVersionPublicationService: could not read the versions; the version stays public until a later copy onto it succeeds',
+			['module' => 'm-1', 'error' => 'index offline']
+		);
+
+		$this->assertSame(['written' => 0, 'failed' => 1], $service->clearVersions(moduleUuid: 'm-1'));
+	}//end testAFailedSearchWhileClearingIsCritical()
+
+	/**
+	 * Without the version register or schema nothing is searched.
+	 *
+	 * @return void
+	 */
+	public function testWithoutTheVersionSchemaNothingIsSearched(): void {
+		$settings = $this->createMock(SettingsService::class);
+		$settings->method('getSchemaIdForObjectType')->willReturn(null);
+		$settings->method('getRegisterIdForObjectType')->willReturn(20);
+		$objects = $this->createMock(ObjectServiceInterface::class);
+		$objects->expects($this->never())->method('searchObjects');
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->willReturn($objects);
+		$service = new ModuleVersionPublicationService(settingsService: $settings, container: $container, logger: $this->createMock(LoggerInterface::class), jobList: $this->createMock(IJobList::class));
+
+		$this->assertSame(['written' => 0, 'failed' => 0], $service->clearVersions(moduleUuid: 'm-1'));
+	}//end testWithoutTheVersionSchemaNothingIsSearched()
+
+	/**
 	 * The listener hands an update with the object before it, and a delete, to the service.
 	 *
 	 * @return void
