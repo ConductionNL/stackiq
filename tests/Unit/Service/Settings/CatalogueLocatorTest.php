@@ -27,12 +27,10 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Service\Settings;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
-use OCP\IGroupManager;
-use OCP\IL10N;
-use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -256,15 +254,16 @@ class CatalogueLocatorTest extends TestCase {
 		$service = $this->service();
 		$this->assertSame('beoordeeling_schema', $service->voorzieningenSchemaKey('software-review'));
 		$this->assertSame('suite_schema', $service->voorzieningenSchemaKey('suite'));
-		$this->assertSame('contactpersoon_schema', SettingsService::LEGACY_SCHEMA_KEY['contactPerson']);
+		$this->assertSame('contactpersoon_schema', CatalogueLocator::LEGACY_SCHEMA_KEY['contactPerson']);
+		$this->assertSame(CatalogueLocator::LEGACY_SCHEMA_KEY, SettingsService::LEGACY_SCHEMA_KEY);
 	}//end testTheVoorzieningenConfigAndSchemaKey()
 
 	/**
 	 * Build the service over the in-memory doubles.
 	 *
-	 * @return SettingsService
+	 * @return CatalogueLocator
 	 */
-	private function service(): SettingsService {
+	private function service(): CatalogueLocator {
 		$config = $this->createMock(IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
 			fn (string $app, string $key, string $default = ''): string => ($this->store[$key] ?? $default)
@@ -303,14 +302,11 @@ class CatalogueLocatorTest extends TestCase {
 			);
 		}
 
-		return new SettingsService(
+		return new CatalogueLocator(
 			config: $config,
-			request: $this->createMock(IRequest::class),
-			container: $container,
 			appManager: $appManager,
-			logger: $logger,
-			groupManager: $this->createMock(IGroupManager::class),
-			l10n: $this->createMock(IL10N::class)
+			container: $container,
+			logger: $logger
 		);
 	}//end service()
 }//end class

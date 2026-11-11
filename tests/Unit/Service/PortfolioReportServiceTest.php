@@ -29,7 +29,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\PortfolioReportDerivation;
 use OCA\Stackiq\Service\PortfolioReportService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -368,8 +368,8 @@ class PortfolioReportServiceTest extends TestCase {
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturn(['openregister']);
 
-		$settingsService = $this->createMock(SettingsService::class);
-		$settingsService->method('getVoorzieningenConfig')->willReturn(
+		$catalogue = $this->createMock(CatalogueLocator::class);
+		$catalogue->method('getVoorzieningenConfig')->willReturn(
 			[
 				'register' => '1',
 				'gebruik_schema' => '20',
@@ -387,7 +387,7 @@ class PortfolioReportServiceTest extends TestCase {
 
 		foreach (
 			[
-				'settingsService' => $settingsService,
+				'catalogue' => $catalogue,
 				'appManager' => $appManager,
 				'container' => $container,
 				'logger' => $this->createMock(LoggerInterface::class),
@@ -438,8 +438,8 @@ class PortfolioReportServiceTest extends TestCase {
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturn(['openregister']);
 
-		$settingsService = $this->createMock(SettingsService::class);
-		$settingsService->method('getVoorzieningenConfig')->willReturn(
+		$catalogue = $this->createMock(CatalogueLocator::class);
+		$catalogue->method('getVoorzieningenConfig')->willReturn(
 			[
 				'register' => '1',
 				'gebruik_schema' => '20',
@@ -457,7 +457,7 @@ class PortfolioReportServiceTest extends TestCase {
 
 		foreach (
 			[
-				'settingsService' => $settingsService,
+				'catalogue' => $catalogue,
 				'appManager' => $appManager,
 				'container' => $container,
 				'logger' => $this->createMock(LoggerInterface::class),
@@ -498,8 +498,8 @@ class PortfolioReportServiceTest extends TestCase {
 		$container->method('get')->willReturn($objectService);
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturn(['openregister']);
-		$settingsService = $this->createMock(SettingsService::class);
-		$settingsService->method('getVoorzieningenConfig')->willReturn(
+		$catalogue = $this->createMock(CatalogueLocator::class);
+		$catalogue->method('getVoorzieningenConfig')->willReturn(
 			['register' => '1', 'gebruik_schema' => '20', 'contract_schema' => '21', 'module_schema' => '22', 'moduleVersie_schema' => '23']
 		);
 		$config = $this->createMock(IAppConfig::class);
@@ -509,7 +509,7 @@ class PortfolioReportServiceTest extends TestCase {
 		$service    = $reflection->newInstanceWithoutConstructor();
 		foreach (
 			[
-				'settingsService' => $settingsService,
+				'catalogue' => $catalogue,
 				'appManager' => $appManager,
 				'container' => $container,
 				'logger' => $this->createMock(LoggerInterface::class),

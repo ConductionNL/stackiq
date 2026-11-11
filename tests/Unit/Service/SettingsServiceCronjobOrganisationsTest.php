@@ -22,6 +22,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\ListQuery;
 use OCA\OpenRegister\Db\OrganisationMapper;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -89,6 +90,12 @@ class SettingsServiceCronjobOrganisationsTest extends TestCase {
 		$appManager->method('getInstalledApps')->willReturn(['openregister']);
 
 		$service = new SettingsService(
+			new CatalogueLocator(
+				config: $this->createMock(IAppConfig::class),
+				appManager: $appManager,
+				container: $container,
+				logger: $this->createMock(LoggerInterface::class)
+			),
 			$this->createMock(IAppConfig::class),
 			$this->createMock(IRequest::class),
 			$container,

@@ -72,6 +72,7 @@ use OCA\Stackiq\Service\ReviewService;
 use OCA\Stackiq\Service\SbomImportService;
 use OCA\Stackiq\Service\SbomParserService;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
@@ -154,7 +155,7 @@ class Application extends App implements IBootstrap {
 		);
 		$context->registerServiceAlias(
 			ObjectTypeLocatorInterface::class,
-			SettingsService::class
+			CatalogueLocator::class
 		);
 		include_once __DIR__ . '/../../vendor/autoload.php';
 
@@ -333,6 +334,7 @@ class Application extends App implements IBootstrap {
 			SettingsService::class,
 			function ($container) {
 				return new SettingsService(
+					catalogue: $container->get(CatalogueLocator::class),
 					config: $container->get(IAppConfig::class),
 					request: $container->get('OCP\IRequest'),
 					container: $container,
@@ -589,7 +591,7 @@ class Application extends App implements IBootstrap {
 			function ($container) {
 				return new FacetService(
 					container: $container,
-					settingsService: $container->get(SettingsService::class),
+					catalogue: $container->get(CatalogueLocator::class),
 					archiMateService: $container->get(ArchiMateService::class),
 					queryBuilder: $container->get(ViewQueryBuilder::class),
 					userSession: $container->get('OCP\IUserSession'),

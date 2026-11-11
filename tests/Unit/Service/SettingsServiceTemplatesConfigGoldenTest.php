@@ -22,9 +22,12 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\SettingsService;
+use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
+use Psr\Container\ContainerInterface;
 use Psr\Log\NullLogger;
 
 /**
@@ -33,6 +36,7 @@ use Psr\Log\NullLogger;
  * @covers \OCA\Stackiq\Service\SettingsService
  * @uses   \OCA\Stackiq\Service\Settings\EmailTemplateDefaults
  * @uses   \OCA\Stackiq\Service\Settings\VoorzieningenConfigNormalizer
+ * @uses   \OCA\Stackiq\Service\Settings\CatalogueLocator
  *
  * @spec openspec/specs/settings-service/spec.md
  */
@@ -74,11 +78,11 @@ class SettingsServiceTemplatesConfigGoldenTest extends TestCase {
 		$out    = [];
 		foreach ($inputs as $name => $json) {
 			$stored = ['voorzieningen_config' => $json, 'voorzieningen_register' => '3', 'voorzieningen_organisatie_schema' => '4'];
-			$out[$name] = $this->service(stored: $stored)->getVoorzieningenConfig();
+			$out[$name] = $this->catalogue(stored: $stored)->getVoorzieningenConfig();
 		}
 
 		$written = [];
-		$service = $this->service(stored: [], written: $written);
+		$service = $this->catalogue(stored: [], written: $written);
 		$service->setVoorzieningenConfig(['register' => 8, 'contract_schema' => 2, 'contract_source' => 'x', 'module_schema' => null]);
 		$out['written'] = $written;
 
@@ -108,7 +112,17 @@ class SettingsServiceTemplatesConfigGoldenTest extends TestCase {
 
 		$reflection = new \ReflectionClass(SettingsService::class);
 		$service    = $reflection->newInstanceWithoutConstructor();
-		$properties = ['config' => $config, 'logger' => new NullLogger(), 'appName' => 'stackiq'];
+		$properties = [
+			'config' => $config,
+			'logger' => new NullLogger(),
+			'appName' => 'stackiq',
+			'catalogue' => new CatalogueLocator(
+				config: $config,
+				appManager: $this->createMock(originalClassName: IAppManager::class),
+				container: $this->createMock(originalClassName: ContainerInterface::class),
+				logger: new NullLogger()
+			),
+		];
 		foreach ($properties as $name => $value) {
 			$reflection->getProperty($name)->setValue($service, $value);
 		}
@@ -116,6 +130,21 @@ class SettingsServiceTemplatesConfigGoldenTest extends TestCase {
 		return $service;
 
 	}//end service()
+
+	/**
+	 * Build the catalogue locator over an in-memory app config.
+	 *
+	 * @param array $stored  The stored values by key.
+	 * @param array $written The writes, by reference.
+	 *
+	 * @return CatalogueLocator
+	 */
+	private function catalogue(array $stored, array &$written=[]): CatalogueLocator {
+		$service = $this->service(stored: $stored, written: $written);
+
+		return (new \ReflectionProperty(SettingsService::class, 'catalogue'))->getValue($service);
+
+	}//end catalogue()
 
 	/**
 	 * Compare a case with the golden file, or record it.

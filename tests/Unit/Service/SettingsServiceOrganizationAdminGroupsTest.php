@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\Stackiq\Service\Settings\OrganizationSettingsHandler;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -78,6 +79,12 @@ class SettingsServiceOrganizationAdminGroupsTest extends TestCase {
 	 */
 	private function makeService(array &$store): SettingsService {
 		return new SettingsService(
+			catalogue: new CatalogueLocator(
+				config: $this->makeConfig($store),
+				appManager: $this->createMock(IAppManager::class),
+				container: $this->createMock(ContainerInterface::class),
+				logger: $this->createMock(LoggerInterface::class)
+			),
 			config: $this->makeConfig($store),
 			request: $this->createMock(IRequest::class),
 			container: $this->createMock(ContainerInterface::class),

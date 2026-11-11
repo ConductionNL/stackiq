@@ -20,7 +20,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\EventListener;
 
 use OCA\Stackiq\Service\ModuleRegistrationService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
@@ -72,8 +72,8 @@ class ModuleRegistrationSubscriber implements IEventListener {
 	private function isModuleObject(object $object): bool {
 		$objectSchemaId = $object->getSchema();
 
-		$settingsService = $this->container->get(SettingsService::class);
-		$moduleSchemaId  = $settingsService->getSchemaIdForObjectType('module');
+		$catalogue = $this->container->get(CatalogueLocator::class);
+		$moduleSchemaId  = $catalogue->getSchemaIdForObjectType('module');
 
 		return $moduleSchemaId !== null && (int)$objectSchemaId === (int)$moduleSchemaId;
 	}//end isModuleObject()

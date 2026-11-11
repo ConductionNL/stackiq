@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -81,6 +82,12 @@ final class SettingsServiceArchiMateStatusFallbackTest extends TestCase {
 		);
 
 		return new SettingsService(
+			catalogue: new CatalogueLocator(
+				config: $config,
+				appManager: $this->createMock(IAppManager::class),
+				container: $container,
+				logger: $this->createMock(LoggerInterface::class)
+			),
 			config: $config,
 			request: $this->createMock(IRequest::class),
 			container: $container,

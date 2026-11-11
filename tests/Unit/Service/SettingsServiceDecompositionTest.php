@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\SettingsService;
 use PHPUnit\Framework\TestCase;
 
@@ -49,11 +50,15 @@ class SettingsServiceDecompositionTest extends TestCase {
 	public function testBuildObjectTypeStatusEntryReportsConfiguredWhenBothPresent(): void {
 		$service = $this->getMockBuilder(SettingsService::class)
 			->disableOriginalConstructor()
-			->onlyMethods(['getSchemaIdForObjectType', 'getRegisterIdForObjectType'])
+			->onlyMethods([])
 			->getMock();
 
-		$service->method('getSchemaIdForObjectType')->with('organization')->willReturn(42);
-		$service->method('getRegisterIdForObjectType')->with('organization')->willReturn(7);
+		// The id lookups live in CatalogueLocator; the service reaches them through it.
+		$catalogue = $this->createMock(CatalogueLocator::class);
+		(new \ReflectionProperty(SettingsService::class, 'catalogue'))->setValue($service, $catalogue);
+
+		$catalogue->method('getSchemaIdForObjectType')->with('organization')->willReturn(42);
+		$catalogue->method('getRegisterIdForObjectType')->with('organization')->willReturn(7);
 
 		$reflection = new \ReflectionMethod($service, 'buildObjectTypeStatusEntry');
 		$reflection->setAccessible(true);
@@ -80,11 +85,15 @@ class SettingsServiceDecompositionTest extends TestCase {
 	public function testBuildObjectTypeStatusEntryReportsUnconfiguredWhenSchemaMissing(): void {
 		$service = $this->getMockBuilder(SettingsService::class)
 			->disableOriginalConstructor()
-			->onlyMethods(['getSchemaIdForObjectType', 'getRegisterIdForObjectType'])
+			->onlyMethods([])
 			->getMock();
 
-		$service->method('getSchemaIdForObjectType')->willReturn(null);
-		$service->method('getRegisterIdForObjectType')->willReturn(7);
+		// The id lookups live in CatalogueLocator; the service reaches them through it.
+		$catalogue = $this->createMock(CatalogueLocator::class);
+		(new \ReflectionProperty(SettingsService::class, 'catalogue'))->setValue($service, $catalogue);
+
+		$catalogue->method('getSchemaIdForObjectType')->willReturn(null);
+		$catalogue->method('getRegisterIdForObjectType')->willReturn(7);
 
 		$reflection = new \ReflectionMethod($service, 'buildObjectTypeStatusEntry');
 		$reflection->setAccessible(true);
@@ -106,16 +115,20 @@ class SettingsServiceDecompositionTest extends TestCase {
 	public function testGetConfigurationStatusDelegatesToHelperForBothObjectTypes(): void {
 		$service = $this->getMockBuilder(SettingsService::class)
 			->disableOriginalConstructor()
-			->onlyMethods(['getSchemaIdForObjectType', 'getRegisterIdForObjectType', 'getRegisterVerificationStatus'])
+			->onlyMethods(['getRegisterVerificationStatus'])
 			->getMock();
 
-		$service->method('getSchemaIdForObjectType')->willReturnMap(
+		// The id lookups live in CatalogueLocator; the service reaches them through it.
+		$catalogue = $this->createMock(CatalogueLocator::class);
+		(new \ReflectionProperty(SettingsService::class, 'catalogue'))->setValue($service, $catalogue);
+
+		$catalogue->method('getSchemaIdForObjectType')->willReturnMap(
 			[
 				['organization', 11],
 				['contactPerson', 12],
 			]
 		);
-		$service->method('getRegisterIdForObjectType')->willReturnMap(
+		$catalogue->method('getRegisterIdForObjectType')->willReturnMap(
 			[
 				['organization', 21],
 				['contactPerson', 22],

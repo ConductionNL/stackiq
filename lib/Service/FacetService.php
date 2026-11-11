@@ -28,6 +28,7 @@ namespace OCA\Stackiq\Service;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\ICache;
 use OCP\ICacheFactory;
 use OCP\IUserSession;
@@ -121,7 +122,7 @@ class FacetService {
 	 * Constructor for FacetService.
 	 *
 	 * @param ContainerInterface $container PSR-11 container interface (for lazy ObjectService lookup).
-	 * @param SettingsService $settingsService Settings service for voorzieningen register/schema configuration.
+	 * @param CatalogueLocator $catalogue The voorzieningen register/schema configuration.
 	 * @param ArchiMateService $archiMateService Reused for bounded `element`/`relationship` lookups
 	 *                                           (domain/applicationService resolution) instead of
 	 *                                           duplicating AMEF register/schema resolution logic.
@@ -132,7 +133,7 @@ class FacetService {
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly CatalogueLocator $catalogue,
 		private readonly ArchiMateService $archiMateService,
 		private readonly ViewQueryBuilder $queryBuilder,
 		private readonly IUserSession $userSession,
@@ -446,18 +447,18 @@ class FacetService {
 	 * @return array{register: mixed, schema: mixed}|null
 	 */
 	private function configuredRegisterSchema(string $schema): ?array {
-		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+		$voorzieningenConfig = $this->catalogue->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 		// NOT `$schema . '_schema'`: the slugs are English now and the stored
 		// config keys are still Dutch, so the derived key would miss and this
 		// method would log "not configured" and return an empty facet set —
 		// which renders as a page with no filters rather than as an error.
 		//
-		// Read as a CONSTANT rather than through SettingsService: this class
+		// Read as a CONSTANT rather than through CatalogueLocator: this class
 		// takes that service as a collaborator and every test mocks it, so a
 		// method call here returns the mock's default and the lookup misses in
 		// exactly the tests meant to catch that.
-		$schemaKey = (SettingsService::LEGACY_SCHEMA_KEY[$schema] ?? $schema . '_schema');
+		$schemaKey = (CatalogueLocator::LEGACY_SCHEMA_KEY[$schema] ?? $schema . '_schema');
 		$schemaId = ($voorzieningenConfig[$schemaKey] ?? null);
 
 		if (empty($registerId) === true || empty($schemaId) === true) {
@@ -650,7 +651,7 @@ class FacetService {
 			return [];
 		}
 
-		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+		$voorzieningenConfig = $this->catalogue->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 		$schemaId = $voorzieningenConfig['module_schema'] ?? null;
 

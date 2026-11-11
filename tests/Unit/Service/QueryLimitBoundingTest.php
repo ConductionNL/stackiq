@@ -31,6 +31,7 @@ use OCA\OpenRegister\Service\ObjectService;
 use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\FacetService;
 use OCA\Stackiq\Service\OrganizationSyncService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\ViewQueryBuilder;
 use OCA\Stackiq\Service\ViewService;
@@ -177,8 +178,8 @@ class QueryLimitBoundingTest extends TestCase {
 			}
 		);
 
-		$settingsService = $this->createMock(SettingsService::class);
-		$settingsService->method('getVoorzieningenConfig')->willReturn(
+		$catalogue = $this->createMock(CatalogueLocator::class);
+		$catalogue->method('getVoorzieningenConfig')->willReturn(
 			['register' => '1', 'module_schema' => '2', 'dienst_schema' => '3']
 		);
 
@@ -193,7 +194,7 @@ class QueryLimitBoundingTest extends TestCase {
 
 		$service = new FacetService(
 			container: $container,
-			settingsService: $settingsService,
+			catalogue: $catalogue,
 			archiMateService: $archiMateService,
 			queryBuilder: new ViewQueryBuilder(),
 			userSession: $this->createMock(IUserSession::class),

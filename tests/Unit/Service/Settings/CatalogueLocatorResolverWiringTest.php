@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for the W22 RegisterResolverService wiring in SettingsService.
+ * Unit tests for the W22 RegisterResolverService wiring in CatalogueLocator.
  *
  * Covers stackiq-adopt-or-abstractions Phase 2.5 (resolver-injection unit tests).
  * Confirms that getSchemaIdForObjectType / getRegisterIdForObjectType route the
@@ -10,7 +10,7 @@
  * the legacy `IAppConfig::getValueString` read when it is not.
  *
  * @category  Test
- * @package   OCA\Stackiq\Tests\Unit\Service
+ * @package   OCA\Stackiq\Tests\Unit\Service\Settings
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -22,11 +22,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\Stackiq\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service\Settings;
 
 use OCA\OpenRegister\Service\ConfigLookup;
 use OCA\OpenRegister\Service\RegisterResolverService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -38,17 +38,17 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
- * Tests for SettingsService getSchemaIdForObjectType / getRegisterIdForObjectType
+ * Tests for CatalogueLocator getSchemaIdForObjectType / getRegisterIdForObjectType
  * routing through the RegisterResolverService.
  *
  * @category Test
- * @package  OCA\Stackiq\Tests\Unit\Service
+ * @package  OCA\Stackiq\Tests\Unit\Service\Settings
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/stackiq
  */
-class SettingsServiceResolverWiringTest extends TestCase {
+class CatalogueLocatorResolverWiringTest extends TestCase {
 
 	/** @var IAppConfig|MockObject */
 	private IAppConfig|MockObject $config;
@@ -89,19 +89,16 @@ class SettingsServiceResolverWiringTest extends TestCase {
 	}//end setUp()
 
 	/**
-	 * Build a SettingsService under test wired against the mocks.
+	 * Build a CatalogueLocator under test wired against the mocks.
 	 *
-	 * @return SettingsService
+	 * @return CatalogueLocator
 	 */
-	private function makeService(): SettingsService {
-		return new SettingsService(
-			$this->config,
-			$this->request,
-			$this->container,
-			$this->appManager,
-			$this->logger,
-			$this->groupManager,
-			$this->l10n,
+	private function makeService(): CatalogueLocator {
+		return new CatalogueLocator(
+			config: $this->config,
+			appManager: $this->appManager,
+			container: $this->container,
+			logger: $this->logger
 		);
 
 	}//end makeService()

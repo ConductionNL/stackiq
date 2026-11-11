@@ -24,6 +24,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\ArchiMateService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -285,6 +286,7 @@ class SettingsServiceObjectCountsGoldenTest extends TestCase {
 			'container'  => $container,
 			'logger'     => $logger,
 			'appName'    => 'stackiq',
+			'catalogue'  => new CatalogueLocator(config: $config, appManager: $apps, container: $container, logger: $logger),
 		];
 		foreach ($properties as $name => $value) {
 			$reflection->getProperty($name)->setValue($service, $value);
