@@ -28,6 +28,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\ArchiMate\XmlAttribute;
+use OCA\Stackiq\Service\ArchiMate\XmlAttributeRun;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -58,6 +60,24 @@ use Psr\Log\LoggerInterface;
  */
 class ArchiMateExportService {
 	/**
+	 * Fields that only belong in the <properties><property> structure, never as direct children.
+	 */
+	private const PROPERTY_LIKE_FIELDS = [
+		'availability',
+		'integrity',
+		'confidentiality',
+		'gemmaType',
+		'objectId',
+		'bivScoreBbn',
+		'belangrijksteReden',
+	];
+
+	/**
+	 * Nested structures whose property-like and invalid-tag fields are filtered out.
+	 */
+	private const NESTED_CONTAINER_KEYS = ['elementProperties', 'properties', 'viewNodes'];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param LoggerInterface $logger The logger instance.
@@ -85,155 +105,246 @@ class ArchiMateExportService {
 	 * @spec   openspec/specs/archimate-export/spec.md
 	 */
 	public function arrayToXml(array $data, \SimpleXMLElement $xml): \SimpleXMLElement {
-		// First pass: attributes and text content.
-		$addedAttributes = [];
-		// Track attributes to avoid duplicates.
-		foreach ($data as $key => $value) {
-			if ($key === '_value' || $key === '_text') {
-				$xml[0] = (string)$value;
-				continue;
-			}
-
-			if (is_string($key) === true && str_starts_with($key, '_') === true && $key !== '_attributes') {
-				// Skip legacy _attributes bag, handle individual underscored keys as attributes.
-				$attrKey = substr($key, 1);
-
-				// Skip malformed attribute keys that would create invalid XML
-				// (e.g., __propertyDefinitionRef -> :propertyDefinitionRef).
-				if (str_starts_with($attrKey, '__') === true || $attrKey === '') {
-					continue;
-				}
-
-				// Fix double underscores to colons (e.g., xml__lang -> xml:lang).
-				$attrKey = str_replace('__', ':', $attrKey);
-
-				// Skip if this attribute was already added.
-				if (in_array($attrKey, $addedAttributes) === true) {
-					continue;
-				}
-
-				[$nsPrefix, $local] = $this->splitNamespacedKey(key: $attrKey);
-
-				if ($nsPrefix !== null) {
-					// Namespaced attribute, ensure namespace is declared on element.
-					$nsUri = $this->getNamespaceUri(xml: $xml, prefix: $nsPrefix);
-					if (empty($nsUri) === false) {
-						$xml->addAttribute($nsPrefix . ':' . $local, (string)$value, $nsUri);
-						$addedAttributes[] = $nsPrefix . ':' . $local;
-					} else {
-						// Fallback to non-namespaced if namespace not found.
-						$xml->addAttribute($attrKey, (string)$value);
-						$addedAttributes[] = $attrKey;
-					}
-				} else {
-					$xml->addAttribute($local, (string)$value);
-					$addedAttributes[] = $local;
-				}
-			}//end if
-		}//end foreach
-
-		// Handle legacy _attributes array with duplicate filtering.
-		if (isset($data['_attributes']) === true && is_array($data['_attributes']) === true) {
-			foreach ($data['_attributes'] as $attrKey => $attrValue) {
-				// Skip duplicate attributes with colon prefix or already added attributes.
-				if (str_starts_with($attrKey, ':') === true || in_array($attrKey, $addedAttributes) === true) {
-					continue;
-				}
-
-				// Fix double underscores to colons.
-				$cleanAttrKey = str_replace('__', ':', $attrKey);
-
-				// Skip if cleaned version was already added.
-				if (in_array($cleanAttrKey, $addedAttributes) === true) {
-					continue;
-				}
-
-				// Handle namespaced attributes (e.g., xml:lang, xsi:type).
-				[$nsPrefix, $local] = $this->splitNamespacedKey(key: $cleanAttrKey);
-				if ($nsPrefix !== null) {
-					$nsUri = $this->getNamespaceUri(xml: $xml, prefix: $nsPrefix);
-					if (empty($nsUri) === false) {
-						$xml->addAttribute($nsPrefix . ':' . $local, (string)$attrValue, $nsUri);
-						$addedAttributes[] = $nsPrefix . ':' . $local;
-						continue;
-					}
-				}
-
-				$xml->addAttribute($cleanAttrKey, (string)$attrValue);
-				$addedAttributes[] = $cleanAttrKey;
-			}//end foreach
-		}//end if
-
-		// Second pass: children.
-		foreach ($data as $key => $value) {
-			if ($key === '_value' || $key === '_text' || $key === '_attributes') {
-				continue;
-			}
-
-			if (is_string($key) === true && str_starts_with($key, '_') === true) {
-				// Already handled as attribute.
-				continue;
-			}
-
-			// Skip colon-prefixed duplicate keys (artifacts from XML-to-JSON parsing).
-			if (is_string($key) === true && str_starts_with($key, ':') === true) {
-				continue;
-			}
-
-			// Skip numeric keys - they indicate array items that should be handled differently.
-			if (is_int($key) === true) {
-				continue;
-			}
-
-			// Skip property-like fields that should be handled by specialized property methods.
-			// These fields often appear as direct data but should only be in <properties> structure.
-			$propertyLikeFields = [
-				'availability',
-				'integrity',
-				'confidentiality',
-				'gemmaType',
-				'objectId',
-				'bivScoreBbn',
-				'belangrijksteReden',
-			];
-			if (in_array($key, $propertyLikeFields, true) === true) {
-				continue;
-				// Skip these - they should only appear in proper <properties><property> structure.
-			}
-
-			// Special handling for elementProperties and other nested structures - filter out problematic fields.
-			$nestedKeys = ['elementProperties', 'properties', 'viewNodes'];
-			if (in_array($key, $nestedKeys, true) === true && is_array($value) === true) {
-				$value = $this->filterProblematicFields(data: $value, fieldsToRemove: $propertyLikeFields);
-			}
-
-			// Ensure key is always a string for XML tag names.
-			$tagName = (string)$key;
-
-			if (is_array($value) === true) {
-				// Handle list of children.
-				if ($this->isList(arr: $value) === true) {
-					foreach ($value as $item) {
-						$child = $xml->addChild($tagName);
-						if (is_array($item) === true) {
-							$this->arrayToXml(data: $item, xml: $child);
-						} else {
-							$child[0] = (string)$item;
-						}
-					}
-				} else {
-					$child = $xml->addChild($tagName);
-					$this->arrayToXml(data: $value, xml: $child);
-				}
-			} else {
-				// Scalar child node.
-				$child = $xml->addChild($tagName);
-				$child[0] = (string)$value;
-			}
-		}//end foreach
+		$run = new XmlAttributeRun(xml: $xml);
+		$this->writeAttributesAndText(run: $run, data: $data);
+		$this->writeLegacyAttributes(run: $run, data: $data);
+		$this->appendChildren(xml: $xml, children: $this->childEntries(data: $data));
 
 		return $xml;
 	}//end arrayToXml()
+
+	/**
+	 * Write the `_value`/`_text` node text and the underscored-key attributes, in data order.
+	 *
+	 * @param XmlAttributeRun $run  The element and the attributes written so far.
+	 * @param array           $data The data array being converted.
+	 *
+	 * @return void
+	 */
+	private function writeAttributesAndText(XmlAttributeRun $run, array $data): void {
+		foreach ($data as $key => $value) {
+			if ($key === '_value' || $key === '_text') {
+				$run->setText(text: (string)$value);
+				continue;
+			}
+
+			$name = $this->underscoredAttributeName(key: $key);
+			if ($name !== null) {
+				$this->writeAttribute(run: $run, attribute: new XmlAttribute(name: $name, value: $value));
+			}
+		}
+	}//end writeAttributesAndText()
+
+	/**
+	 * Resolve the attribute name an underscored key writes, e.g. `_xml__lang` to `xml:lang`.
+	 *
+	 * The legacy `_attributes` bag is not an attribute, and keys that would
+	 * create invalid XML (e.g. `___propertyDefinitionRef`, or a bare `_`) are skipped.
+	 *
+	 * @param string|int $key The data key.
+	 *
+	 * @return string|null The attribute name, or null when the key writes no attribute.
+	 */
+	private function underscoredAttributeName(string|int $key): ?string {
+		if ($this->isUnderscoredAttributeKey(key: $key) === false) {
+			return null;
+		}
+
+		$attrKey = substr($key, 1);
+		if (str_starts_with($attrKey, '__') === true || $attrKey === '') {
+			return null;
+		}
+
+		// Fix double underscores to colons (e.g., xml__lang -> xml:lang).
+		return str_replace('__', ':', $attrKey);
+	}//end underscoredAttributeName()
+
+	/**
+	 * Whether a key is an underscored attribute key (not the legacy `_attributes` bag).
+	 *
+	 * @param string|int $key The data key.
+	 *
+	 * @return bool
+	 */
+	private function isUnderscoredAttributeKey(string|int $key): bool {
+		return is_string($key) === true && str_starts_with($key, '_') === true && $key !== '_attributes';
+	}//end isUnderscoredAttributeKey()
+
+	/**
+	 * Write the legacy `_attributes` bag, skipping colon-prefixed and already written keys.
+	 *
+	 * @param XmlAttributeRun $run  The element and the attributes written so far.
+	 * @param array           $data The data array being converted.
+	 *
+	 * @return void
+	 */
+	private function writeLegacyAttributes(XmlAttributeRun $run, array $data): void {
+		foreach ($this->legacyAttributes(data: $data) as $attrKey => $attrValue) {
+			if (str_starts_with($attrKey, ':') === true || $run->has(name: $attrKey) === true) {
+				continue;
+			}
+
+			// Fix double underscores to colons.
+			$this->writeAttribute(run: $run, attribute: new XmlAttribute(name: str_replace('__', ':', $attrKey), value: $attrValue));
+		}
+	}//end writeLegacyAttributes()
+
+	/**
+	 * The legacy `_attributes` bag of a data array, or an empty list when it has none.
+	 *
+	 * @param array $data The data array being converted.
+	 *
+	 * @return array
+	 */
+	private function legacyAttributes(array $data): array {
+		if (isset($data['_attributes']) === true && is_array($data['_attributes']) === true) {
+			return $data['_attributes'];
+		}
+
+		return [];
+	}//end legacyAttributes()
+
+	/**
+	 * Write one attribute unless already written; a `prefix:local` name is written
+	 * namespaced when the element knows the prefix, and as a plain name otherwise.
+	 *
+	 * @param XmlAttributeRun $run       The element and the attributes written so far.
+	 * @param XmlAttribute    $attribute The attribute to write.
+	 *
+	 * @return void
+	 */
+	private function writeAttribute(XmlAttributeRun $run, XmlAttribute $attribute): void {
+		if ($run->has(name: $attribute->name) === true) {
+			return;
+		}
+
+		[$nsPrefix, $local] = $this->splitNamespacedKey(key: $attribute->name);
+		$nsUri = $this->attributeNamespaceUri(xml: $run->xml, prefix: $nsPrefix);
+		if (empty($nsUri) === false) {
+			$run->xml->addAttribute($nsPrefix . ':' . $local, (string)$attribute->value, $nsUri);
+			$run->record(name: $nsPrefix . ':' . $local);
+			return;
+		}
+
+		$run->xml->addAttribute($attribute->name, (string)$attribute->value);
+		$run->record(name: $attribute->name);
+	}//end writeAttribute()
+
+	/**
+	 * The namespace URI for an attribute prefix, or an empty string for an unprefixed name.
+	 *
+	 * @param \SimpleXMLElement $xml    The element the attribute is written onto.
+	 * @param string|null       $prefix The attribute's namespace prefix, null when it has none.
+	 *
+	 * @return string
+	 */
+	private function attributeNamespaceUri(\SimpleXMLElement $xml, ?string $prefix): string {
+		if ($prefix === null) {
+			return '';
+		}
+
+		return $this->getNamespaceUri(xml: $xml, prefix: $prefix);
+	}//end attributeNamespaceUri()
+
+	/**
+	 * The entries of a data array that become child elements, with nested
+	 * property containers filtered.
+	 *
+	 * @param array $data The data array being converted.
+	 *
+	 * @return array<string, mixed> Child values keyed by tag name.
+	 */
+	private function childEntries(array $data): array {
+		$children = [];
+		foreach ($data as $key => $value) {
+			if ($this->isChildKey(key: $key) === true) {
+				$children[$key] = $this->filterNestedContainer(key: $key, value: $value);
+			}
+		}
+
+		return $children;
+	}//end childEntries()
+
+	/**
+	 * Whether a data key becomes a child element.
+	 *
+	 * Underscored keys are attributes or text, colon-prefixed keys are
+	 * artifacts from XML-to-JSON parsing, numeric keys are list items, and
+	 * property-like fields only belong in the <properties> structure.
+	 *
+	 * @param string|int $key The data key.
+	 *
+	 * @return bool
+	 */
+	private function isChildKey(string|int $key): bool {
+		if (is_int($key) === true) {
+			return false;
+		}
+
+		if (str_starts_with($key, '_') === true || str_starts_with($key, ':') === true) {
+			return false;
+		}
+
+		return in_array($key, self::PROPERTY_LIKE_FIELDS, true) === false;
+	}//end isChildKey()
+
+	/**
+	 * Filter property-like and invalid-tag fields out of a nested container
+	 * (elementProperties, properties, viewNodes); other values pass unchanged.
+	 *
+	 * @param string $key   The child key.
+	 * @param mixed  $value The child value.
+	 *
+	 * @return mixed
+	 */
+	private function filterNestedContainer(string $key, mixed $value): mixed {
+		if (in_array($key, self::NESTED_CONTAINER_KEYS, true) === true && is_array($value) === true) {
+			return $this->filterProblematicFields(data: $value, fieldsToRemove: self::PROPERTY_LIKE_FIELDS);
+		}
+
+		return $value;
+	}//end filterNestedContainer()
+
+	/**
+	 * Append the child elements; a list value repeats the tag once per item.
+	 *
+	 * @param \SimpleXMLElement    $xml      The element to append to.
+	 * @param array<string, mixed> $children Child values keyed by tag name.
+	 *
+	 * @return void
+	 */
+	private function appendChildren(\SimpleXMLElement $xml, array $children): void {
+		foreach ($children as $key => $value) {
+			// Ensure key is always a string for XML tag names.
+			$tagName = (string)$key;
+			if (is_array($value) === true && $this->isList(arr: $value) === true) {
+				foreach ($value as $item) {
+					$this->fillNode(node: $xml->addChild($tagName), value: $item);
+				}
+
+				continue;
+			}
+
+			$this->fillNode(node: $xml->addChild($tagName), value: $value);
+		}
+	}//end appendChildren()
+
+	/**
+	 * Fill a child node: an array is converted recursively, a scalar becomes its text.
+	 *
+	 * @param \SimpleXMLElement $node  The child node.
+	 * @param mixed             $value The child value.
+	 *
+	 * @return void
+	 */
+	private function fillNode(\SimpleXMLElement $node, mixed $value): void {
+		if (is_array($value) === true) {
+			$this->arrayToXml(data: $value, xml: $node);
+			return;
+		}
+
+		$node[0] = (string)$value;
+	}//end fillNode()
 
 	/**
 	 * Check if an array is a numeric list (sequential integer keys).
@@ -254,24 +365,34 @@ class ArchiMateExportService {
 	 * @return array Array of [prefix, localName].
 	 */
 	private function splitNamespacedKey(string $key): array {
-		// Convert `xsi__type` to ['xsi', 'type'].
-		if (str_contains($key, '__') === true) {
-			$parts = explode('__', $key, 2);
-			if (count($parts) === 2 && $parts[0] !== '' && $parts[1] !== '') {
-				return [$parts[0], $parts[1]];
-			}
-		}
-
-		// Also handle already-converted colon notation (e.g., 'xml:lang').
-		if (str_contains($key, ':') === true) {
-			$parts = explode(':', $key, 2);
-			if (count($parts) === 2 && $parts[0] !== '' && $parts[1] !== '') {
-				return [$parts[0], $parts[1]];
+		// Convert `xsi__type` to ['xsi', 'type'], and also handle already-converted
+		// colon notation (e.g., 'xml:lang').
+		foreach (['__', ':'] as $separator) {
+			$parts = $this->splitOnSeparator(key: $key, separator: $separator);
+			if ($parts !== null) {
+				return $parts;
 			}
 		}
 
 		return [null, $key];
 	}//end splitNamespacedKey()
+
+	/**
+	 * Split a key on the first occurrence of a separator into two non-empty parts.
+	 *
+	 * @param string $key       The key to split.
+	 * @param string $separator The separator.
+	 *
+	 * @return array|null Array of [prefix, localName], or null when the key does not split.
+	 */
+	private function splitOnSeparator(string $key, string $separator): ?array {
+		$parts = explode($separator, $key, 2);
+		if (count($parts) === 2 && $parts[0] !== '' && $parts[1] !== '') {
+			return [$parts[0], $parts[1]];
+		}
+
+		return null;
+	}//end splitOnSeparator()
 
 	/**
 	 * Recursively filter out problematic fields from nested data structures.
@@ -285,31 +406,7 @@ class ArchiMateExportService {
 		$filtered = [];
 
 		foreach ($data as $key => $value) {
-			if (is_string($key) === false) {
-				continue;
-			}
-
-			$shouldSkip = false;
-
-			// Skip exact matches.
-			if (in_array($key, $fieldsToRemove, true) === true) {
-				$shouldSkip = true;
-			}
-
-			// Skip fields that start with problematic patterns (e.g., "availabilityPrimaryReason").
-			foreach ($fieldsToRemove as $fieldPattern) {
-				if (str_starts_with($key, $fieldPattern) === true) {
-					$shouldSkip = true;
-					break;
-				}
-			}
-
-			// Skip fields with invalid XML tag name characters (parentheses, etc.).
-			if (preg_match('/[(),<>\/\\\]/', $key) === 1) {
-				$shouldSkip = true;
-			}
-
-			if ($shouldSkip === true) {
+			if (is_string($key) === false || $this->isProblematicField(key: $key, fieldsToRemove: $fieldsToRemove) === true) {
 				continue;
 			}
 
@@ -319,10 +416,30 @@ class ArchiMateExportService {
 			} else {
 				$filtered[$key] = $value;
 			}
-		}//end foreach
+		}
 
 		return $filtered;
 	}//end filterProblematicFields()
+
+	/**
+	 * Whether a field is problematic: it matches or starts with one of the fields
+	 * to remove (e.g., "availabilityPrimaryReason"), or it holds characters that
+	 * are invalid in an XML tag name (parentheses, etc.).
+	 *
+	 * @param string $key            The field name.
+	 * @param array  $fieldsToRemove List of field names to remove.
+	 *
+	 * @return bool
+	 */
+	private function isProblematicField(string $key, array $fieldsToRemove): bool {
+		foreach ($fieldsToRemove as $fieldPattern) {
+			if (str_starts_with($key, $fieldPattern) === true) {
+				return true;
+			}
+		}
+
+		return preg_match('/[(),<>\/\\\]/', $key) === 1;
+	}//end isProblematicField()
 
 	/**
 	 * Get the namespace URI for a given prefix from an XML element.
@@ -344,13 +461,11 @@ class ArchiMateExportService {
 		}
 
 		$docNamespaces = $xml->getDocNamespaces(true);
-		if ($docNamespaces !== false) {
-			$namespaces = $docNamespaces;
-		} else {
-			$namespaces = [];
+		if ($docNamespaces === false) {
+			return '';
 		}
 
-		return $namespaces[$prefix] ?? '';
+		return $docNamespaces[$prefix] ?? '';
 	}//end getNamespaceUri()
 
 	/**
