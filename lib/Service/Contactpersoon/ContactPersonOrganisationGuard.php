@@ -99,19 +99,42 @@ class ContactPersonOrganisationGuard {
 	 * @spec openspec/specs/contactpersoon-sync/spec.md#requirement-the-system-shall-only-accept-a-contact-person-from-someone-who-may-add-members-to-its-organisation-req-003
 	 */
 	public function allows(array $contactData, ?array $oldData = null): bool {
-		$caller = $this->userSession->getUser()?->getUID();
-		if ($caller !== null && $this->groupManager->isAdmin($caller) === true) {
+		$write = new ContactPersonWrite(contactData: $contactData, oldData: $oldData);
+		$write->caller = $this->userSession->getUser()?->getUID();
+		if ($this->isAdministrator(caller: $write->caller) === true) {
 			return true;
 		}
 
-		if ($this->isAmbiguousOrForeign(contactData: $contactData, caller: $caller) === true) {
+		return $this->allowsMember(write: $write);
+	}//end allows()
+
+	/**
+	 * Whether the caller is a Nextcloud administrator.
+	 *
+	 * @param string|null $caller The caller's uid.
+	 *
+	 * @return bool
+	 */
+	private function isAdministrator(?string $caller): bool {
+		return $caller !== null && $this->groupManager->isAdmin($caller) === true;
+	}//end isAdministrator()
+
+	/**
+	 * Whether a caller who is not an administrator may make this write.
+	 *
+	 * @param ContactPersonWrite $write The write.
+	 *
+	 * @return bool
+	 */
+	private function allowsMember(ContactPersonWrite $write): bool {
+		if ($this->isAmbiguousOrForeign(contactData: $write->contactData, caller: $write->caller) === true) {
 			return false;
 		}
 
-		$organisationUuid = ($this->values(contactData: $contactData, keys: self::ORGANISATION_KEYS)[0] ?? '');
+		$organisationUuid = ($this->values(contactData: $write->contactData, keys: self::ORGANISATION_KEYS)[0] ?? '');
 		$organisation     = $this->findOrganisation(uuid: $organisationUuid);
-		$account          = $this->existingAccount(email: $this->values(contactData: $contactData, keys: self::EMAIL_KEYS)[0] ?? '', caller: $caller);
-		if ($account !== null && $organisation?->hasUser($account) !== true) {
+		$account          = $this->existingAccount(email: $this->values(contactData: $write->contactData, keys: self::EMAIL_KEYS)[0] ?? '', caller: $write->caller);
+		if ($this->isAccountOutside(account: $account, organisation: $organisation) === true) {
 			return false;
 		}
 
@@ -119,8 +142,20 @@ class ContactPersonOrganisationGuard {
 			return false;
 		}
 
-		return $this->mayAddTo(organisation: $organisation, contactData: $contactData, oldData: $oldData, caller: $caller);
-	}//end allows()
+		return $this->mayAddTo(organisation: $organisation, write: $write);
+	}//end allowsMember()
+
+	/**
+	 * Whether an existing account is named that is not a member of the organisation.
+	 *
+	 * @param string|null       $account      The uid of the existing account the write names, or null.
+	 * @param Organisation|null $organisation The OpenRegister organisation, or null when it has none yet.
+	 *
+	 * @return bool
+	 */
+	private function isAccountOutside(?string $account, ?Organisation $organisation): bool {
+		return $account !== null && $organisation?->hasUser($account) !== true;
+	}//end isAccountOutside()
 
 	/**
 	 * Whether two keys disagree, or `username` names an account other than the caller's.
@@ -139,20 +174,30 @@ class ContactPersonOrganisationGuard {
 	/**
 	 * Whether the caller may add this contact to the organisation.
 	 *
-	 * @param Organisation|null         $organisation The OpenRegister organisation, or null when it has none yet.
-	 * @param array<string, mixed>      $contactData  The new data.
-	 * @param array<string, mixed>|null $oldData      The stored data, or null on a create.
-	 * @param string|null               $caller       The caller's uid.
+	 * @param Organisation|null  $organisation The OpenRegister organisation, or null when it has none yet.
+	 * @param ContactPersonWrite $write        The write.
 	 *
 	 * @return bool
 	 */
-	private function mayAddTo(?Organisation $organisation, array $contactData, ?array $oldData, ?string $caller): bool {
-		if ($organisation === null || $this->isOwnContactInSameOrganisation(contactData: $contactData, oldData: $oldData, caller: $caller) === true) {
+	private function mayAddTo(?Organisation $organisation, ContactPersonWrite $write): bool {
+		if ($organisation === null || $this->isOwnContactInSameOrganisation(write: $write) === true) {
 			return true;
 		}
 
-		return $caller !== null && $organisation->hasUser($caller) === true && $this->managesMembers(uid: $caller) === true;
+		return $this->isMemberManager(organisation: $organisation, caller: $write->caller);
 	}//end mayAddTo()
+
+	/**
+	 * Whether the caller is a member of the organisation who may add members.
+	 *
+	 * @param Organisation $organisation The OpenRegister organisation.
+	 * @param string|null  $caller       The caller's uid.
+	 *
+	 * @return bool
+	 */
+	private function isMemberManager(Organisation $organisation, ?string $caller): bool {
+		return $caller !== null && $organisation->hasUser($caller) === true && $this->managesMembers(uid: $caller) === true;
+	}//end isMemberManager()
 
 	/**
 	 * Whether the change from the stored contact person needs the check again.
@@ -210,21 +255,19 @@ class ContactPersonOrganisationGuard {
 	/**
 	 * Whether the caller edits their own contact person and keeps its organisation.
 	 *
-	 * @param array<string, mixed>      $contactData The new data.
-	 * @param array<string, mixed>|null $oldData     The stored data.
-	 * @param string|null               $caller      The caller's uid.
+	 * @param ContactPersonWrite $write The write.
 	 *
 	 * @return bool
 	 */
-	private function isOwnContactInSameOrganisation(array $contactData, ?array $oldData, ?string $caller): bool {
-		if ($oldData === null || $caller === null) {
+	private function isOwnContactInSameOrganisation(ContactPersonWrite $write): bool {
+		if ($write->oldData === null || $write->caller === null) {
 			return false;
 		}
 
-		$own = [strtolower($caller)];
-		return $this->values(contactData: $oldData, keys: [self::USERNAME_KEY]) === $own
-			&& $this->values(contactData: $contactData, keys: [self::USERNAME_KEY]) === $own
-			&& $this->values(contactData: $contactData, keys: self::ORGANISATION_KEYS) === $this->values(contactData: $oldData, keys: self::ORGANISATION_KEYS);
+		$own = [strtolower($write->caller)];
+		return $this->values(contactData: $write->oldData, keys: [self::USERNAME_KEY]) === $own
+			&& $this->values(contactData: $write->contactData, keys: [self::USERNAME_KEY]) === $own
+			&& $this->values(contactData: $write->contactData, keys: self::ORGANISATION_KEYS) === $this->values(contactData: $write->oldData, keys: self::ORGANISATION_KEYS);
 	}//end isOwnContactInSameOrganisation()
 
 	/**
