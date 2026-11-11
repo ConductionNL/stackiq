@@ -623,42 +623,60 @@ class GebruikSyncService {
 	 */
 	private function resolveLatestEligibleStatus(array $statusDates, string $gebruikUuid): array {
 		$now = new DateTime();
-		$targetStatus = null;
-		$targetDate = null;
+		$target = [null, null];
 
 		foreach ($statusDates as $status => $dateString) {
-			if (empty($dateString) === true) {
-				continue;
+			$entry = ['gebruikId' => $gebruikUuid, 'status' => $status, 'dateString' => $dateString];
+			$date = $this->eligibleDate(entry: $entry, now: $now);
+			if ($date !== null && ($target[1] === null || $date > $target[1])) {
+				$target = [$status, $date];
 			}
+		}
 
-			try {
-				$date = new DateTime($dateString);
-			} catch (Exception $e) {
-				$this->logger->warning(
-					'Invalid date format',
-					[
-						'app' => 'stackiq',
-						'gebruikId' => $gebruikUuid,
-						'status' => $status,
-						'dateString' => $dateString,
-						'error' => $e->getMessage(),
-					]
-				);
-				continue;
-			}
-
-			if ($date > $now) {
-				continue;
-			}
-
-			if ($targetDate === null || $date > $targetDate) {
-				$targetDate = $date;
-				$targetStatus = $status;
-			}
-		}//end foreach
-
-		return [$targetStatus, $targetDate];
+		return $target;
 	}//end resolveLatestEligibleStatus()
+
+	/**
+	 * The start date of one status, when it is set, parses and is not in the future.
+	 *
+	 * @param array{gebruikId: string, status: string, dateString: string|null} $entry The gebruik UUID, the status
+	 *                                                                                 and its date string.
+	 * @param DateTime                                                          $now   The reference moment.
+	 *
+	 * @return DateTime|null
+	 */
+	private function eligibleDate(array $entry, DateTime $now): ?DateTime {
+		if (empty($entry['dateString']) === true) {
+			return null;
+		}
+
+		$date = $this->parsedStatusDate(entry: $entry);
+		if ($date === null || $date > $now) {
+			return null;
+		}
+
+		return $date;
+	}//end eligibleDate()
+
+	/**
+	 * Parse a status date string, logging and skipping one that does not parse.
+	 *
+	 * @param array{gebruikId: string, status: string, dateString: string} $entry The gebruik UUID, the status and
+	 *                                                                            its date string.
+	 *
+	 * @return DateTime|null
+	 */
+	private function parsedStatusDate(array $entry): ?DateTime {
+		try {
+			return new DateTime($entry['dateString']);
+		} catch (Exception $e) {
+			$this->logger->warning(
+				'Invalid date format',
+				['app' => 'stackiq'] + $entry + ['error' => $e->getMessage()]
+			);
+			return null;
+		}
+	}//end parsedStatusDate()
 
 	/**
 	 * Update a gebruik object in OpenRegister.
