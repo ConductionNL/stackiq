@@ -602,70 +602,143 @@ class ViewService {
 		$this->logger->debug('Getting products data for enrichment');
 
 		try {
-			$objectService = $this->getObjectService();
-			if ($objectService === null) {
-				return [];
-			}
-
-			// Use voorzieningen config for the correct dienst register and schema.
-			$voorzConfig = $this->settingsService->getVoorzieningenConfig();
-			$registerId = $voorzConfig['register'] ?? null;
-			$dienstSchemaId = $voorzConfig['dienst_schema'] ?? null;
-
-			if ($registerId === null || $dienstSchemaId === null || $dienstSchemaId === '') {
-				$this->logger->warning(message: 'Voorzieningen register or dienst schema not configured for products');
-				return [];
-			}
-
-			$currentOrg = $this->getCurrentOrganisation();
-
-			$query = [
-				'@self' => [
-					'register' => $registerId,
-					'schema' => $dienstSchemaId,
-				],
-				'_limit' => 500,
-			];
-
-			// Add organisation filter if current organisation is available.
-			if ($currentOrg !== null) {
-				$query['@self']['organisation'] = $currentOrg;
-			}
-
-			$products = $objectService->searchObjects($query);
-
-			$allProducts = [];
-			foreach ($products as $product) {
-				// Additional check for organisation in metadata if not caught by query.
-				$productOrg = $product['@self']['organisation'] ?? null;
-				$hasOrgMismatch = $currentOrg !== null
-					&& isset($product['@self']['organisation']) === true
-					&& $productOrg !== $currentOrg;
-				if ($hasOrgMismatch === true) {
-					continue;
-				}
-
-				// Index by elementRef or identifier for quick lookup.
-				$elementRef = $product['elementRef'] ?? $product['identifier'] ?? null;
-				if ($elementRef !== null) {
-					$allProducts[$elementRef] = $product;
-				}
-			}
-
-			$this->logger->debug(
-				'Total products retrieved for enrichment',
-				['total_products' => count($allProducts)]
-			);
-
-			return $allProducts;
+			return $this->loadProductsData();
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'Failed to get products data',
 				['error' => $e->getMessage()]
 			);
 			return [];
-		}//end try
+		}
 	}//end getProductsData()
+
+	/**
+	 * Load the dienst records of the current organisation, indexed by elementRef.
+	 *
+	 * @return array Products data indexed by elementRef.
+	 */
+	private function loadProductsData(): array {
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			return [];
+		}
+
+		// Use voorzieningen config for the correct dienst register and schema.
+		$target = $this->productTarget();
+		if ($target === null) {
+			return [];
+		}
+
+		$query = $this->withOrganisation(
+			query: ['@self' => $target, '_limit' => 500],
+			currentOrg: $this->getCurrentOrganisation()
+		);
+		return $this->indexProducts(objectService: $objectService, query: $query);
+	}//end loadProductsData()
+
+	/**
+	 * Resolve the register and dienst schema the products are read from.
+	 *
+	 * @return array|null The register and schema, or null when not configured.
+	 */
+	private function productTarget(): ?array {
+		$voorzConfig = $this->settingsService->getVoorzieningenConfig();
+		$registerId = $voorzConfig['register'] ?? null;
+		$dienstSchemaId = $voorzConfig['dienst_schema'] ?? null;
+
+		if ($registerId === null || $dienstSchemaId === null || $dienstSchemaId === '') {
+			$this->logger->warning(message: 'Voorzieningen register or dienst schema not configured for products');
+			return null;
+		}
+
+		return [
+			'register' => $registerId,
+			'schema' => $dienstSchemaId,
+		];
+	}//end productTarget()
+
+	/**
+	 * Search the products and index the ones of the query's organisation.
+	 *
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param array $query The organisation-scoped products query.
+	 *
+	 * @return array Products data indexed by elementRef.
+	 */
+	private function indexProducts(ObjectServiceInterface $objectService, array $query): array {
+		$allProducts = $this->indexByElementRef(
+			rows: $objectService->searchObjects($query),
+			currentOrg: $query['@self']['organisation'] ?? null
+		);
+
+		$this->logger->debug(
+			'Total products retrieved for enrichment',
+			['total_products' => count($allProducts)]
+		);
+
+		return $allProducts;
+	}//end indexProducts()
+
+	/**
+	 * Scope a query to the current organisation when there is one.
+	 *
+	 * @param array $query The OpenRegister search query.
+	 * @param string|null $currentOrg The current organisation uuid.
+	 *
+	 * @return array The query, with the organisation pinned into `@self` when known.
+	 */
+	private function withOrganisation(array $query, ?string $currentOrg): array {
+		if ($currentOrg !== null) {
+			$query['@self']['organisation'] = $currentOrg;
+		}
+
+		return $query;
+	}//end withOrganisation()
+
+	/**
+	 * Index rows by elementRef (or identifier), skipping rows of another organisation.
+	 *
+	 * This is the additional organisation check for rows the query did not
+	 * catch: a row whose `@self.organisation` is set and differs from the
+	 * current organisation is dropped; rows without one are kept. A later row
+	 * with the same reference replaces an earlier one.
+	 *
+	 * @param array $rows The rows returned by OpenRegister.
+	 * @param string|null $currentOrg The current organisation uuid, or null for no filter.
+	 *
+	 * @return array The rows indexed by elementRef.
+	 */
+	private function indexByElementRef(array $rows, ?string $currentOrg): array {
+		$indexed = [];
+		foreach ($rows as $row) {
+			if ($this->belongsToOtherOrganisation(row: $row, currentOrg: $currentOrg) === true) {
+				continue;
+			}
+
+			// Index by elementRef or identifier for quick lookup.
+			$elementRef = $row['elementRef'] ?? $row['identifier'] ?? null;
+			if ($elementRef !== null) {
+				$indexed[$elementRef] = $row;
+			}
+		}
+
+		return $indexed;
+	}//end indexByElementRef()
+
+	/**
+	 * Whether a row is owned by an organisation other than the current one.
+	 *
+	 * @param array $row The OpenRegister row.
+	 * @param string|null $currentOrg The current organisation uuid, or null for no filter.
+	 *
+	 * @return bool True when the row's organisation is set and differs.
+	 */
+	private function belongsToOtherOrganisation(array $row, ?string $currentOrg): bool {
+		$rowOrg = $row['@self']['organisation'] ?? null;
+		return $currentOrg !== null
+			&& isset($row['@self']['organisation']) === true
+			&& $rowOrg !== $currentOrg;
+	}//end belongsToOtherOrganisation()
 
 	/**
 	 * Get current active organisation UUID for filtering.
@@ -709,110 +782,7 @@ class ViewService {
 		$this->logger->debug('Getting modules data for enrichment');
 
 		try {
-			$objectService = $this->getObjectService();
-			if ($objectService === null) {
-				return [];
-			}
-
-			// Get current organisation for filtering.
-			$currentOrg = $this->getCurrentOrganisation();
-
-			// Get configuration for modules register/schema.
-			$amefConfig = $this->settingsService->getAmefConfig();
-			$registerId = $amefConfig['register_id'] ?? null;
-
-			// Fail closed on an unconfigured register. This used to be the one
-			// read of `register_id` with no guard at all: the loop below only
-			// checks the SCHEMA, so an empty register would have been pinned
-			// into `@self` and OpenRegister asked for "any register" — an
-			// unpinned query returns rows, which reads exactly like a correct
-			// result. `empty()` rather than `=== null` because the legacy
-			// config fallback resolves unset ids to `''`, and `'' === null` is
-			// false.
-			if (empty($registerId) === true) {
-				$this->logger->warning(
-					'ViewService: AMEF register is not configured; skipping the module lookup rather than issuing an unpinned query'
-				);
-
-				return [];
-			}
-
-			// Modules could be in various schemas - check common ones.
-			$moduleSchemas = [
-				$amefConfig['module_schema'] ?? null,
-				$amefConfig['component_schema'] ?? null,
-				$amefConfig['element_schema'] ?? null,
-			];
-
-			$allModules = [];
-
-			foreach ($moduleSchemas as $schemaId) {
-				if (empty($schemaId) === true) {
-					continue;
-				}
-
-				try {
-					// Builds a lookup index (O(1) node matching), so this
-					// intentionally fetches "all matching" — bounded at a
-					// documented safe ceiling rather than left unbounded.
-					$query = [
-						'@self' => [
-							'register' => $registerId,
-							'schema' => $schemaId,
-						],
-						'_limit' => 1000,
-					];
-
-					// Add organisation filter if current organisation is available.
-					if ($currentOrg !== null) {
-						$query['@self']['organisation'] = $currentOrg;
-					}
-
-					$modules = $objectService->searchObjects($query);
-
-					foreach ($modules as $module) {
-						// Additional check for organisation in metadata if not caught by query.
-						$moduleOrg = $module['@self']['organisation'] ?? null;
-						$hasOrgMismatch = $currentOrg !== null
-							&& isset($module['@self']['organisation']) === true
-							&& $moduleOrg !== $currentOrg;
-						if ($hasOrgMismatch === true) {
-							continue;
-						}
-
-						// Index by elementRef or identifier for quick lookup.
-						$elementRef = $module['elementRef'] ?? $module['identifier'] ?? null;
-						if ($elementRef !== null) {
-							$allModules[$elementRef] = $module;
-						}
-					}
-
-					$this->logger->debug(
-						'Retrieved modules from schema',
-						[
-							'schema_id' => $schemaId,
-							'modules_count' => count($modules),
-						]
-					);
-				} catch (\Exception $e) {
-					$this->logger->warning(
-						'Failed to get modules from schema',
-						[
-							'schema_id' => $schemaId,
-							'error' => $e->getMessage(),
-						]
-					);
-				}//end try
-			}//end foreach
-
-			$this->logger->debug(
-				'Total modules retrieved for enrichment',
-				[
-					'total_modules' => count($allModules),
-				]
-			);
-
-			return $allModules;
+			return $this->loadModulesData();
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'Failed to get modules data',
@@ -821,8 +791,199 @@ class ViewService {
 				]
 			);
 			return [];
-		}//end try
+		}
 	}//end getModulesData()
+
+	/**
+	 * Load the modules of the current organisation from every module schema.
+	 *
+	 * @return array Modules data indexed by elementRef.
+	 */
+	private function loadModulesData(): array {
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			return [];
+		}
+
+		// Get current organisation for filtering.
+		$currentOrg = $this->getCurrentOrganisation();
+
+		// Get configuration for modules register/schema.
+		$amefConfig = $this->settingsService->getAmefConfig();
+		if ($this->hasModuleRegister(amefConfig: $amefConfig) === false) {
+			return [];
+		}
+
+		$queries = $this->moduleQueries(amefConfig: $amefConfig, currentOrg: $currentOrg);
+		return $this->collectModules(objectService: $objectService, queries: $queries);
+	}//end loadModulesData()
+
+	/**
+	 * Whether the AMEF register the modules live in is configured.
+	 *
+	 * @param array $amefConfig The AMEF configuration.
+	 *
+	 * @return bool True when a register is configured.
+	 */
+	private function hasModuleRegister(array $amefConfig): bool {
+		// Fail closed on an unconfigured register. This used to be the one
+		// read of `register_id` with no guard at all: the loop below only
+		// checks the SCHEMA, so an empty register would have been pinned
+		// into `@self` and OpenRegister asked for "any register" — an
+		// unpinned query returns rows, which reads exactly like a correct
+		// result. `empty()` rather than `=== null` because the legacy
+		// config fallback resolves unset ids to `''`, and `'' === null` is
+		// false.
+		if (empty($amefConfig['register_id'] ?? null) === true) {
+			$this->logger->warning(
+				'ViewService: AMEF register is not configured; skipping the module lookup rather than issuing an unpinned query'
+			);
+
+			return false;
+		}
+
+		return true;
+	}//end hasModuleRegister()
+
+	/**
+	 * Build one organisation-scoped query per configured module schema.
+	 *
+	 * @param array $amefConfig The AMEF configuration.
+	 * @param string|null $currentOrg The current organisation uuid.
+	 *
+	 * @return array<int, array> The queries, in schema order.
+	 */
+	private function moduleQueries(array $amefConfig, ?string $currentOrg): array {
+		$queries = [];
+		foreach ($this->moduleSchemaIds(amefConfig: $amefConfig) as $schemaId) {
+			// Builds a lookup index (O(1) node matching), so this
+			// intentionally fetches "all matching" — bounded at a
+			// documented safe ceiling rather than left unbounded.
+			$query = [
+				'@self' => [
+					'register' => $amefConfig['register_id'],
+					'schema' => $schemaId,
+				],
+				'_limit' => 1000,
+			];
+			$queries[] = $this->withOrganisation(query: $query, currentOrg: $currentOrg);
+		}
+
+		return $queries;
+	}//end moduleQueries()
+
+	/**
+	 * The configured schemas modules can live in, skipping unset ones.
+	 *
+	 * @param array $amefConfig The AMEF configuration.
+	 *
+	 * @return array The schema ids, in lookup order.
+	 */
+	private function moduleSchemaIds(array $amefConfig): array {
+		// Modules could be in various schemas - check common ones.
+		$moduleSchemas = [
+			$amefConfig['module_schema'] ?? null,
+			$amefConfig['component_schema'] ?? null,
+			$amefConfig['element_schema'] ?? null,
+		];
+
+		return array_filter($moduleSchemas, static fn ($schemaId): bool => empty($schemaId) === false);
+	}//end moduleSchemaIds()
+
+	/**
+	 * Run every module query and merge the indexed results in query order.
+	 *
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param array<int, array> $queries The module queries.
+	 *
+	 * @return array Modules data indexed by elementRef.
+	 */
+	private function collectModules(ObjectServiceInterface $objectService, array $queries): array {
+		$allModules = [];
+		foreach ($queries as $query) {
+			$modules = $this->indexModuleSchema(objectService: $objectService, query: $query);
+			$allModules = array_replace($allModules, $modules);
+		}
+
+		$this->logger->debug(
+			'Total modules retrieved for enrichment',
+			[
+				'total_modules' => count($allModules),
+			]
+		);
+
+		return $allModules;
+	}//end collectModules()
+
+	/**
+	 * Search one module schema and index the modules of the query's organisation.
+	 *
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param array $query The module query of one schema.
+	 *
+	 * @return array The modules of that schema indexed by elementRef.
+	 */
+	private function indexModuleSchema(ObjectServiceInterface $objectService, array $query): array {
+		return $this->indexByElementRef(
+			rows: $this->searchModuleSchema(objectService: $objectService, query: $query),
+			currentOrg: $query['@self']['organisation'] ?? null
+		);
+	}//end indexModuleSchema()
+
+	/**
+	 * Search one module schema; a failing schema is logged and yields no modules.
+	 *
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param array $query The module query of one schema.
+	 *
+	 * @return array The modules of that schema.
+	 */
+	private function searchModuleSchema(ObjectServiceInterface $objectService, array $query): array {
+		try {
+			$modules = $objectService->searchObjects($query);
+			$this->logModuleSchemaRead(query: $query, modules: $modules);
+			return $modules;
+		} catch (\Exception $e) {
+			$this->logModuleSchemaFailure(query: $query, error: $e);
+			return [];
+		}
+	}//end searchModuleSchema()
+
+	/**
+	 * Log that one module schema could not be searched.
+	 *
+	 * @param array $query The module query of one schema.
+	 * @param \Exception $error The search failure.
+	 *
+	 * @return void
+	 */
+	private function logModuleSchemaFailure(array $query, \Exception $error): void {
+		$this->logger->warning(
+			'Failed to get modules from schema',
+			[
+				'schema_id' => $query['@self']['schema'],
+				'error' => $error->getMessage(),
+			]
+		);
+	}//end logModuleSchemaFailure()
+
+	/**
+	 * Log how many modules one schema returned.
+	 *
+	 * @param array $query The module query of one schema.
+	 * @param array $modules The modules it returned.
+	 *
+	 * @return void
+	 */
+	private function logModuleSchemaRead(array $query, array $modules): void {
+		$this->logger->debug(
+			'Retrieved modules from schema',
+			[
+				'schema_id' => $query['@self']['schema'],
+				'modules_count' => count($modules),
+			]
+		);
+	}//end logModuleSchemaRead()
 
 	/**
 	 * Get regular owned gebruik data for enrichment based on elementRef linkage.
