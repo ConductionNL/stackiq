@@ -1759,28 +1759,7 @@ class ArchiMateImportService {
 	 */
 	private function getAmefRegisterId(): ?int {
 		// Retrieve AMEF configuration.
-		$amefConfig = $this->getAmefConfig();
-
-		// Try JSON config keys first: support both 'register_id' and 'register'.
-		$rawRegisterId = $amefConfig['register_id'] ?? $amefConfig['register'] ?? null;
-
-		// Fallback to legacy individual app config keys if not present in JSON.
-		if ($rawRegisterId === null || $rawRegisterId === '') {
-			$rawRegisterId = $this->config->getValueString('stackiq', 'amef_register_id', '');
-			if ($this->config->getValueString('stackiq', 'amef_register', '') !== '') {
-				$rawRegisterId = $this->config->getValueString('stackiq', 'amef_register', '');
-			}
-		}
-
-		// Validate and normalize to positive int.
-		if ($rawRegisterId !== '' && is_numeric((string)$rawRegisterId) === true) {
-			$registerId = (int)$rawRegisterId;
-			if ($registerId > 0) {
-				return $registerId;
-			}
-		}
-
-		return null;
+		return (new ArchiMate\AmefRegisterId(config: $this->config))->resolve(amefConfig: $this->getAmefConfig());
 	}//end getAmefRegisterId()
 
 	/**
