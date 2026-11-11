@@ -27,6 +27,7 @@ use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -104,8 +105,16 @@ class SettingsControllerAdminGuardGoldenTest extends TestCase {
 	private function makeController(?string $uid, array $scenario): array {
 		$calls    = new \ArrayObject();
 		$settings = $this->createMock(SettingsService::class);
+		// The role group methods moved to RoleGroupSettings; a scenario names
+		// the method, and the double that has it answers.
+		$roleGroups = $this->createMock(RoleGroupSettings::class);
 		foreach (($scenario['service'] ?? []) as $method => $result) {
-			$settings->method($method)->willReturnCallback(
+			$double = $settings;
+			if (method_exists(RoleGroupSettings::class, $method) === true) {
+				$double = $roleGroups;
+			}
+
+			$double->method($method)->willReturnCallback(
 				function (...$args) use ($calls, $method, $result) {
 					$calls[] = [$method, $args];
 					if ($result === 'throw') {
@@ -147,6 +156,7 @@ class SettingsControllerAdminGuardGoldenTest extends TestCase {
 			$settings,
 			$this->createMock(OrganizationSyncService::class),
 			$this->createMock(ArchiMateService::class),
+			$roleGroups,
 			$this->createMock(ProgressTracker::class),
 			$this->createMock(EolSyncService::class),
 			$log

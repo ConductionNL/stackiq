@@ -34,6 +34,7 @@ use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -103,6 +104,7 @@ class SettingsController extends Controller {
 	 * @param SettingsService $settingsService The settings service.
 	 * @param OrganizationSyncService $orgSyncSvc The organization sync service.
 	 * @param ArchiMateService $archiMateService The ArchiMate import/export service.
+	 * @param RoleGroupSettings $roleGroupSettings The role group lists.
 	 * @param ProgressTracker $progressTracker The progress tracking service.
 	 * @param EolSyncService $eolSyncService The EOL feed sync orchestration service.
 	 * @param LoggerInterface $logger The logger instance.
@@ -127,6 +129,7 @@ class SettingsController extends Controller {
 		private readonly SettingsService $settingsService,
 		private readonly OrganizationSyncService $orgSyncSvc,
 		private readonly ArchiMateService $archiMateService,
+		private readonly RoleGroupSettings $roleGroupSettings,
 		private readonly ProgressTracker $progressTracker,
 		private readonly EolSyncService $eolSyncService,
 		private readonly LoggerInterface $logger,
@@ -479,7 +482,7 @@ class SettingsController extends Controller {
 				continue;
 			}
 
-			$validation = $this->settingsService->validateGroups($userGroups[$key]);
+			$validation = $this->roleGroupSettings->validateGroups($userGroups[$key]);
 			if (empty($validation['invalid']) === false) {
 				return new JSONResponse(
 					['error' => 'Invalid ' . $cfg['label'] . ' group names provided', 'validation' => $validation],
@@ -487,7 +490,7 @@ class SettingsController extends Controller {
 				);
 			}
 
-			$this->settingsService->{$cfg['setter']}($validation['valid']);
+			$this->roleGroupSettings->{$cfg['setter']}($validation['valid']);
 			$result['userGroups'][$key] = $validation['valid'];
 		}
 
@@ -1761,7 +1764,7 @@ class SettingsController extends Controller {
 		}
 
 		$isOrgAdmin = false;
-		foreach ($this->settingsService->getOrganizationAdminGroups() as $groupName) {
+		foreach ($this->roleGroupSettings->getOrganizationAdminGroups() as $groupName) {
 			if ($this->groupManager->isInGroup($currentUser->getUID(), $groupName) === true) {
 				$isOrgAdmin = true;
 				break;
@@ -2381,7 +2384,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$groups = $this->settingsService->getGenericUserGroups();
+			$groups = $this->roleGroupSettings->getGenericUserGroups();
 
 			return new JSONResponse(
 				[
@@ -2413,7 +2416,7 @@ class SettingsController extends Controller {
 			$groups = $data['groups'] ?? [];
 
 			// Delegate all business logic (including validation) to service.
-			$result = $this->settingsService->updateGenericUserGroups($groups);
+			$result = $this->roleGroupSettings->updateGenericUserGroups($groups);
 
 			return $this->groupsUpdateResponse(result: $result);
 		} catch (\Exception $e) {
@@ -2440,7 +2443,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$groups = $this->settingsService->getOrganizationAdminGroups();
+			$groups = $this->roleGroupSettings->getOrganizationAdminGroups();
 
 			return new JSONResponse(
 				[
@@ -2472,7 +2475,7 @@ class SettingsController extends Controller {
 			$groups = $data['groups'] ?? [];
 
 			// Delegate all business logic (including validation) to service.
-			$result = $this->settingsService->updateOrganizationAdminGroups($groups);
+			$result = $this->roleGroupSettings->updateOrganizationAdminGroups($groups);
 
 			return $this->groupsUpdateResponse(result: $result);
 		} catch (\Exception $e) {
@@ -2499,7 +2502,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$groups = $this->settingsService->getSuperUserGroups();
+			$groups = $this->roleGroupSettings->getSuperUserGroups();
 
 			return new JSONResponse(
 				[
@@ -2531,7 +2534,7 @@ class SettingsController extends Controller {
 			$groups = $data['groups'] ?? [];
 
 			// Delegate all business logic (including validation) to service.
-			$result = $this->settingsService->updateSuperUserGroups($groups);
+			$result = $this->roleGroupSettings->updateSuperUserGroups($groups);
 
 			return $this->groupsUpdateResponse(result: $result);
 		} catch (\Exception $e) {
@@ -2558,7 +2561,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$allGroups = $this->settingsService->getAllGroups();
+			$allGroups = $this->roleGroupSettings->getAllGroups();
 
 			return new JSONResponse(
 				[
@@ -3221,7 +3224,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$config = $this->settingsService->getUserGroupsConfig();
+			$config = $this->roleGroupSettings->getUserGroupsConfig();
 
 			return new JSONResponse($config);
 		} catch (\Exception $e) {
@@ -3257,7 +3260,7 @@ class SettingsController extends Controller {
 
 		try {
 			$data = $this->request->getParams();
-			$result = $this->settingsService->updateUserGroupsConfig($data);
+			$result = $this->roleGroupSettings->updateUserGroupsConfig($data);
 
 			return new JSONResponse($result);
 		} catch (\Exception $e) {

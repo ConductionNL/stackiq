@@ -26,6 +26,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Service\ConfigLookup;
 use OCA\OpenRegister\Service\RegisterResolverService;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -97,6 +98,7 @@ class SettingsServiceResolverWiringTest extends TestCase {
 		return new SettingsService(
 			$this->config,
 			$this->request,
+			$this->createMock(RoleGroupSettings::class),
 			$this->container,
 			$this->appManager,
 			$this->logger,

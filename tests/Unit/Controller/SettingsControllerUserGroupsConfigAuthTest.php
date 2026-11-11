@@ -25,6 +25,7 @@ use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http;
@@ -85,6 +86,13 @@ final class SettingsControllerUserGroupsConfigAuthTest extends TestCase {
 	private SettingsService|MockObject $settingsService;
 
 	/**
+	 * The mocked role group settings.
+	 *
+	 * @var RoleGroupSettings|MockObject
+	 */
+	private RoleGroupSettings|MockObject $roleGroupSettings;
+
+	/**
 	 * The group manager double that decides admin-ness.
 	 *
 	 * @var IGroupManager|MockObject
@@ -108,6 +116,7 @@ final class SettingsControllerUserGroupsConfigAuthTest extends TestCase {
 	 */
 	private function makeController(?string $uid, bool $isAdmin): SettingsController {
 		$this->settingsService = $this->createMock(SettingsService::class);
+		$this->roleGroupSettings = $this->createMock(RoleGroupSettings::class);
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		$this->userSession = $this->createMock(IUserSession::class);
 
@@ -134,6 +143,7 @@ final class SettingsControllerUserGroupsConfigAuthTest extends TestCase {
 			$this->settingsService,
 			$this->createMock(OrganizationSyncService::class),
 			$this->createMock(ArchiMateService::class),
+			$this->roleGroupSettings,
 			$this->createMock(ProgressTracker::class),
 			$this->createMock(EolSyncService::class),
 			$this->createMock(LoggerInterface::class)
@@ -157,7 +167,7 @@ final class SettingsControllerUserGroupsConfigAuthTest extends TestCase {
 		// server error. Counting the calls and asserting afterwards keeps the
 		// failure message about the thing that actually went wrong.
 		$calls = 0;
-		$this->settingsService->method('getUserGroupsConfig')->willReturnCallback(
+		$this->roleGroupSettings->method('getUserGroupsConfig')->willReturnCallback(
 			function () use (&$calls): array {
 				$calls++;
 				return [
@@ -205,7 +215,7 @@ final class SettingsControllerUserGroupsConfigAuthTest extends TestCase {
 	public function testAdminStillGetsTheConfiguration(): void {
 		$controller = $this->makeController(uid: 'an-admin', isAdmin: true);
 
-		$this->settingsService->expects($this->once())
+		$this->roleGroupSettings->expects($this->once())
 			->method('getUserGroupsConfig')
 			->willReturn(
 				[
@@ -240,7 +250,7 @@ final class SettingsControllerUserGroupsConfigAuthTest extends TestCase {
 	public function testAnonymousStillGets401(): void {
 		$controller = $this->makeController(uid: null, isAdmin: false);
 
-		$this->settingsService->expects($this->never())->method('getUserGroupsConfig');
+		$this->roleGroupSettings->expects($this->never())->method('getUserGroupsConfig');
 
 		$response = $controller->getUserGroupsConfig();
 
@@ -260,7 +270,7 @@ final class SettingsControllerUserGroupsConfigAuthTest extends TestCase {
 		$controller = $this->makeController(uid: 'plain-user', isAdmin: false);
 
 		$calls = 0;
-		$this->settingsService->method('updateUserGroupsConfig')->willReturnCallback(
+		$this->roleGroupSettings->method('updateUserGroupsConfig')->willReturnCallback(
 			function () use (&$calls): array {
 				$calls++;
 				return ['success' => true];
@@ -282,7 +292,7 @@ final class SettingsControllerUserGroupsConfigAuthTest extends TestCase {
 	public function testAdminCanUpdateTheConfiguration(): void {
 		$controller = $this->makeController(uid: 'an-admin', isAdmin: true);
 
-		$this->settingsService->expects($this->once())
+		$this->roleGroupSettings->expects($this->once())
 			->method('updateUserGroupsConfig')
 			->willReturn(['success' => true]);
 

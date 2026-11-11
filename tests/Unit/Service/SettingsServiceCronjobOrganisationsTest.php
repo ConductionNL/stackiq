@@ -22,6 +22,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\ListQuery;
 use OCA\OpenRegister\Db\OrganisationMapper;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -91,6 +92,7 @@ class SettingsServiceCronjobOrganisationsTest extends TestCase {
 		$service = new SettingsService(
 			$this->createMock(IAppConfig::class),
 			$this->createMock(IRequest::class),
+			$this->createMock(RoleGroupSettings::class),
 			$container,
 			$appManager,
 			$this->createMock(LoggerInterface::class),

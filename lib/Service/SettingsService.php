@@ -20,6 +20,7 @@ namespace OCA\Stackiq\Service;
 
 use OCA\Stackiq\Service\Settings\EmailTemplateDefaults;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\Settings\SettingsObjectCounts;
 use OCA\Stackiq\Service\Settings\VoorzieningenConfigNormalizer;
 use OCP\App\IAppManager;
@@ -151,21 +152,11 @@ class SettingsService implements ObjectTypeLocatorInterface {
 	private const SHARED_ORGANISATION_SCHEMA = 'nc-organisation';
 
 	/**
-	 * The name each role group list goes by in result messages and logs.
-	 *
-	 * @var array<string, string>
-	 */
-	private const ROLE_GROUP_LABELS = [
-		'generic' => 'generic user groups',
-		'organizationAdmin' => 'organization admin groups',
-		'superUser' => 'super user groups',
-	];
-
-	/**
 	 * SettingsService constructor
 	 *
 	 * @param IAppConfig $config App configuration interface
 	 * @param IRequest $request Request interface
+	 * @param RoleGroupSettings $roleGroupSettings The role group lists.
 	 * @param ContainerInterface $container Container for dependency injection
 	 * @param IAppManager $appManager App manager interface
 	 * @param LoggerInterface $logger Logger interface
@@ -177,6 +168,7 @@ class SettingsService implements ObjectTypeLocatorInterface {
 	public function __construct(
 		private readonly IAppConfig $config,
 		private readonly IRequest $request,
+		private readonly RoleGroupSettings $roleGroupSettings,
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
 		private readonly LoggerInterface $logger,
@@ -2076,180 +2068,6 @@ class SettingsService implements ObjectTypeLocatorInterface {
 	}//end persistRegisterVerificationStatus()
 
 	/**
-	 * Gets the list of generic user groups from configuration
-	 *
-	 * @return array Array of generic user groups
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function getGenericUserGroups(): array {
-		$groupsJson = $this->config->getValueString($this->appName, 'generic_user_groups', '');
-
-		if (empty($groupsJson) === true) {
-			// Return only truly generic groups as default (not role-specific).
-			// Role-specific groups are now assigned based on organization type.
-			return [
-				'software-catalog-users'
-			];
-		}
-
-		$groups = json_decode($groupsJson, true);
-		if (is_array($groups) === true) {
-			return $groups;
-		}
-
-		return [];
-	}//end getGenericUserGroups()
-
-	/**
-	 * Sets the list of generic user groups in configuration
-	 *
-	 * @param array $groups Array of generic user groups
-	 *
-	 * @return void
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function setGenericUserGroups(array $groups): void {
-		$groupsJson = json_encode($groups, JSON_THROW_ON_ERROR);
-		$this->config->setValueString($this->appName, 'generic_user_groups', $groupsJson);
-
-		$this->logger->info(
-			'Updated generic user groups configuration',
-			[
-				'groups' => $groups,
-			]
-		);
-	}//end setGenericUserGroups()
-
-	/**
-	 * Gets the list of organization admin groups from configuration
-	 *
-	 * Returns the list an admin saved under `organization_admin_groups`, or an
-	 * empty list when nothing is saved. There is no default list: commit
-	 * bc4dc9ea dropped the old default (organisaties-beheerder) on purpose,
-	 * and first contacts are not added to these groups automatically (see
-	 * ContactPersonHandler::assignUserGroups()). Until stackiq#1136 this getter
-	 * returned an empty list unconditionally, which discarded the saved
-	 * setting as well.
-	 *
-	 * @return array Array of organization admin groups
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function getOrganizationAdminGroups(): array {
-		$groupsJson = $this->config->getValueString($this->appName, 'organization_admin_groups', '');
-
-		if (empty($groupsJson) === true) {
-			return [];
-		}
-
-		$groups = json_decode($groupsJson, true);
-		if (is_array($groups) === true) {
-			return $groups;
-		}
-
-		return [];
-	}//end getOrganizationAdminGroups()
-
-	/**
-	 * Sets the list of organization admin groups in configuration
-	 *
-	 * @param array $groups Array of organization admin groups
-	 *
-	 * @return void
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function setOrganizationAdminGroups(array $groups): void {
-		$groupsJson = json_encode($groups, JSON_THROW_ON_ERROR);
-		$this->config->setValueString($this->appName, 'organization_admin_groups', $groupsJson);
-
-		$this->logger->info(
-			'Updated organization admin groups configuration',
-			[
-				'groups' => $groups,
-			]
-		);
-	}//end setOrganizationAdminGroups()
-
-	/**
-	 * Gets the list of super user groups from configuration
-	 *
-	 * @return array Array of super user groups
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function getSuperUserGroups(): array {
-		$groupsJson = $this->config->getValueString($this->appName, 'super_user_groups', '');
-
-		if (empty($groupsJson) === true) {
-			// Return default groups if no configuration exists.
-			return [
-				'admin',
-				'software-catalog-admins',
-			];
-		}
-
-		$groups = json_decode($groupsJson, true);
-		if (is_array($groups) === true) {
-			return $groups;
-		}
-
-		return [];
-	}//end getSuperUserGroups()
-
-	/**
-	 * Sets the list of super user groups in configuration
-	 *
-	 * @param array $groups Array of super user groups
-	 *
-	 * @return void
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function setSuperUserGroups(array $groups): void {
-		$groupsJson = json_encode($groups, JSON_THROW_ON_ERROR);
-		$this->config->setValueString($this->appName, 'super_user_groups', $groupsJson);
-
-		$this->logger->info(
-			'Updated super user groups configuration',
-			[
-				'groups' => $groups,
-			]
-		);
-	}//end setSuperUserGroups()
-
-	/**
-	 * Validates a list of group names
-	 *
-	 * @param array $groups Array of group names to validate
-	 *
-	 * @return array Array with validation results
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function validateGroups(array $groups): array {
-		$results = [
-			'valid' => [],
-			'invalid' => [],
-			'errors' => [],
-		];
-
-		foreach ($groups as $groupName) {
-			if (empty($groupName) === true || is_string($groupName) === false) {
-				$results['invalid'][] = $groupName;
-				$results['errors'][] = 'Group name cannot be empty';
-				continue;
-			}
-
-			// Check for invalid characters.
-			if (preg_match('/[^a-zA-Z0-9._-]/', $groupName) === 1) {
-				$results['invalid'][] = $groupName;
-				$results['errors'][] = "Group name '{$groupName}' contains invalid characters";
-				continue;
-			}
-
-			$results['valid'][] = $groupName;
-		}
-
-		return $results;
-	}//end validateGroups()
-
-	/**
 	 * Creates and configures required user groups for the software catalog
 	 *
 	 * This is the public method that creates user groups and returns status information.
@@ -2318,16 +2136,16 @@ class SettingsService implements ObjectTypeLocatorInterface {
 
 			// Update the configuration with only truly generic groups (not role-specific).
 			// Role-specific groups are now assigned based on organization type.
-			$this->setGenericUserGroups(
+			$this->roleGroupSettings->setGenericUserGroups(
 				groups: [
 					'software-catalog-users',
 				]
 			);
 
 			// No automatic organization admin groups - can be configured via settings.
-			$this->setOrganizationAdminGroups(groups: []);
+			$this->roleGroupSettings->setOrganizationAdminGroups(groups: []);
 
-			$this->setSuperUserGroups(
+			$this->roleGroupSettings->setSuperUserGroups(
 				groups: [
 					// Keep existing admin group.
 					'admin',
@@ -2438,16 +2256,16 @@ class SettingsService implements ObjectTypeLocatorInterface {
 
 			// Update the configuration with only truly generic groups (not role-specific).
 			// Role-specific groups are now assigned based on organization type, not as generic groups.
-			$this->setGenericUserGroups(
+			$this->roleGroupSettings->setGenericUserGroups(
 				groups: [
 					'software-catalog-users',
 				]
 			);
 
 			// No automatic organization admin groups - can be configured via settings.
-			$this->setOrganizationAdminGroups(groups: []);
+			$this->roleGroupSettings->setOrganizationAdminGroups(groups: []);
 
-			$this->setSuperUserGroups(
+			$this->roleGroupSettings->setSuperUserGroups(
 				groups: [
 					// Keep existing admin group.
 					'admin',
@@ -2473,37 +2291,6 @@ class SettingsService implements ObjectTypeLocatorInterface {
 			throw new \RuntimeException('Failed to create required user groups: ' . $e->getMessage());
 		}//end try
 	}//end createRequiredUserGroups()
-
-	/**
-	 * Gets all available groups with their information
-	 *
-	 * @return array Array of group information
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function getAllGroups(): array {
-		$groups = [];
-
-		// Get group manager if possible.
-		if ($this->appManager->isInstalled('user_management') === true) {
-			try {
-				$groupManager = $this->groupManager;
-				$allGroups = $groupManager->search('');
-
-				foreach ($allGroups as $group) {
-					$groups[] = [
-						'id' => $group->getGID(),
-						'displayName' => $group->getDisplayName(),
-						'memberCount' => count($group->getUsers()),
-						'isGeneric' => in_array($group->getGID(), $this->getGenericUserGroups()) === true,
-					];
-				}
-			} catch (\Exception $e) {
-				$this->logger->error('Failed to get all groups: ' . $e->getMessage());
-			}
-		}
-
-		return $groups;
-	}//end getAllGroups()
 
 	/**
 	 * The email settings that carry a secret value.
@@ -2933,9 +2720,9 @@ class SettingsService implements ObjectTypeLocatorInterface {
 
 			// Get group configurations.
 			$debugInfo['userGroups'] = [
-				'generic' => $this->getGenericUserGroups(),
-				'organizationAdmin' => $this->getOrganizationAdminGroups(),
-				'superUser' => $this->getSuperUserGroups(),
+				'generic' => $this->roleGroupSettings->getGenericUserGroups(),
+				'organizationAdmin' => $this->roleGroupSettings->getOrganizationAdminGroups(),
+				'superUser' => $this->roleGroupSettings->getSuperUserGroups(),
 			];
 
 			// Get email settings (without sensitive data).
@@ -4519,9 +4306,9 @@ class SettingsService implements ObjectTypeLocatorInterface {
 			'email' => $emailConfig,
 			'archimate' => $this->getArchiMateStatus(),
 			'userGroups' => [
-				'generic' => $this->getGenericUserGroups(),
-				'organizationAdmin' => $this->getOrganizationAdminGroups(),
-				'superUser' => $this->getSuperUserGroups(),
+				'generic' => $this->roleGroupSettings->getGenericUserGroups(),
+				'organizationAdmin' => $this->roleGroupSettings->getOrganizationAdminGroups(),
+				'superUser' => $this->roleGroupSettings->getSuperUserGroups(),
 			],
 		];
 	}//end getConsolidatedConfiguration()
@@ -5221,86 +5008,6 @@ class SettingsService implements ObjectTypeLocatorInterface {
 		return $templates;
 	}//end getAllEmailTemplates()
 
-	/**
-	 * Update generic user groups with validation
-	 *
-	 * @param array $groups Groups to set.
-	 *
-	 * @return array Update result with validation.
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function updateGenericUserGroups(array $groups): array {
-		return $this->updateRoleGroups(groups: $groups, role: 'generic');
-	}//end updateGenericUserGroups()
-
-	/**
-	 * Update organization admin groups with validation
-	 *
-	 * @param array $groups Groups to set.
-	 *
-	 * @return array Update result with validation.
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function updateOrganizationAdminGroups(array $groups): array {
-		return $this->updateRoleGroups(groups: $groups, role: 'organizationAdmin');
-	}//end updateOrganizationAdminGroups()
-
-	/**
-	 * Update super user groups with validation
-	 *
-	 * @param array $groups Groups to set.
-	 *
-	 * @return array Update result with validation.
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function updateSuperUserGroups(array $groups): array {
-		return $this->updateRoleGroups(groups: $groups, role: 'superUser');
-	}//end updateSuperUserGroups()
-
-	/**
-	 * Validate a role's group list and store it when every name is valid.
-	 *
-	 * @param array  $groups Groups to set.
-	 * @param string $role   The role: generic, organizationAdmin or superUser.
-	 *
-	 * @psalm-param 'generic'|'organizationAdmin'|'superUser' $role
-	 *
-	 * @return array Update result with validation.
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	private function updateRoleGroups(array $groups, string $role): array {
-		$label = self::ROLE_GROUP_LABELS[$role];
-		try {
-			$validation = $this->validateGroups(groups: $groups);
-
-			if (empty($validation['invalid']) === false) {
-				return [
-					'success' => false,
-					'message' => 'Invalid group names provided',
-					'validation' => $validation,
-				];
-			}
-
-			match ($role) {
-				'generic' => $this->setGenericUserGroups(groups: $validation['valid']),
-				'organizationAdmin' => $this->setOrganizationAdminGroups(groups: $validation['valid']),
-				'superUser' => $this->setSuperUserGroups(groups: $validation['valid']),
-			};
-
-			return [
-				'success' => true,
-				'message' => ucfirst($label) . ' updated successfully',
-				'groups' => $validation['valid'],
-			];
-		} catch (\Exception $e) {
-			$this->logger->error('SettingsService: Failed to update ' . $label, ['exception' => $e->getMessage()]);
-			return [
-				'success' => false,
-				'message' => 'Failed to update ' . $label . ': ' . $e->getMessage(),
-			];
-		}//end try
-	}//end updateRoleGroups()
-
 	// ======================================================.
 	// FOCUSED ENDPOINT METHODS FOR PERFORMANCE OPTIMIZATION.
 	// ======================================================.
@@ -5723,100 +5430,6 @@ class SettingsService implements ObjectTypeLocatorInterface {
 			];
 		}
 	}//end getObjectsStatistics()
-
-	/**
-	 * Get user groups configuration only
-	 *
-	 * @return array User groups configuration
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function getUserGroupsConfig(): array {
-		try {
-			$config = [
-				'generic' => $this->getGenericUserGroups(),
-				'organizationAdmin' => $this->getOrganizationAdminGroups(),
-				'superUser' => $this->getSuperUserGroups(),
-				'allGroups' => $this->getAllGroups(),
-			];
-
-			return [
-				'success' => true,
-				'config' => $config,
-				'timestamp' => time(),
-			];
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get user groups config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return [
-				'success' => false,
-				'message' => 'Failed to get user groups config: ' . $e->getMessage(),
-			];
-		}//end try
-	}//end getUserGroupsConfig()
-
-	/**
-	 * Update user groups configuration
-	 *
-	 * @param array $config User groups configuration data
-	 *
-	 * @return array Result of the update operation
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function updateUserGroupsConfig(array $config): array {
-		try {
-			$results = [];
-
-			if (isset($config['generic']) === true) {
-				$results['generic'] = $this->updateGenericUserGroups(groups: $config['generic']);
-			}
-
-			if (isset($config['organizationAdmin']) === true) {
-				$results['organizationAdmin'] = $this->updateOrganizationAdminGroups(groups: $config['organizationAdmin']);
-			}
-
-			if (isset($config['superUser']) === true) {
-				$results['superUser'] = $this->updateSuperUserGroups(groups: $config['superUser']);
-			}
-
-			// Check if any updates failed.
-			$failed = array_filter(
-				$results,
-				function ($result) {
-					return $result['success'] === false;
-				}
-			);
-
-			if (empty($failed) === false) {
-				return [
-					'success' => false,
-					'message' => 'Some user group updates failed',
-					'results' => $results,
-				];
-			}
-
-			return [
-				'success' => true,
-				'message' => 'User groups configuration updated successfully',
-				'config' => $this->getUserGroupsConfig(),
-			];
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update user groups config',
-				[
-					'exception' => $e->getMessage(),
-					'config' => $config,
-				]
-			);
-			return [
-				'success' => false,
-				'message' => 'Failed to update user groups config: ' . $e->getMessage(),
-			];
-		}//end try
-	}//end updateUserGroupsConfig()
 
 	/**
 	 * Get catalog location
@@ -6423,7 +6036,7 @@ class SettingsService implements ObjectTypeLocatorInterface {
 			}
 
 			// Also include users from super user groups if configured.
-			$superUserGroups = $this->getSuperUserGroups();
+			$superUserGroups = $this->roleGroupSettings->getSuperUserGroups();
 			foreach ($superUserGroups as $groupName) {
 				$group = $groupManager->get($groupName);
 				if ($group !== null) {

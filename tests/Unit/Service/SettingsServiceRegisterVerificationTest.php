@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\SchemaMapper;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -71,6 +72,7 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 				[
 					$this->createMock(IAppConfig::class),
 					$this->createMock(IRequest::class),
+					$this->createMock(RoleGroupSettings::class),
 					$container,
 					$this->createMock(IAppManager::class),
 					$logger,
@@ -196,6 +198,7 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 		$service = new SettingsService(
 			$config,
 			$this->createMock(IRequest::class),
+			$this->createMock(RoleGroupSettings::class),
 			$this->createMock(ContainerInterface::class),
 			$this->createMock(IAppManager::class),
 			$this->createMock(LoggerInterface::class),
@@ -237,6 +240,7 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 		$service = new SettingsService(
 			$config,
 			$this->createMock(IRequest::class),
+			$this->createMock(RoleGroupSettings::class),
 			$this->createMock(ContainerInterface::class),
 			$this->createMock(IAppManager::class),
 			$this->createMock(LoggerInterface::class),

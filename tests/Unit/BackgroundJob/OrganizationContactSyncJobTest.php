@@ -31,6 +31,7 @@ namespace OCA\Stackiq\Tests\Unit\BackgroundJob;
 use OCA\Stackiq\BackgroundJob\OrganizationContactSyncJob;
 use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
 use OCA\Stackiq\Service\OrganizationSyncService;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\StackiqContactSyncService;
 use OCP\App\IAppManager;
@@ -162,6 +163,7 @@ class OrganizationContactSyncJobTest extends TestCase {
 		return new SettingsService(
 			config: $config,
 			request: $this->createMock(IRequest::class),
+			roleGroupSettings: $this->createMock(RoleGroupSettings::class),
 			container: $this->createMock(ContainerInterface::class),
 			appManager: $this->createMock(IAppManager::class),
 			logger: $this->createMock(LoggerInterface::class),

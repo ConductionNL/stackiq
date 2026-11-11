@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -88,6 +89,7 @@ class SettingsServiceCatalogTypeResolutionTest extends TestCase {
 		return new SettingsService(
 			config: $config,
 			request: $this->createMock(IRequest::class),
+			roleGroupSettings: $this->createMock(RoleGroupSettings::class),
 			container: $this->createMock(ContainerInterface::class),
 			appManager: $appManager,
 			logger: $this->createMock(LoggerInterface::class),

@@ -25,6 +25,7 @@ use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http;
@@ -114,9 +115,17 @@ final class SettingsControllerOrgExportPermissionTest extends TestCase {
 			}
 		);
 
+		$roleGroups = new RoleGroupSettings(
+			config: $appConfig,
+			appManager: $this->createMock(IAppManager::class),
+			groupManager: $groupManager,
+			logger: $this->createMock(LoggerInterface::class)
+		);
+
 		$settingsService = new SettingsService(
 			config: $appConfig,
 			request: $this->createMock(IRequest::class),
+			roleGroupSettings: $roleGroups,
 			container: $this->createMock(ContainerInterface::class),
 			appManager: $this->createMock(IAppManager::class),
 			logger: $this->createMock(LoggerInterface::class),
@@ -176,6 +185,7 @@ final class SettingsControllerOrgExportPermissionTest extends TestCase {
 			$settingsService,
 			$this->createMock(OrganizationSyncService::class),
 			$archiMateService,
+			$roleGroups,
 			$this->createMock(ProgressTracker::class),
 			$this->createMock(EolSyncService::class),
 			$this->createMock(LoggerInterface::class)

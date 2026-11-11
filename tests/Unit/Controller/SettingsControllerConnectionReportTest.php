@@ -31,6 +31,7 @@ use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http;
@@ -97,6 +98,7 @@ class SettingsControllerConnectionReportTest extends TestCase {
 			settingsService: $this->settingsService,
 			orgSyncSvc: $this->createMock(originalClassName: OrganizationSyncService::class),
 			archiMateService: $this->createMock(originalClassName: ArchiMateService::class),
+			roleGroupSettings: $this->createMock(originalClassName: RoleGroupSettings::class),
 			progressTracker: $this->createMock(originalClassName: ProgressTracker::class),
 			eolSyncService: $this->createMock(originalClassName: EolSyncService::class),
 			logger: $this->createMock(originalClassName: LoggerInterface::class),

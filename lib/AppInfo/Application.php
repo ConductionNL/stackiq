@@ -73,6 +73,7 @@ use OCA\Stackiq\Service\SbomImportService;
 use OCA\Stackiq\Service\SbomParserService;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
 use OCA\Stackiq\Service\Stackiq\HierarchyHandler;
@@ -335,6 +336,7 @@ class Application extends App implements IBootstrap {
 				return new SettingsService(
 					config: $container->get(IAppConfig::class),
 					request: $container->get('OCP\IRequest'),
+					roleGroupSettings: $container->get(RoleGroupSettings::class),
 					container: $container,
 					appManager: $container->get('OCP\App\IAppManager'),
 					logger: $container->get('Psr\Log\LoggerInterface'),

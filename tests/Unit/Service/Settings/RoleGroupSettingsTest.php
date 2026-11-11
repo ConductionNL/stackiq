@@ -27,15 +27,12 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service\Settings;
 
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;
-use OCP\IL10N;
-use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -275,9 +272,9 @@ class RoleGroupSettingsTest extends TestCase {
 	/**
 	 * Build the service over the in-memory doubles.
 	 *
-	 * @return SettingsService
+	 * @return RoleGroupSettings
 	 */
-	private function service(): SettingsService {
+	private function service(): RoleGroupSettings {
 		$config = $this->createMock(IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
 			function (string $app, string $key, string $default = ''): string {
@@ -323,14 +320,11 @@ class RoleGroupSettingsTest extends TestCase {
 			);
 		}
 
-		return new SettingsService(
+		return new RoleGroupSettings(
 			config: $config,
-			request: $this->createMock(IRequest::class),
-			container: $this->createMock(ContainerInterface::class),
 			appManager: $appManager,
-			logger: $logger,
 			groupManager: $groupManager,
-			l10n: $this->createMock(IL10N::class)
+			logger: $logger
 		);
 	}//end service()
 }//end class

@@ -1,7 +1,8 @@
 <?php
 
 /**
- * Golden test for updating the three role group lists of SettingsService.
+ * Golden test for updating the three role group lists (RoleGroupSettings,
+ * formerly on SettingsService).
  *
  * Records, per method and case, what updateGenericUserGroups(),
  * updateOrganizationAdminGroups() and updateSuperUserGroups() return and every
@@ -21,15 +22,17 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCP\App\IAppManager;
 use OCP\IAppConfig;
+use OCP\IGroupManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 
 /**
- * Golden cases for the SettingsService role group updates.
+ * Golden cases for the role group updates.
  *
- * @covers \OCA\Stackiq\Service\SettingsService
+ * @covers \OCA\Stackiq\Service\Settings\RoleGroupSettings
  *
  * @spec openspec/specs/settings-service/spec.md
  */
@@ -88,9 +91,9 @@ class SettingsServiceRoleGroupsGoldenTest extends TestCase {
 	 *
 	 * @param bool $fails Whether the config write throws.
 	 *
-	 * @return SettingsService
+	 * @return RoleGroupSettings
 	 */
-	private function service(bool $fails): SettingsService {
+	private function service(bool $fails): RoleGroupSettings {
 		$trace  = &$this->trace;
 		$logger = new class($trace) extends AbstractLogger {
 			/**
@@ -123,13 +126,12 @@ class SettingsServiceRoleGroupsGoldenTest extends TestCase {
 			}
 		);
 
-		$reflection = new \ReflectionClass(SettingsService::class);
-		$service    = $reflection->newInstanceWithoutConstructor();
-		$reflection->getProperty('config')->setValue($service, $config);
-		$reflection->getProperty('logger')->setValue($service, $logger);
-		$reflection->getProperty('appName')->setValue($service, 'stackiq');
-
-		return $service;
+		return new RoleGroupSettings(
+			config: $config,
+			appManager: $this->createMock(originalClassName: IAppManager::class),
+			groupManager: $this->createMock(originalClassName: IGroupManager::class),
+			logger: $logger
+		);
 
 	}//end service()
 
