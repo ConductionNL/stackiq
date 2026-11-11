@@ -1794,40 +1794,65 @@ class CmdbExportImportService {
 	 */
 	private function organisationsOfType(string $type): array {
 		$coordinates = $this->coordinates();
+		$query = ['@self' => ['register' => $coordinates['register'], 'schema' => $coordinates['organization']], 'type' => $type];
 		$found = [];
-		$offset = 0;
-		do {
-			$page = $coordinates['objectService']->searchObjects(
-				query: [
-					'@self' => ['register' => $coordinates['register'], 'schema' => $coordinates['organization']],
-					'type' => $type,
-					'_limit' => self::PAGE_SIZE,
-					'_offset' => $offset,
-				],
-				_rbac: false,
-				_multitenancy: false
-			);
-			if (is_array($page) === false) {
-				$page = [];
+		foreach ($this->allPages(query: $query, lens: []) as $entity) {
+			$data = $entity->getObject();
+			// The filter is checked again: a filter OpenRegister cannot apply must not widen the match.
+			if (($data['type'] ?? null) === $type
+				&& $entity->getUuid() !== null
+				&& in_array(($data['status'] ?? null), self::UNMATCHED_STATUSES, true) === false
+			) {
+				$found[] = ['uuid' => (string)$entity->getUuid(), 'name' => ($data['name'] ?? '')];
 			}
-
-			foreach ($page as $entity) {
-				$data = $entity->getObject();
-				// The filter is checked again: a filter OpenRegister cannot apply must not widen the match.
-				if (($data['type'] ?? null) === $type
-					&& $entity->getUuid() !== null
-					&& in_array(($data['status'] ?? null), self::UNMATCHED_STATUSES, true) === false
-				) {
-					$found[] = ['uuid' => (string)$entity->getUuid(), 'name' => ($data['name'] ?? '')];
-				}
-			}
-
-			$offset += self::PAGE_SIZE;
-			$pageSize = count($page);
-		} while ($pageSize === self::PAGE_SIZE);
+		}
 
 		return $found;
 	}//end organisationsOfType()
+
+	/**
+	 * Every object a search finds, page by page, read unscoped as the import must.
+	 *
+	 * @param array<string, mixed> $query The search, without `_limit` and `_offset`.
+	 * @param array<string, string> $lens The lens added after the paging, [] for working objects.
+	 *
+	 * @return array<int, object>
+	 */
+	private function allPages(array $query, array $lens): array {
+		$found = [];
+		$offset = 0;
+		do {
+			$page = $this->searchPage(query: $query + ['_limit' => self::PAGE_SIZE, '_offset' => $offset], lens: $lens);
+			foreach ($page as $entity) {
+				$found[] = $entity;
+			}
+
+			$offset += self::PAGE_SIZE;
+		} while (count($page) === self::PAGE_SIZE);
+
+		return $found;
+	}//end allPages()
+
+	/**
+	 * One page of a search, read unscoped; no objects when OpenRegister answers no list.
+	 *
+	 * @param array<string, mixed> $query The search, with `_limit` and `_offset`.
+	 * @param array<string, string> $lens The lens, [] for working objects.
+	 *
+	 * @return array<int, object>
+	 */
+	private function searchPage(array $query, array $lens): array {
+		$page = $this->coordinates()['objectService']->searchObjects(
+			query: array_merge($query, $lens),
+			_rbac: false,
+			_multitenancy: false
+		);
+		if (is_array($page) === false) {
+			return [];
+		}
+
+		return $page;
+	}//end searchPage()
 
 	/**
 	 * The working object matching every filter, or null.
@@ -2472,35 +2497,13 @@ class CmdbExportImportService {
 	 */
 	private function usagesInEveryState(string $municipalityUuid): array {
 		$coordinates = $this->coordinates();
+		$query = ['@self' => ['register' => $coordinates['register'], 'schema' => $coordinates['usage']], 'consumer' => $municipalityUuid];
 		$usages = [];
 		foreach ([[[], self::STATE_WORKING], [self::ARCHIVED_LENS, self::STATE_ARCHIVED]] as [$lens, $state]) {
-			$offset = 0;
-			do {
-				$page = $coordinates['objectService']->searchObjects(
-					query: array_merge(
-						[
-							'@self' => ['register' => $coordinates['register'], 'schema' => $coordinates['usage']],
-							'consumer' => $municipalityUuid,
-							'_limit' => self::PAGE_SIZE,
-							'_offset' => $offset,
-						],
-						$lens
-					),
-					_rbac: false,
-					_multitenancy: false
-				);
-				if (is_array($page) === false) {
-					$page = [];
-				}
-
-				foreach ($page as $usage) {
-					$usages[] = ['entity' => $usage, 'state' => $state];
-				}
-
-				$offset += self::PAGE_SIZE;
-				$pageSize = count($page);
-			} while ($pageSize === self::PAGE_SIZE);
-		}//end foreach
+			foreach ($this->allPages(query: $query, lens: $lens) as $usage) {
+				$usages[] = ['entity' => $usage, 'state' => $state];
+			}
+		}
 
 		foreach ($this->trash()['usage'] as $usage) {
 			$usages[] = ['entity' => $usage, 'state' => self::STATE_DELETED];
