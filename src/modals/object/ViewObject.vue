@@ -1960,6 +1960,11 @@ import Upload from 'vue-material-design-icons/Upload.vue'
 import PaginationComponent from '../../components/PaginationComponent.vue'
 import PublishedIcon from '../../components/PublishedIcon.vue'
 import { getTheme } from '../../services/getTheme.js'
+import {
+	dateTimeFormatOf,
+	dateTimeToStorage,
+	pickerValueToStorage,
+} from './dateTimeStorage.js'
 import { FILE_ACTIONS } from './objectFileActions.js'
 import {
 	orderedPropertyRows,
@@ -3259,49 +3264,8 @@ export default {
 			}
 
 			// Get schema information to determine the correct format
-			const schemaProperties = this.getSchemaProperties()
-			const schemaProperty = schemaProperties[key]
-			const format = schemaProperty?.format
-
-			// Helper to format date in local TZ as YYYY-MM-DD
-			const toLocalDateString = (date) => {
-				if (!(date instanceof Date) || isNaN(date.getTime())) return ''
-				const yyyy = date.getFullYear()
-				const mm = String(date.getMonth() + 1).padStart(2, '0')
-				const dd = String(date.getDate()).padStart(2, '0')
-				return `${yyyy}-${mm}-${dd}`
-			}
-
-			let processedValue = newValue
-
-			// Handle Date objects from NcDateTimePicker
-			if (newValue instanceof Date && !isNaN(newValue.getTime())) {
-				try {
-					switch (format) {
-						case 'date':
-							processedValue = toLocalDateString(newValue)
-							break
-						case 'time':
-							processedValue = newValue
-								.toTimeString()
-								.split(' ')[0]
-								.substring(0, 5)
-							break
-						case 'date-time':
-							processedValue = newValue.toISOString()
-							break
-						default:
-							processedValue = newValue.toISOString()
-					}
-				} catch (e) {
-					processedValue = ''
-				}
-			} else if (newValue === null || newValue === undefined) {
-				processedValue = ''
-			}
-
-			// Update the form data
-			this.formData[key] = processedValue
+			const format = this.getSchemaProperties()[key]?.format
+			this.formData[key] = pickerValueToStorage(newValue, format)
 		},
 
 		/**
@@ -3310,80 +3274,11 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		processDateTimeValue(key, value) {
-			// Get schema information to determine if this is a date/time field
-			const schemaProperties = this.getSchemaProperties()
-			const schemaProperty = schemaProperties[key]
-
-			if (!schemaProperty || schemaProperty.type !== 'string') {
+			const format = dateTimeFormatOf(this.getSchemaProperties()[key])
+			if (!format) {
 				return value
 			}
-
-			const format = schemaProperty.format
-			if (!format || !['date', 'time', 'date-time'].includes(format)) {
-				return value
-			}
-
-			// Helper to format date in local TZ as YYYY-MM-DD
-			const toLocalDateString = (date) => {
-				if (!(date instanceof Date) || isNaN(date.getTime())) return ''
-				const yyyy = date.getFullYear()
-				const mm = String(date.getMonth() + 1).padStart(2, '0')
-				const dd = String(date.getDate()).padStart(2, '0')
-				return `${yyyy}-${mm}-${dd}`
-			}
-
-			// If value is empty or null, return empty string
-			if (!value || value === '') {
-				return ''
-			}
-
-			// Handle Date objects from NcDateTimePicker
-			if (value instanceof Date) {
-				try {
-					switch (format) {
-						case 'date':
-							// Return YYYY-MM-DD format **in local timezone**
-							return toLocalDateString(value)
-						case 'time':
-							// Return HH:MM format for consistency with HTML time input
-							return value.toTimeString().split(' ')[0].substring(0, 5)
-						case 'date-time':
-							// Return full ISO string
-							return value.toISOString()
-						default:
-							return value.toISOString()
-					}
-				} catch (e) {
-					return ''
-				}
-			}
-
-			// Handle string values (legacy or fallback)
-			try {
-				switch (format) {
-					case 'date':
-						// Expect YYYY-MM-DD string already in local TZ
-						return value
-					case 'time':
-						// HTML time input returns HH:MM, keep as HH:MM for consistency
-						if (value.length === 5 && value.match(/^\d{2}:\d{2}$/)) {
-							return value // Keep as HH:MM
-						}
-						return value
-					case 'date-time': {
-						// HTML datetime-local input returns YYYY-MM-DDTHH:MM
-						if (value.length === 16) {
-							// Add seconds and timezone
-							return `${value}:00.000Z`
-						}
-						return value
-					}
-					default:
-						return value
-				}
-			} catch (e) {
-				return value
-			}
+			return dateTimeToStorage(value, format)
 		},
 
 		/**
