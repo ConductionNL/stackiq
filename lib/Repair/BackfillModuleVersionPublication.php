@@ -195,9 +195,9 @@ class BackfillModuleVersionPublication implements IRepairStep {
 		$offset = 0;
 		do {
 			$modules = (array) $objects->setRegister($register)->setSchema($schema)->findAll(
-				['limit' => self::PAGE_SIZE, 'offset' => $offset],
-				false,
-				false
+				config: ['limit' => self::PAGE_SIZE, 'offset' => $offset],
+				_rbac: false,
+				_multitenancy: false
 			);
 
 			foreach ($modules as $module) {
