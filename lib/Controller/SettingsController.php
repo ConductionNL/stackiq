@@ -2076,19 +2076,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get email settings',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get email settings: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get email settings', exception: $e);
 		}//end try
 	}//end getEmailSettings()
 
@@ -2122,20 +2110,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update email settings',
-				[
-					'exception' => $e->getMessage(),
-					'requestData' => $this->getRedactedParams(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to update email settings: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigWriteErrorResponse(operationLabel: 'update email settings', exception: $e);
 		}//end try
 	}//end updateEmailSettings()
 
@@ -2168,19 +2143,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get email templates',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get email templates: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get email templates', exception: $e);
 		}//end try
 	}//end getEmailTemplates()
 
@@ -2216,19 +2179,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				"Failed to get email template {$templateName}",
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => "Failed to get email template {$templateName}: " . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: "get email template {$templateName}", exception: $e);
 		}//end try
 	}//end getEmailTemplate()
 
@@ -2281,20 +2232,7 @@ class SettingsController extends Controller {
 
 			return new JSONResponse(['success' => $success, 'message' => $updateMsg]);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				"Failed to update email template {$templateName}",
-				[
-					'exception' => $e->getMessage(),
-					'requestData' => $this->getRedactedParams(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => "Failed to update email template {$templateName}: " . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigWriteErrorResponse(operationLabel: "update email template {$templateName}", exception: $e);
 		}//end try
 	}//end updateEmailTemplate()
 
@@ -2327,19 +2265,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				"Failed to get default email template {$templateName}",
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => "Failed to get default email template {$templateName}: " . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: "get default email template {$templateName}", exception: $e);
 		}//end try
 	}//end getEmailTemplateDefault()
 
@@ -2372,19 +2298,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				"Failed to get email template variables for {$templateName}",
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => "Failed to get email template variables for {$templateName}: " . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: "get email template variables for {$templateName}", exception: $e);
 		}//end try
 	}//end getEmailTemplateVariables()
 
@@ -2597,19 +2511,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get all groups',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get all groups: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get all groups', exception: $e);
 		}//end try
 	}//end getAllGroups()
 
@@ -2645,19 +2547,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to clear ArchiMate import status',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to clear ArchiMate import status: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'clear ArchiMate import status', exception: $e);
 		}//end try
 	}//end clearArchiMateImportStatus()
 
@@ -2691,19 +2581,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to kill ArchiMate import process',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to kill ArchiMate import process: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'kill ArchiMate import process', exception: $e);
 		}//end try
 	}//end killArchiMateImport()
 
@@ -2742,19 +2620,7 @@ class SettingsController extends Controller {
 
 			return new JSONResponse(['success' => $result['cancelled'], 'message' => $message, 'details' => $result]);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to cancel ArchiMate import',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to cancel ArchiMate import: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'cancel ArchiMate import', exception: $e);
 		}//end try
 	}//end cancelArchiMateImport()
 
@@ -2784,19 +2650,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to clear ArchiMate export status',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to clear ArchiMate export status: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'clear ArchiMate export status', exception: $e);
 		}//end try
 	}//end clearArchiMateExportStatus()
 
@@ -2825,19 +2679,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get ArchiMate settings',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get ArchiMate settings: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get ArchiMate settings', exception: $e);
 		}//end try
 	}//end getArchiMateSettings()
 
@@ -2865,19 +2707,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get object counts',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get object counts: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get object counts', exception: $e);
 		}//end try
 	}//end getObjectCounts()
 
@@ -3310,19 +3140,7 @@ class SettingsController extends Controller {
 			$config = $this->settingsService->getCronjobConfig();
 			return new JSONResponse($config);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get cronjob config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get cronjob config: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get cronjob config', exception: $e);
 		}
 	}//end getCronjobConfig()
 
@@ -3347,20 +3165,7 @@ class SettingsController extends Controller {
 
 			return new JSONResponse($result, $statusCode);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update cronjob config',
-				[
-					'exception' => $e->getMessage(),
-					'requestData' => $this->getRedactedParams(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to update cronjob config: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigWriteErrorResponse(operationLabel: 'update cronjob config', exception: $e);
 		}//end try
 	}//end updateCronjobConfig()
 
