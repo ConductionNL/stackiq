@@ -173,6 +173,10 @@ import { objectStore } from '../../store/store.js'
 import { resolveUuid } from '../../utils/lifecyclePhase.js'
 import { fetchObjectTypeCollection } from '../../utils/objectTypeCollection.js'
 import { matchComponents } from '../../utils/sbomVulnerabilityMatch.js'
+import {
+	distinctLicenseCount,
+	moduleVersionComponents,
+} from './sbomComponents.js'
 
 /**
  * @class SbomComponentsPanel
@@ -325,18 +329,7 @@ export default {
 		 */
 		components() {
 			const all = objectStore.getCollection('sbomComponent')?.results || []
-			return all
-				.filter(
-					(c) =>
-						resolveUuid((c.object || c).moduleVersion)
-						=== String(this.objectId),
-				)
-				.slice()
-				.sort((a, b) =>
-					String((a.object || a).name || '').localeCompare(
-						String((b.object || b).name || ''),
-					),
-				)
+			return moduleVersionComponents(all, String(this.objectId))
 		},
 
 		/**
@@ -410,18 +403,7 @@ export default {
 		 * @spec openspec/specs/sbom-import/spec.md#requirement-the-module-version-detail-page-shows-imported-components-with-summary-counts
 		 */
 		distinctLicenseCount() {
-			const set = new Set()
-			for (const component of this.components) {
-				const licenses = (component.object || component).licenses
-				if (Array.isArray(licenses)) {
-					for (const license of licenses) {
-						if (typeof license === 'string' && license !== '') {
-							set.add(license)
-						}
-					}
-				}
-			}
-			return set.size
+			return distinctLicenseCount(this.components)
 		},
 
 		/**
