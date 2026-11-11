@@ -138,8 +138,7 @@ class OrganisatieService {
 		// caller's catch is the real failure path.
 		$organisationEntity = $this->createOrganisationEntityInternal(
 			organisationService: $organisationService,
-			mappedData: $mappedData,
-			organizationUuid: $organizationUuid
+			creation: new OrganisationCreation(mappedData: $mappedData, organizationUuid: $organizationUuid)
 		);
 		$this->logCreated(organizationUuid: $organizationUuid, organisationEntity: $organisationEntity);
 
@@ -296,8 +295,7 @@ class OrganisatieService {
 	 * this service already uses in `addUsersToOrganization()`.
 	 *
 	 * @param \OCA\OpenRegister\Service\OrganisationService $organisationService The organisation service
-	 * @param array $mappedData The mapped data
-	 * @param string $organizationUuid The organization UUID
+	 * @param OrganisationCreation $creation The mapped data and the organization UUID
 	 *
 	 * @return \OCA\OpenRegister\Db\Organisation The created organisation entity
 	 *
@@ -305,50 +303,108 @@ class OrganisatieService {
 	 */
 	private function createOrganisationEntityInternal(
 		\OCA\OpenRegister\Service\OrganisationService $organisationService,
-		array $mappedData,
-		string $organizationUuid,
+		OrganisationCreation $creation,
 	): \OCA\OpenRegister\Db\Organisation {
 		// Resolve the active organisation as the parent for the new (child)
 		// organisation, restoring the hierarchy the hotfix disabled.
 		$parentOrgUuid = $this->getActiveOrganisationUuid(organisationService: $organisationService);
 
+		$this->logCreatingEntity(creation: $creation, parentOrgUuid: $parentOrgUuid);
+
+		$organisationEntity = $this->createEntity(organisationService: $organisationService, creation: $creation);
+		$organisationEntity = $this->linkResolvedParent(organisationEntity: $organisationEntity, parentOrgUuid: $parentOrgUuid);
+
+		$this->logEntityCreated(organizationUuid: $creation->organizationUuid, organisationEntity: $organisationEntity);
+
+		return $organisationEntity;
+	}//end createOrganisationEntityInternal()
+
+	/**
+	 * Log the organisation entity about to be created.
+	 *
+	 * @param OrganisationCreation $creation      The mapped data and the organization UUID
+	 * @param string|null          $parentOrgUuid The resolved parent organisation, if any
+	 *
+	 * @return void
+	 */
+	private function logCreatingEntity(OrganisationCreation $creation, ?string $parentOrgUuid): void {
 		$this->logger->info(
 			'OrganisatieService: Creating organisation entity',
 			[
-				'uuid' => $organizationUuid,
-				'name' => $mappedData['name'],
-				'active' => $mappedData['active'],
+				'uuid' => $creation->organizationUuid,
+				'name' => $creation->mappedData['name'],
+				'active' => $creation->mappedData['active'],
 				'parentOrganisation' => $parentOrgUuid,
 			]
 		);
+	}//end logCreatingEntity()
 
+	/**
+	 * Create the organisation entity through OpenRegister's OrganisationService.
+	 *
+	 * @param \OCA\OpenRegister\Service\OrganisationService $organisationService The organisation service
+	 * @param OrganisationCreation $creation The mapped data and the organization UUID
+	 *
+	 * @return \OCA\OpenRegister\Db\Organisation The created organisation entity
+	 */
+	private function createEntity(
+		\OCA\OpenRegister\Service\OrganisationService $organisationService,
+		OrganisationCreation $creation,
+	): \OCA\OpenRegister\Db\Organisation {
 		// Use OrganisationService to create the entity.
 		// NOTE: Don't call save() afterwards as it causes UUID/ID issues in the mapper.
-		$organisationEntity = $organisationService->createOrganisation(
+		return $organisationService->createOrganisation(
 			details: new NewOrganisation(
-				name: (string)$mappedData['name'],
-				description: (string)($mappedData['type'] ?? ''),
-				uuid: $organizationUuid
+				name: (string)$creation->mappedData['name'],
+				description: (string)($creation->mappedData['type'] ?? ''),
+				uuid: $creation->organizationUuid
 			),
 			addCurrentUser: false
 		);
+	}//end createEntity()
 
-		// Create-then-link: apply the parent AFTER the organisation exists and
-		// is accessible, never self-parent, and only when an active parent was
-		// resolved. Persist via the OrganisationMapper (the seam this service
-		// already uses in addUsersToOrganization()); a link failure is logged
-		// and swallowed so the organisation is still returned (flat) rather
-		// than lost — matching the pre-hotfix "org always created" guarantee.
-		if ($parentOrgUuid !== null
-			&& $parentOrgUuid !== ''
-			&& $parentOrgUuid !== $organisationEntity->getUuid()
+	/**
+	 * Link the created organisation to the resolved parent, unless there is none
+	 * or it is the organisation itself.
+	 *
+	 * Create-then-link: apply the parent AFTER the organisation exists and
+	 * is accessible, never self-parent, and only when an active parent was
+	 * resolved. Persist via the OrganisationMapper (the seam this service
+	 * already uses in addUsersToOrganization()); a link failure is logged
+	 * and swallowed so the organisation is still returned (flat) rather
+	 * than lost — matching the pre-hotfix "org always created" guarantee.
+	 *
+	 * @param \OCA\OpenRegister\Db\Organisation $organisationEntity The created organisation entity.
+	 * @param string|null $parentOrgUuid The resolved parent organisation, if any.
+	 *
+	 * @return \OCA\OpenRegister\Db\Organisation The entity, linked when a parent applies.
+	 */
+	private function linkResolvedParent(
+		\OCA\OpenRegister\Db\Organisation $organisationEntity,
+		?string $parentOrgUuid,
+	): \OCA\OpenRegister\Db\Organisation {
+		if ($parentOrgUuid === null
+			|| $parentOrgUuid === ''
+			|| $parentOrgUuid === $organisationEntity->getUuid()
 		) {
-			$organisationEntity = $this->linkParentOrganisation(
-				organisationEntity: $organisationEntity,
-				parentOrgUuid: $parentOrgUuid
-			);
+			return $organisationEntity;
 		}
 
+		return $this->linkParentOrganisation(
+			organisationEntity: $organisationEntity,
+			parentOrgUuid: $parentOrgUuid
+		);
+	}//end linkResolvedParent()
+
+	/**
+	 * Log the created organisation entity with its active flag and parent.
+	 *
+	 * @param string $organizationUuid The organization UUID
+	 * @param \OCA\OpenRegister\Db\Organisation $organisationEntity The created organisation entity
+	 *
+	 * @return void
+	 */
+	private function logEntityCreated(string $organizationUuid, \OCA\OpenRegister\Db\Organisation $organisationEntity): void {
 		$this->logger->info(
 			'OrganisatieService: Organisation entity created successfully',
 			[
@@ -358,9 +414,7 @@ class OrganisatieService {
 				'parent' => $organisationEntity->getParent(),
 			]
 		);
-
-		return $organisationEntity;
-	}//end createOrganisationEntityInternal()
+	}//end logEntityCreated()
 
 	/**
 	 * Set the parent organisation on an already-created organisation entity.
