@@ -995,7 +995,7 @@ class ContactPersonHandler {
 			}
 
 			// Use find() method with proper register/schema context.
-			$organizationObject = $objectService->find($organizationId, [], false, $registerId, $organisationSchemaId);
+			$organizationObject = $objectService->find(id: $organizationId, _extend: [], files: false, register: $registerId, schema: $organisationSchemaId);
 
 			if (empty($organizationObject) === false) {
 				$organizationData = $organizationObject->getObject();
@@ -1667,11 +1667,11 @@ class ContactPersonHandler {
 					}
 
 					$organizationObject = $objectService->find(
-						$organizationId,
-						[],
-						false,
-						$registerId,
-						$organisationSchemaId
+						id: $organizationId,
+						_extend: [],
+						files: false,
+						register: $registerId,
+						schema: $organisationSchemaId
 					);
 					if (empty($organizationObject) === false) {
 						$organizationData = $organizationObject->getObject();
@@ -2115,7 +2115,13 @@ class ContactPersonHandler {
 			}
 
 			try {
-				$organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisationSchemaId);
+				$organizationObject = $objectService->find(
+					id: $organizationUuid,
+					_extend: [],
+					files: false,
+					register: $registerId,
+					schema: $organisationSchemaId
+				);
 				$organizationData = $organizationObject->getObject();
 
 				// Check if the username is already in the organization's users.
@@ -2199,7 +2205,13 @@ class ContactPersonHandler {
 			}
 
 			try {
-				$organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisationSchemaId);
+				$organizationObject = $objectService->find(
+					id: $organizationUuid,
+					_extend: [],
+					files: false,
+					register: $registerId,
+					schema: $organisationSchemaId
+				);
 				$organizationData = $organizationObject->getObject();
 
 				// Add the username to the organization's users list.
