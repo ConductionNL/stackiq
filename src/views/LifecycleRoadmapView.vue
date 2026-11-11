@@ -133,10 +133,12 @@ import { navigationStore, objectStore } from '../store/store.js'
 import {
 	derivePhase,
 	endOfSupportState,
+	indexByUuid,
 	isEolApproaching,
 	parseDate,
 	PHASE,
 	phaseOrder,
+	recordUuid,
 	resolveUuid,
 } from '../utils/lifecyclePhase.js'
 import { fetchObjectTypeCollection } from '../utils/objectTypeCollection.js'
@@ -216,15 +218,10 @@ export default {
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		moduleVersieIndex() {
-			const index = {}
-			for (const mv of objectStore.getCollection('moduleVersion')?.results
-				|| []) {
-				const id = resolveUuid(mv.uuid ?? mv.id ?? mv['@self']?.id ?? mv)
-				if (id) {
-					index[id] = mv
-				}
-			}
-			return index
+			return indexByUuid(
+				objectStore.getCollection('moduleVersion')?.results || [],
+				(record) => record,
+			)
 		},
 
 		/**
@@ -234,14 +231,10 @@ export default {
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		moduleIndex() {
-			const index = {}
-			for (const m of objectStore.getCollection('module')?.results || []) {
-				const id = resolveUuid(m.uuid ?? m.id ?? m['@self']?.id ?? m)
-				if (id) {
-					index[id] = m
-				}
-			}
-			return index
+			return indexByUuid(
+				objectStore.getCollection('module')?.results || [],
+				(record) => record,
+			)
 		},
 
 		/**
@@ -253,7 +246,7 @@ export default {
 		organisationOptions() {
 			return (objectStore.getCollection('organization')?.results || []).map(
 				(org) => ({
-					uuid: resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org),
+					uuid: recordUuid(org),
 					label:
 						org.name
 						|| org.title
