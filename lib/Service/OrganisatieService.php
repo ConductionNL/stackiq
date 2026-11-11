@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\OpenRegister\Service\Organisation\NewOrganisation;
 use OCP\App\IAppManager;
 use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
@@ -302,10 +303,12 @@ class OrganisatieService {
 		// Use OrganisationService to create the entity.
 		// NOTE: Don't call save() afterwards as it causes UUID/ID issues in the mapper.
 		$organisationEntity = $organisationService->createOrganisation(
-			name: (string)$mappedData['name'],
-			description: (string)($mappedData['type'] ?? ''),
-			addCurrentUser: false,
-			uuid: $organizationUuid
+			details: new NewOrganisation(
+				name: (string)$mappedData['name'],
+				description: (string)($mappedData['type'] ?? ''),
+				uuid: $organizationUuid
+			),
+			addCurrentUser: false
 		);
 
 		// Create-then-link: apply the parent AFTER the organisation exists and
