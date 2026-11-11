@@ -89,11 +89,8 @@ class SeedCmdbImportPacks implements IRepairStep {
 			return;
 		}
 
-		try {
-			$packs = $this->profile->shippedEditablePacks();
-		} catch (Throwable $e) {
-			$this->logger->warning('[SeedCmdbImportPacks] shipped packs unreadable: ' . $e->getMessage());
-			$output->warning('CMDB import packs not seeded: ' . $e->getMessage());
+		$packs = $this->shippedPacks(output: $output);
+		if ($packs === null) {
 			return;
 		}
 
@@ -101,6 +98,23 @@ class SeedCmdbImportPacks implements IRepairStep {
 			$this->seed(output: $output, shipped: $shipped);
 		}
 	}//end run()
+
+	/**
+	 * The shipped editable packs, or null (warned and reported) when they cannot be read.
+	 *
+	 * @param IOutput $output Output interface for status messages.
+	 *
+	 * @return array<string, array<string, mixed>>|null
+	 */
+	private function shippedPacks(IOutput $output): ?array {
+		try {
+			return $this->profile->shippedEditablePacks();
+		} catch (Throwable $e) {
+			$this->logger->warning('[SeedCmdbImportPacks] shipped packs unreadable: ' . $e->getMessage());
+			$output->warning('CMDB import packs not seeded: ' . $e->getMessage());
+			return null;
+		}
+	}//end shippedPacks()
 
 	/**
 	 * Seed or update one pack, and report what happened.
@@ -113,34 +127,71 @@ class SeedCmdbImportPacks implements IRepairStep {
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-2
 	 */
 	private function seed(IOutput $output, array $shipped): void {
+		$stored = $this->storedPack(output: $output, shipped: $shipped);
+		if ($stored === null) {
+			return;
+		}
+
+		[$isWarning, $message] = self::seedReport(shipped: $shipped, stored: $stored);
+		if ($isWarning === true) {
+			$output->warning($message);
+			return;
+		}
+
+		$output->info($message);
+	}//end seed()
+
+	/**
+	 * Seed or update one pack in the store, or null (warned and reported) when that fails.
+	 *
+	 * @param IOutput $output Output interface for status messages.
+	 * @param array<string, mixed> $shipped The shipped pack.
+	 *
+	 * @return array<string, mixed>|null The store's answer: `id`, `outcome`, `version`, `newerShipped`.
+	 */
+	private function storedPack(IOutput $output, array $shipped): ?array {
 		$slug = (string)($shipped['id'] ?? '');
 		try {
-			$stored = $this->store->resolve(shipped: $shipped);
+			return $this->store->resolve(shipped: $shipped);
 		} catch (Throwable $e) {
 			$this->logger->warning('[SeedCmdbImportPacks] ' . $slug . ': ' . $e->getMessage());
 			$output->warning('CMDB import pack ' . $slug . ' not seeded: ' . $e->getMessage());
-			return;
+			return null;
 		}
+	}//end storedPack()
 
-		$where = $slug . ' (id ' . $stored['id'] . ')';
-		if ($stored['outcome'] === CmdbImportPackStore::SEEDED) {
-			$output->info('Seeded CMDB import pack ' . $where);
-			return;
-		}
+	/**
+	 * What to report for a stored pack: whether it is a warning, and the line.
+	 *
+	 * @param array<string, mixed> $shipped The shipped pack.
+	 * @param array<string, mixed> $stored  The store's answer.
+	 *
+	 * @return array{0: bool, 1: string}
+	 */
+	private static function seedReport(array $shipped, array $stored): array {
+		$where = (string)($shipped['id'] ?? '') . ' (id ' . $stored['id'] . ')';
 
-		if ($stored['outcome'] === CmdbImportPackStore::UPDATED) {
-			$output->info('Updated unedited CMDB import pack ' . $where . ' to version ' . $stored['version']);
-			return;
-		}
+		return match (true) {
+			$stored['outcome'] === CmdbImportPackStore::SEEDED => [false, 'Seeded CMDB import pack ' . $where],
+			$stored['outcome'] === CmdbImportPackStore::UPDATED => [
+				false,
+				'Updated unedited CMDB import pack ' . $where . ' to version ' . $stored['version'],
+			],
+			$stored['newerShipped'] === true => [true, self::keptEditedMessage(where: $where, shipped: $shipped)],
+			default => [false, 'CMDB import pack ' . $where . ' already present'],
+		};
+	}//end seedReport()
 
-		if ($stored['newerShipped'] === true) {
-			$output->warning(
-				'CMDB import pack ' . $where . ' was edited in OpenRegister and is kept; this release ships version '
-				. (string)($shipped['version'] ?? '') . ', which is not applied'
-			);
-			return;
-		}
-
-		$output->info('CMDB import pack ' . $where . ' already present');
-	}//end seed()
+	/**
+	 * The warning for a pack an admin edited, which keeps a newer shipped version from applying.
+	 *
+	 * @param string               $where   The pack slug and stored id, for the line.
+	 * @param array<string, mixed> $shipped The shipped pack.
+	 *
+	 * @return string
+	 */
+	private static function keptEditedMessage(string $where, array $shipped): string {
+		return 'CMDB import pack ' . $where . ' was edited in OpenRegister and is kept; this release ships version '
+			. (string)($shipped['version'] ?? '') . ', which is not applied';
+	}//end keptEditedMessage()
 }//end class
