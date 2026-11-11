@@ -364,7 +364,16 @@ export default defineComponent({
 			if (!register) {
 				return
 			}
+			this.useRegister(register)
+		},
 
+		/**
+		 * Make a register the selected one and load its schema options.
+		 *
+		 * @param {object} register The register.
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		useRegister(register) {
 			this.selectedRegister = {
 				label: register.title,
 				value: register.id.toString(),
@@ -444,38 +453,36 @@ export default defineComponent({
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		autoSelectOpenCatalogiRegister() {
+			const registers = this.settings.availableRegisters
 			// Look for a register with "opencatalogi" in the name
-			const opencatalogiRegister = this.settings.availableRegisters.find(
-				(register) => register.title.toLowerCase().includes('publication'),
+			const opencatalogiRegister = registers.find((register) =>
+				register.title.toLowerCase().includes('publication'),
 			)
-
 			if (opencatalogiRegister) {
-				this.selectedRegister = {
-					label: opencatalogiRegister.title,
-					value: opencatalogiRegister.id.toString(),
-				}
-				this.updateSchemaOptions(opencatalogiRegister.id.toString())
+				this.autoSelectRegister(opencatalogiRegister)
+				return
+			}
 
-				// Only try to auto-select schemas if the register has schemas
-				if (Array.isArray(opencatalogiRegister.schemas)) {
-					this.autoSelectMatchingSchemas(opencatalogiRegister)
-				}
-			} else if (
-				this.settings.availableRegisters.length > 0
-				&& !this.selectedRegister
-			) {
-				// If no Open Catalogi register but we have registers, select the first one
-				const firstRegister = this.settings.availableRegisters[0]
-				this.selectedRegister = {
-					label: firstRegister.title,
-					value: firstRegister.id.toString(),
-				}
-				this.updateSchemaOptions(firstRegister.id.toString())
+			// If no Open Catalogi register but we have registers, select the first one
+			if (registers.length > 0 && !this.selectedRegister) {
+				const firstRegister = registers[0]
+				this.autoSelectRegister(firstRegister)
+			}
+		},
 
-				// Only try to auto-select schemas if the register has schemas
-				if (Array.isArray(firstRegister.schemas)) {
-					this.autoSelectMatchingSchemas(firstRegister)
-				}
+		/**
+		 * Select a register and, when it lists schemas, the schemas matching
+		 * the object types.
+		 *
+		 * @param {object} register The register.
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		autoSelectRegister(register) {
+			this.useRegister(register)
+
+			// Only try to auto-select schemas if the register has schemas
+			if (Array.isArray(register.schemas)) {
+				this.autoSelectMatchingSchemas(register)
 			}
 		},
 
