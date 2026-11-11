@@ -1962,6 +1962,13 @@ import PublishedIcon from '../../components/PublishedIcon.vue'
 import { getTheme } from '../../services/getTheme.js'
 import { FILE_ACTIONS } from './objectFileActions.js'
 import {
+	lockDescription,
+	objectDisplayName,
+	objectSchemaName,
+	referenceTitle,
+	timestampRows,
+} from './objectMetadata.js'
+import {
 	orderedPropertyRows,
 	schemaPropertyRows,
 } from './objectPropertyRows.js'
@@ -2149,98 +2156,21 @@ export default {
 			if (!this.currentObject) return []
 
 			const obj = this.currentObject
-			const metadata = []
-
-			// ID
-			metadata.push(['ID', obj.id || 'Not set'])
-
-			// Version
-			metadata.push(['Version', obj['@self']?.version || 'Not set'])
-
-			// Register
-			const register = obj['@self']?.register
-			let registerDisplay = 'Not set'
-			if (register) {
-				if (typeof register === 'object') {
-					registerDisplay =
-						register.title || register.name || register.id || register
-				} else {
-					// Try to find the register title from available registers
-					const availableRegister = objectStore.availableRegisters.find(
-						(r) => r.id === register,
-					)
-					registerDisplay = availableRegister?.title || register
-				}
-			}
-			metadata.push(['Register', registerDisplay])
-
-			// Schema
-			const schema = obj['@self']?.schema
-			let schemaDisplay = 'Not set'
-			if (schema) {
-				if (typeof schema === 'object') {
-					schemaDisplay =
-						schema.title || schema.name || schema.id || schema
-				} else {
-					// Try to find the schema title from available schemas
-					const availableSchema = objectStore.availableSchemas.find(
-						(s) => s.id === schema,
-					)
-					schemaDisplay = availableSchema?.title || schema
-				}
-			}
-			metadata.push(['Schema', schemaDisplay])
-
-			// Locked
-			const locked = obj['@self']?.locked
-			let lockedDisplay = 'Not locked'
-			if (locked) {
-				if (typeof locked === 'object') {
-					const lockedBy = locked.lockedBy || 'Unknown user'
-					const lockedAt = locked.lockedAt
-						? new Date(locked.lockedAt).toLocaleString()
-						: 'Unknown time'
-					const process = locked.process ? ` (${locked.process})` : ''
-					lockedDisplay = `Locked by ${lockedBy} at ${lockedAt}${process}`
-				} else {
-					lockedDisplay = 'Locked'
-				}
-			}
-			metadata.push(['Locked', lockedDisplay])
-
-			// Created
-			metadata.push([
-				'Created',
-				obj['@self']?.created
-					? new Date(obj['@self'].created).toLocaleString()
-					: 'Not set',
-			])
-
-			// Updated
-			metadata.push([
-				'Updated',
-				obj['@self']?.updated
-					? new Date(obj['@self'].updated).toLocaleString()
-					: 'Not set',
-			])
-
-			// Published
-			metadata.push([
-				'Published',
-				obj['@self']?.published
-					? new Date(obj['@self'].published).toLocaleString()
-					: 'Not published',
-			])
-
-			// Depublished
-			metadata.push([
-				'Depublished',
-				obj['@self']?.depublished
-					? new Date(obj['@self'].depublished).toLocaleString()
-					: 'Not depublished',
-			])
-
-			return metadata
+			const self = obj['@self']
+			return [
+				['ID', obj.id || 'Not set'],
+				['Version', self?.version || 'Not set'],
+				[
+					'Register',
+					referenceTitle(self?.register, objectStore.availableRegisters),
+				],
+				[
+					'Schema',
+					referenceTitle(self?.schema, objectStore.availableSchemas),
+				],
+				['Locked', lockDescription(self?.locked)],
+				...timestampRows(self),
+			]
 		},
 
 		// Files tab computed properties
@@ -2584,41 +2514,8 @@ export default {
 
 			if (!this.currentObject) return 'View Object'
 
-			const name =
-				this.currentObject['@self']?.name
-				|| this.currentObject.name
-				|| this.currentObject.title
-				|| this.currentObject.id
-				|| 'Untitled'
-
-			// Try to get schema name from the object itself
-			let schemaName = 'Publication'
-
-			// Check if schema is an object with title/name properties
-			if (
-				this.currentObject.schema
-				&& typeof this.currentObject.schema === 'object'
-			) {
-				schemaName =
-					this.currentObject.schema.title
-					|| this.currentObject.schema.name
-					|| this.currentObject.schema.id
-					|| 'Publication'
-			} else if (
-				this.currentObject['@self']?.schema
-				&& typeof this.currentObject['@self'].schema === 'object'
-			) {
-				// Check if @self.schema is an object with title/name properties
-				schemaName =
-					this.currentObject['@self'].schema.title
-					|| this.currentObject['@self'].schema.name
-					|| this.currentObject['@self'].schema.id
-					|| 'Publication'
-			} else if (typeof this.currentObject['@self']?.schema === 'string') {
-				// If it's a string, use it directly
-				schemaName = this.currentObject['@self'].schema
-			}
-
+			const name = objectDisplayName(this.currentObject)
+			const schemaName = objectSchemaName(this.currentObject)
 			return `${name} (${schemaName})`
 		},
 

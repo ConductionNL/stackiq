@@ -19,10 +19,7 @@ vi.mock('../../src/store/store.js', () => ({
 	catalogStore: {},
 	navigationStore: {},
 	objectStore: {
-		availableRegisters: [
-			{ id: 'r1', title: 'Register One' },
-			{ id: 'r2' },
-		],
+		availableRegisters: [{ id: 'r1', title: 'Register One' }, { id: 'r2' }],
 		availableSchemas: [
 			{ id: 's1', title: 'Schema One' },
 			{ id: 's2', name: 'no title' },
@@ -64,7 +61,9 @@ describe('ViewObject getModalTitle', () => {
 	})
 
 	it('takes the first name the object carries', () => {
-		expect(title({ '@self': { name: 'Self' }, name: 'N', title: 'T', id: 'I' })).toBe('Self (Publication)')
+		expect(
+			title({ '@self': { name: 'Self' }, name: 'N', title: 'T', id: 'I' }),
+		).toBe('Self (Publication)')
 		expect(title({ name: 'N', title: 'T', id: 'I' })).toBe('N (Publication)')
 		expect(title({ title: 'T', id: 'I' })).toBe('T (Publication)')
 		expect(title({ id: 'I' })).toBe('I (Publication)')
@@ -72,18 +71,30 @@ describe('ViewObject getModalTitle', () => {
 	})
 
 	it('takes the schema name from the object, then from @self', () => {
-		expect(title({ id: 'a', schema: { title: 'ST', name: 'SN', id: 'SI' } })).toBe('a (ST)')
+		expect(
+			title({ id: 'a', schema: { title: 'ST', name: 'SN', id: 'SI' } }),
+		).toBe('a (ST)')
 		expect(title({ id: 'a', schema: { name: 'SN', id: 'SI' } })).toBe('a (SN)')
 		expect(title({ id: 'a', schema: { id: 'SI' } })).toBe('a (SI)')
 		expect(title({ id: 'a', schema: {} })).toBe('a (Publication)')
-		expect(title({ id: 'a', schema: 'plain', '@self': { schema: 'self' } })).toBe('a (self)')
-		expect(title({ id: 'a', '@self': { schema: { title: 'Self T' } } })).toBe('a (Self T)')
-		expect(title({ id: 'a', '@self': { schema: { name: 'Self N' } } })).toBe('a (Self N)')
-		expect(title({ id: 'a', '@self': { schema: { id: 'Self I' } } })).toBe('a (Self I)')
+		expect(
+			title({ id: 'a', schema: 'plain', '@self': { schema: 'self' } }),
+		).toBe('a (self)')
+		expect(title({ id: 'a', '@self': { schema: { title: 'Self T' } } })).toBe(
+			'a (Self T)',
+		)
+		expect(title({ id: 'a', '@self': { schema: { name: 'Self N' } } })).toBe(
+			'a (Self N)',
+		)
+		expect(title({ id: 'a', '@self': { schema: { id: 'Self I' } } })).toBe(
+			'a (Self I)',
+		)
 		expect(title({ id: 'a', '@self': { schema: {} } })).toBe('a (Publication)')
 		expect(title({ id: 'a', '@self': { schema: '' } })).toBe('a ()')
 		expect(title({ id: 'a', '@self': { schema: 7 } })).toBe('a (Publication)')
-		expect(title({ id: 'a', schema: null, '@self': { schema: null } })).toBe('a (Publication)')
+		expect(title({ id: 'a', schema: null, '@self': { schema: null } })).toBe(
+			'a (Publication)',
+		)
 	})
 })
 
@@ -107,19 +118,21 @@ describe('ViewObject metadataProperties', () => {
 	})
 
 	it('describes full metadata', () => {
-		expect(metadata({
-			id: 'obj',
-			'@self': {
-				version: '1.2',
-				register: { title: 'RT', name: 'RN', id: 'RI' },
-				schema: { name: 'SN', id: 'SI' },
-				locked: { lockedBy: 'ann', lockedAt: STAMP, process: 'import' },
-				created: STAMP,
-				updated: STAMP,
-				published: STAMP,
-				depublished: STAMP,
-			},
-		})).toEqual([
+		expect(
+			metadata({
+				id: 'obj',
+				'@self': {
+					version: '1.2',
+					register: { title: 'RT', name: 'RN', id: 'RI' },
+					schema: { name: 'SN', id: 'SI' },
+					locked: { lockedBy: 'ann', lockedAt: STAMP, process: 'import' },
+					created: STAMP,
+					updated: STAMP,
+					published: STAMP,
+					depublished: STAMP,
+				},
+			}),
+		).toEqual([
 			['ID', 'obj'],
 			['Version', '1.2'],
 			['Register', 'RT'],
@@ -150,7 +163,9 @@ describe('ViewObject metadataProperties', () => {
 			['Locked', 'Locked by Unknown user at Unknown time'],
 		])
 		const emptyRef = {}
-		expect(rows({ register: emptyRef, schema: { id: '' }, locked: 'yes' })).toEqual([
+		expect(
+			rows({ register: emptyRef, schema: { id: '' }, locked: 'yes' }),
+		).toEqual([
 			['Register', emptyRef],
 			['Schema', { id: '' }],
 			['Locked', 'Locked'],
