@@ -116,17 +116,10 @@ class ItsmFlowGateway {
 	 */
 	public function saveAndPublish(array $flow, ?string $uuid): string {
 		$flows = $this->service(class: self::FLOWS);
-		if ($uuid !== null && $this->exists(uuid: $uuid) === false) {
-			$uuid = null;
-		}
+		$uuid  = $this->storedFlowUuid(uuid: $uuid);
 
-		// A published version is immutable: open a draft first, so a second
-		// set-up edits the flow instead of being refused.
 		if ($uuid !== null) {
-			$existing = $flows->find($uuid);
-			if ((string) $existing->getLifecycleStatus() !== 'draft') {
-				$this->service(class: self::VERSIONS)->createDraft($existing);
-			}
+			$this->openDraft(flows: $flows, uuid: $uuid);
 		}
 
 		$saved = $flows->save($flow, $uuid);
@@ -136,6 +129,37 @@ class ItsmFlowGateway {
 
 		return (string) $enabled->getUuid();
 	}//end saveAndPublish()
+
+	/**
+	 * The flow to update, when it still exists.
+	 *
+	 * @param string|null $uuid The flow to update, or null to create one.
+	 *
+	 * @return string|null The uuid, or null when there is none or it no longer exists.
+	 */
+	private function storedFlowUuid(?string $uuid): ?string {
+		if ($uuid !== null && $this->exists(uuid: $uuid) === false) {
+			return null;
+		}
+
+		return $uuid;
+	}//end storedFlowUuid()
+
+	/**
+	 * A published version is immutable: open a draft first, so a second
+	 * set-up edits the flow instead of being refused.
+	 *
+	 * @param object $flows OpenRegister's flow service.
+	 * @param string $uuid  The flow to update.
+	 *
+	 * @return void
+	 */
+	private function openDraft(object $flows, string $uuid): void {
+		$existing = $flows->find($uuid);
+		if ((string) $existing->getLifecycleStatus() !== 'draft') {
+			$this->service(class: self::VERSIONS)->createDraft($existing);
+		}
+	}//end openDraft()
 
 	/**
 	 * Start a run of a flow with a payload, which seeds the run's first item.
