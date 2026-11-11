@@ -312,13 +312,7 @@ class ModerationService {
 	 * @return array{register:int, schema:int}|null The target, or null.
 	 */
 	private function resolveTarget(string $type): ?array {
-		$register = $this->settingsService->getRegisterIdForObjectType($type);
-		$schema = $this->settingsService->getSchemaIdForObjectType($type);
-		if ($register === null || $schema === null) {
-			return null;
-		}
-
-		return ['register' => (int)$register, 'schema' => (int)$schema];
+		return (new ObjectTypeTarget(locator: $this->settingsService))->resolve(type: $type);
 	}//end resolveTarget()
 
 	/**

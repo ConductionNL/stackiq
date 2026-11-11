@@ -342,13 +342,7 @@ class ReviewService {
 	 * @return array{register:int, schema:int}|null The target, or null.
 	 */
 	private function resolveTarget(): ?array {
-		$register = $this->settingsService->getRegisterIdForObjectType(self::REVIEW_TYPE);
-		$schema = $this->settingsService->getSchemaIdForObjectType(self::REVIEW_TYPE);
-		if ($register === null || $schema === null) {
-			return null;
-		}
-
-		return ['register' => (int)$register, 'schema' => (int)$schema];
+		return (new ObjectTypeTarget(locator: $this->settingsService))->resolve(type: self::REVIEW_TYPE);
 	}//end resolveTarget()
 
 	/**
