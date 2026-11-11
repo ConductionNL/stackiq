@@ -76,11 +76,11 @@ class ArchiMateService {
 	private array $lastSaveTimingBreakdown = [];
 
 	/**
-	 * Cache for camelCase property name conversions to avoid redundant processing
+	 * CamelCase property names, with their conversion cache; created on first use.
 	 *
-	 * @var array<string, string>
+	 * @var ArchiMate\CamelCaseNames|null
 	 */
-	private array $camelCaseCache = [];
+	private ?ArchiMate\CamelCaseNames $camelCaseNames = null;
 
 	/**
 	 * NOTE: Default schema IDs removed - all schema IDs must be configured via AMEF settings.
@@ -996,35 +996,8 @@ class ArchiMateService {
 	 * @return string CamelCase version of the property name
 	 */
 	private function convertToCamelCase(string $propertyName): string {
-		// OPTIMIZATION: Check cache first to avoid redundant conversions.
-		if (isset($this->camelCaseCache[$propertyName]) === true) {
-			return $this->camelCaseCache[$propertyName];
-		}
-
-		// Remove any leading/trailing whitespace.
-		$propertyName = trim($propertyName);
-
-		// Split by spaces and convert to camelCase.
-		$words = explode(' ', $propertyName);
-
-		if (count($words) === 1) {
-			// Single word, just lowercase it.
-			$result = strtolower($words[0]);
-		} else {
-			// First word is lowercase, subsequent words are capitalized.
-			$camelCase = strtolower($words[0]);
-
-			for ($i = 1; $i < count($words); $i++) {
-				$camelCase .= ucfirst(strtolower($words[$i]));
-			}
-
-			$result = $camelCase;
-		}
-
-		// OPTIMIZATION: Cache the result for future use.
-		$this->camelCaseCache[$propertyName] = $result;
-
-		return $result;
+		$this->camelCaseNames ??= new ArchiMate\CamelCaseNames();
+		return $this->camelCaseNames->of(propertyName: $propertyName);
 	}//end convertToCamelCase()
 
 	/**
