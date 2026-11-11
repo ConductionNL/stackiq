@@ -170,17 +170,7 @@ class StackiqEventListener implements IEventListener {
 			return;
 		}
 
-		if ($event instanceof ObjectLockedEvent
-			|| $event instanceof ObjectUnlockedEvent
-			|| $event instanceof ObjectRevertedEvent
-		) {
-			$services['logger']->debug(
-				'Stackiq: Ignoring object lifecycle event',
-				[
-					'eventType' => get_class($event),
-				]
-			);
-		}
+		(new ObjectEventLog())->ignoredLifecycleEvent(event: $event, logger: $services['logger']);
 	}//end dispatchEvent()
 
 	/**
@@ -450,54 +440,51 @@ class StackiqEventListener implements IEventListener {
 			return;
 		}
 
-		$ctx    = $this->objectContext(object: $object, services: $services);
-		$logger = $ctx['logger'];
-		$logger->info(
-			'Stackiq: Processing object creation',
-			[
-				'objectId' => $ctx['objectId'],
-				'schemaId' => $ctx['schemaId'],
-				'schemaIdInt' => $ctx['schemaIdInt'],
-				'registerId' => $ctx['registerId'],
-				'objectData' => json_encode($object->getObject()),
-			]
-		);
+		$ctx = $this->objectContext(object: $object, services: $services);
+		$log = new ObjectEventLog();
+		$log->objectCreation(ctx: $ctx);
 
 		$ids = $this->resolveCatalogSchemaIds(settingsService: $ctx['settings']);
-		$logger->debug(
-			'Stackiq: Configuration lookup results',
-			[
-				'organisatieSchemaId' => $ids['organization'],
-				'contactpersoonSchemaId' => $ids['contactPerson'],
-				'contactgegevensSchemaId' => $ids['contactgegevens'],
-				'gebruikSchemaId' => $ids['usage'],
-				'objectSchemaId' => $ctx['schemaIdInt'],
-			]
-		);
+		$log->catalogSchemaLookup(ctx: $ctx, ids: $ids);
 
-		$kind = null;
+		$this->onObjectCreated(ctx: $ctx, ids: $ids);
+	}//end handleObjectCreated()
+
+	/**
+	 * Hand a created object to the handler of its catalog type.
+	 *
+	 * @param array<string, mixed>    $ctx The object context.
+	 * @param array<string, int|null> $ids The catalog schema ids.
+	 *
+	 * @return void
+	 */
+	private function onObjectCreated(array $ctx, array $ids): void {
+		match ($this->firstConfiguredKind(ids: $ids, schemaIdInt: $ctx['schemaIdInt'])) {
+			'organization' => $this->onOrganisationCreated(ctx: $ctx),
+			'contactPerson' => $this->onContactPersonCreated(ctx: $ctx),
+			'contactgegevens' => $ctx['logger']->info('Stackiq: Processing contactgegevens creation (deprecated)', ['objectId' => $ctx['objectId']]),
+			'usage' => $this->onUsageCreated(ctx: $ctx),
+			default => (new ObjectEventLog())->unhandledCreation(ctx: $ctx, ids: $ids),
+		};
+	}//end onObjectCreated()
+
+	/**
+	 * The first catalog type whose configured schema is the object's schema.
+	 *
+	 * @param array<string, int|null> $ids         The catalog schema ids, by type.
+	 * @param int                     $schemaIdInt The object's schema id.
+	 *
+	 * @return string|null The type, or null when none matches.
+	 */
+	private function firstConfiguredKind(array $ids, int $schemaIdInt): ?string {
 		foreach ($ids as $type => $configured) {
-			if ($kind === null && $this->matchesSchema(objectSchemaIdInt: $ctx['schemaIdInt'], configured: $configured) === true) {
-				$kind = $type;
+			if ($this->matchesSchema(objectSchemaIdInt: $schemaIdInt, configured: $configured) === true) {
+				return $type;
 			}
 		}
 
-		match ($kind) {
-			'organization' => $this->onOrganisationCreated(ctx: $ctx),
-			'contactPerson' => $this->onContactPersonCreated(ctx: $ctx),
-			'contactgegevens' => $logger->info('Stackiq: Processing contactgegevens creation (deprecated)', ['objectId' => $ctx['objectId']]),
-			'usage' => $this->onUsageCreated(ctx: $ctx),
-			default => $logger->debug(
-				'Stackiq: Object creation not handled - not a supported object type',
-				[
-					'objectId' => $ctx['objectId'],
-					'schemaId' => $ctx['schemaIdInt'],
-					'registerId' => $ctx['registerId'],
-					'supportedSchemas' => $ids,
-				]
-			),
-		};
-	}//end handleObjectCreated()
+		return null;
+	}//end firstConfiguredKind()
 
 	/**
 	 * A created organisation is synced when it is active.
@@ -572,22 +559,25 @@ class StackiqEventListener implements IEventListener {
 		}
 
 		$ctx = $this->objectContext(object: $object, services: $services) + ['oldObject' => $event->getOldObject()];
-		$ctx['logger']->info(
-			'Stackiq: Processing object update',
-			[
-				'objectId' => $ctx['objectId'],
-				'schemaId' => $ctx['schemaId'],
-				'schemaIdInt' => $ctx['schemaIdInt'],
-				'registerId' => $ctx['registerId'],
-				'hasOldObject' => $ctx['oldObject'] !== null,
-			]
-		);
+		(new ObjectEventLog())->objectUpdate(ctx: $ctx);
 
 		if ($this->isOrganisationUpdate(ctx: $ctx) === true) {
 			$this->onOrganisationUpdated(ctx: $ctx);
 			return;
 		}
 
+		$this->onCatalogObjectUpdated(ctx: $ctx);
+	}//end handleObjectUpdated()
+
+	/**
+	 * Hand an updated object that is not an organisation to the handler of its catalog type.
+	 *
+	 * @param array<string, mixed> $ctx The object context, with the organisation schema id.
+	 *
+	 * @return void
+	 */
+	private function onCatalogObjectUpdated(array $ctx): void {
+		$log   = new ObjectEventLog();
 		$match = $this->firstMatchingSchema(ctx: $ctx, kinds: ['contactPerson', 'contactgegevens', 'usage']);
 		if ($match['kind'] === 'contactPerson' || $match['kind'] === 'contactgegevens') {
 			$this->runContactAction(ctx: $ctx, action: ['phase' => 'update', 'kind' => $match['kind'], 'configured' => $match['ids'][$match['kind']]]);
@@ -595,31 +585,13 @@ class StackiqEventListener implements IEventListener {
 		}
 
 		if ($match['kind'] === 'usage') {
-			$ctx['logger']->info(
-				'Stackiq: Matched gebruik schema - processing update',
-				[
-					'objectId' => $ctx['objectId'],
-					'schemaId' => $ctx['schemaId'],
-					'configuredSchemaId' => $match['ids']['usage'],
-				]
-			);
-
-			$this->runGebruikSync(object: $object, phase: 'update', logger: $ctx['logger']);
+			$log->usageUpdate(ctx: $ctx, configuredSchemaId: $match['ids']['usage']);
+			$this->runGebruikSync(object: $ctx['object'], phase: 'update', logger: $ctx['logger']);
 			return;
 		}
 
-		$ctx['logger']->debug(
-			'Stackiq: Object update not handled - focusing only on organisatie, contactpersonen, and gebruik',
-			[
-				'objectId' => $ctx['objectId'],
-				'schemaId' => $ctx['schemaId'],
-				'schemaIdInt' => $ctx['schemaIdInt'],
-				'schemaIdType' => gettype($ctx['schemaId']),
-				'registerId' => $ctx['registerId'],
-				'handledSchemas' => ['organization' => $ctx['organisationSchemaId']] + $match['ids'],
-			]
-		);
-	}//end handleObjectUpdated()
+		$log->unhandledUpdate(ctx: $ctx, ids: $match['ids']);
+	}//end onCatalogObjectUpdated()
 
 	/**
 	 * Whether an updated object is an organisation; logs the schema check.
