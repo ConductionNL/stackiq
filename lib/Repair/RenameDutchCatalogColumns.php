@@ -106,6 +106,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Repair;
 
 use OCP\DB\Exception;
+use OCP\DB\IPreparedStatement;
 use OCP\IDBConnection;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -376,57 +377,106 @@ class RenameDutchCatalogColumns implements IRepairStep {
 	private function migrateTable(string $table, array $declared): array {
 		$counts = ['renamed' => 0, 'copied' => 0, 'refused' => 0, 'deferred' => 0];
 
-		$columns = $this->columnsOf(table: $table);
-		$qTable = $this->quote(identifier: $table);
+		$shard = $this->shardOf(table: $table, declared: $declared);
 
-		foreach (self::COLUMN_MAP as $old => $target) {
-			if (in_array($old, $columns, true) === false) {
+		foreach (array_keys(self::COLUMN_MAP) as $old) {
+			if (in_array($old, $shard['columns'], true) === false) {
 				// Already migrated, or this schema never had the property.
 				continue;
 			}
 
-			// A map entry may carry SEVERAL candidate targets; the schema's own
-			// declared columns decide which applies. See firstSafeTarget().
-			$new = $this->decisions->firstSafeTarget(
-				old: $old,
-				candidates: (array)$target,
-				declared: $declared
-			);
-			if ($new === null) {
-				// No candidate is declared here yet, or the Dutch name still is.
-				// Moving the data now would orphan it.
-				$counts['deferred']++;
-				continue;
+			$outcome = $this->migrateColumn(shard: $shard, old: $old);
+			if ($outcome !== '') {
+				$counts[$outcome]++;
 			}
-
-			if ($this->hasCollision(table: $table, columns: $columns, target: $new) === true) {
-				$counts['refused']++;
-				continue;
-			}
-
-			$qOld = $this->quote(identifier: $old);
-			$qNew = $this->quote(identifier: $new);
-
-			if (in_array($new, $columns, true) === false) {
-				$sql = 'ALTER TABLE ' . $qTable . ' RENAME COLUMN ' . $qOld . ' TO ' . $qNew;
-				if ($this->exec(sql: $sql) === true) {
-					$counts['renamed']++;
-				}
-
-				continue;
-			}
-
-			// The mapper already added an empty English column: back-fill and
-			// leave the Dutch one, so this stays reversible.
-			$sql = 'UPDATE ' . $qTable . ' SET ' . $qNew . ' = ' . $qOld
-				. ' WHERE ' . $qNew . ' IS NULL AND ' . $qOld . ' IS NOT NULL';
-			if ($this->exec(sql: $sql) === true) {
-				$counts['copied']++;
-			}
-		}//end foreach
+		}
 
 		return $counts;
 	}//end migrateTable()
+
+	/**
+	 * A shard table with what its columns are decided on: its quoted name, its columns and its schema's
+	 * declared columns.
+	 *
+	 * @param string $table The shard table name.
+	 * @param array<int, string> $declared Snake_cased declared property names of that table's schema.
+	 *
+	 * @return array{table: string, columns: array<int, string>, quoted: string, declared: array<int, string>}
+	 */
+	private function shardOf(string $table, array $declared): array {
+		$columns = $this->columnsOf(table: $table);
+
+		return ['table' => $table, 'columns' => $columns, 'quoted' => $this->quote(identifier: $table), 'declared' => $declared];
+	}//end shardOf()
+
+	/**
+	 * Move one Dutch column of a shard table, when that is safe.
+	 *
+	 * @param array<string, mixed> $shard The table, its quoted name, its columns and its schema's declared columns.
+	 * @param string $old The Dutch column, present in the table.
+	 *
+	 * @return string The count it adds to: `renamed`, `copied`, `refused` or `deferred`; '' for a failed statement.
+	 */
+	private function migrateColumn(array $shard, string $old): string {
+		// A map entry may carry SEVERAL candidate targets; the schema's own
+		// declared columns decide which applies. See firstSafeTarget().
+		$new = $this->decisions->firstSafeTarget(
+			old: $old,
+			candidates: (array)self::COLUMN_MAP[$old],
+			declared: $shard['declared']
+		);
+		if ($new === null) {
+			// No candidate is declared here yet, or the Dutch name still is.
+			// Moving the data now would orphan it.
+			return 'deferred';
+		}
+
+		if ($this->hasCollision(table: $shard['table'], columns: $shard['columns'], target: $new) === true) {
+			return 'refused';
+		}
+
+		return $this->moveColumn(shard: $shard, move: ['old' => $old, 'new' => $new]);
+	}//end migrateColumn()
+
+	/**
+	 * Rename the Dutch column, or back-fill the English one the mapper already added.
+	 *
+	 * @param array<string, mixed> $shard The table, its quoted name and its columns.
+	 * @param array{old: string, new: string} $move The Dutch column and its English destination.
+	 *
+	 * @return string `renamed` or `copied`; '' when the statement failed.
+	 */
+	private function moveColumn(array $shard, array $move): string {
+		$qOld = $this->quote(identifier: $move['old']);
+		$qNew = $this->quote(identifier: $move['new']);
+
+		if (in_array($move['new'], $shard['columns'], true) === false) {
+			$sql = 'ALTER TABLE ' . $shard['quoted'] . ' RENAME COLUMN ' . $qOld . ' TO ' . $qNew;
+			return self::countedAs(done: $this->exec(sql: $sql), count: 'renamed');
+		}
+
+		// The mapper already added an empty English column: back-fill and
+		// leave the Dutch one, so this stays reversible.
+		$sql = 'UPDATE ' . $shard['quoted'] . ' SET ' . $qNew . ' = ' . $qOld
+			. ' WHERE ' . $qNew . ' IS NULL AND ' . $qOld . ' IS NOT NULL';
+		return self::countedAs(done: $this->exec(sql: $sql), count: 'copied');
+	}//end moveColumn()
+
+	/**
+	 * The count a statement adds to when it succeeded, '' when it failed.
+	 *
+	 * @param bool $done Whether the statement succeeded.
+	 * @param string $count The count.
+	 *
+	 * @return string
+	 */
+	private static function countedAs(bool $done, string $count): string {
+		if ($done === true) {
+			return $count;
+		}
+
+		return '';
+	}//end countedAs()
 
 	/**
 	 * The snake_cased column names a schema currently declares.
@@ -450,22 +500,7 @@ class RenameDutchCatalogColumns implements IRepairStep {
 	 *                                 could not be read (caller must fail closed).
 	 */
 	private function declaredColumnsOf(int $schemaId): ?array {
-		try {
-			// Bound as a string, not an int: IDBConnection::executeQuery()
-			// declares `array<string>` for its parameter list, and the driver
-			// casts back for the numeric comparison.
-			$raw = $this->db->executeQuery(
-				'SELECT properties FROM `*PREFIX*openregister_schemas` WHERE id = ?',
-				[(string)$schemaId]
-			)->fetchOne();
-		} catch (Exception $e) {
-			$this->logger->warning(
-				'RenameDutchCatalogColumns: could not read a schema\'s declared properties; skipping its table.',
-				['schemaId' => $schemaId, 'exception' => $e->getMessage()]
-			);
-			return null;
-		}
-
+		$raw = $this->schemaPropertiesJson(schemaId: $schemaId);
 		if (is_string($raw) === false || $raw === '') {
 			return null;
 		}
@@ -479,13 +514,49 @@ class RenameDutchCatalogColumns implements IRepairStep {
 			return null;
 		}
 
+		return $this->sanitizedColumns(properties: $decoded);
+	}//end declaredColumnsOf()
+
+	/**
+	 * The stored `properties` JSON of a schema, or null after a warning when it cannot be read.
+	 *
+	 * @param int $schemaId The schema's database id.
+	 *
+	 * @return mixed The stored value (false when there is no row), or null on a failed read.
+	 */
+	private function schemaPropertiesJson(int $schemaId): mixed {
+		try {
+			// Bound as a string, not an int: IDBConnection::executeQuery()
+			// declares `array<string>` for its parameter list, and the driver
+			// casts back for the numeric comparison.
+			return $this->db->executeQuery(
+				'SELECT properties FROM `*PREFIX*openregister_schemas` WHERE id = ?',
+				[(string)$schemaId]
+			)->fetchOne();
+		} catch (Exception $e) {
+			$this->logger->warning(
+				'RenameDutchCatalogColumns: could not read a schema\'s declared properties; skipping its table.',
+				['schemaId' => $schemaId, 'exception' => $e->getMessage()]
+			);
+			return null;
+		}
+	}//end schemaPropertiesJson()
+
+	/**
+	 * The snake_cased column name of every declared property.
+	 *
+	 * @param array<array-key, mixed> $properties The decoded properties, keyed by property name.
+	 *
+	 * @return array<int, string>
+	 */
+	private function sanitizedColumns(array $properties): array {
 		$columns = [];
-		foreach (array_keys($decoded) as $property) {
+		foreach (array_keys($properties) as $property) {
 			$columns[] = $this->decisions->sanitizeColumnName(name: (string)$property);
 		}
 
 		return $columns;
-	}//end declaredColumnsOf()
+	}//end sanitizedColumns()
 
 	/**
 	 * Whether two Dutch columns in this table both target one English name.
@@ -533,19 +604,7 @@ class RenameDutchCatalogColumns implements IRepairStep {
 	 * @return array<string, int>
 	 */
 	private function inScopeShardTables(): array {
-		try {
-			$registerId = $this->db->executeQuery(
-				'SELECT id FROM `*PREFIX*openregister_registers` WHERE slug = ?',
-				[self::REGISTER_SLUG]
-			)->fetchOne();
-		} catch (Exception $e) {
-			$this->logger->warning(
-				'RenameDutchCatalogColumns: could not resolve the register; skipping.',
-				['exception' => $e->getMessage()]
-			);
-			return [];
-		}
-
+		$registerId = $this->registerId();
 		if ($registerId === false || $registerId === null) {
 			return [];
 		}
@@ -558,32 +617,87 @@ class RenameDutchCatalogColumns implements IRepairStep {
 		// fatal that `php -l` and phpcs both report as clean — only phpstan
 		// catches it. Pattern follows openregister's own RegisterService: anchor
 		// on the `openregister_table_` MARKER, never on a computed prefix.
+		$stmt = $this->shardTableStatement();
+		if ($stmt === null) {
+			return [];
+		}
+
+		$marker = 'openregister_table_' . ((int)$registerId) . '_';
+		return $this->migratableShards(stmt: $stmt, scope: ['marker' => $marker, 'excluded' => $excluded]);
+	}//end inScopeShardTables()
+
+	/**
+	 * The id of this register, or null after a warning when it cannot be read.
+	 *
+	 * @return mixed The id, false when there is no such register, or null on a failed read.
+	 */
+	private function registerId(): mixed {
 		try {
-			$stmt = $this->db->prepare(
-				'SELECT table_name FROM information_schema.tables WHERE table_name LIKE :pattern'
+			return $this->db->executeQuery(
+				'SELECT id FROM `*PREFIX*openregister_registers` WHERE slug = ?',
+				[self::REGISTER_SLUG]
+			)->fetchOne();
+		} catch (Exception $e) {
+			$this->logger->warning(
+				'RenameDutchCatalogColumns: could not resolve the register; skipping.',
+				['exception' => $e->getMessage()]
 			);
-			$stmt->bindValue('pattern', '%openregister\_table\_%');
-			$stmt->execute();
+			return null;
+		}
+	}//end registerId()
+
+	/**
+	 * The executed listing of every OpenRegister shard table, or null after a warning when it cannot run.
+	 *
+	 * @return IPreparedStatement|null
+	 */
+	private function shardTableStatement(): ?IPreparedStatement {
+		try {
+			return $this->listShardTables();
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'RenameDutchCatalogColumns: could not list tables; skipping.',
 				['exception' => $e->getMessage()]
 			);
-			return [];
+			return null;
 		}
+	}//end shardTableStatement()
 
-		$marker = 'openregister_table_' . ((int)$registerId) . '_';
+	/**
+	 * List every OpenRegister shard table from information_schema.
+	 *
+	 * @return IPreparedStatement The executed listing.
+	 */
+	private function listShardTables(): IPreparedStatement {
+		$stmt = $this->db->prepare(
+			'SELECT table_name FROM information_schema.tables WHERE table_name LIKE :pattern'
+		);
+		$stmt->bindValue('pattern', '%openregister\_table\_%');
+		$stmt->execute();
 
+		return $stmt;
+	}//end listShardTables()
+
+	/**
+	 * The listed tables that are migratable shards of this register, by name, with their schema id.
+	 *
+	 * @param IPreparedStatement $stmt The executed table listing.
+	 * @param array{marker: string, excluded: array<int, int>} $scope `openregister_table_<registerId>_` and the
+	 *                                                                exempt schema ids.
+	 *
+	 * @return array<string, int>
+	 */
+	private function migratableShards(IPreparedStatement $stmt, array $scope): array {
 		$tables = [];
 		while (($row = $stmt->fetch(\PDO::FETCH_ASSOC)) !== false) {
 			$name = (string)($row['table_name'] ?? '');
-			if ($this->isMigratableShard(table: $name, marker: $marker, excluded: $excluded) === true) {
-				$tables[$name] = (int)substr($name, (strpos($name, $marker) + strlen($marker)));
+			if ($this->isMigratableShard(table: $name, marker: $scope['marker'], excluded: $scope['excluded']) === true) {
+				$tables[$name] = (int)substr($name, (strpos($name, $scope['marker']) + strlen($scope['marker'])));
 			}
 		}
 
 		return $tables;
-	}//end inScopeShardTables()
+	}//end migratableShards()
 
 	/**
 	 * Whether a table is a shard of this register that is NOT wire-exempt.
