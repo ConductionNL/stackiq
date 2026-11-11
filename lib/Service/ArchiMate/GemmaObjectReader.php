@@ -79,22 +79,58 @@ class GemmaObjectReader {
 	 * @spec openspec/specs/archimate-import/spec.md
 	 */
 	public function gemmaType(array $object): ?string {
-		foreach (self::GEMMA_TYPE_PROPERTIES as $property) {
-			if (empty($object[$property]) === false) {
-				return $this->scalar(value: $object[$property]);
-			}
+		$property = (self::directTypeProperty(object: $object) ?? self::mappedTypeProperty(object: $object));
+		if ($property === null) {
+			return null;
 		}
 
-		foreach ($object['_propertyMapping'] ?? [] as $camelCase => $original) {
-			if (stripos((string) $original, 'gemma') !== false && stripos((string) $original, 'type') !== false
-				&& empty($object[$camelCase]) === false
-			) {
-				return $this->scalar(value: $object[$camelCase]);
+		return $this->scalar(value: $object[$property]);
+	}//end gemmaType()
+
+	/**
+	 * The first of the known GEMMA type properties the element fills.
+	 *
+	 * @param array<string, mixed> $object The element.
+	 *
+	 * @return string|null The property name, or null when none is filled.
+	 */
+	private static function directTypeProperty(array $object): ?string {
+		foreach (self::GEMMA_TYPE_PROPERTIES as $property) {
+			if (empty($object[$property]) === false) {
+				return $property;
 			}
 		}
 
 		return null;
-	}//end gemmaType()
+	}//end directTypeProperty()
+
+	/**
+	 * The first filled property whose original label names both GEMMA and type.
+	 *
+	 * @param array<string, mixed> $object The element.
+	 *
+	 * @return int|string|null The property key, or null when none matches.
+	 */
+	private static function mappedTypeProperty(array $object): int|string|null {
+		foreach ($object['_propertyMapping'] ?? [] as $camelCase => $original) {
+			if (self::isGemmaTypeLabel(label: (string) $original) === true && empty($object[$camelCase]) === false) {
+				return $camelCase;
+			}
+		}
+
+		return null;
+	}//end mappedTypeProperty()
+
+	/**
+	 * Whether a property label names both GEMMA and type, in any case.
+	 *
+	 * @param string $label The original property label.
+	 *
+	 * @return bool
+	 */
+	private static function isGemmaTypeLabel(string $label): bool {
+		return stripos($label, 'gemma') !== false && stripos($label, 'type') !== false;
+	}//end isGemmaTypeLabel()
 
 	/**
 	 * A flattened property value as a string, unwrapping an XML value array.
