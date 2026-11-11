@@ -1,0 +1,4391 @@
+[
+    {
+        "name": "Service desk import: applications (TOPdesk)",
+        "app": "stackiq",
+        "description": "Reads the application records from the service desk and creates or updates the supplier, the application and your organisation's use of it. Matches on the service desk record first, then on name and supplier. On an update it writes only the fields the service desk owns.",
+        "trigger": "schedule",
+        "cron": "0 2 * * *",
+        "executionMode": "async",
+        "limits": {
+            "maxTransitions": 5000
+        },
+        "nodes": [
+            {
+                "id": "start",
+                "type": "openregister.trigger-schedule",
+                "config": {
+                    "cron": "0 2 * * *",
+                    "runAs": "beheerder"
+                }
+            },
+            {
+                "id": "pages",
+                "type": "openconnector.source-paginate",
+                "config": {
+                    "synchronization": "itsm-topdesk-applications",
+                    "output": "page"
+                }
+            },
+            {
+                "id": "each",
+                "type": "openregister.explode",
+                "config": {
+                    "path": "page.results",
+                    "as": "source"
+                }
+            },
+            {
+                "id": "desk",
+                "type": "openregister.set-fields",
+                "config": {
+                    "set": {
+                        "source._desk.baseUrl": "https://topdesk.example.net:8443"
+                    }
+                }
+            },
+            {
+                "id": "map-all",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-topdesk-application-inbound",
+                    "input": "source",
+                    "output": "record"
+                }
+            },
+            {
+                "id": "map-owned",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-topdesk-application-inbound",
+                    "input": "source",
+                    "output": "owned",
+                    "ownership": "inbound",
+                    "exists": "record.recordId"
+                }
+            },
+            {
+                "id": "complete",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "and": [
+                            {
+                                "!!": {
+                                    "var": "json.record.recordId"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.name"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.supplierName"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "decide",
+                "type": "openconnector.contract",
+                "config": {
+                    "synchronization": "itsm-topdesk-applications",
+                    "idPosition": "owned.recordId",
+                    "hashPosition": "owned",
+                    "output": "contract"
+                }
+            },
+            {
+                "id": "changed",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "in": [
+                            {
+                                "var": "json.contract.outcome"
+                            },
+                            [
+                                "create",
+                                "update"
+                            ]
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "flags",
+                "type": "openregister.set-fields",
+                "config": {
+                    "compute": {
+                        "isCreate": {
+                            "!": {
+                                "var": "json.contract.targetId"
+                            }
+                        },
+                        "isUpdate": {
+                            "!!": {
+                                "var": "json.contract.targetId"
+                            }
+                        },
+                        "syncedAt": {
+                            "now": []
+                        }
+                    }
+                }
+            },
+            {
+                "id": "supplier",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "organization",
+                    "operation": "upsert",
+                    "match": [
+                        {
+                            "property": "name",
+                            "value": "{{ record.supplierName }}"
+                        },
+                        {
+                            "property": "type",
+                            "value": "Supplier"
+                        }
+                    ],
+                    "fields": {
+                        "name": "{{ record.supplierName }}",
+                        "type": "Supplier"
+                    },
+                    "output": "supplier"
+                }
+            },
+            {
+                "id": "module",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "module",
+                    "operation": "upsert",
+                    "match": [
+                        {
+                            "property": "name",
+                            "value": "{{ record.name }}"
+                        },
+                        {
+                            "property": "provider",
+                            "value": "{{ supplier.uuid }}"
+                        }
+                    ],
+                    "fields": {
+                        "name": "{{ record.name }}",
+                        "provider": "{{ supplier.uuid }}"
+                    },
+                    "output": "module"
+                }
+            },
+            {
+                "id": "usage-create",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "usage",
+                    "operation": "upsert",
+                    "skipWhen": "isUpdate",
+                    "match": [
+                        {
+                            "property": "module",
+                            "value": "{{ module.uuid }}"
+                        },
+                        {
+                            "property": "consumer",
+                            "value": "0f6c3a8e-1111-4c2b-9d6a-2a1b3c4d5e6f"
+                        }
+                    ],
+                    "fields": {
+                        "module": "{{ module.uuid }}",
+                        "consumer": "0f6c3a8e-1111-4c2b-9d6a-2a1b3c4d5e6f",
+                        "status": "{{ record.status }}",
+                        "installedVersion": "{{ record.installedVersion }}",
+                        "serviceDeskSystem": "topdesk",
+                        "serviceDeskRecordId": "{{ record.recordId }}",
+                        "serviceDeskUrl": "{{ record.recordUrl }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "usageWritten"
+                }
+            },
+            {
+                "id": "usage-update",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "usage",
+                    "operation": "update",
+                    "skipWhen": "isCreate",
+                    "match": [
+                        {
+                            "property": "@self.uuid",
+                            "value": "{{ contract.targetId }}"
+                        }
+                    ],
+                    "fields": {
+                        "module": "{{ module.uuid }}",
+                        "status": "{{ owned.status }}",
+                        "installedVersion": "{{ owned.installedVersion }}",
+                        "serviceDeskSystem": "topdesk",
+                        "serviceDeskRecordId": "{{ owned.recordId }}",
+                        "serviceDeskUrl": "{{ owned.recordUrl }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "usageWritten"
+                }
+            },
+            {
+                "id": "commit",
+                "type": "openconnector.contract-commit",
+                "config": {
+                    "synchronization": "itsm-topdesk-applications",
+                    "contractPosition": "contract",
+                    "targetIdPosition": "usageWritten.uuid",
+                    "targetHashPosition": "owned"
+                }
+            },
+            {
+                "id": "end",
+                "type": "openregister.end",
+                "config": []
+            }
+        ],
+        "edges": [
+            {
+                "id": "e-start-pages",
+                "from": "start",
+                "to": "pages"
+            },
+            {
+                "id": "e-pages-each",
+                "from": "pages",
+                "to": "each"
+            },
+            {
+                "id": "e-each-desk",
+                "from": "each",
+                "to": "desk"
+            },
+            {
+                "id": "e-desk-map-all",
+                "from": "desk",
+                "to": "map-all"
+            },
+            {
+                "id": "e-map-all-map-owned",
+                "from": "map-all",
+                "to": "map-owned"
+            },
+            {
+                "id": "e-map-owned-complete",
+                "from": "map-owned",
+                "to": "complete"
+            },
+            {
+                "id": "e-complete-decide",
+                "from": "complete",
+                "to": "decide"
+            },
+            {
+                "id": "e-decide-changed",
+                "from": "decide",
+                "to": "changed"
+            },
+            {
+                "id": "e-changed-flags",
+                "from": "changed",
+                "to": "flags"
+            },
+            {
+                "id": "e-flags-supplier",
+                "from": "flags",
+                "to": "supplier"
+            },
+            {
+                "id": "e-supplier-module",
+                "from": "supplier",
+                "to": "module"
+            },
+            {
+                "id": "e-module-usage-create",
+                "from": "module",
+                "to": "usage-create"
+            },
+            {
+                "id": "e-usage-create-usage-update",
+                "from": "usage-create",
+                "to": "usage-update"
+            },
+            {
+                "id": "e-usage-update-commit",
+                "from": "usage-update",
+                "to": "commit"
+            },
+            {
+                "id": "e-commit-end",
+                "from": "commit",
+                "to": "end"
+            }
+        ]
+    },
+    {
+        "name": "Service desk import: relations (TOPdesk)",
+        "app": "stackiq",
+        "description": "TOPdesk lists the links of one asset at a time, so this import asks for the links of every application in use that came from TOPdesk, and records each as a connection between the applications. A link whose other end is not imported yet waits for the next run.",
+        "trigger": "schedule",
+        "cron": "0 2 * * *",
+        "executionMode": "async",
+        "limits": {
+            "maxTransitions": 5000
+        },
+        "nodes": [
+            {
+                "id": "start",
+                "type": "openregister.trigger-schedule",
+                "config": {
+                    "cron": "0 2 * * *",
+                    "runAs": "beheerder"
+                }
+            },
+            {
+                "id": "usages",
+                "type": "openregister.object-read",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "usage",
+                    "filters": {
+                        "serviceDeskSystem": "topdesk"
+                    },
+                    "limit": 1000,
+                    "fanOut": true
+                }
+            },
+            {
+                "id": "links",
+                "type": "openconnector.source-call",
+                "config": {
+                    "source": "topdesk",
+                    "endpoint": "/assetmgmt/assetLinks",
+                    "method": "GET",
+                    "query": {
+                        "sourceId": "{{ serviceDeskRecordId }}"
+                    },
+                    "output": "links"
+                }
+            },
+            {
+                "id": "each",
+                "type": "openregister.explode",
+                "config": {
+                    "path": "links.body",
+                    "as": "link"
+                }
+            },
+            {
+                "id": "desk",
+                "type": "openregister.set-fields",
+                "config": {
+                    "set": {
+                        "source.applicationRecordId": "{{ serviceDeskRecordId }}",
+                        "source.link": "{{ link }}",
+                        "source._desk.baseUrl": "https://topdesk.example.net:8443"
+                    }
+                }
+            },
+            {
+                "id": "map-all",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-topdesk-relation-inbound",
+                    "input": "source",
+                    "output": "record"
+                }
+            },
+            {
+                "id": "map-owned",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-topdesk-relation-inbound",
+                    "input": "source",
+                    "output": "owned",
+                    "ownership": "inbound",
+                    "exists": "record.recordId"
+                }
+            },
+            {
+                "id": "complete",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "and": [
+                            {
+                                "!!": {
+                                    "var": "json.record.recordId"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.fromRecordId"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.toRecordId"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "decide",
+                "type": "openconnector.contract",
+                "config": {
+                    "synchronization": "itsm-topdesk-relations",
+                    "idPosition": "owned.recordId",
+                    "hashPosition": "owned",
+                    "output": "contract"
+                }
+            },
+            {
+                "id": "changed",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "in": [
+                            {
+                                "var": "json.contract.outcome"
+                            },
+                            [
+                                "create",
+                                "update"
+                            ]
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "from",
+                "type": "openregister.object-read",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "usage",
+                    "filters": {
+                        "serviceDeskRecordId": "{{ record.fromRecordId }}"
+                    },
+                    "limit": 1,
+                    "fanOut": false,
+                    "output": "fromUsage"
+                }
+            },
+            {
+                "id": "to",
+                "type": "openregister.object-read",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "usage",
+                    "filters": {
+                        "serviceDeskRecordId": "{{ record.toRecordId }}"
+                    },
+                    "limit": 1,
+                    "fanOut": false,
+                    "output": "toUsage"
+                }
+            },
+            {
+                "id": "both-ends",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "and": [
+                            {
+                                "!!": {
+                                    "var": "json.fromUsage.0.module"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.toUsage.0.module"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "flags",
+                "type": "openregister.set-fields",
+                "config": {
+                    "compute": {
+                        "syncedAt": {
+                            "now": []
+                        },
+                        "connectionName": {
+                            "or": [
+                                {
+                                    "var": "json.record.name"
+                                },
+                                {
+                                    "cat": [
+                                        {
+                                            "var": "json.record.fromRecordId"
+                                        },
+                                        " - ",
+                                        {
+                                            "var": "json.record.toRecordId"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        "connectionType": {
+                            "or": [
+                                {
+                                    "var": "json.record.type"
+                                },
+                                "n/a"
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": "connection",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "connection",
+                    "operation": "upsert",
+                    "match": [
+                        {
+                            "property": "serviceDeskRecordId",
+                            "value": "{{ owned.recordId }}"
+                        }
+                    ],
+                    "fields": {
+                        "name": "{{ connectionName }}",
+                        "type": "{{ connectionType }}",
+                        "dataExchangeDirection": "{{ owned.direction }}",
+                        "moduleA": "{{ fromUsage.0.module }}",
+                        "moduleB": "{{ toUsage.0.module }}",
+                        "serviceDeskSystem": "topdesk",
+                        "serviceDeskRecordId": "{{ owned.recordId }}",
+                        "serviceDeskUrl": "{{ owned.recordUrl }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "connectionWritten"
+                }
+            },
+            {
+                "id": "commit",
+                "type": "openconnector.contract-commit",
+                "config": {
+                    "synchronization": "itsm-topdesk-relations",
+                    "contractPosition": "contract",
+                    "targetIdPosition": "connectionWritten.uuid",
+                    "targetHashPosition": "owned"
+                }
+            },
+            {
+                "id": "end",
+                "type": "openregister.end",
+                "config": []
+            }
+        ],
+        "edges": [
+            {
+                "id": "e-start-usages",
+                "from": "start",
+                "to": "usages"
+            },
+            {
+                "id": "e-usages-links",
+                "from": "usages",
+                "to": "links"
+            },
+            {
+                "id": "e-links-each",
+                "from": "links",
+                "to": "each"
+            },
+            {
+                "id": "e-each-desk",
+                "from": "each",
+                "to": "desk"
+            },
+            {
+                "id": "e-desk-map-all",
+                "from": "desk",
+                "to": "map-all"
+            },
+            {
+                "id": "e-map-all-map-owned",
+                "from": "map-all",
+                "to": "map-owned"
+            },
+            {
+                "id": "e-map-owned-complete",
+                "from": "map-owned",
+                "to": "complete"
+            },
+            {
+                "id": "e-complete-decide",
+                "from": "complete",
+                "to": "decide"
+            },
+            {
+                "id": "e-decide-changed",
+                "from": "decide",
+                "to": "changed"
+            },
+            {
+                "id": "e-changed-from",
+                "from": "changed",
+                "to": "from"
+            },
+            {
+                "id": "e-from-to",
+                "from": "from",
+                "to": "to"
+            },
+            {
+                "id": "e-to-both-ends",
+                "from": "to",
+                "to": "both-ends"
+            },
+            {
+                "id": "e-both-ends-flags",
+                "from": "both-ends",
+                "to": "flags"
+            },
+            {
+                "id": "e-flags-connection",
+                "from": "flags",
+                "to": "connection"
+            },
+            {
+                "id": "e-connection-commit",
+                "from": "connection",
+                "to": "commit"
+            },
+            {
+                "id": "e-commit-end",
+                "from": "commit",
+                "to": "end"
+            }
+        ]
+    },
+    {
+        "name": "Service desk import: licences (TOPdesk)",
+        "app": "stackiq",
+        "description": "Reads licences or contracts from the service desk and records them on the application in use they belong to. A new one is created with every field; after that stackiq owns its licence and contract fields, and the import only refreshes the service desk reference.",
+        "trigger": "schedule",
+        "cron": "0 2 * * *",
+        "executionMode": "async",
+        "limits": {
+            "maxTransitions": 5000
+        },
+        "nodes": [
+            {
+                "id": "start",
+                "type": "openregister.trigger-schedule",
+                "config": {
+                    "cron": "0 2 * * *",
+                    "runAs": "beheerder"
+                }
+            },
+            {
+                "id": "pages",
+                "type": "openconnector.source-paginate",
+                "config": {
+                    "synchronization": "itsm-topdesk-licences",
+                    "output": "page"
+                }
+            },
+            {
+                "id": "each",
+                "type": "openregister.explode",
+                "config": {
+                    "path": "page.results",
+                    "as": "source"
+                }
+            },
+            {
+                "id": "desk",
+                "type": "openregister.set-fields",
+                "config": {
+                    "set": {
+                        "source._desk.baseUrl": "https://topdesk.example.net:8443"
+                    }
+                }
+            },
+            {
+                "id": "map-all",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-topdesk-licence-inbound",
+                    "input": "source",
+                    "output": "record"
+                }
+            },
+            {
+                "id": "map-owned",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-topdesk-licence-inbound",
+                    "input": "source",
+                    "output": "owned",
+                    "ownership": "inbound",
+                    "exists": "record.recordId"
+                }
+            },
+            {
+                "id": "complete",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "and": [
+                            {
+                                "!!": {
+                                    "var": "json.record.recordId"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.applicationRecordId"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.startDate"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "decide",
+                "type": "openconnector.contract",
+                "config": {
+                    "synchronization": "itsm-topdesk-licences",
+                    "idPosition": "owned.recordId",
+                    "hashPosition": "owned",
+                    "output": "contract"
+                }
+            },
+            {
+                "id": "changed",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "in": [
+                            {
+                                "var": "json.contract.outcome"
+                            },
+                            [
+                                "create",
+                                "update"
+                            ]
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "application",
+                "type": "openregister.object-read",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "usage",
+                    "filters": {
+                        "serviceDeskRecordId": "{{ record.applicationRecordId }}"
+                    },
+                    "limit": 1,
+                    "fanOut": false,
+                    "output": "usage"
+                }
+            },
+            {
+                "id": "has-application",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "!!": {
+                            "var": "json.usage.0.uuid"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "flags",
+                "type": "openregister.set-fields",
+                "config": {
+                    "compute": {
+                        "isCreate": {
+                            "!": {
+                                "var": "json.contract.targetId"
+                            }
+                        },
+                        "isUpdate": {
+                            "!!": {
+                                "var": "json.contract.targetId"
+                            }
+                        },
+                        "noSupplier": {
+                            "!": {
+                                "var": "json.record.supplierName"
+                            }
+                        },
+                        "syncedAt": {
+                            "now": []
+                        },
+                        "contractNumber": {
+                            "or": [
+                                {
+                                    "var": "json.record.contractNumber"
+                                },
+                                {
+                                    "var": "json.record.vendorReference"
+                                },
+                                {
+                                    "var": "json.record.recordId"
+                                }
+                            ]
+                        },
+                        "contractType": {
+                            "or": [
+                                {
+                                    "var": "json.record.contractType"
+                                },
+                                "Licence"
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": "supplier",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "organization",
+                    "operation": "upsert",
+                    "skipWhen": "noSupplier",
+                    "match": [
+                        {
+                            "property": "name",
+                            "value": "{{ record.supplierName }}"
+                        },
+                        {
+                            "property": "type",
+                            "value": "Supplier"
+                        }
+                    ],
+                    "fields": {
+                        "name": "{{ record.supplierName }}",
+                        "type": "Supplier"
+                    },
+                    "output": "supplier"
+                }
+            },
+            {
+                "id": "contract-create",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "catalogContract",
+                    "operation": "upsert",
+                    "skipWhen": "isUpdate",
+                    "match": [
+                        {
+                            "property": "serviceDeskRecordId",
+                            "value": "{{ record.recordId }}"
+                        }
+                    ],
+                    "fields": {
+                        "usage": "{{ usage.0.uuid }}",
+                        "supplier": "{{ supplier.uuid }}",
+                        "contractNumber": "{{ contractNumber }}",
+                        "vendorReference": "{{ record.vendorReference }}",
+                        "contractType": "{{ contractType }}",
+                        "status": "Active",
+                        "startDate": "{{ record.startDate }}",
+                        "endDate": "{{ record.endDate }}",
+                        "cost": "{{ record.cost }}",
+                        "costPeriod": "{{ record.costPeriod }}",
+                        "currency": "{{ record.currency }}",
+                        "licenceMetric": "{{ record.licenceMetric }}",
+                        "licencesBought": "{{ record.licencesBought }}",
+                        "serviceDeskSystem": "topdesk",
+                        "serviceDeskRecordId": "{{ record.recordId }}",
+                        "serviceDeskUrl": "{{ record.recordUrl }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "contractWritten"
+                }
+            },
+            {
+                "id": "contract-update",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "catalogContract",
+                    "operation": "update",
+                    "skipWhen": "isCreate",
+                    "match": [
+                        {
+                            "property": "@self.uuid",
+                            "value": "{{ contract.targetId }}"
+                        }
+                    ],
+                    "fields": {
+                        "usage": "{{ usage.0.uuid }}",
+                        "supplier": "{{ supplier.uuid }}",
+                        "serviceDeskSystem": "topdesk",
+                        "serviceDeskRecordId": "{{ owned.recordId }}",
+                        "serviceDeskUrl": "{{ owned.recordUrl }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "contractWritten"
+                }
+            },
+            {
+                "id": "commit",
+                "type": "openconnector.contract-commit",
+                "config": {
+                    "synchronization": "itsm-topdesk-licences",
+                    "contractPosition": "contract",
+                    "targetIdPosition": "contractWritten.uuid",
+                    "targetHashPosition": "owned"
+                }
+            },
+            {
+                "id": "end",
+                "type": "openregister.end",
+                "config": []
+            }
+        ],
+        "edges": [
+            {
+                "id": "e-start-pages",
+                "from": "start",
+                "to": "pages"
+            },
+            {
+                "id": "e-pages-each",
+                "from": "pages",
+                "to": "each"
+            },
+            {
+                "id": "e-each-desk",
+                "from": "each",
+                "to": "desk"
+            },
+            {
+                "id": "e-desk-map-all",
+                "from": "desk",
+                "to": "map-all"
+            },
+            {
+                "id": "e-map-all-map-owned",
+                "from": "map-all",
+                "to": "map-owned"
+            },
+            {
+                "id": "e-map-owned-complete",
+                "from": "map-owned",
+                "to": "complete"
+            },
+            {
+                "id": "e-complete-decide",
+                "from": "complete",
+                "to": "decide"
+            },
+            {
+                "id": "e-decide-changed",
+                "from": "decide",
+                "to": "changed"
+            },
+            {
+                "id": "e-changed-application",
+                "from": "changed",
+                "to": "application"
+            },
+            {
+                "id": "e-application-has-application",
+                "from": "application",
+                "to": "has-application"
+            },
+            {
+                "id": "e-has-application-flags",
+                "from": "has-application",
+                "to": "flags"
+            },
+            {
+                "id": "e-flags-supplier",
+                "from": "flags",
+                "to": "supplier"
+            },
+            {
+                "id": "e-supplier-contract-create",
+                "from": "supplier",
+                "to": "contract-create"
+            },
+            {
+                "id": "e-contract-create-contract-update",
+                "from": "contract-create",
+                "to": "contract-update"
+            },
+            {
+                "id": "e-contract-update-commit",
+                "from": "contract-update",
+                "to": "commit"
+            },
+            {
+                "id": "e-commit-end",
+                "from": "commit",
+                "to": "end"
+            }
+        ]
+    },
+    {
+        "name": "Service desk import: contracts (TOPdesk)",
+        "app": "stackiq",
+        "description": "Reads licences or contracts from the service desk and records them on the application in use they belong to. A new one is created with every field; after that stackiq owns its licence and contract fields, and the import only refreshes the service desk reference.",
+        "trigger": "schedule",
+        "cron": "0 2 * * *",
+        "executionMode": "async",
+        "limits": {
+            "maxTransitions": 5000
+        },
+        "nodes": [
+            {
+                "id": "start",
+                "type": "openregister.trigger-schedule",
+                "config": {
+                    "cron": "0 2 * * *",
+                    "runAs": "beheerder"
+                }
+            },
+            {
+                "id": "pages",
+                "type": "openconnector.source-paginate",
+                "config": {
+                    "synchronization": "itsm-topdesk-contracts",
+                    "output": "page"
+                }
+            },
+            {
+                "id": "each",
+                "type": "openregister.explode",
+                "config": {
+                    "path": "page.results",
+                    "as": "source"
+                }
+            },
+            {
+                "id": "desk",
+                "type": "openregister.set-fields",
+                "config": {
+                    "set": {
+                        "source._desk.baseUrl": "https://topdesk.example.net:8443"
+                    }
+                }
+            },
+            {
+                "id": "map-all",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-topdesk-contract-inbound",
+                    "input": "source",
+                    "output": "record"
+                }
+            },
+            {
+                "id": "map-owned",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-topdesk-contract-inbound",
+                    "input": "source",
+                    "output": "owned",
+                    "ownership": "inbound",
+                    "exists": "record.recordId"
+                }
+            },
+            {
+                "id": "complete",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "and": [
+                            {
+                                "!!": {
+                                    "var": "json.record.recordId"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.applicationRecordId"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.startDate"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "decide",
+                "type": "openconnector.contract",
+                "config": {
+                    "synchronization": "itsm-topdesk-contracts",
+                    "idPosition": "owned.recordId",
+                    "hashPosition": "owned",
+                    "output": "contract"
+                }
+            },
+            {
+                "id": "changed",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "in": [
+                            {
+                                "var": "json.contract.outcome"
+                            },
+                            [
+                                "create",
+                                "update"
+                            ]
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "application",
+                "type": "openregister.object-read",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "usage",
+                    "filters": {
+                        "serviceDeskRecordId": "{{ record.applicationRecordId }}"
+                    },
+                    "limit": 1,
+                    "fanOut": false,
+                    "output": "usage"
+                }
+            },
+            {
+                "id": "has-application",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "!!": {
+                            "var": "json.usage.0.uuid"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "flags",
+                "type": "openregister.set-fields",
+                "config": {
+                    "compute": {
+                        "isCreate": {
+                            "!": {
+                                "var": "json.contract.targetId"
+                            }
+                        },
+                        "isUpdate": {
+                            "!!": {
+                                "var": "json.contract.targetId"
+                            }
+                        },
+                        "noSupplier": {
+                            "!": {
+                                "var": "json.record.supplierName"
+                            }
+                        },
+                        "syncedAt": {
+                            "now": []
+                        },
+                        "contractNumber": {
+                            "or": [
+                                {
+                                    "var": "json.record.contractNumber"
+                                },
+                                {
+                                    "var": "json.record.vendorReference"
+                                },
+                                {
+                                    "var": "json.record.recordId"
+                                }
+                            ]
+                        },
+                        "contractType": {
+                            "or": [
+                                {
+                                    "var": "json.record.contractType"
+                                },
+                                "SLA"
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": "supplier",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "organization",
+                    "operation": "upsert",
+                    "skipWhen": "noSupplier",
+                    "match": [
+                        {
+                            "property": "name",
+                            "value": "{{ record.supplierName }}"
+                        },
+                        {
+                            "property": "type",
+                            "value": "Supplier"
+                        }
+                    ],
+                    "fields": {
+                        "name": "{{ record.supplierName }}",
+                        "type": "Supplier"
+                    },
+                    "output": "supplier"
+                }
+            },
+            {
+                "id": "contract-create",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "catalogContract",
+                    "operation": "upsert",
+                    "skipWhen": "isUpdate",
+                    "match": [
+                        {
+                            "property": "serviceDeskRecordId",
+                            "value": "{{ record.recordId }}"
+                        }
+                    ],
+                    "fields": {
+                        "usage": "{{ usage.0.uuid }}",
+                        "supplier": "{{ supplier.uuid }}",
+                        "contractNumber": "{{ contractNumber }}",
+                        "vendorReference": "{{ record.vendorReference }}",
+                        "contractType": "{{ contractType }}",
+                        "status": "Active",
+                        "startDate": "{{ record.startDate }}",
+                        "endDate": "{{ record.endDate }}",
+                        "cost": "{{ record.cost }}",
+                        "costPeriod": "{{ record.costPeriod }}",
+                        "currency": "{{ record.currency }}",
+                        "licenceMetric": "{{ record.licenceMetric }}",
+                        "licencesBought": "{{ record.licencesBought }}",
+                        "serviceDeskSystem": "topdesk",
+                        "serviceDeskRecordId": "{{ record.recordId }}",
+                        "serviceDeskUrl": "{{ record.recordUrl }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "contractWritten"
+                }
+            },
+            {
+                "id": "contract-update",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "catalogContract",
+                    "operation": "update",
+                    "skipWhen": "isCreate",
+                    "match": [
+                        {
+                            "property": "@self.uuid",
+                            "value": "{{ contract.targetId }}"
+                        }
+                    ],
+                    "fields": {
+                        "usage": "{{ usage.0.uuid }}",
+                        "supplier": "{{ supplier.uuid }}",
+                        "serviceDeskSystem": "topdesk",
+                        "serviceDeskRecordId": "{{ owned.recordId }}",
+                        "serviceDeskUrl": "{{ owned.recordUrl }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "contractWritten"
+                }
+            },
+            {
+                "id": "commit",
+                "type": "openconnector.contract-commit",
+                "config": {
+                    "synchronization": "itsm-topdesk-contracts",
+                    "contractPosition": "contract",
+                    "targetIdPosition": "contractWritten.uuid",
+                    "targetHashPosition": "owned"
+                }
+            },
+            {
+                "id": "end",
+                "type": "openregister.end",
+                "config": []
+            }
+        ],
+        "edges": [
+            {
+                "id": "e-start-pages",
+                "from": "start",
+                "to": "pages"
+            },
+            {
+                "id": "e-pages-each",
+                "from": "pages",
+                "to": "each"
+            },
+            {
+                "id": "e-each-desk",
+                "from": "each",
+                "to": "desk"
+            },
+            {
+                "id": "e-desk-map-all",
+                "from": "desk",
+                "to": "map-all"
+            },
+            {
+                "id": "e-map-all-map-owned",
+                "from": "map-all",
+                "to": "map-owned"
+            },
+            {
+                "id": "e-map-owned-complete",
+                "from": "map-owned",
+                "to": "complete"
+            },
+            {
+                "id": "e-complete-decide",
+                "from": "complete",
+                "to": "decide"
+            },
+            {
+                "id": "e-decide-changed",
+                "from": "decide",
+                "to": "changed"
+            },
+            {
+                "id": "e-changed-application",
+                "from": "changed",
+                "to": "application"
+            },
+            {
+                "id": "e-application-has-application",
+                "from": "application",
+                "to": "has-application"
+            },
+            {
+                "id": "e-has-application-flags",
+                "from": "has-application",
+                "to": "flags"
+            },
+            {
+                "id": "e-flags-supplier",
+                "from": "flags",
+                "to": "supplier"
+            },
+            {
+                "id": "e-supplier-contract-create",
+                "from": "supplier",
+                "to": "contract-create"
+            },
+            {
+                "id": "e-contract-create-contract-update",
+                "from": "contract-create",
+                "to": "contract-update"
+            },
+            {
+                "id": "e-contract-update-commit",
+                "from": "contract-update",
+                "to": "commit"
+            },
+            {
+                "id": "e-commit-end",
+                "from": "commit",
+                "to": "end"
+            }
+        ]
+    },
+    {
+        "name": "Service desk export: applications in use (TOPdesk)",
+        "app": "stackiq",
+        "description": "Sends an application in use to the service desk when stackiq-owned fields change: licences, contract, BBN level, TIME class and publication. A record the service desk does not know yet is created there with every field, and its record id comes back. A change the import wrote is not sent back.",
+        "trigger": "object.updated",
+        "triggerRegister": "stackiq",
+        "triggerSchema": "usage",
+        "executionMode": "async",
+        "limits": {
+            "maxTransitions": 5000
+        },
+        "nodes": [
+            {
+                "id": "on-created",
+                "type": "openregister.trigger-object",
+                "config": {
+                    "event": "object.created",
+                    "register": "stackiq",
+                    "schema": "usage"
+                }
+            },
+            {
+                "id": "on-updated",
+                "type": "openregister.trigger-object",
+                "config": {
+                    "event": "object.updated",
+                    "register": "stackiq",
+                    "schema": "usage"
+                }
+            },
+            {
+                "id": "ours",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "and": [
+                            {
+                                "==": [
+                                    {
+                                        "var": "json.consumer"
+                                    },
+                                    "0f6c3a8e-1111-4c2b-9d6a-2a1b3c4d5e6f"
+                                ]
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.module"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "read-module",
+                "type": "openregister.object-read",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "module",
+                    "filters": {
+                        "@self": {
+                            "uuid": "{{ module }}"
+                        }
+                    },
+                    "limit": 1,
+                    "fanOut": false,
+                    "output": "moduleRead"
+                }
+            },
+            {
+                "id": "ids",
+                "type": "openregister.set-fields",
+                "config": {
+                    "compute": {
+                        "providerId": {
+                            "or": [
+                                {
+                                    "var": "json.moduleRead.0.provider"
+                                },
+                                "00000000-0000-0000-0000-000000000000"
+                            ]
+                        },
+                        "usageId": {
+                            "var": "json.@self.id"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "read-supplier",
+                "type": "openregister.object-read",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "organization",
+                    "filters": {
+                        "@self": {
+                            "uuid": "{{ providerId }}"
+                        }
+                    },
+                    "limit": 1,
+                    "fanOut": false,
+                    "output": "supplierRead"
+                }
+            },
+            {
+                "id": "read-contract",
+                "type": "openregister.object-read",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "catalogContract",
+                    "filters": {
+                        "usage": "{{ usageId }}"
+                    },
+                    "limit": 1,
+                    "fanOut": false,
+                    "output": "contractRead"
+                }
+            },
+            {
+                "id": "build",
+                "type": "openregister.set-fields",
+                "config": {
+                    "set": {
+                        "usage.uuid": "{{ @self.id }}",
+                        "usage.catalogueUrl": "https://cloud.example.nl/index.php/apps/stackiq/gebruik/{{ @self.id }}",
+                        "usage.recordId": "{{ serviceDeskRecordId }}",
+                        "usage.name": "{{ moduleRead.0.name }}",
+                        "usage.supplierName": "{{ supplierRead.0.name }}",
+                        "usage.installedVersion": "{{ installedVersion }}",
+                        "usage.status": "{{ status }}",
+                        "usage.bbnLevel": "{{ moduleRead.0.bbnLevel }}",
+                        "usage.timeClassification": "{{ timeClassification }}",
+                        "usage.publicationDate": "{{ publicationDate }}",
+                        "usage.licencesBought": "{{ contractRead.0.licencesBought }}",
+                        "usage.licencesInUse": "{{ contractRead.0.licencesInUse }}",
+                        "usage.licenceMetric": "{{ contractRead.0.licenceMetric }}",
+                        "usage.contractNumber": "{{ contractRead.0.contractNumber }}",
+                        "usage.contractEndDate": "{{ contractRead.0.endDate }}",
+                        "usage._desk.baseUrl": "https://topdesk.example.net:8443",
+                        "usage._desk.templateId": "tpl-7"
+                    }
+                }
+            },
+            {
+                "id": "owned",
+                "type": "openregister.set-fields",
+                "config": {
+                    "set": {
+                        "stackiqOwned.bbnLevel": "{{ usage.bbnLevel }}",
+                        "stackiqOwned.timeClassification": "{{ usage.timeClassification }}",
+                        "stackiqOwned.publicationDate": "{{ usage.publicationDate }}",
+                        "stackiqOwned.licencesBought": "{{ usage.licencesBought }}",
+                        "stackiqOwned.licencesInUse": "{{ usage.licencesInUse }}",
+                        "stackiqOwned.licenceMetric": "{{ usage.licenceMetric }}",
+                        "stackiqOwned.contractNumber": "{{ usage.contractNumber }}",
+                        "stackiqOwned.contractEndDate": "{{ usage.contractEndDate }}"
+                    }
+                }
+            },
+            {
+                "id": "worth-sending",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "or": [
+                            {
+                                "!": {
+                                    "var": "json.usage.recordId"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.stackiqOwned.bbnLevel"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.stackiqOwned.timeClassification"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.stackiqOwned.publicationDate"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.stackiqOwned.licencesBought"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.stackiqOwned.licencesInUse"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.stackiqOwned.licenceMetric"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.stackiqOwned.contractNumber"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.stackiqOwned.contractEndDate"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "map",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-topdesk-application-outbound",
+                    "input": "usage",
+                    "output": "send",
+                    "ownership": "outbound",
+                    "exists": "usage.recordId"
+                }
+            },
+            {
+                "id": "decide",
+                "type": "openconnector.contract",
+                "config": {
+                    "synchronization": "itsm-topdesk-outbound",
+                    "idPosition": "usage.uuid",
+                    "hashPosition": "stackiqOwned",
+                    "output": "contract"
+                }
+            },
+            {
+                "id": "changed",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "in": [
+                            {
+                                "var": "json.contract.outcome"
+                            },
+                            [
+                                "create",
+                                "update"
+                            ]
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "known",
+                "type": "openregister.set-fields",
+                "config": {
+                    "compute": {
+                        "syncedAt": {
+                            "now": []
+                        }
+                    }
+                },
+                "exits": [
+                    {
+                        "id": "create",
+                        "condition": {
+                            "!": {
+                                "var": "json.usage.recordId"
+                            }
+                        }
+                    },
+                    {
+                        "id": "update"
+                    }
+                ]
+            },
+            {
+                "id": "call-create",
+                "type": "openconnector.source-call",
+                "config": {
+                    "source": "topdesk",
+                    "endpoint": "/assetmgmt/assets",
+                    "method": "POST",
+                    "bodyFrom": "send",
+                    "output": "response",
+                    "query": []
+                }
+            },
+            {
+                "id": "link-back",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "usage",
+                    "operation": "update",
+                    "match": [
+                        {
+                            "property": "@self.uuid",
+                            "value": "{{ usage.uuid }}"
+                        }
+                    ],
+                    "fields": {
+                        "serviceDeskSystem": "topdesk",
+                        "serviceDeskRecordId": "{{ response.body.data.id }}",
+                        "serviceDeskUrl": "https://topdesk.example.net:8443/tas/secure/assetmgmt/card.html?unid={{ response.body.data.id }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "linked"
+                }
+            },
+            {
+                "id": "commit-create",
+                "type": "openconnector.contract-commit",
+                "config": {
+                    "synchronization": "itsm-topdesk-outbound",
+                    "contractPosition": "contract",
+                    "targetIdPosition": "response.body.data.id",
+                    "targetHashPosition": "send"
+                }
+            },
+            {
+                "id": "end-create",
+                "type": "openregister.end",
+                "config": []
+            },
+            {
+                "id": "call-update",
+                "type": "openconnector.source-call",
+                "config": {
+                    "source": "topdesk",
+                    "endpoint": "/assetmgmt/assets/{{ usage.recordId }}",
+                    "method": "POST",
+                    "bodyFrom": "send",
+                    "output": "response",
+                    "query": []
+                }
+            },
+            {
+                "id": "commit-update",
+                "type": "openconnector.contract-commit",
+                "config": {
+                    "synchronization": "itsm-topdesk-outbound",
+                    "contractPosition": "contract",
+                    "targetIdPosition": "usage.recordId",
+                    "targetHashPosition": "send"
+                }
+            },
+            {
+                "id": "end-update",
+                "type": "openregister.end",
+                "config": []
+            }
+        ],
+        "edges": [
+            {
+                "id": "e-on-created-ours",
+                "from": "on-created",
+                "to": "ours"
+            },
+            {
+                "id": "e-on-updated-ours",
+                "from": "on-updated",
+                "to": "ours"
+            },
+            {
+                "id": "e-ours-read-module",
+                "from": "ours",
+                "to": "read-module"
+            },
+            {
+                "id": "e-read-module-ids",
+                "from": "read-module",
+                "to": "ids"
+            },
+            {
+                "id": "e-ids-read-supplier",
+                "from": "ids",
+                "to": "read-supplier"
+            },
+            {
+                "id": "e-read-supplier-read-contract",
+                "from": "read-supplier",
+                "to": "read-contract"
+            },
+            {
+                "id": "e-read-contract-build",
+                "from": "read-contract",
+                "to": "build"
+            },
+            {
+                "id": "e-build-owned",
+                "from": "build",
+                "to": "owned"
+            },
+            {
+                "id": "e-owned-worth-sending",
+                "from": "owned",
+                "to": "worth-sending"
+            },
+            {
+                "id": "e-worth-sending-map",
+                "from": "worth-sending",
+                "to": "map"
+            },
+            {
+                "id": "e-map-decide",
+                "from": "map",
+                "to": "decide"
+            },
+            {
+                "id": "e-decide-changed",
+                "from": "decide",
+                "to": "changed"
+            },
+            {
+                "id": "e-changed-known",
+                "from": "changed",
+                "to": "known"
+            },
+            {
+                "id": "e-known-create",
+                "from": "known",
+                "to": "call-create",
+                "fromExit": "create"
+            },
+            {
+                "id": "e-known-update",
+                "from": "known",
+                "to": "call-update",
+                "fromExit": "update"
+            },
+            {
+                "id": "e-call-create-link-back",
+                "from": "call-create",
+                "to": "link-back"
+            },
+            {
+                "id": "e-link-back-commit-create",
+                "from": "link-back",
+                "to": "commit-create"
+            },
+            {
+                "id": "e-commit-create-end-create",
+                "from": "commit-create",
+                "to": "end-create"
+            },
+            {
+                "id": "e-call-update-commit-update",
+                "from": "call-update",
+                "to": "commit-update"
+            },
+            {
+                "id": "e-commit-update-end-update",
+                "from": "commit-update",
+                "to": "end-update"
+            }
+        ]
+    },
+    {
+        "name": "File import: applications",
+        "app": "stackiq",
+        "description": "Imports applications from an uploaded CSV or XLSX file through the same mapping and matching as the service desk import. Importing the same file again updates rather than duplicates.",
+        "executionMode": "async",
+        "limits": {
+            "maxTransitions": 5000
+        },
+        "nodes": [
+            {
+                "id": "start",
+                "type": "openregister.trigger-manual",
+                "config": []
+            },
+            {
+                "id": "each",
+                "type": "openregister.explode",
+                "config": {
+                    "path": "rows",
+                    "as": "source"
+                }
+            },
+            {
+                "id": "desk",
+                "type": "openregister.set-fields",
+                "config": {
+                    "set": {
+                        "source._desk.baseUrl": "https://topdesk.example.net:8443"
+                    }
+                }
+            },
+            {
+                "id": "map-all",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-file-application-inbound",
+                    "input": "source",
+                    "output": "record"
+                }
+            },
+            {
+                "id": "map-owned",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-file-application-inbound",
+                    "input": "source",
+                    "output": "owned",
+                    "ownership": "inbound",
+                    "exists": "record.recordId"
+                }
+            },
+            {
+                "id": "complete",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "and": [
+                            {
+                                "!!": {
+                                    "var": "json.record.recordId"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.name"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.supplierName"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "decide",
+                "type": "openconnector.contract",
+                "config": {
+                    "synchronization": "itsm-file-applications",
+                    "idPosition": "owned.recordId",
+                    "hashPosition": "owned",
+                    "output": "contract"
+                }
+            },
+            {
+                "id": "changed",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "in": [
+                            {
+                                "var": "json.contract.outcome"
+                            },
+                            [
+                                "create",
+                                "update"
+                            ]
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "flags",
+                "type": "openregister.set-fields",
+                "config": {
+                    "compute": {
+                        "isCreate": {
+                            "!": {
+                                "var": "json.contract.targetId"
+                            }
+                        },
+                        "isUpdate": {
+                            "!!": {
+                                "var": "json.contract.targetId"
+                            }
+                        },
+                        "syncedAt": {
+                            "now": []
+                        }
+                    }
+                }
+            },
+            {
+                "id": "supplier",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "organization",
+                    "operation": "upsert",
+                    "match": [
+                        {
+                            "property": "name",
+                            "value": "{{ record.supplierName }}"
+                        },
+                        {
+                            "property": "type",
+                            "value": "Supplier"
+                        }
+                    ],
+                    "fields": {
+                        "name": "{{ record.supplierName }}",
+                        "type": "Supplier"
+                    },
+                    "output": "supplier"
+                }
+            },
+            {
+                "id": "module",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "module",
+                    "operation": "upsert",
+                    "match": [
+                        {
+                            "property": "name",
+                            "value": "{{ record.name }}"
+                        },
+                        {
+                            "property": "provider",
+                            "value": "{{ supplier.uuid }}"
+                        }
+                    ],
+                    "fields": {
+                        "name": "{{ record.name }}",
+                        "provider": "{{ supplier.uuid }}"
+                    },
+                    "output": "module"
+                }
+            },
+            {
+                "id": "usage-create",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "usage",
+                    "operation": "upsert",
+                    "skipWhen": "isUpdate",
+                    "match": [
+                        {
+                            "property": "module",
+                            "value": "{{ module.uuid }}"
+                        },
+                        {
+                            "property": "consumer",
+                            "value": "0f6c3a8e-1111-4c2b-9d6a-2a1b3c4d5e6f"
+                        }
+                    ],
+                    "fields": {
+                        "module": "{{ module.uuid }}",
+                        "consumer": "0f6c3a8e-1111-4c2b-9d6a-2a1b3c4d5e6f",
+                        "status": "{{ record.status }}",
+                        "installedVersion": "{{ record.installedVersion }}",
+                        "serviceDeskSystem": "file",
+                        "serviceDeskRecordId": "{{ record.recordId }}",
+                        "serviceDeskUrl": "{{ record.recordUrl }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "usageWritten"
+                }
+            },
+            {
+                "id": "usage-update",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "usage",
+                    "operation": "update",
+                    "skipWhen": "isCreate",
+                    "match": [
+                        {
+                            "property": "@self.uuid",
+                            "value": "{{ contract.targetId }}"
+                        }
+                    ],
+                    "fields": {
+                        "module": "{{ module.uuid }}",
+                        "status": "{{ owned.status }}",
+                        "installedVersion": "{{ owned.installedVersion }}",
+                        "serviceDeskSystem": "file",
+                        "serviceDeskRecordId": "{{ owned.recordId }}",
+                        "serviceDeskUrl": "{{ owned.recordUrl }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "usageWritten"
+                }
+            },
+            {
+                "id": "commit",
+                "type": "openconnector.contract-commit",
+                "config": {
+                    "synchronization": "itsm-file-applications",
+                    "contractPosition": "contract",
+                    "targetIdPosition": "usageWritten.uuid",
+                    "targetHashPosition": "owned"
+                }
+            },
+            {
+                "id": "end",
+                "type": "openregister.end",
+                "config": []
+            }
+        ],
+        "edges": [
+            {
+                "id": "e-start-each",
+                "from": "start",
+                "to": "each"
+            },
+            {
+                "id": "e-each-desk",
+                "from": "each",
+                "to": "desk"
+            },
+            {
+                "id": "e-desk-map-all",
+                "from": "desk",
+                "to": "map-all"
+            },
+            {
+                "id": "e-map-all-map-owned",
+                "from": "map-all",
+                "to": "map-owned"
+            },
+            {
+                "id": "e-map-owned-complete",
+                "from": "map-owned",
+                "to": "complete"
+            },
+            {
+                "id": "e-complete-decide",
+                "from": "complete",
+                "to": "decide"
+            },
+            {
+                "id": "e-decide-changed",
+                "from": "decide",
+                "to": "changed"
+            },
+            {
+                "id": "e-changed-flags",
+                "from": "changed",
+                "to": "flags"
+            },
+            {
+                "id": "e-flags-supplier",
+                "from": "flags",
+                "to": "supplier"
+            },
+            {
+                "id": "e-supplier-module",
+                "from": "supplier",
+                "to": "module"
+            },
+            {
+                "id": "e-module-usage-create",
+                "from": "module",
+                "to": "usage-create"
+            },
+            {
+                "id": "e-usage-create-usage-update",
+                "from": "usage-create",
+                "to": "usage-update"
+            },
+            {
+                "id": "e-usage-update-commit",
+                "from": "usage-update",
+                "to": "commit"
+            },
+            {
+                "id": "e-commit-end",
+                "from": "commit",
+                "to": "end"
+            }
+        ]
+    },
+    {
+        "name": "Service desk import: applications (ServiceNow)",
+        "app": "stackiq",
+        "description": "Reads the application records from the service desk and creates or updates the supplier, the application and your organisation's use of it. Matches on the service desk record first, then on name and supplier. On an update it writes only the fields the service desk owns.",
+        "trigger": "schedule",
+        "cron": "0 2 * * *",
+        "executionMode": "async",
+        "limits": {
+            "maxTransitions": 5000
+        },
+        "nodes": [
+            {
+                "id": "start",
+                "type": "openregister.trigger-schedule",
+                "config": {
+                    "cron": "0 2 * * *",
+                    "runAs": "admin"
+                }
+            },
+            {
+                "id": "pages",
+                "type": "openconnector.source-paginate",
+                "config": {
+                    "synchronization": "itsm-servicenow-applications",
+                    "output": "page"
+                }
+            },
+            {
+                "id": "each",
+                "type": "openregister.explode",
+                "config": {
+                    "path": "page.results",
+                    "as": "source"
+                }
+            },
+            {
+                "id": "desk",
+                "type": "openregister.set-fields",
+                "config": {
+                    "set": {
+                        "source._desk.baseUrl": "https://servicenow.example.net:8443"
+                    }
+                }
+            },
+            {
+                "id": "map-all",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-servicenow-application-inbound",
+                    "input": "source",
+                    "output": "record"
+                }
+            },
+            {
+                "id": "map-owned",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-servicenow-application-inbound",
+                    "input": "source",
+                    "output": "owned",
+                    "ownership": "inbound",
+                    "exists": "record.recordId"
+                }
+            },
+            {
+                "id": "complete",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "and": [
+                            {
+                                "!!": {
+                                    "var": "json.record.recordId"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.name"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.supplierName"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "decide",
+                "type": "openconnector.contract",
+                "config": {
+                    "synchronization": "itsm-servicenow-applications",
+                    "idPosition": "owned.recordId",
+                    "hashPosition": "owned",
+                    "output": "contract"
+                }
+            },
+            {
+                "id": "changed",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "in": [
+                            {
+                                "var": "json.contract.outcome"
+                            },
+                            [
+                                "create",
+                                "update"
+                            ]
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "flags",
+                "type": "openregister.set-fields",
+                "config": {
+                    "compute": {
+                        "isCreate": {
+                            "!": {
+                                "var": "json.contract.targetId"
+                            }
+                        },
+                        "isUpdate": {
+                            "!!": {
+                                "var": "json.contract.targetId"
+                            }
+                        },
+                        "syncedAt": {
+                            "now": []
+                        }
+                    }
+                }
+            },
+            {
+                "id": "supplier",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "organization",
+                    "operation": "upsert",
+                    "match": [
+                        {
+                            "property": "name",
+                            "value": "{{ record.supplierName }}"
+                        },
+                        {
+                            "property": "type",
+                            "value": "Supplier"
+                        }
+                    ],
+                    "fields": {
+                        "name": "{{ record.supplierName }}",
+                        "type": "Supplier"
+                    },
+                    "output": "supplier"
+                }
+            },
+            {
+                "id": "module",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "module",
+                    "operation": "upsert",
+                    "match": [
+                        {
+                            "property": "name",
+                            "value": "{{ record.name }}"
+                        },
+                        {
+                            "property": "provider",
+                            "value": "{{ supplier.uuid }}"
+                        }
+                    ],
+                    "fields": {
+                        "name": "{{ record.name }}",
+                        "provider": "{{ supplier.uuid }}"
+                    },
+                    "output": "module"
+                }
+            },
+            {
+                "id": "usage-create",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "usage",
+                    "operation": "upsert",
+                    "skipWhen": "isUpdate",
+                    "match": [
+                        {
+                            "property": "module",
+                            "value": "{{ module.uuid }}"
+                        },
+                        {
+                            "property": "consumer",
+                            "value": "0f6c3a8e-1111-4c2b-9d6a-2a1b3c4d5e6f"
+                        }
+                    ],
+                    "fields": {
+                        "module": "{{ module.uuid }}",
+                        "consumer": "0f6c3a8e-1111-4c2b-9d6a-2a1b3c4d5e6f",
+                        "status": "{{ record.status }}",
+                        "installedVersion": "{{ record.installedVersion }}",
+                        "serviceDeskSystem": "servicenow",
+                        "serviceDeskRecordId": "{{ record.recordId }}",
+                        "serviceDeskUrl": "{{ record.recordUrl }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "usageWritten"
+                }
+            },
+            {
+                "id": "usage-update",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "usage",
+                    "operation": "update",
+                    "skipWhen": "isCreate",
+                    "match": [
+                        {
+                            "property": "@self.uuid",
+                            "value": "{{ contract.targetId }}"
+                        }
+                    ],
+                    "fields": {
+                        "module": "{{ module.uuid }}",
+                        "status": "{{ owned.status }}",
+                        "installedVersion": "{{ owned.installedVersion }}",
+                        "serviceDeskSystem": "servicenow",
+                        "serviceDeskRecordId": "{{ owned.recordId }}",
+                        "serviceDeskUrl": "{{ owned.recordUrl }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "usageWritten"
+                }
+            },
+            {
+                "id": "commit",
+                "type": "openconnector.contract-commit",
+                "config": {
+                    "synchronization": "itsm-servicenow-applications",
+                    "contractPosition": "contract",
+                    "targetIdPosition": "usageWritten.uuid",
+                    "targetHashPosition": "owned"
+                }
+            },
+            {
+                "id": "end",
+                "type": "openregister.end",
+                "config": []
+            }
+        ],
+        "edges": [
+            {
+                "id": "e-start-pages",
+                "from": "start",
+                "to": "pages"
+            },
+            {
+                "id": "e-pages-each",
+                "from": "pages",
+                "to": "each"
+            },
+            {
+                "id": "e-each-desk",
+                "from": "each",
+                "to": "desk"
+            },
+            {
+                "id": "e-desk-map-all",
+                "from": "desk",
+                "to": "map-all"
+            },
+            {
+                "id": "e-map-all-map-owned",
+                "from": "map-all",
+                "to": "map-owned"
+            },
+            {
+                "id": "e-map-owned-complete",
+                "from": "map-owned",
+                "to": "complete"
+            },
+            {
+                "id": "e-complete-decide",
+                "from": "complete",
+                "to": "decide"
+            },
+            {
+                "id": "e-decide-changed",
+                "from": "decide",
+                "to": "changed"
+            },
+            {
+                "id": "e-changed-flags",
+                "from": "changed",
+                "to": "flags"
+            },
+            {
+                "id": "e-flags-supplier",
+                "from": "flags",
+                "to": "supplier"
+            },
+            {
+                "id": "e-supplier-module",
+                "from": "supplier",
+                "to": "module"
+            },
+            {
+                "id": "e-module-usage-create",
+                "from": "module",
+                "to": "usage-create"
+            },
+            {
+                "id": "e-usage-create-usage-update",
+                "from": "usage-create",
+                "to": "usage-update"
+            },
+            {
+                "id": "e-usage-update-commit",
+                "from": "usage-update",
+                "to": "commit"
+            },
+            {
+                "id": "e-commit-end",
+                "from": "commit",
+                "to": "end"
+            }
+        ]
+    },
+    {
+        "name": "Service desk import: relations (ServiceNow)",
+        "app": "stackiq",
+        "description": "Reads the relations between application records from the service desk and records them as connections between the applications. A relation whose ends are not imported yet waits for the next run.",
+        "trigger": "schedule",
+        "cron": "0 2 * * *",
+        "executionMode": "async",
+        "limits": {
+            "maxTransitions": 5000
+        },
+        "nodes": [
+            {
+                "id": "start",
+                "type": "openregister.trigger-schedule",
+                "config": {
+                    "cron": "0 2 * * *",
+                    "runAs": "admin"
+                }
+            },
+            {
+                "id": "pages",
+                "type": "openconnector.source-paginate",
+                "config": {
+                    "synchronization": "itsm-servicenow-relations",
+                    "output": "page"
+                }
+            },
+            {
+                "id": "each",
+                "type": "openregister.explode",
+                "config": {
+                    "path": "page.results",
+                    "as": "source"
+                }
+            },
+            {
+                "id": "desk",
+                "type": "openregister.set-fields",
+                "config": {
+                    "set": {
+                        "source._desk.baseUrl": "https://servicenow.example.net:8443"
+                    }
+                }
+            },
+            {
+                "id": "map-all",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-servicenow-relation-inbound",
+                    "input": "source",
+                    "output": "record"
+                }
+            },
+            {
+                "id": "map-owned",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-servicenow-relation-inbound",
+                    "input": "source",
+                    "output": "owned",
+                    "ownership": "inbound",
+                    "exists": "record.recordId"
+                }
+            },
+            {
+                "id": "complete",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "and": [
+                            {
+                                "!!": {
+                                    "var": "json.record.recordId"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.fromRecordId"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.toRecordId"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "decide",
+                "type": "openconnector.contract",
+                "config": {
+                    "synchronization": "itsm-servicenow-relations",
+                    "idPosition": "owned.recordId",
+                    "hashPosition": "owned",
+                    "output": "contract"
+                }
+            },
+            {
+                "id": "changed",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "in": [
+                            {
+                                "var": "json.contract.outcome"
+                            },
+                            [
+                                "create",
+                                "update"
+                            ]
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "from",
+                "type": "openregister.object-read",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "usage",
+                    "filters": {
+                        "serviceDeskRecordId": "{{ record.fromRecordId }}"
+                    },
+                    "limit": 1,
+                    "fanOut": false,
+                    "output": "fromUsage"
+                }
+            },
+            {
+                "id": "to",
+                "type": "openregister.object-read",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "usage",
+                    "filters": {
+                        "serviceDeskRecordId": "{{ record.toRecordId }}"
+                    },
+                    "limit": 1,
+                    "fanOut": false,
+                    "output": "toUsage"
+                }
+            },
+            {
+                "id": "both-ends",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "and": [
+                            {
+                                "!!": {
+                                    "var": "json.fromUsage.0.module"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.toUsage.0.module"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "flags",
+                "type": "openregister.set-fields",
+                "config": {
+                    "compute": {
+                        "syncedAt": {
+                            "now": []
+                        },
+                        "connectionName": {
+                            "or": [
+                                {
+                                    "var": "json.record.name"
+                                },
+                                {
+                                    "cat": [
+                                        {
+                                            "var": "json.record.fromRecordId"
+                                        },
+                                        " - ",
+                                        {
+                                            "var": "json.record.toRecordId"
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        "connectionType": {
+                            "or": [
+                                {
+                                    "var": "json.record.type"
+                                },
+                                "n/a"
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": "connection",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "connection",
+                    "operation": "upsert",
+                    "match": [
+                        {
+                            "property": "serviceDeskRecordId",
+                            "value": "{{ owned.recordId }}"
+                        }
+                    ],
+                    "fields": {
+                        "name": "{{ connectionName }}",
+                        "type": "{{ connectionType }}",
+                        "dataExchangeDirection": "{{ owned.direction }}",
+                        "moduleA": "{{ fromUsage.0.module }}",
+                        "moduleB": "{{ toUsage.0.module }}",
+                        "serviceDeskSystem": "servicenow",
+                        "serviceDeskRecordId": "{{ owned.recordId }}",
+                        "serviceDeskUrl": "{{ owned.recordUrl }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "connectionWritten"
+                }
+            },
+            {
+                "id": "commit",
+                "type": "openconnector.contract-commit",
+                "config": {
+                    "synchronization": "itsm-servicenow-relations",
+                    "contractPosition": "contract",
+                    "targetIdPosition": "connectionWritten.uuid",
+                    "targetHashPosition": "owned"
+                }
+            },
+            {
+                "id": "end",
+                "type": "openregister.end",
+                "config": []
+            }
+        ],
+        "edges": [
+            {
+                "id": "e-start-pages",
+                "from": "start",
+                "to": "pages"
+            },
+            {
+                "id": "e-pages-each",
+                "from": "pages",
+                "to": "each"
+            },
+            {
+                "id": "e-each-desk",
+                "from": "each",
+                "to": "desk"
+            },
+            {
+                "id": "e-desk-map-all",
+                "from": "desk",
+                "to": "map-all"
+            },
+            {
+                "id": "e-map-all-map-owned",
+                "from": "map-all",
+                "to": "map-owned"
+            },
+            {
+                "id": "e-map-owned-complete",
+                "from": "map-owned",
+                "to": "complete"
+            },
+            {
+                "id": "e-complete-decide",
+                "from": "complete",
+                "to": "decide"
+            },
+            {
+                "id": "e-decide-changed",
+                "from": "decide",
+                "to": "changed"
+            },
+            {
+                "id": "e-changed-from",
+                "from": "changed",
+                "to": "from"
+            },
+            {
+                "id": "e-from-to",
+                "from": "from",
+                "to": "to"
+            },
+            {
+                "id": "e-to-both-ends",
+                "from": "to",
+                "to": "both-ends"
+            },
+            {
+                "id": "e-both-ends-flags",
+                "from": "both-ends",
+                "to": "flags"
+            },
+            {
+                "id": "e-flags-connection",
+                "from": "flags",
+                "to": "connection"
+            },
+            {
+                "id": "e-connection-commit",
+                "from": "connection",
+                "to": "commit"
+            },
+            {
+                "id": "e-commit-end",
+                "from": "commit",
+                "to": "end"
+            }
+        ]
+    },
+    {
+        "name": "Service desk import: licences (ServiceNow)",
+        "app": "stackiq",
+        "description": "Reads licences or contracts from the service desk and records them on the application in use they belong to. A new one is created with every field; after that stackiq owns its licence and contract fields, and the import only refreshes the service desk reference.",
+        "trigger": "schedule",
+        "cron": "0 2 * * *",
+        "executionMode": "async",
+        "limits": {
+            "maxTransitions": 5000
+        },
+        "nodes": [
+            {
+                "id": "start",
+                "type": "openregister.trigger-schedule",
+                "config": {
+                    "cron": "0 2 * * *",
+                    "runAs": "admin"
+                }
+            },
+            {
+                "id": "pages",
+                "type": "openconnector.source-paginate",
+                "config": {
+                    "synchronization": "itsm-servicenow-licences",
+                    "output": "page"
+                }
+            },
+            {
+                "id": "each",
+                "type": "openregister.explode",
+                "config": {
+                    "path": "page.results",
+                    "as": "source"
+                }
+            },
+            {
+                "id": "desk",
+                "type": "openregister.set-fields",
+                "config": {
+                    "set": {
+                        "source._desk.baseUrl": "https://servicenow.example.net:8443"
+                    }
+                }
+            },
+            {
+                "id": "map-all",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-servicenow-licence-inbound",
+                    "input": "source",
+                    "output": "record"
+                }
+            },
+            {
+                "id": "map-owned",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-servicenow-licence-inbound",
+                    "input": "source",
+                    "output": "owned",
+                    "ownership": "inbound",
+                    "exists": "record.recordId"
+                }
+            },
+            {
+                "id": "complete",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "and": [
+                            {
+                                "!!": {
+                                    "var": "json.record.recordId"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.applicationRecordId"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.startDate"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "decide",
+                "type": "openconnector.contract",
+                "config": {
+                    "synchronization": "itsm-servicenow-licences",
+                    "idPosition": "owned.recordId",
+                    "hashPosition": "owned",
+                    "output": "contract"
+                }
+            },
+            {
+                "id": "changed",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "in": [
+                            {
+                                "var": "json.contract.outcome"
+                            },
+                            [
+                                "create",
+                                "update"
+                            ]
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "application",
+                "type": "openregister.object-read",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "usage",
+                    "filters": {
+                        "serviceDeskRecordId": "{{ record.applicationRecordId }}"
+                    },
+                    "limit": 1,
+                    "fanOut": false,
+                    "output": "usage"
+                }
+            },
+            {
+                "id": "has-application",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "!!": {
+                            "var": "json.usage.0.uuid"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "flags",
+                "type": "openregister.set-fields",
+                "config": {
+                    "compute": {
+                        "isCreate": {
+                            "!": {
+                                "var": "json.contract.targetId"
+                            }
+                        },
+                        "isUpdate": {
+                            "!!": {
+                                "var": "json.contract.targetId"
+                            }
+                        },
+                        "noSupplier": {
+                            "!": {
+                                "var": "json.record.supplierName"
+                            }
+                        },
+                        "syncedAt": {
+                            "now": []
+                        },
+                        "contractNumber": {
+                            "or": [
+                                {
+                                    "var": "json.record.contractNumber"
+                                },
+                                {
+                                    "var": "json.record.vendorReference"
+                                },
+                                {
+                                    "var": "json.record.recordId"
+                                }
+                            ]
+                        },
+                        "contractType": {
+                            "or": [
+                                {
+                                    "var": "json.record.contractType"
+                                },
+                                "Licence"
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": "supplier",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "organization",
+                    "operation": "upsert",
+                    "skipWhen": "noSupplier",
+                    "match": [
+                        {
+                            "property": "name",
+                            "value": "{{ record.supplierName }}"
+                        },
+                        {
+                            "property": "type",
+                            "value": "Supplier"
+                        }
+                    ],
+                    "fields": {
+                        "name": "{{ record.supplierName }}",
+                        "type": "Supplier"
+                    },
+                    "output": "supplier"
+                }
+            },
+            {
+                "id": "contract-create",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "catalogContract",
+                    "operation": "upsert",
+                    "skipWhen": "isUpdate",
+                    "match": [
+                        {
+                            "property": "serviceDeskRecordId",
+                            "value": "{{ record.recordId }}"
+                        }
+                    ],
+                    "fields": {
+                        "usage": "{{ usage.0.uuid }}",
+                        "supplier": "{{ supplier.uuid }}",
+                        "contractNumber": "{{ contractNumber }}",
+                        "vendorReference": "{{ record.vendorReference }}",
+                        "contractType": "{{ contractType }}",
+                        "status": "Active",
+                        "startDate": "{{ record.startDate }}",
+                        "endDate": "{{ record.endDate }}",
+                        "cost": "{{ record.cost }}",
+                        "costPeriod": "{{ record.costPeriod }}",
+                        "currency": "{{ record.currency }}",
+                        "licenceMetric": "{{ record.licenceMetric }}",
+                        "licencesBought": "{{ record.licencesBought }}",
+                        "serviceDeskSystem": "servicenow",
+                        "serviceDeskRecordId": "{{ record.recordId }}",
+                        "serviceDeskUrl": "{{ record.recordUrl }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "contractWritten"
+                }
+            },
+            {
+                "id": "contract-update",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "catalogContract",
+                    "operation": "update",
+                    "skipWhen": "isCreate",
+                    "match": [
+                        {
+                            "property": "@self.uuid",
+                            "value": "{{ contract.targetId }}"
+                        }
+                    ],
+                    "fields": {
+                        "usage": "{{ usage.0.uuid }}",
+                        "supplier": "{{ supplier.uuid }}",
+                        "serviceDeskSystem": "servicenow",
+                        "serviceDeskRecordId": "{{ owned.recordId }}",
+                        "serviceDeskUrl": "{{ owned.recordUrl }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "contractWritten"
+                }
+            },
+            {
+                "id": "commit",
+                "type": "openconnector.contract-commit",
+                "config": {
+                    "synchronization": "itsm-servicenow-licences",
+                    "contractPosition": "contract",
+                    "targetIdPosition": "contractWritten.uuid",
+                    "targetHashPosition": "owned"
+                }
+            },
+            {
+                "id": "end",
+                "type": "openregister.end",
+                "config": []
+            }
+        ],
+        "edges": [
+            {
+                "id": "e-start-pages",
+                "from": "start",
+                "to": "pages"
+            },
+            {
+                "id": "e-pages-each",
+                "from": "pages",
+                "to": "each"
+            },
+            {
+                "id": "e-each-desk",
+                "from": "each",
+                "to": "desk"
+            },
+            {
+                "id": "e-desk-map-all",
+                "from": "desk",
+                "to": "map-all"
+            },
+            {
+                "id": "e-map-all-map-owned",
+                "from": "map-all",
+                "to": "map-owned"
+            },
+            {
+                "id": "e-map-owned-complete",
+                "from": "map-owned",
+                "to": "complete"
+            },
+            {
+                "id": "e-complete-decide",
+                "from": "complete",
+                "to": "decide"
+            },
+            {
+                "id": "e-decide-changed",
+                "from": "decide",
+                "to": "changed"
+            },
+            {
+                "id": "e-changed-application",
+                "from": "changed",
+                "to": "application"
+            },
+            {
+                "id": "e-application-has-application",
+                "from": "application",
+                "to": "has-application"
+            },
+            {
+                "id": "e-has-application-flags",
+                "from": "has-application",
+                "to": "flags"
+            },
+            {
+                "id": "e-flags-supplier",
+                "from": "flags",
+                "to": "supplier"
+            },
+            {
+                "id": "e-supplier-contract-create",
+                "from": "supplier",
+                "to": "contract-create"
+            },
+            {
+                "id": "e-contract-create-contract-update",
+                "from": "contract-create",
+                "to": "contract-update"
+            },
+            {
+                "id": "e-contract-update-commit",
+                "from": "contract-update",
+                "to": "commit"
+            },
+            {
+                "id": "e-commit-end",
+                "from": "commit",
+                "to": "end"
+            }
+        ]
+    },
+    {
+        "name": "Service desk import: contracts (ServiceNow)",
+        "app": "stackiq",
+        "description": "Reads licences or contracts from the service desk and records them on the application in use they belong to. A new one is created with every field; after that stackiq owns its licence and contract fields, and the import only refreshes the service desk reference.",
+        "trigger": "schedule",
+        "cron": "0 2 * * *",
+        "executionMode": "async",
+        "limits": {
+            "maxTransitions": 5000
+        },
+        "nodes": [
+            {
+                "id": "start",
+                "type": "openregister.trigger-schedule",
+                "config": {
+                    "cron": "0 2 * * *",
+                    "runAs": "admin"
+                }
+            },
+            {
+                "id": "pages",
+                "type": "openconnector.source-paginate",
+                "config": {
+                    "synchronization": "itsm-servicenow-contracts",
+                    "output": "page"
+                }
+            },
+            {
+                "id": "each",
+                "type": "openregister.explode",
+                "config": {
+                    "path": "page.results",
+                    "as": "source"
+                }
+            },
+            {
+                "id": "desk",
+                "type": "openregister.set-fields",
+                "config": {
+                    "set": {
+                        "source._desk.baseUrl": "https://servicenow.example.net:8443"
+                    }
+                }
+            },
+            {
+                "id": "map-all",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-servicenow-contract-inbound",
+                    "input": "source",
+                    "output": "record"
+                }
+            },
+            {
+                "id": "map-owned",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-servicenow-contract-inbound",
+                    "input": "source",
+                    "output": "owned",
+                    "ownership": "inbound",
+                    "exists": "record.recordId"
+                }
+            },
+            {
+                "id": "complete",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "and": [
+                            {
+                                "!!": {
+                                    "var": "json.record.recordId"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.applicationRecordId"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.startDate"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "decide",
+                "type": "openconnector.contract",
+                "config": {
+                    "synchronization": "itsm-servicenow-contracts",
+                    "idPosition": "owned.recordId",
+                    "hashPosition": "owned",
+                    "output": "contract"
+                }
+            },
+            {
+                "id": "changed",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "in": [
+                            {
+                                "var": "json.contract.outcome"
+                            },
+                            [
+                                "create",
+                                "update"
+                            ]
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "application",
+                "type": "openregister.object-read",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "usage",
+                    "filters": {
+                        "serviceDeskRecordId": "{{ record.applicationRecordId }}"
+                    },
+                    "limit": 1,
+                    "fanOut": false,
+                    "output": "usage"
+                }
+            },
+            {
+                "id": "has-application",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "!!": {
+                            "var": "json.usage.0.uuid"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "flags",
+                "type": "openregister.set-fields",
+                "config": {
+                    "compute": {
+                        "isCreate": {
+                            "!": {
+                                "var": "json.contract.targetId"
+                            }
+                        },
+                        "isUpdate": {
+                            "!!": {
+                                "var": "json.contract.targetId"
+                            }
+                        },
+                        "noSupplier": {
+                            "!": {
+                                "var": "json.record.supplierName"
+                            }
+                        },
+                        "syncedAt": {
+                            "now": []
+                        },
+                        "contractNumber": {
+                            "or": [
+                                {
+                                    "var": "json.record.contractNumber"
+                                },
+                                {
+                                    "var": "json.record.vendorReference"
+                                },
+                                {
+                                    "var": "json.record.recordId"
+                                }
+                            ]
+                        },
+                        "contractType": {
+                            "or": [
+                                {
+                                    "var": "json.record.contractType"
+                                },
+                                "SLA"
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "id": "supplier",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "organization",
+                    "operation": "upsert",
+                    "skipWhen": "noSupplier",
+                    "match": [
+                        {
+                            "property": "name",
+                            "value": "{{ record.supplierName }}"
+                        },
+                        {
+                            "property": "type",
+                            "value": "Supplier"
+                        }
+                    ],
+                    "fields": {
+                        "name": "{{ record.supplierName }}",
+                        "type": "Supplier"
+                    },
+                    "output": "supplier"
+                }
+            },
+            {
+                "id": "contract-create",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "catalogContract",
+                    "operation": "upsert",
+                    "skipWhen": "isUpdate",
+                    "match": [
+                        {
+                            "property": "serviceDeskRecordId",
+                            "value": "{{ record.recordId }}"
+                        }
+                    ],
+                    "fields": {
+                        "usage": "{{ usage.0.uuid }}",
+                        "supplier": "{{ supplier.uuid }}",
+                        "contractNumber": "{{ contractNumber }}",
+                        "vendorReference": "{{ record.vendorReference }}",
+                        "contractType": "{{ contractType }}",
+                        "status": "Active",
+                        "startDate": "{{ record.startDate }}",
+                        "endDate": "{{ record.endDate }}",
+                        "cost": "{{ record.cost }}",
+                        "costPeriod": "{{ record.costPeriod }}",
+                        "currency": "{{ record.currency }}",
+                        "licenceMetric": "{{ record.licenceMetric }}",
+                        "licencesBought": "{{ record.licencesBought }}",
+                        "serviceDeskSystem": "servicenow",
+                        "serviceDeskRecordId": "{{ record.recordId }}",
+                        "serviceDeskUrl": "{{ record.recordUrl }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "contractWritten"
+                }
+            },
+            {
+                "id": "contract-update",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "catalogContract",
+                    "operation": "update",
+                    "skipWhen": "isCreate",
+                    "match": [
+                        {
+                            "property": "@self.uuid",
+                            "value": "{{ contract.targetId }}"
+                        }
+                    ],
+                    "fields": {
+                        "usage": "{{ usage.0.uuid }}",
+                        "supplier": "{{ supplier.uuid }}",
+                        "serviceDeskSystem": "servicenow",
+                        "serviceDeskRecordId": "{{ owned.recordId }}",
+                        "serviceDeskUrl": "{{ owned.recordUrl }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "contractWritten"
+                }
+            },
+            {
+                "id": "commit",
+                "type": "openconnector.contract-commit",
+                "config": {
+                    "synchronization": "itsm-servicenow-contracts",
+                    "contractPosition": "contract",
+                    "targetIdPosition": "contractWritten.uuid",
+                    "targetHashPosition": "owned"
+                }
+            },
+            {
+                "id": "end",
+                "type": "openregister.end",
+                "config": []
+            }
+        ],
+        "edges": [
+            {
+                "id": "e-start-pages",
+                "from": "start",
+                "to": "pages"
+            },
+            {
+                "id": "e-pages-each",
+                "from": "pages",
+                "to": "each"
+            },
+            {
+                "id": "e-each-desk",
+                "from": "each",
+                "to": "desk"
+            },
+            {
+                "id": "e-desk-map-all",
+                "from": "desk",
+                "to": "map-all"
+            },
+            {
+                "id": "e-map-all-map-owned",
+                "from": "map-all",
+                "to": "map-owned"
+            },
+            {
+                "id": "e-map-owned-complete",
+                "from": "map-owned",
+                "to": "complete"
+            },
+            {
+                "id": "e-complete-decide",
+                "from": "complete",
+                "to": "decide"
+            },
+            {
+                "id": "e-decide-changed",
+                "from": "decide",
+                "to": "changed"
+            },
+            {
+                "id": "e-changed-application",
+                "from": "changed",
+                "to": "application"
+            },
+            {
+                "id": "e-application-has-application",
+                "from": "application",
+                "to": "has-application"
+            },
+            {
+                "id": "e-has-application-flags",
+                "from": "has-application",
+                "to": "flags"
+            },
+            {
+                "id": "e-flags-supplier",
+                "from": "flags",
+                "to": "supplier"
+            },
+            {
+                "id": "e-supplier-contract-create",
+                "from": "supplier",
+                "to": "contract-create"
+            },
+            {
+                "id": "e-contract-create-contract-update",
+                "from": "contract-create",
+                "to": "contract-update"
+            },
+            {
+                "id": "e-contract-update-commit",
+                "from": "contract-update",
+                "to": "commit"
+            },
+            {
+                "id": "e-commit-end",
+                "from": "commit",
+                "to": "end"
+            }
+        ]
+    },
+    {
+        "name": "Service desk export: applications in use (ServiceNow)",
+        "app": "stackiq",
+        "description": "Sends an application in use to the service desk when stackiq-owned fields change: licences, contract, BBN level, TIME class and publication. A record the service desk does not know yet is created there with every field, and its record id comes back. A change the import wrote is not sent back.",
+        "trigger": "object.updated",
+        "triggerRegister": "stackiq",
+        "triggerSchema": "usage",
+        "executionMode": "async",
+        "limits": {
+            "maxTransitions": 5000
+        },
+        "nodes": [
+            {
+                "id": "on-created",
+                "type": "openregister.trigger-object",
+                "config": {
+                    "event": "object.created",
+                    "register": "stackiq",
+                    "schema": "usage"
+                }
+            },
+            {
+                "id": "on-updated",
+                "type": "openregister.trigger-object",
+                "config": {
+                    "event": "object.updated",
+                    "register": "stackiq",
+                    "schema": "usage"
+                }
+            },
+            {
+                "id": "ours",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "and": [
+                            {
+                                "==": [
+                                    {
+                                        "var": "json.consumer"
+                                    },
+                                    "0f6c3a8e-1111-4c2b-9d6a-2a1b3c4d5e6f"
+                                ]
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.module"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "read-module",
+                "type": "openregister.object-read",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "module",
+                    "filters": {
+                        "@self": {
+                            "uuid": "{{ module }}"
+                        }
+                    },
+                    "limit": 1,
+                    "fanOut": false,
+                    "output": "moduleRead"
+                }
+            },
+            {
+                "id": "ids",
+                "type": "openregister.set-fields",
+                "config": {
+                    "compute": {
+                        "providerId": {
+                            "or": [
+                                {
+                                    "var": "json.moduleRead.0.provider"
+                                },
+                                "00000000-0000-0000-0000-000000000000"
+                            ]
+                        },
+                        "usageId": {
+                            "var": "json.@self.id"
+                        }
+                    }
+                }
+            },
+            {
+                "id": "read-supplier",
+                "type": "openregister.object-read",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "organization",
+                    "filters": {
+                        "@self": {
+                            "uuid": "{{ providerId }}"
+                        }
+                    },
+                    "limit": 1,
+                    "fanOut": false,
+                    "output": "supplierRead"
+                }
+            },
+            {
+                "id": "read-contract",
+                "type": "openregister.object-read",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "catalogContract",
+                    "filters": {
+                        "usage": "{{ usageId }}"
+                    },
+                    "limit": 1,
+                    "fanOut": false,
+                    "output": "contractRead"
+                }
+            },
+            {
+                "id": "build",
+                "type": "openregister.set-fields",
+                "config": {
+                    "set": {
+                        "usage.uuid": "{{ @self.id }}",
+                        "usage.catalogueUrl": "https://cloud.example.nl/index.php/apps/stackiq/gebruik/{{ @self.id }}",
+                        "usage.recordId": "{{ serviceDeskRecordId }}",
+                        "usage.name": "{{ moduleRead.0.name }}",
+                        "usage.supplierName": "{{ supplierRead.0.name }}",
+                        "usage.installedVersion": "{{ installedVersion }}",
+                        "usage.status": "{{ status }}",
+                        "usage.bbnLevel": "{{ moduleRead.0.bbnLevel }}",
+                        "usage.timeClassification": "{{ timeClassification }}",
+                        "usage.publicationDate": "{{ publicationDate }}",
+                        "usage.licencesBought": "{{ contractRead.0.licencesBought }}",
+                        "usage.licencesInUse": "{{ contractRead.0.licencesInUse }}",
+                        "usage.licenceMetric": "{{ contractRead.0.licenceMetric }}",
+                        "usage.contractNumber": "{{ contractRead.0.contractNumber }}",
+                        "usage.contractEndDate": "{{ contractRead.0.endDate }}",
+                        "usage._desk.baseUrl": "https://servicenow.example.net:8443",
+                        "usage._desk.templateId": ""
+                    }
+                }
+            },
+            {
+                "id": "owned",
+                "type": "openregister.set-fields",
+                "config": {
+                    "set": {
+                        "stackiqOwned.bbnLevel": "{{ usage.bbnLevel }}",
+                        "stackiqOwned.timeClassification": "{{ usage.timeClassification }}",
+                        "stackiqOwned.publicationDate": "{{ usage.publicationDate }}",
+                        "stackiqOwned.licencesBought": "{{ usage.licencesBought }}",
+                        "stackiqOwned.licencesInUse": "{{ usage.licencesInUse }}",
+                        "stackiqOwned.licenceMetric": "{{ usage.licenceMetric }}",
+                        "stackiqOwned.contractNumber": "{{ usage.contractNumber }}",
+                        "stackiqOwned.contractEndDate": "{{ usage.contractEndDate }}"
+                    }
+                }
+            },
+            {
+                "id": "worth-sending",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "or": [
+                            {
+                                "!": {
+                                    "var": "json.usage.recordId"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.stackiqOwned.bbnLevel"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.stackiqOwned.timeClassification"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.stackiqOwned.publicationDate"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.stackiqOwned.licencesBought"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.stackiqOwned.licencesInUse"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.stackiqOwned.licenceMetric"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.stackiqOwned.contractNumber"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.stackiqOwned.contractEndDate"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "map",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-servicenow-application-outbound",
+                    "input": "usage",
+                    "output": "send",
+                    "ownership": "outbound",
+                    "exists": "usage.recordId"
+                }
+            },
+            {
+                "id": "decide",
+                "type": "openconnector.contract",
+                "config": {
+                    "synchronization": "itsm-servicenow-outbound",
+                    "idPosition": "usage.uuid",
+                    "hashPosition": "stackiqOwned",
+                    "output": "contract"
+                }
+            },
+            {
+                "id": "changed",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "in": [
+                            {
+                                "var": "json.contract.outcome"
+                            },
+                            [
+                                "create",
+                                "update"
+                            ]
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "known",
+                "type": "openregister.set-fields",
+                "config": {
+                    "compute": {
+                        "syncedAt": {
+                            "now": []
+                        }
+                    }
+                },
+                "exits": [
+                    {
+                        "id": "create",
+                        "condition": {
+                            "!": {
+                                "var": "json.usage.recordId"
+                            }
+                        }
+                    },
+                    {
+                        "id": "update"
+                    }
+                ]
+            },
+            {
+                "id": "call-create",
+                "type": "openconnector.source-call",
+                "config": {
+                    "source": "servicenow",
+                    "endpoint": "/api/now/table/cmdb_ci_appl",
+                    "method": "POST",
+                    "bodyFrom": "send",
+                    "output": "response",
+                    "query": {
+                        "sysparm_input_display_value": "true"
+                    }
+                }
+            },
+            {
+                "id": "link-back",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "usage",
+                    "operation": "update",
+                    "match": [
+                        {
+                            "property": "@self.uuid",
+                            "value": "{{ usage.uuid }}"
+                        }
+                    ],
+                    "fields": {
+                        "serviceDeskSystem": "servicenow",
+                        "serviceDeskRecordId": "{{ response.body.result.sys_id }}",
+                        "serviceDeskUrl": "https://servicenow.example.net:8443/nav_to.do?uri=cmdb_ci_appl.do?sys_id={{ response.body.result.sys_id }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "linked"
+                }
+            },
+            {
+                "id": "commit-create",
+                "type": "openconnector.contract-commit",
+                "config": {
+                    "synchronization": "itsm-servicenow-outbound",
+                    "contractPosition": "contract",
+                    "targetIdPosition": "response.body.result.sys_id",
+                    "targetHashPosition": "send"
+                }
+            },
+            {
+                "id": "end-create",
+                "type": "openregister.end",
+                "config": []
+            },
+            {
+                "id": "call-update",
+                "type": "openconnector.source-call",
+                "config": {
+                    "source": "servicenow",
+                    "endpoint": "/api/now/table/cmdb_ci_appl/{{ usage.recordId }}",
+                    "method": "PATCH",
+                    "bodyFrom": "send",
+                    "output": "response",
+                    "query": {
+                        "sysparm_input_display_value": "true"
+                    }
+                }
+            },
+            {
+                "id": "commit-update",
+                "type": "openconnector.contract-commit",
+                "config": {
+                    "synchronization": "itsm-servicenow-outbound",
+                    "contractPosition": "contract",
+                    "targetIdPosition": "usage.recordId",
+                    "targetHashPosition": "send"
+                }
+            },
+            {
+                "id": "end-update",
+                "type": "openregister.end",
+                "config": []
+            }
+        ],
+        "edges": [
+            {
+                "id": "e-on-created-ours",
+                "from": "on-created",
+                "to": "ours"
+            },
+            {
+                "id": "e-on-updated-ours",
+                "from": "on-updated",
+                "to": "ours"
+            },
+            {
+                "id": "e-ours-read-module",
+                "from": "ours",
+                "to": "read-module"
+            },
+            {
+                "id": "e-read-module-ids",
+                "from": "read-module",
+                "to": "ids"
+            },
+            {
+                "id": "e-ids-read-supplier",
+                "from": "ids",
+                "to": "read-supplier"
+            },
+            {
+                "id": "e-read-supplier-read-contract",
+                "from": "read-supplier",
+                "to": "read-contract"
+            },
+            {
+                "id": "e-read-contract-build",
+                "from": "read-contract",
+                "to": "build"
+            },
+            {
+                "id": "e-build-owned",
+                "from": "build",
+                "to": "owned"
+            },
+            {
+                "id": "e-owned-worth-sending",
+                "from": "owned",
+                "to": "worth-sending"
+            },
+            {
+                "id": "e-worth-sending-map",
+                "from": "worth-sending",
+                "to": "map"
+            },
+            {
+                "id": "e-map-decide",
+                "from": "map",
+                "to": "decide"
+            },
+            {
+                "id": "e-decide-changed",
+                "from": "decide",
+                "to": "changed"
+            },
+            {
+                "id": "e-changed-known",
+                "from": "changed",
+                "to": "known"
+            },
+            {
+                "id": "e-known-create",
+                "from": "known",
+                "to": "call-create",
+                "fromExit": "create"
+            },
+            {
+                "id": "e-known-update",
+                "from": "known",
+                "to": "call-update",
+                "fromExit": "update"
+            },
+            {
+                "id": "e-call-create-link-back",
+                "from": "call-create",
+                "to": "link-back"
+            },
+            {
+                "id": "e-link-back-commit-create",
+                "from": "link-back",
+                "to": "commit-create"
+            },
+            {
+                "id": "e-commit-create-end-create",
+                "from": "commit-create",
+                "to": "end-create"
+            },
+            {
+                "id": "e-call-update-commit-update",
+                "from": "call-update",
+                "to": "commit-update"
+            },
+            {
+                "id": "e-commit-update-end-update",
+                "from": "commit-update",
+                "to": "end-update"
+            }
+        ]
+    },
+    {
+        "name": "File import: applications",
+        "app": "stackiq",
+        "description": "Imports applications from an uploaded CSV or XLSX file through the same mapping and matching as the service desk import. Importing the same file again updates rather than duplicates.",
+        "executionMode": "async",
+        "limits": {
+            "maxTransitions": 5000
+        },
+        "nodes": [
+            {
+                "id": "start",
+                "type": "openregister.trigger-manual",
+                "config": []
+            },
+            {
+                "id": "each",
+                "type": "openregister.explode",
+                "config": {
+                    "path": "rows",
+                    "as": "source"
+                }
+            },
+            {
+                "id": "desk",
+                "type": "openregister.set-fields",
+                "config": {
+                    "set": {
+                        "source._desk.baseUrl": "https://servicenow.example.net:8443"
+                    }
+                }
+            },
+            {
+                "id": "map-all",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-file-application-inbound",
+                    "input": "source",
+                    "output": "record"
+                }
+            },
+            {
+                "id": "map-owned",
+                "type": "openconnector.apply-mapping",
+                "config": {
+                    "mapping": "itsm-file-application-inbound",
+                    "input": "source",
+                    "output": "owned",
+                    "ownership": "inbound",
+                    "exists": "record.recordId"
+                }
+            },
+            {
+                "id": "complete",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "and": [
+                            {
+                                "!!": {
+                                    "var": "json.record.recordId"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.name"
+                                }
+                            },
+                            {
+                                "!!": {
+                                    "var": "json.record.supplierName"
+                                }
+                            }
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "decide",
+                "type": "openconnector.contract",
+                "config": {
+                    "synchronization": "itsm-file-applications",
+                    "idPosition": "owned.recordId",
+                    "hashPosition": "owned",
+                    "output": "contract"
+                }
+            },
+            {
+                "id": "changed",
+                "type": "openregister.filter",
+                "config": {
+                    "condition": {
+                        "in": [
+                            {
+                                "var": "json.contract.outcome"
+                            },
+                            [
+                                "create",
+                                "update"
+                            ]
+                        ]
+                    }
+                }
+            },
+            {
+                "id": "flags",
+                "type": "openregister.set-fields",
+                "config": {
+                    "compute": {
+                        "isCreate": {
+                            "!": {
+                                "var": "json.contract.targetId"
+                            }
+                        },
+                        "isUpdate": {
+                            "!!": {
+                                "var": "json.contract.targetId"
+                            }
+                        },
+                        "syncedAt": {
+                            "now": []
+                        }
+                    }
+                }
+            },
+            {
+                "id": "supplier",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "organization",
+                    "operation": "upsert",
+                    "match": [
+                        {
+                            "property": "name",
+                            "value": "{{ record.supplierName }}"
+                        },
+                        {
+                            "property": "type",
+                            "value": "Supplier"
+                        }
+                    ],
+                    "fields": {
+                        "name": "{{ record.supplierName }}",
+                        "type": "Supplier"
+                    },
+                    "output": "supplier"
+                }
+            },
+            {
+                "id": "module",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "module",
+                    "operation": "upsert",
+                    "match": [
+                        {
+                            "property": "name",
+                            "value": "{{ record.name }}"
+                        },
+                        {
+                            "property": "provider",
+                            "value": "{{ supplier.uuid }}"
+                        }
+                    ],
+                    "fields": {
+                        "name": "{{ record.name }}",
+                        "provider": "{{ supplier.uuid }}"
+                    },
+                    "output": "module"
+                }
+            },
+            {
+                "id": "usage-create",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "usage",
+                    "operation": "upsert",
+                    "skipWhen": "isUpdate",
+                    "match": [
+                        {
+                            "property": "module",
+                            "value": "{{ module.uuid }}"
+                        },
+                        {
+                            "property": "consumer",
+                            "value": "0f6c3a8e-1111-4c2b-9d6a-2a1b3c4d5e6f"
+                        }
+                    ],
+                    "fields": {
+                        "module": "{{ module.uuid }}",
+                        "consumer": "0f6c3a8e-1111-4c2b-9d6a-2a1b3c4d5e6f",
+                        "status": "{{ record.status }}",
+                        "installedVersion": "{{ record.installedVersion }}",
+                        "serviceDeskSystem": "file",
+                        "serviceDeskRecordId": "{{ record.recordId }}",
+                        "serviceDeskUrl": "{{ record.recordUrl }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "usageWritten"
+                }
+            },
+            {
+                "id": "usage-update",
+                "type": "openregister.object-write",
+                "config": {
+                    "register": "stackiq",
+                    "schema": "usage",
+                    "operation": "update",
+                    "skipWhen": "isCreate",
+                    "match": [
+                        {
+                            "property": "@self.uuid",
+                            "value": "{{ contract.targetId }}"
+                        }
+                    ],
+                    "fields": {
+                        "module": "{{ module.uuid }}",
+                        "status": "{{ owned.status }}",
+                        "installedVersion": "{{ owned.installedVersion }}",
+                        "serviceDeskSystem": "file",
+                        "serviceDeskRecordId": "{{ owned.recordId }}",
+                        "serviceDeskUrl": "{{ owned.recordUrl }}",
+                        "serviceDeskSyncedAt": "{{ syncedAt }}"
+                    },
+                    "output": "usageWritten"
+                }
+            },
+            {
+                "id": "commit",
+                "type": "openconnector.contract-commit",
+                "config": {
+                    "synchronization": "itsm-file-applications",
+                    "contractPosition": "contract",
+                    "targetIdPosition": "usageWritten.uuid",
+                    "targetHashPosition": "owned"
+                }
+            },
+            {
+                "id": "end",
+                "type": "openregister.end",
+                "config": []
+            }
+        ],
+        "edges": [
+            {
+                "id": "e-start-each",
+                "from": "start",
+                "to": "each"
+            },
+            {
+                "id": "e-each-desk",
+                "from": "each",
+                "to": "desk"
+            },
+            {
+                "id": "e-desk-map-all",
+                "from": "desk",
+                "to": "map-all"
+            },
+            {
+                "id": "e-map-all-map-owned",
+                "from": "map-all",
+                "to": "map-owned"
+            },
+            {
+                "id": "e-map-owned-complete",
+                "from": "map-owned",
+                "to": "complete"
+            },
+            {
+                "id": "e-complete-decide",
+                "from": "complete",
+                "to": "decide"
+            },
+            {
+                "id": "e-decide-changed",
+                "from": "decide",
+                "to": "changed"
+            },
+            {
+                "id": "e-changed-flags",
+                "from": "changed",
+                "to": "flags"
+            },
+            {
+                "id": "e-flags-supplier",
+                "from": "flags",
+                "to": "supplier"
+            },
+            {
+                "id": "e-supplier-module",
+                "from": "supplier",
+                "to": "module"
+            },
+            {
+                "id": "e-module-usage-create",
+                "from": "module",
+                "to": "usage-create"
+            },
+            {
+                "id": "e-usage-create-usage-update",
+                "from": "usage-create",
+                "to": "usage-update"
+            },
+            {
+                "id": "e-usage-update-commit",
+                "from": "usage-update",
+                "to": "commit"
+            },
+            {
+                "id": "e-commit-end",
+                "from": "commit",
+                "to": "end"
+            }
+        ]
+    }
+]

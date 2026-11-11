@@ -252,4 +252,48 @@ class ItsmExchangeServiceTest extends TestCase {
 		$this->assertFalse($result['created']);
 		$this->assertStringContainsString('Nothing was created', $result['message']);
 	}//end testAPreflightThatThrowsIsARefusal()
+	/**
+	 * Every flow a set-up saves, for both desks, matches its recording (RECORD_GOLDEN=1 records it): the filled
+	 * templates with the organisation's uuid, the run-as user, the record links from the source's location and
+	 * the asset template.
+	 *
+	 * @return void
+	 */
+	public function testTheSavedFlowsMatchTheGolden(): void {
+		$this->gateway = $this->getMockBuilder(ItsmFlowGateway::class)
+			->disableOriginalConstructor()
+			->onlyMethods(['available', 'inspect', 'saveAndPublish', 'run', 'findObject'])
+			->getMock();
+		$this->gateway->method('available')->willReturn(true);
+		$this->gateway->method('inspect')->willReturn(['blocking' => [], 'warnings' => []]);
+		$this->gateway->method('findObject')->willReturnCallback(
+			static function (string $register, string $schema, string $id): ?array {
+				if ($schema === 'organization') {
+					return ['uuid' => self::ORG];
+				}
+
+				return ['uuid' => 'src-' . $id, 'location' => 'https://' . $id . '.example.net:8443/tas/api?x=1'];
+			}
+		);
+		$saved = [];
+		$this->gateway->method('saveAndPublish')->willReturnCallback(
+			static function (array $flow, ?string $uuid) use (&$saved): string {
+				$saved[] = $flow;
+				return 'flow-' . count($saved);
+			}
+		);
+
+		$service = $this->service();
+		$service->setUp(desk: 'topdesk', organisation: 'gemeente-rotterdam', runAs: 'beheerder', templateId: 'tpl-7');
+		$service->setUp(desk: 'servicenow', organisation: self::ORG, runAs: 'admin');
+
+		$json = (string) json_encode($saved, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+		$file = __DIR__ . '/golden/itsmExchangeSavedFlows.json';
+		if (getenv('RECORD_GOLDEN') !== false) {
+			file_put_contents($file, $json . "\n");
+		}
+
+		$this->assertCount(12, $saved);
+		$this->assertSame((string) file_get_contents($file), $json . "\n");
+	}//end testTheSavedFlowsMatchTheGolden()
 }//end class
