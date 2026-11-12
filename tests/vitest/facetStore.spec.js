@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Unit tests for the GEMMA facet Pinia store (gemma-faceted-search).
  *
  * MOVED FROM `src/store/modules/facets.spec.js` (jest) TO vitest. pinia 4 is

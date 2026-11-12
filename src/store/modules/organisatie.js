@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Organisatie Store Module
  *
  * Manages organisatie data and contactpersonen operations
@@ -13,6 +17,15 @@
 
 import { generateUrl } from '@nextcloud/router'
 import { defineStore } from 'pinia'
+import {
+	assertOk,
+	httpError,
+	lenientJson,
+	messageJson,
+	okJson,
+	requireSuccess,
+	tokenRequest,
+} from './organisatieRequests.js'
 
 export const useOrganisatieStore = defineStore('organization', {
 	state: () => ({
@@ -80,27 +93,9 @@ export const useOrganisatieStore = defineStore('organization', {
 					},
 				)
 
-				const response = await fetch(url, {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-					},
-				})
-
-				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`)
-				}
-
-				const data = await response.json()
-
-				if (data.success) {
-					this.contactpersonen = data.contactpersonen || []
-				} else {
-					throw new Error(
-						data.message || 'Failed to fetch contactpersonen',
-					)
-				}
+				const response = await fetch(url, tokenRequest('GET'))
+				const data = requireSuccess(await okJson(response), 'Failed to fetch contactpersonen')
+				this.contactpersonen = data.contactpersonen || []
 			} catch (error) {
 				console.error('Error fetching contactpersonen:', error)
 				this.error = error.message
@@ -130,20 +125,11 @@ export const useOrganisatieStore = defineStore('organization', {
 					},
 				)
 
-				const response = await fetch(url, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-					},
-				})
-
+				const response = await fetch(url, tokenRequest('POST'))
 				const data = await response.json()
 
 				if (!response.ok || !data.success) {
-					throw new Error(
-						data.message || `HTTP error! status: ${response.status}`,
-					)
+					throw httpError(response, data.message)
 				}
 
 				// Return the full response data including the updated contactpersoon object
@@ -153,8 +139,6 @@ export const useOrganisatieStore = defineStore('organization', {
 				console.error('Error converting to user:', error)
 				this.error = error.message
 				throw error
-			} finally {
-				// Don't reset global loading state since we didn't set it
 			}
 		},
 
@@ -175,35 +159,12 @@ export const useOrganisatieStore = defineStore('organization', {
 					'/apps/stackiq/api/contactpersonen/change-password',
 				)
 
-				const response = await fetch(url, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-					},
-					body: JSON.stringify({
-						username,
-						newPassword,
-					}),
-				})
-
-				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`)
-				}
-
-				const data = await response.json()
-
-				if (!data.success) {
-					throw new Error(data.message || 'Failed to change password')
-				}
-
-				return data
+				const response = await fetch(url, tokenRequest('POST', { username, newPassword }))
+				return requireSuccess(await okJson(response), 'Failed to change password')
 			} catch (error) {
 				console.error('Error changing password:', error)
 				this.error = error.message
 				throw error
-			} finally {
-				// Don't reset global loading state since we didn't set it
 			}
 		},
 
@@ -224,42 +185,21 @@ export const useOrganisatieStore = defineStore('organization', {
 					'/apps/stackiq/api/contactpersonen/update-groups',
 				)
 
-				const response = await fetch(url, {
-					method: 'POST',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-					},
-					body: JSON.stringify({
-						username,
-						groups,
-					}),
-				})
+				const response = await fetch(url, tokenRequest('POST', { username, groups }))
+				const data = requireSuccess(await okJson(response), 'Failed to update user groups')
 
-				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`)
+				// Update the contactpersoon in the local state
+				const contactpersoon = this.contactpersonen.find(
+					(cp) => cp.user.username === username,
+				)
+				if (contactpersoon) {
+					contactpersoon.user.groups = data.groups || []
 				}
-
-				const data = await response.json()
-
-				if (data.success) {
-					// Update the contactpersoon in the local state
-					const contactpersoon = this.contactpersonen.find(
-						(cp) => cp.user.username === username,
-					)
-					if (contactpersoon) {
-						contactpersoon.user.groups = data.groups || []
-					}
-					return data
-				} else {
-					throw new Error(data.message || 'Failed to update user groups')
-				}
+				return data
 			} catch (error) {
 				console.error('Error updating user groups:', error)
 				this.error = error.message
 				throw error
-			} finally {
-				// Don't reset global loading state since we didn't set it
 			}
 		},
 
@@ -279,26 +219,10 @@ export const useOrganisatieStore = defineStore('organization', {
 					},
 				)
 
-				const response = await fetch(url, {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-					},
-				})
-
-				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`)
-				}
-
-				const data = await response.json()
-
-				if (data.success) {
-					this.availableGroups = data.availableGroups || []
-					return data.userInfo || {}
-				} else {
-					throw new Error(data.message || 'Failed to fetch user info')
-				}
+				const response = await fetch(url, tokenRequest('GET'))
+				const data = requireSuccess(await okJson(response), 'Failed to fetch user info')
+				this.availableGroups = data.availableGroups || []
+				return data.userInfo || {}
 			} catch (error) {
 				console.error('Error fetching user info:', error)
 				this.error = error.message
@@ -320,32 +244,13 @@ export const useOrganisatieStore = defineStore('organization', {
 					`/apps/stackiq/api/contactpersonen/organisation/${organizationUuid}/with-user-details`,
 				)
 
-				const response = await fetch(url, {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-					},
-				})
-
-				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`)
-				}
-
-				const data = await response.json()
-
-				if (data.success) {
-					console.info(
-						'Successfully fetched contact persons with user details:',
-						data,
-					)
-					return data.data || []
-				} else {
-					throw new Error(
-						data.message
-							|| 'Failed to fetch contact persons with user details',
-					)
-				}
+				const response = await fetch(url, tokenRequest('GET'))
+				const data = requireSuccess(await okJson(response), 'Failed to fetch contact persons with user details')
+				console.info(
+					'Successfully fetched contact persons with user details:',
+					data,
+				)
+				return data.data || []
 			} catch (error) {
 				console.error(
 					'Error fetching contact persons with user details:',
@@ -368,27 +273,9 @@ export const useOrganisatieStore = defineStore('organization', {
 					'/apps/stackiq/api/contactpersonen/available-groups',
 				)
 
-				const response = await fetch(url, {
-					method: 'GET',
-					headers: {
-						'Content-Type': 'application/json',
-						requesttoken: OC.requestToken,
-					},
-				})
-
-				if (!response.ok) {
-					throw new Error(`HTTP error! status: ${response.status}`)
-				}
-
-				const data = await response.json()
-
-				if (data.success) {
-					this.availableGroups = data.groups || []
-				} else {
-					throw new Error(
-						data.message || 'Failed to fetch available groups',
-					)
-				}
+				const response = await fetch(url, tokenRequest('GET'))
+				const data = requireSuccess(await okJson(response), 'Failed to fetch available groups')
+				this.availableGroups = data.groups || []
 			} catch (error) {
 				console.error('Error fetching available groups:', error)
 				this.error = error.message
@@ -425,18 +312,9 @@ export const useOrganisatieStore = defineStore('organization', {
 			try {
 				const response = await fetch(
 					`/index.php/apps/stackiq/api/contactpersonen/${encodeURIComponent(contactpersoonId)}/disable`,
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-						},
-					},
+					tokenRequest('POST'),
 				)
-
-				if (!response.ok) {
-					const errorData = await response.json()
-					throw new Error(errorData.message || 'Failed to disable user')
-				}
+				await assertOk(response, 'Failed to disable user')
 			} catch (error) {
 				console.error('Error disabling user:', error)
 				throw error
@@ -454,18 +332,9 @@ export const useOrganisatieStore = defineStore('organization', {
 			try {
 				const response = await fetch(
 					`/index.php/apps/stackiq/api/contactpersonen/${encodeURIComponent(contactpersoonId)}/enable`,
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-						},
-					},
+					tokenRequest('POST'),
 				)
-
-				if (!response.ok) {
-					const errorData = await response.json()
-					throw new Error(errorData.message || 'Failed to enable user')
-				}
+				await assertOk(response, 'Failed to enable user')
 			} catch (error) {
 				console.error('Error enabling user:', error)
 				throw error
@@ -489,24 +358,7 @@ export const useOrganisatieStore = defineStore('organization', {
 				},
 			)
 
-			const response = await fetch(url, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					requesttoken: OC.requestToken,
-				},
-				body: JSON.stringify({ targetUuid }),
-			})
-
-			const data = await response.json()
-
-			if (!response.ok) {
-				throw new Error(
-					data.message || `HTTP error! status: ${response.status}`,
-				)
-			}
-
-			return data
+			return messageJson(await fetch(url, tokenRequest('POST', { targetUuid })))
 		},
 
 		/**
@@ -527,25 +379,8 @@ export const useOrganisatieStore = defineStore('organization', {
 				},
 			)
 
-			const response = await fetch(url, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					requesttoken: OC.requestToken,
-				},
-				body: JSON.stringify({ targetUuid, confirm: true }),
-			})
-
-			const data = await response.json()
-
-			if (!response.ok) {
-				// 409 (blockers) still returns a structured body — surface its message.
-				throw new Error(
-					data.message || `HTTP error! status: ${response.status}`,
-				)
-			}
-
-			return data
+			// 409 (blockers) still returns a structured body — surface its message.
+			return messageJson(await fetch(url, tokenRequest('POST', { targetUuid, confirm: true })))
 		},
 
 		/**
@@ -564,15 +399,7 @@ export const useOrganisatieStore = defineStore('organization', {
 
 				const response = await fetch(
 					'/index.php/apps/stackiq/api/contactpersonen/bulk-user-info',
-					{
-						method: 'POST',
-						headers: {
-							'Content-Type': 'application/json',
-						},
-						body: JSON.stringify({
-							contactpersoonIds,
-						}),
-					},
+					tokenRequest('POST', { contactpersoonIds }),
 				)
 
 				console.info(
@@ -616,19 +443,11 @@ export const useOrganisatieStore = defineStore('organization', {
 				uuid,
 			})
 
-			const response = await fetch(url, {
-				method: 'GET',
-				headers: {
-					'Content-Type': 'application/json',
-					requesttoken: OC.requestToken,
-				},
-			})
+			const response = await fetch(url, tokenRequest('GET'))
 
 			if (!response.ok) {
 				const errorData = await response.json().catch(() => ({}))
-				throw new Error(
-					errorData.error || `HTTP error! status: ${response.status}`,
-				)
+				throw httpError(response, errorData.error)
 			}
 
 			const data = await response.json()
@@ -652,24 +471,7 @@ export const useOrganisatieStore = defineStore('organization', {
 				{ uuid },
 			)
 
-			const response = await fetch(url, {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json',
-					requesttoken: OC.requestToken,
-				},
-				body: JSON.stringify({ userId }),
-			})
-
-			const data = await response.json().catch(() => ({}))
-
-			if (!response.ok) {
-				throw new Error(
-					data.error || `HTTP error! status: ${response.status}`,
-				)
-			}
-
-			return data
+			return lenientJson(await fetch(url, tokenRequest('POST', { userId })))
 		},
 
 		/**
@@ -686,23 +488,7 @@ export const useOrganisatieStore = defineStore('organization', {
 				{ uuid, userId },
 			)
 
-			const response = await fetch(url, {
-				method: 'DELETE',
-				headers: {
-					'Content-Type': 'application/json',
-					requesttoken: OC.requestToken,
-				},
-			})
-
-			const data = await response.json().catch(() => ({}))
-
-			if (!response.ok) {
-				throw new Error(
-					data.error || `HTTP error! status: ${response.status}`,
-				)
-			}
-
-			return data
+			return lenientJson(await fetch(url, tokenRequest('DELETE')))
 		},
 	},
 })

@@ -1,0 +1,5517 @@
+{
+	"fetchContactpersonen / success": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/organisation/{organisationId}#{\"organisationId\":\"org-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"id": "c1"
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchContactpersonen / success, empty": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/organisation/{organisationId}#{\"organisationId\":\"org-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchContactpersonen / unsuccessful": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/organisation/{organisationId}#{\"organisationId\":\"org-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching contactpersonen:",
+				{
+					"error": "Error",
+					"message": "refused"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [],
+			"loading": false,
+			"error": "refused",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchContactpersonen / unsuccessful, no message": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/organisation/{organisationId}#{\"organisationId\":\"org-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching contactpersonen:",
+				{
+					"error": "Error",
+					"message": "Failed to fetch contactpersonen"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [],
+			"loading": false,
+			"error": "Failed to fetch contactpersonen",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchContactpersonen / http error": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/organisation/{organisationId}#{\"organisationId\":\"org-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching contactpersonen:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 403"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [],
+			"loading": false,
+			"error": "HTTP error! status: 403",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchContactpersonen / http error, bare body": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/organisation/{organisationId}#{\"organisationId\":\"org-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching contactpersonen:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 500"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [],
+			"loading": false,
+			"error": "HTTP error! status: 500",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchContactpersonen / http error, unreadable body": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/organisation/{organisationId}#{\"organisationId\":\"org-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching contactpersonen:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 502"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [],
+			"loading": false,
+			"error": "HTTP error! status: 502",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchContactpersonen / network failure": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/organisation/{organisationId}#{\"organisationId\":\"org-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching contactpersonen:",
+				{
+					"error": "TypeError",
+					"message": "Failed to fetch"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [],
+			"loading": false,
+			"error": "Failed to fetch",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"convertToUser / success": {
+		"outcome": {
+			"returned": {
+				"success": true,
+				"contactpersonen": [
+					{
+						"id": "c1"
+					}
+				],
+				"groups": [
+					"g1"
+				],
+				"availableGroups": [
+					"g2"
+				],
+				"userInfo": {
+					"username": "u"
+				},
+				"data": [
+					{
+						"id": "d1"
+					}
+				],
+				"organisation": {
+					"users": [
+						"alice"
+					]
+				},
+				"counts": {
+					"a": 1
+				}
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/{contactpersoonId}/convert-to-user#{\"contactpersoonId\":\"cp-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"convertToUser / success, empty": {
+		"outcome": {
+			"returned": {
+				"success": true
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/{contactpersoonId}/convert-to-user#{\"contactpersoonId\":\"cp-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"convertToUser / unsuccessful": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "refused"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/{contactpersoonId}/convert-to-user#{\"contactpersoonId\":\"cp-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error converting to user:",
+				{
+					"error": "Error",
+					"message": "refused"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "refused",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"convertToUser / unsuccessful, no message": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "HTTP error! status: 200"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/{contactpersoonId}/convert-to-user#{\"contactpersoonId\":\"cp-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error converting to user:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 200"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "HTTP error! status: 200",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"convertToUser / http error": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "forbidden"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/{contactpersoonId}/convert-to-user#{\"contactpersoonId\":\"cp-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error converting to user:",
+				{
+					"error": "Error",
+					"message": "forbidden"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "forbidden",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"convertToUser / http error, bare body": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "HTTP error! status: 500"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/{contactpersoonId}/convert-to-user#{\"contactpersoonId\":\"cp-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error converting to user:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 500"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "HTTP error! status: 500",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"convertToUser / http error, unreadable body": {
+		"outcome": {
+			"thrown": {
+				"error": "SyntaxError",
+				"message": "bad json"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/{contactpersoonId}/convert-to-user#{\"contactpersoonId\":\"cp-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error converting to user:",
+				{
+					"error": "SyntaxError",
+					"message": "bad json"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "bad json",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"convertToUser / network failure": {
+		"outcome": {
+			"thrown": {
+				"error": "TypeError",
+				"message": "Failed to fetch"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/{contactpersoonId}/convert-to-user#{\"contactpersoonId\":\"cp-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error converting to user:",
+				{
+					"error": "TypeError",
+					"message": "Failed to fetch"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "Failed to fetch",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"changePassword / success": {
+		"outcome": {
+			"returned": {
+				"success": true,
+				"contactpersonen": [
+					{
+						"id": "c1"
+					}
+				],
+				"groups": [
+					"g1"
+				],
+				"availableGroups": [
+					"g2"
+				],
+				"userInfo": {
+					"username": "u"
+				},
+				"data": [
+					{
+						"id": "d1"
+					}
+				],
+				"organisation": {
+					"users": [
+						"alice"
+					]
+				},
+				"counts": {
+					"a": 1
+				}
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/change-password",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"username\":\"alice\",\"newPassword\":\"s3cret\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"changePassword / success, empty": {
+		"outcome": {
+			"returned": {
+				"success": true
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/change-password",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"username\":\"alice\",\"newPassword\":\"s3cret\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"changePassword / unsuccessful": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "refused"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/change-password",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"username\":\"alice\",\"newPassword\":\"s3cret\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"error",
+				"Error changing password:",
+				{
+					"error": "Error",
+					"message": "refused"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "refused",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"changePassword / unsuccessful, no message": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "Failed to change password"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/change-password",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"username\":\"alice\",\"newPassword\":\"s3cret\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"error",
+				"Error changing password:",
+				{
+					"error": "Error",
+					"message": "Failed to change password"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "Failed to change password",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"changePassword / http error": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "HTTP error! status: 403"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/change-password",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"username\":\"alice\",\"newPassword\":\"s3cret\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"error",
+				"Error changing password:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 403"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "HTTP error! status: 403",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"changePassword / http error, bare body": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "HTTP error! status: 500"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/change-password",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"username\":\"alice\",\"newPassword\":\"s3cret\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"error",
+				"Error changing password:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 500"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "HTTP error! status: 500",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"changePassword / http error, unreadable body": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "HTTP error! status: 502"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/change-password",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"username\":\"alice\",\"newPassword\":\"s3cret\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"error",
+				"Error changing password:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 502"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "HTTP error! status: 502",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"changePassword / network failure": {
+		"outcome": {
+			"thrown": {
+				"error": "TypeError",
+				"message": "Failed to fetch"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/change-password",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"username\":\"alice\",\"newPassword\":\"s3cret\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"error",
+				"Error changing password:",
+				{
+					"error": "TypeError",
+					"message": "Failed to fetch"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "Failed to fetch",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"updateUserGroups / success": {
+		"outcome": {
+			"returned": {
+				"success": true,
+				"contactpersonen": [
+					{
+						"id": "c1"
+					}
+				],
+				"groups": [
+					"g1"
+				],
+				"availableGroups": [
+					"g2"
+				],
+				"userInfo": {
+					"username": "u"
+				},
+				"data": [
+					{
+						"id": "d1"
+					}
+				],
+				"organisation": {
+					"users": [
+						"alice"
+					]
+				},
+				"counts": {
+					"a": 1
+				}
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/update-groups",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"username\":\"alice\",\"groups\":[\"g1\"]}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": [
+							"g1"
+						]
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"updateUserGroups / success, empty": {
+		"outcome": {
+			"returned": {
+				"success": true
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/update-groups",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"username\":\"alice\",\"groups\":[\"g1\"]}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"updateUserGroups / unsuccessful": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "refused"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/update-groups",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"username\":\"alice\",\"groups\":[\"g1\"]}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"error",
+				"Error updating user groups:",
+				{
+					"error": "Error",
+					"message": "refused"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "refused",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"updateUserGroups / unsuccessful, no message": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "Failed to update user groups"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/update-groups",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"username\":\"alice\",\"groups\":[\"g1\"]}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"error",
+				"Error updating user groups:",
+				{
+					"error": "Error",
+					"message": "Failed to update user groups"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "Failed to update user groups",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"updateUserGroups / http error": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "HTTP error! status: 403"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/update-groups",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"username\":\"alice\",\"groups\":[\"g1\"]}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"error",
+				"Error updating user groups:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 403"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "HTTP error! status: 403",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"updateUserGroups / http error, bare body": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "HTTP error! status: 500"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/update-groups",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"username\":\"alice\",\"groups\":[\"g1\"]}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"error",
+				"Error updating user groups:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 500"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "HTTP error! status: 500",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"updateUserGroups / http error, unreadable body": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "HTTP error! status: 502"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/update-groups",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"username\":\"alice\",\"groups\":[\"g1\"]}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"error",
+				"Error updating user groups:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 502"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "HTTP error! status: 502",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"updateUserGroups / network failure": {
+		"outcome": {
+			"thrown": {
+				"error": "TypeError",
+				"message": "Failed to fetch"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/update-groups",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"username\":\"alice\",\"groups\":[\"g1\"]}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"error",
+				"Error updating user groups:",
+				{
+					"error": "TypeError",
+					"message": "Failed to fetch"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "Failed to fetch",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchUserInfo / success": {
+		"outcome": {
+			"returned": {
+				"username": "u"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/{contactpersoonId}/user-info#{\"contactpersoonId\":\"cp-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"g2"
+			]
+		}
+	},
+	"fetchUserInfo / success, empty": {
+		"outcome": {
+			"returned": {}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/{contactpersoonId}/user-info#{\"contactpersoonId\":\"cp-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": []
+		}
+	},
+	"fetchUserInfo / unsuccessful": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "refused"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/{contactpersoonId}/user-info#{\"contactpersoonId\":\"cp-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching user info:",
+				{
+					"error": "Error",
+					"message": "refused"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "refused",
+			"availableGroups": []
+		}
+	},
+	"fetchUserInfo / unsuccessful, no message": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "Failed to fetch user info"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/{contactpersoonId}/user-info#{\"contactpersoonId\":\"cp-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching user info:",
+				{
+					"error": "Error",
+					"message": "Failed to fetch user info"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "Failed to fetch user info",
+			"availableGroups": []
+		}
+	},
+	"fetchUserInfo / http error": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "HTTP error! status: 403"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/{contactpersoonId}/user-info#{\"contactpersoonId\":\"cp-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching user info:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 403"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "HTTP error! status: 403",
+			"availableGroups": []
+		}
+	},
+	"fetchUserInfo / http error, bare body": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "HTTP error! status: 500"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/{contactpersoonId}/user-info#{\"contactpersoonId\":\"cp-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching user info:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 500"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "HTTP error! status: 500",
+			"availableGroups": []
+		}
+	},
+	"fetchUserInfo / http error, unreadable body": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "HTTP error! status: 502"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/{contactpersoonId}/user-info#{\"contactpersoonId\":\"cp-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching user info:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 502"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "HTTP error! status: 502",
+			"availableGroups": []
+		}
+	},
+	"fetchUserInfo / network failure": {
+		"outcome": {
+			"thrown": {
+				"error": "TypeError",
+				"message": "Failed to fetch"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/{contactpersoonId}/user-info#{\"contactpersoonId\":\"cp-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching user info:",
+				{
+					"error": "TypeError",
+					"message": "Failed to fetch"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "Failed to fetch",
+			"availableGroups": []
+		}
+	},
+	"fetchContactPersonsWithUserDetails / success": {
+		"outcome": {
+			"returned": [
+				{
+					"id": "d1"
+				}
+			]
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/organisation/org-1/with-user-details",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"info",
+				"Successfully fetched contact persons with user details:",
+				{
+					"success": true,
+					"contactpersonen": [
+						{
+							"id": "c1"
+						}
+					],
+					"groups": [
+						"g1"
+					],
+					"availableGroups": [
+						"g2"
+					],
+					"userInfo": {
+						"username": "u"
+					},
+					"data": [
+						{
+							"id": "d1"
+						}
+					],
+					"organisation": {
+						"users": [
+							"alice"
+						]
+					},
+					"counts": {
+						"a": 1
+					}
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchContactPersonsWithUserDetails / success, empty": {
+		"outcome": {
+			"returned": []
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/organisation/org-1/with-user-details",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"info",
+				"Successfully fetched contact persons with user details:",
+				{
+					"success": true
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchContactPersonsWithUserDetails / unsuccessful": {
+		"outcome": {
+			"returned": []
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/organisation/org-1/with-user-details",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching contact persons with user details:",
+				{
+					"error": "Error",
+					"message": "refused"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "refused",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchContactPersonsWithUserDetails / unsuccessful, no message": {
+		"outcome": {
+			"returned": []
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/organisation/org-1/with-user-details",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching contact persons with user details:",
+				{
+					"error": "Error",
+					"message": "Failed to fetch contact persons with user details"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "Failed to fetch contact persons with user details",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchContactPersonsWithUserDetails / http error": {
+		"outcome": {
+			"returned": []
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/organisation/org-1/with-user-details",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching contact persons with user details:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 403"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "HTTP error! status: 403",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchContactPersonsWithUserDetails / http error, bare body": {
+		"outcome": {
+			"returned": []
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/organisation/org-1/with-user-details",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching contact persons with user details:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 500"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "HTTP error! status: 500",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchContactPersonsWithUserDetails / http error, unreadable body": {
+		"outcome": {
+			"returned": []
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/organisation/org-1/with-user-details",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching contact persons with user details:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 502"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "HTTP error! status: 502",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchContactPersonsWithUserDetails / network failure": {
+		"outcome": {
+			"returned": []
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/organisation/org-1/with-user-details",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching contact persons with user details:",
+				{
+					"error": "TypeError",
+					"message": "Failed to fetch"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "Failed to fetch",
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchAvailableGroups / success": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/available-groups",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"g1"
+			]
+		}
+	},
+	"fetchAvailableGroups / success, empty": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/available-groups",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": []
+		}
+	},
+	"fetchAvailableGroups / unsuccessful": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/available-groups",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching available groups:",
+				{
+					"error": "Error",
+					"message": "refused"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "refused",
+			"availableGroups": []
+		}
+	},
+	"fetchAvailableGroups / unsuccessful, no message": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/available-groups",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching available groups:",
+				{
+					"error": "Error",
+					"message": "Failed to fetch available groups"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "Failed to fetch available groups",
+			"availableGroups": []
+		}
+	},
+	"fetchAvailableGroups / http error": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/available-groups",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching available groups:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 403"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "HTTP error! status: 403",
+			"availableGroups": []
+		}
+	},
+	"fetchAvailableGroups / http error, bare body": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/available-groups",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching available groups:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 500"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "HTTP error! status: 500",
+			"availableGroups": []
+		}
+	},
+	"fetchAvailableGroups / http error, unreadable body": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/available-groups",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching available groups:",
+				{
+					"error": "Error",
+					"message": "HTTP error! status: 502"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "HTTP error! status: 502",
+			"availableGroups": []
+		}
+	},
+	"fetchAvailableGroups / network failure": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/available-groups",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error fetching available groups:",
+				{
+					"error": "TypeError",
+					"message": "Failed to fetch"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": "Failed to fetch",
+			"availableGroups": []
+		}
+	},
+	"disableUser / success": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/cp%201/disable",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"disableUser / success, empty": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/cp%201/disable",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"disableUser / unsuccessful": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/cp%201/disable",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"disableUser / unsuccessful, no message": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/cp%201/disable",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"disableUser / http error": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "forbidden"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/cp%201/disable",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error disabling user:",
+				{
+					"error": "Error",
+					"message": "forbidden"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"disableUser / http error, bare body": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "Failed to disable user"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/cp%201/disable",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error disabling user:",
+				{
+					"error": "Error",
+					"message": "Failed to disable user"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"disableUser / http error, unreadable body": {
+		"outcome": {
+			"thrown": {
+				"error": "SyntaxError",
+				"message": "bad json"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/cp%201/disable",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error disabling user:",
+				{
+					"error": "SyntaxError",
+					"message": "bad json"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"disableUser / network failure": {
+		"outcome": {
+			"thrown": {
+				"error": "TypeError",
+				"message": "Failed to fetch"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/cp%201/disable",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error disabling user:",
+				{
+					"error": "TypeError",
+					"message": "Failed to fetch"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"enableUser / success": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/cp%2F1/enable",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"enableUser / success, empty": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/cp%2F1/enable",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"enableUser / unsuccessful": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/cp%2F1/enable",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"enableUser / unsuccessful, no message": {
+		"outcome": {
+			"returned": null
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/cp%2F1/enable",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"enableUser / http error": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "forbidden"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/cp%2F1/enable",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error enabling user:",
+				{
+					"error": "Error",
+					"message": "forbidden"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"enableUser / http error, bare body": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "Failed to enable user"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/cp%2F1/enable",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error enabling user:",
+				{
+					"error": "Error",
+					"message": "Failed to enable user"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"enableUser / http error, unreadable body": {
+		"outcome": {
+			"thrown": {
+				"error": "SyntaxError",
+				"message": "bad json"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/cp%2F1/enable",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error enabling user:",
+				{
+					"error": "SyntaxError",
+					"message": "bad json"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"enableUser / network failure": {
+		"outcome": {
+			"thrown": {
+				"error": "TypeError",
+				"message": "Failed to fetch"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/cp%2F1/enable",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			],
+			[
+				"error",
+				"Error enabling user:",
+				{
+					"error": "TypeError",
+					"message": "Failed to fetch"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"dryRunMerge / success": {
+		"outcome": {
+			"returned": {
+				"success": true,
+				"contactpersonen": [
+					{
+						"id": "c1"
+					}
+				],
+				"groups": [
+					"g1"
+				],
+				"availableGroups": [
+					"g2"
+				],
+				"userInfo": {
+					"username": "u"
+				},
+				"data": [
+					{
+						"id": "d1"
+					}
+				],
+				"organisation": {
+					"users": [
+						"alice"
+					]
+				},
+				"counts": {
+					"a": 1
+				}
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisaties/{sourceUuid}/merge/dry-run#{\"sourceUuid\":\"src-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"targetUuid\":\"tgt-1\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"dryRunMerge / success, empty": {
+		"outcome": {
+			"returned": {
+				"success": true
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisaties/{sourceUuid}/merge/dry-run#{\"sourceUuid\":\"src-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"targetUuid\":\"tgt-1\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"dryRunMerge / unsuccessful": {
+		"outcome": {
+			"returned": {
+				"success": false,
+				"message": "refused"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisaties/{sourceUuid}/merge/dry-run#{\"sourceUuid\":\"src-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"targetUuid\":\"tgt-1\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"dryRunMerge / unsuccessful, no message": {
+		"outcome": {
+			"returned": {
+				"success": false
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisaties/{sourceUuid}/merge/dry-run#{\"sourceUuid\":\"src-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"targetUuid\":\"tgt-1\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"dryRunMerge / http error": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "forbidden"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisaties/{sourceUuid}/merge/dry-run#{\"sourceUuid\":\"src-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"targetUuid\":\"tgt-1\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"dryRunMerge / http error, bare body": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "HTTP error! status: 500"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisaties/{sourceUuid}/merge/dry-run#{\"sourceUuid\":\"src-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"targetUuid\":\"tgt-1\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"dryRunMerge / http error, unreadable body": {
+		"outcome": {
+			"thrown": {
+				"error": "SyntaxError",
+				"message": "bad json"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisaties/{sourceUuid}/merge/dry-run#{\"sourceUuid\":\"src-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"targetUuid\":\"tgt-1\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"dryRunMerge / network failure": {
+		"outcome": {
+			"thrown": {
+				"error": "TypeError",
+				"message": "Failed to fetch"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisaties/{sourceUuid}/merge/dry-run#{\"sourceUuid\":\"src-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"targetUuid\":\"tgt-1\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"executeMerge / success": {
+		"outcome": {
+			"returned": {
+				"success": true,
+				"contactpersonen": [
+					{
+						"id": "c1"
+					}
+				],
+				"groups": [
+					"g1"
+				],
+				"availableGroups": [
+					"g2"
+				],
+				"userInfo": {
+					"username": "u"
+				},
+				"data": [
+					{
+						"id": "d1"
+					}
+				],
+				"organisation": {
+					"users": [
+						"alice"
+					]
+				},
+				"counts": {
+					"a": 1
+				}
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisaties/{sourceUuid}/merge#{\"sourceUuid\":\"src-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"targetUuid\":\"tgt-1\",\"confirm\":true}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"executeMerge / success, empty": {
+		"outcome": {
+			"returned": {
+				"success": true
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisaties/{sourceUuid}/merge#{\"sourceUuid\":\"src-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"targetUuid\":\"tgt-1\",\"confirm\":true}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"executeMerge / unsuccessful": {
+		"outcome": {
+			"returned": {
+				"success": false,
+				"message": "refused"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisaties/{sourceUuid}/merge#{\"sourceUuid\":\"src-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"targetUuid\":\"tgt-1\",\"confirm\":true}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"executeMerge / unsuccessful, no message": {
+		"outcome": {
+			"returned": {
+				"success": false
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisaties/{sourceUuid}/merge#{\"sourceUuid\":\"src-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"targetUuid\":\"tgt-1\",\"confirm\":true}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"executeMerge / http error": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "forbidden"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisaties/{sourceUuid}/merge#{\"sourceUuid\":\"src-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"targetUuid\":\"tgt-1\",\"confirm\":true}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"executeMerge / http error, bare body": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "HTTP error! status: 500"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisaties/{sourceUuid}/merge#{\"sourceUuid\":\"src-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"targetUuid\":\"tgt-1\",\"confirm\":true}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"executeMerge / http error, unreadable body": {
+		"outcome": {
+			"thrown": {
+				"error": "SyntaxError",
+				"message": "bad json"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisaties/{sourceUuid}/merge#{\"sourceUuid\":\"src-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"targetUuid\":\"tgt-1\",\"confirm\":true}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"executeMerge / network failure": {
+		"outcome": {
+			"thrown": {
+				"error": "TypeError",
+				"message": "Failed to fetch"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisaties/{sourceUuid}/merge#{\"sourceUuid\":\"src-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"targetUuid\":\"tgt-1\",\"confirm\":true}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"getBulkUserInfo / success": {
+		"outcome": {
+			"returned": {
+				"username": "u"
+			}
+		},
+		"trace": [
+			[
+				"info",
+				"Store: Getting bulk user info for IDs:",
+				[
+					"cp-1",
+					"cp-2"
+				]
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/bulk-user-info",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"contactpersoonIds\":[\"cp-1\",\"cp-2\"]}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"info",
+				"Store: Bulk user info response status:",
+				200
+			],
+			[
+				"info",
+				"Store: Bulk user info success response:",
+				{
+					"success": true,
+					"contactpersonen": [
+						{
+							"id": "c1"
+						}
+					],
+					"groups": [
+						"g1"
+					],
+					"availableGroups": [
+						"g2"
+					],
+					"userInfo": {
+						"username": "u"
+					},
+					"data": [
+						{
+							"id": "d1"
+						}
+					],
+					"organisation": {
+						"users": [
+							"alice"
+						]
+					},
+					"counts": {
+						"a": 1
+					}
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"getBulkUserInfo / success, empty": {
+		"outcome": {
+			"returned": {}
+		},
+		"trace": [
+			[
+				"info",
+				"Store: Getting bulk user info for IDs:",
+				[
+					"cp-1",
+					"cp-2"
+				]
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/bulk-user-info",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"contactpersoonIds\":[\"cp-1\",\"cp-2\"]}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"info",
+				"Store: Bulk user info response status:",
+				200
+			],
+			[
+				"info",
+				"Store: Bulk user info success response:",
+				{
+					"success": true
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"getBulkUserInfo / unsuccessful": {
+		"outcome": {
+			"returned": {}
+		},
+		"trace": [
+			[
+				"info",
+				"Store: Getting bulk user info for IDs:",
+				[
+					"cp-1",
+					"cp-2"
+				]
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/bulk-user-info",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"contactpersoonIds\":[\"cp-1\",\"cp-2\"]}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"info",
+				"Store: Bulk user info response status:",
+				200
+			],
+			[
+				"info",
+				"Store: Bulk user info success response:",
+				{
+					"success": false,
+					"message": "refused"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"getBulkUserInfo / unsuccessful, no message": {
+		"outcome": {
+			"returned": {}
+		},
+		"trace": [
+			[
+				"info",
+				"Store: Getting bulk user info for IDs:",
+				[
+					"cp-1",
+					"cp-2"
+				]
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/bulk-user-info",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"contactpersoonIds\":[\"cp-1\",\"cp-2\"]}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"info",
+				"Store: Bulk user info response status:",
+				200
+			],
+			[
+				"info",
+				"Store: Bulk user info success response:",
+				{
+					"success": false
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"getBulkUserInfo / http error": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "forbidden"
+			}
+		},
+		"trace": [
+			[
+				"info",
+				"Store: Getting bulk user info for IDs:",
+				[
+					"cp-1",
+					"cp-2"
+				]
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/bulk-user-info",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"contactpersoonIds\":[\"cp-1\",\"cp-2\"]}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"info",
+				"Store: Bulk user info response status:",
+				403
+			],
+			[
+				"error",
+				"Store: Bulk user info error response:",
+				{
+					"success": false,
+					"message": "forbidden",
+					"error": "nope"
+				}
+			],
+			[
+				"error",
+				"Store: Error getting bulk user info:",
+				{
+					"error": "Error",
+					"message": "forbidden"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"getBulkUserInfo / http error, bare body": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "Failed to get bulk user info"
+			}
+		},
+		"trace": [
+			[
+				"info",
+				"Store: Getting bulk user info for IDs:",
+				[
+					"cp-1",
+					"cp-2"
+				]
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/bulk-user-info",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"contactpersoonIds\":[\"cp-1\",\"cp-2\"]}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"info",
+				"Store: Bulk user info response status:",
+				500
+			],
+			[
+				"error",
+				"Store: Bulk user info error response:",
+				{}
+			],
+			[
+				"error",
+				"Store: Error getting bulk user info:",
+				{
+					"error": "Error",
+					"message": "Failed to get bulk user info"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"getBulkUserInfo / http error, unreadable body": {
+		"outcome": {
+			"thrown": {
+				"error": "SyntaxError",
+				"message": "bad json"
+			}
+		},
+		"trace": [
+			[
+				"info",
+				"Store: Getting bulk user info for IDs:",
+				[
+					"cp-1",
+					"cp-2"
+				]
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/bulk-user-info",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"contactpersoonIds\":[\"cp-1\",\"cp-2\"]}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"info",
+				"Store: Bulk user info response status:",
+				502
+			],
+			[
+				"error",
+				"Store: Error getting bulk user info:",
+				{
+					"error": "SyntaxError",
+					"message": "bad json"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"getBulkUserInfo / network failure": {
+		"outcome": {
+			"thrown": {
+				"error": "TypeError",
+				"message": "Failed to fetch"
+			}
+		},
+		"trace": [
+			[
+				"info",
+				"Store: Getting bulk user info for IDs:",
+				[
+					"cp-1",
+					"cp-2"
+				]
+			],
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/contactpersonen/bulk-user-info",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"contactpersoonIds\":[\"cp-1\",\"cp-2\"]}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			],
+			[
+				"error",
+				"Store: Error getting bulk user info:",
+				{
+					"error": "TypeError",
+					"message": "Failed to fetch"
+				}
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchMembers / success": {
+		"outcome": {
+			"returned": [
+				"alice"
+			]
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/organisations/{uuid}#{\"uuid\":\"org-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchMembers / success, empty": {
+		"outcome": {
+			"returned": []
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/organisations/{uuid}#{\"uuid\":\"org-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchMembers / unsuccessful": {
+		"outcome": {
+			"returned": []
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/organisations/{uuid}#{\"uuid\":\"org-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchMembers / unsuccessful, no message": {
+		"outcome": {
+			"returned": []
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/organisations/{uuid}#{\"uuid\":\"org-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchMembers / http error": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "nope"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/organisations/{uuid}#{\"uuid\":\"org-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchMembers / http error, bare body": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "HTTP error! status: 500"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/organisations/{uuid}#{\"uuid\":\"org-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchMembers / http error, unreadable body": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "HTTP error! status: 502"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/organisations/{uuid}#{\"uuid\":\"org-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"fetchMembers / network failure": {
+		"outcome": {
+			"thrown": {
+				"error": "TypeError",
+				"message": "Failed to fetch"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/openregister/api/organisations/{uuid}#{\"uuid\":\"org-1\"}",
+				{
+					"method": "GET",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"grantAccess / success": {
+		"outcome": {
+			"returned": {
+				"success": true,
+				"contactpersonen": [
+					{
+						"id": "c1"
+					}
+				],
+				"groups": [
+					"g1"
+				],
+				"availableGroups": [
+					"g2"
+				],
+				"userInfo": {
+					"username": "u"
+				},
+				"data": [
+					{
+						"id": "d1"
+					}
+				],
+				"organisation": {
+					"users": [
+						"alice"
+					]
+				},
+				"counts": {
+					"a": 1
+				}
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisations/{uuid}/members#{\"uuid\":\"org-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"userId\":\"bob\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"grantAccess / success, empty": {
+		"outcome": {
+			"returned": {
+				"success": true
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisations/{uuid}/members#{\"uuid\":\"org-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"userId\":\"bob\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"grantAccess / unsuccessful": {
+		"outcome": {
+			"returned": {
+				"success": false,
+				"message": "refused"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisations/{uuid}/members#{\"uuid\":\"org-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"userId\":\"bob\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"grantAccess / unsuccessful, no message": {
+		"outcome": {
+			"returned": {
+				"success": false
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisations/{uuid}/members#{\"uuid\":\"org-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"userId\":\"bob\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"grantAccess / http error": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "nope"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisations/{uuid}/members#{\"uuid\":\"org-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"userId\":\"bob\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"grantAccess / http error, bare body": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "HTTP error! status: 500"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisations/{uuid}/members#{\"uuid\":\"org-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"userId\":\"bob\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"grantAccess / http error, unreadable body": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "HTTP error! status: 502"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisations/{uuid}/members#{\"uuid\":\"org-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"userId\":\"bob\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"grantAccess / network failure": {
+		"outcome": {
+			"thrown": {
+				"error": "TypeError",
+				"message": "Failed to fetch"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisations/{uuid}/members#{\"uuid\":\"org-1\"}",
+				{
+					"method": "POST",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					},
+					"body": "{\"userId\":\"bob\"}"
+				},
+				[
+					"method",
+					"headers",
+					"body"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"revokeAccess / success": {
+		"outcome": {
+			"returned": {
+				"success": true,
+				"contactpersonen": [
+					{
+						"id": "c1"
+					}
+				],
+				"groups": [
+					"g1"
+				],
+				"availableGroups": [
+					"g2"
+				],
+				"userInfo": {
+					"username": "u"
+				},
+				"data": [
+					{
+						"id": "d1"
+					}
+				],
+				"organisation": {
+					"users": [
+						"alice"
+					]
+				},
+				"counts": {
+					"a": 1
+				}
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisations/{uuid}/members/{userId}#{\"uuid\":\"org-1\",\"userId\":\"bob\"}",
+				{
+					"method": "DELETE",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"revokeAccess / success, empty": {
+		"outcome": {
+			"returned": {
+				"success": true
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisations/{uuid}/members/{userId}#{\"uuid\":\"org-1\",\"userId\":\"bob\"}",
+				{
+					"method": "DELETE",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"revokeAccess / unsuccessful": {
+		"outcome": {
+			"returned": {
+				"success": false,
+				"message": "refused"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisations/{uuid}/members/{userId}#{\"uuid\":\"org-1\",\"userId\":\"bob\"}",
+				{
+					"method": "DELETE",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"revokeAccess / unsuccessful, no message": {
+		"outcome": {
+			"returned": {
+				"success": false
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisations/{uuid}/members/{userId}#{\"uuid\":\"org-1\",\"userId\":\"bob\"}",
+				{
+					"method": "DELETE",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"revokeAccess / http error": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "nope"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisations/{uuid}/members/{userId}#{\"uuid\":\"org-1\",\"userId\":\"bob\"}",
+				{
+					"method": "DELETE",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"revokeAccess / http error, bare body": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "HTTP error! status: 500"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisations/{uuid}/members/{userId}#{\"uuid\":\"org-1\",\"userId\":\"bob\"}",
+				{
+					"method": "DELETE",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"revokeAccess / http error, unreadable body": {
+		"outcome": {
+			"thrown": {
+				"error": "Error",
+				"message": "HTTP error! status: 502"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisations/{uuid}/members/{userId}#{\"uuid\":\"org-1\",\"userId\":\"bob\"}",
+				{
+					"method": "DELETE",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	},
+	"revokeAccess / network failure": {
+		"outcome": {
+			"thrown": {
+				"error": "TypeError",
+				"message": "Failed to fetch"
+			}
+		},
+		"trace": [
+			[
+				"fetch",
+				"/index.php/apps/stackiq/api/organisations/{uuid}/members/{userId}#{\"uuid\":\"org-1\",\"userId\":\"bob\"}",
+				{
+					"method": "DELETE",
+					"headers": {
+						"Content-Type": "application/json",
+						"requesttoken": "token-1"
+					}
+				},
+				[
+					"method",
+					"headers"
+				]
+			]
+		],
+		"state": {
+			"contactpersonen": [
+				{
+					"user": {
+						"username": "alice",
+						"groups": []
+					}
+				}
+			],
+			"loading": false,
+			"error": null,
+			"availableGroups": [
+				"old"
+			]
+		}
+	}
+}

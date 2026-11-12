@@ -3,6 +3,9 @@
 /**
  * Stackiq Portal Contribution Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Stackiq's contribution to the shared Portaliq external portal (hydra
  * ADR-046 + contract v2.1). Portaliq — the ONE shared portal for people WITHOUT
  * Nextcloud accounts — discovers this class by convention FQCN
@@ -29,9 +32,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @version GIT: <git-id>
  *
@@ -80,6 +80,144 @@ class PortalContributionProvider {
 	 * @var string
 	 */
 	private const ORG_CLAIM = 'organisationId';
+
+	/**
+	 * Read collections of the `vendor-org` audience; see vendorContribution().
+	 *
+	 * @var list<array<string, mixed>>
+	 */
+	private const VENDOR_COLLECTIONS = [
+		[
+			'id' => 'vendorDiensten',
+			'register' => self::REGISTER,
+			'schema' => 'catalogService',
+			'scopeField' => 'provider',
+			'scopeClaim' => self::ORG_CLAIM,
+			'label' => 'My services',
+			'listable' => true,
+			'fields' => [
+				'name',
+				'shortDescription',
+				'longDescription',
+				'website',
+				'type',
+				'modules',
+			],
+		],
+		[
+			'id' => 'vendorGebruik',
+			'register' => self::REGISTER,
+			'schema' => 'usage',
+			'scopeField' => 'provider',
+			'scopeClaim' => self::ORG_CLAIM,
+			'label' => 'Deployments of my offerings',
+			'listable' => true,
+			'fields' => [
+				'status',
+				'startDateAcquisition',
+				'startDatePlanned',
+				'startDateInProduction',
+				'startDateOutPhasing',
+				'startDateOutPhased',
+				'consumer',
+				'module',
+				'moduleVersion',
+			],
+		],
+		[
+			'id' => 'vendorContracts',
+			'register' => self::REGISTER,
+			'schema' => 'catalogContract',
+			'scopeField' => 'provider',
+			'via' => 'service',
+			'scopeClaim' => self::ORG_CLAIM,
+			'minTrust' => 'substantial',
+			'label' => 'Contracts for my services',
+			'listable' => true,
+			'fields' => [
+				'service',
+				'usage',
+				'startDate',
+				'endDate',
+				'contractNumber',
+				'contractType',
+				'cost',
+				'costPeriod',
+				'contactPersonProvider',
+				'documentReference',
+				'status',
+			],
+		],
+		[
+			'id' => 'vendorCompliancy',
+			'register' => self::REGISTER,
+			'schema' => 'compliancy',
+			'scopeField' => 'provider',
+			'via' => 'module',
+			'scopeClaim' => self::ORG_CLAIM,
+			'label' => 'Compliance of my modules',
+			'listable' => true,
+			'fields' => [
+				'standardVersion',
+				'standardGemma',
+				'module',
+				'url',
+			],
+		],
+	];
+
+	/**
+	 * Read collections of the `participant-org` audience; see participantContribution().
+	 *
+	 * @var list<array<string, mixed>>
+	 */
+	private const PARTICIPANT_COLLECTIONS = [
+		[
+			'id' => 'participantGebruik',
+			'register' => self::REGISTER,
+			'schema' => 'usage',
+			'scopeField' => 'consumer',
+			'scopeClaim' => self::ORG_CLAIM,
+			'label' => 'Software we use',
+			'listable' => true,
+			'fields' => [
+				'status',
+				'startDateAcquisition',
+				'startDatePlanned',
+				'startDateInProduction',
+				'startDateOutPhasing',
+				'startDateOutPhased',
+				'provider',
+				'module',
+				'moduleVersion',
+				'diensten',
+			],
+		],
+		[
+			'id' => 'participantContracts',
+			'register' => self::REGISTER,
+			'schema' => 'catalogContract',
+			'scopeField' => 'consumer',
+			'via' => 'usage',
+			'scopeClaim' => self::ORG_CLAIM,
+			'minTrust' => 'substantial',
+			'label' => 'Our contracts',
+			'listable' => true,
+			'fields' => [
+				'service',
+				'usage',
+				'startDate',
+				'endDate',
+				'contractNumber',
+				'contractType',
+				'cost',
+				'costPeriod',
+				'contactPersonUser',
+				'documentReference',
+				'status',
+			],
+		],
+	];
 
 	/**
 	 * Constructor.
@@ -209,92 +347,7 @@ class PortalContributionProvider {
 	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	private function vendorContribution(): array {
-		return [
-			'label' => 'Stackiq',
-			'collections' => [
-				[
-					'id' => 'vendorDiensten',
-					'register' => self::REGISTER,
-					'schema' => 'catalogService',
-					'scopeField' => 'provider',
-					'scopeClaim' => self::ORG_CLAIM,
-					'label' => 'My services',
-					'listable' => true,
-					'fields' => [
-						'name',
-						'shortDescription',
-						'longDescription',
-						'website',
-						'type',
-						'modules',
-					],
-				],
-				[
-					'id' => 'vendorGebruik',
-					'register' => self::REGISTER,
-					'schema' => 'usage',
-					'scopeField' => 'provider',
-					'scopeClaim' => self::ORG_CLAIM,
-					'label' => 'Deployments of my offerings',
-					'listable' => true,
-					'fields' => [
-						'status',
-						'startDateAcquisition',
-						'startDatePlanned',
-						'startDateInProduction',
-						'startDateOutPhasing',
-						'startDateOutPhased',
-						'consumer',
-						'module',
-						'moduleVersion',
-					],
-				],
-				[
-					'id' => 'vendorContracts',
-					'register' => self::REGISTER,
-					'schema' => 'catalogContract',
-					'scopeField' => 'provider',
-					'via' => 'service',
-					'scopeClaim' => self::ORG_CLAIM,
-					'minTrust' => 'substantial',
-					'label' => 'Contracts for my services',
-					'listable' => true,
-					'fields' => [
-						'service',
-						'usage',
-						'startDate',
-						'endDate',
-						'contractNumber',
-						'contractType',
-						'cost',
-						'costPeriod',
-						'contactPersonProvider',
-						'documentReference',
-						'status',
-					],
-				],
-				[
-					'id' => 'vendorCompliancy',
-					'register' => self::REGISTER,
-					'schema' => 'compliancy',
-					'scopeField' => 'provider',
-					'via' => 'module',
-					'scopeClaim' => self::ORG_CLAIM,
-					'label' => 'Compliance of my modules',
-					'listable' => true,
-					'fields' => [
-						'standardVersion',
-						'standardGemma',
-						'module',
-						'url',
-					],
-				],
-			],
-			'actions' => [],
-			'notifications' => [],
-			'publicRecords' => $this->publicRecords(),
-		];
-
+		return $this->manifest(collections: self::VENDOR_COLLECTIONS);
 	}//end vendorContribution()
 
 	/**
@@ -313,59 +366,24 @@ class PortalContributionProvider {
 	 * @spec openspec/specs/portal-contribution/spec.md
 	 */
 	private function participantContribution(): array {
+		return $this->manifest(collections: self::PARTICIPANT_COLLECTIONS);
+	}//end participantContribution()
+
+	/**
+	 * The manifest around a set of read collections: no create-actions, no
+	 * notifications, and the public record lists.
+	 *
+	 * @param list<array<string, mixed>> $collections The read collections.
+	 *
+	 * @return array<string, mixed> The manifest.
+	 */
+	private function manifest(array $collections): array {
 		return [
 			'label' => 'Stackiq',
-			'collections' => [
-				[
-					'id' => 'participantGebruik',
-					'register' => self::REGISTER,
-					'schema' => 'usage',
-					'scopeField' => 'consumer',
-					'scopeClaim' => self::ORG_CLAIM,
-					'label' => 'Software we use',
-					'listable' => true,
-					'fields' => [
-						'status',
-						'startDateAcquisition',
-						'startDatePlanned',
-						'startDateInProduction',
-						'startDateOutPhasing',
-						'startDateOutPhased',
-						'provider',
-						'module',
-						'moduleVersion',
-						'diensten',
-					],
-				],
-				[
-					'id' => 'participantContracts',
-					'register' => self::REGISTER,
-					'schema' => 'catalogContract',
-					'scopeField' => 'consumer',
-					'via' => 'usage',
-					'scopeClaim' => self::ORG_CLAIM,
-					'minTrust' => 'substantial',
-					'label' => 'Our contracts',
-					'listable' => true,
-					'fields' => [
-						'service',
-						'usage',
-						'startDate',
-						'endDate',
-						'contractNumber',
-						'contractType',
-						'cost',
-						'costPeriod',
-						'contactPersonUser',
-						'documentReference',
-						'status',
-					],
-				],
-			],
+			'collections' => $collections,
 			'actions' => [],
 			'notifications' => [],
 			'publicRecords' => $this->publicRecords(),
 		];
-
-	}//end participantContribution()
+	}//end manifest()
 }//end class

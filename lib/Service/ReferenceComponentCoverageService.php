@@ -71,50 +71,96 @@ class ReferenceComponentCoverageService {
 	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
 	 */
 	public function build(string $organisationUuid): array {
-		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
-			throw new Exception('OpenRegister app is not installed');
-		}
-
-		$config = $this->settingsService->getVoorzieningenConfig();
-		$registerId = (int)($config['register'] ?? 0);
-		$usageSchemaId = (int)($config['gebruik_schema'] ?? 0);
-		$moduleSchemaId = (int)($config['module_schema'] ?? 0);
-		if ($registerId === 0 || $usageSchemaId === 0) {
-			throw new Exception('Voorzieningen configuration not found. Please configure the schemas in the admin panel.');
-		}
-
-		$usageResult = $this->search(query: [
-			'@self' => ['register' => $registerId, 'schema' => $usageSchemaId],
-			'consumer' => $organisationUuid,
-			'_limit' => PortfolioReportService::DEFAULT_PAGE_SIZE_CEILING,
-		]);
-		$usages = $this->relations->normalizeResults(results: $usageResult['results'] ?? []);
-		$total = (int)($usageResult['total'] ?? count($usages));
-
-		$modules = $this->modules(usages: $usages, registerId: $registerId, schemaId: $moduleSchemaId);
-
-		$coverage = $this->derivation->derive(
-			components: $this->components(),
-			usages: $usages,
-			moduleNames: array_map(static fn (array $module): string => (string)($module['name'] ?? ''), $modules),
-			moduleComponents: array_map(
-				fn (array $module): array => array_map(
-					fn (mixed $value): string => $this->relations->resolveRelationId(value: $value),
-					(array)($module['referenceComponents'] ?? [])
-				),
-				$modules
-			)
-		);
+		$source   = $this->usageSource();
+		$page     = $this->organisationUsages(organisationUuid: $organisationUuid, source: $source);
+		$modules  = $this->modules(usages: $page['usages'], registerId: $source['register'], schemaId: $source['module']);
+		$coverage = $this->coverage(usages: $page['usages'], modules: $modules);
 
 		return [
 			'organisation' => $organisationUuid,
 			'generatedAt' => (new DateTimeImmutable())->format(DATE_ATOM),
 			'summary' => $coverage['summary'],
 			'components' => $coverage['components'],
-			'total' => $total,
-			'truncated' => $total > count($usages),
-		];
+		] + $page['counts'];
 	}//end build()
+
+	/**
+	 * The register and the usage and module schemas the coverage reads, checked to be usable.
+	 *
+	 * @return array{register: int, usage: int, module: int} The register and schema ids.
+	 *
+	 * @throws Exception When OpenRegister or the register configuration is unavailable.
+	 */
+	private function usageSource(): array {
+		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
+			throw new Exception('OpenRegister app is not installed');
+		}
+
+		$config = $this->settingsService->getVoorzieningenConfig();
+		$source = [
+			'register' => (int)($config['register'] ?? 0),
+			'usage'    => (int)($config['gebruik_schema'] ?? 0),
+			'module'   => (int)($config['module_schema'] ?? 0),
+		];
+		if ($source['register'] === 0 || $source['usage'] === 0) {
+			throw new Exception('Voorzieningen configuration not found. Please configure the schemas in the admin panel.');
+		}
+
+		return $source;
+	}//end usageSource()
+
+	/**
+	 * The usages one organisation consumes, with the page counts.
+	 *
+	 * Scoped by the `consumer` filter to the one organisation the coverage is for.
+	 *
+	 * @param string                                         $organisationUuid The consuming organisation.
+	 * @param array{register: int, usage: int, module: int} $source           The register and schema ids.
+	 *
+	 * @return array{usages: array<int, array<string, mixed>>, counts: array{total: int, truncated: bool}}
+	 */
+	private function organisationUsages(string $organisationUuid, array $source): array {
+		$usageResult = $this->search(query: [
+			'@self' => ['register' => $source['register'], 'schema' => $source['usage']],
+			'consumer' => $organisationUuid,
+			'_limit' => PortfolioReportService::DEFAULT_PAGE_SIZE_CEILING,
+		]);
+		$usages = $this->relations->normalizeResults(results: $usageResult['results'] ?? []);
+		$total  = (int)($usageResult['total'] ?? count($usages));
+
+		return ['usages' => $usages, 'counts' => ['total' => $total, 'truncated' => $total > count($usages)]];
+	}//end organisationUsages()
+
+	/**
+	 * Derive the coverage from the reference components, the usages and their modules.
+	 *
+	 * @param array<int, array<string, mixed>>    $usages  The organisation's usages.
+	 * @param array<string, array<string, mixed>> $modules The used modules, by id.
+	 *
+	 * @return array<string, mixed> The derivation's summary and components.
+	 */
+	private function coverage(array $usages, array $modules): array {
+		return $this->derivation->derive(
+			components: $this->components(),
+			usages: $usages,
+			moduleNames: array_map(static fn (array $module): string => (string)($module['name'] ?? ''), $modules),
+			moduleComponents: array_map(fn (array $module): array => $this->moduleComponentIds(module: $module), $modules)
+		);
+	}//end coverage()
+
+	/**
+	 * The reference component ids one module names.
+	 *
+	 * @param array<string, mixed> $module The module.
+	 *
+	 * @return array<int|string, string>
+	 */
+	private function moduleComponentIds(array $module): array {
+		return array_map(
+			fn (mixed $value): string => $this->relations->resolveRelationId(value: $value),
+			(array)($module['referenceComponents'] ?? [])
+		);
+	}//end moduleComponentIds()
 
 	/**
 	 * The same coverage as CSV, one row per reference component.
@@ -126,8 +172,6 @@ class ReferenceComponentCoverageService {
 	 * @throws Exception When OpenRegister or the register configuration is unavailable.
 	 *
 	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) csvSafeCell() is the portfolio report's pure cell guard, shared so both CSVs escape alike.
 	 */
 	public function buildCsv(string $organisationUuid): string {
 		$coverage = $this->build(organisationUuid: $organisationUuid);
@@ -135,19 +179,7 @@ class ReferenceComponentCoverageService {
 		$handle = fopen('php://temp', 'r+');
 		fputcsv($handle, ['group', 'referenceComponent', 'state', 'fillable', 'applications']);
 		foreach ($coverage['components'] as $row) {
-			$fillable = 'no';
-			if ($row['fillable'] === true) {
-				$fillable = 'yes';
-			}
-
-			$cells = [
-				$row['group'],
-				$row['name'],
-				$row['state'],
-				$fillable,
-				implode(' | ', array_column($row['applications'], 'moduleName')),
-			];
-			fputcsv($handle, array_map(static fn (string $cell): string => PortfolioReportService::csvSafeCell(value: $cell), $cells));
+			fputcsv($handle, self::csvCells(row: $row));
 		}
 
 		rewind($handle);
@@ -156,6 +188,31 @@ class ReferenceComponentCoverageService {
 
 		return $csv;
 	}//end buildCsv()
+
+	/**
+	 * The CSV cells of one reference component row, each through the formula guard.
+	 *
+	 * @param array<string,mixed> $row One component row of the coverage.
+	 *
+	 * @return array<int,string> The cells: group, name, state, fillable, applications.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) csvSafeCell() is the portfolio report's pure cell guard, shared so both CSVs escape alike.
+	 */
+	private static function csvCells(array $row): array {
+		$fillable = 'no';
+		if ($row['fillable'] === true) {
+			$fillable = 'yes';
+		}
+
+		$cells = [
+			$row['group'],
+			$row['name'],
+			$row['state'],
+			$fillable,
+			implode(' | ', array_column($row['applications'], 'moduleName')),
+		];
+		return array_map(static fn (string $cell): string => PortfolioReportService::csvSafeCell(value: $cell), $cells);
+	}//end csvCells()
 
 	/**
 	 * The GEMMA reference components, bounded.

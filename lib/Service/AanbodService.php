@@ -16,6 +16,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -112,15 +115,7 @@ class AanbodService {
 			$currentOrg = $this->getCurrentOrganisation();
 			if ($currentOrg === null) {
 				$this->logger->warning('No current organization available for aanbod filtering');
-				return [
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'message' => 'No current organization available',
-				];
+				return (new EmptyListing())->page() + ['message' => 'No current organization available'];
 			}
 
 			// Get voorzieningen configuration.
@@ -259,15 +254,7 @@ class AanbodService {
 				]
 			);
 
-			return [
-				'results' => [],
-				'total' => 0,
-				'page' => 1,
-				'pages' => 0,
-				'limit' => 20,
-				'offset' => 0,
-				'error' => 'Failed to retrieve aanbod: ' . $e->getMessage(),
-			];
+			return (new EmptyListing())->page() + ['error' => 'Failed to retrieve aanbod: ' . $e->getMessage()];
 		}//end try
 	}//end getAanbod()
 
@@ -656,30 +643,7 @@ class AanbodService {
 	 * @return string|null Current organisation identifier or null if no user session
 	 */
 	private function getCurrentOrganisation(): ?string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return null;
-		}
-
-		try {
-			// Get the OpenRegister OrganisationService to get the active organisation.
-			$organisationService = $this->container->get('OCA\OpenRegister\Service\OrganisationService');
-			$activeOrg = $organisationService->getActiveOrganisation();
-
-			if ($activeOrg !== null) {
-				return $activeOrg->getUuid();
-			}
-
-			return null;
-		} catch (Exception $e) {
-			$this->logger->error(
-				'Failed to get current organisation from OpenRegister',
-				[
-					'error' => $e->getMessage(),
-				]
-			);
-			return null;
-		}
+		return $this->openRegisterLookup()->activeOrganisationUuid();
 	}//end getCurrentOrganisation()
 
 	/**
@@ -690,16 +654,22 @@ class AanbodService {
 	 * @throws Exception When OpenRegister service is not available
 	 */
 	private function getObjectService(): ObjectServiceInterface {
-		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === false) {
-			throw new Exception('OpenRegister app is not installed');
-		}
-
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Exception $e) {
-			throw new Exception('Failed to get OpenRegister service: ' . $e->getMessage());
-		}
+		return $this->openRegisterLookup()->objectService();
 	}//end getObjectService()
+
+	/**
+	 * The OpenRegister lookups, built from this service's app manager, container, session and logger.
+	 *
+	 * @return OpenRegisterLookup
+	 */
+	private function openRegisterLookup(): OpenRegisterLookup {
+		return new OpenRegisterLookup(
+			appManager: $this->appManager,
+			container: $this->container,
+			userSession: $this->userSession,
+			logger: $this->logger
+		);
+	}//end openRegisterLookup()
 
 	/**
 	 * Add query filters from options to the base query.

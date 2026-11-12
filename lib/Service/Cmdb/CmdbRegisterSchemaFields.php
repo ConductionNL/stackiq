@@ -75,23 +75,55 @@ class CmdbRegisterSchemaFields {
 
 		$fields = [];
 		foreach ($decodedFiles as $decoded) {
-			foreach (($decoded['components']['schemas'] ?? []) as $schema => $definition) {
-				$calculations = (array)($definition['configuration']['x-openregister-calculations'] ?? []);
-				foreach ((array)($definition['properties'] ?? []) as $property => $propertyDefinition) {
-					$reason = self::reasonOf(definition: $propertyDefinition, calculated: array_key_exists((string)$property, $calculations));
-					$before = ($fields[(string)$schema][(string)$property] ?? '');
-					if ($before !== 'relation' && $reason !== '') {
-						$before = $reason;
-					}
-
-					$fields[(string)$schema][(string)$property] = $before;
-				}
-			}
+			$fields = self::withDocumentReasons(fields: $fields, decoded: $decoded);
 		}
 
 		$this->fields = $fields;
 		return $fields;
 	}//end fields()
+
+	/**
+	 * Add the properties of every schema one register document defines to the reasons found so far.
+	 *
+	 * @param array<string, array<string, string>> $fields The reasons so far, per schema and property.
+	 * @param array<string, mixed> $decoded The register file or a fragment, decoded.
+	 *
+	 * @return array<string, array<string, string>>
+	 */
+	private static function withDocumentReasons(array $fields, array $decoded): array {
+		foreach (($decoded['components']['schemas'] ?? []) as $schema => $definition) {
+			$reasons = self::withSchemaReasons(reasons: ($fields[(string)$schema] ?? []), definition: $definition);
+			if ($reasons !== []) {
+				$fields[(string)$schema] = $reasons;
+			}
+		}
+
+		return $fields;
+	}//end withDocumentReasons()
+
+	/**
+	 * Add one schema definition's properties to the reasons found so far: a relation wins, another reason
+	 * replaces ''.
+	 *
+	 * @param array<string, string> $reasons The schema's reasons from earlier documents, by property.
+	 * @param mixed $definition The schema definition in this document.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function withSchemaReasons(array $reasons, mixed $definition): array {
+		$calculations = (array)($definition['configuration']['x-openregister-calculations'] ?? []);
+		foreach ((array)($definition['properties'] ?? []) as $property => $propertyDefinition) {
+			$reason = self::reasonOf(definition: $propertyDefinition, calculated: array_key_exists((string)$property, $calculations));
+			$before = ($reasons[(string)$property] ?? '');
+			if ($before !== 'relation' && $reason !== '') {
+				$before = $reason;
+			}
+
+			$reasons[(string)$property] = $before;
+		}
+
+		return $reasons;
+	}//end withSchemaReasons()
 
 	/**
 	 * The register file and every fragment, decoded; fails closed when one cannot be read.

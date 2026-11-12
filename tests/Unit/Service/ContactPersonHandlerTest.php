@@ -24,6 +24,9 @@ use RuntimeException;
 /**
  * The role group of an organisation type, and adding a user to a group that exists.
  *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * @category Tests
  * @package  OCA\Stackiq\Tests\Unit\Service
  * @author   Conduction b.v. <info@conduction.nl>

@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 /** * @file ViewObject.vue * @module Modals/Object * @author Your Name * @copyright
 2024 Your Organization * @license EUPL-1.2
 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 */
@@ -1913,6 +1917,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 </template>
 
 <script>
+import { getRequestToken } from '@nextcloud/auth'
 import {
 	NcActionButton,
 	NcActions,
@@ -1960,6 +1965,24 @@ import Upload from 'vue-material-design-icons/Upload.vue'
 import PaginationComponent from '../../components/PaginationComponent.vue'
 import PublishedIcon from '../../components/PublishedIcon.vue'
 import { getTheme } from '../../services/getTheme.js'
+import { FILE_ACTIONS } from './objectFileActions.js'
+import {
+	lockDescription,
+	objectDisplayName,
+	objectSchemaName,
+	referenceTitle,
+	timestampRows,
+} from './objectMetadata.js'
+import {
+	orderedPropertyRows,
+	schemaPropertyRows,
+} from './objectPropertyRows.js'
+import {
+	isValidDateString,
+	isValidPropertyValue,
+	presenceClass,
+	propertyErrorMessage,
+} from './propertyValidation.js'
 
 import '@toast-ui/editor/dist/toastui-editor.css'
 
@@ -2086,121 +2109,12 @@ export default {
 			const objectData = this.currentObject || {}
 			const schemaProperties = this.getSchemaProperties()
 
-			const propertiesWithOrder = []
-			const propertiesWithoutOrder = []
-
-			// First, add all schema properties in their defined order
-			for (const [schemaKey, schemaProperty] of Object.entries(
-				schemaProperties,
-			)) {
-				let propertyValue
-				if (Object.hasOwn(objectData, schemaKey)) {
-					// Property exists in object, use its value
-					propertyValue = objectData[schemaKey]
-				} else {
-					// Property doesn't exist in object, use appropriate default value
-					let defaultValue = ''
-					switch (schemaProperty.type) {
-						case 'string':
-							defaultValue = schemaProperty.const || ''
-							break
-						case 'number':
-						case 'integer':
-							defaultValue = 0
-							break
-						case 'boolean':
-							defaultValue = false
-							break
-						case 'array':
-							defaultValue = []
-							break
-						case 'object':
-							defaultValue = {}
-							break
-						default:
-							defaultValue = ''
-					}
-					propertyValue = defaultValue
-				}
-
-				const propertyData = [schemaKey, propertyValue, schemaProperty]
-
-				// Check if property has an order value
-				if (
-					schemaProperty.order !== undefined
-					&& schemaProperty.order !== null
-				) {
-					propertiesWithOrder.push(propertyData)
-				} else {
-					propertiesWithoutOrder.push(propertyData)
-				}
-			}
-
-			// Then, add any additional properties from the object that aren't in the schema
-			const additionalProperties = []
-			for (const [objectKey, objectValue] of Object.entries(objectData)) {
-				// Skip metadata and properties already handled by schema
-				// Also skip properties that have been marked for deletion (undefined in formData)
-				if (
-					objectKey !== '@self'
-					&& objectKey !== 'id'
-					&& !Object.hasOwn(schemaProperties, objectKey)
-					&& !(this.formData[objectKey] === undefined)
-				) {
-					additionalProperties.push([objectKey, objectValue, null])
-				}
-			}
-
-			// Sort properties with order: ascending by order value, then alphabetically by key
-			propertiesWithOrder.sort((a, b) => {
-				const [keyA, , schemaA] = a
-				const [keyB, , schemaB] = b
-
-				// First sort by order (ascending)
-				const orderA = schemaA?.order || 0
-				const orderB = schemaB?.order || 0
-
-				if (orderA !== orderB) {
-					return orderA - orderB // Ascending order
-				}
-
-				// If same order, sort alphabetically
-				return keyA.localeCompare(keyB)
-			})
-
-			// Sort properties without order alphabetically by key
-			propertiesWithoutOrder.sort((a, b) => {
-				const [keyA] = a
-				const [keyB] = b
-				return keyA.localeCompare(keyB)
-			})
-
-			// Sort additional properties alphabetically for consistency
-			additionalProperties.sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
-
-			// If we have no properties to show (new object with no schema), provide some basic ones
-			if (
-				propertiesWithoutOrder.length === 0
-				&& propertiesWithOrder.length === 0
-				&& additionalProperties.length === 0
-			) {
-				return [
-					['title', ''],
-					['description', ''],
-					['omschrijving', ''],
-					['category', ''],
-					['status', 'draft'],
-				]
-			}
-
-			// Combine: properties with order first (descending order), then properties without order, then additional properties
-			const combinedProperties = [
-				...propertiesWithOrder.map(([key, value]) => [key, value]),
-				...propertiesWithoutOrder.map(([key, value]) => [key, value]),
-				...additionalProperties,
-			]
-
-			return combinedProperties
+			// The schema properties in their defined order, then the object's own;
+			// basic rows when there are none (new object with no schema)
+			return orderedPropertyRows(
+				schemaPropertyRows(objectData, schemaProperties),
+				this.additionalPropertyRows(objectData, schemaProperties),
+			)
 		},
 
 		/**
@@ -2253,98 +2167,17 @@ export default {
 			if (!this.currentObject) return []
 
 			const obj = this.currentObject
-			const metadata = []
-
-			// ID
-			metadata.push(['ID', obj.id || 'Not set'])
-
-			// Version
-			metadata.push(['Version', obj['@self']?.version || 'Not set'])
-
-			// Register
-			const register = obj['@self']?.register
-			let registerDisplay = 'Not set'
-			if (register) {
-				if (typeof register === 'object') {
-					registerDisplay =
-						register.title || register.name || register.id || register
-				} else {
-					// Try to find the register title from available registers
-					const availableRegister = objectStore.availableRegisters.find(
-						(r) => r.id === register,
-					)
-					registerDisplay = availableRegister?.title || register
-				}
-			}
-			metadata.push(['Register', registerDisplay])
-
-			// Schema
-			const schema = obj['@self']?.schema
-			let schemaDisplay = 'Not set'
-			if (schema) {
-				if (typeof schema === 'object') {
-					schemaDisplay =
-						schema.title || schema.name || schema.id || schema
-				} else {
-					// Try to find the schema title from available schemas
-					const availableSchema = objectStore.availableSchemas.find(
-						(s) => s.id === schema,
-					)
-					schemaDisplay = availableSchema?.title || schema
-				}
-			}
-			metadata.push(['Schema', schemaDisplay])
-
-			// Locked
-			const locked = obj['@self']?.locked
-			let lockedDisplay = 'Not locked'
-			if (locked) {
-				if (typeof locked === 'object') {
-					const lockedBy = locked.lockedBy || 'Unknown user'
-					const lockedAt = locked.lockedAt
-						? new Date(locked.lockedAt).toLocaleString()
-						: 'Unknown time'
-					const process = locked.process ? ` (${locked.process})` : ''
-					lockedDisplay = `Locked by ${lockedBy} at ${lockedAt}${process}`
-				} else {
-					lockedDisplay = 'Locked'
-				}
-			}
-			metadata.push(['Locked', lockedDisplay])
-
-			// Created
-			metadata.push([
-				'Created',
-				obj['@self']?.created
-					? new Date(obj['@self'].created).toLocaleString()
-					: 'Not set',
-			])
-
-			// Updated
-			metadata.push([
-				'Updated',
-				obj['@self']?.updated
-					? new Date(obj['@self'].updated).toLocaleString()
-					: 'Not set',
-			])
-
-			// Published
-			metadata.push([
-				'Published',
-				obj['@self']?.published
-					? new Date(obj['@self'].published).toLocaleString()
-					: 'Not published',
-			])
-
-			// Depublished
-			metadata.push([
-				'Depublished',
-				obj['@self']?.depublished
-					? new Date(obj['@self'].depublished).toLocaleString()
-					: 'Not depublished',
-			])
-
-			return metadata
+			const self = obj['@self']
+			const registers = objectStore.availableRegisters
+			const schemas = objectStore.availableSchemas
+			return [
+				['ID', obj.id || 'Not set'],
+				['Version', self?.version || 'Not set'],
+				['Register', referenceTitle(self?.register, registers)],
+				['Schema', referenceTitle(self?.schema, schemas)],
+				['Locked', lockDescription(self?.locked)],
+				...timestampRows(self),
+			]
 		},
 
 		// Files tab computed properties
@@ -2688,41 +2521,8 @@ export default {
 
 			if (!this.currentObject) return 'View Object'
 
-			const name =
-				this.currentObject['@self']?.name
-				|| this.currentObject.name
-				|| this.currentObject.title
-				|| this.currentObject.id
-				|| 'Untitled'
-
-			// Try to get schema name from the object itself
-			let schemaName = 'Publication'
-
-			// Check if schema is an object with title/name properties
-			if (
-				this.currentObject.schema
-				&& typeof this.currentObject.schema === 'object'
-			) {
-				schemaName =
-					this.currentObject.schema.title
-					|| this.currentObject.schema.name
-					|| this.currentObject.schema.id
-					|| 'Publication'
-			} else if (
-				this.currentObject['@self']?.schema
-				&& typeof this.currentObject['@self'].schema === 'object'
-			) {
-				// Check if @self.schema is an object with title/name properties
-				schemaName =
-					this.currentObject['@self'].schema.title
-					|| this.currentObject['@self'].schema.name
-					|| this.currentObject['@self'].schema.id
-					|| 'Publication'
-			} else if (typeof this.currentObject['@self']?.schema === 'string') {
-				// If it's a string, use it directly
-				schemaName = this.currentObject['@self'].schema
-			}
-
+			const name = objectDisplayName(this.currentObject)
+			const schemaName = objectSchemaName(this.currentObject)
 			return `${name} (${schemaName})`
 		},
 
@@ -2902,6 +2702,7 @@ export default {
 					method,
 					headers: {
 						'Content-Type': 'application/json',
+						requesttoken: getRequestToken(),
 					},
 					body: JSON.stringify(objectData),
 				})
@@ -2998,24 +2799,7 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		isValidDate(value) {
-			if (!value || typeof value !== 'string') return false
-
-			// Don't treat simple strings like "test 12" as dates
-			if (value.length < 8) return false
-
-			// Check if it looks like a date format
-			const datePatterns = [
-				/^\d{4}-\d{2}-\d{2}/, // YYYY-MM-DD
-				/^\d{1,2}-\d{1,2}-\d{4}/, // M-D-YYYY or MM-DD-YYYY
-				/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/, // ISO datetime
-			]
-
-			const looksLikeDate = datePatterns.some((pattern) => pattern.test(value))
-			if (!looksLikeDate) return false
-
-			// Try to parse it
-			const date = new Date(value)
-			return date instanceof Date && !isNaN(date) && date.getFullYear() > 1900
+			return isValidDateString(value)
 		},
 
 		/**
@@ -3125,30 +2909,26 @@ export default {
 			// Get schema properties
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-			const existsInObject =
-				this.currentObject && Object.hasOwn(this.currentObject, key)
-
-			if (!schemaProperty) {
-				// Property exists in object but not in schema - warning (yellow)
-				if (existsInObject) {
-					return 'property-warning'
-				}
-				return ''
-			}
-
-			if (!existsInObject) {
-				// Property exists in schema but not in object yet - neutral (no special class)
-				return 'property-new'
+			const existsInObject = this.hasObjectProperty(key)
+			if (!schemaProperty || !existsInObject) {
+				return presenceClass(schemaProperty, existsInObject)
 			}
 
 			// Property exists in both schema and object, validate the value
-			if (this.isValidPropertyValue(key, value, schemaProperty)) {
-				// Valid property - success (green)
-				return 'property-valid'
-			} else {
-				// Invalid property - error (red)
-				return 'property-invalid'
-			}
+			return isValidPropertyValue(value, schemaProperty)
+				? 'property-valid'
+				: 'property-invalid'
+		},
+
+		/**
+		 * Whether the object shown holds a property of its own.
+		 *
+		 * @param {string} key The property key.
+		 * @return {boolean} Whether it does.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		hasObjectProperty(key) {
+			return Boolean(this.currentObject) && Object.hasOwn(this.currentObject, key)
 		},
 
 		/**
@@ -3158,40 +2938,8 @@ export default {
 		 */
 		getPropertyErrorMessage(key, value) {
 			const schemaProperties = this.getSchemaProperties()
-			const schemaProperty = schemaProperties[key]
-
-			if (!schemaProperty) {
-				return `Property '${key}' is not defined in the current schema. This property exists in the object but is not part of the schema definition.`
-			}
-
-			// Check if required but empty
-			const isRequired = schemaProperty.required
-			if (
-				(value === null || value === undefined || value === '')
-				&& isRequired
-			) {
-				return `Required property '${key}' is missing or empty`
-			}
-
-			// Check type mismatch
-			const expectedType = schemaProperty.type
-			const actualType = Array.isArray(value) ? 'array' : typeof value
-
-			if (expectedType !== actualType) {
-				return `Property '${key}' should be ${expectedType} but is ${actualType}`
-			}
-
-			// Check format constraints
-			if (schemaProperty.format === 'date-time' && !this.isValidDate(value)) {
-				return `Property '${key}' should be a valid date-time format`
-			}
-
-			// Check const constraint
-			if (schemaProperty.const && value !== schemaProperty.const) {
-				return `Property '${key}' should be '${schemaProperty.const}' but is '${value}'`
-			}
-
-			return `Property '${key}' has an invalid value`
+			const property = schemaProperties[key]
+			return propertyErrorMessage({ key, value, property })
 		},
 
 		getPropertyWarningMessage(key, value) {
@@ -4147,8 +3895,9 @@ export default {
 					headers: this.showPublishModal
 						? {
 								'Content-Type': 'application/json',
+								requesttoken: getRequestToken(),
 							}
-						: undefined,
+						: { requesttoken: getRequestToken() },
 					body: this.showPublishModal ? JSON.stringify(body) : undefined,
 				})
 
@@ -4228,8 +3977,9 @@ export default {
 					headers: this.showDepublishModal
 						? {
 								'Content-Type': 'application/json',
+								requesttoken: getRequestToken(),
 							}
-						: undefined,
+						: { requesttoken: getRequestToken() },
 					body: this.showDepublishModal ? JSON.stringify(body) : undefined,
 				})
 
@@ -4342,24 +4092,10 @@ export default {
 		async onFilesPageChanged(page) {
 			if (!this.currentObject) return
 
-			const publication = this.currentObject
-			const { registerId, schemaId } = this.getRegisterSchemaIds(publication)
-			const publicationData = {
-				source: 'openregister',
-				schema: schemaId,
-				register: registerId,
-			}
-
-			await objectStore.fetchRelatedData(
-				'publication',
-				this.currentObject.id,
-				'files',
-				{
-					_page: page,
-					_limit: this.filesCurrentPageSize,
-				},
-				publicationData,
-			)
+			await this.refreshFiles(this.getRegisterSchemaIds(this.currentObject), {
+				_page: page,
+				_limit: this.filesCurrentPageSize,
+			})
 		},
 
 		/**
@@ -4369,198 +4105,31 @@ export default {
 		async onFilesPageSizeChanged(pageSize) {
 			if (!this.currentObject) return
 
-			const publication = this.currentObject
-			const { registerId, schemaId } = this.getRegisterSchemaIds(publication)
-			const publicationData = {
-				source: 'openregister',
-				schema: schemaId,
-				register: registerId,
-			}
-
-			await objectStore.fetchRelatedData(
-				'publication',
-				this.currentObject.id,
-				'files',
-				{
-					_page: 1,
-					_limit: pageSize,
-				},
-				publicationData,
-			)
+			await this.refreshFiles(this.getRegisterSchemaIds(this.currentObject), {
+				_page: 1,
+				_limit: pageSize,
+			})
 		},
 
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async publishSelectedFiles() {
-			if (this.selectedAttachments.length === 0) return
-
-			try {
-				this.publishLoading = [...this.selectedAttachments]
-
-				// Get the selected files
-				const selectedFiles = this.paginatedFiles.filter((file) =>
-					this.selectedAttachments.includes(file.id),
-				)
-
-				// Publish each file individually
-				for (const file of selectedFiles) {
-					const publication = this.currentObject
-					const { registerId, schemaId } =
-						this.getRegisterSchemaIds(publication)
-					const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}/publish`
-
-					const response = await fetch(endpoint, {
-						method: 'POST',
-					})
-
-					if (!response.ok) {
-						throw new Error(
-							`Failed to publish file ${file.title || file.name}: ${response.statusText}`,
-						)
-					}
-				}
-
-				// Refresh files list once after all operations with publication data
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
-
-				// Clear selection after successful operation
-				this.selectedAttachments = []
-			} catch (error) {
-				console.error('Error publishing files:', error)
-			} finally {
-				this.publishLoading = []
-			}
+			await this.runSelectedFileAction(FILE_ACTIONS.publish)
 		},
 
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async depublishSelectedFiles() {
-			if (this.selectedAttachments.length === 0) return
-
-			try {
-				this.depublishLoading = [...this.selectedAttachments]
-
-				// Get the selected files
-				const selectedFiles = this.paginatedFiles.filter((file) =>
-					this.selectedAttachments.includes(file.id),
-				)
-
-				// Depublish each file individually
-				for (const file of selectedFiles) {
-					const publication = this.currentObject
-					const { registerId, schemaId } =
-						this.getRegisterSchemaIds(publication)
-					const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}/depublish`
-
-					const response = await fetch(endpoint, {
-						method: 'POST',
-					})
-
-					if (!response.ok) {
-						throw new Error(
-							`Failed to depublish file ${file.title || file.name}: ${response.statusText}`,
-						)
-					}
-				}
-
-				// Refresh files list once after all operations with publication data
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
-
-				// Clear selection after successful operation
-				this.selectedAttachments = []
-			} catch (error) {
-				console.error('Error depublishing files:', error)
-			} finally {
-				this.depublishLoading = []
-			}
+			await this.runSelectedFileAction(FILE_ACTIONS.depublish)
 		},
 
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async deleteSelectedFiles() {
-			if (this.selectedAttachments.length === 0) return
-
-			try {
-				this.fileIdsLoading = [...this.selectedAttachments]
-
-				// Get the selected files
-				const selectedFiles = this.paginatedFiles.filter((item) =>
-					this.selectedAttachments.includes(item.id),
-				)
-
-				// Delete each selected file
-				for (const file of selectedFiles) {
-					const publication = this.currentObject
-					const { registerId, schemaId } =
-						this.getRegisterSchemaIds(publication)
-					const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}`
-
-					const response = await fetch(endpoint, {
-						method: 'DELETE',
-					})
-
-					if (!response.ok) {
-						throw new Error(
-							`Failed to delete file ${file.title || file.name}: ${response.statusText}`,
-						)
-					}
-				}
-
-				// Refresh files list once after all operations with publication data
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
-
-				// Clear selection - files list is automatically refreshed by the store methods
-				this.selectedAttachments = []
-			} catch (error) {
-				console.error('Failed to delete selected files:', error)
-			} finally {
-				this.fileIdsLoading = []
-			}
+			await this.runSelectedFileAction(FILE_ACTIONS.delete)
 		},
 
 		/**
@@ -4568,42 +4137,7 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async publishFile(file) {
-			try {
-				this.publishLoading.push(file.id)
-
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
-				const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}/publish`
-
-				const response = await fetch(endpoint, {
-					method: 'POST',
-				})
-
-				if (!response.ok) {
-					throw new Error(`Failed to publish file: ${response.statusText}`)
-				}
-
-				// Refresh files list with publication data
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
-			} catch (error) {
-				console.error('Failed to publish file:', error)
-			} finally {
-				this.publishLoading = this.publishLoading.filter(
-					(id) => id !== file.id,
-				)
-			}
+			await this.runFileAction(file, FILE_ACTIONS.publish)
 		},
 
 		/**
@@ -4611,44 +4145,7 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async depublishFile(file) {
-			try {
-				this.depublishLoading.push(file.id)
-
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
-				const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}/depublish`
-
-				const response = await fetch(endpoint, {
-					method: 'POST',
-				})
-
-				if (!response.ok) {
-					throw new Error(
-						`Failed to depublish file: ${response.statusText}`,
-					)
-				}
-
-				// Refresh files list with publication data
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
-			} catch (error) {
-				console.error('Failed to depublish file:', error)
-			} finally {
-				this.depublishLoading = this.depublishLoading.filter(
-					(id) => id !== file.id,
-				)
-			}
+			await this.runFileAction(file, FILE_ACTIONS.depublish)
 		},
 
 		/**
@@ -4656,42 +4153,123 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async deleteFile(file) {
+			await this.runFileAction(file, FILE_ACTIONS.delete)
+		},
+
+		/**
+		 * Run a file action on every selected file, one request at a time, then refresh the files list once.
+		 *
+		 * @param {object} action The file action (FILE_ACTIONS).
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		async runSelectedFileAction(action) {
+			if (this.selectedAttachments.length === 0) return
+
 			try {
-				this.fileIdsLoading.push(file.id)
+				this[action.loading] = [...this.selectedAttachments]
+				await this.sendSelectedFileAction(action)
 
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
-				const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}`
+				// Refresh files list once after all operations with publication data
+				await this.refreshFiles(this.getRegisterSchemaIds(this.currentObject))
 
-				const response = await fetch(endpoint, {
-					method: 'DELETE',
+				// Clear selection after successful operation
+				this.selectedAttachments = []
+			} catch (error) {
+				console.error(action.bulkError, error)
+			} finally {
+				this[action.loading] = []
+			}
+		},
+
+		/**
+		 * Send a file action for each selected file; stop at the first refused request.
+		 *
+		 * @param {object} action The file action (FILE_ACTIONS).
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		async sendSelectedFileAction(action) {
+			const selectedFiles = this.paginatedFiles.filter((file) =>
+				this.selectedAttachments.includes(file.id),
+			)
+
+			for (const file of selectedFiles) {
+				const ids = this.getRegisterSchemaIds(this.currentObject)
+				const response = await fetch(this.fileUrl(file, ids) + action.suffix, {
+					method: action.method,
+					headers: { requesttoken: getRequestToken() },
 				})
 
 				if (!response.ok) {
-					throw new Error(`Failed to delete file: ${response.statusText}`)
+					throw new Error(
+						`Failed to ${action.verb} file ${file.title || file.name}: ${response.statusText}`,
+					)
+				}
+			}
+		},
+
+		/**
+		 * Run a file action on one file, then refresh the files list.
+		 *
+		 * @param {object} file The file.
+		 * @param {object} action The file action (FILE_ACTIONS).
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		async runFileAction(file, action) {
+			try {
+				this[action.loading].push(file.id)
+
+				const ids = this.getRegisterSchemaIds(this.currentObject)
+				const response = await fetch(this.fileUrl(file, ids) + action.suffix, {
+					method: action.method,
+					headers: { requesttoken: getRequestToken() },
+				})
+
+				if (!response.ok) {
+					throw new Error(`Failed to ${action.verb} file: ${response.statusText}`)
 				}
 
-				// Refresh files list with publication data
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
+				await this.refreshFiles(ids)
 			} catch (error) {
-				console.error('Failed to delete file:', error)
+				console.error(`Failed to ${action.verb} file:`, error)
 			} finally {
-				this.fileIdsLoading = this.fileIdsLoading.filter(
+				this[action.loading] = this[action.loading].filter(
 					(id) => id !== file.id,
 				)
 			}
+		},
+
+		/**
+		 * The API URL of a file of the current object.
+		 *
+		 * @param {object} file The file.
+		 * @param {{registerId: string|number, schemaId: string|number}} ids The register and schema ids of the object.
+		 * @return {string} The URL.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		fileUrl(file, ids) {
+			return `/index.php/apps/openregister/api/objects/${ids.registerId}/${ids.schemaId}/${this.currentObject.id}/files/${file.id}`
+		},
+
+		/**
+		 * Refresh the files list of the current object with its publication data.
+		 *
+		 * @param {{registerId: string|number, schemaId: string|number}} ids The register and schema ids of the object.
+		 * @param {object} query The page query; none refreshes the default page.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		async refreshFiles(ids, query = {}) {
+			const publicationData = {
+				source: 'openregister',
+				schema: ids.schemaId,
+				register: ids.registerId,
+			}
+			await objectStore.fetchRelatedData(
+				'publication',
+				this.currentObject.id,
+				'files',
+				query,
+				publicationData,
+			)
 		},
 
 		/**
@@ -4742,17 +4320,14 @@ export default {
 		 */
 		async saveTags(file, editedTags) {
 			try {
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
+				const ids = this.getRegisterSchemaIds(this.currentObject)
 
 				// Update file tags using the same approach as PublicationDetail.vue
-				const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}`
-
-				const response = await fetch(endpoint, {
+				const response = await fetch(this.fileUrl(file, ids), {
 					method: 'PUT',
 					headers: {
 						'Content-Type': 'application/json',
+						requesttoken: getRequestToken(),
 					},
 					body: JSON.stringify({
 						tags: editedTags,
@@ -4766,18 +4341,7 @@ export default {
 				}
 
 				// Refresh files list with publication data
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
+				await this.refreshFiles(ids)
 
 				this.editingTags = null
 				this.editedTags = []
@@ -4900,6 +4464,28 @@ export default {
 		},
 
 		// Schema handling methods
+		/**
+		 * The object's own properties that are not in the schema, as rows
+		 * `[key, value, null]`: never the metadata, and only those the form holds
+		 * a value for (a property marked for deletion is undefined in the form).
+		 *
+		 * @param {object} objectData The object.
+		 * @param {object} schemaProperties The schema properties.
+		 * @return {Array} The rows.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		additionalPropertyRows(objectData, schemaProperties) {
+			return Object.entries(objectData)
+				.filter(
+					([objectKey]) =>
+						objectKey !== '@self'
+						&& objectKey !== 'id'
+						&& !Object.hasOwn(schemaProperties, objectKey)
+						&& !(this.formData[objectKey] === undefined),
+				)
+				.map(([objectKey, objectValue]) => [objectKey, objectValue, null])
+		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -5249,57 +4835,14 @@ export default {
 		},
 
 		// Enhanced property validation and editing methods (from openregister version)
-		/**
-		 * @param key
-		 * @param value
-		 * @param schemaProperty
-		 * @spec openspec/specs/fe-object-modals/spec.md
-		 */
-		isValidPropertyValue(key, value, schemaProperty) {
-			// Handle null/undefined values
-			if (value === null || value === undefined || value === '') {
-				// Check if property is required
-				const isRequired = schemaProperty.required
-				return !isRequired // Valid if not required, invalid if required
-			}
-
-			// Validate based on schema type
-			switch (schemaProperty.type) {
-				case 'string':
-					if (typeof value !== 'string') return false
-					// Check format constraints
-					if (schemaProperty.format === 'date-time') {
-						return this.isValidDate(value)
-					}
-					// Check const constraint
-					if (schemaProperty.const && value !== schemaProperty.const) {
-						return false
-					}
-					return true
-
-				case 'number':
-					return typeof value === 'number' && !isNaN(value)
-
-				case 'boolean':
-					return typeof value === 'boolean'
-
-				case 'array':
-					return Array.isArray(value)
-
-				case 'object':
-					return (
-						typeof value === 'object'
-						&& value !== null
-						&& !Array.isArray(value)
-					)
-
-				default:
-					return true // Unknown type, assume valid
-			}
-		},
 	},
 }
 </script>
+
+<!-- Tab strip: the app-wide tab look of StandardTabs, included here because
+     the Files tab needs a component-rendered title (spinner / counter bubble)
+     and StandardTabs only accepts plain title strings. -->
+<style scoped src="../../components/standardTabs.css"></style>
 
 <style scoped>
 /* ViewObject-specific overrides only */
@@ -5493,103 +5036,6 @@ export default {
 
 .publishedIcon {
 	color: var(--color-success);
-}
-
-/* Tab strip. Mirrors src/components/StandardTabs.vue so the modal keeps the
-   app-wide tab look, but written out here because the Files tab needs a
-   component-rendered title (spinner / counter bubble) and StandardTabs only
-   accepts plain title strings. */
-.standard-tabs {
-	width: 100%;
-}
-
-.tab-navigation {
-	display: flex;
-	border: 1px solid var(--color-border);
-	border-bottom: none;
-	margin-bottom: 0;
-	background-color: var(--color-background-hover);
-	border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
-	padding: 0 8px;
-}
-
-.tab-button {
-	flex: 1;
-	padding: 12px 16px;
-	background: none;
-	border: none;
-	color: var(--color-text-lighter);
-	font-weight: 500;
-	font-size: 14px;
-	cursor: pointer;
-	transition: all 0.2s ease;
-	position: relative;
-	min-height: 48px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.tab-button:hover {
-	color: var(--color-main-text);
-	background-color: var(--color-background-hover);
-}
-
-.tab-button.active {
-	color: var(--color-primary);
-	background-color: var(--color-background);
-	font-weight: 600;
-	border: 1px solid var(--color-border);
-	border-bottom: 2px solid var(--color-background);
-	border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
-}
-
-.tab-button.active::after {
-	content: '';
-	position: absolute;
-	bottom: -2px;
-	left: 0;
-	right: 0;
-	height: 2px;
-	background-color: var(--color-primary);
-}
-
-.tab-content {
-	padding: 8px 0 0 0;
-	border: none;
-	border-top: none;
-	border-radius: 0;
-	background-color: transparent;
-}
-
-@media (max-width: 768px) {
-	.tab-navigation {
-		flex-direction: column;
-		border-bottom: none;
-		border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
-		padding: 8px;
-	}
-
-	.tab-button {
-		border-bottom: none;
-		border-radius: var(--border-radius);
-		margin-bottom: 4px;
-		min-height: 40px;
-	}
-
-	.tab-button.active {
-		background-color: var(--color-primary);
-		color: white;
-		border-bottom-color: transparent;
-	}
-
-	.tab-button.active::after {
-		display: none;
-	}
-
-	.tab-content {
-		border-top: 1px solid var(--color-border);
-	}
 }
 
 .tab-title {

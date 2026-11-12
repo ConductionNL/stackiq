@@ -1,0 +1,126 @@
+{
+    "no register": {
+        "uids": [],
+        "trace": [
+            [
+                "warning",
+                "[ContactNames] The register or the contact person schema is not configured; no names are given",
+                []
+            ]
+        ]
+    },
+    "no schema": {
+        "uids": [],
+        "trace": [
+            [
+                "warning",
+                "[ContactNames] The register or the contact person schema is not configured; no names are given",
+                []
+            ]
+        ]
+    },
+    "zero register": {
+        "uids": [],
+        "trace": [
+            [
+                "warning",
+                "[ContactNames] The register or the contact person schema is not configured; no names are given",
+                []
+            ]
+        ]
+    },
+    "read fails": {
+        "uids": [],
+        "trace": [
+            [
+                "searchObjectsPaginated",
+                [
+                    {
+                        "@self": {
+                            "register": 4,
+                            "schema": 12
+                        },
+                        "_ids": [
+                            "aaaaaaaa-0000-4000-8000-000000000001",
+                            "bbbbbbbb-0000-4000-8000-000000000002",
+                            "cccccccc-0000-4000-8000-000000000003"
+                        ],
+                        "_limit": 100
+                    },
+                    true,
+                    true,
+                    false,
+                    null,
+                    null,
+                    null
+                ]
+            ],
+            [
+                "warning",
+                "[ContactNames] The contact persons could not be read",
+                [
+                    "exception"
+                ]
+            ]
+        ]
+    },
+    "no results key": {
+        "uids": [],
+        "trace": [
+            [
+                "searchObjectsPaginated",
+                [
+                    {
+                        "@self": {
+                            "register": 4,
+                            "schema": 12
+                        },
+                        "_ids": [
+                            "aaaaaaaa-0000-4000-8000-000000000001",
+                            "bbbbbbbb-0000-4000-8000-000000000002",
+                            "cccccccc-0000-4000-8000-000000000003"
+                        ],
+                        "_limit": 100
+                    },
+                    true,
+                    true,
+                    false,
+                    null,
+                    null,
+                    null
+                ]
+            ]
+        ]
+    },
+    "resolved": {
+        "uids": {
+            "aaaaaaaa-0000-4000-8000-000000000001": "uid-a",
+            "bbbbbbbb-0000-4000-8000-000000000002": "uid-b"
+        },
+        "trace": [
+            [
+                "searchObjectsPaginated",
+                [
+                    {
+                        "@self": {
+                            "register": 4,
+                            "schema": 12
+                        },
+                        "_ids": [
+                            "aaaaaaaa-0000-4000-8000-000000000001",
+                            "bbbbbbbb-0000-4000-8000-000000000002",
+                            "cccccccc-0000-4000-8000-000000000003"
+                        ],
+                        "_limit": 100
+                    },
+                    true,
+                    true,
+                    false,
+                    null,
+                    null,
+                    null
+                ]
+            ]
+        ]
+    }
+}

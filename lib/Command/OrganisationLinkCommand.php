@@ -108,18 +108,8 @@ class OrganisationLinkCommand extends Command {
 	 * @spec openspec/specs/organisatie-service/spec.md
 	 */
 	protected function execute(InputInterface $input, OutputInterface $output): int {
-		$organisatie  = (string) $input->getArgument('organisatie');
-		$organisation = (string) $input->getArgument('organisation');
 		try {
-			$sync    = $this->container->get(OrganizationSyncService::class);
-			$outcome = $sync->checkOrganisationLink(organisatieUuid: $organisatie, entityUuid: $organisation);
-			if ($outcome === null && $this->confirmed(input: $input, output: $output) === false) {
-				$outcome = 'not-confirmed';
-			}
-
-			if ($outcome === null) {
-				$outcome = $sync->linkOrganisationEntity(organisatieUuid: $organisatie, entityUuid: $organisation);
-			}
+			$outcome = $this->linkOutcome(input: $input, output: $output);
 		} catch (Throwable $e) {
 			$output->writeln(messages: '<error>Could not link: ' . $e->getMessage() . '</error>');
 			return 1;
@@ -132,6 +122,30 @@ class OrganisationLinkCommand extends Command {
 
 		return 1;
 	}//end execute()
+
+	/**
+	 * Check the link, ask for confirmation when it is allowed, and make it once confirmed.
+	 *
+	 * @param InputInterface  $input  Console input.
+	 * @param OutputInterface $output Console output.
+	 *
+	 * @return string The refusal, 'not-confirmed', or the outcome of the link.
+	 */
+	private function linkOutcome(InputInterface $input, OutputInterface $output): string {
+		$organisatie  = (string) $input->getArgument('organisatie');
+		$organisation = (string) $input->getArgument('organisation');
+		$sync    = $this->container->get(OrganizationSyncService::class);
+		$outcome = $sync->checkOrganisationLink(organisatieUuid: $organisatie, entityUuid: $organisation);
+		if ($outcome === null && $this->confirmed(input: $input, output: $output) === false) {
+			$outcome = 'not-confirmed';
+		}
+
+		if ($outcome === null) {
+			$outcome = $sync->linkOrganisationEntity(organisatieUuid: $organisatie, entityUuid: $organisation);
+		}
+
+		return $outcome;
+	}//end linkOutcome()
 
 	/**
 	 * Say what keeps the organisation's old uuid, and ask whether to link anyway.
