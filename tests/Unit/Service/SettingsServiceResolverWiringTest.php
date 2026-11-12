@@ -30,6 +30,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 use OCA\OpenRegister\Service\ConfigLookup;
 use OCA\OpenRegister\Service\RegisterResolverService;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -107,6 +108,7 @@ class SettingsServiceResolverWiringTest extends TestCase {
 			$this->logger,
 			$this->groupManager,
 			$this->l10n,
+			$this->createMock(EmailSettings::class),
 		);
 
 	}//end makeService()

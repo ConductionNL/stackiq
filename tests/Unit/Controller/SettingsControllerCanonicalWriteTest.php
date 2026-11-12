@@ -11,6 +11,7 @@ namespace OCA\Stackiq\Tests\Unit\Controller;
 
 use OCA\Stackiq\Controller\SettingsController;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -38,6 +39,14 @@ class SettingsControllerCanonicalWriteTest extends TestCase {
 	 * @var RoleGroupSettings|null
 	 */
 	private ?RoleGroupSettings $roleGroupSettings = null;
+
+	/**
+	 * The e-mail settings double a test sets up, or null for a plain mock.
+	 *
+	 * @var EmailSettings|null
+	 */
+	private ?EmailSettings $emailSettings = null;
+
 	/**
 	 * The canonical `/api/settings` methods, asserted item by item.
 	 *
@@ -167,6 +176,7 @@ class SettingsControllerCanonicalWriteTest extends TestCase {
 				'request' => $request,
 				'settingsService' => $settingsService,
 				'roleGroupSettings' => ($this->roleGroupSettings ?? $this->createMock(RoleGroupSettings::class)),
+				'emailSettings' => ($this->emailSettings ?? $this->createMock(EmailSettings::class)),
 				'logger' => $this->createMock(LoggerInterface::class),
 				// A promoted `?ConnectionReportService $connectionReports = null`
 				// gets its null from the constructor, which
@@ -206,7 +216,8 @@ class SettingsControllerCanonicalWriteTest extends TestCase {
 		$this->roleGroupSettings->expects($this->once())
 			->method('setGenericUserGroups')
 			->with(['users']);
-		$settingsService->expects($this->once())
+		$this->emailSettings = $this->createMock(EmailSettings::class);
+		$this->emailSettings->expects($this->once())
 			->method('updateEmailSettings')
 			->with(['smtpHost' => 'mail.example.org'])
 			->willReturn(['smtpHost' => 'mail.example.org']);
@@ -235,7 +246,8 @@ class SettingsControllerCanonicalWriteTest extends TestCase {
 		$settingsService->expects($this->never())->method('updateSettings');
 		$this->roleGroupSettings = $this->createMock(RoleGroupSettings::class);
 		$this->roleGroupSettings->expects($this->never())->method('setGenericUserGroups');
-		$settingsService->expects($this->never())->method('updateEmailSettings');
+		$this->emailSettings = $this->createMock(EmailSettings::class);
+		$this->emailSettings->expects($this->never())->method('updateEmailSettings');
 
 		$params = [
 			'catalogLocation' => '/somewhere',

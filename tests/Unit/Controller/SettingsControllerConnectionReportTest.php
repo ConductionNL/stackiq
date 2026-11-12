@@ -32,6 +32,8 @@ use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http;
@@ -81,10 +83,11 @@ class SettingsControllerConnectionReportTest extends TestCase {
 		$groups->method('isAdmin')->willReturn(true);
 
 		$this->settingsService = $this->createMock(originalClassName: SettingsService::class);
+		$emailSettings = $this->createMock(originalClassName: EmailSettings::class);
 		if ($writeFails === true) {
-			$this->settingsService->method('updateEmailSettings')->willThrowException(new RuntimeException('write failed'));
+			$emailSettings->method('updateEmailSettings')->willThrowException(new RuntimeException('write failed'));
 		} else {
-			$this->settingsService->method('updateEmailSettings')->willReturn(['enabled' => false, 'transportType' => 'smtp']);
+			$emailSettings->method('updateEmailSettings')->willReturn(['enabled' => false, 'transportType' => 'smtp']);
 		}
 
 		return new SettingsController(
@@ -96,11 +99,13 @@ class SettingsControllerConnectionReportTest extends TestCase {
 			groupManager: $groups,
 			userSession: $session,
 			settingsService: $this->settingsService,
+			cronjobSettings: $this->createMock(CronjobSettings::class),
 			orgSyncSvc: $this->createMock(originalClassName: OrganizationSyncService::class),
 			archiMateService: $this->createMock(originalClassName: ArchiMateService::class),
 			roleGroupSettings: $this->createMock(originalClassName: RoleGroupSettings::class),
 			progressTracker: $this->createMock(originalClassName: ProgressTracker::class),
 			eolSyncService: $this->createMock(originalClassName: EolSyncService::class),
+			emailSettings: $emailSettings,
 			logger: $this->createMock(originalClassName: LoggerInterface::class),
 			connectionReports: $reports
 		);

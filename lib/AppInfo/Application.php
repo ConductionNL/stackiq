@@ -77,6 +77,8 @@ use OCA\Stackiq\Service\ReviewService;
 use OCA\Stackiq\Service\SbomImportService;
 use OCA\Stackiq\Service\SbomParserService;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\Settings\EolSyncSettings;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
@@ -333,7 +335,7 @@ class Application extends App implements IBootstrap {
 				return new SymfonyEmailService(
 					config: $container->get(IAppConfig::class),
 					logger: $container->get('Psr\Log\LoggerInterface'),
-					settingsService: $container->get(SettingsService::class)
+					emailSettings: $container->get(EmailSettings::class)
 				);
 			}
 		);
@@ -350,7 +352,8 @@ class Application extends App implements IBootstrap {
 					appManager: $container->get('OCP\App\IAppManager'),
 					logger: $container->get('Psr\Log\LoggerInterface'),
 					groupManager: $container->get(IGroupManager::class),
-					l10n: $container->get('OCP\IL10N')
+					l10n: $container->get('OCP\IL10N'),
+					emailSettings: $container->get(EmailSettings::class)
 				);
 			}
 		);
@@ -633,6 +636,7 @@ class Application extends App implements IBootstrap {
 					orgSyncService: $container->get(OrganizationSyncService::class),
 					contactSync: $container->get(StackiqContactSyncService::class),
 					settingsService: $container->get(SettingsService::class),
+					cronjobSettings: $container->get(CronjobSettings::class),
 					appManager: $container->get(IAppManager::class),
 					logger: $container->get(LoggerInterface::class)
 				);

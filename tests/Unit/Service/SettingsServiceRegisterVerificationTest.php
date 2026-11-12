@@ -25,6 +25,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -81,6 +82,7 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 					$logger,
 					$this->createMock(IGroupManager::class),
 					$this->createMock(IL10N::class),
+					$this->createMock(EmailSettings::class),
 				]
 			)
 			->onlyMethods(['getSchemaIdForObjectType'])
@@ -206,7 +208,8 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 			$this->createMock(IAppManager::class),
 			$this->createMock(LoggerInterface::class),
 			$this->createMock(IGroupManager::class),
-			$this->createMock(IL10N::class)
+			$this->createMock(IL10N::class),
+			$this->createMock(EmailSettings::class),
 		);
 
 		$reflection = new ReflectionMethod($service, 'getRegisterVerificationStatus');
@@ -248,7 +251,8 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 			$this->createMock(IAppManager::class),
 			$this->createMock(LoggerInterface::class),
 			$this->createMock(IGroupManager::class),
-			$l10n
+			$l10n,
+			$this->createMock(EmailSettings::class),
 		);
 
 		$reflection = new ReflectionMethod($service, 'getRegisterVerificationStatus');

@@ -1,14 +1,14 @@
 <?php
 
 /**
- * Unit tests for SettingsService::getAvailableOrganisationsForCronjobs().
+ * Unit tests for CronjobSettings::getAvailableOrganisationsForCronjobs().
  *
  * OpenRegister's OrganisationMapper::findAll() is paged with typed int limit and
  * offset; the old nine-argument call with null limit/offset raised a TypeError.
  * The service now asks findList() for an unbounded ListQuery.
  *
  * @category  Test
- * @package   OCA\Stackiq\Tests\Unit\Service
+ * @package   OCA\Stackiq\Tests\Unit\Service\Settings
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -21,17 +21,13 @@
 
 declare(strict_types=1);
 
-namespace OCA\Stackiq\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service\Settings;
 
 use OCA\OpenRegister\Db\ListQuery;
 use OCA\OpenRegister\Db\OrganisationMapper;
-use OCA\Stackiq\Service\Settings\RoleGroupSettings;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
-use OCP\IGroupManager;
-use OCP\IL10N;
-use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -40,13 +36,13 @@ use Psr\Log\LoggerInterface;
  * Tests for the cronjob organisation listing.
  *
  * @category Test
- * @package  OCA\Stackiq\Tests\Unit\Service
+ * @package  OCA\Stackiq\Tests\Unit\Service\Settings
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version  GIT: <git_id>
  * @link     https://github.com/ConductionNL/stackiq
  */
-class SettingsServiceCronjobOrganisationsTest extends TestCase {
+class CronjobSettingsOrganisationsTest extends TestCase {
 
 	/**
 	 * Every organisation is listed through one unbounded ListQuery.
@@ -92,15 +88,11 @@ class SettingsServiceCronjobOrganisationsTest extends TestCase {
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturn(['openregister']);
 
-		$service = new SettingsService(
+		$service = new CronjobSettings(
 			$this->createMock(IAppConfig::class),
-			$this->createMock(IRequest::class),
-			$this->createMock(RoleGroupSettings::class),
-			$container,
 			$appManager,
+			$container,
 			$this->createMock(LoggerInterface::class),
-			$this->createMock(IGroupManager::class),
-			$this->createMock(IL10N::class),
 		);
 
 		$this->assertSame(
