@@ -21,6 +21,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Mailer\Mailer;
@@ -286,11 +287,11 @@ class SymfonyEmailService {
 	];
 
 	/**
-	 * The settings service for accessing email configuration
+	 * The stored e-mail settings
 	 *
-	 * @var SettingsService Settings service instance
+	 * @var EmailSettings E-mail settings instance
 	 */
-	private readonly SettingsService $settingsService;
+	private readonly EmailSettings $emailSettings;
 
 	/**
 	 * Cached Symfony Mailer instance
@@ -304,14 +305,14 @@ class SymfonyEmailService {
 	 *
 	 * @param IAppConfig $config The Nextcloud configuration service
 	 * @param LoggerInterface $logger The logger instance
-	 * @param SettingsService $settingsService The settings service for email configuration
+	 * @param EmailSettings $emailSettings The stored e-mail settings
 	 */
 	public function __construct(
 		private readonly IAppConfig $config,
 		private readonly LoggerInterface $logger,
-		SettingsService $settingsService,
+		EmailSettings $emailSettings,
 	) {
-		$this->settingsService = $settingsService;
+		$this->emailSettings = $emailSettings;
 	}//end __construct()
 
 	/**
@@ -339,7 +340,7 @@ class SymfonyEmailService {
 	 */
 	private function createTransport(): TransportInterface {
 		$factory = new MailTransportFactory(logger: $this->logger);
-		return $factory->create(emailSettings: $this->settingsService->getEmailSettings());
+		return $factory->create(emailSettings: $this->emailSettings->getEmailSettings());
 	}//end createTransport()
 
 	/**
@@ -567,7 +568,7 @@ class SymfonyEmailService {
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-7-5
 	 */
 	private function renderTemplate(string $templateName, array $templateData): string {
-		$emailSettings = $this->settingsService->getEmailSettings();
+		$emailSettings = $this->emailSettings->getEmailSettings();
 		$templates = ($emailSettings['templates'] ?? []);
 		$templateContent = ($templates[$templateName] ?? $this->getDefaultTemplate(templateName: $templateName));
 
@@ -591,7 +592,7 @@ class SymfonyEmailService {
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-7-5
 	 */
 	private function resolveSender(): array {
-		$emailSettings = $this->settingsService->getEmailSettings();
+		$emailSettings = $this->emailSettings->getEmailSettings();
 		$senderEmail = ($emailSettings['senderEmail'] ?? self::DEFAULT_SENDER);
 		$senderName = ($emailSettings['senderName'] ?? self::DEFAULT_SENDER_NAME);
 		$transportType = ($emailSettings['transportType'] ?? 'smtp');
@@ -734,7 +735,7 @@ class SymfonyEmailService {
 	 * @return string|null The test receiver override email address or null if not set.
 	 */
 	private function getTestReceiverOverride(): ?string {
-		$emailSettings = $this->settingsService->getEmailSettings();
+		$emailSettings = $this->emailSettings->getEmailSettings();
 		$override = ($emailSettings['testReceiverOverride'] ?? '');
 
 		if (empty($override) === false && $this->validateEmail(email: $override) === true) {
@@ -819,7 +820,7 @@ class SymfonyEmailService {
 	 * @spec   openspec/specs/email-delivery/spec.md
 	 */
 	public function getSenderEmail(): string {
-		$emailSettings = $this->settingsService->getEmailSettings();
+		$emailSettings = $this->emailSettings->getEmailSettings();
 		return $emailSettings['senderEmail'] ?? self::DEFAULT_SENDER;
 	}//end getSenderEmail()
 
@@ -830,7 +831,7 @@ class SymfonyEmailService {
 	 * @spec   openspec/specs/email-delivery/spec.md
 	 */
 	public function getSenderName(): string {
-		$emailSettings = $this->settingsService->getEmailSettings();
+		$emailSettings = $this->emailSettings->getEmailSettings();
 		return $emailSettings['senderName'] ?? self::DEFAULT_SENDER_NAME;
 	}//end getSenderName()
 
@@ -841,7 +842,7 @@ class SymfonyEmailService {
 	 * @spec   openspec/specs/email-delivery/spec.md
 	 */
 	public function getEmailSettings(): array {
-		$settings = $this->settingsService->getEmailSettings();
+		$settings = $this->emailSettings->getEmailSettings();
 
 		// Add transport information.
 		$settings['availableTransports'] = self::TRANSPORT_TYPES;
@@ -872,7 +873,7 @@ class SymfonyEmailService {
 			throw new \InvalidArgumentException('Invalid email address: ' . $email);
 		}
 
-		$this->settingsService->updateEmailSettings(['senderEmail' => $email]);
+		$this->emailSettings->updateEmailSettings(['senderEmail' => $email]);
 		$this->mailer = null;
 		// Reset mailer to pick up new settings.
 	}//end setSenderEmail()
@@ -886,7 +887,7 @@ class SymfonyEmailService {
 	 * @spec   openspec/specs/email-delivery/spec.md
 	 */
 	public function setSenderName(string $name): void {
-		$this->settingsService->updateEmailSettings(['senderName' => $name]);
+		$this->emailSettings->updateEmailSettings(['senderName' => $name]);
 		$this->mailer = null;
 		// Reset mailer to pick up new settings.
 	}//end setSenderName()
@@ -906,7 +907,7 @@ class SymfonyEmailService {
 		}
 
 		$settings = ['transportType' => $transportType] + $transportConfig;
-		$this->settingsService->updateEmailSettings($settings);
+		$this->emailSettings->updateEmailSettings($settings);
 		$this->mailer = null;
 		// Reset mailer to pick up new settings.
 	}//end setTransportConfiguration()
@@ -974,7 +975,7 @@ class SymfonyEmailService {
 	 * @return void
 	 */
 	public function setEnabled(bool $enabled): void {
-		$this->settingsService->updateEmailSettings(['enabled' => $enabled]);
+		$this->emailSettings->updateEmailSettings(['enabled' => $enabled]);
 	}//end setEnabled()
 
 	/**
@@ -990,7 +991,7 @@ class SymfonyEmailService {
 			throw new \InvalidArgumentException('Invalid test receiver override email address: ' . $email);
 		}
 
-		$this->settingsService->updateEmailSettings(['testReceiverOverride' => $email]);
+		$this->emailSettings->updateEmailSettings(['testReceiverOverride' => $email]);
 	}//end setTestReceiverOverride()
 
 	/**
@@ -1001,7 +1002,7 @@ class SymfonyEmailService {
 	 * @return void
 	 */
 	public function setOrganizationRegistrationEnabled(bool $enabled): void {
-		$this->settingsService->updateEmailSettings(['organizationRegistrationEnabled' => $enabled]);
+		$this->emailSettings->updateEmailSettings(['organizationRegistrationEnabled' => $enabled]);
 	}//end setOrganizationRegistrationEnabled()
 
 	/**
@@ -1012,7 +1013,7 @@ class SymfonyEmailService {
 	 * @return void
 	 */
 	public function setOrganizationActivationEnabled(bool $enabled): void {
-		$this->settingsService->updateEmailSettings(['organizationActivationEnabled' => $enabled]);
+		$this->emailSettings->updateEmailSettings(['organizationActivationEnabled' => $enabled]);
 	}//end setOrganizationActivationEnabled()
 
 	/**
@@ -1023,7 +1024,7 @@ class SymfonyEmailService {
 	 * @return void
 	 */
 	public function setUserCreationEnabled(bool $enabled): void {
-		$this->settingsService->updateEmailSettings(['userCreationEnabled' => $enabled]);
+		$this->emailSettings->updateEmailSettings(['userCreationEnabled' => $enabled]);
 	}//end setUserCreationEnabled()
 
 	/**
@@ -1033,7 +1034,7 @@ class SymfonyEmailService {
 	 * @spec   openspec/specs/email-delivery/spec.md
 	 */
 	public function isEmailSystemConfigured(): array {
-		$emailSettings = $this->settingsService->getEmailSettings();
+		$emailSettings = $this->emailSettings->getEmailSettings();
 
 		// Check if emails are enabled.
 		if (($emailSettings['enabled'] ?? false) === false) {
@@ -1186,7 +1187,7 @@ class SymfonyEmailService {
 			return null;
 		}
 
-		$emailSettings = $this->settingsService->getEmailSettings();
+		$emailSettings = $this->emailSettings->getEmailSettings();
 		if (($emailSettings[$settingsKey] ?? null) === false) {
 			$this->logger->info(
 				$logPrefix . ': Delivery disabled for this message type',

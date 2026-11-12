@@ -24,6 +24,7 @@ namespace OCA\Stackiq\BackgroundJob;
 
 use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
 use OCA\Stackiq\Service\OrganizationSyncService;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\StackiqContactSyncService;
 use OCP\App\IAppManager;
@@ -71,6 +72,7 @@ class OrganizationContactSyncJob extends TimedJob {
 	 * @param OrganizationSyncService $orgSyncService The sync service
 	 * @param StackiqContactSyncService $contactSync The Nextcloud-Contacts bridge
 	 * @param SettingsService $settingsService The settings service (register/schema id resolution)
+	 * @param CronjobSettings $cronjobSettings The cronjob settings (whether this job is switched on)
 	 * @param IAppManager $appManager The Nextcloud app manager
 	 * @param LoggerInterface $logger The logger
 	 */
@@ -79,6 +81,7 @@ class OrganizationContactSyncJob extends TimedJob {
 		OrganizationSyncService $orgSyncService,
 		private readonly StackiqContactSyncService $contactSync,
 		private readonly SettingsService $settingsService,
+		private readonly CronjobSettings $cronjobSettings,
 		private readonly IAppManager $appManager,
 		private readonly LoggerInterface $logger,
 	) {
@@ -126,7 +129,7 @@ class OrganizationContactSyncJob extends TimedJob {
 
 		// An admin can switch the job off in the cronjob settings (for example
 		// during a migration); then neither the sync nor the link refresh runs.
-		if ($this->settingsService->isCronjobEnabled(jobId: self::JOB_ID) === false) {
+		if ($this->cronjobSettings->isCronjobEnabled(jobId: self::JOB_ID) === false) {
 			$this->logger->info('[OrganizationContactSyncJob] Switched off in the cronjob settings, skipping sync');
 			return;
 		}

@@ -31,6 +31,9 @@ use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -106,8 +109,21 @@ class SettingsControllerErrorResponsesGoldenTest extends TestCase {
 	private function makeController(?string $uid, array $scenario): array {
 		$calls    = new \ArrayObject();
 		$settings = $this->createMock(originalClassName: SettingsService::class);
+		$collaborators = [
+			CronjobSettings::class => $this->createMock(originalClassName: CronjobSettings::class),
+			EmailSettings::class => $this->createMock(originalClassName: EmailSettings::class),
+			RoleGroupSettings::class => $this->createMock(originalClassName: RoleGroupSettings::class),
+		];
 		foreach ($scenario['service'] as $method => $result) {
-			$settings->method($method)->willReturnCallback(
+			$double = $settings;
+			foreach ($collaborators as $class => $collaborator) {
+				if (method_exists($class, $method) === true) {
+					$double = $collaborator;
+					break;
+				}
+			}
+
+			$double->method($method)->willReturnCallback(
 				function (...$args) use ($calls, $method, $result) {
 					$calls[] = [$method, $args];
 					if ($result === 'throw') {
@@ -147,6 +163,9 @@ class SettingsControllerErrorResponsesGoldenTest extends TestCase {
 			groupManager: $groups,
 			userSession: $session,
 			settingsService: $settings,
+			cronjobSettings: $collaborators[CronjobSettings::class],
+			emailSettings: $collaborators[EmailSettings::class],
+			roleGroupSettings: $collaborators[RoleGroupSettings::class],
 			orgSyncSvc: $this->createMock(originalClassName: OrganizationSyncService::class),
 			archiMateService: $this->createMock(originalClassName: ArchiMateService::class),
 			progressTracker: $this->createMock(originalClassName: ProgressTracker::class),

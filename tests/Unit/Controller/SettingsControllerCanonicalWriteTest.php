@@ -10,6 +10,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Controller;
 
 use OCA\Stackiq\Controller\SettingsController;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -30,6 +32,21 @@ use ReflectionMethod;
  * @spec openspec/specs/method-decomposition/spec.md#requirement-settingscontroller-settings-crud-endpoints-req-decomp-013
  */
 class SettingsControllerCanonicalWriteTest extends TestCase {
+
+	/**
+	 * The role group settings double a test sets up, or null for a plain mock.
+	 *
+	 * @var RoleGroupSettings|null
+	 */
+	private ?RoleGroupSettings $roleGroupSettings = null;
+
+	/**
+	 * The e-mail settings double a test sets up, or null for a plain mock.
+	 *
+	 * @var EmailSettings|null
+	 */
+	private ?EmailSettings $emailSettings = null;
+
 	/**
 	 * The canonical `/api/settings` methods, asserted item by item.
 	 *
@@ -158,6 +175,8 @@ class SettingsControllerCanonicalWriteTest extends TestCase {
 			[
 				'request' => $request,
 				'settingsService' => $settingsService,
+				'roleGroupSettings' => ($this->roleGroupSettings ?? $this->createMock(RoleGroupSettings::class)),
+				'emailSettings' => ($this->emailSettings ?? $this->createMock(EmailSettings::class)),
 				'logger' => $this->createMock(LoggerInterface::class),
 				// A promoted `?ConnectionReportService $connectionReports = null`
 				// gets its null from the constructor, which
@@ -189,14 +208,16 @@ class SettingsControllerCanonicalWriteTest extends TestCase {
 		$settingsService->expects($this->once())
 			->method('updateSettings')
 			->willReturn(['configuration' => ['catalog' => 'main']]);
-		$settingsService->expects($this->once())
+		$this->roleGroupSettings = $this->createMock(RoleGroupSettings::class);
+		$this->roleGroupSettings->expects($this->once())
 			->method('validateGroups')
 			->with(['users'])
 			->willReturn(['valid' => ['users'], 'invalid' => []]);
-		$settingsService->expects($this->once())
+		$this->roleGroupSettings->expects($this->once())
 			->method('setGenericUserGroups')
 			->with(['users']);
-		$settingsService->expects($this->once())
+		$this->emailSettings = $this->createMock(EmailSettings::class);
+		$this->emailSettings->expects($this->once())
 			->method('updateEmailSettings')
 			->with(['smtpHost' => 'mail.example.org'])
 			->willReturn(['smtpHost' => 'mail.example.org']);
@@ -223,8 +244,10 @@ class SettingsControllerCanonicalWriteTest extends TestCase {
 	public function testUpdateIsNotACatchAllForOtherSettingsSurfaces(): void {
 		$settingsService = $this->createMock(SettingsService::class);
 		$settingsService->expects($this->never())->method('updateSettings');
-		$settingsService->expects($this->never())->method('setGenericUserGroups');
-		$settingsService->expects($this->never())->method('updateEmailSettings');
+		$this->roleGroupSettings = $this->createMock(RoleGroupSettings::class);
+		$this->roleGroupSettings->expects($this->never())->method('setGenericUserGroups');
+		$this->emailSettings = $this->createMock(EmailSettings::class);
+		$this->emailSettings->expects($this->never())->method('updateEmailSettings');
 
 		$params = [
 			'catalogLocation' => '/somewhere',
@@ -244,9 +267,10 @@ class SettingsControllerCanonicalWriteTest extends TestCase {
 	 */
 	public function testUpdateReturns400OnInvalidGroupNames(): void {
 		$settingsService = $this->createMock(SettingsService::class);
-		$settingsService->method('validateGroups')
+		$this->roleGroupSettings = $this->createMock(RoleGroupSettings::class);
+		$this->roleGroupSettings->method('validateGroups')
 			->willReturn(['valid' => [], 'invalid' => ['no-such-group']]);
-		$settingsService->expects($this->never())->method('setGenericUserGroups');
+		$this->roleGroupSettings->expects($this->never())->method('setGenericUserGroups');
 
 		$response = $this->makeController(
 			['userGroups' => ['generic' => ['no-such-group']]],

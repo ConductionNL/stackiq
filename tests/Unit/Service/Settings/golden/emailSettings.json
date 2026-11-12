@@ -1,0 +1,240 @@
+{
+    "read back": {
+        "defaults": {
+            "enabled": false,
+            "senderEmail": "noreply@softwarecatalogus.nl",
+            "senderName": "Software Catalogus",
+            "testReceiverOverride": "",
+            "organizationRegistrationEnabled": true,
+            "organizationActivationEnabled": true,
+            "userCreationEnabled": true,
+            "userOrganisationEnabled": true,
+            "transportType": "smtp",
+            "smtpHost": "localhost",
+            "smtpPort": 587,
+            "smtpEncryption": "tls",
+            "smtpUsername": "",
+            "smtpPassword": "",
+            "sendgridApiKey": "",
+            "mailgunApiKey": "",
+            "mailgunDomain": "",
+            "postmarkApiKey": "",
+            "sesAccessKey": "",
+            "sesSecretKey": "",
+            "sesRegion": "us-east-1",
+            "mailjetApiKey": "",
+            "mailjetSecretKey": "",
+            "templates": {
+                "organization_registration": "\n<h1>Welkom bij de Software Catalogus!</h1>\n<p>Beste {{ organization.name }},</p>\n<p>Hartelijk welkom bij de Software Catalogus! Uw organisatie is succesvol geregistreerd.</p>\n<p>Met de Software Catalogus kunt u:</p>\n<ul>\n    <li>Uw software overzichtelijk beheren</li>\n    <li>Software delen met andere organisaties</li>\n    <li>Ontdekken welke software andere organisaties gebruiken</li>\n</ul>\n<p>Uw organisatie heeft de status \"{{ organization.beoordeling }}\" en kan nu gebruik maken van alle functionaliteiten.</p>\n<p>Heeft u vragen? Neem dan contact met ons op.</p>\n<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n            ",
+                "organization_activation": "\n<h1>Uw organisatie is geactiveerd!</h1>\n<p>Beste {{ organization.name }},</p>\n<p>Goed nieuws! Uw organisatie is zojuist geactiveerd in de Software Catalogus.</p>\n<p>Dit betekent dat u nu volledig kunt deelnemen aan:</p>\n<ul>\n    <li>Het delen van software informatie</li>\n    <li>Samenwerking met andere organisaties</li>\n    <li>Toegang tot alle catalogus functionaliteiten</li>\n</ul>\n<p>Status: {{ organization.beoordeling }}</p>\n<p>U kunt nu inloggen en gebruik maken van alle beschikbare functionaliteiten.</p>\n<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n            ",
+                "user_creation": "\n<h1>Welkom {{ user.name }}!</h1>\n<p>Beste {{ user.name }},</p>\n<p>Er is een gebruikersaccount voor u aangemaakt in de Software Catalogus.</p>\n<p>Uw accountgegevens:</p>\n<ul>\n    <li>E-mailadres: {{ user.email }}</li>\n    <li>Gebruikersnaam: {{ user.username }}</li>\n    <li>Organisatie: {{ user.organization.name if user.organization }}</li>\n</ul>\n<p>U kunt nu inloggen op het platform en gebruik maken van alle functionaliteiten.</p>\n<p>Heeft u vragen over uw account? Neem dan contact met ons op.</p>\n<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n            "
+            }
+        },
+        "stored": {
+            "enabled": true,
+            "senderEmail": "v:sender_email",
+            "senderName": "v:sender_name",
+            "testReceiverOverride": "v:test_receiver_override",
+            "organizationRegistrationEnabled": false,
+            "organizationActivationEnabled": false,
+            "userCreationEnabled": false,
+            "userOrganisationEnabled": false,
+            "transportType": "v:email_transport_type",
+            "smtpHost": "v:email_smtp_host",
+            "smtpPort": 0,
+            "smtpEncryption": "v:email_smtp_encryption",
+            "smtpUsername": "v:email_smtp_username",
+            "smtpPassword": "v:email_smtp_password",
+            "sendgridApiKey": "v:email_sendgrid_api_key",
+            "mailgunApiKey": "v:email_mailgun_api_key",
+            "mailgunDomain": "v:email_mailgun_domain",
+            "postmarkApiKey": "v:email_postmark_api_key",
+            "sesAccessKey": "v:email_ses_access_key",
+            "sesSecretKey": "v:email_ses_secret_key",
+            "sesRegion": "v:email_ses_region",
+            "mailjetApiKey": "abc",
+            "mailjetSecretKey": "v:email_mailjet_secret_key",
+            "templates": {
+                "organization_registration": "v:email_template_organization_registration",
+                "organization_activation": "\n<h1>Uw organisatie is geactiveerd!</h1>\n<p>Beste {{ organization.name }},</p>\n<p>Goed nieuws! Uw organisatie is zojuist geactiveerd in de Software Catalogus.</p>\n<p>Dit betekent dat u nu volledig kunt deelnemen aan:</p>\n<ul>\n    <li>Het delen van software informatie</li>\n    <li>Samenwerking met andere organisaties</li>\n    <li>Toegang tot alle catalogus functionaliteiten</li>\n</ul>\n<p>Status: {{ organization.beoordeling }}</p>\n<p>U kunt nu inloggen en gebruik maken van alle beschikbare functionaliteiten.</p>\n<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n            ",
+                "user_creation": "v:email_template_user_creation"
+            }
+        },
+        "logs": [
+            [
+                "debug",
+                "Stackiq: Loading email settings from configuration",
+                []
+            ],
+            [
+                "info",
+                "Stackiq: Email settings loaded from configuration",
+                {
+                    "enabled": false,
+                    "transport_type": "smtp",
+                    "sender_email": "noreply@softwarecatalogus.nl",
+                    "has_mailjet_api_key": false,
+                    "mailjet_api_key_length": 0,
+                    "has_mailjet_secret_key": false,
+                    "mailjet_secret_key_length": 0,
+                    "test_receiver_override": ""
+                }
+            ],
+            [
+                "debug",
+                "Stackiq: Loading email settings from configuration",
+                []
+            ],
+            [
+                "info",
+                "Stackiq: Email settings loaded from configuration",
+                {
+                    "enabled": true,
+                    "transport_type": "v:email_transport_type",
+                    "sender_email": "v:sender_email",
+                    "has_mailjet_api_key": true,
+                    "mailjet_api_key_length": 3,
+                    "has_mailjet_secret_key": true,
+                    "mailjet_secret_key_length": 26,
+                    "test_receiver_override": "v:test_receiver_override"
+                }
+            ]
+        ]
+    },
+    "update": {
+        "result": {
+            "enabled": "true",
+            "senderName": "••••••••",
+            "userCreationEnabled": "false",
+            "smtpPort": "587",
+            "mailjetSecretKey": "new-secret"
+        },
+        "writes": [
+            [
+                "stackiq",
+                "email_enabled",
+                "true"
+            ],
+            [
+                "stackiq",
+                "sender_name",
+                "••••••••"
+            ],
+            [
+                "stackiq",
+                "email_user_creation_enabled",
+                "false"
+            ],
+            [
+                "stackiq",
+                "email_smtp_port",
+                "587"
+            ],
+            [
+                "stackiq",
+                "email_mailjet_secret_key",
+                "new-secret"
+            ]
+        ],
+        "logs": [
+            [
+                "info",
+                "Email settings updated successfully",
+                {
+                    "updatedKeys": [
+                        "enabled",
+                        "senderName",
+                        "userCreationEnabled",
+                        "smtpPort",
+                        "mailjetSecretKey"
+                    ]
+                }
+            ]
+        ]
+    },
+    "redaction": {
+        "out": {
+            "smtpPassword": "••••••••",
+            "sendgridApiKey": "",
+            "mailgunApiKey": "",
+            "postmarkApiKey": "••••••••",
+            "sesSecretKey": "",
+            "smtpUsername": "user",
+            "mailjetApiKey": "public-part"
+        },
+        "mask": "••••••••",
+        "fields": [
+            "smtpPassword",
+            "sendgridApiKey",
+            "mailgunApiKey",
+            "postmarkApiKey",
+            "sesSecretKey",
+            "mailjetSecretKey"
+        ],
+        "allRedacted": {
+            "enabled": false,
+            "senderEmail": "noreply@softwarecatalogus.nl",
+            "senderName": "Software Catalogus",
+            "testReceiverOverride": "",
+            "organizationRegistrationEnabled": true,
+            "organizationActivationEnabled": true,
+            "userCreationEnabled": true,
+            "userOrganisationEnabled": true,
+            "transportType": "smtp",
+            "smtpHost": "localhost",
+            "smtpPort": 587,
+            "smtpEncryption": "tls",
+            "smtpUsername": "",
+            "smtpPassword": "",
+            "sendgridApiKey": "",
+            "mailgunApiKey": "",
+            "mailgunDomain": "",
+            "postmarkApiKey": "",
+            "sesAccessKey": "",
+            "sesSecretKey": "",
+            "sesRegion": "us-east-1",
+            "mailjetApiKey": "",
+            "mailjetSecretKey": "",
+            "templates": {
+                "organization_registration": "\n<h1>Welkom bij de Software Catalogus!</h1>\n<p>Beste {{ organization.name }},</p>\n<p>Hartelijk welkom bij de Software Catalogus! Uw organisatie is succesvol geregistreerd.</p>\n<p>Met de Software Catalogus kunt u:</p>\n<ul>\n    <li>Uw software overzichtelijk beheren</li>\n    <li>Software delen met andere organisaties</li>\n    <li>Ontdekken welke software andere organisaties gebruiken</li>\n</ul>\n<p>Uw organisatie heeft de status \"{{ organization.beoordeling }}\" en kan nu gebruik maken van alle functionaliteiten.</p>\n<p>Heeft u vragen? Neem dan contact met ons op.</p>\n<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n            ",
+                "organization_activation": "\n<h1>Uw organisatie is geactiveerd!</h1>\n<p>Beste {{ organization.name }},</p>\n<p>Goed nieuws! Uw organisatie is zojuist geactiveerd in de Software Catalogus.</p>\n<p>Dit betekent dat u nu volledig kunt deelnemen aan:</p>\n<ul>\n    <li>Het delen van software informatie</li>\n    <li>Samenwerking met andere organisaties</li>\n    <li>Toegang tot alle catalogus functionaliteiten</li>\n</ul>\n<p>Status: {{ organization.beoordeling }}</p>\n<p>U kunt nu inloggen en gebruik maken van alle beschikbare functionaliteiten.</p>\n<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n            ",
+                "user_creation": "\n<h1>Welkom {{ user.name }}!</h1>\n<p>Beste {{ user.name }},</p>\n<p>Er is een gebruikersaccount voor u aangemaakt in de Software Catalogus.</p>\n<p>Uw accountgegevens:</p>\n<ul>\n    <li>E-mailadres: {{ user.email }}</li>\n    <li>Gebruikersnaam: {{ user.username }}</li>\n    <li>Organisatie: {{ user.organization.name if user.organization }}</li>\n</ul>\n<p>U kunt nu inloggen op het platform en gebruik maken van alle functionaliteiten.</p>\n<p>Heeft u vragen over uw account? Neem dan contact met ons op.</p>\n<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n            "
+            }
+        }
+    },
+    "templates": {
+        "stored": "<p>stored</p>",
+        "default": "\n<h1>Uw organisatie is geactiveerd!</h1>\n<p>Beste {{ organization.name }},</p>\n<p>Goed nieuws! Uw organisatie is zojuist geactiveerd in de Software Catalogus.</p>\n<p>Dit betekent dat u nu volledig kunt deelnemen aan:</p>\n<ul>\n    <li>Het delen van software informatie</li>\n    <li>Samenwerking met andere organisaties</li>\n    <li>Toegang tot alle catalogus functionaliteiten</li>\n</ul>\n<p>Status: {{ organization.beoordeling }}</p>\n<p>U kunt nu inloggen en gebruik maken van alle beschikbare functionaliteiten.</p>\n<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n            ",
+        "all": {
+            "organization_registration": "\n<h1>Welkom bij de Software Catalogus!</h1>\n<p>Beste {{ organization.name }},</p>\n<p>Hartelijk welkom bij de Software Catalogus! Uw organisatie is succesvol geregistreerd.</p>\n<p>Met de Software Catalogus kunt u:</p>\n<ul>\n    <li>Uw software overzichtelijk beheren</li>\n    <li>Software delen met andere organisaties</li>\n    <li>Ontdekken welke software andere organisaties gebruiken</li>\n</ul>\n<p>Uw organisatie heeft de status \"{{ organization.beoordeling }}\" en kan nu gebruik maken van alle functionaliteiten.</p>\n<p>Heeft u vragen? Neem dan contact met ons op.</p>\n<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n            ",
+            "organization_activation": "\n<h1>Uw organisatie is geactiveerd!</h1>\n<p>Beste {{ organization.name }},</p>\n<p>Goed nieuws! Uw organisatie is zojuist geactiveerd in de Software Catalogus.</p>\n<p>Dit betekent dat u nu volledig kunt deelnemen aan:</p>\n<ul>\n    <li>Het delen van software informatie</li>\n    <li>Samenwerking met andere organisaties</li>\n    <li>Toegang tot alle catalogus functionaliteiten</li>\n</ul>\n<p>Status: {{ organization.beoordeling }}</p>\n<p>U kunt nu inloggen en gebruik maken van alle beschikbare functionaliteiten.</p>\n<p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n            ",
+            "user_creation": "<p>stored</p>",
+            "user_organisation": ""
+        },
+        "updated": true,
+        "failed": false,
+        "writes": [
+            [
+                "stackiq",
+                "email_template_welcome",
+                "<p>hi</p>"
+            ]
+        ],
+        "logs": [
+            [
+                "info",
+                "Email template updated successfully",
+                {
+                    "templateName": "welcome"
+                }
+            ],
+            [
+                "error",
+                "Failed to update email template: config down",
+                {
+                    "templateName": "welcome"
+                }
+            ]
+        ]
+    }
+}

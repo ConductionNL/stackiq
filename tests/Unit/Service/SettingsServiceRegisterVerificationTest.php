@@ -25,6 +25,8 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\Stackiq\Service\Settings\CatalogueLocator;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -74,16 +76,17 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 		// answers it, as the partial mock of SettingsService used to.
 		$catalogue = $this->createMock(CatalogueLocator::class);
 		$catalogue->method('getSchemaIdForObjectType')->willReturn($resolvedObjectType);
-
 		$service = new SettingsService(
 			$catalogue,
 			$this->createMock(IAppConfig::class),
 			$this->createMock(IRequest::class),
+			$this->createMock(RoleGroupSettings::class),
 			$container,
 			$this->createMock(IAppManager::class),
 			$logger,
 			$this->createMock(IGroupManager::class),
 			$this->createMock(IL10N::class),
+			$this->createMock(EmailSettings::class),
 		);
 
 		return [$service, $logger];
@@ -205,11 +208,13 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 			),
 			$config,
 			$this->createMock(IRequest::class),
+			$this->createMock(RoleGroupSettings::class),
 			$this->createMock(ContainerInterface::class),
 			$this->createMock(IAppManager::class),
 			$this->createMock(LoggerInterface::class),
 			$this->createMock(IGroupManager::class),
-			$this->createMock(IL10N::class)
+			$this->createMock(IL10N::class),
+			$this->createMock(EmailSettings::class),
 		);
 
 		$reflection = new ReflectionMethod($service, 'getRegisterVerificationStatus');
@@ -252,11 +257,13 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 			),
 			$config,
 			$this->createMock(IRequest::class),
+			$this->createMock(RoleGroupSettings::class),
 			$this->createMock(ContainerInterface::class),
 			$this->createMock(IAppManager::class),
 			$this->createMock(LoggerInterface::class),
 			$this->createMock(IGroupManager::class),
-			$l10n
+			$l10n,
+			$this->createMock(EmailSettings::class),
 		);
 
 		$reflection = new ReflectionMethod($service, 'getRegisterVerificationStatus');

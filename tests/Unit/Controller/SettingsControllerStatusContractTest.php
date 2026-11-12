@@ -37,6 +37,9 @@ use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http;
@@ -122,10 +125,13 @@ class SettingsControllerStatusContractTest extends TestCase {
 			$this->createMock(IGroupManager::class),
 			$this->userSession,
 			$this->settingsService,
+			$this->createMock(CronjobSettings::class),
 			$this->orgSyncService,
 			$this->createMock(ArchiMateService::class),
+			$this->createMock(RoleGroupSettings::class),
 			$this->progressTracker,
 			$this->createMock(EolSyncService::class),
+			$this->createMock(EmailSettings::class),
 			$this->createMock(LoggerInterface::class)
 		);
 
