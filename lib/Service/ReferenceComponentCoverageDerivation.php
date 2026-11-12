@@ -60,29 +60,76 @@ class ReferenceComponentCoverageDerivation {
 	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
 	 */
 	public function derive(array $components, array $usages, array $moduleNames, array $moduleComponents): array {
+		$covered = $this->applicationsByComponent(usages: $usages, moduleNames: $moduleNames);
+		$index = new CoverageIndex(
+			applications: $covered['applications'],
+			fillableBy: $this->fillableBy(moduleComponents: $moduleComponents, moduleNames: $moduleNames)
+		);
+
+		$rows = array_map(fn (array $component): array => $this->componentRow(component: $component, index: $index), array_values($components));
+		$summary = $this->summary(rows: $rows, withoutComponent: $covered['withoutComponent']);
+
+		usort($rows, static fn (array $a, array $b): int => [$a['group'], $a['name']] <=> [$b['group'], $b['name']]);
+
+		return ['summary' => $summary, 'components' => $rows];
+	}//end derive()
+
+	/**
+	 * The applications that cover each component: one per module, from the usages that count;
+	 * and how many usages name no component.
+	 *
+	 * @param array<int, array<string, mixed>> $usages The usages.
+	 * @param array<string, string> $moduleNames The module names by id.
+	 *
+	 * @return array{applications: array<string, array<string, array<string, string>>>, withoutComponent: int}
+	 */
+	private function applicationsByComponent(array $usages, array $moduleNames): array {
 		$byComponent = [];
 		$withoutComponent = 0;
 		foreach ($usages as $usage) {
 			$named = $this->ids(values: $usage['usedForReferenceComponents'] ?? []);
-			if ($named === []) {
-				$withoutComponent++;
-			}
-
+			$withoutComponent += (int)($named === []);
 			if (in_array((string)($usage['status'] ?? ''), self::NOT_COUNTING, true) === true) {
 				continue;
 			}
 
-			$moduleId = $this->relations->resolveRelationId(value: $usage['module'] ?? null);
+			$application = $this->application(usage: $usage, moduleNames: $moduleNames);
 			foreach ($named as $componentId) {
-				$byComponent[$componentId][$moduleId] = [
-					'usage' => $this->relations->resolveRelationId(value: $usage['id'] ?? ($usage['@self']['id'] ?? null)),
-					'module' => $moduleId,
-					'moduleName' => $moduleNames[$moduleId] ?? '',
-					'status' => (string)($usage['status'] ?? ''),
-				];
+				$byComponent[$componentId][$application['module']] = $application;
 			}
-		}//end foreach
+		}
 
+		return ['applications' => $byComponent, 'withoutComponent' => $withoutComponent];
+	}//end applicationsByComponent()
+
+	/**
+	 * The application a usage stands for: the usage, its module and the module's name, and the usage's status.
+	 *
+	 * @param array<string, mixed> $usage The usage.
+	 * @param array<string, string> $moduleNames The module names by id.
+	 *
+	 * @return array{usage: string, module: string, moduleName: string, status: string}
+	 */
+	private function application(array $usage, array $moduleNames): array {
+		$moduleId = $this->relations->resolveRelationId(value: $usage['module'] ?? null);
+
+		return [
+			'usage' => $this->relations->resolveRelationId(value: $usage['id'] ?? ($usage['@self']['id'] ?? null)),
+			'module' => $moduleId,
+			'moduleName' => $moduleNames[$moduleId] ?? '',
+			'status' => (string)($usage['status'] ?? ''),
+		];
+	}//end application()
+
+	/**
+	 * The names of the modules that declare each component.
+	 *
+	 * @param array<string, array<int, string>> $moduleComponents The component ids each module declares.
+	 * @param array<string, string> $moduleNames The module names by id.
+	 *
+	 * @return array<string, array<int, string>>
+	 */
+	private function fillableBy(array $moduleComponents, array $moduleNames): array {
 		$fillableBy = [];
 		foreach ($moduleComponents as $moduleId => $componentIds) {
 			foreach ($componentIds as $componentId) {
@@ -90,34 +137,68 @@ class ReferenceComponentCoverageDerivation {
 			}
 		}
 
-		$summary = ['components' => 0, 'gap' => 0, 'fillable' => 0, 'covered' => 0, 'overlap' => 0, 'usagesWithoutComponent' => $withoutComponent];
-		$rows = [];
-		foreach ($components as $component) {
-			$id = $this->relations->resolveRelationId(value: $component['id'] ?? ($component['@self']['id'] ?? null));
-			$applications = array_values($byComponent[$id] ?? []);
-			$state = $this->state(count: count($applications));
-			$fillable = $state === 'gap' && isset($fillableBy[$id]) === true;
+		return $fillableBy;
+	}//end fillableBy()
 
-			$summary['components']++;
-			$summary[$state]++;
-			$summary['fillable'] += (int)$fillable;
+	/**
+	 * One component's row: what it is, its state, whether a used module could fill a gap, and its applications.
+	 *
+	 * @param array<string, mixed> $component The reference component.
+	 * @param CoverageIndex $index The applications and fillable modules per component.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function componentRow(array $component, CoverageIndex $index): array {
+		$id = $this->relations->resolveRelationId(value: $component['id'] ?? ($component['@self']['id'] ?? null));
+		$applications = array_values($index->applications[$id] ?? []);
+		$state = $this->state(count: count($applications));
+		$fillable = $state === 'gap' && isset($index->fillableBy[$id]) === true;
 
-			$rows[] = [
-				'id' => $id,
-				'name' => (string)($component['name'] ?? ''),
-				'group' => (string)($component['grouping'] ?? ''),
-				'documentation' => (string)($component['documentation'] ?? ''),
+		return array_merge(
+			['id' => $id],
+			self::componentFacts(component: $component),
+			[
 				'state' => $state,
 				'fillable' => $fillable,
-				'fillableBy' => $this->fillableNames(fillable: $fillable, names: $fillableBy[$id] ?? []),
+				'fillableBy' => $this->fillableNames(fillable: $fillable, names: $index->fillableBy[$id] ?? []),
 				'applications' => $applications,
-			];
-		}//end foreach
+			]
+		);
+	}//end componentRow()
 
-		usort($rows, static fn (array $a, array $b): int => [$a['group'], $a['name']] <=> [$b['group'], $b['name']]);
+	/**
+	 * What a component is: its name, group and documentation.
+	 *
+	 * @param array<string, mixed> $component The reference component.
+	 *
+	 * @return array{name: string, group: string, documentation: string}
+	 */
+	private static function componentFacts(array $component): array {
+		return [
+			'name' => (string)($component['name'] ?? ''),
+			'group' => (string)($component['grouping'] ?? ''),
+			'documentation' => (string)($component['documentation'] ?? ''),
+		];
+	}//end componentFacts()
 
-		return ['summary' => $summary, 'components' => $rows];
-	}//end derive()
+	/**
+	 * The counts of the rows per state and of the fillable gaps, and the usages without a component.
+	 *
+	 * @param array<int, array<string, mixed>> $rows The component rows.
+	 * @param int $withoutComponent The usages that name no component.
+	 *
+	 * @return array<string, int>
+	 */
+	private function summary(array $rows, int $withoutComponent): array {
+		$summary = ['components' => 0, 'gap' => 0, 'fillable' => 0, 'covered' => 0, 'overlap' => 0, 'usagesWithoutComponent' => $withoutComponent];
+		foreach ($rows as $row) {
+			$summary['components']++;
+			$summary[$row['state']]++;
+			$summary['fillable'] += (int)$row['fillable'];
+		}
+
+		return $summary;
+	}//end summary()
 
 	/**
 	 * The relation ids in a list of references.

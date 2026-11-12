@@ -117,27 +117,59 @@ class ContactNamesController extends Controller {
 
 		$ids = $this->requestedIds();
 		if (count($ids) > self::MAX_IDS) {
-			return new JSONResponse(
-				['message' => $this->l10n->t('At most %s contact persons per request', [self::MAX_IDS]), 'error' => 'too-many-ids'],
-				Http::STATUS_BAD_REQUEST
-			);
+			return $this->tooManyIds();
 		}
 
+		return new JSONResponse(['names' => (object)$this->namesOf(ids: $ids)], Http::STATUS_OK);
+	}//end index()
+
+	/**
+	 * The 400 answer for more than MAX_IDS ids.
+	 *
+	 * @return JSONResponse
+	 */
+	private function tooManyIds(): JSONResponse {
+		return new JSONResponse(
+			['message' => $this->l10n->t('At most %s contact persons per request', [self::MAX_IDS]), 'error' => 'too-many-ids'],
+			Http::STATUS_BAD_REQUEST
+		);
+	}//end tooManyIds()
+
+	/**
+	 * The display names of the requested contact persons the caller may read; none without Contacts.
+	 *
+	 * @param array<int, string> $ids Contact person uuids, lower case.
+	 *
+	 * @return array<string, string> uuid => display name.
+	 */
+	private function namesOf(array $ids): array {
 		if ($ids === [] || $this->contactSync->isAvailable() === false) {
-			return new JSONResponse(['names' => (object)[]], Http::STATUS_OK);
+			return [];
 		}
 
 		$names = [];
 		foreach ($this->contactsUidsOf(ids: $ids) as $uuid => $contactsUid) {
-			$contact = $this->contactSync->findOwnContactByUid(uid: $contactsUid);
-			$name = self::firstValue(value: ($contact['FN'] ?? ''));
+			$name = $this->contactName(contactsUid: $contactsUid);
 			if ($name !== '') {
 				$names[$uuid] = $name;
 			}
 		}
 
-		return new JSONResponse(['names' => (object)$names], Http::STATUS_OK);
-	}//end index()
+		return $names;
+	}//end namesOf()
+
+	/**
+	 * The display name of a contact in the caller's own or shared address books, or ''.
+	 *
+	 * @param string $contactsUid The contact's UID.
+	 *
+	 * @return string
+	 */
+	private function contactName(string $contactsUid): string {
+		$contact = $this->contactSync->findOwnContactByUid(uid: $contactsUid);
+
+		return self::firstValue(value: ($contact['FN'] ?? ''));
+	}//end contactName()
 
 	/**
 	 * The distinct, well-formed uuids in the `ids` query parameter, lower case.
@@ -145,17 +177,8 @@ class ContactNamesController extends Controller {
 	 * @return array<int, string>
 	 */
 	private function requestedIds(): array {
-		$raw = $this->request->getParam('ids', []);
-		if (is_string($raw) === true) {
-			$raw = [$raw];
-		}
-
-		if (is_array($raw) === false) {
-			return [];
-		}
-
 		$ids = [];
-		foreach ($raw as $id) {
+		foreach (self::rawIds(raw: $this->request->getParam('ids', [])) as $id) {
 			if (is_string($id) === true && preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id) === 1) {
 				$ids[strtolower($id)] = true;
 			}
@@ -163,6 +186,25 @@ class ContactNamesController extends Controller {
 
 		return array_keys($ids);
 	}//end requestedIds()
+
+	/**
+	 * The `ids` query parameter as a list: one string becomes a list of one, anything else but a list none.
+	 *
+	 * @param mixed $raw The parameter.
+	 *
+	 * @return array<array-key, mixed>
+	 */
+	private static function rawIds(mixed $raw): array {
+		if (is_string($raw) === true) {
+			return [$raw];
+		}
+
+		if (is_array($raw) === false) {
+			return [];
+		}
+
+		return $raw;
+	}//end rawIds()
 
 	/**
 	 * The `contactsUid` of each requested contact person the caller may read.
@@ -175,43 +217,95 @@ class ContactNamesController extends Controller {
 	 * @return array<string, string> uuid => contactsUid.
 	 */
 	private function contactsUidsOf(array $ids): array {
-		$config = $this->settingsService->getVoorzieningenConfig();
-		$register = ($config['register'] ?? null);
-		$schema = ($config[SettingsService::LEGACY_SCHEMA_KEY['contactPerson']] ?? null);
-		if (empty($register) === true || empty($schema) === true) {
-			$this->logger->warning('[ContactNames] The register or the contact person schema is not configured; no names are given');
+		$source = $this->contactPersonSource();
+		if ($source === null) {
 			return [];
 		}
 
+		$results = $this->readContactPersons(source: $source, ids: $ids);
+		if ($results === null) {
+			return [];
+		}
+
+		return self::requestedUids(results: $results, ids: $ids);
+	}//end contactsUidsOf()
+
+	/**
+	 * The register and contact person schema, or null after warning that they are not configured.
+	 *
+	 * @return array{register: int, schema: int}|null
+	 */
+	private function contactPersonSource(): ?array {
+		$config   = $this->settingsService->getVoorzieningenConfig();
+		$register = ($config['register'] ?? null);
+		$schema   = ($config[SettingsService::LEGACY_SCHEMA_KEY['contactPerson']] ?? null);
+		if (empty($register) === true || empty($schema) === true) {
+			$this->logger->warning('[ContactNames] The register or the contact person schema is not configured; no names are given');
+			return null;
+		}
+
+		return ['register' => (int)$register, 'schema' => (int)$schema];
+	}//end contactPersonSource()
+
+	/**
+	 * Read the requested contact persons with the caller's own rights.
+	 *
+	 * @param array{register: int, schema: int} $source The register and contact person schema.
+	 * @param array<int, string>                $ids    Contact person uuids, lower case.
+	 *
+	 * @return array<int, mixed>|null The records, or null when OpenRegister cannot be read.
+	 */
+	private function readContactPersons(array $source, array $ids): ?array {
 		try {
 			// RBAC and multitenancy stay at their defaults: the caller's own rights.
 			// The ids go in the query as `_ids`: OpenRegister's single
 			// register+schema path reads that key and ignores the `ids` argument.
 			$result = $this->objectService->searchObjectsPaginated(
-				query: [
-					'@self' => ['register' => (int)$register, 'schema' => (int)$schema],
-					'_ids' => $ids,
-					'_limit' => self::MAX_IDS,
-				]
+				query: ['@self' => $source, '_ids' => $ids, '_limit' => self::MAX_IDS]
 			);
 		} catch (Throwable $e) {
 			$this->logger->warning('[ContactNames] The contact persons could not be read', ['exception' => $e]);
-			return [];
+			return null;
 		}
 
+		return ($result['results'] ?? []);
+	}//end readContactPersons()
+
+	/**
+	 * The contactsUid of each requested contact person among the records.
+	 *
+	 * The ids filter is OpenRegister's; a record it did not ask for is never named.
+	 *
+	 * @param iterable<mixed>    $results The records read.
+	 * @param array<int, string> $ids     Contact person uuids, lower case.
+	 *
+	 * @return array<string, string> uuid => contactsUid.
+	 */
+	private static function requestedUids(iterable $results, array $ids): array {
 		$uids = [];
-		foreach (($result['results'] ?? []) as $entry) {
-			$data = self::objectData(entry: $entry);
-			$uuid = strtolower((string)($data['id'] ?? ($data['@self']['id'] ?? '')));
-			$contactsUid = trim((string)($data['contactsUid'] ?? ''));
-			// The ids filter is OpenRegister's; a record it did not ask for is never named.
+		foreach ($results as $entry) {
+			[$uuid, $contactsUid] = self::uuidAndContactsUid(data: self::objectData(entry: $entry));
 			if ($contactsUid !== '' && in_array($uuid, $ids, true) === true) {
 				$uids[$uuid] = $contactsUid;
 			}
 		}
 
 		return $uids;
-	}//end contactsUidsOf()
+	}//end requestedUids()
+
+	/**
+	 * A contact person record's uuid, lower case, and its trimmed contactsUid.
+	 *
+	 * @param array<string, mixed> $data The record.
+	 *
+	 * @return array{0: string, 1: string}
+	 */
+	private static function uuidAndContactsUid(array $data): array {
+		return [
+			strtolower((string)($data['id'] ?? ($data['@self']['id'] ?? ''))),
+			trim((string)($data['contactsUid'] ?? '')),
+		];
+	}//end uuidAndContactsUid()
 
 	/**
 	 * The data of one search result, an entity or an array.

@@ -1,0 +1,2510 @@
+{
+    "registration, full | ready": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "OrganizationRegistrationEmail: Sending registration email",
+                {
+                    "organizationName": "Gemeente Test",
+                    "recipientEmail": "org@example.org",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "org@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Organisatie Geregistreerd",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "OrganizationRegistrationEmail: Successfully sent registration email",
+                {
+                    "organizationName": "Gemeente Test",
+                    "recipientEmail": "org@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "org@example.org",
+                "Gemeente Test",
+                "Welkom bij de Software Catalogus - Organisatie Geregistreerd",
+                "\"Sender\" <sender@example.org>",
+                "\n        <html>\n        <head>\n            <title>Welkom bij de Software Catalogus</title>\n            <meta charset=\"UTF-8\">\n        </head>\n        <body>\n            <h1>Welkom Gemeente Test!</h1>\n            <p>Beste Gemeente Test,</p>\n            <p>Hartelijk welkom bij de Software Catalogus! Uw organisatie is succesvol geregistreerd.</p>\n            <p>Met de Software Catalogus kunt u:</p>\n            <ul>\n                <li>Uw software overzichtelijk beheren</li>\n                <li>Software delen met andere organisaties</li>\n                <li>Ontdekken welke software andere organisaties gebruiken</li>\n                <li>Bijdragen aan de open data gemeenschap</li>\n            </ul>\n            <p>U kunt nu inloggen op het platform en uw software catalogus beheren.</p>\n            <p>Heeft u vragen? Neem dan contact met ons op via info@conduction.nl</p>\n            <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n        </body>\n        </html>\n    "
+            ]
+        ]
+    },
+    "registration, full | not configured": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationRegistrationEmail: Email system not configured, skipping",
+                {
+                    "reason": "Email notifications are disabled",
+                    "hasCredentials": false,
+                    "hasTemplates": false,
+                    "organizationName": "Gemeente Test"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "registration, full | type disabled": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationRegistrationEmail: Delivery disabled for this message type",
+                {
+                    "organizationName": "Gemeente Test"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "registration, full | transport fails": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationRegistrationEmail: Sending registration email",
+                {
+                    "organizationName": "Gemeente Test",
+                    "recipientEmail": "org@example.org",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "error",
+                "Failed to send email using Symfony Mailer",
+                {
+                    "recipient": "org@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Organisatie Geregistreerd",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "Failed to send templated email",
+                {
+                    "recipient": "org@example.org",
+                    "template": "organization_registration",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "OrganizationRegistrationEmail: Failed to send registration email",
+                {
+                    "organizationName": "Gemeente Test",
+                    "recipientEmail": "org@example.org",
+                    "error": "transport down"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "registration, full | custom templates": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "OrganizationRegistrationEmail: Sending registration email",
+                {
+                    "organizationName": "Gemeente Test",
+                    "recipientEmail": "org@example.org",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "org@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Organisatie Geregistreerd",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "OrganizationRegistrationEmail: Successfully sent registration email",
+                {
+                    "organizationName": "Gemeente Test",
+                    "recipientEmail": "org@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "org@example.org",
+                "Gemeente Test",
+                "Welkom bij de Software Catalogus - Organisatie Geregistreerd",
+                "\"Sender\" <sender@example.org>",
+                "Gemeente Test|{{ user.name }}|{{ user.email }}|{{ user.password }}"
+            ]
+        ]
+    },
+    "activation, full | ready": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "OrganizationActivationEmail: Sending activation email",
+                {
+                    "organizationName": "Gemeente Test",
+                    "recipientEmail": "org@example.org",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "org@example.org",
+                    "subject": "Software Catalogus - Organisatie Geactiveerd",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "OrganizationActivationEmail: Successfully sent activation email",
+                {
+                    "organizationName": "Gemeente Test",
+                    "recipientEmail": "org@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "org@example.org",
+                "Gemeente Test",
+                "Software Catalogus - Organisatie Geactiveerd",
+                "\"Sender\" <sender@example.org>",
+                "\n        <html>\n        <head>\n            <title>Organisatie Geactiveerd - Software Catalogus</title>\n            <meta charset=\"UTF-8\">\n        </head>\n        <body>\n            <h1>Gemeente Test is nu Actief!</h1>\n            <p>Beste Gemeente Test,</p>\n            <p>Goed nieuws! Uw organisatie is nu geactiveerd in de Software Catalogus.</p>\n            <p>Dit betekent dat u nu:</p>\n            <ul>\n                <li>Volledig gebruik kunt maken van alle functies</li>\n                <li>Software kunt publiceren en delen</li>\n                <li>Toegang heeft tot de community features</li>\n                <li>Deel kunt nemen aan collaboraties</li>\n            </ul>\n            <p>Log in op het platform om te beginnen met het beheren van uw software catalogus.</p>\n            <p>Heeft u vragen? Neem dan contact met ons op via info@conduction.nl</p>\n            <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n        </body>\n        </html>\n    "
+            ]
+        ]
+    },
+    "activation, full | not configured": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationActivationEmail: Email system not configured, skipping",
+                {
+                    "reason": "Email notifications are disabled",
+                    "hasCredentials": false,
+                    "hasTemplates": false,
+                    "organizationName": "Gemeente Test"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "activation, full | type disabled": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationActivationEmail: Delivery disabled for this message type",
+                {
+                    "organizationName": "Gemeente Test"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "activation, full | transport fails": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationActivationEmail: Sending activation email",
+                {
+                    "organizationName": "Gemeente Test",
+                    "recipientEmail": "org@example.org",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "error",
+                "Failed to send email using Symfony Mailer",
+                {
+                    "recipient": "org@example.org",
+                    "subject": "Software Catalogus - Organisatie Geactiveerd",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "Failed to send templated email",
+                {
+                    "recipient": "org@example.org",
+                    "template": "organization_activation",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "OrganizationActivationEmail: Failed to send activation email",
+                {
+                    "organizationName": "Gemeente Test",
+                    "recipientEmail": "org@example.org",
+                    "error": "transport down"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "activation, full | custom templates": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "OrganizationActivationEmail: Sending activation email",
+                {
+                    "organizationName": "Gemeente Test",
+                    "recipientEmail": "org@example.org",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "org@example.org",
+                    "subject": "Software Catalogus - Organisatie Geactiveerd",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "OrganizationActivationEmail: Successfully sent activation email",
+                {
+                    "organizationName": "Gemeente Test",
+                    "recipientEmail": "org@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "org@example.org",
+                "Gemeente Test",
+                "Software Catalogus - Organisatie Geactiveerd",
+                "\"Sender\" <sender@example.org>",
+                "Gemeente Test|{{ user.name }}|{{ user.email }}|{{ user.password }}"
+            ]
+        ]
+    },
+    "registration, via contact | ready": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "OrganizationRegistrationEmail: Sending registration email",
+                {
+                    "organizationName": "Via Contact",
+                    "recipientEmail": "contact@example.org",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "contact@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Organisatie Geregistreerd",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "OrganizationRegistrationEmail: Successfully sent registration email",
+                {
+                    "organizationName": "Via Contact",
+                    "recipientEmail": "contact@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "contact@example.org",
+                "Via Contact",
+                "Welkom bij de Software Catalogus - Organisatie Geregistreerd",
+                "\"Sender\" <sender@example.org>",
+                "\n        <html>\n        <head>\n            <title>Welkom bij de Software Catalogus</title>\n            <meta charset=\"UTF-8\">\n        </head>\n        <body>\n            <h1>Welkom Via Contact!</h1>\n            <p>Beste Via Contact,</p>\n            <p>Hartelijk welkom bij de Software Catalogus! Uw organisatie is succesvol geregistreerd.</p>\n            <p>Met de Software Catalogus kunt u:</p>\n            <ul>\n                <li>Uw software overzichtelijk beheren</li>\n                <li>Software delen met andere organisaties</li>\n                <li>Ontdekken welke software andere organisaties gebruiken</li>\n                <li>Bijdragen aan de open data gemeenschap</li>\n            </ul>\n            <p>U kunt nu inloggen op het platform en uw software catalogus beheren.</p>\n            <p>Heeft u vragen? Neem dan contact met ons op via info@conduction.nl</p>\n            <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n        </body>\n        </html>\n    "
+            ]
+        ]
+    },
+    "registration, via contact | not configured": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationRegistrationEmail: Email system not configured, skipping",
+                {
+                    "reason": "Email notifications are disabled",
+                    "hasCredentials": false,
+                    "hasTemplates": false,
+                    "organizationName": "Via Contact"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "registration, via contact | type disabled": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationRegistrationEmail: Delivery disabled for this message type",
+                {
+                    "organizationName": "Via Contact"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "registration, via contact | transport fails": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationRegistrationEmail: Sending registration email",
+                {
+                    "organizationName": "Via Contact",
+                    "recipientEmail": "contact@example.org",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "error",
+                "Failed to send email using Symfony Mailer",
+                {
+                    "recipient": "contact@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Organisatie Geregistreerd",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "Failed to send templated email",
+                {
+                    "recipient": "contact@example.org",
+                    "template": "organization_registration",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "OrganizationRegistrationEmail: Failed to send registration email",
+                {
+                    "organizationName": "Via Contact",
+                    "recipientEmail": "contact@example.org",
+                    "error": "transport down"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "registration, via contact | custom templates": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "OrganizationRegistrationEmail: Sending registration email",
+                {
+                    "organizationName": "Via Contact",
+                    "recipientEmail": "contact@example.org",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "contact@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Organisatie Geregistreerd",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "OrganizationRegistrationEmail: Successfully sent registration email",
+                {
+                    "organizationName": "Via Contact",
+                    "recipientEmail": "contact@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "contact@example.org",
+                "Via Contact",
+                "Welkom bij de Software Catalogus - Organisatie Geregistreerd",
+                "\"Sender\" <sender@example.org>",
+                "Via Contact|{{ user.name }}|{{ user.email }}|{{ user.password }}"
+            ]
+        ]
+    },
+    "activation, via contact | ready": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "OrganizationActivationEmail: Sending activation email",
+                {
+                    "organizationName": "Via Contact",
+                    "recipientEmail": "contact@example.org",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "contact@example.org",
+                    "subject": "Software Catalogus - Organisatie Geactiveerd",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "OrganizationActivationEmail: Successfully sent activation email",
+                {
+                    "organizationName": "Via Contact",
+                    "recipientEmail": "contact@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "contact@example.org",
+                "Via Contact",
+                "Software Catalogus - Organisatie Geactiveerd",
+                "\"Sender\" <sender@example.org>",
+                "\n        <html>\n        <head>\n            <title>Organisatie Geactiveerd - Software Catalogus</title>\n            <meta charset=\"UTF-8\">\n        </head>\n        <body>\n            <h1>Via Contact is nu Actief!</h1>\n            <p>Beste Via Contact,</p>\n            <p>Goed nieuws! Uw organisatie is nu geactiveerd in de Software Catalogus.</p>\n            <p>Dit betekent dat u nu:</p>\n            <ul>\n                <li>Volledig gebruik kunt maken van alle functies</li>\n                <li>Software kunt publiceren en delen</li>\n                <li>Toegang heeft tot de community features</li>\n                <li>Deel kunt nemen aan collaboraties</li>\n            </ul>\n            <p>Log in op het platform om te beginnen met het beheren van uw software catalogus.</p>\n            <p>Heeft u vragen? Neem dan contact met ons op via info@conduction.nl</p>\n            <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n        </body>\n        </html>\n    "
+            ]
+        ]
+    },
+    "activation, via contact | not configured": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationActivationEmail: Email system not configured, skipping",
+                {
+                    "reason": "Email notifications are disabled",
+                    "hasCredentials": false,
+                    "hasTemplates": false,
+                    "organizationName": "Via Contact"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "activation, via contact | type disabled": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationActivationEmail: Delivery disabled for this message type",
+                {
+                    "organizationName": "Via Contact"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "activation, via contact | transport fails": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationActivationEmail: Sending activation email",
+                {
+                    "organizationName": "Via Contact",
+                    "recipientEmail": "contact@example.org",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "error",
+                "Failed to send email using Symfony Mailer",
+                {
+                    "recipient": "contact@example.org",
+                    "subject": "Software Catalogus - Organisatie Geactiveerd",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "Failed to send templated email",
+                {
+                    "recipient": "contact@example.org",
+                    "template": "organization_activation",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "OrganizationActivationEmail: Failed to send activation email",
+                {
+                    "organizationName": "Via Contact",
+                    "recipientEmail": "contact@example.org",
+                    "error": "transport down"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "activation, via contact | custom templates": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "OrganizationActivationEmail: Sending activation email",
+                {
+                    "organizationName": "Via Contact",
+                    "recipientEmail": "contact@example.org",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "contact@example.org",
+                    "subject": "Software Catalogus - Organisatie Geactiveerd",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "OrganizationActivationEmail: Successfully sent activation email",
+                {
+                    "organizationName": "Via Contact",
+                    "recipientEmail": "contact@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "contact@example.org",
+                "Via Contact",
+                "Software Catalogus - Organisatie Geactiveerd",
+                "\"Sender\" <sender@example.org>",
+                "Via Contact|{{ user.name }}|{{ user.email }}|{{ user.password }}"
+            ]
+        ]
+    },
+    "registration, bad email | ready": {
+        "result": false,
+        "log": [
+            [
+                "warning",
+                "OrganizationRegistrationEmail: Cannot send without valid email address",
+                {
+                    "organization": {
+                        "name": "Bad",
+                        "e-mailadres": "not-an-email"
+                    },
+                    "organizationName": "Bad"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "registration, bad email | not configured": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationRegistrationEmail: Email system not configured, skipping",
+                {
+                    "reason": "Email notifications are disabled",
+                    "hasCredentials": false,
+                    "hasTemplates": false,
+                    "organizationName": "Bad"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "registration, bad email | type disabled": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationRegistrationEmail: Delivery disabled for this message type",
+                {
+                    "organizationName": "Bad"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "registration, bad email | transport fails": {
+        "result": false,
+        "log": [
+            [
+                "warning",
+                "OrganizationRegistrationEmail: Cannot send without valid email address",
+                {
+                    "organization": {
+                        "name": "Bad",
+                        "e-mailadres": "not-an-email"
+                    },
+                    "organizationName": "Bad"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "registration, bad email | custom templates": {
+        "result": false,
+        "log": [
+            [
+                "warning",
+                "OrganizationRegistrationEmail: Cannot send without valid email address",
+                {
+                    "organization": {
+                        "name": "Bad",
+                        "e-mailadres": "not-an-email"
+                    },
+                    "organizationName": "Bad"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "activation, bad email | ready": {
+        "result": false,
+        "log": [
+            [
+                "warning",
+                "OrganizationActivationEmail: Cannot send without valid email address",
+                {
+                    "organization": {
+                        "name": "Bad",
+                        "e-mailadres": "not-an-email"
+                    },
+                    "organizationName": "Bad"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "activation, bad email | not configured": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationActivationEmail: Email system not configured, skipping",
+                {
+                    "reason": "Email notifications are disabled",
+                    "hasCredentials": false,
+                    "hasTemplates": false,
+                    "organizationName": "Bad"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "activation, bad email | type disabled": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationActivationEmail: Delivery disabled for this message type",
+                {
+                    "organizationName": "Bad"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "activation, bad email | transport fails": {
+        "result": false,
+        "log": [
+            [
+                "warning",
+                "OrganizationActivationEmail: Cannot send without valid email address",
+                {
+                    "organization": {
+                        "name": "Bad",
+                        "e-mailadres": "not-an-email"
+                    },
+                    "organizationName": "Bad"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "activation, bad email | custom templates": {
+        "result": false,
+        "log": [
+            [
+                "warning",
+                "OrganizationActivationEmail: Cannot send without valid email address",
+                {
+                    "organization": {
+                        "name": "Bad",
+                        "e-mailadres": "not-an-email"
+                    },
+                    "organizationName": "Bad"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "registration, no name | ready": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "OrganizationRegistrationEmail: Sending registration email",
+                {
+                    "organizationName": "Onbekende Organisatie",
+                    "recipientEmail": "anon@example.org",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "anon@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Organisatie Geregistreerd",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "OrganizationRegistrationEmail: Successfully sent registration email",
+                {
+                    "organizationName": "Onbekende Organisatie",
+                    "recipientEmail": "anon@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "anon@example.org",
+                "Onbekende Organisatie",
+                "Welkom bij de Software Catalogus - Organisatie Geregistreerd",
+                "\"Sender\" <sender@example.org>",
+                "\n        <html>\n        <head>\n            <title>Welkom bij de Software Catalogus</title>\n            <meta charset=\"UTF-8\">\n        </head>\n        <body>\n            <h1>Welkom Onbekende Organisatie!</h1>\n            <p>Beste Onbekende Organisatie,</p>\n            <p>Hartelijk welkom bij de Software Catalogus! Uw organisatie is succesvol geregistreerd.</p>\n            <p>Met de Software Catalogus kunt u:</p>\n            <ul>\n                <li>Uw software overzichtelijk beheren</li>\n                <li>Software delen met andere organisaties</li>\n                <li>Ontdekken welke software andere organisaties gebruiken</li>\n                <li>Bijdragen aan de open data gemeenschap</li>\n            </ul>\n            <p>U kunt nu inloggen op het platform en uw software catalogus beheren.</p>\n            <p>Heeft u vragen? Neem dan contact met ons op via info@conduction.nl</p>\n            <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n        </body>\n        </html>\n    "
+            ]
+        ]
+    },
+    "registration, no name | not configured": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationRegistrationEmail: Email system not configured, skipping",
+                {
+                    "reason": "Email notifications are disabled",
+                    "hasCredentials": false,
+                    "hasTemplates": false,
+                    "organizationName": "Unknown"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "registration, no name | type disabled": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationRegistrationEmail: Delivery disabled for this message type",
+                {
+                    "organizationName": "Unknown"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "registration, no name | transport fails": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationRegistrationEmail: Sending registration email",
+                {
+                    "organizationName": "Onbekende Organisatie",
+                    "recipientEmail": "anon@example.org",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "error",
+                "Failed to send email using Symfony Mailer",
+                {
+                    "recipient": "anon@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Organisatie Geregistreerd",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "Failed to send templated email",
+                {
+                    "recipient": "anon@example.org",
+                    "template": "organization_registration",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "OrganizationRegistrationEmail: Failed to send registration email",
+                {
+                    "organizationName": "Onbekende Organisatie",
+                    "recipientEmail": "anon@example.org",
+                    "error": "transport down"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "registration, no name | custom templates": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "OrganizationRegistrationEmail: Sending registration email",
+                {
+                    "organizationName": "Onbekende Organisatie",
+                    "recipientEmail": "anon@example.org",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "anon@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Organisatie Geregistreerd",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "OrganizationRegistrationEmail: Successfully sent registration email",
+                {
+                    "organizationName": "Onbekende Organisatie",
+                    "recipientEmail": "anon@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "anon@example.org",
+                "Onbekende Organisatie",
+                "Welkom bij de Software Catalogus - Organisatie Geregistreerd",
+                "\"Sender\" <sender@example.org>",
+                "Onbekende Organisatie|{{ user.name }}|{{ user.email }}|{{ user.password }}"
+            ]
+        ]
+    },
+    "activation, no name | ready": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "OrganizationActivationEmail: Sending activation email",
+                {
+                    "organizationName": "Onbekende Organisatie",
+                    "recipientEmail": "anon@example.org",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "anon@example.org",
+                    "subject": "Software Catalogus - Organisatie Geactiveerd",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "OrganizationActivationEmail: Successfully sent activation email",
+                {
+                    "organizationName": "Onbekende Organisatie",
+                    "recipientEmail": "anon@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "anon@example.org",
+                "Onbekende Organisatie",
+                "Software Catalogus - Organisatie Geactiveerd",
+                "\"Sender\" <sender@example.org>",
+                "\n        <html>\n        <head>\n            <title>Organisatie Geactiveerd - Software Catalogus</title>\n            <meta charset=\"UTF-8\">\n        </head>\n        <body>\n            <h1>Onbekende Organisatie is nu Actief!</h1>\n            <p>Beste Onbekende Organisatie,</p>\n            <p>Goed nieuws! Uw organisatie is nu geactiveerd in de Software Catalogus.</p>\n            <p>Dit betekent dat u nu:</p>\n            <ul>\n                <li>Volledig gebruik kunt maken van alle functies</li>\n                <li>Software kunt publiceren en delen</li>\n                <li>Toegang heeft tot de community features</li>\n                <li>Deel kunt nemen aan collaboraties</li>\n            </ul>\n            <p>Log in op het platform om te beginnen met het beheren van uw software catalogus.</p>\n            <p>Heeft u vragen? Neem dan contact met ons op via info@conduction.nl</p>\n            <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n        </body>\n        </html>\n    "
+            ]
+        ]
+    },
+    "activation, no name | not configured": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationActivationEmail: Email system not configured, skipping",
+                {
+                    "reason": "Email notifications are disabled",
+                    "hasCredentials": false,
+                    "hasTemplates": false,
+                    "organizationName": "Unknown"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "activation, no name | type disabled": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationActivationEmail: Delivery disabled for this message type",
+                {
+                    "organizationName": "Unknown"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "activation, no name | transport fails": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "OrganizationActivationEmail: Sending activation email",
+                {
+                    "organizationName": "Onbekende Organisatie",
+                    "recipientEmail": "anon@example.org",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "error",
+                "Failed to send email using Symfony Mailer",
+                {
+                    "recipient": "anon@example.org",
+                    "subject": "Software Catalogus - Organisatie Geactiveerd",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "Failed to send templated email",
+                {
+                    "recipient": "anon@example.org",
+                    "template": "organization_activation",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "OrganizationActivationEmail: Failed to send activation email",
+                {
+                    "organizationName": "Onbekende Organisatie",
+                    "recipientEmail": "anon@example.org",
+                    "error": "transport down"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "activation, no name | custom templates": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "OrganizationActivationEmail: Sending activation email",
+                {
+                    "organizationName": "Onbekende Organisatie",
+                    "recipientEmail": "anon@example.org",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "anon@example.org",
+                    "subject": "Software Catalogus - Organisatie Geactiveerd",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "OrganizationActivationEmail: Successfully sent activation email",
+                {
+                    "organizationName": "Onbekende Organisatie",
+                    "recipientEmail": "anon@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "anon@example.org",
+                "Onbekende Organisatie",
+                "Software Catalogus - Organisatie Geactiveerd",
+                "\"Sender\" <sender@example.org>",
+                "Onbekende Organisatie|{{ user.name }}|{{ user.email }}|{{ user.password }}"
+            ]
+        ]
+    },
+    "user creation, full | ready": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "Jan Jansen",
+                    "userEmail": "user@example.org",
+                    "organizationName": "Gemeente Test",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "user@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account Aangemaakt",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "UserCreationEmail: Successfully sent user creation email",
+                {
+                    "userName": "Jan Jansen",
+                    "userEmail": "user@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "user@example.org",
+                "Jan Jansen",
+                "Welkom bij de Software Catalogus - Account Aangemaakt",
+                "\"Sender\" <sender@example.org>",
+                "\n        <html>\n        <head>\n            <title>Welkom bij de Software Catalogus</title>\n            <meta charset=\"UTF-8\">\n        </head>\n        <body>\n            <h1>Welkom Jan Jansen!</h1>\n            <p>Beste Jan Jansen,</p>\n            <p>Hartelijk welkom bij de Software Catalogus! Uw gebruikersaccount is\n            succesvol aangemaakt voor Gemeente Test.</p>\n            <p>U kunt nu:</p>\n            <ul>\n                <li>Inloggen op het platform</li>\n                <li>Software beheren voor uw organisatie</li>\n                <li>Deelnemen aan de open data gemeenschap</li>\n                <li>Samenwerken met andere organisaties</li>\n            </ul>\n            <p><strong>Login gegevens:</strong></p>\n            <ul>\n                <li>E-mailadres: user@example.org</li>\n                <li>Wachtwoord: U ontvangt een apart e-mailadres met instructies voor het instellen van uw wachtwoord</li>\n            </ul>\n            <p>Heeft u vragen? Neem dan contact met ons op via info@conduction.nl</p>\n            <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n        </body>\n        </html>\n    "
+            ]
+        ]
+    },
+    "user creation, full | not configured": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Email system not configured, skipping",
+                {
+                    "reason": "Email notifications are disabled",
+                    "hasCredentials": false,
+                    "hasTemplates": false,
+                    "userEmail": "user@example.org"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user creation, full | type disabled": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Delivery disabled for this message type",
+                {
+                    "userEmail": "user@example.org"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user creation, full | transport fails": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "Jan Jansen",
+                    "userEmail": "user@example.org",
+                    "organizationName": "Gemeente Test",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "error",
+                "Failed to send email using Symfony Mailer",
+                {
+                    "recipient": "user@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account Aangemaakt",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "Failed to send templated email",
+                {
+                    "recipient": "user@example.org",
+                    "template": "user_creation",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "UserCreationEmail: Failed to send user creation email",
+                {
+                    "userName": "Jan Jansen",
+                    "userEmail": "user@example.org",
+                    "error": "transport down"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user creation, full | custom templates": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "Jan Jansen",
+                    "userEmail": "user@example.org",
+                    "organizationName": "Gemeente Test",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "user@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account Aangemaakt",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "UserCreationEmail: Successfully sent user creation email",
+                {
+                    "userName": "Jan Jansen",
+                    "userEmail": "user@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "user@example.org",
+                "Jan Jansen",
+                "Welkom bij de Software Catalogus - Account Aangemaakt",
+                "\"Sender\" <sender@example.org>",
+                "Gemeente Test|Jan Jansen|user@example.org|"
+            ]
+        ]
+    },
+    "user organisation, full | ready": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "Jan Jansen",
+                    "userEmail": "user@example.org",
+                    "organizationName": "Gemeente Test",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "user@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "UserCreationEmail: Successfully sent user organisation email",
+                {
+                    "userName": "Jan Jansen",
+                    "userEmail": "user@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "user@example.org",
+                "Jan Jansen",
+                "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                "\"Sender\" <sender@example.org>",
+                "\n        <html>\n        <head>\n            <title>Toegevoegd aan organisatie</title>\n            <meta charset=\"UTF-8\">\n        </head>\n        <body>\n            <h1>Welkom Jan Jansen!</h1>\n            <p>Beste Jan Jansen,</p>\n            <p>Uw gebruikersnaam is succesvol toegevoegd aan Gemeente Test.</p>\n            <p>U kunt nu:</p>\n            <ul>\n                <li>Inloggen op het platform</li>\n                <li>Software beheren voor uw organisatie</li>\n                <li>Deelnemen aan de open data gemeenschap</li>\n                <li>Samenwerken met andere organisaties</li>\n            </ul>\n            <p><strong>Login gegevens:</strong></p>\n            <p>We hebben uw bestaande account gekoppeld aan een nieuwe organisatie.\n            Uw inloggegevens zijn hetzelfde, maar u kunt nu uw organisatie wisselen tussen uw organisaties.</p>\n            <p>Heeft u vragen? Neem dan contact met ons op via info@conduction.nl</p>\n            <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n        </body>\n        </html>\n    "
+            ]
+        ]
+    },
+    "user organisation, full | not configured": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserOrganisationEmail: Email system not configured, skipping",
+                {
+                    "reason": "Email notifications are disabled",
+                    "hasCredentials": false,
+                    "hasTemplates": false,
+                    "userEmail": "user@example.org"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user organisation, full | type disabled": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserOrganisationEmail: Delivery disabled for this message type",
+                {
+                    "userEmail": "user@example.org"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user organisation, full | transport fails": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "Jan Jansen",
+                    "userEmail": "user@example.org",
+                    "organizationName": "Gemeente Test",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "error",
+                "Failed to send email using Symfony Mailer",
+                {
+                    "recipient": "user@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "Failed to send templated email",
+                {
+                    "recipient": "user@example.org",
+                    "template": "user_organisation",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "UserCreationEmail: Failed to send user organisation email",
+                {
+                    "userName": "Jan Jansen",
+                    "userEmail": "user@example.org",
+                    "error": "transport down"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user organisation, full | custom templates": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "Jan Jansen",
+                    "userEmail": "user@example.org",
+                    "organizationName": "Gemeente Test",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "user@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "UserCreationEmail: Successfully sent user organisation email",
+                {
+                    "userName": "Jan Jansen",
+                    "userEmail": "user@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "user@example.org",
+                "Jan Jansen",
+                "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                "\"Sender\" <sender@example.org>",
+                "Gemeente Test|Jan Jansen|user@example.org|"
+            ]
+        ]
+    },
+    "user creation, name parts | ready": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "Piet Pietersen",
+                    "userEmail": "parts@example.org",
+                    "organizationName": "Software Catalogus",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "parts@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account Aangemaakt",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "UserCreationEmail: Successfully sent user creation email",
+                {
+                    "userName": "Piet Pietersen",
+                    "userEmail": "parts@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "parts@example.org",
+                "Piet Pietersen",
+                "Welkom bij de Software Catalogus - Account Aangemaakt",
+                "\"Sender\" <sender@example.org>",
+                "\n        <html>\n        <head>\n            <title>Welkom bij de Software Catalogus</title>\n            <meta charset=\"UTF-8\">\n        </head>\n        <body>\n            <h1>Welkom Piet Pietersen!</h1>\n            <p>Beste Piet Pietersen,</p>\n            <p>Hartelijk welkom bij de Software Catalogus! Uw gebruikersaccount is\n            succesvol aangemaakt voor Software Catalogus.</p>\n            <p>U kunt nu:</p>\n            <ul>\n                <li>Inloggen op het platform</li>\n                <li>Software beheren voor uw organisatie</li>\n                <li>Deelnemen aan de open data gemeenschap</li>\n                <li>Samenwerken met andere organisaties</li>\n            </ul>\n            <p><strong>Login gegevens:</strong></p>\n            <ul>\n                <li>E-mailadres: parts@example.org</li>\n                <li>Wachtwoord: U ontvangt een apart e-mailadres met instructies voor het instellen van uw wachtwoord</li>\n            </ul>\n            <p>Heeft u vragen? Neem dan contact met ons op via info@conduction.nl</p>\n            <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n        </body>\n        </html>\n    "
+            ]
+        ]
+    },
+    "user creation, name parts | not configured": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Email system not configured, skipping",
+                {
+                    "reason": "Email notifications are disabled",
+                    "hasCredentials": false,
+                    "hasTemplates": false,
+                    "userEmail": "parts@example.org"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user creation, name parts | type disabled": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Delivery disabled for this message type",
+                {
+                    "userEmail": "parts@example.org"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user creation, name parts | transport fails": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "Piet Pietersen",
+                    "userEmail": "parts@example.org",
+                    "organizationName": "Software Catalogus",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "error",
+                "Failed to send email using Symfony Mailer",
+                {
+                    "recipient": "parts@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account Aangemaakt",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "Failed to send templated email",
+                {
+                    "recipient": "parts@example.org",
+                    "template": "user_creation",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "UserCreationEmail: Failed to send user creation email",
+                {
+                    "userName": "Piet Pietersen",
+                    "userEmail": "parts@example.org",
+                    "error": "transport down"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user creation, name parts | custom templates": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "Piet Pietersen",
+                    "userEmail": "parts@example.org",
+                    "organizationName": "Software Catalogus",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "parts@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account Aangemaakt",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "UserCreationEmail: Successfully sent user creation email",
+                {
+                    "userName": "Piet Pietersen",
+                    "userEmail": "parts@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "parts@example.org",
+                "Piet Pietersen",
+                "Welkom bij de Software Catalogus - Account Aangemaakt",
+                "\"Sender\" <sender@example.org>",
+                "Software Catalogus|Piet Pietersen|parts@example.org|"
+            ]
+        ]
+    },
+    "user organisation, name parts | ready": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "Piet Pietersen",
+                    "userEmail": "parts@example.org",
+                    "organizationName": "Software Catalogus",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "parts@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "UserCreationEmail: Successfully sent user organisation email",
+                {
+                    "userName": "Piet Pietersen",
+                    "userEmail": "parts@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "parts@example.org",
+                "Piet Pietersen",
+                "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                "\"Sender\" <sender@example.org>",
+                "\n        <html>\n        <head>\n            <title>Toegevoegd aan organisatie</title>\n            <meta charset=\"UTF-8\">\n        </head>\n        <body>\n            <h1>Welkom Piet Pietersen!</h1>\n            <p>Beste Piet Pietersen,</p>\n            <p>Uw gebruikersnaam is succesvol toegevoegd aan Software Catalogus.</p>\n            <p>U kunt nu:</p>\n            <ul>\n                <li>Inloggen op het platform</li>\n                <li>Software beheren voor uw organisatie</li>\n                <li>Deelnemen aan de open data gemeenschap</li>\n                <li>Samenwerken met andere organisaties</li>\n            </ul>\n            <p><strong>Login gegevens:</strong></p>\n            <p>We hebben uw bestaande account gekoppeld aan een nieuwe organisatie.\n            Uw inloggegevens zijn hetzelfde, maar u kunt nu uw organisatie wisselen tussen uw organisaties.</p>\n            <p>Heeft u vragen? Neem dan contact met ons op via info@conduction.nl</p>\n            <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n        </body>\n        </html>\n    "
+            ]
+        ]
+    },
+    "user organisation, name parts | not configured": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserOrganisationEmail: Email system not configured, skipping",
+                {
+                    "reason": "Email notifications are disabled",
+                    "hasCredentials": false,
+                    "hasTemplates": false,
+                    "userEmail": "parts@example.org"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user organisation, name parts | type disabled": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserOrganisationEmail: Delivery disabled for this message type",
+                {
+                    "userEmail": "parts@example.org"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user organisation, name parts | transport fails": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "Piet Pietersen",
+                    "userEmail": "parts@example.org",
+                    "organizationName": "Software Catalogus",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "error",
+                "Failed to send email using Symfony Mailer",
+                {
+                    "recipient": "parts@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "Failed to send templated email",
+                {
+                    "recipient": "parts@example.org",
+                    "template": "user_organisation",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "UserCreationEmail: Failed to send user organisation email",
+                {
+                    "userName": "Piet Pietersen",
+                    "userEmail": "parts@example.org",
+                    "error": "transport down"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user organisation, name parts | custom templates": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "Piet Pietersen",
+                    "userEmail": "parts@example.org",
+                    "organizationName": "Software Catalogus",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "parts@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "UserCreationEmail: Successfully sent user organisation email",
+                {
+                    "userName": "Piet Pietersen",
+                    "userEmail": "parts@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "parts@example.org",
+                "Piet Pietersen",
+                "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                "\"Sender\" <sender@example.org>",
+                "Software Catalogus|Piet Pietersen|parts@example.org|"
+            ]
+        ]
+    },
+    "user creation, no name | ready": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "",
+                    "userEmail": "noname@example.org",
+                    "organizationName": "Software Catalogus",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "noname@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account Aangemaakt",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "UserCreationEmail: Successfully sent user creation email",
+                {
+                    "userName": "",
+                    "userEmail": "noname@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "noname@example.org",
+                "Gebruiker",
+                "Welkom bij de Software Catalogus - Account Aangemaakt",
+                "\"Sender\" <sender@example.org>",
+                "\n        <html>\n        <head>\n            <title>Welkom bij de Software Catalogus</title>\n            <meta charset=\"UTF-8\">\n        </head>\n        <body>\n            <h1>Welkom Gebruiker!</h1>\n            <p>Beste Gebruiker,</p>\n            <p>Hartelijk welkom bij de Software Catalogus! Uw gebruikersaccount is\n            succesvol aangemaakt voor Software Catalogus.</p>\n            <p>U kunt nu:</p>\n            <ul>\n                <li>Inloggen op het platform</li>\n                <li>Software beheren voor uw organisatie</li>\n                <li>Deelnemen aan de open data gemeenschap</li>\n                <li>Samenwerken met andere organisaties</li>\n            </ul>\n            <p><strong>Login gegevens:</strong></p>\n            <ul>\n                <li>E-mailadres: noname@example.org</li>\n                <li>Wachtwoord: U ontvangt een apart e-mailadres met instructies voor het instellen van uw wachtwoord</li>\n            </ul>\n            <p>Heeft u vragen? Neem dan contact met ons op via info@conduction.nl</p>\n            <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n        </body>\n        </html>\n    "
+            ]
+        ]
+    },
+    "user creation, no name | not configured": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Email system not configured, skipping",
+                {
+                    "reason": "Email notifications are disabled",
+                    "hasCredentials": false,
+                    "hasTemplates": false,
+                    "userEmail": "noname@example.org"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user creation, no name | type disabled": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Delivery disabled for this message type",
+                {
+                    "userEmail": "noname@example.org"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user creation, no name | transport fails": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "",
+                    "userEmail": "noname@example.org",
+                    "organizationName": "Software Catalogus",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "error",
+                "Failed to send email using Symfony Mailer",
+                {
+                    "recipient": "noname@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account Aangemaakt",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "Failed to send templated email",
+                {
+                    "recipient": "noname@example.org",
+                    "template": "user_creation",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "UserCreationEmail: Failed to send user creation email",
+                {
+                    "userName": "",
+                    "userEmail": "noname@example.org",
+                    "error": "transport down"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user creation, no name | custom templates": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "",
+                    "userEmail": "noname@example.org",
+                    "organizationName": "Software Catalogus",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "noname@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account Aangemaakt",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "UserCreationEmail: Successfully sent user creation email",
+                {
+                    "userName": "",
+                    "userEmail": "noname@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "noname@example.org",
+                "Gebruiker",
+                "Welkom bij de Software Catalogus - Account Aangemaakt",
+                "\"Sender\" <sender@example.org>",
+                "Software Catalogus|Gebruiker|noname@example.org|"
+            ]
+        ]
+    },
+    "user organisation, no name | ready": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "",
+                    "userEmail": "noname@example.org",
+                    "organizationName": "Software Catalogus",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "noname@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "UserCreationEmail: Successfully sent user organisation email",
+                {
+                    "userName": "",
+                    "userEmail": "noname@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "noname@example.org",
+                "Gebruiker",
+                "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                "\"Sender\" <sender@example.org>",
+                "\n        <html>\n        <head>\n            <title>Toegevoegd aan organisatie</title>\n            <meta charset=\"UTF-8\">\n        </head>\n        <body>\n            <h1>Welkom Gebruiker!</h1>\n            <p>Beste Gebruiker,</p>\n            <p>Uw gebruikersnaam is succesvol toegevoegd aan Software Catalogus.</p>\n            <p>U kunt nu:</p>\n            <ul>\n                <li>Inloggen op het platform</li>\n                <li>Software beheren voor uw organisatie</li>\n                <li>Deelnemen aan de open data gemeenschap</li>\n                <li>Samenwerken met andere organisaties</li>\n            </ul>\n            <p><strong>Login gegevens:</strong></p>\n            <p>We hebben uw bestaande account gekoppeld aan een nieuwe organisatie.\n            Uw inloggegevens zijn hetzelfde, maar u kunt nu uw organisatie wisselen tussen uw organisaties.</p>\n            <p>Heeft u vragen? Neem dan contact met ons op via info@conduction.nl</p>\n            <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n        </body>\n        </html>\n    "
+            ]
+        ]
+    },
+    "user organisation, no name | not configured": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserOrganisationEmail: Email system not configured, skipping",
+                {
+                    "reason": "Email notifications are disabled",
+                    "hasCredentials": false,
+                    "hasTemplates": false,
+                    "userEmail": "noname@example.org"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user organisation, no name | type disabled": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserOrganisationEmail: Delivery disabled for this message type",
+                {
+                    "userEmail": "noname@example.org"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user organisation, no name | transport fails": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "",
+                    "userEmail": "noname@example.org",
+                    "organizationName": "Software Catalogus",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "error",
+                "Failed to send email using Symfony Mailer",
+                {
+                    "recipient": "noname@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "Failed to send templated email",
+                {
+                    "recipient": "noname@example.org",
+                    "template": "user_organisation",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "UserCreationEmail: Failed to send user organisation email",
+                {
+                    "userName": "",
+                    "userEmail": "noname@example.org",
+                    "error": "transport down"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user organisation, no name | custom templates": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "",
+                    "userEmail": "noname@example.org",
+                    "organizationName": "Software Catalogus",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "noname@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "UserCreationEmail: Successfully sent user organisation email",
+                {
+                    "userName": "",
+                    "userEmail": "noname@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "noname@example.org",
+                "Gebruiker",
+                "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                "\"Sender\" <sender@example.org>",
+                "Software Catalogus|Gebruiker|noname@example.org|"
+            ]
+        ]
+    },
+    "user creation, no email | ready": {
+        "result": false,
+        "log": [
+            [
+                "warning",
+                "UserCreationEmail: Cannot send without email address",
+                {
+                    "user": {
+                        "name": "Geen Mail"
+                    },
+                    "userName": "Geen Mail"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user creation, no email | not configured": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Email system not configured, skipping",
+                {
+                    "reason": "Email notifications are disabled",
+                    "hasCredentials": false,
+                    "hasTemplates": false,
+                    "userEmail": "Unknown"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user creation, no email | type disabled": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Delivery disabled for this message type",
+                {
+                    "userEmail": "Unknown"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user creation, no email | transport fails": {
+        "result": false,
+        "log": [
+            [
+                "warning",
+                "UserCreationEmail: Cannot send without email address",
+                {
+                    "user": {
+                        "name": "Geen Mail"
+                    },
+                    "userName": "Geen Mail"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user creation, no email | custom templates": {
+        "result": false,
+        "log": [
+            [
+                "warning",
+                "UserCreationEmail: Cannot send without email address",
+                {
+                    "user": {
+                        "name": "Geen Mail"
+                    },
+                    "userName": "Geen Mail"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user organisation, no email | ready": {
+        "result": false,
+        "log": [
+            [
+                "warning",
+                "UserCreationEmail: Cannot send without email address",
+                {
+                    "user": {
+                        "name": "Geen Mail"
+                    },
+                    "userName": "Geen Mail"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user organisation, no email | not configured": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserOrganisationEmail: Email system not configured, skipping",
+                {
+                    "reason": "Email notifications are disabled",
+                    "hasCredentials": false,
+                    "hasTemplates": false,
+                    "userEmail": "Unknown"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user organisation, no email | type disabled": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserOrganisationEmail: Delivery disabled for this message type",
+                {
+                    "userEmail": "Unknown"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user organisation, no email | transport fails": {
+        "result": false,
+        "log": [
+            [
+                "warning",
+                "UserCreationEmail: Cannot send without email address",
+                {
+                    "user": {
+                        "name": "Geen Mail"
+                    },
+                    "userName": "Geen Mail"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user organisation, no email | custom templates": {
+        "result": false,
+        "log": [
+            [
+                "warning",
+                "UserCreationEmail: Cannot send without email address",
+                {
+                    "user": {
+                        "name": "Geen Mail"
+                    },
+                    "userName": "Geen Mail"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user creation, no organisation | ready": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "Solo",
+                    "userEmail": "solo@example.org",
+                    "organizationName": "Software Catalogus",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "solo@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account Aangemaakt",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "UserCreationEmail: Successfully sent user creation email",
+                {
+                    "userName": "Solo",
+                    "userEmail": "solo@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "solo@example.org",
+                "Solo",
+                "Welkom bij de Software Catalogus - Account Aangemaakt",
+                "\"Sender\" <sender@example.org>",
+                "\n        <html>\n        <head>\n            <title>Welkom bij de Software Catalogus</title>\n            <meta charset=\"UTF-8\">\n        </head>\n        <body>\n            <h1>Welkom Solo!</h1>\n            <p>Beste Solo,</p>\n            <p>Hartelijk welkom bij de Software Catalogus! Uw gebruikersaccount is\n            succesvol aangemaakt voor Software Catalogus.</p>\n            <p>U kunt nu:</p>\n            <ul>\n                <li>Inloggen op het platform</li>\n                <li>Software beheren voor uw organisatie</li>\n                <li>Deelnemen aan de open data gemeenschap</li>\n                <li>Samenwerken met andere organisaties</li>\n            </ul>\n            <p><strong>Login gegevens:</strong></p>\n            <ul>\n                <li>E-mailadres: solo@example.org</li>\n                <li>Wachtwoord: U ontvangt een apart e-mailadres met instructies voor het instellen van uw wachtwoord</li>\n            </ul>\n            <p>Heeft u vragen? Neem dan contact met ons op via info@conduction.nl</p>\n            <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n        </body>\n        </html>\n    "
+            ]
+        ]
+    },
+    "user creation, no organisation | not configured": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Email system not configured, skipping",
+                {
+                    "reason": "Email notifications are disabled",
+                    "hasCredentials": false,
+                    "hasTemplates": false,
+                    "userEmail": "solo@example.org"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user creation, no organisation | type disabled": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Delivery disabled for this message type",
+                {
+                    "userEmail": "solo@example.org"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user creation, no organisation | transport fails": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "Solo",
+                    "userEmail": "solo@example.org",
+                    "organizationName": "Software Catalogus",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "error",
+                "Failed to send email using Symfony Mailer",
+                {
+                    "recipient": "solo@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account Aangemaakt",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "Failed to send templated email",
+                {
+                    "recipient": "solo@example.org",
+                    "template": "user_creation",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "UserCreationEmail: Failed to send user creation email",
+                {
+                    "userName": "Solo",
+                    "userEmail": "solo@example.org",
+                    "error": "transport down"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user creation, no organisation | custom templates": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "Solo",
+                    "userEmail": "solo@example.org",
+                    "organizationName": "Software Catalogus",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "solo@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account Aangemaakt",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "UserCreationEmail: Successfully sent user creation email",
+                {
+                    "userName": "Solo",
+                    "userEmail": "solo@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "solo@example.org",
+                "Solo",
+                "Welkom bij de Software Catalogus - Account Aangemaakt",
+                "\"Sender\" <sender@example.org>",
+                "Software Catalogus|Solo|solo@example.org|"
+            ]
+        ]
+    },
+    "user organisation, no organisation | ready": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "Solo",
+                    "userEmail": "solo@example.org",
+                    "organizationName": "Software Catalogus",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "solo@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "UserCreationEmail: Successfully sent user organisation email",
+                {
+                    "userName": "Solo",
+                    "userEmail": "solo@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "solo@example.org",
+                "Solo",
+                "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                "\"Sender\" <sender@example.org>",
+                "\n        <html>\n        <head>\n            <title>Toegevoegd aan organisatie</title>\n            <meta charset=\"UTF-8\">\n        </head>\n        <body>\n            <h1>Welkom Solo!</h1>\n            <p>Beste Solo,</p>\n            <p>Uw gebruikersnaam is succesvol toegevoegd aan Software Catalogus.</p>\n            <p>U kunt nu:</p>\n            <ul>\n                <li>Inloggen op het platform</li>\n                <li>Software beheren voor uw organisatie</li>\n                <li>Deelnemen aan de open data gemeenschap</li>\n                <li>Samenwerken met andere organisaties</li>\n            </ul>\n            <p><strong>Login gegevens:</strong></p>\n            <p>We hebben uw bestaande account gekoppeld aan een nieuwe organisatie.\n            Uw inloggegevens zijn hetzelfde, maar u kunt nu uw organisatie wisselen tussen uw organisaties.</p>\n            <p>Heeft u vragen? Neem dan contact met ons op via info@conduction.nl</p>\n            <p>Met vriendelijke groet,<br>Het Software Catalogus Team</p>\n        </body>\n        </html>\n    "
+            ]
+        ]
+    },
+    "user organisation, no organisation | not configured": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserOrganisationEmail: Email system not configured, skipping",
+                {
+                    "reason": "Email notifications are disabled",
+                    "hasCredentials": false,
+                    "hasTemplates": false,
+                    "userEmail": "solo@example.org"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user organisation, no organisation | type disabled": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserOrganisationEmail: Delivery disabled for this message type",
+                {
+                    "userEmail": "solo@example.org"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user organisation, no organisation | transport fails": {
+        "result": false,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "Solo",
+                    "userEmail": "solo@example.org",
+                    "organizationName": "Software Catalogus",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "error",
+                "Failed to send email using Symfony Mailer",
+                {
+                    "recipient": "solo@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "Failed to send templated email",
+                {
+                    "recipient": "solo@example.org",
+                    "template": "user_organisation",
+                    "error": "transport down",
+                    "trace": "<trace>"
+                }
+            ],
+            [
+                "error",
+                "UserCreationEmail: Failed to send user organisation email",
+                {
+                    "userName": "Solo",
+                    "userEmail": "solo@example.org",
+                    "error": "transport down"
+                }
+            ]
+        ],
+        "sent": []
+    },
+    "user organisation, no organisation | custom templates": {
+        "result": true,
+        "log": [
+            [
+                "info",
+                "UserCreationEmail: Sending user creation email",
+                {
+                    "userName": "Solo",
+                    "userEmail": "solo@example.org",
+                    "organizationName": "Software Catalogus",
+                    "transportType": "null"
+                }
+            ],
+            [
+                "info",
+                "Email sent successfully using Symfony Mailer",
+                {
+                    "recipient": "solo@example.org",
+                    "subject": "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                    "sender": "sender@example.org",
+                    "transport": "null"
+                }
+            ],
+            [
+                "info",
+                "UserCreationEmail: Successfully sent user organisation email",
+                {
+                    "userName": "Solo",
+                    "userEmail": "solo@example.org"
+                }
+            ]
+        ],
+        "sent": [
+            [
+                "solo@example.org",
+                "Solo",
+                "Welkom bij de Software Catalogus - Account toegevoegd aan organisatie",
+                "\"Sender\" <sender@example.org>",
+                "Software Catalogus|Solo|solo@example.org|"
+            ]
+        ]
+    }
+}

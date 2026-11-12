@@ -2,6 +2,9 @@
 /**
  * Repair step that re-points dashboards from the renamed widget id to the frozen one.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * `ConceptOrganisatiesWidget::getId()` is frozen at
  * `softwarecatalog_concept_organisaties_widget`: the Dashboard app stores each
  * user's chosen widgets BY WIDGET ID, so a renamed id silently drops the widget
@@ -35,9 +38,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/app-id-rename/spec.md#requirement-externally-owned-identifiers-stay-frozen
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -135,46 +135,75 @@ class RepointDashboardWidgetId implements IRepairStep {
 			// `false` return as "stop iterating", so null means "keep going".
 			$this->userManager->callForSeenUsers(
 				function (IUser $user): ?bool {
-					try {
-						$this->repointUser(user: $user);
-					} catch (Throwable $e) {
-						// One unreadable user must not stop the walk for the rest.
-						$this->logger->warning(
-							'Stackiq: could not re-point the dashboard widget id for user ' . $user->getUID() . ': ' . $e->getMessage(),
-							[
-								'app'       => AppIdentity::APP_ID,
-								'exception' => $e,
-							]
-						);
-					}
-
+					$this->repointSafely(user: $user);
 					return null;
 				}
 			);
-
-			$output->info(
-				sprintf(
-					'Stackiq: re-pointed the concept organisations widget from "%s" to "%s" on %d dashboard(s)',
-					self::RENAMED_WIDGET_ID,
-					self::FROZEN_WIDGET_ID,
-					$this->users
-				)
-			);
+			$this->reportRepointed(output: $output);
 		} catch (Throwable $e) {
 			// Swallowed deliberately — see the docblock.
-			$this->logger->error(
-				'Stackiq: failed to re-point the dashboard widget id: ' . $e->getMessage(),
-				[
-					'app'       => AppIdentity::APP_ID,
-					'exception' => $e,
-				]
-			);
-			$output->warning(
-				'Stackiq: dashboard widget re-pointing failed; see the log. '
-				. 'Users who added the widget on stackiq 0.1.148 to 0.2.0 may have to add it again.'
-			);
-		}//end try
+			$this->reportFailure(output: $output, exception: $e);
+		}
 	}//end run()
+
+
+	/**
+	 * Re-point one user's dashboard, logging rather than throwing on failure.
+	 *
+	 * @param IUser $user The user whose dashboard layout to check.
+	 *
+	 * @return void
+	 */
+	private function repointSafely(IUser $user): void {
+		try {
+			$this->repointUser(user: $user);
+		} catch (Throwable $e) {
+			// One unreadable user must not stop the walk for the rest.
+			$this->logger->warning(
+				'Stackiq: could not re-point the dashboard widget id for user ' . $user->getUID() . ': ' . $e->getMessage(),
+				['app' => AppIdentity::APP_ID, 'exception' => $e]
+			);
+		}
+	}//end repointSafely()
+
+
+	/**
+	 * Report how many dashboards were re-pointed.
+	 *
+	 * @param IOutput $output The output interface for progress reporting.
+	 *
+	 * @return void
+	 */
+	private function reportRepointed(IOutput $output): void {
+		$output->info(
+			sprintf(
+				'Stackiq: re-pointed the concept organisations widget from "%s" to "%s" on %d dashboard(s)',
+				self::RENAMED_WIDGET_ID,
+				self::FROZEN_WIDGET_ID,
+				$this->users
+			)
+		);
+	}//end reportRepointed()
+
+
+	/**
+	 * Log and report a re-pointing run that failed.
+	 *
+	 * @param IOutput   $output    The output interface for progress reporting.
+	 * @param Throwable $exception What went wrong.
+	 *
+	 * @return void
+	 */
+	private function reportFailure(IOutput $output, Throwable $exception): void {
+		$this->logger->error(
+			'Stackiq: failed to re-point the dashboard widget id: ' . $exception->getMessage(),
+			['app' => AppIdentity::APP_ID, 'exception' => $exception]
+		);
+		$output->warning(
+			'Stackiq: dashboard widget re-pointing failed; see the log. '
+			. 'Users who added the widget on stackiq 0.1.148 to 0.2.0 may have to add it again.'
+		);
+	}//end reportFailure()
 
 
 	/**
@@ -193,18 +222,44 @@ class RepointDashboardWidgetId implements IRepairStep {
 			return;
 		}
 
-		$ids = array_values(
+		$ids = self::layoutIds(layout: $layout);
+		if (in_array(self::RENAMED_WIDGET_ID, $ids, true) === false) {
+			return;
+		}
+
+		$this->config->setUserValue($userId, self::DASHBOARD_APP_ID, self::LAYOUT_KEY, implode(',', self::frozenIds(ids: $ids)));
+		$this->users++;
+	}//end repointUser()
+
+
+	/**
+	 * The widget ids of a stored layout, trimmed, without empty entries.
+	 *
+	 * @param string $layout The stored comma-separated layout.
+	 *
+	 * @return array<int, string> The ids in order.
+	 */
+	private static function layoutIds(string $layout): array {
+		return array_values(
 			array_filter(
 				array_map('trim', explode(',', $layout)),
 				static fn (string $id): bool => $id !== ''
 			)
 		);
-		if (in_array(self::RENAMED_WIDGET_ID, $ids, true) === false) {
-			return;
-		}
+	}//end layoutIds()
 
-		// Keep the widget in the position the user gave it; never list the
-		// frozen id twice when the user somehow holds both.
+
+	/**
+	 * The ids with the renamed widget id replaced by the frozen one.
+	 *
+	 * Keep the widget in the position the user gave it; never list the
+	 * frozen id twice when the user somehow holds both.
+	 *
+	 * @param array<int, string> $ids The layout's widget ids.
+	 *
+	 * @return array<int, string> The rewritten ids.
+	 */
+	private static function frozenIds(array $ids): array {
 		$rewritten = [];
 		foreach ($ids as $id) {
 			if ($id === self::RENAMED_WIDGET_ID) {
@@ -216,7 +271,6 @@ class RepointDashboardWidgetId implements IRepairStep {
 			}
 		}
 
-		$this->config->setUserValue($userId, self::DASHBOARD_APP_ID, self::LAYOUT_KEY, implode(',', $rewritten));
-		$this->users++;
-	}//end repointUser()
+		return $rewritten;
+	}//end frozenIds()
 }//end class

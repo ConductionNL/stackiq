@@ -1,0 +1,52 @@
+{
+    "login": [
+        [
+            "info",
+            "Stackiq TestEventListener: Event received!",
+            {
+                "eventClass": "login event",
+                "timestamp": "<timestamp>",
+                "microtime": "<microtime>"
+            }
+        ],
+        [
+            "info",
+            "Stackiq TestEventListener: User logged in successfully!",
+            {
+                "userId": "alice",
+                "userDisplayName": "Alice",
+                "userEmail": "alice@example.org",
+                "timestamp": "<timestamp>",
+                "eventType": "UserLoggedInEvent"
+            }
+        ],
+        [
+            "debug",
+            "Stackiq TestEventListener: Event listener is working correctly!",
+            {
+                "message": "This confirms that event listeners are properly registered and triggered",
+                "userId": "alice",
+                "eventClass": "login event"
+            }
+        ]
+    ],
+    "other": [
+        [
+            "info",
+            "Stackiq TestEventListener: Event received!",
+            {
+                "eventClass": "Event",
+                "timestamp": "<timestamp>",
+                "microtime": "<microtime>"
+            }
+        ],
+        [
+            "debug",
+            "Stackiq TestEventListener: Received unhandled event",
+            {
+                "eventClass": "Event",
+                "timestamp": "<timestamp>"
+            }
+        ]
+    ]
+}

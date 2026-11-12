@@ -3,6 +3,9 @@
 /**
  * Contract Approval Delegation Service.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Delegates the contract approval / sign-off / renewal DECISION (the
  * `In onderhandeling -> Actief` transition, and the re-approval of an
  * expiring/`Verlopen` contract) to decidesk — the canonical fleet decision
@@ -28,9 +31,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/contract-decision-delegation/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -176,6 +176,19 @@ class ContractApprovalService {
 	 * Projection state: decidesk rejected or withdrew the decision.
 	 */
 	public const APPROVAL_REJECTED = 'rejected';
+
+	/**
+	 * The fields each terminal decidesk outcome projects onto a contract.
+	 *
+	 * `approved` is the ONLY outcome that sets status=Actief (the
+	 * In onderhandeling -> Actief transition); `rejected`/`withdrawn` leave the
+	 * status in onderhandeling, never forced. Any other outcome projects nothing.
+	 */
+	private const OUTCOME_PROJECTIONS = [
+		'approved' => ['approvalState' => self::APPROVAL_APPROVED, 'status' => self::STATUS_ACTIVE],
+		'rejected' => ['approvalState' => self::APPROVAL_REJECTED],
+		'withdrawn' => ['approvalState' => self::APPROVAL_REJECTED],
+	];
 
 	/**
 	 * Constructor.
@@ -414,58 +427,73 @@ class ContractApprovalService {
 	public function projectOutcome(string $contractUuid, string $outcomeStatus): bool {
 		$contract = $this->loadContract(contractUuid: $contractUuid);
 		if ($contract === null) {
-			$this->logger->warning(
-				'ContractApprovalService: outcome for unknown contract ignored',
-				['contractUuid' => $contractUuid]
-			);
-			return false;
+			return $this->ignoreOutcomeForUnknownContract(contractUuid: $contractUuid);
 		}
 
-		$data = $contract->getObject();
-		$changed = false;
-
-		switch ($outcomeStatus) {
-			case 'approved':
-				if (($data['approvalState'] ?? self::APPROVAL_NONE) !== self::APPROVAL_APPROVED) {
-					$data['approvalState'] = self::APPROVAL_APPROVED;
-					$changed = true;
-				}
-
-				// The In onderhandeling -> Actief transition happens ONLY here,
-				// as a projection of an approved decidesk outcome.
-				if (($data['status'] ?? '') !== self::STATUS_ACTIVE) {
-					$data['status'] = self::STATUS_ACTIVE;
-					$changed = true;
-				}
-				break;
-
-			case 'rejected':
-			case 'withdrawn':
-				if (($data['approvalState'] ?? self::APPROVAL_NONE) !== self::APPROVAL_REJECTED) {
-					$data['approvalState'] = self::APPROVAL_REJECTED;
-					$changed = true;
-				}
-
-				// Status stays In onderhandeling — never forced here.
-				break;
-
-			default:
-				// Pending / unknown — no projection.
-				return false;
-		}//end switch
-
-		if ($changed === false) {
-			// Idempotent re-receipt — nothing to write.
+		$data = $this->projectedContractData(data: $contract->getObject(), outcomeStatus: $outcomeStatus);
+		if ($data === null) {
+			// Pending / unknown outcome, or an idempotent re-receipt — nothing to write.
 			return false;
 		}
 
 		$this->persistContract(contract: $contract, data: $data);
+		$this->logProjectedOutcome(contractUuid: $contractUuid, outcomeStatus: $outcomeStatus);
+		return true;
+	}//end projectOutcome()
+
+	/**
+	 * Log and ignore an outcome for a contract that cannot be loaded.
+	 *
+	 * @param string $contractUuid The contract uuid.
+	 *
+	 * @return bool Always false: the contract was not changed.
+	 */
+	private function ignoreOutcomeForUnknownContract(string $contractUuid): bool {
+		$this->logger->warning(
+			'ContractApprovalService: outcome for unknown contract ignored',
+			['contractUuid' => $contractUuid]
+		);
+		return false;
+	}//end ignoreOutcomeForUnknownContract()
+
+	/**
+	 * Apply the projection of an outcome to the contract data.
+	 *
+	 * @param array  $data          The contract object data.
+	 * @param string $outcomeStatus The decidesk-derived status.
+	 *
+	 * @return array|null The changed data, or null when the outcome changes nothing.
+	 */
+	private function projectedContractData(array $data, string $outcomeStatus): ?array {
+		$changed = false;
+		foreach ((self::OUTCOME_PROJECTIONS[$outcomeStatus] ?? []) as $field => $value) {
+			if (($data[$field] ?? null) !== $value) {
+				$data[$field] = $value;
+				$changed = true;
+			}
+		}
+
+		if ($changed === false) {
+			return null;
+		}
+
+		return $data;
+	}//end projectedContractData()
+
+	/**
+	 * Log that an outcome was projected onto a contract.
+	 *
+	 * @param string $contractUuid  The contract uuid.
+	 * @param string $outcomeStatus The projected status.
+	 *
+	 * @return void
+	 */
+	private function logProjectedOutcome(string $contractUuid, string $outcomeStatus): void {
 		$this->logger->info(
 			'ContractApprovalService: outcome projected onto contract',
 			['contractUuid' => $contractUuid, 'outcomeStatus' => $outcomeStatus]
 		);
-		return true;
-	}//end projectOutcome()
+	}//end logProjectedOutcome()
 
 	/**
 	 * Resolve the catalog contract that a concluded decidesk outcome addresses.
@@ -516,34 +544,82 @@ class ContractApprovalService {
 			return null;
 		}
 
+		$contracts = $this->searchContractsByDecision(decisionId: $decisionId);
+		return $this->contractUuidWithNumber(contracts: $contracts, externalReference: $externalReference);
+	}//end findContractByExternalReference()
+
+	/**
+	 * Search the contracts that carry a decision id.
+	 *
+	 * @param string $decisionId The concluded decision id.
+	 *
+	 * @return array|int The contracts, or [] when OpenRegister, the register or the schema is unavailable.
+	 */
+	private function searchContractsByDecision(string $decisionId): array|int {
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
-			return null;
+			return [];
 		}
 
+		$query = $this->contractDecisionQuery(decisionId: $decisionId);
+		if ($query === null) {
+			return [];
+		}
+
+		return $this->searchContracts(objectService: $objectService, query: $query);
+	}//end searchContractsByDecision()
+
+	/**
+	 * Build the contract search for a decision id.
+	 *
+	 * @param string $decisionId The concluded decision id.
+	 *
+	 * @return array|null The query, or null when the contract register or schema is not configured.
+	 */
+	private function contractDecisionQuery(string $decisionId): ?array {
 		$registerId = $this->settingsService->getRegisterIdForObjectType(objectType: 'catalogContract');
 		$schemaId = $this->settingsService->getSchemaIdForObjectType(objectType: 'catalogContract');
 		if ($registerId === null || $schemaId === null) {
 			return null;
 		}
 
-		$query = [
+		return [
 			'register' => $registerId,
 			'schema' => $schemaId,
 			'approvalDecisionId' => $decisionId,
 			'_limit' => 50,
 		];
+	}//end contractDecisionQuery()
 
+	/**
+	 * Run a contract search, logging a failure as an empty result.
+	 *
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param array                  $query         The contract search.
+	 *
+	 * @return array|int The contracts found, as the object service answers them.
+	 */
+	private function searchContracts(ObjectServiceInterface $objectService, array $query): array|int {
 		try {
-			$contracts = $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
+			return $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'ContractApprovalService: failed to query contract by decision id',
 				['error' => $e->getMessage()]
 			);
-			return null;
+			return [];
 		}//end try
+	}//end searchContracts()
 
+	/**
+	 * Find the uuid of the first contract whose contractNumber equals the external reference.
+	 *
+	 * @param array|int $contracts         The contracts of the decision.
+	 * @param string    $externalReference The carried contractNummer.
+	 *
+	 * @return string|null The matched contract uuid, or null.
+	 */
+	private function contractUuidWithNumber(array|int $contracts, string $externalReference): ?string {
 		foreach ($contracts as $contract) {
 			$data = $contract->getObject();
 			if ((string)($data['contractNumber'] ?? '') === $externalReference) {
@@ -552,7 +628,7 @@ class ContractApprovalService {
 		}
 
 		return null;
-	}//end findContractByExternalReference()
+	}//end contractUuidWithNumber()
 
 	/**
 	 * Build the human-readable subject label for the decision provenance.

@@ -11,6 +11,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/organisatie-service/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -18,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\Organisation;
+use OCA\OpenRegister\Service\Organisation\NewOrganisation;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Service\OrganisatieService;
 use OCA\Stackiq\Service\OrganisationSlug;
@@ -81,7 +85,13 @@ class OrganisatieServiceSlugConflictTest extends TestCase {
 			$organisations = $this->createMock(OrganisationService::class);
 			$organisations->method('getActiveOrganisation')->willReturn(null);
 			$organisations->expects(self::once())->method('createOrganisation')
-				->with((new OrganisationSlug())->nameFor(objectData: $data), self::anything(), false, $id)
+				->with(
+					self::callback(
+						static fn (NewOrganisation $details): bool => $details->name === (new OrganisationSlug())->nameFor(objectData: $data)
+							&& $details->uuid === $id
+					),
+					false
+				)
 				->willReturn($this->createMock(Organisation::class));
 
 			$this->service(organisations: $organisations)->createOrganisationInOpenRegister($data);

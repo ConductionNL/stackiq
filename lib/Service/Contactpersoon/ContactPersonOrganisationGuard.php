@@ -22,7 +22,11 @@ namespace OCA\Stackiq\Service\Contactpersoon;
 
 use OCA\OpenRegister\Db\Organisation;
 use OCA\OpenRegister\Db\OrganisationMapper;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Service\ObjectService;
+use OCA\Stackiq\Service\SettingsService;
 use OCP\AppFramework\Db\DoesNotExistException;
+use Throwable;
 use OCP\IGroupManager;
 use OCP\IUserManager;
 use OCP\IUserSession;
@@ -61,18 +65,27 @@ class ContactPersonOrganisationGuard {
 	public const USERNAME_KEY = 'username';
 
 	/**
+	 * The organisatie statuses for which the sync creates the OpenRegister organisation.
+	 */
+	public const ACTIVE_STATUSES = ['actief', 'active'];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IUserSession       $userSession        Names the caller.
 	 * @param IGroupManager      $groupManager       Tells administrators and member managers apart.
 	 * @param IUserManager       $userManager        Tells whether a name is an existing account.
 	 * @param OrganisationMapper $organisationMapper Finds the OpenRegister organisation and its members.
+	 * @param ObjectService      $objectService      Reads the organisatie object's status.
+	 * @param SettingsService    $settingsService    Names the organisatie register and schema.
 	 */
 	public function __construct(
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
 		private readonly IUserManager $userManager,
 		private readonly OrganisationMapper $organisationMapper,
+		private readonly ObjectService $objectService,
+		private readonly SettingsService $settingsService,
 	) {
 	}//end __construct()
 
@@ -96,9 +109,14 @@ class ContactPersonOrganisationGuard {
 			return false;
 		}
 
-		$organisation = $this->findOrganisation(uuid: $this->values(contactData: $contactData, keys: self::ORGANISATION_KEYS)[0] ?? '');
-		$account      = $this->existingAccount(email: $this->values(contactData: $contactData, keys: self::EMAIL_KEYS)[0] ?? '', caller: $caller);
+		$organisationUuid = ($this->values(contactData: $contactData, keys: self::ORGANISATION_KEYS)[0] ?? '');
+		$organisation     = $this->findOrganisation(uuid: $organisationUuid);
+		$account          = $this->existingAccount(email: $this->values(contactData: $contactData, keys: self::EMAIL_KEYS)[0] ?? '', caller: $caller);
 		if ($account !== null && $organisation?->hasUser($account) !== true) {
+			return false;
+		}
+
+		if ($organisation === null && $this->organisatieMayBecomeActive(uuid: $organisationUuid) === true) {
 			return false;
 		}
 
@@ -228,6 +246,43 @@ class ContactPersonOrganisationGuard {
 			return null;
 		}
 	}//end findOrganisation()
+
+	/**
+	 * Whether the sync would create the OpenRegister organisation for this organisatie.
+	 *
+	 * The sync creates the organisation, and adds the contact's account to it, when the
+	 * organisatie object is active. A lookup that fails is treated as active.
+	 *
+	 * @param string $uuid The organisatie uuid.
+	 *
+	 * @return bool
+	 */
+	private function organisatieMayBecomeActive(string $uuid): bool {
+		if ($uuid === '') {
+			return false;
+		}
+
+		try {
+			$config = $this->settingsService->getVoorzieningenConfig();
+			$object = $this->objectService->find(
+				id: $uuid,
+				options: new ObjectFindOptions(register: ($config['register'] ?? ''), schema: ($config['organisatie_schema'] ?? '')),
+				_rbac: false,
+				_multitenancy: false
+			);
+		} catch (DoesNotExistException $e) {
+			return false;
+		} catch (Throwable $e) {
+			return true;
+		}
+
+		if ($object === null) {
+			return false;
+		}
+
+		$status = ($object->getObject()['status'] ?? '');
+		return is_string($status) === false || in_array(strtolower(trim($status)), self::ACTIVE_STATUSES, true) === true;
+	}//end organisatieMayBecomeActive()
 
 	/**
 	 * The uid of the existing account this e-mail address names, when it is not the caller's own.

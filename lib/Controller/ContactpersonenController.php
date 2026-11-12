@@ -25,6 +25,7 @@ namespace OCA\Stackiq\Controller;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\OrganisationService;
+use OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard;
 use OCA\Stackiq\Service\ContactpersoonService;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
@@ -134,6 +135,7 @@ class ContactpersonenController extends Controller {
 	 * @param ObjectServiceInterface $objectService OpenRegister object access (ADR-022/ADR-084 —
 	 *                                              the published contract, not the concrete service)
 	 * @param OrganisationService $organisationService Resolves the organisation a contactpersoon belongs to
+	 * @param ContactPersonOrganisationGuard $organisationGuard Decides whether the caller may add the contact to its organisation
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 */
@@ -150,6 +152,7 @@ class ContactpersonenController extends Controller {
 		LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly OrganisationService $organisationService,
+		private readonly ContactPersonOrganisationGuard $organisationGuard,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 		$this->settingsService = $settingsService;
@@ -444,6 +447,16 @@ class ContactpersonenController extends Controller {
 				);
 			}
 
+			if ($this->organisationGuard->allows(contactData: $contactData) === false) {
+				return new JSONResponse(
+					[
+						'success' => false,
+						'message' => 'Insufficient permissions',
+					],
+					Http::STATUS_FORBIDDEN
+				);
+			}
+
 			// Validate email address before attempting user creation.
 			$email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
 			$emailError = $this->contactPersonHandler->validateEmailForUsername($email);
@@ -595,10 +608,12 @@ class ContactpersonenController extends Controller {
 	}//end convertToUser()
 
 	/**
-	 * Authorises the convertToUser endpoint.
+	 * Authorises the account-manager endpoints: convertToUser, enableUser,
+	 * disableUser and getBulkUserInfo.
 	 *
-	 * Returns null when the current user is allowed to create user accounts, or
-	 * a 401/403 JSONResponse otherwise. Extracted from {@see convertToUser()} as
+	 * Returns null when the current user is an administrator or in an
+	 * organisation-admin group (gebruik-beheerder, aanbod-beheerder), or a
+	 * 401/403 JSONResponse otherwise. Extracted from {@see convertToUser()} as
 	 * part of task 5.1.
 	 *
 	 * @return JSONResponse|null
@@ -1369,16 +1384,9 @@ class ContactpersonenController extends Controller {
 	 * @spec           openspec/specs/contactpersonen-api/spec.md
 	 */
 	public function disableUser(string $contactPersonId): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		$isAdmin = $this->groupManager->isAdmin($currentUser->getUID());
-		$isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
-			|| $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
-		if ($isAdmin === false && $isOrgAdmin === false) {
-			return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->validateConvertToUserPermission();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -1429,16 +1437,9 @@ class ContactpersonenController extends Controller {
 	 * @spec           openspec/specs/contactpersonen-api/spec.md
 	 */
 	public function enableUser(string $contactPersonId): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		$isAdmin = $this->groupManager->isAdmin($currentUser->getUID());
-		$isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
-			|| $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
-		if ($isAdmin === false && $isOrgAdmin === false) {
-			return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->validateConvertToUserPermission();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -1486,18 +1487,9 @@ class ContactpersonenController extends Controller {
 	 * @spec            openspec/specs/contactpersonen-api/spec.md
 	 */
 	public function getBulkUserInfo(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		$isAdmin = $this->groupManager->isAdmin($currentUser->getUID());
-		$isOrgAdmin = $this->groupManager->isInGroup($currentUser->getUID(), 'gebruik-beheerder')
-			|| $this->groupManager->isInGroup($currentUser->getUID(), 'aanbod-beheerder');
-
-		$canViewBulkInfo = ($isAdmin || $isOrgAdmin);
-		if ($canViewBulkInfo === false) {
-			return new JSONResponse(['message' => 'Insufficient permissions'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->validateConvertToUserPermission();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {

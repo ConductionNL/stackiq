@@ -15,6 +15,9 @@
  * @link      https://github.com/nextcloud/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -77,11 +80,11 @@ class ArchiMateService {
 	private array $lastSaveTimingBreakdown = [];
 
 	/**
-	 * Cache for camelCase property name conversions to avoid redundant processing
+	 * CamelCase property names, with their conversion cache; created on first use.
 	 *
-	 * @var array<string, string>
+	 * @var ArchiMate\CamelCaseNames|null
 	 */
-	private array $camelCaseCache = [];
+	private ?ArchiMate\CamelCaseNames $camelCaseNames = null;
 
 	/**
 	 * NOTE: Default schema IDs removed - all schema IDs must be configured via AMEF settings.
@@ -533,21 +536,7 @@ class ArchiMateService {
 	 * @return ObjectServiceInterface|null ObjectService instance or null if not available
 	 */
 	private function getObjectService(): ?ObjectServiceInterface {
-		if ($this->appManager->isInstalled(appId: 'openregister') === false) {
-			return null;
-		}
-
-		try {
-			return $this->container->get(ObjectService::class);
-		} catch (\Exception $e) {
-			$this->logger->warning(
-				'Failed to get ObjectService',
-				[
-					'error' => $e->getMessage(),
-				]
-			);
-			return null;
-		}
+		return (new ArchiMate\ObjectServiceLookup(appManager: $this->appManager, container: $this->container, logger: $this->logger))->find();
 	}//end getObjectService()
 
 	/**
@@ -557,97 +546,13 @@ class ArchiMateService {
 	 */
 
 	/**
-	 * Read a configured id, failing closed on the empty default.
-	 *
-	 * The legacy fallback used to read every id with `''` as its default, so
-	 * an unconfigured instance produced a config array full of empty STRINGS.
-	 * Its consumers guard with `=== null` — `ViewService::getViews()` and
-	 * `getView()` throw only when a value `=== null` — and `'' === null` is
-	 * false. Today nothing reaches a query only because that fallback writes
-	 * PLURAL key names (`views_schema`) while every consumer reads SINGULAR
-	 * ones (`view_schema`), so the lookups miss and fall back to `null`. That
-	 * is an accident of naming, not a defence: adding the singular keys — the
-	 * obvious "cleanup" — would send `register => ''` straight into
-	 * `searchObjects()` as an UNPINNED query, and an unpinned query returns
-	 * rows, which reads exactly like a correct result.
-	 *
-	 * Returning null instead of `''` makes `?? null` downstream yield null,
-	 * which is what every consumer already checks for, and the warning names
-	 * the missing key so a misconfigured import stops reporting "0 objects"
-	 * with no explanation.
-	 *
-	 * @param string $key The app-config key holding the id.
-	 *
-	 * @return string|null The configured id, or null when it is unset.
-	 *
-	 * @spec openspec/specs/archimate-import/spec.md
-	 */
-	private function resolveConfiguredId(string $key): ?string {
-		$value = $this->config->getValueString('stackiq', $key, '');
-		if (trim($value) === '') {
-			$this->logger->warning(
-				'ArchiMate configuration is incomplete — this id is not configured, so it is omitted rather than passed on as an empty string',
-				['key' => $key]
-			);
-
-			return null;
-		}
-
-		return $value;
-	}//end resolveConfiguredId()
-
-	/**
 	 * Get AMEF configuration from app config
 	 *
 	 * @return array AMEF configuration
 	 * @spec   openspec/specs/archimate-import/spec.md
 	 */
 	public function getAmefConfig(): array {
-		$this->logger->info('Getting AMEF configuration');
-
-		try {
-			// Get configuration from app config using the correct method.
-			$config = $this->config->getValueString('stackiq', 'amef_config', '{}');
-			$decoded = json_decode($config, true);
-
-			if (is_array($decoded) === false) {
-				// Fallback to individual config values for backward
-				// compatibility. Every id is read through
-				// resolveConfiguredId(), which guards the empty default at the
-				// point of the read and omits the key entirely when it is
-				// unset — so `?? null` downstream yields null, which is what
-				// the consumers already check for.
-				$decoded = array_filter(
-					[
-						'register_id' => $this->resolveConfiguredId(key: 'amef_register'),
-						'model_schema_id' => $this->resolveConfiguredId(key: 'amef_model_schema'),
-						'elements_schema' => $this->resolveConfiguredId(key: 'amef_elements_schema'),
-						'relationships_schema' => $this->resolveConfiguredId(key: 'amef_relationships_schema'),
-						'views_schema' => $this->resolveConfiguredId(key: 'amef_views_schema'),
-						'organizations_schema' => $this->resolveConfiguredId(key: 'amef_organizations_schema'),
-						'folders_schema' => $this->resolveConfiguredId(key: 'amef_folders_schema'),
-						'property_definitions_schema' => $this->resolveConfiguredId(key: 'amef_property_definitions_schema'),
-					],
-					static function ($value) {
-						return $value !== null;
-					}
-				);
-			}//end if
-
-			return $decoded;
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get AMEF configuration',
-				[
-					'error' => $e->getMessage(),
-				]
-			);
-
-			return [
-				'success' => false,
-				'error' => $e->getMessage(),
-			];
-		}//end try
+		return (new ArchiMate\AmefConfigReader(config: $this->config, logger: $this->logger))->read();
 	}//end getAmefConfig()
 
 	/**
@@ -718,29 +623,7 @@ class ArchiMateService {
 	 */
 	private function getAmefRegisterId(): ?int {
 		// Retrieve AMEF configuration (use SettingsService for consistency).
-		$amefConfig = $this->settingsService->getAmefConfig();
-
-		// Try JSON config keys first: support both 'register_id' and 'register'.
-		$rawRegisterId = $amefConfig['register_id'] ?? $amefConfig['register'] ?? null;
-
-		// Fallback to legacy individual app config keys if not present in JSON.
-		if ($rawRegisterId === null || $rawRegisterId === '') {
-			$rawRegisterId = $this->config->getValueString('stackiq', 'amef_register_id', '');
-			if ($this->config->getValueString('stackiq', 'amef_register', '') !== '') {
-				// If only the plain register key is configured, use it as the ID.
-				$rawRegisterId = $this->config->getValueString('stackiq', 'amef_register', '');
-			}
-		}
-
-		// Validate and normalize to positive int.
-		if ($rawRegisterId !== '' && is_numeric((string)$rawRegisterId) === true) {
-			$registerId = (int)$rawRegisterId;
-			if ($registerId > 0) {
-				return $registerId;
-			}
-		}
-
-		return null;
+		return (new ArchiMate\AmefRegisterId(config: $this->config))->resolve(amefConfig: $this->settingsService->getAmefConfig());
 	}//end getAmefRegisterId()
 
 	/**
@@ -996,35 +879,8 @@ class ArchiMateService {
 	 * @return string CamelCase version of the property name
 	 */
 	private function convertToCamelCase(string $propertyName): string {
-		// OPTIMIZATION: Check cache first to avoid redundant conversions.
-		if (isset($this->camelCaseCache[$propertyName]) === true) {
-			return $this->camelCaseCache[$propertyName];
-		}
-
-		// Remove any leading/trailing whitespace.
-		$propertyName = trim($propertyName);
-
-		// Split by spaces and convert to camelCase.
-		$words = explode(' ', $propertyName);
-
-		if (count($words) === 1) {
-			// Single word, just lowercase it.
-			$result = strtolower($words[0]);
-		} else {
-			// First word is lowercase, subsequent words are capitalized.
-			$camelCase = strtolower($words[0]);
-
-			for ($i = 1; $i < count($words); $i++) {
-				$camelCase .= ucfirst(strtolower($words[$i]));
-			}
-
-			$result = $camelCase;
-		}
-
-		// OPTIMIZATION: Cache the result for future use.
-		$this->camelCaseCache[$propertyName] = $result;
-
-		return $result;
+		$this->camelCaseNames ??= new ArchiMate\CamelCaseNames();
+		return $this->camelCaseNames->convertName(propertyName: $propertyName);
 	}//end convertToCamelCase()
 
 	/**

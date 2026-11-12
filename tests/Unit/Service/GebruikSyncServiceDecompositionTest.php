@@ -14,6 +14,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-8-7
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -155,5 +158,57 @@ class GebruikSyncServiceDecompositionTest extends TestCase {
 		$this->assertSame('2024-01-01', $date->format('Y-m-d'));
 
 	}//end testResolveLatestEligibleStatusSkipsUnparseableDates()
+
+	/**
+	 * resolveLatestEligibleStatus logs an unparseable date with its status, and keeps the first status of
+	 * two with the same date.
+	 *
+	 * @return void
+	 */
+	public function testResolveLatestEligibleStatusLogsAndKeepsTheFirstOfATie(): void {
+		$logger = new class extends \Psr\Log\AbstractLogger {
+			/**
+			 * @var array<int, array{0: mixed, 1: string, 2: array}>
+			 */
+			public array $records = [];
+
+			/**
+			 * @param mixed $level   The level.
+			 * @param mixed $message The message.
+			 * @param array $context The context.
+			 *
+			 * @return void
+			 */
+			public function log($level, $message, array $context = []): void {
+				$this->records[] = [$level, (string)$message, $context];
+			}
+		};
+		$service = new GebruikSyncService(
+			$logger,
+			$this->createMock(SettingsService::class),
+			objectService: $this->createMock(ObjectServiceInterface::class),
+		);
+		$reflection = new \ReflectionMethod($service, 'resolveLatestEligibleStatus');
+		$reflection->setAccessible(true);
+
+		[$status, $date] = $reflection->invoke(
+			$service,
+			['Acquisition' => '2001-05-05', 'Planned' => '2001-05-05', 'In production' => 'soon', 'Phased out' => '', 'To be phased out' => '2000-01-01'],
+			'gebruik-uuid'
+		);
+
+		$this->assertSame('Acquisition', $status);
+		$this->assertSame('2001-05-05', $date->format('Y-m-d'));
+		$this->assertCount(1, $logger->records);
+		$this->assertSame('warning', $logger->records[0][0]);
+		$this->assertSame('Invalid date format', $logger->records[0][1]);
+		$this->assertSame(['app', 'gebruikId', 'status', 'dateString', 'error'], array_keys($logger->records[0][2]));
+		$this->assertSame(
+			['stackiq', 'gebruik-uuid', 'In production', 'soon'],
+			array_slice(array_values($logger->records[0][2]), 0, 4)
+		);
+		$this->assertStringContainsString('soon', $logger->records[0][2]['error']);
+
+	}//end testResolveLatestEligibleStatusLogsAndKeepsTheFirstOfATie()
 
 }//end class

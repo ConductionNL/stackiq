@@ -3,6 +3,9 @@
 /**
  * The per-part size bound of a CMDB workbook, applied only to the parts the import can parse.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * PhpSpreadsheet builds the whole XML tree of every part it parses, so a part
  * that unpacks to more than the profile's `maxPartBytes` is refused before
  * anything is parsed. An export carries sheets the import never reads (an
@@ -30,9 +33,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -110,6 +110,18 @@ class CmdbPartReferences {
 			return ['unread' => false, 'sheet' => null];
 		}
 
+		return self::referencesVerdict(key: $key, references: $references);
+	}//end verdict()
+
+	/**
+	 * Whether only unread sheets name a part by this key, and the sheet of the first relationship that is read.
+	 *
+	 * @param string $key The last segment of the part's name.
+	 * @param array<int, array{keys: array<int, string>, sheet: ?string, unread: bool}> $references Every relationship.
+	 *
+	 * @return array{unread: bool, sheet: ?string}
+	 */
+	private static function referencesVerdict(string $key, array $references): array {
 		$unread = false;
 		foreach ($references as $reference) {
 			if (in_array($key, $reference['keys'], true) === false) {
@@ -124,7 +136,7 @@ class CmdbPartReferences {
 		}
 
 		return ['unread' => $unread, 'sheet' => null];
-	}//end verdict()
+	}//end referencesVerdict()
 
 	/**
 	 * Every relationship in the package: the names it may resolve to, its sheet, and whether that sheet is unread.

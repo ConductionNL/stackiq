@@ -3,6 +3,9 @@
 /**
  * Merge Organisatie Service.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Admin-triggered organisation-merge capability (VNG Softwarecatalogus #141):
  * folds a source organisation into a target organisation for gemeentelijke
  * herindeling (municipal mergers) or leveranciersovername (supplier
@@ -53,9 +56,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/organisation-merge/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

@@ -15,6 +15,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -53,6 +56,27 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
 class ModuleComplianceService {
+	/**
+	 * Per-shape counters reported after extracting standaardversie UUIDs
+	 */
+	private const STANDARD_VERSION_TRACKING = [
+		'withStandaardversie' => 0,
+		'withoutStandaardversie' => 0,
+		'stringType' => 0,
+		'arrayType' => 0,
+		'objectType' => 0,
+		'invalidType' => 0,
+	];
+
+	/**
+	 * Debug message logged for each valid standaardversie shape
+	 */
+	private const FOUND_STANDARD_VERSION_MESSAGES = [
+		'stringType' => 'ModuleComplianceService: Found string standaardversie',
+		'arrayType' => 'ModuleComplianceService: Found array standaardversie',
+		'objectType' => 'ModuleComplianceService: Found object standaardversie',
+	];
+
 	/**
 	 * Constructor for ModuleComplianceService
 	 *
@@ -335,96 +359,16 @@ class ModuleComplianceService {
 	 * @return array Array of standaardversie UUIDs
 	 */
 	private function extractStandaardversieUuids(array $complianceObjects): array {
-		$standaardversieUuids = [];
-		$tracking = [
-			'withStandaardversie' => 0,
-			'withoutStandaardversie' => 0,
-			'stringType' => 0,
-			'arrayType' => 0,
-			'objectType' => 0,
-			'invalidType' => 0,
-		];
-
-		foreach ($complianceObjects as $complianceObject) {
-			$complianceData = $complianceObject->getObject();
-			$standardVersion = $complianceData['standardVersion'] ?? null;
-
-			if ($standardVersion === null) {
-				$tracking['withoutStandaardversie']++;
-				$this->logger->debug(
-					'ModuleComplianceService: Compliance object missing standaardversie',
-					[
-						'complianceId' => $complianceObject->getId(),
-						'complianceUuid' => $complianceData['uuid'] ?? 'unknown',
-					]
-				);
-				continue;
-			}
-
-			$tracking['withStandaardversie']++;
-
-			// Handle both string UUID and object with UUID property.
-			if (is_string($standardVersion) === true) {
-				$tracking['stringType']++;
-				$standaardversieUuids[] = $standardVersion;
-				$this->logger->debug(
-					'ModuleComplianceService: Found string standaardversie',
-					[
-						'complianceId' => $complianceObject->getId(),
-						'standardVersion' => $standardVersion,
-					]
-				);
-			} elseif (is_array($standardVersion) === true && isset($standardVersion['uuid']) === true) {
-				$tracking['arrayType']++;
-				$standaardversieUuids[] = $standardVersion['uuid'];
-				$this->logger->debug(
-					'ModuleComplianceService: Found array standaardversie',
-					[
-						'complianceId' => $complianceObject->getId(),
-						'standardVersion' => $standardVersion['uuid'],
-					]
-				);
-			} elseif (is_object($standardVersion) === true && isset($standardVersion->uuid) === true) {
-				$tracking['objectType']++;
-				$standaardversieUuids[] = $standardVersion->uuid;
-				$this->logger->debug(
-					'ModuleComplianceService: Found object standaardversie',
-					[
-						'complianceId' => $complianceObject->getId(),
-						'standardVersion' => $standardVersion->uuid,
-					]
-				);
-			}//end if
-
-			if (is_string($standardVersion) === false
-				&& (is_array($standardVersion) === false || isset($standardVersion['uuid']) === false)
-				&& (is_object($standardVersion) === false || isset($standardVersion->uuid) === false)
-			) {
-				$tracking['invalidType']++;
-				$standardVersionValue = (string)$standardVersion;
-				if (is_array($standardVersion) === true) {
-					$standardVersionValue = json_encode($standardVersion);
-				}
-
-				$this->logger->warning(
-					'ModuleComplianceService: Invalid standaardversie type',
-					[
-						'complianceId' => $complianceObject->getId(),
-						'type' => gettype($standardVersion),
-						'value' => $standardVersionValue,
-					]
-				);
-			}
-		}//end foreach
+		$collected = $this->collectStandardVersions(complianceObjects: $complianceObjects);
 
 		// Remove duplicates and empty values.
-		$standaardversieUuids = array_unique(array_filter($standaardversieUuids));
+		$standaardversieUuids = array_unique(array_filter($collected['uuids']));
 
 		$this->logger->info(
 			'ModuleComplianceService: Extracted standaardversie UUIDs',
 			[
 				'complianceCount' => count($complianceObjects),
-				'tracking' => $tracking,
+				'tracking' => $collected['tracking'],
 				'uniqueStandaardversieUuids' => count($standaardversieUuids),
 				'standaardversieUuids' => $standaardversieUuids,
 			]
@@ -432,6 +376,157 @@ class ModuleComplianceService {
 
 		return $standaardversieUuids;
 	}//end extractStandaardversieUuids()
+
+	/**
+	 * Classify every compliance object's standaardversie and tally the shapes
+	 *
+	 * @param array $complianceObjects Array of compliance objects
+	 *
+	 * @return array{tracking: array<string, int>, uuids: array<int, string>} The shape tally and the UUIDs found
+	 */
+	private function collectStandardVersions(array $complianceObjects): array {
+		$collected = ['tracking' => self::STANDARD_VERSION_TRACKING, 'uuids' => []];
+
+		foreach ($complianceObjects as $complianceObject) {
+			[$shape, $uuid] = $this->classifyStandardVersion(complianceObject: $complianceObject);
+			$collected['tracking'][$shape]++;
+			if ($shape !== 'withoutStandaardversie') {
+				$collected['tracking']['withStandaardversie']++;
+			}
+
+			if ($uuid !== null) {
+				$collected['uuids'][] = $uuid;
+			}
+		}
+
+		return $collected;
+	}//end collectStandardVersions()
+
+	/**
+	 * Classify one compliance object's standaardversie and log what was found
+	 *
+	 * @param object $complianceObject The compliance object
+	 *
+	 * @return array{0: string, 1: string|null} The tracking shape and the UUID, if any
+	 */
+	private function classifyStandardVersion(object $complianceObject): array {
+		$complianceData = $complianceObject->getObject();
+		$standardVersion = $complianceData['standardVersion'] ?? null;
+
+		if ($standardVersion === null) {
+			$this->logMissingStandardVersion(complianceObject: $complianceObject, complianceData: $complianceData);
+			return ['withoutStandaardversie', null];
+		}
+
+		$found = $this->standardVersionShape(standardVersion: $standardVersion);
+		if ($found[1] === null) {
+			$this->logInvalidStandardVersion(complianceObject: $complianceObject, standardVersion: $standardVersion);
+			return $found;
+		}
+
+		$this->logFoundStandardVersion(complianceObject: $complianceObject, found: $found);
+		return $found;
+	}//end classifyStandardVersion()
+
+	/**
+	 * Log a standaardversie UUID found on a compliance object
+	 *
+	 * @param object $complianceObject The compliance object
+	 * @param array  $found            The tracking shape and the UUID
+	 *
+	 * @return void
+	 */
+	private function logFoundStandardVersion(object $complianceObject, array $found): void {
+		$this->logger->debug(
+			self::FOUND_STANDARD_VERSION_MESSAGES[$found[0]],
+			['complianceId' => $complianceObject->getId(), 'standardVersion' => $found[1]]
+		);
+	}//end logFoundStandardVersion()
+
+	/**
+	 * Determine the shape of a standaardversie value: a string UUID, or an array or object with a UUID
+	 *
+	 * @param mixed $standardVersion The standaardversie value (not null)
+	 *
+	 * @return array{0: string, 1: string|null} The tracking shape and the UUID, null when invalid
+	 */
+	private function standardVersionShape(mixed $standardVersion): array {
+		if (is_string($standardVersion) === true) {
+			return ['stringType', $standardVersion];
+		}
+
+		$uuid = $this->nestedStandardVersionUuid(standardVersion: $standardVersion);
+		if ($uuid === null) {
+			return ['invalidType', null];
+		}
+
+		if (is_array($standardVersion) === true) {
+			return ['arrayType', $uuid];
+		}
+
+		return ['objectType', $uuid];
+	}//end standardVersionShape()
+
+	/**
+	 * Read the UUID property of an array or object standaardversie
+	 *
+	 * @param mixed $standardVersion The standaardversie value
+	 *
+	 * @return mixed The UUID, or null when the value carries none
+	 */
+	private function nestedStandardVersionUuid(mixed $standardVersion): mixed {
+		if (is_array($standardVersion) === true && isset($standardVersion['uuid']) === true) {
+			return $standardVersion['uuid'];
+		}
+
+		if (is_object($standardVersion) === true && isset($standardVersion->uuid) === true) {
+			return $standardVersion->uuid;
+		}
+
+		return null;
+	}//end nestedStandardVersionUuid()
+
+	/**
+	 * Log a compliance object that has no standaardversie
+	 *
+	 * @param object $complianceObject The compliance object
+	 * @param array  $complianceData   The compliance object's data
+	 *
+	 * @return void
+	 */
+	private function logMissingStandardVersion(object $complianceObject, array $complianceData): void {
+		$this->logger->debug(
+			'ModuleComplianceService: Compliance object missing standaardversie',
+			[
+				'complianceId' => $complianceObject->getId(),
+				'complianceUuid' => $complianceData['uuid'] ?? 'unknown',
+			]
+		);
+	}//end logMissingStandardVersion()
+
+	/**
+	 * Log a standaardversie value of an unsupported type
+	 *
+	 * @param object $complianceObject The compliance object
+	 * @param mixed  $standardVersion  The standaardversie value
+	 *
+	 * @return void
+	 */
+	private function logInvalidStandardVersion(object $complianceObject, mixed $standardVersion): void {
+		$standardVersionValue = (string)$standardVersion;
+		if (is_array($standardVersion) === true) {
+			$standardVersionValue = json_encode($standardVersion);
+		}
+
+		$this->logger->warning(
+			'ModuleComplianceService: Invalid standaardversie type',
+			[
+				'complianceId' => $complianceObject->getId(),
+				'type' => gettype($standardVersion),
+				'value' => $standardVersionValue,
+			]
+		);
+	}//end logInvalidStandardVersion()
 
 	/**
 	 * Check if two arrays are different (ignoring order)
