@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Stackiq;
 
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use OCP\IGroup;
 use OCP\IGroupManager;
@@ -184,7 +185,7 @@ class OrganizationHandler {
 
 				// Save the updated organization with correct register/schema IDs.
 				$objectService = $this->getObjectService();
-				$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+				$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 				$registerId = $settingsService->getVoorzieningenRegisterId();
 				$organizationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -350,7 +351,7 @@ class OrganizationHandler {
 			foreach ($contactpersonen as $index => $contactPerson) {
 				try {
 					// Get the contactgegevens schema ID from settings.
-					$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+					$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 					$contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
 					$registerId = $settingsService->getVoorzieningenRegisterId();
 

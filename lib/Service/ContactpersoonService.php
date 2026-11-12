@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\Stackiq\Service\Contactpersoon\ContactPersonUserDetails;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
 use OCA\Stackiq\Service\Stackiq\HierarchyHandler;
@@ -188,7 +189,7 @@ class ContactpersoonService {
 						);
 						try {
 							$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-							$settingsService = $this->container->get('OCA\Stackiq\Service\SettingsService');
+							$settingsService = $this->container->get(RegisterConfigReaderInterface::class);
 							$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 							$orgObject = $objectService->find(
 								id: $organizationUuid,

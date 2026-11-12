@@ -23,6 +23,7 @@ namespace OCA\Stackiq\Service\Stackiq;
 
 use OCA\OpenRegister\Service\Organisation\NewOrganisation;
 use OCA\Stackiq\Service\OrganisationSlug;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -988,7 +989,7 @@ class ContactPersonHandler {
 			}
 
 			// Get register and schema IDs dynamically from configuration.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$registerId = $settingsService->getVoorzieningenRegisterId();
 			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -1546,7 +1547,7 @@ class ContactPersonHandler {
 			);
 
 			// Get voorzieningen config for register and schema.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 			$register = $voorzieningenConfig['register'] ?? '';
 			$organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
@@ -1660,7 +1661,7 @@ class ContactPersonHandler {
 				try {
 					$objectService = $this->getObjectService();
 					// Get register and schema IDs dynamically from configuration.
-					$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+					$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 					$registerId = $settingsService->getVoorzieningenRegisterId();
 					$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -2109,7 +2110,7 @@ class ContactPersonHandler {
 			}
 
 			// Get the organization object.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$registerId = $settingsService->getVoorzieningenRegisterId();
 			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -2198,7 +2199,7 @@ class ContactPersonHandler {
 			}
 
 			// Get the organization object.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$registerId = $settingsService->getVoorzieningenRegisterId();
 			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -2508,7 +2509,7 @@ class ContactPersonHandler {
 			$objectService = $this->getObjectService();
 
 			// Get voorzieningen config for register and schema.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 			$register = $voorzieningenConfig['register'] ?? '';
 			$organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';

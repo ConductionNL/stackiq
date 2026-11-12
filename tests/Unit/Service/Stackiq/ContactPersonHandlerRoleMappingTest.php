@@ -12,6 +12,7 @@ namespace OCA\Stackiq\Tests\Unit\Service\Stackiq;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\App\IAppManager;
@@ -180,7 +181,7 @@ class ContactPersonHandlerRoleMappingTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			static function (string $id) use ($settingsService, $objectService) {
-				if ($id === 'OCA\Stackiq\Service\SettingsService') {
+				if ($id === RegisterConfigReaderInterface::class) {
 					return $settingsService;
 				}
 
