@@ -158,6 +158,7 @@
 
 <script>
 import { CnDataTable } from '@conduction/nextcloud-vue'
+import { getRequestToken } from '@nextcloud/auth'
 import { translate as t } from '@nextcloud/l10n'
 import { generateUrl } from '@nextcloud/router'
 import {
@@ -574,7 +575,7 @@ export default {
 				// the correct boundary (mirrors ArchiMate import's upload path).
 				const response = await fetch(url, {
 					method: 'POST',
-					headers: { 'X-Requested-With': 'XMLHttpRequest' },
+					headers: { requesttoken: getRequestToken(), 'X-Requested-With': 'XMLHttpRequest' },
 					body: formData,
 				})
 				const result = await response.json()

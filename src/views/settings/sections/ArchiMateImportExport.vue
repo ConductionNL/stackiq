@@ -684,6 +684,7 @@
  * @version 2.0.0
  */
 
+import { getRequestToken } from '@nextcloud/auth'
 import axios from '@nextcloud/axios'
 // Nextcloud Vue components
 import {
@@ -1001,6 +1002,7 @@ export default {
 					{
 						method: 'POST',
 						headers: {
+							requesttoken: getRequestToken(),
 							'X-Requested-With': 'XMLHttpRequest',
 						},
 						body: formData,

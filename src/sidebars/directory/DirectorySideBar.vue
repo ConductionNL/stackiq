@@ -3,6 +3,7 @@
   - SPDX-License-Identifier: EUPL-1.2
 -->
 <script setup>
+import { getRequestToken } from '@nextcloud/auth'
 import { reactive } from 'vue'
 import { navigationStore } from '../../store/store.js'
 </script>
@@ -344,6 +345,7 @@ export default {
 			fetch('/index.php/apps/opencatalogi/api/metadata', {
 				method: 'POST',
 				headers: {
+					requesttoken: getRequestToken(),
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify(data),
@@ -368,6 +370,7 @@ export default {
 			fetch(`/index.php/apps/opencatalogi/api/metadata/${metadataId}`, {
 				method: 'DELETE',
 				headers: {
+					requesttoken: getRequestToken(),
 					'Content-Type': 'application/json',
 				},
 			})

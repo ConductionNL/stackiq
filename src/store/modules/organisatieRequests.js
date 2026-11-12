@@ -30,25 +30,6 @@ export function tokenRequest(method, body) {
 }
 
 /**
- * Options for a JSON POST without the request token.
- *
- * @param {object|Array} [body] The body, JSON-encoded when given.
- * @return {object} fetch options.
- */
-export function plainPost(body) {
-	const options = {
-		method: 'POST',
-		headers: {
-			'Content-Type': 'application/json',
-		},
-	}
-	if (body !== undefined) {
-		options.body = JSON.stringify(body)
-	}
-	return options
-}
-
-/**
  * The Error for a failed answer: the server's message, else the HTTP status.
  *
  * @param {Response} response The answer.

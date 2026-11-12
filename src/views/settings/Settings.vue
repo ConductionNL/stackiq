@@ -145,6 +145,7 @@
 </template>
 
 <script>
+import { getRequestToken } from '@nextcloud/auth'
 import {
 	NcButton,
 	NcLoadingIcon,
@@ -612,6 +613,7 @@ export default defineComponent({
 				await fetch('/index.php/apps/stackiq/api/settings', {
 					method: 'POST',
 					headers: {
+						requesttoken: getRequestToken(),
 						'Content-Type': 'application/json',
 					},
 					body: JSON.stringify(configToSave),
@@ -686,6 +688,7 @@ export default defineComponent({
 					{
 						method: 'POST',
 						headers: {
+							requesttoken: getRequestToken(),
 							'Content-Type': 'application/json',
 						},
 						body: JSON.stringify({

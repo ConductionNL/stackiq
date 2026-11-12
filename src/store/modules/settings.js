@@ -2,6 +2,7 @@
  * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  */
+import { getRequestToken } from '@nextcloud/auth'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { defineStore } from 'pinia'
 
@@ -53,6 +54,7 @@ async function runEmailTest(body, texts) {
 		const result = await fetchJson('/index.php/apps/stackiq/api/email/test', {
 			method: 'POST',
 			headers: {
+				requesttoken: getRequestToken(),
 				'Content-Type': 'application/json',
 				'X-Requested-With': 'XMLHttpRequest',
 			},
@@ -483,7 +485,7 @@ async function clearArchiMateStatus(store, kind) {
 	try {
 		const response = await fetch(
 			`/index.php/apps/stackiq/api/archimate/status/${kind}/clear`,
-			{ method: 'POST', headers: { 'Content-Type': 'application/json' } },
+			{ method: 'POST', headers: { requesttoken: getRequestToken(), 'Content-Type': 'application/json' } },
 		)
 		if (!response.ok) {
 			throw new Error(`HTTP ${response.status}: ${response.statusText}`)
@@ -551,6 +553,7 @@ function postJson(url, body) {
 	return fetch(url, {
 		method: 'POST',
 		headers: {
+			requesttoken: getRequestToken(),
 			'Content-Type': 'application/json',
 			'X-Requested-With': 'XMLHttpRequest',
 		},
@@ -1563,7 +1566,7 @@ export const useSettingsStore = defineStore('settings', {
 				formData.append('processingMode', processingMode)
 				fetch('/index.php/apps/stackiq/api/archimate/import', {
 					method: 'POST',
-					headers: { 'X-Requested-With': 'XMLHttpRequest' },
+					headers: { requesttoken: getRequestToken(), 'X-Requested-With': 'XMLHttpRequest' },
 					body: formData,
 				})
 					.then((response) => {
@@ -1772,6 +1775,7 @@ export const useSettingsStore = defineStore('settings', {
 					{
 						method: 'POST',
 						headers: {
+							requesttoken: getRequestToken(),
 							'Content-Type': 'application/json',
 							'X-Requested-With': 'XMLHttpRequest',
 						},
@@ -1817,6 +1821,7 @@ export const useSettingsStore = defineStore('settings', {
 					{
 						method: 'POST',
 						headers: {
+							requesttoken: getRequestToken(),
 							'Content-Type': 'application/json',
 							'X-Requested-With': 'XMLHttpRequest',
 						},
@@ -1845,6 +1850,7 @@ export const useSettingsStore = defineStore('settings', {
 					{
 						method: 'POST',
 						headers: {
+							requesttoken: getRequestToken(),
 							'Content-Type': 'application/json',
 							'X-Requested-With': 'XMLHttpRequest',
 						},
