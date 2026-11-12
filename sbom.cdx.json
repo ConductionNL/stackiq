@@ -7,7 +7,7 @@
     "tools": [
       {
         "name": "composer",
-        "version": "2.10.2"
+        "version": "2.8.12"
       },
       {
         "vendor": "cyclonedx",
@@ -3164,6 +3164,123 @@
     },
     {
       "type": "library",
+      "name": "core",
+      "group": "@emnapi",
+      "version": "1.10.0",
+      "bom-ref": "stackiq@1.0.0|@emnapi/core@1.10.0",
+      "scope": "optional",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:npm/%40emnapi/core@1.10.0",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/@emnapi/core/-/core-1.10.0.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "caae8e909e29f360807cf974bbd99079b40728f26463b5ab22e936d3971362761efa4d99f18061d7516b6d11bf1fa8a18aba9c69c3a09760483bca323102de5f"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/@emnapi/core"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "runtime",
+      "group": "@emnapi",
+      "version": "1.10.0",
+      "bom-ref": "stackiq@1.0.0|@emnapi/runtime@1.10.0",
+      "scope": "optional",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:npm/%40emnapi/runtime@1.10.0",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/@emnapi/runtime/-/runtime-1.10.0.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "7b0bd8964f3ac54a06234cd044dabf982fb5e91d5078394a432db52a2de84985cd80b6f8e465753fa03433efecea7c82b8d0ea7b9569698f380735c6c156f014"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/@emnapi/runtime"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "wasi-threads",
+      "group": "@emnapi",
+      "version": "1.2.1",
+      "bom-ref": "stackiq@1.0.0|@emnapi/wasi-threads@1.2.1",
+      "scope": "optional",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:npm/%40emnapi/wasi-threads@1.2.1",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/@emnapi/wasi-threads/-/wasi-threads-1.2.1.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "b93208ece605fbf31eb3f32b708398a79c8eb5230b056488a0b3e9720c22a6888a6e58ba937db6b5ca05b31a082313c3a96d35490180824a38133662d8136fdb"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/@emnapi/wasi-threads"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "eslint-utils",
       "group": "@eslint-community",
       "version": "4.10.1",
@@ -4449,6 +4566,45 @@
     },
     {
       "type": "library",
+      "name": "wasm-runtime",
+      "group": "@napi-rs",
+      "version": "1.2.6",
+      "bom-ref": "stackiq@1.0.0|@napi-rs/wasm-runtime@1.2.6",
+      "scope": "optional",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:npm/%40napi-rs/wasm-runtime@1.2.6",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/@napi-rs/wasm-runtime/-/wasm-runtime-1.2.6.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "991c83984c3dfdf0835c219f2f5b1b808c3f1942b43d5c515b863080f37ad45dcb43e7d2ca80456ab255ce01b2845ea447311067415e8c3aa6e162d749ea909b"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/@napi-rs/wasm-runtime"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "auth",
       "group": "@nextcloud",
       "version": "2.6.0",
@@ -5390,8 +5546,8 @@
       "type": "library",
       "name": "types",
       "group": "@oxc-project",
-      "version": "0.147.0",
-      "bom-ref": "stackiq@1.0.0|@oxc-project/types@0.147.0",
+      "version": "0.156.0",
+      "bom-ref": "stackiq@1.0.0|@oxc-project/types@0.156.0",
       "licenses": [
         {
           "license": {
@@ -5399,15 +5555,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40oxc-project/types@0.147.0",
+      "purl": "pkg:npm/%40oxc-project/types@0.156.0",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@oxc-project/types/-/types-0.147.0.tgz",
+          "url": "https://registry.npmjs.org/@oxc-project/types/-/types-0.156.0.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "209decea5b472e9e394b46e1ee98645fe8093bb0355aecf611aaa90216fc5a3a83c1bccc896287872c93e36b6c91a5a31185ed1ed5423e99c12554fdf9d7112e"
+              "content": "d43bb2838f1374935dca1101f179f52f7e9b4fd3efe8652d94a8c7c4ecacf3191a17fad0ab75c913e6c0bab48afc0808cf998616c6fbedc9fd3dbdb4f9609273"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -5454,6 +5610,10 @@
       ],
       "properties": [
         {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-android-arm64"
         }
@@ -5488,6 +5648,10 @@
         }
       ],
       "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-darwin-arm64"
@@ -5524,6 +5688,10 @@
       ],
       "properties": [
         {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-darwin-x64"
         }
@@ -5558,6 +5726,10 @@
         }
       ],
       "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-freebsd-x64"
@@ -5594,6 +5766,10 @@
       ],
       "properties": [
         {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-linux-arm-glibc"
         }
@@ -5628,6 +5804,10 @@
         }
       ],
       "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-linux-arm-musl"
@@ -5664,6 +5844,10 @@
       ],
       "properties": [
         {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-linux-arm64-glibc"
         }
@@ -5698,6 +5882,10 @@
         }
       ],
       "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-linux-arm64-musl"
@@ -5734,6 +5922,10 @@
       ],
       "properties": [
         {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-linux-x64-glibc"
         }
@@ -5768,6 +5960,10 @@
         }
       ],
       "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-linux-x64-musl"
@@ -5804,6 +6000,10 @@
       ],
       "properties": [
         {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-win32-arm64"
         }
@@ -5838,6 +6038,10 @@
         }
       ],
       "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@parcel/watcher-win32-x64"
@@ -5886,8 +6090,8 @@
       "type": "library",
       "name": "binding-android-arm-eabi",
       "group": "@rolldown",
-      "version": "1.2.6",
-      "bom-ref": "stackiq@1.0.0|@rolldown/binding-android-arm-eabi@1.2.6",
+      "version": "1.2.19",
+      "bom-ref": "stackiq@1.0.0|@rolldown/binding-android-arm-eabi@1.2.19",
       "scope": "optional",
       "licenses": [
         {
@@ -5896,15 +6100,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-android-arm-eabi@1.2.6",
+      "purl": "pkg:npm/%40rolldown/binding-android-arm-eabi@1.2.19",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@rolldown/binding-android-arm-eabi/-/binding-android-arm-eabi-1.2.6.tgz",
+          "url": "https://registry.npmjs.org/@rolldown/binding-android-arm-eabi/-/binding-android-arm-eabi-1.2.19.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "6fe8d370045d4e214b23a8c1e1ae578d39b445677a29c45f423fc8db7e7a7f15197a68a1a3dcd02f1a3446d0ae30303229c2e8e9c125b6481b429e9dd7eb238d"
+              "content": "7be11b7b4593fbdb5b5e634a3c8882f18ad6007630ba0de6ea2e29deb6461ae95f66b8b58ed2381ec953f8e66715ffce207a30585ef50d3947c1704fd92880ec"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -5925,8 +6129,8 @@
       "type": "library",
       "name": "binding-android-arm64",
       "group": "@rolldown",
-      "version": "1.2.6",
-      "bom-ref": "stackiq@1.0.0|@rolldown/binding-android-arm64@1.2.6",
+      "version": "1.2.19",
+      "bom-ref": "stackiq@1.0.0|@rolldown/binding-android-arm64@1.2.19",
       "scope": "optional",
       "licenses": [
         {
@@ -5935,15 +6139,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-android-arm64@1.2.6",
+      "purl": "pkg:npm/%40rolldown/binding-android-arm64@1.2.19",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@rolldown/binding-android-arm64/-/binding-android-arm64-1.2.6.tgz",
+          "url": "https://registry.npmjs.org/@rolldown/binding-android-arm64/-/binding-android-arm64-1.2.19.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "964594f1925a464f6adc22046354dceef20500ba775f0e4d7c6268da1420e6822a360c568b5cc8f8888310adebef4045e43ce8975b5c5ec9f3b1173c34b846f9"
+              "content": "84ea266eb4c9faccedd9c884cd2ee8080efc94c3c1805e54310582248c8d7e7ac8ec62e5f0762816a0a7a4bda070f39a5ccaabc86094e44c5d40ac830dc0bec8"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -5964,8 +6168,8 @@
       "type": "library",
       "name": "binding-darwin-arm64",
       "group": "@rolldown",
-      "version": "1.2.6",
-      "bom-ref": "stackiq@1.0.0|@rolldown/binding-darwin-arm64@1.2.6",
+      "version": "1.2.19",
+      "bom-ref": "stackiq@1.0.0|@rolldown/binding-darwin-arm64@1.2.19",
       "scope": "optional",
       "licenses": [
         {
@@ -5974,15 +6178,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-darwin-arm64@1.2.6",
+      "purl": "pkg:npm/%40rolldown/binding-darwin-arm64@1.2.19",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@rolldown/binding-darwin-arm64/-/binding-darwin-arm64-1.2.6.tgz",
+          "url": "https://registry.npmjs.org/@rolldown/binding-darwin-arm64/-/binding-darwin-arm64-1.2.19.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "760479e8d627bc0b339bb39bd41dbf567d1ef1b5106191f652355a30cb4c54e08a1527e385f2e6b80ffdf8ef85f9a8d4746e81fdb4acb2b296e892580126bc8c"
+              "content": "5e8300da9c022864d0cd48cf82d47091e747e1699785d20f293ea5ea83b17753d46cda1d188e837017a480dec40bfffec77a5f0585ffa8bd60366640aa2bf0e6"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -6003,8 +6207,8 @@
       "type": "library",
       "name": "binding-darwin-x64",
       "group": "@rolldown",
-      "version": "1.2.6",
-      "bom-ref": "stackiq@1.0.0|@rolldown/binding-darwin-x64@1.2.6",
+      "version": "1.2.19",
+      "bom-ref": "stackiq@1.0.0|@rolldown/binding-darwin-x64@1.2.19",
       "scope": "optional",
       "licenses": [
         {
@@ -6013,15 +6217,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-darwin-x64@1.2.6",
+      "purl": "pkg:npm/%40rolldown/binding-darwin-x64@1.2.19",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@rolldown/binding-darwin-x64/-/binding-darwin-x64-1.2.6.tgz",
+          "url": "https://registry.npmjs.org/@rolldown/binding-darwin-x64/-/binding-darwin-x64-1.2.19.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "be957116f502162a09aae83b393beaa6d91ce326fc517d00c1f0e6269691ff4b16cfe0549aa49501fedcf0991482737c60bb296f86bf37a3614f230099dc90ed"
+              "content": "ce8f04b124b0319098fdef9f46719a5f4d981a0bc90f4caf84d8bff61a463c0d8c27d645f1d3c2c3be5419fa48e8ea50fe6c91fdd2189a8811bea8990f44eb5e"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -6042,8 +6246,8 @@
       "type": "library",
       "name": "binding-freebsd-x64",
       "group": "@rolldown",
-      "version": "1.2.6",
-      "bom-ref": "stackiq@1.0.0|@rolldown/binding-freebsd-x64@1.2.6",
+      "version": "1.2.19",
+      "bom-ref": "stackiq@1.0.0|@rolldown/binding-freebsd-x64@1.2.19",
       "scope": "optional",
       "licenses": [
         {
@@ -6052,15 +6256,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-freebsd-x64@1.2.6",
+      "purl": "pkg:npm/%40rolldown/binding-freebsd-x64@1.2.19",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@rolldown/binding-freebsd-x64/-/binding-freebsd-x64-1.2.6.tgz",
+          "url": "https://registry.npmjs.org/@rolldown/binding-freebsd-x64/-/binding-freebsd-x64-1.2.19.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "875c06e98e8adc9951b30c6c23ae2a409a81032e2facbb878116dcf0264c192593385458ea084c02933534acc1d88d27e715757e3904d7c4ae565d90a4b78da4"
+              "content": "3bc21200e7c8d678fb02e04f777d05485e3bcfb7fb973964e69a105468228a4bd0b86101158bd6f248be5049d3f9824f9cd1a34339f7d38925b783bd15413b98"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -6081,8 +6285,8 @@
       "type": "library",
       "name": "binding-linux-arm-gnueabihf",
       "group": "@rolldown",
-      "version": "1.2.6",
-      "bom-ref": "stackiq@1.0.0|@rolldown/binding-linux-arm-gnueabihf@1.2.6",
+      "version": "1.2.19",
+      "bom-ref": "stackiq@1.0.0|@rolldown/binding-linux-arm-gnueabihf@1.2.19",
       "scope": "optional",
       "licenses": [
         {
@@ -6091,15 +6295,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-linux-arm-gnueabihf@1.2.6",
+      "purl": "pkg:npm/%40rolldown/binding-linux-arm-gnueabihf@1.2.19",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@rolldown/binding-linux-arm-gnueabihf/-/binding-linux-arm-gnueabihf-1.2.6.tgz",
+          "url": "https://registry.npmjs.org/@rolldown/binding-linux-arm-gnueabihf/-/binding-linux-arm-gnueabihf-1.2.19.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "b5b0a2aae6f4ab63155892a01793e80253560ad43276239848b22477cb01caa2bfe8c3182c945c497498a1da98b5dd0ef85c3b41a56628a952e282fde18459d3"
+              "content": "fe56026dae4d3b4caae12d2318c1fc41306d92f431a178e8416cc5e41716a7d32307d8f15510f51900cda1f9158dc3a3df40d6ca12c837fe0e7bad092b368e37"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -6120,8 +6324,8 @@
       "type": "library",
       "name": "binding-linux-arm64-gnu",
       "group": "@rolldown",
-      "version": "1.2.6",
-      "bom-ref": "stackiq@1.0.0|@rolldown/binding-linux-arm64-gnu@1.2.6",
+      "version": "1.2.19",
+      "bom-ref": "stackiq@1.0.0|@rolldown/binding-linux-arm64-gnu@1.2.19",
       "scope": "optional",
       "licenses": [
         {
@@ -6130,15 +6334,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-linux-arm64-gnu@1.2.6",
+      "purl": "pkg:npm/%40rolldown/binding-linux-arm64-gnu@1.2.19",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@rolldown/binding-linux-arm64-gnu/-/binding-linux-arm64-gnu-1.2.6.tgz",
+          "url": "https://registry.npmjs.org/@rolldown/binding-linux-arm64-gnu/-/binding-linux-arm64-gnu-1.2.19.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "a312bdf9b68404f8591b91c1e14458fae534e33256799947e936fdac1e432b80c5f57475b9734b5ede50e59b2e81329ac8d08d2e191cc33ff27bbe21448f7c76"
+              "content": "a66fdaa453019d26c56f73ba9c6e691ced62a87859ae31831448d29bea2df49d7b5d73ef1fd2fdd32e61fa381f1c213e41d96cbf2f2a284714e152b18230febc"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -6159,8 +6363,8 @@
       "type": "library",
       "name": "binding-linux-arm64-musl",
       "group": "@rolldown",
-      "version": "1.2.6",
-      "bom-ref": "stackiq@1.0.0|@rolldown/binding-linux-arm64-musl@1.2.6",
+      "version": "1.2.19",
+      "bom-ref": "stackiq@1.0.0|@rolldown/binding-linux-arm64-musl@1.2.19",
       "scope": "optional",
       "licenses": [
         {
@@ -6169,15 +6373,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-linux-arm64-musl@1.2.6",
+      "purl": "pkg:npm/%40rolldown/binding-linux-arm64-musl@1.2.19",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@rolldown/binding-linux-arm64-musl/-/binding-linux-arm64-musl-1.2.6.tgz",
+          "url": "https://registry.npmjs.org/@rolldown/binding-linux-arm64-musl/-/binding-linux-arm64-musl-1.2.19.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "9ae582936ec5541119b6fd0cb0af209df4a681ccc0f0a434b915496d30012a19117d0737f1a52b71bedf862dc1362cac7859a0711b2831f42c48d27e0db65d4b"
+              "content": "2b54a6429dc51627219fca2aacd230bc5a19e7072f8c2ee0a01ce968c36f2dff4565cf9007f42f2e69e92598000061e20fdf34b4ff056599d79362bde2bbe5c6"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -6198,8 +6402,8 @@
       "type": "library",
       "name": "binding-linux-ppc64-gnu",
       "group": "@rolldown",
-      "version": "1.2.6",
-      "bom-ref": "stackiq@1.0.0|@rolldown/binding-linux-ppc64-gnu@1.2.6",
+      "version": "1.2.19",
+      "bom-ref": "stackiq@1.0.0|@rolldown/binding-linux-ppc64-gnu@1.2.19",
       "scope": "optional",
       "licenses": [
         {
@@ -6208,15 +6412,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-linux-ppc64-gnu@1.2.6",
+      "purl": "pkg:npm/%40rolldown/binding-linux-ppc64-gnu@1.2.19",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@rolldown/binding-linux-ppc64-gnu/-/binding-linux-ppc64-gnu-1.2.6.tgz",
+          "url": "https://registry.npmjs.org/@rolldown/binding-linux-ppc64-gnu/-/binding-linux-ppc64-gnu-1.2.19.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "7960e849f53b0a8daa8f7be00770ede258f5986e82a166dc25091130fdd726997208cb6e6aadcb1ef3c58d2f5020fbcc19655a7490b4e178b2d0875c54fb67c1"
+              "content": "234c700f9ee33ffdc0efee543d98a7db0f18ed71c4984339ceaa5864e710e39325356ead5095338b2995df246beeb2f8bf0c9f11c46c464b02e1aeca734f29e5"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -6237,8 +6441,8 @@
       "type": "library",
       "name": "binding-linux-s390x-gnu",
       "group": "@rolldown",
-      "version": "1.2.6",
-      "bom-ref": "stackiq@1.0.0|@rolldown/binding-linux-s390x-gnu@1.2.6",
+      "version": "1.2.19",
+      "bom-ref": "stackiq@1.0.0|@rolldown/binding-linux-s390x-gnu@1.2.19",
       "scope": "optional",
       "licenses": [
         {
@@ -6247,15 +6451,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-linux-s390x-gnu@1.2.6",
+      "purl": "pkg:npm/%40rolldown/binding-linux-s390x-gnu@1.2.19",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@rolldown/binding-linux-s390x-gnu/-/binding-linux-s390x-gnu-1.2.6.tgz",
+          "url": "https://registry.npmjs.org/@rolldown/binding-linux-s390x-gnu/-/binding-linux-s390x-gnu-1.2.19.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "d9b58d8d14886b2beea512b15d4636b561bd7d87685254ea5b2c0746f13c12adc6bee43e7f61de224bdeebdedf22df8842cfcf57cc85b1d5ae869d5a2753dd9c"
+              "content": "06bb441d3db848d5e3f47897ab2facfe45e24a2406b7a10a08f525462ac0a088a85712869db5c150491b6404807a2ee2649074fd89e6fb424fd34229c7b0274b"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -6276,8 +6480,8 @@
       "type": "library",
       "name": "binding-linux-x64-gnu",
       "group": "@rolldown",
-      "version": "1.2.6",
-      "bom-ref": "stackiq@1.0.0|@rolldown/binding-linux-x64-gnu@1.2.6",
+      "version": "1.2.19",
+      "bom-ref": "stackiq@1.0.0|@rolldown/binding-linux-x64-gnu@1.2.19",
       "scope": "optional",
       "licenses": [
         {
@@ -6286,15 +6490,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-linux-x64-gnu@1.2.6",
+      "purl": "pkg:npm/%40rolldown/binding-linux-x64-gnu@1.2.19",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@rolldown/binding-linux-x64-gnu/-/binding-linux-x64-gnu-1.2.6.tgz",
+          "url": "https://registry.npmjs.org/@rolldown/binding-linux-x64-gnu/-/binding-linux-x64-gnu-1.2.19.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "29e908d204b4c0bc5ed540524128de9c1570a2efc991c40f0f304f2021998f152ff64dd1b5e1c33c141a88e89c65414a4481f6c0a122986c15a6726c6cfceeef"
+              "content": "ae6ef9ffd0e41ca794d969c0f30e17f785866202e50c21427e4402fb86e0b952660bf8ef0d1bf607edb02ce621c84d1f56ebfbfff0a4937f4ea0eb9fc82bbbe9"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -6315,8 +6519,8 @@
       "type": "library",
       "name": "binding-linux-x64-musl",
       "group": "@rolldown",
-      "version": "1.2.6",
-      "bom-ref": "stackiq@1.0.0|@rolldown/binding-linux-x64-musl@1.2.6",
+      "version": "1.2.19",
+      "bom-ref": "stackiq@1.0.0|@rolldown/binding-linux-x64-musl@1.2.19",
       "scope": "optional",
       "licenses": [
         {
@@ -6325,15 +6529,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-linux-x64-musl@1.2.6",
+      "purl": "pkg:npm/%40rolldown/binding-linux-x64-musl@1.2.19",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@rolldown/binding-linux-x64-musl/-/binding-linux-x64-musl-1.2.6.tgz",
+          "url": "https://registry.npmjs.org/@rolldown/binding-linux-x64-musl/-/binding-linux-x64-musl-1.2.19.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "4efb4f9df56bf87b721a20e63cae155a694d9bb42134d01c2b943d03b68e5ec23ce78e720b26a831a89c5eb159ef62737988da51593bc93db8df34f48f38c529"
+              "content": "8ab87fe3e89814ce06033a65b8312b823cfcf5b8fa343b6aa8c006ffa3b52c6dfc11ddcda7279bcc2a5c54d9055bcba1cbeff7fc1a1c52f9d70d1df709759ef4"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -6354,8 +6558,8 @@
       "type": "library",
       "name": "binding-openharmony-arm64",
       "group": "@rolldown",
-      "version": "1.2.6",
-      "bom-ref": "stackiq@1.0.0|@rolldown/binding-openharmony-arm64@1.2.6",
+      "version": "1.2.19",
+      "bom-ref": "stackiq@1.0.0|@rolldown/binding-openharmony-arm64@1.2.19",
       "scope": "optional",
       "licenses": [
         {
@@ -6364,15 +6568,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-openharmony-arm64@1.2.6",
+      "purl": "pkg:npm/%40rolldown/binding-openharmony-arm64@1.2.19",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@rolldown/binding-openharmony-arm64/-/binding-openharmony-arm64-1.2.6.tgz",
+          "url": "https://registry.npmjs.org/@rolldown/binding-openharmony-arm64/-/binding-openharmony-arm64-1.2.19.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "88ea345446b2d97161682707d2ca6ce572229a44ae3a735a66b7faf9992848e40124f28d538f1192626fd3f952a62a5ec6ee4ffa8b8581a7dee481abfc38907e"
+              "content": "f8a59358da0fb7e09f4aaf780a271e5aedf23c4f90ce4686fa984fcb3f46eb4b6664bc1f424700e007a4b1a7f3bc9030e29be0d6671de5ad53914a95bf4b3824"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -6391,10 +6595,10 @@
     },
     {
       "type": "library",
-      "name": "binding-win32-arm64-msvc",
+      "name": "binding-wasm32-wasi",
       "group": "@rolldown",
-      "version": "1.2.6",
-      "bom-ref": "stackiq@1.0.0|@rolldown/binding-win32-arm64-msvc@1.2.6",
+      "version": "1.2.19",
+      "bom-ref": "stackiq@1.0.0|@rolldown/binding-wasm32-wasi@1.2.19",
       "scope": "optional",
       "licenses": [
         {
@@ -6403,15 +6607,173 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-win32-arm64-msvc@1.2.6",
+      "purl": "pkg:npm/%40rolldown/binding-wasm32-wasi@1.2.19",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@rolldown/binding-win32-arm64-msvc/-/binding-win32-arm64-msvc-1.2.6.tgz",
+          "url": "https://registry.npmjs.org/@rolldown/binding-wasm32-wasi/-/binding-wasm32-wasi-1.2.19.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "cb93539a66ac312e39e4994e08ee1933d92b21c86fdccbe6d5cacbd6250f18e3e01334a4bdeb3d9f449d0b94a3cfafaa58316177cfc9a5f58c1fc35258d1def8"
+              "content": "ec41feb243ac979aa95a72b4bf36a68091613afd5cc31429b319bcb48f3cdcaf5fbabe5cdbba7cabcedfcc43ba05b04f69b036ffeb3fcd1eb7fe92dcd77ee23a"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/@rolldown/binding-wasm32-wasi"
+        }
+      ],
+      "components": [
+        {
+          "type": "library",
+          "name": "core",
+          "group": "@emnapi",
+          "version": "2.0.0-beta.2",
+          "bom-ref": "stackiq@1.0.0|@rolldown/binding-wasm32-wasi@1.2.19|@emnapi/core@2.0.0-beta.2",
+          "scope": "optional",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT"
+              }
+            }
+          ],
+          "purl": "pkg:npm/%40emnapi/core@2.0.0-beta.2",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/@emnapi/core/-/core-2.0.0-beta.2.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "333095a16b5c8383e6d81de37b998cbd832f8f732604ac3e7d4eef6ec25cf7f893f22a7afde6081e8fc3b26fe6afec2c1c1e92132243bb1074f58cbaafff3ee0"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:development",
+              "value": "true"
+            },
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/@rolldown/binding-wasm32-wasi/node_modules/@emnapi/core"
+            }
+          ]
+        },
+        {
+          "type": "library",
+          "name": "runtime",
+          "group": "@emnapi",
+          "version": "2.0.0-beta.2",
+          "bom-ref": "stackiq@1.0.0|@rolldown/binding-wasm32-wasi@1.2.19|@emnapi/runtime@2.0.0-beta.2",
+          "scope": "optional",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT"
+              }
+            }
+          ],
+          "purl": "pkg:npm/%40emnapi/runtime@2.0.0-beta.2",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/@emnapi/runtime/-/runtime-2.0.0-beta.2.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "25cad23f33ef66e359bc9a8f4c5f45c36e4b6ce27c6afcc556569fda0ae61f80a4bb4a063f8eed460a8f65a75c7e3dd8a1930790556709815b40cf08fa2e5013"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:development",
+              "value": "true"
+            },
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/@rolldown/binding-wasm32-wasi/node_modules/@emnapi/runtime"
+            }
+          ]
+        },
+        {
+          "type": "library",
+          "name": "wasi-threads",
+          "group": "@emnapi",
+          "version": "2.2.0",
+          "bom-ref": "stackiq@1.0.0|@rolldown/binding-wasm32-wasi@1.2.19|@emnapi/wasi-threads@2.2.0",
+          "scope": "optional",
+          "licenses": [
+            {
+              "license": {
+                "id": "MIT"
+              }
+            }
+          ],
+          "purl": "pkg:npm/%40emnapi/wasi-threads@2.2.0",
+          "externalReferences": [
+            {
+              "url": "https://registry.npmjs.org/@emnapi/wasi-threads/-/wasi-threads-2.2.0.tgz",
+              "type": "distribution",
+              "hashes": [
+                {
+                  "alg": "SHA-512",
+                  "content": "24fece607dfc43bfa9c9301ed78ada6472d020aec10ca6ddc238be5e2de971dffa424258407dd25f8c2ee84a651ab1895917a9a0dcde75f9b41b707d6787bd47"
+                }
+              ],
+              "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+            }
+          ],
+          "properties": [
+            {
+              "name": "cdx:npm:package:development",
+              "value": "true"
+            },
+            {
+              "name": "cdx:npm:package:path",
+              "value": "node_modules/@rolldown/binding-wasm32-wasi/node_modules/@emnapi/wasi-threads"
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "binding-win32-arm64-msvc",
+      "group": "@rolldown",
+      "version": "1.2.19",
+      "bom-ref": "stackiq@1.0.0|@rolldown/binding-win32-arm64-msvc@1.2.19",
+      "scope": "optional",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:npm/%40rolldown/binding-win32-arm64-msvc@1.2.19",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/@rolldown/binding-win32-arm64-msvc/-/binding-win32-arm64-msvc-1.2.19.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "dd0d5883543bb44bc15a865fe6b16f1bf18a6503e0c1faeefa9e3005a8c37c9141b344870a92fef9d7d38d6f60c8029dd53ed9a4862f75a51ac7b3dafc884555"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -6432,8 +6794,8 @@
       "type": "library",
       "name": "binding-win32-x64-msvc",
       "group": "@rolldown",
-      "version": "1.2.6",
-      "bom-ref": "stackiq@1.0.0|@rolldown/binding-win32-x64-msvc@1.2.6",
+      "version": "1.2.19",
+      "bom-ref": "stackiq@1.0.0|@rolldown/binding-win32-x64-msvc@1.2.19",
       "scope": "optional",
       "licenses": [
         {
@@ -6442,15 +6804,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/%40rolldown/binding-win32-x64-msvc@1.2.6",
+      "purl": "pkg:npm/%40rolldown/binding-win32-x64-msvc@1.2.19",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/@rolldown/binding-win32-x64-msvc/-/binding-win32-x64-msvc-1.2.6.tgz",
+          "url": "https://registry.npmjs.org/@rolldown/binding-win32-x64-msvc/-/binding-win32-x64-msvc-1.2.19.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "9e9f226522df5e5003e245a18b2abfbb462df28643b5143c9468506825e8dab977eca363794d068c9bb0af83f7a1e67ef9139fa1fb0a341a91e4b4cef1a5f259"
+              "content": "cbfb2a45173a77b8440b33857399f72d27aa72d988a7d98c8d8d4aab8b35e2e2cf77f2d9e33ee2d73ad6e9f32da7698f7ae4080b87ba50b31cc10ccca26a906a"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -6888,6 +7250,45 @@
         {
           "name": "cdx:npm:package:path",
           "value": "node_modules/@tokenizer/token"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "wasm-util",
+      "group": "@tybys",
+      "version": "0.10.3",
+      "bom-ref": "stackiq@1.0.0|@tybys/wasm-util@0.10.3",
+      "scope": "optional",
+      "licenses": [
+        {
+          "license": {
+            "id": "MIT"
+          }
+        }
+      ],
+      "purl": "pkg:npm/%40tybys/wasm-util@0.10.3",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/@tybys/wasm-util/-/wasm-util-0.10.3.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "1777e8d4c62b44960bdf3111d0e50e9a4bad8ebd55a76de6eceb12829ee7ab848fe8ea97e82ff9e971483c09796eddf3681463996ed21b3deeffa2f016961c3a"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/@tybys/wasm-util"
         }
       ]
     },
@@ -10502,8 +10903,8 @@
     {
       "type": "library",
       "name": "brace-expansion",
-      "version": "5.0.9",
-      "bom-ref": "stackiq@1.0.0|brace-expansion@5.0.9",
+      "version": "5.0.13",
+      "bom-ref": "stackiq@1.0.0|brace-expansion@5.0.13",
       "licenses": [
         {
           "license": {
@@ -10511,15 +10912,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/brace-expansion@5.0.9",
+      "purl": "pkg:npm/brace-expansion@5.0.13",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.9.tgz",
+          "url": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-5.0.13.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "49c43822ebc8105d533253fb66dfaf8c9ffff7394f6f64837315b13376e4f2ceade8619d27b28ed5d09c4e274e3c929e3d6df42c4ff6713ef00b23e1a3dfd6c6"
+              "content": "561ddd9856dce3065ea31eccf48ff42fd19f15df374aee3ec82724fce17d1a2fcffdd0079f4453ed7e0af51ee030d3210dc9370ef851e905ec9d07638e0c0dbd"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -13841,22 +14242,22 @@
     {
       "type": "library",
       "name": "dompurify",
-      "version": "3.4.14",
-      "bom-ref": "stackiq@1.0.0|dompurify@3.4.14",
+      "version": "3.4.17",
+      "bom-ref": "stackiq@1.0.0|dompurify@3.4.17",
       "licenses": [
         {
           "expression": "(MPL-2.0 OR Apache-2.0)"
         }
       ],
-      "purl": "pkg:npm/dompurify@3.4.14",
+      "purl": "pkg:npm/dompurify@3.4.17",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/dompurify/-/dompurify-3.4.14.tgz",
+          "url": "https://registry.npmjs.org/dompurify/-/dompurify-3.4.17.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "755a07f73f8c63e0bd22296018293761f16a8cb8b77c2866d8e88a24cce1e9ac6b279ab0c6a59a65a9a0987ae9bf6d8237f29d6d926e1841a07d0a0bd342d376"
+              "content": "07fa52958547439f24a88483ff20e3b89d727f3237e26d60178940a1dd9bc1246188de0ae429771fc01fee1a81d8f9932fdd75b5d12e7679d79f9167851a33d3"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -15492,8 +15893,8 @@
     {
       "type": "library",
       "name": "fast-uri",
-      "version": "3.1.6",
-      "bom-ref": "stackiq@1.0.0|fast-uri@3.1.6",
+      "version": "3.1.9",
+      "bom-ref": "stackiq@1.0.0|fast-uri@3.1.9",
       "licenses": [
         {
           "license": {
@@ -15501,15 +15902,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/fast-uri@3.1.6",
+      "purl": "pkg:npm/fast-uri@3.1.9",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/fast-uri/-/fast-uri-3.1.6.tgz",
+          "url": "https://registry.npmjs.org/fast-uri/-/fast-uri-3.1.9.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "ec871a975bc510caf4a276d5cc40c8ade336d88e24856f9fcf240fc2f005581a758b076c852651b0be238d1bcf1bd24fd6e8aa30746da3e614e91dbf0b30f3e5"
+              "content": "852ff45addd86b4e37a0a5ecd2c231acca4a4084d784c2c8ad500a2978b8828cc60bdbfb6115959d7219ce334f4ced3633d05dc4b096a8ad7245780dce257225"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -16043,8 +16444,8 @@
     {
       "type": "library",
       "name": "follow-redirects",
-      "version": "1.16.0",
-      "bom-ref": "stackiq@1.0.0|follow-redirects@1.16.0",
+      "version": "1.16.3",
+      "bom-ref": "stackiq@1.0.0|follow-redirects@1.16.3",
       "licenses": [
         {
           "license": {
@@ -16052,15 +16453,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/follow-redirects@1.16.0",
+      "purl": "pkg:npm/follow-redirects@1.16.3",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.16.0.tgz",
+          "url": "https://registry.npmjs.org/follow-redirects/-/follow-redirects-1.16.3.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "cb9acdfee3ac69d153fc97d8c21c514b947b41c7be837cc6f7bf89aed159942f64957fd6e610fb8a22f349c2389d9a944bb0cd51d84f830e3123c5b62ee5e553"
+              "content": "b68392a2a37a779d568dfd5a38525872856fd5a343f6b8ff0b08cb534573e34a03b92a560dac8278a7b82692f934bd16745be838e088dc1468ebd1da8636d1d4"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -22225,8 +22626,8 @@
     {
       "type": "library",
       "name": "nanoid",
-      "version": "3.3.18",
-      "bom-ref": "stackiq@1.0.0|nanoid@3.3.18",
+      "version": "3.3.20",
+      "bom-ref": "stackiq@1.0.0|nanoid@3.3.20",
       "licenses": [
         {
           "license": {
@@ -22234,15 +22635,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/nanoid@3.3.18",
+      "purl": "pkg:npm/nanoid@3.3.20",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.18.tgz",
+          "url": "https://registry.npmjs.org/nanoid/-/nanoid-3.3.20.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "0d38383096c631691f8ba55915d36ddbf71a31b432e0ebbe3a9fe1250bc611672755fa00d5003ec7344a033c3d8c3ebe19538e798aff98872e0d276e83a17afb"
+              "content": "b8a760d86dc63422909fd6f260ea716c6aab4f67c63b9291b7927ff1bde9a24f2b4faab119617a871332262118b407fe155c98b83f6145a0ea5f9b8f15827865"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -24433,8 +24834,8 @@
     {
       "type": "library",
       "name": "postcss",
-      "version": "8.5.26",
-      "bom-ref": "stackiq@1.0.0|postcss@8.5.26",
+      "version": "8.5.32",
+      "bom-ref": "stackiq@1.0.0|postcss@8.5.32",
       "licenses": [
         {
           "license": {
@@ -24442,15 +24843,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/postcss@8.5.26",
+      "purl": "pkg:npm/postcss@8.5.32",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/postcss/-/postcss-8.5.26.tgz",
+          "url": "https://registry.npmjs.org/postcss/-/postcss-8.5.32.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "bbcd8def82c5cc6f1c6be743f29b8f9e99535e8187e1f4cfa551ae21bb77e86deabcd964bdf0f49440194b16a5cb7297f134bf2f503582c0849af2a605c55b91"
+              "content": "2c994a08201414a3ae6718a951d630d4dcc821312c3dc832386f4b92f449bee2a3fdb4736ee458d00457bcbd29586a6c66f9fc8e4bbe2cc7a9d9e534b1e1e9f2"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -26077,8 +26478,8 @@
     {
       "type": "library",
       "name": "rolldown",
-      "version": "1.2.6",
-      "bom-ref": "stackiq@1.0.0|rolldown@1.2.6",
+      "version": "1.2.19",
+      "bom-ref": "stackiq@1.0.0|rolldown@1.2.19",
       "licenses": [
         {
           "license": {
@@ -26086,15 +26487,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/rolldown@1.2.6",
+      "purl": "pkg:npm/rolldown@1.2.19",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/rolldown/-/rolldown-1.2.6.tgz",
+          "url": "https://registry.npmjs.org/rolldown/-/rolldown-1.2.19.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "bcc338ab76a2c5fe3a1a21752a893c8c33c5b04a578055868d41d7364347366f98d9a757006d9d6d7f758e4b62de2d1946c3a57266eecc0cf5a6839b4870a650"
+              "content": "408895d49f5dd29ccde2379e4c7e2c8cfcb4019e9c032d9c1b41317a8135f94f11be3fa1477818928931d186de50d1a566a890249daeb5c1137b4a0a5f0cecb8"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -26994,8 +27395,8 @@
     {
       "type": "library",
       "name": "source-map-js",
-      "version": "1.2.1",
-      "bom-ref": "stackiq@1.0.0|source-map-js@1.2.1",
+      "version": "1.2.2",
+      "bom-ref": "stackiq@1.0.0|source-map-js@1.2.2",
       "licenses": [
         {
           "license": {
@@ -27003,15 +27404,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/source-map-js@1.2.1",
+      "purl": "pkg:npm/source-map-js@1.2.2",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.1.tgz",
+          "url": "https://registry.npmjs.org/source-map-js/-/source-map-js-1.2.2.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "51758c2a12cec1529bef6f0852d40f5f17d853ebac7726ed52b2bff2e184f0240cbeb84ea70bf30c1c23d108522fb31073bbc8b084811bc550f3e203431a5f40"
+              "content": "2868fff18e37c77e5a6550edb7e27898ad61a0b18750b3187d290e0c93508cd0c2de85b53ea3e8c4cc28d292d4b1633f5041b338dfcdc5e1f2c047cd5cd3f757"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -29133,6 +29534,44 @@
     },
     {
       "type": "library",
+      "name": "tslib",
+      "version": "2.8.1",
+      "bom-ref": "stackiq@1.0.0|tslib@2.8.1",
+      "scope": "optional",
+      "licenses": [
+        {
+          "license": {
+            "id": "0BSD"
+          }
+        }
+      ],
+      "purl": "pkg:npm/tslib@2.8.1",
+      "externalReferences": [
+        {
+          "url": "https://registry.npmjs.org/tslib/-/tslib-2.8.1.tgz",
+          "type": "distribution",
+          "hashes": [
+            {
+              "alg": "SHA-512",
+              "content": "a0916ef781d06fe29576e49440bef09e99aa9df98bb0e03f9c087a6fa107d30084a0ad3f98f79753a737c0a0d5f373243ae1cf447b525ca294f7d2016b34bfdb"
+            }
+          ],
+          "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
+        }
+      ],
+      "properties": [
+        {
+          "name": "cdx:npm:package:development",
+          "value": "true"
+        },
+        {
+          "name": "cdx:npm:package:path",
+          "value": "node_modules/tslib"
+        }
+      ]
+    },
+    {
+      "type": "library",
       "name": "tty-browserify",
       "version": "0.0.1",
       "bom-ref": "stackiq@1.0.0|tty-browserify@0.0.1",
@@ -30076,8 +30515,8 @@
     {
       "type": "library",
       "name": "vite",
-      "version": "8.2.2",
-      "bom-ref": "stackiq@1.0.0|vite@8.2.2",
+      "version": "8.3.8",
+      "bom-ref": "stackiq@1.0.0|vite@8.3.8",
       "licenses": [
         {
           "license": {
@@ -30085,15 +30524,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/vite@8.2.2",
+      "purl": "pkg:npm/vite@8.3.8",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/vite/-/vite-8.2.2.tgz",
+          "url": "https://registry.npmjs.org/vite/-/vite-8.3.8.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "70528b57f3d18005252119b95a332327cea3adfb73a6a7201fe52cf834bc988dc20cd887df45a1af3f2e1cbdfe30e2cf020a9b30102a59d00702984e00cfb3fd"
+              "content": "2f33a7de1f6b1bfd2f84b757ad5e3227840503d784a2a0a5f98c7e90625deda07dc3a9df3605472926302cf6541ebcf86466beb7e9178d5f62b6f7070cb428b8"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -30986,8 +31425,8 @@
         {
           "type": "library",
           "name": "brace-expansion",
-          "version": "2.1.4",
-          "bom-ref": "stackiq@1.0.0|webdav@5.10.0|brace-expansion@2.1.4",
+          "version": "2.1.8",
+          "bom-ref": "stackiq@1.0.0|webdav@5.10.0|brace-expansion@2.1.8",
           "licenses": [
             {
               "license": {
@@ -30995,15 +31434,15 @@
               }
             }
           ],
-          "purl": "pkg:npm/brace-expansion@2.1.4",
+          "purl": "pkg:npm/brace-expansion@2.1.8",
           "externalReferences": [
             {
-              "url": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.1.4.tgz",
+              "url": "https://registry.npmjs.org/brace-expansion/-/brace-expansion-2.1.8.tgz",
               "type": "distribution",
               "hashes": [
                 {
                   "alg": "SHA-512",
-                  "content": "8467d5ccfc6d85b7f7fb6ca383f441b3ad1c074161a814bfcef755ff8c27e3f0663746cd30c1cf73857f05b1627aa7f54ca0061801e76387928da8c29747f65e"
+                  "content": "067943cc3610a29953b194af3e2f3a08dce66dc6f4ed7f2e7d1f1f935ce2bda8842655c9922ab5310c830959a559cb166e3e9a597a879ebc307af6eb9bf49a8a"
                 }
               ],
               "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
@@ -31594,8 +32033,8 @@
     {
       "type": "library",
       "name": "zod",
-      "version": "4.6.5",
-      "bom-ref": "stackiq@1.0.0|zod@4.6.5",
+      "version": "4.6.7",
+      "bom-ref": "stackiq@1.0.0|zod@4.6.7",
       "licenses": [
         {
           "license": {
@@ -31603,15 +32042,15 @@
           }
         }
       ],
-      "purl": "pkg:npm/zod@4.6.5",
+      "purl": "pkg:npm/zod@4.6.7",
       "externalReferences": [
         {
-          "url": "https://registry.npmjs.org/zod/-/zod-4.6.5.tgz",
+          "url": "https://registry.npmjs.org/zod/-/zod-4.6.7.tgz",
           "type": "distribution",
           "hashes": [
             {
               "alg": "SHA-512",
-              "content": "bf997f6855d941e6a2e1ac0b6cea52a0779c13d52232b9dfc7be6d1172e33689d754047143998e7a2a538d1394721b3350d0aa9c4fa1a8032e8d1b111ecbadd9"
+              "content": "83c5b60f6914e9af2e9ed734e777d7d6e5412b333bcaa0315bfdf3c24f37fba472176f9228eb95f9cd30043854c335753da19aa66647fab99c5333dffb7086c2"
             }
           ],
           "comment": "as detected from npm-ls property \"resolved\" and property \"integrity\""
