@@ -1626,14 +1626,14 @@
               {"kind": "object-acl", "permission": "manage"}
             ],
             "subject": {
-              "nl": "Kwetsbaarheid gemeld: {{naam}} ({{cveCode}}, CVSS {{cvssScore}})",
-              "en": "Vulnerability reported: {{naam}} ({{cveCode}}, CVSS {{cvssScore}})"
+              "nl": "Kwetsbaarheid gemeld: {{name}} ({{cveCode}}, CVSS {{cvssScore}})",
+              "en": "Vulnerability reported: {{name}} ({{cveCode}}, CVSS {{cvssScore}})"
             }
           }
         },
         "title": "Vulnerability",
         "description": "Schema voor kwetsbaarheden. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
-        "version": "1.0.20",
+        "version": "1.0.21",
         "omschrijving": "",
         "icon": "ShieldAlertOutline",
         "required": [
@@ -2597,7 +2597,7 @@
         "slug": "usage",
         "title": "Usage",
         "description": "Het gebruik van applicaties, diensten en koppelingen door afnemers",
-        "version": "1.5.3",
+        "version": "1.5.10",
         "omschrijving": "",
         "icon": "Gauge",
         "x-openregister-notifications": {
@@ -2610,8 +2610,8 @@
               {"kind": "object-acl", "permission": "manage"}
             ],
             "subject": {
-              "nl": "Uitfasering nadert: {{contractNummer}} (uit te faseren {{startDatumUitTeFaseren}})",
-              "en": "Phase-out approaching (phase-out date {{startDatumUitTeFaseren}})"
+              "nl": "Uitfasering nadert (uit te faseren {{startDateOutPhasing}})",
+              "en": "Phase-out approaching (phase-out date {{startDateOutPhasing}})"
             }
           }
         },
@@ -3163,14 +3163,14 @@
               {"kind": "object-acl", "permission": "manage"}
             ],
             "subject": {
-              "nl": "Contract verloopt: {{contractNummer}} (einddatum {{eindDatum}})",
-              "en": "Contract expiring: {{contractNummer}} (end date {{eindDatum}})"
+              "nl": "Contract verloopt: {{contractNumber}} (einddatum {{endDate}})",
+              "en": "Contract expiring: {{contractNumber}} (end date {{endDate}})"
             }
           }
         },
         "title": "Contract",
         "description": "Een formele overeenkomst voor het inzetten van een Dienst op een Gebruik. Beschrijft de inkooprelatie achter een Gebruik (welke organisatie welke module onder welke voorwaarden gebruikt): looptijd, kosten, contracttype en status.",
-        "version": "0.1.2",
+        "version": "0.1.5",
         "omschrijving": "",
         "icon": "FileSign",
         "required": [
@@ -3872,14 +3872,14 @@
               {"kind": "groups", "groups": ["software-catalog-admins"]}
             ],
             "subject": {
-              "nl": "Nieuwe beoordeling: {{naam}} (waardering {{waardering}})",
-              "en": "New review: {{naam}} (rating {{waardering}})"
+              "nl": "Nieuwe beoordeling: {{name}} (waardering {{rating}})",
+              "en": "New review: {{name}} (rating {{rating}})"
             }
           }
         },
         "title": "Assessment",
         "description": "Schema voor beoordelingen en waarderingen van applicaties en diensten. Dit schema is onderdeel van het vastgestelde datamodel maar wordt niet daadwerkelijk in de applicatie gebruikt.",
-        "version": "0.1.3",
+        "version": "0.1.4",
         "omschrijving": "",
         "icon": "Star",
         "required": [
@@ -6385,14 +6385,14 @@
               {"kind": "object-acl", "permission": "manage"}
             ],
             "subject": {
-              "nl": "DPIA-beoordeling verlopen: {{naam}} (uiterlijk {{dpiaVolgendeBeoordeling}})",
-              "en": "DPIA review overdue: {{naam}} (due {{dpiaVolgendeBeoordeling}})"
+              "nl": "DPIA-beoordeling verlopen: {{name}} (uiterlijk {{dpiaNextAssessment}})",
+              "en": "DPIA review overdue: {{name}} (due {{dpiaNextAssessment}})"
             }
           }
         },
         "title": "Application",
         "description": "Een applicatie is een softwarecomponent (applicatie of systeemsoftware)",
-        "version": "0.3.4",
+        "version": "0.3.12",
         "omschrijving": "",
         "icon": "Package",
         "required": [
@@ -7244,8 +7244,8 @@
               {"kind": "groups", "groups": ["software-catalog-admins"]}
             ],
             "subject": {
-              "nl": "Nieuwe moduleversie: {{versie}}",
-              "en": "New module version: {{versie}}"
+              "nl": "Nieuwe moduleversie: {{version}}",
+              "en": "New module version: {{version}}"
             }
           },
           "eol-approaching": {
@@ -7257,14 +7257,14 @@
               {"kind": "object-acl", "permission": "manage"}
             ],
             "subject": {
-              "nl": "Einde ondersteuning nadert: {{versie}} (einddatum {{datumEindeOndersteuning}})",
-              "en": "End of support approaching: {{versie}} (end date {{datumEindeOndersteuning}})"
+              "nl": "Einde ondersteuning nadert: {{version}} (einddatum {{dateEndSupport}})",
+              "en": "End of support approaching: {{version}} (end date {{dateEndSupport}})"
             }
           }
         },
         "title": "Application version",
         "description": "Schema voor applicatieversies",
-        "version": "0.1.5",
+        "version": "0.1.7",
         "omschrijving": "",
         "icon": "ViewModule",
         "required": [],
