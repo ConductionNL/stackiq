@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -8,12 +9,13 @@
  * @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#3.5
  */
 
+import { describe, expect, it, vi } from 'vitest'
 import {
 	getSourceLanguage,
 	languageName,
 	shouldShowTranslationBadge,
 	translationBadge,
-} from './translationBadge.js'
+} from '../../src/utils/translationBadge.js'
 
 describe('translationBadge.languageName', () => {
 	it('maps known codes to English names', () => {
@@ -94,7 +96,7 @@ describe('translationBadge.translationBadge', () => {
 	})
 
 	it('uses the provided translate function and interpolates the language', () => {
-		const t = jest.fn((app, text, vars) =>
+		const t = vi.fn((app, text, vars) =>
 			text.replace('{language}', vars.language),
 		)
 		const badge = translationBadge({ sourceLanguage: 'nl' }, 'en')

@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -9,6 +10,7 @@
  */
 
 import { getLanguage } from '@nextcloud/l10n'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 import {
 	buildObjectUrl,
 	buildWriteHeaders,
@@ -17,10 +19,10 @@ import {
 	resolveLanguage,
 	setActiveOrganisationUuid,
 	withLanguageParam,
-} from './orClient.js'
+} from '../../src/composables/orClient.js'
 
-jest.mock('@nextcloud/l10n', () => ({
-	getLanguage: jest.fn(() => 'nl_NL'),
+vi.mock('@nextcloud/l10n', () => ({
+	getLanguage: vi.fn(() => 'nl_NL'),
 }))
 
 describe('orClient.resolveLanguage', () => {

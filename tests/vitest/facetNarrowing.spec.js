@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -8,6 +9,7 @@
  *
  * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facets-combine-with-free-text-search
  */
+import { describe, expect, it } from 'vitest'
 import {
 	FACET_NO_MATCH_SENTINEL,
 	facetNarrowingFilter,

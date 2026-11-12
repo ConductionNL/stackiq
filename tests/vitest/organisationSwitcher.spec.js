@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -8,11 +9,12 @@
  * @spec openspec/specs/multi-org-membership/spec.md#requirement-switching-the-active-organisation-must-be-verified-against-server-side-membership-never-a-client-supplied-claim-req-001
  */
 
+import { describe, expect, it } from 'vitest'
 import {
 	resolveActiveOrganisationName,
 	resolveOtherOrganisations,
 	resolveSwitchError,
-} from './organisationSwitcher.js'
+} from '../../src/components/organisations/organisationSwitcher.js'
 
 describe('organisationSwitcher.resolveActiveOrganisationName', () => {
 	const organisations = [

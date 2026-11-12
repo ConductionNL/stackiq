@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * SPDX-License-Identifier: EUPL-1.2
  * SPDX-FileCopyrightText: 2026 Conduction B.V.
@@ -10,32 +11,31 @@
 
 import axios from '@nextcloud/axios'
 import { flushPromises, mount, shallowMount } from '@vue/test-utils'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import { h } from 'vue'
-import CmdbImport from './CmdbImport.vue'
-import CmdbImportMapping from './CmdbImportMapping.vue'
+import CmdbImport from '../../src/views/settings/sections/CmdbImport.vue'
+import CmdbImportMapping from '../../src/views/settings/sections/CmdbImportMapping.vue'
 
-// Virtual: the package's `exports` field declares only the `import` condition, which jest does not resolve.
-jest.mock(
+vi.mock(
 	'@nextcloud/axios',
 	() => ({
 		__esModule: true,
-		default: { get: jest.fn(), post: jest.fn() },
+		default: { get: vi.fn(), post: vi.fn() },
 	}),
-	{ virtual: true },
 )
-jest.mock('@nextcloud/router', () => ({
+vi.mock('@nextcloud/router', () => ({
 	generateUrl: (url, params = {}) =>
 		url.replace(/{(\w+)}/g, (match, key) => String(params[key] ?? match)),
 	generateOcsUrl: (url) => url,
 }))
-// The component libraries are stubbed; virtual for the same `exports` reason.
+// The component libraries are stubbed.
 // shallowMount replaces them with empty stubs. The ones below also render what
 // the tests that mount the section for real (`mountFull`) need to see: the
 // slots, the radio's value and the table's cell slots.
-jest.mock(
+vi.mock(
 	'@nextcloud/vue',
-	() => {
-		const { h } = require('vue')
+	async () => {
+		const { h } = await import('vue')
 		const withSlot = {
 			render() {
 				return h('div', this.$slots.default?.())
@@ -83,12 +83,11 @@ jest.mock(
 			NcSelect: { render: () => null },
 		}
 	},
-	{ virtual: true },
 )
-jest.mock(
+vi.mock(
 	'@conduction/nextcloud-vue',
-	() => {
-		const { h } = require('vue')
+	async () => {
+		const { h } = await import('vue')
 		return {
 			// One element per row, with the cell slots the section fills.
 			CnDataTable: {
@@ -112,30 +111,21 @@ jest.mock(
 			CnStatusBadge: { render: () => null },
 		}
 	},
-	{ virtual: true },
 )
-// The icon SFCs live in node_modules, which jest does not transform.
-jest.mock('vue-material-design-icons/Close.vue', () => ({ render: () => null }))
-jest.mock('vue-material-design-icons/DatabaseImport.vue', () => ({
-	render: () => null,
-}))
-jest.mock('vue-material-design-icons/TrayArrowUp.vue', () => ({
-	render: () => null,
-}))
-jest.mock('vue-material-design-icons/ChevronDown.vue', () => ({
-	render: () => null,
-}))
-jest.mock('vue-material-design-icons/ChevronUp.vue', () => ({
-	render: () => null,
-}))
-jest.mock('vue-material-design-icons/OpenInNew.vue', () => ({
-	render: () => null,
-}))
-jest.mock('../../../components/AlwaysVisibleSection.vue', () => {
-	const { h } = require('vue')
+// The icon SFCs are stubbed.
+vi.mock('vue-material-design-icons/Close.vue', () => ({ default: { render: () => null } }))
+vi.mock('vue-material-design-icons/DatabaseImport.vue', () => ({ default: { render: () => null } }))
+vi.mock('vue-material-design-icons/TrayArrowUp.vue', () => ({ default: { render: () => null } }))
+vi.mock('vue-material-design-icons/ChevronDown.vue', () => ({ default: { render: () => null } }))
+vi.mock('vue-material-design-icons/ChevronUp.vue', () => ({ default: { render: () => null } }))
+vi.mock('vue-material-design-icons/OpenInNew.vue', () => ({ default: { render: () => null } }))
+vi.mock('../../src/components/AlwaysVisibleSection.vue', async () => {
+	const { h } = await import('vue')
 	return {
-		render() {
-			return h('div', this.$slots.default?.())
+		default: {
+			render() {
+				return h('div', this.$slots.default?.())
+			},
 		},
 	}
 })
@@ -205,7 +195,7 @@ async function mountFull() {
 
 describe('CmdbImport municipality chooser', () => {
 	afterEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	it('does not offer a merged or an inactive municipality', async () => {
@@ -267,7 +257,7 @@ function mountWithSlots() {
 
 describe('CmdbImport sheet names in the help texts', () => {
 	afterEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	const SHIPPED = ['Onbeh Applicaties CMDB', 'Beheerde Applicaties CMDB']
@@ -422,7 +412,7 @@ describe('CmdbImport sheet names in the help texts', () => {
  */
 describe('CmdbImport applications missing from the export', () => {
 	afterEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	it('archives by default and posts the choice the admin made', async () => {
@@ -480,7 +470,7 @@ describe('CmdbImport applications missing from the export', () => {
  */
 describe('CmdbImport cancelling', () => {
 	afterEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	it('says after Cancel that the comparison of the applications stops before the next application', async () => {
@@ -528,7 +518,7 @@ describe('CmdbImport cancelling', () => {
  */
 describe('CmdbImport finished announcement', () => {
 	afterEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	it('names the archived and deleted applications in the sentence the live region announces', async () => {
@@ -588,7 +578,7 @@ describe('CmdbImport finished announcement', () => {
  */
 describe('CmdbImport the choice for missing applications, as the admin makes it', () => {
 	afterEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	const radio = (wrapper, which) =>
@@ -673,7 +663,7 @@ describe('CmdbImport the choice for missing applications, as the admin makes it'
  */
 describe('CmdbImport report rows of archived and deleted applications', () => {
 	afterEach(() => {
-		jest.clearAllMocks()
+		vi.clearAllMocks()
 	})
 
 	const reconciliationRow = (outcome, extra = {}) => ({

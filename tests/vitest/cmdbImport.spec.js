@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 // SPDX-License-Identifier: EUPL-1.2
 // SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
 
@@ -9,6 +10,7 @@
  * @spec openspec/changes/cmdb-export-import/specs/cmdb-export-import/spec.md#requirement-the-admin-settings-shall-offer-a-cmdb-import-section-req-cmdb-014
  */
 
+import { describe, expect, it, vi } from 'vitest'
 import {
 	buildImportForm,
 	cancelCmdbImport,
@@ -34,7 +36,17 @@ import {
 	sheetsReadText,
 	sortReportRows,
 	typedMunicipalityOption,
-} from './cmdbImport.js'
+} from '../../src/utils/cmdbImport.js'
+
+vi.mock('@nextcloud/l10n', () => {
+	const fill = (app, text, vars = {}) => String(text).replace(/{(\w+)}/g, (match, key) => (key in vars ? String(vars[key]) : match))
+	return { t: fill, translate: fill, n: (app, one, many, count, vars) => fill(app, count === 1 ? one : many, { count, ...vars }), getLanguage: () => 'en' }
+})
+
+vi.mock('@nextcloud/router', () => ({
+	generateUrl: (url, params = {}) => '/index.php' + url.replace(/{(\w+)}/g, (match, key) => (key in params ? encodeURIComponent(String(params[key])) : match)),
+	generateOcsUrl: (url) => '/ocs/v2.php' + url,
+}))
 
 /** The operation ids CmdbImportController accepts. */
 const SERVER_OPERATION_ID = /^cmdb-[A-Za-z0-9-]{8,64}$/
@@ -258,7 +270,7 @@ describe('the endpoints', () => {
 	})
 
 	it('posts a cancel to the route of the operation', async () => {
-		const post = jest.fn().mockResolvedValue({ data: { cancelled: true } })
+		const post = vi.fn().mockResolvedValue({ data: { cancelled: true } })
 		await expect(
 			cancelCmdbImport({ operationId: 'cmdb-abcdefgh', http: { post } }),
 		).resolves.toEqual({ cancelled: true })
@@ -639,7 +651,7 @@ describe('followInterruptedImport', () => {
 	const report = { summary: { rowsRead: 2 }, rows: [], cancelled: false }
 
 	it('returns the report a completed operation kept', async () => {
-		const get = jest.fn().mockResolvedValue({
+		const get = vi.fn().mockResolvedValue({
 			data: { progress: { status: 'completed', statistics: { report } } },
 		})
 		const outcome = await followInterruptedImport({
@@ -653,7 +665,7 @@ describe('followInterruptedImport', () => {
 	})
 
 	it('waits while the operation runs, then returns its report', async () => {
-		const get = jest
+		const get = vi
 			.fn()
 			.mockResolvedValueOnce({
 				data: { progress: { status: 'running', processed_items: 1 } },
@@ -661,7 +673,7 @@ describe('followInterruptedImport', () => {
 			.mockResolvedValueOnce({
 				data: { progress: { status: 'cancelled', statistics: { report } } },
 			})
-		const wait = jest.fn().mockResolvedValue()
+		const wait = vi.fn().mockResolvedValue()
 		const seen = []
 		const outcome = await followInterruptedImport({
 			operationId: 'cmdb-abcdefgh',
@@ -675,7 +687,7 @@ describe('followInterruptedImport', () => {
 	})
 
 	it('reports a failed operation as failed', async () => {
-		const get = jest
+		const get = vi
 			.fn()
 			.mockResolvedValue({ data: { progress: { status: 'failed' } } })
 		await expect(
@@ -684,7 +696,7 @@ describe('followInterruptedImport', () => {
 	})
 
 	it('does not know the outcome when the operation cannot be found', async () => {
-		const get = jest
+		const get = vi
 			.fn()
 			.mockRejectedValue(httpError(404, { error: 'OPERATION_NOT_FOUND' }))
 		await expect(
@@ -693,14 +705,14 @@ describe('followInterruptedImport', () => {
 	})
 
 	it('says when the progress cannot be read either', async () => {
-		const get = jest.fn().mockRejectedValue({ message: 'Network Error' })
+		const get = vi.fn().mockRejectedValue({ message: 'Network Error' })
 		await expect(
 			followInterruptedImport({ operationId: 'cmdb-abcdefgh', http: { get } }),
 		).resolves.toEqual({ state: 'unreachable' })
 	})
 
 	it('stops waiting for a running import after the timeout', async () => {
-		const get = jest
+		const get = vi
 			.fn()
 			.mockResolvedValue({ data: { progress: { status: 'running' } } })
 		const outcome = await followInterruptedImport({
@@ -715,7 +727,7 @@ describe('followInterruptedImport', () => {
 	})
 
 	it('stops waiting when the page is left', async () => {
-		const get = jest
+		const get = vi
 			.fn()
 			.mockResolvedValue({ data: { progress: { status: 'running' } } })
 		const outcome = await followInterruptedImport({
