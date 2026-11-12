@@ -1,6 +1,7 @@
 OC.L10N.register(
     "stackiq",
     {
+        "Marketplace": "Marketplace",
         "Licence metric": "Licence metric",
         "What one licence covers, as the contract with the supplier states it.": "What one licence covers, as the contract with the supplier states it.",
         "Licences bought": "Licences bought",

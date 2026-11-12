@@ -282,7 +282,7 @@ OC.L10N.register(
         "Reports": "Rapports",
         "Pick a report to open it.": "Choisissez un rapport pour l'ouvrir.",
         "Overlapping and ageing software across the portfolio.": "Logiciels redondants et vieillissants dans le portefeuille.",
-        "Store": "Boutique",
+        "Marketplace": "Boutique",
         "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Installez des registres, schémas et flux publiés par d'autres organisations."
     },
     "nplurals=2; plural=(n != 1);"

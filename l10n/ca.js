@@ -282,7 +282,7 @@ OC.L10N.register(
         "Reports": "Informes",
         "Pick a report to open it.": "Trieu un informe per obrir-lo.",
         "Overlapping and ageing software across the portfolio.": "Programari solapat i antic a la cartera.",
-        "Store": "Botiga",
+        "Marketplace": "Botiga",
         "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current.": "Instal·leu registres, esquemes i fluxos publicats per altres organitzacions."
     },
     "nplurals=2; plural=(n != 1);"
