@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Test stub for OCA\OpenRegister\Service\Object\BulkSaveOptions.
+ * Test stub for OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions.
  *
  * Mirrors the constructor of OpenRegister's value object (openregister #9108),
  * so tests can assert what a saveObjects() call asks for.
@@ -14,7 +14,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\OpenRegister\Service\Object;
+namespace OCA\OpenRegister\Kernel\Contracts\Value;
 
 /**
  * Stub of the options of one bulk save: defaults, validation, events and audit.
