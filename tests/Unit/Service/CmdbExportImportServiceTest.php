@@ -36,6 +36,7 @@ require_once __DIR__ . '/../Support/FakeMigrationPackService.php';
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCA\OpenRegister\Service\Object\ObjectStateRequest;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportPackMarker;
@@ -604,9 +605,10 @@ class CmdbExportImportServiceTest extends TestCase {
 			}
 		);
 		$service->method('deleteObject')->willReturnCallback(
-			function (string $uuid, $register = null, $schema = null, bool $_rbac = true, bool $_multitenancy = true): bool {
+			function (ObjectDeletion $deletion, bool $_rbac = true, bool $_multitenancy = true): bool {
 				$this->noteScope(method: 'deleteObject', rbac: $_rbac, multitenancy: $_multitenancy);
-				$this->deletes[] = [$uuid, $schema];
+				$uuid = $deletion->uuid;
+				$this->deletes[] = [$uuid, $deletion->target->schema];
 				if ($this->deleteRefusedFor === $uuid) {
 					return false;
 				}

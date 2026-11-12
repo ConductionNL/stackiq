@@ -25,6 +25,7 @@ namespace OCA\Stackiq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -1453,7 +1454,7 @@ class AangebodenGebruikService {
 			$objectService->setSchema($existingGebruik->getSchema());
 
 			$deleteResult = $objectService->deleteObject(
-				uuid: $gebruikId,
+				deletion: new ObjectDeletion(uuid: $gebruikId),
 				_rbac: false,
 				// Disable RBAC to allow cross-organisation deletion.
 				_multitenancy: false

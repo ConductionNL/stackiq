@@ -27,6 +27,7 @@ namespace OCA\Stackiq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -510,7 +511,7 @@ class AanbodService {
 			$objectService->setSchema(schema: $existingAanbod->getSchema());
 
 			$deleteResult = $objectService->deleteObject(
-				uuid: $aanbodId,
+				deletion: new ObjectDeletion(uuid: $aanbodId),
 				_rbac: false,
 				_multitenancy: false
 			);
