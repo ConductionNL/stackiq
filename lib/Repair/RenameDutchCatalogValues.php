@@ -176,23 +176,46 @@ class RenameDutchCatalogValues implements IRepairStep {
 
 		$updated = 0;
 		foreach ($tables as $table) {
-			$planned = $this->decisions->plannedRewrites(
-				valueMap: self::VALUE_MAP,
-				columns: $this->columnsOf(table: $table)
-			);
-
-			foreach ($planned as $job) {
-				$updated += $this->rewrite(
-					table: $table,
-					column: $job['column'],
-					old: $job['old'],
-					new: $job['new']
-				);
-			}
+			$updated += $this->translateTable(table: $table);
 		}
 
 		$output->info(sprintf('RenameDutchCatalogValues: %d row value(s) translated.', $updated));
 	}//end run()
+
+	/**
+	 * Rewrite every planned value in one shard table.
+	 *
+	 * @param string $table Shard table.
+	 *
+	 * @return int Rows affected.
+	 */
+	private function translateTable(string $table): int {
+		$updated = 0;
+		foreach ($this->plannedRewritesFor(table: $table) as $job) {
+			$updated += $this->rewrite(
+				table: $table,
+				column: $job['column'],
+				old: $job['old'],
+				new: $job['new']
+			);
+		}
+
+		return $updated;
+	}//end translateTable()
+
+	/**
+	 * The value rewrites planned for the columns one table actually has.
+	 *
+	 * @param string $table Shard table.
+	 *
+	 * @return array<int, array{column: string, old: string, new: string}>
+	 */
+	private function plannedRewritesFor(string $table): array {
+		return $this->decisions->plannedRewrites(
+			valueMap: self::VALUE_MAP,
+			columns: $this->columnsOf(table: $table)
+		);
+	}//end plannedRewritesFor()
 
 	/**
 	 * Rewrite one value in one column.
@@ -231,12 +254,7 @@ class RenameDutchCatalogValues implements IRepairStep {
 	 */
 	private function shardTables(): array {
 		try {
-			$stmt = $this->db->prepare(
-				'SELECT table_name FROM information_schema.tables WHERE table_name LIKE :pattern'
-			);
-			$stmt->bindValue('pattern', '%openregister\_table\_%');
-			$stmt->execute();
-			$rows = $stmt->fetchAll();
+			$rows = $this->listShardTables();
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'RenameDutchCatalogValues: could not list tables; skipping.',
@@ -249,6 +267,20 @@ class RenameDutchCatalogValues implements IRepairStep {
 	}//end shardTables()
 
 	/**
+	 * List the tables carrying the `openregister_table_` marker.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function listShardTables(): array {
+		$stmt = $this->db->prepare(
+			'SELECT table_name FROM information_schema.tables WHERE table_name LIKE :pattern'
+		);
+		$stmt->bindValue('pattern', '%openregister\_table\_%');
+		$stmt->execute();
+		return $stmt->fetchAll();
+	}//end listShardTables()
+
+	/**
 	 * Read a table's column names.
 	 *
 	 * @param string $table Table name.
@@ -257,12 +289,7 @@ class RenameDutchCatalogValues implements IRepairStep {
 	 */
 	private function columnsOf(string $table): array {
 		try {
-			$stmt = $this->db->prepare(
-				'SELECT column_name FROM information_schema.columns WHERE table_name = :table'
-			);
-			$stmt->bindValue('table', $table);
-			$stmt->execute();
-			$rows = $stmt->fetchAll();
+			$rows = $this->listColumns(table: $table);
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'RenameDutchCatalogValues: could not read columns; skipping table.',
@@ -273,6 +300,22 @@ class RenameDutchCatalogValues implements IRepairStep {
 
 		return array_map(static fn (array $r): string => (string)$r['column_name'], $rows);
 	}//end columnsOf()
+
+	/**
+	 * List the column rows of one table.
+	 *
+	 * @param string $table Table name.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function listColumns(string $table): array {
+		$stmt = $this->db->prepare(
+			'SELECT column_name FROM information_schema.columns WHERE table_name = :table'
+		);
+		$stmt->bindValue('table', $table);
+		$stmt->execute();
+		return $stmt->fetchAll();
+	}//end listColumns()
 
 	/**
 	 * Quote an identifier for the active platform.
