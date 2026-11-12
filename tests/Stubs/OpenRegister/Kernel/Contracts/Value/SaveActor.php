@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Test stub for OCA\OpenRegister\Service\Object\SaveActor.
+ * Test stub for OCA\OpenRegister\Kernel\Contracts\Value\SaveActor.
  *
  * Mirrors OpenRegister's value object (openregister #9123): who one save runs as.
  *
@@ -13,7 +13,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\OpenRegister\Service\Object;
+namespace OCA\OpenRegister\Kernel\Contracts\Value;
 
 use OCP\IUser;
 

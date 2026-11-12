@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Test stub for OCA\OpenRegister\Service\Object\ObjectSaveOptions.
+ * Test stub for OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions.
  *
  * Mirrors the constructor of OpenRegister's value object (openregister #9123),
  * so tests can assert what a saveObject() call asks for.
@@ -14,7 +14,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\OpenRegister\Service\Object;
+namespace OCA\OpenRegister\Kernel\Contracts\Value;
 
 /**
  * Stub of the options of one save: target, uuid, extend, files, policy and actor.

@@ -21,8 +21,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Stackiq;
 
-use OCA\OpenRegister\Service\Object\ObjectFindTarget;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use OCP\IGroup;
 use OCP\IGroupManager;

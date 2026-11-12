@@ -18,8 +18,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Stackiq;
 
-use OCA\OpenRegister\Service\Object\ObjectFindTarget;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\OrganisationSlug;
 use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\App\IAppManager;

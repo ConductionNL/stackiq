@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Test stub for OCA\OpenRegister\Service\Object\SavePolicy.
+ * Test stub for OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy.
  *
  * Mirrors OpenRegister's value object (openregister #9123): how one save runs.
  *
@@ -13,7 +13,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\OpenRegister\Service\Object;
+namespace OCA\OpenRegister\Kernel\Contracts\Value;
 
 /**
  * Stub of the save policy: events, validation, insert-only and duplicate override.

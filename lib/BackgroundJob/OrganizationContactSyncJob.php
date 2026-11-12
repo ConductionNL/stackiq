@@ -19,8 +19,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\BackgroundJob;
 
-use OCA\OpenRegister\Service\Object\ObjectFindTarget;
-use OCA\OpenRegister\Service\Object\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\SettingsService;
