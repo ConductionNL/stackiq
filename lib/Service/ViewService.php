@@ -74,6 +74,17 @@ class ViewService {
 	private const CACHE_TTL = 1800;
 
 	/**
+	 * The module fields that can hold referentiecomponent relationships, in lookup order.
+	 */
+	private const REFERENCE_COMPONENT_FIELDS = [
+		'referentiecomponenten',
+		'referenceComponents',
+		'relatedComponents',
+		'components',
+		'relationships',
+	];
+
+	/**
 	 * Constructor for ViewService
 	 *
 	 * @param IAppConfig $config Nextcloud app configuration service
@@ -440,76 +451,120 @@ class ViewService {
 	 * @return array Array of enriched view nodes.
 	 */
 	private function enrichViewNodes(array $viewNodes, array $options): array {
-		$enrichedNodes = [];
-
 		// Get enrichment data upfront if requested.
-		$productsData = [];
-		$modulesData = [];
-		$gebruikData = [];
-		$deelnamesGebruikData = [];
+		$enrichers = $this->nodeEnrichers(data: $this->enrichmentData(options: $options));
 
-		if ($this->shouldIncludeProducts(options: $options) === true) {
-			$productsData = $this->getProductsData();
-		}
-
-		if ($this->shouldIncludeModules(options: $options) === true) {
-			$modulesData = $this->getModulesData();
-		}
-
-		if ($this->shouldIncludeGebruik(options: $options) === true) {
-			$gebruikData = $this->getGebruikData();
-		}
-
-		if ($this->shouldIncludeDeelnamesGebruik(options: $options) === true) {
-			$deelnamesGebruikData = $this->getDeelnamesGebruikData();
-		}
-
-		// Deduplicate: owned gebruik takes precedence over deelnames for the same elementRef.
-		if (empty($gebruikData) === false && empty($deelnamesGebruikData) === false) {
-			$deelnamesGebruikData = array_diff_key($deelnamesGebruikData, $gebruikData);
-		}
-
+		$enrichedNodes = [];
 		foreach ($viewNodes as $node) {
-			$enrichedNode = $node;
-
-			// Apply enrichments based on the node's modelNodeId (element reference).
-			$modelNodeId = $node['modelNodeId'] ?? null;
-
-			if ($modelNodeId !== null) {
-				if ($this->shouldIncludeProducts(options: $options) === true) {
-					$enrichedNode['products'] = $this->getNodeProducts(
-						modelNodeId: $modelNodeId,
-						productsData: $productsData
-					);
-				}
-
-				if ($this->shouldIncludeModules(options: $options) === true) {
-					$enrichedNode['modules'] = $this->getNodeModules(
-						modelNodeId: $modelNodeId,
-						modulesData: $modulesData
-					);
-				}
-
-				if ($this->shouldIncludeGebruik(options: $options) === true) {
-					$enrichedNode['usage'] = $this->getNodeGebruik(
-						modelNodeId: $modelNodeId,
-						gebruikData: $gebruikData
-					);
-				}
-
-				if ($this->shouldIncludeDeelnamesGebruik(options: $options) === true) {
-					$enrichedNode['deelnamesGebruik'] = $this->getNodeDeelnamesGebruik(
-						modelNodeId: $modelNodeId,
-						deelnamesGebruikData: $deelnamesGebruikData
-					);
-				}
-			}//end if
-
-			$enrichedNodes[] = $enrichedNode;
-		}//end foreach
+			$enrichedNodes[] = $this->enrichViewNode(node: $node, enrichers: $enrichers);
+		}
 
 		return $enrichedNodes;
 	}//end enrichViewNodes()
+
+	/**
+	 * Load the data of every requested enrichment, keyed by the node field it fills.
+	 *
+	 * @param array $options Enrichment options.
+	 *
+	 * @return array The requested enrichment data, in products, modules, usage, deelnames order.
+	 */
+	private function enrichmentData(array $options): array {
+		return array_merge(
+			$this->catalogueEnrichmentData(options: $options),
+			$this->usageEnrichmentData(options: $options)
+		);
+	}//end enrichmentData()
+
+	/**
+	 * Load the products and modules data when requested.
+	 *
+	 * @param array $options Enrichment options.
+	 *
+	 * @return array The products and modules data, keyed by node field.
+	 */
+	private function catalogueEnrichmentData(array $options): array {
+		$data = [];
+		if ($this->shouldIncludeProducts(options: $options) === true) {
+			$data['products'] = $this->getProductsData();
+		}
+
+		if ($this->shouldIncludeModules(options: $options) === true) {
+			$data['modules'] = $this->getModulesData();
+		}
+
+		return $data;
+	}//end catalogueEnrichmentData()
+
+	/**
+	 * Load the owned and deelnames gebruik data when requested.
+	 *
+	 * Owned gebruik takes precedence over deelnames for the same elementRef.
+	 *
+	 * @param array $options Enrichment options.
+	 *
+	 * @return array The usage and deelnames gebruik data, keyed by node field.
+	 */
+	private function usageEnrichmentData(array $options): array {
+		$data = [];
+		if ($this->shouldIncludeGebruik(options: $options) === true) {
+			$data['usage'] = $this->getGebruikData();
+		}
+
+		if ($this->shouldIncludeDeelnamesGebruik(options: $options) === true) {
+			$data['deelnamesGebruik'] = $this->getDeelnamesGebruikData();
+		}
+
+		// Deduplicate: owned gebruik takes precedence over deelnames for the same elementRef.
+		if (empty($data['usage'] ?? []) === false && empty($data['deelnamesGebruik'] ?? []) === false) {
+			$data['deelnamesGebruik'] = array_diff_key($data['deelnamesGebruik'], $data['usage']);
+		}
+
+		return $data;
+	}//end usageEnrichmentData()
+
+	/**
+	 * Build one node enricher per loaded enrichment, keyed by the node field it fills.
+	 *
+	 * @param array $data The loaded enrichment data, keyed by node field.
+	 *
+	 * @return array<string, callable> The enrichers, in products, modules, usage, deelnames order.
+	 */
+	private function nodeEnrichers(array $data): array {
+		$enrichers = [
+			'products' => fn ($id): array => $this->getNodeProducts(modelNodeId: $id, productsData: $data['products']),
+			'modules' => fn ($id): array => $this->getNodeModules(modelNodeId: $id, modulesData: $data['modules']),
+			'usage' => fn ($id): array => $this->getNodeGebruik(modelNodeId: $id, gebruikData: $data['usage']),
+			'deelnamesGebruik' => fn ($id): array => $this->getNodeDeelnamesGebruik(
+				modelNodeId: $id,
+				deelnamesGebruikData: $data['deelnamesGebruik']
+			),
+		];
+
+		return array_intersect_key($enrichers, $data);
+	}//end nodeEnrichers()
+
+	/**
+	 * Apply every enricher to a node that references a model element.
+	 *
+	 * @param array $node The view node.
+	 * @param array<string, callable> $enrichers The node enrichers, keyed by node field.
+	 *
+	 * @return array The enriched node; a node without modelNodeId is returned as is.
+	 */
+	private function enrichViewNode(array $node, array $enrichers): array {
+		// Apply enrichments based on the node's modelNodeId (element reference).
+		$modelNodeId = $node['modelNodeId'] ?? null;
+		if ($modelNodeId === null) {
+			return $node;
+		}
+
+		foreach ($enrichers as $field => $enricher) {
+			$node[$field] = $enricher($modelNodeId);
+		}
+
+		return $node;
+	}//end enrichViewNode()
 
 	/**
 	 * Check if products should be included in enrichment.
@@ -1180,53 +1235,98 @@ class ViewService {
 		// Get modules data for expansion.
 		$modulesData = $this->getModulesData();
 
-		foreach ($views as &$view) {
-			if (isset($view['viewNodes']) === false || is_array(value: $view['viewNodes']) === false) {
-				continue;
-			}
-
-			$originalNodes = $view['viewNodes'];
-			$expandedNodes = $originalNodes;
-
-			// Create a lookup of existing nodes by modelNodeId for quick parent matching.
-			$nodesByModelId = [];
-			foreach ($originalNodes as $node) {
-				$modelNodeId = $node['modelNodeId'] ?? null;
-				if ($modelNodeId !== null) {
-					$nodesByModelId[$modelNodeId] = $node;
-				}
-			}
-
-			// Process each module for expansion.
-			foreach ($modulesData as $elementRef => $module) {
-				$expandedNodes = $this->expandModuleToNodes(
-					module: $module,
-					existingNodes: $expandedNodes,
-					nodesByModelId: $nodesByModelId
-				);
-			}
-
-			// Update the view with expanded nodes.
-			$view['viewNodes'] = $expandedNodes;
-
-			$addedNodesCount = count($expandedNodes) - count($originalNodes);
-			if ($addedNodesCount > 0) {
-				$this->logger->debug(
-					'Added module nodes to view',
-					[
-						'view_id' => $view['id'] ?? 'unknown',
-						'original_nodes' => count($originalNodes),
-						'expanded_nodes' => count($expandedNodes),
-						'added_nodes' => $addedNodesCount,
-					]
-				);
-			}
-		}//end foreach
-
-		// Clean up reference.
-		unset($view);
-		return $views;
+		return array_map(
+			fn (array $view): array => $this->expandViewModules(view: $view, modulesData: $modulesData),
+			$views
+		);
 	}//end expandModulesToViewNodes()
+
+	/**
+	 * Add a child node for every module linked to a referentiecomponent node of one view.
+	 *
+	 * @param array $view The view.
+	 * @param array $modulesData Modules data indexed by elementRef.
+	 *
+	 * @return array The view with expanded module nodes; a view without a node list is returned as is.
+	 */
+	private function expandViewModules(array $view, array $modulesData): array {
+		if (isset($view['viewNodes']) === false || is_array(value: $view['viewNodes']) === false) {
+			return $view;
+		}
+
+		$originalNodes = $view['viewNodes'];
+
+		// Update the view with expanded nodes.
+		$view['viewNodes'] = $this->expandNodesWithModules(nodes: $originalNodes, modulesData: $modulesData);
+		$this->logAddedModuleNodes(view: $view, originalNodes: $originalNodes);
+		return $view;
+	}//end expandViewModules()
+
+	/**
+	 * Append a node for every module under its referentiecomponent nodes.
+	 *
+	 * @param array $nodes The view nodes before the expansion.
+	 * @param array $modulesData Modules data indexed by elementRef.
+	 *
+	 * @return array The nodes followed by the added module nodes.
+	 */
+	private function expandNodesWithModules(array $nodes, array $modulesData): array {
+		$expandedNodes = $nodes;
+		$nodesByModelId = $this->nodesByModelId(nodes: $nodes);
+
+		// Process each module for expansion.
+		foreach ($modulesData as $module) {
+			$expandedNodes = $this->expandModuleToNodes(
+				module: $module,
+				existingNodes: $expandedNodes,
+				nodesByModelId: $nodesByModelId
+			);
+		}
+
+		return $expandedNodes;
+	}//end expandNodesWithModules()
+
+	/**
+	 * Create a lookup of existing nodes by modelNodeId for quick parent matching.
+	 *
+	 * @param array $nodes The view nodes.
+	 *
+	 * @return array The nodes indexed by modelNodeId.
+	 */
+	private function nodesByModelId(array $nodes): array {
+		$nodesByModelId = [];
+		foreach ($nodes as $node) {
+			$modelNodeId = $node['modelNodeId'] ?? null;
+			if ($modelNodeId !== null) {
+				$nodesByModelId[$modelNodeId] = $node;
+			}
+		}
+
+		return $nodesByModelId;
+	}//end nodesByModelId()
+
+	/**
+	 * Log how many module nodes were added to a view, when any were.
+	 *
+	 * @param array $view The expanded view.
+	 * @param array $originalNodes The view nodes before the expansion.
+	 *
+	 * @return void
+	 */
+	private function logAddedModuleNodes(array $view, array $originalNodes): void {
+		$addedNodesCount = count($view['viewNodes']) - count($originalNodes);
+		if ($addedNodesCount > 0) {
+			$this->logger->debug(
+				'Added module nodes to view',
+				[
+					'view_id' => $view['id'] ?? 'unknown',
+					'original_nodes' => count($originalNodes),
+					'expanded_nodes' => count($view['viewNodes']),
+					'added_nodes' => $addedNodesCount,
+				]
+			);
+		}
+	}//end logAddedModuleNodes()
 
 	/**
 	 * Expand a single module to nodes based on its referentiecomponent relationships.
@@ -1282,38 +1382,60 @@ class ViewService {
 		$referenceComponents = [];
 
 		// Look for referentiecomponent relationships in various possible locations.
-		$possibleFields = [
-			'referentiecomponenten',
-			'referenceComponents',
-			'relatedComponents',
-			'components',
-			'relationships',
-		];
-
-		foreach ($possibleFields as $field) {
+		foreach (self::REFERENCE_COMPONENT_FIELDS as $field) {
 			if (isset($module[$field]) === true) {
-				$value = $module[$field];
-
-				if (is_array(value: $value) === true) {
-					// Handle array of components.
-					foreach ($value as $component) {
-						if (is_string(value: $component) === true) {
-							$referenceComponents[] = $component;
-						} elseif (is_array(value: $component) === true && isset($component['id']) === true) {
-							$referenceComponents[] = $component['id'];
-						} elseif (is_array(value: $component) === true && isset($component['identifier']) === true) {
-							$referenceComponents[] = $component['identifier'];
-						}
-					}
-				} elseif (is_string(value: $value) === true) {
-					// Handle single component ID.
-					$referenceComponents[] = $value;
-				}
+				$fieldIds = $this->referenceComponentIds(value: $module[$field]);
+				$referenceComponents = array_merge($referenceComponents, $fieldIds);
 			}
-		}//end foreach
+		}
 
 		return array_unique($referenceComponents);
 	}//end extractReferentieComponenten()
+
+	/**
+	 * Read the referentiecomponent ids of one module field.
+	 *
+	 * @param mixed $value A single component id or a list of components.
+	 *
+	 * @return array The component ids, in list order.
+	 */
+	private function referenceComponentIds(mixed $value): array {
+		if (is_string(value: $value) === true) {
+			// Handle single component ID.
+			return [$value];
+		}
+
+		if (is_array(value: $value) === false) {
+			return [];
+		}
+
+		// Handle array of components.
+		$ids = array_map(
+			fn ($component): mixed => $this->referenceComponentId(component: $component),
+			$value
+		);
+
+		return array_values(array_filter($ids, static fn ($id): bool => $id !== null));
+	}//end referenceComponentIds()
+
+	/**
+	 * Read the id of one component: the string itself, or its id or identifier.
+	 *
+	 * @param mixed $component A component id or component data.
+	 *
+	 * @return mixed The component id, or null when it has none.
+	 */
+	private function referenceComponentId(mixed $component): mixed {
+		if (is_string(value: $component) === true) {
+			return $component;
+		}
+
+		if (is_array(value: $component) === false) {
+			return null;
+		}
+
+		return $component['id'] ?? $component['identifier'] ?? null;
+	}//end referenceComponentId()
 
 	/**
 	 * Create a module node as child of a referentiecomponent node.
@@ -1644,35 +1766,37 @@ class ViewService {
 			$transformedView['documentation'] = $view['xml']['documentation'];
 		}
 
+		return $this->transformXmlSections(view: $transformedView);
+	}//end transformView()
+
+	/**
+	 * Transform the XML properties, viewNodes and viewRelationships that are lists.
+	 *
+	 * @param array $view View object to transform.
+	 *
+	 * @return array The view with the critical API fields of each XML section.
+	 */
+	private function transformXmlSections(array $view): array {
 		// Transform properties from XML to required API format.
-		$hasProperties = isset($view['xml']['properties']['property']) === true
-			&& is_array(value: $view['xml']['properties']['property']) === true;
-		if ($hasProperties === true) {
-			$transformedView['properties'] = $this->transformViewProperties(
-				properties: $view['xml']['properties']['property']
-			);
+		$properties = $view['xml']['properties']['property'] ?? null;
+		if (is_array(value: $properties) === true) {
+			$view['properties'] = $this->transformViewProperties(properties: $properties);
 		}
 
 		// Transform viewNodes to include critical fields.
-		$hasViewNodes = isset($view['xml']['viewNodes']) === true
-			&& is_array(value: $view['xml']['viewNodes']) === true;
-		if ($hasViewNodes === true) {
-			$transformedView['viewNodes'] = $this->transformViewNodes(
-				viewNodes: $view['xml']['viewNodes']
-			);
+		$viewNodes = $view['xml']['viewNodes'] ?? null;
+		if (is_array(value: $viewNodes) === true) {
+			$view['viewNodes'] = $this->transformViewNodes(viewNodes: $viewNodes);
 		}
 
 		// Transform viewRelationships to include critical fields.
-		$hasRelationships = isset($view['xml']['viewRelationships']) === true
-			&& is_array(value: $view['xml']['viewRelationships']) === true;
-		if ($hasRelationships === true) {
-			$transformedView['viewRelationships'] = $this->transformViewRelationships(
-				viewRelationships: $view['xml']['viewRelationships']
-			);
+		$relationships = $view['xml']['viewRelationships'] ?? null;
+		if (is_array(value: $relationships) === true) {
+			$view['viewRelationships'] = $this->transformViewRelationships(viewRelationships: $relationships);
 		}
 
-		return $transformedView;
-	}//end transformView()
+		return $view;
+	}//end transformXmlSections()
 
 	/**
 	 * Transform view properties to required API format.
