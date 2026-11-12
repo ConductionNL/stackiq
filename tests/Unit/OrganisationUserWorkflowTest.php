@@ -13,6 +13,9 @@ declare(strict_types=1);
  * @link     https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/contactpersonen-api/spec.md
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Stackiq\Tests\Unit;
@@ -21,12 +24,17 @@ require_once __DIR__ . '/Support/SaveCallShape.php';
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Db\Organisation;
+use OCA\OpenRegister\Db\OrganisationMapper;
+use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Controller\ContactpersonenController;
+use OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard;
 use OCA\Stackiq\Service\ContactpersoonService;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Tests\Unit\Support\SaveCallShape;
+use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUser;
@@ -47,6 +55,8 @@ class OrganisationUserWorkflowTest extends TestCase {
 	private const CONTACT = 'c0000000-0000-4000-8000-000000000001';
 
 	private const ORGANISATION = 'o0000000-0000-4000-8000-000000000001';
+
+	private const OTHER_ORGANISATION = 'o0000000-0000-4000-8000-000000000002';
 
 	/**
 	 * The object access.
@@ -91,6 +101,32 @@ class OrganisationUserWorkflowTest extends TestCase {
 		$session       = $this->createMock(IUserSession::class);
 		$session->method('getUser')->willReturn($this->user(uid: 'caller'));
 
+		$mapper = $this->createMock(OrganisationMapper::class);
+		$mapper->method('findByUuid')->willReturnCallback(
+			static function (string $uuid): Organisation {
+				$members = [
+					self::ORGANISATION       => ['caller'],
+					self::OTHER_ORGANISATION => ['someone'],
+				];
+				if (isset($members[$uuid]) === false) {
+					throw new DoesNotExistException('no organisation');
+				}
+
+				$organisation = new Organisation();
+				$organisation->setUuid($uuid);
+				$organisation->setUsers($members[$uuid]);
+				return $organisation;
+			}
+		);
+		$guard = new ContactPersonOrganisationGuard(
+			$session,
+			$this->groups,
+			$this->createMock(IUserManager::class),
+			$mapper,
+			$this->createMock(ObjectService::class),
+			$this->createMock(SettingsService::class)
+		);
+
 		$this->controller = new ContactpersonenController(
 			'stackiq',
 			$this->createMock(IRequest::class),
@@ -104,6 +140,7 @@ class OrganisationUserWorkflowTest extends TestCase {
 			$this->createMock(LoggerInterface::class),
 			objectService: $this->objects,
 			organisationService: $this->createMock(OrganisationService::class),
+			organisationGuard: $guard,
 		);
 	}//end setUp()
 
@@ -242,6 +279,48 @@ class OrganisationUserWorkflowTest extends TestCase {
 
 		self::assertSame(500, $this->controller->convertToUser(self::CONTACT)->getStatus());
 	}//end testNoAccountMeansNothingIsLinkedOrSaved()
+
+	/**
+	 * An organisation administrator converts a contact person of their own organisation.
+	 *
+	 * @return void
+	 */
+	public function testAnOrganisationAdministratorConvertsAContactOfTheOwnOrganisation(): void {
+		$this->callerIsOrganisationAdministrator();
+		$contact = $this->contact(data: ['email' => 'jan@example.org', 'organization' => self::ORGANISATION]);
+		$this->objects->method('find')->willReturn($contact);
+		$this->objects->method('saveObject')->willReturn($contact);
+		$this->handler->expects($this->once())->method('createUserAccount')->willReturn($this->user(uid: 'jan'));
+
+		self::assertSame(200, $this->controller->convertToUser(self::CONTACT)->getStatus());
+	}//end testAnOrganisationAdministratorConvertsAContactOfTheOwnOrganisation()
+
+	/**
+	 * An organisation administrator cannot convert a contact person that names another organisation.
+	 *
+	 * @return void
+	 */
+	public function testAnOrganisationAdministratorCannotConvertAContactOfAnotherOrganisation(): void {
+		$this->callerIsOrganisationAdministrator();
+		$this->objects->method('find')->willReturn($this->contact(data: ['email' => 'jan@example.org', 'organization' => self::OTHER_ORGANISATION]));
+		$this->handler->expects($this->never())->method('createUserAccount');
+		$this->handler->expects($this->never())->method('addUserToOrganizationEntity');
+		$this->objects->expects($this->never())->method('saveObject');
+
+		self::assertSame(403, $this->controller->convertToUser(self::CONTACT)->getStatus());
+	}//end testAnOrganisationAdministratorCannotConvertAContactOfAnotherOrganisation()
+
+	/**
+	 * The caller is an organisation administrator, not an instance administrator.
+	 *
+	 * @return void
+	 */
+	private function callerIsOrganisationAdministrator(): void {
+		$this->groups->method('isAdmin')->willReturn(false);
+		$this->groups->method('isInGroup')->willReturnCallback(
+			static fn (string $uid, string $group): bool => $uid === 'caller' && $group === 'gebruik-beheerder'
+		);
+	}//end callerIsOrganisationAdministrator()
 
 	/**
 	 * The caller is an administrator; the check is asked about the caller.

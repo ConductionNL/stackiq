@@ -15,6 +15,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -72,6 +75,17 @@ class ViewService {
 	 * Cache TTL in seconds (30 minutes).
 	 */
 	private const CACHE_TTL = 1800;
+
+	/**
+	 * The module fields that can hold referentiecomponent relationships, in lookup order.
+	 */
+	private const REFERENCE_COMPONENT_FIELDS = [
+		'referentiecomponenten',
+		'referenceComponents',
+		'relatedComponents',
+		'components',
+		'relationships',
+	];
 
 	/**
 	 * Constructor for ViewService
@@ -440,76 +454,120 @@ class ViewService {
 	 * @return array Array of enriched view nodes.
 	 */
 	private function enrichViewNodes(array $viewNodes, array $options): array {
-		$enrichedNodes = [];
-
 		// Get enrichment data upfront if requested.
-		$productsData = [];
-		$modulesData = [];
-		$gebruikData = [];
-		$deelnamesGebruikData = [];
+		$enrichers = $this->nodeEnrichers(data: $this->enrichmentData(options: $options));
 
-		if ($this->shouldIncludeProducts(options: $options) === true) {
-			$productsData = $this->getProductsData();
-		}
-
-		if ($this->shouldIncludeModules(options: $options) === true) {
-			$modulesData = $this->getModulesData();
-		}
-
-		if ($this->shouldIncludeGebruik(options: $options) === true) {
-			$gebruikData = $this->getGebruikData();
-		}
-
-		if ($this->shouldIncludeDeelnamesGebruik(options: $options) === true) {
-			$deelnamesGebruikData = $this->getDeelnamesGebruikData();
-		}
-
-		// Deduplicate: owned gebruik takes precedence over deelnames for the same elementRef.
-		if (empty($gebruikData) === false && empty($deelnamesGebruikData) === false) {
-			$deelnamesGebruikData = array_diff_key($deelnamesGebruikData, $gebruikData);
-		}
-
+		$enrichedNodes = [];
 		foreach ($viewNodes as $node) {
-			$enrichedNode = $node;
-
-			// Apply enrichments based on the node's modelNodeId (element reference).
-			$modelNodeId = $node['modelNodeId'] ?? null;
-
-			if ($modelNodeId !== null) {
-				if ($this->shouldIncludeProducts(options: $options) === true) {
-					$enrichedNode['products'] = $this->getNodeProducts(
-						modelNodeId: $modelNodeId,
-						productsData: $productsData
-					);
-				}
-
-				if ($this->shouldIncludeModules(options: $options) === true) {
-					$enrichedNode['modules'] = $this->getNodeModules(
-						modelNodeId: $modelNodeId,
-						modulesData: $modulesData
-					);
-				}
-
-				if ($this->shouldIncludeGebruik(options: $options) === true) {
-					$enrichedNode['usage'] = $this->getNodeGebruik(
-						modelNodeId: $modelNodeId,
-						gebruikData: $gebruikData
-					);
-				}
-
-				if ($this->shouldIncludeDeelnamesGebruik(options: $options) === true) {
-					$enrichedNode['deelnamesGebruik'] = $this->getNodeDeelnamesGebruik(
-						modelNodeId: $modelNodeId,
-						deelnamesGebruikData: $deelnamesGebruikData
-					);
-				}
-			}//end if
-
-			$enrichedNodes[] = $enrichedNode;
-		}//end foreach
+			$enrichedNodes[] = $this->enrichViewNode(node: $node, enrichers: $enrichers);
+		}
 
 		return $enrichedNodes;
 	}//end enrichViewNodes()
+
+	/**
+	 * Load the data of every requested enrichment, keyed by the node field it fills.
+	 *
+	 * @param array $options Enrichment options.
+	 *
+	 * @return array The requested enrichment data, in products, modules, usage, deelnames order.
+	 */
+	private function enrichmentData(array $options): array {
+		return array_merge(
+			$this->catalogueEnrichmentData(options: $options),
+			$this->usageEnrichmentData(options: $options)
+		);
+	}//end enrichmentData()
+
+	/**
+	 * Load the products and modules data when requested.
+	 *
+	 * @param array $options Enrichment options.
+	 *
+	 * @return array The products and modules data, keyed by node field.
+	 */
+	private function catalogueEnrichmentData(array $options): array {
+		$data = [];
+		if ($this->shouldIncludeProducts(options: $options) === true) {
+			$data['products'] = $this->getProductsData();
+		}
+
+		if ($this->shouldIncludeModules(options: $options) === true) {
+			$data['modules'] = $this->getModulesData();
+		}
+
+		return $data;
+	}//end catalogueEnrichmentData()
+
+	/**
+	 * Load the owned and deelnames gebruik data when requested.
+	 *
+	 * Owned gebruik takes precedence over deelnames for the same elementRef.
+	 *
+	 * @param array $options Enrichment options.
+	 *
+	 * @return array The usage and deelnames gebruik data, keyed by node field.
+	 */
+	private function usageEnrichmentData(array $options): array {
+		$data = [];
+		if ($this->shouldIncludeGebruik(options: $options) === true) {
+			$data['usage'] = $this->getGebruikData();
+		}
+
+		if ($this->shouldIncludeDeelnamesGebruik(options: $options) === true) {
+			$data['deelnamesGebruik'] = $this->getDeelnamesGebruikData();
+		}
+
+		// Deduplicate: owned gebruik takes precedence over deelnames for the same elementRef.
+		if (empty($data['usage'] ?? []) === false && empty($data['deelnamesGebruik'] ?? []) === false) {
+			$data['deelnamesGebruik'] = array_diff_key($data['deelnamesGebruik'], $data['usage']);
+		}
+
+		return $data;
+	}//end usageEnrichmentData()
+
+	/**
+	 * Build one node enricher per loaded enrichment, keyed by the node field it fills.
+	 *
+	 * @param array $data The loaded enrichment data, keyed by node field.
+	 *
+	 * @return array<string, callable> The enrichers, in products, modules, usage, deelnames order.
+	 */
+	private function nodeEnrichers(array $data): array {
+		$enrichers = [
+			'products' => fn ($id): array => $this->getNodeProducts(modelNodeId: $id, productsData: $data['products']),
+			'modules' => fn ($id): array => $this->getNodeModules(modelNodeId: $id, modulesData: $data['modules']),
+			'usage' => fn ($id): array => $this->getNodeGebruik(modelNodeId: $id, gebruikData: $data['usage']),
+			'deelnamesGebruik' => fn ($id): array => $this->getNodeDeelnamesGebruik(
+				modelNodeId: $id,
+				deelnamesGebruikData: $data['deelnamesGebruik']
+			),
+		];
+
+		return array_intersect_key($enrichers, $data);
+	}//end nodeEnrichers()
+
+	/**
+	 * Apply every enricher to a node that references a model element.
+	 *
+	 * @param array $node The view node.
+	 * @param array<string, callable> $enrichers The node enrichers, keyed by node field.
+	 *
+	 * @return array The enriched node; a node without modelNodeId is returned as is.
+	 */
+	private function enrichViewNode(array $node, array $enrichers): array {
+		// Apply enrichments based on the node's modelNodeId (element reference).
+		$modelNodeId = $node['modelNodeId'] ?? null;
+		if ($modelNodeId === null) {
+			return $node;
+		}
+
+		foreach ($enrichers as $field => $enricher) {
+			$node[$field] = $enricher($modelNodeId);
+		}
+
+		return $node;
+	}//end enrichViewNode()
 
 	/**
 	 * Check if products should be included in enrichment.
@@ -602,70 +660,143 @@ class ViewService {
 		$this->logger->debug('Getting products data for enrichment');
 
 		try {
-			$objectService = $this->getObjectService();
-			if ($objectService === null) {
-				return [];
-			}
-
-			// Use voorzieningen config for the correct dienst register and schema.
-			$voorzConfig = $this->settingsService->getVoorzieningenConfig();
-			$registerId = $voorzConfig['register'] ?? null;
-			$dienstSchemaId = $voorzConfig['dienst_schema'] ?? null;
-
-			if ($registerId === null || $dienstSchemaId === null || $dienstSchemaId === '') {
-				$this->logger->warning(message: 'Voorzieningen register or dienst schema not configured for products');
-				return [];
-			}
-
-			$currentOrg = $this->getCurrentOrganisation();
-
-			$query = [
-				'@self' => [
-					'register' => $registerId,
-					'schema' => $dienstSchemaId,
-				],
-				'_limit' => 500,
-			];
-
-			// Add organisation filter if current organisation is available.
-			if ($currentOrg !== null) {
-				$query['@self']['organisation'] = $currentOrg;
-			}
-
-			$products = $objectService->searchObjects($query);
-
-			$allProducts = [];
-			foreach ($products as $product) {
-				// Additional check for organisation in metadata if not caught by query.
-				$productOrg = $product['@self']['organisation'] ?? null;
-				$hasOrgMismatch = $currentOrg !== null
-					&& isset($product['@self']['organisation']) === true
-					&& $productOrg !== $currentOrg;
-				if ($hasOrgMismatch === true) {
-					continue;
-				}
-
-				// Index by elementRef or identifier for quick lookup.
-				$elementRef = $product['elementRef'] ?? $product['identifier'] ?? null;
-				if ($elementRef !== null) {
-					$allProducts[$elementRef] = $product;
-				}
-			}
-
-			$this->logger->debug(
-				'Total products retrieved for enrichment',
-				['total_products' => count($allProducts)]
-			);
-
-			return $allProducts;
+			return $this->loadProductsData();
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'Failed to get products data',
 				['error' => $e->getMessage()]
 			);
 			return [];
-		}//end try
+		}
 	}//end getProductsData()
+
+	/**
+	 * Load the dienst records of the current organisation, indexed by elementRef.
+	 *
+	 * @return array Products data indexed by elementRef.
+	 */
+	private function loadProductsData(): array {
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			return [];
+		}
+
+		// Use voorzieningen config for the correct dienst register and schema.
+		$target = $this->productTarget();
+		if ($target === null) {
+			return [];
+		}
+
+		$query = $this->withOrganisation(
+			query: ['@self' => $target, '_limit' => 500],
+			currentOrg: $this->getCurrentOrganisation()
+		);
+		return $this->indexProducts(objectService: $objectService, query: $query);
+	}//end loadProductsData()
+
+	/**
+	 * Resolve the register and dienst schema the products are read from.
+	 *
+	 * @return array|null The register and schema, or null when not configured.
+	 */
+	private function productTarget(): ?array {
+		$voorzConfig = $this->settingsService->getVoorzieningenConfig();
+		$registerId = $voorzConfig['register'] ?? null;
+		$dienstSchemaId = $voorzConfig['dienst_schema'] ?? null;
+
+		if ($registerId === null || $dienstSchemaId === null || $dienstSchemaId === '') {
+			$this->logger->warning(message: 'Voorzieningen register or dienst schema not configured for products');
+			return null;
+		}
+
+		return [
+			'register' => $registerId,
+			'schema' => $dienstSchemaId,
+		];
+	}//end productTarget()
+
+	/**
+	 * Search the products and index the ones of the query's organisation.
+	 *
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param array $query The organisation-scoped products query.
+	 *
+	 * @return array Products data indexed by elementRef.
+	 */
+	private function indexProducts(ObjectServiceInterface $objectService, array $query): array {
+		$allProducts = $this->indexByElementRef(
+			rows: $objectService->searchObjects($query),
+			currentOrg: $query['@self']['organisation'] ?? null
+		);
+
+		$this->logger->debug(
+			'Total products retrieved for enrichment',
+			['total_products' => count($allProducts)]
+		);
+
+		return $allProducts;
+	}//end indexProducts()
+
+	/**
+	 * Scope a query to the current organisation when there is one.
+	 *
+	 * @param array $query The OpenRegister search query.
+	 * @param string|null $currentOrg The current organisation uuid.
+	 *
+	 * @return array The query, with the organisation pinned into `@self` when known.
+	 */
+	private function withOrganisation(array $query, ?string $currentOrg): array {
+		if ($currentOrg !== null) {
+			$query['@self']['organisation'] = $currentOrg;
+		}
+
+		return $query;
+	}//end withOrganisation()
+
+	/**
+	 * Index rows by elementRef (or identifier), skipping rows of another organisation.
+	 *
+	 * This is the additional organisation check for rows the query did not
+	 * catch: a row whose `@self.organisation` is set and differs from the
+	 * current organisation is dropped; rows without one are kept. A later row
+	 * with the same reference replaces an earlier one.
+	 *
+	 * @param array $rows The rows returned by OpenRegister.
+	 * @param string|null $currentOrg The current organisation uuid, or null for no filter.
+	 *
+	 * @return array The rows indexed by elementRef.
+	 */
+	private function indexByElementRef(array $rows, ?string $currentOrg): array {
+		$indexed = [];
+		foreach ($rows as $row) {
+			if ($this->belongsToOtherOrganisation(row: $row, currentOrg: $currentOrg) === true) {
+				continue;
+			}
+
+			// Index by elementRef or identifier for quick lookup.
+			$elementRef = $row['elementRef'] ?? $row['identifier'] ?? null;
+			if ($elementRef !== null) {
+				$indexed[$elementRef] = $row;
+			}
+		}
+
+		return $indexed;
+	}//end indexByElementRef()
+
+	/**
+	 * Whether a row is owned by an organisation other than the current one.
+	 *
+	 * @param array $row The OpenRegister row.
+	 * @param string|null $currentOrg The current organisation uuid, or null for no filter.
+	 *
+	 * @return bool True when the row's organisation is set and differs.
+	 */
+	private function belongsToOtherOrganisation(array $row, ?string $currentOrg): bool {
+		$rowOrg = $row['@self']['organisation'] ?? null;
+		return $currentOrg !== null
+			&& isset($row['@self']['organisation']) === true
+			&& $rowOrg !== $currentOrg;
+	}//end belongsToOtherOrganisation()
 
 	/**
 	 * Get current active organisation UUID for filtering.
@@ -709,110 +840,7 @@ class ViewService {
 		$this->logger->debug('Getting modules data for enrichment');
 
 		try {
-			$objectService = $this->getObjectService();
-			if ($objectService === null) {
-				return [];
-			}
-
-			// Get current organisation for filtering.
-			$currentOrg = $this->getCurrentOrganisation();
-
-			// Get configuration for modules register/schema.
-			$amefConfig = $this->settingsService->getAmefConfig();
-			$registerId = $amefConfig['register_id'] ?? null;
-
-			// Fail closed on an unconfigured register. This used to be the one
-			// read of `register_id` with no guard at all: the loop below only
-			// checks the SCHEMA, so an empty register would have been pinned
-			// into `@self` and OpenRegister asked for "any register" — an
-			// unpinned query returns rows, which reads exactly like a correct
-			// result. `empty()` rather than `=== null` because the legacy
-			// config fallback resolves unset ids to `''`, and `'' === null` is
-			// false.
-			if (empty($registerId) === true) {
-				$this->logger->warning(
-					'ViewService: AMEF register is not configured; skipping the module lookup rather than issuing an unpinned query'
-				);
-
-				return [];
-			}
-
-			// Modules could be in various schemas - check common ones.
-			$moduleSchemas = [
-				$amefConfig['module_schema'] ?? null,
-				$amefConfig['component_schema'] ?? null,
-				$amefConfig['element_schema'] ?? null,
-			];
-
-			$allModules = [];
-
-			foreach ($moduleSchemas as $schemaId) {
-				if (empty($schemaId) === true) {
-					continue;
-				}
-
-				try {
-					// Builds a lookup index (O(1) node matching), so this
-					// intentionally fetches "all matching" — bounded at a
-					// documented safe ceiling rather than left unbounded.
-					$query = [
-						'@self' => [
-							'register' => $registerId,
-							'schema' => $schemaId,
-						],
-						'_limit' => 1000,
-					];
-
-					// Add organisation filter if current organisation is available.
-					if ($currentOrg !== null) {
-						$query['@self']['organisation'] = $currentOrg;
-					}
-
-					$modules = $objectService->searchObjects($query);
-
-					foreach ($modules as $module) {
-						// Additional check for organisation in metadata if not caught by query.
-						$moduleOrg = $module['@self']['organisation'] ?? null;
-						$hasOrgMismatch = $currentOrg !== null
-							&& isset($module['@self']['organisation']) === true
-							&& $moduleOrg !== $currentOrg;
-						if ($hasOrgMismatch === true) {
-							continue;
-						}
-
-						// Index by elementRef or identifier for quick lookup.
-						$elementRef = $module['elementRef'] ?? $module['identifier'] ?? null;
-						if ($elementRef !== null) {
-							$allModules[$elementRef] = $module;
-						}
-					}
-
-					$this->logger->debug(
-						'Retrieved modules from schema',
-						[
-							'schema_id' => $schemaId,
-							'modules_count' => count($modules),
-						]
-					);
-				} catch (\Exception $e) {
-					$this->logger->warning(
-						'Failed to get modules from schema',
-						[
-							'schema_id' => $schemaId,
-							'error' => $e->getMessage(),
-						]
-					);
-				}//end try
-			}//end foreach
-
-			$this->logger->debug(
-				'Total modules retrieved for enrichment',
-				[
-					'total_modules' => count($allModules),
-				]
-			);
-
-			return $allModules;
+			return $this->loadModulesData();
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'Failed to get modules data',
@@ -821,8 +849,199 @@ class ViewService {
 				]
 			);
 			return [];
-		}//end try
+		}
 	}//end getModulesData()
+
+	/**
+	 * Load the modules of the current organisation from every module schema.
+	 *
+	 * @return array Modules data indexed by elementRef.
+	 */
+	private function loadModulesData(): array {
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			return [];
+		}
+
+		// Get current organisation for filtering.
+		$currentOrg = $this->getCurrentOrganisation();
+
+		// Get configuration for modules register/schema.
+		$amefConfig = $this->settingsService->getAmefConfig();
+		if ($this->hasModuleRegister(amefConfig: $amefConfig) === false) {
+			return [];
+		}
+
+		$queries = $this->moduleQueries(amefConfig: $amefConfig, currentOrg: $currentOrg);
+		return $this->collectModules(objectService: $objectService, queries: $queries);
+	}//end loadModulesData()
+
+	/**
+	 * Whether the AMEF register the modules live in is configured.
+	 *
+	 * @param array $amefConfig The AMEF configuration.
+	 *
+	 * @return bool True when a register is configured.
+	 */
+	private function hasModuleRegister(array $amefConfig): bool {
+		// Fail closed on an unconfigured register. This used to be the one
+		// read of `register_id` with no guard at all: the loop below only
+		// checks the SCHEMA, so an empty register would have been pinned
+		// into `@self` and OpenRegister asked for "any register" — an
+		// unpinned query returns rows, which reads exactly like a correct
+		// result. `empty()` rather than `=== null` because the legacy
+		// config fallback resolves unset ids to `''`, and `'' === null` is
+		// false.
+		if (empty($amefConfig['register_id'] ?? null) === true) {
+			$this->logger->warning(
+				'ViewService: AMEF register is not configured; skipping the module lookup rather than issuing an unpinned query'
+			);
+
+			return false;
+		}
+
+		return true;
+	}//end hasModuleRegister()
+
+	/**
+	 * Build one organisation-scoped query per configured module schema.
+	 *
+	 * @param array $amefConfig The AMEF configuration.
+	 * @param string|null $currentOrg The current organisation uuid.
+	 *
+	 * @return array<int, array> The queries, in schema order.
+	 */
+	private function moduleQueries(array $amefConfig, ?string $currentOrg): array {
+		$queries = [];
+		foreach ($this->moduleSchemaIds(amefConfig: $amefConfig) as $schemaId) {
+			// Builds a lookup index (O(1) node matching), so this
+			// intentionally fetches "all matching" — bounded at a
+			// documented safe ceiling rather than left unbounded.
+			$query = [
+				'@self' => [
+					'register' => $amefConfig['register_id'],
+					'schema' => $schemaId,
+				],
+				'_limit' => 1000,
+			];
+			$queries[] = $this->withOrganisation(query: $query, currentOrg: $currentOrg);
+		}
+
+		return $queries;
+	}//end moduleQueries()
+
+	/**
+	 * The configured schemas modules can live in, skipping unset ones.
+	 *
+	 * @param array $amefConfig The AMEF configuration.
+	 *
+	 * @return array The schema ids, in lookup order.
+	 */
+	private function moduleSchemaIds(array $amefConfig): array {
+		// Modules could be in various schemas - check common ones.
+		$moduleSchemas = [
+			$amefConfig['module_schema'] ?? null,
+			$amefConfig['component_schema'] ?? null,
+			$amefConfig['element_schema'] ?? null,
+		];
+
+		return array_filter($moduleSchemas, static fn ($schemaId): bool => empty($schemaId) === false);
+	}//end moduleSchemaIds()
+
+	/**
+	 * Run every module query and merge the indexed results in query order.
+	 *
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param array<int, array> $queries The module queries.
+	 *
+	 * @return array Modules data indexed by elementRef.
+	 */
+	private function collectModules(ObjectServiceInterface $objectService, array $queries): array {
+		$allModules = [];
+		foreach ($queries as $query) {
+			$modules = $this->indexModuleSchema(objectService: $objectService, query: $query);
+			$allModules = array_replace($allModules, $modules);
+		}
+
+		$this->logger->debug(
+			'Total modules retrieved for enrichment',
+			[
+				'total_modules' => count($allModules),
+			]
+		);
+
+		return $allModules;
+	}//end collectModules()
+
+	/**
+	 * Search one module schema and index the modules of the query's organisation.
+	 *
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param array $query The module query of one schema.
+	 *
+	 * @return array The modules of that schema indexed by elementRef.
+	 */
+	private function indexModuleSchema(ObjectServiceInterface $objectService, array $query): array {
+		return $this->indexByElementRef(
+			rows: $this->searchModuleSchema(objectService: $objectService, query: $query),
+			currentOrg: $query['@self']['organisation'] ?? null
+		);
+	}//end indexModuleSchema()
+
+	/**
+	 * Search one module schema; a failing schema is logged and yields no modules.
+	 *
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param array $query The module query of one schema.
+	 *
+	 * @return array The modules of that schema.
+	 */
+	private function searchModuleSchema(ObjectServiceInterface $objectService, array $query): array {
+		try {
+			$modules = $objectService->searchObjects($query);
+			$this->logModuleSchemaRead(query: $query, modules: $modules);
+			return $modules;
+		} catch (\Exception $e) {
+			$this->logModuleSchemaFailure(query: $query, error: $e);
+			return [];
+		}
+	}//end searchModuleSchema()
+
+	/**
+	 * Log that one module schema could not be searched.
+	 *
+	 * @param array $query The module query of one schema.
+	 * @param \Exception $error The search failure.
+	 *
+	 * @return void
+	 */
+	private function logModuleSchemaFailure(array $query, \Exception $error): void {
+		$this->logger->warning(
+			'Failed to get modules from schema',
+			[
+				'schema_id' => $query['@self']['schema'],
+				'error' => $error->getMessage(),
+			]
+		);
+	}//end logModuleSchemaFailure()
+
+	/**
+	 * Log how many modules one schema returned.
+	 *
+	 * @param array $query The module query of one schema.
+	 * @param array $modules The modules it returned.
+	 *
+	 * @return void
+	 */
+	private function logModuleSchemaRead(array $query, array $modules): void {
+		$this->logger->debug(
+			'Retrieved modules from schema',
+			[
+				'schema_id' => $query['@self']['schema'],
+				'modules_count' => count($modules),
+			]
+		);
+	}//end logModuleSchemaRead()
 
 	/**
 	 * Get regular owned gebruik data for enrichment based on elementRef linkage.
@@ -1019,53 +1238,98 @@ class ViewService {
 		// Get modules data for expansion.
 		$modulesData = $this->getModulesData();
 
-		foreach ($views as &$view) {
-			if (isset($view['viewNodes']) === false || is_array(value: $view['viewNodes']) === false) {
-				continue;
-			}
-
-			$originalNodes = $view['viewNodes'];
-			$expandedNodes = $originalNodes;
-
-			// Create a lookup of existing nodes by modelNodeId for quick parent matching.
-			$nodesByModelId = [];
-			foreach ($originalNodes as $node) {
-				$modelNodeId = $node['modelNodeId'] ?? null;
-				if ($modelNodeId !== null) {
-					$nodesByModelId[$modelNodeId] = $node;
-				}
-			}
-
-			// Process each module for expansion.
-			foreach ($modulesData as $elementRef => $module) {
-				$expandedNodes = $this->expandModuleToNodes(
-					module: $module,
-					existingNodes: $expandedNodes,
-					nodesByModelId: $nodesByModelId
-				);
-			}
-
-			// Update the view with expanded nodes.
-			$view['viewNodes'] = $expandedNodes;
-
-			$addedNodesCount = count($expandedNodes) - count($originalNodes);
-			if ($addedNodesCount > 0) {
-				$this->logger->debug(
-					'Added module nodes to view',
-					[
-						'view_id' => $view['id'] ?? 'unknown',
-						'original_nodes' => count($originalNodes),
-						'expanded_nodes' => count($expandedNodes),
-						'added_nodes' => $addedNodesCount,
-					]
-				);
-			}
-		}//end foreach
-
-		// Clean up reference.
-		unset($view);
-		return $views;
+		return array_map(
+			fn (array $view): array => $this->expandViewModules(view: $view, modulesData: $modulesData),
+			$views
+		);
 	}//end expandModulesToViewNodes()
+
+	/**
+	 * Add a child node for every module linked to a referentiecomponent node of one view.
+	 *
+	 * @param array $view The view.
+	 * @param array $modulesData Modules data indexed by elementRef.
+	 *
+	 * @return array The view with expanded module nodes; a view without a node list is returned as is.
+	 */
+	private function expandViewModules(array $view, array $modulesData): array {
+		if (isset($view['viewNodes']) === false || is_array(value: $view['viewNodes']) === false) {
+			return $view;
+		}
+
+		$originalNodes = $view['viewNodes'];
+
+		// Update the view with expanded nodes.
+		$view['viewNodes'] = $this->expandNodesWithModules(nodes: $originalNodes, modulesData: $modulesData);
+		$this->logAddedModuleNodes(view: $view, originalNodes: $originalNodes);
+		return $view;
+	}//end expandViewModules()
+
+	/**
+	 * Append a node for every module under its referentiecomponent nodes.
+	 *
+	 * @param array $nodes The view nodes before the expansion.
+	 * @param array $modulesData Modules data indexed by elementRef.
+	 *
+	 * @return array The nodes followed by the added module nodes.
+	 */
+	private function expandNodesWithModules(array $nodes, array $modulesData): array {
+		$expandedNodes = $nodes;
+		$nodesByModelId = $this->nodesByModelId(nodes: $nodes);
+
+		// Process each module for expansion.
+		foreach ($modulesData as $module) {
+			$expandedNodes = $this->expandModuleToNodes(
+				module: $module,
+				existingNodes: $expandedNodes,
+				nodesByModelId: $nodesByModelId
+			);
+		}
+
+		return $expandedNodes;
+	}//end expandNodesWithModules()
+
+	/**
+	 * Create a lookup of existing nodes by modelNodeId for quick parent matching.
+	 *
+	 * @param array $nodes The view nodes.
+	 *
+	 * @return array The nodes indexed by modelNodeId.
+	 */
+	private function nodesByModelId(array $nodes): array {
+		$nodesByModelId = [];
+		foreach ($nodes as $node) {
+			$modelNodeId = $node['modelNodeId'] ?? null;
+			if ($modelNodeId !== null) {
+				$nodesByModelId[$modelNodeId] = $node;
+			}
+		}
+
+		return $nodesByModelId;
+	}//end nodesByModelId()
+
+	/**
+	 * Log how many module nodes were added to a view, when any were.
+	 *
+	 * @param array $view The expanded view.
+	 * @param array $originalNodes The view nodes before the expansion.
+	 *
+	 * @return void
+	 */
+	private function logAddedModuleNodes(array $view, array $originalNodes): void {
+		$addedNodesCount = count($view['viewNodes']) - count($originalNodes);
+		if ($addedNodesCount > 0) {
+			$this->logger->debug(
+				'Added module nodes to view',
+				[
+					'view_id' => $view['id'] ?? 'unknown',
+					'original_nodes' => count($originalNodes),
+					'expanded_nodes' => count($view['viewNodes']),
+					'added_nodes' => $addedNodesCount,
+				]
+			);
+		}
+	}//end logAddedModuleNodes()
 
 	/**
 	 * Expand a single module to nodes based on its referentiecomponent relationships.
@@ -1121,38 +1385,60 @@ class ViewService {
 		$referenceComponents = [];
 
 		// Look for referentiecomponent relationships in various possible locations.
-		$possibleFields = [
-			'referentiecomponenten',
-			'referenceComponents',
-			'relatedComponents',
-			'components',
-			'relationships',
-		];
-
-		foreach ($possibleFields as $field) {
+		foreach (self::REFERENCE_COMPONENT_FIELDS as $field) {
 			if (isset($module[$field]) === true) {
-				$value = $module[$field];
-
-				if (is_array(value: $value) === true) {
-					// Handle array of components.
-					foreach ($value as $component) {
-						if (is_string(value: $component) === true) {
-							$referenceComponents[] = $component;
-						} elseif (is_array(value: $component) === true && isset($component['id']) === true) {
-							$referenceComponents[] = $component['id'];
-						} elseif (is_array(value: $component) === true && isset($component['identifier']) === true) {
-							$referenceComponents[] = $component['identifier'];
-						}
-					}
-				} elseif (is_string(value: $value) === true) {
-					// Handle single component ID.
-					$referenceComponents[] = $value;
-				}
+				$fieldIds = $this->referenceComponentIds(value: $module[$field]);
+				$referenceComponents = array_merge($referenceComponents, $fieldIds);
 			}
-		}//end foreach
+		}
 
 		return array_unique($referenceComponents);
 	}//end extractReferentieComponenten()
+
+	/**
+	 * Read the referentiecomponent ids of one module field.
+	 *
+	 * @param mixed $value A single component id or a list of components.
+	 *
+	 * @return array The component ids, in list order.
+	 */
+	private function referenceComponentIds(mixed $value): array {
+		if (is_string(value: $value) === true) {
+			// Handle single component ID.
+			return [$value];
+		}
+
+		if (is_array(value: $value) === false) {
+			return [];
+		}
+
+		// Handle array of components.
+		$ids = array_map(
+			fn ($component): mixed => $this->referenceComponentId(component: $component),
+			$value
+		);
+
+		return array_values(array_filter($ids, static fn ($id): bool => $id !== null));
+	}//end referenceComponentIds()
+
+	/**
+	 * Read the id of one component: the string itself, or its id or identifier.
+	 *
+	 * @param mixed $component A component id or component data.
+	 *
+	 * @return mixed The component id, or null when it has none.
+	 */
+	private function referenceComponentId(mixed $component): mixed {
+		if (is_string(value: $component) === true) {
+			return $component;
+		}
+
+		if (is_array(value: $component) === false) {
+			return null;
+		}
+
+		return $component['id'] ?? $component['identifier'] ?? null;
+	}//end referenceComponentId()
 
 	/**
 	 * Create a module node as child of a referentiecomponent node.
@@ -1483,35 +1769,37 @@ class ViewService {
 			$transformedView['documentation'] = $view['xml']['documentation'];
 		}
 
+		return $this->transformXmlSections(view: $transformedView);
+	}//end transformView()
+
+	/**
+	 * Transform the XML properties, viewNodes and viewRelationships that are lists.
+	 *
+	 * @param array $view View object to transform.
+	 *
+	 * @return array The view with the critical API fields of each XML section.
+	 */
+	private function transformXmlSections(array $view): array {
 		// Transform properties from XML to required API format.
-		$hasProperties = isset($view['xml']['properties']['property']) === true
-			&& is_array(value: $view['xml']['properties']['property']) === true;
-		if ($hasProperties === true) {
-			$transformedView['properties'] = $this->transformViewProperties(
-				properties: $view['xml']['properties']['property']
-			);
+		$properties = $view['xml']['properties']['property'] ?? null;
+		if (is_array(value: $properties) === true) {
+			$view['properties'] = $this->transformViewProperties(properties: $properties);
 		}
 
 		// Transform viewNodes to include critical fields.
-		$hasViewNodes = isset($view['xml']['viewNodes']) === true
-			&& is_array(value: $view['xml']['viewNodes']) === true;
-		if ($hasViewNodes === true) {
-			$transformedView['viewNodes'] = $this->transformViewNodes(
-				viewNodes: $view['xml']['viewNodes']
-			);
+		$viewNodes = $view['xml']['viewNodes'] ?? null;
+		if (is_array(value: $viewNodes) === true) {
+			$view['viewNodes'] = $this->transformViewNodes(viewNodes: $viewNodes);
 		}
 
 		// Transform viewRelationships to include critical fields.
-		$hasRelationships = isset($view['xml']['viewRelationships']) === true
-			&& is_array(value: $view['xml']['viewRelationships']) === true;
-		if ($hasRelationships === true) {
-			$transformedView['viewRelationships'] = $this->transformViewRelationships(
-				viewRelationships: $view['xml']['viewRelationships']
-			);
+		$relationships = $view['xml']['viewRelationships'] ?? null;
+		if (is_array(value: $relationships) === true) {
+			$view['viewRelationships'] = $this->transformViewRelationships(viewRelationships: $relationships);
 		}
 
-		return $transformedView;
-	}//end transformView()
+		return $view;
+	}//end transformXmlSections()
 
 	/**
 	 * Transform view properties to required API format.

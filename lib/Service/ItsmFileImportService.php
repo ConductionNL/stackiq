@@ -93,39 +93,89 @@ class ItsmFileImportService {
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-006-a-file-feeds-the-same-import
 	 */
 	public function import(string $path, string $name): array {
-		$config = json_decode($this->appConfig->getValueString(AppIdentity::APP_ID, ItsmExchangeService::CONFIG_KEY, '{}'), true);
-		$flow   = null;
-		if (is_array($config) === true) {
-			$flow = ($config['flows']['file'] ?? null);
-		}
-		if (is_string($flow) === false || $flow === '') {
-			return ['started' => false, 'message' => 'Set up the exchange first. The file import uses the flow the set-up creates.'];
+		$flow = $this->fileFlow();
+		if ($flow === null) {
+			return self::refused(message: 'Set up the exchange first. The file import uses the flow the set-up creates.');
 		}
 
+		$rows = $this->rowsOrProblem(path: $path, name: $name);
+		if (is_string($rows) === true) {
+			return self::refused(message: $rows);
+		}
+
+		return $this->startImport(flow: $flow, rows: $rows);
+	}//end import()
+
+	/**
+	 * The uuid of the file import flow the exchange set-up created.
+	 *
+	 * @return string|null The flow uuid, or null when the exchange is not set up.
+	 */
+	private function fileFlow(): ?string {
+		$config = json_decode($this->appConfig->getValueString(AppIdentity::APP_ID, ItsmExchangeService::CONFIG_KEY, '{}'), true);
+		if (is_array($config) === false) {
+			return null;
+		}
+
+		$flow = ($config['flows']['file'] ?? null);
+		if (is_string($flow) === false || $flow === '') {
+			return null;
+		}
+
+		return $flow;
+	}//end fileFlow()
+
+	/**
+	 * The checked rows of a file, or the reason it cannot be imported.
+	 *
+	 * @param string $path The uploaded file on disk.
+	 * @param string $name The name it was uploaded with.
+	 *
+	 * @return array<int, array<string, string>>|string The rows, or the problem.
+	 */
+	private function rowsOrProblem(string $path, string $name): array|string {
 		if (is_file($path) === true && filesize($path) > self::MAX_FILE_BYTES) {
-			return ['started' => false, 'message' => 'The file is larger than ' . (self::MAX_FILE_BYTES / 1048576) . ' MB; one import takes at most that.'];
+			return 'The file is larger than ' . (self::MAX_FILE_BYTES / 1048576) . ' MB; one import takes at most that.';
 		}
 
 		try {
 			$rows = $this->readRows(path: $path, name: $name);
 		} catch (Throwable $e) {
-			return ['started' => false, 'message' => 'The file could not be read: ' . $e->getMessage()];
+			return 'The file could not be read: ' . $e->getMessage();
 		}
 
-		$problem = $this->checkRows(rows: $rows);
-		if ($problem !== null) {
-			return ['started' => false, 'message' => $problem];
-		}
+		return ($this->checkRows(rows: $rows) ?? $rows);
+	}//end rowsOrProblem()
 
+	/**
+	 * Start the file import flow with the rows.
+	 *
+	 * @param string                             $flow The flow uuid.
+	 * @param array<int, array<string, string>> $rows The checked rows.
+	 *
+	 * @return array<string, mixed> `started` with the run and the row count, or `started: false` with the reason.
+	 */
+	private function startImport(string $flow, array $rows): array {
 		try {
 			$run = $this->gateway->run(uuid: $flow, payload: ['rows' => $rows]);
 		} catch (Throwable $e) {
 			$this->logger->error('[ItsmFileImportService] Starting the file import flow failed', ['exception' => $e]);
-			return ['started' => false, 'message' => 'The file import flow could not be started: ' . $e->getMessage()];
+			return self::refused(message: 'The file import flow could not be started: ' . $e->getMessage());
 		}
 
 		return ['started' => true, 'run' => $run, 'rows' => count($rows)];
-	}//end import()
+	}//end startImport()
+
+	/**
+	 * The result of an import that did not start.
+	 *
+	 * @param string $message Why it did not start.
+	 *
+	 * @return array{started: false, message: string}
+	 */
+	private static function refused(string $message): array {
+		return ['started' => false, 'message' => $message];
+	}//end refused()
 
 	/**
 	 * Read the rows of a CSV or XLSX file, keyed by the header row.
@@ -151,25 +201,53 @@ class ItsmFileImportService {
 				continue;
 			}
 
-			if (count($rows) > self::MAX_ROWS) {
+			if (self::addRow(rows: $rows, row: self::rowOf(header: $header, cells: $cells)) === false) {
 				break;
-			}
-
-			$row = [];
-			foreach ($header as $index => $column) {
-				$cell = trim((string) ($cells[$index] ?? ''));
-				if ($column !== '' && $cell !== '') {
-					$row[$column] = $cell;
-				}
-			}
-
-			if ($row !== []) {
-				$rows[] = $row;
 			}
 		}
 
 		return $rows;
 	}//end readRows()
+
+	/**
+	 * Add a row unless it is empty; refuse it once the rows are past MAX_ROWS.
+	 *
+	 * @param list<array<string, string>> $rows The rows read so far; the row is appended to them.
+	 * @param array<string, string>       $row  The row.
+	 *
+	 * @return bool False when the rows already hold more than MAX_ROWS, so reading stops.
+	 */
+	private static function addRow(array &$rows, array $row): bool {
+		if (count($rows) > self::MAX_ROWS) {
+			return false;
+		}
+
+		if ($row !== []) {
+			$rows[] = $row;
+		}
+
+		return true;
+	}//end addRow()
+
+	/**
+	 * One row keyed by the header, with the cells under an empty header and the empty cells left out.
+	 *
+	 * @param list<string> $header The trimmed header cells.
+	 * @param list<string> $cells  The row's cells.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function rowOf(array $header, array $cells): array {
+		$row = [];
+		foreach ($header as $index => $column) {
+			$cell = trim((string) ($cells[$index] ?? ''));
+			if ($column !== '' && $cell !== '') {
+				$row[$column] = $cell;
+			}
+		}
+
+		return $row;
+	}//end rowOf()
 
 	/**
 	 * Read a file into rows of cells, by its extension.
@@ -212,6 +290,17 @@ class ItsmFileImportService {
 			return 'The file holds more than ' . self::MAX_ROWS . ' rows; one import takes at most ' . self::MAX_ROWS . '.';
 		}
 
+		return self::missingKeyReason(rows: $rows);
+	}//end checkRows()
+
+	/**
+	 * Why a row cannot be imported for lack of a key, or null when every row has one.
+	 *
+	 * @param list<array<string, string>> $rows The rows.
+	 *
+	 * @return string|null The reason, naming the first row without a key as the spreadsheet numbers it.
+	 */
+	private static function missingKeyReason(array $rows): ?string {
 		foreach ($rows as $index => $row) {
 			if (($row[self::KEY_COLUMN] ?? '') === '') {
 				return 'Row ' . ($index + 2) . ' has no ' . self::KEY_COLUMN . '. Every row needs one, so a second import updates instead of adding.';
@@ -219,7 +308,7 @@ class ItsmFileImportService {
 		}
 
 		return null;
-	}//end checkRows()
+	}//end missingKeyReason()
 
 	/**
 	 * Read a CSV file into rows of cells. Comma or semicolon, whichever the header uses.
@@ -235,27 +324,49 @@ class ItsmFileImportService {
 		}
 
 		try {
-			$first     = (string) fgets($handle);
-			$delimiter = ',';
-			if (substr_count($first, ';') > substr_count($first, ',')) {
-				$delimiter = ';';
-			}
-
+			$delimiter = self::csvDelimiter(header: (string) fgets($handle));
 			rewind($handle);
-			$isFirst = true;
-			while (($cells = fgetcsv($handle, null, $delimiter, '"', '\\')) !== false) {
-				$cells = array_map(static fn ($cell): string => (string) $cell, $cells);
-				if ($isFirst === true && isset($cells[0]) === true) {
-					$cells[0] = (string) preg_replace('/^\xEF\xBB\xBF/', '', $cells[0]);
-				}
-
-				$isFirst = false;
-				yield $cells;
-			}
+			yield from self::csvRows(handle: $handle, delimiter: $delimiter);
 		} finally {
 			fclose($handle);
 		}
 	}//end readCsv()
+
+	/**
+	 * The delimiter a CSV header uses: a semicolon when it has more semicolons than commas, else a comma.
+	 *
+	 * @param string $header The first line of the file.
+	 *
+	 * @return string
+	 */
+	private static function csvDelimiter(string $header): string {
+		if (substr_count($header, ';') > substr_count($header, ',')) {
+			return ';';
+		}
+
+		return ',';
+	}//end csvDelimiter()
+
+	/**
+	 * Read the rows of cells of an open CSV file, without the byte order mark before the first cell.
+	 *
+	 * @param resource $handle    The open file, at its start.
+	 * @param string   $delimiter The delimiter.
+	 *
+	 * @return \Generator<int, list<string>> The cells, row by row.
+	 */
+	private static function csvRows(mixed $handle, string $delimiter): \Generator {
+		$isFirst = true;
+		while (($cells = fgetcsv($handle, null, $delimiter, '"', '\\')) !== false) {
+			$cells = array_map(static fn ($cell): string => (string) $cell, $cells);
+			if ($isFirst === true && isset($cells[0]) === true) {
+				$cells[0] = (string) preg_replace('/^\xEF\xBB\xBF/', '', $cells[0]);
+			}
+
+			$isFirst = false;
+			yield $cells;
+		}
+	}//end csvRows()
 
 	/**
 	 * Read the first sheet of an XLSX file into rows of cells, with PhpSpreadsheet as OpenRegister ships it.

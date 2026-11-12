@@ -103,9 +103,10 @@
 
 ## 7. Supersession + spec/docs
 
-- [ ] 7.1 Archive `stackiq-mcp-adoption` as superseded by this
+- [x] 7.1 Archive `stackiq-mcp-adoption` as superseded by this
   change (pointer in its archive note); its
   `register.d/stackiq-mcp-adoption.json` is never created.
+  Ticked (decision 399): archived early as `openspec/changes/archive/2026-11-12-stackiq-mcp-adoption` with the superseded note at the top of its proposal; no `register.d/stackiq-mcp-adoption.json` exists.
 - [ ] 7.2 Sync this change's spec delta into
   `openspec/specs/mcp-tool-surface/spec.md` on archive.
 - [ ] 7.3 CHANGELOG entry under Unreleased: full MCP action surface

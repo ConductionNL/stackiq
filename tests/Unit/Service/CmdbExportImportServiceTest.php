@@ -37,6 +37,7 @@ require_once __DIR__ . '/../Support/FakeMigrationPackService.php';
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Service\Object\ObjectStateRequest;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportPackMarker;
 use OCA\Stackiq\Service\Cmdb\CmdbImportPackStore;
@@ -725,29 +726,23 @@ class CmdbExportImportServiceTest extends TestCase {
 			/**
 			 * Archive an object.
 			 *
-			 * @param string $identifier The uuid.
-			 * @param string|null $reason The reason.
-			 * @param string|null $register Ignored.
-			 * @param string|null $schema Ignored.
+			 * @param ObjectStateRequest $request The uuid and the reason.
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function archive(string $identifier, ?string $reason = null, ?string $register = null, ?string $schema = null): array {
-				return $this->test->changeState(verb: 'archive', uuid: $identifier, reason: $reason);
+			public function archiveWith(ObjectStateRequest $request): array {
+				return $this->test->changeState(verb: 'archive', uuid: $request->identifier, reason: $request->reason);
 			}
 
 			/**
 			 * Unarchive an object.
 			 *
-			 * @param string $identifier The uuid.
-			 * @param string|null $reason The reason.
-			 * @param string|null $register Ignored.
-			 * @param string|null $schema Ignored.
+			 * @param ObjectStateRequest $request The uuid and the reason.
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function unarchive(string $identifier, ?string $reason = null, ?string $register = null, ?string $schema = null): array {
-				return $this->test->changeState(verb: 'unarchive', uuid: $identifier, reason: $reason);
+			public function unarchiveWith(ObjectStateRequest $request): array {
+				return $this->test->changeState(verb: 'unarchive', uuid: $request->identifier, reason: $request->reason);
 			}
 		};
 		$mapper = new class($test) {

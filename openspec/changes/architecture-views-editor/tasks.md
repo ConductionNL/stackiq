@@ -20,7 +20,7 @@
   - GIVEN the effective manifest WHEN it is built THEN `Views` is an index page at `/views` over `@resolve:amef_register` and `view` with the quick filters All, Mine, Drawn and Imported
   - GIVEN the effective menu WHEN it renders THEN Standards and Views sit under an Architecture group and the top-level count is unchanged
 - [ ] Implement
-- [ ] Test (`tests/validate-manifest.js`, Playwright `tests/e2e/workflows/architecture-views.spec.ts` tag and Mine filters)
+- [ ] Test (`tests/validate-manifest.js`, Playwright `tests/e2e/workflows/architecture-views.spec.ts` tag, status and Mine filters)
 
 ### Task 3: Canvas shape mapping
 - **spec_ref**: openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view

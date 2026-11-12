@@ -3,6 +3,9 @@
 /**
  * Repair step that backfills the contract approval-projection default.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * For every existing `contract` object in the `voorzieningen` register that
  * does not yet carry an `approvalState`, this step writes `approvalState =
  * none` so the projection field is present and queryable. It is idempotent
@@ -26,9 +29,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/contract-decision-delegation/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -114,7 +114,7 @@ class BackfillContractApprovalState implements IRepairStep {
 		try {
 			$contracts = $objectService->setRegister($registerId)
 				->setSchema($schemaId)
-				->findAll([], false, false);
+				->findAll(config: [], _rbac: false, _multitenancy: false);
 		} catch (\Throwable $e) {
 			$output->warning(sprintf('Could not read contract objects: %s', $e->getMessage()));
 			$this->logger->error('[BackfillContractApprovalState] Failed to read contracts', ['error' => $e->getMessage()]);

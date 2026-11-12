@@ -36,6 +36,7 @@ namespace OCA\Stackiq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\Stackiq\Service\Settings\EolSyncSettings;
 use OCP\AppFramework\Utility\ITimeFactory;
 use Psr\Log\LoggerInterface;
 
@@ -55,7 +56,8 @@ class EolSyncService {
 	/**
 	 * Constructor.
 	 *
-	 * @param SettingsService $settingsService The settings service (config/status/register-schema resolution).
+	 * @param SettingsService $settingsService The settings service (OpenRegister and register/schema resolution).
+	 * @param EolSyncSettings $eolSyncSettings The persisted EOL sync configuration and run status.
 	 * @param EolMatcherService $matcher The pure matching/stamping logic.
 	 * @param ITimeFactory $timeFactory The time factory (sync-run timestamp).
 	 * @param LoggerInterface $logger The logger.
@@ -65,6 +67,7 @@ class EolSyncService {
 	 */
 	public function __construct(
 		private readonly SettingsService $settingsService,
+		private readonly EolSyncSettings $eolSyncSettings,
 		private readonly EolMatcherService $matcher,
 		private readonly ITimeFactory $timeFactory,
 		private readonly LoggerInterface $logger,
@@ -75,12 +78,12 @@ class EolSyncService {
 	/**
 	 * Get the current EOL sync configuration.
 	 *
-	 * @return array The configuration (see `SettingsService::getEolSyncConfig()`).
+	 * @return array The configuration (see `EolSyncSettings::getEolSyncConfig()`).
 	 *
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-products-are-mapped-to-endoflife-date-via-per-module-config
 	 */
 	public function getConfig(): array {
-		return $this->settingsService->getEolSyncConfig();
+		return $this->eolSyncSettings->getEolSyncConfig();
 	}//end getConfig()
 
 	/**
@@ -97,7 +100,7 @@ class EolSyncService {
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	public function updateConfig(array $data): array {
-		$result = $this->settingsService->updateEolSyncConfig($data);
+		$result = $this->eolSyncSettings->updateEolSyncConfig($data);
 		$this->connectionReports?->eolSyncConfigSaved();
 
 		return $result;
@@ -106,12 +109,12 @@ class EolSyncService {
 	/**
 	 * Get the last-recorded sync status.
 	 *
-	 * @return array The status (see `SettingsService::getEolSyncStatus()`).
+	 * @return array The status (see `EolSyncSettings::getEolSyncStatus()`).
 	 *
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-the-feature-degrades-gracefully-when-the-feed-is-unavailable
 	 */
 	public function getStatus(): array {
-		return $this->settingsService->getEolSyncStatus();
+		return $this->eolSyncSettings->getEolSyncStatus();
 	}//end getStatus()
 
 	/**
@@ -145,7 +148,7 @@ class EolSyncService {
 	 * the middle steps would mean threading that accumulator through helpers for no real gain.
 	 */
 	public function run(): array {
-		$config = $this->settingsService->getEolSyncConfig();
+		$config = $this->eolSyncSettings->getEolSyncConfig();
 
 		if ($config['enabled'] !== true) {
 			return $this->degrade(reason: 'disabled');
@@ -502,7 +505,7 @@ class EolSyncService {
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	private function recordStatus(array $status): void {
-		$this->settingsService->setEolSyncStatus($status);
+		$this->eolSyncSettings->setEolSyncStatus($status);
 		$this->connectionReports?->eolSyncRan(runStatus: $status);
 	}//end recordStatus()
 }//end class

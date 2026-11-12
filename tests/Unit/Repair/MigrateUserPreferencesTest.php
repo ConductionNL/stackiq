@@ -272,4 +272,44 @@ class MigrateUserPreferencesTest extends TestCase {
 		$step = new MigrateUserPreferences($config, $this->userManagerYielding(['alice']), new NullLogger());
 		$step->run($output);
 	}//end testAThrowDuringTheWriteIsAlsoCaught()
+	/**
+	 * The report counts the copied values and the users that had one copied: an empty legacy value and a key
+	 * the new namespace already holds copy nothing, and a user without a copy is not counted.
+	 *
+	 * @return void
+	 */
+	public function testReportsTheCopiedValuesAndTheirUsers(): void {
+		$config = $this->createMock(IConfig::class);
+		$config->method('getUserKeys')->willReturnMap(
+			[
+				['alice', self::LEGACY, ['empty', 'kept', 'copied', 'also-copied']],
+				['bob', self::LEGACY, ['kept']],
+				['carol', self::LEGACY, []],
+			]
+		);
+		$config->method('getUserValue')->willReturnCallback(
+			static function (string $uid, string $app, string $key, string $default = ''): string {
+				if ($app !== self::LEGACY) {
+					return ($key === 'kept' ? 'new' : '');
+				}
+
+				return ($key === 'empty' ? '' : 'old-' . $key);
+			}
+		);
+		$written = [];
+		$config->method('setUserValue')->willReturnCallback(
+			static function (string $uid, string $app, string $key, string $value) use (&$written): void {
+				$written[] = "$uid/$key=$value";
+			}
+		);
+		$output = $this->createMock(IOutput::class);
+		$output->expects($this->once())->method('info')->with(
+			'Stackiq: migrated 2 user preference value(s) for 1 user(s) from "' . self::LEGACY . '"'
+		);
+
+		$step = new MigrateUserPreferences($config, $this->userManagerYielding(['alice', 'bob', 'carol']), new NullLogger());
+		$step->run($output);
+
+		$this->assertSame(['alice/copied=old-copied', 'alice/also-copied=old-also-copied'], $written);
+	}//end testReportsTheCopiedValuesAndTheirUsers()
 }//end class

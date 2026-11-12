@@ -13,6 +13,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/integriq
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -21,6 +24,7 @@ namespace OCA\Stackiq\EventListener;
 
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
+use OCP\IUser;
 use OCP\User\Events\UserLoggedInEvent;
 use Psr\Log\LoggerInterface;
 
@@ -73,17 +77,38 @@ class TestEventListener implements IEventListener {
 
 		// Handle UserLoggedInEvent specifically.
 		if (($event instanceof UserLoggedInEvent) === false) {
-			// Log other events we might receive.
-			$this->logger->debug(
-				'Stackiq TestEventListener: Received unhandled event',
-				[
-					'eventClass' => get_class($event),
-					'timestamp' => date('Y-m-d H:i:s'),
-				]
-			);
+			$this->logUnhandled(event: $event);
 			return;
 		}
 
+		$this->logLogin(event: $event);
+	}//end handle()
+
+	/**
+	 * Log another event we might receive.
+	 *
+	 * @param Event $event The event.
+	 *
+	 * @return void
+	 */
+	private function logUnhandled(Event $event): void {
+		$this->logger->debug(
+			'Stackiq TestEventListener: Received unhandled event',
+			[
+				'eventClass' => get_class($event),
+				'timestamp' => date('Y-m-d H:i:s'),
+			]
+		);
+	}//end logUnhandled()
+
+	/**
+	 * Log a login, then that the listener works.
+	 *
+	 * @param UserLoggedInEvent $event The login event.
+	 *
+	 * @return void
+	 */
+	private function logLogin(UserLoggedInEvent $event): void {
 		$user = $event->getUser();
 
 		$this->logger->info(
@@ -97,7 +122,18 @@ class TestEventListener implements IEventListener {
 			]
 		);
 
-		// Test that we can access Nextcloud services.
+		$this->confirmWorking(user: $user, event: $event);
+	}//end logLogin()
+
+	/**
+	 * Test that we can access Nextcloud services: log that the listener works, or the error.
+	 *
+	 * @param IUser $user The user who logged in.
+	 * @param UserLoggedInEvent $event The login event.
+	 *
+	 * @return void
+	 */
+	private function confirmWorking(IUser $user, UserLoggedInEvent $event): void {
 		try {
 			$this->logger->debug(
 				'Stackiq TestEventListener: Event listener is working correctly!',
@@ -108,13 +144,24 @@ class TestEventListener implements IEventListener {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Stackiq TestEventListener: Error in event processing',
-				[
-					'exception' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
+			$this->logProcessingError(error: $e);
 		}
-	}//end handle()
+	}//end confirmWorking()
+
+	/**
+	 * Log an error in event processing.
+	 *
+	 * @param \Exception $error The error.
+	 *
+	 * @return void
+	 */
+	private function logProcessingError(\Exception $error): void {
+		$this->logger->error(
+			'Stackiq TestEventListener: Error in event processing',
+			[
+				'exception' => $error->getMessage(),
+				'trace' => $error->getTraceAsString(),
+			]
+		);
+	}//end logProcessingError()
 }//end class

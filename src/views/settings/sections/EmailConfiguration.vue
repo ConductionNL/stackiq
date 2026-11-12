@@ -1,4 +1,8 @@
 <!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
+<!--
  - @copyright Copyright (c) 2023 Ruben Linde <info@conduction.nl>
  - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
@@ -579,6 +583,78 @@ import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 import StandardTabs from '../../../components/StandardTabs.vue'
 import { settingsStore } from '../../../store/store.js'
 
+/**
+ * The section's initial flags, fields and results.
+ */
+const INITIAL_STATE = {
+	activeTab: 'settings', // Default active tab
+	saving: false,
+	testingConnection: false,
+	testingEmail: false,
+	savingTemplate: false,
+	testEmailAddress: '',
+	connectionTestResult: null,
+	testEmailResult: null,
+	templateSaveResult: null,
+	activeTemplate: 'organization_registration',
+}
+
+/**
+ * The email templates an administrator can edit, with the variables each
+ * one offers.
+ */
+const AVAILABLE_TEMPLATES = [
+	{
+		key: 'organization_registration',
+		name: 'Organization Registration',
+		description: 'Email sent when a new organization is registered',
+		variables: {
+			'organization.name': 'Name of the organization',
+			'organization.email': 'Organization contact email',
+			'organization.website': 'Organization website',
+			'user.name': 'Name of the registering user',
+			'user.email': 'Email of the registering user',
+			activation_url: 'URL to activate the organization',
+		},
+	},
+	{
+		key: 'organization_activation',
+		name: 'Organization Activation',
+		description: 'Email sent when an organization is activated',
+		variables: {
+			'organization.name': 'Name of the organization',
+			'organization.email': 'Organization contact email',
+			'user.name': 'Name of the contact person',
+			'user.email': 'Email of the contact person',
+			login_url: 'URL to log into the system',
+		},
+	},
+	{
+		key: 'user_creation',
+		name: 'User Creation',
+		description: 'Email sent when a new user account is created',
+		variables: {
+			'user.name': 'Name of the new user',
+			'user.email': 'Email of the new user',
+			'user.username': 'Username for the new account',
+			'organization.name': "Name of the user's organization",
+			login_url: 'URL to log into the system',
+			password_reset_url: 'URL to set initial password',
+		},
+	},
+	{
+		key: 'password_reset',
+		name: 'Password Reset',
+		description: 'Email sent for password reset requests',
+		variables: {
+			'user.name': 'Name of the user',
+			'user.email': 'Email of the user',
+			reset_url: 'URL to reset the password',
+			expiry_time: 'When the reset link expires',
+		},
+	},
+]
+
 export default {
 	name: 'EmailConfiguration',
 
@@ -608,67 +684,8 @@ export default {
 
 	data() {
 		return {
-			activeTab: 'settings', // Default active tab
-			saving: false,
-			testingConnection: false,
-			testingEmail: false,
-			savingTemplate: false,
-			testEmailAddress: '',
-			connectionTestResult: null,
-			testEmailResult: null,
-			templateSaveResult: null,
-			activeTemplate: 'organization_registration',
-			availableTemplates: [
-				{
-					key: 'organization_registration',
-					name: 'Organization Registration',
-					description: 'Email sent when a new organization is registered',
-					variables: {
-						'organization.name': 'Name of the organization',
-						'organization.email': 'Organization contact email',
-						'organization.website': 'Organization website',
-						'user.name': 'Name of the registering user',
-						'user.email': 'Email of the registering user',
-						activation_url: 'URL to activate the organization',
-					},
-				},
-				{
-					key: 'organization_activation',
-					name: 'Organization Activation',
-					description: 'Email sent when an organization is activated',
-					variables: {
-						'organization.name': 'Name of the organization',
-						'organization.email': 'Organization contact email',
-						'user.name': 'Name of the contact person',
-						'user.email': 'Email of the contact person',
-						login_url: 'URL to log into the system',
-					},
-				},
-				{
-					key: 'user_creation',
-					name: 'User Creation',
-					description: 'Email sent when a new user account is created',
-					variables: {
-						'user.name': 'Name of the new user',
-						'user.email': 'Email of the new user',
-						'user.username': 'Username for the new account',
-						'organization.name': "Name of the user's organization",
-						login_url: 'URL to log into the system',
-						password_reset_url: 'URL to set initial password',
-					},
-				},
-				{
-					key: 'password_reset',
-					name: 'Password Reset',
-					description: 'Email sent for password reset requests',
-					variables: {
-						'user.name': 'Name of the user',
-						'user.email': 'Email of the user',
-						reset_url: 'URL to reset the password',
-						expiry_time: 'When the reset link expires',
-					},
-				},
-			],
+			...INITIAL_STATE,
+			availableTemplates: structuredClone(AVAILABLE_TEMPLATES),
 
 			templates: {},
 		}

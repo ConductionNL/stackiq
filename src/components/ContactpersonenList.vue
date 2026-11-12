@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="contactpersonen-list">
 		<div v-if="loading" class="loading">
@@ -199,6 +203,11 @@ import Key from 'vue-material-design-icons/Key.vue'
 import ChangePasswordDialog from '../dialogs/ChangePasswordDialog.vue'
 import ManageUserGroupsDialog from '../dialogs/ManageUserGroupsDialog.vue'
 import { useOrganisatieStore } from '../store/modules/organisatie.js'
+import {
+	applyUserInfo,
+	contactpersoonKey,
+	contactUser,
+} from './contactpersoonUser.js'
 
 /**
  * Set the loading flag of a contact person row.
@@ -450,39 +459,51 @@ export default {
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		processContactpersonen(rawContactpersonen) {
-			return rawContactpersonen.map((contactpersoon) => {
-				const contactId = contactpersoon.id || contactpersoon.uuid
-				const data = contactpersoon.data || contactpersoon
-				const hasUser = !!data.username
+			return rawContactpersonen.map((contactpersoon) =>
+				this.processContactpersoon(contactpersoon),
+			)
+		},
 
-				// Debug logging to understand the data structure.
-				console.info('Processing contactPerson:', {
-					contactId,
-					data,
-					hasUser,
-					userFromAPI: contactpersoon.user,
-					usernameFromData: data.username,
-					disabledFromAPI: contactpersoon.user?.disabled,
-					disabledFromData: data.disabled,
-					groupsFromAPI: contactpersoon.user?.groups,
-					groupsFromData: data.groups,
-				})
+		/**
+		 * One contact person in the expected format, with its user details.
+		 *
+		 * @param {object} contactpersoon - Raw contact person from the organisation.
+		 * @return {object} The processed contact person.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		processContactpersoon(contactpersoon) {
+			const contactId = contactpersoonKey(contactpersoon)
+			const data = contactpersoon.data || contactpersoon
+			const summary = { contactId, data, hasUser: !!data.username }
 
-				return {
-					id: contactId,
-					data,
-					user: {
-						hasUser,
-						username: data.username || '',
-						// Use groups from API user object if available, otherwise from data.
-						groups: contactpersoon.user?.groups || data.groups || [],
-						// Use user.disabled from API, fallback to data.disabled.
-						disabled:
-							contactpersoon.user?.disabled || data.disabled || false,
-					},
-					// Include loading state from organisation data.
-					loading: contactpersoon.loading || false,
-				}
+			// Debug logging to understand the data structure.
+			this.logContactpersoon(contactpersoon, summary)
+
+			return {
+				id: contactId,
+				data,
+				user: contactUser(contactpersoon, summary),
+				// Include loading state from organisation data.
+				loading: contactpersoon.loading || false,
+			}
+		},
+
+		/**
+		 * Logs how a contact person is processed.
+		 *
+		 * @param {object} contactpersoon - Raw contact person from the organisation.
+		 * @param {object} summary - Its id, data and whether it has a user.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		logContactpersoon(contactpersoon, summary) {
+			console.info('Processing contactPerson:', {
+				...summary,
+				userFromAPI: contactpersoon.user,
+				usernameFromData: summary.data.username,
+				disabledFromAPI: contactpersoon.user?.disabled,
+				disabledFromData: summary.data.disabled,
+				groupsFromAPI: contactpersoon.user?.groups,
+				groupsFromData: summary.data.groups,
 			})
 		},
 
@@ -492,71 +513,130 @@ export default {
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		async loadUserInfoAndGroups() {
-			// Prevent multiple simultaneous calls
-			if (this.userStatusRefreshInProgress) {
-				console.info('User info loading already in progress, skipping...')
-				return
-			}
-
-			// Prevent multiple calls per session
-			if (this.userInfoLoaded) {
-				console.info('User info already loaded in this session, skipping...')
-				return
-			}
-
-			if (!this.organisationData || !this.organisationData.contactpersonen) {
-				console.info('No organisation data available for user info loading')
+			if (this.skipsUserInfoLoading()) {
 				return
 			}
 
 			this.userStatusRefreshInProgress = true
 
 			try {
-				console.info(
-					'Starting SINGLE parallel loading of user info and available groups',
-				)
-
-				// Get all contact person IDs, filter out empty ones
-				const contactpersoonIds = this.organisationData.contactpersonen
-					.map((cp) => cp.id || cp.uuid)
-					.filter((id) => id && id.trim() !== '')
-
-				console.info(
-					'Loading user info for contactpersons:',
-					contactpersoonIds.length,
-				)
-				console.info('Contactpersoon IDs:', contactpersoonIds)
-
-				// Load available groups and bulk user info in parallel - but only once
-				const promises = [this.organisatieStore.fetchAvailableGroups()]
-
-				// Only add bulk user info request if we have contactpersonen
-				if (contactpersoonIds.length > 0) {
-					promises.push(
-						this.organisatieStore.getBulkUserInfo(contactpersoonIds),
-					)
-				} else {
-					promises.push(Promise.resolve({}))
-				}
-
-				const [availableGroups, bulkUserInfo] = await Promise.all(promises)
-
-				console.info('Received bulk user info:', bulkUserInfo)
-
-				// Update contactpersonen with user info
-				if (bulkUserInfo && Object.keys(bulkUserInfo).length > 0) {
-					this.updateContactpersonenWithUserInfo(bulkUserInfo)
-				}
-
-				console.info(
-					'Completed SINGLE parallel loading of user info and available groups',
-				)
-				this.userInfoLoaded = true
+				await this.fetchUserInfoAndGroups()
 			} catch (error) {
 				console.error('Error loading user info and groups:', error)
 			} finally {
 				this.userStatusRefreshInProgress = false
 			}
+		},
+
+		/**
+		 * Whether to skip loading: it is running, it ran this session, or there are no contact persons.
+		 *
+		 * @return {boolean} Whether to skip.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		skipsUserInfoLoading() {
+			// Prevent multiple simultaneous calls
+			if (this.userStatusRefreshInProgress) {
+				console.info('User info loading already in progress, skipping...')
+				return true
+			}
+
+			// Prevent multiple calls per session
+			if (this.userInfoLoaded) {
+				console.info('User info already loaded in this session, skipping...')
+				return true
+			}
+
+			if (!this.organisationData || !this.organisationData.contactpersonen) {
+				console.info('No organisation data available for user info loading')
+				return true
+			}
+
+			return false
+		},
+
+		/**
+		 * Load the available groups and the contact persons' user info in parallel, once, and apply the info.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		async fetchUserInfoAndGroups() {
+			console.info(
+				'Starting SINGLE parallel loading of user info and available groups',
+			)
+
+			const contactpersoonIds = this.contactpersoonIds()
+			this.logContactpersoonIds(contactpersoonIds)
+
+			// Load available groups and bulk user info in parallel - but only once
+			const [, bulkUserInfo] = await Promise.all([
+				this.organisatieStore.fetchAvailableGroups(),
+				this.bulkUserInfoFor(contactpersoonIds),
+			])
+
+			this.applyBulkUserInfo(bulkUserInfo)
+			this.userInfoLoaded = true
+		},
+
+		/**
+		 * Log the contact persons whose user info is loaded.
+		 *
+		 * @param {Array<string>} contactpersoonIds The contact person ids.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		logContactpersoonIds(contactpersoonIds) {
+			console.info(
+				'Loading user info for contactpersons:',
+				contactpersoonIds.length,
+			)
+			console.info('Contactpersoon IDs:', contactpersoonIds)
+		},
+
+		/**
+		 * Update the contact persons with the bulk user info, when there is any.
+		 *
+		 * @param {object|null} bulkUserInfo The user info keyed by contact person id.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		applyBulkUserInfo(bulkUserInfo) {
+			console.info('Received bulk user info:', bulkUserInfo)
+
+			// Update contactpersonen with user info
+			if (bulkUserInfo && Object.keys(bulkUserInfo).length > 0) {
+				this.updateContactpersonenWithUserInfo(bulkUserInfo)
+			}
+
+			console.info(
+				'Completed SINGLE parallel loading of user info and available groups',
+			)
+		},
+
+		/**
+		 * The ids of the organisation's contact persons, without empty ones.
+		 *
+		 * @return {Array<string>} The ids.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		contactpersoonIds() {
+			return this.organisationData.contactpersonen
+				.map((cp) => cp.id || cp.uuid)
+				.filter((id) => id && id.trim() !== '')
+		},
+
+		/**
+		 * The bulk user info of contact persons; none to ask for without ids.
+		 *
+		 * @param {Array<string>} contactpersoonIds The contact person ids.
+		 * @return {Promise<object>} The user info keyed by contact person id.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		bulkUserInfoFor(contactpersoonIds) {
+			// Only add bulk user info request if we have contactpersonen
+			if (contactpersoonIds.length > 0) {
+				return this.organisatieStore.getBulkUserInfo(contactpersoonIds)
+			}
+			return Promise.resolve({})
 		},
 
 		/**
@@ -571,39 +651,20 @@ export default {
 
 			this.organisationData.contactpersonen.forEach(
 				(contactpersoon, index) => {
-					const contactpersoonId = contactpersoon.id || contactpersoon.uuid
+					const contactpersoonId = contactpersoonKey(contactpersoon)
 					const userInfo = bulkUserInfo[contactpersoonId]
-
-					if (userInfo) {
-						console.info(
-							`Updating contactpersoon ${contactpersoonId} with user info:`,
-							userInfo,
-						)
-
-						// Ensure user object exists.
-						if (!contactpersoon.user) {
-							contactpersoon.user = {}
-						}
-
-						// Update user object.
-						contactpersoon.user.hasUser = userInfo.hasUser
-						contactpersoon.user.username = userInfo.username
-						contactpersoon.user.groups = userInfo.groups || []
-						contactpersoon.user.disabled = !userInfo.enabled // Map enabled to disabled.
-						contactpersoon.user.displayName = userInfo.displayName
-						contactpersoon.user.lastLogin = userInfo.lastLogin
-
-						// Update data object for consistency.
-						if (contactpersoon.data) {
-							contactpersoon.data.disabled = !userInfo.enabled // Map enabled to disabled.
-							contactpersoon.data.groups = userInfo.groups || [] // Also set groups in data.
-							contactpersoon.data.username = userInfo.username // Also set username in data.
-						}
-
-						// Force reactivity update.
-						// eslint-disable-next-line vue/no-mutating-props -- @TODO: fix this.
-						this.organisationData.contactpersonen[index] = contactpersoon
+					if (!userInfo) {
+						return
 					}
+					console.info(
+						`Updating contactpersoon ${contactpersoonId} with user info:`,
+						userInfo,
+					)
+					applyUserInfo(contactpersoon, userInfo)
+
+					// Force reactivity update.
+					// eslint-disable-next-line vue/no-mutating-props -- @TODO: fix this.
+					this.organisationData.contactpersonen[index] = contactpersoon
 				},
 			)
 		},

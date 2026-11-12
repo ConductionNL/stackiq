@@ -170,4 +170,34 @@ class MergeControllerTest extends TestCase {
 
 		$this->assertSame(Http::STATUS_OK, $response->getStatus());
 	}//end testExecuteReturns200OnSuccess()
+
+	/**
+	 * The execute() bodies: the blockers on a 409, the service result as-is on a 200,
+	 * and the caller's uid passed on as the actor.
+	 *
+	 * @return void
+	 */
+	public function testExecuteBodiesArePinned(): void {
+		$controller = $this->makeController(isAdmin: true);
+		$blocked    = ['ok' => false, 'sourceUuid' => 'org-a', 'targetUuid' => 'org-a', 'blockers' => [['type' => 'self-merge', 'message' => 'same']]];
+		$done       = ['ok' => true, 'operationId' => 'org_merge_2', 'status' => 'completed', 'counts' => ['usage' => 3]];
+		$actors     = [];
+		$this->mergeService->method('execute')->willReturnCallback(
+			function (string $sourceUuid, string $targetUuid, ?string $actorUid) use (&$actors, $blocked, $done): array {
+				$actors[] = $actorUid;
+				return $sourceUuid === $targetUuid ? $blocked : $done;
+			}
+		);
+
+		$conflict = $controller->execute(uuid: 'org-a', targetUuid: 'org-a');
+		$success  = $controller->execute(uuid: 'org-a', targetUuid: 'org-b');
+
+		$this->assertSame(['message' => 'Merge request rejected.', 'blockers' => [['type' => 'self-merge', 'message' => 'same']]], $conflict->getData());
+		$this->assertSame($done, $success->getData());
+		$this->assertSame(Http::STATUS_OK, $success->getStatus());
+		$this->assertCount(2, $actors);
+		$this->assertSame($actors[0], $actors[1]);
+		$this->assertNotNull($actors[0]);
+
+	}//end testExecuteBodiesArePinned()
 }//end class

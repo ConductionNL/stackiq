@@ -3,6 +3,9 @@
 /**
  * CMDB export import service.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Turns a TOPdesk CMDB export (xlsx) into stackiq objects for one
  * municipality (openspec/changes/cmdb-export-import). Every application row
  * of the CMDB sheets ("Onbeh Applicaties CMDB", "Beheerde Applicaties
@@ -52,9 +55,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -67,6 +67,7 @@ use JsonSerializable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
 use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Service\Object\ObjectStateRequest;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\Cmdb\CmdbImportReport;
@@ -665,51 +666,83 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
 	 */
 	private function addRunWarnings(CmdbImportRun $run): void {
-		$report         = $run->report;
-		$municipality   = $run->municipality;
-		$archive        = $run->archive;
-		$missingRecords = $run->missingRecords;
 		if ($this->profile->usesShippedFallback() === true) {
-			$report->addImportWarnings(
-				warnings: [
-					[
-						'sheet' => '',
-						'message' => $this->l10n->t('OpenRegister\'s migration pack store is not available, so this import used the mapping that ships with stackiq.'),
-					],
-				]
-			);
+			$this->addShippedFallbackWarning(report: $run->report);
 		}
 
-		if ($missingRecords === 'archive' && ($archive['present'] === false || $archive['uncachedRows'] !== [])) {
+		if ($run->missingRecords === 'archive') {
+			$this->addArchiveWarnings(run: $run);
+		}
+
+		if ($run->municipality['created'] === true) {
+			$this->addCreatedMunicipalityWarning(run: $run);
+		}
+	}//end addRunWarnings()
+
+	/**
+	 * Warn that the import used the mapping that ships with stackiq.
+	 *
+	 * @param CmdbImportReport $report The run's report
+	 *
+	 * @return void
+	 */
+	private function addShippedFallbackWarning(CmdbImportReport $report): void {
+		$report->addImportWarnings(
+			warnings: [
+				[
+					'sheet' => '',
+					'message' => $this->l10n->t('OpenRegister\'s migration pack store is not available, so this import used the mapping that ships with stackiq.'),
+				],
+			]
+		);
+	}//end addShippedFallbackWarning()
+
+	/**
+	 * Warn about every sheet that keeps an archiving run from deleting: a missing or partly unreadable
+	 * archive sheet, a missing source sheet, and source-sheet rows whose APPID has no cached value.
+	 *
+	 * @param CmdbImportRun $run The run, with missingRecords 'archive'
+	 *
+	 * @return void
+	 */
+	private function addArchiveWarnings(CmdbImportRun $run): void {
+		$report  = $run->report;
+		$archive = $run->archive;
+		if ($archive['present'] === false || $archive['uncachedRows'] !== []) {
 			$report->addImportWarnings(warnings: [['sheet' => $archive['sheet'], 'message' => $this->archiveSheetWarning(archive: $archive)]]);
 		}
 
-		if ($missingRecords === 'archive') {
-			foreach ($this->absentSheets as $sheet) {
-				$absent = ['sheet' => $sheet, 'keyColumnMissing' => false, 'uncachedRows' => []];
-				$report->addImportWarnings(warnings: [['sheet' => $sheet, 'message' => $this->archiveSheetWarning(archive: $absent)]]);
-			}
-
-			foreach ($this->unreadableKeyRows as $sheet => $rowNumbers) {
-				$cmdbSheet = ['sheet' => $sheet, 'keyColumnMissing' => false, 'uncachedRows' => $rowNumbers];
-				$report->addImportWarnings(warnings: [['sheet' => $sheet, 'message' => $this->archiveSheetWarning(archive: $cmdbSheet)]]);
-			}
+		foreach ($this->absentSheets as $sheet) {
+			$absent = ['sheet' => $sheet, 'keyColumnMissing' => false, 'uncachedRows' => []];
+			$report->addImportWarnings(warnings: [['sheet' => $sheet, 'message' => $this->archiveSheetWarning(archive: $absent)]]);
 		}
 
-		if ($municipality['created'] === true) {
-			$report->addImportWarnings(
-				warnings: [
-					[
-						'sheet' => '',
-						'message' => $this->l10n->t(
-							'No municipality named "%s" was found, so it was created. Check the name if you meant an existing one.',
-							[$municipality['name']]
-						),
-					],
-				]
-			);
+		foreach ($this->unreadableKeyRows as $sheet => $rowNumbers) {
+			$cmdbSheet = ['sheet' => $sheet, 'keyColumnMissing' => false, 'uncachedRows' => $rowNumbers];
+			$report->addImportWarnings(warnings: [['sheet' => $sheet, 'message' => $this->archiveSheetWarning(archive: $cmdbSheet)]]);
 		}
-	}//end addRunWarnings()
+	}//end addArchiveWarnings()
+
+	/**
+	 * Warn that the run created the municipality it was given by name.
+	 *
+	 * @param CmdbImportRun $run The run, whose municipality was created
+	 *
+	 * @return void
+	 */
+	private function addCreatedMunicipalityWarning(CmdbImportRun $run): void {
+		$run->report->addImportWarnings(
+			warnings: [
+				[
+					'sheet' => '',
+					'message' => $this->l10n->t(
+						'No municipality named "%s" was found, so it was created. Check the name if you meant an existing one.',
+						[$run->municipality['name']]
+					),
+				],
+			]
+		);
+	}//end addCreatedMunicipalityWarning()
 
 	/**
 	 * The CMDB-sheet rows whose key column is a formula without a cached value, per sheet.
@@ -934,10 +967,9 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private static function rowOutcome(string $module, string $usage): string {
-		foreach ([CmdbImportReport::RESTORED, CmdbImportReport::UNARCHIVED] as $revived) {
-			if ($module === $revived || $usage === $revived) {
-				return $revived;
-			}
+		$revived = self::revivedOutcome(module: $module, usage: $usage);
+		if ($revived !== '') {
+			return $revived;
 		}
 
 		if ($module === CmdbImportReport::CREATED) {
@@ -950,6 +982,25 @@ class CmdbExportImportService {
 
 		return CmdbImportReport::UNCHANGED;
 	}//end rowOutcome()
+
+	/**
+	 * Restored when the module or the usage was restored from the trash, else unarchived when either was
+	 * unarchived, else ''.
+	 *
+	 * @param string $module The module outcome.
+	 * @param string $usage The usage outcome.
+	 *
+	 * @return string
+	 */
+	private static function revivedOutcome(string $module, string $usage): string {
+		foreach ([CmdbImportReport::RESTORED, CmdbImportReport::UNARCHIVED] as $revived) {
+			if ($module === $revived || $usage === $revived) {
+				return $revived;
+			}
+		}
+
+		return '';
+	}//end revivedOutcome()
 
 	/**
 	 * Store the report with the operation and close it, as completed or cancelled.
@@ -1306,8 +1357,24 @@ class CmdbExportImportService {
 	private function upsertUsage(CmdbImportRow $row, array $data): array {
 		$municipalityUuid = $row->run->municipalityUuid();
 		$moduleUuid = (string) $row->moduleUuid;
-		$providerUuid = $row->providerUuid;
-		$owners = $row->owners;
+		$data = $this->withUsageRelations(row: $row, data: $this->withoutEmptyAnnotationParts(data: $data));
+
+		$existing = $this->findInAnyState(schemaKey: 'usage', filters: ['consumer' => $municipalityUuid, 'module' => $moduleUuid]);
+		if ($existing === null) {
+			return ['uuid' => $this->save(schemaKey: 'usage', data: $data, uuid: null), 'outcome' => CmdbImportReport::CREATED];
+		}
+
+		return $this->updateUsage(existing: $existing, data: $data);
+	}//end upsertUsage()
+
+	/**
+	 * Drop the empty parts the concat mapping leaves in a usage's interneAnnotation.
+	 *
+	 * @param array<string, mixed> $data The mapped usage fields.
+	 *
+	 * @return array<string, mixed> The fields, interneAnnotation without empty parts.
+	 */
+	private function withoutEmptyAnnotationParts(array $data): array {
 		$separator = $this->profile->concatSeparator(target: 'usage', field: 'interneAnnotation');
 		if ($separator !== null && isset($data['interneAnnotation']) === true && is_string($data['interneAnnotation']) === true) {
 			// The concat mapping leaves an empty part for every empty column; drop those.
@@ -1318,23 +1385,44 @@ class CmdbExportImportService {
 			$data['interneAnnotation'] = implode($separator, $parts);
 		}
 
-		$data['consumer'] = $municipalityUuid;
-		$data['module'] = $moduleUuid;
-		if ($providerUuid !== null) {
-			$data['provider'] = $providerUuid;
+		return $data;
+	}//end withoutEmptyAnnotationParts()
+
+	/**
+	 * Set a usage's consumer, module, supplier and owner contact persons from its row.
+	 *
+	 * @param CmdbImportRow        $row  The row: its module, the supplier when there is one, the owner contact
+	 *                                   persons and the run's consumer.
+	 * @param array<string, mixed> $data The mapped usage fields.
+	 *
+	 * @return array<string, mixed> The fields with the relations set.
+	 */
+	private function withUsageRelations(CmdbImportRow $row, array $data): array {
+		$data['consumer'] = $row->run->municipalityUuid();
+		$data['module'] = (string) $row->moduleUuid;
+		if ($row->providerUuid !== null) {
+			$data['provider'] = $row->providerUuid;
 		}
 
-		foreach ($owners as $field => $contactPersonUuid) {
+		foreach ($row->owners as $field => $contactPersonUuid) {
 			if ($contactPersonUuid !== null) {
 				$data[$field] = $contactPersonUuid;
 			}
 		}
 
-		$existing = $this->findInAnyState(schemaKey: 'usage', filters: ['consumer' => $municipalityUuid, 'module' => $moduleUuid]);
-		if ($existing === null) {
-			return ['uuid' => $this->save(schemaKey: 'usage', data: $data, uuid: null), 'outcome' => CmdbImportReport::CREATED];
-		}
+		return $data;
+	}//end withUsageRelations()
 
+	/**
+	 * Revive a stored usage when needed and merge the mapped fields onto it.
+	 *
+	 * @param array{entity: object, state: array{archived: bool, deleted: bool}} $existing The stored usage, as findInAnyState() found it.
+	 * @param array<string, mixed>                                               $data     The usage fields.
+	 *
+	 * @return array{uuid: string, outcome: string} Outcome updated or unchanged, or restored or unarchived when
+	 *                                            the stored usage was revived first.
+	 */
+	private function updateUsage(array $existing, array $data): array {
 		$uuid = (string)$existing['entity']->getUuid();
 		$revived = $this->revive(found: $existing);
 		$merged = $this->merge(target: 'usage', stored: $revived['entity']->getObject(), mapped: $data);
@@ -1344,7 +1432,7 @@ class CmdbExportImportService {
 
 		$this->save(schemaKey: 'usage', data: $merged, uuid: $uuid);
 		return ['uuid' => $uuid, 'outcome' => ($revived['outcome'] ?? CmdbImportReport::UPDATED)];
-	}//end upsertUsage()
+	}//end updateUsage()
 
 	/**
 	 * Merge mapped fields onto a stored object.
@@ -1362,36 +1450,74 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 */
 	private function merge(string $target, array $stored, array $mapped): ?array {
-		$createOnly = $this->profile->createOnlyFields(target: $target);
-		$never = $this->profile->neverWrittenOnUpdate(target: $target);
-		$merged = $stored;
-		unset($merged['@self']);
-		$changed = false;
-
-		foreach ($mapped as $field => $value) {
-			if (in_array($field, $never, true) === true) {
-				continue;
-			}
-
-			$current = ($stored[$field] ?? null);
-			if (in_array($field, $createOnly, true) === true && self::isEmptyValue(value: $current) === false) {
-				continue;
-			}
-
-			if (self::sameValue(stored: $current, value: $value) === true) {
-				continue;
-			}
-
-			$merged[$field] = $value;
-			$changed = true;
-		}
-
-		if ($changed === false) {
+		$writable = self::withoutKeptFields(mapped: $mapped, kept: $this->keptFields(target: $target, stored: $stored));
+		$changes = self::changedFields(stored: $stored, mapped: $writable);
+		if ($changes === []) {
 			return null;
 		}
 
-		return $merged;
+		$merged = $stored;
+		unset($merged['@self']);
+
+		return array_replace($merged, $changes);
 	}//end merge()
+
+	/**
+	 * The mapped fields without the ones an update leaves as they are.
+	 *
+	 * @param array<string, mixed> $mapped The mapped fields.
+	 * @param array<int, string> $kept The fields an update leaves as they are, from keptFields().
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function withoutKeptFields(array $mapped, array $kept): array {
+		foreach (array_keys($mapped) as $field) {
+			if (in_array($field, $kept, true) === true) {
+				unset($mapped[$field]);
+			}
+		}
+
+		return $mapped;
+	}//end withoutKeptFields()
+
+	/**
+	 * The mapped fields whose value differs from the stored one.
+	 *
+	 * @param array<string, mixed> $stored The stored object data.
+	 * @param array<string, mixed> $mapped The mapped fields.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function changedFields(array $stored, array $mapped): array {
+		$changes = [];
+		foreach ($mapped as $field => $value) {
+			if (self::sameValue(stored: ($stored[$field] ?? null), value: $value) === false) {
+				$changes[$field] = $value;
+			}
+		}
+
+		return $changes;
+	}//end changedFields()
+
+	/**
+	 * The fields an update leaves as they are: the never-written ones, and the create-only ones that hold a value.
+	 *
+	 * @param string $target The profile target.
+	 * @param array<string, mixed> $stored The stored object data.
+	 *
+	 * @return array<int, string>
+	 */
+	private function keptFields(string $target, array $stored): array {
+		$createOnly = $this->profile->createOnlyFields(target: $target);
+		$kept = $this->profile->neverWrittenOnUpdate(target: $target);
+		foreach ($createOnly as $field) {
+			if (self::isEmptyValue(value: ($stored[$field] ?? null)) === false) {
+				$kept[] = $field;
+			}
+		}
+
+		return $kept;
+	}//end keptFields()
 
 	/**
 	 * Resolve the owner of a row (Applicatie Eigenaar) as the usage's business owner.
@@ -2058,7 +2184,7 @@ class CmdbExportImportService {
 	/**
 	 * Resolve OpenRegister's archive handler and object mapper, failing closed.
 	 *
-	 * @return array{handler: object, mapper: object} The handler, with `archive()` and `unarchive()`, and the
+	 * @return array{handler: object, mapper: object} The handler, with `archiveWith()` and `unarchiveWith()`, and the
 	 *                                                mapper, with `restoreObject()` and `findDeletedAcrossAllMagicTables()`.
 	 *
 	 * @throws CmdbImportException ARCHIVE_UNAVAILABLE.
@@ -2070,31 +2196,58 @@ class CmdbExportImportService {
 			return $this->archiveServices;
 		}
 
-		$previous = null;
-		try {
-			$handler = $this->container->get(static::ARCHIVE_HANDLER_CLASS);
-			$mapper = $this->container->get(static::OBJECT_MAPPER_CLASS);
-		} catch (Throwable $e) {
-			$this->logger->warning('CmdbExportImportService: OpenRegister archive services could not be resolved', ['exception' => get_class($e)]);
-			$previous = $e;
-			$handler = null;
-			$mapper = null;
-		}
-
-		if (is_object($handler) === false || method_exists($handler, 'archive') === false || method_exists($handler, 'unarchive') === false
-			|| is_object($mapper) === false || method_exists($mapper, 'restoreObject') === false
-			|| method_exists($mapper, 'findDeletedAcrossAllMagicTables') === false
-		) {
+		$resolved = $this->resolveArchiveServices();
+		if (self::isArchiveHandler(handler: $resolved['handler']) === false || self::isObjectMapper(mapper: $resolved['mapper']) === false) {
 			throw new CmdbImportException(
 				errorCode: CmdbImportException::ARCHIVE_UNAVAILABLE,
 				message: 'OpenRegister ArchiveHandler or MagicMapper is not available',
-				previous: $previous
+				previous: $resolved['previous']
 			);
 		}
 
-		$this->archiveServices = ['handler' => $handler, 'mapper' => $mapper];
+		$this->archiveServices = ['handler' => $resolved['handler'], 'mapper' => $resolved['mapper']];
 		return $this->archiveServices;
 	}//end archiveServices()
+
+	/**
+	 * Get OpenRegister's archive handler and object mapper from the container.
+	 *
+	 * @return array{handler: mixed, mapper: mixed, previous: Throwable|null} Both services, or nulls and the
+	 *                                                                        failure when the container could not give them.
+	 */
+	private function resolveArchiveServices(): array {
+		try {
+			$handler = $this->container->get(static::ARCHIVE_HANDLER_CLASS);
+			$mapper = $this->container->get(static::OBJECT_MAPPER_CLASS);
+			return ['handler' => $handler, 'mapper' => $mapper, 'previous' => null];
+		} catch (Throwable $e) {
+			$this->logger->warning('CmdbExportImportService: OpenRegister archive services could not be resolved', ['exception' => get_class($e)]);
+			return ['handler' => null, 'mapper' => null, 'previous' => $e];
+		}
+	}//end resolveArchiveServices()
+
+	/**
+	 * Whether a service is an archive handler, with `archiveWith()` and `unarchiveWith()`.
+	 *
+	 * @param mixed $handler The service.
+	 *
+	 * @return bool
+	 */
+	private static function isArchiveHandler(mixed $handler): bool {
+		return is_object($handler) === true && method_exists($handler, 'archiveWith') === true && method_exists($handler, 'unarchiveWith') === true;
+	}//end isArchiveHandler()
+
+	/**
+	 * Whether a service is an object mapper, with `restoreObject()` and `findDeletedAcrossAllMagicTables()`.
+	 *
+	 * @param mixed $mapper The service.
+	 *
+	 * @return bool
+	 */
+	private static function isObjectMapper(mixed $mapper): bool {
+		return is_object($mapper) === true && method_exists($mapper, 'restoreObject') === true
+			&& method_exists($mapper, 'findDeletedAcrossAllMagicTables') === true;
+	}//end isObjectMapper()
 
 	/**
 	 * Whether an object as OpenRegister's mapper reads it by uuid is archived and whether it is in the trash.
@@ -2162,7 +2315,9 @@ class CmdbExportImportService {
 		}
 
 		if ($archived === true) {
-			$this->archiveServices()['handler']->unarchive(identifier: $uuid, reason: self::REASON_PREFIX . 'back in the export');
+			$this->archiveServices()['handler']->unarchiveWith(
+				request: new ObjectStateRequest(identifier: $uuid, reason: self::REASON_PREFIX . 'back in the export', register: null, schema: null)
+			);
 			$outcome = ($outcome ?? CmdbImportReport::UNARCHIVED);
 		}
 
@@ -2250,19 +2405,48 @@ class CmdbExportImportService {
 		}
 
 		foreach ($deleted as $entity) {
-			if (is_object($entity) === false || (string)$entity->getRegister() !== (string)$coordinates['register'] || $entity->getUuid() === null) {
-				continue;
-			}
-
-			foreach (['module', 'usage'] as $schemaKey) {
-				if ((string)$entity->getSchema() === (string)$coordinates[$schemaKey]) {
-					$trash[$schemaKey][(string)$entity->getUuid()] = $entity;
-				}
+			foreach (self::trashSchemaKeys(entity: $entity, coordinates: $coordinates) as $schemaKey) {
+				$trash[$schemaKey][(string)$entity->getUuid()] = $entity;
 			}
 		}
 
 		return $trash;
 	}//end registerTrash()
+
+	/**
+	 * The schema keys (module, usage) a soft-deleted object of this register belongs to; none for anything else.
+	 *
+	 * @param mixed $entity One entry of what MagicMapper::findDeletedAcrossAllMagicTables() answered.
+	 * @param array<string, mixed> $coordinates The register and schema ids, from coordinates().
+	 *
+	 * @return array<int, string>
+	 */
+	private static function trashSchemaKeys(mixed $entity, array $coordinates): array {
+		if (self::isRegisterTrash(entity: $entity, coordinates: $coordinates) === false) {
+			return [];
+		}
+
+		$schemaKeys = [];
+		foreach (['module', 'usage'] as $schemaKey) {
+			if ((string)$entity->getSchema() === (string)$coordinates[$schemaKey]) {
+				$schemaKeys[] = $schemaKey;
+			}
+		}
+
+		return $schemaKeys;
+	}//end trashSchemaKeys()
+
+	/**
+	 * Whether a soft-deleted entry is an object of this register with a uuid.
+	 *
+	 * @param mixed $entity One entry of what MagicMapper::findDeletedAcrossAllMagicTables() answered.
+	 * @param array<string, mixed> $coordinates The register and schema ids, from coordinates().
+	 *
+	 * @return bool
+	 */
+	private static function isRegisterTrash(mixed $entity, array $coordinates): bool {
+		return is_object($entity) === true && (string)$entity->getRegister() === (string)$coordinates['register'] && $entity->getUuid() !== null;
+	}//end isRegisterTrash()
 
 	/**
 	 * Archive or soft-delete every application of the municipality whose APPID left the CMDB sheets.
@@ -2327,10 +2511,32 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-missing-from-the-cmdb-sheets-shall-be-archived-when-the-archive-sheet-lists-it-and-soft-deleted-when-no-sheet-does-req-cmdb-015
 	 */
 	private function reconciliationScope(string $municipalityUuid): array {
-		$usages = $this->usagesInEveryState(municipalityUuid: $municipalityUuid);
+		$owned = $this->ownedUsages(municipalityUuid: $municipalityUuid);
 
+		$prefix = $this->profile->externalKeyPrefix() . ':' . $municipalityUuid . ':';
+		$modules = $this->modulesByUuid(uuids: array_values(array_unique(array_column($owned, 'module'))));
+		$scope = [];
+		foreach ($owned as $usage) {
+			$module = ($modules[$usage['module']] ?? null);
+			$key = self::importKeyOf(module: $module, prefix: $prefix);
+			if ($key !== '') {
+				$scope[] = ['key' => $key] + self::scopeObjects(usage: $usage, module: $module);
+			}
+		}
+
+		return self::onePerKey(scope: $scope);
+	}//end reconciliationScope()
+
+	/**
+	 * The usages of the municipality, in every state, that relate to a module, each with that module's uuid.
+	 *
+	 * @param string $municipalityUuid The consumer of this import.
+	 *
+	 * @return array<int, array{entity: object, state: array{archived: bool, deleted: bool}, module: string}>
+	 */
+	private function ownedUsages(string $municipalityUuid): array {
 		$owned = [];
-		foreach ($usages as $usage) {
+		foreach ($this->usagesInEveryState(municipalityUuid: $municipalityUuid) as $usage) {
 			$data = $usage['entity']->getObject();
 			$moduleUuid = self::relationUuid(value: ($data['module'] ?? null));
 			// The filter is checked again: a filter OpenRegister cannot apply must not widen the scope.
@@ -2339,28 +2545,47 @@ class CmdbExportImportService {
 			}
 		}
 
-		$prefix = $this->profile->externalKeyPrefix() . ':' . $municipalityUuid . ':';
-		$modules = $this->modulesByUuid(uuids: array_values(array_unique(array_column($owned, 'module'))));
-		$scope = [];
-		foreach ($owned as $usage) {
-			$module = ($modules[$usage['module']] ?? null);
-			if ($module === null) {
-				continue;
-			}
+		return $owned;
+	}//end ownedUsages()
 
-			$externalKey = (string)($module['entity']->getObject()['externalKey'] ?? '');
-			if (str_starts_with($externalKey, $prefix) === true && strlen($externalKey) > strlen($prefix)) {
-				$scope[] = [
-					'key' => substr($externalKey, strlen($prefix)),
-					'usage' => $usage['entity'],
-					'module' => $module['entity'],
-					'states' => ['usage' => $usage['state'], 'module' => $module['state']],
-				];
-			}
+	/**
+	 * The APPID match key of a module this municipality's import created, or '' for any other module.
+	 *
+	 * @param array{entity: object, state: array{archived: bool, deleted: bool}}|null $module The module, or null
+	 *                                                                                       when it was not found.
+	 * @param string                                                                 $prefix The external-key
+	 *                                                                                       prefix of this import.
+	 *
+	 * @return string The key; never '' for a module in scope, as the key follows the prefix.
+	 */
+	private static function importKeyOf(?array $module, string $prefix): string {
+		if ($module === null) {
+			return '';
 		}
 
-		return self::onePerKey(scope: $scope);
-	}//end reconciliationScope()
+		$externalKey = (string)($module['entity']->getObject()['externalKey'] ?? '');
+		if (str_starts_with($externalKey, $prefix) === true && strlen($externalKey) > strlen($prefix)) {
+			return substr($externalKey, strlen($prefix));
+		}
+
+		return '';
+	}//end importKeyOf()
+
+	/**
+	 * The usage and module of one application in the reconciliation scope, with the state of both.
+	 *
+	 * @param array{entity: object, state: array{archived: bool, deleted: bool}} $usage  The owned usage.
+	 * @param array{entity: object, state: array{archived: bool, deleted: bool}} $module The usage's module.
+	 *
+	 * @return array{usage: object, module: object, states: array<string, array{archived: bool, deleted: bool}>}
+	 */
+	private static function scopeObjects(array $usage, array $module): array {
+		return [
+			'usage' => $usage['entity'],
+			'module' => $module['entity'],
+			'states' => ['usage' => $usage['state'], 'module' => $module['state']],
+		];
+	}//end scopeObjects()
 
 	/**
 	 * One application per import key: the entry the import would match, with the other usages of the key as extras.
@@ -2792,7 +3017,9 @@ class CmdbExportImportService {
 			return;
 		}
 
-		$this->archiveServices()['handler']->archive(identifier: $uuid, reason: $item['reason']);
+		$this->archiveServices()['handler']->archiveWith(
+			request: new ObjectStateRequest(identifier: $uuid, reason: $item['reason'], register: null, schema: null)
+		);
 	}//end transition()
 
 	/**
@@ -2806,27 +3033,54 @@ class CmdbExportImportService {
 	 */
 	private function resolveEngine(): object {
 		$class = static::ENGINE_CLASS;
-		try {
-			if ($this->container->has($class) === true) {
-				$engine = $this->container->get($class);
-				if (is_object($engine) === true && method_exists($engine, 'mapRow') === true) {
-					return $engine;
-				}
-			}
-		} catch (Throwable $e) {
-			// Fall through to the class check below.
-			$engine = null;
+		$engine = $this->containerEngine(class: $class);
+		if ($engine === null && class_exists($class) === true) {
+			$engine = (new OpenRegisterInstance(container: $this->container))->build(class: $class);
 		}
 
-		if (class_exists($class) === true) {
-			$engine = (new OpenRegisterInstance(container: $this->container))->build(class: $class);
-			if ($engine !== null && method_exists($engine, 'mapRow') === true) {
-				return $engine;
-			}
+		if (self::isMappingEngine(engine: $engine) === true) {
+			return $engine;
 		}
 
 		throw new CmdbImportException(errorCode: CmdbImportException::MAPPING_UNAVAILABLE, message: 'OpenRegister MappingEngine is not available');
 	}//end resolveEngine()
+
+	/**
+	 * The mapping engine the container holds, when it has one with `mapRow`.
+	 *
+	 * @param string $class The engine class.
+	 *
+	 * @return object|null
+	 */
+	private function containerEngine(string $class): ?object {
+		try {
+			if ($this->container->has($class) === false) {
+				return null;
+			}
+
+			$engine = $this->container->get($class);
+		} catch (Throwable $e) {
+			// Fall through to the class check.
+			return null;
+		}
+
+		if (self::isMappingEngine(engine: $engine) === true) {
+			return $engine;
+		}
+
+		return null;
+	}//end containerEngine()
+
+	/**
+	 * Whether a candidate is a mapping engine: an object with `mapRow`.
+	 *
+	 * @param mixed $engine The candidate.
+	 *
+	 * @return bool
+	 */
+	private static function isMappingEngine(mixed $engine): bool {
+		return is_object($engine) === true && method_exists($engine, 'mapRow') === true;
+	}//end isMappingEngine()
 
 	/**
 	 * Resolve OpenRegister and the register and schema ids, failing closed.

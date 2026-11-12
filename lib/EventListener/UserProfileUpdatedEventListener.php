@@ -13,6 +13,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -134,94 +137,169 @@ class UserProfileUpdatedEventListener implements IEventListener {
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
 	private function syncToContactPerson(UserProfileUpdatedEvent $event, LoggerInterface $logger): void {
+		$sync = $this->startContactPersonSync(event: $event, logger: $logger);
+		if ($sync === null) {
+			return;
+		}
+
+		$contactPerson = $this->findContactPerson(sync: $sync);
+		if ($contactPerson === null) {
+			$this->logNoContactPerson(sync: $sync);
+			return;
+		}
+
+		$this->patchContactPerson(sync: $sync, contactPerson: $contactPerson);
+	}//end syncToContactpersoon()
+
+	/**
+	 * Start a sync from the voorzieningen configuration, or stop when its register or schema is missing.
+	 *
+	 * @param UserProfileUpdatedEvent $event The profile updated event.
+	 * @param LoggerInterface $logger The logger.
+	 *
+	 * @return ProfileContactSync|null The sync, or null when the configuration is incomplete.
+	 */
+	private function startContactPersonSync(UserProfileUpdatedEvent $event, LoggerInterface $logger): ?ProfileContactSync {
 		$settingsService = $this->container->get(SettingsService::class);
 
-		$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
-		$register = $voorzieningenConfig['register'] ?? '';
-		$contactPersonSchema = $voorzieningenConfig['contactpersoon_schema'] ?? '';
-
-		if (empty($register) === true || empty($contactPersonSchema) === true) {
+		$sync = new ProfileContactSync();
+		$sync->voorzieningenConfig = $settingsService->getVoorzieningenConfig();
+		if (empty($sync->register()) === true || empty($sync->schema()) === true) {
 			$logger->warning(
 				'[UserProfileUpdatedEventListener] Voorzieningen config missing register or contactpersoon_schema'
 			);
-			return;
+			return null;
 		}
 
-		$userId = $event->getUserId();
-		$selfQuery = [
-			'register' => (int)$register,
-			'schema' => (int)$contactPersonSchema,
-		];
+		$sync->event = $event;
+		$sync->logger = $logger;
+		$sync->userId = $event->getUserId();
+		return $sync;
+	}//end startContactPersonSync()
 
-		$contactPerson = $this->findContactPerson(
-			objectService: $this->objectService,
-			selfQuery: $selfQuery,
-			userId: $userId,
-			event: $event,
-			logger: $logger
-		);
-
-		if ($contactPerson === null) {
-			$logger->info(
-				'[UserProfileUpdatedEventListener] No contactpersoon found for user',
-				[
-					'userId' => $userId,
-					'register' => $register,
-					'schema' => $contactPersonSchema,
-				]
-			);
-			return;
-		}
-
-		$contactData = $contactPerson->getObject();
-		$patch = $this->buildContactPatch(
-			event:       $event,
-			userId:      $userId,
-			contactData: $contactData,
-			contactPersonId: $contactPerson->getUuid(),
-			logger:      $logger
-		);
-
-		if (empty($patch) === true) {
-			$logger->debug(
-				'[UserProfileUpdatedEventListener] No fields to patch on contactpersoon',
-				[
-					'userId' => $userId,
-				]
-			);
-			return;
-		}
-
-		$logger->info(
-			'[UserProfileUpdatedEventListener] Patching contactpersoon object',
+	/**
+	 * Log that no contactpersoon matches the user.
+	 *
+	 * @param ProfileContactSync $sync The sync.
+	 *
+	 * @return void
+	 */
+	private function logNoContactPerson(ProfileContactSync $sync): void {
+		$sync->logger->info(
+			'[UserProfileUpdatedEventListener] No contactpersoon found for user',
 			[
-				'userId' => $userId,
-				'contactpersoonId' => $contactPerson->getUuid(),
-				'patch' => $patch,
+				'userId' => $sync->userId,
+				'register' => $sync->register(),
+				'schema' => $sync->schema(),
 			]
 		);
+	}//end logNoContactPerson()
+
+	/**
+	 * Patch the changed profile fields onto the contactpersoon, when there are any.
+	 *
+	 * @param ProfileContactSync $sync The sync.
+	 * @param object $contactPerson The contactpersoon entity.
+	 *
+	 * @return void
+	 */
+	private function patchContactPerson(ProfileContactSync $sync, object $contactPerson): void {
+		$sync->contactData = $contactPerson->getObject();
+		$sync->patch = $this->buildContactPatch(
+			event:       $sync->event,
+			userId:      $sync->userId,
+			contactData: $sync->contactData,
+			contactPersonId: $contactPerson->getUuid(),
+			logger:      $sync->logger
+		);
+
+		if (empty($sync->patch) === true) {
+			$this->logNothingToPatch(sync: $sync);
+			return;
+		}
+
+		$this->storeContactPatch(sync: $sync, contactPerson: $contactPerson);
+	}//end patchContactPerson()
+
+	/**
+	 * Log that the contactpersoon has no fields to patch.
+	 *
+	 * @param ProfileContactSync $sync The sync.
+	 *
+	 * @return void
+	 */
+	private function logNothingToPatch(ProfileContactSync $sync): void {
+		$sync->logger->debug(
+			'[UserProfileUpdatedEventListener] No fields to patch on contactpersoon',
+			[
+				'userId' => $sync->userId,
+			]
+		);
+	}//end logNothingToPatch()
+
+	/**
+	 * Store the patch merged into the full contactpersoon payload.
+	 *
+	 * @param ProfileContactSync $sync The sync, with the contact data and the patch.
+	 * @param object $contactPerson The contactpersoon entity.
+	 *
+	 * @return void
+	 */
+	private function storeContactPatch(ProfileContactSync $sync, object $contactPerson): void {
+		$this->logContactPatch(sync: $sync, contactPerson: $contactPerson);
 
 		// Merge the patch into the existing payload. `saveObject()` is
 		// PUT-semantic, so the FULL payload must be carried forward, not only
 		// the changed keys. Validation is skipped on the save because schema
 		// validation can reject pre-existing legacy values (e.g. notificaties
 		// enum) that this listener never touched.
-		$mergedObject = array_merge($contactData, $patch);
+		$mergedObject = array_merge($sync->contactData, $sync->patch);
 
 		$this->persistContactPersonPatch(
 			contactPerson: $contactPerson,
 			object:        $mergedObject
 		);
 
-		$logger->info(
-			'[UserProfileUpdatedEventListener] Successfully synced user profile to contactpersoon',
+		$this->logContactPatched(sync: $sync, contactPerson: $contactPerson);
+	}//end storeContactPatch()
+
+	/**
+	 * Log the patch about to be written.
+	 *
+	 * @param ProfileContactSync $sync The sync, with the patch.
+	 * @param object $contactPerson The contactpersoon entity.
+	 *
+	 * @return void
+	 */
+	private function logContactPatch(ProfileContactSync $sync, object $contactPerson): void {
+		$sync->logger->info(
+			'[UserProfileUpdatedEventListener] Patching contactpersoon object',
 			[
-				'userId' => $userId,
+				'userId' => $sync->userId,
 				'contactpersoonId' => $contactPerson->getUuid(),
-				'patchedFields' => array_keys($patch),
+				'patch' => $sync->patch,
 			]
 		);
-	}//end syncToContactpersoon()
+	}//end logContactPatch()
+
+	/**
+	 * Log the patch written.
+	 *
+	 * @param ProfileContactSync $sync The sync, with the patch.
+	 * @param object $contactPerson The contactpersoon entity.
+	 *
+	 * @return void
+	 */
+	private function logContactPatched(ProfileContactSync $sync, object $contactPerson): void {
+		$sync->logger->info(
+			'[UserProfileUpdatedEventListener] Successfully synced user profile to contactpersoon',
+			[
+				'userId' => $sync->userId,
+				'contactpersoonId' => $contactPerson->getUuid(),
+				'patchedFields' => array_keys($sync->patch),
+			]
+		);
+	}//end logContactPatched()
 
 	/**
 	 * Build the contactpersoon patch from a profile-updated event.
@@ -309,83 +387,145 @@ class UserProfileUpdatedEventListener implements IEventListener {
 	/**
 	 * Find a contactpersoon by username, falling back to a case-insensitive email search.
 	 *
-	 * @param object $objectService The OpenRegister ObjectService.
-	 * @param array $selfQuery The @self register/schema filter.
-	 * @param string $userId The Nextcloud user ID.
-	 * @param UserProfileUpdatedEvent $event The profile updated event.
-	 * @param LoggerInterface $logger The logger.
+	 * @param ProfileContactSync $sync The sync.
 	 *
 	 * @return object|null The contactpersoon entity or null if not found.
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
 	 */
-	private function findContactPerson(
-		object $objectService,
-		array $selfQuery,
-		string $userId,
-		UserProfileUpdatedEvent $event,
-		LoggerInterface $logger,
-	): ?object {
+	private function findContactPerson(ProfileContactSync $sync): ?object {
+		$contactPerson = $this->findContactPersonByUsername(sync: $sync);
+		if ($contactPerson !== null) {
+			return $contactPerson;
+		}
+
+		return $this->findContactPersonByEmail(sync: $sync);
+	}//end findContactpersoon()
+
+	/**
+	 * Search the contactpersoon whose username is the user id.
+	 *
+	 * @param ProfileContactSync $sync The sync.
+	 *
+	 * @return object|null The first contactpersoon found, or null.
+	 */
+	private function findContactPersonByUsername(ProfileContactSync $sync): ?object {
 		// 1. Search by username = userId, scoped to the user's organisation (multitenancy).
 		// This prevents updating a contactpersoon from a different organisation when.
 		// Multiple records share the same username across orgs.
-		$results = $objectService->searchObjects(
-			query: ['@self' => $selfQuery, 'username' => $userId, '_limit' => 5],
+		$results = $this->objectService->searchObjects(
+			query: ['@self' => $sync->selfQuery(), 'username' => $sync->userId, '_limit' => 5],
 			_rbac: false,
 			_multitenancy: true
 		);
 
-		if (empty($results) === false && (is_array($results) === false || count($results) > 0)) {
-			if (is_array($results) === true) {
-				return reset($results);
-			}
-
-			return $results;
+		if (empty($results) === true) {
+			return null;
 		}
 
+		if (is_array($results) === true) {
+			return reset($results);
+		}
+
+		return $results;
+	}//end findContactPersonByUsername()
+
+	/**
+	 * Search the contactpersoon by e-mail: the user's address first, then the user id.
+	 *
+	 * @param ProfileContactSync $sync The sync.
+	 *
+	 * @return object|null The first contactpersoon whose stored address matches, or null.
+	 */
+	private function findContactPersonByEmail(ProfileContactSync $sync): ?object {
 		// 2. Fallback: case-insensitive email search using _search (ILIKE).
-		// Try the user's email first, then the userId (which may itself be an email).
-		$emailCandidates = array_filter(
+		foreach ($this->emailCandidates(sync: $sync) as $emailCandidate) {
+			$contactPerson = $this->findContactPersonWithEmail(sync: $sync, emailCandidate: $emailCandidate);
+			if ($contactPerson !== null) {
+				return $contactPerson;
+			}
+		}
+
+		return null;
+	}//end findContactPersonByEmail()
+
+	/**
+	 * The addresses to try: the user's email first, then the userId (which may itself be an email).
+	 *
+	 * @param ProfileContactSync $sync The sync.
+	 *
+	 * @return array<int, string> The distinct, non-empty candidates.
+	 */
+	private function emailCandidates(ProfileContactSync $sync): array {
+		return array_filter(
 			array_unique(
 				[
-					$event->getUser()->getEMailAddress(),
-					$userId,
+					$sync->event->getUser()->getEMailAddress(),
+					$sync->userId,
 				]
 			)
 		);
+	}//end emailCandidates()
 
-		foreach ($emailCandidates as $emailCandidate) {
-			if (empty($emailCandidate) === true) {
-				continue;
+	/**
+	 * Search the contactpersoon whose stored address is an e-mail candidate.
+	 *
+	 * @param ProfileContactSync $sync The sync.
+	 * @param string $emailCandidate The address to search for.
+	 *
+	 * @return object|null The first contactpersoon whose stored address matches, or null.
+	 */
+	private function findContactPersonWithEmail(ProfileContactSync $sync, string $emailCandidate): ?object {
+		$this->logEmailFallback(sync: $sync, emailCandidate: $emailCandidate);
+
+		// Use _search for case-insensitive matching, then verify the email field in PHP.
+		// Scoped to user's organisation via multitenancy to avoid cross-org matches.
+		$results = $this->objectService->searchObjects(
+			query: ['@self' => $sync->selfQuery(), '_search' => $emailCandidate, '_limit' => 5],
+			_rbac: false,
+			_multitenancy: true
+		);
+
+		if (is_array($results) === false) {
+			return null;
+		}
+
+		return self::withStoredEmail(results: $results, emailCandidate: $emailCandidate);
+	}//end findContactPersonWithEmail()
+
+	/**
+	 * Log that the username lookup failed and an e-mail candidate is tried.
+	 *
+	 * @param ProfileContactSync $sync The sync.
+	 * @param string $emailCandidate The address tried.
+	 *
+	 * @return void
+	 */
+	private function logEmailFallback(ProfileContactSync $sync, string $emailCandidate): void {
+		$sync->logger->debug(
+			'[UserProfileUpdatedEventListener] Username lookup failed, trying email fallback',
+			[
+				'userId' => $sync->userId,
+				'emailCandidate' => $emailCandidate,
+			]
+		);
+	}//end logEmailFallback()
+
+	/**
+	 * The first result whose stored `e-mailadres` (else `email`) equals the candidate, case-insensitively.
+	 *
+	 * @param array $results The search results.
+	 * @param string $emailCandidate The address searched for.
+	 *
+	 * @return object|null The matching contactpersoon, or null.
+	 */
+	private static function withStoredEmail(array $results, string $emailCandidate): ?object {
+		foreach ($results as $result) {
+			$data = $result->getObject();
+			$storedEmail = $data['e-mailadres'] ?? $data['email'] ?? '';
+			if (strcasecmp($storedEmail, $emailCandidate) === 0) {
+				return $result;
 			}
-
-			$logger->debug(
-				'[UserProfileUpdatedEventListener] Username lookup failed, trying email fallback',
-				[
-					'userId' => $userId,
-					'emailCandidate' => $emailCandidate,
-				]
-			);
-
-			// Use _search for case-insensitive matching, then verify the email field in PHP.
-			// Scoped to user's organisation via multitenancy to avoid cross-org matches.
-			$results = $objectService->searchObjects(
-				query: ['@self' => $selfQuery, '_search' => $emailCandidate, '_limit' => 5],
-				_rbac: false,
-				_multitenancy: true
-			);
-
-			if (is_array($results) === true) {
-				foreach ($results as $result) {
-					$data = $result->getObject();
-					$storedEmail = $data['e-mailadres'] ?? $data['email'] ?? '';
-					if (strcasecmp($storedEmail, $emailCandidate) === 0) {
-						return $result;
-					}
-				}
-			}
-		}//end foreach
+		}
 
 		return null;
-	}//end findContactpersoon()
+	}//end withStoredEmail()
 }//end class

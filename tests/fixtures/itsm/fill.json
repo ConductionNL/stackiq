@@ -1,0 +1,49 @@
+{
+    "plain": "no placeholders",
+    "whole string": "Desk",
+    "whole number": 3,
+    "whole list": [
+        "a",
+        "b"
+    ],
+    "whole map": {
+        "k": "v"
+    },
+    "whole null": null,
+    "whole false": false,
+    "whole unknown": "%MISSING%",
+    "whole lower": "%name%",
+    "embedded": "Hello Desk, 3 x 1.5 (1//) []",
+    "embedded list": "items: %LIST% and %MAP%",
+    "overlap": "long then pre",
+    "repeated": "DeskDesk",
+    "padded whole": " Desk",
+    "number": 42,
+    "float": 2.5,
+    "bool": true,
+    "null": null,
+    "nested": {
+        "a": "Desk",
+        "b": [
+            [
+                "a",
+                "b"
+            ],
+            "x 3"
+        ],
+        "7": {
+            "k": "v"
+        },
+        "c": 5
+    },
+    "list": [
+        true,
+        false,
+        "id-3"
+    ],
+    "empty array": [],
+    "no values": [
+        "%NAME%",
+        "x %NAME%"
+    ]
+}

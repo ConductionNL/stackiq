@@ -82,42 +82,60 @@ class DecisionConcludedListener implements IEventListener {
 		// `instanceof` against a class that is not installed is simply false —
 		// it neither autoloads nor errors — which is why naming both here costs
 		// nothing on an instance that runs only one of them.
-		if (($event instanceof DecidiqDecisionConcludedEvent) === false
-			&& ($event instanceof DecideskDecisionConcludedEvent) === false
-		) {
-			return;
-		}
-
-		if ($event->getSourceApp() !== ContractApprovalService::SOURCE_APP) {
+		$decision = self::ownDecision(event: $event);
+		if ($decision === null) {
 			return;
 		}
 
 		try {
-			$contractUuid = $this->approvalService->resolveContractForOutcome(
-				subjectId: (string)($event->getSubjectId() ?? ''),
-				externalReference: $event->getExternalReference(),
-				decisionId: $event->getDecisionId()
-			);
-
-			if ($contractUuid === null) {
-				return;
-			}
-
-			$this->approvalService->projectOutcome(
-				contractUuid: $contractUuid,
-				outcomeStatus: $event->getStatus()
-			);
+			$this->projectDecision(event: $decision);
 		} catch (\Throwable $e) {
 			// Never break the dispatch chain; a projection failure leaves the
 			// contract in its prior (fail-closed) state.
 			$this->logger->error(
 				'DecisionConcludedListener: projecting contract outcome failed',
-				[
-					'decisionId' => $event->getDecisionId(),
-					'error' => $e->getMessage(),
-				]
+				['decisionId' => $decision->getDecisionId(), 'error' => $e->getMessage()]
 			);
-		}//end try
-
+		}
 	}//end handle()
+
+	/**
+	 * The event as a concluded decision this app asked for, or null for any other event.
+	 *
+	 * @param Event $event The dispatched event.
+	 *
+	 * @return DecidiqDecisionConcludedEvent|DecideskDecisionConcludedEvent|null The decision, under either namespace, whose source app is stackiq.
+	 */
+	private static function ownDecision(Event $event): DecidiqDecisionConcludedEvent|DecideskDecisionConcludedEvent|null {
+		if (($event instanceof DecidiqDecisionConcludedEvent) === false
+			&& ($event instanceof DecideskDecisionConcludedEvent) === false
+		) {
+			return null;
+		}
+
+		if ($event->getSourceApp() !== ContractApprovalService::SOURCE_APP) {
+			return null;
+		}
+
+		return $event;
+	}//end ownDecision()
+
+	/**
+	 * Resolve the decision's contract, IDOR-checked by the service, and project the outcome onto it.
+	 *
+	 * @param DecidiqDecisionConcludedEvent|DecideskDecisionConcludedEvent $event The concluded decision.
+	 *
+	 * @return void
+	 */
+	private function projectDecision(DecidiqDecisionConcludedEvent|DecideskDecisionConcludedEvent $event): void {
+		$contractUuid = $this->approvalService->resolveContractForOutcome(
+			subjectId: (string)($event->getSubjectId() ?? ''),
+			externalReference: $event->getExternalReference(),
+			decisionId: $event->getDecisionId()
+		);
+
+		if ($contractUuid !== null) {
+			$this->approvalService->projectOutcome(contractUuid: $contractUuid, outcomeStatus: $event->getStatus());
+		}
+	}//end projectDecision()
 }//end class

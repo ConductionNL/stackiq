@@ -1,0 +1,248 @@
+{
+	"module null view": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [
+			"kept"
+		],
+		"loading": false
+	},
+	"fresh null view": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [],
+		"loading": false
+	},
+	"module string view": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [
+			"kept"
+		],
+		"loading": false
+	},
+	"fresh string view": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [],
+		"loading": false
+	},
+	"module empty view": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [
+			"kept"
+		],
+		"loading": false
+	},
+	"fresh empty view": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [],
+		"loading": false
+	},
+	"module null query": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [
+			"kept"
+		],
+		"loading": false
+	},
+	"fresh null query": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [],
+		"loading": false
+	},
+	"module string query": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [
+			"kept"
+		],
+		"loading": false
+	},
+	"fresh string query": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [],
+		"loading": false
+	},
+	"module array query": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [
+			"kept"
+		],
+		"loading": false
+	},
+	"fresh array query": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [],
+		"loading": false
+	},
+	"module empty query": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [
+			"kept"
+		],
+		"loading": false
+	},
+	"fresh empty query": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [],
+		"loading": false
+	},
+	"module search only": {
+		"activeFilters": {},
+		"search": "cloud",
+		"savedViews": [
+			"kept"
+		],
+		"loading": false
+	},
+	"fresh search only": {
+		"activeFilters": {},
+		"search": "cloud",
+		"savedViews": [],
+		"loading": false
+	},
+	"module numeric search": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [
+			"kept"
+		],
+		"loading": false
+	},
+	"fresh numeric search": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [],
+		"loading": false
+	},
+	"module array filters": {
+		"activeFilters": {},
+		"search": "s",
+		"savedViews": [
+			"kept"
+		],
+		"loading": false
+	},
+	"fresh array filters": {
+		"activeFilters": {},
+		"search": "s",
+		"savedViews": [],
+		"loading": false
+	},
+	"module string filters": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [
+			"kept"
+		],
+		"loading": false
+	},
+	"fresh string filters": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [],
+		"loading": false
+	},
+	"module null filters": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [
+			"kept"
+		],
+		"loading": false
+	},
+	"fresh null filters": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [],
+		"loading": false
+	},
+	"module mixed filters": {
+		"activeFilters": {
+			"referenceComponent": [
+				"a",
+				"b"
+			]
+		},
+		"search": "term",
+		"savedViews": [
+			"kept"
+		],
+		"loading": false
+	},
+	"fresh mixed filters": {
+		"activeFilters": {
+			"referenceComponent": [
+				"a",
+				"b"
+			]
+		},
+		"search": "term",
+		"savedViews": [],
+		"loading": false
+	},
+	"module non-array values": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [
+			"kept"
+		],
+		"loading": false
+	},
+	"fresh non-array values": {
+		"activeFilters": {},
+		"search": "",
+		"savedViews": [],
+		"loading": false
+	},
+	"module every dimension": {
+		"activeFilters": {
+			"referenceComponent": [
+				"referenceComponent-1"
+			],
+			"standard": [
+				"standard-1"
+			],
+			"applicationService": [
+				"applicationService-1"
+			],
+			"domain": [
+				"domain-1"
+			]
+		},
+		"search": "",
+		"savedViews": [
+			"kept"
+		],
+		"loading": false
+	},
+	"fresh every dimension": {
+		"activeFilters": {
+			"referenceComponent": [
+				"referenceComponent-1"
+			],
+			"standard": [
+				"standard-1"
+			],
+			"applicationService": [
+				"applicationService-1"
+			],
+			"domain": [
+				"domain-1"
+			]
+		},
+		"search": "",
+		"savedViews": [],
+		"loading": false
+	}
+}

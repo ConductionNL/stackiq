@@ -19,12 +19,17 @@
  * @link https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\EventListener;
 
+use Closure;
+use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectLockedEvent;
@@ -108,6 +113,27 @@ class OpenRegisterEventsDebugListener implements IEventListener {
 		$eventClass = get_class($event);
 		$eventType = $this->getEventTypeName(eventClass: $eventClass);
 
+		$this->logTrigger(eventType: $eventType, eventClass: $eventClass);
+
+		if ($this->debugEnabled === false) {
+			$this->logger->warning('Stackiq OpenRegister Debug: Debug disabled, skipping detailed logging.');
+
+			return;
+		}
+
+		$this->logEventDetails(eventType: $eventType, event: $event);
+
+	}//end handle()
+
+	/**
+	 * Log that the listener was triggered.
+	 *
+	 * @param string $eventType  The simplified event type name
+	 * @param string $eventClass The full event class name
+	 *
+	 * @return void
+	 */
+	private function logTrigger(string $eventType, string $eventClass): void {
 		$this->logger->debug(
 			'OpenRegister debug listener triggered',
 			[
@@ -117,30 +143,32 @@ class OpenRegisterEventsDebugListener implements IEventListener {
 				'debugEnabled' => $this->debugEnabled,
 			]
 		);
+	}//end logTrigger()
 
-		if ($this->debugEnabled === false) {
-			$this->logger->warning('Stackiq OpenRegister Debug: Debug disabled, skipping detailed logging.');
-
-			return;
-		}
-
+	/**
+	 * Log comprehensive debug information about the event.
+	 *
+	 * @param string $eventType The simplified event type name
+	 * @param Event  $event     The event
+	 *
+	 * @return void
+	 */
+	private function logEventDetails(string $eventType, Event $event): void {
 		$eventData = $this->extractEventData(event: $event);
 
-		// Log comprehensive debug information.
 		$this->logger->info(
 			'[Stackiq] OPENREGISTER EVENT: {eventType} received from OpenRegister',
 			[
 				'app' => 'stackiq',
 				'eventType' => $eventType,
-				'eventClass' => $eventClass,
+				'eventClass' => get_class($event),
 				'listenerClass' => self::class,
 				'eventData' => $eventData,
 				'timestamp' => date('Y-m-d H:i:s'),
 				'source' => 'OpenRegister',
 			]
 		);
-
-	}//end handle()
+	}//end logEventDetails()
 
 	/**
 	 * Extract a human-readable event type name from the class name
@@ -204,91 +232,162 @@ class OpenRegisterEventsDebugListener implements IEventListener {
 	 * @return array|null Payload, or null when the event is not an Object* event
 	 */
 	private function extractObjectEventData(Event $event): ?array {
-		if ($event instanceof ObjectCreatedEvent) {
-			$object = $event->getObject();
-			return [
-				'eventType' => 'ObjectCreated',
-				'objectId' => $object->getId(),
-				'objectUuid' => $object->getUuid(),
-				'registerId' => $object->getRegister(),
-				'schemaId' => $object->getSchema(),
-				'owner' => $object->getOwner(),
-				'created' => $object->getCreated()?->format('Y-m-d H:i:s'),
-				'objectData' => $this->getSafeObjectData(objectData: $object->getObject()),
-			];
-		}
+		return $this->projectEvent(
+			event: $event,
+			projections: [
+				ObjectCreatedEvent::class => $this->objectCreatedData(...),
+				ObjectUpdatedEvent::class => $this->objectUpdatedData(...),
+				ObjectDeletedEvent::class => $this->objectDeletedData(...),
+				ObjectLockedEvent::class => $this->objectLockedData(...),
+				ObjectUnlockedEvent::class => $this->objectUnlockedData(...),
+				ObjectRevertedEvent::class => $this->objectRevertedData(...),
+			]
+		);
+	}//end extractObjectEventData()
 
-		if ($event instanceof ObjectUpdatedEvent) {
-			$newObject = $event->getNewObject();
-			$oldObject = $event->getOldObject();
-			$oldObjectData = $oldObject?->getObject();
-
-			return [
-				'eventType' => 'ObjectUpdated',
-				'newObjectId' => $newObject->getId(),
-				'newObjectUuid' => $newObject->getUuid(),
-				'oldObjectId' => $oldObject?->getId(),
-				'oldObjectUuid' => $oldObject?->getUuid(),
-				'registerId' => $newObject->getRegister(),
-				'schemaId' => $newObject->getSchema(),
-				'owner' => $newObject->getOwner(),
-				'updated' => $newObject->getUpdated()?->format('Y-m-d H:i:s'),
-				'newObjectData' => $this->getSafeObjectData(objectData: $newObject->getObject()),
-				'oldObjectData' => $oldObjectData,
-			];
-		}//end if
-
-		if ($event instanceof ObjectDeletedEvent) {
-			$object = $event->getObject();
-			return [
-				'eventType' => 'ObjectDeleted',
-				'objectId' => $object->getId(),
-				'objectUuid' => $object->getUuid(),
-				'registerId' => $object->getRegister(),
-				'schemaId' => $object->getSchema(),
-				'owner' => $object->getOwner(),
-				'objectData' => $this->getSafeObjectData(objectData: $object->getObject()),
-			];
-		}
-
-		if ($event instanceof ObjectLockedEvent) {
-			$object = $event->getObject();
-			return [
-				'eventType' => 'ObjectLocked',
-				'objectId' => $object->getId(),
-				'objectUuid' => $object->getUuid(),
-				'registerId' => $object->getRegister(),
-				'schemaId' => $object->getSchema(),
-				'lockedBy' => $object->getLockedBy(),
-				'lockedAt' => null,
-			];
-		}
-
-		if ($event instanceof ObjectUnlockedEvent) {
-			$object = $event->getObject();
-			return [
-				'eventType' => 'ObjectUnlocked',
-				'objectId' => $object->getId(),
-				'objectUuid' => $object->getUuid(),
-				'registerId' => $object->getRegister(),
-				'schemaId' => $object->getSchema(),
-			];
-		}
-
-		if ($event instanceof ObjectRevertedEvent) {
-			$object = $event->getObject();
-			return [
-				'eventType' => 'ObjectReverted',
-				'objectId' => $object->getId(),
-				'objectUuid' => $object->getUuid(),
-				'registerId' => $object->getRegister(),
-				'schemaId' => $object->getSchema(),
-				'revertedTo' => $event->getRevertPoint(),
-			];
+	/**
+	 * Project an event with the first projection whose event class it is an instance of.
+	 *
+	 * @param Event                  $event       The dispatched event
+	 * @param array<string, Closure> $projections Projection per event class, in check order
+	 *
+	 * @return array|null Payload, or null when no projection applies
+	 */
+	private function projectEvent(Event $event, array $projections): ?array {
+		foreach ($projections as $eventClass => $project) {
+			if ($event instanceof $eventClass) {
+				return $project($event);
+			}
 		}
 
 		return null;
-	}//end extractObjectEventData()
+	}//end projectEvent()
+
+	/**
+	 * The id, uuid, register and schema of an object.
+	 *
+	 * @param ObjectEntity $object The object
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function objectIdentity(ObjectEntity $object): array {
+		return [
+			'objectId' => $object->getId(),
+			'objectUuid' => $object->getUuid(),
+			'registerId' => $object->getRegister(),
+			'schemaId' => $object->getSchema(),
+		];
+	}//end objectIdentity()
+
+	/**
+	 * Payload of an ObjectCreated event.
+	 *
+	 * @param ObjectCreatedEvent $event The event
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function objectCreatedData(ObjectCreatedEvent $event): array {
+		$object = $event->getObject();
+		return ['eventType' => 'ObjectCreated'] + $this->objectIdentity(object: $object) + [
+			'owner' => $object->getOwner(),
+			'created' => $object->getCreated()?->format('Y-m-d H:i:s'),
+			'objectData' => $this->getSafeObjectData(objectData: $object->getObject()),
+		];
+	}//end objectCreatedData()
+
+	/**
+	 * Payload of an ObjectUpdated event: the new object, and the old one when known.
+	 *
+	 * @param ObjectUpdatedEvent $event The event
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function objectUpdatedData(ObjectUpdatedEvent $event): array {
+		$newObject = $event->getNewObject();
+		$oldObject = $event->getOldObject();
+		$oldObjectData = $oldObject?->getObject();
+
+		return [
+			'eventType' => 'ObjectUpdated',
+			'newObjectId' => $newObject->getId(),
+			'newObjectUuid' => $newObject->getUuid(),
+		] + $this->oldObjectIdentity(oldObject: $oldObject) + [
+			'registerId' => $newObject->getRegister(),
+			'schemaId' => $newObject->getSchema(),
+			'owner' => $newObject->getOwner(),
+			'updated' => $newObject->getUpdated()?->format('Y-m-d H:i:s'),
+			'newObjectData' => $this->getSafeObjectData(objectData: $newObject->getObject()),
+			'oldObjectData' => $oldObjectData,
+		];
+	}//end objectUpdatedData()
+
+	/**
+	 * The id and uuid of the object before an update, null when unknown.
+	 *
+	 * @param ObjectEntity|null $oldObject The object before the update
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function oldObjectIdentity(?ObjectEntity $oldObject): array {
+		return [
+			'oldObjectId' => $oldObject?->getId(),
+			'oldObjectUuid' => $oldObject?->getUuid(),
+		];
+	}//end oldObjectIdentity()
+
+	/**
+	 * Payload of an ObjectDeleted event.
+	 *
+	 * @param ObjectDeletedEvent $event The event
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function objectDeletedData(ObjectDeletedEvent $event): array {
+		$object = $event->getObject();
+		return ['eventType' => 'ObjectDeleted'] + $this->objectIdentity(object: $object) + [
+			'owner' => $object->getOwner(),
+			'objectData' => $this->getSafeObjectData(objectData: $object->getObject()),
+		];
+	}//end objectDeletedData()
+
+	/**
+	 * Payload of an ObjectLocked event.
+	 *
+	 * @param ObjectLockedEvent $event The event
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function objectLockedData(ObjectLockedEvent $event): array {
+		$object = $event->getObject();
+		return ['eventType' => 'ObjectLocked'] + $this->objectIdentity(object: $object) + [
+			'lockedBy' => $object->getLockedBy(),
+			'lockedAt' => null,
+		];
+	}//end objectLockedData()
+
+	/**
+	 * Payload of an ObjectUnlocked event.
+	 *
+	 * @param ObjectUnlockedEvent $event The event
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function objectUnlockedData(ObjectUnlockedEvent $event): array {
+		return ['eventType' => 'ObjectUnlocked'] + $this->objectIdentity(object: $event->getObject());
+	}//end objectUnlockedData()
+
+	/**
+	 * Payload of an ObjectReverted event.
+	 *
+	 * @param ObjectRevertedEvent $event The event
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function objectRevertedData(ObjectRevertedEvent $event): array {
+		return ['eventType' => 'ObjectReverted'] + $this->objectIdentity(object: $event->getObject()) + [
+			'revertedTo' => $event->getRevertPoint(),
+		];
+	}//end objectRevertedData()
 
 	/**
 	 * Project Register* events into a debug payload.
@@ -298,38 +397,32 @@ class OpenRegisterEventsDebugListener implements IEventListener {
 	 * @return array|null Payload, or null when not a Register* event
 	 */
 	private function extractRegisterEventData(Event $event): ?array {
-		if ($event instanceof RegisterCreatedEvent) {
-			$register = $event->getRegister();
-			return [
-				'eventType' => 'RegisterCreated',
-				'registerId' => $register->getId(),
-				'registerTitle' => $register->getTitle(),
-				'registerSlug' => $register->getSlug(),
-			];
-		}
-
-		if ($event instanceof RegisterUpdatedEvent) {
-			$register = $event->getNewRegister();
-			return [
-				'eventType' => 'RegisterUpdated',
-				'registerId' => $register->getId(),
-				'registerTitle' => $register->getTitle(),
-				'registerSlug' => $register->getSlug(),
-			];
-		}
-
-		if ($event instanceof RegisterDeletedEvent) {
-			$register = $event->getRegister();
-			return [
-				'eventType' => 'RegisterDeleted',
-				'registerId' => $register->getId(),
-				'registerTitle' => $register->getTitle(),
-				'registerSlug' => $register->getSlug(),
-			];
-		}
-
-		return null;
+		return $this->projectEvent(
+			event: $event,
+			projections: [
+				RegisterCreatedEvent::class => fn (RegisterCreatedEvent $e) => $this->registerData(eventType: 'RegisterCreated', register: $e->getRegister()),
+				RegisterUpdatedEvent::class => fn (RegisterUpdatedEvent $e) => $this->registerData(eventType: 'RegisterUpdated', register: $e->getNewRegister()),
+				RegisterDeletedEvent::class => fn (RegisterDeletedEvent $e) => $this->registerData(eventType: 'RegisterDeleted', register: $e->getRegister()),
+			]
+		);
 	}//end extractRegisterEventData()
+
+	/**
+	 * Payload of a Register* event.
+	 *
+	 * @param string $eventType The event type name
+	 * @param object $register  The register
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function registerData(string $eventType, object $register): array {
+		return [
+			'eventType' => $eventType,
+			'registerId' => $register->getId(),
+			'registerTitle' => $register->getTitle(),
+			'registerSlug' => $register->getSlug(),
+		];
+	}//end registerData()
 
 	/**
 	 * Project Schema* events into a debug payload.
@@ -339,38 +432,32 @@ class OpenRegisterEventsDebugListener implements IEventListener {
 	 * @return array|null Payload, or null when not a Schema* event
 	 */
 	private function extractSchemaEventData(Event $event): ?array {
-		if ($event instanceof SchemaCreatedEvent) {
-			$schema = $event->getSchema();
-			return [
-				'eventType' => 'SchemaCreated',
-				'schemaId' => $schema->getId(),
-				'schemaTitle' => $schema->getTitle(),
-				'schemaVersion' => $schema->getVersion(),
-			];
-		}
-
-		if ($event instanceof SchemaUpdatedEvent) {
-			$schema = $event->getNewSchema();
-			return [
-				'eventType' => 'SchemaUpdated',
-				'schemaId' => $schema->getId(),
-				'schemaTitle' => $schema->getTitle(),
-				'schemaVersion' => $schema->getVersion(),
-			];
-		}
-
-		if ($event instanceof SchemaDeletedEvent) {
-			$schema = $event->getSchema();
-			return [
-				'eventType' => 'SchemaDeleted',
-				'schemaId' => $schema->getId(),
-				'schemaTitle' => $schema->getTitle(),
-				'schemaVersion' => $schema->getVersion(),
-			];
-		}
-
-		return null;
+		return $this->projectEvent(
+			event: $event,
+			projections: [
+				SchemaCreatedEvent::class => fn (SchemaCreatedEvent $e) => $this->schemaData(eventType: 'SchemaCreated', schema: $e->getSchema()),
+				SchemaUpdatedEvent::class => fn (SchemaUpdatedEvent $e) => $this->schemaData(eventType: 'SchemaUpdated', schema: $e->getNewSchema()),
+				SchemaDeletedEvent::class => fn (SchemaDeletedEvent $e) => $this->schemaData(eventType: 'SchemaDeleted', schema: $e->getSchema()),
+			]
+		);
 	}//end extractSchemaEventData()
+
+	/**
+	 * Payload of a Schema* event.
+	 *
+	 * @param string $eventType The event type name
+	 * @param object $schema    The schema
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function schemaData(string $eventType, object $schema): array {
+		return [
+			'eventType' => $eventType,
+			'schemaId' => $schema->getId(),
+			'schemaTitle' => $schema->getTitle(),
+			'schemaVersion' => $schema->getVersion(),
+		];
+	}//end schemaData()
 
 	/**
 	 * Project Organisation* events into a debug payload.

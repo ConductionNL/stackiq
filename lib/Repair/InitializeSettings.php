@@ -10,6 +10,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -36,6 +39,25 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/repair-init/spec.md
  */
 class InitializeSettings implements IRepairStep {
+	/**
+	 * Defaults seeded only when unset (admin overrides survive), in seeding order:
+	 * - contract_expiry_window_days: openspec/specs/contract-administration/spec.md
+	 * - eol_warning_window_days: openspec/specs/application-lifecycle-tracking/spec.md
+	 * - portfolio_report_page_size_ceiling: openspec/changes/portfolio-rationalization-time/specs
+	 *   /portfolio-rationalization-time/spec.md#requirement-report-aggregation-queries-are-bounded
+	 * - federation_*: openspec/specs/federated-catalog-sync/spec.md
+	 *
+	 * @var array<string, int|bool|string>
+	 */
+	private const SEEDED_DEFAULTS = [
+		'contract_expiry_window_days' => 90,
+		'eol_warning_window_days' => 180,
+		'portfolio_report_page_size_ceiling' => 500,
+		'federation_enabled' => false,
+		'federation_directory_url' => 'https://directory.opencatalogi.nl',
+		'federation_sync_interval' => 3600,
+	];
+
 	/**
 	 * Constructor for InitializeSettings.
 	 *
@@ -70,96 +92,136 @@ class InitializeSettings implements IRepairStep {
 	 *
 	 * @return void
 	 * @spec   openspec/specs/repair-init/spec.md
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity) Complexity 11 (threshold 10). A repair step
-	 * runs at install/upgrade time with no user session and must never abort the upgrade, so the
-	 * body is a sequence of independent "is this piece already present / still resolvable?"
-	 * checks, each with its own tolerated-failure branch that reports to `IOutput` and continues.
-	 *
-	 * @SuppressWarnings(PHPMD.NPathComplexity) NPath 385 (threshold 200) — the product of those
-	 * independent tolerated-failure checks, not nested logic.
 	 */
 	public function run(IOutput $output): void {
 		$output->startProgress(1);
 
 		try {
 			$currentAppVersion = $this->appManager->getAppVersion(AppIdentity::APP_ID);
-			$lastInitVersion = $this->config->getValueString(AppIdentity::APP_ID, 'last_initialized_version', '');
 
 			// Only initialize if version changed or never initialized.
-			if ($lastInitVersion === $currentAppVersion) {
-				$output->info('Settings already initialized for version ' . $currentAppVersion);
-				$output->advance(1);
-				$output->finishProgress();
+			if ($this->finishIfInitialized(output: $output, version: $currentAppVersion) === true) {
 				return;
 			}
 
-			$output->info('Initializing settings for version ' . $currentAppVersion);
-			$this->logger->info('Stackiq repair: Starting initialization for version ' . $currentAppVersion);
-
-			// @spec openspec/specs/contract-administration/spec.md
-			// Seed window defaults only when the admin has not set them, so
-			// upgrades never clobber an operator's chosen window.
-			if ($this->config->hasKey(AppIdentity::APP_ID, 'contract_expiry_window_days') === false) {
-				$this->config->setValueInt(AppIdentity::APP_ID, 'contract_expiry_window_days', 90);
-			}
-
-			// @spec openspec/specs/application-lifecycle-tracking/spec.md
-			// Seed the EOL warning window default only when unset, so an
-			// operator's chosen window survives upgrades.
-			if ($this->config->hasKey(AppIdentity::APP_ID, 'eol_warning_window_days') === false) {
-				$this->config->setValueInt(AppIdentity::APP_ID, 'eol_warning_window_days', 180);
-			}
-
-			// @spec openspec/changes/portfolio-rationalization-time/specs
-			//       /portfolio-rationalization-time/spec.md
-			//       #requirement-report-aggregation-queries-are-bounded
-			// Seed the portfolio-report page-size ceiling default only when
-			// unset, so an operator's chosen bound survives upgrades.
-			if ($this->config->hasKey(AppIdentity::APP_ID, 'portfolio_report_page_size_ceiling') === false) {
-				$this->config->setValueInt(AppIdentity::APP_ID, 'portfolio_report_page_size_ceiling', 500);
-			}
-
-			// @spec openspec/specs/federated-catalog-sync/spec.md
-			// Seed federation defaults only when unset (admin overrides survive).
-			if ($this->config->hasKey(AppIdentity::APP_ID, 'federation_enabled') === false) {
-				$this->config->setValueBool(AppIdentity::APP_ID, 'federation_enabled', false);
-			}
-
-			if ($this->config->hasKey(AppIdentity::APP_ID, 'federation_directory_url') === false) {
-				$this->config->setValueString(AppIdentity::APP_ID, 'federation_directory_url', 'https://directory.opencatalogi.nl');
-			}
-
-			if ($this->config->hasKey(AppIdentity::APP_ID, 'federation_sync_interval') === false) {
-				$this->config->setValueInt(AppIdentity::APP_ID, 'federation_sync_interval', 3600);
-			}
-
-			// Get the settings service and initialize.
-			$settingsService = $this->container->get(SettingsService::class);
-			$result = $settingsService->initialize();
-
-			// Mark this version as initialized regardless of partial failures.
-			// This prevents repeated attempts on every request.
-			$this->config->setValueString(AppIdentity::APP_ID, 'last_initialized_version', $currentAppVersion);
-
-			if (empty($result['errors']) === false) {
-				foreach ($result['errors'] as $error) {
-					$output->warning('Initialization warning: ' . $error);
-					$this->logger->warning('Stackiq repair: ' . $error);
-				}
-			}
-
-			$output->info('Settings initialization completed');
-			$this->logger->info('Stackiq repair: Initialization completed', ['result' => $result]);
+			$this->initializeVersion(output: $output, version: $currentAppVersion);
 		} catch (\Exception $e) {
-			// Still mark as initialized to prevent repeated failures.
-			$currentAppVersion = $this->appManager->getAppVersion(AppIdentity::APP_ID);
-			$this->config->setValueString(AppIdentity::APP_ID, 'last_initialized_version', $currentAppVersion);
-			$output->warning('Settings initialization failed: ' . $e->getMessage());
-			$this->logger->error('Stackiq repair: Initialization failed', ['exception' => $e->getMessage()]);
-		}//end try
+			$this->recordFailedInitialization(output: $output, error: $e);
+		}
 
 		$output->advance(1);
 		$output->finishProgress();
 	}//end run()
+
+	/**
+	 * Finish the progress when this version was already initialized.
+	 *
+	 * @param IOutput $output  The output interface for progress reporting
+	 * @param string  $version The current app version
+	 *
+	 * @return bool True when the version was already initialized
+	 */
+	private function finishIfInitialized(IOutput $output, string $version): bool {
+		$lastInitVersion = $this->config->getValueString(AppIdentity::APP_ID, 'last_initialized_version', '');
+		if ($lastInitVersion !== $version) {
+			return false;
+		}
+
+		$output->info('Settings already initialized for version ' . $version);
+		$output->advance(1);
+		$output->finishProgress();
+		return true;
+	}//end finishIfInitialized()
+
+	/**
+	 * Seed the defaults, initialize the settings and mark the version initialized.
+	 *
+	 * @param IOutput $output  The output interface for progress reporting
+	 * @param string  $version The current app version
+	 *
+	 * @return void
+	 */
+	private function initializeVersion(IOutput $output, string $version): void {
+		$output->info('Initializing settings for version ' . $version);
+		$this->logger->info('Stackiq repair: Starting initialization for version ' . $version);
+
+		$this->seedDefaults();
+
+		// Get the settings service and initialize.
+		$settingsService = $this->container->get(SettingsService::class);
+		$result = $settingsService->initialize();
+
+		// Mark this version as initialized regardless of partial failures.
+		// This prevents repeated attempts on every request.
+		$this->config->setValueString(AppIdentity::APP_ID, 'last_initialized_version', $version);
+
+		$this->reportInitializationErrors(output: $output, errors: ($result['errors'] ?? []));
+
+		$output->info('Settings initialization completed');
+		$this->logger->info('Stackiq repair: Initialization completed', ['result' => $result]);
+	}//end initializeVersion()
+
+	/**
+	 * Seed each default only when the admin has not set it, so upgrades never
+	 * clobber an operator's chosen value.
+	 *
+	 * @return void
+	 */
+	private function seedDefaults(): void {
+		foreach (self::SEEDED_DEFAULTS as $key => $value) {
+			if ($this->config->hasKey(AppIdentity::APP_ID, $key) === false) {
+				$this->seedDefault(key: $key, value: $value);
+			}
+		}
+	}//end seedDefaults()
+
+	/**
+	 * Write one default with the setter of its type.
+	 *
+	 * @param string          $key   The config key
+	 * @param int|bool|string $value The default value
+	 *
+	 * @return void
+	 */
+	private function seedDefault(string $key, int|bool|string $value): void {
+		match (true) {
+			is_bool($value) => $this->config->setValueBool(AppIdentity::APP_ID, $key, $value),
+			is_int($value) => $this->config->setValueInt(AppIdentity::APP_ID, $key, $value),
+			default => $this->config->setValueString(AppIdentity::APP_ID, $key, $value),
+		};
+	}//end seedDefault()
+
+	/**
+	 * Report each initialization error as a warning.
+	 *
+	 * @param IOutput $output The output interface for progress reporting
+	 * @param mixed   $errors The errors the settings service reported
+	 *
+	 * @return void
+	 */
+	private function reportInitializationErrors(IOutput $output, mixed $errors): void {
+		if (empty($errors) === true) {
+			return;
+		}
+
+		foreach ($errors as $error) {
+			$output->warning('Initialization warning: ' . $error);
+			$this->logger->warning('Stackiq repair: ' . $error);
+		}
+	}//end reportInitializationErrors()
+
+	/**
+	 * Still mark the version as initialized to prevent repeated failures, and report the failure.
+	 *
+	 * @param IOutput    $output The output interface for progress reporting
+	 * @param \Exception $error  The failure
+	 *
+	 * @return void
+	 */
+	private function recordFailedInitialization(IOutput $output, \Exception $error): void {
+		$currentAppVersion = $this->appManager->getAppVersion(AppIdentity::APP_ID);
+		$this->config->setValueString(AppIdentity::APP_ID, 'last_initialized_version', $currentAppVersion);
+		$output->warning('Settings initialization failed: ' . $error->getMessage());
+		$this->logger->error('Stackiq repair: Initialization failed', ['exception' => $error->getMessage()]);
+	}//end recordFailedInitialization()
 }//end class

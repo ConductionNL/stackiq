@@ -47,6 +47,7 @@ use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IURLGenerator;
+use OCP\IUser;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -205,7 +206,8 @@ class SettingsController extends Controller {
 	}//end getRedactedParams()
 
 	/**
-	 * Build the 500 response for a failed config READ.
+	 * Build the 500 response for a failed config READ, or for a config call
+	 * that logs no request params.
 	 *
 	 * Centralises the error-log emission + the
 	 * `{success: false, message: "Failed to <op>: <exception>"}` shape that
@@ -251,6 +253,71 @@ class SettingsController extends Controller {
 			]
 		);
 	}//end buildConfigWriteErrorResponse()
+
+	/**
+	 * The refusal for a caller who is not an administrator: 401 for an
+	 * anonymous caller, 403 for a signed-in non-admin; null for an admin.
+	 *
+	 * @return JSONResponse|null The refusal, or null when the caller is an admin.
+	 */
+	private function adminRefusal(): ?JSONResponse {
+		$currentUser = $this->userSession->getUser();
+		if ($currentUser === null) {
+			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
+			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		}
+
+		return null;
+	}//end adminRefusal()
+
+	/**
+	 * The response to a user-group update: the service's outcome, message and groups.
+	 *
+	 * @param array<string, mixed> $result The service result.
+	 *
+	 * @return JSONResponse
+	 */
+	private function groupsUpdateResponse(array $result): JSONResponse {
+		return new JSONResponse(
+			[
+				'success' => $result['success'],
+				'message' => $result['message'],
+				'groups' => $result['groups'] ?? null,
+			]
+		);
+	}//end groupsUpdateResponse()
+
+	/**
+	 * The refusal for an anonymous caller: 401; null for a signed-in caller.
+	 *
+	 * @return JSONResponse|null The refusal, or null when someone is signed in.
+	 */
+	private function anonymousRefusal(): ?JSONResponse {
+		if ($this->userSession->getUser() === null) {
+			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+		}
+
+		return null;
+	}//end anonymousRefusal()
+
+	/**
+	 * Run one per-section config call, answering an exception with the shared 500 body.
+	 *
+	 * @param string   $operationLabel "get AMEF config" / "update email config" / …
+	 * @param \Closure $call           Builds the success response.
+	 *
+	 * @return JSONResponse
+	 */
+	private function configCall(string $operationLabel, \Closure $call): JSONResponse {
+		try {
+			return $call();
+		} catch (\Exception $e) {
+			return $this->buildConfigReadErrorResponse(operationLabel: $operationLabel, exception: $e);
+		}
+	}//end configCall()
 
 	/**
 	 * Log the failure and build the shared 500 config-error response body.
@@ -1398,8 +1465,7 @@ class SettingsController extends Controller {
 	 * @NoAdminRequired
 	 * @NoCSRFRequired
 	 *
-	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength) framework-required: SSE loop in anonymous Response subclass
-	 * @spec                                          openspec/specs/method-decomposition/spec.md
+	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
 	public function streamProgress(string $operationId): Response {
 		$currentUser = $this->userSession->getUser();
@@ -1407,117 +1473,41 @@ class SettingsController extends Controller {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		// Verify the caller may read this operation before streaming. An
-		// unknown operation streams one error event and closes.
+		$refusal = $this->streamRefusal(operationId: $operationId, user: $currentUser);
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		// Stream Server-Sent Events.
+		return new ProgressStreamResponse(
+			operationId: $operationId,
+			stream: new ProgressEventStream(progressTracker: $this->progressTracker, logger: $this->logger)
+		);
+	}//end streamProgress()
+
+	/**
+	 * The 404 for a caller who may not read the operation; null when the stream may open.
+	 *
+	 * Verifies the caller may read this operation before streaming. An
+	 * unknown operation streams one error event and closes.
+	 *
+	 * @param string $operationId The operation ID.
+	 * @param IUser $user The signed-in caller.
+	 *
+	 * @return JSONResponse|null
+	 *
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 */
+	private function streamRefusal(string $operationId, IUser $user): ?JSONResponse {
 		$progress = $this->progressTracker->getProgress($operationId);
 		if ($progress !== null
-			&& $this->mayReadProgress(progress: $progress, uid: $currentUser->getUID()) === false
+			&& $this->mayReadProgress(progress: $progress, uid: $user->getUID()) === false
 		) {
 			return new JSONResponse(['message' => 'Operation not found', 'error' => 'OPERATION_NOT_FOUND'], 404);
 		}
 
-		// Set headers for Server-Sent Events.
-		$response = new class($operationId, $this->progressTracker, $this->logger) extends Response {
-			/**
-			 * Constructor for the SSE response.
-			 *
-			 * @param string $operationId The operation ID to stream.
-			 * @param ProgressTracker $progressTracker The progress tracker service.
-			 * @param LoggerInterface $logger The logger instance.
-			 */
-			public function __construct(
-				private string $operationId,
-				private ProgressTracker $progressTracker,
-				private LoggerInterface $logger,
-			) {
-				parent::__construct();
-				$this->addHeader(name: 'Content-Type', value: 'text/event-stream');
-				$this->addHeader(name: 'Cache-Control', value: 'no-cache');
-				$this->addHeader(name: 'Connection', value: 'keep-alive');
-				$this->addHeader(name: 'Access-Control-Allow-Headers', value: 'Cache-Control');
-			}//end __construct()
-
-			/**
-			 * Render the SSE stream.
-			 *
-			 * @return string Empty string (output is streamed directly).
-			 *
-			 * @spec openspec/specs/settings-admin-controller/spec.md
-			 */
-			public function render(): string {
-				// Enable output buffering and turn off compression.
-				if (ob_get_level() !== 0) {
-					ob_end_clean();
-				}
-
-				ob_implicit_flush(true);
-
-				// Stream progress updates.
-				$lastProgress = null;
-				$maxAttempts = 300;
-				// 5 minutes with 1-second intervals.
-				$attempts = 0;
-
-				while ($attempts < $maxAttempts) {
-					try {
-						$progress = $this->progressTracker->getProgress($this->operationId);
-
-						if ($progress === null) {
-							// Operation not found, send error and close.
-							echo "event: error\n";
-							echo 'data: ' . json_encode(['error' => 'Operation not found']) . "\n\n";
-							break;
-						}
-
-						// Only send update if progress changed.
-						if ($progress !== $lastProgress) {
-							echo "event: progress\n";
-							echo 'data: ' . json_encode($progress) . "\n\n";
-							$lastProgress = $progress;
-
-							// If operation completed, send final event and close.
-							if ($progress['phase'] === 'completed') {
-								echo "event: completed\n";
-								echo 'data: ' . json_encode($progress) . "\n\n";
-								break;
-							}
-						}
-
-						// Send heartbeat every 10 seconds.
-						if ($attempts % 10 === 0) {
-							echo "event: heartbeat\n";
-							echo 'data: ' . json_encode(['timestamp' => time()]) . "\n\n";
-						}
-
-						flush();
-						sleep(1);
-						$attempts++;
-					} catch (\Exception $e) {
-						$this->logger->error(
-							'Progress streaming error',
-							[
-								'operation_id' => $this->operationId,
-								'error' => $e->getMessage(),
-							]
-						);
-
-						echo "event: error\n";
-						echo 'data: ' . json_encode(['error' => $e->getMessage()]) . "\n\n";
-						break;
-					}//end try
-				}//end while
-
-				// Send final close event.
-				echo "event: close\n";
-				echo 'data: ' . json_encode(['reason' => 'Stream ended']) . "\n\n";
-				flush();
-
-				return '';
-			}//end render()
-		};
-
-		return $response;
-	}//end streamProgress()
+		return null;
+	}//end streamRefusal()
 
 	/**
 	 * Import ArchiMate file.
@@ -1535,13 +1525,9 @@ class SettingsController extends Controller {
 	 * @spec                                 openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function importArchiMate(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -2070,13 +2056,9 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getEmailSettings(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -2094,19 +2076,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get email settings',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get email settings: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get email settings', exception: $e);
 		}//end try
 	}//end getEmailSettings()
 
@@ -2120,13 +2090,9 @@ class SettingsController extends Controller {
 	 * @spec   openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	public function updateEmailSettings(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -2144,20 +2110,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update email settings',
-				[
-					'exception' => $e->getMessage(),
-					'requestData' => $this->getRedactedParams(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to update email settings: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigWriteErrorResponse(operationLabel: 'update email settings', exception: $e);
 		}//end try
 	}//end updateEmailSettings()
 
@@ -2190,19 +2143,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get email templates',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get email templates: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get email templates', exception: $e);
 		}//end try
 	}//end getEmailTemplates()
 
@@ -2238,19 +2179,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				"Failed to get email template {$templateName}",
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => "Failed to get email template {$templateName}: " . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: "get email template {$templateName}", exception: $e);
 		}//end try
 	}//end getEmailTemplate()
 
@@ -2303,20 +2232,7 @@ class SettingsController extends Controller {
 
 			return new JSONResponse(['success' => $success, 'message' => $updateMsg]);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				"Failed to update email template {$templateName}",
-				[
-					'exception' => $e->getMessage(),
-					'requestData' => $this->getRedactedParams(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => "Failed to update email template {$templateName}: " . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigWriteErrorResponse(operationLabel: "update email template {$templateName}", exception: $e);
 		}//end try
 	}//end updateEmailTemplate()
 
@@ -2349,19 +2265,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				"Failed to get default email template {$templateName}",
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => "Failed to get default email template {$templateName}: " . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: "get default email template {$templateName}", exception: $e);
 		}//end try
 	}//end getEmailTemplateDefault()
 
@@ -2394,19 +2298,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				"Failed to get email template variables for {$templateName}",
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => "Failed to get email template variables for {$templateName}: " . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: "get email template variables for {$templateName}", exception: $e);
 		}//end try
 	}//end getEmailTemplateVariables()
 
@@ -2427,13 +2319,9 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getGenericUserGroups(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -2446,20 +2334,8 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get generic user groups',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get generic user groups: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get generic user groups', exception: $e);
+		}
 	}//end getGenericUserGroups()
 
 	/**
@@ -2471,13 +2347,9 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function setGenericUserGroups(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -2487,29 +2359,10 @@ class SettingsController extends Controller {
 			// Delegate all business logic (including validation) to service.
 			$result = $this->settingsService->updateGenericUserGroups($groups);
 
-			return new JSONResponse(
-				[
-					'success' => $result['success'],
-					'message' => $result['message'],
-					'groups' => $result['groups'] ?? null,
-				]
-			);
+			return $this->groupsUpdateResponse(result: $result);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to set generic user groups',
-				[
-					'exception' => $e->getMessage(),
-					'requestData' => $this->getRedactedParams(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to set generic user groups: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
+			return $this->buildConfigWriteErrorResponse(operationLabel: 'set generic user groups', exception: $e);
+		}
 	}//end setGenericUserGroups()
 
 	/**
@@ -2525,13 +2378,9 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getOrganizationAdminGroups(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -2544,20 +2393,8 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get organization admin groups',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get organization admin groups: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get organization admin groups', exception: $e);
+		}
 	}//end getOrganizationAdminGroups()
 
 	/**
@@ -2569,13 +2406,9 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function setOrganizationAdminGroups(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -2585,29 +2418,10 @@ class SettingsController extends Controller {
 			// Delegate all business logic (including validation) to service.
 			$result = $this->settingsService->updateOrganizationAdminGroups($groups);
 
-			return new JSONResponse(
-				[
-					'success' => $result['success'],
-					'message' => $result['message'],
-					'groups' => $result['groups'] ?? null,
-				]
-			);
+			return $this->groupsUpdateResponse(result: $result);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to set organization admin groups',
-				[
-					'exception' => $e->getMessage(),
-					'requestData' => $this->getRedactedParams(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to set organization admin groups: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
+			return $this->buildConfigWriteErrorResponse(operationLabel: 'set organization admin groups', exception: $e);
+		}
 	}//end setOrganizationAdminGroups()
 
 	/**
@@ -2623,13 +2437,9 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getSuperUserGroups(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -2642,20 +2452,8 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get super user groups',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get super user groups: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get super user groups', exception: $e);
+		}
 	}//end getSuperUserGroups()
 
 	/**
@@ -2667,13 +2465,9 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function setSuperUserGroups(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -2683,29 +2477,10 @@ class SettingsController extends Controller {
 			// Delegate all business logic (including validation) to service.
 			$result = $this->settingsService->updateSuperUserGroups($groups);
 
-			return new JSONResponse(
-				[
-					'success' => $result['success'],
-					'message' => $result['message'],
-					'groups' => $result['groups'] ?? null,
-				]
-			);
+			return $this->groupsUpdateResponse(result: $result);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to set super user groups',
-				[
-					'exception' => $e->getMessage(),
-					'requestData' => $this->getRedactedParams(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to set super user groups: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
+			return $this->buildConfigWriteErrorResponse(operationLabel: 'set super user groups', exception: $e);
+		}
 	}//end setSuperUserGroups()
 
 	/**
@@ -2721,13 +2496,9 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getAllGroups(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -2740,19 +2511,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get all groups',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get all groups: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get all groups', exception: $e);
 		}//end try
 	}//end getAllGroups()
 
@@ -2772,13 +2531,9 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function clearArchiMateImportStatus(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -2792,19 +2547,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to clear ArchiMate import status',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to clear ArchiMate import status: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'clear ArchiMate import status', exception: $e);
 		}//end try
 	}//end clearArchiMateImportStatus()
 
@@ -2822,13 +2565,9 @@ class SettingsController extends Controller {
 	 * @spec           openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function killArchiMateImport(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -2842,19 +2581,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to kill ArchiMate import process',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to kill ArchiMate import process: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'kill ArchiMate import process', exception: $e);
 		}//end try
 	}//end killArchiMateImport()
 
@@ -2871,13 +2598,9 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function cancelArchiMateImport(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		$operationId = $this->request->getParam('operationId');
@@ -2897,19 +2620,7 @@ class SettingsController extends Controller {
 
 			return new JSONResponse(['success' => $result['cancelled'], 'message' => $message, 'details' => $result]);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to cancel ArchiMate import',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to cancel ArchiMate import: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'cancel ArchiMate import', exception: $e);
 		}//end try
 	}//end cancelArchiMateImport()
 
@@ -2924,13 +2635,9 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function clearArchiMateExportStatus(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -2943,19 +2650,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to clear ArchiMate export status',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to clear ArchiMate export status: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'clear ArchiMate export status', exception: $e);
 		}//end try
 	}//end clearArchiMateExportStatus()
 
@@ -2984,19 +2679,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get ArchiMate settings',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get ArchiMate settings: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get ArchiMate settings', exception: $e);
 		}//end try
 	}//end getArchiMateSettings()
 
@@ -3024,19 +2707,7 @@ class SettingsController extends Controller {
 				]
 			);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get object counts',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get object counts: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get object counts', exception: $e);
 		}//end try
 	}//end getObjectCounts()
 
@@ -3054,29 +2725,10 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getArchiMateConfig(): JSONResponse {
-		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		try {
-			$config = $this->settingsService->getArchiMateConfig();
-
-			return new JSONResponse($config);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get ArchiMate config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get ArchiMate config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->anonymousRefusal() ?? $this->configCall(
+			operationLabel: 'get ArchiMate config',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->getArchiMateConfig())
+		);
 	}//end getArchiMateConfig()
 
 	/**
@@ -3088,26 +2740,10 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function updateArchiMateConfig(): JSONResponse {
-		try {
-			$data = $this->request->getParams();
-			$result = $this->settingsService->updateArchiMateConfig($data);
-
-			return new JSONResponse($result);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update ArchiMate config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to update ArchiMate config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->configCall(
+			operationLabel: 'update ArchiMate config',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->updateArchiMateConfig($this->request->getParams()))
+		);
 	}//end updateArchiMateConfig()
 
 	/**
@@ -3128,34 +2764,10 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getEmailConfig(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
-		}
-
-		try {
-			$config = $this->settingsService->getEmailConfigFocused();
-
-			return new JSONResponse($config);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get email config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get email config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->adminRefusal() ?? $this->configCall(
+			operationLabel: 'get email config',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->getEmailConfigFocused())
+		);
 	}//end getEmailConfig()
 
 	/**
@@ -3167,26 +2779,10 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function updateEmailConfig(): JSONResponse {
-		try {
-			$data = $this->request->getParams();
-			$result = $this->settingsService->updateEmailConfig($data);
-
-			return new JSONResponse($result);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update email config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to update email config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->configCall(
+			operationLabel: 'update email config',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->updateEmailConfig($this->request->getParams()))
+		);
 	}//end updateEmailConfig()
 
 	/**
@@ -3199,29 +2795,10 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getAmefConfig(): JSONResponse {
-		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		try {
-			$config = $this->settingsService->getAmefConfigFocused();
-
-			return new JSONResponse($config);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get AMEF config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get AMEF config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->anonymousRefusal() ?? $this->configCall(
+			operationLabel: 'get AMEF config',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->getAmefConfigFocused())
+		);
 	}//end getAmefConfig()
 
 	/**
@@ -3233,26 +2810,10 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function updateAmefConfig(): JSONResponse {
-		try {
-			$data = $this->request->getParams();
-			$result = $this->settingsService->updateAmefConfig($data);
-
-			return new JSONResponse($result);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update AMEF config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to update AMEF config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->configCall(
+			operationLabel: 'update AMEF config',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->updateAmefConfig($this->request->getParams()))
+		);
 	}//end updateAmefConfig()
 
 	/**
@@ -3265,29 +2826,10 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getVoorzieningenConfig(): JSONResponse {
-		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		try {
-			$config = $this->settingsService->getVoorzieningenConfigFocused();
-
-			return new JSONResponse($config);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get Voorzieningen config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get Voorzieningen config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->anonymousRefusal() ?? $this->configCall(
+			operationLabel: 'get Voorzieningen config',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->getVoorzieningenConfigFocused())
+		);
 	}//end getVoorzieningenConfig()
 
 	/**
@@ -3299,26 +2841,10 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function updateVoorzieningenConfig(): JSONResponse {
-		try {
-			$data = $this->request->getParams();
-			$result = $this->settingsService->updateVoorzieningenConfig($data);
-
-			return new JSONResponse($result);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update Voorzieningen config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to update Voorzieningen config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->configCall(
+			operationLabel: 'update Voorzieningen config',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->updateVoorzieningenConfig($this->request->getParams()))
+		);
 	}//end updateVoorzieningenConfig()
 
 	/**
@@ -3331,29 +2857,10 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getObjectsCounts(): JSONResponse {
-		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		try {
-			$counts = $this->settingsService->getObjectsCounts();
-
-			return new JSONResponse($counts);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get object counts',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get object counts: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->anonymousRefusal() ?? $this->configCall(
+			operationLabel: 'get object counts',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->getObjectsCounts())
+		);
 	}//end getObjectsCounts()
 
 	/**
@@ -3366,29 +2873,10 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getObjectsStatistics(): JSONResponse {
-		if ($this->userSession->getUser() === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		try {
-			$statistics = $this->settingsService->getObjectsStatistics();
-
-			return new JSONResponse($statistics);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get object statistics',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get object statistics: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->anonymousRefusal() ?? $this->configCall(
+			operationLabel: 'get object statistics',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->getObjectsStatistics())
+		);
 	}//end getObjectsStatistics()
 
 	/**
@@ -3408,34 +2896,10 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function getUserGroupsConfig(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
-		}
-
-		try {
-			$config = $this->settingsService->getUserGroupsConfig();
-
-			return new JSONResponse($config);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get user groups config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get user groups config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->adminRefusal() ?? $this->configCall(
+			operationLabel: 'get user groups config',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->getUserGroupsConfig())
+		);
 	}//end getUserGroupsConfig()
 
 	/**
@@ -3447,35 +2911,10 @@ class SettingsController extends Controller {
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function updateUserGroupsConfig(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
-		}
-
-		try {
-			$data = $this->request->getParams();
-			$result = $this->settingsService->updateUserGroupsConfig($data);
-
-			return new JSONResponse($result);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update user groups config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to update user groups config: ' . $e->getMessage(),
-				],
-				500
-			);
-		}
+		return $this->adminRefusal() ?? $this->configCall(
+			operationLabel: 'update user groups config',
+			call: fn (): JSONResponse => new JSONResponse($this->settingsService->updateUserGroupsConfig($this->request->getParams()))
+		);
 	}//end updateUserGroupsConfig()
 
 	/**
@@ -3627,13 +3066,9 @@ class SettingsController extends Controller {
 	 * @spec           openspec/specs/settings-admin-controller/spec.md
 	 */
 	public function bulkSyncStandards(): JSONResponse {
-		$currentUser = $this->userSession->getUser();
-		if ($currentUser === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		if ($this->groupManager->isAdmin($currentUser->getUID()) === false) {
-			return new JSONResponse(['message' => 'Admin privileges required'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->adminRefusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
@@ -3705,19 +3140,7 @@ class SettingsController extends Controller {
 			$config = $this->settingsService->getCronjobConfig();
 			return new JSONResponse($config);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get cronjob config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to get cronjob config: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigReadErrorResponse(operationLabel: 'get cronjob config', exception: $e);
 		}
 	}//end getCronjobConfig()
 
@@ -3742,20 +3165,7 @@ class SettingsController extends Controller {
 
 			return new JSONResponse($result, $statusCode);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update cronjob config',
-				[
-					'exception' => $e->getMessage(),
-					'requestData' => $this->getRedactedParams(),
-				]
-			);
-			return new JSONResponse(
-				[
-					'success' => false,
-					'message' => 'Failed to update cronjob config: ' . $e->getMessage(),
-				],
-				500
-			);
+			return $this->buildConfigWriteErrorResponse(operationLabel: 'update cronjob config', exception: $e);
 		}//end try
 	}//end updateCronjobConfig()
 

@@ -15,6 +15,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -58,6 +61,22 @@ class GroupHandler {
 	 * @var string
 	 */
 	private const APP_NAME = 'stackiq';
+
+	/**
+	 * The role-based groups ensured next to the generic user groups.
+	 */
+	private const ROLE_BASED_GROUPS = [
+		'aanbod-beheerder',
+		'gebruik-beheerder',
+		'gebruik-raadpleger',
+		'functioneel-beheerder',
+		'vng-raadpleger',
+		'organisatie-beheerder',
+		// Plural form for organization contacts.
+		'organisaties-beheerder',
+		// For users from Gemeente organizations.
+		'ambtenaar',
+	];
 
 	/**
 	 * GroupHandler constructor
@@ -147,50 +166,58 @@ class GroupHandler {
 	 */
 	public function ensureGenericUserGroupsExist(): array {
 		$genericGroups = $genericGroups = $this->getGenericUserGroups();
-		$createdGroups = [];
-
-		foreach ($genericGroups as $groupName) {
-			if ($this->_groupManager->get($groupName) === null) {
-				$group = $this->_groupManager->createGroup($groupName);
-				if ($group !== null) {
-					$createdGroups[] = $groupName;
-					$this->_logger->info(
-						'Created generic user group',
-						['groupName' => $groupName]
-					);
-				}
-			}
-		}
+		$createdGroups = $this->createMissingGroups(groupNames: $genericGroups, logMessage: 'Created generic user group');
 
 		// Also ensure role-based groups exist.
-		$roleBasedGroups = [
-			'aanbod-beheerder',
-			'gebruik-beheerder',
-			'gebruik-raadpleger',
-			'functioneel-beheerder',
-			'vng-raadpleger',
-			'organisatie-beheerder',
-			// Plural form for organization contacts.
-			'organisaties-beheerder',
-			// For users from Gemeente organizations.
-			'ambtenaar',
-		];
+		return array_merge(
+			$createdGroups,
+			$this->createMissingGroups(groupNames: self::ROLE_BASED_GROUPS, logMessage: 'Created role-based group')
+		);
+	}//end ensureGenericUserGroupsExist()
 
-		foreach ($roleBasedGroups as $groupName) {
-			if ($this->_groupManager->get($groupName) === null) {
-				$group = $this->_groupManager->createGroup($groupName);
-				if ($group !== null) {
-					$createdGroups[] = $groupName;
-					$this->_logger->info(
-						'Created role-based group',
-						['groupName' => $groupName]
-					);
-				}
+	/**
+	 * Create the groups that do not exist yet.
+	 *
+	 * @param array  $groupNames The groups to ensure.
+	 * @param string $logMessage The message logged for each group created.
+	 *
+	 * @return array The groups that were created, in order.
+	 */
+	private function createMissingGroups(array $groupNames, string $logMessage): array {
+		$createdGroups = [];
+		foreach ($groupNames as $groupName) {
+			if ($this->createMissingGroup(groupName: $groupName, logMessage: $logMessage) === true) {
+				$createdGroups[] = $groupName;
 			}
 		}
 
 		return $createdGroups;
-	}//end ensureGenericUserGroupsExist()
+	}//end createMissingGroups()
+
+	/**
+	 * Create a group when it does not exist yet.
+	 *
+	 * @param mixed  $groupName  The group to ensure.
+	 * @param string $logMessage The message logged when the group is created.
+	 *
+	 * @return bool True when the group was created.
+	 */
+	private function createMissingGroup(mixed $groupName, string $logMessage): bool {
+		if ($this->_groupManager->get($groupName) !== null) {
+			return false;
+		}
+
+		$group = $this->_groupManager->createGroup($groupName);
+		if ($group === null) {
+			return false;
+		}
+
+		$this->_logger->info(
+			$logMessage,
+			['groupName' => $groupName]
+		);
+		return true;
+	}//end createMissingGroup()
 
 	/**
 	 * Creates a group if it doesn't exist
@@ -284,10 +311,7 @@ class GroupHandler {
 	 * @spec   openspec/specs/sc-handlers/spec.md
 	 */
 	public function updateRoleBasedGroups(IUser $user, array $objectData): void {
-		$userRoles = $objectData['roles'] ?? [];
-		if (is_array($userRoles) === false) {
-			$userRoles = [];
-		}
+		$userRoles = self::rolesOf(objectData: $objectData);
 
 		$this->_logger->info(
 			'Updating role-based groups for user',
@@ -297,54 +321,136 @@ class GroupHandler {
 			]
 		);
 
-		// Role names are compared without regard to case: the roles enum is
-		// capitalised (Aanbod-beheerder) while the role groups are lower case
-		// (aanbod-beheerder), stackiq#1137.
-		$userRolesLower = array_map(
+		$userRolesLower = self::lowerCaseRoles(roles: $userRoles);
+
+		// Get the configured generic user groups.
+		foreach ($this->getGenericUserGroups() as $groupName) {
+			$this->updateRoleGroup(membership: $this->roleGroupMembership(user: $user, groupName: $groupName), userRolesLower: $userRolesLower);
+		}
+	}//end updateRoleBasedGroups()
+
+	/**
+	 * The roles of a contactpersoon.
+	 *
+	 * @param array $objectData The contactpersoon data.
+	 *
+	 * @return array The roles, or [] when they are missing or not a list.
+	 */
+	private static function rolesOf(array $objectData): array {
+		$userRoles = $objectData['roles'] ?? [];
+		if (is_array($userRoles) === false) {
+			return [];
+		}
+
+		return $userRoles;
+	}//end rolesOf()
+
+	/**
+	 * Role names are compared without regard to case: the roles enum is
+	 * capitalised (Aanbod-beheerder) while the role groups are lower case
+	 * (aanbod-beheerder), stackiq#1137.
+	 *
+	 * @param array $roles The roles.
+	 *
+	 * @return array The roles, trimmed and lower-cased.
+	 */
+	private static function lowerCaseRoles(array $roles): array {
+		return array_map(
 			static function ($role): string {
 				return strtolower(trim((string)$role));
 			},
-			$userRoles
+			$roles
 		);
+	}//end lowerCaseRoles()
 
-		// Get the configured generic user groups.
-		$genericGroups = $this->getGenericUserGroups();
+	/**
+	 * The user's membership of a role-based group, creating the group when it does not exist.
+	 *
+	 * @param IUser $user      The user.
+	 * @param mixed $groupName The configured group name.
+	 *
+	 * @return RoleGroupMembership|null The membership, or null when the group cannot be created.
+	 */
+	private function roleGroupMembership(IUser $user, mixed $groupName): ?RoleGroupMembership {
+		$group = $this->createGroupIfNotExists(groupName: $groupName);
+		if ($group === null) {
+			return null;
+		}
 
-		foreach ($genericGroups as $groupName) {
-			$group = $this->createGroupIfNotExists(groupName: $groupName);
+		$membership = new RoleGroupMembership();
+		$membership->user = $user;
+		$membership->groupName = $groupName;
+		$membership->group = $group;
+		return $membership;
+	}//end roleGroupMembership()
 
-			if ($group !== null) {
-				$hasRole = in_array(needle: strtolower(trim($groupName)), haystack: $userRolesLower, strict: true);
-				$inGroup = $group->inGroup($user);
+	/**
+	 * Add the user to the group when they hold its role, remove them when they no longer do.
+	 *
+	 * @param RoleGroupMembership|null $membership     The membership, or null when the group is not available.
+	 * @param array                    $userRolesLower The user's roles, trimmed and lower-cased.
+	 *
+	 * @return void
+	 */
+	private function updateRoleGroup(?RoleGroupMembership $membership, array $userRolesLower): void {
+		if ($membership === null) {
+			return;
+		}
 
-				if ($hasRole === true && $inGroup === false) {
-					// Add user to group.
-					$group->addUser($user);
-					$this->_logger->info(
-						'Added user to role-based group',
-						[
-							'username' => $user->getUID(),
-							'group' => $groupName,
-							'role' => $groupName,
-						]
-					);
-				} elseif ($hasRole === false && $inGroup === true) {
-					// Remove user from group (except for system groups).
-					// Note: Removed 'ambtenaar' from protected groups since it's no longer automatically assigned.
-					if (in_array(needle: $groupName, haystack: ['software-catalog-users']) === false) {
-						$group->removeUser($user);
-						$this->_logger->info(
-							'Removed user from role-based group',
-							[
-								'username' => $user->getUID(),
-								'group' => $groupName,
-							]
-						);
-					}
-				}//end if
-			}//end if
-		}//end foreach
-	}//end updateRoleBasedGroups()
+		$hasRole = in_array(needle: strtolower(trim($membership->groupName)), haystack: $userRolesLower, strict: true);
+		$inGroup = $membership->group->inGroup($membership->user);
+		if ($hasRole === $inGroup) {
+			return;
+		}
+
+		if ($hasRole === true) {
+			$this->addToRoleGroup(membership: $membership);
+			return;
+		}
+
+		$this->removeFromRoleGroup(membership: $membership);
+	}//end updateRoleGroup()
+
+	/**
+	 * Add the user to a role-based group.
+	 *
+	 * @param RoleGroupMembership $membership The membership.
+	 *
+	 * @return void
+	 */
+	private function addToRoleGroup(RoleGroupMembership $membership): void {
+		$membership->group->addUser($membership->user);
+		$this->_logger->info(
+			'Added user to role-based group',
+			[
+				'username' => $membership->user->getUID(),
+				'group' => $membership->groupName,
+				'role' => $membership->groupName,
+			]
+		);
+	}//end addToRoleGroup()
+
+	/**
+	 * Remove the user from a role-based group (except for system groups).
+	 *
+	 * Note: Removed 'ambtenaar' from protected groups since it's no longer automatically assigned.
+	 *
+	 * @param RoleGroupMembership $membership The membership.
+	 *
+	 * @return void
+	 */
+	private function removeFromRoleGroup(RoleGroupMembership $membership): void {
+		if (in_array(needle: $membership->groupName, haystack: ['software-catalog-users']) === false) {
+			$membership->group->removeUser($membership->user);
+			$this->_logger->info(
+				'Removed user from role-based group',
+				[
+					'username' => $membership->user->getUID(),
+					'group' => $membership->groupName,
+				]
+			);
+		}
+	}//end removeFromRoleGroup()
 
 	/**
 	 * Updates organization-based groups for a user
@@ -415,7 +521,7 @@ class GroupHandler {
 			return null;
 		}
 
-		$organizationObject = $objectService->find($organisationUuid, [], false, $registerId, $organisationSchemaId);
+		$organizationObject = $objectService->find(id: $organisationUuid, _extend: [], files: false, register: $registerId, schema: $organisationSchemaId);
 		if ($organizationObject === null) {
 			return null;
 		}
