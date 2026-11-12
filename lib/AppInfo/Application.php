@@ -81,6 +81,7 @@ use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\Settings\EolSyncSettings;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
@@ -163,6 +164,10 @@ class Application extends App implements IBootstrap {
 		);
 		$context->registerServiceAlias(
 			ObjectTypeLocatorInterface::class,
+			SettingsService::class
+		);
+		$context->registerServiceAlias(
+			RegisterConfigReaderInterface::class,
 			SettingsService::class
 		);
 		include_once __DIR__ . '/../../vendor/autoload.php';
