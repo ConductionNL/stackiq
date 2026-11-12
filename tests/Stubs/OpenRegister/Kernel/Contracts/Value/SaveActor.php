@@ -5,6 +5,7 @@
  *
  * Mirrors OpenRegister's value object (openregister #9123): who one save runs as.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Test

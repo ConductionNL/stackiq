@@ -10,6 +10,7 @@
  * assertions and recordings unchanged, so a changed one still means changed
  * behaviour.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Test
