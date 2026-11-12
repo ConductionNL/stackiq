@@ -250,31 +250,54 @@ class MaintenanceRecipientService {
 	 * @return array<int, string> Unique contact person ids.
 	 */
 	private function ownerContactIds(ObjectServiceInterface $objectService, string $moduleId): array {
+		$ids = [];
+		foreach ((array) $this->usagesOfProduct(objectService: $objectService, moduleId: $moduleId) as $usage) {
+			$ids = self::withOwnerIds(ids: $ids, usage: $usage->getObject());
+		}
+
+		return $ids;
+	}//end ownerContactIds()
+
+	/**
+	 * The usages of a product.
+	 *
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
+	 * @param string                 $moduleId      The product's id.
+	 *
+	 * @return array|int The usages, or [] when the usage register or schema is not configured.
+	 */
+	private function usagesOfProduct(ObjectServiceInterface $objectService, string $moduleId): array|int {
 		$register = $this->settingsService->getRegisterIdForObjectType('usage');
 		$schema   = $this->settingsService->getSchemaIdForObjectType('usage');
 		if ($register === null || $schema === null) {
 			return [];
 		}
 
-		$usages = $objectService->searchObjects(
+		return $objectService->searchObjects(
 			query: ['register' => $register, 'schema' => $schema, 'module' => $moduleId, '_limit' => self::USAGE_LIMIT],
 			_rbac: false,
 			_multitenancy: false
 		);
+	}//end usagesOfProduct()
 
-		$ids = [];
-		foreach ((array) $usages as $usage) {
-			$data = $usage->getObject();
-			foreach (self::OWNER_FIELDS as $field) {
-				$id = self::referenceId(value: ($data[$field] ?? null));
-				if ($id !== null && in_array($id, $ids, true) === false) {
-					$ids[] = $id;
-				}
+	/**
+	 * Add the contact person ids a usage names as owner, skipping those already listed.
+	 *
+	 * @param array<int, string>   $ids   The contact person ids so far.
+	 * @param array<string, mixed> $usage The usage data.
+	 *
+	 * @return array<int, string> The ids, in the order found.
+	 */
+	private static function withOwnerIds(array $ids, array $usage): array {
+		foreach (self::OWNER_FIELDS as $field) {
+			$id = self::referenceId(value: ($usage[$field] ?? null));
+			if ($id !== null && in_array($id, $ids, true) === false) {
+				$ids[] = $id;
 			}
 		}
 
 		return $ids;
-	}//end ownerContactIds()
+	}//end withOwnerIds()
 
 	/**
 	 * The Nextcloud user a contact person stands for.
@@ -292,27 +315,80 @@ class MaintenanceRecipientService {
 			return null;
 		}
 
-		if (($contact['isLocalSystemBook'] ?? false) === true && $this->userManager->userExists((string) ($contact['UID'] ?? '')) === true) {
+		if ($this->isSystemBookUser(contact: $contact) === true) {
 			return (string) $contact['UID'];
 		}
 
+		return $this->userIdForContactEmail(contact: $contact);
+	}//end userIdForContactPerson()
+
+	/**
+	 * Whether a contact is the system address book entry of an existing user.
+	 *
+	 * @param array<string, mixed> $contact The contact.
+	 *
+	 * @return bool True when its UID is the id of an existing user.
+	 */
+	private function isSystemBookUser(array $contact): bool {
+		return ($contact['isLocalSystemBook'] ?? false) === true && $this->userManager->userExists((string) ($contact['UID'] ?? '')) === true;
+	}//end isSystemBookUser()
+
+	/**
+	 * The user of the first e-mail address of a contact that exactly one user has.
+	 *
+	 * @param array<string, mixed> $contact The contact.
+	 *
+	 * @return string|null The user id, or null when no address matches exactly one user.
+	 */
+	private function userIdForContactEmail(array $contact): ?string {
 		foreach ((array) ($contact['EMAIL'] ?? []) as $email) {
-			if (is_array($email) === true) {
-				$email = ($email['value'] ?? '');
-			}
-
-			if (is_string($email) === false || $email === '') {
-				continue;
-			}
-
-			$users = $this->userManager->getByEmail($email);
-			if (count($users) === 1) {
-				return $users[0]->getUID();
+			$uid = $this->userIdForEmail(email: self::emailAddress(email: $email));
+			if ($uid !== null) {
+				return $uid;
 			}
 		}
 
 		return null;
-	}//end userIdForContactPerson()
+	}//end userIdForContactEmail()
+
+	/**
+	 * The address of a contact e-mail entry: a plain string, or an entry carrying a value.
+	 *
+	 * @param mixed $email The e-mail entry.
+	 *
+	 * @return string The address, or '' when the entry carries none.
+	 */
+	private static function emailAddress(mixed $email): string {
+		if (is_array($email) === true) {
+			$email = ($email['value'] ?? '');
+		}
+
+		if (is_string($email) === false) {
+			return '';
+		}
+
+		return $email;
+	}//end emailAddress()
+
+	/**
+	 * The user an e-mail address belongs to, when exactly one user has it.
+	 *
+	 * @param string $email The address.
+	 *
+	 * @return string|null The user id, or null for an empty address or none or several users.
+	 */
+	private function userIdForEmail(string $email): ?string {
+		if ($email === '') {
+			return null;
+		}
+
+		$users = $this->userManager->getByEmail($email);
+		if (count($users) === 1) {
+			return $users[0]->getUID();
+		}
+
+		return null;
+	}//end userIdForEmail()
 
 	/**
 	 * The id a relation value points at: a plain id, or an object carrying one.
@@ -329,15 +405,28 @@ class MaintenanceRecipientService {
 		}
 
 		if (is_array($value) === true) {
-			foreach (['id', 'uuid'] as $key) {
-				if (is_string($value[$key] ?? null) === true && $value[$key] !== '') {
-					return $value[$key];
-				}
-			}
+			return self::relationObjectId(relation: $value);
 		}
 
 		return null;
 	}//end referenceId()
+
+	/**
+	 * The id a relation object carries: its non-empty string `id`, else its non-empty string `uuid`.
+	 *
+	 * @param array<string, mixed> $relation The stored relation object.
+	 *
+	 * @return string|null The id, or null when the object carries none.
+	 */
+	private static function relationObjectId(array $relation): ?string {
+		foreach (['id', 'uuid'] as $key) {
+			if (is_string($relation[$key] ?? null) === true && $relation[$key] !== '') {
+				return $relation[$key];
+			}
+		}
+
+		return null;
+	}//end relationObjectId()
 
 	/**
 	 * Lazily resolve OpenRegister's ObjectService.

@@ -398,19 +398,7 @@ class AangebodenGebruikController extends Controller {
 	 */
 	private function isUserInGroup(string $groupName): bool {
 		try {
-			// Get the current user from the session.
-			$user = $this->userSession->getUser();
-			if ($user === null) {
-				$this->logger->debug(
-					'No user in session for group check',
-					[
-						'group' => $groupName,
-					]
-				);
-				return false;
-			}
-
-			return $this->isMemberOf(user: $user, groupName: $groupName);
+			return $this->isSessionUserInGroup(groupName: $groupName);
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'Failed to check user group membership',
@@ -422,6 +410,29 @@ class AangebodenGebruikController extends Controller {
 			return false;
 		}//end try
 	}//end isUserInGroup()
+
+	/**
+	 * Check if the user in the session is in a group; no session user is in no group.
+	 *
+	 * @param string $groupName The name of the group to check
+	 *
+	 * @return bool True if the session user is in the group, false otherwise
+	 */
+	private function isSessionUserInGroup(string $groupName): bool {
+		// Get the current user from the session.
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			$this->logger->debug(
+				'No user in session for group check',
+				[
+					'group' => $groupName,
+				]
+			);
+			return false;
+		}
+
+		return $this->isMemberOf(user: $user, groupName: $groupName);
+	}//end isSessionUserInGroup()
 
 	/**
 	 * Check if a user is in a group; a group that does not exist has no members.
@@ -475,6 +486,22 @@ class AangebodenGebruikController extends Controller {
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getGebruiksWhereDeelnemers(): JSONResponse {
+		$this->logDeelnemersRequest();
+
+		try {
+			return $this->deelnemersResponse();
+		} catch (\Exception $e) {
+			$this->logDeelnemersFailure(error: $e);
+			return $this->deelnemersFailureResponse(error: $e);
+		}//end try
+	}//end getGebruiksWhereDeelnemers()
+
+	/**
+	 * Log the incoming deelnemers request with its query parameters.
+	 *
+	 * @return void
+	 */
+	private function logDeelnemersRequest(): void {
 		$this->logger->info(
 			'API: Getting gebruiks where active org is in deelnemers',
 			[
@@ -483,55 +510,104 @@ class AangebodenGebruikController extends Controller {
 				'query_params' => $this->request->getParams(),
 			]
 		);
+	}//end logDeelnemersRequest()
 
-		try {
-			// Parse query parameters for filtering options.
-			// Don't include product filter for deelnemers endpoint.
-			$options = $this->parseQueryOptions();
+	/**
+	 * Read the gebruiks where the active org is in deelnemers and answer with
+	 * the status code the result maps to.
+	 *
+	 * @return JSONResponse
+	 */
+	private function deelnemersResponse(): JSONResponse {
+		// Parse query parameters for filtering options.
+		// Don't include product filter for deelnemers endpoint.
+		$options = $this->parseQueryOptions();
 
-			// Get gebruiks from service where org is in deelnemers.
-			$result = $this->gebruikSvc->getGebruiksWhereDeelnemers($options);
+		// Get gebruiks from service where org is in deelnemers.
+		$result = $this->gebruikSvc->getGebruiksWhereDeelnemers($options);
 
-			// Determine appropriate HTTP status code.
-			$statusCode = 500;
-			if ($result['success'] === true) {
-				$statusCode = 200;
-			} elseif (($result['error'] ?? '') === 'Gebruik object not found') {
-				$statusCode = 404;
-			} elseif (strpos(haystack: ($result['error'] ?? ''), needle: 'Operation not allowed') !== false) {
-				$statusCode = 403;
-			}
+		$statusCode = $this->deelnemersStatusCode(result: $result);
+		$this->logDeelnemersCompleted(result: $result);
 
-			$this->logger->info(
-				'API: Deelnemers gebruiks request completed',
-				[
-					'success' => $result['success'],
-					'gebruiks_count' => $result['count'] ?? 0,
-					'organisation' => $result['organisation'] ?? 'unknown',
-				]
-			);
+		return new JSONResponse($result, $statusCode);
+	}//end deelnemersResponse()
 
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to get deelnemers gebruiks',
-				[
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
+	/**
+	 * The HTTP status code a deelnemers service result maps to.
+	 *
+	 * @param array $result The service result
+	 *
+	 * @return int 200 on success, 404 when the object is missing, 403 when not allowed, else 500
+	 */
+	private function deelnemersStatusCode(array $result): int {
+		if ($result['success'] === true) {
+			return 200;
+		}
 
-			return new JSONResponse(
-				[
-					'success' => false,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-					'gebruiks' => [],
-					'count' => 0,
-				],
-				500
-			);
-		}//end try
-	}//end getGebruiksWhereDeelnemers()
+		if (($result['error'] ?? '') === 'Gebruik object not found') {
+			return 404;
+		}
+
+		if (strpos(haystack: ($result['error'] ?? ''), needle: 'Operation not allowed') !== false) {
+			return 403;
+		}
+
+		return 500;
+	}//end deelnemersStatusCode()
+
+	/**
+	 * Log the outcome of a completed deelnemers request.
+	 *
+	 * @param array $result The service result
+	 *
+	 * @return void
+	 */
+	private function logDeelnemersCompleted(array $result): void {
+		$this->logger->info(
+			'API: Deelnemers gebruiks request completed',
+			[
+				'success' => $result['success'],
+				'gebruiks_count' => $result['count'] ?? 0,
+				'organisation' => $result['organisation'] ?? 'unknown',
+			]
+		);
+	}//end logDeelnemersCompleted()
+
+	/**
+	 * Log a failed deelnemers request.
+	 *
+	 * @param \Exception $error The failure
+	 *
+	 * @return void
+	 */
+	private function logDeelnemersFailure(\Exception $error): void {
+		$this->logger->error(
+			'API: Failed to get deelnemers gebruiks',
+			[
+				'error' => $error->getMessage(),
+				'trace' => $error->getTraceAsString(),
+			]
+		);
+	}//end logDeelnemersFailure()
+
+	/**
+	 * The 500 response for a failed deelnemers request.
+	 *
+	 * @param \Exception $error The failure
+	 *
+	 * @return JSONResponse
+	 */
+	private function deelnemersFailureResponse(\Exception $error): JSONResponse {
+		return new JSONResponse(
+			[
+				'success' => false,
+				'error' => 'Internal server error: ' . $error->getMessage(),
+				'gebruiks' => [],
+				'count' => 0,
+			],
+			500
+		);
+	}//end deelnemersFailureResponse()
 
 	/**
 	 * Set the @self property of a gebruik or koppeling to the active organization.

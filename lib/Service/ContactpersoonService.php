@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Contactpersoon\ContactPersonUserDetails;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
 use OCA\Stackiq\Service\Stackiq\HierarchyHandler;
@@ -834,132 +835,7 @@ class ContactpersoonService {
 	 */
 	public function getContactPersonsWithUserDetailsForOrganization(string $organizationUuid): array {
 		try {
-			$this->logger->info(
-				'ContactpersoonService: Getting contact persons with user details for organization',
-				['organizationUuid' => $organizationUuid]
-			);
-
-			// Get contact persons for the organization.
-			$contactPersons = $this->getContactPersonsForOrganization(organizationUuid: $organizationUuid);
-
-			if (empty($contactPersons) === true) {
-				$this->logger->info(
-					'ContactpersoonService: No contact persons found for organization',
-					['organizationUuid' => $organizationUuid]
-				);
-				return [];
-			}
-
-			$this->logger->info(
-				'ContactpersoonService: Found contact persons, fetching user details',
-				[
-					'organizationUuid' => $organizationUuid,
-					'contactPersonCount' => count($contactPersons),
-				]
-			);
-
-			// Get user manager to fetch user details.
-			$userManager = $this->container->get('OCP\IUserManager');
-			$enhancedContactPersons = [];
-
-			// Loop through each contact person and fetch user details.
-			foreach ($contactPersons as $contactPerson) {
-				try {
-					$contactData = $contactPerson->getObject();
-					$username = ($contactData['username'] ?? null);
-
-					// Initialize user details as null.
-					$userDetails = null;
-
-					// If username exists, fetch user details.
-					if ($username === null) {
-						$this->logger->debug(
-							'ContactpersoonService: No username found for contact person',
-							[
-								'contactPersonId' => $contactPerson->getId(),
-							]
-						);
-					}
-
-					if ($username !== null) {
-						$user = $userManager->get($username);
-						if ($user !== null) {
-							$userDetails = [
-								'uid' => $user->getUID(),
-								'email' => $user->getEMailAddress(),
-								'displayName' => $user->getDisplayName(),
-								'enabled' => $user->isEnabled(),
-								'lastLogin' => $user->getLastLogin(),
-								'backend' => $user->getBackendClassName(),
-								'home' => $user->getHome(),
-								'avatarImage' => $user->getAvatarImage(64)->data(),
-								'quota' => $user->getQuota(),
-								'freeQuota' => $user->getFreeQuota(),
-							];
-
-							$this->logger->debug(
-								'ContactpersoonService: Fetched user details',
-								[
-									'contactPersonId' => $contactPerson->getId(),
-									'username' => $username,
-									'userEnabled' => $user->isEnabled(),
-								]
-							);
-						}//end if
-
-						if ($user === null) {
-							$this->logger->warning(
-								'ContactpersoonService: User not found for username',
-								[
-									'contactPersonId' => $contactPerson->getId(),
-									'username' => $username,
-								]
-							);
-						}
-					}//end if
-
-					// Create enhanced contact person object with user details spliced in.
-					$enhancedContactData = $contactData;
-					$enhancedContactData['userDetails'] = $userDetails;
-
-					// Create a new object with the enhanced data.
-					$enhancedContactPerson = clone $contactPerson;
-					$enhancedContactPerson->setObject($enhancedContactData);
-
-					$enhancedContactPersons[] = $enhancedContactPerson;
-				} catch (\Exception $e) {
-					$this->logger->error(
-						'ContactpersoonService: Failed to process contact person',
-						[
-							'contactPersonId' => $contactPerson->getId(),
-							'organizationUuid' => $organizationUuid,
-							'error' => $e->getMessage(),
-						]
-					);
-
-					// Still add the contact person without user details.
-					$enhancedContactPersons[] = $contactPerson;
-				}//end try
-			}//end foreach
-
-			$this->logger->info(
-				'ContactpersoonService: Successfully enhanced contact persons with user details',
-				[
-					'organizationUuid' => $organizationUuid,
-					'totalContactPersons' => count($enhancedContactPersons),
-					'contactPersonsWithUserDetails' => count(
-						array_filter(
-							$enhancedContactPersons,
-							static function ($cp) {
-								$data = $cp->getObject();
-								return $data['userDetails'] !== null;
-							}
-						)
-					),
-				]
-			);
-
-			return $enhancedContactPersons;
+			return $this->enhanceOrganisationContactPersons(organizationUuid: $organizationUuid);
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'ContactpersoonService: Failed to get contact persons with user details for organization',
@@ -973,6 +849,110 @@ class ContactpersoonService {
 		}//end try
 
 	}//end getContactPersonsWithUserDetailsForOrganization()
+
+	/**
+	 * Read the contact persons of an organisation and splice in their user details.
+	 *
+	 * @param string $organizationUuid The organization UUID to get contact persons for
+	 *
+	 * @return array Array of contact person objects with user details spliced in
+	 */
+	private function enhanceOrganisationContactPersons(string $organizationUuid): array {
+		$this->logger->info(
+			'ContactpersoonService: Getting contact persons with user details for organization',
+			['organizationUuid' => $organizationUuid]
+		);
+
+		// Get contact persons for the organization.
+		$contactPersons = $this->getContactPersonsForOrganization(organizationUuid: $organizationUuid);
+		if ($this->hasContactPersonsToEnhance(organizationUuid: $organizationUuid, contactPersons: $contactPersons) === false) {
+			return [];
+		}
+
+		// Get user manager to fetch user details.
+		$userDetails = new ContactPersonUserDetails(logger: $this->logger, userManager: $this->container->get('OCP\IUserManager'));
+		$enhancedContactPersons = $userDetails->enhanceAll(contactPersons: $contactPersons, organizationUuid: $organizationUuid);
+
+		$this->logEnhancedContactPersons(organizationUuid: $organizationUuid, enhancedContactPersons: $enhancedContactPersons);
+		return $enhancedContactPersons;
+	}//end enhanceOrganisationContactPersons()
+
+	/**
+	 * Log whether an organisation has contact persons to enhance.
+	 *
+	 * @param string $organizationUuid The organization UUID
+	 * @param array $contactPersons The contact persons of the organisation
+	 *
+	 * @return bool True when there is at least one contact person
+	 */
+	private function hasContactPersonsToEnhance(string $organizationUuid, array $contactPersons): bool {
+		if (empty($contactPersons) === true) {
+			$this->logger->info(
+				'ContactpersoonService: No contact persons found for organization',
+				['organizationUuid' => $organizationUuid]
+			);
+			return false;
+		}
+
+		$this->logContactPersonsFound(organizationUuid: $organizationUuid, contactPersons: $contactPersons);
+		return true;
+	}//end hasContactPersonsToEnhance()
+
+	/**
+	 * Log how many contact persons an organisation has before their user details are read.
+	 *
+	 * @param string $organizationUuid The organization UUID
+	 * @param array $contactPersons The contact persons of the organisation
+	 *
+	 * @return void
+	 */
+	private function logContactPersonsFound(string $organizationUuid, array $contactPersons): void {
+		$this->logger->info(
+			'ContactpersoonService: Found contact persons, fetching user details',
+			[
+				'organizationUuid' => $organizationUuid,
+				'contactPersonCount' => count($contactPersons),
+			]
+		);
+	}//end logContactPersonsFound()
+
+	/**
+	 * Log how many contact persons of an organisation carry user details.
+	 *
+	 * @param string $organizationUuid The organization UUID
+	 * @param array $enhancedContactPersons The contact persons after the enhancement
+	 *
+	 * @return void
+	 */
+	private function logEnhancedContactPersons(string $organizationUuid, array $enhancedContactPersons): void {
+		$this->logger->info(
+			'ContactpersoonService: Successfully enhanced contact persons with user details',
+			[
+				'organizationUuid' => $organizationUuid,
+				'totalContactPersons' => count($enhancedContactPersons),
+				'contactPersonsWithUserDetails' => $this->countWithUserDetails(contactPersons: $enhancedContactPersons),
+			]
+		);
+	}//end logEnhancedContactPersons()
+
+	/**
+	 * Count the contact persons whose data carries user details.
+	 *
+	 * @param array $contactPersons The contact person objects
+	 *
+	 * @return int The number with user details
+	 */
+	private function countWithUserDetails(array $contactPersons): int {
+		return count(
+			array_filter(
+				$contactPersons,
+				static function ($cp) {
+					$data = $cp->getObject();
+					return $data['userDetails'] !== null;
+				}
+			)
+		);
+	}//end countWithUserDetails()
 
 	/**
 	 * Gets bulk user information for multiple contact persons
