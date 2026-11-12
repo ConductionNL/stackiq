@@ -25,6 +25,8 @@ use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http;
@@ -121,7 +123,8 @@ final class SettingsControllerOrgExportPermissionTest extends TestCase {
 			appManager: $this->createMock(IAppManager::class),
 			logger: $this->createMock(LoggerInterface::class),
 			groupManager: $groupManager,
-			l10n: $this->createMock(IL10N::class)
+			l10n: $this->createMock(IL10N::class),
+			emailSettings: $this->createMock(EmailSettings::class)
 		);
 
 		$user = $this->createMock(IUser::class);
@@ -174,10 +177,12 @@ final class SettingsControllerOrgExportPermissionTest extends TestCase {
 			$groupManager,
 			$userSession,
 			$settingsService,
+			$this->createMock(CronjobSettings::class),
 			$this->createMock(OrganizationSyncService::class),
 			$archiMateService,
 			$this->createMock(ProgressTracker::class),
 			$this->createMock(EolSyncService::class),
+			$this->createMock(EmailSettings::class),
 			$this->createMock(LoggerInterface::class)
 		);
 	}//end makeController()
