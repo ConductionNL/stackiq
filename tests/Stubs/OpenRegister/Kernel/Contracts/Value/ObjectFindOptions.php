@@ -8,6 +8,7 @@
  * schema accept the kernel Register/Schema contracts in OpenRegister; the stub
  * widens those to object, which no Stackiq test constructs.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Test

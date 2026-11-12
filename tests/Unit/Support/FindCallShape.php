@@ -8,6 +8,7 @@
  * captured the flat list; flattening the new call back to it keeps every
  * recording byte-for-byte, so a changed recording still means changed behaviour.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Test
