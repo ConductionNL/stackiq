@@ -116,4 +116,38 @@ class SyncHandlerTest extends TestCase {
 		$this->assertTrue(condition: $response['success']);
 		$this->assertSame(expected: [], actual: $response['results']);
 	}//end testANegativeWindowFallsBackToAFullSync()
+
+	/**
+	 * An explicit zero or a non-numeric window is a full sync, without a warning.
+	 *
+	 * @return void
+	 */
+	public function testAZeroOrNonNumericWindowRunsTheFullSync(): void {
+		$this->logger->expects($this->never())->method('warning');
+		$this->sync->expects($this->exactly(2))->method('performOptimizedManualSync')->with(15, 75)->willReturn(['success' => true]);
+		$this->sync->expects($this->never())->method('performManualSync');
+
+		$this->assertTrue(condition: $this->handler()->handle(['minutesBack' => 0])['success']);
+		$this->assertTrue(condition: $this->handler()->handle(['minutesBack' => 'soon'])['success']);
+	}//end testAZeroOrNonNumericWindowRunsTheFullSync()
+
+	/**
+	 * A failed sync without its own message keeps success false and gets the
+	 * default message; the response is always marked optimised.
+	 *
+	 * @return void
+	 */
+	public function testAFailedSyncWithoutAMessageKeepsTheDefaultMessage(): void {
+		$this->sync->method('performManualSync')->with(1)->willReturn(['success' => false]);
+
+		$this->assertSame(
+			expected: [
+				'success' => false,
+				'results' => ['success' => false],
+				'message' => 'Synchronization completed successfully',
+				'isOptimized' => true,
+			],
+			actual: $this->handler()->handle(['minutesBack' => 1.9])
+		);
+	}//end testAFailedSyncWithoutAMessageKeepsTheDefaultMessage()
 }//end class
