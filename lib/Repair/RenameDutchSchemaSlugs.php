@@ -143,29 +143,64 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 
 		$plan = $this->decisions->plan(map: self::SLUG_MAP, existing: $existing);
 
-		foreach ($plan['refused'] as $old => $why) {
+		$this->warnRefused(refused: $plan['refused']);
+
+		$refused = count($plan['refused']);
+		$renamed = $this->applyRenames(renames: $plan['renames'], schemaIds: $schemaIds);
+
+		$output->info($this->renameSummary(renamed: $renamed, refused: $refused));
+	}//end run()
+
+	/**
+	 * Warn about every rename the plan refused.
+	 *
+	 * @param array<string, string> $refused Reason per refused old slug.
+	 *
+	 * @return void
+	 */
+	private function warnRefused(array $refused): void {
+		foreach ($refused as $old => $why) {
 			$this->logger->warning(
 				'RenameDutchSchemaSlugs: ' . $why . '; renaming neither.',
 				['old' => $old]
 			);
 		}
+	}//end warnRefused()
 
+	/**
+	 * Apply the planned renames and count the ones that went through.
+	 *
+	 * @param array<string, string> $renames   New slug per old slug.
+	 * @param array<int, int>       $schemaIds Schema ids in scope.
+	 *
+	 * @return int Number of slugs renamed.
+	 */
+	private function applyRenames(array $renames, array $schemaIds): int {
 		$renamed = 0;
-		$refused = count($plan['refused']);
-		foreach ($plan['renames'] as $old => $new) {
+		foreach ($renames as $old => $new) {
 			if ($this->renameSlug(old: $old, new: $new, schemaIds: $schemaIds) === true) {
 				$renamed++;
 			}
 		}
 
-		$output->info(
-			sprintf(
-				'RenameDutchSchemaSlugs: %d slug(s) renamed, %d refused.',
-				$renamed,
-				$refused
-			)
+		return $renamed;
+	}//end applyRenames()
+
+	/**
+	 * The summary line of a run.
+	 *
+	 * @param int $renamed Number of slugs renamed.
+	 * @param int $refused Number of renames refused.
+	 *
+	 * @return string
+	 */
+	private function renameSummary(int $renamed, int $refused): string {
+		return sprintf(
+			'RenameDutchSchemaSlugs: %d slug(s) renamed, %d refused.',
+			$renamed,
+			$refused
 		);
-	}//end run()
+	}//end renameSummary()
 
 	/**
 	 * Free the name `organization` by parking the absorbed ArchiMate schema.
@@ -196,22 +231,72 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 			return;
 		}
 
-		$count = $this->rowCountFor(schemaId: (int)$archimate['id']);
-		if ($this->decisions->mayRetire(rowCount: $count) === false) {
-			$this->logger->warning(
-				'RenameDutchSchemaSlugs: the ArchiMate organization schema holds rows; refusing to merge. '
-				. 'Migrate them onto the catalogue organisation deliberately, then re-run repair.',
-				['schemaId' => $archimate['id'], 'rows' => $count]
-			);
-			$output->warning(
-				sprintf(
-					'RenameDutchSchemaSlugs: ArchiMate organization schema holds %d row(s) — merge refused, both schemas left as they are.',
-					$count
-				)
-			);
+		if ($this->mayRetireArchimate(archimate: $archimate, output: $output) === false) {
 			return;
 		}
 
+		$this->parkArchimate(archimate: $archimate, output: $output);
+	}//end retireArchimateOrganization()
+
+	/**
+	 * Whether the ArchiMate schema holds no rows and may be parked; when it
+	 * holds rows (or cannot be counted) the refusal is logged and reported.
+	 *
+	 * @param array{id: int|string, slug: string} $archimate The ArchiMate schema row.
+	 * @param IOutput                             $output    Repair output.
+	 *
+	 * @return bool
+	 */
+	private function mayRetireArchimate(array $archimate, IOutput $output): bool {
+		$count = $this->rowCountFor(schemaId: (int)$archimate['id']);
+		if ($this->decisions->mayRetire(rowCount: $count) === true) {
+			return true;
+		}
+
+		$this->warnArchimateHoldsRows(archimate: $archimate, rowCount: $count);
+		$output->warning($this->mergeRefusedMessage(rowCount: $count));
+		return false;
+	}//end mayRetireArchimate()
+
+	/**
+	 * Log that the ArchiMate schema holds rows and will not be merged.
+	 *
+	 * @param array{id: int|string, slug: string} $archimate The ArchiMate schema row.
+	 * @param int                                 $rowCount  Rows counted (-1 when uncountable).
+	 *
+	 * @return void
+	 */
+	private function warnArchimateHoldsRows(array $archimate, int $rowCount): void {
+		$this->logger->warning(
+			'RenameDutchSchemaSlugs: the ArchiMate organization schema holds rows; refusing to merge. '
+			. 'Migrate them onto the catalogue organisation deliberately, then re-run repair.',
+			['schemaId' => $archimate['id'], 'rows' => $rowCount]
+		);
+	}//end warnArchimateHoldsRows()
+
+	/**
+	 * The output line for a refused merge.
+	 *
+	 * @param int $rowCount Rows counted (-1 when uncountable).
+	 *
+	 * @return string
+	 */
+	private function mergeRefusedMessage(int $rowCount): string {
+		return sprintf(
+			'RenameDutchSchemaSlugs: ArchiMate organization schema holds %d row(s) — merge refused, both schemas left as they are.',
+			$rowCount
+		);
+	}//end mergeRefusedMessage()
+
+	/**
+	 * Park the empty ArchiMate schema under its retired slug.
+	 *
+	 * @param array{id: int|string, slug: string} $archimate The ArchiMate schema row.
+	 * @param IOutput                             $output    Repair output.
+	 *
+	 * @return void
+	 */
+	private function parkArchimate(array $archimate, IOutput $output): void {
 		try {
 			$this->db->executeStatement(
 				'UPDATE `*PREFIX*openregister_schemas` SET slug = ? WHERE id = ?',
@@ -226,7 +311,7 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 		}
 
 		$output->info('RenameDutchSchemaSlugs: absorbed ArchiMate organization schema (0 rows) parked as ' . self::RETIRED_ARCHIMATE_SLUG . '.');
-	}//end retireArchimateOrganization()
+	}//end parkArchimate()
 
 	/**
 	 * Count the rows in a schema's shard table across this app's registers.
@@ -239,13 +324,25 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	 * @return int Row count.
 	 */
 	private function rowCountFor(int $schemaId): int {
+		$tables = $this->shardTableCandidates(schemaId: $schemaId);
+		if ($tables === null) {
+			return -1;
+		}
+
+		return $this->countShardRows(tables: $tables, schemaId: $schemaId);
+	}//end rowCountFor()
+
+	/**
+	 * The tables whose name looks like a shard table of the schema, or null
+	 * when they cannot be listed.
+	 *
+	 * @param int $schemaId Schema id.
+	 *
+	 * @return array<int, array<string, mixed>>|null
+	 */
+	private function shardTableCandidates(int $schemaId): ?array {
 		try {
-			$stmt = $this->db->prepare(
-				'SELECT table_name FROM information_schema.tables WHERE table_name LIKE :pattern'
-			);
-			$stmt->bindValue('pattern', '%openregister\_table\_%\_' . $schemaId);
-			$stmt->execute();
-			$tables = $stmt->fetchAll();
+			return $this->listShardTables(schemaId: $schemaId);
 		} catch (\Throwable $e) {
 			// Unable to look: treat as "has rows" so the merge refuses rather
 			// than proceeding on an unchecked assumption.
@@ -253,9 +350,35 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 				'RenameDutchSchemaSlugs: could not list shard tables; treating the schema as non-empty.',
 				['exception' => $e->getMessage()]
 			);
-			return -1;
+			return null;
 		}
+	}//end shardTableCandidates()
 
+	/**
+	 * List the tables whose name matches the schema's shard-table pattern.
+	 *
+	 * @param int $schemaId Schema id.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function listShardTables(int $schemaId): array {
+		$stmt = $this->db->prepare(
+			'SELECT table_name FROM information_schema.tables WHERE table_name LIKE :pattern'
+		);
+		$stmt->bindValue('pattern', '%openregister\_table\_%\_' . $schemaId);
+		$stmt->execute();
+		return $stmt->fetchAll();
+	}//end listShardTables()
+
+	/**
+	 * Sum the rows of the schema's shard tables; -1 as soon as one cannot be counted.
+	 *
+	 * @param array<int, array<string, mixed>> $tables   Candidate tables.
+	 * @param int                              $schemaId Schema id.
+	 *
+	 * @return int Row count.
+	 */
+	private function countShardRows(array $tables, int $schemaId): int {
 		$total = 0;
 		foreach ($tables as $table) {
 			$name = (string)($table['table_name'] ?? '');
@@ -263,19 +386,35 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 				continue;
 			}
 
-			try {
-				$total += (int)$this->db->executeQuery('SELECT COUNT(*) FROM ' . $this->quote(identifier: $name))->fetchOne();
-			} catch (Exception $e) {
-				$this->logger->warning(
-					'RenameDutchSchemaSlugs: could not count rows; treating the schema as non-empty.',
-					['table' => $name, 'exception' => $e->getMessage()]
-				);
+			$rows = $this->shardRowCount(tableName: $name);
+			if ($rows === null) {
 				return -1;
 			}
+
+			$total += $rows;
 		}
 
 		return $total;
-	}//end rowCountFor()
+	}//end countShardRows()
+
+	/**
+	 * Count the rows of one shard table, or null when it cannot be counted.
+	 *
+	 * @param string $tableName The shard table.
+	 *
+	 * @return int|null
+	 */
+	private function shardRowCount(string $tableName): ?int {
+		try {
+			return (int)$this->db->executeQuery('SELECT COUNT(*) FROM ' . $this->quote(identifier: $tableName))->fetchOne();
+		} catch (Exception $e) {
+			$this->logger->warning(
+				'RenameDutchSchemaSlugs: could not count rows; treating the schema as non-empty.',
+				['table' => $tableName, 'exception' => $e->getMessage()]
+			);
+			return null;
+		}
+	}//end shardRowCount()
 
 	/**
 	 * Quote an identifier for the active platform.
@@ -296,13 +435,8 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	 * @return array<int, array{id: int|string, slug: string}>
 	 */
 	private function schemaRows(array $schemaIds): array {
-		$placeholders = implode(',', array_fill(0, count($schemaIds), '?'));
-
 		try {
-			$rows = $this->db->executeQuery(
-				'SELECT id, slug FROM `*PREFIX*openregister_schemas` WHERE id IN (' . $placeholders . ')',
-				array_map(static fn (int $id): string => (string)$id, $schemaIds)
-			)->fetchAll();
+			$rows = $this->selectSchemas(columns: 'id, slug', schemaIds: $schemaIds);
 		} catch (Exception $e) {
 			$this->logger->warning(
 				'RenameDutchSchemaSlugs: could not read schemas; skipping.',
@@ -315,18 +449,32 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	}//end schemaRows()
 
 	/**
+	 * Select the given columns of the given schemas.
+	 *
+	 * @param string          $columns   The column list, e.g. 'id, slug'.
+	 * @param array<int, int> $schemaIds Schema ids to read.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @throws Exception When the query fails.
+	 */
+	private function selectSchemas(string $columns, array $schemaIds): array {
+		$placeholders = implode(',', array_fill(0, count($schemaIds), '?'));
+
+		return $this->db->executeQuery(
+			'SELECT ' . $columns . ' FROM `*PREFIX*openregister_schemas` WHERE id IN (' . $placeholders . ')',
+			array_map(static fn (int $id): string => (string)$id, $schemaIds)
+		)->fetchAll();
+	}//end selectSchemas()
+
+	/**
 	 * Resolve the schema ids belonging to this app's registers.
 	 *
 	 * @return array<int, int>
 	 */
 	private function inScopeSchemaIds(): array {
-		$placeholders = implode(',', array_fill(0, count(self::REGISTER_SLUGS), '?'));
-
 		try {
-			$rows = $this->db->executeQuery(
-				'SELECT schemas FROM `*PREFIX*openregister_registers` WHERE slug IN (' . $placeholders . ')',
-				self::REGISTER_SLUGS
-			)->fetchAll();
+			$rows = $this->registerRows();
 		} catch (Exception $e) {
 			$this->logger->warning(
 				'RenameDutchSchemaSlugs: could not resolve the registers; skipping.',
@@ -339,6 +487,22 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	}//end inScopeSchemaIds()
 
 	/**
+	 * Read the schema lists of this app's registers.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @throws Exception When the query fails.
+	 */
+	private function registerRows(): array {
+		$placeholders = implode(',', array_fill(0, count(self::REGISTER_SLUGS), '?'));
+
+		return $this->db->executeQuery(
+			'SELECT schemas FROM `*PREFIX*openregister_registers` WHERE slug IN (' . $placeholders . ')',
+			self::REGISTER_SLUGS
+		)->fetchAll();
+	}//end registerRows()
+
+	/**
 	 * Read the slugs currently held by the given schemas.
 	 *
 	 * @param array<int, int> $schemaIds Schema ids to read.
@@ -346,13 +510,8 @@ class RenameDutchSchemaSlugs implements IRepairStep {
 	 * @return array<int, string>
 	 */
 	private function slugsOf(array $schemaIds): array {
-		$placeholders = implode(',', array_fill(0, count($schemaIds), '?'));
-
 		try {
-			$rows = $this->db->executeQuery(
-				'SELECT slug FROM `*PREFIX*openregister_schemas` WHERE id IN (' . $placeholders . ')',
-				array_map(static fn (int $id): string => (string)$id, $schemaIds)
-			)->fetchAll();
+			$rows = $this->selectSchemas(columns: 'slug', schemaIds: $schemaIds);
 		} catch (Exception $e) {
 			$this->logger->warning(
 				'RenameDutchSchemaSlugs: could not read schema slugs; skipping.',
