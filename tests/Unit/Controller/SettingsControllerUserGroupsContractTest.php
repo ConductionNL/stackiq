@@ -26,6 +26,9 @@ use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
 use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http;
@@ -83,6 +86,13 @@ final class SettingsControllerUserGroupsContractTest extends TestCase {
 	private SettingsService|MockObject $settingsService;
 
 	/**
+	 * The mocked role group settings.
+	 *
+	 * @var RoleGroupSettings|MockObject
+	 */
+	private RoleGroupSettings|MockObject $roleGroupSettings;
+
+	/**
 	 * The group manager double that decides admin-ness.
 	 *
 	 * @var IGroupManager|MockObject
@@ -106,6 +116,7 @@ final class SettingsControllerUserGroupsContractTest extends TestCase {
 	 */
 	private function makeController(?string $uid, bool $isAdmin): SettingsController {
 		$this->settingsService = $this->createMock(SettingsService::class);
+		$this->roleGroupSettings = $this->createMock(RoleGroupSettings::class);
 		$this->groupManager = $this->createMock(IGroupManager::class);
 		$this->userSession = $this->createMock(IUserSession::class);
 
@@ -130,11 +141,14 @@ final class SettingsControllerUserGroupsContractTest extends TestCase {
 			$this->groupManager,
 			$this->userSession,
 			$this->settingsService,
+			$this->createMock(CronjobSettings::class),
 			$this->createMock(OrganizationSyncService::class),
 			$this->createMock(ArchiMateService::class),
+			$this->roleGroupSettings,
 			$this->createMock(ProgressTracker::class),
 			$this->createMock(ArchiMateImportControl::class),
 			$this->createMock(EolSyncService::class),
+			$this->createMock(EmailSettings::class),
 			$this->createMock(LoggerInterface::class)
 		);
 
@@ -148,13 +162,13 @@ final class SettingsControllerUserGroupsContractTest extends TestCase {
 	 * expectation failure into a 500 and report a data leak as an unrelated
 	 * server error.
 	 *
-	 * @param string $serviceMethod The SettingsService method to arm.
+	 * @param string $serviceMethod The RoleGroupSettings method to arm.
 	 * @param int $calls Call counter, by reference.
 	 *
 	 * @return void
 	 */
 	private function spyOn(string $serviceMethod, int &$calls): void {
-		$this->settingsService->method($serviceMethod)->willReturnCallback(
+		$this->roleGroupSettings->method($serviceMethod)->willReturnCallback(
 			function () use (&$calls): array {
 				$calls++;
 				return ['SENTINEL-group'];
@@ -189,7 +203,7 @@ final class SettingsControllerUserGroupsContractTest extends TestCase {
 		);
 
 		$controller = $this->makeController(uid: 'an-admin', isAdmin: true);
-		$this->settingsService->expects($this->once())
+		$this->roleGroupSettings->expects($this->once())
 			->method('getGenericUserGroups')
 			->willReturn(['software-catalog-users']);
 		$response = $controller->getGenericUserGroups();
@@ -226,7 +240,7 @@ final class SettingsControllerUserGroupsContractTest extends TestCase {
 		);
 
 		$controller = $this->makeController(uid: 'an-admin', isAdmin: true);
-		$this->settingsService->expects($this->once())
+		$this->roleGroupSettings->expects($this->once())
 			->method('getOrganizationAdminGroups')
 			->willReturn(['organisation-beheerders']);
 		$response = $controller->getOrganizationAdminGroups();
@@ -263,7 +277,7 @@ final class SettingsControllerUserGroupsContractTest extends TestCase {
 		);
 
 		$controller = $this->makeController(uid: 'an-admin', isAdmin: true);
-		$this->settingsService->expects($this->once())
+		$this->roleGroupSettings->expects($this->once())
 			->method('getSuperUserGroups')
 			->willReturn(['admin']);
 		$response = $controller->getSuperUserGroups();
@@ -303,7 +317,7 @@ final class SettingsControllerUserGroupsContractTest extends TestCase {
 		);
 
 		$controller = $this->makeController(uid: 'an-admin', isAdmin: true);
-		$this->settingsService->expects($this->once())
+		$this->roleGroupSettings->expects($this->once())
 			->method('getAllGroups')
 			->willReturn([['gid' => 'admin', 'displayName' => 'admin', 'isGeneric' => false]]);
 		$response = $controller->getAllGroups();

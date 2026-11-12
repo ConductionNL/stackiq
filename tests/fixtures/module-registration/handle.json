@@ -7,7 +7,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Service\\Settings\\CatalogueLocator"
         ],
         [
             "getSchemaIdForObjectType",
@@ -28,7 +28,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Service\\Settings\\CatalogueLocator"
         ],
         [
             "getSchemaIdForObjectType",
@@ -49,7 +49,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Service\\Settings\\CatalogueLocator"
         ],
         [
             "getSchemaIdForObjectType",
@@ -62,7 +62,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Service\\Settings\\CatalogueLocator"
         ],
         [
             "getSchemaIdForObjectType",
@@ -75,7 +75,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Service\\Settings\\CatalogueLocator"
         ],
         [
             "getSchemaIdForObjectType",
@@ -88,7 +88,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Service\\Settings\\CatalogueLocator"
         ],
         [
             "getSchemaIdForObjectType",
@@ -109,7 +109,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Service\\Settings\\CatalogueLocator"
         ],
         [
             "getSchemaIdForObjectType",
@@ -130,7 +130,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Service\\Settings\\CatalogueLocator"
         ],
         [
             "getSchemaIdForObjectType",
@@ -151,7 +151,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Service\\Settings\\CatalogueLocator"
         ],
         [
             "getSchemaIdForObjectType",
@@ -184,7 +184,7 @@
         ],
         [
             "container.get",
-            "OCA\\Stackiq\\Service\\SettingsService"
+            "OCA\\Stackiq\\Service\\Settings\\CatalogueLocator"
         ],
         [
             "getSchemaIdForObjectType",

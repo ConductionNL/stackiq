@@ -33,6 +33,9 @@ use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
 use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Tests\Unit\Support\CmdbTestSupport;
 use OCA\Stackiq\Tests\Unit\Support\FakeMigrationPackService;
@@ -137,11 +140,14 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 			$this->createMock(IGroupManager::class),
 			$this->createMock(IUserSession::class),
 			$this->createMock(SettingsService::class),
+			$this->createMock(CronjobSettings::class),
 			$this->createMock(OrganizationSyncService::class),
 			$this->createMock(ArchiMateService::class),
+			$this->createMock(RoleGroupSettings::class),
 			$this->createMock(ProgressTracker::class),
 			$this->createMock(ArchiMateImportControl::class),
 			$this->createMock(EolSyncService::class),
+			$this->createMock(EmailSettings::class),
 			($logger ?? $this->createMock(LoggerInterface::class)),
 			null,
 			$profile,

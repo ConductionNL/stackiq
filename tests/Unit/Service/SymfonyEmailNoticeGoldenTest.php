@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -131,7 +131,7 @@ class SymfonyEmailNoticeGoldenTest extends TestCase {
 	 * @return array
 	 */
 	private function record(callable $send, array $settings, bool $fail): array {
-		$settingsService = $this->createMock(SettingsService::class);
+		$settingsService = $this->createMock(EmailSettings::class);
 		$settingsService->method('getEmailSettings')->willReturn($settings);
 		$log = new EmailNoticeLogRecorder();
 		$service = new SymfonyEmailService($this->createMock(IAppConfig::class), $log, $settingsService);

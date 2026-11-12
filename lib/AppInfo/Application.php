@@ -77,8 +77,12 @@ use OCA\Stackiq\Service\ReviewService;
 use OCA\Stackiq\Service\SbomImportService;
 use OCA\Stackiq\Service\SbomParserService;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
+use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\Settings\EolSyncSettings;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
 use OCA\Stackiq\Service\Stackiq\HierarchyHandler;
@@ -160,7 +164,7 @@ class Application extends App implements IBootstrap {
 		);
 		$context->registerServiceAlias(
 			ObjectTypeLocatorInterface::class,
-			SettingsService::class
+			CatalogueLocator::class
 		);
 		include_once __DIR__ . '/../../vendor/autoload.php';
 
@@ -332,7 +336,7 @@ class Application extends App implements IBootstrap {
 				return new SymfonyEmailService(
 					config: $container->get(IAppConfig::class),
 					logger: $container->get('Psr\Log\LoggerInterface'),
-					settingsService: $container->get(SettingsService::class)
+					emailSettings: $container->get(EmailSettings::class)
 				);
 			}
 		);
@@ -342,13 +346,16 @@ class Application extends App implements IBootstrap {
 			SettingsService::class,
 			function ($container) {
 				return new SettingsService(
+					catalogue: $container->get(CatalogueLocator::class),
 					config: $container->get(IAppConfig::class),
 					request: $container->get('OCP\IRequest'),
+					roleGroupSettings: $container->get(RoleGroupSettings::class),
 					container: $container,
 					appManager: $container->get('OCP\App\IAppManager'),
 					logger: $container->get('Psr\Log\LoggerInterface'),
 					groupManager: $container->get(IGroupManager::class),
-					l10n: $container->get('OCP\IL10N')
+					l10n: $container->get('OCP\IL10N'),
+					emailSettings: $container->get(EmailSettings::class)
 				);
 			}
 		);
@@ -598,7 +605,7 @@ class Application extends App implements IBootstrap {
 			function ($container) {
 				return new FacetService(
 					container: $container,
-					settingsService: $container->get(SettingsService::class),
+					catalogue: $container->get(CatalogueLocator::class),
 					archiMateService: $container->get(ArchiMateService::class),
 					queryBuilder: $container->get(ViewQueryBuilder::class),
 					userSession: $container->get('OCP\IUserSession'),
@@ -631,6 +638,7 @@ class Application extends App implements IBootstrap {
 					orgSyncService: $container->get(OrganizationSyncService::class),
 					contactSync: $container->get(StackiqContactSyncService::class),
 					settingsService: $container->get(SettingsService::class),
+					cronjobSettings: $container->get(CronjobSettings::class),
 					appManager: $container->get(IAppManager::class),
 					logger: $container->get(LoggerInterface::class)
 				);

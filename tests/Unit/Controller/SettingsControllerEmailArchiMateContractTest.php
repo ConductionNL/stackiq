@@ -40,6 +40,9 @@ use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
 use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http;
@@ -65,6 +68,13 @@ class SettingsControllerEmailArchiMateContractTest extends TestCase {
 	 * @var SettingsService|MockObject
 	 */
 	private SettingsService|MockObject $settingsService;
+
+	/**
+	 * The mocked e-mail settings.
+	 *
+	 * @var EmailSettings|MockObject
+	 */
+	private EmailSettings|MockObject $emailSettings;
 
 	/**
 	 * The mocked ArchiMate service.
@@ -111,6 +121,7 @@ class SettingsControllerEmailArchiMateContractTest extends TestCase {
 		);
 
 		$this->settingsService = $this->createMock(SettingsService::class);
+		$this->emailSettings = $this->createMock(EmailSettings::class);
 		$this->archiMateService = $this->createMock(ArchiMateService::class);
 		$this->userSession = $this->createMock(IUserSession::class);
 		$this->groupManager = $this->createMock(IGroupManager::class);
@@ -125,11 +136,14 @@ class SettingsControllerEmailArchiMateContractTest extends TestCase {
 			$this->groupManager,
 			$this->userSession,
 			$this->settingsService,
+			$this->createMock(CronjobSettings::class),
 			$this->createMock(OrganizationSyncService::class),
 			$this->archiMateService,
+			$this->createMock(RoleGroupSettings::class),
 			$this->createMock(ProgressTracker::class),
 			$this->createMock(ArchiMateImportControl::class),
 			$this->createMock(EolSyncService::class),
+			$this->emailSettings,
 			$this->createMock(LoggerInterface::class)
 		);
 
@@ -189,6 +203,7 @@ class SettingsControllerEmailArchiMateContractTest extends TestCase {
 		$this->userSession->method('getUser')->willReturn(null);
 
 		$this->settingsService->expects($this->never())->method($this->anything());
+		$this->emailSettings->expects($this->never())->method($this->anything());
 		$this->archiMateService->expects($this->never())->method($this->anything());
 		$this->container->expects($this->never())->method('get');
 
@@ -251,7 +266,7 @@ class SettingsControllerEmailArchiMateContractTest extends TestCase {
 	public function testGetEmailTemplatesReturnsTheTemplateList(): void {
 		$controller = $this->makeController();
 		$this->withUser();
-		$this->settingsService->method('getAllEmailTemplates')->willReturn(['welcome', 'invite']);
+		$this->emailSettings->method('getAllEmailTemplates')->willReturn(['welcome', 'invite']);
 
 		$data = $controller->getEmailTemplates()->getData();
 
@@ -271,11 +286,11 @@ class SettingsControllerEmailArchiMateContractTest extends TestCase {
 		$controller = $this->makeController();
 		$this->withUser();
 
-		$this->settingsService->expects($this->once())
+		$this->emailSettings->expects($this->once())
 			->method('getEmailTemplate')->with('welcome')->willReturn('<p>hi</p>');
-		$this->settingsService->expects($this->once())
+		$this->emailSettings->expects($this->once())
 			->method('getDefaultEmailTemplate')->with('welcome')->willReturn('<p>default</p>');
-		$this->settingsService->expects($this->once())
+		$this->emailSettings->expects($this->once())
 			->method('getEmailTemplateVariables')->with('welcome')->willReturn(['name']);
 
 		$current = $controller->getEmailTemplate('welcome')->getData();
@@ -301,7 +316,7 @@ class SettingsControllerEmailArchiMateContractTest extends TestCase {
 	public function testGetEmailTemplateReportsAServiceFailureAs500(): void {
 		$controller = $this->makeController();
 		$this->withUser();
-		$this->settingsService->method('getEmailTemplate')
+		$this->emailSettings->method('getEmailTemplate')
 			->willThrowException(new \Exception('unreadable'));
 
 		$response = $controller->getEmailTemplate('welcome');
@@ -322,7 +337,7 @@ class SettingsControllerEmailArchiMateContractTest extends TestCase {
 		$controller = $this->makeController([]);
 		$this->withUser();
 
-		$this->settingsService->expects($this->never())->method('updateEmailTemplate');
+		$this->emailSettings->expects($this->never())->method('updateEmailTemplate');
 
 		$response = $controller->updateEmailTemplate('welcome');
 
@@ -341,7 +356,7 @@ class SettingsControllerEmailArchiMateContractTest extends TestCase {
 		$controller = $this->makeController(['content' => '<p>new</p>']);
 		$this->withUser();
 
-		$this->settingsService->expects($this->once())
+		$this->emailSettings->expects($this->once())
 			->method('updateEmailTemplate')
 			->with('welcome', '<p>new</p>')
 			->willReturn(true);
@@ -362,7 +377,7 @@ class SettingsControllerEmailArchiMateContractTest extends TestCase {
 	public function testUpdateEmailTemplateSurfacesAFailedWrite(): void {
 		$controller = $this->makeController(['template' => '<p>new</p>']);
 		$this->withUser();
-		$this->settingsService->method('updateEmailTemplate')->willReturn(false);
+		$this->emailSettings->method('updateEmailTemplate')->willReturn(false);
 
 		$data = $controller->updateEmailTemplate('welcome')->getData();
 

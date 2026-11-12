@@ -4,7 +4,7 @@
  * Regression tests for catalog object-type register/schema resolution (#375).
  *
  * @category Test
- * @package  OCA\Stackiq\Tests\Unit\Service
+ * @package  OCA\Stackiq\Tests\Unit\Service\Settings
  *
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -17,14 +17,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\Stackiq\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service\Settings;
 
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
-use OCP\IGroupManager;
-use OCP\IL10N;
-use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -40,15 +37,15 @@ use Psr\Log\LoggerInterface;
  * beoordeeling target through these two methods) read "register/schema not
  * configured" on every call.
  */
-class SettingsServiceCatalogTypeResolutionTest extends TestCase {
+class CatalogueLocatorCatalogTypeResolutionTest extends TestCase {
 
 	/**
-	 * Build a SettingsService whose voorzieningen_config carries the register
+	 * Build a CatalogueLocator whose voorzieningen_config carries the register
 	 * and a `<type>_schema` id for each catalog type.
 	 *
-	 * @return SettingsService
+	 * @return CatalogueLocator
 	 */
-	private function makeService(): SettingsService {
+	private function makeService(): CatalogueLocator {
 		$voorzieningenConfig = json_encode(
 			[
 				'register' => '11',
@@ -85,14 +82,11 @@ class SettingsServiceCatalogTypeResolutionTest extends TestCase {
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturn([]);
 
-		return new SettingsService(
+		return new CatalogueLocator(
 			config: $config,
-			request: $this->createMock(IRequest::class),
-			container: $this->createMock(ContainerInterface::class),
 			appManager: $appManager,
-			logger: $this->createMock(LoggerInterface::class),
-			groupManager: $this->createMock(IGroupManager::class),
-			l10n: $this->createMock(IL10N::class)
+			container: $this->createMock(ContainerInterface::class),
+			logger: $this->createMock(LoggerInterface::class)
 		);
 
 	}//end makeService()

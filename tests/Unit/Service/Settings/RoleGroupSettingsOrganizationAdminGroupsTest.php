@@ -4,7 +4,7 @@
  * Unit tests for reading back the organisation admin groups setting.
  *
  * @category  Tests
- * @package   OCA\Stackiq\Tests\Unit\Service
+ * @package   OCA\Stackiq\Tests\Unit\Service\Settings
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -18,17 +18,14 @@
 
 declare(strict_types=1);
 
-namespace OCA\Stackiq\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service\Settings;
 
 use OCA\Stackiq\Service\Settings\OrganizationSettingsHandler;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
-use OCP\IL10N;
-use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -43,7 +40,7 @@ use Psr\Log\LoggerInterface;
  *
  * phpcs:disable CustomSniffs.Functions.NamedParameters
  */
-class SettingsServiceOrganizationAdminGroupsTest extends TestCase {
+class RoleGroupSettingsOrganizationAdminGroupsTest extends TestCase {
 
 	/**
 	 * Build an IAppConfig double backed by an in-memory store.
@@ -70,21 +67,18 @@ class SettingsServiceOrganizationAdminGroupsTest extends TestCase {
 	}//end makeConfig()
 
 	/**
-	 * Build a SettingsService backed by an in-memory IAppConfig store.
+	 * Build the role group settings backed by an in-memory IAppConfig store.
 	 *
 	 * @param array $store Reference to the backing key/value store.
 	 *
-	 * @return SettingsService
+	 * @return RoleGroupSettings
 	 */
-	private function makeService(array &$store): SettingsService {
-		return new SettingsService(
+	private function makeService(array &$store): RoleGroupSettings {
+		return new RoleGroupSettings(
 			config: $this->makeConfig($store),
-			request: $this->createMock(IRequest::class),
-			container: $this->createMock(ContainerInterface::class),
 			appManager: $this->createMock(IAppManager::class),
-			logger: $this->createMock(LoggerInterface::class),
 			groupManager: $this->createMock(IGroupManager::class),
-			l10n: $this->createMock(IL10N::class)
+			logger: $this->createMock(LoggerInterface::class)
 		);
 	}//end makeService()
 

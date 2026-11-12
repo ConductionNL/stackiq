@@ -26,6 +26,10 @@ use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
 use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http;
@@ -115,14 +119,29 @@ final class SettingsControllerOrgExportPermissionTest extends TestCase {
 			}
 		);
 
+		$roleGroups = new RoleGroupSettings(
+			config: $appConfig,
+			appManager: $this->createMock(IAppManager::class),
+			groupManager: $groupManager,
+			logger: $this->createMock(LoggerInterface::class)
+		);
+
 		$settingsService = new SettingsService(
+			catalogue: new CatalogueLocator(
+				config: $appConfig,
+				appManager: $this->createMock(IAppManager::class),
+				container: $this->createMock(ContainerInterface::class),
+				logger: $this->createMock(LoggerInterface::class)
+			),
 			config: $appConfig,
 			request: $this->createMock(IRequest::class),
+			roleGroupSettings: $roleGroups,
 			container: $this->createMock(ContainerInterface::class),
 			appManager: $this->createMock(IAppManager::class),
 			logger: $this->createMock(LoggerInterface::class),
 			groupManager: $groupManager,
-			l10n: $this->createMock(IL10N::class)
+			l10n: $this->createMock(IL10N::class),
+			emailSettings: $this->createMock(EmailSettings::class)
 		);
 
 		$user = $this->createMock(IUser::class);
@@ -175,11 +194,14 @@ final class SettingsControllerOrgExportPermissionTest extends TestCase {
 			$groupManager,
 			$userSession,
 			$settingsService,
+			$this->createMock(CronjobSettings::class),
 			$this->createMock(OrganizationSyncService::class),
 			$archiMateService,
+			$roleGroups,
 			$this->createMock(ProgressTracker::class),
 			$this->createMock(ArchiMateImportControl::class),
 			$this->createMock(EolSyncService::class),
+			$this->createMock(EmailSettings::class),
 			$this->createMock(LoggerInterface::class)
 		);
 	}//end makeController()

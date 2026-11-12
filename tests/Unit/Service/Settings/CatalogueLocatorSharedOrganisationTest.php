@@ -4,7 +4,7 @@
  * The organisation lookup falls back to OpenRegister's shared projection.
  *
  * @category Test
- * @package  OCA\Stackiq\Tests\Unit\Service
+ * @package  OCA\Stackiq\Tests\Unit\Service\Settings
  *
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
@@ -17,14 +17,11 @@
 
 declare(strict_types=1);
 
-namespace OCA\Stackiq\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service\Settings;
 
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
-use OCP\IGroupManager;
-use OCP\IL10N;
-use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -45,10 +42,10 @@ use Psr\Log\LoggerInterface;
  * are the same lookup with and without a local schema, which is the only way to
  * tell "resolves last" from "resolves at all".
  */
-class SettingsServiceSharedOrganisationTest extends TestCase {
+class CatalogueLocatorSharedOrganisationTest extends TestCase {
 
 	/**
-	 * Build a SettingsService whose config carries the given organisation
+	 * Build a CatalogueLocator whose config carries the given organisation
 	 * schema id, and whose container answers with a schema mapper (or throws).
 	 *
 	 * @param string|null $localSchemaId The configured `organisatie_schema`, or
@@ -58,13 +55,13 @@ class SettingsServiceSharedOrganisationTest extends TestCase {
 	 *                                   that throws (no such schema).
 	 * @param bool        $openRegister  Whether OpenRegister is installed.
 	 *
-	 * @return SettingsService The service under test.
+	 * @return CatalogueLocator The service under test.
 	 */
 	private function makeService(
 		?string $localSchemaId,
 		?int $projectionId,
 		bool $openRegister=true
-	): SettingsService {
+	): CatalogueLocator {
 		$voorzieningen = ['register' => '11'];
 		if ($localSchemaId !== null) {
 			$voorzieningen['organisatie_schema'] = $localSchemaId;
@@ -140,14 +137,11 @@ class SettingsServiceSharedOrganisationTest extends TestCase {
 			}
 		);
 
-		return new SettingsService(
+		return new CatalogueLocator(
 			config: $config,
-			request: $this->createMock(IRequest::class),
-			container: $container,
 			appManager: $appManager,
-			logger: $this->createMock(LoggerInterface::class),
-			groupManager: $this->createMock(IGroupManager::class),
-			l10n: $this->createMock(IL10N::class)
+			container: $container,
+			logger: $this->createMock(LoggerInterface::class)
 		);
 
 	}//end makeService()

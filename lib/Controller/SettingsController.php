@@ -35,6 +35,9 @@ use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
 use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -102,11 +105,14 @@ class SettingsController extends Controller {
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param IUserSession $userSession The user session.
 	 * @param SettingsService $settingsService The settings service.
+	 * @param CronjobSettings $cronjobSettings The cronjob configuration.
 	 * @param OrganizationSyncService $orgSyncSvc The organization sync service.
 	 * @param ArchiMateService $archiMateService The ArchiMate import/export service.
+	 * @param RoleGroupSettings $roleGroupSettings The role group lists.
 	 * @param ProgressTracker $progressTracker The progress tracking service.
 	 * @param ArchiMateImportControl $archiMateImportControl Clears, stops and cancels the ArchiMate import status.
 	 * @param EolSyncService $eolSyncService The EOL feed sync orchestration service.
+	 * @param EmailSettings $emailSettings The stored e-mail settings and templates.
 	 * @param LoggerInterface $logger The logger instance.
 	 * @param ConnectionReportService|null $connectionReports Asks integriq to look again after an email settings save.
 	 * @param CmdbImportProfile|null $cmdbImportProfile The CMDB import profile and packs; null builds the shipped one.
@@ -127,11 +133,14 @@ class SettingsController extends Controller {
 		private readonly IGroupManager $groupManager,
 		private readonly IUserSession $userSession,
 		private readonly SettingsService $settingsService,
+		private readonly CronjobSettings $cronjobSettings,
 		private readonly OrganizationSyncService $orgSyncSvc,
 		private readonly ArchiMateService $archiMateService,
+		private readonly RoleGroupSettings $roleGroupSettings,
 		private readonly ProgressTracker $progressTracker,
 		private readonly ArchiMateImportControl $archiMateImportControl,
 		private readonly EolSyncService $eolSyncService,
+		private readonly EmailSettings $emailSettings,
 		private readonly LoggerInterface $logger,
 		private readonly ?ConnectionReportService $connectionReports = null,
 		private readonly ?CmdbImportProfile $cmdbImportProfile = null,
@@ -512,7 +521,7 @@ class SettingsController extends Controller {
 				continue;
 			}
 
-			$validation = $this->settingsService->validateGroups($userGroups[$key]);
+			$validation = $this->roleGroupSettings->validateGroups($userGroups[$key]);
 			if (empty($validation['invalid']) === false) {
 				return new JSONResponse(
 					['error' => 'Invalid ' . $cfg['label'] . ' group names provided', 'validation' => $validation],
@@ -520,7 +529,7 @@ class SettingsController extends Controller {
 				);
 			}
 
-			$this->settingsService->{$cfg['setter']}($validation['valid']);
+			$this->roleGroupSettings->{$cfg['setter']}($validation['valid']);
 			$result['userGroups'][$key] = $validation['valid'];
 		}
 
@@ -547,7 +556,7 @@ class SettingsController extends Controller {
 			return;
 		}
 
-		$result['emailSettings'] = $this->settingsService->updateEmailSettings($data['emailSettings']);
+		$result['emailSettings'] = $this->emailSettings->updateEmailSettings($data['emailSettings']);
 		$this->connectionReports?->emailSettingsSaved();
 
 	}//end applyEmailSettingsUpdate()
@@ -1794,7 +1803,7 @@ class SettingsController extends Controller {
 		}
 
 		$isOrgAdmin = false;
-		foreach ($this->settingsService->getOrganizationAdminGroups() as $groupName) {
+		foreach ($this->roleGroupSettings->getOrganizationAdminGroups() as $groupName) {
 			if ($this->groupManager->isInGroup($currentUser->getUID(), $groupName) === true) {
 				$isOrgAdmin = true;
 				break;
@@ -2068,8 +2077,8 @@ class SettingsController extends Controller {
 			// Redaction lives in SettingsService so this route and /api/email/config share
 			// one secret list — they had drifted, and the other one was returning the
 			// secrets in the clear.
-			$emailSettings = $this->settingsService->redactEmailSecrets(
-				$this->settingsService->getEmailSettings()
+			$emailSettings = $this->emailSettings->redactEmailSecrets(
+				$this->emailSettings->getEmailSettings()
 			);
 
 			return new JSONResponse(
@@ -2102,7 +2111,7 @@ class SettingsController extends Controller {
 			$data = $this->request->getParams();
 			$emailSettings = $data['emailSettings'] ?? $data;
 
-			$updatedSettings = $this->settingsService->updateEmailSettings($emailSettings);
+			$updatedSettings = $this->emailSettings->updateEmailSettings($emailSettings);
 			$this->connectionReports?->emailSettingsSaved();
 
 			return new JSONResponse(
@@ -2137,7 +2146,7 @@ class SettingsController extends Controller {
 
 		try {
 			// Delegate all business logic to service.
-			$templates = $this->settingsService->getAllEmailTemplates();
+			$templates = $this->emailSettings->getAllEmailTemplates();
 
 			return new JSONResponse(
 				[
@@ -2172,7 +2181,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$template = $this->settingsService->getEmailTemplate($templateName);
+			$template = $this->emailSettings->getEmailTemplate($templateName);
 
 			return new JSONResponse(
 				[
@@ -2223,7 +2232,7 @@ class SettingsController extends Controller {
 				);
 			}
 
-			$success = $this->settingsService->updateEmailTemplate(
+			$success = $this->emailSettings->updateEmailTemplate(
 				templateName: $templateName,
 				templateContent: $templateContent
 			);
@@ -2258,7 +2267,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$defaultTemplate = $this->settingsService->getDefaultEmailTemplate($templateName);
+			$defaultTemplate = $this->emailSettings->getDefaultEmailTemplate($templateName);
 
 			return new JSONResponse(
 				[
@@ -2291,7 +2300,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$variables = $this->settingsService->getEmailTemplateVariables($templateName);
+			$variables = $this->emailSettings->getEmailTemplateVariables($templateName);
 
 			return new JSONResponse(
 				[
@@ -2328,7 +2337,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$groups = $this->settingsService->getGenericUserGroups();
+			$groups = $this->roleGroupSettings->getGenericUserGroups();
 
 			return new JSONResponse(
 				[
@@ -2360,7 +2369,7 @@ class SettingsController extends Controller {
 			$groups = $data['groups'] ?? [];
 
 			// Delegate all business logic (including validation) to service.
-			$result = $this->settingsService->updateGenericUserGroups($groups);
+			$result = $this->roleGroupSettings->updateGenericUserGroups($groups);
 
 			return $this->groupsUpdateResponse(result: $result);
 		} catch (\Exception $e) {
@@ -2387,7 +2396,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$groups = $this->settingsService->getOrganizationAdminGroups();
+			$groups = $this->roleGroupSettings->getOrganizationAdminGroups();
 
 			return new JSONResponse(
 				[
@@ -2419,7 +2428,7 @@ class SettingsController extends Controller {
 			$groups = $data['groups'] ?? [];
 
 			// Delegate all business logic (including validation) to service.
-			$result = $this->settingsService->updateOrganizationAdminGroups($groups);
+			$result = $this->roleGroupSettings->updateOrganizationAdminGroups($groups);
 
 			return $this->groupsUpdateResponse(result: $result);
 		} catch (\Exception $e) {
@@ -2446,7 +2455,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$groups = $this->settingsService->getSuperUserGroups();
+			$groups = $this->roleGroupSettings->getSuperUserGroups();
 
 			return new JSONResponse(
 				[
@@ -2478,7 +2487,7 @@ class SettingsController extends Controller {
 			$groups = $data['groups'] ?? [];
 
 			// Delegate all business logic (including validation) to service.
-			$result = $this->settingsService->updateSuperUserGroups($groups);
+			$result = $this->roleGroupSettings->updateSuperUserGroups($groups);
 
 			return $this->groupsUpdateResponse(result: $result);
 		} catch (\Exception $e) {
@@ -2505,7 +2514,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$allGroups = $this->settingsService->getAllGroups();
+			$allGroups = $this->roleGroupSettings->getAllGroups();
 
 			return new JSONResponse(
 				[
@@ -2901,7 +2910,7 @@ class SettingsController extends Controller {
 	public function getUserGroupsConfig(): JSONResponse {
 		return $this->adminRefusal() ?? $this->configCall(
 			operationLabel: 'get user groups config',
-			call: fn (): JSONResponse => new JSONResponse($this->settingsService->getUserGroupsConfig())
+			call: fn (): JSONResponse => new JSONResponse($this->roleGroupSettings->getUserGroupsConfig())
 		);
 	}//end getUserGroupsConfig()
 
@@ -2916,7 +2925,7 @@ class SettingsController extends Controller {
 	public function updateUserGroupsConfig(): JSONResponse {
 		return $this->adminRefusal() ?? $this->configCall(
 			operationLabel: 'update user groups config',
-			call: fn (): JSONResponse => new JSONResponse($this->settingsService->updateUserGroupsConfig($this->request->getParams()))
+			call: fn (): JSONResponse => new JSONResponse($this->roleGroupSettings->updateUserGroupsConfig($this->request->getParams()))
 		);
 	}//end updateUserGroupsConfig()
 
@@ -3140,7 +3149,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$config = $this->settingsService->getCronjobConfig();
+			$config = $this->cronjobSettings->getCronjobConfig();
 			return new JSONResponse($config);
 		} catch (\Exception $e) {
 			return $this->buildConfigReadErrorResponse(operationLabel: 'get cronjob config', exception: $e);
@@ -3160,7 +3169,7 @@ class SettingsController extends Controller {
 	public function updateCronjobConfig(): JSONResponse {
 		try {
 			$data = $this->request->getParams();
-			$result = $this->settingsService->updateCronjobConfig($data);
+			$result = $this->cronjobSettings->updateCronjobConfig($data);
 			$statusCode = 400;
 			if ($result['success'] === true) {
 				$statusCode = 200;
