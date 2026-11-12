@@ -22,13 +22,11 @@ namespace OCA\Stackiq\Controller;
 
 use Exception;
 use OCA\Stackiq\Service\DataQualityReportService;
-use OCA\Stackiq\Service\OrganisationReportAccess;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * Serves one organisation's data quality report.
@@ -41,16 +39,14 @@ class DataQualityReportController extends Controller {
 	 *
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
-	 * @param IUserSession $userSession The user session.
 	 * @param DataQualityReportService $reportService Builds the report.
-	 * @param OrganisationReportAccess $access Who may read which organisation's report.
+	 * @param OrganisationReportRequest $reportRequest The requested organisation and whether the user may read it.
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly IUserSession $userSession,
 		private readonly DataQualityReportService $reportService,
-		private readonly OrganisationReportAccess $access,
+		private readonly OrganisationReportRequest $reportRequest,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -64,22 +60,13 @@ class DataQualityReportController extends Controller {
 	 */
 	#[NoAdminRequired]
 	public function index(): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
-		}
-
-		$organisation = (string)$this->request->getParam('organisation', '');
-		if ($organisation === '') {
-			return new JSONResponse(['message' => 'organisation is required'], Http::STATUS_BAD_REQUEST);
-		}
-
-		if ($this->access->mayRead(user: $user, organisationUuid: $organisation) === false) {
-			return new JSONResponse(['message' => 'Not authorised for this organisation'], Http::STATUS_FORBIDDEN);
+		$refusal = $this->reportRequest->refusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
 		try {
-			return new JSONResponse($this->reportService->build(organisationUuid: $organisation));
+			return new JSONResponse($this->reportService->build(organisationUuid: $this->reportRequest->organisation()));
 		} catch (Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
