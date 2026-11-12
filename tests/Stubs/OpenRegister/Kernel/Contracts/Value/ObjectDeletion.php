@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Test stub for OCA\OpenRegister\Service\Object\ObjectDeletion.
+ * Test stub for OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion.
  *
  * Mirrors the constructor of OpenRegister's value object (openregister #9099),
  * so tests can assert what a deleteObject() call asks for.
@@ -14,7 +14,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\OpenRegister\Service\Object;
+namespace OCA\OpenRegister\Kernel\Contracts\Value;
 
 use OCP\IUser;
 

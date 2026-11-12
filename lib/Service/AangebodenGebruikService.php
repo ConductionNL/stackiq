@@ -22,7 +22,7 @@ namespace OCA\Stackiq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\OpenRegister\Service\Object\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;

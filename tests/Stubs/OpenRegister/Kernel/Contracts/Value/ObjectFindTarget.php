@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Test stub for OCA\OpenRegister\Service\Object\ObjectFindTarget.
+ * Test stub for OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget.
  *
  * Mirrors OpenRegister's register/schema target value object. OpenRegister
  * types the two as Register|Schema entity, id, UUID or slug; the stub widens
@@ -15,7 +15,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\OpenRegister\Service\Object;
+namespace OCA\OpenRegister\Kernel\Contracts\Value;
 
 /**
  * Stub of the register and schema one object call is scoped to.
