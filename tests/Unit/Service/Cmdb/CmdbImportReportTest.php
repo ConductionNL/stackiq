@@ -87,6 +87,24 @@ class CmdbImportReportTest extends TestCase {
 	}//end testWithinTheLimitEveryRowIsStored()
 
 	/**
+	 * A limit of zero or below keeps no rows and says the copy is truncated.
+	 *
+	 * @return void
+	 */
+	public function testANonPositiveLimitKeepsNoRows(): void {
+		foreach ([0, -1] as $maxRows) {
+			$stored = $this->report()->toStoredArray(maxRows: $maxRows);
+
+			$this->assertSame([], $stored['rows']);
+			$this->assertSame(0, $stored['rowsStored']);
+			$this->assertTrue($stored['rowsTruncated']);
+		}
+
+		$four = $this->report()->toStoredArray(maxRows: 4);
+		$this->assertSame(['4', '5', '3', '2'], array_column($four['rows'], 'appId'));
+	}//end testANonPositiveLimitKeepsNoRows()
+
+	/**
 	 * The reconciliation outcomes are counted, and their entries (row 0) are not counted as processed sheet rows.
 	 *
 	 * @return void
