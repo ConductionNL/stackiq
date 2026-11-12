@@ -28,6 +28,9 @@ namespace OCA\Stackiq\Tests\Unit\Service\Settings;
 
 use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
+use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -193,14 +196,25 @@ class ArchiMateImportControlTest extends TestCase {
 	 * @return SettingsService
 	 */
 	private function settings(?ArchiMateService $archiMate): SettingsService {
+		$config    = $this->config();
+		$container = $this->container($archiMate);
+		$logger    = $this->logger();
 		return new SettingsService(
-			config: $this->config(),
+			catalogue: new CatalogueLocator(
+				config: $config,
+				appManager: $this->createMock(IAppManager::class),
+				container: $container,
+				logger: $logger
+			),
+			config: $config,
 			request: $this->createMock(IRequest::class),
-			container: $this->container($archiMate),
+			roleGroupSettings: $this->createMock(RoleGroupSettings::class),
+			container: $container,
 			appManager: $this->createMock(IAppManager::class),
-			logger: $this->logger(),
+			logger: $logger,
 			groupManager: $this->createMock(IGroupManager::class),
-			l10n: $this->createMock(IL10N::class)
+			l10n: $this->createMock(IL10N::class),
+			emailSettings: $this->createMock(EmailSettings::class)
 		);
 	}//end settings()
 
