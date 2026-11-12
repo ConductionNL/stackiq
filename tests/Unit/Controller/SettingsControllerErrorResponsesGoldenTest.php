@@ -33,6 +33,7 @@ use OCA\Stackiq\Service\ProgressTracker;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -111,6 +112,7 @@ class SettingsControllerErrorResponsesGoldenTest extends TestCase {
 		$collaborators = [
 			CronjobSettings::class => $this->createMock(originalClassName: CronjobSettings::class),
 			EmailSettings::class => $this->createMock(originalClassName: EmailSettings::class),
+			RoleGroupSettings::class => $this->createMock(originalClassName: RoleGroupSettings::class),
 		];
 		foreach ($scenario['service'] as $method => $result) {
 			$double = $settings;
@@ -163,6 +165,7 @@ class SettingsControllerErrorResponsesGoldenTest extends TestCase {
 			settingsService: $settings,
 			cronjobSettings: $collaborators[CronjobSettings::class],
 			emailSettings: $collaborators[EmailSettings::class],
+			roleGroupSettings: $collaborators[RoleGroupSettings::class],
 			orgSyncSvc: $this->createMock(originalClassName: OrganizationSyncService::class),
 			archiMateService: $this->createMock(originalClassName: ArchiMateService::class),
 			progressTracker: $this->createMock(originalClassName: ProgressTracker::class),

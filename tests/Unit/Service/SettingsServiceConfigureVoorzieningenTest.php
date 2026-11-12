@@ -26,6 +26,7 @@ use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Service\RegisterService;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -126,6 +127,7 @@ final class SettingsServiceConfigureVoorzieningenTest extends TestCase {
 				[
 					$this->createMock(IAppConfig::class),
 					$this->createMock(IRequest::class),
+					$this->createMock(RoleGroupSettings::class),
 					$container,
 					$this->createMock(IAppManager::class),
 					$this->createMock(LoggerInterface::class),

@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Settings;
 
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
@@ -190,6 +191,7 @@ class MaintenanceRoadmapFragmentTest extends TestCase {
 		$settings = new SettingsService(
 			config: $config,
 			request: $this->createMock(IRequest::class),
+			roleGroupSettings: $this->createMock(RoleGroupSettings::class),
 			container: $container,
 			appManager: $this->createMock(IAppManager::class),
 			logger: $this->createMock(LoggerInterface::class),
