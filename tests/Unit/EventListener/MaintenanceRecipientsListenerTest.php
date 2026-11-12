@@ -27,6 +27,7 @@ use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
+use OCA\OpenRegister\Kernel\Contracts\SearchOptions;
 use OCA\Stackiq\BackgroundJob\MaintenanceRecipientsJob;
 use OCA\Stackiq\EventListener\MaintenanceRecipientsListener;
 use OCA\Stackiq\Service\MaintenanceAnnouncerCheck;
@@ -187,7 +188,8 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 
 		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->objectService->method('searchObjects')->willReturnCallback(
-			function (array $query=[], bool $_rbac=true, bool $_multitenancy=true, ?array $ids=null) use ($usages, $people): array {
+			function (array $query=[], bool $_rbac=true, bool $_multitenancy=true, ?SearchOptions $options=null) use ($usages, $people): array {
+				$ids = $options?->selection->ids;
 				if ($query['schema'] === self::SCHEMAS['usage'] && $this->failUsages === true) {
 					throw new \RuntimeException('index offline');
 				}

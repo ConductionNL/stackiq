@@ -27,11 +27,14 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+require_once __DIR__ . '/../Support/SearchCallShape.php';
+
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\Organisation;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Service\AangebodenGebruikService;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Tests\Unit\Support\SearchCallShape;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUser;
@@ -210,6 +213,7 @@ class AangebodenGebruikListingsGoldenTest extends TestCase {
 		$objectService = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objectService->method('searchObjectsPaginated')->willReturnCallback(
 			function (...$args): array {
+				$args          = SearchCallShape::paginated(args: $args);
 				$this->trace[] = ['objects.searchObjectsPaginated', $args[0], $args[1], $args[2], $args[3] ?? null, $args[5] ?? null];
 				if (isset($this->plan['searchThrows']) === true) {
 					throw new \RuntimeException('search failed');

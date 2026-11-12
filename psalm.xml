@@ -54,6 +54,11 @@
              openregister/lib/Db/ListQuery.php, shared with the PHPUnit stubs. -->
         <file name="tests/Stubs/Service/ConfigLookup.php" preloadClasses="true" />
         <file name="tests/Stubs/Db/ListQuery.php" preloadClasses="true" />
+        <!-- SearchOptions and ObjectSelection, which the search and count methods of
+             ObjectService take since openregister #9103. Copies of
+             openregister/lib/Kernel/Contracts/, shared with the PHPUnit stubs. -->
+        <file name="tests/Stubs/OpenRegister/Kernel/Contracts/ObjectSelection.php" preloadClasses="true" />
+        <file name="tests/Stubs/OpenRegister/Kernel/Contracts/SearchOptions.php" preloadClasses="true" />
         <!-- Integriq's connection-registry events (adopt-connection-registry).
              ConnectionReportService names them by string behind class_exists
              (ADR-041). The stubs mirror integriq/lib/Event/ on development, so

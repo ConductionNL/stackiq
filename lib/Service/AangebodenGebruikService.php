@@ -25,6 +25,8 @@ namespace OCA\Stackiq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\ObjectSelection;
+use OCA\OpenRegister\Kernel\Contracts\SearchOptions;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -469,8 +471,7 @@ class AangebodenGebruikService {
 			return $request['objectService']->searchObjectsPaginated(
 				query: $searchQuery,
 				_rbac: false,
-				_multitenancy: false,
-				deleted: false
+				_multitenancy: false
 			);
 		}//end if
 
@@ -485,8 +486,7 @@ class AangebodenGebruikService {
 			query: $searchQuery,
 			_rbac: false,
 			_multitenancy: false,
-			deleted: false,
-			uses: $uuid
+			options: new SearchOptions(selection: new ObjectSelection(uses: $uuid))
 		);
 	}//end searchKoppelingen()
 
@@ -616,9 +616,8 @@ class AangebodenGebruikService {
 				// Disable RBAC to access all objects.
 				_rbac: false,
 				// Disable multitenancy to access objects from all organisations.
-				_multitenancy: false,
-				// Exclude deleted objects.
-				deleted: false
+				// Deleted objects are excluded by default.
+				_multitenancy: false
 			);
 
 			$this->logger->debug(
@@ -713,10 +712,9 @@ class AangebodenGebruikService {
 				// Disable RBAC to access any object.
 				_multitenancy: false,
 				// Disable multitenancy to access objects from any organisation.
-				deleted: false,
-				// Exclude deleted objects.
-				uses: $suiteId
-				// Find objects that have this UUID in their relations array.
+				// Deleted objects are excluded by default; uses finds the objects
+				// that have this UUID in their relations array.
+				options: new SearchOptions(selection: new ObjectSelection(uses: $suiteId))
 			);
 
 			$this->logger->debug(

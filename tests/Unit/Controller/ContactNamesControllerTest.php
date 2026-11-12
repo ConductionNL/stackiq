@@ -21,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\SearchOptions;
 use OCA\Stackiq\Controller\ContactNamesController;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\StackiqContactSyncService;
@@ -118,8 +119,7 @@ class ContactNamesControllerTest extends TestCase {
 				// The caller's own RBAC and organisation scope.
 				true,
 				true,
-				false,
-				null
+				$this->equalTo(new SearchOptions())
 			)
 			->willReturn(
 				[
