@@ -6,6 +6,7 @@
  * Mirrors the constructor of OpenRegister's value object (openregister #9103):
  * the ids and relation (uses) a search or count is narrowed to.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Test
