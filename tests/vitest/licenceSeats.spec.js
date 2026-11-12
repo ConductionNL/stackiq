@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Licence seats: the seat position of one contract, the Seats rows of the
  * License posture page, and the seeded contracts validated against the real
  * catalogContract schema (the monolith with the register.d fragment merged in,

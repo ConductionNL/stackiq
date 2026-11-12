@@ -10,6 +10,8 @@
  * @spec openspec/specs/fe-object-modals/spec.md
  */
 
+import { getRequestToken } from '@nextcloud/auth'
+
 /**
  * A publish or depublish action.
  *
@@ -75,7 +77,9 @@ export function publicationInit(object, action) {
 	const body = isDated(action) ? datedObject(object, action) : {}
 	return {
 		method: action.modal ? 'PUT' : 'POST',
-		headers: action.modal ? { 'Content-Type': 'application/json' } : undefined,
+		headers: action.modal
+			? { 'Content-Type': 'application/json', requesttoken: getRequestToken() }
+			: { requesttoken: getRequestToken() },
 		body: action.modal ? JSON.stringify(body) : undefined,
 	}
 }

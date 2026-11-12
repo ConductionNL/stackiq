@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div v-if="totalPages > 1 || totalItems > minItemsToShow" class="viewPagination">
 		<!-- Page info first -->

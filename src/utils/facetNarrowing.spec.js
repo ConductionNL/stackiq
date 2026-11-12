@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * facetNarrowing.spec.js — the filter that narrows the Applications list to
  * the ids a facets response matched uses OpenRegister's `_ids` parameter.
  *

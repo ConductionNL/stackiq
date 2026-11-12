@@ -13,6 +13,7 @@
  * @spec openspec/specs/fe-object-modals/spec.md
  */
 
+import { getRequestToken } from '@nextcloud/auth'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const stores = vi.hoisted(() => ({
@@ -120,7 +121,7 @@ describe('ViewObject publishObject and depublishObject', () => {
 		const published = await run('publishObject')
 		expect(published.request).toEqual([
 			BASE + '/publish',
-			{ method: 'POST', headers: undefined, body: undefined },
+			{ method: 'POST', headers: { requesttoken: getRequestToken() }, body: undefined },
 		])
 		expect(published.active).toEqual([
 			[
@@ -149,7 +150,7 @@ describe('ViewObject publishObject and depublishObject', () => {
 		const depublished = await run('depublishObject')
 		expect(depublished.request).toEqual([
 			BASE + '/depublish',
-			{ method: 'POST', headers: undefined, body: undefined },
+			{ method: 'POST', headers: { requesttoken: getRequestToken() }, body: undefined },
 		])
 		expect(depublished.success).toBe('Object depublished successfully')
 	})
@@ -164,6 +165,7 @@ describe('ViewObject publishObject and depublishObject', () => {
 		expect(published.request[1].method).toBe('PUT')
 		expect(published.request[1].headers).toEqual({
 			'Content-Type': 'application/json',
+			requesttoken: getRequestToken(),
 		})
 		expect(JSON.parse(published.request[1].body)).toEqual({
 			...OBJECT,
@@ -188,7 +190,7 @@ describe('ViewObject publishObject and depublishObject', () => {
 			BASE + '/publish',
 			{
 				method: 'PUT',
-				headers: { 'Content-Type': 'application/json' },
+				headers: { 'Content-Type': 'application/json', requesttoken: getRequestToken() },
 				body: '{}',
 			},
 		])

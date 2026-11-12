@@ -221,4 +221,56 @@ class ContactNamesControllerTest extends TestCase {
 		$this->assertSame(200, $response->getStatus());
 		$this->assertEquals(['names' => (object)[]], $response->getData());
 	}//end testAnUnreadableRegisterGivesNoNames()
+	/**
+	 * Without Contacts, without ids, or with an `ids` parameter that is no list or string, nothing is read
+	 * and nobody is named.
+	 *
+	 * @return void
+	 */
+	public function testNamesNobodyWithoutContactsOrIds(): void {
+		$this->objectService->expects($this->never())->method('searchObjectsPaginated');
+
+		foreach ([[], 'not-a-uuid', 42, null] as $ids) {
+			$response = $this->controller(ids: $ids)->index();
+			$this->assertSame(200, $response->getStatus());
+			$this->assertEquals(['names' => (object)[]], $response->getData());
+		}
+
+		$this->contactSync = $this->createMock(StackiqContactSyncService::class);
+		$this->contactSync->method('isAvailable')->willReturn(false);
+		$this->contactSync->expects($this->never())->method('findOwnContactByUid');
+		$response = $this->controller(ids: [self::A])->index();
+		$this->assertSame(200, $response->getStatus());
+		$this->assertEquals(['names' => (object)[]], $response->getData());
+	}//end testNamesNobodyWithoutContactsOrIds()
+
+	/**
+	 * The refusal for too many ids names the limit; exactly MAX_IDS distinct ids are allowed, and a name
+	 * given as a list takes its first value.
+	 *
+	 * @return void
+	 */
+	public function testTheIdLimitAndAListName(): void {
+		$ids = [];
+		for ($i = 0; $i <= ContactNamesController::MAX_IDS; $i++) {
+			$ids[] = sprintf('00000000-0000-0000-0000-%012d', $i);
+		}
+
+		$refused = $this->controller(ids: $ids)->index();
+		$this->assertSame(
+			['message' => 'At most %s contact persons per request', 'error' => 'too-many-ids'],
+			$refused->getData()
+		);
+
+		array_pop($ids);
+		$ids[] = strtoupper($ids[0]);
+		$this->objectService->expects($this->once())->method('searchObjectsPaginated')->willReturn(
+			['results' => [['id' => $ids[0], 'contactsUid' => 'uid-0']]]
+		);
+		$this->contactSync->method('findOwnContactByUid')->willReturn(['UID' => 'uid-0', 'FN' => ['Eerste Naam', 'Tweede']]);
+
+		$allowed = $this->controller(ids: $ids)->index();
+		$this->assertSame(200, $allowed->getStatus());
+		$this->assertEquals(['names' => (object)[$ids[0] => 'Eerste Naam']], $allowed->getData());
+	}//end testTheIdLimitAndAListName()
 }//end class
