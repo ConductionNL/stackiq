@@ -612,6 +612,7 @@ export default defineComponent({
 				await fetch('/index.php/apps/stackiq/api/settings', {
 					method: 'POST',
 					headers: {
+						requesttoken: OC.requestToken,
 						'Content-Type': 'application/json',
 					},
 					body: JSON.stringify(configToSave),
@@ -686,6 +687,7 @@ export default defineComponent({
 					{
 						method: 'POST',
 						headers: {
+							requesttoken: OC.requestToken,
 							'Content-Type': 'application/json',
 						},
 						body: JSON.stringify({

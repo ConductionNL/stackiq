@@ -23,7 +23,6 @@ import {
 	lenientJson,
 	messageJson,
 	okJson,
-	plainPost,
 	requireSuccess,
 	tokenRequest,
 } from './organisatieRequests.js'
@@ -313,7 +312,7 @@ export const useOrganisatieStore = defineStore('organization', {
 			try {
 				const response = await fetch(
 					`/index.php/apps/stackiq/api/contactpersonen/${encodeURIComponent(contactpersoonId)}/disable`,
-					plainPost(),
+					tokenRequest('POST'),
 				)
 				await assertOk(response, 'Failed to disable user')
 			} catch (error) {
@@ -333,7 +332,7 @@ export const useOrganisatieStore = defineStore('organization', {
 			try {
 				const response = await fetch(
 					`/index.php/apps/stackiq/api/contactpersonen/${encodeURIComponent(contactpersoonId)}/enable`,
-					plainPost(),
+					tokenRequest('POST'),
 				)
 				await assertOk(response, 'Failed to enable user')
 			} catch (error) {
@@ -400,7 +399,7 @@ export const useOrganisatieStore = defineStore('organization', {
 
 				const response = await fetch(
 					'/index.php/apps/stackiq/api/contactpersonen/bulk-user-info',
-					plainPost({ contactpersoonIds }),
+					tokenRequest('POST', { contactpersoonIds }),
 				)
 
 				console.info(

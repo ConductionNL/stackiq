@@ -326,6 +326,7 @@ export default defineComponent({
 				{
 					method: 'POST',
 					headers: {
+						requesttoken: OC.requestToken,
 						'Content-Type': 'application/json',
 						'X-Requested-With': 'XMLHttpRequest',
 					},

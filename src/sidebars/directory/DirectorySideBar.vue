@@ -344,6 +344,7 @@ export default {
 			fetch('/index.php/apps/opencatalogi/api/metadata', {
 				method: 'POST',
 				headers: {
+					requesttoken: OC.requestToken,
 					'Content-Type': 'application/json',
 				},
 				body: JSON.stringify(data),
@@ -368,6 +369,7 @@ export default {
 			fetch(`/index.php/apps/opencatalogi/api/metadata/${metadataId}`, {
 				method: 'DELETE',
 				headers: {
+					requesttoken: OC.requestToken,
 					'Content-Type': 'application/json',
 				},
 			})
