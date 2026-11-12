@@ -757,6 +757,12 @@ class CmdbImportControllerTest extends TestCase {
 			'yes' => ['yes', null],
 			'blank' => ['  ', null],
 			'array' => [['false'], null],
+			'bool true' => [true, true],
+			'bool false' => [false, false],
+			'int one' => [1, true],
+			'int zero' => [0, false],
+			'int two' => [2, null],
+			'float one' => [1.0, null],
 		];
 	}//end updateExistingValues()
 
