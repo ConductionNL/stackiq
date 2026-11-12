@@ -157,7 +157,7 @@ class ReviewAggregateService {
 		// so this is the actual enforcement point, not defensive redundancy.
 		$items = [];
 		foreach ($objectList as $object) {
-			$data = $this->toDataBag(object: $object);
+			$data = (new ObjectDataBag())->fromItem(object: $object);
 			if (($data['status'] ?? null) === self::STATUS_APPROVED) {
 				$items[] = $data;
 			}
@@ -260,42 +260,8 @@ class ReviewAggregateService {
 	 * @return array{register:int, schema:int}|null The target, or null.
 	 */
 	private function resolveTarget(): ?array {
-		$register = $this->settingsService->getRegisterIdForObjectType(self::REVIEW_TYPE);
-		$schema = $this->settingsService->getSchemaIdForObjectType(self::REVIEW_TYPE);
-		if ($register === null || $schema === null) {
-			return null;
-		}
-
-		return ['register' => (int)$register, 'schema' => (int)$schema];
+		return (new ObjectTypeTarget(locator: $this->settingsService))->resolve(type: self::REVIEW_TYPE);
 	}//end resolveTarget()
-
-	/**
-	 * Normalise an ObjectService result item to a data bag (with its uuid).
-	 *
-	 * @param mixed $object The result item (ObjectEntity or array).
-	 *
-	 * @return array<string,mixed> The data bag.
-	 */
-	private function toDataBag(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (method_exists($object, 'getUuid') === true && empty($data['id']) === true) {
-				$data['id'] = $object->getUuid();
-			}
-
-			if (is_array($data) === true) {
-				return $data;
-			}
-
-			return [];
-		}
-
-		return [];
-	}//end toDataBag()
 
 	/**
 	 * Get the OpenRegister ObjectService from the DI container.

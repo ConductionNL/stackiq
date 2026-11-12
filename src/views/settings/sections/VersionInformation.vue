@@ -1,4 +1,8 @@
 <!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
+<!--
  - @copyright Copyright (c) 2023 Ruben Linde <info@conduction.nl>
  - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
@@ -371,12 +375,18 @@
  * @version 1.0.0
  */
 
-import { showError, showSuccess } from '@nextcloud/dialogs'
+import { showError } from '@nextcloud/dialogs'
 // Nextcloud Vue components
 import { NcButton, NcNoteCard } from '@nextcloud/vue'
 // Components
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 import { settingsStore } from '../../../store/store.js'
+import {
+	FORCE_UPDATE_TEXTS,
+	reportActionResult,
+	reportAutoConfigResult,
+	RESET_AUTO_CONFIG_TEXTS,
+} from '../autoConfigFeedback.js'
 
 export default {
 	name: 'VersionInformation',
@@ -444,22 +454,25 @@ export default {
 			try {
 				const result = await this.store.consolidatedAutoConfigure()
 				this.consolidatedResult = result
-				if (result && result.success) {
-					showSuccess('Auto configuration completed successfully')
-				} else if (result && result.message) {
-					showError('Auto configuration failed: ' + result.message)
-				}
+				reportAutoConfigResult(result)
 			} catch (error) {
-				console.error('Failed to perform auto-configuration:', error)
-				this.consolidatedResult = {
-					success: false,
-					message:
-						'Failed to perform auto-configuration: ' + error.message,
-				}
-				showError('Failed to perform auto-configuration: ' + error.message)
+				this.reportAutoConfigFailure(error)
 			} finally {
 				this.autoConfiguring = false
 			}
+		},
+
+		/**
+		 * Keeps and shows the error of an auto-configuration that threw.
+		 *
+		 * @param {Error} error The error.
+		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 */
+		reportAutoConfigFailure(error) {
+			console.error('Failed to perform auto-configuration:', error)
+			const message = 'Failed to perform auto-configuration: ' + error.message
+			this.consolidatedResult = { success: false, message }
+			showError(message)
 		},
 
 		/**
@@ -471,20 +484,10 @@ export default {
 			try {
 				this.resetAutoConfigResult = await this.store.resetAutoConfig()
 				await this.store.loadVersionInfo()
-				if (
-					this.resetAutoConfigResult
-					&& this.resetAutoConfigResult.success
-				) {
-					showSuccess(
-						this.resetAutoConfigResult.message
-							|| 'Auto-config reset successfully',
-					)
-				} else if (this.resetAutoConfigResult) {
-					showError(
-						this.resetAutoConfigResult.message
-							|| 'Failed to reset auto-config',
-					)
-				}
+				reportActionResult(
+					this.resetAutoConfigResult,
+					RESET_AUTO_CONFIG_TEXTS,
+				)
 			} finally {
 				this.autoConfiguring = false
 			}
@@ -499,16 +502,7 @@ export default {
 			try {
 				this.consolidatedResult = await this.store.forceUpdate()
 				await this.store.loadVersionInfo()
-				if (this.consolidatedResult && this.consolidatedResult.success) {
-					showSuccess(
-						this.consolidatedResult.message
-							|| 'Force update completed successfully',
-					)
-				} else if (this.consolidatedResult) {
-					showError(
-						this.consolidatedResult.message || 'Force update failed',
-					)
-				}
+				reportActionResult(this.consolidatedResult, FORCE_UPDATE_TEXTS)
 			} finally {
 				this.autoConfiguring = false
 			}

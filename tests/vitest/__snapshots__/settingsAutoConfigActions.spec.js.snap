@@ -1,0 +1,510 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`settings auto-configuration actions > StackiqSettings consolidatedAutoConfigure 1`] = `
+{
+  "empty": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [],
+    "resetAutoConfigResult": "old",
+    "success": [],
+    "versionReloads": 1,
+  },
+  "failure": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [
+      [
+        "Auto configuration failed: Broke",
+      ],
+    ],
+    "resetAutoConfigResult": "old",
+    "success": [],
+    "versionReloads": 1,
+  },
+  "failure without message": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [],
+    "resetAutoConfigResult": "old",
+    "success": [],
+    "versionReloads": 1,
+  },
+  "success": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [],
+    "resetAutoConfigResult": "old",
+    "success": [
+      [
+        "Auto configuration completed successfully",
+      ],
+    ],
+    "versionReloads": 1,
+  },
+  "success without message": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [],
+    "resetAutoConfigResult": "old",
+    "success": [
+      [
+        "Auto configuration completed successfully",
+      ],
+    ],
+    "versionReloads": 1,
+  },
+  "throws": {
+    "autoConfiguring": false,
+    "busy": [],
+    "consolidatedResult": "old",
+    "error": [
+      [
+        "Failed to perform auto-configuration: offline",
+      ],
+    ],
+    "resetAutoConfigResult": "old",
+    "success": [],
+    "versionReloads": 0,
+  },
+}
+`;
+
+exports[`settings auto-configuration actions > StackiqSettings handleForceUpdate 1`] = `
+{
+  "empty": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [],
+    "resetAutoConfigResult": "old",
+    "success": [],
+    "versionReloads": 1,
+  },
+  "failure": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [
+      [
+        "Broke",
+      ],
+    ],
+    "resetAutoConfigResult": "old",
+    "success": [],
+    "versionReloads": 1,
+  },
+  "failure without message": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [
+      [
+        "Force update failed",
+      ],
+    ],
+    "resetAutoConfigResult": "old",
+    "success": [],
+    "versionReloads": 1,
+  },
+  "success": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [],
+    "resetAutoConfigResult": "old",
+    "success": [
+      [
+        "Done here",
+      ],
+    ],
+    "versionReloads": 1,
+  },
+  "success without message": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [],
+    "resetAutoConfigResult": "old",
+    "success": [
+      [
+        "Force update completed successfully",
+      ],
+    ],
+    "versionReloads": 1,
+  },
+  "throws": {
+    "rejected": "offline",
+  },
+}
+`;
+
+exports[`settings auto-configuration actions > StackiqSettings handleResetAutoConfig 1`] = `
+{
+  "empty": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [],
+    "resetAutoConfigResult": "old",
+    "success": [],
+    "versionReloads": 1,
+  },
+  "failure": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [
+      [
+        "Broke",
+      ],
+    ],
+    "resetAutoConfigResult": "old",
+    "success": [],
+    "versionReloads": 1,
+  },
+  "failure without message": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [
+      [
+        "Failed to reset auto-config",
+      ],
+    ],
+    "resetAutoConfigResult": "old",
+    "success": [],
+    "versionReloads": 1,
+  },
+  "success": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [],
+    "resetAutoConfigResult": "old",
+    "success": [
+      [
+        "Done here",
+      ],
+    ],
+    "versionReloads": 1,
+  },
+  "success without message": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [],
+    "resetAutoConfigResult": "old",
+    "success": [
+      [
+        "Auto-config reset successfully",
+      ],
+    ],
+    "versionReloads": 1,
+  },
+  "throws": {
+    "rejected": "offline",
+  },
+}
+`;
+
+exports[`settings auto-configuration actions > VersionInformation consolidatedAutoConfigure 1`] = `
+{
+  "empty": {
+    "autoConfiguring": false,
+    "busy": [],
+    "consolidatedResult": null,
+    "error": [],
+    "resetAutoConfigResult": "old",
+    "success": [],
+    "versionReloads": 0,
+  },
+  "failure": {
+    "autoConfiguring": false,
+    "busy": [],
+    "consolidatedResult": {
+      "message": "Broke",
+      "success": false,
+    },
+    "error": [
+      [
+        "Auto configuration failed: Broke",
+      ],
+    ],
+    "resetAutoConfigResult": "old",
+    "success": [],
+    "versionReloads": 0,
+  },
+  "failure without message": {
+    "autoConfiguring": false,
+    "busy": [],
+    "consolidatedResult": {
+      "success": false,
+    },
+    "error": [],
+    "resetAutoConfigResult": "old",
+    "success": [],
+    "versionReloads": 0,
+  },
+  "success": {
+    "autoConfiguring": false,
+    "busy": [],
+    "consolidatedResult": {
+      "message": "Done here",
+      "success": true,
+    },
+    "error": [],
+    "resetAutoConfigResult": "old",
+    "success": [
+      [
+        "Auto configuration completed successfully",
+      ],
+    ],
+    "versionReloads": 0,
+  },
+  "success without message": {
+    "autoConfiguring": false,
+    "busy": [],
+    "consolidatedResult": {
+      "success": true,
+    },
+    "error": [],
+    "resetAutoConfigResult": "old",
+    "success": [
+      [
+        "Auto configuration completed successfully",
+      ],
+    ],
+    "versionReloads": 0,
+  },
+  "throws": {
+    "autoConfiguring": false,
+    "busy": [],
+    "consolidatedResult": {
+      "message": "Failed to perform auto-configuration: offline",
+      "success": false,
+    },
+    "error": [
+      [
+        "Failed to perform auto-configuration: offline",
+      ],
+    ],
+    "resetAutoConfigResult": "old",
+    "success": [],
+    "versionReloads": 0,
+  },
+}
+`;
+
+exports[`settings auto-configuration actions > VersionInformation handleForceUpdate 1`] = `
+{
+  "empty": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": null,
+    "error": [],
+    "resetAutoConfigResult": "old",
+    "success": [],
+    "versionReloads": 1,
+  },
+  "failure": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": {
+      "message": "Broke",
+      "success": false,
+    },
+    "error": [
+      [
+        "Broke",
+      ],
+    ],
+    "resetAutoConfigResult": "old",
+    "success": [],
+    "versionReloads": 1,
+  },
+  "failure without message": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": {
+      "success": false,
+    },
+    "error": [
+      [
+        "Force update failed",
+      ],
+    ],
+    "resetAutoConfigResult": "old",
+    "success": [],
+    "versionReloads": 1,
+  },
+  "success": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": {
+      "message": "Done here",
+      "success": true,
+    },
+    "error": [],
+    "resetAutoConfigResult": "old",
+    "success": [
+      [
+        "Done here",
+      ],
+    ],
+    "versionReloads": 1,
+  },
+  "success without message": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": {
+      "success": true,
+    },
+    "error": [],
+    "resetAutoConfigResult": "old",
+    "success": [
+      [
+        "Force update completed successfully",
+      ],
+    ],
+    "versionReloads": 1,
+  },
+  "throws": {
+    "rejected": "offline",
+  },
+}
+`;
+
+exports[`settings auto-configuration actions > VersionInformation handleResetAutoConfig 1`] = `
+{
+  "empty": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [],
+    "resetAutoConfigResult": null,
+    "success": [],
+    "versionReloads": 1,
+  },
+  "failure": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [
+      [
+        "Broke",
+      ],
+    ],
+    "resetAutoConfigResult": {
+      "message": "Broke",
+      "success": false,
+    },
+    "success": [],
+    "versionReloads": 1,
+  },
+  "failure without message": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [
+      [
+        "Failed to reset auto-config",
+      ],
+    ],
+    "resetAutoConfigResult": {
+      "success": false,
+    },
+    "success": [],
+    "versionReloads": 1,
+  },
+  "success": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [],
+    "resetAutoConfigResult": {
+      "message": "Done here",
+      "success": true,
+    },
+    "success": [
+      [
+        "Done here",
+      ],
+    ],
+    "versionReloads": 1,
+  },
+  "success without message": {
+    "autoConfiguring": false,
+    "busy": [
+      true,
+    ],
+    "consolidatedResult": "old",
+    "error": [],
+    "resetAutoConfigResult": {
+      "success": true,
+    },
+    "success": [
+      [
+        "Auto-config reset successfully",
+      ],
+    ],
+    "versionReloads": 1,
+  },
+  "throws": {
+    "rejected": "offline",
+  },
+}
+`;

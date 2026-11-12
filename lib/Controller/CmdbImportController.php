@@ -3,6 +3,9 @@
 /**
  * Stackiq CmdbImportController.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Upload endpoint for a TOPdesk CMDB export (xlsx) and the cancel endpoint
  * of a running import (openspec/changes/cmdb-export-import/contract.md).
  *
@@ -29,9 +32,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/cmdb-export-import/tasks.md#task-8
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

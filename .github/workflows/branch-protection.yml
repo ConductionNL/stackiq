@@ -6,6 +6,9 @@ on:
       - main
       - beta
 
+permissions:
+  contents: read
+
 jobs:
   branch-protection:
     # The callee's `check-branch` job is a single bash comparison of
