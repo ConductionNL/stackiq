@@ -8804,7 +8804,8 @@
 				"owner": "ConductionNL/openregister",
 				"change": "2026-06-14-open-data-publishing",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/specs/open-data-publishing :: Published entries are exposed through the existing public read surface; openspec/specs/open-data-publishing :: Open-data serialization strips internal fields and carries reuse metadata"
+				"requirement": "openspec/specs/open-data-publishing :: Published entries are exposed through the existing public read surface; openspec/specs/open-data-publishing :: Open-data serialization strips internal fields and carries reuse metadata",
+				"note": "decision 392 (12 Nov): published entries are publicly readable without login, everything else needs login. The code still requires login on GET /api/aanbod (AanbodController::getAanbod rejects anonymous callers); change anonymous-aanbod-listing-is-published-only replaces vendor-visibility-rbac REQ-009 and holds the code task. Anonymous reads through the OpenRegister public rules above are not affected."
 			},
 			"reachedOn": "API only: OpenRegister objects API for anonymous reads; no stackiq page",
 			"provider": "openregister",
