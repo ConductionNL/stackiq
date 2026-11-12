@@ -10,6 +10,8 @@
  * @spec openspec/specs/fe-object-modals/spec.md
  */
 
+import { getRequestToken } from '@nextcloud/auth'
+
 const OBJECTS_API = '/index.php/apps/openregister/api/objects'
 
 /**
@@ -108,6 +110,7 @@ export function jsonRequest(method, objectData) {
 		method,
 		headers: {
 			'Content-Type': 'application/json',
+			requesttoken: getRequestToken(),
 		},
 		body: JSON.stringify(objectData),
 	}

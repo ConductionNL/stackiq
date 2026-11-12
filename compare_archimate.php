@@ -4,6 +4,9 @@
  * 
  * This script compares the original GEMMA_release.xml with the exported XML
  * to identify differences and ensure round-trip compatibility.
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 require_once '/var/www/html/lib/base.php';

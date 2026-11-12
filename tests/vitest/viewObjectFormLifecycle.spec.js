@@ -13,6 +13,7 @@
  * @spec openspec/specs/fe-object-modals/spec.md
  */
 
+import { getRequestToken } from '@nextcloud/auth'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const stores = vi.hoisted(() => ({
@@ -202,7 +203,7 @@ describe('ViewObject saveObject', () => {
 			'/index.php/apps/openregister/api/objects/r1/s1',
 			{
 				method: 'POST',
-				headers: { 'Content-Type': 'application/json' },
+				headers: { 'Content-Type': 'application/json', requesttoken: getRequestToken() },
 				body: '{"payload":true}',
 			},
 		)
