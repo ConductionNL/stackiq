@@ -303,7 +303,7 @@
       "count": 1
     },
     "@typescript-eslint/no-unused-vars": {
-      "count": 13
+      "count": 11
     },
     "jsdoc/require-param-type": {
       "count": 71
@@ -312,7 +312,7 @@
       "count": 12
     },
     "no-useless-assignment": {
-      "count": 5
+      "count": 4
     },
     "vue/prefer-define-options": {
       "count": 1
