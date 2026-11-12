@@ -79,14 +79,36 @@ class ReviewController extends Controller {
 	public function submit(array $review = [], string $subjectType = '', string $subjectId = ''): JSONResponse {
 		$result = $this->reviews->submit(payload: $review, subjectType: $subjectType, subjectId: $subjectId);
 		if ($result['ok'] === false) {
-			$statusCode = Http::STATUS_BAD_REQUEST;
-			if ($result['reason'] === 'not authenticated') {
-				$statusCode = Http::STATUS_UNAUTHORIZED;
-			}
-
-			return new JSONResponse(data: ['message' => $result['reason']], statusCode: $statusCode);
+			return self::refusedReview(reason: $result['reason']);
 		}
 
+		return self::acceptedReview(result: $result);
+	}//end submit()
+
+	/**
+	 * The refusal of a review: 401 for an anonymous caller, 400 otherwise, with the reason only.
+	 *
+	 * @param string $reason Why the review service refused.
+	 *
+	 * @return JSONResponse
+	 */
+	private static function refusedReview(string $reason): JSONResponse {
+		$statusCode = Http::STATUS_BAD_REQUEST;
+		if ($reason === 'not authenticated') {
+			$statusCode = Http::STATUS_UNAUTHORIZED;
+		}
+
+		return new JSONResponse(data: ['message' => $reason], statusCode: $statusCode);
+	}//end refusedReview()
+
+	/**
+	 * The 202 acknowledgement of a queued review.
+	 *
+	 * @param array<string,mixed> $result The review service result, with `uuid` and `status`.
+	 *
+	 * @return JSONResponse
+	 */
+	private static function acceptedReview(array $result): JSONResponse {
 		return new JSONResponse(
 			data: [
 				'ok' => true,
@@ -96,7 +118,7 @@ class ReviewController extends Controller {
 			],
 			statusCode: Http::STATUS_ACCEPTED
 		);
-	}//end submit()
+	}//end acceptedReview()
 
 	/**
 	 * The approved-only aggregate (average + count) and a bounded list of
