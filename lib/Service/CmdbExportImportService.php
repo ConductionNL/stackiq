@@ -965,10 +965,9 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-an-application-that-returns-to-the-export-shall-be-unarchived-or-restored-never-duplicated-req-cmdb-016
 	 */
 	private static function rowOutcome(string $module, string $usage): string {
-		foreach ([CmdbImportReport::RESTORED, CmdbImportReport::UNARCHIVED] as $revived) {
-			if ($module === $revived || $usage === $revived) {
-				return $revived;
-			}
+		$revived = self::revivedOutcome(module: $module, usage: $usage);
+		if ($revived !== '') {
+			return $revived;
 		}
 
 		if ($module === CmdbImportReport::CREATED) {
@@ -981,6 +980,25 @@ class CmdbExportImportService {
 
 		return CmdbImportReport::UNCHANGED;
 	}//end rowOutcome()
+
+	/**
+	 * Restored when the module or the usage was restored from the trash, else unarchived when either was
+	 * unarchived, else ''.
+	 *
+	 * @param string $module The module outcome.
+	 * @param string $usage The usage outcome.
+	 *
+	 * @return string
+	 */
+	private static function revivedOutcome(string $module, string $usage): string {
+		foreach ([CmdbImportReport::RESTORED, CmdbImportReport::UNARCHIVED] as $revived) {
+			if ($module === $revived || $usage === $revived) {
+				return $revived;
+			}
+		}
+
+		return '';
+	}//end revivedOutcome()
 
 	/**
 	 * Store the report with the operation and close it, as completed or cancelled.
@@ -1430,36 +1448,74 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-5
 	 */
 	private function merge(string $target, array $stored, array $mapped): ?array {
-		$createOnly = $this->profile->createOnlyFields(target: $target);
-		$never = $this->profile->neverWrittenOnUpdate(target: $target);
-		$merged = $stored;
-		unset($merged['@self']);
-		$changed = false;
-
-		foreach ($mapped as $field => $value) {
-			if (in_array($field, $never, true) === true) {
-				continue;
-			}
-
-			$current = ($stored[$field] ?? null);
-			if (in_array($field, $createOnly, true) === true && self::isEmptyValue(value: $current) === false) {
-				continue;
-			}
-
-			if (self::sameValue(stored: $current, value: $value) === true) {
-				continue;
-			}
-
-			$merged[$field] = $value;
-			$changed = true;
-		}
-
-		if ($changed === false) {
+		$writable = self::withoutKeptFields(mapped: $mapped, kept: $this->keptFields(target: $target, stored: $stored));
+		$changes = self::changedFields(stored: $stored, mapped: $writable);
+		if ($changes === []) {
 			return null;
 		}
 
-		return $merged;
+		$merged = $stored;
+		unset($merged['@self']);
+
+		return array_replace($merged, $changes);
 	}//end merge()
+
+	/**
+	 * The mapped fields without the ones an update leaves as they are.
+	 *
+	 * @param array<string, mixed> $mapped The mapped fields.
+	 * @param array<int, string> $kept The fields an update leaves as they are, from keptFields().
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function withoutKeptFields(array $mapped, array $kept): array {
+		foreach (array_keys($mapped) as $field) {
+			if (in_array($field, $kept, true) === true) {
+				unset($mapped[$field]);
+			}
+		}
+
+		return $mapped;
+	}//end withoutKeptFields()
+
+	/**
+	 * The mapped fields whose value differs from the stored one.
+	 *
+	 * @param array<string, mixed> $stored The stored object data.
+	 * @param array<string, mixed> $mapped The mapped fields.
+	 *
+	 * @return array<string, mixed>
+	 */
+	private static function changedFields(array $stored, array $mapped): array {
+		$changes = [];
+		foreach ($mapped as $field => $value) {
+			if (self::sameValue(stored: ($stored[$field] ?? null), value: $value) === false) {
+				$changes[$field] = $value;
+			}
+		}
+
+		return $changes;
+	}//end changedFields()
+
+	/**
+	 * The fields an update leaves as they are: the never-written ones, and the create-only ones that hold a value.
+	 *
+	 * @param string $target The profile target.
+	 * @param array<string, mixed> $stored The stored object data.
+	 *
+	 * @return array<int, string>
+	 */
+	private function keptFields(string $target, array $stored): array {
+		$createOnly = $this->profile->createOnlyFields(target: $target);
+		$kept = $this->profile->neverWrittenOnUpdate(target: $target);
+		foreach ($createOnly as $field) {
+			if (self::isEmptyValue(value: ($stored[$field] ?? null)) === false) {
+				$kept[] = $field;
+			}
+		}
+
+		return $kept;
+	}//end keptFields()
 
 	/**
 	 * Resolve the owner of a row (Applicatie Eigenaar) as the usage's business owner.
@@ -2349,19 +2405,48 @@ class CmdbExportImportService {
 		}
 
 		foreach ($deleted as $entity) {
-			if (is_object($entity) === false || (string)$entity->getRegister() !== (string)$coordinates['register'] || $entity->getUuid() === null) {
-				continue;
-			}
-
-			foreach (['module', 'usage'] as $schemaKey) {
-				if ((string)$entity->getSchema() === (string)$coordinates[$schemaKey]) {
-					$trash[$schemaKey][(string)$entity->getUuid()] = $entity;
-				}
+			foreach (self::trashSchemaKeys(entity: $entity, coordinates: $coordinates) as $schemaKey) {
+				$trash[$schemaKey][(string)$entity->getUuid()] = $entity;
 			}
 		}
 
 		return $trash;
 	}//end registerTrash()
+
+	/**
+	 * The schema keys (module, usage) a soft-deleted object of this register belongs to; none for anything else.
+	 *
+	 * @param mixed $entity One entry of what MagicMapper::findDeletedAcrossAllMagicTables() answered.
+	 * @param array<string, mixed> $coordinates The register and schema ids, from coordinates().
+	 *
+	 * @return array<int, string>
+	 */
+	private static function trashSchemaKeys(mixed $entity, array $coordinates): array {
+		if (self::isRegisterTrash(entity: $entity, coordinates: $coordinates) === false) {
+			return [];
+		}
+
+		$schemaKeys = [];
+		foreach (['module', 'usage'] as $schemaKey) {
+			if ((string)$entity->getSchema() === (string)$coordinates[$schemaKey]) {
+				$schemaKeys[] = $schemaKey;
+			}
+		}
+
+		return $schemaKeys;
+	}//end trashSchemaKeys()
+
+	/**
+	 * Whether a soft-deleted entry is an object of this register with a uuid.
+	 *
+	 * @param mixed $entity One entry of what MagicMapper::findDeletedAcrossAllMagicTables() answered.
+	 * @param array<string, mixed> $coordinates The register and schema ids, from coordinates().
+	 *
+	 * @return bool
+	 */
+	private static function isRegisterTrash(mixed $entity, array $coordinates): bool {
+		return is_object($entity) === true && (string)$entity->getRegister() === (string)$coordinates['register'] && $entity->getUuid() !== null;
+	}//end isRegisterTrash()
 
 	/**
 	 * Archive or soft-delete every application of the municipality whose APPID left the CMDB sheets.
@@ -2948,27 +3033,54 @@ class CmdbExportImportService {
 	 */
 	private function resolveEngine(): object {
 		$class = static::ENGINE_CLASS;
-		try {
-			if ($this->container->has($class) === true) {
-				$engine = $this->container->get($class);
-				if (is_object($engine) === true && method_exists($engine, 'mapRow') === true) {
-					return $engine;
-				}
-			}
-		} catch (Throwable $e) {
-			// Fall through to the class check below.
-			$engine = null;
+		$engine = $this->containerEngine(class: $class);
+		if ($engine === null && class_exists($class) === true) {
+			$engine = (new OpenRegisterInstance(container: $this->container))->build(class: $class);
 		}
 
-		if (class_exists($class) === true) {
-			$engine = (new OpenRegisterInstance(container: $this->container))->build(class: $class);
-			if ($engine !== null && method_exists($engine, 'mapRow') === true) {
-				return $engine;
-			}
+		if (self::isMappingEngine(engine: $engine) === true) {
+			return $engine;
 		}
 
 		throw new CmdbImportException(errorCode: CmdbImportException::MAPPING_UNAVAILABLE, message: 'OpenRegister MappingEngine is not available');
 	}//end resolveEngine()
+
+	/**
+	 * The mapping engine the container holds, when it has one with `mapRow`.
+	 *
+	 * @param string $class The engine class.
+	 *
+	 * @return object|null
+	 */
+	private function containerEngine(string $class): ?object {
+		try {
+			if ($this->container->has($class) === false) {
+				return null;
+			}
+
+			$engine = $this->container->get($class);
+		} catch (Throwable $e) {
+			// Fall through to the class check.
+			return null;
+		}
+
+		if (self::isMappingEngine(engine: $engine) === true) {
+			return $engine;
+		}
+
+		return null;
+	}//end containerEngine()
+
+	/**
+	 * Whether a candidate is a mapping engine: an object with `mapRow`.
+	 *
+	 * @param mixed $engine The candidate.
+	 *
+	 * @return bool
+	 */
+	private static function isMappingEngine(mixed $engine): bool {
+		return is_object($engine) === true && method_exists($engine, 'mapRow') === true;
+	}//end isMappingEngine()
 
 	/**
 	 * Resolve OpenRegister and the register and schema ids, failing closed.
