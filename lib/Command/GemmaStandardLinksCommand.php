@@ -23,8 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Command;
 
-use OCA\OpenRegister\Service\Object\ObjectFindTarget;
-use OCA\OpenRegister\Service\Object\ObjectPatch;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use OCA\Stackiq\Service\ArchiMate\GemmaStandardLinker;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;

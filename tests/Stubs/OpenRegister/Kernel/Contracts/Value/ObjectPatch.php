@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Test stub for OCA\OpenRegister\Service\Object\ObjectPatch.
+ * Test stub for OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch.
  *
  * Mirrors the constructor of OpenRegister's value object (openregister #9096),
  * so tests can assert what a patchObject() call asks for.
@@ -14,7 +14,7 @@
 
 declare(strict_types=1);
 
-namespace OCA\OpenRegister\Service\Object;
+namespace OCA\OpenRegister\Kernel\Contracts\Value;
 
 use OCP\IUser;
 

@@ -22,7 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Command;
 
-use OCA\OpenRegister\Service\Object\ObjectPatch;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use OCA\Stackiq\Command\ReferencesAuditCommand;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;

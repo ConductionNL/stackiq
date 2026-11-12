@@ -55,10 +55,10 @@
         <file name="tests/Stubs/Service/ConfigLookup.php" preloadClasses="true" />
         <file name="tests/Stubs/Db/ListQuery.php" preloadClasses="true" />
         <!-- ObjectPatch and its ObjectFindTarget, which ObjectService::patchObject()
-             takes since openregister #9096. Copies of openregister/lib/Service/Object/,
+             takes since openregister #9096. Copies of openregister/lib/Kernel/Contracts/Value/,
              shared with the PHPUnit stubs. -->
-        <file name="tests/Stubs/Service/Object/ObjectFindTarget.php" preloadClasses="true" />
-        <file name="tests/Stubs/Service/Object/ObjectPatch.php" preloadClasses="true" />
+        <file name="tests/Stubs/OpenRegister/Kernel/Contracts/Value/ObjectFindTarget.php" preloadClasses="true" />
+        <file name="tests/Stubs/OpenRegister/Kernel/Contracts/Value/ObjectPatch.php" preloadClasses="true" />
         <!-- Integriq's connection-registry events (adopt-connection-registry).
              ConnectionReportService names them by string behind class_exists
              (ADR-041). The stubs mirror integriq/lib/Event/ on development, so
