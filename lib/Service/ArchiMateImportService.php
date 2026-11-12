@@ -24,6 +24,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\BulkBatchDefaults;
+use OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Service\ArchiMate\ArchiMateImportScope;
@@ -1408,12 +1410,13 @@ class ArchiMateImportService {
 
 				$saveResult = $objectService->saveObjects(
 					objects: $schemaObjects,
-					register: $registerId,
-					schema: $schemaValue,
+					options: new BulkSaveOptions(
+						defaults: new BulkBatchDefaults(register: $registerId, schema: $schemaValue),
+						validation: false,
+						events: false
+					),
 					_rbac: false,
-					_multitenancy: false,
-					validation: false,
-					events: false
+					_multitenancy: false
 				);
 
 				$countsBySchema[$schemaId] = $this->addSaveResult(outcome: $outcome, saveResult: $saveResult);

@@ -54,6 +54,11 @@
              openregister/lib/Db/ListQuery.php, shared with the PHPUnit stubs. -->
         <file name="tests/Stubs/Service/ConfigLookup.php" preloadClasses="true" />
         <file name="tests/Stubs/Db/ListQuery.php" preloadClasses="true" />
+        <!-- BulkSaveOptions and its BulkBatchDefaults, which ObjectService::saveObjects()
+             takes since openregister #9108. Copies of openregister/lib/Kernel/Contracts/Value/,
+             shared with the PHPUnit stubs. -->
+        <file name="tests/Stubs/OpenRegister/Kernel/Contracts/Value/BulkBatchDefaults.php" preloadClasses="true" />
+        <file name="tests/Stubs/OpenRegister/Kernel/Contracts/Value/BulkSaveOptions.php" preloadClasses="true" />
         <!-- Integriq's connection-registry events (adopt-connection-registry).
              ConnectionReportService names them by string behind class_exists
              (ADR-041). The stubs mirror integriq/lib/Event/ on development, so

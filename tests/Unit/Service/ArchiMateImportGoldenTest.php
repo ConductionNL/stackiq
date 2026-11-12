@@ -28,6 +28,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\Organisation;
+use OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Service\ArchiMateImportService;
@@ -223,7 +224,12 @@ class ArchiMateImportGoldenTest extends TestCase {
 	private function objectService(): ObjectServiceInterface {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('saveObjects')->willReturnCallback(
-			function (array $objects, $register, $schema, $rbac, $multitenancy, $validation, $events): array {
+			function (array $objects, BulkSaveOptions $options, bool $rbac, bool $multitenancy): array {
+				// The recording keeps the flat argument list the call had before openregister #9108.
+				$register   = $options->defaults->register;
+				$schema     = $options->defaults->schema;
+				$validation = $options->validation;
+				$events     = $options->events;
 				$this->trace[] = [
 					'objects.saveObjects',
 					[

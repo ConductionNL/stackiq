@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OCA\OpenRegister\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions;
 
 /**
  * Stub for ObjectService with the surface used by Stackiq tests.
@@ -189,28 +190,18 @@ abstract class ObjectService {
 	 * Bulk-persist a batch of objects (used by bounded-batch bulk-save paths,
 	 * e.g. `SbomImportService`).
 	 *
-	 * @param array $objects Array of object data bags.
-	 * @param string|int|null $register Register slug or id.
-	 * @param string|int|null $schema Schema slug or id.
-	 * @param bool $_rbac Apply RBAC.
-	 * @param bool $_multitenancy Apply multitenancy.
-	 * @param bool $validation Run validation.
-	 * @param bool $events Dispatch events.
-	 * @param bool $deduplicateIds Deduplicate ids across the batch.
-	 * @param bool $enrich Enrich saved objects.
+	 * @param array           $objects       Array of object data bags.
+	 * @param BulkSaveOptions $options       Default register/schema, validation, events and audit.
+	 * @param bool            $_rbac         Apply RBAC.
+	 * @param bool            $_multitenancy Apply multitenancy.
 	 *
 	 * @return array
 	 */
 	abstract public function saveObjects(
 		array $objects,
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		BulkSaveOptions $options = new BulkSaveOptions(),
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		bool $validation = false,
-		bool $events = false,
-		bool $deduplicateIds = true,
-		bool $enrich = true,
 	): array;
 
 	/**

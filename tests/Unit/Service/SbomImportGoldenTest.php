@@ -26,6 +26,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions;
 use OCA\Stackiq\Service\ProgressTracker;
 use OCA\Stackiq\Service\SbomImportService;
 use OCA\Stackiq\Service\SbomParserService;
@@ -214,8 +215,8 @@ class SbomImportGoldenTest extends TestCase {
 			}
 		);
 		$objects->method('saveObjects')->willReturnCallback(
-			function (array $objects, $register = null, $schema = null) {
-				$this->trace[] = ['objects.saveObjects', count($objects), $objects[0] ?? null, $register, $schema];
+			function (array $objects, ?BulkSaveOptions $options = null) {
+				$this->trace[] = ['objects.saveObjects', count($objects), $objects[0] ?? null, $options?->defaults->register, $options?->defaults->schema];
 				return ['statistics' => ['objectsCreated' => count($objects)]];
 			}
 		);

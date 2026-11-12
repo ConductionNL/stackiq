@@ -21,6 +21,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\BulkBatchDefaults;
+use OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions;
 use OCA\Stackiq\Service\Settings\EmailTemplateDefaults;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCA\Stackiq\Service\Settings\SettingsObjectCounts;
@@ -6079,16 +6081,13 @@ class SettingsService implements ObjectTypeLocatorInterface {
 					);
 
 					// BULK OPERATION: Create entire batch in single operation.
+					// Validation and events are skipped for performance.
+					$defaults   = new BulkBatchDefaults(register: $voorzieningenConfig['register'], schema: $voorzieningenConfig['organisatie_schema']);
 					$bulkResult = $objectService->saveObjects(
 						objects: $batch,
-						register: $voorzieningenConfig['register'],
-						schema: $voorzieningenConfig['organisatie_schema'],
+						options: new BulkSaveOptions(defaults: $defaults, validation: false, events: false),
 						_rbac: false,
-						_multitenancy: false,
-						validation: false,
-						// Skip validation for performance.
-						events: false
-						// Skip events for performance.
+						_multitenancy: false
 					);
 
 					$batchTime = microtime(true) - $batchStartTime;
