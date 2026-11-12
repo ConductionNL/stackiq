@@ -17,6 +17,13 @@ Stackiq SHALL open a wizard when a user chooses Add on the Applications, Service
 - **THEN** a wizard opens on the details step
 - **AND** after the details and the reference components they see a summary with a Save button
 
+#### Scenario: A supplier adds a service step by step
+@e2e tests/e2e/workflows/entry-wizard.spec.ts
+
+- **GIVEN** a supplier on the Services page
+- **WHEN** they choose Add, fill in the details, pick the applications the service runs on and confirm
+- **THEN** the service is saved with those applications and its page opens
+
 #### Scenario: A connection is added with both applications
 
 - **GIVEN** an information manager on the Connections page

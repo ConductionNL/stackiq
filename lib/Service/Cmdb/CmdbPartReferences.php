@@ -110,6 +110,18 @@ class CmdbPartReferences {
 			return ['unread' => false, 'sheet' => null];
 		}
 
+		return self::referencesVerdict(key: $key, references: $references);
+	}//end verdict()
+
+	/**
+	 * Whether only unread sheets name a part by this key, and the sheet of the first relationship that is read.
+	 *
+	 * @param string $key The last segment of the part's name.
+	 * @param array<int, array{keys: array<int, string>, sheet: ?string, unread: bool}> $references Every relationship.
+	 *
+	 * @return array{unread: bool, sheet: ?string}
+	 */
+	private static function referencesVerdict(string $key, array $references): array {
 		$unread = false;
 		foreach ($references as $reference) {
 			if (in_array($key, $reference['keys'], true) === false) {
@@ -124,7 +136,7 @@ class CmdbPartReferences {
 		}
 
 		return ['unread' => $unread, 'sheet' => null];
-	}//end verdict()
+	}//end referencesVerdict()
 
 	/**
 	 * Every relationship in the package: the names it may resolve to, its sheet, and whether that sheet is unread.
