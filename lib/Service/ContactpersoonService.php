@@ -99,6 +99,17 @@ class ContactpersoonService {
 	private static array $processingContacts = [];
 
 	/**
+	 * The contactpersoon fields that are synced to its Nextcloud user.
+	 */
+	private const NAME_SYNC_FIELDS = [
+		'voornaam',
+		'tussenvoegsel',
+		'achternaam',
+		'role',
+		'e-mailadres',
+	];
+
+	/**
 	 * Processes a contactpersoon object to create a user account.
 	 *
 	 * If the contactpersoon object doesn't have a user or the user is missing,
@@ -576,67 +587,104 @@ class ContactpersoonService {
 	 */
 	private function syncNameFieldsToUser(object $contactPersonObject, ?object $oldContactPersonObject): void {
 		$newData = $contactPersonObject->getObject();
-		$oldData = [];
-		if ($oldContactPersonObject !== null) {
-			$oldData = $oldContactPersonObject->getObject();
-		}
-
-		// Check if any name/functie fields have changed.
-		$nameFields = [
-			'voornaam',
-			'tussenvoegsel',
-			'achternaam',
-			'role',
-			'e-mailadres',
-		];
-		$hasNameChanges = false;
-
-		foreach ($nameFields as $field) {
-			if (($newData[$field] ?? '') !== ($oldData[$field] ?? '')) {
-				$hasNameChanges = true;
-				break;
-			}
-		}
-
-		if ($hasNameChanges === false) {
+		if ($this->hasNameChanges(newData: $newData, oldContactPersonObject: $oldContactPersonObject) === false) {
 			return;
 		}
 
 		// Find the corresponding Nextcloud user.
-		$username = ($newData['username'] ?? '');
-		if (empty($username) === true) {
-			return;
-		}
-
-		$userManager = $this->container->get('OCP\IUserManager');
-		$user = $userManager->get($username);
-
+		$user = $this->nameSyncUser(newData: $newData);
 		if ($user === null) {
-			$this->logger->debug(
-				'ContactpersoonService: No Nextcloud user found for name sync',
-				['username' => $username]
-			);
 			return;
 		}
 
-		$this->logger->info(
-			'ContactpersoonService: Syncing contactpersoon name fields to user',
-			[
-				'username' => $username,
-				'contactId' => $contactPersonObject->getId(),
-				'changedData' => array_intersect_key(
-					$newData,
-					array_flip($nameFields)
-				),
-			]
-		);
-
+		$this->logNameSync(contactPersonObject: $contactPersonObject, newData: $newData);
 		$this->contactPersonHandler->storeContactNameFields(
 			user: $user,
 			contactData: $newData
 		);
 
 	}//end syncNameFieldsToUser()
+
+	/**
+	 * The data of the previous contactpersoon object, or none.
+	 *
+	 * @param object|null $oldContactPersonObject The previous contactpersoon object.
+	 *
+	 * @return array The previous data.
+	 */
+	private function previousContactData(?object $oldContactPersonObject): array {
+		if ($oldContactPersonObject === null) {
+			return [];
+		}
+
+		return $oldContactPersonObject->getObject();
+	}//end previousContactData()
+
+	/**
+	 * Whether any name/functie field differs between the new and the previous data.
+	 *
+	 * @param array $newData The updated contactpersoon data.
+	 * @param object|null $oldContactPersonObject The previous contactpersoon object.
+	 *
+	 * @return bool True when a name field changed.
+	 */
+	private function hasNameChanges(array $newData, ?object $oldContactPersonObject): bool {
+		$oldData = $this->previousContactData(oldContactPersonObject: $oldContactPersonObject);
+		foreach (self::NAME_SYNC_FIELDS as $field) {
+			if (($newData[$field] ?? '') !== ($oldData[$field] ?? '')) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end hasNameChanges()
+
+	/**
+	 * The Nextcloud user the contactpersoon names by its username, if it exists.
+	 *
+	 * @param array $newData The updated contactpersoon data.
+	 *
+	 * @return mixed The user, or null without a username or when no such user exists.
+	 */
+	private function nameSyncUser(array $newData): mixed {
+		$username = ($newData['username'] ?? '');
+		if (empty($username) === true) {
+			return null;
+		}
+
+		$userManager = $this->container->get('OCP\IUserManager');
+		$user = $userManager->get($username);
+		if ($user === null) {
+			$this->logger->debug(
+				'ContactpersoonService: No Nextcloud user found for name sync',
+				['username' => $username]
+			);
+		}
+
+		return $user;
+	}//end nameSyncUser()
+
+	/**
+	 * Log that the name fields of a contactpersoon are written to its user.
+	 *
+	 * @param object $contactPersonObject The updated contactpersoon object.
+	 * @param array $newData The updated contactpersoon data.
+	 *
+	 * @return void
+	 */
+	private function logNameSync(object $contactPersonObject, array $newData): void {
+		$this->logger->info(
+			'ContactpersoonService: Syncing contactpersoon name fields to user',
+			[
+				'username' => ($newData['username'] ?? ''),
+				'contactId' => $contactPersonObject->getId(),
+				'changedData' => array_intersect_key(
+					$newData,
+					array_flip(self::NAME_SYNC_FIELDS)
+				),
+			]
+		);
+	}//end logNameSync()
 
 	/**
 	 * Handles role changes between old and new contactpersoon objects
