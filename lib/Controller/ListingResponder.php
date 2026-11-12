@@ -26,6 +26,7 @@ namespace OCA\Stackiq\Controller;
 
 use Closure;
 use Exception;
+use OCA\Stackiq\Service\EmptyListing;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -58,14 +59,7 @@ final class ListingResponder {
 	 * @spec openspec/specs/aangeboden-gebruik-api/spec.md
 	 */
 	public function emptyListing(): array {
-		return [
-			'results' => [],
-			'total' => 0,
-			'page' => 1,
-			'pages' => 0,
-			'limit' => 20,
-			'offset' => 0,
-		];
+		return (new EmptyListing())->page();
 	}//end emptyListing()
 
 	/**

@@ -3,6 +3,9 @@
 /**
  * Repair step that clears the `oc_jobs` rows orphaned by the namespace rename.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * `oc_jobs` stores a background job's CLASS NAME as a string, so the four rows
  * this app registered under `OCA\SoftwareCatalog\BackgroundJob\` now name
  * classes that no longer exist. Nextcloud re-registers the new
@@ -30,9 +33,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-background-job-classes-survive-the-rename
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

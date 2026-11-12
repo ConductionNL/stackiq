@@ -1,0 +1,175 @@
+{
+    "DataQualityReportController anonymous": {
+        "status": 401,
+        "body": {
+            "message": "Not authenticated"
+        },
+        "calls": []
+    },
+    "DataQualityReportController no organisation": {
+        "status": 400,
+        "body": {
+            "message": "organisation is required"
+        },
+        "calls": []
+    },
+    "DataQualityReportController other organisation": {
+        "status": 403,
+        "body": {
+            "message": "Not authorised for this organisation"
+        },
+        "calls": []
+    },
+    "DataQualityReportController own organisation": {
+        "status": 200,
+        "body": {
+            "report": "json"
+        },
+        "calls": [
+            [
+                "build",
+                "zuiddrecht"
+            ]
+        ]
+    },
+    "DataQualityReportController own as csv": {
+        "status": 200,
+        "body": {
+            "report": "json"
+        },
+        "calls": [
+            [
+                "build",
+                "zuiddrecht"
+            ]
+        ]
+    },
+    "DataQualityReportController report fails": {
+        "status": 500,
+        "body": {
+            "error": "report down"
+        },
+        "calls": [
+            [
+                "build",
+                "zuiddrecht"
+            ]
+        ]
+    },
+    "ReferenceComponentCoverageController anonymous": {
+        "status": 401,
+        "body": {
+            "message": "Not authenticated"
+        },
+        "calls": []
+    },
+    "ReferenceComponentCoverageController no organisation": {
+        "status": 400,
+        "body": {
+            "message": "organisation is required"
+        },
+        "calls": []
+    },
+    "ReferenceComponentCoverageController other organisation": {
+        "status": 403,
+        "body": {
+            "message": "Not authorised for this organisation"
+        },
+        "calls": []
+    },
+    "ReferenceComponentCoverageController own organisation": {
+        "status": 200,
+        "body": {
+            "report": "json"
+        },
+        "calls": [
+            [
+                "build",
+                "zuiddrecht"
+            ]
+        ]
+    },
+    "ReferenceComponentCoverageController own as csv": {
+        "status": 200,
+        "body": [
+            "a;b\n",
+            "attachment; filename=\"reference-component-coverage-zuiddrecht.csv\""
+        ],
+        "calls": [
+            [
+                "buildCsv",
+                "zuiddrecht"
+            ]
+        ]
+    },
+    "ReferenceComponentCoverageController report fails": {
+        "status": 500,
+        "body": {
+            "error": "report down"
+        },
+        "calls": [
+            [
+                "build",
+                "zuiddrecht"
+            ]
+        ]
+    },
+    "PortfolioReportController anonymous": {
+        "status": 401,
+        "body": {
+            "message": "Not authenticated"
+        },
+        "calls": []
+    },
+    "PortfolioReportController no organisation": {
+        "status": 400,
+        "body": {
+            "message": "organisation is required"
+        },
+        "calls": []
+    },
+    "PortfolioReportController other organisation": {
+        "status": 403,
+        "body": {
+            "message": "Not authorised for this organisation"
+        },
+        "calls": []
+    },
+    "PortfolioReportController own organisation": {
+        "status": 200,
+        "body": {
+            "report": "json"
+        },
+        "calls": [
+            [
+                "buildReport",
+                "zuiddrecht"
+            ]
+        ]
+    },
+    "PortfolioReportController own as csv": {
+        "status": 200,
+        "body": [
+            "a;b\n",
+            "attachment; filename=\"portfolio-report-zuiddrecht.csv\""
+        ],
+        "calls": [
+            [
+                "buildCsv",
+                "zuiddrecht"
+            ]
+        ]
+    },
+    "PortfolioReportController report fails": {
+        "status": 500,
+        "body": {
+            "error": "report down"
+        },
+        "calls": [
+            [
+                "buildReport",
+                "zuiddrecht"
+            ]
+        ]
+    }
+}

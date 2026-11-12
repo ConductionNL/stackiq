@@ -16,6 +16,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -121,61 +124,123 @@ class ModuleVersionService {
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-9-5
 	 */
 	private function fetchVersionData(object $moduleObject): ?array {
-		$moduleUuid = $moduleObject->getUuid();
-
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
 			$this->logger->error('ModuleVersionService: ObjectService not available');
 			return null;
 		}
 
+		$lookup = $this->versionLookup(moduleObject: $moduleObject);
+		if ($lookup === null) {
+			return null;
+		}
+
+		$lookup['objectService'] = $objectService;
+		return $this->withExistingVersions(moduleObject: $moduleObject, lookup: $lookup);
+	}//end fetchVersionData()
+
+	/**
+	 * Resolve the module UUID and the moduleVersion schema and register to search in.
+	 *
+	 * @param object $moduleObject The module object entity
+	 *
+	 * @return array{moduleUuid:string,registerId:int,schemaId:int}|null Null when the schema or register is not configured.
+	 */
+	private function versionLookup(object $moduleObject): ?array {
 		$versionSchemaId = $this->settingsService->getSchemaIdForObjectType('moduleVersion');
 		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
 		$registerId = $voorzieningenConfig['register'] ?? null;
 
 		if ($versionSchemaId === null || $registerId === null) {
-			$this->logger->warning(
-				'ModuleVersionService: moduleVersie schema or register not configured',
-				[
-					'moduleVersieSchemaId' => $versionSchemaId,
-					'registerId' => $registerId,
-				]
-			);
+			$this->logMissingVersionConfig(versionSchemaId: $versionSchemaId, registerId: $registerId);
 			return null;
 		}
 
-		$query = [
-			'@self' => [
-				'schema' => (int)$versionSchemaId,
-				'register' => (int)$registerId,
-			],
-			'module' => $moduleUuid,
-			'_limit' => 200,
+		return [
+			'moduleUuid' => $moduleObject->getUuid(),
+			'registerId' => (int)$registerId,
+			'schemaId' => (int)$versionSchemaId,
 		];
+	}//end versionLookup()
 
-		$existingVersions = $objectService->searchObjects(
-			query: $query,
+	/**
+	 * Log that the moduleVersion schema or the register is not configured.
+	 *
+	 * @param int|null $versionSchemaId The moduleVersion schema id, if any
+	 * @param mixed    $registerId      The register id, if any
+	 *
+	 * @return void
+	 */
+	private function logMissingVersionConfig(?int $versionSchemaId, mixed $registerId): void {
+		$this->logger->warning(
+			'ModuleVersionService: moduleVersie schema or register not configured',
+			[
+				'moduleVersieSchemaId' => $versionSchemaId,
+				'registerId' => $registerId,
+			]
+		);
+	}//end logMissingVersionConfig()
+
+	/**
+	 * Complete the version context with the module's data and its existing versions.
+	 *
+	 * @param object $moduleObject The module object entity
+	 * @param array  $lookup       The module UUID, register, schema and ObjectService
+	 *
+	 * @return array{moduleUuid:string,moduleData:array,registerId:int,schemaId:int,existingVersions:array,versionCount:int}
+	 */
+	private function withExistingVersions(object $moduleObject, array $lookup): array {
+		$existingVersionList = $this->existingVersionList(lookup: $lookup);
+
+		return [
+			'moduleUuid' => $lookup['moduleUuid'],
+			'moduleData' => $moduleObject->getObject(),
+			'registerId' => $lookup['registerId'],
+			'schemaId' => $lookup['schemaId'],
+			'existingVersions' => $existingVersionList,
+			'versionCount' => count($existingVersionList),
+			'objectService' => $lookup['objectService'],
+		];
+	}//end withExistingVersions()
+
+	/**
+	 * Search the existing versions of the module, system-wide.
+	 *
+	 * @param array $lookup The module UUID, register, schema and ObjectService
+	 *
+	 * @return array The existing versions; empty when the search gives no list.
+	 */
+	private function existingVersionList(array $lookup): array {
+		$existingVersions = $lookup['objectService']->searchObjects(
+			query: $this->versionQuery(lookup: $lookup),
 			_rbac: false,
 			_multitenancy: false
 		);
 
-		$versionCount = 0;
-		$existingVersionList = [];
 		if (is_array($existingVersions) === true) {
-			$versionCount = count($existingVersions);
-			$existingVersionList = $existingVersions;
+			return $existingVersions;
 		}
 
+		return [];
+	}//end existingVersionList()
+
+	/**
+	 * The search for the module's versions in the moduleVersion schema.
+	 *
+	 * @param array $lookup The module UUID, register and schema
+	 *
+	 * @return array The search query.
+	 */
+	private function versionQuery(array $lookup): array {
 		return [
-			'moduleUuid' => $moduleUuid,
-			'moduleData' => $moduleObject->getObject(),
-			'registerId' => (int)$registerId,
-			'schemaId' => (int)$versionSchemaId,
-			'existingVersions' => $existingVersionList,
-			'versionCount' => $versionCount,
-			'objectService' => $objectService,
+			'@self' => [
+				'schema' => $lookup['schemaId'],
+				'register' => $lookup['registerId'],
+			],
+			'module' => $lookup['moduleUuid'],
+			'_limit' => 200,
 		];
-	}//end fetchVersionData()
+	}//end versionQuery()
 
 	/**
 	 * Decide whether the module already has at least one version.
