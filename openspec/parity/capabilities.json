@@ -881,7 +881,10 @@
 				"evidence": "register.json:1135 suite schema with applications[] (register.json:1231); src/manifest.json:674 SuiteDetail with suite-related panel; no schema breaks one application into sub-modules (module IS the application, register.json:6777 title 'Application')",
 				"owner": "ConductionNL/stackiq",
 				"change": "landscape-application-components",
-				"requirement": "openspec/changes/landscape-application-components/specs/application-components :: REQ-ACM-001 An application can name the application it is a component of; openspec/changes/landscape-application-components/specs/application-components :: REQ-ACM-002 The application page lists its components"
+				"requirement": [
+					"openspec/changes/landscape-application-components/specs/application-components :: REQ-ACM-001 An application can name the application it is a component of",
+					"openspec/changes/landscape-application-components/specs/application-components :: REQ-ACM-002 The application page lists its components"
+				]
 			},
 			"reachedOn": "Suites /suites and SuiteDetail /suites/:id (Related panel); ModuleDetail Related panel shows suites that include it",
 			"provider": "stackiq",
@@ -921,7 +924,7 @@
 				"evidence": "src/manifest.json:915 Moduleversies type:index (columns version, module, dateInUse, status) + :937 ModuleversieDetail; register.json:7649 moduleVersion schema with dateInUse (register.json:7746), dateInDevelopment, dateEndSupport, dateWithdrawn",
 				"owner": "ConductionNL/stackiq",
 				"change": "openspec/changes/landscape-services-and-module-versions",
-				"requirement": "A released version of an application is recorded with its lifecycle dates (REQ-MVR-001)",
+				"requirement": "openspec/changes/landscape-services-and-module-versions/specs/module-versions :: A released version of an application is recorded with its lifecycle dates (REQ-MVR-001)",
 				"readOn": "2026-10-30"
 			},
 			"reachedOn": "Module versions /moduleversies (menu), Add + detail /moduleversies/:id; also ModuleDetail md-versions list (src/manifest.json:504, allowCreate false)",
@@ -1000,7 +1003,7 @@
 				"evidence": "src/manifest.json:682 Diensten page (FacetedCatalogIndexView, schema catalogService, columns name, provider, type, publicationDate) with the CnIndexPage create form; :423 org-diensten list on the organisation page; register.json catalogService requires name, provider and type (enum Functional/Application/Technical management, Implementation support, Training, Licence reseller), modules[]. Re-read 30 Oct against board SkApplicaties: the board draws services as the Diensten tab with its count, no service detail page and no hosting type, so the missing detail page and hosting type named before are not gaps against the canon.",
 				"owner": "ConductionNL/stackiq",
 				"change": "openspec/changes/landscape-services-and-module-versions",
-				"requirement": "A supplier's service is registered over one or more applications (REQ-CSV-001)",
+				"requirement": "openspec/changes/landscape-services-and-module-versions/specs/catalogue-services :: A supplier's service is registered over one or more applications (REQ-CSV-001)",
 				"readOn": "2026-10-30"
 			},
 			"reachedOn": "Services /diensten (menu), Add button",
@@ -1153,7 +1156,10 @@
 				"evidence": "Library CnIndexPage (@conduction/nextcloud-vue 2.55.1, package-lock) showMassImport default true (CnIndexPage.vue:1599) and self-mode handleMassImport (selfModeActions.js:168) POSTs to /apps/openregister/api/registers/{register}/import with the schema for CSV (selfModeIO.js:82); rendered on the Modules page's CnIndexPage (src/views/FacetedCatalogIndexView.vue:108)",
 				"owner": "ConductionNL/openregister",
 				"change": "sharing-itsm-exchange",
-				"requirement": "openspec/changes/sharing-itsm-exchange :: REQ-ITX-006 A file feeds the same import; openspec/specs/cmdb-export-import :: REQ-CMDB-000"
+				"requirement": [
+					"openspec/changes/sharing-itsm-exchange/specs/itsm-exchange :: REQ-ITX-006 A file feeds the same import",
+					"openspec/specs/cmdb-export-import :: Stackiq imports a TOPdesk CMDB export into OpenRegister objects (REQ-CMDB-000)"
+				]
 			},
 			"reachedOn": "Modules /modules, Import in the index actions (also every type:index page)",
 			"provider": "openregister",
@@ -1191,7 +1197,11 @@
 				"evidence": "src/manifest.json ModuleDetail: data widget under the schema keys (shortDescription, longDescription, contactPerson), versions, usages (md-usages), compliance (bioMeasure) and a Contracts body section (src/components/contracts/ApplicationContractsPanel.vue via src/utils/applicationContracts.js); src/views/FacetedCatalogIndexView.vue opens ModuleDetail on row click and View (detailRoute); guarded by tests/vitest/manifestIncludeKeys.spec.js and tests/vitest/applicationContracts.spec.js",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-09-29-landscape-application-page",
-				"requirement": "openspec/specs/application-page :: REQ-APG-001 The application page shows every field it lists under the schema's current keys; openspec/specs/application-page :: REQ-APG-002 The application page lists the usages of the application; openspec/specs/application-page :: REQ-APG-003 The application page lists the contracts behind the application"
+				"requirement": [
+					"openspec/specs/application-page :: REQ-APG-001 The application page shows every field it lists under the schema's current keys",
+					"openspec/specs/application-page :: REQ-APG-002 The application page lists the usages of the application",
+					"openspec/specs/application-page :: REQ-APG-003 The application page lists the contracts behind the application"
+				]
 			},
 			"reachedOn": "ModuleDetail /modules/:id, reached from OrganisatieDetail Applications list (src/manifest.json:417 rowRoute ModuleDetail); NOT from the Modules list (FacetedCatalogIndexView.vue:108 binds no @view/@row-click)",
 			"provider": "stackiq",
@@ -1231,7 +1241,7 @@
 				"owner": "ConductionNL/stackiq",
 				"spec": "none",
 				"change": "openspec/changes/publish-and-lock-from-the-list",
-				"requirement": "Selected entries are published, withdrawn or locked together from the list (REQ-ODP-010)",
+				"requirement": "openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing :: Selected entries are published, withdrawn or locked together from the list (REQ-ODP-010)",
 				"readOn": "2026-10-30"
 			},
 			"reachedOn": "Any index page (e.g. Module versions /moduleversies): select rows, mass delete; publish and lock: nothing reaches them",
@@ -1310,7 +1320,10 @@
 				"evidence": "No survey, attestation or owner-confirmation code in lib/ or src/ (searched survey/enquete/confirm entry)",
 				"owner": "ConductionNL/stackiq",
 				"change": "landscape-owner-attestation",
-				"requirement": "openspec/changes/landscape-owner-attestation :: REQ-OAT-001 An information manager starts a confirmation round for a scope; REQ-OAT-003 An owner confirms or corrects each entry"
+				"requirement": [
+					"openspec/changes/landscape-owner-attestation/specs/owner-attestation :: REQ-OAT-001 An information manager starts a confirmation round for a scope",
+					"openspec/changes/landscape-owner-attestation/specs/owner-attestation :: REQ-OAT-003 An owner confirms or corrects each entry"
+				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -1348,7 +1361,10 @@
 				"evidence": "No completeness or data-quality score in lib/ or src/ (searched completeness/volledigheid/score outside reviews)",
 				"owner": "ConductionNL/stackiq",
 				"change": "landscape-completeness-score",
-				"requirement": "openspec/changes/landscape-completeness-score/specs/catalogue-data-quality :: REQ-CDQ-001 Every application and usage carries a data quality score from a declared rule set; openspec/changes/landscape-completeness-score/specs/catalogue-data-quality :: REQ-CDQ-003 A Data quality page shows how complete and current an organisation's register is"
+				"requirement": [
+					"openspec/changes/landscape-completeness-score/specs/catalogue-data-quality :: REQ-CDQ-001 Every application and usage carries a data quality score from a declared rule set",
+					"openspec/changes/landscape-completeness-score/specs/catalogue-data-quality :: REQ-CDQ-003 A Data quality page shows how complete and current an organisation's register is"
+				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -1388,7 +1404,10 @@
 				"owner": "ConductionNL/stackiq",
 				"spec": "openspec/specs/first-time-setup",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/specs/first-time-setup :: Example data is loaded on request only, by an administrator; openspec/specs/first-time-setup :: Example data is imported through OpenRegister and the outcome is reported"
+				"requirement": [
+					"openspec/specs/first-time-setup :: Example data is loaded on request only, by an administrator",
+					"openspec/specs/first-time-setup :: Example data is imported through OpenRegister and the outcome is reported"
+				]
 			},
 			"reachedOn": "First-run setup wizard (admin), step 'Load example data'",
 			"provider": "stackiq",
@@ -1659,7 +1678,10 @@
 				"evidence": "No diagram rendering in src/ (no graph library; src/store/modules/view.js GET /api/views has no importer outside itself); lib/Service/ArchiMateExportService.php exports GEMMA views as ArchiMate XML without koppeling objects (no 'koppeling' in lib/Service/ArchiMate*)",
 				"owner": "ConductionNL/stackiq",
 				"change": "connections-diagram-and-graph-export",
-				"requirement": "openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export :: REQ-CDX-001 The application page draws the application's connections as a map; openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export :: REQ-CDX-002 The connections list can be shown as a diagram of the filtered rows"
+				"requirement": [
+					"openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export :: REQ-CDX-001 The application page draws the application's connections as a map",
+					"openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export :: REQ-CDX-002 The connections list can be shown as a diagram of the filtered rows"
+				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -1774,7 +1796,10 @@
 				"evidence": "No API/interface schema in register.json (schemas listed at register.json:1034-7920); connection.type 'api' is only a transport label",
 				"owner": "ConductionNL/stackiq",
 				"change": "connections-api-catalogue",
-				"requirement": "openspec/changes/connections-api-catalogue/specs/application-interfaces :: REQ-AIF-001 A user can record an API that an application offers; openspec/changes/connections-api-catalogue/specs/application-interfaces :: REQ-AIF-002 The application page lists its APIs"
+				"requirement": [
+					"openspec/changes/connections-api-catalogue/specs/application-interfaces :: REQ-AIF-001 A user can record an API that an application offers",
+					"openspec/changes/connections-api-catalogue/specs/application-interfaces :: REQ-AIF-002 The application page lists its APIs"
+				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -1852,7 +1877,10 @@
 				"owner": "ConductionNL/integriq",
 				"change": "adopt-connection-registry",
 				"readOn": "2026-10-30",
-				"requirement": "openspec/changes/adopt-connection-registry/specs/admin-integrations :: REQ-STACKIQ-CONN-003 An admin reads the connections on an Integrations page; openspec/changes/adopt-connection-registry/specs/admin-integrations :: REQ-STACKIQ-CONN-002 A save asks integriq to look again, and a run reports what it met"
+				"requirement": [
+					"openspec/changes/adopt-connection-registry/specs/admin-integrations :: REQ-STACKIQ-CONN-003 An admin reads the connections on an Integrations page",
+					"openspec/changes/adopt-connection-registry/specs/admin-integrations :: REQ-STACKIQ-CONN-002 A save asks integriq to look again, and a run reports what it met"
+				]
 			},
 			"reachedOn": "Integrations /settings/integrations (settings menu, admin, only when app id 'integriq' is installed)",
 			"provider": "integriq",
@@ -1968,7 +1996,10 @@
 				"evidence": "appinfo/routes.php:98 GET /api/archimate/export/organization/{organizationUuid} -> lib/Controller/SettingsController.php:1685 exportOrgArchiMate -> lib/Service/ArchiMateService.php:302 -> lib/Service/ArchiMateExportService.php:2734 copyAndEnrichViews nests the org's applications in GEMMA view copies; UI ArchiMateImportExport.vue:602 'Organization Export' with Modules/Deelnames/Gebruik checkboxes",
 				"owner": "ConductionNL/stackiq",
 				"spec": "openspec/specs/org-archimate-export",
-				"requirement": "openspec/specs/org-archimate-export :: Export MUST produce valid ArchiMate XML with organization applications; openspec/specs/org-archimate-export :: Views MUST be copied with applications plotted inside referentiecomponenten"
+				"requirement": [
+					"openspec/specs/org-archimate-export :: Export MUST produce valid ArchiMate XML with organization applications",
+					"openspec/specs/org-archimate-export :: Views MUST be copied with applications plotted inside referentiecomponenten"
+				]
 			},
 			"reachedOn": "admin settings section ArchiMate Import/Export, organisation select + Organization Export",
 			"provider": "stackiq",
@@ -2046,7 +2077,10 @@
 				"evidence": "lib/Service/ArchiMateImportService.php startTracking() and saveSchemaGroups() record the phase and saved count in ProgressTracker under the page-named operation id and stop before the next schema group on a cancel; lib/Service/ArchiMateService.php cancelArchiMateImport() sets the cancel flag (the method was missing); src/views/settings/sections/ArchiMateImportExport.vue polls /api/progress/{id} every two seconds and shows the phase, a progress bar and a Cancel import button (tests/Unit/Service/ArchiMateImportProgressTest.php, ArchiMateServiceCancelTest.php, src/utils/archiMateImportProgress.spec.js)",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-09-29-architecture-import-progress-and-cancel",
-				"requirement": "openspec/specs/archimate-import-progress :: REQ-AIP-001 A running import SHALL record its phase and the objects saved so far; openspec/specs/archimate-import-progress :: REQ-AIP-002 An admin SHALL be able to cancel a running import"
+				"requirement": [
+					"openspec/specs/archimate-import-progress :: REQ-AIP-001 A running import SHALL record its phase and the objects saved so far",
+					"openspec/specs/archimate-import-progress :: REQ-AIP-002 An admin SHALL be able to cancel a running import"
+				]
 			},
 			"reachedOn": "admin settings, ArchiMate import: phase, progress bar and Cancel import while an import runs",
 			"provider": "stackiq",
@@ -2085,7 +2119,7 @@
 				"evidence": "src/manifest.json StandaardDetail /standaarden/:id st-data widget shows documentation and gemmaNotes of a standard; src/views/organisaties/GemmaPlate.vue:121 shows element.documentation of the selected reference component in the side panel (re-read 30 Oct). Missing against board SkApplicaties: FacetedCatalogIndexView.vue shows reference components by name only, no definition popover; planned in gemma-plate-views-peers-and-definitions task 5.",
 				"owner": "ConductionNL/stackiq",
 				"change": "openspec/changes/gemma-plate-views-peers-and-definitions",
-				"requirement": "GEMMA terms show their definition where they appear (REQ-GPL-003)",
+				"requirement": "openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate :: GEMMA terms show their definition where they appear (REQ-GPL-003)",
 				"readOn": "2026-10-30"
 			},
 			"reachedOn": "Standaarden /standaarden and StandaardDetail /standaarden/:id for standards; no page for reference components or other GEMMA terms, and no in-place definition while working",
@@ -2127,7 +2161,10 @@
 				"evidence": "module.referenceComponents / usage.usedForReferenceComponents in lib/Settings/softwarecatalogus_register.json hold the application-to-reference-component mapping; lib/Service/ArchiMateExportService.php:2734 draws it only into exported view copies",
 				"owner": "ConductionNL/stackiq",
 				"change": "architecture-reference-component-coverage",
-				"requirement": "openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage :: REQ-RCC-002 A GEMMA plate SHALL show the components with their applications, with filters for gaps and overlaps; openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage :: REQ-RCC-003 The coverage SHALL be drawn on a GEMMA view as a map"
+				"requirement": [
+					"openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage :: REQ-RCC-002 A GEMMA plate SHALL show the components with their applications, with filters for gaps and overlaps",
+					"openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage :: REQ-RCC-003 The coverage SHALL be drawn on a GEMMA view as a map"
+				]
 			},
 			"reachedOn": "Modules /modules facet by reference component (a list, not a map); the map itself only in Archi after the admin org export",
 			"provider": "stackiq",
@@ -2204,7 +2241,10 @@
 				"evidence": "no process schema in lib/Settings/softwarecatalogus_register.json (20 schemas listed under components.schemas); no process page in src/manifest.json",
 				"owner": "ConductionNL/stackiq",
 				"change": "architecture-process-mapping",
-				"requirement": "openspec/changes/architecture-process-mapping/specs/business-process-mapping :: REQ-BPM-001 A municipal information manager SHALL record a business process with ordered steps; openspec/changes/architecture-process-mapping/specs/business-process-mapping :: REQ-BPM-002 A step SHALL name the applications in use that support it"
+				"requirement": [
+					"openspec/changes/architecture-process-mapping/specs/business-process-mapping :: REQ-BPM-001 A municipal information manager SHALL record a business process with ordered steps",
+					"openspec/changes/architecture-process-mapping/specs/business-process-mapping :: REQ-BPM-002 A step SHALL name the applications in use that support it"
+				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -2242,7 +2282,10 @@
 				"evidence": "searched src/manifest.json and the register for scenario/future-state/toekomst: nothing; usage.status 'Planned' and plannedReplacement (register) are per-usage fields, not a comparable landscape",
 				"owner": "ConductionNL/stackiq",
 				"change": "architecture-future-state-scenarios",
-				"requirement": "openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios :: REQ-FSS-002 An information manager SHALL compare today's landscape with the plan on a date; openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios :: REQ-FSS-003 An information manager SHALL write a scenario of additions, phase-outs and replacements"
+				"requirement": [
+					"openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios :: REQ-FSS-002 An information manager SHALL compare today's landscape with the plan on a date",
+					"openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios :: REQ-FSS-003 An information manager SHALL write a scenario of additions, phase-outs and replacements"
+				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -2280,7 +2323,10 @@
 				"evidence": "grep for uncovered/gap/coverage in lib and src found nothing; lib/Service/FacetService.php counts modules per reference component but never lists components with zero coverage",
 				"owner": "ConductionNL/stackiq",
 				"change": "architecture-reference-component-coverage",
-				"requirement": "openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage :: REQ-RCC-001 Stackiq SHALL give each reference component a coverage state for one organisation; openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage :: REQ-RCC-002 A GEMMA plate SHALL show the components with their applications, with filters for gaps and overlaps"
+				"requirement": [
+					"openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage :: REQ-RCC-001 Stackiq SHALL give each reference component a coverage state for one organisation",
+					"openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage :: REQ-RCC-002 A GEMMA plate SHALL show the components with their applications, with filters for gaps and overlaps"
+				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -2395,7 +2441,10 @@
 				"evidence": "lib/Settings/softwarecatalogus_register.json compliancy.evidence (file, pdf/jpeg/png/doc, 10 MB), compliancy.url, compliancy.evidenceReference; src/manifest.json KompliantieDetail cm-files widget type integration integrationId files 'Evidence documents'",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-06-14-module-compliance-assessment",
-				"requirement": "openspec/specs/module-compliance-assessment :: Compliance records link modules to standard versions with evidence; openspec/specs/module-compliance-assessment :: New evidence is linked via NC Files, legacy evidence stays readable"
+				"requirement": [
+					"openspec/specs/module-compliance-assessment :: Compliance records link modules to standard versions with evidence",
+					"openspec/specs/module-compliance-assessment :: New evidence is linked via NC Files, legacy evidence stays readable"
+				]
 			},
 			"reachedOn": "KompliantieDetail /komplianties/:id, Evidence documents widget; evidence URL/file fields on the compliance form",
 			"provider": "stackiq",
@@ -2551,7 +2600,7 @@
 				"evidence": "src/manifest.json BioMaatregelen /bio-maatregelen index (columns code,name,thema,bioVersion,bbnNiveau) and BioMaatregelDetail; register property is bbnLevel (lib/Settings/softwarecatalogus_register.json bioMeasure), so the bbnNiveau column is empty; no BIO catalogue is seeded (only 6 demo objects in lib/Settings/stackiq_mock_register.json)",
 				"owner": "ConductionNL/stackiq",
 				"change": "openspec/changes/bio-measures-shipped-and-not-met",
-				"requirement": "The BIO 2.0 measures ship with the app and show their level (REQ-BIO-010)",
+				"requirement": "openspec/changes/bio-measures-shipped-and-not-met/specs/bio-compliance-assessment :: The BIO 2.0 measures ship with the app and show their level (REQ-BIO-010)",
 				"readOn": "2026-10-30"
 			},
 			"reachedOn": "BioMaatregelen /bio-maatregelen, menu BIO measures; detail BioMaatregelDetail /bio-maatregelen/:id",
@@ -2591,7 +2640,7 @@
 				"evidence": "lib/Settings/softwarecatalogus_register.json compliancy.bioMeasure links a module to a BIO measure; src/manifest.json ModuleDetail md-compliance lists claims incl. bioMaatregel column, BioMaatregelDetail bm-compliance lists modules per measure; compliancy has no status/met-not-met field",
 				"owner": "ConductionNL/stackiq",
 				"change": "openspec/changes/bio-measures-shipped-and-not-met",
-				"requirement": "A compliance claim says whether the application meets the measure (REQ-BIO-011)",
+				"requirement": "openspec/changes/bio-measures-shipped-and-not-met/specs/bio-compliance-assessment :: A compliance claim says whether the application meets the measure (REQ-BIO-011)",
 				"readOn": "2026-10-30"
 			},
 			"reachedOn": "Komplianties /komplianties (create a claim with a BIO measure); ComplianceMatrix /compliance-matrix with BIO measures as columns",
@@ -2778,7 +2827,10 @@
 				"evidence": "src/manifest.json:592 Modules and :647 Diensten are FacetedCatalogIndexView over schema module/catalogService (CnIndexPage, showAdd default true); lib/Settings/softwarecatalogus_register.json:6779 module has provider + publicationDate (visible on form) and public read when publicationDate <= now or registeredBy Supplier",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-06-14-open-data-publishing",
-				"requirement": "openspec/specs/aangeboden-gebruik-api :: REQ-002; openspec/specs/open-data-publishing :: Catalog entries can be marked as published open data (supplier side implied, not stated)"
+				"requirement": [
+					"openspec/specs/aangeboden-gebruik-api :: The system SHALL allow assigning and removing offered-usage for the caller's active organisation (REQ-002)",
+					"openspec/specs/open-data-publishing :: Catalog entries can be marked as published open data"
+				]
 			},
 			"reachedOn": "Applications /modules and Services /diensten (main menu), create via the index Add form",
 			"provider": "stackiq",
@@ -2817,7 +2869,10 @@
 				"evidence": "lib/Service/FacetService.php:109 DIMENSIONS referenceComponent, standard, applicationService, domain for schemas module and catalogService (:102); src/views/FacetedCatalogIndexView.vue:108 CnFacetSidebar narrows CnIndexPage; route GET /api/facets/{schema} called from src/services/facets.js Corrections round 8 (2026-09-28), stackiq#1141: the fourth dimension, domain, is always empty because lib/Service/FacetService.php:704 reads domain while GEMMA elements carry domein (lib/Settings/softwarecatalogus_register.json:4642), at d22033a.",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-07-23-gemma-faceted-search",
-				"requirement": "openspec/specs/gemma-faceted-search :: Facet aggregation endpoint returns GEMMA dimension counts; Facet sidebar UI on the module and dienst index pages"
+				"requirement": [
+					"openspec/specs/gemma-faceted-search :: Facet aggregation endpoint returns GEMMA dimension counts",
+					"openspec/specs/gemma-faceted-search :: Facet sidebar UI on the module and dienst index pages"
+				]
 			},
 			"reachedOn": "Applications /modules and Services /diensten, GEMMA facet sidebar",
 			"provider": "stackiq",
@@ -3046,7 +3101,7 @@
 				"evidence": "src/manifest.json ModuleDetail md-data includes contactPerson (was the stale key contactpersoon, which rendered nothing); tests/vitest/manifestIncludeKeys.spec.js keeps detail page keys on their schema",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-09-29-landscape-application-page",
-				"requirement": "openspec/specs/application-page :: REQ-APG-001 The application page shows every field it lists under the schema's current keys (scenario: a buyer reads a product's contact person)"
+				"requirement": "openspec/specs/application-page :: REQ-APG-001 The application page shows every field it lists under the schema's current keys"
 			},
 			"reachedOn": "Applications /modules create/edit form; not shown on ModuleDetail /modules/:id",
 			"provider": "stackiq",
@@ -3358,7 +3413,10 @@
 				"evidence": "lib/Settings/softwarecatalogus_register.json sbomComponent has name/version/purl/licenses/type/hashes/bomRef/vexCveIds, no lifecycle or EOL field; the EOL feed (lib/Service/EolSyncService.php:290) only stamps versions of modules with eolProductSlug; no relation from an application to the platform it runs on",
 				"owner": "ConductionNL/stackiq",
 				"change": "operations-technology-components",
-				"requirement": "openspec/changes/operations-technology-components/specs/technology-components :: REQ-TCO-003 An application in use SHALL record the components it runs on and show their support state; openspec/changes/operations-technology-components/specs/technology-components :: REQ-TCO-004 The end-of-life sync SHALL stamp a component's end of support from the software version it is"
+				"requirement": [
+					"openspec/changes/operations-technology-components/specs/technology-components :: REQ-TCO-003 An application in use SHALL record the components it runs on and show their support state",
+					"openspec/changes/operations-technology-components/specs/technology-components :: REQ-TCO-004 The end-of-life sync SHALL stamp a component's end of support from the software version it is"
+				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -3471,7 +3529,10 @@
 				"evidence": "lib/Service/ContractStatusService.php:77 shouldExpire and :114 expirePastContracts set Active -> Expired when endDate < now; lib/BackgroundJob/ContractStatusJob.php:57 daily, registered in appinfo/info.xml:99",
 				"owner": "ConductionNL/stackiq",
 				"change": "contracts-expiry-and-owner",
-				"requirement": "openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner :: REQ-CEO-001 The contract status MUST include Expiring, set by the daily contract job inside the notice window; openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner :: REQ-CEO-002 The daily job SHALL expire an expiring contract after its end date and SHALL return it to active when its end date moves past the window"
+				"requirement": [
+					"openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner :: REQ-CEO-001 The contract status MUST include Expiring, set by the daily contract job inside the notice window",
+					"openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner :: REQ-CEO-002 The daily job SHALL expire an expiring contract after its end date and SHALL return it to active when its end date moves past the window"
+				]
 			},
 			"reachedOn": "Contracts /contracten status column and quick filters",
 			"provider": "stackiq",
@@ -3512,7 +3573,10 @@
 				"owner": "ConductionNL/decidiq",
 				"ownerNote": "reader wrote: ConductionNL/stackiq + ConductionNL/decidiq",
 				"change": "2026-06-15-softwarecatalog-delegation-via-events",
-				"requirement": "openspec/specs/contract-decision-delegation :: REQ-SCCD-002 — The system SHALL delegate the contract approval and renewal decision to decidesk by dispatching an in-process DecisionRequestedEvent; openspec/specs/contract-decision-delegation :: REQ-SCCD-004 — The system SHALL project the decidesk outcome onto the contract via a DecisionConcludedEvent listener as the source of the approval transition"
+				"requirement": [
+					"openspec/specs/contract-decision-delegation :: REQ-SCCD-002 — The system SHALL delegate the contract approval and renewal decision to decidesk by dispatching an in-process DecisionRequestedEvent",
+					"openspec/specs/contract-decision-delegation :: REQ-SCCD-004 — The system SHALL project the decidesk outcome onto the contract via a DecisionConcludedEvent listener as the source of the approval transition"
+				]
 			},
 			"reachedOn": "ContractDetail /contracten/:id, Approval panel 'Submit renewal' and approval state",
 			"provider": "decidiq",
@@ -3709,7 +3773,10 @@
 				"evidence": "lib/Settings/register.d/contracts-licence-seats.json catalogContract.licencesBought and licencesInUse (integer, minimum 0); ContractSeatsPanel on ContractDetail sets in use against bought (Within licence, Over licence by N, Unknown, Not counted) and the Seats section on /license-posture lists over-licence contracts first (src/utils/licensePosture.js seatPosition, seatRows); tests/vitest/licenceSeats.spec.js",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-09-29-contracts-licence-seats",
-				"requirement": "openspec/specs/licence-seats :: REQ-LSC-001 A contract SHALL record its licence metric and the number of licences bought and in use; openspec/specs/licence-seats :: REQ-LSC-002 The contract detail page MUST show licences in use against licences bought"
+				"requirement": [
+					"openspec/specs/licence-seats :: REQ-LSC-001 A contract SHALL record its licence metric and the number of licences bought and in use",
+					"openspec/specs/licence-seats :: REQ-LSC-002 The contract detail page MUST show licences in use against licences bought"
+				]
 			},
 			"reachedOn": "Contracts /contracten/:id Licences panel and License posture /license-posture Seats section",
 			"provider": "stackiq",
@@ -3930,7 +3997,10 @@
 				"evidence": "src/views/KwetsbaarhedenView.vue:378 reportVulnerability opens the generic ObjectModal for 'vulnerability'; register.json:1619 vulnerability schema with cveCode (pattern CVE-yyyy-n, :1679) and cvssScore 0-10",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-07-07-module-vulnerability-tracking",
-				"requirement": "openspec/specs/module-vulnerability-tracking :: Vulnerabilities are managed on the existing schema via the manifest renderer; openspec/specs/module-vulnerability-tracking :: Severity is derived from CVSS, never stored"
+				"requirement": [
+					"openspec/specs/module-vulnerability-tracking :: Vulnerabilities are managed on the existing schema via the manifest renderer",
+					"openspec/specs/module-vulnerability-tracking :: Severity is derived from CVSS, never stored"
+				]
 			},
 			"reachedOn": "Vulnerabilities /kwetsbaarheden (menu), Report vulnerability",
 			"provider": "stackiq",
@@ -4007,7 +4077,10 @@
 				"evidence": "src/components/sbom/SbomComponentsPanel.vue:53-90 upload control (.json) -> POST /api/moduleversies/{uuid}/sbom (appinfo/routes.php:92) -> lib/Controller/SbomController.php:129 importSbom -> lib/Service/SbomParserService.php:77 parse (CycloneDX JSON) and :127 parseSpdx (SPDX 2.x JSON)",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-07-23-sbom-import",
-				"requirement": "openspec/specs/sbom-import :: CycloneDX SBOM files are parsed into a normalized component list; openspec/changes/capability-requirements-from-the-matrix/specs/sbom-import :: SPDX 2.x JSON files are parsed into the same component list"
+				"requirement": [
+					"openspec/specs/sbom-import :: CycloneDX SBOM files are parsed into a normalized component list",
+					"openspec/changes/capability-requirements-from-the-matrix/specs/sbom-import :: SPDX 2.x JSON files are parsed into the same component list"
+				]
 			},
 			"reachedOn": "ModuleversieDetail /moduleversies/:id, sidebar tab Components, upload",
 			"provider": "stackiq",
@@ -4335,7 +4408,10 @@
 				"owner": "ConductionNL/openregister",
 				"ownerNote": "reader wrote: ConductionNL/stackiq + ConductionNL/openregister",
 				"change": "2026-07-24-multi-org-membership",
-				"requirement": "openspec/specs/multi-org-membership :: Granting or revoking organisation access MUST be restricted to a beheerder of that organisation (REQ-004); openspec/specs/multi-org-membership :: Granting access MUST only target an existing Nextcloud user (REQ-005)"
+				"requirement": [
+					"openspec/specs/multi-org-membership :: Granting or revoking organisation access MUST be restricted to a beheerder of that organisation (REQ-004)",
+					"openspec/specs/multi-org-membership :: Granting access MUST only target an existing Nextcloud user (REQ-005)"
+				]
 			},
 			"reachedOn": "App header OrganisationSwitcher (src/App.vue:55) -> Manage members",
 			"provider": "openregister",
@@ -4374,7 +4450,10 @@
 				"owner": "ConductionNL/openregister",
 				"ownerNote": "reader wrote: ConductionNL/stackiq + ConductionNL/openregister",
 				"change": "2026-07-24-multi-org-membership",
-				"requirement": "openspec/specs/multi-org-membership :: The organisation switcher MUST list only the authenticated user's own organisations (REQ-003); openspec/specs/multi-org-membership :: After a switch, the user MUST see only the newly-active organisation's data (REQ-002)"
+				"requirement": [
+					"openspec/specs/multi-org-membership :: The organisation switcher MUST list only the authenticated user's own organisations (REQ-003)",
+					"openspec/specs/multi-org-membership :: After a switch, the user MUST see only the newly-active organisation's data (REQ-002)"
+				]
 			},
 			"reachedOn": "App header OrganisationSwitcher on every page",
 			"provider": "openregister",
@@ -4628,7 +4707,7 @@
 				"evidence": "lib/Service/SymfonyEmailService.php:466 registration, :553 activation, :641 user creation mails from templates; src/views/settings/sections/EmailConfiguration.vue:902 saveTemplate is a stub that logs 'not yet implemented in the backend' and still shows success; backend POST /api/email/templates/{templateName} (lib/Controller/SettingsController.php:2194) has no caller in src/; lib/Settings/connections.json email adapter reports the 'null' transport as simulated",
 				"owner": "ConductionNL/stackiq",
 				"change": "openspec/changes/mail-template-editor-saves",
-				"requirement": "An administrator edits and saves a mail template (REQ-010)",
+				"requirement": "openspec/changes/mail-template-editor-saves/specs/email-delivery :: An administrator edits and saves a mail template (REQ-010)",
 				"readOn": "2026-10-30"
 			},
 			"reachedOn": "admin settings section 'Email configuration', Templates tab (save does not persist)",
@@ -4667,7 +4746,7 @@
 				"evidence": "lib/Controller/PublicationController.php:87 publish/depublish (routes.php:208-209, PUT/DELETE /api/publication/{objectType}/{uuid}) with an IDOR guard; lib/Service/PublicationService.php:51 publishable types catalogService, module, connection, organization. No src/ caller of /api/publication (only a comment in src/utils/openDataProjection.js). The publish buttons in src/modals/object/ViewObject.vue:4854 are unreachable: Modals.vue renders ViewObject only for modal 'viewOrganisatie'/'viewContactpersoon', which nothing sets. Workaround: publicationDate/depublicationDate are visible, editable fields on module/catalogService/organization/connection (lib/Settings/softwarecatalogus_register.json:6777 schema).",
 				"owner": "ConductionNL/stackiq",
 				"change": "openspec/changes/publish-and-lock-from-the-list",
-				"requirement": "An entry's page publishes or withdraws that entry (REQ-ODP-011)",
+				"requirement": "openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing :: An entry's page publishes or withdraws that entry (REQ-ODP-011)",
 				"readOn": "2026-10-30"
 			},
 			"reachedOn": "API only for the publish action: PUT /api/publication/{objectType}/{uuid}/publish, no stackiq page calls it; a user can only set the publicationDate field by hand in the edit form on Applications /modules or Services /diensten",
@@ -4781,7 +4860,7 @@
 				"evidence": "lib/Service/Federation/FederationService.php:434 fetchPeerCatalog() calls OpenCatalogi DirectoryService->getDirectory(['url' => $peerUrl]); OpenCatalogi's getDirectory (opencatalogi lib/Service/DirectoryService.php:2409, also on origin/development) reads only filters/limit/offset/include-federated and ignores 'url', so it returns this instance's own directory listings, not the peer's published entries. Provenance marking itself is built: lib/Service/Federation/FederationMerger.php:239 stamps _source.instance. Mirrors are written into the organization schema (FederationService.php:56 PEER_MIRROR_TYPE). No src/ code reads _source, so no page shows where an entry came from.",
 				"owner": "ConductionNL/opencatalogi",
 				"change": "openspec/changes/federation-pull-fetches-the-peer",
-				"requirement": "A pull reads the peer's own published catalogue (REQ-FED-010)",
+				"requirement": "openspec/changes/federation-pull-fetches-the-peer/specs/federated-catalog-sync :: A pull reads the peer's own published catalogue (REQ-FED-010)",
 				"readOn": "2026-10-30"
 			},
 			"reachedOn": "admin settings section Catalog federation, Pull now button (src/views/settings/sections/FederationSettings.vue:332)",
@@ -4860,7 +4939,7 @@
 				"evidence": "Every catalogue entity is an OpenRegister object (src/manifest.json pages read register @resolve:voorzieningen_register), so OpenRegister's /apps/openregister/api/objects/{register}/{schema} CRUD applies, gated by the schema authorization rules (lib/Settings/softwarecatalogus_register.json:6777 module and others). Stackiq adds its own routed endpoints in appinfo/routes.php (e.g. :202 /api/aanbod, :255-261 /api/aangeboden-gebruik, :298 /api/gebruik, :303 /api/portfolio-report).",
 				"owner": "ConductionNL/openregister",
 				"change": "openspec/changes/platform-properties",
-				"requirement": "Catalogue data is read and written through a REST API (REQ-PLAT-002)"
+				"requirement": "openspec/changes/platform-properties/specs/platform-properties :: Catalogue data is read and written through a REST API (REQ-PLAT-002)"
 			},
 			"reachedOn": "API: /apps/openregister/api/objects plus stackiq /api/*; the stackiq pages themselves use the same API",
 			"provider": "openregister",
@@ -4933,7 +5012,10 @@
 				"evidence": "ArchiMate export lib/Controller/SettingsController.php:1615 (POST /api/archimate/export) and :1685 per-organisation export (GET /api/archimate/export/organization/{uuid}), called only from src/views/settings/sections/ArchiMateImportExport.vue (admin settings, StackiqSettings.vue:86). CSV export of the portfolio report: lib/Controller/PortfolioReportController.php:105, button src/views/organisaties/PortfolioReport.vue:567. No index page opts into the library's CSV/Excel export (no allowExport in src/manifest.json).",
 				"owner": "ConductionNL/stackiq",
 				"change": "insight-exports-and-custom-reports",
-				"requirement": "openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports :: REQ-CER-001 The catalogue list pages SHALL offer export as CSV and Excel of the rows the page shows; openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports :: REQ-CER-003 A member of an organisation MUST be able to export that organisation as ArchiMate from its detail page, and only that organisation"
+				"requirement": [
+					"openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports :: REQ-CER-001 The catalogue list pages SHALL offer export as CSV and Excel of the rows the page shows",
+					"openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports :: REQ-CER-003 A member of an organisation MUST be able to export that organisation as ArchiMate from its detail page, and only that organisation"
+				]
 			},
 			"reachedOn": "admin settings section ArchiMate Import/Export; Portfolio rationalization /portfolio-report (Export CSV, one organisation at a time)",
 			"provider": "stackiq",
@@ -5011,7 +5093,7 @@
 				"evidence": "appinfo/info.xml: a Nextcloud app (id stackiq, EUPL-1.2) installed on the customer's own Nextcloud with OpenRegister; stackiq-compose.yaml at repo root for a local stack.",
 				"owner": "ConductionNL/stackiq",
 				"change": "openspec/changes/platform-properties",
-				"requirement": "The catalogue runs on the customer's own Nextcloud (REQ-PLAT-001)"
+				"requirement": "openspec/changes/platform-properties/specs/platform-properties :: The catalogue runs on the customer's own Nextcloud (REQ-PLAT-001)"
 			},
 			"reachedOn": "the whole app runs on the customer's own Nextcloud",
 			"provider": "nextcloud",
@@ -5277,7 +5359,10 @@
 				"evidence": "Portfolio report CSV: lib/Controller/PortfolioReportController.php:105 (DataDownloadResponse text/csv), button src/views/organisaties/PortfolioReport.vue:567. No index page sets the library's allowExport (grep allowExport/exportable in src/manifest.json and the register finds nothing), so Applications, Contracts and the other lists have no export.",
 				"owner": "ConductionNL/stackiq",
 				"change": "insight-exports-and-custom-reports",
-				"requirement": "openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports :: REQ-CER-001 The catalogue list pages SHALL offer export as CSV and Excel of the rows the page shows; openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports :: REQ-CER-002 The Applications and Services pages SHALL export the rows the facets, the quick filter and the search leave"
+				"requirement": [
+					"openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports :: REQ-CER-001 The catalogue list pages SHALL offer export as CSV and Excel of the rows the page shows",
+					"openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports :: REQ-CER-002 The Applications and Services pages SHALL export the rows the facets, the quick filter and the search leave"
+				]
 			},
 			"reachedOn": "Portfolio rationalization /portfolio-report, Export CSV",
 			"provider": "stackiq",
@@ -5351,7 +5436,10 @@
 				"evidence": "src/views/LicensePostureView.vue:84 per-vendor rollup with annual cost from contracts (src/utils/licensePosture.js perVendorRollup); src/views/organisaties/PortfolioReport.vue:143 annualised and one-off cost per TIME quadrant for one selected organisation (lib/Service/PortfolioReportService.php via GET /api/portfolio-report).",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-07-07-software-license-posture",
-				"requirement": "openspec/specs/portfolio-rationalization-time :: Portfolio rationalization report aggregates per organisation; openspec/specs/software-license-posture :: Cost is consumed from contract administration, not re-derived"
+				"requirement": [
+					"openspec/specs/portfolio-rationalization-time :: Portfolio rationalization report aggregates per organisation",
+					"openspec/specs/software-license-posture :: Cost is consumed from contract administration, not re-derived"
+				]
 			},
 			"reachedOn": "License posture /license-posture (per vendor); Portfolio rationalization /portfolio-report (per selected organisation)",
 			"provider": "stackiq",
@@ -5391,7 +5479,7 @@
 				"evidence": "src/manifest.json:1048 FeaturesRoadmap page (type roadmap, line 1050), footer menu entry FeaturesRoadmapMenu; content from openspec/features.overlay.json statuses stable/beta/soon.",
 				"owner": "ConductionNL/stackiq",
 				"change": "openspec/changes/features-roadmap-page",
-				"requirement": "The Features and roadmap page groups the app's features by status (REQ-FRM-001)",
+				"requirement": "openspec/changes/features-roadmap-page/specs/features-roadmap :: The Features and roadmap page groups the app's features by status (REQ-FRM-001)",
 				"readOn": "2026-10-30"
 			},
 			"reachedOn": "Features & roadmap /features-roadmap (footer menu)",
@@ -5430,7 +5518,10 @@
 				"evidence": "lib/Controller/SettingsController.php:1289 getProgress and :1360 streamProgress (routes.php:119-120) serve lib/Service/ProgressTracker.php, used only by lib/Service/MergeOrganisatieService.php; no src/ caller of /api/progress. The admin ArchiMate import shows a spinner then the final objects-processed count (src/views/settings/sections/ArchiMateImportExport.vue:103). Organisation sync shows a status block with last sync time and organisations to process (src/views/settings/sections/OrganizationSynchronization.vue:211). Corrections round 8 (2026-09-28), stackiq#1138: the tracker's only store is the user's session (lib/Service/ProgressTracker.php:83 ISession, :412 saveProgress, :332 getProgress), so /api/progress answers only the browser session that started the work and a cron job cannot report progress at all; the tracker is also written by lib/Service/SbomImportService.php:144, not only by the merge, at d22033a.",
 				"owner": "ConductionNL/stackiq",
 				"change": "operations-sync-status-and-progress",
-				"requirement": "openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress :: REQ-SSP-001 Progress of a long operation SHALL be readable from any request, and only by users allowed to read it; openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress :: REQ-SSP-002 The organisation sync SHALL report its progress and keep the result of its last run"
+				"requirement": [
+					"openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress :: REQ-SSP-001 Progress of a long operation SHALL be readable from any request, and only by users allowed to read it",
+					"openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress :: REQ-SSP-002 The organisation sync SHALL report its progress and keep the result of its last run"
+				]
 			},
 			"reachedOn": "admin settings sections Organization Synchronization and ArchiMate Import/Export (status and result only); progress endpoints API only",
 			"provider": "stackiq",
@@ -5647,7 +5738,10 @@
 				"evidence": "Applications (module lib/Settings/softwarecatalogus_register.json:6777), versions (moduleVersion :7649), suites (suite :1135) and application-to-application connections (connection :3563) with relations; ModuleDetail and SuiteDetail show a Related panel. No manifest page has register+schema 'connection' or 'usage', so connections are not listed or created on their own page.",
 				"owner": "ConductionNL/stackiq",
 				"change": "operations-technology-components",
-				"requirement": "openspec/changes/operations-technology-components :: REQ-TCO-001; REQ-TCO-002 The Technology pages SHALL list components and show their relations both ways"
+				"requirement": [
+					"openspec/changes/operations-technology-components/specs/technology-components :: REQ-TCO-001 An organisation SHALL record technology components with a class, a status and an owner",
+					"openspec/changes/operations-technology-components/specs/technology-components :: REQ-TCO-002 The Technology pages SHALL list components and show their relations both ways"
+				]
 			},
 			"reachedOn": "Applications /modules/:id and Suites /suites/:id Related panels; no page for connections",
 			"provider": "stackiq",
@@ -5686,7 +5780,12 @@
 				"evidence": "Organisation merge: src/manifest.json:430 OrganisationMergePanel on OrganisatieDetail, calling /api/organisaties/{uuid}/merge/dry-run and /merge (src/store/modules/organisatie.js:486/524, lib/Controller/MergeController.php:106, admin-only body guard). Federation mirrors are reconciled per peer by lib/Service/Federation/FederationMerger.php.",
 				"owner": "ConductionNL/stackiq",
 				"change": "operations-record-reconciliation",
-				"requirement": "openspec/changes/operations-record-reconciliation :: REQ-RRC-001 to REQ-RRC-004"
+				"requirement": [
+					"openspec/changes/operations-record-reconciliation/specs/record-reconciliation :: REQ-RRC-001 Applications, services and organisations SHALL declare duplicate rules, and applications and services SHALL declare how they merge",
+					"openspec/changes/operations-record-reconciliation/specs/record-reconciliation :: REQ-RRC-002 The catalogue pages SHALL lead an administrator to OpenRegister's duplicate candidates",
+					"openspec/changes/operations-record-reconciliation/specs/record-reconciliation :: REQ-RRC-003 After OpenRegister merges two applications or services, every catalogue reference SHALL point at the survivor",
+					"openspec/changes/operations-record-reconciliation/specs/record-reconciliation :: REQ-RRC-004 Merged applications and services SHALL leave the lists and point readers to the survivor"
+				]
 			},
 			"reachedOn": "Organisation /organisaties/:id, Merge organisation panel (admin only)",
 			"provider": "stackiq",
@@ -5895,7 +5994,10 @@
 				"evidence": "lib/BackgroundJob/OrganizationContactSyncJob.php:75 TimedJob every 300 s calling performScheduledSync; admin section src/views/settings/sections/CronjobConfiguration.vue:56 shows each job's interval and an enable switch; src/views/settings/sections/OrganizationSynchronization.vue:211 shows Last Sync from app config last_sync_time (lib/Service/OrganizationSyncService.php:1609, written by recordSyncTime :1674). Corrections round 8 (2026-09-28), stackiq#1139: the enable switch has no effect, because lib/BackgroundJob/OrganizationContactSyncJob.php:99 run() checks only that OpenRegister is installed before performScheduledSync, and nothing reads the enabled flag that lib/Service/SettingsService.php:6901 updateCronjobConfig stores, at d22033a.",
 				"owner": "ConductionNL/stackiq",
 				"change": "operations-sync-status-and-progress",
-				"requirement": "openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress :: REQ-SSP-003 The scheduled sync MUST NOT run while its switch is off; openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress :: REQ-SSP-004 The Synchronisation page SHALL show the schedule, the last run and a running sync to Nextcloud admins and functional administrators"
+				"requirement": [
+					"openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress :: REQ-SSP-003 The scheduled sync MUST NOT run while its switch is off",
+					"openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress :: REQ-SSP-004 The Synchronisation page SHALL show the schedule, the last run and a running sync to Nextcloud admins and functional administrators"
+				]
 			},
 			"reachedOn": "admin settings sections Cronjob configuration and Organization Synchronization",
 			"provider": "stackiq",
@@ -6008,7 +6110,10 @@
 				"evidence": "src/manifest.json has no page for the element, relation or view schema other than Standaarden (src/manifest.json:708, filtered to standards); no diagram editor under src/views or src/components (same finding as arch-modelling)",
 				"owner": "ConductionNL/stackiq",
 				"change": "architecture-data-model-and-ggm",
-				"requirement": "openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm :: REQ-DMG-002 A data entity page SHALL draw the entity's relations to other entities; openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm :: REQ-DMG-004 A municipality SHALL add its own data entities with attributes, keys and cardinalities"
+				"requirement": [
+					"openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm :: REQ-DMG-002 A data entity page SHALL draw the entity's relations to other entities",
+					"openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm :: REQ-DMG-004 A municipality SHALL add its own data entities with attributes, keys and cardinalities"
+				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -6047,7 +6152,10 @@
 				"evidence": "lib/Service/ContactpersoonService.php:889 returns a user's lastLogin and src/components/ContactpersonenList.vue:482 stores it, but nothing renders it; no review, recertification or expiry of access in lib/ or src/ (grep recertif, accessReview)",
 				"owner": "ConductionNL/stackiq",
 				"change": "organisations-role-mapping-and-access-review",
-				"requirement": "openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review :: REQ-RMA-003 A functional administrator SHALL review the access of their organisation's people; openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review :: REQ-RMA-004 A reviewer SHALL confirm or withdraw a person's access, and the decision SHALL be recorded"
+				"requirement": [
+					"openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review :: REQ-RMA-003 A functional administrator SHALL review the access of their organisation's people",
+					"openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review :: REQ-RMA-004 A reviewer SHALL confirm or withdraw a person's access, and the decision SHALL be recorded"
+				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -6305,7 +6413,10 @@
 				"evidence": "compliance records carry bewijsReferentie and a Documentation files panel (src/manifest.json:885 KompliantieDetail), and module.dpiaDocumentRef (lib/Settings/softwarecatalogus_register.json:7280) links a DPIA; these are published per record under the register read rules, but nothing shares a processing agreement or pentest report between organisations as such",
 				"owner": "ConductionNL/stackiq",
 				"change": "sharing-compliance-documents",
-				"requirement": "openspec/changes/sharing-compliance-documents/specs/shared-compliance-documents :: REQ-SCD-001 An organisation publishes a compliance document about a product; openspec/changes/sharing-compliance-documents/specs/shared-compliance-documents :: REQ-SCD-002 The audience decides who reads a document"
+				"requirement": [
+					"openspec/changes/sharing-compliance-documents/specs/shared-compliance-documents :: REQ-SCD-001 An organisation publishes a compliance document about a product",
+					"openspec/changes/sharing-compliance-documents/specs/shared-compliance-documents :: REQ-SCD-002 The audience decides who reads a document"
+				]
 			},
 			"reachedOn": "KompliantieDetail /komplianties/:id Evidence documents; ModuleDetail DPIA document field",
 			"provider": "stackiq",
@@ -6565,7 +6676,10 @@
 				"evidence": "Relation pickers already follow another field on the form: module.contactPerson x-relation-filter {organization: @object.provider}, catalogService.modules and contactPerson on @object.provider, usage.moduleVersion on @object.module (lib/Settings/softwarecatalogus_register.json), honoured by the library form (@conduction/nextcloud-vue 2.57.1 src/components/CnFormDialog/CnFormDialog.vue:1183 relationFilterDecls). No enum property declares dependent values (x-openregister-dependent-values, openregister lib/Service/Rules/DependentValueTable.php), and the library form does not read that annotation.",
 				"owner": "ConductionNL/stackiq",
 				"change": "landscape-dependent-field-options",
-				"requirement": "openspec/changes/landscape-dependent-field-options/specs/dependent-field-options :: REQ-DFO-003 The form offers only the allowed options; openspec/changes/landscape-dependent-field-options/specs/dependent-field-options :: REQ-DFO-001 A value outside its dependent list is refused on save"
+				"requirement": [
+					"openspec/changes/landscape-dependent-field-options/specs/dependent-field-options :: REQ-DFO-003 The form offers only the allowed options",
+					"openspec/changes/landscape-dependent-field-options/specs/dependent-field-options :: REQ-DFO-001 A value outside its dependent list is refused on save"
+				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -6643,7 +6757,10 @@
 				"evidence": "stackiq has no AI or MCP integration of its own (see share-ai-assistant); the History tab (widget type audit, src/manifest.json:436) shows every change per object but does not single out actions an assistant took",
 				"owner": "ConductionNL/stackiq",
 				"change": "insight-assistant-answers-and-action-trail",
-				"requirement": "openspec/changes/insight-assistant-answers-and-action-trail/specs/assistant-insight :: REQ-ASK-003 Assistant actions on catalogue records are listed; openspec/changes/insight-assistant-answers-and-action-trail/specs/assistant-insight :: REQ-ASK-004 The History tab marks assistant actions"
+				"requirement": [
+					"openspec/changes/insight-assistant-answers-and-action-trail/specs/assistant-insight :: REQ-ASK-003 Assistant actions on catalogue records are listed",
+					"openspec/changes/insight-assistant-answers-and-action-trail/specs/assistant-insight :: REQ-ASK-004 The History tab marks assistant actions"
+				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -6861,7 +6978,10 @@
 				"evidence": "catalogContract.contactPersonUser (lib/Settings/softwarecatalogus_register.json:3398) names the responsible person on the user side, shown on ContractDetail (src/manifest.json:563); expiry warnings do not reach them because the only expiry notification never matches (see ctr-expiry-alert)",
 				"owner": "ConductionNL/stackiq",
 				"change": "contracts-expiry-and-owner",
-				"requirement": "openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner :: REQ-CEO-004 A contract SHALL name one responsible Nextcloud user, picked from the users of the instance; openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner :: REQ-CEO-005 The contract expiry warning MUST include the responsible user among its recipients"
+				"requirement": [
+					"openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner :: REQ-CEO-004 A contract SHALL name one responsible Nextcloud user, picked from the users of the instance",
+					"openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner :: REQ-CEO-005 The contract expiry warning MUST include the responsible user among its recipients"
+				]
 			},
 			"reachedOn": "ContractDetail /contracten/:id contract details",
 			"provider": "stackiq",
@@ -6971,7 +7091,7 @@
 				"evidence": "stackiq styles use Nextcloud's theming variables (src/views/KwetsbaarhedenView.vue:478 var(--color-primary-element)), so the colours and logo an admin sets in Nextcloud theming apply to stackiq pages",
 				"owner": "nextcloud/server",
 				"change": "openspec/changes/platform-properties",
-				"requirement": "The look comes from the theme, not the code (REQ-PLAT-003)"
+				"requirement": "openspec/changes/platform-properties/specs/platform-properties :: The look comes from the theme, not the code (REQ-PLAT-003)"
 			},
 			"reachedOn": "every stackiq page, through Nextcloud theming",
 			"provider": "nextcloud",
@@ -7008,7 +7128,7 @@
 				"evidence": "library CnIndexPage mass copy on stackiq index pages: @conduction/nextcloud-vue v2.55.1 src/components/CnIndexPage/CnIndexPage.vue:215 CnMassCopyDialog, showMassCopy default true at :1611 (package.json:45 pins ^2.55.1); whether relations are copied along was not traced",
 				"owner": "ConductionNL/nextcloud-vue",
 				"change": "openspec/changes/applications-copy-with-links",
-				"requirement": "An application is copied with the links the user picks (REQ-ACP-001)",
+				"requirement": "openspec/changes/applications-copy-with-links/specs/application-copy :: An application is copied with the links the user picks (REQ-ACP-001)",
 				"readOn": "2026-10-30"
 			},
 			"reachedOn": "index pages such as Module versions /moduleversies: select rows, Copy",
@@ -7088,7 +7208,11 @@
 				"evidence": "the only decisions are contract approval and renewal decisions delegated to decidiq (catalogContract.decisions, lib/Settings/softwarecatalogus_register.json, and lib/Service/ContractApprovalService.php); no architecture decision record",
 				"owner": "ConductionNL/stackiq",
 				"change": "architecture-decision-register",
-				"requirement": "openspec/changes/architecture-decision-register/specs/architecture-decision-register :: REQ-ADREG-001 An information manager SHALL record an architecture decision with its context, options and consequences; openspec/changes/architecture-decision-register/specs/architecture-decision-register :: REQ-ADREG-002 A decision SHALL be reviewed by a second person through a declared lifecycle; openspec/changes/architecture-decision-register/specs/architecture-decision-register :: REQ-ADREG-004 A decision SHALL link to the applications and elements it affects and to board decisions"
+				"requirement": [
+					"openspec/changes/architecture-decision-register/specs/architecture-decision-register :: REQ-ADREG-001 An information manager SHALL record an architecture decision with its context, options and consequences",
+					"openspec/changes/architecture-decision-register/specs/architecture-decision-register :: REQ-ADREG-002 A decision SHALL be reviewed by a second person through a declared lifecycle",
+					"openspec/changes/architecture-decision-register/specs/architecture-decision-register :: REQ-ADREG-004 A decision SHALL link to the applications and elements it affects and to board decisions"
+				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -7280,7 +7404,7 @@
 				"evidence": "src/manifest.json:1057 Flows page (entitySource flows, app stackiq) and FlowDetail canvas over OpenRegister's flow store; openregister lib/Service/Flow/Nodes/TriggerObjectNode.php:82 object.updated trigger per register and schema; lib/Service/Flow/Nodes/FilterNode.php:10 and :186 per-item condition (for example the status); integriq lib/Flow/SourceCallNode.php (development) calls the outside source. Open half (30 Oct, board canon): platform-properties task 4: the threshold field on the service desk exchange drawn on SkInstellingenUitwisseling; a flow authored by hand on the Flows page already gates on the status.",
 				"owner": "ConductionNL/openregister",
 				"change": "openspec/changes/platform-properties",
-				"requirement": "Entries go to outside systems only from a chosen lifecycle state (REQ-PLAT-004)",
+				"requirement": "openspec/changes/platform-properties/specs/platform-properties :: Entries go to outside systems only from a chosen lifecycle state (REQ-PLAT-004)",
 				"readOn": "2026-10-30"
 			},
 			"reachedOn": "nothing reaches it",
@@ -7397,7 +7521,10 @@
 				"evidence": "POST /api/cmdb-import and /api/cmdb-import/{operationId}/cancel (appinfo/routes.php:110-111, Nextcloud admins only); main spec openspec/specs/cmdb-export-import (15 requirements: xlsx upload, one consuming municipality, APPID match on re-import, supplier organisations, usages, owner contact persons, progress and cancel, admin settings section)",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-10-05-cmdb-export-import",
-				"requirement": "openspec/specs/cmdb-export-import :: Stackiq imports a TOPdesk CMDB export into OpenRegister objects (REQ-CMDB-000); openspec/specs/cmdb-export-import :: A module SHALL be matched on its TOPdesk APPID, so a re-import updates instead of duplicating (REQ-CMDB-006)"
+				"requirement": [
+					"openspec/specs/cmdb-export-import :: Stackiq imports a TOPdesk CMDB export into OpenRegister objects (REQ-CMDB-000)",
+					"openspec/specs/cmdb-export-import :: A module SHALL be matched on its TOPdesk APPID, so a re-import updates instead of duplicating (REQ-CMDB-006)"
+				]
 			},
 			"feature": "landscape-import",
 			"source": "spec-round-2026-10-07",
@@ -7548,7 +7675,7 @@
 				"owner": "ConductionNL/stackiq",
 				"readOn": "2026-10-30",
 				"change": "openspec/changes/landscape-migrate-from-previous-catalogue",
-				"requirement": "An organisation imports its export from the previous catalogue (REQ-LCM-001)"
+				"requirement": "openspec/changes/landscape-migrate-from-previous-catalogue/specs/legacy-catalogue-migration :: An organisation imports its export from the previous catalogue (REQ-LCM-001)"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "stackiq",
@@ -7673,7 +7800,7 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "openspec/changes/shared-usage-visible-to-participants",
 				"readOn": "2026-10-30",
-				"requirement": "The connections list says with whom a connection is shared (REQ-DLG-011)"
+				"requirement": "openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik :: The connections list says with whom a connection is shared (REQ-DLG-011)"
 			},
 			"reachedOn": "API only: /api/aangeboden-gebruik/deelnemers; participants set (not seen by partners) on /gebruik/:id",
 			"provider": "stackiq",
@@ -7758,7 +7885,7 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "openspec/changes/gemma-plate-views-peers-and-definitions",
 				"readOn": "2026-10-30",
-				"requirement": "The plate draws the GEMMA view the user picks (REQ-GPL-001)"
+				"requirement": "openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate :: The plate draws the GEMMA view the user picks (REQ-GPL-001)"
 			},
 			"reachedOn": "API only: GET /api/views (src/store/modules/view.js:89 defines a store but nothing imports useViewStore); the drawn view is only visible in Archi after 'Organization Export' on admin settings section ArchiMate Import/Export",
 			"provider": "stackiq",
@@ -7800,7 +7927,10 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "architecture-shared-usage-on-views",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/changes/architecture-shared-usage-on-views/specs/shared-usage-on-views :: REQ-SUV-001 The GEMMA view page MUST let a user show own and shared applications on the view; openspec/changes/architecture-shared-usage-on-views/specs/shared-usage-on-views :: REQ-SUV-002 A shared application MUST be drawn apart from an own application without relying on colour"
+				"requirement": [
+					"openspec/changes/architecture-shared-usage-on-views/specs/shared-usage-on-views :: REQ-SUV-001 The GEMMA view page MUST let a user show own and shared applications on the view",
+					"openspec/changes/architecture-shared-usage-on-views/specs/shared-usage-on-views :: REQ-SUV-002 A shared application MUST be drawn apart from an own application without relying on colour"
+				]
 			},
 			"reachedOn": "API only: GET /api/views/{viewId}?include_deelnames_gebruik=true; org ArchiMate export from admin settings section ArchiMate Import/Export (Deelnames checkbox)",
 			"provider": "stackiq",
@@ -7924,7 +8054,7 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "openspec/changes/supplier-accepts-claimed-usage",
 				"readOn": "2026-10-30",
-				"requirement": "A supplier answers the usages claimed of its products (REQ-010)"
+				"requirement": "openspec/changes/supplier-accepts-claimed-usage/specs/aanbod-listings :: A supplier answers the usages claimed of its products (REQ-010)"
 			},
 			"reachedOn": "API only: /api/aanbod and /api/aangeboden-gebruik, no stackiq page calls them (grep of src finds no caller)",
 			"provider": "stackiq",
@@ -7966,7 +8096,7 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "openspec/changes/gemma-plate-views-peers-and-definitions",
 				"readOn": "2026-10-30",
-				"requirement": "The plate shows what comparable organisations use (REQ-GPL-002)"
+				"requirement": "openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate :: The plate shows what comparable organisations use (REQ-GPL-002)"
 			},
 			"reachedOn": "API only: GET /api/views, the only caller is src/store/modules/view.js which no mounted component uses",
 			"provider": "stackiq",
@@ -8093,7 +8223,7 @@
 				"ownerNote": "reader wrote: ConductionNL/stackiq (rules), executed by ConductionNL/openregister",
 				"change": "2026-07-23-vendor-visibility-rbac",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/specs/vendor-visibility-rbac :: REQ-002 aanbod-beheerder (vendor) reads of gebruik/koppeling objects MUST be scoped to the vendor's own offered products"
+				"requirement": "openspec/specs/vendor-visibility-rbac :: `aanbod-beheerder` (vendor) reads of gebruik/koppeling objects MUST be scoped to the vendor's own offered products (REQ-002)"
 			},
 			"reachedOn": "no page of its own: enforced by OpenRegister RBAC on every read, including /gebruik, /koppelingen and the /modules/:id Usages list",
 			"provider": "openregister",
@@ -8171,7 +8301,10 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-06-14-application-lifecycle-tracking",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/specs/application-lifecycle-tracking :: End-of-support is surfaced on applications in use; openspec/specs/application-lifecycle-tracking :: Lifecycle events dispatch via the OR notification engine"
+				"requirement": [
+					"openspec/specs/application-lifecycle-tracking :: End-of-support is surfaced on applications in use",
+					"openspec/specs/application-lifecycle-tracking :: Lifecycle events dispatch via the OR notification engine"
+				]
 			},
 			"reachedOn": "LifecycleRoadmap /portfolio-roadmap badges and the Risk signals section on Applications in use /gebruik/:id; push warning only if OpenRegister executes the declared rule",
 			"provider": "stackiq",
@@ -8215,7 +8348,10 @@
 				"owner": "ConductionNL/integriq",
 				"change": "2026-07-23-eol-feed-integration",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/specs/eol-feed-integration :: Products are mapped to endoflife.date via per-module config; openspec/specs/eol-feed-integration :: Stamping preserves every other field and records provenance"
+				"requirement": [
+					"openspec/specs/eol-feed-integration :: Products are mapped to endoflife.date via per-module config",
+					"openspec/specs/eol-feed-integration :: Stamping preserves every other field and records provenance"
+				]
 			},
 			"reachedOn": "admin settings section End-of-life feed sync (src/views/settings/sections/EolSyncSettings.vue); results visible on ModuleversieDetail and LifecycleRoadmap",
 			"provider": "integriq",
@@ -8386,7 +8522,10 @@
 				"ownerNote": "reader wrote: ConductionNL/stackiq (declaration), dispatch by ConductionNL/openregister",
 				"change": "contracts-expiry-warning-fires",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/changes/contracts-expiry-warning-fires/specs/contract-expiry-warning :: REQ-CEW-001 The contract-expiry rule MUST match active and expiring contracts whose end date falls within 90 days; openspec/changes/contracts-expiry-warning-fires/specs/contract-expiry-warning :: REQ-CEW-002 The warning MUST name the contract number and the end date"
+				"requirement": [
+					"openspec/changes/contracts-expiry-warning-fires/specs/contract-expiry-warning :: REQ-CEW-001 The contract-expiry rule MUST match active and expiring contracts whose end date falls within 90 days",
+					"openspec/changes/contracts-expiry-warning-fires/specs/contract-expiry-warning :: REQ-CEW-002 The warning MUST name the contract number and the end date"
+				]
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "openregister",
@@ -8430,7 +8569,10 @@
 				"ownerNote": "reader wrote: ConductionNL/stackiq + ConductionNL/decidiq",
 				"change": "openspec/changes/capability-requirements-from-the-matrix",
 				"readOn": "2026-11-12",
-				"requirement": "openspec/specs/contract-decision-delegation :: REQ-SCCD-002 — The system SHALL delegate the contract approval and renewal decision to decidesk by dispatching an in-process DecisionRequestedEvent; openspec/changes/capability-requirements-from-the-matrix/specs/contract-decision-delegation :: REQ-SCCD-007 A contract becomes Active only through an approved decision"
+				"requirement": [
+					"openspec/specs/contract-decision-delegation :: REQ-SCCD-002 — The system SHALL delegate the contract approval and renewal decision to decidesk by dispatching an in-process DecisionRequestedEvent",
+					"openspec/changes/capability-requirements-from-the-matrix/specs/contract-decision-delegation :: REQ-SCCD-007 A contract becomes Active only through an approved decision"
+				]
 			},
 			"reachedOn": "ContractDetail /contracten/:id, Approval panel 'Submit for approval' (needs decidiq installed)",
 			"provider": "decidiq",
@@ -8514,7 +8656,7 @@
 				"owner": "ConductionNL/openregister",
 				"change": "2026-06-14-softwarecatalog-notifications",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/specs/softwarecatalog-notifications :: Catalogue schemas declare notification rules (the vulnerability rule)"
+				"requirement": "openspec/specs/softwarecatalog-notifications :: Catalogue schemas declare notification rules"
 			},
 			"reachedOn": "Declaration in the register; fires on create from Vulnerabilities /kwetsbaarheden",
 			"provider": "openregister",
@@ -8641,7 +8783,7 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "openspec/changes/shared-usage-visible-to-participants",
 				"readOn": "2026-10-30",
-				"requirement": "A participant reads the usages shared with it, and their connections (REQ-DLG-010)"
+				"requirement": "openspec/changes/shared-usage-visible-to-participants/specs/deelnames-gebruik :: A participant reads the usages shared with it, and their connections (REQ-DLG-010)"
 			},
 			"reachedOn": "Organisations /organisaties form (type Collaboration, participants); Applications in use /gebruik form (participants); shared landscape API only",
 			"provider": "stackiq",
@@ -8686,7 +8828,10 @@
 				"ownerNote": "reader wrote: ConductionNL/stackiq (rules), executed by ConductionNL/openregister",
 				"change": "2026-07-24-schema-rbac-hardening",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/specs/vendor-visibility-rbac :: `gebruik-beheerder` reads of gebruik objects MUST be scoped to the caller's own organisation (REQ-003); openspec/specs/vendor-visibility-rbac :: `gebruik`, `koppeling`, and `organisatie` schema-level RBAC reads MUST deny cross-organisation access for `gebruik-beheerder` (REQ-008)"
+				"requirement": [
+					"openspec/specs/vendor-visibility-rbac :: `gebruik-beheerder` reads of gebruik objects MUST be scoped to the caller's own organisation (REQ-003)",
+					"openspec/specs/vendor-visibility-rbac :: `gebruik`, `koppeling`, and `organisatie` schema-level RBAC reads MUST deny cross-organisation access for `gebruik-beheerder` (REQ-008)"
+				]
 			},
 			"reachedOn": "no page: enforced by OpenRegister RBAC/multitenancy on every list and detail page",
 			"provider": "openregister",
@@ -8725,7 +8870,10 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-05-31-retrofit-2026-05-26-sc-handlers",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/specs/sc-handlers :: The system SHALL provision and maintain a contact person's Nextcloud user account (REQ-001); openspec/specs/sc-handlers :: The system SHALL maintain user-manager hierarchy and report organisation structure (REQ-003)"
+				"requirement": [
+					"openspec/specs/sc-handlers :: The system SHALL provision and maintain a contact person's Nextcloud user account (REQ-001)",
+					"openspec/specs/sc-handlers :: The system SHALL maintain user-manager hierarchy and report organisation structure (REQ-003)"
+				]
 			},
 			"reachedOn": "no page: runs when a contact is provisioned automatically (see org-contact-to-account)",
 			"provider": "stackiq",
@@ -8807,7 +8955,10 @@
 				"owner": "ConductionNL/openregister",
 				"change": "2026-06-14-open-data-publishing",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/specs/open-data-publishing :: Published entries are exposed through the existing public read surface; openspec/specs/open-data-publishing :: Open-data serialization strips internal fields and carries reuse metadata",
+				"requirement": [
+					"openspec/specs/open-data-publishing :: Published entries are exposed through the existing public read surface",
+					"openspec/specs/open-data-publishing :: Open-data serialization strips internal fields and carries reuse metadata"
+				],
 				"note": "decision 392 (12 Nov): published entries are publicly readable without login, everything else needs login. The code still requires login on GET /api/aanbod (AanbodController::getAanbod rejects anonymous callers); change anonymous-aanbod-listing-is-published-only replaces vendor-visibility-rbac REQ-009 and holds the code task. Anonymous reads through the OpenRegister public rules above are not affected."
 			},
 			"reachedOn": "API only: OpenRegister objects API for anonymous reads; no stackiq page",
@@ -8886,7 +9037,10 @@
 				"owner": "ConductionNL/openregister",
 				"change": "mcp-full-action-surface",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface :: Software Catalog MUST register a hand-written MCP tool provider; openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface :: Every write tool MUST delegate to the existing workflow service behind its existing guard"
+				"requirement": [
+					"openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface :: Software Catalog MUST register a hand-written MCP tool provider",
+					"openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface :: Every write tool MUST delegate to the existing workflow service behind its existing guard"
+				]
 			},
 			"reachedOn": "nothing in stackiq reaches it; only OpenRegister's generic MCP endpoint",
 			"provider": "openregister",
@@ -8925,7 +9079,7 @@
 				"owner": "ConductionNL/openregister",
 				"change": "openspec/changes/platform-properties",
 				"readOn": "2026-10-30",
-				"requirement": "Another system is notified when a catalogue entry changes (REQ-PLAT-005)"
+				"requirement": "openspec/changes/platform-properties/specs/platform-properties :: Another system is notified when a catalogue entry changes (REQ-PLAT-005)"
 			},
 			"reachedOn": "Admin settings > Service desk exchange (sets up the outbound flow); Flows /flows; general webhooks only in OpenRegister's own admin UI",
 			"provider": "openregister",
@@ -8966,7 +9120,7 @@
 				"owner": "ConductionNL/openregister",
 				"change": "openspec/changes/platform-properties",
 				"readOn": "2026-10-07",
-				"requirement": "Every record keeps its history (REQ-PLAT-006)"
+				"requirement": "openspec/changes/platform-properties/specs/platform-properties :: Every record keeps its history (REQ-PLAT-006)"
 			},
 			"reachedOn": "History sidebar tab on the detail pages, e.g. Organisation /organisaties/:id",
 			"provider": "openregister",
@@ -9094,7 +9248,7 @@
 				"owner": "ConductionNL/openregister",
 				"readOn": "2026-10-07",
 				"change": "openspec/changes/platform-properties",
-				"requirement": "The store adds configuration published by others (REQ-PLAT-007)"
+				"requirement": "openspec/changes/platform-properties/specs/platform-properties :: The store adds configuration published by others (REQ-PLAT-007)"
 			},
 			"reachedOn": "Store /store (footer menu)",
 			"provider": "openregister",
