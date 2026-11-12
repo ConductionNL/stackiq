@@ -1663,77 +1663,7 @@ class OrganizationSyncService {
 	 */
 	private function processContactPerson(object $contactPerson, array &$stats): ?string {
 		try {
-			$contactData = $contactPerson->getObject();
-			// Schema uses 'e-mailadres' but some data may use 'email'.
-			$email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
-			$existingUsername = ($contactData['username'] ?? '');
-
-			if (empty($email) === true) {
-				$this->logger->debug(
-					'OrganizationSyncService: Contact person has no email, skipping',
-					[
-						'contactId' => $contactPerson->getId(),
-					]
-				);
-				return null;
-			}
-
-			// Check if user already exists.
-			$userManager = $this->container->get('OCP\IUserManager');
-			// Use the stored username when available, otherwise fall back to email as username.
-			if (empty($existingUsername) === false) {
-				$username = $existingUsername;
-			} else {
-				$username = $email;
-			}
-
-			$user = $userManager->get($username);
-
-			if ($user === null) {
-				// Create user account.
-				$this->logger->info(
-					'OrganizationSyncService: Creating user account for contact person',
-					[
-						'contactId' => $contactPerson->getId(),
-						'email' => $email,
-						'username' => $username,
-					]
-				);
-
-				$success = $this->contactPersonService->processContactpersoon($contactPerson, false);
-				if (empty($success) === false) {
-					$stats['usersCreated']++;
-					$this->logger->info(
-						'OrganizationSyncService: Successfully created user account',
-						[
-							'contactId' => $contactPerson->getId(),
-							'username' => $username,
-						]
-					);
-				} else {
-					$this->logger->error(
-						'OrganizationSyncService: Failed to create user account',
-						[
-							'contactId' => $contactPerson->getId(),
-							'username' => $username,
-						]
-					);
-				}
-			}//end if
-
-			// Contact exists without a stored username — record the resolved username for future syncs.
-			if (empty($existingUsername) === true) {
-				$this->logger->debug(
-					'OrganizationSyncService: Updating contact person with username',
-					[
-						'contactId' => $contactPerson->getId(),
-						'username' => $username,
-					]
-				);
-				$stats['usersUpdated']++;
-			}
-
-			return $username;
+			return $this->ensureContactAccount(contactPerson: $contactPerson, stats: $stats);
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'OrganizationSyncService: Failed to process contact person',
@@ -1746,6 +1676,158 @@ class OrganizationSyncService {
 		}//end try
 
 	}//end processContactPerson()
+
+	/**
+	 * Make sure a contact person with an e-mail has a user account, and count what was done.
+	 *
+	 * @param object $contactPerson The contact person object
+	 * @param array  $stats         Statistics array (passed by reference)
+	 *
+	 * @return string|null The username, or null when the contact person has no e-mail
+	 */
+	private function ensureContactAccount(object $contactPerson, array &$stats): ?string {
+		$account = $this->contactAccountOf(contactPerson: $contactPerson);
+		if ($account === null) {
+			return null;
+		}
+
+		// Check if user already exists.
+		$userManager = $this->container->get('OCP\IUserManager');
+		if ($userManager->get($account->username) === null) {
+			$this->createContactAccount(account: $account, stats: $stats);
+		}
+
+		// Contact exists without a stored username — record the resolved username for future syncs.
+		if ($account->hasStoredUsername === false) {
+			$this->countResolvedUsername(account: $account, stats: $stats);
+		}
+
+		return $account->username;
+	}//end ensureContactAccount()
+
+	/**
+	 * The account of a contact person: its e-mail and its username.
+	 *
+	 * @param object $contactPerson The contact person object
+	 *
+	 * @return ContactAccount|null The account, or null when the contact person has no e-mail
+	 */
+	private function contactAccountOf(object $contactPerson): ?ContactAccount {
+		$contactData = $contactPerson->getObject();
+		// Schema uses 'e-mailadres' but some data may use 'email'.
+		if (empty($contactData['email'] ?? $contactData['e-mailadres'] ?? '') === true) {
+			$this->logContactWithoutEmail(contactPerson: $contactPerson);
+			return null;
+		}
+
+		return self::newContactAccount(contactPerson: $contactPerson, contactData: $contactData);
+	}//end contactAccountOf()
+
+	/**
+	 * The account of a contact person with an e-mail.
+	 *
+	 * @param object $contactPerson The contact person object
+	 * @param array  $contactData   Its data
+	 *
+	 * @return ContactAccount The account
+	 */
+	private static function newContactAccount(object $contactPerson, array $contactData): ContactAccount {
+		$existingUsername = ($contactData['username'] ?? '');
+
+		$account = new ContactAccount();
+		$account->contactPerson = $contactPerson;
+		$account->email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+		// Use the stored username when available, otherwise fall back to email as username.
+		$account->hasStoredUsername = empty($existingUsername) === false;
+		$account->username = $account->email;
+		if ($account->hasStoredUsername === true) {
+			$account->username = $existingUsername;
+		}
+
+		return $account;
+	}//end newContactAccount()
+
+	/**
+	 * Log that a contact person has no e-mail and gets no account.
+	 *
+	 * @param object $contactPerson The contact person object
+	 *
+	 * @return void
+	 */
+	private function logContactWithoutEmail(object $contactPerson): void {
+		$this->logger->debug(
+			'OrganizationSyncService: Contact person has no email, skipping',
+			[
+				'contactId' => $contactPerson->getId(),
+			]
+		);
+	}//end logContactWithoutEmail()
+
+	/**
+	 * Create the user account of a contact person, counting it when it was made.
+	 *
+	 * @param ContactAccount $account The account to create
+	 * @param array          $stats   Statistics array (passed by reference)
+	 *
+	 * @return void
+	 */
+	private function createContactAccount(ContactAccount $account, array &$stats): void {
+		$this->logger->info(
+			'OrganizationSyncService: Creating user account for contact person',
+			[
+				'contactId' => $account->contactPerson->getId(),
+				'email' => $account->email,
+				'username' => $account->username,
+			]
+		);
+
+		$success = $this->contactPersonService->processContactpersoon($account->contactPerson, false);
+		if (empty($success) === false) {
+			$stats['usersCreated']++;
+		}
+
+		$this->logContactAccountCreation(account: $account, success: empty($success) === false);
+	}//end createContactAccount()
+
+	/**
+	 * Log whether the user account of a contact person was created.
+	 *
+	 * @param ContactAccount $account The account
+	 * @param bool           $success Whether it was created
+	 *
+	 * @return void
+	 */
+	private function logContactAccountCreation(ContactAccount $account, bool $success): void {
+		$context = [
+			'contactId' => $account->contactPerson->getId(),
+			'username' => $account->username,
+		];
+		if ($success === true) {
+			$this->logger->info('OrganizationSyncService: Successfully created user account', $context);
+			return;
+		}
+
+		$this->logger->error('OrganizationSyncService: Failed to create user account', $context);
+	}//end logContactAccountCreation()
+
+	/**
+	 * Count the username resolved for a contact person that stored none.
+	 *
+	 * @param ContactAccount $account The account
+	 * @param array          $stats   Statistics array (passed by reference)
+	 *
+	 * @return void
+	 */
+	private function countResolvedUsername(ContactAccount $account, array &$stats): void {
+		$this->logger->debug(
+			'OrganizationSyncService: Updating contact person with username',
+			[
+				'contactId' => $account->contactPerson->getId(),
+				'username' => $account->username,
+			]
+		);
+		$stats['usersUpdated']++;
+	}//end countResolvedUsername()
 
 	/**
 	 * Updates organisation entity with all usernames
