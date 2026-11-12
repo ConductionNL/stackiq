@@ -46,6 +46,7 @@ use Psr\Log\LoggerInterface;
  * Contactpersonen#convertToUser from the signed-in caller to the saved contact person.
  *
  * @covers \OCA\Stackiq\Controller\ContactpersonenController
+ * @uses \OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard
  */
 class OrganisationUserWorkflowTest extends TestCase {
 
