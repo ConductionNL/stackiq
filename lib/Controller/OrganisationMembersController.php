@@ -3,6 +3,9 @@
 /**
  * Stackiq OrganisationMembersController.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Self-service colleague access (VNG Softwarecatalogus #65): lets a
  * `beheerder` of an organisation grant or revoke an EXISTING Nextcloud
  * user's membership of that organisation, without an administrator.
@@ -33,9 +36,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-or-revoking-organisation-access-must-be-restricted-to-a-beheerder-of-that-organisation-req-004
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

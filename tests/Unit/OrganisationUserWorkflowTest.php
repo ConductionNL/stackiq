@@ -13,6 +13,9 @@ declare(strict_types=1);
  * @link     https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/contactpersonen-api/spec.md
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Stackiq\Tests\Unit;
