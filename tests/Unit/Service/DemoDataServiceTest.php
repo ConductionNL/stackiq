@@ -274,4 +274,68 @@ class DemoDataServiceTest extends TestCase {
 		$this->assertSame('organization', $selves[2]['schema'], 'a register that cannot be read is left to the importer');
 		$this->assertSame([5, 9], $schemas->lastIds);
 	}
+	public function testAnObjectWithoutARegisterOrSchemaIsLeftAndEachRegisterIsReadOnce(): void {
+		file_put_contents(
+			$this->descriptor(),
+			json_encode([
+				'components' => [
+					'objects' => [
+						['@self' => ['register' => 'stackiq', 'schema' => 'module', 'slug' => 'm-1']],
+						['@self' => ['register' => 'stackiq', 'schema' => '', 'slug' => 'm-2']],
+						['@self' => ['register' => '', 'schema' => 'module', 'slug' => 'm-3']],
+						['@self' => ['register' => 'stackiq', 'schema' => 'module', 'slug' => 'm-4']],
+						['naam' => 'no self'],
+					],
+				],
+			])
+		);
+
+		$importer = new class {
+			public array $data = [];
+
+			public function importFromApp(string $appId, array $data, string $version, bool $force): array {
+				$this->data = $data;
+				return [];
+			}
+		};
+		$registers = new class {
+			public int $finds = 0;
+
+			public function find(string|int $id, bool $_rbac = true, bool $_multitenancy = true): object {
+				$this->finds++;
+				return new class {
+					public function getSchemas(): array {
+						return [5];
+					}
+				};
+			}
+		};
+		$schemas = new class {
+			public function findMultiple(array $ids, bool $_rbac = true, bool $_multitenancy = true): array {
+				return [new class {
+					public function getId(): int {
+						return 5;
+					}
+
+					public function getSlug(): string {
+						return 'module';
+					}
+				}];
+			}
+		};
+		$this->container->method('get')->willReturnCallback(
+			static fn (string $id): object => match ($id) {
+				'OCA\OpenRegister\Db\RegisterMapper' => $registers,
+				'OCA\OpenRegister\Db\SchemaMapper' => $schemas,
+				default => $importer,
+			}
+		);
+
+		$this->service()->install();
+
+		$objects = $importer->data['components']['objects'];
+		$this->assertSame(['5', '', 'module', '5'], array_map(static fn (array $object): string => $object['@self']['schema'], array_slice($objects, 0, 4)));
+		$this->assertSame(['naam' => 'no self'], $objects[4]);
+		$this->assertSame(1, $registers->finds, 'a register is read once');
+	}
 }
