@@ -178,6 +178,13 @@ class CmdbExportImportServiceTest extends TestCase {
 	private array $ownerRecords = [];
 
 	/**
+	 * What writing an owner contact answers instead of a uid: '' (not created) or 'throw'; null for the address book.
+	 *
+	 * @var string|null
+	 */
+	private ?string $ownerSyncAnswer = null;
+
+	/**
 	 * The in-memory distributed cache behind the ProgressTracker.
 	 *
 	 * @var array<string, mixed>
@@ -303,6 +310,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->addressBooks = [];
 		$this->contactsEnabled = true;
 		$this->ownerRecords = [];
+		$this->ownerSyncAnswer = null;
 		$this->cache = [];
 		$this->cacheFailure = null;
 		$this->logLines = [];
@@ -965,6 +973,14 @@ class CmdbExportImportServiceTest extends TestCase {
 		$sync->method('syncToNamedAddressBook')->willReturnCallback(
 			function (string $objectType, array $record, string $addressBookUri, string $displayName, ?string $fixedUid = null): ?string {
 				$this->ownerRecords[] = $record;
+				if ($this->ownerSyncAnswer === 'throw') {
+					throw new \RuntimeException('address book unavailable');
+				}
+
+				if ($this->ownerSyncAnswer !== null) {
+					return $this->ownerSyncAnswer;
+				}
+
 				$this->addressBooks[$addressBookUri] = $displayName;
 				$email = (string)($record['email'] ?? '');
 				foreach ($this->contacts as $uid => $contact) {
@@ -4360,4 +4376,35 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame(['voornaam' => 'Voornaam', 'achternaam' => 'Achternaam'], CmdbExportImportService::splitPersonName(name: 'Achternaam,  Voornaam '));
 		$this->assertSame(['voornaam' => '', 'achternaam' => 'Functioneel Beheer'], CmdbExportImportService::splitPersonName(name: 'Functioneel  Beheer'));
 	}//end testPersonNamesSplit()
+	/**
+	 * An owner whose contact cannot be created is skipped with a warning naming its column; a failure while
+	 * resolving one is logged and warned about, and the import goes on without the owner.
+	 *
+	 * @return void
+	 */
+	public function testAnUnresolvableOwnerIsSkippedWithAWarning(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$rows = [$this->row(appId: '1', cells: ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam'])];
+
+		$this->ownerSyncAnswer = '';
+		$unresolved = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(
+			['Owner from column "Applicatie Eigenaar (Persoon)" could not be resolved in Nextcloud Contacts'],
+			$unresolved['rows'][0]['warnings']
+		);
+		$this->assertArrayNotHasKey('businessOwner', $this->objects(self::USAGE)[0]);
+		$this->assertSame([], $this->objects(self::CONTACT_PERSON));
+
+		$this->ownerSyncAnswer = 'throw';
+		$this->logLines = [];
+		$failed = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(['Owner from column "Applicatie Eigenaar (Persoon)" could not be resolved'], $failed['rows'][0]['warnings']);
+		$this->assertContains(
+			'CmdbExportImportService: owner could not be resolved {"row":2,"column":"Applicatie Eigenaar (Persoon)","exception":"RuntimeException"}',
+			$this->logLines
+		);
+		$this->assertArrayNotHasKey('businessOwner', $this->objects(self::USAGE)[0]);
+	}//end testAnUnresolvableOwnerIsSkippedWithAWarning()
 }//end class
