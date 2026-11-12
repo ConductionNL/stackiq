@@ -508,14 +508,40 @@ class MergeOrganisatieService {
 	 * @spec openspec/specs/organisation-merge/spec.md#requirement-execute-must-re-point-every-relation-type-while-preserving-every-unrelated-field-on-each-object
 	 */
 	private function readOwningOrganisation(object $entity): ?string {
-		if (property_exists($entity, 'organisation') === false
-			&& method_exists($entity, 'getOrganisation') === false
-		) {
+		if (self::hasOrganisationAccessor(entity: $entity) === false) {
 			return null;
 		}
 
+		$owningOrganisation = $this->owningOrganisationOf(entity: $entity);
+		if (is_string($owningOrganisation) === false) {
+			return null;
+		}
+
+		return $owningOrganisation;
+	}//end readOwningOrganisation()
+
+	/**
+	 * Whether an entity declares the organisation property or its accessor.
+	 *
+	 * @param object $entity The OpenRegister ObjectEntity to read.
+	 *
+	 * @return bool
+	 */
+	private static function hasOrganisationAccessor(object $entity): bool {
+		return property_exists($entity, 'organisation') === true
+			|| method_exists($entity, 'getOrganisation') === true;
+	}//end hasOrganisationAccessor()
+
+	/**
+	 * The entity's owning organisation as its accessor answers it.
+	 *
+	 * @param object $entity The OpenRegister ObjectEntity to read.
+	 *
+	 * @return mixed The accessor's answer, or null when it fails.
+	 */
+	private function owningOrganisationOf(object $entity): mixed {
 		try {
-			$owningOrganisation = $entity->getOrganisation();
+			return $entity->getOrganisation();
 		} catch (\Throwable $e) {
 			$this->logger->warning(
 				'MergeOrganisatieService: could not read @self.organisation from object entity',
@@ -523,13 +549,7 @@ class MergeOrganisatieService {
 			);
 			return null;
 		}
-
-		if (is_string($owningOrganisation) === false) {
-			return null;
-		}
-
-		return $owningOrganisation;
-	}//end readOwningOrganisation()
+	}//end owningOrganisationOf()
 
 	/**
 	 * Save the full existing payload (only the organisation-reference field(s)
@@ -658,22 +678,43 @@ class MergeOrganisatieService {
 		}
 
 		$targetData = $targetEntity->getObject();
-		$targetGroupId = $targetData['group'] ?? null;
 
-		if (empty($targetGroupId) === false) {
-			$group = $this->groupManager->get($targetGroupId);
-			if ($group !== null) {
-				return $group;
-			}
+		return $this->storedTargetGroup(targetData: $targetData)
+			?? $this->ensuredTargetGroup(targetEntity: $targetEntity, targetData: $targetData);
+	}//end resolveTargetGroup()
+
+	/**
+	 * The NC group the target organisation stores, when it exists.
+	 *
+	 * @param array $targetData The target organisation's data.
+	 *
+	 * @return \OCP\IGroup|null The group, or null when none is stored or it does not exist.
+	 */
+	private function storedTargetGroup(array $targetData): ?\OCP\IGroup {
+		$targetGroupId = $targetData['group'] ?? null;
+		if (empty($targetGroupId) === true) {
+			return null;
 		}
 
+		return $this->groupManager->get($targetGroupId);
+	}//end storedTargetGroup()
+
+	/**
+	 * The target organisation's NC group as `OrganizationHandler` ensures it.
+	 *
+	 * @param object $targetEntity The target organisation.
+	 * @param array  $targetData   Its data.
+	 *
+	 * @return \OCP\IGroup|null The group, or null when unresolvable.
+	 */
+	private function ensuredTargetGroup(object $targetEntity, array $targetData): ?\OCP\IGroup {
 		$targetGroupId = $this->organizationHandler->ensureOrganizationGroup(organizationObject: $targetEntity, objectData: $targetData);
 		if ($targetGroupId === null) {
 			return null;
 		}
 
 		return $this->groupManager->get($targetGroupId);
-	}//end resolveTargetGroup()
+	}//end ensuredTargetGroup()
 
 	/**
 	 * Tombstone the source organisation: PUT-semantic full re-save with
