@@ -5073,8 +5073,10 @@
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/sap-leanix-apis: 'we provide the OpenAPI explorer . This tool enables you to explore APIs, send requests, and view responses directly in your browser' (read 2026-09-26). Reached on: Workspace > OpenAPI explorer."
 			},
 			"screen": {
-				"board": null,
-				"reason": "Gegenereerde API-documentatie op de docs-site, geen scherm in de app."
+				"canvas": "design-system",
+				"board": [
+					"SkApiDocumentatie"
+				]
 			}
 		},
 		{
@@ -6146,7 +6148,8 @@
 			"screen": {
 				"canvas": "design-system",
 				"board": [
-					"SkGemmaPlaat"
+					"SkGemmaPlaat",
+					"SkGebruikDetail"
 				]
 			}
 		},
@@ -6878,7 +6881,8 @@
 			"screen": {
 				"canvas": "design-system",
 				"board": [
-					"SkDashboard"
+					"SkDashboard",
+					"SkAssistentActies"
 				]
 			}
 		},
