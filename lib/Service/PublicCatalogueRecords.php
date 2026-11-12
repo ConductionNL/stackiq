@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use DateTimeImmutable;
 use OCP\IL10N;
 use Psr\Container\ContainerInterface;
@@ -43,14 +44,14 @@ class PublicCatalogueRecords {
 	/**
 	 * Constructor.
 	 *
-	 * @param SettingsService $settingsService Resolves the register and schema ids.
+	 * @param RegisterConfigReaderInterface $settingsService Resolves the register and schema ids.
 	 * @param ContainerInterface $container Lazy OpenRegister lookups.
 	 * @param PortfolioReportDerivation $relations Normalises results and relation ids.
 	 * @param LoggerInterface $logger Logger.
 	 * @param IL10N $l10n Translates the record's labels.
 	 */
 	public function __construct(
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly ContainerInterface $container,
 		private readonly PortfolioReportDerivation $relations,
 		private readonly LoggerInterface $logger,

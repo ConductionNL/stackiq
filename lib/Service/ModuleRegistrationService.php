@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -50,12 +51,12 @@ class ModuleRegistrationService {
 	 * Constructor for ModuleRegistrationService.
 	 *
 	 * @param ContainerInterface $container The DI container
-	 * @param SettingsService $settingsService The settings service
+	 * @param RegisterConfigReaderInterface $settingsService The settings service
 	 * @param LoggerInterface $logger The logger instance
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
