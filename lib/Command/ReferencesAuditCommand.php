@@ -300,17 +300,10 @@ class ReferencesAuditCommand extends Command {
 	 * @return array{0: array<string, array<int, string>>, 1: array<string, bool>} The index and the id set.
 	 */
 	private function ownerIndex(mixed $objectService, OutputInterface $output): array {
-		$owners = [];
-
 		try {
-			foreach ((new ObjectPages(objectService: $objectService))->all(register: self::OWNER_REGISTER, schema: self::OWNER_SCHEMA) as $owner) {
-				$key = trim((string)($owner[self::IDENTITY_KEY] ?? ''));
-				if ($key === '') {
-					continue;
-				}
-
-				$owners[$key][] = (string)($owner['id'] ?? '');
-			}
+			$owners = self::ownersByIdentity(
+				owners: (new ObjectPages(objectService: $objectService))->all(register: self::OWNER_REGISTER, schema: self::OWNER_SCHEMA)
+			);
 		} catch (Throwable $e) {
 			// An absent shillinq is a normal state, not a fault. Say so
 			// plainly: with no owner register there is nothing to resolve
@@ -322,6 +315,38 @@ class ReferencesAuditCommand extends Command {
 			return [[], []];
 		}//end try
 
+		return [$owners, self::ownerIdSet(owners: $owners)];
+	}//end ownerIndex()
+
+	/**
+	 * The owner ids per identity key; owners without one are left out.
+	 *
+	 * @param iterable<int, array<string, mixed>> $owners The owner records.
+	 *
+	 * @return array<string, array<int, string>> Identity key to owner ids.
+	 */
+	private static function ownersByIdentity(iterable $owners): array {
+		$index = [];
+		foreach ($owners as $owner) {
+			$key = trim((string)($owner[self::IDENTITY_KEY] ?? ''));
+			if ($key === '') {
+				continue;
+			}
+
+			$index[$key][] = (string)($owner['id'] ?? '');
+		}
+
+		return $index;
+	}//end ownersByIdentity()
+
+	/**
+	 * Every owner id the index holds.
+	 *
+	 * @param array<string, array<int, string>> $owners Identity key to owner ids.
+	 *
+	 * @return array<string, bool> Every known owner id.
+	 */
+	private static function ownerIdSet(array $owners): array {
 		$ownerIds = [];
 		foreach ($owners as $ids) {
 			foreach ($ids as $id) {
@@ -329,8 +354,8 @@ class ReferencesAuditCommand extends Command {
 			}
 		}
 
-		return [$owners, $ownerIds];
-	}//end ownerIndex()
+		return $ownerIds;
+	}//end ownerIdSet()
 
 	/**
 	 * Print the one-line summary, and the nudge toward the write option.
