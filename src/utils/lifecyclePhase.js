@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * lifecyclePhase — derive an application-in-use (gebruik) lifecycle phase.
  *
  * Lifecycle tracking is the core job of application-portfolio management. A

@@ -3,6 +3,9 @@
 /**
  * Stackiq Portal Contribution Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Stackiq's contribution to the shared Portaliq external portal (hydra
  * ADR-046 + contract v2.1). Portaliq — the ONE shared portal for people WITHOUT
  * Nextcloud accounts — discovers this class by convention FQCN
@@ -29,9 +32,6 @@
  * @author    Conduction Development Team <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @version GIT: <git-id>
  *

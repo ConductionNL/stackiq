@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * The contracts behind an application, and routing a catalogue row to its page.
  *
  * A contract points at a usage and a service, not at the application, so the
