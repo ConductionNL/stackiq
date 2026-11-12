@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Unit tests for the facets.js API client (gemma-faceted-search).
  *
  * @spec openspec/changes/gemma-faceted-search/tasks.md#task-10

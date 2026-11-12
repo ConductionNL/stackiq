@@ -14,6 +14,9 @@
  *
  * @spec openspec/specs/settings-service/spec.md#requirement-the-system-shall-run-auto-configuration-import-and-configuration-maintenance-req-003
  * @spec openspec/specs/settings-service/spec.md#requirement-the-system-shall-read-and-persist-every-configuration-domain-req-002
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

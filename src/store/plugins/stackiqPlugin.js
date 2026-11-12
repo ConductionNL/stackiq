@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Stackiq plugin for the @conduction/nextcloud-vue object store.
  *
  * Adds app-specific state, getters, and actions that extend the base CRUD store

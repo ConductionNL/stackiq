@@ -3,6 +3,9 @@
 /**
  * Unit tests for PublicationController — the app's ONE live publish seam.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * `PUT /api/publication/{objectType}/{uuid}/publish` (route `publication#publish`)
  * is how a catalog entry's OpenRegister `publicatiedatum` is set, which is what
  * the `{group:public, match:{publicatiedatum:{$lte:$now}}}` RBAC read predicate
@@ -27,9 +30,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/open-data-publishing/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
