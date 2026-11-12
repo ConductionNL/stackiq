@@ -1087,7 +1087,7 @@
 			"providerHow": "read-from-code",
 			"feature": "software-landscape-register",
 			"featureConfidence": "high",
-			"note": "One contact person per application can be set, but there is no separate business owner and technical owner. ModuleDetail's data widget includes 'contactpersoon', a key the schema no longer has, so the contact may not show there. Specified in openspec/changes/landscape-usage-registration (OpenSpec pass 2026-09-27). Built by openspec/changes/archive/2026-09-29-landscape-usage-registration.",
+			"note": "A usage names a business owner and a technical owner (usage.businessOwner, usage.technicalOwner), set on the usage form and shown on the usage page. Built by openspec/changes/archive/2026-09-29-landscape-usage-registration.",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/subscription-roles: 'Define roles that map to your organization's positions, such as application owner', with subscription types 'Responsible, Accountable, Observer' per fact sheet (read 2026-09-26). Reached on: Fact sheet > Subscriptions; Administration > Subscription Roles.",
 				"stackiq": "lib/Settings/softwarecatalogus_register.json usage.businessOwner and usage.technicalOwner ($ref contactPerson, x-relation-filter organization @object.consumer); columns on Gebruik and fields on GebruikDetail; tests/Unit/Settings/UsageSchemaTest.php",
@@ -1531,14 +1531,17 @@
 				"evidence": "register.json:6869 module.cloudDienstverleningsmodel enum On-premises, IaaS, PaaS, SaaS; register.json:6906 hostingLocation and hostingJurisdiction; usage.cloudDienstverleningsmodel (register.json:3050); on ModuleDetail md-data include (src/manifest.json:500)",
 				"owner": "ConductionNL/stackiq",
 				"spec": "openspec/specs/application-hosting-model",
-				"requirement": "openspec/specs/application-hosting-model :: An application records its hosting model, location and jurisdiction"
+				"requirement": [
+					"openspec/specs/application-hosting-model :: An application records its hosting model, location and jurisdiction",
+					"openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/application-hosting-model :: An application run by a hosting party records it as IaaS or PaaS (REQ-CLR-020)"
+				]
 			},
 			"reachedOn": "Modules /modules create/edit form; ModuleDetail data widget",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "software-landscape-register",
 			"featureConfidence": "high",
-			"note": "The application form records on-premises, IaaS, PaaS or SaaS plus hosting location and jurisdiction. There is no field naming the hosting party itself.",
+			"note": "The application form records on-premises, IaaS, PaaS or SaaS plus hosting location and jurisdiction. A product that a hosting party runs is recorded as IaaS or PaaS with its location (REQ-CLR-020). There is no field naming the hosting party itself.",
 			"evidence": {
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/applications-in-reference-catalog lists application fields 'Hosting Type' and 'Hosting Description'; https://help.sap.com/docs/leanix/ea/configuring-kpis filters applications on 'Hosting Type = \"Cloud\"'; IT component subtypes SaaS, IaaS, PaaS, Hardware (read 2026-09-26). Reached on: Application fact sheet > Hosting Type.",
 				"stackiq": "register.json:6869 module.cloudDienstverleningsmodel enum On-premises, IaaS, PaaS, SaaS; register.json:6906 hostingLocation and hostingJurisdiction; usage.cloudDienstverleningsmodel (register.json:3050); on ModuleDetail md-data include (src/manifest.json:500)",
@@ -1732,7 +1735,10 @@
 				"evidence": "src/manifest.json:502 ModuleDetail md-related (library CnRelatedObjectsWidget: /used lists every object that references this module: usages, connections, suites, services, vulnerabilities); no dependency or impact computation in lib/ or src/",
 				"owner": "ConductionNL/openregister",
 				"change": "openregister/relations-that-travel-and-what-they-expose",
-				"requirement": "openregister:openspec/changes/relations-that-travel-and-what-they-expose/specs/referential-integrity :: The relations of a record answer who else is affected (REQ-RTE-001)"
+				"requirement": [
+					"openregister:openspec/changes/relations-that-travel-and-what-they-expose/specs/referential-integrity :: The relations of a record answer who else is affected (REQ-RTE-001)",
+					"openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export :: REQ-CDX-001 The application page draws the application's connections as a map"
+				]
 			},
 			"reachedOn": "ModuleDetail /modules/:id, Related panel",
 			"provider": "openregister",
@@ -2494,11 +2500,15 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
-				"evidence": "src/utils/complianceMatrix.js:9-17 cell state verified = compliancy record with evidence (hasEvidence :107 checks evidence/evidenceReference/url), claimed = link without evidence; rendered by src/views/ComplianceMatrixView.vue",
+				"state": "specified",
+				"evidence": "Not built: a claim reads verified as soon as evidence is attached, and nobody reviews it, so a supplier's own upload counts as verified (task 15). Planned in openspec/changes/capability-rows-the-code-does-not-yet-meet, set back from built on 2026-11-12 (decision 389). src/utils/complianceMatrix.js:9-17 cell state verified = compliancy record with evidence (hasEvidence :107 checks evidence/evidenceReference/url), claimed = link without evidence; rendered by src/views/ComplianceMatrixView.vue",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-06-14-module-compliance-assessment",
-				"requirement": "openspec/specs/module-compliance-assessment :: Compliance matrix distinguishes verified from claimed"
+				"requirement": [
+					"openspec/specs/module-compliance-assessment :: Compliance matrix distinguishes verified from claimed",
+					"openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/module-compliance-assessment :: A claim reads verified only after a reviewer outside the supplier checks it (REQ-CLR-022)"
+				],
+				"plan": "openspec/changes/capability-rows-the-code-does-not-yet-meet"
 			},
 			"reachedOn": "ComplianceMatrix /compliance-matrix (menu Reports & Compliance > Compliance matrix)",
 			"provider": "stackiq",
@@ -2846,8 +2856,8 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-06-14-open-data-publishing",
 				"requirement": [
-					"openspec/specs/aangeboden-gebruik-api :: The system SHALL allow assigning and removing offered-usage for the caller's active organisation (REQ-002)",
-					"openspec/specs/open-data-publishing :: Catalog entries can be marked as published open data"
+					"openspec/specs/open-data-publishing :: Catalog entries can be marked as published open data",
+					"openspec/changes/landscape-services-and-module-versions/specs/catalogue-services :: A supplier's service is registered over one or more applications (REQ-CSV-001)"
 				]
 			},
 			"reachedOn": "Applications /modules and Services /diensten (main menu), create via the index Add form",
@@ -3008,7 +3018,7 @@
 			"providerHow": "read-from-code",
 			"feature": "maintenance-and-supplier-roadmap",
 			"featureConfidence": "high",
-			"note": "A supplier can register a future version with status 'in development' and planned dates, which reads as a crude release plan. There is no roadmap view or declared roadmap; the overlay marks maintenance-and-supplier-roadmap as 'soon'. Specified in openspec/changes/lifecycle-maintenance-and-supplier-roadmap (OpenSpec pass 2026-09-27). Built by openspec/changes/archive/2026-09-29-lifecycle-maintenance-and-supplier-roadmap.",
+			"note": "The application page shows the supplier's roadmap (ProductRoadmap.vue on ModuleDetail, from the roadmap statement and the versions in development). Built by openspec/changes/archive/2026-09-29-lifecycle-maintenance-and-supplier-roadmap.",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/13683: \"Alle pakketversies en planningen ... gelijk zichtbaar de planning van de diverse pakketversies\" (read 2026-09-26); https://www.softwarecatalogus.nl/pakketversies: facet \"Status planning ... Filter op in ontwikkeling en zie de distributie planningsdata\" (read 2026-09-26). Reached on: Wat is er te vinden > Alle pakketversies en planningen.",
 				"stackiq": "lib/Settings/register.d/maintenance-and-roadmap.json module.roadmapStatement; src/components/roadmap/ProductRoadmap.vue on ModuleDetail (statement + versions on CnTimelineView, planned first); Moduleversies Planned releases quick filter and dateInDevelopment column; tests/vitest/maintenance.spec.js",
@@ -3128,7 +3138,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "supplier-directory",
-			"note": "Each product can point at its own contact person of the supplier through the form. The application page's data widget names the old Dutch keys, so the product's contact person (and its descriptions) do not show there; the same stale keys are on SuiteDetail (src/manifest.json:683). Specified in openspec/changes/landscape-application-page (OpenSpec pass 2026-09-27). The application page now shows the contact person under the current key contactPerson (built by openspec/changes/archive/2026-09-29-landscape-application-page).",
+			"note": "Each product points at its own contact person of the supplier through the form, and the application page shows it under the current key contactPerson. Built by openspec/changes/archive/2026-09-29-landscape-application-page.",
 			"evidence": {
 				"stackiq": "register :6856 module.contactPerson -> contactPerson with x-relation-filter organization = @object.provider; catalogService and suite also carry contactPerson; src/manifest.json:500 ModuleDetail md-data include lists 'contactpersoon', 'beschrijvingKort', 'beschrijvingLang', which are not module properties (renamed to contactPerson/shortDescription/longDescription)",
 				"topdesk": "unknown: supplier contacts are registered per supplier (\"Registering a supplier contact\"); contacts per product are not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -3209,7 +3219,7 @@
 			"providerHow": "read-from-code",
 			"feature": "portfolio-roadmap",
 			"featureConfidence": "high",
-			"note": "Pick an organisation and its applications in use are grouped by derived lifecycle phase. The usage records themselves cannot be created or edited on any stackiq page (see life-planned-replacement).",
+			"note": "Pick an organisation and its applications in use are grouped by derived lifecycle phase. Usages are created and edited on Applications in use (/gebruik) and the usage page (REQ-UAP-001).",
 			"evidence": {
 				"vng-softwarecatalogus": "https://www.softwarecatalogus.nl/node/16564: A1: \"Bij de oude versie kan de status gewijzigd worden in uit-te-faseren / uitgefaseerd\" (read 2026-09-26); https://www.softwarecatalogus.nl/voortgang-verbeteren: \"pakketversies hebben de status Gepland óf Uit te faseren\" (read 2026-09-26); https://www.softwarecatalogus.nl/node/30355: \"Vul onder Planning bij Status in gebruik in\" (read 2026-09-26). Reached on: Mijn softwarecatalogus > Pakketten > Planning Status.",
 				"sap-leanix": "https://help.sap.com/docs/leanix/ea/advanced-filter-options: 'The lifecycle filter enables filtering of fact sheets by their lifecycle state: plan, phase-in, active, phase-out, and end-of-life' (read 2026-09-26). Reached on: Application fact sheet > Lifecycle.",
@@ -3370,7 +3380,7 @@
 			"providerHow": "read-from-code",
 			"feature": "lifecycle-and-end-of-support",
 			"featureConfidence": "high",
-			"note": "The version an organisation runs is a field on its usage and drives the EOL badges, but no stackiq page lets the organisation set or change it. Specified in openspec/changes/landscape-usage-registration (OpenSpec pass 2026-09-27). Built by openspec/changes/archive/2026-09-29-landscape-usage-registration.",
+			"note": "The version an organisation runs is a field on its usage, set on the usage form and the usage page, and drives the end-of-life badges. Built by openspec/changes/archive/2026-09-29-landscape-usage-registration.",
 			"evidence": {
 				"stackiq": "usage.moduleVersion (x-relation-filter module) set on the usage form from Add to our landscape and on GebruikDetail (src/manifest.d/usages.json); shown in the Applications in use list; tests/vitest/usages.spec.js",
 				"topdesk": "unknown: versions in use are only possible as a self-defined field; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -3530,7 +3540,7 @@
 			"providerHow": "read-from-code",
 			"feature": "maintenance-and-supplier-roadmap",
 			"featureConfidence": "high",
-			"note": "Listed as 'soon' in the feature overlay; nothing is built. Specified in openspec/changes/lifecycle-maintenance-and-supplier-roadmap (OpenSpec pass 2026-09-27). Built by openspec/changes/archive/2026-09-29-lifecycle-maintenance-and-supplier-roadmap.",
+			"note": "A supplier records planned maintenance on a product, and organisations that use it see the window on their dashboard and the application page. Built by openspec/changes/archive/2026-09-29-lifecycle-maintenance-and-supplier-roadmap.",
 			"evidence": {
 				"stackiq": "lib/Settings/softwarecatalogus_register.json schema maintenanceWindow (module, moduleVersion, startsAt, endsAt, impact, status with lifecycle start/complete/cancel, notification rules maintenance-announced and maintenance-starts-tomorrow to the usage owners); lib/EventListener/MaintenanceRecipientsListener.php queues lib/BackgroundJob/MaintenanceRecipientsJob.php, lib/Service/MaintenanceRecipientService.php; ModuleDetail md-maintenance; Dashboard widget upcoming-maintenance (src/components/maintenance/UpcomingMaintenanceWidget.vue); tests/Unit/Settings/MaintenanceRoadmapFragmentTest.php, tests/Unit/EventListener/MaintenanceRecipientsListenerTest.php, tests/vitest/maintenance.spec.js",
 				"topdesk": "https://docs.topdesk.com/en/operations-management.html: \"In TOPdesk you can easily schedule operational activities in the user-friendly planner. If you wish to schedule a recurring activity, you can use a series\" (read 2026-09-26); https://docs.topdesk.com/en/linking-assets-to-cards.html: assets can be linked to \"Operational Activity\" cards (read 2026-09-26). Reached on: Modules > Operations Management > Planner.",
@@ -3743,7 +3753,7 @@
 			"providerHow": "read-from-code",
 			"feature": "license-and-seat-tracking",
 			"featureConfidence": "high",
-			"note": "An application records open versus closed source and which open-source licence. There is no licence metric such as per user, per organisation or per seat. Specified in openspec/changes/contracts-licence-seats (OpenSpec pass 2026-09-27). A licence contract now records its licence metric, per user, per device, per inhabitant or per organisation (built by openspec/changes/archive/2026-09-29-contracts-licence-seats).",
+			"note": "An application records open versus closed source and which open-source licence. A licence contract records its licence metric: per user, per device, per inhabitant or per organisation. Built by openspec/changes/archive/2026-09-29-contracts-licence-seats.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: each licence has a type, install/mysql/glpi-empty.sql:6775 glpi_softwarelicenses.softwarelicensetypes_id, an admin editable dropdown seeded with types such as OEM (install/empty_data.php:9294). Reached on: Management > Licenses (front/softwarelicense.php), Type field.",
 				"stackiq": "lib/Settings/register.d/contracts-licence-seats.json catalogContract.licenceMetric (Per named user, Per concurrent user, Per device, Per inhabitant, Per organisation, Other) next to module.licentietype and module.licence; shown and edited on ContractDetail (src/components/contracts/ContractSeatsPanel.vue); tests/Unit/Settings/LicenceSeatsDeclarationTest.php",
@@ -3824,7 +3834,7 @@
 			"providerHow": "read-from-code",
 			"feature": "license-and-seat-tracking",
 			"featureConfidence": "high",
-			"note": "No field records licences bought or in use. The overlay lists license-and-seat-tracking as 'soon'. Specified in openspec/changes/contracts-licence-seats (OpenSpec pass 2026-09-27). A licence contract now records licences bought and in use; the contract page and the License posture page flag use over the licence (built by openspec/changes/archive/2026-09-29-contracts-licence-seats).",
+			"note": "A licence contract records licences bought and in use; the contract page and the License posture page flag use over the licence. Built by openspec/changes/archive/2026-09-29-contracts-licence-seats.",
 			"evidence": {
 				"glpi": "source read at 11.0.9: install/mysql/glpi-empty.sql:6774 glpi_softwarelicenses.number is the bought quantity; src/SoftwareLicense.php:158 computeValidityIndicator compares it with assigned items (Item_SoftwareLicense::countForLicense) and flags over use in red (src/SoftwareLicense.php:1030), with allow_overquota at install/mysql/glpi-empty.sql:6797. Reached on: Assets > Software > Licenses tab.",
 				"stackiq": "lib/Settings/register.d/contracts-licence-seats.json catalogContract.licencesBought and licencesInUse (integer, minimum 0); ContractSeatsPanel on ContractDetail sets in use against bought (Within licence, Over licence by N, Unknown, Not counted) and the Seats section on /license-posture lists over-licence contracts first (src/utils/licensePosture.js seatPosition, seatRows); tests/vitest/licenceSeats.spec.js",
@@ -4545,17 +4555,18 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
-				"evidence": "src/manifest.json:430 OrganisationMergePanel on OrganisatieDetail; POST /api/organisaties/{uuid}/merge -> lib/Controller/MergeController.php:142 isAdmin; lib/Service/MergeOrganisatieService.php:111 re-points usage.consumer/participants, contactPerson.organization, connection.provider and @self.organisation of catalogContract/compliancy; module.provider and catalogService.provider are not re-pointed Corrections round 8 (2026-09-28), stackiq#1086 (comment of 2026-09-27): four more organisation references stay on the source, usage.provider (lib/Settings/softwarecatalogus_register.json:2693), organization.deelnames (:2200), organization.participants (:2236) and model.organizations (:6027), none of which is in lib/Service/MergeOrganisatieService.php:111 or :122, at d22033a.",
+				"state": "specified",
+				"evidence": "Not built: the merge leaves usage provider, organisation memberships and participants, and model organisations on the merged-away organisation, while the requirement re-points every relation type (task 17, stackiq#1086). Planned in openspec/changes/capability-rows-the-code-does-not-yet-meet, set back from built on 2026-11-12 (decision 389). src/manifest.json:430 OrganisationMergePanel on OrganisatieDetail; POST /api/organisaties/{uuid}/merge -> lib/Controller/MergeController.php:142 isAdmin; lib/Service/MergeOrganisatieService.php:111 re-points usage.consumer/participants, contactPerson.organization, connection.provider and @self.organisation of catalogContract/compliancy; module.provider and catalogService.provider are not re-pointed Corrections round 8 (2026-09-28), stackiq#1086 (comment of 2026-09-27): four more organisation references stay on the source, usage.provider (lib/Settings/softwarecatalogus_register.json:2693), organization.deelnames (:2200), organization.participants (:2236) and model.organizations (:6027), none of which is in lib/Service/MergeOrganisatieService.php:111 or :122, at d22033a.",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-07-23-organisation-merge",
-				"requirement": "openspec/specs/organisation-merge :: Execute MUST re-point every relation type while preserving every unrelated field on each object"
+				"requirement": "openspec/specs/organisation-merge :: Execute MUST re-point every relation type while preserving every unrelated field on each object",
+				"plan": "openspec/changes/capability-rows-the-code-does-not-yet-meet"
 			},
 			"reachedOn": "OrganisatieDetail /organisaties/:id, merge panel (admin only)",
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "organisation-register",
-			"note": "An admin can merge a municipality into another and its usages, contacts and contracts follow. A supplier takeover leaves the source's applications and services pointing at the tombstoned supplier, because module and service provider fields are not in the relation map. Corrections round 8 (2026-09-28): besides module and service providers, a merge also leaves usage providers, collaboration memberships and GEMMA model organisations on the merged-away organisation, stackiq#1086; rating kept because usages, contacts, connections and contracts are still re-pointed.",
+			"note": "An admin merges a municipality into another; its usages, contacts, connections, contracts, and module and service providers follow. Usage providers, organisation memberships and GEMMA model organisations stay on the merged-away organisation (stackiq#1086), so the row is planned until task 17 lands.",
 			"evidence": {
 				"stackiq": "src/manifest.json:430 OrganisationMergePanel on OrganisatieDetail; POST /api/organisaties/{uuid}/merge -> lib/Controller/MergeController.php:142 isAdmin; lib/Service/MergeOrganisatieService.php:111 re-points usage.consumer/participants, contactPerson.organization, connection.provider and @self.organisation of catalogContract/compliancy; module.provider and catalogService.provider are not re-pointed",
 				"topdesk": "unknown: merging organisations is not described; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -4593,7 +4604,7 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "organisation-register",
-			"note": "The merge panel shows per-type counts of what would be re-pointed before the admin confirms. It inherits the merge's blind spot: module and service provider links are not counted because they are not moved. Corrections round 8 (2026-09-28): the preview omits the six organisation references the merge does not move, stackiq#1086; rating kept because the preview matches exactly what the merge will change.",
+			"note": "The merge panel shows per-type counts of what would be re-pointed before the admin confirms, and matches exactly what the merge changes. Module and service provider links are counted and moved; the relations the merge does not move yet are planned under org-merge (stackiq#1086).",
 			"evidence": {
 				"glpi": "source read at 11.0.9: with no merge (src/Entity.php:202 forbids merge for Entity) there is nothing to preview; the transfer (src/Transfer.php:50) runs directly without a what would change report.",
 				"stackiq": "src/components/organisations/OrganisationMergePanel.vue:324 organisatieStore.dryRunMerge shows dryRunCounts before execute; POST /api/organisaties/{uuid}/merge/dry-run -> lib/Service/MergeOrganisatieService.php:160 dryRun",
@@ -4892,7 +4903,7 @@
 			"providerHow": "read-from-code",
 			"feature": "federation-between-catalogues",
 			"featureConfidence": "high",
-			"note": "The announce hop is a real call into OpenCatalogi, but it is off by default, can only be switched on with occ, has no announce button, and needs OpenCatalogi installed.",
+			"note": "The announce hop is a real call into OpenCatalogi and needs OpenCatalogi installed. It is off by default and can only be switched on with occ; the switch and the registration status on the exchange settings page are planned (capability-rows-the-code-does-not-yet-meet task 21).",
 			"evidence": {
 				"stackiq": "lib/Service/Federation/FederationService.php:215 announce() calls OpenCatalogi BroadcastService->broadcast(directory URL); only caller is lib/BackgroundJob/FederationSyncJob.php:73. Off by default: lib/Service/Federation/FederationConfig.php:56 federation_enabled=false; lib/Settings/connections.json lists federation as switch-only via occ. isAvailable() is class_exists('OCA\\\\OpenCatalogi\\\\Service\\\\DirectoryService') (FederationService.php:95).",
 				"topdesk": "unknown: open data publication and catalogue federation are not covered; searched the full-text search index of docs.topdesk.com (https://docs.topdesk.com/en/js/fuzzydata.js, 987 pages) (read 2026-09-26)",
@@ -5316,11 +5327,12 @@
 			"topdesk": "unknown",
 			"stackiq": "no",
 			"built": {
-				"state": "built",
-				"evidence": "lib/Dashboard/ConceptOrganisatiesWidget.php registered at lib/AppInfo/Application.php:760; src/views/widgets/ConceptOrganisatiesWidget.vue:100 filters organisations on status === 'concept', but the status enum is Draft/Active/Inactive/merged (lib/Settings/softwarecatalogus_register.json:2321) after lib/Repair/RenameDutchCatalogValues.php:76 renamed 'Concept' to 'Draft'. Accept writes status 'actief' (:129), which is not in the enum either.",
+				"state": "specified",
+				"evidence": "Not built: the widget filters on status 'concept', which the status list (Draft, Active, Inactive, merged) no longer holds, so it always lists nothing, and its accept button saves a status that is not allowed (task 16). Planned in openspec/changes/capability-rows-the-code-does-not-yet-meet, set back from built on 2026-11-12 (decision 389). lib/Dashboard/ConceptOrganisatiesWidget.php registered at lib/AppInfo/Application.php:760; src/views/widgets/ConceptOrganisatiesWidget.vue:100 filters organisations on status === 'concept', but the status enum is Draft/Active/Inactive/merged (lib/Settings/softwarecatalogus_register.json:2321) after lib/Repair/RenameDutchCatalogValues.php:76 renamed 'Concept' to 'Draft'. Accept writes status 'actief' (:129), which is not in the enum either.",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-05-31-retrofit-2026-05-24-concept-organizations-widget",
-				"requirement": "openspec/specs/fe-organizations :: Concept organisations widget (REQ-FE-206)"
+				"requirement": "openspec/specs/fe-organizations :: Concept organisations widget (REQ-FE-206)",
+				"plan": "openspec/changes/capability-rows-the-code-does-not-yet-meet"
 			},
 			"reachedOn": "Nextcloud dashboard widget 'Concept organisaties'",
 			"provider": "stackiq",
@@ -8077,7 +8089,10 @@
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-06-14-view-enrichment-api",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/specs/view-enrichment-api :: Enrichment API MUST return standard viewNode format",
+				"requirement": [
+					"openspec/specs/view-enrichment-api :: Enrichment API MUST return standard viewNode format",
+					"openspec/changes/capability-rows-the-code-does-not-yet-meet/specs/view-enrichment-api :: The views API lists the imported GEMMA views and returns each as imported (REQ-CLR-021)"
+				],
 				"plan": "openspec/changes/view-products-enrichment"
 			},
 			"reachedOn": "API only: GET /api/views and /api/views/{viewId} (authenticated), plus OpenRegister /api/objects on the AMEF register for elements",
@@ -8113,12 +8128,13 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
-				"evidence": "register.json:7401 compliancy schema, :7411 standardVersion ($ref element, gemmaType=standaardversie; element lives in AMEF register vng-gemma), :7424 standardGemma string; src/manifest.json:881 Komplianties /komplianties index and :902 KompliantieDetail; :512 ModuleDetail md-compliance allowCreate:false; module.standardVersions hideOnForm (register.json:7124-7131)",
+				"state": "specified",
+				"evidence": "Not built: the standard version picker queries elements in the AMEF register while the page works on the voorzieningen register, so a version may not resolve, and the application page does not offer it (task 18). Planned in openspec/changes/capability-rows-the-code-does-not-yet-meet, set back from built on 2026-11-12 (decision 389). register.json:7401 compliancy schema, :7411 standardVersion ($ref element, gemmaType=standaardversie; element lives in AMEF register vng-gemma), :7424 standardGemma string; src/manifest.json:881 Komplianties /komplianties index and :902 KompliantieDetail; :512 ModuleDetail md-compliance allowCreate:false; module.standardVersions hideOnForm (register.json:7124-7131)",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-06-14-module-compliance-assessment",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/specs/module-compliance-assessment :: Compliance records link modules to standard versions with evidence"
+				"requirement": "openspec/specs/module-compliance-assessment :: Compliance records link modules to standard versions with evidence",
+				"plan": "openspec/changes/capability-rows-the-code-does-not-yet-meet"
 			},
 			"reachedOn": "Komplianties /komplianties (menu Reports & Compliance > Compliance), generic create form",
 			"provider": "stackiq",
@@ -8239,12 +8255,13 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
-				"evidence": "src/manifest.json:514 ModuleDetail md-usages object-list on /modules/:id over usage filtered by module=@objectId with Organisation (consumer), Version and Status columns, rowRoute GebruikDetail and viewAll to /gebruik (src/manifest.d/usages.json:14); usage read rules lib/Settings/softwarecatalogus_register.json:3149-3172 (gebruik-beheerder: own _organisation or consumer; aanbod-beheerder: own _organisation or provider = own organisation); usage.provider is visible:false (:2690-2701) and only lib/Service/CmdbExportImportService.php:1193 sets it, so usages created through stackiq's own forms carry no provider; GET /api/koppelingen-gebruik/{uuid} and /api/gebruik remain in lib/Controller/AangebodenGebruikController.php:208 and lib/Controller/GebruikController.php:97",
+				"state": "specified",
+				"evidence": "Not built: usages made on stackiq's own forms carry no provider, so a supplier sees only usages from imports or external data (task 19). Planned in openspec/changes/capability-rows-the-code-does-not-yet-meet, set back from built on 2026-11-12 (decision 389). src/manifest.json:514 ModuleDetail md-usages object-list on /modules/:id over usage filtered by module=@objectId with Organisation (consumer), Version and Status columns, rowRoute GebruikDetail and viewAll to /gebruik (src/manifest.d/usages.json:14); usage read rules lib/Settings/softwarecatalogus_register.json:3149-3172 (gebruik-beheerder: own _organisation or consumer; aanbod-beheerder: own _organisation or provider = own organisation); usage.provider is visible:false (:2690-2701) and only lib/Service/CmdbExportImportService.php:1193 sets it, so usages created through stackiq's own forms carry no provider; GET /api/koppelingen-gebruik/{uuid} and /api/gebruik remain in lib/Controller/AangebodenGebruikController.php:208 and lib/Controller/GebruikController.php:97",
 				"owner": "ConductionNL/stackiq",
 				"change": "2026-09-29-landscape-application-page",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/specs/application-page :: REQ-APG-002 The application page lists the usages of the application"
+				"requirement": "openspec/specs/application-page :: REQ-APG-002 The application page lists the usages of the application",
+				"plan": "openspec/changes/capability-rows-the-code-does-not-yet-meet"
 			},
 			"reachedOn": "ModuleDetail /modules/:id 'Usages' list (and Applications in use /gebruik filtered by module), scoped by RBAC; per-product endpoints /api/koppelingen-gebruik, /api/gebruik remain API only",
 			"provider": "stackiq",
@@ -9036,12 +9053,13 @@
 			"topdesk": "unknown",
 			"stackiq": "partial",
 			"built": {
-				"state": "built",
-				"evidence": "lib/Settings/softwarecatalogus_register.json:7307 module authorization.read grants group public on publicationDate<=$now and, separately (:7321), on registeredBy=Supplier; :1563 catalogService public on publicationDate; :1273 suite read is plain 'public'. lib/Settings/register.d/publication-field-rules.json (added 1 Oct, #1206) keeps contacts, owners, costs, DPIA and service desk fields signed-in only (e.g. :8 module.contactPerson, :22 dpiaDocumentRef), makes usage public only from its publicationDate (:469) and moduleVersion public only while its application is (:109-125, kept in step by lib/AppInfo/Application.php:821-823 ModuleVersionPublicationListener). tests/live/publication-field-rules-live.sh:42-56 checks anonymous reads. Stackiq still has no anonymous page: appinfo/routes.php:325 SPA catch-all is login-only; only intake (lib/Controller/IntakeController.php:74), review aggregate (ReviewController.php:138), gebruik (GebruikController.php:96, empty envelope for anonymous) and some aangebodenGebruik reads/docs are @PublicPage.",
+				"state": "specified",
+				"evidence": "Not built: the module read rule makes every module registered by a supplier public whatever its publication date, against decision 392 (published entries public, the rest needs login) (task 20). Planned in openspec/changes/capability-rows-the-code-does-not-yet-meet, set back from built on 2026-11-12 (decision 389). lib/Settings/softwarecatalogus_register.json:7307 module authorization.read grants group public on publicationDate<=$now and, separately (:7321), on registeredBy=Supplier; :1563 catalogService public on publicationDate; :1273 suite read is plain 'public'. lib/Settings/register.d/publication-field-rules.json (added 1 Oct, #1206) keeps contacts, owners, costs, DPIA and service desk fields signed-in only (e.g. :8 module.contactPerson, :22 dpiaDocumentRef), makes usage public only from its publicationDate (:469) and moduleVersion public only while its application is (:109-125, kept in step by lib/AppInfo/Application.php:821-823 ModuleVersionPublicationListener). tests/live/publication-field-rules-live.sh:42-56 checks anonymous reads. Stackiq still has no anonymous page: appinfo/routes.php:325 SPA catch-all is login-only; only intake (lib/Controller/IntakeController.php:74), review aggregate (ReviewController.php:138), gebruik (GebruikController.php:96, empty envelope for anonymous) and some aangebodenGebruik reads/docs are @PublicPage.",
 				"owner": "ConductionNL/openregister",
 				"change": "2026-06-14-open-data-publishing",
 				"readOn": "2026-10-07",
-				"requirement": "openspec/specs/open-data-publishing :: Published entries are exposed through the existing public read surface"
+				"requirement": "openspec/specs/open-data-publishing :: Published entries are exposed through the existing public read surface",
+				"plan": "openspec/changes/capability-rows-the-code-does-not-yet-meet"
 			},
 			"reachedOn": "API only: anonymous reads go through OpenRegister's objects API; no stackiq page is reachable without signing in",
 			"provider": "openregister",
@@ -9478,7 +9496,9 @@
 			"source": "closing-round-2026-11-12",
 			"screen": {
 				"canvas": "design-system",
-				"board": []
+				"board": [
+					"SkInstellingenGegevens"
+				]
 			}
 		},
 		{
@@ -9511,7 +9531,9 @@
 			"source": "closing-round-2026-11-12",
 			"screen": {
 				"canvas": "design-system",
-				"board": []
+				"board": [
+					"SkOrganisatie"
+				]
 			}
 		},
 		{
@@ -9549,7 +9571,10 @@
 			"source": "closing-round-2026-11-12",
 			"screen": {
 				"canvas": "design-system",
-				"board": []
+				"board": [
+					"SkApplicatie",
+					"SkContract"
+				]
 			}
 		},
 		{
