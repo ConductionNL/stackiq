@@ -3,6 +3,9 @@
 /**
  * Stackiq RenameDutchCatalogColumns Repair Step
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Moves stored catalog data from the Dutch column names to the English ones
  * the register declares.
  *
@@ -85,9 +88,6 @@
  *
  * Fails CLOSED: a schema whose declared properties cannot be read is skipped
  * entirely rather than migrated on an assumption.
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V.
  *
  * @category Repair
  * @package  OCA\Stackiq\Repair

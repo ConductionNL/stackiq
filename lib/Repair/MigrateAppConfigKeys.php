@@ -3,6 +3,9 @@
 /**
  * Repair step that carries `oc_appconfig` rows across the app-id rename.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Nextcloud namespaces `oc_appconfig` BY APP ID and offers no in-place app-id
  * upgrade, so the moment `stackiq` became `stackiq` every row this app
  * had ever written became unreachable. Nothing errors: every reader in this
@@ -32,9 +35,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-app-config-survives-the-rename
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

@@ -2,6 +2,9 @@
 /**
  * Repair step that re-points dashboards from the renamed widget id to the frozen one.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * `ConceptOrganisatiesWidget::getId()` is frozen at
  * `softwarecatalog_concept_organisaties_widget`: the Dashboard app stores each
  * user's chosen widgets BY WIDGET ID, so a renamed id silently drops the widget
@@ -35,9 +38,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/app-id-rename/spec.md#requirement-externally-owned-identifiers-stay-frozen
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

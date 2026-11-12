@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * The `CnIndexPage` filter that narrows a self-fetch object list to the ids
  * a facets response matched (gemma-faceted-search).
  *
