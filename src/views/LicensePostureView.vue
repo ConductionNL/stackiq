@@ -218,7 +218,7 @@ import Refresh from 'vue-material-design-icons/Refresh.vue'
 import { useLiveCollections } from '../composables/useLiveCollections.js'
 import { objectStore } from '../store/store.js'
 import {
-	LICENSE_TYPE,
+	licenceMixCounts,
 	perOrganisationPosture,
 	perVendorRollup,
 	portfolioPosture,
@@ -402,23 +402,7 @@ export default {
 		 */
 		vendorRows() {
 			return perVendorRollup(this.modules, this.usages, this.contracts)
-				.map((row) => ({
-					vendorId: row.vendorId,
-					vendorName:
-						this.organisatieIndex[row.vendorId]
-						|| row.vendorId
-						|| t('stackiq', 'Unknown vendor'),
-					deployments: row.deployments,
-					mix: {
-						openCount: row.mix[LICENSE_TYPE.OPEN] || 0,
-						closedCount: row.mix[LICENSE_TYPE.CLOSED] || 0,
-						unknownCount: row.mix[LICENSE_TYPE.UNKNOWN] || 0,
-					},
-					costLabel:
-						row.annualCost === null
-							? '—'
-							: this.formatCurrency(row.annualCost),
-				}))
+				.map((row) => this.vendorRow(row))
 				.sort((a, b) => b.deployments - a.deployments)
 		},
 
@@ -529,6 +513,50 @@ export default {
 		 */
 		async fetchType(type) {
 			await fetchObjectTypeCollection(objectStore, type)
+		},
+
+		/**
+		 * The display name of a vendor, else its id, else a placeholder.
+		 *
+		 * @param {string} vendorId The vendor id.
+		 * @return {string} The name.
+		 * @spec openspec/specs/software-license-posture/spec.md
+		 */
+		vendorLabel(vendorId) {
+			return (
+				this.organisatieIndex[vendorId]
+				|| vendorId
+				|| t('stackiq', 'Unknown vendor')
+			)
+		},
+
+		/**
+		 * A yearly cost as a currency label, or a dash when unknown.
+		 *
+		 * @param {number|null} annualCost The cost.
+		 * @return {string} The label.
+		 * @spec openspec/specs/software-license-posture/spec.md
+		 */
+		costText(annualCost) {
+			return annualCost === null ? '—' : this.formatCurrency(annualCost)
+		},
+
+		/**
+		 * One vendor rollup row resolved to its display name, licence mix
+		 * counts and cost label.
+		 *
+		 * @param {object} row The rollup row.
+		 * @return {object} The vendor row.
+		 * @spec openspec/specs/software-license-posture/spec.md
+		 */
+		vendorRow(row) {
+			return {
+				vendorId: row.vendorId,
+				vendorName: this.vendorLabel(row.vendorId),
+				deployments: row.deployments,
+				mix: licenceMixCounts(row.mix),
+				costLabel: this.costText(row.annualCost),
+			}
 		},
 
 		/**
