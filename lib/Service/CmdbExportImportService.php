@@ -61,6 +61,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use DateTimeImmutable;
 use DateTimeZone;
 use JsonSerializable;
@@ -348,7 +349,7 @@ class CmdbExportImportService {
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container Resolves OpenRegister services.
-	 * @param SettingsService $settingsService Register and schema ids.
+	 * @param RegisterConfigReaderInterface $settingsService Register and schema ids.
 	 * @param StackiqContactSyncService $contactSync Nextcloud Contacts bridge.
 	 * @param ProgressTracker $progressTracker Progress and cancel.
 	 * @param CmdbImportProfile $profile The import profile and packs.
@@ -368,7 +369,7 @@ class CmdbExportImportService {
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly StackiqContactSyncService $contactSync,
 		private readonly ProgressTracker $progressTracker,
 		private readonly CmdbImportProfile $profile,
