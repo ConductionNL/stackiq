@@ -1084,17 +1084,40 @@ class OrganizationSyncService {
 			return false;
 		}
 
-		if ($entityCreated instanceof \DateTimeInterface
-			&& $entityCreated->getTimestamp() >= $objectCreated->getTimestamp()
-		) {
+		if (self::createdSince(entityCreated: $entityCreated, objectCreated: $objectCreated) === true) {
 			return true;
 		}
 
+		return $this->linkedSince(run: $run, objectCreated: $objectCreated);
+	}//end isBoundOrganisation()
+
+	/**
+	 * Whether the organisation was made at or after the organisatie.
+	 *
+	 * @param mixed              $entityCreated When the organisation was made, when known.
+	 * @param \DateTimeInterface $objectCreated When the organisatie was made.
+	 *
+	 * @return bool False when the organisation's creation date is unknown.
+	 */
+	private static function createdSince(mixed $entityCreated, \DateTimeInterface $objectCreated): bool {
+		return $entityCreated instanceof \DateTimeInterface
+			&& $entityCreated->getTimestamp() >= $objectCreated->getTimestamp();
+	}//end createdSince()
+
+	/**
+	 * Whether an administrator linked the organisatie's organisation at or after the organisatie was made.
+	 *
+	 * @param array              $run           The ensure run, with the organisatie id.
+	 * @param \DateTimeInterface $objectCreated When the organisatie was made.
+	 *
+	 * @return bool False when no link is recorded, or its time cannot be read.
+	 */
+	private function linkedSince(array $run, \DateTimeInterface $objectCreated): bool {
 		$linked   = $this->config->getValueString('stackiq', self::LINK_KEY_PREFIX . $run['organisationId'], '', lazy: true);
 		$linkedAt = strtotime($linked);
 
 		return $linked !== '' && $linkedAt !== false && $linkedAt >= $objectCreated->getTimestamp();
-	}//end isBoundOrganisation()
+	}//end linkedSince()
 
 	/**
 	 * Log and count an organisatie left unlinked because it carries the uuid of an
@@ -1301,6 +1324,34 @@ class OrganizationSyncService {
 			return 'no-organisation';
 		}
 
+		return $this->defaultOrganisationRefusal(entityUuid: $entityUuid)
+			?? $this->organisationInUseRefusal(run: $run, entityUuid: $entityUuid);
+	}//end organisationRefusal()
+
+	/**
+	 * Why an OpenRegister organisation may not be linked because another organisatie uses it, or null.
+	 *
+	 * @param array  $run        The link run (see linkRun()).
+	 * @param string $entityUuid The OpenRegister organisation's uuid.
+	 *
+	 * @return string|null organisation-in-use, or null.
+	 */
+	private function organisationInUseRefusal(array $run, string $entityUuid): ?string {
+		if ($entityUuid !== $run['organisationId'] && $this->findOrganisatie(run: $run, uuid: $entityUuid) !== null) {
+			return 'organisation-in-use';
+		}
+
+		return null;
+	}//end organisationInUseRefusal()
+
+	/**
+	 * Why an OpenRegister organisation may not be linked because of the default organisation, or null.
+	 *
+	 * @param string $entityUuid The OpenRegister organisation's uuid.
+	 *
+	 * @return string|null default-unknown when no default is set, default-organisation when it is the default, or null.
+	 */
+	private function defaultOrganisationRefusal(string $entityUuid): ?string {
 		$defaultUuid = $this->container->get('OCA\OpenRegister\Service\OrganisationService')->getDefaultOrganisationUuid();
 		if ($defaultUuid === null || $defaultUuid === '') {
 			return 'default-unknown';
@@ -1310,12 +1361,8 @@ class OrganizationSyncService {
 			return 'default-organisation';
 		}
 
-		if ($entityUuid !== $run['organisationId'] && $this->findOrganisatie(run: $run, uuid: $entityUuid) !== null) {
-			return 'organisation-in-use';
-		}
-
 		return null;
-	}//end organisationRefusal()
+	}//end defaultOrganisationRefusal()
 
 	/**
 	 * Whether an OpenRegister organisation has this uuid.
@@ -2406,19 +2453,42 @@ class OrganizationSyncService {
 	private function namesAccountOutside(array $contactData, object $organisationEntity): bool {
 		$userManager = $this->container->get('OCP\IUserManager');
 		foreach (['email', 'e-mailadres', 'username'] as $key) {
-			$name = ($contactData[$key] ?? '');
-			if (is_string($name) === false || trim($name) === '') {
-				continue;
-			}
-
-			$uid = $userManager->get(trim($name))?->getUID();
-			if ($uid !== null && (method_exists($organisationEntity, 'hasUser') === false || $organisationEntity->hasUser($uid) !== true)) {
+			$uid = self::accountNamed(userManager: $userManager, name: ($contactData[$key] ?? ''));
+			if ($uid !== null && self::isOutsider(organisationEntity: $organisationEntity, uid: $uid) === true) {
 				return true;
 			}
 		}
 
 		return false;
 	}//end namesAccountOutside()
+
+	/**
+	 * The account a contact field names.
+	 *
+	 * @param object $userManager The Nextcloud user manager.
+	 * @param mixed  $name        The field's value.
+	 *
+	 * @return string|null The account's uid, or null when the value is not a name or no account has it.
+	 */
+	private static function accountNamed(object $userManager, mixed $name): ?string {
+		if (is_string($name) === false || trim($name) === '') {
+			return null;
+		}
+
+		return $userManager->get(trim($name))?->getUID();
+	}//end accountNamed()
+
+	/**
+	 * Whether an account is not a member of the organisation.
+	 *
+	 * @param object $organisationEntity The OpenRegister organisation.
+	 * @param string $uid                The account's uid.
+	 *
+	 * @return bool True when the organisation cannot tell its members, or does not count the account among them.
+	 */
+	private static function isOutsider(object $organisationEntity, string $uid): bool {
+		return method_exists($organisationEntity, 'hasUser') === false || $organisationEntity->hasUser($uid) !== true;
+	}//end isOutsider()
 
 	/**
 	 * Process related contactpersoon objects that have this organization in their organisation property

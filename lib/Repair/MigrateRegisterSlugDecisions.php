@@ -62,27 +62,7 @@ class MigrateRegisterSlugDecisions {
 	 *  conformance to a requirement that says nothing about it.
 	 */
 	public function plan(array $map, array $existing): array {
-		$renames = [];
-		$refused = [];
-
-		foreach ($map as $old => $new) {
-			if (in_array($old, $existing, true) === false) {
-				continue;
-			}
-
-			if (in_array($new, $existing, true) === true) {
-				$refused[$old] = sprintf("target slug '%s' already exists", $new);
-				continue;
-			}
-
-			$renames[$old] = $new;
-			$existing[] = $new;
-		}
-
-		return [
-			'renames' => $renames,
-			'refused' => $refused,
-		];
+		return (new SlugRenamePlanner(existing: $existing))->plan(map: $map);
 	}//end plan()
 
 	/**

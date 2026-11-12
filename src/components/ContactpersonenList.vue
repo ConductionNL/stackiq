@@ -203,6 +203,11 @@ import Key from 'vue-material-design-icons/Key.vue'
 import ChangePasswordDialog from '../dialogs/ChangePasswordDialog.vue'
 import ManageUserGroupsDialog from '../dialogs/ManageUserGroupsDialog.vue'
 import { useOrganisatieStore } from '../store/modules/organisatie.js'
+import {
+	applyUserInfo,
+	contactpersoonKey,
+	contactUser,
+} from './contactpersoonUser.js'
 
 /**
  * Set the loading flag of a contact person row.
@@ -454,39 +459,51 @@ export default {
 		 * @spec openspec/specs/fe-organizations/spec.md
 		 */
 		processContactpersonen(rawContactpersonen) {
-			return rawContactpersonen.map((contactpersoon) => {
-				const contactId = contactpersoon.id || contactpersoon.uuid
-				const data = contactpersoon.data || contactpersoon
-				const hasUser = !!data.username
+			return rawContactpersonen.map((contactpersoon) =>
+				this.processContactpersoon(contactpersoon),
+			)
+		},
 
-				// Debug logging to understand the data structure.
-				console.info('Processing contactPerson:', {
-					contactId,
-					data,
-					hasUser,
-					userFromAPI: contactpersoon.user,
-					usernameFromData: data.username,
-					disabledFromAPI: contactpersoon.user?.disabled,
-					disabledFromData: data.disabled,
-					groupsFromAPI: contactpersoon.user?.groups,
-					groupsFromData: data.groups,
-				})
+		/**
+		 * One contact person in the expected format, with its user details.
+		 *
+		 * @param {object} contactpersoon - Raw contact person from the organisation.
+		 * @return {object} The processed contact person.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		processContactpersoon(contactpersoon) {
+			const contactId = contactpersoonKey(contactpersoon)
+			const data = contactpersoon.data || contactpersoon
+			const summary = { contactId, data, hasUser: !!data.username }
 
-				return {
-					id: contactId,
-					data,
-					user: {
-						hasUser,
-						username: data.username || '',
-						// Use groups from API user object if available, otherwise from data.
-						groups: contactpersoon.user?.groups || data.groups || [],
-						// Use user.disabled from API, fallback to data.disabled.
-						disabled:
-							contactpersoon.user?.disabled || data.disabled || false,
-					},
-					// Include loading state from organisation data.
-					loading: contactpersoon.loading || false,
-				}
+			// Debug logging to understand the data structure.
+			this.logContactpersoon(contactpersoon, summary)
+
+			return {
+				id: contactId,
+				data,
+				user: contactUser(contactpersoon, summary),
+				// Include loading state from organisation data.
+				loading: contactpersoon.loading || false,
+			}
+		},
+
+		/**
+		 * Logs how a contact person is processed.
+		 *
+		 * @param {object} contactpersoon - Raw contact person from the organisation.
+		 * @param {object} summary - Its id, data and whether it has a user.
+		 * @spec openspec/specs/fe-organizations/spec.md
+		 */
+		logContactpersoon(contactpersoon, summary) {
+			console.info('Processing contactPerson:', {
+				...summary,
+				userFromAPI: contactpersoon.user,
+				usernameFromData: summary.data.username,
+				disabledFromAPI: contactpersoon.user?.disabled,
+				disabledFromData: summary.data.disabled,
+				groupsFromAPI: contactpersoon.user?.groups,
+				groupsFromData: summary.data.groups,
 			})
 		},
 
@@ -634,39 +651,20 @@ export default {
 
 			this.organisationData.contactpersonen.forEach(
 				(contactpersoon, index) => {
-					const contactpersoonId = contactpersoon.id || contactpersoon.uuid
+					const contactpersoonId = contactpersoonKey(contactpersoon)
 					const userInfo = bulkUserInfo[contactpersoonId]
-
-					if (userInfo) {
-						console.info(
-							`Updating contactpersoon ${contactpersoonId} with user info:`,
-							userInfo,
-						)
-
-						// Ensure user object exists.
-						if (!contactpersoon.user) {
-							contactpersoon.user = {}
-						}
-
-						// Update user object.
-						contactpersoon.user.hasUser = userInfo.hasUser
-						contactpersoon.user.username = userInfo.username
-						contactpersoon.user.groups = userInfo.groups || []
-						contactpersoon.user.disabled = !userInfo.enabled // Map enabled to disabled.
-						contactpersoon.user.displayName = userInfo.displayName
-						contactpersoon.user.lastLogin = userInfo.lastLogin
-
-						// Update data object for consistency.
-						if (contactpersoon.data) {
-							contactpersoon.data.disabled = !userInfo.enabled // Map enabled to disabled.
-							contactpersoon.data.groups = userInfo.groups || [] // Also set groups in data.
-							contactpersoon.data.username = userInfo.username // Also set username in data.
-						}
-
-						// Force reactivity update.
-						// eslint-disable-next-line vue/no-mutating-props -- @TODO: fix this.
-						this.organisationData.contactpersonen[index] = contactpersoon
+					if (!userInfo) {
+						return
 					}
+					console.info(
+						`Updating contactpersoon ${contactpersoonId} with user info:`,
+						userInfo,
+					)
+					applyUserInfo(contactpersoon, userInfo)
+
+					// Force reactivity update.
+					// eslint-disable-next-line vue/no-mutating-props -- @TODO: fix this.
+					this.organisationData.contactpersonen[index] = contactpersoon
 				},
 			)
 		},
