@@ -25,6 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+require_once __DIR__ . '/../Support/SearchCallShape.php';
+
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -32,6 +34,7 @@ use OCA\Stackiq\Service\MaintenanceAnnouncerCheck;
 use OCA\Stackiq\Service\MaintenanceRecipientService;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCA\Stackiq\Service\StackiqContactSyncService;
+use OCA\Stackiq\Tests\Unit\Support\SearchCallShape;
 use OCP\IUser;
 use OCP\IUserManager;
 use PHPUnit\Framework\TestCase;
@@ -162,7 +165,8 @@ class MaintenanceRecipientGoldenTest extends TestCase {
 	private function objectService(): ObjectServiceInterface {
 		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('searchObjects')->willReturnCallback(
-			function (array $query, bool $_rbac, bool $_multitenancy, ?array $ids=null) {
+			function (...$args) {
+				[$query, $_rbac, $_multitenancy, $ids] = SearchCallShape::search(args: $args);
 				$this->trace[] = ['searchObjects', $query, $_rbac, $_multitenancy, $ids];
 				if (isset($query['module']) === true) {
 					return array_map(fn (array $data) => self::entity(data: $data, uuid: 'usage'), $this->plan['usages']);

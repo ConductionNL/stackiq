@@ -22,12 +22,15 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+require_once __DIR__ . '/../Support/SearchCallShape.php';
+
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\DataQualityDerivation;
 use OCA\Stackiq\Service\DataQualityReportService;
 use OCA\Stackiq\Service\PortfolioReportDerivation;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Tests\Unit\Support\SearchCallShape;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -89,7 +92,7 @@ final class DataQualityReportBuildGoldenTest extends TestCase {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$objectService->method('searchObjectsPaginated')->willReturnCallback(
 			function (...$args) use (&$trace, $case): array {
-				$trace[] = ['searchObjectsPaginated', $args];
+				$trace[] = ['searchObjectsPaginated', SearchCallShape::paginated(args: $args)];
 				return ($case['page'] ?? []);
 			}
 		);

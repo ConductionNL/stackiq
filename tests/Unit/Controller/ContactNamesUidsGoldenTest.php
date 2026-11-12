@@ -23,10 +23,13 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Controller;
 
+require_once __DIR__ . '/../Support/SearchCallShape.php';
+
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Controller\ContactNamesController;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\StackiqContactSyncService;
+use OCA\Stackiq\Tests\Unit\Support\SearchCallShape;
 use OCP\IL10N;
 use OCP\IRequest;
 use OCP\IUserSession;
@@ -108,7 +111,7 @@ final class ContactNamesUidsGoldenTest extends TestCase {
 		$settings->method('getVoorzieningenConfig')->willReturn($case['config']);
 		$objects = $this->createMock(ObjectServiceInterface::class);
 		$objects->method('searchObjectsPaginated')->willReturnCallback(function (...$args) use (&$trace, $case): array {
-			$trace[] = ['searchObjectsPaginated', $args];
+			$trace[] = ['searchObjectsPaginated', SearchCallShape::paginated(args: $args)];
 			if (($case['fails'] ?? false) === true) {
 				throw new \RuntimeException('register down');
 			}
