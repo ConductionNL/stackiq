@@ -15,6 +15,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec exclude Shared event plumbing; carries no behaviour of its own.
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

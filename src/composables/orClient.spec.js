@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Unit tests for the orClient composable (i18n + tenant URL/header helpers).
  *
  * @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#3.2

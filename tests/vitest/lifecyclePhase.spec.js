@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Unit tests for the lifecycle-phase derivation utility.
  *
  * Covers every phase boundary (today, future-only, all-unset, out-of-order

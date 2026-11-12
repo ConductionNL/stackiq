@@ -44,6 +44,20 @@ class PortfolioReportDerivation {
 	public const EOL_WINDOW_DAYS = 180;
 
 	/**
+	 * The TIME class per business value band and technical fit band.
+	 */
+	private const TIME_CLASSIFICATION = [
+		'high' => [
+			'high' => 'Invest',
+			'low' => 'Migrate',
+		],
+		'low' => [
+			'high' => 'Tolerate',
+			'low' => 'Eliminate',
+		],
+	];
+
+	/**
 	 * Derive the lifecycle phase of a gebruik — the most advanced phase
 	 * whose start date is in the past. Mirrors `src/utils/lifecyclePhase.js`
 	 * `derivePhase()`.
@@ -87,15 +101,8 @@ class PortfolioReportDerivation {
 	 */
 	public function deriveEolState(?array $moduleVersion, DateTimeImmutable $now): array {
 		$endRaw = $moduleVersion['dateEndSupport'] ?? null;
-		$withdrawnRaw = $moduleVersion['dateWithdrawn'] ?? null;
-		if (is_string($withdrawnRaw) === false || trim($withdrawnRaw) === '') {
-			$withdrawnRaw = null;
-		}
-
-		$endDate = null;
-		if (is_string($endRaw) === true) {
-			$endDate = $endRaw;
-		}
+		$withdrawnRaw = $this->withdrawnDate(value: $moduleVersion['dateWithdrawn'] ?? null);
+		$endDate = $this->stringOrNull(value: $endRaw);
 
 		$end = $this->parseDate(value: $endRaw);
 
@@ -106,6 +113,36 @@ class PortfolioReportDerivation {
 			'withdrawnDate' => $withdrawnRaw,
 		];
 	}//end deriveEolState()
+
+	/**
+	 * The withdrawn date as recorded, or null when it is not a non-blank string.
+	 *
+	 * @param mixed $value The raw `dateWithdrawn`.
+	 *
+	 * @return string|null The withdrawn date, or null.
+	 */
+	private function withdrawnDate(mixed $value): ?string {
+		if (is_string($value) === false || trim($value) === '') {
+			return null;
+		}
+
+		return $value;
+	}//end withdrawnDate()
+
+	/**
+	 * A value when it is a string, else null.
+	 *
+	 * @param mixed $value The raw value.
+	 *
+	 * @return string|null The string, or null.
+	 */
+	private function stringOrNull(mixed $value): ?string {
+		if (is_string($value) === true) {
+			return $value;
+		}
+
+		return null;
+	}//end stringOrNull()
 
 	/**
 	 * Whether a moduleVersie's end-of-support falls within the approaching
@@ -288,24 +325,28 @@ class PortfolioReportDerivation {
 	 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-001-an-organisation-scores-each-application-it-uses-on-value-fit-and-risk
 	 */
 	public function suggestTimeClassification(?int $businessValue, ?int $technicalFit): ?string {
-		if ($businessValue === null || $technicalFit === null) {
+		// No class while either score is missing.
+		if (in_array(null, [$businessValue, $technicalFit], true) === true) {
 			return null;
 		}
 
-		if ($businessValue >= 3) {
-			if ($technicalFit >= 3) {
-				return 'Invest';
-			}
-
-			return 'Migrate';
-		}
-
-		if ($technicalFit >= 3) {
-			return 'Tolerate';
-		}
-
-		return 'Eliminate';
+		return self::TIME_CLASSIFICATION[$this->scoreBand(score: $businessValue)][$this->scoreBand(score: $technicalFit)];
 	}//end suggestTimeClassification()
+
+	/**
+	 * Whether a 1 to 5 score is high (3 or more) or low.
+	 *
+	 * @param int $score The score.
+	 *
+	 * @return string 'high' or 'low'.
+	 */
+	private function scoreBand(int $score): string {
+		if ($score >= 3) {
+			return 'high';
+		}
+
+		return 'low';
+	}//end scoreBand()
 
 	/**
 	 * The value assessment of one gebruik: its scores, the suggested TIME class
