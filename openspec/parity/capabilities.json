@@ -1114,7 +1114,8 @@
 				"evidence": "Looked in src/manifest.json, src/views, lib/Controller: no field-definition or schema-extension UI in stackiq; the data model is fixed in lib/Settings/softwarecatalogus_register.json",
 				"owner": "ConductionNL/openregister",
 				"ownerNote": "reader wrote: ConductionNL/stackiq",
-				"change": "openregister/fields-a-user-adds-and-choices-a-record-narrows"
+				"change": "openregister/fields-a-user-adds-and-choices-a-record-narrows",
+				"requirement": "openregister:openspec/changes/fields-a-user-adds-and-choices-a-record-narrows/specs/runtime-schema-api :: A property may be declared at a scope narrower than the schema (REQ-FUC-001)"
 			},
 			"reachedOn": "nothing reaches it",
 			"provider": "openregister",
@@ -1696,7 +1697,8 @@
 				"state": "specified",
 				"evidence": "src/manifest.json:502 ModuleDetail md-related (library CnRelatedObjectsWidget: /used lists every object that references this module: usages, connections, suites, services, vulnerabilities); no dependency or impact computation in lib/ or src/",
 				"owner": "ConductionNL/openregister",
-				"change": "openregister/relations-that-travel-and-what-they-expose"
+				"change": "openregister/relations-that-travel-and-what-they-expose",
+				"requirement": "openregister:openspec/changes/relations-that-travel-and-what-they-expose/specs/referential-integrity :: The relations of a record answer who else is affected (REQ-RTE-001)"
 			},
 			"reachedOn": "ModuleDetail /modules/:id, Related panel",
 			"provider": "openregister",
@@ -3315,7 +3317,8 @@
 				"state": "specified",
 				"evidence": "lib/Settings/softwarecatalogus_register.json moduleVersion x-openregister-notifications module-version-published (trigger created, recipients object-acl manage + group software-catalog-admins); no notification code in lib (no INotificationManager use)",
 				"owner": "ConductionNL/openregister",
-				"change": "openregister/notifications-new-notes-and-referrers"
+				"change": "openregister/notifications-new-notes-and-referrers",
+				"requirement": "openregister:openspec/changes/notifications-new-notes-and-referrers/specs/notificatie-engine :: A rule can address the people behind referring objects"
 			},
 			"reachedOn": "nothing reaches it for a using organisation",
 			"provider": "openregister",
