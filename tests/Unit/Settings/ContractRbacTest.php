@@ -4,6 +4,9 @@
  * Verification test for the `contract` schema's OpenRegister RBAC read rule
  * (vendor-visibility-rbac REQ-006, extended by schema-rbac-hardening).
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Contract CRUD runs entirely through OpenRegister's own object store
  * (ADR-022, `contract-administration`) — there is no app-local contract
  * controller for reads. This capability's REQ-006 therefore verifies (and,

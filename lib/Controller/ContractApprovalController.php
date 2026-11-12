@@ -3,6 +3,9 @@
 /**
  * Stackiq ContractApprovalController.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Thin HTTP seam for delegating a contract approval / sign-off / renewal
  * DECISION to decidesk (cross-app interface contract #1) via the in-process
  * `IEventDispatcher` event contract. It owns NO approval workflow — it raises
@@ -35,9 +38,6 @@
  * @link https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/contract-decision-delegation/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -54,6 +54,7 @@ use OCP\IConfig;
 use OCP\IGroup;
 use OCP\IGroupManager;
 use OCP\IRequest;
+use OCP\IUser;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -167,38 +168,63 @@ class ContractApprovalController extends Controller {
 			return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
 		}
 
-		$groupNames = array_map(
+		if ($this->mayRaise(user: $user, contractUuid: $contractUuid) === true) {
+			return null;
+		}
+
+		return $this->refuseSubmit(user: $user, contractUuid: $contractUuid);
+	}//end authorizeContract()
+
+	/**
+	 * Whether the caller is an admin, or an aanbod-beheerder whose active organisation owns the contract.
+	 *
+	 * @param IUser  $user         The signed-in caller.
+	 * @param string $contractUuid The contract OR object uuid.
+	 *
+	 * @return bool True when the caller may raise a decision for the contract.
+	 */
+	private function mayRaise(IUser $user, string $contractUuid): bool {
+		return $this->approvalService->authorizeSubmit(
+			contractUuid: $contractUuid,
+			groupNames: $this->groupNamesOf(user: $user),
+			activeOrgUuid: (string)$this->config->getUserValue(userId: $user->getUID(), appName: 'core', key: 'organisation')
+		);
+	}//end mayRaise()
+
+	/**
+	 * The ids of the caller's groups.
+	 *
+	 * @param IUser $user The signed-in caller.
+	 *
+	 * @return array<int, string>
+	 */
+	private function groupNamesOf(IUser $user): array {
+		return array_map(
 			static function (IGroup $group) {
 				return $group->getGID();
 			},
 			$this->groupManager->getUserGroups(user: $user)
 		);
+	}//end groupNamesOf()
 
-		$activeOrgUuid = (string)$this->config->getUserValue(
-			userId: $user->getUID(),
-			appName: 'core',
-			key: 'organisation'
+	/**
+	 * Log and refuse a caller who does not own the contract.
+	 *
+	 * @param IUser  $user         The signed-in caller.
+	 * @param string $contractUuid The contract OR object uuid.
+	 *
+	 * @return JSONResponse The 403 response.
+	 */
+	private function refuseSubmit(IUser $user, string $contractUuid): JSONResponse {
+		$this->logger->warning(
+			'ContractApprovalController: submit refused (not contract owner)',
+			['contractUuid' => $contractUuid, 'uid' => $user->getUID()]
 		);
-
-		$authorized = $this->approvalService->authorizeSubmit(
-			contractUuid: $contractUuid,
-			groupNames: $groupNames,
-			activeOrgUuid: $activeOrgUuid
+		return new JSONResponse(
+			data: ['message' => 'You do not have permission to submit this contract for approval'],
+			statusCode: Http::STATUS_FORBIDDEN
 		);
-
-		if ($authorized === false) {
-			$this->logger->warning(
-				'ContractApprovalController: submit refused (not contract owner)',
-				['contractUuid' => $contractUuid, 'uid' => $user->getUID()]
-			);
-			return new JSONResponse(
-				data: ['message' => 'You do not have permission to submit this contract for approval'],
-				statusCode: Http::STATUS_FORBIDDEN
-			);
-		}
-
-		return null;
-	}//end authorizeContract()
+	}//end refuseSubmit()
 
 	/**
 	 * Shared submit path for approval / renewal — fail-closed on error.

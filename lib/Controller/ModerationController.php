@@ -3,6 +3,9 @@
 /**
  * Registration / review moderation / approval-queue controller.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Admin-only endpoints to review the moderation queue and approve/reject each
  * entry, for either moderated type selected by the `type` query parameter
  * (`organisatie`, the default, or `beoordeeling` — see `ModerationService`).
@@ -29,9 +32,6 @@
  *
  * @spec openspec/specs/open-data-publishing/spec.md
  * @spec openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

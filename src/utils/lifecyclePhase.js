@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * lifecyclePhase — derive an application-in-use (gebruik) lifecycle phase.
  *
  * Lifecycle tracking is the core job of application-portfolio management. A
@@ -125,10 +129,66 @@ export function resolveUuid(value) {
 		return value.trim()
 	}
 	if (value && typeof value === 'object') {
-		const uuid = value.uuid ?? value.id ?? value['@self']?.id ?? ''
-		return typeof uuid === 'string' ? uuid.trim() : String(uuid || '')
+		return uuidText(uuidField(value))
 	}
 	return ''
+}
+
+/**
+ * The first of an object's uuid, id and @self id that is set, or ''.
+ *
+ * @param {object} value An object.
+ * @return {*} The field's value.
+ *
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
+ */
+function uuidField(value) {
+	return value.uuid ?? value.id ?? value['@self']?.id ?? ''
+}
+
+/**
+ * A uuid field as trimmed text.
+ *
+ * @param {*} uuid The field's value.
+ * @return {string} The text.
+ *
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
+ */
+function uuidText(uuid) {
+	return typeof uuid === 'string' ? uuid.trim() : String(uuid || '')
+}
+
+/**
+ * The UUID of a record: its uuid, id or @self id resolved, or the record
+ * itself resolved when none is set.
+ *
+ * @param {*} record A record (OR object, data bag or uuid).
+ * @return {string} The resolved UUID, or ''.
+ *
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
+ */
+export function recordUuid(record) {
+	return resolveUuid(record.uuid ?? record.id ?? record['@self']?.id ?? record)
+}
+
+/**
+ * Records indexed by UUID; a record without one is left out.
+ *
+ * @param {Array} records The records.
+ * @param {Function} valueOf The value kept per record, given the record and its UUID.
+ * @return {object} UUID → value.
+ *
+ * @spec openspec/specs/application-lifecycle-tracking/spec.md
+ */
+export function indexByUuid(records, valueOf) {
+	const index = {}
+	for (const record of records) {
+		const id = recordUuid(record)
+		if (id) {
+			index[id] = valueOf(record, id)
+		}
+	}
+	return index
 }
 
 /**

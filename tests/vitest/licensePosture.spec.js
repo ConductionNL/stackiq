@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Unit tests for the software-license-posture aggregation utility.
  *
  * Covers deployment weighting (not catalogue rows), the phased-out exclusion,

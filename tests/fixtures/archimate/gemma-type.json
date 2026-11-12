@@ -1,0 +1,20 @@
+{
+    "nothing": null,
+    "direct": "Referentiecomponent",
+    "direct later name": "Bedrijfsfunctie",
+    "direct order": "first",
+    "direct empty": "kept",
+    "direct array value": "wrapped",
+    "direct list value": "listed",
+    "direct number": "7",
+    "mapped": "Applicatiedienst",
+    "mapped case": "Mixed",
+    "mapped only gemma": null,
+    "mapped only type": null,
+    "mapped empty value": "Second",
+    "mapped missing value": null,
+    "mapped numeric label": null,
+    "mapped numeric key": "Indexed",
+    "direct beats mapped": "direct",
+    "mapped non-scalar": ""
+}

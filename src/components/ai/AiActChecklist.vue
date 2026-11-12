@@ -171,33 +171,42 @@ export default {
 			this.error = false
 			try {
 				if (this.objectId) {
-					const params = {
-						register: this.register,
-						schema: this.schema,
-						id: String(this.objectId),
-					}
-					const [object, files] = await Promise.all([
-						axios.get(
-							generateUrl(
-								'/apps/openregister/api/objects/{register}/{schema}/{id}',
-								params,
-							),
-						),
-						axios.get(
-							generateUrl(
-								'/apps/openregister/api/objects/{register}/{schema}/{id}/files',
-								params,
-							),
-						),
-					])
-					this.system = object.data?.object || object.data || {}
-					this.files = files.data?.results ?? []
+					this.applySystem(await this.fetchSystem())
 				}
 			} catch {
 				this.error = true
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Fetch the AI system and its files from OpenRegister, side by side.
+		 *
+		 * @return {Promise<Array<object>>} The object reply and the files reply.
+		 */
+		fetchSystem() {
+			const params = {
+				register: this.register,
+				schema: this.schema,
+				id: String(this.objectId),
+			}
+			const url = '/apps/openregister/api/objects/{register}/{schema}/{id}'
+			return Promise.all([
+				axios.get(generateUrl(url, params)),
+				axios.get(generateUrl(url + '/files', params)),
+			])
+		},
+
+		/**
+		 * Take the AI system and its files from the replies.
+		 *
+		 * @param {Array<object>} replies The object reply and the files reply.
+		 * @return {void}
+		 */
+		applySystem([object, files]) {
+			this.system = object.data?.object || object.data || {}
+			this.files = files.data?.results ?? []
 		},
 	},
 }

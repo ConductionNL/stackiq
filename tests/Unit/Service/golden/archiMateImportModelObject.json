@@ -1,0 +1,490 @@
+{
+    "createModelObject full": {
+        "result": {
+            "@self": {
+                "register": 5,
+                "schema": 9,
+                "id": "id-model",
+                "owner": "admin",
+                "organisation": "org-default",
+                "published": "masked"
+            },
+            "identifier": "id-model",
+            "section": "model",
+            "model_identifier": "model-1",
+            "xml": {
+                "name": {
+                    "_value": "Model A",
+                    "lang": "nl"
+                },
+                "documentation": {
+                    "_value": "Doc"
+                },
+                "properties": {
+                    "property": [
+                        {
+                            "ref": "p1"
+                        }
+                    ]
+                },
+                "propertyDefinitionMap": {
+                    "p1": "Owner"
+                }
+            },
+            "name": "Model A",
+            "documentation": {
+                "_value": "Doc"
+            },
+            "properties": {
+                "property": [
+                    {
+                        "ref": "p1"
+                    }
+                ]
+            },
+            "propertyDefinitionMap": {
+                "p1": "Owner"
+            },
+            "extra": "kept"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "organisations.ensureDefaultOrganisation"
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ]
+        ]
+    },
+    "createModelObject string name": {
+        "result": {
+            "@self": {
+                "register": 5,
+                "schema": 9,
+                "id": "id-model",
+                "owner": "admin",
+                "organisation": "org-default",
+                "published": "masked"
+            },
+            "identifier": "id-model",
+            "section": "model",
+            "model_identifier": "model-1",
+            "xml": {
+                "name": "Model B"
+            },
+            "name": "Model B"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "organisations.ensureDefaultOrganisation"
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ]
+        ]
+    },
+    "createModelObject name without value": {
+        "result": {
+            "@self": {
+                "register": 5,
+                "schema": 9,
+                "id": "id-model",
+                "owner": "admin",
+                "organisation": "org-default",
+                "published": "masked"
+            },
+            "identifier": "id-model",
+            "section": "model",
+            "model_identifier": "model-1",
+            "xml": {
+                "name": {
+                    "lang": "nl"
+                }
+            },
+            "name": {
+                "lang": "nl"
+            }
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "organisations.ensureDefaultOrganisation"
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ]
+        ]
+    },
+    "createModelObject numeric name": {
+        "result": {
+            "@self": {
+                "register": 5,
+                "schema": 9,
+                "id": "id-model",
+                "owner": "admin",
+                "organisation": "org-default",
+                "published": "masked"
+            },
+            "identifier": "id-model",
+            "section": "model",
+            "model_identifier": "model-1",
+            "xml": {
+                "name": 7
+            },
+            "name": 7
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "organisations.ensureDefaultOrganisation"
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ]
+        ]
+    },
+    "createModelObject documentation only": {
+        "result": {
+            "@self": {
+                "register": 5,
+                "schema": 9,
+                "id": "id-model",
+                "owner": "admin",
+                "organisation": "org-default",
+                "published": "masked"
+            },
+            "identifier": "id-model",
+            "section": "model",
+            "model_identifier": "model-1",
+            "xml": {
+                "documentation": "Doc"
+            },
+            "documentation": "Doc"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "organisations.ensureDefaultOrganisation"
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ]
+        ]
+    },
+    "createModelObject properties only": {
+        "result": {
+            "@self": {
+                "register": 5,
+                "schema": 9,
+                "id": "id-model",
+                "owner": "admin",
+                "organisation": "org-default",
+                "published": "masked"
+            },
+            "identifier": "id-model",
+            "section": "model",
+            "model_identifier": "model-1",
+            "xml": {
+                "properties": {
+                    "p": 1
+                },
+                "propertyDefinitionMap": []
+            },
+            "properties": {
+                "p": 1
+            },
+            "propertyDefinitionMap": []
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "organisations.ensureDefaultOrganisation"
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ]
+        ]
+    },
+    "createModelObjectDirect full": {
+        "result": {
+            "@self": {
+                "register": 5,
+                "schema": 9,
+                "id": "model-1",
+                "owner": "admin",
+                "organisation": "org-default",
+                "published": "masked"
+            },
+            "identifier": "model-1",
+            "section": "model",
+            "model_identifier": "model-1",
+            "xml": {
+                "name": {
+                    "_value": "Model A",
+                    "lang": "nl"
+                },
+                "documentation": {
+                    "_value": "Doc"
+                },
+                "properties": {
+                    "property": [
+                        {
+                            "ref": "p1"
+                        }
+                    ]
+                },
+                "propertyDefinitionMap": {
+                    "p1": "Owner"
+                }
+            },
+            "name": "Model A",
+            "documentation": {
+                "_value": "Doc"
+            },
+            "properties": {
+                "property": [
+                    {
+                        "ref": "p1"
+                    }
+                ]
+            },
+            "propertyDefinitionMap": {
+                "p1": "Owner"
+            },
+            "extra": "kept"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "organisations.ensureDefaultOrganisation"
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ]
+        ]
+    },
+    "createModelObjectDirect string name": {
+        "result": {
+            "@self": {
+                "register": 5,
+                "schema": 9,
+                "id": "model-1",
+                "owner": "admin",
+                "organisation": "org-default",
+                "published": "masked"
+            },
+            "identifier": "model-1",
+            "section": "model",
+            "model_identifier": "model-1",
+            "xml": {
+                "name": "Model B"
+            },
+            "name": "Model B"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "organisations.ensureDefaultOrganisation"
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ]
+        ]
+    },
+    "createModelObjectDirect name without value": {
+        "result": {
+            "@self": {
+                "register": 5,
+                "schema": 9,
+                "id": "model-1",
+                "owner": "admin",
+                "organisation": "org-default",
+                "published": "masked"
+            },
+            "identifier": "model-1",
+            "section": "model",
+            "model_identifier": "model-1",
+            "xml": {
+                "name": {
+                    "lang": "nl"
+                }
+            },
+            "name": {
+                "lang": "nl"
+            }
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "organisations.ensureDefaultOrganisation"
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ]
+        ]
+    },
+    "createModelObjectDirect numeric name": {
+        "result": {
+            "@self": {
+                "register": 5,
+                "schema": 9,
+                "id": "model-1",
+                "owner": "admin",
+                "organisation": "org-default",
+                "published": "masked"
+            },
+            "identifier": "model-1",
+            "section": "model",
+            "model_identifier": "model-1",
+            "xml": {
+                "name": 7
+            },
+            "name": 7
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "organisations.ensureDefaultOrganisation"
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ]
+        ]
+    },
+    "createModelObjectDirect documentation only": {
+        "result": {
+            "@self": {
+                "register": 5,
+                "schema": 9,
+                "id": "model-1",
+                "owner": "admin",
+                "organisation": "org-default",
+                "published": "masked"
+            },
+            "identifier": "model-1",
+            "section": "model",
+            "model_identifier": "model-1",
+            "xml": {
+                "documentation": "Doc"
+            },
+            "documentation": "Doc"
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "organisations.ensureDefaultOrganisation"
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ]
+        ]
+    },
+    "createModelObjectDirect properties only": {
+        "result": {
+            "@self": {
+                "register": 5,
+                "schema": 9,
+                "id": "model-1",
+                "owner": "admin",
+                "organisation": "org-default",
+                "published": "masked"
+            },
+            "identifier": "model-1",
+            "section": "model",
+            "model_identifier": "model-1",
+            "xml": {
+                "properties": {
+                    "p": 1
+                },
+                "propertyDefinitionMap": []
+            },
+            "properties": {
+                "p": 1
+            },
+            "propertyDefinitionMap": []
+        },
+        "calls": [
+            [
+                "log.info",
+                "Getting default organisation from OrganisationService",
+                []
+            ],
+            [
+                "organisations.ensureDefaultOrganisation"
+            ],
+            [
+                "log.info",
+                "Got default organisation UUID: org-default",
+                []
+            ]
+        ]
+    }
+}

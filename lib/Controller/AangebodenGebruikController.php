@@ -14,6 +14,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -27,6 +30,7 @@ use OCP\AppFramework\Http\Attribute\AnonRateLimit;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
+use OCP\IUser;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
 
@@ -52,6 +56,44 @@ use Psr\Log\LoggerInterface;
  */
 class AangebodenGebruikController extends Controller {
 	/**
+	 * The object the set-self and deny actions work on.
+	 *
+	 * @var array<string, string>
+	 */
+	private const ACTION_OBJECT = [
+		'idParam' => 'gebruikId',
+		'idLabel' => 'Gebruik ID',
+		'logIdKey' => 'gebruik_id',
+		'notFoundError' => 'Gebruik object not found',
+	];
+
+	/**
+	 * The set-self and deny actions: route, log messages and error body fields.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	private const ACTIONS = [
+		'set-self' => [
+			'endpoint' => '/api/aangeboden-gebruik/%s/set-self',
+			'method' => 'PUT',
+			'started' => 'API: Setting gebruik @self property to active org',
+			'completed' => 'API: Set gebruik @self property request completed',
+			'failed' => 'API: Failed to set gebruik @self property',
+			'emptyResult' => ['usage' => null],
+			'reportsDeleted' => false,
+		],
+		'deny' => [
+			'endpoint' => '/api/aangeboden-gebruik/%s/deny',
+			'method' => 'DELETE',
+			'started' => 'API: Deleting gebruik object as afnemer',
+			'completed' => 'API: Delete gebruik as afnemer request completed',
+			'failed' => 'API: Failed to delete gebruik as afnemer',
+			'emptyResult' => ['deleted' => false],
+			'reportsDeleted' => true,
+		],
+	];
+
+	/**
 	 * Constructor for AangebodenGebruikController.
 	 *
 	 * @param string $appName The name of the app
@@ -71,6 +113,43 @@ class AangebodenGebruikController extends Controller {
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
+
+	/**
+	 * The listing reads: endpoint as logged and log messages.
+	 *
+	 * @var array<string, array<string, mixed>>
+	 */
+	private const LISTINGS = [
+		'afnemer' => [
+			'endpoint' => '/api/aangeboden-gebruik/afnemer',
+			'rejected' => 'API: Rejecting unauthenticated afnemer gebruiks request',
+			'started' => 'API: Getting gebruiks where active org is afnemer',
+			'completed' => 'API: Afnemer gebruiks request completed',
+			'failed' => 'API: Failed to get afnemer gebruiks',
+			'failureLogsEndpoint' => false,
+		],
+		'koppelingen' => [
+			'endpoint' => '/api/koppelingen-gebruik/{uuid}',
+			'started' => 'API: Getting koppelingen and gebruiks for specific UUID',
+			'completed' => 'API: Koppelingen-gebruik by UUID request completed',
+			'failed' => 'API: Failed to get koppelingen-gebruik by UUID',
+			'failureLogsEndpoint' => false,
+		],
+		'ambtenaar' => [
+			'endpoint' => '/api/aangeboden-gebruik/ambtenaar',
+			'started' => 'API: Getting all gebruiks for ambtenaar (ignoring RBAC/multitenancy)',
+			'completed' => 'API: Ambtenaar all gebruiks request completed',
+			'failed' => 'API: Failed to get all gebruiks for ambtenaar',
+			'failureLogsEndpoint' => true,
+		],
+		'ambtenaarSingle' => [
+			'endpoint' => '/api/aangeboden-gebruik/ambtenaar/{gebruikId}',
+			'started' => 'API: Getting single gebruik for ambtenaar (ignoring RBAC/multitenancy)',
+			'completed' => 'API: Ambtenaar single gebruik request completed',
+			'failed' => 'API: Failed to get single gebruik for ambtenaar',
+			'failureLogsEndpoint' => true,
+		],
+	];
 
 	/**
 	 * Get all gebruiks objects where the active organization is the afnemer (consumer).
@@ -107,84 +186,16 @@ class AangebodenGebruikController extends Controller {
 		// implicit, unstated invariant of a downstream helper, not an
 		// explicit guard at the entry point. Reject before the service is
 		// ever invoked (deny-before-grant, REQ-001).
+		$listing = $this->objectListing(name: 'afnemer', idContext: []);
 		if ($this->userSession->getUser() === null) {
-			$this->logger->info(
-				'API: Rejecting unauthenticated afnemer gebruiks request',
-				[
-					'endpoint' => '/api/aangeboden-gebruik/afnemer',
-					'method' => 'GET',
-				]
-			);
+			return $this->listingResponder()->rejectUnauthenticated(listing: $listing);
+		}
 
-			return new JSONResponse(
-				[
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'message' => 'Not authenticated',
-				],
-				Http::STATUS_UNAUTHORIZED
-			);
-		}//end if
-
-		$this->logger->info(
-			'API: Getting gebruiks where active org is afnemer',
-			[
-				'endpoint' => '/api/aangeboden-gebruik/afnemer',
-				'method' => 'GET',
-				'query_params' => $this->request->getParams(),
-			]
+		// Don't include product filter for "get all" endpoint.
+		return $this->listingResponder()->respond(
+			listing: $listing,
+			fetch: fn (): array => $this->gebruikSvc->getGebruiksWhereAfnemer($this->parseQueryOptions())
 		);
-
-		try {
-			// Parse query parameters for filtering options (force database source).
-			// Don't include product filter for "get all" endpoint.
-			$options = $this->parseQueryOptions();
-
-			// Get gebruiks from service where org is afnemer.
-			$result = $this->gebruikSvc->getGebruiksWhereAfnemer($options);
-
-			// Determine HTTP status code based on whether there's an error.
-			$statusCode = 200;
-			if (isset($result['error']) === true) {
-				$statusCode = 500;
-			}
-
-			$this->logger->info(
-				'API: Afnemer gebruiks request completed',
-				[
-					'total' => $result['total'] ?? 0,
-					'results_count' => count($result['results'] ?? []),
-					'has_error' => isset($result['error']) === true,
-				]
-			);
-
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to get afnemer gebruiks',
-				[
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
 	}//end getGebruiksWhereAfnemer()
 
 	/**
@@ -206,79 +217,37 @@ class AangebodenGebruikController extends Controller {
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getKoppelingenGebruikByUuid(string $uuid): JSONResponse {
-		$this->logger->info(
-			'API: Getting koppelingen and gebruiks for specific UUID',
-			[
-				'endpoint' => '/api/koppelingen-gebruik/{uuid}',
-				'method' => 'GET',
-				'uuid' => $uuid,
-				'query_params' => $this->request->getParams(),
-			]
+		return $this->listingResponder()->respond(
+			listing: $this->objectListing(name: 'koppelingen', idContext: ['uuid' => $uuid]),
+			fetch: fn (): array => $this->fetchKoppelingenGebruik(uuid: $uuid)
 		);
-
-		try {
-			// Check if user is in admin or ambtenaar group.
-			$isAmbtenaar = $this->isUserInGroup(groupName: 'admin') || $this->isUserInGroup(groupName: 'ambtenaar');
-
-			// Get organization filter if provided (only for ambtenaar users).
-			$organisationFilter = $this->request->getParam('organisation');
-
-			// Parse query parameters for filtering options.
-			$options = $this->parseQueryOptions();
-
-			// Add organization filter if provided and user is ambtenaar.
-			if ($isAmbtenaar === true && $organisationFilter !== null) {
-				$options['organisation'] = $organisationFilter;
-			}
-
-			// Get koppelingen and gebruiks for UUID from service.
-			$result = $this->gebruikSvc->getKoppelingenGebruikByUuid(
-				uuid: $uuid,
-				options: $options,
-				isAmbtenaar: $isAmbtenaar
-			);
-
-			// Determine HTTP status code based on whether there's an error.
-			$statusCode = 200;
-			if (isset($result['error']) === true) {
-				$statusCode = 500;
-			}
-
-			$this->logger->info(
-				'API: Koppelingen-gebruik by UUID request completed',
-				[
-					'uuid' => $uuid,
-					'total' => $result['total'] ?? 0,
-					'results_count' => count($result['results'] ?? []),
-					'has_error' => isset($result['error']) === true,
-				]
-			);
-
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to get koppelingen-gebruik by UUID',
-				[
-					'uuid' => $uuid,
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
 	}//end getKoppelingenGebruikByUuid()
+
+	/**
+	 * Read the koppelingen and gebruiks of one application/module; the
+	 * organisation filter applies only for admin or ambtenaar users.
+	 *
+	 * @param string $uuid The UUID of the application/module
+	 *
+	 * @return array The service result.
+	 */
+	private function fetchKoppelingenGebruik(string $uuid): array {
+		// Check if user is in admin or ambtenaar group.
+		$isAmbtenaar = $this->isUserInGroup(groupName: 'admin') || $this->isUserInGroup(groupName: 'ambtenaar');
+
+		// Get organization filter if provided (only for ambtenaar users).
+		$organisationFilter = $this->request->getParam('organisation');
+		$options            = $this->parseQueryOptions();
+		if ($isAmbtenaar === true && $organisationFilter !== null) {
+			$options['organisation'] = $organisationFilter;
+		}
+
+		return $this->gebruikSvc->getKoppelingenGebruikByUuid(
+			uuid: $uuid,
+			options: $options,
+			isAmbtenaar: $isAmbtenaar
+		);
+	}//end fetchKoppelingenGebruik()
 
 	/**
 	 * Get all gebruiks objects (ignoring RBAC and multitenancy) - restricted to ambtenaar group.
@@ -297,95 +266,28 @@ class AangebodenGebruikController extends Controller {
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getAllGebruiksForAmbtenaar(): JSONResponse {
-		$this->logger->info(
-			'API: Getting all gebruiks for ambtenaar (ignoring RBAC/multitenancy)',
-			[
-				'endpoint' => '/api/aangeboden-gebruik/ambtenaar',
-				'method' => 'GET',
-				'query_params' => $this->request->getParams(),
-			]
+		$listing = $this->objectListing(name: 'ambtenaar', idContext: []);
+		return $this->listingResponder()->respond(
+			listing: $listing,
+			fetch: fn (): array|JSONResponse => $this->fetchAllForAmbtenaar(listing: $listing)
 		);
-
-		try {
-			// Check if user is in admin or ambtenaar group.
-			$isAdmin = $this->isUserInGroup(groupName: 'admin');
-			$isAmbtenaar = $this->isUserInGroup(groupName: 'ambtenaar');
-			if ($isAdmin === false && $isAmbtenaar === false) {
-				// Get user ID for logging (may be null if not authenticated).
-				$user = $this->userSession->getUser();
-				$userId = 'null';
-				if ($user !== null) {
-					$userId = $user->getUID();
-				}
-
-				$this->logger->info(
-					'API: Returning empty results - user not in admin or ambtenaar group',
-					[
-						'endpoint' => '/api/aangeboden-gebruik/ambtenaar',
-						'user' => $userId,
-					]
-				);
-
-				// Return empty results with 200 status (not an error).
-				return new JSONResponse(
-					[
-						'results' => [],
-						'total' => 0,
-						'page' => 1,
-						'pages' => 1,
-						'limit' => 20,
-						'offset' => 0,
-					],
-					200
-				);
-			}//end if
-
-			// Parse query parameters for filtering options (force database source).
-			// Don't include product filter for "get all" endpoint.
-			$options = $this->parseQueryOptions();
-
-			// Get all gebruiks from service (ignoring RBAC/multitenancy).
-			$result = $this->gebruikSvc->getAllGebruiksForAmbtenaar($options);
-
-			// Determine HTTP status code based on whether there's an error.
-			$statusCode = 200;
-			if (isset($result['error']) === true) {
-				$statusCode = Http::STATUS_INTERNAL_SERVER_ERROR;
-			}
-
-			$this->logger->info(
-				'API: Ambtenaar all gebruiks request completed',
-				[
-					'total' => $result['total'] ?? 0,
-					'results_count' => count($result['results'] ?? []),
-					'has_error' => isset($result['error']) === true,
-				]
-			);
-
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to get all gebruiks for ambtenaar',
-				[
-					'error' => $e->getMessage(),
-					'endpoint' => '/api/aangeboden-gebruik/ambtenaar',
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
 	}//end getAllGebruiksForAmbtenaar()
+
+	/**
+	 * Read all gebruiks for an admin or ambtenaar user; anyone else gets the empty listing.
+	 *
+	 * @param ObjectListing $listing The listing.
+	 *
+	 * @return array|JSONResponse The service result, or the empty listing response.
+	 */
+	private function fetchAllForAmbtenaar(ObjectListing $listing): array|JSONResponse {
+		if ($this->isAdminOrAmbtenaar() === false) {
+			return $this->outsiderListing(listing: $listing);
+		}
+
+		// Don't include product filter for "get all" endpoint.
+		return $this->gebruikSvc->getAllGebruiksForAmbtenaar($this->parseQueryOptions());
+	}//end fetchAllForAmbtenaar()
 
 	/**
 	 * Get a single gebruiks object by ID (ignoring RBAC and multitenancy) - restricted to ambtenaar group.
@@ -400,107 +302,92 @@ class AangebodenGebruikController extends Controller {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 *
-	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-	 * @spec                                          openspec/specs/aangeboden-gebruik-api/spec.md
+	 * @spec openspec/specs/aangeboden-gebruik-api/spec.md
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getSingleGebruikForAmbtenaar(string $gebruikId): JSONResponse {
+		$listing = $this->objectListing(name: 'ambtenaarSingle', idContext: ['gebruik_id' => $gebruikId]);
+		return $this->listingResponder()->respond(
+			listing: $listing,
+			fetch: fn (): array|JSONResponse => $this->fetchSingleForAmbtenaar(listing: $listing, gebruikId: $gebruikId)
+		);
+	}//end getSingleGebruikForAmbtenaar()
+
+	/**
+	 * Read one gebruik for an admin or ambtenaar user; anyone else gets the empty listing.
+	 *
+	 * @param ObjectListing $listing   The listing.
+	 * @param string        $gebruikId The ID of the gebruik object to retrieve
+	 *
+	 * @return array|JSONResponse The service result, or the empty listing response.
+	 */
+	private function fetchSingleForAmbtenaar(ObjectListing $listing, string $gebruikId): array|JSONResponse {
+		if ($this->isAdminOrAmbtenaar() === false) {
+			return $this->outsiderListing(listing: $listing);
+		}
+
+		// Don't include product filter - we use uses parameter instead.
+		return $this->gebruikSvc->getSingleGebruikForAmbtenaar(
+			suiteId: $gebruikId,
+			options: $this->parseQueryOptions()
+		);
+	}//end fetchSingleForAmbtenaar()
+
+	/**
+	 * Whether the current user is in the admin or the ambtenaar group; both
+	 * memberships are checked.
+	 *
+	 * @return bool
+	 */
+	private function isAdminOrAmbtenaar(): bool {
+		$isAdmin     = $this->isUserInGroup(groupName: 'admin');
+		$isAmbtenaar = $this->isUserInGroup(groupName: 'ambtenaar');
+		return $isAdmin === true || $isAmbtenaar === true;
+	}//end isAdminOrAmbtenaar()
+
+	/**
+	 * The empty listing (200, not an error) for a user outside the admin and ambtenaar groups.
+	 *
+	 * @param ObjectListing $listing The listing.
+	 *
+	 * @return JSONResponse
+	 */
+	private function outsiderListing(ObjectListing $listing): JSONResponse {
+		// Get user ID for logging (may be null if not authenticated).
+		$user   = $this->userSession->getUser();
+		$userId = 'null';
+		if ($user !== null) {
+			$userId = $user->getUID();
+		}
+
 		$this->logger->info(
-			'API: Getting single gebruik for ambtenaar (ignoring RBAC/multitenancy)',
-			[
-				'endpoint' => '/api/aangeboden-gebruik/ambtenaar/{gebruikId}',
-				'method' => 'GET',
-				'gebruik_id' => $gebruikId,
-				'query_params' => $this->request->getParams(),
-			]
+			'API: Returning empty results - user not in admin or ambtenaar group',
+			['endpoint' => $listing->definition['endpoint']] + $listing->idContext + ['user' => $userId]
 		);
 
-		try {
-			// Check if user is in admin or ambtenaar group.
-			$isAdmin = $this->isUserInGroup(groupName: 'admin');
-			$isAmbtenaar = $this->isUserInGroup(groupName: 'ambtenaar');
-			if ($isAdmin === false && $isAmbtenaar === false) {
-				// Get user ID for logging (may be null if not authenticated).
-				$user = $this->userSession->getUser();
-				$userId = 'null';
-				if ($user !== null) {
-					$userId = $user->getUID();
-				}
+		return new JSONResponse(array_replace($this->listingResponder()->emptyListing(), ['pages' => 1]), 200);
+	}//end outsiderListing()
 
-				$this->logger->info(
-					'API: Returning empty results - user not in admin or ambtenaar group',
-					[
-						'endpoint' => '/api/aangeboden-gebruik/ambtenaar/{gebruikId}',
-						'gebruik_id' => $gebruikId,
-						'user' => $userId,
-					]
-				);
+	/**
+	 * The responder that runs this controller's listing reads.
+	 *
+	 * @return ListingResponder
+	 */
+	private function listingResponder(): ListingResponder {
+		return new ListingResponder(logger: $this->logger, request: $this->request);
+	}//end listingResponder()
 
-				// Return empty results with 200 status (not an error).
-				return new JSONResponse(
-					[
-						'results' => [],
-						'total' => 0,
-						'page' => 1,
-						'pages' => 1,
-						'limit' => 20,
-						'offset' => 0,
-					],
-					200
-				);
-			}//end if
-
-			// Parse query parameters for filtering options (force database source).
-			// Don't include product filter - we use uses parameter instead.
-			$options = $this->parseQueryOptions();
-
-			// Get single gebruik from service (ignoring RBAC/multitenancy).
-			$result = $this->gebruikSvc->getSingleGebruikForAmbtenaar(
-				suiteId: $gebruikId,
-				options: $options
-			);
-
-			// Determine HTTP status code based on whether there's an error.
-			$statusCode = 200;
-			if (isset($result['error']) === true) {
-				$statusCode = Http::STATUS_INTERNAL_SERVER_ERROR;
-			}
-
-			$this->logger->info(
-				'API: Ambtenaar single gebruik request completed',
-				[
-					'gebruik_id' => $gebruikId,
-					'total' => $result['total'] ?? 0,
-					'results_count' => count($result['results'] ?? []),
-					'has_error' => isset($result['error']) === true,
-				]
-			);
-
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to get single gebruik for ambtenaar',
-				[
-					'gebruik_id' => $gebruikId,
-					'error' => $e->getMessage(),
-					'endpoint' => '/api/aangeboden-gebruik/ambtenaar/{gebruikId}',
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-				],
-				500
-			);
-		}//end try
-	}//end getSingleGebruikForAmbtenaar()
+	/**
+	 * Build a listing from the listing table.
+	 *
+	 * @param string $name      The listing name in the listing table.
+	 * @param array  $idContext Identifying fields of the log lines.
+	 *
+	 * @return ObjectListing
+	 */
+	private function objectListing(string $name, array $idContext): ObjectListing {
+		return new ObjectListing(idContext: $idContext, definition: self::LISTINGS[$name]);
+	}//end objectListing()
 
 	/**
 	 * Check if the current user is in a specific group.
@@ -511,38 +398,7 @@ class AangebodenGebruikController extends Controller {
 	 */
 	private function isUserInGroup(string $groupName): bool {
 		try {
-			// Get the current user from the session.
-			$user = $this->userSession->getUser();
-			if ($user === null) {
-				$this->logger->debug(
-					'No user in session for group check',
-					[
-						'group' => $groupName,
-					]
-				);
-				return false;
-			}
-
-			$userId = $user->getUID();
-
-			$group = $this->groupManager->get($groupName);
-			if ($group === null) {
-				$this->logger->warning('Group does not exist', ['group' => $groupName]);
-				return false;
-			}
-
-			$isInGroup = $group->inGroup($user);
-
-			$this->logger->debug(
-				'User group membership check',
-				[
-					'user' => $userId,
-					'group' => $groupName,
-					'isMember' => $isInGroup,
-				]
-			);
-
-			return $isInGroup;
+			return $this->isSessionUserInGroup(groupName: $groupName);
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'Failed to check user group membership',
@@ -554,6 +410,60 @@ class AangebodenGebruikController extends Controller {
 			return false;
 		}//end try
 	}//end isUserInGroup()
+
+	/**
+	 * Check if the user in the session is in a group; no session user is in no group.
+	 *
+	 * @param string $groupName The name of the group to check
+	 *
+	 * @return bool True if the session user is in the group, false otherwise
+	 */
+	private function isSessionUserInGroup(string $groupName): bool {
+		// Get the current user from the session.
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			$this->logger->debug(
+				'No user in session for group check',
+				[
+					'group' => $groupName,
+				]
+			);
+			return false;
+		}
+
+		return $this->isMemberOf(user: $user, groupName: $groupName);
+	}//end isSessionUserInGroup()
+
+	/**
+	 * Check if a user is in a group; a group that does not exist has no members.
+	 *
+	 * @param IUser  $user      The user.
+	 * @param string $groupName The name of the group to check
+	 *
+	 * @return bool True if user is in the group, false otherwise
+	 */
+	private function isMemberOf(IUser $user, string $groupName): bool {
+		$userId = $user->getUID();
+
+		$group = $this->groupManager->get($groupName);
+		if ($group === null) {
+			$this->logger->warning('Group does not exist', ['group' => $groupName]);
+			return false;
+		}
+
+		$isInGroup = $group->inGroup($user);
+
+		$this->logger->debug(
+			'User group membership check',
+			[
+				'user' => $userId,
+				'group' => $groupName,
+				'isMember' => $isInGroup,
+			]
+		);
+
+		return $isInGroup;
+	}//end isMemberOf()
 
 	/**
 	 * Get all gebruiks objects where the active organization is in deelnemers (participants).
@@ -576,6 +486,22 @@ class AangebodenGebruikController extends Controller {
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getGebruiksWhereDeelnemers(): JSONResponse {
+		$this->logDeelnemersRequest();
+
+		try {
+			return $this->deelnemersResponse();
+		} catch (\Exception $e) {
+			$this->logDeelnemersFailure(error: $e);
+			return $this->deelnemersFailureResponse(error: $e);
+		}//end try
+	}//end getGebruiksWhereDeelnemers()
+
+	/**
+	 * Log the incoming deelnemers request with its query parameters.
+	 *
+	 * @return void
+	 */
+	private function logDeelnemersRequest(): void {
 		$this->logger->info(
 			'API: Getting gebruiks where active org is in deelnemers',
 			[
@@ -584,55 +510,104 @@ class AangebodenGebruikController extends Controller {
 				'query_params' => $this->request->getParams(),
 			]
 		);
+	}//end logDeelnemersRequest()
 
-		try {
-			// Parse query parameters for filtering options.
-			// Don't include product filter for deelnemers endpoint.
-			$options = $this->parseQueryOptions();
+	/**
+	 * Read the gebruiks where the active org is in deelnemers and answer with
+	 * the status code the result maps to.
+	 *
+	 * @return JSONResponse
+	 */
+	private function deelnemersResponse(): JSONResponse {
+		// Parse query parameters for filtering options.
+		// Don't include product filter for deelnemers endpoint.
+		$options = $this->parseQueryOptions();
 
-			// Get gebruiks from service where org is in deelnemers.
-			$result = $this->gebruikSvc->getGebruiksWhereDeelnemers($options);
+		// Get gebruiks from service where org is in deelnemers.
+		$result = $this->gebruikSvc->getGebruiksWhereDeelnemers($options);
 
-			// Determine appropriate HTTP status code.
-			$statusCode = 500;
-			if ($result['success'] === true) {
-				$statusCode = 200;
-			} elseif (($result['error'] ?? '') === 'Gebruik object not found') {
-				$statusCode = 404;
-			} elseif (strpos(haystack: ($result['error'] ?? ''), needle: 'Operation not allowed') !== false) {
-				$statusCode = 403;
-			}
+		$statusCode = $this->deelnemersStatusCode(result: $result);
+		$this->logDeelnemersCompleted(result: $result);
 
-			$this->logger->info(
-				'API: Deelnemers gebruiks request completed',
-				[
-					'success' => $result['success'],
-					'gebruiks_count' => $result['count'] ?? 0,
-					'organisation' => $result['organisation'] ?? 'unknown',
-				]
-			);
+		return new JSONResponse($result, $statusCode);
+	}//end deelnemersResponse()
 
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to get deelnemers gebruiks',
-				[
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
+	/**
+	 * The HTTP status code a deelnemers service result maps to.
+	 *
+	 * @param array $result The service result
+	 *
+	 * @return int 200 on success, 404 when the object is missing, 403 when not allowed, else 500
+	 */
+	private function deelnemersStatusCode(array $result): int {
+		if ($result['success'] === true) {
+			return 200;
+		}
 
-			return new JSONResponse(
-				[
-					'success' => false,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-					'gebruiks' => [],
-					'count' => 0,
-				],
-				500
-			);
-		}//end try
-	}//end getGebruiksWhereDeelnemers()
+		if (($result['error'] ?? '') === 'Gebruik object not found') {
+			return 404;
+		}
+
+		if (strpos(haystack: ($result['error'] ?? ''), needle: 'Operation not allowed') !== false) {
+			return 403;
+		}
+
+		return 500;
+	}//end deelnemersStatusCode()
+
+	/**
+	 * Log the outcome of a completed deelnemers request.
+	 *
+	 * @param array $result The service result
+	 *
+	 * @return void
+	 */
+	private function logDeelnemersCompleted(array $result): void {
+		$this->logger->info(
+			'API: Deelnemers gebruiks request completed',
+			[
+				'success' => $result['success'],
+				'gebruiks_count' => $result['count'] ?? 0,
+				'organisation' => $result['organisation'] ?? 'unknown',
+			]
+		);
+	}//end logDeelnemersCompleted()
+
+	/**
+	 * Log a failed deelnemers request.
+	 *
+	 * @param \Exception $error The failure
+	 *
+	 * @return void
+	 */
+	private function logDeelnemersFailure(\Exception $error): void {
+		$this->logger->error(
+			'API: Failed to get deelnemers gebruiks',
+			[
+				'error' => $error->getMessage(),
+				'trace' => $error->getTraceAsString(),
+			]
+		);
+	}//end logDeelnemersFailure()
+
+	/**
+	 * The 500 response for a failed deelnemers request.
+	 *
+	 * @param \Exception $error The failure
+	 *
+	 * @return JSONResponse
+	 */
+	private function deelnemersFailureResponse(\Exception $error): JSONResponse {
+		return new JSONResponse(
+			[
+				'success' => false,
+				'error' => 'Internal server error: ' . $error->getMessage(),
+				'gebruiks' => [],
+				'count' => 0,
+			],
+			500
+		);
+	}//end deelnemersFailureResponse()
 
 	/**
 	 * Set the @self property of a gebruik or koppeling to the active organization.
@@ -656,87 +631,10 @@ class AangebodenGebruikController extends Controller {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$this->logger->info(
-			'API: Setting gebruik @self property to active org',
-			[
-				'endpoint' => "/api/aangeboden-gebruik/{$gebruikId}/set-self",
-				'method' => 'PUT',
-				'gebruik_id' => $gebruikId,
-			]
+		return $this->actionResponder()->respond(
+			action: $this->objectAction(id: $gebruikId, name: 'set-self'),
+			perform: fn (array $options): array => $this->gebruikSvc->setGebruikSelfToActiveOrg(gebruikId: $gebruikId, options: $options)
 		);
-
-		try {
-			// Validate input.
-			if (empty($gebruikId) === true) {
-				return new JSONResponse(
-					[
-						'success' => false,
-						'error' => 'Gebruik ID is required',
-						'usage' => null,
-					],
-					400
-				);
-			}
-
-			// Parse any additional options from request body.
-			$options = [];
-			$requestBody = $this->request->getParams();
-			if (empty($requestBody) === false) {
-				$options = array_filter(
-					$requestBody,
-					function ($key) {
-						// Exclude path parameters.
-						return in_array(needle: $key, haystack: ['gebruikId']) === false;
-					},
-					ARRAY_FILTER_USE_KEY
-				);
-			}
-
-			// Update gebruik @self property via service.
-			$result = $this->gebruikSvc->setGebruikSelfToActiveOrg(
-				gebruikId: $gebruikId,
-				options: $options
-			);
-
-			// Determine appropriate HTTP status code.
-			$statusCode = 500;
-			if ($result['success'] === true) {
-				$statusCode = 200;
-			} elseif ($result['error'] === 'Gebruik object not found') {
-				$statusCode = 404;
-			} elseif (strpos(haystack: ($result['error'] ?? ''), needle: 'Operation not allowed') !== false) {
-				$statusCode = 403;
-			}
-
-			$this->logger->info(
-				'API: Set gebruik @self property request completed',
-				[
-					'gebruik_id' => $gebruikId,
-					'success' => $result['success'],
-					'status_code' => $statusCode,
-				]
-			);
-
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to set gebruik @self property',
-				[
-					'gebruik_id' => $gebruikId,
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'success' => false,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-					'usage' => null,
-				],
-				500
-			);
-		}//end try
 	}//end setGebruikSelfToActiveOrg()
 
 	/**
@@ -765,89 +663,32 @@ class AangebodenGebruikController extends Controller {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$this->logger->info(
-			'API: Deleting gebruik object as afnemer',
-			[
-				'endpoint' => "/api/aangeboden-gebruik/{$gebruikId}/deny",
-				'method' => 'DELETE',
-				'gebruik_id' => $gebruikId,
-			]
+		return $this->actionResponder()->respond(
+			action: $this->objectAction(id: $gebruikId, name: 'deny'),
+			perform: fn (array $options): array => $this->gebruikSvc->deleteGebruikAsAfnemer(gebruikId: $gebruikId, options: $options)
 		);
-
-		try {
-			// Validate input.
-			if (empty($gebruikId) === true) {
-				return new JSONResponse(
-					[
-						'success' => false,
-						'error' => 'Gebruik ID is required',
-						'deleted' => false,
-					],
-					400
-				);
-			}
-
-			// Parse any additional options from request body.
-			$options = [];
-			$requestBody = $this->request->getParams();
-			if (empty($requestBody) === false) {
-				$options = array_filter(
-					$requestBody,
-					function ($key) {
-						// Exclude path parameters.
-						return in_array(needle: $key, haystack: ['gebruikId']) === false;
-					},
-					ARRAY_FILTER_USE_KEY
-				);
-			}
-
-			// Delete gebruik object via service.
-			$result = $this->gebruikSvc->deleteGebruikAsAfnemer(
-				gebruikId: $gebruikId,
-				options: $options
-			);
-
-			// Determine appropriate HTTP status code.
-			$statusCode = 500;
-			if ($result['success'] === true) {
-				$statusCode = 200;
-			} elseif ($result['error'] === 'Gebruik object not found') {
-				$statusCode = 404;
-			} elseif (strpos(haystack: ($result['error'] ?? ''), needle: 'Operation not allowed') !== false) {
-				$statusCode = 403;
-			}
-
-			$this->logger->info(
-				'API: Delete gebruik as afnemer request completed',
-				[
-					'gebruik_id' => $gebruikId,
-					'success' => $result['success'],
-					'deleted' => $result['deleted'] ?? false,
-					'status_code' => $statusCode,
-				]
-			);
-
-			return new JSONResponse($result, $statusCode);
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'API: Failed to delete gebruik as afnemer',
-				[
-					'gebruik_id' => $gebruikId,
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			return new JSONResponse(
-				[
-					'success' => false,
-					'error' => 'Internal server error: ' . $e->getMessage(),
-					'deleted' => false,
-				],
-				500
-			);
-		}//end try
 	}//end deleteGebruikAsAfnemer()
+
+	/**
+	 * The responder that runs this controller's object actions.
+	 *
+	 * @return ObjectActionResponder
+	 */
+	private function actionResponder(): ObjectActionResponder {
+		return new ObjectActionResponder(logger: $this->logger, request: $this->request);
+	}//end actionResponder()
+
+	/**
+	 * Build an object action from the action table.
+	 *
+	 * @param string $id   The object id from the route.
+	 * @param string $name The action name in the action table.
+	 *
+	 * @return ObjectAction
+	 */
+	private function objectAction(string $id, string $name): ObjectAction {
+		return new ObjectAction(id: $id, definition: self::ACTIONS[$name] + self::ACTION_OBJECT);
+	}//end objectAction()
 
 	/**
 	 * Get API documentation for AangebodenGebruik endpoints.
@@ -859,162 +700,11 @@ class AangebodenGebruikController extends Controller {
 	 * @NoCSRFRequired
 	 * @PublicPage
 	 *
-	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength)
-	 * @spec                                          openspec/specs/aangeboden-gebruik-api/spec.md
+	 * @spec openspec/specs/aangeboden-gebruik-api/spec.md
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getApiDocumentation(): JSONResponse {
-		$documentation = [
-			'api_version' => '2.0.0',
-			'description' => 'Stackiq AangebodenGebruik API',
-			'base_url' => '/api/aangeboden-gebruik',
-			'endpoints' => [
-				[
-					'method' => 'GET',
-					'path' => '/api/aangeboden-gebruik/afnemer',
-					'description' => 'Get all gebruiks objects where the active organization is the afnemer (consumer)',
-					'parameters' => [
-						[
-							'name' => 'limit',
-							'type' => 'integer',
-							'required' => false,
-							'description' => 'Maximum number of results to return',
-						],
-						[
-							'name' => 'offset',
-							'type' => 'integer',
-							'required' => false,
-							'description' => 'Number of results to skip for pagination',
-						],
-						[
-							'name' => 'status',
-							'type' => 'string',
-							'required' => false,
-							'description' => 'Filter by usage status',
-						],
-						[
-							'name' => 'product',
-							'type' => 'string',
-							'required' => false,
-							'description' => 'Filter by product ID',
-						],
-						[
-							'name' => 'startDate',
-							'type' => 'string',
-							'required' => false,
-							'description' => 'Filter by start date (ISO 8601 format)',
-						],
-						[
-							'name' => 'endDate',
-							'type' => 'string',
-							'required' => false,
-							'description' => 'Filter by end date (ISO 8601 format)',
-						],
-					],
-				],
-				[
-					'method' => 'GET',
-					'path' => '/api/aangeboden-gebruik/deelnemers',
-					'description' => 'Get gebruiks with active org in deelnemers',
-					'parameters' => [
-						[
-							'name' => 'limit',
-							'type' => 'integer',
-							'required' => false,
-							'description' => 'Maximum number of results to return',
-						],
-						[
-							'name' => 'offset',
-							'type' => 'integer',
-							'required' => false,
-							'description' => 'Number of results to skip for pagination',
-						],
-						[
-							'name' => 'status',
-							'type' => 'string',
-							'required' => false,
-							'description' => 'Filter by usage status',
-						],
-					],
-				],
-				[
-					'method' => 'PUT',
-					'path' => '/api/aangeboden-gebruik/{gebruikId}/set-self',
-					'description' => 'Set the @self property of a gebruik or koppeling to the active organization',
-					'parameters' => [
-						[
-							'name' => 'gebruikId',
-							'type' => 'string',
-							'required' => true,
-							'description' => 'The UUID of the gebruik object to update (in URL path)',
-						],
-					],
-				],
-				[
-					'method' => 'GET',
-					'path' => '/api/aangeboden-gebruik/docs',
-					'description' => 'Get this API documentation',
-					'parameters' => [],
-				],
-				[
-					'method' => 'GET',
-					'path' => '/api/koppelingen-gebruik',
-					'description' => 'Get all koppelingen and gebruiks objects with extended access control.',
-					'parameters' => [
-						[
-							'name' => 'organisation',
-							'type' => 'string',
-							'required' => false,
-							'description' => 'Filter by organization UUID (only for ambtenaar users)',
-						],
-						[
-							'name' => 'limit',
-							'type' => 'integer',
-							'required' => false,
-							'description' => 'Maximum number of results to return',
-						],
-						[
-							'name' => 'offset',
-							'type' => 'integer',
-							'required' => false,
-							'description' => 'Number of results to skip for pagination',
-						],
-					],
-				],
-				[
-					'method' => 'GET',
-					'path' => '/api/koppelingen-gebruik/{uuid}',
-					'description' => 'Get koppelingen and gebruiks for a specific application/module UUID.',
-					'parameters' => [
-						[
-							'name' => 'uuid',
-							'type' => 'string',
-							'required' => true,
-							'description' => 'The UUID of the application/module (in URL path)',
-						],
-						[
-							'name' => 'organisation',
-							'type' => 'string',
-							'required' => false,
-							'description' => 'Filter by organization UUID (only for ambtenaar users)',
-						],
-					],
-				],
-			],
-			'security' => [
-				'afnemer_filtering' => 'Uses standard RBAC filtering based on organization association',
-				'deelnemers_filtering' => 'Uses RBAC-disabled search to find participation records',
-				'self_update_permission' => 'Only allowed if active organization is the afnemer or aanbieder',
-			],
-			'error_codes' => [
-				400 => 'Bad Request - Invalid parameters or missing required fields',
-				403 => 'Forbidden - Operation not allowed',
-				404 => 'Not Found - Gebruik object not found',
-				500 => 'Internal Server Error - Server-side error occurred',
-			],
-		];
-
-		return new JSONResponse($documentation, 200);
+		return new JSONResponse(AangebodenGebruikApiDocumentation::DOCUMENTATION, 200);
 	}//end getApiDocumentation()
 
 	/**
@@ -1024,48 +714,12 @@ class AangebodenGebruikController extends Controller {
 	 * pagination, and other options. Always forces database source for real-time data.
 	 *
 	 * @return array Parsed options array with database source
-	 *
-	 * @SuppressWarnings(PHPMD.CyclomaticComplexity)
-	 * @SuppressWarnings(PHPMD.NPathComplexity)
 	 */
 	private function parseQueryOptions(): array {
-		$options = [];
-
-		// Parse pagination parameters (with and without underscore for compatibility).
-		$limit = $this->request->getParam('_limit') ?? $this->request->getParam('limit');
-		if ($limit !== null && is_numeric($limit) === true) {
-			$options['_limit'] = (int)$limit;
-			// Keep both for compatibility.
-			$options['limit'] = (int)$limit;
-		}
-
-		$offset = $this->request->getParam('_offset') ?? $this->request->getParam('offset');
-		if ($offset !== null && is_numeric($offset) === true) {
-			$options['_offset'] = (int)$offset;
-			// Keep both for compatibility.
-			$options['offset'] = (int)$offset;
-		}
-
-		$page = $this->request->getParam('_page') ?? $this->request->getParam('page');
-		if ($page !== null && is_numeric($page) === true) {
-			$options['_page'] = (int)$page;
-		}
-
-		// Parse filter parameters.
-		$status = $this->request->getParam('status');
-		if ($status !== null && empty(trim($status) === true) === false) {
-			$options['status'] = trim($status);
-		}
-
-		$startDate = $this->request->getParam('startDate');
-		if ($startDate !== null && empty(trim($startDate) === true) === false) {
-			$options['startDate'] = trim($startDate);
-		}
-
-		$endDate = $this->request->getParam('endDate');
-		if ($endDate !== null && empty(trim($endDate) === true) === false) {
-			$options['endDate'] = trim($endDate);
-		}
+		$pagination = new ListingPagination(request: $this->request);
+		$raw        = $pagination->rawParams();
+		$filters    = $this->textFilterParams();
+		$options    = $this->applyTextFilters(options: $pagination->options(raw: $raw), filters: $filters);
 
 		// Force database source for all custom endpoints to ensure real-time data.
 		$options['_source'] = 'database';
@@ -1073,17 +727,42 @@ class AangebodenGebruikController extends Controller {
 		$this->logger->debug(
 			'Parsed query options for AangebodenGebruik',
 			[
-				'raw_params' => [
-					'limit' => $limit,
-					'offset' => $offset,
-					'status' => $status,
-					'startDate' => $startDate,
-					'endDate' => $endDate,
-				],
+				'raw_params' => ['limit' => $raw['limit'], 'offset' => $raw['offset']] + $filters,
 				'parsed_options' => $options,
 			]
 		);
 
 		return $options;
 	}//end parseQueryOptions()
+
+	/**
+	 * The raw status, startDate and endDate filter parameters.
+	 *
+	 * @return array{status: mixed, startDate: mixed, endDate: mixed}
+	 */
+	private function textFilterParams(): array {
+		return [
+			'status' => $this->request->getParam('status'),
+			'startDate' => $this->request->getParam('startDate'),
+			'endDate' => $this->request->getParam('endDate'),
+		];
+	}//end textFilterParams()
+
+	/**
+	 * Add the filter parameters that pass the filter check, trimmed.
+	 *
+	 * @param array $options The options so far.
+	 * @param array $filters The raw filter parameters.
+	 *
+	 * @return array The options with the filters added.
+	 */
+	private function applyTextFilters(array $options, array $filters): array {
+		foreach ($filters as $name => $value) {
+			if ($value !== null && empty(trim($value) === true) === false) {
+				$options[$name] = trim($value);
+			}
+		}
+
+		return $options;
+	}//end applyTextFilters()
 }//end class

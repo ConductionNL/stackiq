@@ -11,6 +11,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/sc-handlers/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -186,12 +189,12 @@ class ContactPersonHandlerSlugConflictTest extends TestCase {
 			}
 
 			/**
-			 * @param mixed ...$args The organisation, by name.
+			 * @param mixed ...$args The organisation details, then whether the caller joins.
 			 *
 			 * @return Organisation
 			 */
 			public function createOrganisation(...$args): Organisation {
-				return $this->test->create(name: (string) ($args['name'] ?? $args[0]), refuse: $this->refuse);
+				return $this->test->create(name: ($args['details'] ?? $args[0])->name, refuse: $this->refuse);
 			}
 		};
 

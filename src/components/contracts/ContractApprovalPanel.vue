@@ -87,6 +87,16 @@ import Autorenew from 'vue-material-design-icons/Autorenew.vue'
 import Check from 'vue-material-design-icons/Check.vue'
 
 /**
+ * Unwrap an OpenRegister object reply to the object itself.
+ *
+ * @param {object} data The reply body.
+ * @return {object} The body itself when it carries `@self`, else its `object`, else the body.
+ */
+function unwrapObject(data) {
+	return data && data['@self'] !== undefined ? data : data.object || data
+}
+
+/**
  * @class ContractApprovalPanel
  * @module Components/Contracts
  * @copyright 2026 Conduction B.V.
@@ -256,6 +266,15 @@ export default {
 			if (!this.objectId) {
 				return
 			}
+			this.applyContract(await this.fetchContract())
+		},
+
+		/**
+		 * Fetch the contract object from OpenRegister.
+		 *
+		 * @return {Promise<object>} The contract, unwrapped from its envelope.
+		 */
+		async fetchContract() {
 			const url = generateUrl(
 				'/apps/openregister/api/objects/{register}/{schema}/{id}',
 				{
@@ -265,8 +284,16 @@ export default {
 				},
 			)
 			const { data } = await axios.get(url)
-			const obj =
-				data && data['@self'] !== undefined ? data : data.object || data
+			return unwrapObject(data)
+		},
+
+		/**
+		 * Copy the contract's status, approval state and decision.
+		 *
+		 * @param {object} obj The contract object.
+		 * @return {void}
+		 */
+		applyContract(obj) {
 			this.status = obj.status || ''
 			this.approvalState = obj.approvalState || 'none'
 			this.decisionId = obj.approvalDecisionId || ''

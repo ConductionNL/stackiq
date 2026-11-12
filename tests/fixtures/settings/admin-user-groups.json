@@ -1,0 +1,357 @@
+{
+    "getGenericUserGroups ok": [
+        200,
+        {
+            "success": true,
+            "groups": [
+                "g1"
+            ]
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "getGenericUserGroups",
+                []
+            ]
+        ],
+        []
+    ],
+    "getGenericUserGroups throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get generic user groups: service down"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "getGenericUserGroups",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get generic user groups",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "getOrganizationAdminGroups ok": [
+        200,
+        {
+            "success": true,
+            "groups": [
+                "g2"
+            ]
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "getOrganizationAdminGroups",
+                []
+            ]
+        ],
+        []
+    ],
+    "getOrganizationAdminGroups throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get organization admin groups: service down"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "getOrganizationAdminGroups",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get organization admin groups",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "getSuperUserGroups ok": [
+        200,
+        {
+            "success": true,
+            "groups": [
+                "g3"
+            ]
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "getSuperUserGroups",
+                []
+            ]
+        ],
+        []
+    ],
+    "getSuperUserGroups throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get super user groups: service down"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "getSuperUserGroups",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get super user groups",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "setGenericUserGroups ok": [
+        200,
+        {
+            "success": true,
+            "message": "ok",
+            "groups": [
+                "g1"
+            ]
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "updateGenericUserGroups",
+                [
+                    [
+                        "g1",
+                        "g9"
+                    ]
+                ]
+            ]
+        ],
+        []
+    ],
+    "setGenericUserGroups throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to set generic user groups: service down"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "updateGenericUserGroups",
+                [
+                    [
+                        "g1",
+                        "g9"
+                    ]
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to set generic user groups",
+                {
+                    "exception": "service down",
+                    "requestData": {
+                        "groups": [
+                            "g1",
+                            "g9"
+                        ],
+                        "smtpPassword": "***",
+                        "note": "n"
+                    }
+                }
+            ]
+        ]
+    ],
+    "setOrganizationAdminGroups ok": [
+        200,
+        {
+            "success": false,
+            "message": "bad group",
+            "groups": null
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "updateOrganizationAdminGroups",
+                [
+                    [
+                        "g1",
+                        "g9"
+                    ]
+                ]
+            ]
+        ],
+        []
+    ],
+    "setOrganizationAdminGroups throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to set organization admin groups: service down"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "updateOrganizationAdminGroups",
+                [
+                    [
+                        "g1",
+                        "g9"
+                    ]
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to set organization admin groups",
+                {
+                    "exception": "service down",
+                    "requestData": {
+                        "groups": [
+                            "g1",
+                            "g9"
+                        ],
+                        "smtpPassword": "***",
+                        "note": "n"
+                    }
+                }
+            ]
+        ]
+    ],
+    "setSuperUserGroups ok": [
+        200,
+        {
+            "success": true,
+            "message": "ok",
+            "groups": [
+                "g3"
+            ]
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "updateSuperUserGroups",
+                [
+                    [
+                        "g1",
+                        "g9"
+                    ]
+                ]
+            ]
+        ],
+        []
+    ],
+    "setSuperUserGroups throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to set super user groups: service down"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "updateSuperUserGroups",
+                [
+                    [
+                        "g1",
+                        "g9"
+                    ]
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to set super user groups",
+                {
+                    "exception": "service down",
+                    "requestData": {
+                        "groups": [
+                            "g1",
+                            "g9"
+                        ],
+                        "smtpPassword": "***",
+                        "note": "n"
+                    }
+                }
+            ]
+        ]
+    ]
+}
