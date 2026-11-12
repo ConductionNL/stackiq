@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -8,7 +9,8 @@
  * @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-access-must-only-target-an-existing-nextcloud-user-req-005
  */
 
-import { extractUserId, removeMember } from './grantOrganisationAccess.js'
+import { describe, expect, it } from 'vitest'
+import { extractUserId, removeMember } from '../../src/modals/grantOrganisationAccess.js'
 
 describe('grantOrganisationAccess.extractUserId', () => {
 	it('extracts the id from an { id } shaped selection', () => {

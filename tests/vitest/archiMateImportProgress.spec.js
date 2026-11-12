@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -8,13 +9,24 @@
  * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-003-the-settings-page-shall-show-the-progress-and-offer-a-cancel
  */
 
+import { describe, expect, it, vi } from 'vitest'
 import {
 	cancelImport,
 	makeOperationId,
 	OPERATION_ID_PATTERN,
 	progressView,
 	startProgressPolling,
-} from './archiMateImportProgress.js'
+} from '../../src/utils/archiMateImportProgress.js'
+
+vi.mock('@nextcloud/l10n', () => {
+	const fill = (app, text, vars = {}) => String(text).replace(/{(\w+)}/g, (match, key) => (key in vars ? String(vars[key]) : match))
+	return { t: fill, translate: fill, n: (app, one, many, count, vars) => fill(app, count === 1 ? one : many, { count, ...vars }), getLanguage: () => 'en' }
+})
+
+vi.mock('@nextcloud/router', () => ({
+	generateUrl: (url, params = {}) => '/index.php' + url.replace(/{(\w+)}/g, (match, key) => (key in params ? encodeURIComponent(String(params[key])) : match)),
+	generateOcsUrl: (url) => '/ocs/v2.php' + url,
+}))
 
 describe('makeOperationId', () => {
 	it('makes an id the server accepts, different each time', () => {
@@ -59,12 +71,12 @@ describe('progressView', () => {
 describe('startProgressPolling', () => {
 	it('reads the progress endpoint every interval and hands each answer on until stopped', async () => {
 		let tick = null
-		const setIntervalFn = jest.fn((fn) => {
+		const setIntervalFn = vi.fn((fn) => {
 			tick = fn
 			return 7
 		})
-		const clearIntervalFn = jest.fn()
-		const get = jest.fn().mockResolvedValue({
+		const clearIntervalFn = vi.fn()
+		const get = vi.fn().mockResolvedValue({
 			data: { progress: { phase: 'processing_elements', percentage: 40 } },
 		})
 		const seen = []
@@ -90,7 +102,7 @@ describe('startProgressPolling', () => {
 
 	it('keeps polling quietly when the operation is not readable yet', async () => {
 		let tick = null
-		const get = jest.fn().mockRejectedValue({ response: { status: 404 } })
+		const get = vi.fn().mockRejectedValue({ response: { status: 404 } })
 		const seen = []
 		startProgressPolling({
 			operationId: 'archimate_import_abc12345',
@@ -109,7 +121,7 @@ describe('startProgressPolling', () => {
 	it('sends no new request while the previous one is still waiting', async () => {
 		let tick = null
 		let answer = null
-		const get = jest.fn(
+		const get = vi.fn(
 			() =>
 				new Promise((resolve) => {
 					answer = resolve
@@ -139,7 +151,7 @@ describe('startProgressPolling', () => {
 
 describe('cancelImport', () => {
 	it('posts the operation id to the cancel endpoint', async () => {
-		const post = jest.fn().mockResolvedValue({ data: { success: true } })
+		const post = vi.fn().mockResolvedValue({ data: { success: true } })
 		await cancelImport({
 			operationId: 'archimate_import_abc12345',
 			http: { post },

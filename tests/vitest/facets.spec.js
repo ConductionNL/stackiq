@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -11,23 +12,19 @@
 
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
-import { buildFacetQueryParams, FACET_DIMENSIONS, fetchFacets } from './facets.js'
+import { afterEach, describe, expect, it, vi } from 'vitest'
+import { buildFacetQueryParams, FACET_DIMENSIONS, fetchFacets } from '../../src/services/facets.js'
 
-// `virtual: true` — `@nextcloud/axios` ships an ESM-only `exports` map (no
-// `require` condition), which Jest's CJS resolver cannot resolve even to
-// locate the module for mocking. `virtual: true` mocks the specifier without
-// requiring it to resolve for real, matching how the app's real webpack/
-// Babel build (not Jest) actually consumes the package at runtime.
-jest.mock(
+vi.mock(
 	'@nextcloud/axios',
-	() => ({
-		get: jest.fn(),
-	}),
-	{ virtual: true },
+	() => {
+		const axios = { get: vi.fn() }
+		return { default: axios, ...axios }
+	},
 )
 
-jest.mock('@nextcloud/router', () => ({
-	generateUrl: jest.fn((path) => path),
+vi.mock('@nextcloud/router', () => ({
+	generateUrl: vi.fn((path) => path),
 }))
 
 describe('facets.FACET_DIMENSIONS', () => {

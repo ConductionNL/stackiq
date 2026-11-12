@@ -1,3 +1,4 @@
+// @vitest-environment jsdom
 /**
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
@@ -8,13 +9,14 @@
  * @spec openspec/specs/suite-wizard/spec.md#requirement-the-wizard-must-require-at-least-one-attached-application-before-advancing-past-the-applications-step
  */
 
+import { describe, expect, it } from 'vitest'
 import {
 	buildSuitePayload,
 	isApplicationsStepValid,
 	isDetailsStepValid,
 	mapApplicationOptions,
 	summarizeApplications,
-} from './suiteWizard.js'
+} from '../../src/utils/suiteWizard.js'
 
 describe('suiteWizard.isDetailsStepValid', () => {
 	it('is invalid when naam is blank', () => {
