@@ -1996,11 +1996,6 @@ import {
 	schemaPropertyRows,
 } from './objectPropertyRows.js'
 import {
-	inputComponentOf,
-	inputTypeOf,
-	pickerTypeOf,
-} from './propertyInputKind.js'
-import {
 	editabilityWarning,
 	isControlClick,
 	isEditable,
@@ -2008,6 +2003,11 @@ import {
 	schemaLockFlags,
 	themeIdList,
 } from './propertyEditing.js'
+import {
+	inputComponentOf,
+	inputTypeOf,
+	pickerTypeOf,
+} from './propertyInputKind.js'
 import {
 	isValidDateString,
 	isValidPropertyValue,
