@@ -2469,132 +2469,18 @@ class ArchiMateImportService {
 		}
 
 		foreach ($nodeData as $node) {
-			if (isset($node['_attributes']) === false) {
-				continue;
-			}
-
 			$nodeId = $node['_attributes']['identifier'] ?? null;
-			$elementRef = $node['_attributes']['elementRef'] ?? null;
-
-			if ($nodeId === null) {
+			if (isset($node['_attributes']) === false || $nodeId === null) {
 				continue;
 			}
 
-			// Create viewNode with standardized structure.
-			$xValue = (int)($node['_attributes']['x'] ?? 0);
-			$yValue = (int)($node['_attributes']['y'] ?? 0);
-			$widthValue = (int)($node['_attributes']['w'] ?? 100);
-			$heightValue = (int)($node['_attributes']['h'] ?? 50);
-
-			$viewNode = [
-				'modelNodeId' => $elementRef,
-				// Reference to the ArchiMate element.
-				'viewNodeId' => $nodeId,
-				// Unique identifier within this view.
-				'x' => $xValue,
-				'y' => $yValue,
-				'width' => $widthValue,
-				'height' => $heightValue,
-				'parent' => null,
-				// Will be set to parent nodeId for nested nodes (see recursive processing below).
-				'name' => null,
-				'type' => $this->extractNodeType(node: $node),
-				// Extract type directly from node XML.
-				'color' => 'rgb(255, 255, 255)',
-				// Default white background.
-				'borderColor' => 'rgb(0, 0, 0)',
-				// Default black border.
-				'font' => [
-					'name' => 'Segoe UI, Arial',
-					'size' => 12,
-					'style' => 'normal',
-					'color' => 'rgb(0, 0, 0)',
-				],
-				'description' => null,
-				'elementRef' => $elementRef,
-			];
-
-			// Extract style information if present.
-			if (isset($node['style']) === true) {
-				$this->applyNodeStyle(viewNode: $viewNode, style: $node['style']);
-			}
-
-			// Extract label text for Label type nodes.
-			if (isset($node['label']) === true) {
-				if (is_array($node['label']) === true && isset($node['label']['_value']) === true) {
-					$viewNode['name'] = $node['label']['_value'];
-				} elseif (is_string($node['label']) === true) {
-					$viewNode['name'] = $node['label'];
-				}
-			}
+			$elementRef = $node['_attributes']['elementRef'] ?? null;
+			$viewNode = $this->buildViewNode(node: $node, elementRef: $elementRef);
 
 			// Enrich with element data if available and elementRef exists.
 			if ($elementRef !== false && isset($elementsLookup[$elementRef]) === true) {
-				$element = $elementsLookup[$elementRef];
-
-				// Use element name if node doesn't have its own label.
-				if ($viewNode['name'] === null && isset($element['name']) === true) {
-					$viewNode['name'] = $element['name'];
-				}
-
-				// Set description from element documentation.
-				if (isset($element['omschrijving']) === true) {
-					$viewNode['description'] = $element['omschrijving'];
-				} elseif (isset($element['documentation']) === true) {
-					$viewNode['description'] = $element['documentation'];
-				}
-
-				// Enhance type with element data if node type wasn't fully extracted.
-				if ($viewNode['type'] === null || $viewNode['type'] === 'element') {
-					if (isset($element['gemmaType']) === true) {
-						$gemmaType = $element['gemmaType'];
-						// Handle case where gemmaType might be an array.
-						if (is_array($gemmaType) === true) {
-							$gemmaType = $gemmaType['_value'] ?? $gemmaType[0] ?? 'unknown';
-						}
-
-						$viewNode['type'] = strtolower((string)$gemmaType);
-					} elseif (isset($element['xml']['_attributes']['xsi:type']) === true) {
-						$archiType = $element['xml']['_attributes']['xsi:type'];
-						// Convert ArchiMate type to simplified type
-						// (e.g., "archimate:BusinessService" -> "businessservice").
-						$viewNode['type'] = strtolower(preg_replace('/^archimate:|^[a-z]+:/', '', $archiType));
-					}
-				}
-
-				// Add all element properties to view node for full data access.
-				$viewNode['elementProperties'] = $this->extractElementProperties(element: $element);
-
-				// Add specific useful properties directly to the node.
-				if (isset($element['objectId']) === true) {
-					$viewNode['objectId'] = $element['objectId'];
-				}
-
-				// Add GEMMA-specific properties if they exist.
-				$gemmaProperties = [
-					'gemmaType',
-					'bivScoreBbn',
-					'belangrijksteReden',
-					'availability',
-					'integrity',
-					'confidentiality',
-				];
-				foreach ($gemmaProperties as $prop) {
-					if (isset($element[$prop]) === true) {
-						$viewNode[$prop] = $element[$prop];
-					}
-				}
-
-				// Store element section for reference.
-				if (isset($element['section']) === true) {
-					$viewNode['elementSection'] = $element['section'];
-				}
-
-				// Store model identifier for linking.
-				if (isset($element['model_identifier']) === true) {
-					$viewNode['modelIdentifier'] = $element['model_identifier'];
-				}
-			}//end if
+				$this->enrichViewNodeFromElement(viewNode: $viewNode, element: $elementsLookup[$elementRef]);
+			}
 
 			// Add parent node BEFORE its children so the frontend rendering.
 			// engine can look up parents via graph.getCell(parentId).
@@ -2603,25 +2489,170 @@ class ArchiMateImportService {
 			// Handle child nodes recursively (flatten hierarchy into single array
 			// while preserving parent-child relationships).
 			if (isset($node['node']) === true) {
-				$childNodes = $this->extractViewNodesRecursively(nodeData: $node['node'], elementsLookup: $elementsLookup);
-
-				// Set parent reference only for DIRECT children (those with parent === null).
-				// Grandchildren already have their parent set by the recursive call.
-				foreach ($childNodes as &$childNode) {
-					if ($childNode['parent'] === null) {
-						$childNode['parent'] = $nodeId;
-					}
-				}
-
-				unset($childNode);
-
-				// Add child nodes to the main flattened array (maintaining parent references).
-				$viewNodes = array_merge($viewNodes, $childNodes);
+				$viewNodes = array_merge(
+					$viewNodes,
+					$this->extractChildViewNodes(childData: $node['node'], parentId: $nodeId, elementsLookup: $elementsLookup)
+				);
 			}
 		}//end foreach
 
 		return $viewNodes;
 	}//end extractViewNodesRecursively()
+
+	/**
+	 * Build the view node of one diagram node, before element enrichment
+	 *
+	 * @param array $node       The diagram node as parsed from the XML
+	 * @param mixed $elementRef The identifier of the element the node shows, if any
+	 *
+	 * @return array The view node with geometry, type, default styling, node style and label
+	 */
+	private function buildViewNode(array $node, mixed $elementRef): array {
+		$viewNode = [
+			'modelNodeId' => $elementRef,
+			// Reference to the ArchiMate element.
+			'viewNodeId' => $node['_attributes']['identifier'],
+			// Unique identifier within this view.
+			'x' => (int)($node['_attributes']['x'] ?? 0),
+			'y' => (int)($node['_attributes']['y'] ?? 0),
+			'width' => (int)($node['_attributes']['w'] ?? 100),
+			'height' => (int)($node['_attributes']['h'] ?? 50),
+			'parent' => null,
+			// Will be set to parent nodeId for nested nodes (see extractChildViewNodes()).
+			'name' => null,
+			'type' => $this->extractNodeType(node: $node),
+			// Extract type directly from node XML.
+			'color' => 'rgb(255, 255, 255)',
+			// Default white background.
+			'borderColor' => 'rgb(0, 0, 0)',
+			// Default black border.
+			'font' => [
+				'name' => 'Segoe UI, Arial',
+				'size' => 12,
+				'style' => 'normal',
+				'color' => 'rgb(0, 0, 0)',
+			],
+			'description' => null,
+			'elementRef' => $elementRef,
+		];
+
+		// Extract style information if present.
+		if (isset($node['style']) === true) {
+			$this->applyNodeStyle(viewNode: $viewNode, style: $node['style']);
+		}
+
+		// Extract label text for Label type nodes.
+		if (isset($node['label']['_value']) === true && is_array($node['label']) === true) {
+			$viewNode['name'] = $node['label']['_value'];
+		} elseif (isset($node['label']) === true && is_string($node['label']) === true) {
+			$viewNode['name'] = $node['label'];
+		}
+
+		return $viewNode;
+	}//end buildViewNode()
+
+	/**
+	 * Enrich a view node with the name, description, type and properties of its element
+	 *
+	 * @param array $viewNode The view node, updated in place
+	 * @param array $element  The element the node shows
+	 *
+	 * @return void
+	 */
+	private function enrichViewNodeFromElement(array &$viewNode, array $element): void {
+		// Use element name if node doesn't have its own label.
+		if ($viewNode['name'] === null && isset($element['name']) === true) {
+			$viewNode['name'] = $element['name'];
+		}
+
+		// Set description from element documentation.
+		if (isset($element['omschrijving']) === true) {
+			$viewNode['description'] = $element['omschrijving'];
+		} elseif (isset($element['documentation']) === true) {
+			$viewNode['description'] = $element['documentation'];
+		}
+
+		// Enhance type with element data if node type wasn't fully extracted.
+		if ($viewNode['type'] === null || $viewNode['type'] === 'element') {
+			$viewNode['type'] = ($this->elementViewNodeType(element: $element) ?? $viewNode['type']);
+		}
+
+		// Add all element properties to view node for full data access.
+		$viewNode['elementProperties'] = $this->extractElementProperties(element: $element);
+
+		// Copy the object id, the GEMMA-specific properties, the element
+		// section and the model identifier when the element has them.
+		$copied = [
+			'objectId' => 'objectId',
+			'gemmaType' => 'gemmaType',
+			'bivScoreBbn' => 'bivScoreBbn',
+			'belangrijksteReden' => 'belangrijksteReden',
+			'availability' => 'availability',
+			'integrity' => 'integrity',
+			'confidentiality' => 'confidentiality',
+			'section' => 'elementSection',
+			'model_identifier' => 'modelIdentifier',
+		];
+		foreach ($copied as $from => $to) {
+			if (isset($element[$from]) === true) {
+				$viewNode[$to] = $element[$from];
+			}
+		}
+	}//end enrichViewNodeFromElement()
+
+	/**
+	 * The simplified view node type an element declares
+	 *
+	 * The GEMMA type wins over the ArchiMate xsi:type
+	 * (e.g., "archimate:BusinessService" -> "businessservice").
+	 *
+	 * @param array $element The element
+	 *
+	 * @return string|null The lowercased type, or null when the element declares none
+	 */
+	private function elementViewNodeType(array $element): ?string {
+		if (isset($element['gemmaType']) === true) {
+			$gemmaType = $element['gemmaType'];
+			// Handle case where gemmaType might be an array.
+			if (is_array($gemmaType) === true) {
+				$gemmaType = $gemmaType['_value'] ?? $gemmaType[0] ?? 'unknown';
+			}
+
+			return strtolower((string)$gemmaType);
+		}
+
+		if (isset($element['xml']['_attributes']['xsi:type']) === true) {
+			return strtolower(preg_replace('/^archimate:|^[a-z]+:/', '', $element['xml']['_attributes']['xsi:type']));
+		}
+
+		return null;
+	}//end elementViewNodeType()
+
+	/**
+	 * The flattened view nodes nested under a node, with their parent set
+	 *
+	 * Only the direct children (parent still null) get this node as parent;
+	 * deeper descendants already carry the parent the recursion gave them.
+	 *
+	 * @param mixed  $childData      The nested node data (single node or array of nodes)
+	 * @param mixed  $parentId       The identifier of the node they are nested under
+	 * @param array  $elementsLookup Lookup array of elements by identifier for enrichment
+	 *
+	 * @return array The flattened child view nodes
+	 */
+	private function extractChildViewNodes(mixed $childData, mixed $parentId, array $elementsLookup): array {
+		$childNodes = $this->extractViewNodesRecursively(nodeData: $childData, elementsLookup: $elementsLookup);
+
+		foreach ($childNodes as &$childNode) {
+			if ($childNode['parent'] === null) {
+				$childNode['parent'] = $parentId;
+			}
+		}
+
+		unset($childNode);
+
+		return $childNodes;
+	}//end extractChildViewNodes()
 
 	/**
 	 * Extract all properties from an element for view node enrichment
