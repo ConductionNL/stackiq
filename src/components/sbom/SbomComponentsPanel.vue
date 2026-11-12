@@ -565,7 +565,7 @@ export default {
 				// the correct boundary (mirrors ArchiMate import's upload path).
 				const response = await fetch(url, {
 					method: 'POST',
-					headers: { 'X-Requested-With': 'XMLHttpRequest' },
+					headers: { requesttoken: OC.requestToken, 'X-Requested-With': 'XMLHttpRequest' },
 					body: formData,
 				})
 				const result = await response.json()
