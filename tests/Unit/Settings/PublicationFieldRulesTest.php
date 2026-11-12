@@ -178,6 +178,6 @@ class PublicationFieldRulesTest extends TestCase {
 		$schemas = $this->register()['components']['schemas'];
 		$this->assertTrue(version_compare($schemas['usage']['version'], '1.5.8', '>='), 'topdesk-cmdb-import.json bumps it past publication-field-rules.json; value-assessment.json, sorting last, does not lower it');
 		$this->assertSame('0.3.5', $schemas['connection']['version']);
-		$this->assertSame('0.1.6', $schemas['moduleVersion']['version']);
+		$this->assertSame(expected: '0.1.7', actual: $schemas['moduleVersion']['version']);
 	}//end testAFragmentNeverLowersAVersion()
 }//end class
