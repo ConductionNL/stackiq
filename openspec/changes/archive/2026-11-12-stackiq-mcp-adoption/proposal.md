@@ -1,3 +1,5 @@
+> Superseded by `mcp-full-action-surface`, whose proposal says so: this change's fragment names the old Dutch schema slugs (`moduleVersie`, `dienst`, `organisatie`). Archived under decision 399 without syncing its spec. Reversible.
+
 # Proposal: stackiq-mcp-adoption
 
 ## Summary
