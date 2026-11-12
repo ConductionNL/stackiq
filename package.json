@@ -97,7 +97,7 @@
     "@pinia/testing": "^2.0.1",
     "@playwright/test": "^1.63.0",
     "@types/jest": "^30.0.0",
-    "@types/node": "^26.4.1",
+    "@types/node": "^26.6.2",
     "@typescript-eslint/parser": "^8.67.0",
     "@vitejs/plugin-vue": "^6.0.8",
     "@vitest/coverage-v8": "^5.0.0",
