@@ -18,6 +18,9 @@
  * @link      https://github.com/conduction/nextcloud-software-catalog
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -180,127 +183,293 @@ class GebruikSyncService {
 		];
 
 		try {
-			$gebruikData = $gebruikObject->getObject();
-			$gebruikUuid = $gebruikObject->getUuid();
-
-			// Get the referentiecomponenten IDs.
-			$referenceComponents = $gebruikData['usedForReferenceComponents'] ?? [];
-
-			if (empty($referenceComponents) === true) {
-				$this->logger->info(
-					'No referentiecomponenten found for gebruik object',
-					[
-						'gebruikId' => $gebruikUuid,
-					]
-				);
-				return $stats;
-			}
-
-			$this->logger->debug(
-				'Processing referentiecomponenten',
-				[
-					'app' => 'stackiq',
-					'gebruikId' => $gebruikUuid,
-					'referentieComponentenCount' => count($referenceComponents),
-				]
-			);
-
-			// Extract IDs from referentiecomponenten.
-			$referenceIds = [];
-			foreach ($referenceComponents as $component) {
-				if (isset($component['id']) === true) {
-					$referenceIds[] = $component['id'];
-				}
-			}
-
-			if (empty($referenceIds) === true) {
-				$this->logger->warning(
-					'No valid IDs found in referentiecomponenten',
-					[
-						'gebruikId' => $gebruikUuid,
-					]
-				);
-				return $stats;
-			}
-
-			// Get AMEF register configuration.
-			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-			$amefRegister = $voorzieningenConfig['amef_register'] ?? '';
-			$elementSchema = $voorzieningenConfig['element_schema'] ?? '';
-
-			if (empty($amefRegister) === true || empty($elementSchema) === true) {
-				$stats['errors'][] = 'AMEF register or element schema not configured';
-				$this->logger->error(
-					'AMEF configuration missing',
-					[
-						'app' => 'stackiq',
-						'amefRegister' => $amefRegister,
-						'elementSchema' => $elementSchema,
-					]
-				);
-				return $stats;
-			}
-
-			// Search for AMEF elements.
-			$amefElements = $this->searchAmefElementsByIds(
-				ids: $referenceIds,
-				register: $amefRegister,
-				schema: $elementSchema
-			);
-
-			// Extract slugs from found AMEF elements.
-			$amefSlugs = [];
-			foreach ($amefElements as $amefElement) {
-				$amefData = $amefElement->getObject();
-				if (isset($amefData['slug']) === true) {
-					$amefSlugs[] = $amefData['slug'];
-					$stats['amefElementsProcessed']++;
-				}
-			}
-
-			// Update the gebruik object with AMEF slugs.
-			if (empty($amefSlugs) === true) {
-				$this->logger->info(
-					'No AMEF elements with slugs found',
-					[
-						'gebruikId' => $gebruikUuid,
-					]
-				);
-			}//end if
-
-			if (empty($amefSlugs) === false) {
-				$gebruikData['amefElements'] = array_unique($amefSlugs);
-				$this->updateGebruikObject(
-					gebruikObject: $gebruikObject,
-					updatedData: $gebruikData
-				);
-
-				$this->logger->critical(
-					'AMEF ELEMENTS UPDATED',
-					[
-						'app' => 'stackiq',
-						'gebruikId' => $gebruikUuid,
-						'amefSlugs' => $amefSlugs,
-						'amefElementsCount' => count($amefSlugs),
-					]
-				);
-			}
-
+			$this->linkAmefElements(gebruikObject: $gebruikObject, stats: $stats);
 			return $stats;
 		} catch (Exception $e) {
 			$stats['errors'][] = 'AMEF processing error: ' . $e->getMessage();
-			$this->logger->error(
-				'AMEF PROCESSING ERROR',
-				[
-					'app' => 'stackiq',
-					'gebruikId' => $gebruikObject->getUuid(),
-					'exception' => $e->getMessage(),
-				]
-			);
-
+			$this->logAmefProcessingError(gebruikObject: $gebruikObject, exception: $e);
 			return $stats;
 		}//end try
 	}//end processAmefElements()
+
+	/**
+	 * Find the AMEF elements a gebruik object refers to and store their slugs on it.
+	 *
+	 * @param ObjectEntity $gebruikObject The gebruik object to process
+	 * @param array        $stats         Processing statistics, updated in place
+	 *
+	 * @return void
+	 *
+	 * @throws Exception If the gebruik object cannot be updated.
+	 */
+	private function linkAmefElements(ObjectEntity $gebruikObject, array &$stats): void {
+		$referenceIds = $this->amefReferenceIds(gebruikObject: $gebruikObject);
+		if ($referenceIds === []) {
+			return;
+		}
+
+		$amefElements = $this->searchReferencedAmefElements(referenceIds: $referenceIds, stats: $stats);
+		if ($amefElements === null) {
+			return;
+		}
+
+		$amefSlugs = $this->amefSlugsOf(amefElements: $amefElements, stats: $stats);
+		$this->storeAmefSlugs(gebruikObject: $gebruikObject, amefSlugs: $amefSlugs);
+	}//end linkAmefElements()
+
+	/**
+	 * Search the configured AMEF register for the referenced elements.
+	 *
+	 * @param array $referenceIds The referenced ids
+	 * @param array $stats        Processing statistics, updated in place
+	 *
+	 * @return array|null The found AMEF elements, or null when the register is not configured.
+	 */
+	private function searchReferencedAmefElements(array $referenceIds, array &$stats): ?array {
+		$target = $this->amefSearchTarget(stats: $stats);
+		if ($target === null) {
+			return null;
+		}
+
+		return $this->searchAmefElementsByIds(
+			ids: $referenceIds,
+			register: $target['register'],
+			schema: $target['schema']
+		);
+	}//end searchReferencedAmefElements()
+
+	/**
+	 * Read the referentiecomponenten of a gebruik object.
+	 *
+	 * @param ObjectEntity $gebruikObject The gebruik object
+	 *
+	 * @return array The referenced ids; empty when there is nothing to look up.
+	 */
+	private function amefReferenceIds(ObjectEntity $gebruikObject): array {
+		$gebruikData = $gebruikObject->getObject();
+		$gebruikUuid = $gebruikObject->getUuid();
+		$referenceComponents = $gebruikData['usedForReferenceComponents'] ?? [];
+
+		if (empty($referenceComponents) === true) {
+			$this->logger->info(
+				'No referentiecomponenten found for gebruik object',
+				[
+					'gebruikId' => $gebruikUuid,
+				]
+			);
+			return [];
+		}
+
+		return $this->referenceComponentIds(referenceComponents: $referenceComponents, gebruikUuid: $gebruikUuid);
+	}//end amefReferenceIds()
+
+	/**
+	 * Extract the ids of a gebruik object's referentiecomponenten.
+	 *
+	 * @param mixed       $referenceComponents The referentiecomponenten (not empty)
+	 * @param string|null $gebruikUuid         The gebruik object's UUID
+	 *
+	 * @return array The ids; empty when no component carries one.
+	 */
+	private function referenceComponentIds(mixed $referenceComponents, ?string $gebruikUuid): array {
+		$this->logger->debug(
+			'Processing referentiecomponenten',
+			[
+				'app' => 'stackiq',
+				'gebruikId' => $gebruikUuid,
+				'referentieComponentenCount' => count($referenceComponents),
+			]
+		);
+
+		return $this->validReferenceIds(referenceComponents: $referenceComponents, gebruikUuid: $gebruikUuid);
+	}//end referenceComponentIds()
+
+	/**
+	 * Collect the referentiecomponent ids, warning when there are none.
+	 *
+	 * @param mixed       $referenceComponents The referentiecomponenten (not empty)
+	 * @param string|null $gebruikUuid         The gebruik object's UUID
+	 *
+	 * @return array The ids; empty when no component carries one.
+	 */
+	private function validReferenceIds(mixed $referenceComponents, ?string $gebruikUuid): array {
+		$referenceIds = $this->idsOf(referenceComponents: $referenceComponents);
+		if (empty($referenceIds) === true) {
+			$this->logger->warning(
+				'No valid IDs found in referentiecomponenten',
+				[
+					'gebruikId' => $gebruikUuid,
+				]
+			);
+		}
+
+		return $referenceIds;
+	}//end validReferenceIds()
+
+	/**
+	 * Collect the id of every referentiecomponent that has one.
+	 *
+	 * @param mixed $referenceComponents The referentiecomponenten
+	 *
+	 * @return array The ids.
+	 */
+	private function idsOf(mixed $referenceComponents): array {
+		$referenceIds = [];
+		foreach ($referenceComponents as $component) {
+			if (isset($component['id']) === true) {
+				$referenceIds[] = $component['id'];
+			}
+		}
+
+		return $referenceIds;
+	}//end idsOf()
+
+	/**
+	 * Read the AMEF register and element schema to search in.
+	 *
+	 * @param array $stats Processing statistics, updated in place
+	 *
+	 * @return array|null The register and schema, or null when not configured.
+	 */
+	private function amefSearchTarget(array &$stats): ?array {
+		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+		$target = [
+			'register' => $voorzieningenConfig['amef_register'] ?? '',
+			'schema' => $voorzieningenConfig['element_schema'] ?? '',
+		];
+
+		if (empty($target['register']) === true || empty($target['schema']) === true) {
+			$this->reportMissingAmefConfig(stats: $stats, target: $target);
+			return null;
+		}
+
+		return $target;
+	}//end amefSearchTarget()
+
+	/**
+	 * Record and log a missing AMEF register or element schema.
+	 *
+	 * @param array $stats  Processing statistics, updated in place
+	 * @param array $target The configured register and schema
+	 *
+	 * @return void
+	 */
+	private function reportMissingAmefConfig(array &$stats, array $target): void {
+		$stats['errors'][] = 'AMEF register or element schema not configured';
+		$this->logger->error(
+			'AMEF configuration missing',
+			[
+				'app' => 'stackiq',
+				'amefRegister' => $target['register'],
+				'elementSchema' => $target['schema'],
+			]
+		);
+	}//end reportMissingAmefConfig()
+
+	/**
+	 * Collect the slugs of the found AMEF elements.
+	 *
+	 * @param array $amefElements The found AMEF elements
+	 * @param array $stats        Processing statistics, updated in place
+	 *
+	 * @return array The slugs, in element order.
+	 */
+	private function amefSlugsOf(array $amefElements, array &$stats): array {
+		$amefSlugs = [];
+		foreach ($amefElements as $amefElement) {
+			$amefData = $amefElement->getObject();
+			if (isset($amefData['slug']) === true) {
+				$amefSlugs[] = $amefData['slug'];
+				$stats['amefElementsProcessed']++;
+			}
+		}
+
+		return $amefSlugs;
+	}//end amefSlugsOf()
+
+	/**
+	 * Store the AMEF slugs on the gebruik object, or log that there are none.
+	 *
+	 * @param ObjectEntity $gebruikObject The gebruik object
+	 * @param array        $amefSlugs     The AMEF slugs found
+	 *
+	 * @return void
+	 *
+	 * @throws Exception If the gebruik object cannot be updated.
+	 */
+	private function storeAmefSlugs(ObjectEntity $gebruikObject, array $amefSlugs): void {
+		if (empty($amefSlugs) === true) {
+			$this->logger->info(
+				'No AMEF elements with slugs found',
+				[
+					'gebruikId' => $gebruikObject->getUuid(),
+				]
+			);
+			return;
+		}
+
+		$this->saveAmefSlugs(gebruikObject: $gebruikObject, amefSlugs: $amefSlugs);
+	}//end storeAmefSlugs()
+
+	/**
+	 * Save the unique AMEF slugs on the gebruik object.
+	 *
+	 * @param ObjectEntity $gebruikObject The gebruik object
+	 * @param array        $amefSlugs     The AMEF slugs found (not empty)
+	 *
+	 * @return void
+	 *
+	 * @throws Exception If the gebruik object cannot be updated.
+	 */
+	private function saveAmefSlugs(ObjectEntity $gebruikObject, array $amefSlugs): void {
+		$gebruikData = $gebruikObject->getObject();
+		$gebruikData['amefElements'] = array_unique($amefSlugs);
+		$this->updateGebruikObject(
+			gebruikObject: $gebruikObject,
+			updatedData: $gebruikData
+		);
+
+		$this->logAmefSlugsUpdated(gebruikUuid: $gebruikObject->getUuid(), amefSlugs: $amefSlugs);
+	}//end saveAmefSlugs()
+
+	/**
+	 * Log the AMEF slugs stored on a gebruik object.
+	 *
+	 * @param string|null $gebruikUuid The gebruik object's UUID
+	 * @param array       $amefSlugs   The AMEF slugs stored
+	 *
+	 * @return void
+	 */
+	private function logAmefSlugsUpdated(?string $gebruikUuid, array $amefSlugs): void {
+		$this->logger->critical(
+			'AMEF ELEMENTS UPDATED',
+			[
+				'app' => 'stackiq',
+				'gebruikId' => $gebruikUuid,
+				'amefSlugs' => $amefSlugs,
+				'amefElementsCount' => count($amefSlugs),
+			]
+		);
+	}//end logAmefSlugsUpdated()
+
+	/**
+	 * Log a failure while linking AMEF elements.
+	 *
+	 * @param ObjectEntity $gebruikObject The gebruik object
+	 * @param Exception    $exception     The failure
+	 *
+	 * @return void
+	 */
+	private function logAmefProcessingError(ObjectEntity $gebruikObject, Exception $exception): void {
+		$this->logger->error(
+			'AMEF PROCESSING ERROR',
+			[
+				'app' => 'stackiq',
+				'gebruikId' => $gebruikObject->getUuid(),
+				'exception' => $exception->getMessage(),
+			]
+		);
+	}//end logAmefProcessingError()
 
 	/**
 	 * Search for AMEF elements by IDs.

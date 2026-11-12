@@ -1,10 +1,16 @@
 <?php
 
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Controller;
 
 use OCA\Stackiq\Controller\ReferenceComponentCoverageController;
+use OCA\Stackiq\Controller\OrganisationReportRequest;
 use OCA\Stackiq\Service\ReferenceComponentCoverageService;
 use OCA\Stackiq\Service\OrganisationReportAccess;
 use OCP\AppFramework\Http;
@@ -72,9 +78,8 @@ final class ReferenceComponentCoverageControllerTest extends TestCase {
 		return new ReferenceComponentCoverageController(
 			appName: 'stackiq',
 			request: $request,
-			userSession: $session,
 			reportService: $service,
-			access: new OrganisationReportAccess(groupManager: $groupManager, config: $config)
+			reportRequest: new OrganisationReportRequest(userSession: $session, request: $request, access: new OrganisationReportAccess(groupManager: $groupManager, config: $config))
 		);
 	}//end controller()
 }//end class

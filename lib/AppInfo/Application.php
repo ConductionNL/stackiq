@@ -14,6 +14,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2024 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -43,11 +46,13 @@ use OCA\Stackiq\EventListener\ContactPersonOrganisationListener;
 use OCA\Stackiq\EventListener\ModuleRegistrationSubscriber;
 use OCA\Stackiq\EventListener\TestEventListener;
 use OCA\Stackiq\EventListener\UserProfileUpdatedEventListener;
+use OCA\Stackiq\Middleware\ApiContractMiddleware;
 use OCA\Stackiq\Service\ArchiMateExportService;
 use OCA\Stackiq\Service\ArchiMateImportService;
 use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\ContactpersoonService;
+use OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard;
 use OCA\Stackiq\Service\ContractApprovalService;
 use OCA\Stackiq\Service\ContractStatusService;
 use OCA\Stackiq\Service\EolMatcherService;
@@ -73,6 +78,7 @@ use OCA\Stackiq\Service\SbomImportService;
 use OCA\Stackiq\Service\SbomParserService;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\Settings\CronjobSettings;
+use OCA\Stackiq\Service\Settings\EolSyncSettings;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
@@ -167,6 +173,9 @@ class Application extends App implements IBootstrap {
 		$this->registerEventListeners(context: $context);
 
 		$this->registerDomainServices(context: $context);
+
+		// API-Version header and problem details on the JSON API (spec api-contract).
+		$context->registerMiddleware(ApiContractMiddleware::class);
 	}//end register()
 
 	/**
@@ -724,6 +733,7 @@ class Application extends App implements IBootstrap {
 			function ($container) {
 				return new EolSyncService(
 					settingsService: $container->get(SettingsService::class),
+					eolSyncSettings: $container->get(EolSyncSettings::class),
 					matcher: $container->get(EolMatcherService::class),
 					timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
 					logger: $container->get(LoggerInterface::class),
@@ -766,7 +776,8 @@ class Application extends App implements IBootstrap {
 					// request time and nothing catches it before then — see
 					// tests/Unit/AppInfo/CompositionRootArgumentsTest.php.
 					objectService: $container->get(ObjectServiceInterface::class),
-					organisationService: $container->get(OpenRegisterOrganisationService::class)
+					organisationService: $container->get(OpenRegisterOrganisationService::class),
+					organisationGuard: $container->get(ContactPersonOrganisationGuard::class)
 				);
 			}
 		);
