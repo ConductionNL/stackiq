@@ -173,33 +173,7 @@ class OrganisatieService {
 	 */
 	public function updateOrganizationStatus(string $organizationUuid, array $objectData): bool {
 		try {
-			$this->logger->info(
-				'OrganisatieService: Updating organization status',
-				[
-					'organizationUuid' => $organizationUuid,
-					'beoordeling' => $objectData['beoordeling'] ?? 'unknown',
-				]
-			);
-
-			// Get the organization entity.
-			$organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
-			$organisationEntity = $organisationMapper->findByUuid($organizationUuid);
-
-			// Map status from Stackiq to OpenRegister.
-			$active = $this->mapStatus(status: $objectData['beoordeling'] ?? 'actief');
-
-			// Update the entity.
-			$organisationEntity->setActive($active);
-			$organisationMapper->save($organisationEntity);
-
-			$this->logger->info(
-				'OrganisatieService: Successfully updated organization status',
-				[
-					'organizationUuid' => $organizationUuid,
-					'active' => $active,
-				]
-			);
-
+			$this->applyOrganizationStatus(organizationUuid: $organizationUuid, objectData: $objectData);
 			return true;
 		} catch (\Exception $e) {
 			$this->logger->error(
@@ -212,6 +186,55 @@ class OrganisatieService {
 			return false;
 		}//end try
 	}//end updateOrganizationStatus()
+
+	/**
+	 * Log the status update, then persist it.
+	 *
+	 * @param string $organizationUuid The organization UUID
+	 * @param array  $objectData       The organization object data
+	 *
+	 * @return void
+	 */
+	private function applyOrganizationStatus(string $organizationUuid, array $objectData): void {
+		$this->logger->info(
+			'OrganisatieService: Updating organization status',
+			[
+				'organizationUuid' => $organizationUuid,
+				'beoordeling' => $objectData['beoordeling'] ?? 'unknown',
+			]
+		);
+
+		$this->persistOrganizationStatus(organizationUuid: $organizationUuid, objectData: $objectData);
+	}//end applyOrganizationStatus()
+
+	/**
+	 * Set the mapped active flag on the organisation entity and save it.
+	 *
+	 * @param string $organizationUuid The organization UUID
+	 * @param array  $objectData       The organization object data
+	 *
+	 * @return void
+	 */
+	private function persistOrganizationStatus(string $organizationUuid, array $objectData): void {
+		// Get the organization entity.
+		$organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
+		$organisationEntity = $organisationMapper->findByUuid($organizationUuid);
+
+		// Map status from Stackiq to OpenRegister.
+		$active = $this->mapStatus(status: $objectData['beoordeling'] ?? 'actief');
+
+		// Update the entity.
+		$organisationEntity->setActive($active);
+		$organisationMapper->save($organisationEntity);
+
+		$this->logger->info(
+			'OrganisatieService: Successfully updated organization status',
+			[
+				'organizationUuid' => $organizationUuid,
+				'active' => $active,
+			]
+		);
+	}//end persistOrganizationStatus()
 
 	/**
 	 * Gets the OrganisationService instance.
@@ -383,33 +406,59 @@ class OrganisatieService {
 		string $parentOrgUuid,
 	): \OCA\OpenRegister\Db\Organisation {
 		try {
-			$organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
-
-			$organisationEntity->setParent($parentOrgUuid);
-			$saved = $organisationMapper->save($organisationEntity);
-
-			$this->logger->info(
-				'OrganisatieService: Linked organisation to parent',
-				[
-					'uuid' => $organisationEntity->getUuid(),
-					'parent' => $parentOrgUuid,
-				]
-			);
-
-			return $saved;
+			return $this->saveParentLink(organisationEntity: $organisationEntity, parentOrgUuid: $parentOrgUuid);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'OrganisatieService: Failed to link organisation to parent, leaving it flat',
-				[
-					'uuid' => $organisationEntity->getUuid(),
-					'parent' => $parentOrgUuid,
-					'error' => $e->getMessage(),
-				]
+				$this->parentLinkContext(organisationEntity: $organisationEntity, parentOrgUuid: $parentOrgUuid) + ['error' => $e->getMessage()]
 			);
 
 			return $organisationEntity;
 		}//end try
 	}//end linkParentOrganisation()
+
+	/**
+	 * Set the parent on the entity and persist it via the OrganisationMapper.
+	 *
+	 * @param \OCA\OpenRegister\Db\Organisation $organisationEntity The created organisation entity.
+	 * @param string $parentOrgUuid The parent organisation UUID to link.
+	 *
+	 * @return \OCA\OpenRegister\Db\Organisation The saved entity.
+	 */
+	private function saveParentLink(
+		\OCA\OpenRegister\Db\Organisation $organisationEntity,
+		string $parentOrgUuid,
+	): \OCA\OpenRegister\Db\Organisation {
+		$organisationMapper = $this->container->get('OCA\OpenRegister\Db\OrganisationMapper');
+
+		$organisationEntity->setParent($parentOrgUuid);
+		$saved = $organisationMapper->save($organisationEntity);
+
+		$this->logger->info(
+			'OrganisatieService: Linked organisation to parent',
+			$this->parentLinkContext(organisationEntity: $organisationEntity, parentOrgUuid: $parentOrgUuid)
+		);
+
+		return $saved;
+	}//end saveParentLink()
+
+	/**
+	 * The log context naming the organisation and the parent it is linked to.
+	 *
+	 * @param \OCA\OpenRegister\Db\Organisation $organisationEntity The organisation entity.
+	 * @param string $parentOrgUuid The parent organisation UUID.
+	 *
+	 * @return array{uuid: string|null, parent: string}
+	 */
+	private function parentLinkContext(
+		\OCA\OpenRegister\Db\Organisation $organisationEntity,
+		string $parentOrgUuid,
+	): array {
+		return [
+			'uuid' => $organisationEntity->getUuid(),
+			'parent' => $parentOrgUuid,
+		];
+	}//end parentLinkContext()
 
 	/**
 	 * Get the currently active organisation UUID from the user session.
@@ -424,11 +473,7 @@ class OrganisatieService {
 		\OCA\OpenRegister\Service\OrganisationService $organisationService,
 	): ?string {
 		try {
-			// Try to get the active organisation from the OrganisationService.
-			$activeOrganisation = $organisationService->getActiveOrganisation();
-			if ($activeOrganisation !== null) {
-				return $activeOrganisation->getUuid();
-			}
+			return $this->activeOrganisationUuidOf(organisationService: $organisationService);
 		} catch (\Exception $e) {
 			$this->logger->debug(
 				'OrganisatieService: Could not get active organisation',
@@ -440,6 +485,25 @@ class OrganisatieService {
 
 		return null;
 	}//end getActiveOrganisationUuid()
+
+	/**
+	 * The UUID of the session's active organisation, or null when there is none.
+	 *
+	 * @param \OCA\OpenRegister\Service\OrganisationService $organisationService The organisation service
+	 *
+	 * @return string|null
+	 */
+	private function activeOrganisationUuidOf(
+		\OCA\OpenRegister\Service\OrganisationService $organisationService,
+	): ?string {
+		// Try to get the active organisation from the OrganisationService.
+		$activeOrganisation = $organisationService->getActiveOrganisation();
+		if ($activeOrganisation !== null) {
+			return $activeOrganisation->getUuid();
+		}
+
+		return null;
+	}//end activeOrganisationUuidOf()
 
 	/**
 	 * Adds users to organization entity.
@@ -571,20 +635,7 @@ class OrganisatieService {
 	 */
 	public function getAdminGroupUsernames(): array {
 		try {
-			$groupManager = $this->container->get('OCP\IGroupManager');
-			$adminGroup = $groupManager->get('admin');
-
-			if ($adminGroup !== null) {
-				$adminUsers = $adminGroup->getUsers();
-				$adminUsernames = [];
-				foreach ($adminUsers as $user) {
-					$adminUsernames[] = $user->getUID();
-				}
-
-				return $adminUsernames;
-			}
-
-			return [];
+			return $this->adminUsernames();
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'OrganisatieService: Failed to get admin users',
@@ -595,4 +646,26 @@ class OrganisatieService {
 			return [];
 		}//end try
 	}//end getAdminGroupUsernames()
+
+	/**
+	 * The uids of the admin group's members; none when the group does not exist.
+	 *
+	 * @return array<int, string>
+	 */
+	private function adminUsernames(): array {
+		$groupManager = $this->container->get('OCP\IGroupManager');
+		$adminGroup = $groupManager->get('admin');
+
+		if ($adminGroup === null) {
+			return [];
+		}
+
+		$adminUsers = $adminGroup->getUsers();
+		$adminUsernames = [];
+		foreach ($adminUsers as $user) {
+			$adminUsernames[] = $user->getUID();
+		}
+
+		return $adminUsernames;
+	}//end adminUsernames()
 }//end class
