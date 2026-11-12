@@ -339,19 +339,44 @@ class ItsmExchangeService {
 			return 'Unknown service desk "' . $desk . '".';
 		}
 
-		$found = $this->gateway->findObject(register: self::REGISTER, schema: 'organization', id: $organisation);
-		if ($found === null || (string) ($found['uuid'] ?? '') === '') {
+		$uuid = $this->organisationUuid(organisation: $organisation);
+		if ($uuid === '') {
 			return 'The organisation ' . $organisation . ' does not exist in stackiq.';
 		}
 
+		return $this->withDeskSource(desk: $desk, organisationUuid: $uuid);
+	}//end preconditions()
+
+	/**
+	 * The uuid of the organisation given by uuid, id or slug, or '' when stackiq does not hold it.
+	 *
+	 * @param string $organisation The organisation's uuid, id or slug.
+	 *
+	 * @return string
+	 */
+	private function organisationUuid(string $organisation): string {
+		$found = $this->gateway->findObject(register: self::REGISTER, schema: 'organization', id: $organisation);
+
+		return (string) ($found['uuid'] ?? '');
+	}//end organisationUuid()
+
+	/**
+	 * Integriq's source for the desk with the organisation's uuid, or why the set-up cannot start without it.
+	 *
+	 * @param string $desk             A known desk key.
+	 * @param string $organisationUuid The organisation's uuid.
+	 *
+	 * @return array{source: array<string, mixed>, organisation: string}|string
+	 */
+	private function withDeskSource(string $desk, string $organisationUuid): array|string {
 		$profile = self::DESKS[$desk];
 		$source  = $this->gateway->findObject(register: 'integriq', schema: 'source', id: $profile['source']);
 		if ($source === null) {
 			return 'Integriq has no source "' . $profile['source'] . '". Add the ' . $profile['label'] . ' source in integriq first.';
 		}
 
-		return ['source' => $source, 'organisation' => (string) $found['uuid']];
-	}//end preconditions()
+		return ['source' => $source, 'organisation' => $organisationUuid];
+	}//end withDeskSource()
 
 	/**
 	 * Preflight every flow and keep the blocking findings.
