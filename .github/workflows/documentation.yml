@@ -12,6 +12,9 @@ on:
   pull_request:
     branches: [development]
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     # Permission CEILING for the called workflow, not a grant: the callee's

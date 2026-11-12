@@ -3,6 +3,9 @@
 /**
  * Stackiq RenameCollidingSchemaSlugs repair step.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Moves this app's share of the cross-app slug collisions onto namespaced slugs IN
  * PLACE, before the register import.
  *
@@ -38,9 +41,6 @@
  * @author    Conduction <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  *
  * @version GIT: <git_id>
  *
@@ -121,8 +121,8 @@ class RenameCollidingSchemaSlugs implements IRepairStep {
 	 * @spec exclude No canonical spec covers the cross-app slug namespacing pass.
 	 */
 	public function run(IOutput $output): void {
-		foreach (self::RENAMES as $from => $rename) {
-			$this->renameOne(output: $output, from: $from, to: $rename['to'], with: $rename['with']);
+		foreach (array_keys(self::RENAMES) as $from) {
+			$this->renameOne(output: $output, from: $from);
 		}
 	}//end run()
 
@@ -130,54 +130,126 @@ class RenameCollidingSchemaSlugs implements IRepairStep {
 	 * Rename one slug.
 	 *
 	 * @param IOutput $output Repair output.
-	 * @param string $from The slug being moved away from.
-	 * @param string $to The namespaced slug.
-	 * @param string $with The app this slug collided with.
+	 * @param string  $from   The slug being moved away from (a key of RENAMES).
 	 *
 	 * @return void
 	 */
-	private function renameOne(IOutput $output, string $from, string $to, string $with): void {
-		$old = $this->schemaIds(slug: $from);
-		$new = $this->schemaIds(slug: $to);
-
-		if ($old === null || $new === null) {
-			$output->info('RenameCollidingSchemaSlugs: schema table unreadable; leaving `' . $from . '` alone.');
+	private function renameOne(IOutput $output, string $from): void {
+		$rename = $this->planRename(from: $from);
+		if ($this->reportNothingToRename(output: $output, rename: $rename) === true
+			|| $this->refuseAmbiguousRename(output: $output, rename: $rename) === true
+			|| $this->writeRename(output: $output, rename: $rename) === false
+		) {
 			return;
 		}
 
-		if ($old === []) {
-			$output->info('RenameCollidingSchemaSlugs: no stackiq-owned `' . $from . '`; nothing to do.');
-			return;
+		$output->info(
+			'RenameCollidingSchemaSlugs: schema ' . $rename->old[0] . ' renamed `' . $rename->from . '` -> `' . $rename->to
+			. '` (collided with ' . $rename->with . '); its objects stay attached.'
+		);
+	}//end renameOne()
+
+	/**
+	 * Look up this app's schemas under the old slug, then under the new one.
+	 *
+	 * @param string $from The slug being moved away from (a key of RENAMES).
+	 *
+	 * @return SchemaSlugRename The planned rename.
+	 */
+	private function planRename(string $from): SchemaSlugRename {
+		$rename = new SchemaSlugRename();
+		$rename->from = $from;
+		$rename->to   = self::RENAMES[$from]['to'];
+		$rename->with = self::RENAMES[$from]['with'];
+		$rename->old  = $this->schemaIds(slug: $rename->from);
+		$rename->new  = $this->schemaIds(slug: $rename->to);
+
+		return $rename;
+	}//end planRename()
+
+	/**
+	 * Say so, and answer true, when the table is unreadable or there is no old slug.
+	 *
+	 * @param IOutput          $output Repair output.
+	 * @param SchemaSlugRename $rename The planned rename.
+	 *
+	 * @return bool True when there is nothing to rename.
+	 */
+	private function reportNothingToRename(IOutput $output, SchemaSlugRename $rename): bool {
+		if ($rename->old === null || $rename->new === null) {
+			$output->info('RenameCollidingSchemaSlugs: schema table unreadable; leaving `' . $rename->from . '` alone.');
+			return true;
 		}
 
-		if ($new !== []) {
+		if ($rename->old === []) {
+			$output->info('RenameCollidingSchemaSlugs: no stackiq-owned `' . $rename->from . '`; nothing to do.');
+			return true;
+		}
+
+		return false;
+	}//end reportNothingToRename()
+
+	/**
+	 * Warn, and answer true, when both slugs exist or the old slug is duplicated.
+	 *
+	 * @param IOutput          $output Repair output.
+	 * @param SchemaSlugRename $rename The planned rename.
+	 *
+	 * @return bool True when the rename is refused.
+	 */
+	private function refuseAmbiguousRename(IOutput $output, SchemaSlugRename $rename): bool {
+		if ($rename->new !== []) {
 			// Both slugs present: each may own objects, and renaming would collide
 			// with the new row. Abandoning either set is not a call a repair step
 			// gets to make without being asked.
 			$this->logger->warning(
 				'RenameCollidingSchemaSlugs: both slugs exist; refusing to merge them.',
-				['from' => $from, 'to' => $to, 'old' => $old, 'new' => $new]
+				['from' => $rename->from, 'to' => $rename->to, 'old' => $rename->old, 'new' => $rename->new]
 			);
 			$output->warning(
-				'RenameCollidingSchemaSlugs: both `' . $from . '` and `' . $to
+				'RenameCollidingSchemaSlugs: both `' . $rename->from . '` and `' . $rename->to
 				. '` exist; refusing to merge them. Resolve by hand.'
 			);
-			return;
+			return true;
 		}
 
-		if (count($old) > 1) {
-			$this->logger->warning(
-				'RenameCollidingSchemaSlugs: duplicate slugs; refusing to guess.',
-				['from' => $from, 'ids' => $old]
-			);
-			$output->warning('RenameCollidingSchemaSlugs: duplicate `' . $from . '` schemas; refusing to guess.');
-			return;
+		return $this->refuseDuplicateRename(output: $output, rename: $rename);
+	}//end refuseAmbiguousRename()
+
+	/**
+	 * Warn, and answer true, when more than one schema carries the old slug.
+	 *
+	 * @param IOutput          $output Repair output.
+	 * @param SchemaSlugRename $rename The planned rename.
+	 *
+	 * @return bool True when the rename is refused.
+	 */
+	private function refuseDuplicateRename(IOutput $output, SchemaSlugRename $rename): bool {
+		if (count($rename->old) <= 1) {
+			return false;
 		}
 
+		$this->logger->warning(
+			'RenameCollidingSchemaSlugs: duplicate slugs; refusing to guess.',
+			['from' => $rename->from, 'ids' => $rename->old]
+		);
+		$output->warning('RenameCollidingSchemaSlugs: duplicate `' . $rename->from . '` schemas; refusing to guess.');
+		return true;
+	}//end refuseDuplicateRename()
+
+	/**
+	 * Write the new slug onto the one old schema row.
+	 *
+	 * @param IOutput          $output Repair output.
+	 * @param SchemaSlugRename $rename The planned rename.
+	 *
+	 * @return bool True when the row was renamed.
+	 */
+	private function writeRename(IOutput $output, SchemaSlugRename $rename): bool {
 		try {
 			$this->db->executeStatement(
 				'UPDATE `*PREFIX*openregister_schemas` SET slug = ? WHERE id = ?',
-				[$to, $old[0]]
+				[$rename->to, $rename->old[0]]
 			);
 		} catch (Exception $e) {
 			// Safe to fail: the import then creates a new schema rather than
@@ -185,17 +257,14 @@ class RenameCollidingSchemaSlugs implements IRepairStep {
 			// because the objects on the old schema stop being reachable.
 			$this->logger->error(
 				'RenameCollidingSchemaSlugs: slug rename failed; the import will create a second schema.',
-				['from' => $from, 'id' => $old[0], 'exception' => $e->getMessage()]
+				['from' => $rename->from, 'id' => $rename->old[0], 'exception' => $e->getMessage()]
 			);
-			$output->warning('RenameCollidingSchemaSlugs: renaming `' . $from . '` failed; see the log.');
-			return;
+			$output->warning('RenameCollidingSchemaSlugs: renaming `' . $rename->from . '` failed; see the log.');
+			return false;
 		}
 
-		$output->info(
-			'RenameCollidingSchemaSlugs: schema ' . $old[0] . ' renamed `' . $from . '` -> `' . $to
-			. '` (collided with ' . $with . '); its objects stay attached.'
-		);
-	}//end renameOne()
+		return true;
+	}//end writeRename()
 
 	/**
 	 * Ids of this application's schemas carrying the given slug.

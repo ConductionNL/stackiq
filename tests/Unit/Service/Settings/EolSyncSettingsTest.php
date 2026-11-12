@@ -1,10 +1,10 @@
 <?php
 
 /**
- * Unit tests for SettingsService's EOL sync config/status persistence.
+ * Unit tests for EolSyncSettings' EOL sync config/status persistence.
  *
  * @category  Tests
- * @package   OCA\Stackiq\Tests\Unit\Service
+ * @package   OCA\Stackiq\Tests\Unit\Service\Settings
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -19,22 +19,15 @@
 
 declare(strict_types=1);
 
-namespace OCA\Stackiq\Tests\Unit\Service;
+namespace OCA\Stackiq\Tests\Unit\Service\Settings;
 
-use OCA\Stackiq\Service\Settings\RoleGroupSettings;
-use OCA\Stackiq\Service\SettingsService;
-use OCP\App\IAppManager;
+use OCA\Stackiq\Service\Settings\EolSyncSettings;
 use OCP\IAppConfig;
-use OCP\IGroupManager;
-use OCP\IL10N;
-use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
-use Psr\Container\ContainerInterface;
-use Psr\Log\LoggerInterface;
 
 /**
  * Round-trips the EOL sync config/status blobs through an in-memory
- * IAppConfig double so the real (non-mocked) SettingsService logic is
+ * IAppConfig double so the real (non-mocked) EolSyncSettings logic is
  * exercised end to end.
  *
  * PHPUnit assertions take positional arguments; the named-parameter sniff does
@@ -43,16 +36,16 @@ use Psr\Log\LoggerInterface;
  *
  * phpcs:disable CustomSniffs.Functions.NamedParameters
  */
-class SettingsServiceEolConfigTest extends TestCase {
+class EolSyncSettingsTest extends TestCase {
 
 	/**
-	 * Build a SettingsService backed by an in-memory IAppConfig store.
+	 * Build an EolSyncSettings backed by an in-memory IAppConfig store.
 	 *
 	 * @param array $store Reference to the backing key/value store.
 	 *
-	 * @return SettingsService
+	 * @return EolSyncSettings
 	 */
-	private function makeService(array &$store): SettingsService {
+	private function makeService(array &$store): EolSyncSettings {
 		$config = $this->createMock(IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
 			function (string $app, string $key, string $default = '') use (&$store): string {
@@ -66,16 +59,7 @@ class SettingsServiceEolConfigTest extends TestCase {
 			}
 		);
 
-		return new SettingsService(
-			config: $config,
-			request: $this->createMock(IRequest::class),
-			roleGroupSettings: $this->createMock(RoleGroupSettings::class),
-			container: $this->createMock(ContainerInterface::class),
-			appManager: $this->createMock(IAppManager::class),
-			logger: $this->createMock(LoggerInterface::class),
-			groupManager: $this->createMock(IGroupManager::class),
-			l10n: $this->createMock(IL10N::class)
-		);
+		return new EolSyncSettings(config: $config);
 	}//end makeService()
 
 	/**
