@@ -1819,110 +1819,7 @@ class OrganizationSyncService {
 		try {
 			// Check configuration.
 			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-			$register = ($voorzieningenConfig['register'] ?? '');
-			$organizationSchema = ($voorzieningenConfig['organisatie_schema'] ?? '');
-			$contactSchema = ($voorzieningenConfig['contactpersoon_schema'] ?? '');
-
-			if (empty($register) === true || empty($organizationSchema) === true) {
-				return [
-					'configured' => false,
-					'message' => 'Sync not configured: missing register or organization schema',
-				];
-			}
-
-			// Get total counts (all objects).
-			$allOrganisationObjects = $this->getOrganisationObjectsByTimeWindow(
-				register: $register,
-				organizationSchema: $organizationSchema,
-				minutesBack: 0
-			);
-
-			// Get incremental counts (objects to be processed in next sync).
-			$incrementalOrganisationObjects = $this->getOrganisationObjectsByTimeWindow(
-				register: $register,
-				organizationSchema: $organizationSchema,
-				minutesBack: $minutesBack
-			);
-
-			// Get organization entities count.
-			$entitiesCount = 0;
-			try {
-				$entities = $this->organisationMapper->findAllWithUserCount();
-				$entitiesCount = count($entities);
-			} catch (\Exception $e) {
-				// Ignore errors in count.
-			}
-
-			// Predict contact persons to be processed.
-			$predictedContactPersonsToProcess = 0;
-			if (empty($contactSchema) === false) {
-				foreach ($incrementalOrganisationObjects as $orgObject) {
-					$objectData = $orgObject->getObject();
-					$organisationId = ($objectData['id'] ?? $orgObject->getId());
-					$contactPersons = $this->getContactPersonsForOrganisation(
-						organisationId: $organisationId,
-						register: $register,
-						contactSchema: $contactSchema
-					);
-					$predictedContactPersonsToProcess += count($contactPersons);
-				}
-			}
-
-			// Calculate efficiency metrics.
-			$efficiencyImprovement = 0;
-			if (count($allOrganisationObjects) > 0) {
-				$ratio = count($incrementalOrganisationObjects) / count($allOrganisationObjects);
-				$efficiencyImprovement = round(((1 - $ratio) * 100), 1);
-			}
-
-			if ($minutesBack === 0) {
-				$syncModeValue = 'full';
-			} else {
-				$syncModeValue = 'incremental';
-			}
-
-			$messageValue = 'No organizations to process in the current time window';
-			if (count($incrementalOrganisationObjects) > 0) {
-				$orgCount = $this->formatNumber(number: count($incrementalOrganisationObjects));
-				$contactCount = $this->formatNumber(number: $predictedContactPersonsToProcess);
-				// phpcs:ignore Generic.Files.LineLength.TooLong
-				$messageValue = "Ready to process {$orgCount} organizations and {$contactCount} contact persons";
-			}
-
-			if ($minutesBack > 0) {
-				$nextScheduledSyncValue = "Will process organizations modified in the last {$minutesBack} minutes (incremental sync)";
-			} else {
-				$nextScheduledSyncValue = 'Will process all organizations (full sync)';
-			}
-
-			return [
-				'configured' => true,
-				'syncMode' => $syncModeValue,
-				'timeWindow' => $minutesBack,
-
-				// Total counts.
-				'totalOrganizationObjects' => count($allOrganisationObjects),
-				'totalOrganizationEntities' => $entitiesCount,
-
-				// Processing predictions.
-				'organizationsToProcess' => count($incrementalOrganisationObjects),
-				'contactPersonsToProcess' => $predictedContactPersonsToProcess,
-
-				// Efficiency metrics.
-				'efficiencyImprovement' => $efficiencyImprovement . '%',
-				'processingReduction' => (count($allOrganisationObjects) - count($incrementalOrganisationObjects)),
-
-				// Configuration.
-				'contactSchemaConfigured' => empty($contactSchema) === false,
-				'lastSyncTime' => $this->config->getValueString('stackiq', 'last_sync_time', 'Never'),
-
-				// Email configuration status.
-				'emailStatus' => $this->getEmailConfigurationStatus(),
-
-				// Status messages.
-				'message' => $messageValue,
-				'nextScheduledSync' => $nextScheduledSyncValue,
-			];
+			return $this->syncStatusFor(voorzieningenConfig: $voorzieningenConfig, minutesBack: $minutesBack);
 		} catch (\Exception $e) {
 			return [
 				'configured' => false,
@@ -1931,6 +1828,235 @@ class OrganizationSyncService {
 		}//end try
 
 	}//end getSyncStatus()
+
+	/**
+	 * Builds the sync status for a configuration, or reports it as not configured
+	 *
+	 * @param array $voorzieningenConfig The voorzieningen configuration
+	 * @param int   $minutesBack         Number of minutes to look back for prediction
+	 *
+	 * @return array Status information about sync requirements
+	 */
+	private function syncStatusFor(array $voorzieningenConfig, int $minutesBack): array {
+		$register = ($voorzieningenConfig['register'] ?? '');
+		$organizationSchema = ($voorzieningenConfig['organisatie_schema'] ?? '');
+
+		if (empty($register) === true || empty($organizationSchema) === true) {
+			return [
+				'configured' => false,
+				'message' => 'Sync not configured: missing register or organization schema',
+			];
+		}
+
+		return $this->predictSyncStatus(voorzieningenConfig: $voorzieningenConfig, minutesBack: $minutesBack);
+
+	}//end syncStatusFor()
+
+	/**
+	 * Predicts the objects the next sync processes and reports them with the sync configuration
+	 *
+	 * @param array $voorzieningenConfig The voorzieningen configuration, with register and organisation schema
+	 * @param int   $minutesBack         Number of minutes to look back for prediction
+	 *
+	 * @return array Status information about sync requirements including processing predictions
+	 */
+	private function predictSyncStatus(array $voorzieningenConfig, int $minutesBack): array {
+		// Get total counts (all objects), then the objects to be processed in next sync.
+		$allOrganisationObjects = $this->configuredOrganisationObjects(voorzieningenConfig: $voorzieningenConfig, minutesBack: 0);
+		$objectsToProcess = $this->configuredOrganisationObjects(voorzieningenConfig: $voorzieningenConfig, minutesBack: $minutesBack);
+
+		$status = [
+			'configured' => true,
+			'syncMode' => $this->syncModeFor(minutesBack: $minutesBack),
+			'timeWindow' => $minutesBack,
+
+			// Total counts.
+			'totalOrganizationObjects' => count($allOrganisationObjects),
+			'totalOrganizationEntities' => $this->countOrganisationEntities(),
+
+			// Processing predictions.
+			'organizationsToProcess' => count($objectsToProcess),
+			'contactPersonsToProcess' => $this->predictContactPersonsToProcess(voorzieningenConfig: $voorzieningenConfig, objects: $objectsToProcess),
+		];
+
+		return $this->completeSyncStatus(status: $status, voorzieningenConfig: $voorzieningenConfig);
+
+	}//end predictSyncStatus()
+
+	/**
+	 * Adds the efficiency metrics, configuration and status messages to a predicted sync status
+	 *
+	 * @param array $status              The status with its counts and predictions
+	 * @param array $voorzieningenConfig The voorzieningen configuration
+	 *
+	 * @return array The complete sync status
+	 */
+	private function completeSyncStatus(array $status, array $voorzieningenConfig): array {
+		$totalObjects = $status['totalOrganizationObjects'];
+		$objectsToProcess = $status['organizationsToProcess'];
+
+		return $status + [
+			// Efficiency metrics.
+			'efficiencyImprovement' => $this->efficiencyImprovement(totalObjects: $totalObjects, objectsToProcess: $objectsToProcess) . '%',
+			'processingReduction' => ($totalObjects - $objectsToProcess),
+
+			// Configuration.
+			'contactSchemaConfigured' => empty($voorzieningenConfig['contactpersoon_schema'] ?? '') === false,
+			'lastSyncTime' => $this->config->getValueString('stackiq', 'last_sync_time', 'Never'),
+
+			// Email configuration status.
+			'emailStatus' => $this->getEmailConfigurationStatus(),
+
+			// Status messages.
+			'message' => $this->syncReadyMessage(status: $status),
+			'nextScheduledSync' => $this->nextScheduledSyncFor(minutesBack: $status['timeWindow']),
+		];
+
+	}//end completeSyncStatus()
+
+	/**
+	 * Gets the organisation objects of the configured register and schema in a time window
+	 *
+	 * @param array $voorzieningenConfig The voorzieningen configuration, with register and organisation schema
+	 * @param int   $minutesBack         Number of minutes to look back (0 for all objects)
+	 *
+	 * @return array The organisation objects
+	 */
+	private function configuredOrganisationObjects(array $voorzieningenConfig, int $minutesBack): array {
+		return $this->getOrganisationObjectsByTimeWindow(
+			register: $voorzieningenConfig['register'],
+			organizationSchema: $voorzieningenConfig['organisatie_schema'],
+			minutesBack: $minutesBack
+		);
+
+	}//end configuredOrganisationObjects()
+
+	/**
+	 * Counts the organisation entities, or 0 when they cannot be read
+	 *
+	 * @return int The number of organisation entities
+	 */
+	private function countOrganisationEntities(): int {
+		try {
+			$entities = $this->organisationMapper->findAllWithUserCount();
+			return count($entities);
+		} catch (\Exception $e) {
+			// Ignore errors in count.
+			return 0;
+		}
+
+	}//end countOrganisationEntities()
+
+	/**
+	 * Predicts the contact persons to be processed for the given organisation objects
+	 *
+	 * @param array $voorzieningenConfig The voorzieningen configuration
+	 * @param array $objects             The organisation objects of the next sync
+	 *
+	 * @return int The predicted number of contact persons
+	 */
+	private function predictContactPersonsToProcess(array $voorzieningenConfig, array $objects): int {
+		$contactSchema = ($voorzieningenConfig['contactpersoon_schema'] ?? '');
+		if (empty($contactSchema) === true) {
+			return 0;
+		}
+
+		$predictedContactPersonsToProcess = 0;
+		foreach ($objects as $orgObject) {
+			$predictedContactPersonsToProcess += $this->countContactPersonsOf(voorzieningenConfig: $voorzieningenConfig, orgObject: $orgObject);
+		}
+
+		return $predictedContactPersonsToProcess;
+
+	}//end predictContactPersonsToProcess()
+
+	/**
+	 * Counts the contact persons of one organisation object
+	 *
+	 * @param array $voorzieningenConfig The voorzieningen configuration, with register and contact schema
+	 * @param mixed $orgObject           The organisation object
+	 *
+	 * @return int The number of contact persons
+	 */
+	private function countContactPersonsOf(array $voorzieningenConfig, $orgObject): int {
+		$objectData = $orgObject->getObject();
+		$contactPersons = $this->getContactPersonsForOrganisation(
+			organisationId: ($objectData['id'] ?? $orgObject->getId()),
+			register: $voorzieningenConfig['register'],
+			contactSchema: $voorzieningenConfig['contactpersoon_schema']
+		);
+		return count($contactPersons);
+
+	}//end countContactPersonsOf()
+
+	/**
+	 * Calculates the share of objects the window saves, in percent with one decimal
+	 *
+	 * @param int $totalObjects     The number of all organisation objects
+	 * @param int $objectsToProcess The number of organisation objects in the window
+	 *
+	 * @return int|float The efficiency improvement (0 when there are no objects)
+	 */
+	private function efficiencyImprovement(int $totalObjects, int $objectsToProcess): int|float {
+		if ($totalObjects > 0) {
+			$ratio = $objectsToProcess / $totalObjects;
+			return round(((1 - $ratio) * 100), 1);
+		}
+
+		return 0;
+
+	}//end efficiencyImprovement()
+
+	/**
+	 * Names the sync mode of a time window
+	 *
+	 * @param int $minutesBack Number of minutes to look back
+	 *
+	 * @return string 'full' for a window of 0, 'incremental' otherwise
+	 */
+	private function syncModeFor(int $minutesBack): string {
+		if ($minutesBack === 0) {
+			return 'full';
+		}
+
+		return 'incremental';
+
+	}//end syncModeFor()
+
+	/**
+	 * Describes what the next sync is ready to process
+	 *
+	 * @param array $status The status with its processing predictions
+	 *
+	 * @return string The status message
+	 */
+	private function syncReadyMessage(array $status): string {
+		if ($status['organizationsToProcess'] > 0) {
+			$orgCount = $this->formatNumber(number: $status['organizationsToProcess']);
+			$contactCount = $this->formatNumber(number: $status['contactPersonsToProcess']);
+			// phpcs:ignore Generic.Files.LineLength.TooLong
+			return "Ready to process {$orgCount} organizations and {$contactCount} contact persons";
+		}
+
+		return 'No organizations to process in the current time window';
+
+	}//end syncReadyMessage()
+
+	/**
+	 * Describes the objects the next scheduled sync processes
+	 *
+	 * @param int $minutesBack Number of minutes to look back
+	 *
+	 * @return string The next scheduled sync description
+	 */
+	private function nextScheduledSyncFor(int $minutesBack): string {
+		if ($minutesBack > 0) {
+			return "Will process organizations modified in the last {$minutesBack} minutes (incremental sync)";
+		}
+
+		return 'Will process all organizations (full sync)';
+
+	}//end nextScheduledSyncFor()
 
 	/**
 	 * Gets email configuration status for sync reporting
