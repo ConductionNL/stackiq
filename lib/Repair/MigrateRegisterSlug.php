@@ -3,6 +3,9 @@
 /**
  * Renames this app's OpenRegister register SLUG in place, before the import.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * WHY A REPAIR STEP AT ALL. OpenRegister's ImportHandler resolves a register by
  * SLUG and by nothing else — `registerMapper->find(id: strtolower($data['slug']))`,
  * and `autoCreateRegisterIfApplication()` on `filters: ['slug' => $slug]` — and
@@ -57,9 +60,6 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -167,19 +167,8 @@ class MigrateRegisterSlug implements IRepairStep {
 		$existing = $this->existingSlugs();
 		$plan = $this->decisions->plan(map: self::SLUG_MAP, existing: $existing);
 
-		foreach ($plan['refused'] as $old => $why) {
-			$this->logger->warning(
-				'MigrateRegisterSlug: ' . $why . '; renaming neither.',
-				['old' => $old]
-			);
-		}
-
-		$renamed = 0;
-		foreach ($plan['renames'] as $old => $new) {
-			if ($this->renameSlug(old: $old, new: $new) === true) {
-				$renamed++;
-			}
-		}
+		$this->warnRefused(refused: $plan['refused']);
+		$renamed = $this->applyRenames(renames: $plan['renames']);
 
 		$rekeyed = $this->migrateStoredSlugValues();
 
@@ -192,6 +181,40 @@ class MigrateRegisterSlug implements IRepairStep {
 			)
 		);
 	}//end run()
+
+	/**
+	 * Warn about every rename the plan refused.
+	 *
+	 * @param array<string, string> $refused Reason per refused old slug.
+	 *
+	 * @return void
+	 */
+	private function warnRefused(array $refused): void {
+		foreach ($refused as $old => $why) {
+			$this->logger->warning(
+				'MigrateRegisterSlug: ' . $why . '; renaming neither.',
+				['old' => $old]
+			);
+		}
+	}//end warnRefused()
+
+	/**
+	 * Apply the planned renames and count the ones that went through.
+	 *
+	 * @param array<string, string> $renames New slug per old slug.
+	 *
+	 * @return int Number of register slugs renamed.
+	 */
+	private function applyRenames(array $renames): int {
+		$renamed = 0;
+		foreach ($renames as $old => $new) {
+			if ($this->renameSlug(old: $old, new: $new) === true) {
+				$renamed++;
+			}
+		}
+
+		return $renamed;
+	}//end applyRenames()
 
 	/**
 	 * Re-point app-config values that still name an old register slug.
@@ -208,34 +231,71 @@ class MigrateRegisterSlug implements IRepairStep {
 		$rekeyed = 0;
 
 		foreach (self::APPCONFIG_KEYS as $key) {
-			try {
-				$current = $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
-			} catch (Throwable $e) {
-				$this->logger->warning(
-					'MigrateRegisterSlug: could not read app config; leaving it alone.',
-					['key' => $key, 'exception' => $e->getMessage()]
-				);
-				continue;
-			}
-
-			$new = self::SLUG_MAP[$current] ?? null;
-			if ($new === null) {
-				continue;
-			}
-
-			try {
-				$this->appConfig->setValueString(AppIdentity::APP_ID, $key, $new);
+			if ($this->repointStoredSlug(key: $key) === true) {
 				$rekeyed++;
-			} catch (Throwable $e) {
-				$this->logger->warning(
-					'MigrateRegisterSlug: could not re-point app config.',
-					['key' => $key, 'old' => $current, 'new' => $new, 'exception' => $e->getMessage()]
-				);
 			}
 		}
 
 		return $rekeyed;
 	}//end migrateStoredSlugValues()
+
+	/**
+	 * Re-point one app-config value when it holds an old register slug.
+	 *
+	 * @param string $key The app-config key.
+	 *
+	 * @return bool True when the value was rewritten.
+	 */
+	private function repointStoredSlug(string $key): bool {
+		$current = $this->storedSlug(key: $key);
+		if ($current === null || isset(self::SLUG_MAP[$current]) === false) {
+			return false;
+		}
+
+		return $this->writeNewSlug(key: $key, current: $current);
+	}//end repointStoredSlug()
+
+	/**
+	 * Read one app-config value, or null when it cannot be read.
+	 *
+	 * @param string $key The app-config key.
+	 *
+	 * @return string|null
+	 */
+	private function storedSlug(string $key): ?string {
+		try {
+			return $this->appConfig->getValueString(AppIdentity::APP_ID, $key, '');
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'MigrateRegisterSlug: could not read app config; leaving it alone.',
+				['key' => $key, 'exception' => $e->getMessage()]
+			);
+			return null;
+		}
+	}//end storedSlug()
+
+	/**
+	 * Write the new slug for a value that holds an old one.
+	 *
+	 * @param string $key     The app-config key.
+	 * @param string $current The old slug it holds (a key of the slug map).
+	 *
+	 * @return bool True when the value was rewritten.
+	 */
+	private function writeNewSlug(string $key, string $current): bool {
+		$new = self::SLUG_MAP[$current];
+		try {
+			$this->appConfig->setValueString(AppIdentity::APP_ID, $key, $new);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'MigrateRegisterSlug: could not re-point app config.',
+				['key' => $key, 'old' => $current, 'new' => $new, 'exception' => $e->getMessage()]
+			);
+			return false;
+		}
+
+		return true;
+	}//end writeNewSlug()
 
 	/**
 	 * Read the slugs currently held by the registers on both sides of the map.
@@ -247,14 +307,8 @@ class MigrateRegisterSlug implements IRepairStep {
 	 * @return array<int, string>
 	 */
 	private function existingSlugs(): array {
-		$slugs = $this->decisions->slugsToRead(map: self::SLUG_MAP);
-		$placeholders = $this->decisions->placeholders(count: count($slugs));
-
 		try {
-			$rows = $this->db->executeQuery(
-				'SELECT slug FROM `*PREFIX*openregister_registers` WHERE slug IN (' . $placeholders . ')',
-				$slugs
-			)->fetchAll();
+			$rows = $this->registerSlugRows();
 		} catch (Exception $e) {
 			$this->logger->warning(
 				'MigrateRegisterSlug: could not read register slugs; skipping.',
@@ -265,6 +319,23 @@ class MigrateRegisterSlug implements IRepairStep {
 
 		return $this->decisions->slugsFrom(rows: $rows);
 	}//end existingSlugs()
+
+	/**
+	 * Read the register rows holding a slug on either side of the map.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @throws Exception When the query fails.
+	 */
+	private function registerSlugRows(): array {
+		$slugs = $this->decisions->slugsToRead(map: self::SLUG_MAP);
+		$placeholders = $this->decisions->placeholders(count: count($slugs));
+
+		return $this->db->executeQuery(
+			'SELECT slug FROM `*PREFIX*openregister_registers` WHERE slug IN (' . $placeholders . ')',
+			$slugs
+		)->fetchAll();
+	}//end registerSlugRows()
 
 	/**
 	 * Rename one register slug.

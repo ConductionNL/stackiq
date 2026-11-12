@@ -3,6 +3,9 @@
 /**
  * Repair step that carries `oc_preferences` rows across the app-id rename.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Nextcloud namespaces `oc_preferences` BY APP ID exactly as it does
  * `oc_appconfig`, so every per-user preference this app stored under
  * `stackiq` became unreachable when the id moved to `stackiq`. The
@@ -30,9 +33,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-user-preferences-survive-the-rename
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

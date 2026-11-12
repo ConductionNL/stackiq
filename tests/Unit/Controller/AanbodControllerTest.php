@@ -20,6 +20,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-the-aanbod-listing-endpoint-must-require-authentication-explicitly-not-implicitly-req-009
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
