@@ -15,6 +15,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/organization-sync/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -844,6 +847,27 @@ class OrganizationSyncEntityGoldenTest extends TestCase {
 		self::assertContains(['config.get', 'stackiq', 'linked_organisation_o-1', true], $this->trace);
 		self::assertContains(['mapper.save', 'o-1', false], $this->trace);
 	}//end testAnAdministratorsLinkKeepsAnOlderOrganisationBound()
+
+	/**
+	 * A link made before this organisatie object existed was made for an earlier
+	 * object with the same uuid, so it does not bind this one.
+	 *
+	 * @return void
+	 */
+	public function testALinkOlderThanTheOrganisatieDoesNotBind(): void {
+		foreach (['2020-05-31 23:59:59', '2020-06-01T09:59:59+00:00', 'not a date'] as $linkedAt) {
+			$stats  = ['entitiesCreated' => 0, 'entitiesUpdated' => 0];
+			$entity = $this->ensureWithDates(
+				status: 'Active',
+				stats: $stats,
+				dates: ['2020-06-01 10:00:01 UTC', '2020-06-01 10:00:00 UTC'],
+				appConfig: ['stackiq/linked_organisation_o-1' => $linkedAt]
+			);
+
+			self::assertNull($entity, $linkedAt);
+			self::assertSame(['o-1'], $stats['organisationIdConflicts'] ?? null, $linkedAt);
+		}
+	}//end testALinkOlderThanTheOrganisatieDoesNotBind()
 
 	/**
 	 * Another organisatie's link says nothing about this one.

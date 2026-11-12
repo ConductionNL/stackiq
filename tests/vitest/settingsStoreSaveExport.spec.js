@@ -261,6 +261,7 @@ function check(key, result) {
 
 describe('settings store save and export', () => {
 	beforeEach(() => {
+		globalThis.OC = { requestToken: 'token-1' }
 		vi.useFakeTimers({ toFake: ['Date'] })
 		vi.setSystemTime(new Date('2026-11-02T10:20:30.456Z'))
 		document.body.innerHTML = ''

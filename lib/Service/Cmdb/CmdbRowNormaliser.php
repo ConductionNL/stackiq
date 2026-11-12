@@ -3,6 +3,9 @@
 /**
  * CMDB row normaliser.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Turns a row from {@see CmdbWorkbookReader} into the flat
  * `column => string` row OpenRegister's `MappingEngine` expects (design D4):
  *
@@ -27,9 +30,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -187,27 +187,44 @@ class CmdbRowNormaliser {
 	 * @return string
 	 */
 	private function toText(mixed $value): string {
-		if ($value === null) {
-			return '';
-		}
-
-		if (is_bool($value) === true) {
-			if ($value === true) {
-				return 'TRUE';
-			}
-
-			return 'FALSE';
-		}
-
-		if (is_float($value) === true && floor($value) === $value && abs($value) < PHP_INT_MAX) {
-			return (string)(int)$value;
-		}
-
 		if (is_scalar($value) === false) {
 			return '';
 		}
 
-		$text = (string)$value;
+		if ($value === true) {
+			return 'TRUE';
+		}
+
+		if ($value === false) {
+			return 'FALSE';
+		}
+
+		if (self::isWholeFloat(value: $value) === true) {
+			return (string)(int)$value;
+		}
+
+		return self::trimmedText(text: (string)$value);
+	}//end toText()
+
+	/**
+	 * Whether a value is a float holding a whole number within integer range.
+	 *
+	 * @param mixed $value The raw value.
+	 *
+	 * @return bool True for a float such as 3.0 that converts to an integer exactly.
+	 */
+	private static function isWholeFloat(mixed $value): bool {
+		return is_float($value) === true && floor($value) === $value && abs($value) < PHP_INT_MAX;
+	}//end isWholeFloat()
+
+	/**
+	 * Text with leading and trailing Unicode whitespace removed.
+	 *
+	 * @param string $text The text.
+	 *
+	 * @return string
+	 */
+	private static function trimmedText(string $text): string {
 		$trimmed = preg_replace('/^[\s\x{00A0}\x{200B}\x{FEFF}]+|[\s\x{00A0}\x{200B}\x{FEFF}]+$/u', '', $text);
 		if ($trimmed === null) {
 			// Not valid UTF-8: trim the ASCII whitespace only.
@@ -215,5 +232,5 @@ class CmdbRowNormaliser {
 		}
 
 		return $trimmed;
-	}//end toText()
+	}//end trimmedText()
 }//end class

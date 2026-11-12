@@ -298,8 +298,10 @@ class ConnectionsDeclarationTest extends TestCase {
 
 		$emailService = (string) file_get_contents($this->root() . '/lib/Service/SymfonyEmailService.php');
 		$this->assertStringContainsString(needle: "'null' => 'Null (No Emails)'", haystack: $emailService);
-		$this->assertMatchesRegularExpression(pattern: "/case 'null':\s+return Transport::fromDsn\('null:\/\/null'\);/", string: $emailService);
-		$this->assertMatchesRegularExpression(pattern: '/default:.*?return \$this->createSmtpTransport/s', string: $emailService);
+		$transportFactory = (string) file_get_contents($this->root() . '/lib/Service/MailTransportFactory.php');
+		$this->assertMatchesRegularExpression(pattern: "/'null' => 'null:\/\/null',/", string: $transportFactory);
+		$this->assertMatchesRegularExpression(pattern: '/default => \$this->createFallbackSmtpTransport/', string: $transportFactory);
+		$this->assertMatchesRegularExpression(pattern: '/function createFallbackSmtpTransport.*?return \$this->createSmtpTransport/s', string: $transportFactory);
 	}//end testOnlyTheNullTransportReadsSimulated()
 
 	/**
@@ -373,7 +375,7 @@ class ConnectionsDeclarationTest extends TestCase {
 		$federation = (string) file_get_contents($this->root() . '/lib/Service/Federation/FederationConfig.php');
 		$this->assertStringContainsString(needle: "getValueBool(AppIdentity::APP_ID, 'federation_enabled', false)", haystack: $federation);
 
-		$settings = (string) file_get_contents($this->root() . '/lib/Service/SettingsService.php');
+		$settings = (string) file_get_contents($this->root() . '/lib/Service/Settings/EolSyncSettings.php');
 		$this->assertStringContainsString(needle: "EOL_SYNC_CONFIG_KEY = 'eol_sync_config'", haystack: $settings);
 		$this->assertStringContainsString(needle: "'enabled' => (\$decoded['enabled'] ?? false) === true", haystack: $settings);
 	}//end testFederationAndTheSyncDeclareTheirSwitches()
@@ -390,7 +392,7 @@ class ConnectionsDeclarationTest extends TestCase {
 	public function testTheFeedOffersTheEndoflifeDateSource(): void {
 		$this->assertSame(expected: 'endoflife-date', actual: $this->connectionsByKey()['eol-feed']['sourceTemplate']);
 
-		$settings = (string) file_get_contents($this->root() . '/lib/Service/SettingsService.php');
+		$settings = (string) file_get_contents($this->root() . '/lib/Service/Settings/EolSyncSettings.php');
 		$this->assertStringContainsString(needle: "EOL_DEFAULT_REGISTER = 'integriq'", haystack: $settings);
 	}//end testTheFeedOffersTheEndoflifeDateSource()
 

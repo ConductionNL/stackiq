@@ -5,6 +5,9 @@
  * cross-organisation relationship scoping (vendor-visibility-rbac REQ-001,
  * REQ-002, REQ-005, REQ-008).
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * discovery.md's audit found these paths already implement the correct
  * "resolve caller relationship, deny BEFORE the RBAC-bypass query" ordering.
  * This test locks that behaviour in with regression coverage so it cannot

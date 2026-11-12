@@ -1,0 +1,804 @@
+{
+    "import, anonymous": [
+        401,
+        {
+            "message": "Not logged in"
+        },
+        [],
+        []
+    ],
+    "import, admin": [
+        200,
+        {
+            "imported": 3
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "importForModuleVersie",
+                [
+                    "30fe94244aa269261a71c18c59c7837e",
+                    "5108bb74a1d5c8eb590b8e71a0f7b91f",
+                    "20bbe83b39c5bd67dc3781e2c81f45ef",
+                    "3e340637791df4387edfe4757ee34a74"
+                ]
+            ]
+        ],
+        []
+    ],
+    "import, no manage group": [
+        403,
+        {
+            "message": "Admin privileges or a manage role are required to import an SBOM"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "isInGroup",
+                [
+                    "alice",
+                    "software-catalog-admins"
+                ]
+            ],
+            [
+                "isInGroup",
+                [
+                    "alice",
+                    "aanbod-beheerder"
+                ]
+            ],
+            [
+                "isInGroup",
+                [
+                    "alice",
+                    "functioneel-beheerder"
+                ]
+            ]
+        ],
+        [
+            [
+                "warning",
+                "SbomController: import refused (not admin, no manage group)",
+                {
+                    "moduleVersieUuid": "mv-1",
+                    "uid": "alice"
+                }
+            ]
+        ]
+    ],
+    "import, second manage group": [
+        200,
+        {
+            "imported": 3
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "isInGroup",
+                [
+                    "alice",
+                    "software-catalog-admins"
+                ]
+            ],
+            [
+                "isInGroup",
+                [
+                    "alice",
+                    "aanbod-beheerder"
+                ]
+            ],
+            [
+                "resolveParentModuleUuid",
+                [
+                    "mv-1"
+                ]
+            ],
+            [
+                "userCanReadModule",
+                [
+                    "module-1"
+                ]
+            ],
+            [
+                "importForModuleVersie",
+                [
+                    "30fe94244aa269261a71c18c59c7837e",
+                    "5108bb74a1d5c8eb590b8e71a0f7b91f",
+                    "20bbe83b39c5bd67dc3781e2c81f45ef",
+                    "3e340637791df4387edfe4757ee34a74"
+                ]
+            ]
+        ],
+        []
+    ],
+    "import, third manage group": [
+        200,
+        {
+            "imported": 3
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "isInGroup",
+                [
+                    "alice",
+                    "software-catalog-admins"
+                ]
+            ],
+            [
+                "isInGroup",
+                [
+                    "alice",
+                    "aanbod-beheerder"
+                ]
+            ],
+            [
+                "isInGroup",
+                [
+                    "alice",
+                    "functioneel-beheerder"
+                ]
+            ],
+            [
+                "resolveParentModuleUuid",
+                [
+                    "mv-1"
+                ]
+            ],
+            [
+                "userCanReadModule",
+                [
+                    "module-1"
+                ]
+            ],
+            [
+                "importForModuleVersie",
+                [
+                    "30fe94244aa269261a71c18c59c7837e",
+                    "5108bb74a1d5c8eb590b8e71a0f7b91f",
+                    "c53a6fda4e272a3753087704987a6544",
+                    "3e340637791df4387edfe4757ee34a74"
+                ]
+            ]
+        ],
+        []
+    ],
+    "import, manage group, no module": [
+        403,
+        {
+            "message": "You do not have manage access to this application"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "isInGroup",
+                [
+                    "alice",
+                    "software-catalog-admins"
+                ]
+            ],
+            [
+                "resolveParentModuleUuid",
+                [
+                    "mv-1"
+                ]
+            ]
+        ],
+        [
+            [
+                "warning",
+                "SbomController: import refused (no manage-ACL on target module)",
+                {
+                    "moduleVersieUuid": "mv-1",
+                    "uid": "alice"
+                }
+            ]
+        ]
+    ],
+    "import, manage group, no module ACL": [
+        403,
+        {
+            "message": "You do not have manage access to this application"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "isInGroup",
+                [
+                    "alice",
+                    "software-catalog-admins"
+                ]
+            ],
+            [
+                "resolveParentModuleUuid",
+                [
+                    "mv-1"
+                ]
+            ],
+            [
+                "userCanReadModule",
+                [
+                    "module-1"
+                ]
+            ]
+        ],
+        [
+            [
+                "warning",
+                "SbomController: import refused (no manage-ACL on target module)",
+                {
+                    "moduleVersieUuid": "mv-1",
+                    "uid": "alice"
+                }
+            ]
+        ]
+    ],
+    "import, module lookup throws": [
+        404,
+        {
+            "message": "moduleVersie not found: mv-1",
+            "error": "MODULE_VERSION_NOT_FOUND"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "isInGroup",
+                [
+                    "alice",
+                    "software-catalog-admins"
+                ]
+            ],
+            [
+                "resolveParentModuleUuid",
+                [
+                    "mv-1"
+                ]
+            ]
+        ],
+        []
+    ],
+    "import, no file": [
+        400,
+        {
+            "message": "No SBOM file uploaded",
+            "error": "NO_FILE_UPLOADED"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ]
+        ],
+        []
+    ],
+    "import, file via $_FILES": [
+        200,
+        {
+            "imported": 3
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "importForModuleVersie",
+                [
+                    "30fe94244aa269261a71c18c59c7837e",
+                    "5108bb74a1d5c8eb590b8e71a0f7b91f",
+                    "20bbe83b39c5bd67dc3781e2c81f45ef",
+                    "13a447e756add5c4307d2618b629f805"
+                ]
+            ]
+        ],
+        []
+    ],
+    "import, upload without size": [
+        200,
+        {
+            "imported": 3
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "importForModuleVersie",
+                [
+                    "30fe94244aa269261a71c18c59c7837e",
+                    "5108bb74a1d5c8eb590b8e71a0f7b91f",
+                    "20bbe83b39c5bd67dc3781e2c81f45ef",
+                    "3e340637791df4387edfe4757ee34a74"
+                ]
+            ]
+        ],
+        []
+    ],
+    "import, upload without name": [
+        200,
+        {
+            "imported": 3
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "importForModuleVersie",
+                [
+                    "30fe94244aa269261a71c18c59c7837e",
+                    "5108bb74a1d5c8eb590b8e71a0f7b91f",
+                    "20bbe83b39c5bd67dc3781e2c81f45ef",
+                    "1dc2a95a55a7628544392033b3116c01"
+                ]
+            ]
+        ],
+        []
+    ],
+    "import, too large": [
+        400,
+        {
+            "message": "File exceeds the maximum allowed size of 10485760 bytes",
+            "error": "FILE_TOO_LARGE"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ]
+        ],
+        [
+            [
+                "warning",
+                "SbomController: upload rejected (too large)",
+                {
+                    "moduleVersieUuid": "mv-1",
+                    "fileSize": 10485761
+                }
+            ]
+        ]
+    ],
+    "import, exactly the limit": [
+        200,
+        {
+            "imported": 3
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "importForModuleVersie",
+                [
+                    "30fe94244aa269261a71c18c59c7837e",
+                    "5108bb74a1d5c8eb590b8e71a0f7b91f",
+                    "20bbe83b39c5bd67dc3781e2c81f45ef",
+                    "3e340637791df4387edfe4757ee34a74"
+                ]
+            ]
+        ],
+        []
+    ],
+    "import, unreadable": [
+        400,
+        {
+            "message": "Uploaded file could not be read",
+            "error": "FILE_UNREADABLE"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ]
+        ],
+        []
+    ],
+    "import, empty tmp name": [
+        400,
+        {
+            "message": "Uploaded file could not be read",
+            "error": "FILE_UNREADABLE"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ]
+        ],
+        []
+    ],
+    "import, invalid JSON": [
+        400,
+        {
+            "message": "Uploaded file is not valid JSON: Syntax error",
+            "error": "INVALID_JSON"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ]
+        ],
+        []
+    ],
+    "import, unknown format": [
+        400,
+        {
+            "message": "Unknown SBOM format: xml",
+            "error": "UNKNOWN_FORMAT"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ]
+        ],
+        []
+    ],
+    "import, unsupported format": [
+        422,
+        {
+            "message": "nope",
+            "error": "UNSUPPORTED_SBOM_FORMAT"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "importForModuleVersie",
+                [
+                    "30fe94244aa269261a71c18c59c7837e",
+                    "5108bb74a1d5c8eb590b8e71a0f7b91f",
+                    "20bbe83b39c5bd67dc3781e2c81f45ef",
+                    "3e340637791df4387edfe4757ee34a74"
+                ]
+            ]
+        ],
+        []
+    ],
+    "import, version not found": [
+        404,
+        {
+            "message": "moduleVersie not found",
+            "error": "MODULE_VERSION_NOT_FOUND"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "importForModuleVersie",
+                [
+                    "30fe94244aa269261a71c18c59c7837e",
+                    "5108bb74a1d5c8eb590b8e71a0f7b91f",
+                    "20bbe83b39c5bd67dc3781e2c81f45ef",
+                    "3e340637791df4387edfe4757ee34a74"
+                ]
+            ]
+        ],
+        []
+    ],
+    "import, does not exist": [
+        404,
+        {
+            "message": "moduleVersie not found: mv-1",
+            "error": "MODULE_VERSION_NOT_FOUND"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "importForModuleVersie",
+                [
+                    "30fe94244aa269261a71c18c59c7837e",
+                    "5108bb74a1d5c8eb590b8e71a0f7b91f",
+                    "20bbe83b39c5bd67dc3781e2c81f45ef",
+                    "3e340637791df4387edfe4757ee34a74"
+                ]
+            ]
+        ],
+        []
+    ],
+    "import, other failure": [
+        500,
+        {
+            "message": "Import failed: disk full",
+            "error": "IMPORT_FAILED"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "importForModuleVersie",
+                [
+                    "30fe94244aa269261a71c18c59c7837e",
+                    "5108bb74a1d5c8eb590b8e71a0f7b91f",
+                    "20bbe83b39c5bd67dc3781e2c81f45ef",
+                    "3e340637791df4387edfe4757ee34a74"
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "SbomController: import failed",
+                {
+                    "moduleVersieUuid": "mv-1",
+                    "error": "disk full"
+                }
+            ]
+        ]
+    ],
+    "status, anonymous": [
+        401,
+        {
+            "message": "Not logged in"
+        },
+        [],
+        []
+    ],
+    "status, admin": [
+        200,
+        {
+            "sbomFormat": "cyclonedx-json"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "getStatus",
+                [
+                    "mv-1",
+                    "op-1"
+                ]
+            ]
+        ],
+        []
+    ],
+    "status, admin, non-string operation": [
+        200,
+        {
+            "sbomFormat": "cyclonedx-json"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "getStatus",
+                [
+                    "mv-1",
+                    null
+                ]
+            ]
+        ],
+        []
+    ],
+    "status, reader": [
+        200,
+        {
+            "sbomFormat": "cyclonedx-json"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "resolveParentModuleUuid",
+                [
+                    "mv-1"
+                ]
+            ],
+            [
+                "userCanReadModule",
+                [
+                    "module-1"
+                ]
+            ],
+            [
+                "getStatus",
+                [
+                    "mv-1",
+                    null
+                ]
+            ]
+        ],
+        []
+    ],
+    "status, no module": [
+        404,
+        {
+            "message": "moduleVersie not found: mv-1",
+            "error": "MODULE_VERSION_NOT_FOUND"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "resolveParentModuleUuid",
+                [
+                    "mv-1"
+                ]
+            ]
+        ],
+        [
+            [
+                "warning",
+                "SbomController: status read refused (no read access to the parent module)",
+                {
+                    "moduleVersieUuid": "mv-1",
+                    "uid": "alice"
+                }
+            ]
+        ]
+    ],
+    "status, no read ACL": [
+        404,
+        {
+            "message": "moduleVersie not found: mv-1",
+            "error": "MODULE_VERSION_NOT_FOUND"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "resolveParentModuleUuid",
+                [
+                    "mv-1"
+                ]
+            ],
+            [
+                "userCanReadModule",
+                [
+                    "module-1"
+                ]
+            ]
+        ],
+        [
+            [
+                "warning",
+                "SbomController: status read refused (no read access to the parent module)",
+                {
+                    "moduleVersieUuid": "mv-1",
+                    "uid": "alice"
+                }
+            ]
+        ]
+    ],
+    "status, module lookup throws": [
+        404,
+        {
+            "message": "moduleVersie not found: mv-1",
+            "error": "MODULE_VERSION_NOT_FOUND"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "resolveParentModuleUuid",
+                [
+                    "mv-1"
+                ]
+            ]
+        ],
+        []
+    ],
+    "status, status throws": [
+        404,
+        {
+            "message": "moduleVersie not found: mv-1",
+            "error": "MODULE_VERSION_NOT_FOUND"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "alice"
+                ]
+            ],
+            [
+                "getStatus",
+                [
+                    "mv-1",
+                    null
+                ]
+            ]
+        ],
+        []
+    ]
+}

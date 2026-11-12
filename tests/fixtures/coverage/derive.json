@@ -1,0 +1,108 @@
+{
+    "summary": {
+        "components": 6,
+        "gap": 2,
+        "fillable": 1,
+        "covered": 3,
+        "overlap": 1,
+        "usagesWithoutComponent": 2
+    },
+    "components": [
+        {
+            "id": "",
+            "name": "No id",
+            "group": "",
+            "documentation": "",
+            "state": "gap",
+            "fillable": false,
+            "fillableBy": [],
+            "applications": []
+        },
+        {
+            "id": "fin",
+            "name": "Financiële component",
+            "group": "Back-office",
+            "documentation": "",
+            "state": "covered",
+            "fillable": false,
+            "fillableBy": [],
+            "applications": [
+                {
+                    "usage": "u4",
+                    "module": "key2",
+                    "moduleName": "Key2Financien",
+                    "status": "In production"
+                }
+            ]
+        },
+        {
+            "id": "kb",
+            "name": "Kennisbankcomponent",
+            "group": "Front-office",
+            "documentation": "",
+            "state": "gap",
+            "fillable": true,
+            "fillableBy": [
+                "Exact"
+            ],
+            "applications": []
+        },
+        {
+            "id": "ab",
+            "name": "Alpha",
+            "group": "Mid-office",
+            "documentation": "",
+            "state": "covered",
+            "fillable": false,
+            "fillableBy": [],
+            "applications": [
+                {
+                    "usage": "u2",
+                    "module": "openzaak",
+                    "moduleName": "OpenZaak",
+                    "status": "To be phased out"
+                }
+            ]
+        },
+        {
+            "id": "doc",
+            "name": "Documentbeheercomponent",
+            "group": "Mid-office",
+            "documentation": "",
+            "state": "covered",
+            "fillable": false,
+            "fillableBy": [],
+            "applications": [
+                {
+                    "usage": "u8",
+                    "module": "",
+                    "moduleName": "",
+                    "status": ""
+                }
+            ]
+        },
+        {
+            "id": "zrc",
+            "name": "Zaakregistratiecomponent",
+            "group": "Mid-office",
+            "documentation": "Zaken",
+            "state": "overlap",
+            "fillable": false,
+            "fillableBy": [],
+            "applications": [
+                {
+                    "usage": "u1",
+                    "module": "mozard",
+                    "moduleName": "Mozard",
+                    "status": "In production"
+                },
+                {
+                    "usage": "u2",
+                    "module": "openzaak",
+                    "moduleName": "OpenZaak",
+                    "status": "To be phased out"
+                }
+            ]
+        }
+    ]
+}

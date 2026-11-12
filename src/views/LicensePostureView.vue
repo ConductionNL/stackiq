@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="postureView">
 		<div class="pv-header">
@@ -221,8 +225,23 @@ import {
 	SEAT_STATE,
 	seatRows,
 } from '../utils/licensePosture.js'
-import { resolveUuid } from '../utils/lifecyclePhase.js'
+import { indexByUuid } from '../utils/lifecyclePhase.js'
+import { fetchObjectTypeCollection } from '../utils/objectTypeCollection.js'
 import { licenceMetricLabel, seatStateLabel } from '../utils/seatLabels.js'
+
+/**
+ * A record's display name (of its object envelope when it has one), else
+ * the given UUID.
+ *
+ * @param {object} record The record.
+ * @param {string} id Its UUID.
+ * @return {string} The name.
+ * @spec openspec/specs/software-license-posture/spec.md
+ */
+function displayNameOr(record, id) {
+	const data = record.object || record
+	return data.name || data.title || id
+}
 
 /**
  * @class LicensePostureView
@@ -337,16 +356,10 @@ export default {
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
 		organisatieIndex() {
-			const index = {}
-			for (const org of objectStore.getCollection('organization')?.results
-				|| []) {
-				const data = org.object || org
-				const id = resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org)
-				if (id) {
-					index[id] = data.name || data.title || id
-				}
-			}
-			return index
+			return indexByUuid(
+				objectStore.getCollection('organization')?.results || [],
+				displayNameOr,
+			)
 		},
 
 		/**
@@ -356,15 +369,7 @@ export default {
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
 		moduleNameIndex() {
-			const index = {}
-			for (const m of this.modules) {
-				const data = m.object || m
-				const id = resolveUuid(m.uuid ?? m.id ?? m['@self']?.id ?? m)
-				if (id) {
-					index[id] = data.name || data.title || id
-				}
-			}
-			return index
+			return indexByUuid(this.modules, displayNameOr)
 		},
 
 		/**
@@ -523,23 +528,7 @@ export default {
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
 		async fetchType(type) {
-			if (
-				typeof objectStore.registerObjectType === 'function'
-				&& !objectStore.objectTypeRegistry?.[type]
-			) {
-				let cfg = null
-				try {
-					cfg = objectStore.getSchemaConfig?.(type)
-				} catch (cfgError) {
-					// getSchemaConfig throws when no schema/register resolves; fall through.
-				}
-				if (cfg?.register && cfg?.schema) {
-					objectStore.registerObjectType(type, cfg.schema, cfg.register)
-				}
-			}
-			if (typeof objectStore.fetchCollection === 'function') {
-				await objectStore.fetchCollection(type, { _limit: 1000 })
-			}
+			await fetchObjectTypeCollection(objectStore, type)
 		},
 
 		/**

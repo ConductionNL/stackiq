@@ -177,8 +177,24 @@ class ConnectionReportService {
 			return false;
 		}
 
+		$described = $this->readEmailDescription();
+		if ($described === null) {
+			return false;
+		}
+
+		[$status, $message] = $described;
+
+		return $this->report(key: self::KEY_EMAIL, status: $status, message: $message);
+	}//end emailSettingsSaved()
+
+	/**
+	 * What the saved email settings say, or null (logged) when they cannot be read.
+	 *
+	 * @return array{0: string, 1: string}|null The status and the message, or null.
+	 */
+	private function readEmailDescription(): ?array {
 		try {
-			[$status, $message] = $this->describeEmail(
+			return $this->describeEmail(
 				configStatus: $this->emailService->isEmailSystemConfigured(),
 				transportLabels: $this->emailService->getAvailableTransports()
 			);
@@ -187,11 +203,9 @@ class ConnectionReportService {
 				'Stackiq: could not read the email settings for a connection report',
 				['key' => self::KEY_EMAIL, 'exception' => $e->getMessage()]
 			);
-			return false;
+			return null;
 		}
-
-		return $this->report(key: self::KEY_EMAIL, status: $status, message: $message);
-	}//end emailSettingsSaved()
+	}//end readEmailDescription()
 
 	/**
 	 * What the email configuration status says about the connection.
@@ -289,46 +303,100 @@ class ConnectionReportService {
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
 	public function describePull(array $pull): ?array {
-		$reason = (string) ($pull['reason'] ?? '');
 		if (($pull['ok'] ?? false) !== true) {
-			if ($reason === self::PULL_REASON_SWITCHED_OFF) {
-				return null;
-			}
-
-			$blocked = $this->federationBlocker(
-				available: $reason !== 'OpenCatalogi unavailable',
-				peerCount: 1
-			);
-
-			return ($blocked ?? ['error', 'The last federation pull failed: ' . $this->shorten(text: $reason)]);
+			return $this->describeFailedPull(reason: (string) ($pull['reason'] ?? ''));
 		}
 
-		$peers = array_values((array) ($pull['peers'] ?? []));
+		return $this->describePeerAnswers(peers: array_values((array) ($pull['peers'] ?? [])));
+	}//end describePull()
+
+	/**
+	 * What a pull that did not run says: nothing when federation is off, else why it was blocked or failed.
+	 *
+	 * @param string $reason The pull's reason.
+	 *
+	 * @return array{0: string, 1: string}|null The status and the message, or null when federation is switched off.
+	 */
+	private function describeFailedPull(string $reason): ?array {
+		if ($reason === self::PULL_REASON_SWITCHED_OFF) {
+			return null;
+		}
+
+		$blocked = $this->federationBlocker(
+			available: $reason !== 'OpenCatalogi unavailable',
+			peerCount: 1
+		);
+
+		return ($blocked ?? ['error', 'The last federation pull failed: ' . $this->shorten(text: $reason)]);
+	}//end describeFailedPull()
+
+	/**
+	 * What the peers of a pull that ran answered.
+	 *
+	 * @param array<int, mixed> $peers The per-peer results.
+	 *
+	 * @return array{0: string, 1: string} The status and the message.
+	 */
+	private function describePeerAnswers(array $peers): array {
 		if ($peers === []) {
 			return ['unconfigured', 'Federation is on, and no peer catalog is added yet.'];
 		}
 
-		$failed = array_values(
+		$failed = $this->failedPeers(peers: $peers);
+		if ($failed === []) {
+			return $this->allPeersAnswered(peerCount: count($peers));
+		}
+
+		return $this->somePeersFailed(failed: $failed, peerCount: count($peers));
+	}//end describePeerAnswers()
+
+	/**
+	 * The peer results that are arrays and did not answer.
+	 *
+	 * @param array<int, mixed> $peers The per-peer results.
+	 *
+	 * @return array<int, array<string, mixed>> The failed peers, reindexed.
+	 */
+	private function failedPeers(array $peers): array {
+		return array_values(
 			array_filter($peers, static fn (mixed $peer): bool => is_array($peer) === true && ($peer['ok'] ?? false) !== true)
 		);
-		if ($failed === [] && count($peers) === 1) {
+	}//end failedPeers()
+
+	/**
+	 * The message for a pull every peer answered.
+	 *
+	 * @param int $peerCount The number of peers.
+	 *
+	 * @return array{0: string, 1: string} The status and the message.
+	 */
+	private function allPeersAnswered(int $peerCount): array {
+		if ($peerCount === 1) {
 			return ['configured', 'The peer catalog answered the last pull.'];
 		}
 
-		if ($failed === []) {
-			return ['configured', 'All ' . count($peers) . ' peer catalogs answered the last pull.'];
-		}
+		return ['configured', 'All ' . $peerCount . ' peer catalogs answered the last pull.'];
+	}//end allPeersAnswered()
 
+	/**
+	 * The message for a pull where at least one peer did not answer, naming the first.
+	 *
+	 * @param array<int, array<string, mixed>> $failed    The failed peers.
+	 * @param int                              $peerCount The number of peers.
+	 *
+	 * @return array{0: string, 1: string} The status and the message.
+	 */
+	private function somePeersFailed(array $failed, int $peerCount): array {
 		$first = $this->peerHost(url: (string) ($failed[0]['peer'] ?? ''))
 			. ' did not: ' . $this->shorten(text: (string) ($failed[0]['reason'] ?? ''));
-		if (count($failed) === count($peers)) {
+		if (count($failed) === $peerCount) {
 			return ['error', 'No peer catalog answered the last pull. ' . $first];
 		}
 
-		$answered = (count($peers) - count($failed));
+		$answered = ($peerCount - count($failed));
 
-		return ['limited', $answered . ' of ' . count($peers) . ' peer catalogs answered the last pull. ' . $first];
-	}//end describePull()
+		return ['limited', $answered . ' of ' . $peerCount . ' peer catalogs answered the last pull. ' . $first];
+	}//end somePeersFailed()
 
 	/**
 	 * After an EOL sync settings save: refresh, and send no report.

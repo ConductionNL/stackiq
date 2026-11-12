@@ -121,38 +121,70 @@ class ModuleRegistrationHandler {
 	 */
 	private function persistModules(array $resolved): array {
 		try {
-			$modules = $resolved['resolvedModules'] ?? [];
-
-			$registered = 0;
-			foreach ($modules as $moduleData) {
-				// ModuleRegistrationService handles object-based registration;
-				// convert array data to stdClass for compatibility.
-				$moduleObject = (object)$moduleData;
-				$this->registrationSvc->handleModuleRegistration($moduleObject);
-				$registered++;
-			}
-
-			$this->logger->info(
-				'ModuleRegistrationHandler: Modules registered',
-				['count' => $registered]
-			);
-
-			return [
-				'success' => true,
-				'message' => sprintf('%d module(s) registered successfully.', $registered),
-				'registered' => $registered,
-			];
+			$registered = $this->registerModules(modules: $resolved['resolvedModules'] ?? []);
+			return $this->registrationSuccess(registered: $registered);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'ModuleRegistrationHandler: Failed to register modules',
-				['exception' => $e->getMessage()]
-			);
-
-			return [
-				'success' => false,
-				'message' => 'Failed to register modules: ' . $e->getMessage(),
-			];
+			return $this->registrationFailure(error: $e);
 		}//end try
 
 	}//end persistModules()
+
+	/**
+	 * Log a successful registration and answer the success result.
+	 *
+	 * @param int $registered Number of modules registered.
+	 *
+	 * @return array<string,mixed> Result with 'success', 'message', and 'registered' count.
+	 */
+	private function registrationSuccess(int $registered): array {
+		$this->logger->info(
+			'ModuleRegistrationHandler: Modules registered',
+			['count' => $registered]
+		);
+
+		return [
+			'success' => true,
+			'message' => sprintf('%d module(s) registered successfully.', $registered),
+			'registered' => $registered,
+		];
+	}//end registrationSuccess()
+
+	/**
+	 * Register each module through ModuleRegistrationService.
+	 *
+	 * @param array<int, array<string,mixed>> $modules The module data.
+	 *
+	 * @return int Number of modules registered.
+	 */
+	private function registerModules(array $modules): int {
+		$registered = 0;
+		foreach ($modules as $moduleData) {
+			// ModuleRegistrationService handles object-based registration;
+			// convert array data to stdClass for compatibility.
+			$moduleObject = (object)$moduleData;
+			$this->registrationSvc->handleModuleRegistration($moduleObject);
+			$registered++;
+		}
+
+		return $registered;
+	}//end registerModules()
+
+	/**
+	 * Log a failed registration and answer the failure result.
+	 *
+	 * @param \Exception $error What went wrong.
+	 *
+	 * @return array<string,mixed> Result with 'success' false and the 'message'.
+	 */
+	private function registrationFailure(\Exception $error): array {
+		$this->logger->error(
+			'ModuleRegistrationHandler: Failed to register modules',
+			['exception' => $error->getMessage()]
+		);
+
+		return [
+			'success' => false,
+			'message' => 'Failed to register modules: ' . $error->getMessage(),
+		];
+	}//end registrationFailure()
 }//end class
