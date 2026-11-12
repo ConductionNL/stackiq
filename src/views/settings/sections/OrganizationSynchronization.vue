@@ -600,7 +600,6 @@
  * @version 1.0.0
  */
 
-import { getRequestToken } from '@nextcloud/auth'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 // Nextcloud Vue components
 import { NcButton, NcLoadingIcon, NcNoteCard, NcSelect } from '@nextcloud/vue'
@@ -653,7 +652,7 @@ async function postJson(url, payload) {
 	const response = await fetch(url, {
 		method: 'POST',
 		headers: {
-			requesttoken: getRequestToken(),
+			requesttoken: OC.requestToken,
 			'Content-Type': 'application/json',
 			'X-Requested-With': 'XMLHttpRequest',
 		},

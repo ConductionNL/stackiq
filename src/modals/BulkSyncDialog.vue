@@ -171,7 +171,6 @@
 </template>
 
 <script>
-import { getRequestToken } from '@nextcloud/auth'
 import { NcButton, NcLoadingIcon, NcModal } from '@nextcloud/vue'
 import { defineComponent } from 'vue'
 
@@ -327,7 +326,7 @@ export default defineComponent({
 				{
 					method: 'POST',
 					headers: {
-						requesttoken: getRequestToken(),
+						requesttoken: OC.requestToken,
 						'Content-Type': 'application/json',
 						'X-Requested-With': 'XMLHttpRequest',
 					},
