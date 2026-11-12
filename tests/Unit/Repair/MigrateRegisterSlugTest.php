@@ -432,6 +432,39 @@ final class MigrateRegisterSlugTest extends TestCase {
 	}//end testAConfigWriteFailureIsLoggedNotThrown()
 
 	/**
+	 * The config warnings carry the key, the old and new slug and the error.
+	 *
+	 * @return void
+	 */
+	public function testConfigWarningContextsArePinned(): void {
+		$warnings = [];
+		$logger   = $this->createMock(LoggerInterface::class);
+		$logger->method('warning')->willReturnCallback(
+			function (string $message, array $context) use (&$warnings): void {
+				$warnings[] = [$message, $context];
+			}
+		);
+
+		$readFails = $this->createMock(IAppConfig::class);
+		$readFails->method('getValueString')->willThrowException(new \RuntimeException('type conflict'));
+		(new MigrateRegisterSlug($this->dbReturning([]), $readFails, $logger))->run($this->createMock(IOutput::class));
+
+		$writeFails = $this->createMock(IAppConfig::class);
+		$writeFails->method('getValueString')->willReturn('voorzieningen');
+		$writeFails->expects(self::once())->method('setValueString')->with('stackiq', 'register', 'stackiq')->willThrowException(new \RuntimeException('write refused'));
+		(new MigrateRegisterSlug($this->dbReturning([]), $writeFails, $logger))->run($this->createMock(IOutput::class));
+
+		self::assertSame(
+			[
+				['MigrateRegisterSlug: could not read app config; leaving it alone.', ['key' => 'register', 'exception' => 'type conflict']],
+				['MigrateRegisterSlug: could not re-point app config.', ['key' => 'register', 'old' => 'voorzieningen', 'new' => 'stackiq', 'exception' => 'write refused']],
+			],
+			$warnings
+		);
+
+	}//end testConfigWarningContextsArePinned()
+
+	/**
 	 * The shipped map is a repair step's, and every entry actually moves.
 	 *
 	 * @return void
