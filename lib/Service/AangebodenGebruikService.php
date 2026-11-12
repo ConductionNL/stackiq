@@ -25,6 +25,8 @@ namespace OCA\Stackiq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -991,9 +993,7 @@ class AangebodenGebruikService {
 			// so $gebruikData already carries every unchanged field forward.
 			$updatedGebruik = $objectService->saveObject(
 				object: $gebruikData,
-				register: $existingGebruik->getRegister(),
-				schema: $existingGebruik->getSchema(),
-				uuid: $gebruikId,
+				options: new ObjectSaveOptions(new ObjectFindTarget($existingGebruik->getRegister(), $existingGebruik->getSchema()), $gebruikId),
 				_rbac: false,
 				_multitenancy: false
 			);

@@ -24,6 +24,10 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SaveActor;
+use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
 use OCA\Stackiq\Service\Contactpersoon\ContactPersonUserDetails;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
@@ -489,11 +493,11 @@ class ContactpersoonService {
 			if ($objectService !== null) {
 				$objectService->saveObject(
 					object: $contactData,
-					register: $contactPersonObject->getRegister(),
-					schema: $contactPersonObject->getSchema(),
-					uuid: $contactPersonObject->getUuid(),
-					silent: true,
-					_validation: false
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $contactPersonObject->getRegister(), schema: $contactPersonObject->getSchema()),
+						uuid: $contactPersonObject->getUuid(),
+						policy: new SavePolicy(silent: true, validation: false)
+					)
 				);
 			}
 
@@ -1274,12 +1278,12 @@ class ContactpersoonService {
 
 				$objectService->saveObject(
 					object: $payload,
-					register: $contactObject->getRegister(),
-					schema: $contactObject->getSchema(),
-					uuid: $contactObject->getUuid(),
-					silent: true,
-					_validation: false,
-					currentUser: $actingUser
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $contactObject->getRegister(), schema: $contactObject->getSchema()),
+						uuid: $contactObject->getUuid(),
+						policy: new SavePolicy(silent: true, validation: false),
+						actor: new SaveActor(currentUser: $actingUser)
+					)
 				);
 			}
 

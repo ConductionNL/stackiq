@@ -25,6 +25,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -581,10 +583,7 @@ class ModuleComplianceService {
 			// Save the updated module.
 			$savedObject = $objectService->saveObject(
 				object: $moduleData,
-				extend: [],
-				register: $registerId,
-				schema: $moduleObject->getSchema(),
-				uuid: $moduleObject->getUuid()
+				options: new ObjectSaveOptions(new ObjectFindTarget($registerId, $moduleObject->getSchema()), $moduleObject->getUuid())
 			);
 
 			$this->logger->info(

@@ -24,11 +24,14 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\EventListener;
 
+require_once __DIR__ . '/../Support/SaveCallShape.php';
+
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\Stackiq\EventListener\UserProfileUpdatedEventListener;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Tests\Unit\Support\SaveCallShape;
 use OCP\IUser;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -225,7 +228,8 @@ class UserProfileContactSyncGoldenTest extends TestCase {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend=[], $register=null, $schema=null, ?string $uuid=null, bool $_rbac=true, bool $_multitenancy=true, bool $silent=false, bool $_validation=true) {
+			function (...$args) {
+				[$object, $extend, $register, $schema, $uuid, $_rbac, $_multitenancy, $silent, $_validation] = SaveCallShape::flat(args: $args);
 				$this->trace[] = ['saveObject', $object, $register, $schema, $uuid, $silent, $_validation];
 				return $this->contact(data: $object, uuid: (string) $uuid);
 			}

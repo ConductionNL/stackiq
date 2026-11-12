@@ -35,6 +35,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Repair;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\ContractApprovalService;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
@@ -137,10 +139,7 @@ class BackfillContractApprovalState implements IRepairStep {
 			try {
 				$objectService->saveObject(
 					object: $data,
-					extend: [],
-					register: $contract->getRegister(),
-					schema: $contract->getSchema(),
-					uuid: $contract->getUuid()
+					options: new ObjectSaveOptions(new ObjectFindTarget($contract->getRegister(), $contract->getSchema()), $contract->getUuid())
 				);
 				$backfilled++;
 			} catch (\Throwable $e) {

@@ -18,6 +18,7 @@ declare(strict_types=1);
 namespace OCA\OpenRegister\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * Stub for ObjectService with the surface used by Stackiq tests.
@@ -125,40 +126,21 @@ abstract class ObjectService {
 	/**
 	 * Persist an object.
 	 *
-	 * `$register`/`$schema`/`$uuid` keep their original stub positions
-	 * (position-bound `willReturnCallback` closures in existing tests rely
-	 * on that order); `$extend`/`$silent`/`$uploadedFiles`/`$currentUser`
-	 * are appended so production code that calls `saveObject()` with named
-	 * arguments (the convention throughout this codebase — see
-	 * PublicationService/IntakeService/FederationService) resolves
-	 * correctly against the mock regardless of declared position. `$object`
-	 * is widened to `array|ObjectEntity` to match the real
-	 * `OCA\OpenRegister\Service\ObjectService::saveObject()` signature.
+	 * Mirrors `OCA\OpenRegister\Service\ObjectService::saveObject()` as of
+	 * openregister #9123.
 	 *
-	 * @param array|ObjectEntity $object The object data bag or entity.
-	 * @param int|string $register Register slug or id.
-	 * @param int|string $schema Schema slug or id.
-	 * @param string $uuid Object uuid.
-	 * @param bool $_rbac Apply RBAC.
-	 * @param bool $_multitenancy Apply multitenancy.
-	 * @param array|null $extend Properties to extend the object with.
-	 * @param bool $silent Skip audit trail creation and events.
-	 * @param array|null $uploadedFiles Uploaded files.
-	 * @param mixed $currentUser Explicit acting user.
+	 * @param array|ObjectEntity $object        The object to store.
+	 * @param ObjectSaveOptions  $options       Target, uuid, extend, files, policy and actor.
+	 * @param bool               $_rbac         Apply RBAC.
+	 * @param bool               $_multitenancy Apply multitenancy.
 	 *
 	 * @return ObjectEntity
 	 */
 	abstract public function saveObject(
-		array|ObjectEntity $object = [],
-		int|string $register = '',
-		int|string $schema = '',
-		string $uuid = '',
+		array|ObjectEntity $object,
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
 		bool $_multitenancy = true,
-		?array $extend = [],
-		bool $silent = false,
-		?array $uploadedFiles = null,
-		mixed $currentUser = null,
 	): ObjectEntity;
 
 	/**

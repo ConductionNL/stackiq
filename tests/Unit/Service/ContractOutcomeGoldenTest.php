@@ -24,10 +24,13 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+require_once __DIR__ . '/../Support/SaveCallShape.php';
+
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\ContractApprovalService;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
+use OCA\Stackiq\Tests\Unit\Support\SaveCallShape;
 use OCP\EventDispatcher\IEventDispatcher;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -168,7 +171,8 @@ class ContractOutcomeGoldenTest extends TestCase {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function ($object, $extend, $register, $schema, $uuid) {
+			function (...$args) {
+				[$object, , $register, $schema, $uuid] = SaveCallShape::flat(args: $args);
 				$this->trace[] = ['saveObject', $object, $register, $schema, $uuid];
 				return self::contract(data: $object, uuid: $uuid);
 			}

@@ -24,6 +24,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Stackiq;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use OCP\IGroup;
 use OCP\IGroupManager;
@@ -204,20 +206,20 @@ class OrganizationHandler {
 					// scoped to at that moment.
 					$objectService->saveObject(
 						object: $objectData,
-						extend: [],
-						register: $organizationObject->getRegister(),
-						schema: $organizationObject->getSchema(),
-						uuid: $organizationObject->getUuid()
+						options: new ObjectSaveOptions(
+							target: new ObjectFindTarget(register: $organizationObject->getRegister(), schema: $organizationObject->getSchema()),
+							uuid: $organizationObject->getUuid()
+						)
 					);
 				}
 
 				if ($registerId !== null && $organizationSchemaId !== null) {
 					$objectService->saveObject(
 						object: $objectData,
-						extend: [],
-						register: (int)$registerId,
-						schema: (int)$organizationSchemaId,
-						uuid: $organizationObject->getUuid()
+						options: new ObjectSaveOptions(
+							target: new ObjectFindTarget(register: (int)$registerId, schema: (int)$organizationSchemaId),
+							uuid: $organizationObject->getUuid()
+						)
 					);
 				}
 
@@ -425,18 +427,16 @@ class OrganizationHandler {
 						// Update existing contactgegevens object.
 						$contactgegevensObject = $objectService->saveObject(
 							object: $contactgegevensData,
-							extend: [],
-							register: $registerId,
-							schema: $contactgegevensSchemaId,
-							uuid: $existingContactgegevens->getUuid()
+							options: new ObjectSaveOptions(
+								target: new ObjectFindTarget(register: $registerId, schema: $contactgegevensSchemaId),
+								uuid: $existingContactgegevens->getUuid()
+							)
 						);
 					} else {
 						// Create new contactgegevens object.
 						$contactgegevensObject = $objectService->saveObject(
 							object: $contactgegevensData,
-							extend: [],
-							register: $registerId,
-							schema: $contactgegevensSchemaId
+							options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $registerId, schema: $contactgegevensSchemaId))
 						);
 					}
 

@@ -30,6 +30,8 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
@@ -190,10 +192,7 @@ class MaintenanceRecipientService {
 	private function saveWindow(ObjectServiceInterface $objectService, ObjectEntityInterface $window, array $data): void {
 		$objectService->saveObject(
 			object: $data,
-			extend: [],
-			register: $window->getRegister(),
-			schema: $window->getSchema(),
-			uuid: $window->getUuid(),
+			options: new ObjectSaveOptions(new ObjectFindTarget($window->getRegister(), $window->getSchema()), $window->getUuid()),
 			_rbac: false,
 			_multitenancy: false
 		);

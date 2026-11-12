@@ -27,6 +27,8 @@ namespace OCA\Stackiq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -367,9 +369,7 @@ class AanbodService {
 			// $aanbodData already carries every unchanged field forward.
 			$updatedAanbod = $objectService->saveObject(
 				object: $aanbodData,
-				register: $existingAanbod->getRegister(),
-				schema: $existingAanbod->getSchema(),
-				uuid: $aanbodId,
+				options: new ObjectSaveOptions(new ObjectFindTarget($existingAanbod->getRegister(), $existingAanbod->getSchema()), $aanbodId),
 				_rbac: false,
 				_multitenancy: false
 			);

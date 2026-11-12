@@ -45,6 +45,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -291,9 +293,7 @@ class ModerationService {
 		try {
 			$objectService->saveObject(
 				object: $data,
-				register: $target['register'],
-				schema: $target['schema'],
-				uuid: $uuid
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']), uuid: $uuid)
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error('ModerationService: ' . $action . ' failed', ['type' => $type, 'uuid' => $uuid, 'error' => $e->getMessage()]);

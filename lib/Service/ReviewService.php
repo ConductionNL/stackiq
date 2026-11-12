@@ -33,6 +33,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -159,8 +161,7 @@ class ReviewService {
 		try {
 			$entity = $objectService->saveObject(
 				object: $clean,
-				register: $target['register'],
-				schema: $target['schema']
+				options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $target['register'], schema: $target['schema']))
 			);
 		} catch (\Throwable $e) {
 			$this->logger->error('ReviewService: submit failed', ['error' => $e->getMessage()]);

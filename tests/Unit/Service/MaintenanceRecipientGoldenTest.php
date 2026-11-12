@@ -25,6 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+require_once __DIR__ . '/../Support/SaveCallShape.php';
+
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -32,6 +34,7 @@ use OCA\Stackiq\Service\MaintenanceAnnouncerCheck;
 use OCA\Stackiq\Service\MaintenanceRecipientService;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCA\Stackiq\Service\StackiqContactSyncService;
+use OCA\Stackiq\Tests\Unit\Support\SaveCallShape;
 use OCP\IUser;
 use OCP\IUserManager;
 use PHPUnit\Framework\TestCase;
@@ -172,7 +175,8 @@ class MaintenanceRecipientGoldenTest extends TestCase {
 			}
 		);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend, $register, $schema, ?string $uuid, bool $_rbac, bool $_multitenancy) {
+			function (...$args) {
+				[$object, $extend, $register, $schema, $uuid, $_rbac, $_multitenancy] = SaveCallShape::flat(args: $args);
 				$this->trace[] = ['saveObject', $object, $extend, $register, $schema, $uuid, $_rbac, $_multitenancy];
 				return self::entity(data: $object);
 			}

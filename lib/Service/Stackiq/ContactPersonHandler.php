@@ -21,6 +21,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Stackiq;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\Organisation\NewOrganisation;
 use OCA\Stackiq\Service\OrganisationSlug;
 use OCA\Stackiq\Service\SymfonyEmailService;
@@ -2229,11 +2231,8 @@ class ContactPersonHandler {
 
 					// Update the organization object.
 					$updatedOrganization = $objectService->saveObject(
-						$organizationData,
-						[],
-						$registerId,
-						$organisationSchemaId,
-						$organizationUuid
+						object: $organizationData,
+						options: new ObjectSaveOptions(new ObjectFindTarget($registerId, $organisationSchemaId), $organizationUuid)
 					);
 
 					$this->_logger->info(

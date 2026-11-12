@@ -25,6 +25,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -256,9 +258,7 @@ class ModuleRegistrationService {
 
 		$objectService->saveObject(
 			object: $moduleData,
-			register: $moduleObject->getRegister(),
-			schema: $moduleObject->getSchema(),
-			uuid: $moduleObject->getUuid(),
+			options: new ObjectSaveOptions(new ObjectFindTarget($moduleObject->getRegister(), $moduleObject->getSchema()), $moduleObject->getUuid()),
 			_rbac: false,
 			_multitenancy: false
 		);

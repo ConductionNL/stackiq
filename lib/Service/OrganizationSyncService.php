@@ -25,6 +25,9 @@ namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\OrganisationMapper;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
@@ -571,9 +574,7 @@ class OrganizationSyncService {
 				// $contactEntityObject already carries every unchanged field.
 				$this->objectService->saveObject(
 					object: $contactEntityObject,
-					register: $register,
-					schema: $contactSchema,
-					uuid: $contactEntity->getUuid(),
+					options: new ObjectSaveOptions(new ObjectFindTarget($register, $contactSchema), $contactEntity->getUuid()),
 					_rbac: false,
 					_multitenancy: false
 				);
@@ -3137,11 +3138,11 @@ class OrganizationSyncService {
 				// ContactpersonenController for the reasoning.
 				$this->objectService->saveObject(
 					object: $contactData,
-					register: $contactObject->getRegister(),
-					schema: $contactObject->getSchema(),
-					uuid: $contactObject->getUuid(),
-					silent: true,
-					_validation: false
+					options: new ObjectSaveOptions(
+						target: new ObjectFindTarget(register: $contactObject->getRegister(), schema: $contactObject->getSchema()),
+						uuid: $contactObject->getUuid(),
+						policy: new SavePolicy(silent: true, validation: false)
+					)
 				);
 				$this->logger->info(
 					'[FLOW] Set missing organisatie field on related contact',
@@ -3367,8 +3368,7 @@ class OrganizationSyncService {
 
 		$contactObject = $this->objectService->saveObject(
 			object: $contactData,
-			register: $run['register'],
-			schema: $run['contactSchema'],
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(register: $run['register'], schema: $run['contactSchema'])),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -3752,11 +3752,11 @@ class OrganizationSyncService {
 		// passed explicitly, as `setObject()` is not on ObjectEntityInterface (ADR-084).
 		$this->objectService->saveObject(
 			object: $object,
-			register: $contactObject->getRegister(),
-			schema: $contactObject->getSchema(),
-			uuid: $contactObject->getUuid(),
-			silent: true,
-			_validation: false
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: $contactObject->getRegister(), schema: $contactObject->getSchema()),
+				uuid: $contactObject->getUuid(),
+				policy: new SavePolicy(silent: true, validation: false)
+			)
 		);
 
 	}//end persistContactObject()
@@ -3897,9 +3897,7 @@ class OrganizationSyncService {
 								// carries every unchanged field.
 								$this->objectService->saveObject(
 									object: $contactEntityObject,
-									register: $register,
-									schema: $contactSchema,
-									uuid: $contactObject->getUuid(),
+									options: new ObjectSaveOptions(new ObjectFindTarget($register, $contactSchema), $contactObject->getUuid()),
 									_rbac: false,
 									_multitenancy: false
 								);
@@ -4383,11 +4381,11 @@ class OrganizationSyncService {
 					$organisationObject->getObject(),
 					['@self' => ['organisation' => $organisationObject->getOrganisation()]]
 				),
-				register: $organisationObject->getRegister(),
-				schema: $organisationObject->getSchema(),
-				uuid: $organisationObject->getUuid(),
-				silent: true,
-				_validation: false
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $organisationObject->getRegister(), schema: $organisationObject->getSchema()),
+					uuid: $organisationObject->getUuid(),
+					policy: new SavePolicy(silent: true, validation: false)
+				)
 			);
 
 			$this->logger->info(

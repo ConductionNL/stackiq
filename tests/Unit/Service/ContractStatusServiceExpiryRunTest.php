@@ -20,11 +20,15 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+require_once __DIR__ . '/../Support/SaveCallShape.php';
+
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\ContractStatusService;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
+use OCA\Stackiq\Tests\Unit\Support\SaveCallShape;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -196,10 +200,12 @@ class ContractStatusServiceExpiryRunTest extends TestCase {
 		$this->objects->expects($this->once())->method('saveObject')
 			->with(
 				['status' => 'Expired', 'endDate' => '2026-06-01', 'name' => 'A'],
-				[],
-				'7',
-				'9',
-				'past'
+				$this->callback(
+					static fn (ObjectSaveOptions $options): bool => $options->extend === []
+						&& $options->target->register === '7'
+						&& $options->target->schema === '9'
+						&& $options->uuid === 'past'
+				)
 			);
 
 		$this->assertSame(expected: 1, actual: $this->service()->expirePastContracts($this->now()));
@@ -221,7 +227,8 @@ class ContractStatusServiceExpiryRunTest extends TestCase {
 		$saved = $this->contract(uuid: 'second', data: []);
 		$this->objects->expects($this->exactly(count: 2))->method('saveObject')
 			->willReturnCallback(
-				static function (array $object, array $extend, $register, $schema, $uuid) use ($saved) {
+				static function (...$args) use ($saved) {
+					[, , , , $uuid] = SaveCallShape::flat(args: $args);
 					if ($uuid === 'first') {
 						throw new RuntimeException('locked');
 					}

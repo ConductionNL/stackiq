@@ -36,6 +36,7 @@ require_once __DIR__ . '/../Support/FakeMigrationPackService.php';
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\Object\ObjectStateRequest;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportPackMarker;
@@ -540,9 +541,10 @@ class CmdbExportImportServiceTest extends TestCase {
 	private function objectService(): ObjectServiceInterface {
 		$service = $this->createMock(ObjectServiceInterface::class);
 		$service->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null, ?string $uuid = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface {
+			function (array $object, ?ObjectSaveOptions $options = null, bool $_rbac = true, bool $_multitenancy = true): ObjectEntityInterface {
 				$this->noteScope(method: 'saveObject', rbac: $_rbac, multitenancy: $_multitenancy);
-				$schema = (int)$schema;
+				$schema = (int)$options?->target->schema;
+				$uuid   = $options?->uuid;
 				if ($this->beforeSave !== null) {
 					($this->beforeSave)($schema, $object);
 				}

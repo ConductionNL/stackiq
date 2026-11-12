@@ -20,6 +20,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit;
 
+require_once __DIR__ . '/Support/SaveCallShape.php';
+
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\Organisation;
@@ -31,6 +33,7 @@ use OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard;
 use OCA\Stackiq\Service\ContactpersoonService;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
+use OCA\Stackiq\Tests\Unit\Support\SaveCallShape;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IGroupManager;
 use OCP\IRequest;
@@ -164,7 +167,7 @@ class OrganisationUserWorkflowTest extends TestCase {
 		$saved = [];
 		$this->objects->expects($this->once())->method('saveObject')->willReturnCallback(
 			function (...$args) use (&$saved, $contact) {
-				$saved = $args;
+				$saved = SaveCallShape::flat(args: $args);
 				return $contact;
 			}
 		);

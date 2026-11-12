@@ -20,10 +20,13 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Repair;
 
+require_once __DIR__ . '/../Support/SaveCallShape.php';
+
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Repair\BackfillContractApprovalState;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Tests\Unit\Support\SaveCallShape;
 use OCP\App\IAppManager;
 use OCP\Migration\IOutput;
 use PHPUnit\Framework\MockObject\MockObject;
@@ -212,7 +215,8 @@ class BackfillContractApprovalStateTest extends TestCase {
 		$saved = [];
 		$entity = $this->contract(uuid: 'x', data: []);
 		$this->objects->expects($this->exactly(count: 2))->method('saveObject')->willReturnCallback(
-			static function (array $object, array $extend, $register, $schema, $uuid) use (&$saved, $entity) {
+			static function (...$args) use (&$saved, $entity) {
+				[$object, , $register, $schema, $uuid] = SaveCallShape::flat(args: $args);
 				$saved[$uuid] = [$object, $register, $schema];
 				return $entity;
 			}

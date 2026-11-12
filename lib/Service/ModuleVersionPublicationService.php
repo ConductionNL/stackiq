@@ -36,6 +36,9 @@ namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\SavePolicy;
 use OCA\Stackiq\BackgroundJob\ModuleVersionPublicationJob;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\BackgroundJob\IJobList;
@@ -396,13 +399,13 @@ class ModuleVersionPublicationService {
 		try {
 			$objects->saveObject(
 				object: array_merge($data, $mirror),
-				extend: [],
-				register: $version->getRegister(),
-				schema: $version->getSchema(),
-				uuid: $version->getUuid(),
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(register: $version->getRegister(), schema: $version->getSchema()),
+					uuid: $version->getUuid(),
+					policy: new SavePolicy(validation: false)
+				),
 				_rbac: false,
-				_multitenancy: false,
-				_validation: false
+				_multitenancy: false
 			);
 		} catch (Throwable $e) {
 			$this->logFailure(
