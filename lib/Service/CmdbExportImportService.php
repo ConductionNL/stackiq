@@ -65,6 +65,7 @@ use DateTimeImmutable;
 use DateTimeZone;
 use JsonSerializable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\Object\ObjectStateRequest;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
@@ -1843,8 +1844,7 @@ class CmdbExportImportService {
 		try {
 			$organisation = $coordinates['objectService']->find(
 				id: $uuid,
-				register: $coordinates['register'],
-				schema: $coordinates['organization'],
+				options: new ObjectFindOptions(register: $coordinates['register'], schema: $coordinates['organization']),
 				_rbac: false,
 				_multitenancy: false
 			);

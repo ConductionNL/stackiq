@@ -30,6 +30,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
@@ -110,7 +111,7 @@ class MaintenanceRecipientService {
 			return null;
 		}
 
-		$window = $objectService->find(id: $uuid, register: $register, schema: $schema, _rbac: false, _multitenancy: false);
+		$window = $objectService->find(id: $uuid, options: new ObjectFindOptions(register: $register, schema: $schema), _rbac: false, _multitenancy: false);
 		if ($window === null) {
 			return null;
 		}

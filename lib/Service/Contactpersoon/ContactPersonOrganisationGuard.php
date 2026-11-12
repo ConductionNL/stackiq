@@ -22,6 +22,7 @@ namespace OCA\Stackiq\Service\Contactpersoon;
 
 use OCA\OpenRegister\Db\Organisation;
 use OCA\OpenRegister\Db\OrganisationMapper;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -265,8 +266,7 @@ class ContactPersonOrganisationGuard {
 			$config = $this->settingsService->getVoorzieningenConfig();
 			$object = $this->objectService->find(
 				id: $uuid,
-				register: ($config['register'] ?? ''),
-				schema: ($config['organisatie_schema'] ?? ''),
+				options: new ObjectFindOptions(register: ($config['register'] ?? ''), schema: ($config['organisatie_schema'] ?? '')),
 				_rbac: false,
 				_multitenancy: false
 			);

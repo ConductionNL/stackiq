@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -155,8 +156,7 @@ class ModuleRegistrationService {
 		try {
 			$organisationObject = $objectService->find(
 				id: $organisationUuid,
-				register: (int)$registerId,
-				schema: (int)$organisationSchemaId
+				options: new ObjectFindOptions(register: (int)$registerId, schema: (int)$organisationSchemaId)
 			);
 		} catch (\Exception $e) {
 			$this->logger->debug(

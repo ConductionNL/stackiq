@@ -6,4 +6,7 @@
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/OrganizationSyncService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/SettingsService.php"/>
   <violation rule="PHPMD\Rule\CleanCode\ElseExpression" file="lib/Service/Stackiq/OrganizationHandler.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="lib/Service/MaintenanceRecipientService.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="lib/Service/SbomImportService.php"/>
+  <violation rule="PHPMD\Rule\Design\CouplingBetweenObjects" file="lib/Service/Stackiq/GroupHandler.php"/>
 </phpmd-baseline>

@@ -40,6 +40,7 @@ namespace OCA\Stackiq\Service;
 
 use DateTime;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -168,8 +169,7 @@ class SbomImportService {
 	private function findModuleVersion(array $coordinates, string $moduleVersieUuid): ?object {
 		return $coordinates['objectService']->find(
 			id: $moduleVersieUuid,
-			register: $coordinates['registerId'],
-			schema: $coordinates['moduleVersieSchemaId'],
+			options: new ObjectFindOptions(register: $coordinates['registerId'], schema: $coordinates['moduleVersieSchemaId']),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -298,8 +298,7 @@ class SbomImportService {
 
 		$module = $objectService->find(
 			id: $moduleUuid,
-			register: (int)$registerId,
-			schema: (int)$moduleSchemaId,
+			options: new ObjectFindOptions(register: (int)$registerId, schema: (int)$moduleSchemaId),
 			_rbac: true,
 			_multitenancy: true
 		);

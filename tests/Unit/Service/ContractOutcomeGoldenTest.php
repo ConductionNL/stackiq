@@ -24,10 +24,13 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+require_once __DIR__ . '/../Support/FindCallShape.php';
+
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\ContractApprovalService;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
+use OCA\Stackiq\Tests\Unit\Support\FindCallShape;
 use OCP\EventDispatcher\IEventDispatcher;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -162,7 +165,8 @@ class ContractOutcomeGoldenTest extends TestCase {
 			}
 		);
 		$objects->method('find')->willReturnCallback(
-			function ($id, $_extend, $files, $register, $schema, $_rbac, $_multitenancy) {
+			function (...$args) {
+				[$id, , , $register, $schema, $_rbac, $_multitenancy] = FindCallShape::find(args: $args);
 				$this->trace[] = ['find', $id, $register, $schema, $_rbac, $_multitenancy];
 				return $this->plan['found'];
 			}

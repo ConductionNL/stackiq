@@ -31,6 +31,7 @@ namespace OCA\Stackiq\BackgroundJob;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Service\ModuleVersionPublicationService;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\AppFramework\Db\DoesNotExistException;
@@ -207,8 +208,10 @@ class ModuleVersionPublicationJob extends QueuedJob {
 
 		return $objects->find(
 			id: $moduleUuid,
-			register: $this->settingsService->getRegisterIdForObjectType('module'),
-			schema: $this->settingsService->getSchemaIdForObjectType('module'),
+			options: new ObjectFindOptions(
+				register: $this->settingsService->getRegisterIdForObjectType('module'),
+				schema: $this->settingsService->getSchemaIdForObjectType('module')
+			),
 			_rbac: false,
 			_multitenancy: false
 		);

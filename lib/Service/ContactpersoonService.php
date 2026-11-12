@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Service\Contactpersoon\ContactPersonUserDetails;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
@@ -192,8 +193,7 @@ class ContactpersoonService {
 							$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 							$orgObject = $objectService->find(
 								id: $organizationUuid,
-								register: ($voorzieningenConfig['register'] ?? ''),
-								schema: ($voorzieningenConfig['organisatie_schema'] ?? ''),
+								options: new ObjectFindOptions($voorzieningenConfig['register'] ?? '', $voorzieningenConfig['organisatie_schema'] ?? ''),
 								_rbac: false,
 								_multitenancy: false
 							);
@@ -1070,10 +1070,7 @@ class ContactpersoonService {
 					try {
 						$contactObject = $objectService->findSilent(
 							id: $contactPersonId,
-							_extend: [],
-							files: false,
-							register: $contactRegister,
-							schema: $contactSchema
+							options: new ObjectFindOptions(register: $contactRegister, schema: $contactSchema)
 						);
 					} catch (DoesNotExistException $e) {
 						$this->logger->warning(
@@ -1331,8 +1328,7 @@ class ContactpersoonService {
 
 			$contactObject = $objectService->find(
 				id: $contactPersonId,
-				register: 'stackiq',
-				schema: 'contactPerson',
+				options: new ObjectFindOptions(register: 'stackiq', schema: 'contactPerson'),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -1402,8 +1398,7 @@ class ContactpersoonService {
 
 			$contactObject = $objectService->find(
 				id: $contactPersonId,
-				register: 'stackiq',
-				schema: 'contactPerson',
+				options: new ObjectFindOptions(register: 'stackiq', schema: 'contactPerson'),
 				_rbac: false,
 				_multitenancy: false
 			);

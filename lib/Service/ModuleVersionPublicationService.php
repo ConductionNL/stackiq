@@ -36,6 +36,7 @@ namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\BackgroundJob\ModuleVersionPublicationJob;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\BackgroundJob\IJobList;
@@ -336,8 +337,10 @@ class ModuleVersionPublicationService {
 		try {
 			$module = $objects->find(
 				id: $moduleId,
-				register: $this->settingsService->getRegisterIdForObjectType('module'),
-				schema: $this->settingsService->getSchemaIdForObjectType('module'),
+				options: new ObjectFindOptions(
+					register: $this->settingsService->getRegisterIdForObjectType('module'),
+					schema: $this->settingsService->getSchemaIdForObjectType('module')
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

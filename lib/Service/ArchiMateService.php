@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -301,8 +302,7 @@ class ArchiMateService {
 			try {
 				$orgEntity = $objectService->find(
 					id: $organizationUuid,
-					register: $orgRegisterId,
-					schema: $orgSchemaId,
+					options: new ObjectFindOptions(register: $orgRegisterId, schema: $orgSchemaId),
 					_rbac: false,
 					_multitenancy: false
 				);

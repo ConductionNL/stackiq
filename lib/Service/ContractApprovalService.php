@@ -38,6 +38,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\EventDispatcher\IEventDispatcher;
 use Psr\Container\ContainerInterface;
@@ -676,10 +677,7 @@ class ContractApprovalService {
 		try {
 			return $objectService->find(
 				id: $contractUuid,
-				_extend: [],
-				files: false,
-				register: $registerId,
-				schema: $schemaId,
+				options: new ObjectFindOptions(register: $registerId, schema: $schemaId),
 				_rbac: false,
 				_multitenancy: false
 			);

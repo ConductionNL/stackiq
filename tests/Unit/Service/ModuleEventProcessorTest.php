@@ -20,8 +20,11 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+require_once __DIR__ . '/../Support/FindCallShape.php';
+
 use OCA\Stackiq\Service\ModuleEventProcessor;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Tests\Unit\Support\FindCallShape;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -282,7 +285,10 @@ class ModuleEventProcessorTest extends TestCase {
 			 * @return object
 			 */
 			public function find(...$args): object {
-				$this->call = $args;
+				// The assertion lists the arguments in the order the old call wrote them.
+				$named = FindCallShape::named(args: $args);
+				$order = array_intersect_key(array_flip(['id', 'register', 'schema', '_extend', '_rbac', '_multitenancy']), $named);
+				$this->call = array_merge($order, $named);
 				return $this->answer;
 			}
 		};

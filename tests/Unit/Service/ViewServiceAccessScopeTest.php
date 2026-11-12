@@ -28,6 +28,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\Organisation;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\ViewService;
@@ -187,17 +188,14 @@ class ViewServiceAccessScopeTest extends TestCase {
 			->willReturnCallback(
 				function (
 					int|string $id,
-					?array $_extend=[],
-					bool $files=false,
-					string|int|null $register=null,
-					string|int|null $schema=null,
+					?ObjectFindOptions $options=null,
 					bool $_rbac=true,
 					bool $_multitenancy=true
 				) use (&$seen) {
 					$seen = [
 						'id' => $id,
-						'register' => $register,
-						'schema' => $schema,
+						'register' => $options?->register,
+						'schema' => $options?->schema,
 						'_rbac' => $_rbac,
 						'_multitenancy' => $_multitenancy,
 					];

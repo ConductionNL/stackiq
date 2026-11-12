@@ -24,11 +24,14 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\BackgroundJob;
 
+require_once __DIR__ . '/../Support/FindCallShape.php';
+
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\BackgroundJob\ModuleVersionPublicationJob;
 use OCA\Stackiq\Service\ModuleVersionPublicationService;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
+use OCA\Stackiq\Tests\Unit\Support\FindCallShape;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJobList;
@@ -76,7 +79,8 @@ class ModuleVersionPublicationJobRunTest extends TestCase {
 
 		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
-			function ($id, $_extend=[], $files=false, $register=null, $schema=null, $_rbac=true, $_multitenancy=true) use ($module) {
+			function (...$args) use ($module) {
+				[$id, , , $register, $schema, $_rbac, $_multitenancy] = FindCallShape::find(args: $args);
 				$this->trace[] = ['find', $id, $register, $schema, $_rbac, $_multitenancy];
 				if ($this->plan['find'] === 'missing') {
 					throw new DoesNotExistException('gone');

@@ -25,6 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\EventListener;
 
+require_once __DIR__ . '/../Support/FindCallShape.php';
+
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
@@ -34,6 +36,7 @@ use OCA\Stackiq\Service\ContactpersoonService;
 use OCA\Stackiq\Service\GebruikSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Tests\Unit\Support\FindCallShape;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\AbstractLogger;
@@ -253,7 +256,11 @@ class StackiqEventListenerGoldenTest extends TestCase {
 			 * @return ObjectEntity
 			 */
 			public function find(...$args): ObjectEntity {
-				return $this->test->refetch(args: $args);
+				// The recording lists the arguments in the order the old call wrote them.
+				$named = FindCallShape::named(args: $args);
+				$order = array_intersect_key(array_flip(['id', 'register', 'schema', '_extend', '_rbac', '_multitenancy']), $named);
+
+				return $this->test->refetch(args: array_merge($order, $named));
 			}
 		};
 

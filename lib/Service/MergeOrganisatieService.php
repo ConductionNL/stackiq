@@ -63,6 +63,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 use OCA\Stackiq\Service\Stackiq\OrganizationHandler;
 use OCP\App\IAppManager;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -782,7 +783,7 @@ class MergeOrganisatieService {
 		}
 
 		try {
-			return $objectService->find(id: $uuid, register: (int)$registerId, schema: (int)$schemaId);
+			return $objectService->find(id: $uuid, options: new ObjectFindOptions(register: (int)$registerId, schema: (int)$schemaId));
 		} catch (\Throwable $e) {
 			$this->logger->debug('MergeOrganisatieService: organisation not found', ['uuid' => $uuid, 'error' => $e->getMessage()]);
 			return null;
