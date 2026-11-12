@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Pure helpers for OrganisationMergePanel.vue: the organisations a source
  * organisation can be merged into, as select options.
  *
