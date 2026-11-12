@@ -110,7 +110,7 @@
     "ajv-formats": "^3.0.1",
     "browserslist": "^4.28.9",
     "caniuse-lite": "^1.0.30001810",
-    "eslint": "^10.10.0",
+    "eslint": "^10.11.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-webpack-plugin": "^6.0.0",
     "espree": "^11.0.0",
