@@ -78,6 +78,7 @@ use OCA\Stackiq\Service\SbomImportService;
 use OCA\Stackiq\Service\SbomParserService;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\Settings\EolSyncSettings;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
@@ -633,6 +634,7 @@ class Application extends App implements IBootstrap {
 					orgSyncService: $container->get(OrganizationSyncService::class),
 					contactSync: $container->get(StackiqContactSyncService::class),
 					settingsService: $container->get(SettingsService::class),
+					cronjobSettings: $container->get(CronjobSettings::class),
 					appManager: $container->get(IAppManager::class),
 					logger: $container->get(LoggerInterface::class)
 				);
