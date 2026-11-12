@@ -7,6 +7,7 @@
  * schema a bulk batch falls back to. OpenRegister types them as Register/Schema
  * entity, id, UUID or slug; the stub widens the entities to object.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
  * @category Test
