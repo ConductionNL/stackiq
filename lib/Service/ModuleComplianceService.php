@@ -624,67 +624,22 @@ class ModuleComplianceService {
 
 		$this->logger->info('ModuleComplianceService: Starting bulk sync of module standards');
 
-		$results = [
-			'totalProcessed' => 0,
-			'complianceMissingModule' => 0,
-			'complianceMissingStandaardversie' => 0,
-			'modulesFound' => 0,
-			'modulesNotFound' => 0,
-			'modulesWithNoStandards' => 0,
-			'modulesAlreadyUpToDate' => 0,
-			'modulesUpdated' => 0,
-			'standardsAdded' => 0,
-			'errors' => [],
-			'samples' => [
-				'complianceWithStandaardversie' => [],
-				'complianceWithoutStandaardversie' => [],
-				'modulesUpdated' => [],
-				'modulesSkipped' => [],
-			],
-			// Full list of all processed modules.
-			'modules' => [],
-		];
+		$results = $this->emptyBulkSyncResults();
 
 		try {
-			// Get compliance schema ID from configuration.
-			$complianceSchemaId = $this->settingsService->getSchemaIdForObjectType('compliancy');
-
-			if ($complianceSchemaId === null) {
-				throw new \RuntimeException('Compliance schema not configured');
-			}
-
-			// Get register ID from voorzieningen config.
-			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-			$registerId = $voorzieningenConfig['register'] ?? null;
-
-			if ($registerId === null) {
-				throw new \RuntimeException('Voorzieningen register not configured');
-			}
-
-			// Get module schema ID from configuration.
-			$moduleSchemaId = $this->settingsService->getSchemaIdForObjectType('module');
-
-			if ($moduleSchemaId === null) {
-				throw new \RuntimeException('Module schema not configured');
-			}
-
-			// Get object service.
-			$objectService = $this->getObjectService();
-			if ($objectService === null) {
-				throw new \RuntimeException('ObjectService not available');
-			}
+			$target = $this->bulkSyncTarget();
 
 			// Get all compliance objects (both schema AND register are required).
 			// Bulk sync structurally needs "all matching" — bounded at a
 			// documented safe ceiling rather than left unbounded.
 			$query = [
 				'@self' => [
-					'schema' => (int)$complianceSchemaId,
-					'register' => (int)$registerId,
+					'schema' => (int)$target['complianceSchemaId'],
+					'register' => (int)$target['registerId'],
 				],
 				'_limit' => 1000,
 			];
-			$complianceObjects = $objectService->searchObjects($query);
+			$complianceObjects = $target['objectService']->searchObjects($query);
 
 			$this->logger->info(
 				'ModuleComplianceService: Found compliance objects for bulk sync',
@@ -695,224 +650,18 @@ class ModuleComplianceService {
 
 			$results['totalProcessed'] = count($complianceObjects);
 
-			// Group compliance objects by module UUID and track samples.
-			$complianceByModule = [];
-			$sampleCount = 0;
-
-			foreach ($complianceObjects as $complianceObject) {
-				$complianceData = $complianceObject->getObject();
-				$moduleUuid = $complianceData['module'] ?? null;
-				$standardVersion = $complianceData['standardVersion'] ?? null;
-
-				// Track compliance objects with/without standaardversie (first 5 samples).
-				if ($sampleCount < 5) {
-					if ($standardVersion !== null) {
-						$results['samples']['complianceWithStandaardversie'][] = [
-							'id' => $complianceObject->getId(),
-							'uuid' => $complianceData['uuid'] ?? 'unknown',
-							'module' => $moduleUuid,
-							'standardVersion' => $standardVersion,
-						];
-					}
-
-					if ($standardVersion === null) {
-						$results['samples']['complianceWithoutStandaardversie'][] = [
-							'id' => $complianceObject->getId(),
-							'uuid' => $complianceData['uuid'] ?? 'unknown',
-							'module' => $moduleUuid,
-						];
-					}
-
-					$sampleCount++;
-				}
-
-				if ($moduleUuid === null) {
-					$results['complianceMissingModule']++;
-					$results['errors'][] = 'Compliance object has no module reference: ' . $complianceObject->getId();
-					continue;
-				}
-
-				// Handle both string UUID and object with UUID property.
-				$moduleUuidValue = null;
-				if (is_string($moduleUuid) === true) {
-					$moduleUuidValue = $moduleUuid;
-				} elseif (is_array($moduleUuid) === true && isset($moduleUuid['uuid']) === true) {
-					$moduleUuidValue = $moduleUuid['uuid'];
-				} elseif (is_object($moduleUuid) === true && isset($moduleUuid->uuid) === true) {
-					$moduleUuidValue = $moduleUuid->uuid;
-				}
-
-				if ($moduleUuidValue === null) {
-					$results['errors'][] = 'Invalid module reference in compliance object: ' . $complianceObject->getId();
-					continue;
-				}
-
-				if (isset($complianceByModule[$moduleUuidValue]) === false) {
-					$complianceByModule[$moduleUuidValue] = [];
-				}
-
-				$complianceByModule[$moduleUuidValue][] = $complianceObject;
-			}//end foreach
+			$complianceByModule = $this->groupComplianceByModule(complianceObjects: $complianceObjects, results: $results);
 
 			$results['modulesFound'] = count($complianceByModule);
 
-			// Process each module.
 			foreach ($complianceByModule as $moduleUuid => $moduleComplianceObjects) {
-				try {
-					// Find the module object (must specify register and schema for magic table lookup).
-					$moduleObject = $objectService->find(
-						id: $moduleUuid,
-						register: (int)$registerId,
-						schema: (int)$moduleSchemaId
-					);
-					if ($moduleObject === null) {
-						$results['modulesNotFound']++;
-						$results['errors'][] = 'Module not found for UUID: ' . $moduleUuid;
-
-						// Add to full modules list.
-						$results['modules'][] = [
-							'uuid' => $moduleUuid,
-							'name' => 'Not Found',
-							'status' => 'error',
-							'reason' => 'Module not found in database',
-							'complianceCount' => count($moduleComplianceObjects),
-							'currentStandaarden' => [],
-							'newStandaarden' => [],
-							'standardsCount' => 0,
-						];
-						continue;
-					}
-
-					// Get module data for tracking.
-					$moduleData = $moduleObject->getObject();
-					$moduleName = $moduleData['name'] ?? $moduleData['title'] ?? 'Unknown';
-
-					// Extract standaardversie UUIDs from compliance objects.
-					$standaardversieUuids = $this->extractStandaardversieUuids(complianceObjects: $moduleComplianceObjects);
-
-					if (empty($standaardversieUuids) === true) {
-						$results['modulesWithNoStandards']++;
-						$results['complianceMissingStandaardversie'] += count($moduleComplianceObjects);
-
-						// Add to full modules list.
-						$results['modules'][] = [
-							'uuid' => $moduleUuid,
-							'name' => $moduleName,
-							'status' => 'skipped',
-							'reason' => 'No standaardversie found',
-							'complianceCount' => count($moduleComplianceObjects),
-							'currentStandaarden' => [],
-							'newStandaarden' => [],
-							'standardsCount' => 0,
-						];
-
-						// Add to samples (first 5).
-						if (count($results['samples']['modulesSkipped']) < 5) {
-							$complianceCount = count($moduleComplianceObjects);
-							$reason = 'No standaardversie found in ' . $complianceCount . ' compliance object(s)';
-							$results['samples']['modulesSkipped'][] = [
-								'uuid' => $moduleUuid,
-								'name' => $moduleName,
-								'reason' => $reason,
-								'complianceCount' => $complianceCount,
-							];
-						}
-
-						continue;
-					}//end if
-
-					// Get current standaarden from module.
-					$currentStandards = $moduleData['standardVersions'] ?? [];
-
-					// Ensure currentStandaarden is an array.
-					if (is_array($currentStandards) === false) {
-						$currentStandards = [];
-					}
-
-					// Compare and update if different.
-					if ($this->arraysAreDifferent(array1: $currentStandards, array2: $standaardversieUuids) === true) {
-						// Update the module with new standaarden.
-						$this->updateModuleStandards(
-							moduleObject: $moduleObject,
-							standaardversieUuids: $standaardversieUuids
-						);
-
-						$results['modulesUpdated']++;
-						$results['standardsAdded'] += count($standaardversieUuids);
-
-						// Add to full modules list.
-						$results['modules'][] = [
-							'uuid' => $moduleUuid,
-							'name' => $moduleName,
-							'status' => 'updated',
-							'reason' => 'Standards updated',
-							'complianceCount' => count($moduleComplianceObjects),
-							'currentStandaarden' => $currentStandards,
-							'newStandaarden' => $standaardversieUuids,
-							'standardsCount' => count($standaardversieUuids),
-						];
-
-						// Add to samples (first 5).
-						if (count($results['samples']['modulesUpdated']) < 5) {
-							$results['samples']['modulesUpdated'][] = [
-								'uuid' => $moduleUuid,
-								'name' => $moduleName,
-								'oldStandaarden' => $currentStandards,
-								'newStandaarden' => $standaardversieUuids,
-								'complianceCount' => count($moduleComplianceObjects),
-							];
-						}
-
-						$this->logger->info(
-							'ModuleComplianceService: Updated module in bulk sync',
-							[
-								'moduleUuid' => $moduleUuid,
-								'moduleName' => $moduleName,
-								'standards' => $standaardversieUuids,
-								'count' => count($standaardversieUuids),
-							]
-						);
-					}//end if
-
-					if ($this->arraysAreDifferent(array1: $currentStandards, array2: $standaardversieUuids) === false) {
-						$results['modulesAlreadyUpToDate']++;
-
-						// Add to full modules list.
-						$results['modules'][] = [
-							'uuid' => $moduleUuid,
-							'name' => $moduleName,
-							'status' => 'up-to-date',
-							'reason' => 'Already up-to-date',
-							'complianceCount' => count($moduleComplianceObjects),
-							'currentStandaarden' => $currentStandards,
-							'newStandaarden' => $standaardversieUuids,
-							'standardsCount' => count($currentStandards),
-						];
-
-						// Add to samples (first 5).
-						if (count($results['samples']['modulesSkipped']) < 5) {
-							$results['samples']['modulesSkipped'][] = [
-								'uuid' => $moduleUuid,
-								'name' => $moduleName,
-								'reason' => 'Already up-to-date',
-								'currentStandaarden' => $currentStandards,
-								'extractedStandaarden' => $standaardversieUuids,
-								'complianceCount' => count($moduleComplianceObjects),
-							];
-						}
-					}//end if
-				} catch (\Exception $e) {
-					$results['errors'][] = 'Failed to process module ' . $moduleUuid . ': ' . $e->getMessage();
-					$this->logger->error(
-						'ModuleComplianceService: Error processing module in bulk sync',
-						[
-							'moduleUuid' => $moduleUuid,
-							'exception' => $e->getMessage(),
-							'trace' => $e->getTraceAsString(),
-						]
-					);
-				}//end try
-			}//end foreach
+				$this->syncModuleInBulk(
+					moduleUuid: $moduleUuid,
+					complianceObjects: $moduleComplianceObjects,
+					target: $target,
+					results: $results
+				);
+			}
 
 			$endTime = microtime(true);
 			$executionTime = round(($endTime - $startTime) * 1000, 2);
@@ -937,6 +686,344 @@ class ModuleComplianceService {
 			throw $e;
 		}//end try
 	}//end bulkSyncModuleStandards()
+
+	/**
+	 * The empty result of a bulk sync
+	 *
+	 * @return array The counters, errors, samples and module list, all empty
+	 */
+	private function emptyBulkSyncResults(): array {
+		return [
+			'totalProcessed' => 0,
+			'complianceMissingModule' => 0,
+			'complianceMissingStandaardversie' => 0,
+			'modulesFound' => 0,
+			'modulesNotFound' => 0,
+			'modulesWithNoStandards' => 0,
+			'modulesAlreadyUpToDate' => 0,
+			'modulesUpdated' => 0,
+			'standardsAdded' => 0,
+			'errors' => [],
+			'samples' => [
+				'complianceWithStandaardversie' => [],
+				'complianceWithoutStandaardversie' => [],
+				'modulesUpdated' => [],
+				'modulesSkipped' => [],
+			],
+			// Full list of all processed modules.
+			'modules' => [],
+		];
+	}//end emptyBulkSyncResults()
+
+	/**
+	 * The schemas, register and object service a bulk sync works on
+	 *
+	 * @return array{complianceSchemaId: int, registerId: mixed, moduleSchemaId: int, objectService: ObjectServiceInterface}
+	 *
+	 * @throws \RuntimeException When a schema, the register or the object service is missing
+	 */
+	private function bulkSyncTarget(): array {
+		$complianceSchemaId = $this->settingsService->getSchemaIdForObjectType('compliancy');
+		if ($complianceSchemaId === null) {
+			throw new \RuntimeException('Compliance schema not configured');
+		}
+
+		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+		$registerId = $voorzieningenConfig['register'] ?? null;
+		if ($registerId === null) {
+			throw new \RuntimeException('Voorzieningen register not configured');
+		}
+
+		$moduleSchemaId = $this->settingsService->getSchemaIdForObjectType('module');
+		if ($moduleSchemaId === null) {
+			throw new \RuntimeException('Module schema not configured');
+		}
+
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			throw new \RuntimeException('ObjectService not available');
+		}
+
+		return [
+			'complianceSchemaId' => $complianceSchemaId,
+			'registerId' => $registerId,
+			'moduleSchemaId' => $moduleSchemaId,
+			'objectService' => $objectService,
+		];
+	}//end bulkSyncTarget()
+
+	/**
+	 * Group compliance objects by the UUID of the module they reference
+	 *
+	 * Samples the first five compliance objects and records the ones without a
+	 * usable module reference in the results.
+	 *
+	 * @param array $complianceObjects The compliance objects
+	 * @param array $results           The bulk sync results, updated in place
+	 *
+	 * @return array<string, array> The compliance objects per module UUID
+	 */
+	private function groupComplianceByModule(array $complianceObjects, array &$results): array {
+		$complianceByModule = [];
+		$sampleCount = 0;
+
+		foreach ($complianceObjects as $complianceObject) {
+			$complianceData = $complianceObject->getObject();
+			$moduleUuid = $complianceData['module'] ?? null;
+
+			// Track compliance objects with/without standaardversie (first 5 samples).
+			if ($sampleCount < 5) {
+				$this->sampleComplianceObject(complianceObject: $complianceObject, results: $results);
+				$sampleCount++;
+			}
+
+			if ($moduleUuid === null) {
+				$results['complianceMissingModule']++;
+				$results['errors'][] = 'Compliance object has no module reference: ' . $complianceObject->getId();
+				continue;
+			}
+
+			// Handle both string UUID and object with UUID property.
+			$moduleUuidValue = $moduleUuid;
+			if (is_string($moduleUuid) === false) {
+				$moduleUuidValue = $this->nestedStandardVersionUuid(standardVersion: $moduleUuid);
+			}
+
+			if ($moduleUuidValue === null) {
+				$results['errors'][] = 'Invalid module reference in compliance object: ' . $complianceObject->getId();
+				continue;
+			}
+
+			$complianceByModule[$moduleUuidValue][] = $complianceObject;
+		}//end foreach
+
+		return $complianceByModule;
+	}//end groupComplianceByModule()
+
+	/**
+	 * Add one compliance object to the with or without standaardversie samples
+	 *
+	 * @param object $complianceObject The compliance object
+	 * @param array  $results          The bulk sync results, updated in place
+	 *
+	 * @return void
+	 */
+	private function sampleComplianceObject(object $complianceObject, array &$results): void {
+		$complianceData = $complianceObject->getObject();
+		$standardVersion = $complianceData['standardVersion'] ?? null;
+		$sample = [
+			'id' => $complianceObject->getId(),
+			'uuid' => $complianceData['uuid'] ?? 'unknown',
+			'module' => $complianceData['module'] ?? null,
+		];
+
+		if ($standardVersion === null) {
+			$results['samples']['complianceWithoutStandaardversie'][] = $sample;
+			return;
+		}
+
+		$sample['standardVersion'] = $standardVersion;
+		$results['samples']['complianceWithStandaardversie'][] = $sample;
+	}//end sampleComplianceObject()
+
+	/**
+	 * Sync the standards of one module in a bulk sync and record the outcome
+	 *
+	 * A failure is recorded as an error and logged; it does not stop the bulk sync.
+	 *
+	 * @param string|int $moduleUuid    The module UUID
+	 * @param array  $complianceObjects The module's compliance objects
+	 * @param array  $target            The schemas, register and object service of the bulk sync
+	 * @param array  $results           The bulk sync results, updated in place
+	 *
+	 * @return void
+	 */
+	private function syncModuleInBulk(string|int $moduleUuid, array $complianceObjects, array $target, array &$results): void {
+		try {
+			// Find the module object (must specify register and schema for magic table lookup).
+			$moduleObject = $target['objectService']->find(
+				id: $moduleUuid,
+				register: (int)$target['registerId'],
+				schema: (int)$target['moduleSchemaId']
+			);
+			if ($moduleObject === null) {
+				$this->recordModuleNotFound(moduleUuid: $moduleUuid, complianceCount: count($complianceObjects), results: $results);
+				return;
+			}
+
+			$moduleData = $moduleObject->getObject();
+			$module = [
+				'uuid' => $moduleUuid,
+				'name' => $moduleData['name'] ?? $moduleData['title'] ?? 'Unknown',
+				'complianceCount' => count($complianceObjects),
+			];
+
+			$standaardversieUuids = $this->extractStandaardversieUuids(complianceObjects: $complianceObjects);
+			if (empty($standaardversieUuids) === true) {
+				$this->recordModuleWithoutStandards(module: $module, results: $results);
+				return;
+			}
+
+			$currentStandards = $this->normaliseCurrentStandards(rawStandards: $moduleData['standardVersions'] ?? []);
+			if ($this->arraysAreDifferent(array1: $currentStandards, array2: $standaardversieUuids) === false) {
+				$this->recordModuleUpToDate(module: $module, standards: [$currentStandards, $standaardversieUuids], results: $results);
+				return;
+			}
+
+			$this->updateModuleStandards(moduleObject: $moduleObject, standaardversieUuids: $standaardversieUuids);
+			$this->recordModuleUpdated(module: $module, standards: [$currentStandards, $standaardversieUuids], results: $results);
+		} catch (\Exception $e) {
+			$results['errors'][] = 'Failed to process module ' . $moduleUuid . ': ' . $e->getMessage();
+			$this->logger->error(
+				'ModuleComplianceService: Error processing module in bulk sync',
+				[
+					'moduleUuid' => $moduleUuid,
+					'exception' => $e->getMessage(),
+					'trace' => $e->getTraceAsString(),
+				]
+			);
+		}//end try
+	}//end syncModuleInBulk()
+
+	/**
+	 * Record a module that a compliance object references but that does not exist
+	 *
+	 * @param string|int $moduleUuid    The module UUID
+	 * @param int    $complianceCount The number of compliance objects referencing it
+	 * @param array  $results         The bulk sync results, updated in place
+	 *
+	 * @return void
+	 */
+	private function recordModuleNotFound(string|int $moduleUuid, int $complianceCount, array &$results): void {
+		$results['modulesNotFound']++;
+		$results['errors'][] = 'Module not found for UUID: ' . $moduleUuid;
+
+		$results['modules'][] = [
+			'uuid' => $moduleUuid,
+			'name' => 'Not Found',
+			'status' => 'error',
+			'reason' => 'Module not found in database',
+			'complianceCount' => $complianceCount,
+			'currentStandaarden' => [],
+			'newStandaarden' => [],
+			'standardsCount' => 0,
+		];
+	}//end recordModuleNotFound()
+
+	/**
+	 * Record a module whose compliance objects carry no standaardversie
+	 *
+	 * @param array $module  The module's uuid, name and compliance count
+	 * @param array $results The bulk sync results, updated in place
+	 *
+	 * @return void
+	 */
+	private function recordModuleWithoutStandards(array $module, array &$results): void {
+		$results['modulesWithNoStandards']++;
+		$results['complianceMissingStandaardversie'] += $module['complianceCount'];
+
+		$results['modules'][] = [
+			'uuid' => $module['uuid'],
+			'name' => $module['name'],
+			'status' => 'skipped',
+			'reason' => 'No standaardversie found',
+			'complianceCount' => $module['complianceCount'],
+			'currentStandaarden' => [],
+			'newStandaarden' => [],
+			'standardsCount' => 0,
+		];
+
+		if (count($results['samples']['modulesSkipped']) < 5) {
+			$results['samples']['modulesSkipped'][] = [
+				'uuid' => $module['uuid'],
+				'name' => $module['name'],
+				'reason' => 'No standaardversie found in ' . $module['complianceCount'] . ' compliance object(s)',
+				'complianceCount' => $module['complianceCount'],
+			];
+		}
+	}//end recordModuleWithoutStandards()
+
+	/**
+	 * Record a module whose standards were updated
+	 *
+	 * @param array $module    The module's uuid, name and compliance count
+	 * @param array $standards The module's current and new standaardversie UUIDs
+	 * @param array $results   The bulk sync results, updated in place
+	 *
+	 * @return void
+	 */
+	private function recordModuleUpdated(array $module, array $standards, array &$results): void {
+		[$currentStandards, $newStandards] = $standards;
+		$results['modulesUpdated']++;
+		$results['standardsAdded'] += count($newStandards);
+
+		$results['modules'][] = [
+			'uuid' => $module['uuid'],
+			'name' => $module['name'],
+			'status' => 'updated',
+			'reason' => 'Standards updated',
+			'complianceCount' => $module['complianceCount'],
+			'currentStandaarden' => $currentStandards,
+			'newStandaarden' => $newStandards,
+			'standardsCount' => count($newStandards),
+		];
+
+		if (count($results['samples']['modulesUpdated']) < 5) {
+			$results['samples']['modulesUpdated'][] = [
+				'uuid' => $module['uuid'],
+				'name' => $module['name'],
+				'oldStandaarden' => $currentStandards,
+				'newStandaarden' => $newStandards,
+				'complianceCount' => $module['complianceCount'],
+			];
+		}
+
+		$this->logger->info(
+			'ModuleComplianceService: Updated module in bulk sync',
+			[
+				'moduleUuid' => $module['uuid'],
+				'moduleName' => $module['name'],
+				'standards' => $newStandards,
+				'count' => count($newStandards),
+			]
+		);
+	}//end recordModuleUpdated()
+
+	/**
+	 * Record a module whose standards already match its compliance objects
+	 *
+	 * @param array $module    The module's uuid, name and compliance count
+	 * @param array $standards The module's current and extracted standaardversie UUIDs
+	 * @param array $results   The bulk sync results, updated in place
+	 *
+	 * @return void
+	 */
+	private function recordModuleUpToDate(array $module, array $standards, array &$results): void {
+		[$currentStandards, $extractedStandards] = $standards;
+		$results['modulesAlreadyUpToDate']++;
+
+		$results['modules'][] = [
+			'uuid' => $module['uuid'],
+			'name' => $module['name'],
+			'status' => 'up-to-date',
+			'reason' => 'Already up-to-date',
+			'complianceCount' => $module['complianceCount'],
+			'currentStandaarden' => $currentStandards,
+			'newStandaarden' => $extractedStandards,
+			'standardsCount' => count($currentStandards),
+		];
+
+		if (count($results['samples']['modulesSkipped']) < 5) {
+			$results['samples']['modulesSkipped'][] = [
+				'uuid' => $module['uuid'],
+				'name' => $module['name'],
+				'reason' => 'Already up-to-date',
+				'currentStandaarden' => $currentStandards,
+				'extractedStandaarden' => $extractedStandards,
+				'complianceCount' => $module['complianceCount'],
+			];
+		}
+	}//end recordModuleUpToDate()
 
 	/**
 	 * Get the object service
