@@ -95,23 +95,7 @@ final class SettingsObjectCounts {
 	 */
 	public function voorzieningenCounts(): array {
 		try {
-			$objectService = $this->settings->getObjectService();
-			if ($objectService === null) {
-				return self::zeroVoorzieningenCounts();
-			}
-
-			$config = $this->settings->getVoorzieningenConfig();
-			$counts = self::zeroVoorzieningenCounts();
-			foreach (self::VOORZIENINGEN_COUNT_KEYS as $configKey => $countKey) {
-				$counts[$countKey] = $this->countSchema(
-					objectService: $objectService,
-					target: ['register' => ($config['register'] ?? null), 'schema' => ($config[$configKey] ?? null), 'configKey' => $configKey]
-				);
-			}
-
-			$this->logger->debug('SettingsService: Retrieved Voorzieningen object counts', $counts);
-
-			return $counts;
+			return $this->countVoorzieningen();
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'SettingsService: Failed to get Voorzieningen object counts',
@@ -127,6 +111,45 @@ final class SettingsObjectCounts {
 	}//end voorzieningenCounts()
 
 	/**
+	 * Count every voorzieningen schema; all zero without an object service.
+	 *
+	 * @return array<string, int>
+	 */
+	private function countVoorzieningen(): array {
+		$objectService = $this->settings->getObjectService();
+		if ($objectService === null) {
+			return self::zeroVoorzieningenCounts();
+		}
+
+		$config = $this->settings->getVoorzieningenConfig();
+		$counts = $this->countEachSchema(objectService: $objectService, config: $config);
+
+		$this->logger->debug('SettingsService: Retrieved Voorzieningen object counts', $counts);
+
+		return $counts;
+	}//end countVoorzieningen()
+
+	/**
+	 * The object count of each voorzieningen schema in the config.
+	 *
+	 * @param object $objectService The OpenRegister object service.
+	 * @param array  $config        The voorzieningen config.
+	 *
+	 * @return array<string, int>
+	 */
+	private function countEachSchema(object $objectService, array $config): array {
+		$counts = self::zeroVoorzieningenCounts();
+		foreach (self::VOORZIENINGEN_COUNT_KEYS as $configKey => $countKey) {
+			$counts[$countKey] = $this->countSchema(
+				objectService: $objectService,
+				target: ['register' => ($config['register'] ?? null), 'schema' => ($config[$configKey] ?? null), 'configKey' => $configKey]
+			);
+		}
+
+		return $counts;
+	}//end countEachSchema()
+
+	/**
 	 * Object counts per AMEF type, zero for every type when ArchiMate cannot answer.
 	 *
 	 * @return array<string, int>
@@ -134,26 +157,7 @@ final class SettingsObjectCounts {
 	 */
 	public function amefCounts(): array {
 		try {
-			// Get ArchiMateService from container to avoid circular dependency.
-			$archiMateService = $this->container->get(\OCA\Stackiq\Service\ArchiMateService::class);
-
-			$counts = [];
-			foreach (self::AMEF_COUNT_KEYS as $countKey => $getter) {
-				$counts[$countKey] = count($archiMateService->$getter());
-			}
-
-			$this->logger->debug(
-				'SettingsService: Retrieved AMEF object counts',
-				[
-					'elementObjects' => $counts['totalElementObjects'],
-					'organizationObjects' => $counts['totalOrganizationObjects'],
-					'viewObjects' => $counts['totalViewObjects'],
-					'relationshipObjects' => $counts['totalRelationshipsObjects'],
-					'modelObjects' => $counts['totalModelObjects'],
-				]
-			);
-
-			return $counts;
+			return $this->countAmef();
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'SettingsService: Failed to get AMEF object counts',
@@ -169,6 +173,45 @@ final class SettingsObjectCounts {
 	}//end amefCounts()
 
 	/**
+	 * Count the objects of every AMEF type through the ArchiMateService.
+	 *
+	 * @return array<string, int>
+	 */
+	private function countAmef(): array {
+		// Get ArchiMateService from container to avoid circular dependency.
+		$archiMateService = $this->container->get(\OCA\Stackiq\Service\ArchiMateService::class);
+
+		$counts = [];
+		foreach (self::AMEF_COUNT_KEYS as $countKey => $getter) {
+			$counts[$countKey] = count($archiMateService->$getter());
+		}
+
+		$this->logAmefCounts(counts: $counts);
+
+		return $counts;
+	}//end countAmef()
+
+	/**
+	 * Log the AMEF object counts.
+	 *
+	 * @param array<string, int> $counts The counts per AMEF count key.
+	 *
+	 * @return void
+	 */
+	private function logAmefCounts(array $counts): void {
+		$this->logger->debug(
+			'SettingsService: Retrieved AMEF object counts',
+			[
+				'elementObjects' => $counts['totalElementObjects'],
+				'organizationObjects' => $counts['totalOrganizationObjects'],
+				'viewObjects' => $counts['totalViewObjects'],
+				'relationshipObjects' => $counts['totalRelationshipsObjects'],
+				'modelObjects' => $counts['totalModelObjects'],
+			]
+		);
+	}//end logAmefCounts()
+
+	/**
 	 * Statistics for both registers: their config, their object counts and
 	 * whether they are configured.
 	 *
@@ -177,16 +220,7 @@ final class SettingsObjectCounts {
 	 */
 	public function statistics(): array {
 		try {
-			$statistics = [
-				'voorzieningen' => [],
-				'amef' => [],
-				'timestamp' => time(),
-			];
-
-			$statistics['voorzieningen'] = $this->voorzieningenStatistics();
-			$statistics['amef'] = $this->amefStatistics();
-
-			return $statistics;
+			return $this->collectStatistics();
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'SettingsService: Failed to get object counts statistics',
@@ -194,15 +228,44 @@ final class SettingsObjectCounts {
 					'exception' => $e->getMessage(),
 				]
 			);
-			return [
-				'voorzieningen' => self::failedVoorzieningenStatistics(message: $e->getMessage()),
-				'amef' => self::failedAmefStatistics(message: $e->getMessage()),
-				'timestamp' => time(),
-				'error' => $e->getMessage(),
-			];
+			return self::failedStatistics(error: $e);
 		}//end try
 
 	}//end statistics()
+
+	/**
+	 * The statistics of both registers, stamped with the current time.
+	 *
+	 * @return array
+	 */
+	private function collectStatistics(): array {
+		$statistics = [
+			'voorzieningen' => [],
+			'amef' => [],
+			'timestamp' => time(),
+		];
+
+		$statistics['voorzieningen'] = $this->voorzieningenStatistics();
+		$statistics['amef'] = $this->amefStatistics();
+
+		return $statistics;
+	}//end collectStatistics()
+
+	/**
+	 * The statistics answered when collecting them failed.
+	 *
+	 * @param \Exception $error The failure.
+	 *
+	 * @return array
+	 */
+	private static function failedStatistics(\Exception $error): array {
+		return [
+			'voorzieningen' => self::failedVoorzieningenStatistics(message: $error->getMessage()),
+			'amef' => self::failedAmefStatistics(message: $error->getMessage()),
+			'timestamp' => time(),
+			'error' => $error->getMessage(),
+		];
+	}//end failedStatistics()
 
 	/**
 	 * The voorzieningen statistics.
@@ -264,12 +327,7 @@ final class SettingsObjectCounts {
 		}
 
 		try {
-			$query = [
-				'@self' => [
-					'register' => (int) $target['register'],
-					'schema' => (int) $target['schema'],
-				],
-			];
+			$query = self::countQuery(target: $target);
 			// A true SQL COUNT via OpenRegister's countSearchObjects(), not
 			// count(searchObjects()), which would load or under-report a large register.
 			return $objectService->countSearchObjects($query);
@@ -280,6 +338,22 @@ final class SettingsObjectCounts {
 		return 0;
 
 	}//end countSchema()
+
+	/**
+	 * The search query selecting one register's schema.
+	 *
+	 * @param array $target `register` and `schema` ids.
+	 *
+	 * @return array
+	 */
+	private static function countQuery(array $target): array {
+		return [
+			'@self' => [
+				'register' => (int) $target['register'],
+				'schema' => (int) $target['schema'],
+			],
+		];
+	}//end countQuery()
 
 	/**
 	 * Zero counts for every voorzieningen schema.
