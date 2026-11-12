@@ -185,10 +185,25 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 	 */
 	public function testTheRouteIsRegistered(): void {
 		$routes = require __DIR__ . '/../../../appinfo/routes.php';
-		$byName = array_column($routes['routes'], null, 'name');
+		// The /api/v1 aliases share each route's name and differ by postfix, so
+		// index the unversioned routes and the aliases separately.
+		$byName = array_column(
+			array: array_filter(array: $routes['routes'], callback: static fn (array $route): bool => isset($route['postfix']) === false),
+			column_key: null,
+			index_key: 'name'
+		);
+		$aliases = array_column(
+			array: array_filter(array: $routes['routes'], callback: static fn (array $route): bool => ($route['postfix'] ?? null) === 'v1'),
+			column_key: null,
+			index_key: 'name'
+		);
 		$this->assertSame(
 			['name' => 'settings#getCmdbImportMapping', 'url' => '/api/settings/cmdb-import/mapping', 'verb' => 'GET'],
 			$byName['settings#getCmdbImportMapping']
+		);
+		$this->assertSame(
+			expected: ['name' => 'settings#getCmdbImportMapping', 'url' => '/api/v1/settings/cmdb-import/mapping', 'verb' => 'GET', 'postfix' => 'v1'],
+			actual: $aliases['settings#getCmdbImportMapping']
 		);
 	}//end testTheRouteIsRegistered()
 
