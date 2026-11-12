@@ -133,7 +133,7 @@
 
 <script>
 import { CnAdminSettingsShell } from '@conduction/nextcloud-vue'
-import { showError, showSuccess } from '@nextcloud/dialogs'
+import { showError } from '@nextcloud/dialogs'
 import { loadState } from '@nextcloud/initial-state'
 import { translate as t } from '@nextcloud/l10n'
 import { NcButton, NcTextField } from '@nextcloud/vue'
@@ -153,6 +153,12 @@ import OrganizationSynchronization from './sections/OrganizationSynchronization.
 import StatisticsOverview from './sections/StatisticsOverview.vue'
 import UserGroupsConfiguration from './sections/UserGroupsConfiguration.vue'
 import { settingsStore } from '../../store/store.js'
+import {
+	FORCE_UPDATE_TEXTS,
+	reportActionResult,
+	reportAutoConfigResult,
+	RESET_AUTO_CONFIG_TEXTS,
+} from './autoConfigFeedback.js'
 
 /**
  * Stackiq Settings component
@@ -340,11 +346,7 @@ export default defineComponent({
 			this.autoConfiguring = true
 			try {
 				const result = await this.store.consolidatedAutoConfigure()
-				if (result && result.success) {
-					showSuccess('Auto configuration completed successfully')
-				} else if (result && result.message) {
-					showError('Auto configuration failed: ' + result.message)
-				}
+				reportAutoConfigResult(result)
 				await this.store.loadVersionInfo()
 			} catch (error) {
 				console.error('Failed to perform auto-configuration:', error)
@@ -365,13 +367,7 @@ export default defineComponent({
 			try {
 				const result = await this.store.forceUpdate()
 				await this.store.loadVersionInfo()
-				if (result && result.success) {
-					showSuccess(
-						result.message || 'Force update completed successfully',
-					)
-				} else if (result) {
-					showError(result.message || 'Force update failed')
-				}
+				reportActionResult(result, FORCE_UPDATE_TEXTS)
 			} finally {
 				this.autoConfiguring = false
 			}
@@ -388,11 +384,7 @@ export default defineComponent({
 			try {
 				const result = await this.store.resetAutoConfig()
 				await this.store.loadVersionInfo()
-				if (result && result.success) {
-					showSuccess(result.message || 'Auto-config reset successfully')
-				} else if (result) {
-					showError(result.message || 'Failed to reset auto-config')
-				}
+				reportActionResult(result, RESET_AUTO_CONFIG_TEXTS)
 			} finally {
 				this.autoConfiguring = false
 			}
