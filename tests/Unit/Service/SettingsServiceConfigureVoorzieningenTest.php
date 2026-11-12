@@ -25,6 +25,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Service\RegisterService;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -130,6 +131,7 @@ final class SettingsServiceConfigureVoorzieningenTest extends TestCase {
 					$this->createMock(LoggerInterface::class),
 					$this->createMock(IGroupManager::class),
 					$this->createMock(IL10N::class),
+					$this->createMock(EmailSettings::class),
 				]
 			)
 			->onlyMethods(['getObjectService', 'getRegisterService', 'setVoorzieningenConfig'])
