@@ -14,6 +14,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -113,25 +116,13 @@ class AangebodenGebruikService {
 			$currentOrg = $this->getCurrentOrganisation();
 			if ($currentOrg === null) {
 				$this->logger->warning('No current organization available for afnemer filtering');
-				return [
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'message' => 'No current organization available',
-				];
+				return (new EmptyListing())->page() + ['message' => 'No current organization available'];
 			}
 
 			// Get configuration for gebruiks register/schema.
 			$gebruiksConfig = $this->getGebruiksConfiguration();
 
-			// Use the first schema for now (can be extended for multi-schema support).
-			$schemaId = $gebruiksConfig['schemas'][0] ?? null;
-			if ($schemaId === null) {
-				throw new Exception('No gebruik schema configured');
-			}
+			$schemaId = $this->firstGebruikSchema(gebruiksConfig: $gebruiksConfig);
 
 			// Build query for afnemer filtering - search for objects where current org is afnemer.
 			// Note: We don't filter by organisation in @self since the objects are owned by leveranciers.
@@ -294,15 +285,7 @@ class AangebodenGebruikService {
 				]
 			);
 
-			return [
-				'results' => [],
-				'total' => 0,
-				'page' => 1,
-				'pages' => 0,
-				'limit' => 20,
-				'offset' => 0,
-				'error' => 'Failed to retrieve gebruiks: ' . $e->getMessage(),
-			];
+			return $this->emptyKoppelingenPage(error: 'Failed to retrieve gebruiks: ' . $e->getMessage());
 		}//end try
 	}//end getGebruiksWhereAfnemer()
 
@@ -543,20 +526,33 @@ class AangebodenGebruikService {
 	 * @return array The empty page
 	 */
 	private function emptyKoppelingenPage(?string $error): array {
-		$page = [
-			'results' => [],
-			'total' => 0,
-			'page' => 1,
-			'pages' => 0,
-			'limit' => 20,
-			'offset' => 0,
-		];
+		$page = (new EmptyListing())->page();
 		if ($error !== null) {
 			$page['error'] = $error;
 		}
 
 		return $page;
 	}//end emptyKoppelingenPage()
+
+	/**
+	 * The first gebruik schema of the gebruiks configuration.
+	 *
+	 * Uses the first schema for now (can be extended for multi-schema support).
+	 *
+	 * @param array<string, mixed> $gebruiksConfig The gebruiks register and schemas.
+	 *
+	 * @return mixed The schema id.
+	 *
+	 * @throws Exception When no gebruik schema is configured.
+	 */
+	private function firstGebruikSchema(array $gebruiksConfig): mixed {
+		$schemaId = $gebruiksConfig['schemas'][0] ?? null;
+		if ($schemaId === null) {
+			throw new Exception('No gebruik schema configured');
+		}
+
+		return $schemaId;
+	}//end firstGebruikSchema()
 
 	/**
 	 * Get all gebruiks objects (ignoring RBAC and multitenancy) - restricted to ambtenaar group
@@ -589,11 +585,7 @@ class AangebodenGebruikService {
 			// Get configuration for gebruiks register/schema.
 			$gebruiksConfig = $this->getGebruiksConfiguration();
 
-			// Use the first schema for now (can be extended for multi-schema support).
-			$schemaId = $gebruiksConfig['schemas'][0] ?? null;
-			if ($schemaId === null) {
-				throw new Exception('No gebruik schema configured');
-			}
+			$schemaId = $this->firstGebruikSchema(gebruiksConfig: $gebruiksConfig);
 
 			// Build query for all gebruiks - no organization filtering.
 			$query = [
@@ -647,15 +639,7 @@ class AangebodenGebruikService {
 				]
 			);
 
-			return [
-				'results' => [],
-				'total' => 0,
-				'page' => 1,
-				'pages' => 0,
-				'limit' => 20,
-				'offset' => 0,
-				'error' => 'Failed to retrieve gebruiks: ' . $e->getMessage(),
-			];
+			return $this->emptyKoppelingenPage(error: 'Failed to retrieve gebruiks: ' . $e->getMessage());
 		}//end try
 	}//end getAllGebruiksForAmbtenaar()
 
@@ -686,15 +670,7 @@ class AangebodenGebruikService {
 		try {
 			// Validate input.
 			if (empty($suiteId) === true) {
-				return [
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'error' => 'Suite ID is required',
-				];
+				return $this->emptyKoppelingenPage(error: 'Suite ID is required');
 			}
 
 			// Get ObjectService from OpenRegister.
@@ -703,11 +679,7 @@ class AangebodenGebruikService {
 			// Get configuration for gebruiks register/schema.
 			$gebruiksConfig = $this->getGebruiksConfiguration();
 
-			// Use the first schema for now (can be extended for multi-schema support).
-			$schemaId = $gebruiksConfig['schemas'][0] ?? null;
-			if ($schemaId === null) {
-				throw new Exception('No gebruik schema configured');
-			}
+			$schemaId = $this->firstGebruikSchema(gebruiksConfig: $gebruiksConfig);
 
 			// Build query for all gebruiks that reference the specified UUID in their relations.
 			// Follow the same pattern as PublicationsController.php used() method.
@@ -767,15 +739,7 @@ class AangebodenGebruikService {
 				]
 			);
 
-			return [
-				'results' => [],
-				'total' => 0,
-				'page' => 1,
-				'pages' => 0,
-				'limit' => 20,
-				'offset' => 0,
-				'error' => 'Failed to retrieve usage: ' . $e->getMessage(),
-			];
+			return $this->emptyKoppelingenPage(error: 'Failed to retrieve usage: ' . $e->getMessage());
 		}//end try
 	}//end getSingleGebruikForAmbtenaar()
 
@@ -1138,30 +1102,7 @@ class AangebodenGebruikService {
 	 * @return string|null Current organisation identifier or null if no user session
 	 */
 	private function getCurrentOrganisation(): ?string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return null;
-		}
-
-		try {
-			// Get the OpenRegister OrganisationService to get the active organisation.
-			$organisationService = $this->container->get('OCA\OpenRegister\Service\OrganisationService');
-			$activeOrg = $organisationService->getActiveOrganisation();
-
-			if ($activeOrg !== null) {
-				return $activeOrg->getUuid();
-			}
-
-			return null;
-		} catch (Exception $e) {
-			$this->logger->error(
-				'Failed to get current organisation from OpenRegister',
-				[
-					'error' => $e->getMessage(),
-				]
-			);
-			return null;
-		}
+		return $this->openRegisterLookup()->activeOrganisationUuid();
 	}//end getCurrentOrganisation()
 
 	/**
@@ -1171,16 +1112,22 @@ class AangebodenGebruikService {
 	 * @throws Exception When OpenRegister service is not available
 	 */
 	private function getObjectService(): ObjectServiceInterface {
-		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === false) {
-			throw new Exception('OpenRegister app is not installed');
-		}
-
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Exception $e) {
-			throw new Exception('Failed to get OpenRegister service: ' . $e->getMessage());
-		}
+		return $this->openRegisterLookup()->objectService();
 	}//end getObjectService()
+
+	/**
+	 * The OpenRegister lookups, built from this service's app manager, container, session and logger.
+	 *
+	 * @return OpenRegisterLookup
+	 */
+	private function openRegisterLookup(): OpenRegisterLookup {
+		return new OpenRegisterLookup(
+			appManager: $this->appManager,
+			container: $this->container,
+			userSession: $this->userSession,
+			logger: $this->logger
+		);
+	}//end openRegisterLookup()
 
 	/**
 	 * Get configuration for gebruiks objects (register ID and schema IDs)

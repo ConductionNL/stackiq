@@ -1,0 +1,160 @@
+{
+    "created": {
+        "eventClass": "OCA\\OpenRegister\\Event\\ObjectCreatedEvent",
+        "eventType": "ObjectCreated",
+        "objectId": "id-a",
+        "objectUuid": "uuid-a",
+        "registerId": "reg-a",
+        "schemaId": "sch-a",
+        "owner": "owner-a",
+        "created": "2026-01-02 03:04:05",
+        "objectData": {
+            "name": "Small"
+        }
+    },
+    "created-large": {
+        "eventClass": "OCA\\OpenRegister\\Event\\ObjectCreatedEvent",
+        "eventType": "ObjectCreated",
+        "objectId": "id-b",
+        "objectUuid": "uuid-b",
+        "registerId": "reg-b",
+        "schemaId": "sch-b",
+        "owner": "owner-b",
+        "created": "2026-01-02 03:04:05",
+        "objectData": {
+            "_truncated": true,
+            "_originalSize": 3011,
+            "_preview": "{\"blob\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...",
+            "_note": "Object data truncated for logging - too large to display fully"
+        }
+    },
+    "updated": {
+        "eventClass": "OCA\\OpenRegister\\Event\\ObjectUpdatedEvent",
+        "eventType": "ObjectUpdated",
+        "newObjectId": "id-n",
+        "newObjectUuid": "uuid-n",
+        "oldObjectId": "id-o",
+        "oldObjectUuid": "uuid-o",
+        "registerId": "reg-n",
+        "schemaId": "sch-n",
+        "owner": "owner-n",
+        "updated": null,
+        "newObjectData": {
+            "_truncated": true,
+            "_originalSize": 3011,
+            "_preview": "{\"blob\":\"xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx...",
+            "_note": "Object data truncated for logging - too large to display fully"
+        },
+        "oldObjectData": {
+            "name": "Small"
+        }
+    },
+    "updated-new": {
+        "eventClass": "OCA\\OpenRegister\\Event\\ObjectUpdatedEvent",
+        "eventType": "ObjectUpdated",
+        "newObjectId": "id-n",
+        "newObjectUuid": "uuid-n",
+        "oldObjectId": null,
+        "oldObjectUuid": null,
+        "registerId": "reg-n",
+        "schemaId": "sch-n",
+        "owner": "owner-n",
+        "updated": null,
+        "newObjectData": {
+            "name": "Small"
+        },
+        "oldObjectData": null
+    },
+    "deleted": {
+        "eventClass": "OCA\\OpenRegister\\Event\\ObjectDeletedEvent",
+        "eventType": "ObjectDeleted",
+        "objectId": "id-d",
+        "objectUuid": "uuid-d",
+        "registerId": "reg-d",
+        "schemaId": "sch-d",
+        "owner": "owner-d",
+        "objectData": {
+            "name": "Small"
+        }
+    },
+    "locked": {
+        "eventClass": "OCA\\OpenRegister\\Event\\ObjectLockedEvent",
+        "eventType": "ObjectLocked",
+        "objectId": "id-l",
+        "objectUuid": "uuid-l",
+        "registerId": "reg-l",
+        "schemaId": "sch-l",
+        "lockedBy": "locker-l",
+        "lockedAt": null
+    },
+    "unlocked": {
+        "eventClass": "OCA\\OpenRegister\\Event\\ObjectUnlockedEvent",
+        "eventType": "ObjectUnlocked",
+        "objectId": "id-u",
+        "objectUuid": "uuid-u",
+        "registerId": "reg-u",
+        "schemaId": "sch-u"
+    },
+    "reverted": {
+        "eventClass": "OCA\\OpenRegister\\Event\\ObjectRevertedEvent",
+        "eventType": "ObjectReverted",
+        "objectId": "id-r",
+        "objectUuid": "uuid-r",
+        "registerId": "reg-r",
+        "schemaId": "sch-r",
+        "revertedTo": "audit-3"
+    },
+    "reg-created": {
+        "eventClass": "OCA\\OpenRegister\\Event\\RegisterCreatedEvent",
+        "eventType": "RegisterCreated",
+        "registerId": 7,
+        "registerTitle": "Reg",
+        "registerSlug": "reg"
+    },
+    "reg-updated": {
+        "eventClass": "OCA\\OpenRegister\\Event\\RegisterUpdatedEvent",
+        "eventType": "RegisterUpdated",
+        "registerId": 7,
+        "registerTitle": "Reg",
+        "registerSlug": "reg"
+    },
+    "reg-deleted": {
+        "eventClass": "OCA\\OpenRegister\\Event\\RegisterDeletedEvent",
+        "eventType": "RegisterDeleted",
+        "registerId": 7,
+        "registerTitle": "Reg",
+        "registerSlug": "reg"
+    },
+    "sch-created": {
+        "eventClass": "OCA\\OpenRegister\\Event\\SchemaCreatedEvent",
+        "eventType": "SchemaCreated",
+        "schemaId": 8,
+        "schemaTitle": "Sch",
+        "schemaVersion": "1.2"
+    },
+    "sch-updated": {
+        "eventClass": "OCA\\OpenRegister\\Event\\SchemaUpdatedEvent",
+        "eventType": "SchemaUpdated",
+        "schemaId": 8,
+        "schemaTitle": "Sch",
+        "schemaVersion": "1.2"
+    },
+    "sch-deleted": {
+        "eventClass": "OCA\\OpenRegister\\Event\\SchemaDeletedEvent",
+        "eventType": "SchemaDeleted",
+        "schemaId": 8,
+        "schemaTitle": "Sch",
+        "schemaVersion": "1.2"
+    },
+    "org-created": {
+        "eventClass": "OCA\\OpenRegister\\Event\\OrganisationCreatedEvent",
+        "eventType": "OrganisationCreated",
+        "organisationId": 9,
+        "organisationTitle": "Org"
+    },
+    "unknown": {
+        "eventClass": "anonymous",
+        "eventType": "Unknown",
+        "note": "Event type not specifically handled by Stackiq debug listener"
+    }
+}

@@ -1,4 +1,8 @@
 <!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
+<!--
  - @copyright Copyright (c) 2023 Ruben Linde <info@conduction.nl>
  - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
@@ -78,100 +82,9 @@ export default {
 }
 </script>
 
+<style scoped src="./standardTabs.css"></style>
+
 <style scoped>
-.standard-tabs {
-	width: 100%;
-}
-
-.tab-navigation {
-	display: flex;
-	border: 1px solid var(--color-border);
-	border-bottom: none;
-	margin-bottom: 0;
-	background-color: var(--color-background-hover);
-	border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
-	padding: 0 8px;
-}
-
-.tab-button {
-	flex: 1;
-	padding: 12px 16px;
-	background: none;
-	border: none;
-	color: var(--color-text-lighter);
-	font-weight: 500;
-	font-size: 14px;
-	cursor: pointer;
-	transition: all 0.2s ease;
-	position: relative;
-	min-height: 48px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.tab-button:hover {
-	color: var(--color-main-text);
-	background-color: var(--color-background-hover);
-}
-
-.tab-button.active {
-	color: var(--color-primary);
-	background-color: var(--color-background);
-	font-weight: 600;
-	border: 1px solid var(--color-border);
-	border-bottom: 2px solid var(--color-background);
-	border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
-}
-
-.tab-button.active::after {
-	content: '';
-	position: absolute;
-	bottom: -2px;
-	left: 0;
-	right: 0;
-	height: 2px;
-	background-color: var(--color-primary);
-}
-
-.tab-content {
-	padding: 8px 0 0 0;
-	border: none;
-	border-top: none;
-	border-radius: 0;
-	background-color: transparent;
-}
-
-/* Responsive design */
-@media (max-width: 768px) {
-	.tab-navigation {
-		flex-direction: column;
-		border-bottom: none;
-		border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
-		padding: 8px;
-	}
-
-	.tab-button {
-		border-bottom: none;
-		border-radius: var(--border-radius);
-		margin-bottom: 4px;
-		min-height: 40px;
-	}
-
-	.tab-button.active {
-		background-color: var(--color-primary);
-		color: white;
-		border-bottom-color: transparent;
-	}
-
-	.tab-button.active::after {
-		display: none;
-	}
-	.tab-content {
-		border-top: 1px solid var(--color-border);
-	}
-}
-
 /* WCAG 2.3.3 — honour a reduced-motion preference for the tab hover/active
    transition. Scoped to the selector that declares motion; everything else
    keeps its appearance. */

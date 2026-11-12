@@ -1,128 +1,69 @@
+<!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 /** * @file MassLockObjects.vue * @module Modals/Object * @author Your Name *
 @copyright 2024 Your Organization * @license EUPL-1.2
 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 */
 
 <script setup>
-import { navigationStore, objectStore } from '../../store/store.js'
+import { objectStore } from '../../store/store.js'
 </script>
 
 <template>
-	<NcDialog
-		:name="dialogTitle"
-		:canClose="true"
-		size="normal"
-		class="mass-action-dialog"
-		@update:open="handleDialogClose">
-		<!-- Object Selection Review -->
-		<div v-if="success === null" class="lock-step">
-			<NcNoteCard type="info">
+	<MassObjectDialog
+		:title="dialogTitle"
+		stepClass="lock-step"
+		noteType="info"
+		:singleTitle="t('stackiq', 'Publication to Lock')"
+		:successOne="t('stackiq', 'Publication successfully locked')"
+		:successMany="t('stackiq', 'Publications successfully locked')"
+		buttonVariant="primary"
+		:buttonLabel="t('stackiq', 'Lock')"
+		:action="massAction">
+		<template #note>
 				{{
 					t(
 						'stackiq',
 						"Locking objects prevents other users from modifying them until they are unlocked. You can specify an optional process name to indicate why they're locked and a duration after which they will automatically unlock. Only the user who locked the objects or an administrator can unlock them before the duration expires.",
 					)
 				}}
-			</NcNoteCard>
-
-			<SelectedObjectsList
-				:title="
-					(objectStore.selectedObjects?.length || 0) === 1
-						? t('stackiq', 'Publication to Lock')
-						: t('stackiq', 'Selected Publications')
-				"
-				:showRemove="true" />
-
-			<div v-if="!success" class="formContainer">
-				<NcTextField
-					v-model="process"
-					:label="t('stackiq', 'Process Name (optional)')"
-					:disabled="loading" />
-				<NcTextField
-					v-model="duration"
-					type="number"
-					:label="t('stackiq', 'Duration in seconds (optional)')"
-					:disabled="loading" />
-			</div>
-		</div>
-
-		<NcNoteCard v-if="success" type="success">
-			<p>
-				{{
-					originalSelectedCount > 1
-						? t('stackiq', 'Publications successfully locked')
-						: t('stackiq', 'Publication successfully locked')
-				}}
-			</p>
-		</NcNoteCard>
-		<NcNoteCard v-if="error" type="error">
-			<p>{{ error }}</p>
-		</NcNoteCard>
-
-		<template #actions>
-			<NcButton @click="closeDialog">
-				<template #icon>
-					<Cancel :size="20" />
-				</template>
-				{{
-					success === null ? t('stackiq', 'Cancel') : t('stackiq', 'Close')
-				}}
-			</NcButton>
-			<NcButton
-				v-if="success === null"
-				:disabled="
-					loading || (objectStore.selectedObjects?.length || 0) === 0
-				"
-				variant="primary"
-				@click="lockObjects()">
-				<template #icon>
-					<NcLoadingIcon v-if="loading" :size="20" />
-					<LockOutline v-if="!loading" :size="20" />
-				</template>
-				{{ t('stackiq', 'Lock') }}
-			</NcButton>
 		</template>
-	</NcDialog>
+		<template #form="{ loading, success }">
+		<div v-if="!success" class="formContainer">
+			<NcTextField
+				v-model="process"
+				:label="t('stackiq', 'Process Name (optional)')"
+				:disabled="loading" />
+			<NcTextField
+				v-model="duration"
+				type="number"
+				:label="t('stackiq', 'Duration in seconds (optional)')"
+				:disabled="loading" />
+		</div>
+		</template>
+		<template #icon>
+			<LockOutline :size="20" />
+		</template>
+	</MassObjectDialog>
 </template>
 
 <script>
-import {
-	NcButton,
-	NcDialog,
-	NcLoadingIcon,
-	NcNoteCard,
-	NcTextField,
-} from '@nextcloud/vue'
-import Cancel from 'vue-material-design-icons/Cancel.vue'
+import { NcTextField } from '@nextcloud/vue'
 import LockOutline from 'vue-material-design-icons/LockOutline.vue'
-import SelectedObjectsList from '../../components/SelectedObjectsList.vue'
-import { runMassObjectAction } from '../../utils/massObjectAction.js'
+import MassObjectDialog from './MassObjectDialog.vue'
 
 export default {
 	name: 'MassLockObjects',
 	components: {
-		NcDialog,
-		NcButton,
-		NcLoadingIcon,
-		NcNoteCard,
+		MassObjectDialog,
 		NcTextField,
-		SelectedObjectsList,
 		// Icons
 		LockOutline,
-		Cancel,
-	},
-
-	props: {
-		// No props needed - always uses selected objects from store
 	},
 
 	data() {
 		return {
-			success: null,
-			loading: false,
-			error: false,
-			result: null,
-			closeModalTimeout: null,
-			originalSelectedCount: 0,
 			process: '',
 			duration: 3600,
 		}
@@ -152,86 +93,38 @@ export default {
 			}
 			return this.t('stackiq', 'Lock {count} publications', { count })
 		},
-	},
-
-	mounted() {
-		this.initializeSelection()
-	},
-
-	methods: {
-		/**
-		 * @spec openspec/specs/fe-object-modals/spec.md
-		 */
-		initializeSelection() {
-			// Store the original count for success message
-			this.originalSelectedCount = objectStore.selectedObjects?.length || 0
-		},
 
 		/**
+		 * The store call and the texts of this mass action.
+		 *
+		 * @return {object} The action, as runMassObjectAction takes it
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
-		closeDialog() {
-			// Clear any pending timeout that might reopen the dialog
-			if (this.closeModalTimeout) {
-				clearTimeout(this.closeModalTimeout)
-				this.closeModalTimeout = null
-			}
-			navigationStore.setDialog(false)
-		},
-
-		/**
-		 * @param isOpen
-		 * @spec openspec/specs/fe-object-modals/spec.md
-		 */
-		handleDialogClose(isOpen) {
-			if (!isOpen) {
-				this.closeDialog()
-			}
-		},
-
-		/**
-		 * @spec openspec/specs/fe-object-modals/spec.md
-		 */
-		async lockObjects() {
-			await runMassObjectAction(this, {
+		massAction() {
+			return {
 				run: () =>
 					objectStore.massLockObjects(
 						[...this.objectsToLock],
 						this.process || null,
 						this.duration || null,
 					),
+
 				failedText: (count) =>
 					this.t('stackiq', 'Failed to lock {count} objects', { count }),
+
 				errorText: () =>
 					this.t('stackiq', 'An error occurred while locking objects'),
-			})
+			}
 		},
 	},
 }
 </script>
 
 <style scoped>
-.lock-step {
-	padding: 0;
-}
-
-.step-title {
-	margin-top: 0 !important;
-	margin-bottom: 16px;
-	color: var(--color-main-text);
-}
-
 .formContainer {
 	margin-top: 1rem;
 	display: flex;
 	flex-direction: column;
 	gap: 1rem;
-}
-</style>
-
-<style scoped>
-/* Ensure mass action dialogs appear on top of other modals */
-.mass-action-dialog {
-	z-index: 10000 !important;
 }
 </style>

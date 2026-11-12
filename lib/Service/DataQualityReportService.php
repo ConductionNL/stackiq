@@ -73,21 +73,60 @@ class DataQualityReportService {
 	 * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
 	 */
 	public function build(string $organisationUuid): array {
+		$usageSource = $this->usageSource();
+		$page        = $this->organisationUsages(organisationUuid: $organisationUuid, usageSource: $usageSource);
+
+		[$rules, $titles] = $this->rules(schemaId: $usageSource['schema']);
+		$evaluation       = $this->evaluate(rules: $rules, usages: $page['usages']);
+		$lowest           = $this->namedLowest(entries: $evaluation['entries'], usages: $page['usages']);
+
+		return [
+			'organisation' => $organisationUuid,
+			'generatedAt' => (new DateTimeImmutable())->format(DATE_ATOM),
+			'summary' => $evaluation['summary'],
+			'rules' => self::titledRules(rules: $evaluation['rules'], titles: $titles),
+			'lowest' => self::titledMissing(lowest: $lowest, titles: $titles),
+		] + $page['counts'];
+	}//end build()
+
+	/**
+	 * The register and usage schema the report reads, checked to be usable.
+	 *
+	 * @return array{register: int, schema: int} The register and usage schema ids.
+	 *
+	 * @throws Exception When OpenRegister or the register configuration is unavailable.
+	 */
+	private function usageSource(): array {
 		if (in_array('openregister', $this->appManager->getInstalledApps(), true) === false) {
 			throw new Exception('OpenRegister app is not installed');
 		}
 
-		$config = $this->settingsService->getVoorzieningenConfig();
-		$registerId = (int)($config['register'] ?? 0);
+		$config        = $this->settingsService->getVoorzieningenConfig();
+		$registerId    = (int)($config['register'] ?? 0);
 		$usageSchemaId = (int)($config['gebruik_schema'] ?? 0);
 		if ($registerId === 0 || $usageSchemaId === 0) {
 			throw new Exception('Voorzieningen configuration not found. Please configure the schemas in the admin panel.');
 		}
 
+		return ['register' => $registerId, 'schema' => $usageSchemaId];
+	}//end usageSource()
+
+	/**
+	 * The usages one organisation consumes, with the page counts.
+	 *
+	 * Scoped by the `consumer` filter to the one organisation the report is
+	 * for; read without rbac or multitenancy, as before.
+	 *
+	 * @param string                             $organisationUuid The consuming organisation.
+	 * @param array{register: int, schema: int} $usageSource      The register and usage schema ids.
+	 *
+	 * @return array{usages: array<int, array<string, mixed>>, counts: array{total: int, truncated: bool}}
+	 */
+	private function organisationUsages(string $organisationUuid, array $usageSource): array {
 		$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		$result = $objectService->searchObjectsPaginated(
+		$result        = $objectService->searchObjectsPaginated(
 			query: [
-				'@self' => ['register' => $registerId, 'schema' => $usageSchemaId],
+				'@self' => $usageSource,
 				'consumer' => $organisationUuid,
 				'_limit' => PortfolioReportService::DEFAULT_PAGE_SIZE_CEILING,
 			],
@@ -95,40 +134,78 @@ class DataQualityReportService {
 			_multitenancy: false
 		);
 		$usages = $this->relations->normalizeResults(results: $result['results'] ?? []);
-		$total = (int)($result['total'] ?? count($usages));
+		$total  = (int)($result['total'] ?? count($usages));
 
-		[$rules, $titles] = $this->rules(schemaId: $usageSchemaId);
-		$evaluation = $this->derivation->evaluate(
+		return ['usages' => $usages, 'counts' => ['total' => $total, 'truncated' => $total > count($usages)]];
+	}//end organisationUsages()
+
+	/**
+	 * Evaluate the rules over the usages, now.
+	 *
+	 * @param array<int, array<string, mixed>> $rules  The declared rules.
+	 * @param array<int, array<string, mixed>> $usages The usages.
+	 *
+	 * @return array<string, mixed> The derivation's summary, rules and entries.
+	 */
+	private function evaluate(array $rules, array $usages): array {
+		return $this->derivation->evaluate(
 			rules: $rules,
 			objects: $this->withIds(usages: $usages),
 			now: new DateTimeImmutable()
 		);
+	}//end evaluate()
 
-		$lowest = array_slice($evaluation['entries'], 0, self::LOWEST);
-		$names = $this->moduleNames(usages: $usages, usageIds: array_column($lowest, 'id'));
+	/**
+	 * The least complete entries, each with the name of its application.
+	 *
+	 * @param array<int, array<string, mixed>> $entries The evaluated entries, least complete first.
+	 * @param array<int, array<string, mixed>> $usages  The usages.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function namedLowest(array $entries, array $usages): array {
+		$lowest = array_slice($entries, 0, self::LOWEST);
+		$names  = $this->moduleNames(usages: $usages, usageIds: array_column($lowest, 'id'));
 		foreach ($lowest as $index => $entry) {
 			$lowest[$index]['name'] = $names[$entry['id']] ?? '';
+		}
+
+		return $lowest;
+	}//end namedLowest()
+
+	/**
+	 * The lowest entries with their missing fields named by title.
+	 *
+	 * @param array<int, array<string, mixed>> $lowest The lowest entries.
+	 * @param array<string, string>            $titles Field titles keyed by field.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function titledMissing(array $lowest, array $titles): array {
+		foreach ($lowest as $index => $entry) {
 			$lowest[$index]['missing'] = array_map(static fn (string $field): string => $titles[$field] ?? $field, $entry['missing']);
 		}
 
-		$ruleRows = array_map(
+		return $lowest;
+	}//end titledMissing()
+
+	/**
+	 * The evaluated rules, each with the title of its field.
+	 *
+	 * @param array<int, array<string, mixed>> $rules  The evaluated rules.
+	 * @param array<string, string>            $titles Field titles keyed by field.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private static function titledRules(array $rules, array $titles): array {
+		return array_map(
 			static function (array $rule) use ($titles): array {
 				$rule['title'] = $titles[$rule['field']] ?? $rule['field'];
 				return $rule;
 			},
-			$evaluation['rules']
+			$rules
 		);
-
-		return [
-			'organisation' => $organisationUuid,
-			'generatedAt' => (new DateTimeImmutable())->format(DATE_ATOM),
-			'summary' => $evaluation['summary'],
-			'rules' => $ruleRows,
-			'lowest' => $lowest,
-			'total' => $total,
-			'truncated' => $total > count($usages),
-		];
-	}//end build()
+	}//end titledRules()
 
 	/**
 	 * The usage schema's declared quality rules and the titles of its fields.

@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 /** * OrganisatieCard.vue * Custom card component for displaying organisatie objects
 * @category Components * @package stackiq * @author Ruben Linde * @copyright 2024 *
 @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 *
@@ -393,20 +397,13 @@ export default {
 		 */
 		getOrganisatieAdres() {
 			const adres = this.item?.adres
-			const postcode = this.item?.postcode
 			const plaats = this.item?.plaats
-
-			if (adres && postcode && plaats) {
-				return `${adres}, ${postcode} ${plaats}`
-			} else if (adres && plaats) {
-				return `${adres}, ${plaats}`
-			} else if (plaats) {
-				return plaats
-			} else if (adres) {
-				return adres
-			}
-
-			return 'Geen adres beschikbaar'
+			// The postcode only shows in a full street, postcode and place line.
+			const postcode = adres && plaats ? this.item?.postcode : ''
+			const place = [postcode, plaats].filter(Boolean).join(' ')
+			return (
+				[adres, place].filter(Boolean).join(', ') || 'Geen adres beschikbaar'
+			)
 		},
 	},
 }

@@ -1,0 +1,527 @@
+{
+	"ensureType": {
+		"UsageRiskSignals no register function": [],
+		"UsageRiskSignals already known": [],
+		"UsageRiskSignals no schema config function": [],
+		"UsageRiskSignals config found": [
+			[
+				"getSchemaConfig",
+				"usage"
+			],
+			[
+				"registerObjectType",
+				"usage",
+				"s1",
+				"r1"
+			]
+		],
+		"UsageRiskSignals config without schema": [
+			[
+				"getSchemaConfig",
+				"usage"
+			]
+		],
+		"UsageRiskSignals config throws": [
+			[
+				"getSchemaConfig",
+				"usage"
+			]
+		],
+		"UsageRiskSignals voorzieningen fallback": [
+			[
+				"getSchemaConfig",
+				"usage"
+			],
+			[
+				"registerObjectType",
+				"usage",
+				"usage",
+				"vz"
+			]
+		],
+		"UsageRiskSignals voorzieningenConfig fallback": [
+			[
+				"getSchemaConfig",
+				"usage"
+			],
+			[
+				"registerObjectType",
+				"usage",
+				"usage",
+				"vzc"
+			]
+		],
+		"UsageRiskSignals voorzieningen without register": [
+			[
+				"getSchemaConfig",
+				"usage"
+			]
+		],
+		"ProductRoadmap no register function": [],
+		"ProductRoadmap already known": [],
+		"ProductRoadmap no schema config function": [],
+		"ProductRoadmap config found": [
+			[
+				"getSchemaConfig",
+				"usage"
+			],
+			[
+				"registerObjectType",
+				"usage",
+				"s1",
+				"r1"
+			]
+		],
+		"ProductRoadmap config without schema": [
+			[
+				"getSchemaConfig",
+				"usage"
+			]
+		],
+		"ProductRoadmap config throws": [
+			[
+				"getSchemaConfig",
+				"usage"
+			],
+			[
+				"threw",
+				"no config"
+			]
+		],
+		"ProductRoadmap voorzieningen fallback": [
+			[
+				"getSchemaConfig",
+				"usage"
+			]
+		],
+		"ProductRoadmap voorzieningenConfig fallback": [
+			[
+				"getSchemaConfig",
+				"usage"
+			]
+		],
+		"ProductRoadmap voorzieningen without register": [
+			[
+				"getSchemaConfig",
+				"usage"
+			]
+		],
+		"UpcomingMaintenanceWidget no register function": [],
+		"UpcomingMaintenanceWidget already known": [],
+		"UpcomingMaintenanceWidget no schema config function": [],
+		"UpcomingMaintenanceWidget config found": [
+			[
+				"getSchemaConfig",
+				"usage"
+			],
+			[
+				"registerObjectType",
+				"usage",
+				"s1",
+				"r1"
+			]
+		],
+		"UpcomingMaintenanceWidget config without schema": [
+			[
+				"getSchemaConfig",
+				"usage"
+			]
+		],
+		"UpcomingMaintenanceWidget config throws": [
+			[
+				"getSchemaConfig",
+				"usage"
+			],
+			[
+				"threw",
+				"no config"
+			]
+		],
+		"UpcomingMaintenanceWidget voorzieningen fallback": [
+			[
+				"getSchemaConfig",
+				"usage"
+			]
+		],
+		"UpcomingMaintenanceWidget voorzieningenConfig fallback": [
+			[
+				"getSchemaConfig",
+				"usage"
+			]
+		],
+		"UpcomingMaintenanceWidget voorzieningen without register": [
+			[
+				"getSchemaConfig",
+				"usage"
+			]
+		],
+		"ApplicationContractsPanel no register function": [],
+		"ApplicationContractsPanel already known": [],
+		"ApplicationContractsPanel no schema config function": [],
+		"ApplicationContractsPanel config found": [
+			[
+				"getSchemaConfig",
+				"usage"
+			],
+			[
+				"registerObjectType",
+				"usage",
+				"s1",
+				"r1"
+			]
+		],
+		"ApplicationContractsPanel config without schema": [
+			[
+				"getSchemaConfig",
+				"usage"
+			]
+		],
+		"ApplicationContractsPanel config throws": [
+			[
+				"getSchemaConfig",
+				"usage"
+			],
+			[
+				"threw",
+				"no config"
+			]
+		],
+		"ApplicationContractsPanel voorzieningen fallback": [
+			[
+				"getSchemaConfig",
+				"usage"
+			]
+		],
+		"ApplicationContractsPanel voorzieningenConfig fallback": [
+			[
+				"getSchemaConfig",
+				"usage"
+			]
+		],
+		"ApplicationContractsPanel voorzieningen without register": [
+			[
+				"getSchemaConfig",
+				"usage"
+			]
+		]
+	},
+	"load": {
+		"full usage": {
+			"trace": [
+				[
+					"getSchemaConfig",
+					"usage"
+				],
+				[
+					"registerObjectType",
+					"usage",
+					"s1",
+					"r1"
+				],
+				[
+					"getSchemaConfig",
+					"moduleVersion"
+				],
+				[
+					"registerObjectType",
+					"moduleVersion",
+					"s1",
+					"r1"
+				],
+				[
+					"getSchemaConfig",
+					"vulnerability"
+				],
+				[
+					"registerObjectType",
+					"vulnerability",
+					"s1",
+					"r1"
+				],
+				[
+					"fetchObject",
+					"usage",
+					"u1"
+				],
+				[
+					"fetchObject",
+					"moduleVersion",
+					"v1"
+				],
+				[
+					"fetchCollectionForOptions",
+					"vulnerability",
+					{
+						"modules": "m1",
+						"_limit": 200
+					}
+				]
+			],
+			"loading": false,
+			"error": false,
+			"riskScore": 7,
+			"signals": {
+				"endOfSupportPassed": false,
+				"endOfSupportDate": null,
+				"withdrawn": false,
+				"vulnerabilityCount": 1
+			}
+		},
+		"plain usage": {
+			"trace": [
+				[
+					"getSchemaConfig",
+					"usage"
+				],
+				[
+					"registerObjectType",
+					"usage",
+					"s1",
+					"r1"
+				],
+				[
+					"getSchemaConfig",
+					"moduleVersion"
+				],
+				[
+					"registerObjectType",
+					"moduleVersion",
+					"s1",
+					"r1"
+				],
+				[
+					"getSchemaConfig",
+					"vulnerability"
+				],
+				[
+					"registerObjectType",
+					"vulnerability",
+					"s1",
+					"r1"
+				],
+				[
+					"fetchObject",
+					"usage",
+					"u1"
+				],
+				[
+					"fetchCollectionForOptions",
+					"vulnerability",
+					{
+						"modules": "m1",
+						"_limit": 200
+					}
+				]
+			],
+			"loading": false,
+			"error": false,
+			"riskScore": null,
+			"signals": {
+				"endOfSupportPassed": false,
+				"endOfSupportDate": null,
+				"withdrawn": false,
+				"vulnerabilityCount": 1
+			}
+		},
+		"no module": {
+			"trace": [
+				[
+					"getSchemaConfig",
+					"usage"
+				],
+				[
+					"registerObjectType",
+					"usage",
+					"s1",
+					"r1"
+				],
+				[
+					"getSchemaConfig",
+					"moduleVersion"
+				],
+				[
+					"registerObjectType",
+					"moduleVersion",
+					"s1",
+					"r1"
+				],
+				[
+					"getSchemaConfig",
+					"vulnerability"
+				],
+				[
+					"registerObjectType",
+					"vulnerability",
+					"s1",
+					"r1"
+				],
+				[
+					"fetchObject",
+					"usage",
+					"u1"
+				],
+				[
+					"fetchObject",
+					"moduleVersion",
+					"v1"
+				]
+			],
+			"loading": false,
+			"error": false,
+			"riskScore": null,
+			"signals": {
+				"endOfSupportPassed": false,
+				"endOfSupportDate": null,
+				"withdrawn": false,
+				"vulnerabilityCount": 0
+			}
+		},
+		"null usage": {
+			"trace": [
+				[
+					"getSchemaConfig",
+					"usage"
+				],
+				[
+					"registerObjectType",
+					"usage",
+					"s1",
+					"r1"
+				],
+				[
+					"getSchemaConfig",
+					"moduleVersion"
+				],
+				[
+					"registerObjectType",
+					"moduleVersion",
+					"s1",
+					"r1"
+				],
+				[
+					"getSchemaConfig",
+					"vulnerability"
+				],
+				[
+					"registerObjectType",
+					"vulnerability",
+					"s1",
+					"r1"
+				],
+				[
+					"fetchObject",
+					"usage",
+					"u1"
+				]
+			],
+			"loading": false,
+			"error": false,
+			"riskScore": null,
+			"signals": {
+				"endOfSupportPassed": false,
+				"endOfSupportDate": null,
+				"withdrawn": false,
+				"vulnerabilityCount": 0
+			}
+		},
+		"needs settings": {
+			"trace": [
+				[
+					"fetchSettings"
+				],
+				[
+					"getSchemaConfig",
+					"usage"
+				],
+				[
+					"registerObjectType",
+					"usage",
+					"s1",
+					"r1"
+				],
+				[
+					"getSchemaConfig",
+					"moduleVersion"
+				],
+				[
+					"registerObjectType",
+					"moduleVersion",
+					"s1",
+					"r1"
+				],
+				[
+					"getSchemaConfig",
+					"vulnerability"
+				],
+				[
+					"registerObjectType",
+					"vulnerability",
+					"s1",
+					"r1"
+				],
+				[
+					"fetchObject",
+					"usage",
+					"u1"
+				]
+			],
+			"loading": false,
+			"error": false,
+			"riskScore": null,
+			"signals": {
+				"endOfSupportPassed": false,
+				"endOfSupportDate": null,
+				"withdrawn": false,
+				"vulnerabilityCount": 0
+			}
+		},
+		"fetch fails": {
+			"trace": [
+				[
+					"getSchemaConfig",
+					"usage"
+				],
+				[
+					"registerObjectType",
+					"usage",
+					"s1",
+					"r1"
+				],
+				[
+					"getSchemaConfig",
+					"moduleVersion"
+				],
+				[
+					"registerObjectType",
+					"moduleVersion",
+					"s1",
+					"r1"
+				],
+				[
+					"getSchemaConfig",
+					"vulnerability"
+				],
+				[
+					"registerObjectType",
+					"vulnerability",
+					"s1",
+					"r1"
+				],
+				[
+					"fetchObject",
+					"usage",
+					"u1"
+				]
+			],
+			"loading": false,
+			"error": true,
+			"riskScore": null,
+			"signals": {
+				"endOfSupportPassed": false,
+				"endOfSupportDate": null,
+				"withdrawn": false,
+				"vulnerabilityCount": 0
+			}
+		}
+	}
+}

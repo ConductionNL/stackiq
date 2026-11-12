@@ -3,6 +3,9 @@
 /**
  * Stackiq OrganisationMembersController.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Self-service colleague access (VNG Softwarecatalogus #65): lets a
  * `beheerder` of an organisation grant or revoke an EXISTING Nextcloud
  * user's membership of that organisation, without an administrator.
@@ -33,9 +36,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-or-revoking-organisation-access-must-be-restricted-to-a-beheerder-of-that-organisation-req-004
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -51,6 +51,7 @@ use OCP\AppFramework\Http\Attribute\NoCSRFRequired;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IGroupManager;
 use OCP\IRequest;
+use OCP\IUser;
 use OCP\IUserManager;
 use OCP\IUserSession;
 use Psr\Log\LoggerInterface;
@@ -112,12 +113,26 @@ class OrganisationMembersController extends Controller {
 		}
 
 		if ($this->userManager->get($userId) === null) {
-			return new JSONResponse(
-				data: ['error' => 'User not found'],
-				statusCode: Http::STATUS_NOT_FOUND
-			);
+			return self::userNotFound();
 		}
 
+		$failure = $this->joinMembership(uuid: $uuid, userId: $userId);
+		if ($failure !== null) {
+			return $failure;
+		}
+
+		return self::membershipChanged(message: 'Successfully granted organisation access', userId: $userId);
+	}//end grant()
+
+	/**
+	 * Add the user to the organisation through OpenRegister.
+	 *
+	 * @param string $uuid   The organisation UUID.
+	 * @param string $userId The existing Nextcloud user id to grant access to.
+	 *
+	 * @return JSONResponse|null The 400 response when OpenRegister refuses, null on success.
+	 */
+	private function joinMembership(string $uuid, string $userId): ?JSONResponse {
 		try {
 			$organisationService = $this->getOrganisationService();
 			$organisationService->joinOrganisation(organisationUuid: $uuid, targetUserId: $userId);
@@ -126,20 +141,11 @@ class OrganisationMembersController extends Controller {
 				'[OrganisationMembersController] Failed to grant organisation access',
 				['organisationUuid' => $uuid, 'userId' => $userId, 'error' => $e->getMessage()]
 			);
-			return new JSONResponse(
-				data: ['error' => $e->getMessage()],
-				statusCode: Http::STATUS_BAD_REQUEST
-			);
+			return self::badRequest(error: $e);
 		}
 
-		return new JSONResponse(
-			data: [
-				'message' => 'Successfully granted organisation access',
-				'userId' => $userId,
-			],
-			statusCode: Http::STATUS_OK
-		);
-	}//end grant()
+		return null;
+	}//end joinMembership()
 
 	/**
 	 * Revoke an existing member's access to an organisation.
@@ -161,6 +167,23 @@ class OrganisationMembersController extends Controller {
 			return $guard;
 		}
 
+		$failure = $this->leaveMembership(uuid: $uuid, userId: $userId);
+		if ($failure !== null) {
+			return $failure;
+		}
+
+		return self::membershipChanged(message: 'Successfully revoked organisation access', userId: $userId);
+	}//end revoke()
+
+	/**
+	 * Remove the user from the organisation through OpenRegister.
+	 *
+	 * @param string $uuid   The organisation UUID.
+	 * @param string $userId The Nextcloud user id to revoke access from.
+	 *
+	 * @return JSONResponse|null The 400 response when OpenRegister refuses, null on success.
+	 */
+	private function leaveMembership(string $uuid, string $userId): ?JSONResponse {
 		try {
 			$organisationService = $this->getOrganisationService();
 			$organisationService->leaveOrganisation(organisationUuid: $uuid, targetUserId: $userId);
@@ -169,20 +192,55 @@ class OrganisationMembersController extends Controller {
 				'[OrganisationMembersController] Failed to revoke organisation access',
 				['organisationUuid' => $uuid, 'userId' => $userId, 'error' => $e->getMessage()]
 			);
-			return new JSONResponse(
-				data: ['error' => $e->getMessage()],
-				statusCode: Http::STATUS_BAD_REQUEST
-			);
+			return self::badRequest(error: $e);
 		}
 
+		return null;
+	}//end leaveMembership()
+
+	/**
+	 * The 404 answered when the user to grant access to does not exist.
+	 *
+	 * @return JSONResponse
+	 */
+	private static function userNotFound(): JSONResponse {
+		return new JSONResponse(
+			data: ['error' => 'User not found'],
+			statusCode: Http::STATUS_NOT_FOUND
+		);
+	}//end userNotFound()
+
+	/**
+	 * The 400 answered when OpenRegister refuses a membership change.
+	 *
+	 * @param \Exception $error What OpenRegister threw.
+	 *
+	 * @return JSONResponse
+	 */
+	private static function badRequest(\Exception $error): JSONResponse {
+		return new JSONResponse(
+			data: ['error' => $error->getMessage()],
+			statusCode: Http::STATUS_BAD_REQUEST
+		);
+	}//end badRequest()
+
+	/**
+	 * The 200 answered after a membership change.
+	 *
+	 * @param string $message What changed.
+	 * @param string $userId  The user whose access changed.
+	 *
+	 * @return JSONResponse
+	 */
+	private static function membershipChanged(string $message, string $userId): JSONResponse {
 		return new JSONResponse(
 			data: [
-				'message' => 'Successfully revoked organisation access',
+				'message' => $message,
 				'userId' => $userId,
 			],
 			statusCode: Http::STATUS_OK
 		);
-	}//end revoke()
+	}//end membershipChanged()
 
 	/**
 	 * Beheerder-of-this-organisation authorization guard (IDOR guard).
@@ -211,45 +269,96 @@ class OrganisationMembersController extends Controller {
 		}
 
 		if ($this->groupManager->isInGroup($user->getUID(), self::BEHEERDER_GROUP) === false) {
-			$this->logger->warning(
-				'[OrganisationMembersController] Access refused (not a beheerder)',
-				['uid' => $user->getUID(), 'organisationUuid' => $organisationUuid]
-			);
-			return new JSONResponse(
-				data: ['error' => 'Only a beheerder of this organisation may grant or revoke access'],
-				statusCode: Http::STATUS_FORBIDDEN
-			);
+			return $this->refuseMaintainer(reason: 'not a beheerder', context: ['uid' => $user->getUID(), 'organisationUuid' => $organisationUuid]);
 		}
 
+		return $this->membershipRefusal(user: $user, organisationUuid: $organisationUuid);
+	}//end authorizeMaintainer()
+
+	/**
+	 * Refuse a beheerder whose own organisations do not include the target.
+	 *
+	 * @param IUser  $user             The authenticated beheerder.
+	 * @param string $organisationUuid The organisation the caller is trying to manage.
+	 *
+	 * @return JSONResponse|null Error response, or null when the caller belongs to the organisation.
+	 */
+	private function membershipRefusal(IUser $user, string $organisationUuid): ?JSONResponse {
+		$callerOrganisations = $this->callerOrganisations(user: $user);
+		if ($callerOrganisations === null) {
+			return self::forbidden(error: 'Unable to verify organisation membership');
+		}
+
+		if (self::includesOrganisation(organisations: $callerOrganisations, organisationUuid: $organisationUuid) === true) {
+			return null;
+		}
+
+		return $this->refuseMaintainer(
+			reason: 'beheerder of a different organisation',
+			context: ['uid' => $user->getUID(), 'organisationUuid' => $organisationUuid]
+		);
+	}//end membershipRefusal()
+
+	/**
+	 * The caller's own organisation memberships, or null when they cannot be resolved.
+	 *
+	 * @param IUser $user The authenticated beheerder.
+	 *
+	 * @return iterable<object>|null The organisations, from OpenRegister's session-scoped lookup.
+	 */
+	private function callerOrganisations(IUser $user): ?iterable {
 		try {
-			$organisationService = $this->getOrganisationService();
-			$callerOrganisations = $organisationService->getUserOrganisations();
+			return $this->getOrganisationService()->getUserOrganisations();
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'[OrganisationMembersController] Failed to resolve caller organisations',
 				['uid' => $user->getUID(), 'error' => $e->getMessage()]
 			);
-			return new JSONResponse(
-				data: ['error' => 'Unable to verify organisation membership'],
-				statusCode: Http::STATUS_FORBIDDEN
-			);
+			return null;
 		}
+	}//end callerOrganisations()
 
-		foreach ($callerOrganisations as $organisation) {
+	/**
+	 * Whether a list of organisations includes the one with the given uuid.
+	 *
+	 * @param iterable<object> $organisations    The caller's organisations.
+	 * @param string           $organisationUuid The organisation uuid.
+	 *
+	 * @return bool True when one of them has exactly that uuid.
+	 */
+	private static function includesOrganisation(iterable $organisations, string $organisationUuid): bool {
+		foreach ($organisations as $organisation) {
 			if ($organisation->getUuid() === $organisationUuid) {
-				return null;
+				return true;
 			}
 		}
 
-		$this->logger->warning(
-			'[OrganisationMembersController] Access refused (beheerder of a different organisation)',
-			['uid' => $user->getUID(), 'organisationUuid' => $organisationUuid]
-		);
-		return new JSONResponse(
-			data: ['error' => 'Only a beheerder of this organisation may grant or revoke access'],
-			statusCode: Http::STATUS_FORBIDDEN
-		);
-	}//end authorizeBeheerder()
+		return false;
+	}//end includesOrganisation()
+
+	/**
+	 * Log and refuse a caller who may not manage the organisation's members.
+	 *
+	 * @param string               $reason  Why access is refused, for the log.
+	 * @param array<string, mixed> $context The caller and the organisation, for the log.
+	 *
+	 * @return JSONResponse The 403 response.
+	 */
+	private function refuseMaintainer(string $reason, array $context): JSONResponse {
+		$this->logger->warning('[OrganisationMembersController] Access refused (' . $reason . ')', $context);
+		return self::forbidden(error: 'Only a beheerder of this organisation may grant or revoke access');
+	}//end refuseMaintainer()
+
+	/**
+	 * A 403 response with an error message.
+	 *
+	 * @param string $error The message.
+	 *
+	 * @return JSONResponse
+	 */
+	private static function forbidden(string $error): JSONResponse {
+		return new JSONResponse(data: ['error' => $error], statusCode: Http::STATUS_FORBIDDEN);
+	}//end forbidden()
 
 	/**
 	 * Resolve OpenRegister's OrganisationService via the DI container.
