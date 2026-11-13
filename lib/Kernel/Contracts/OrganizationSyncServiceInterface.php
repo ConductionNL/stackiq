@@ -91,4 +91,55 @@ interface OrganizationSyncServiceInterface {
 	 * @spec   openspec/specs/organization-sync/spec.md
 	 */
 	public function performScheduledSync(int $minutesBack = 0): array;
+
+	/**
+	 * Process a specific organization object (called from event listener)
+	 *
+	 * This method processes a single organization object, creating or updating
+	 * the corresponding organization entity as needed.
+	 *
+	 * @param \OCA\OpenRegister\Db\ObjectEntity $organizationObject The organization object to process
+	 *
+	 * @return array Processing results
+	 * @spec   openspec/specs/organization-sync/spec.md
+	 */
+	public function processSpecificOrganization($organizationObject): array;
+
+	/**
+	 * Why an organisatie may not be linked to an OpenRegister organisation, or null when it may.
+	 *
+	 * Refused when the organisatie is unknown or already has an organisation, when
+	 * the organisation is unknown, is OpenRegister's default organisation, or is
+	 * already another organisatie's, and when OpenRegister cannot say which
+	 * organisation is its default. Nothing is written.
+	 *
+	 * @param string $organisatieUuid The organisatie object's uuid.
+	 * @param string $entityUuid      The OpenRegister organisation's uuid.
+	 *
+	 * @return string|null no-organisatie, already-linked, no-organisation, default-unknown,
+	 *                     default-organisation, organisation-in-use, or null.
+	 *
+	 * @spec openspec/specs/organisatie-service/spec.md
+	 */
+	public function checkOrganisationLink(string $organisatieUuid, string $entityUuid): ?string;
+
+	/**
+	 * Link an organisatie to an existing OpenRegister organisation, as an administrator decides.
+	 *
+	 * The organisation takes the organisatie's uuid, which is what links the two,
+	 * and becomes the organisatie object's owner. The link is recorded so the sync
+	 * keeps the two together although the organisation is older. Refused for the
+	 * reasons checkOrganisationLink() gives.
+	 *
+	 * With both uuids the same it confirms an organisatie the sync refused for
+	 * carrying the uuid of an older organisation.
+	 *
+	 * @param string $organisatieUuid The organisatie object's uuid.
+	 * @param string $entityUuid      The OpenRegister organisation's uuid.
+	 *
+	 * @return string linked, or the refusal checkOrganisationLink() gives.
+	 *
+	 * @spec openspec/specs/organisatie-service/spec.md
+	 */
+	public function linkOrganisationEntity(string $organisatieUuid, string $entityUuid): string;
 }//end interface

@@ -137,7 +137,7 @@ class StackiqEventListenerDecompositionTest extends TestCase {
 		};
 
 		$this->container->method('get')->willReturnCallback(
-			static fn (string $id): mixed => $id === 'OCA\Stackiq\Service\OrganizationSyncService'
+			static fn (string $id): mixed => $id === 'OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface'
 				? $orgSyncService
 				: null
 		);

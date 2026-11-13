@@ -27,11 +27,12 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use DateTime;
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\Stackiq\Kernel\Contracts\GebruikSyncServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -56,7 +57,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
-class GebruikSyncService {
+class GebruikSyncService implements GebruikSyncServiceInterface {
 
 	/**
 	 * Logger for debugging and error reporting.

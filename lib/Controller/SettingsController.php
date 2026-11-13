@@ -34,6 +34,7 @@ use OCA\Stackiq\Kernel\Contracts\ConnectionReportServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\CronjobSettingsInterface;
 use OCA\Stackiq\Kernel\Contracts\EmailSettingsInterface;
 use OCA\Stackiq\Kernel\Contracts\EolSyncServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ModuleComplianceServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ProgressTrackerInterface;
 use OCA\Stackiq\Kernel\Contracts\RoleGroupSettingsInterface;
@@ -3087,7 +3088,7 @@ class SettingsController extends Controller {
 			$this->logger->info('SettingsController: Starting bulk sync of module standards.');
 
 			// Get the ModuleComplianceService from the container.
-			$moduleComplianceService = $this->container->get(\OCA\Stackiq\Service\ModuleComplianceService::class);
+			$moduleComplianceService = $this->container->get(ModuleComplianceServiceInterface::class);
 
 			// Perform the bulk sync.
 			$results = $moduleComplianceService->bulkSyncModuleStandards();

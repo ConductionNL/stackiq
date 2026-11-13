@@ -25,8 +25,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ModuleVersionServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -43,7 +44,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/method-decomposition/tasks.md#task-9-5
  */
-class ModuleVersionService {
+class ModuleVersionService implements ModuleVersionServiceInterface {
 	/**
 	 * Constructor for ModuleVersionService
 	 *
