@@ -121,17 +121,7 @@
     ],
     [
         "service",
-        "OCA\\Stackiq\\BackgroundJob\\OrganizationContactSyncJob",
-        true
-    ],
-    [
-        "service",
         "OCA\\Stackiq\\Service\\ContractStatusService",
-        true
-    ],
-    [
-        "service",
-        "OCA\\Stackiq\\BackgroundJob\\ContractStatusJob",
         true
     ],
     [
@@ -156,17 +146,27 @@
     ],
     [
         "service",
-        "OCA\\Stackiq\\BackgroundJob\\FederationSyncJob",
-        true
-    ],
-    [
-        "service",
         "OCA\\Stackiq\\Service\\EolMatcherService",
         true
     ],
     [
         "service",
         "OCA\\Stackiq\\Service\\EolSyncService",
+        true
+    ],
+    [
+        "service",
+        "OCA\\Stackiq\\BackgroundJob\\OrganizationContactSyncJob",
+        true
+    ],
+    [
+        "service",
+        "OCA\\Stackiq\\BackgroundJob\\ContractStatusJob",
+        true
+    ],
+    [
+        "service",
+        "OCA\\Stackiq\\BackgroundJob\\FederationSyncJob",
         true
     ],
     [

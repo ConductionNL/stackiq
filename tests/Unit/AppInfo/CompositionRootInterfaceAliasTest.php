@@ -37,12 +37,16 @@ use RecursiveIteratorIterator;
 class CompositionRootInterfaceAliasTest extends TestCase {
 
 	/**
-	 * The aliases registered in Application.php, as interface short name => target short name.
+	 * The aliases registered in the composition root, as interface short name => target short name.
 	 *
 	 * @return array<string, string>
 	 */
 	private function registeredAliases(): array {
-		$source = (string) file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
+		$source = '';
+		foreach (['lib/AppInfo/Application.php', 'lib/Service/ServiceRegistrar.php'] as $file) {
+			$source .= (string) file_get_contents(dirname(__DIR__, 3) . '/' . $file);
+		}
+
 		preg_match_all(
 			'/registerServiceAlias\(\s*(\w+)::class,\s*(\w+)::class\s*\)/',
 			$source,
@@ -99,7 +103,7 @@ class CompositionRootInterfaceAliasTest extends TestCase {
 		$imported = $this->importedAppInterfaces();
 		self::assertNotEmpty($imported);
 		foreach (array_keys($imported) as $name) {
-			self::assertArrayHasKey($name, $aliases, "$name is imported in lib/ but not bound in Application::register()");
+			self::assertArrayHasKey($name, $aliases, "$name is imported in lib/ but not bound in the composition root");
 		}
 	}//end testEveryImportedAppInterfaceIsBound()
 }//end class
