@@ -35,6 +35,7 @@ use OCA\Stackiq\Service\ProgressTracker;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
@@ -160,6 +161,7 @@ class SettingsControllerGeneralEndpointsTest extends TestCase {
 			cronjobSettings: $this->createMock(CronjobSettings::class),
 			orgSyncSvc: $this->createMock(OrganizationSyncService::class),
 			archiMateService: $this->createMock(ArchiMateService::class),
+			roleGroupSettings: $this->createMock(RoleGroupSettings::class),
 			progressTracker: $this->createMock(ProgressTracker::class),
 			eolSyncService: $this->eolSyncService,
 			emailSettings: $this->createMock(EmailSettings::class),
