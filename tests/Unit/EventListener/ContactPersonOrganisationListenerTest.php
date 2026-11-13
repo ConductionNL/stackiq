@@ -423,7 +423,7 @@ final class ContactPersonOrganisationListenerTest extends TestCase {
 	}//end testAnotherSchemaIsLeftAlone()
 
 	public function testTheListenerIsRegisteredForCreatesAndUpdates(): void {
-		$source = (string)file_get_contents(__DIR__ . '/../../../lib/AppInfo/Application.php');
+		$source = (string)file_get_contents(__DIR__ . '/../../../lib/EventListener/ListenerRegistrar.php');
 
 		foreach (['ObjectCreatingEvent', 'ObjectUpdatingEvent'] as $event) {
 			self::assertMatchesRegularExpression(
