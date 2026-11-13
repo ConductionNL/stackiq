@@ -32,7 +32,7 @@ use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\AppInfo\AppIdentity;
 use OCA\Stackiq\Service\ModuleVersionPublicationService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -64,13 +64,13 @@ class BackfillModuleVersionPublication implements IRepairStep {
 	 * Constructor.
 	 *
 	 * @param IAppManager                     $appManager      Tells whether OpenRegister is installed.
-	 * @param SettingsService                 $settingsService Resolves the module schema and the object service.
+	 * @param RegisterConfigReaderInterface                 $settingsService Resolves the module schema and the object service.
 	 * @param ModuleVersionPublicationService $publication     The mirror.
 	 * @param IAppConfig                      $appConfig       Holds the done marker.
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly ModuleVersionPublicationService $publication,
 		private readonly IAppConfig $appConfig,
 	) {

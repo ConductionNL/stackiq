@@ -22,7 +22,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\Stackiq\Service\Settings\EmailSettings;
-use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\Settings\SettingsObjectCounts;
 use OCA\Stackiq\Service\Settings\VoorzieningenConfigNormalizer;
@@ -73,7 +73,7 @@ use Symfony\Component\Mime\Email;
  *
  * @spec openspec/specs/settings-service/spec.md
  */
-class SettingsService implements ObjectTypeLocatorInterface {
+class SettingsService implements RegisterConfigReaderInterface {
 
 	/**
 	 * The application name for identification and configuration purposes

@@ -26,7 +26,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard;
 use OCA\Stackiq\Service\ContactpersoonService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -65,9 +65,9 @@ class ContactpersonenController extends Controller {
 	/**
 	 * Settings service for configuration access.
 	 *
-	 * @var SettingsService
+	 * @var RegisterConfigReaderInterface
 	 */
-	private SettingsService $settingsService;
+	private RegisterConfigReaderInterface $settingsService;
 
 	/**
 	 * Contact person handler for user operations.
@@ -123,7 +123,7 @@ class ContactpersonenController extends Controller {
 	 *
 	 * @param string $appName The app name
 	 * @param IRequest $request The request object
-	 * @param SettingsService $settingsService Settings service
+	 * @param RegisterConfigReaderInterface $settingsService Settings service
 	 * @param ContactPersonHandler $contactPersonHandler Contact person handler
 	 * @param ContactpersoonService $contactSvc Contactpersoon service
 	 * @param IUserManager $userManager User manager
@@ -141,7 +141,7 @@ class ContactpersonenController extends Controller {
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		SettingsService $settingsService,
+		RegisterConfigReaderInterface $settingsService,
 		ContactPersonHandler $contactPersonHandler,
 		ContactpersoonService $contactSvc,
 		IUserManager $userManager,

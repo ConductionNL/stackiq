@@ -25,7 +25,7 @@ namespace OCA\Stackiq\BackgroundJob;
 use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\Settings\CronjobSettings;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\StackiqContactSyncService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -71,7 +71,7 @@ class OrganizationContactSyncJob extends TimedJob {
 	 * @param ITimeFactory $timeFactory The time factory for job scheduling
 	 * @param OrganizationSyncService $orgSyncService The sync service
 	 * @param StackiqContactSyncService $contactSync The Nextcloud-Contacts bridge
-	 * @param SettingsService $settingsService The settings service (register/schema id resolution)
+	 * @param RegisterConfigReaderInterface $settingsService The settings service (register/schema id resolution)
 	 * @param CronjobSettings $cronjobSettings The cronjob settings (whether this job is switched on)
 	 * @param IAppManager $appManager The Nextcloud app manager
 	 * @param LoggerInterface $logger The logger
@@ -80,7 +80,7 @@ class OrganizationContactSyncJob extends TimedJob {
 		ITimeFactory $timeFactory,
 		OrganizationSyncService $orgSyncService,
 		private readonly StackiqContactSyncService $contactSync,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly CronjobSettings $cronjobSettings,
 		private readonly IAppManager $appManager,
 		private readonly LoggerInterface $logger,
