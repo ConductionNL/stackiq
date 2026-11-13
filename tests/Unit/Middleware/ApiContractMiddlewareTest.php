@@ -191,18 +191,21 @@ class ApiContractMiddlewareTest extends TestCase {
 	}//end testVersionedPathIsNotDeprecated()
 
 	/**
-	 * A path that speaks a protocol defined elsewhere keeps that protocol's formats.
+	 * A path that speaks a protocol defined elsewhere keeps the contract it always
+	 * had (version header, problem details) but is not announced as deprecated.
 	 *
 	 * @return void
 	 */
-	public function testStandardProtocolPathIsUntouched(): void {
+	public function testStandardProtocolPathKeepsTheContractWithoutDeprecation(): void {
 		$response = $this->decorate(path: '/apps/stackiq/api/progress/1/stream', response: new JSONResponse(data: ['error' => 'x'], statusCode: 400));
 		$headers  = $this->headersOf(response: $response);
 
-		$this->assertSame(expected: ['error' => 'x'], actual: $response->getData());
-		$this->assertArrayNotHasKey(key: 'API-Version', array: $headers);
+		$this->assertSame(expected: '1.2.3', actual: $headers['API-Version']);
+		$this->assertSame(expected: 'x', actual: $response->getData()['error']);
+		$this->assertSame(expected: 400, actual: $response->getData()['status']);
 		$this->assertArrayNotHasKey(key: 'Deprecation', array: $headers);
-	}//end testStandardProtocolPathIsUntouched()
+		$this->assertArrayNotHasKey(key: 'Link', array: $headers);
+	}//end testStandardProtocolPathKeepsTheContractWithoutDeprecation()
 
 	/**
 	 * The detail comes from detail, then message, then error, skipping empty

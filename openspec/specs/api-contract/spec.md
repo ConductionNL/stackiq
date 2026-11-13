@@ -69,14 +69,15 @@ Every route under `/api/` MUST also be served under `/api/v1/`, with the same co
 - WHEN a client calls `/index.php/apps/stackiq/api/v1/settings`
 - THEN the same controller method MUST answer it, without a `Deprecation` header
 
-### Requirement: Standard protocol paths keep their own formats
+### Requirement: Standard protocol paths are not deprecated
 
-Paths that implement a protocol defined elsewhere (Server-sent event streams, Health check, Prometheus metrics) MUST NOT get a `/api/v1/` alias, a `Deprecation` header, an `API-Version` header or a problem details rewrite: their formats belong to their standard. They are listed in `lib/Middleware/Support/StandardProtocolPaths.php` and are not described in the OpenAPI document.
+Paths that implement a protocol defined elsewhere (Server-sent event streams, Health check, Prometheus metrics) MUST NOT get a `Deprecation` or successor `Link` header: their URLs belong to their standard. They keep what they had before the deprecation schedule: their `/api/v1/` alias, the `API-Version` header and the problem details rewrite. They are listed in `lib/Middleware/Support/StandardProtocolPaths.php` and are described in the OpenAPI document under their unversioned base.
 
-#### Scenario: A protocol path is left alone
+#### Scenario: A protocol path is not announced as deprecated
 
-@e2e exclude a response shape, not browser behaviour; covered by PHPUnit ApiContractMiddlewareTest.
+@e2e exclude a response shape, not browser behaviour; covered by PHPUnit ApiContractMiddlewareTest and ApiPathAliasesTest.
 
 - GIVEN a client calls `/index.php/apps/stackiq/api/progress/1/stream` and it answers `400` with `{"error": "x"}`
-- THEN the body MUST stay `{"error": "x"}`
-- AND the response MUST carry no `API-Version` and no `Deprecation` header
+- THEN the body MUST keep `"error": "x"`
+- AND the response MUST carry an `API-Version` header and no `Deprecation` or `Link` header
+- AND `/index.php/apps/stackiq/api/v1/progress/1/stream` MUST reach the same controller method

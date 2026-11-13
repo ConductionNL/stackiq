@@ -79,17 +79,21 @@ final class ApiPathAliases {
 	private const VERSIONED = '#^/api/(?:[a-z0-9-]+/)*v[0-9]{1,3}(?:/|$)#i';
 
 	/**
-	 * Whether a path is an unversioned API path, deprecated in favour of its `/api/v1/` alias.
+	 * Whether a path is an unversioned API path, served under `/api/v1/` as well.
+	 *
+	 * Every such path gets a `/api/v1/` alias, including a path that speaks a
+	 * protocol defined elsewhere: the alias existed before the deprecation
+	 * headers did, and dropping it would break a caller that already uses it.
 	 *
 	 * @param string $path An app-relative path or a request path under the app root.
 	 *
-	 * @return bool True for a deprecated unversioned API path.
+	 * @return bool True for an unversioned API path.
 	 *
 	 * @SuppressWarnings(PHPMD.StaticAccess) StandardProtocolPaths is a pure lookup, shared with routes.php.
 	 *
 	 * @spec openspec/specs/api-contract/spec.md
 	 */
-	public static function isDeprecated(string $path): bool {
+	public static function isUnversioned(string $path): bool {
 		$relative = StandardProtocolPaths::appRelative(path: $path);
 		if (str_starts_with($relative, '/api/') === false || preg_match(self::VERSIONED, $relative) === 1) {
 			return false;
@@ -101,7 +105,29 @@ final class ApiPathAliases {
 			}
 		}
 
-		return StandardProtocolPaths::matches(path: $relative) === false;
+		return true;
+	}//end isUnversioned()
+
+	/**
+	 * Whether a path is an unversioned API path, deprecated in favour of its `/api/v1/` alias.
+	 *
+	 * A path that speaks a protocol defined elsewhere ({@see StandardProtocolPaths})
+	 * keeps its alias but is not announced as deprecated.
+	 *
+	 * @param string $path An app-relative path or a request path under the app root.
+	 *
+	 * @return bool True for a deprecated unversioned API path.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) StandardProtocolPaths is a pure lookup, shared with routes.php.
+	 *
+	 * @spec openspec/specs/api-contract/spec.md
+	 */
+	public static function isDeprecated(string $path): bool {
+		if (self::isUnversioned(path: $path) === false) {
+			return false;
+		}
+
+		return StandardProtocolPaths::matches(path: StandardProtocolPaths::appRelative(path: $path)) === false;
 	}//end isDeprecated()
 
 	/**
@@ -155,7 +181,7 @@ final class ApiPathAliases {
 		$aliases = [];
 		foreach (($routes['routes'] ?? []) as $route) {
 			$url = '/'.ltrim((string) ($route['url'] ?? ''), '/');
-			if (self::isDeprecated(path: $url) === false || self::isApiFallback(route: $route) === true) {
+			if (self::isUnversioned(path: $url) === false || self::isApiFallback(route: $route) === true) {
 				continue;
 			}
 

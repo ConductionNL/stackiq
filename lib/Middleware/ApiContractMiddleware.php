@@ -28,7 +28,6 @@ namespace OCA\Stackiq\Middleware;
 
 use OCA\Stackiq\AppInfo\Application;
 use OCA\Stackiq\Middleware\Support\ApiPathAliases;
-use OCA\Stackiq\Middleware\Support\StandardProtocolPaths;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
@@ -39,7 +38,8 @@ use OCP\IRequest;
  * Stamps `API-Version` on API responses, marks an unversioned path deprecated
  * in favour of its `/api/v1/` alias, and turns JSON error bodies into problem
  * details. Paths that speak a protocol defined elsewhere
- * ({@see StandardProtocolPaths}) are left exactly as they are.
+ * ({@see \OCA\Stackiq\Middleware\Support\StandardProtocolPaths}) keep the
+ * version header and problem details but are not announced as deprecated.
  *
  * An error body keeps every member it already had, so existing callers that
  * read `error` or `message` see no change. A body that already uses `type`,
@@ -155,21 +155,20 @@ class ApiContractMiddleware extends Middleware {
 	}//end decorate()
 
 	/**
-	 * Whether the request path lies under the app's `/api/` and is not a standard protocol path.
+	 * Whether the request path lies under the app's `/api/`.
 	 *
-	 * @return bool True for a request on the app's own API.
+	 * A path that speaks a protocol defined elsewhere is an API request too: it
+	 * keeps the `API-Version` header and problem details it always had, and only
+	 * the deprecation announcement passes it by ({@see ApiPathAliases::successorOf()}).
 	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) StandardProtocolPaths is a pure lookup that routes.php shares, outside any container.
+	 * @return bool True for an API request.
 	 *
 	 * @spec openspec/specs/api-contract/spec.md
 	 */
 	private function isApiRequest(): bool {
 		$path = $this->request->getPathInfo();
-		if (is_string($path) === false || str_contains($path, self::API_PATH_MARKER) === false) {
-			return false;
-		}
 
-		return StandardProtocolPaths::matches(path: $path) === false;
+		return is_string($path) === true && str_contains($path, self::API_PATH_MARKER) === true;
 	}//end isApiRequest()
 
 	/**

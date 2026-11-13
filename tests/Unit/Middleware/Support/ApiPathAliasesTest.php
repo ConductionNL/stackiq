@@ -150,6 +150,23 @@ class ApiPathAliasesTest extends TestCase {
 	}//end testEveryDeprecatedRouteHasAReachableTwin()
 
 	/**
+	 * A protocol path keeps the `/api/v1/` alias it already had before the
+	 * deprecation headers, but is not itself deprecated.
+	 *
+	 * @return void
+	 */
+	public function testAProtocolPathKeepsItsAliasWithoutDeprecation(): void {
+		$stream = '/api/progress/{operationId}/stream';
+		$twin   = self::find(routes: self::shippedRoutes(), verb: 'GET', url: '/api/v1/progress/{operationId}/stream', name: 'settings#streamProgress');
+
+		$this->assertNotNull(actual: $twin, message: 'the progress stream lost its /api/v1/ alias');
+		$this->assertSame(expected: 'v1', actual: $twin['postfix']);
+		$this->assertTrue(condition: ApiPathAliases::isUnversioned(path: $stream));
+		$this->assertFalse(condition: ApiPathAliases::isDeprecated(path: $stream));
+		$this->assertNull(actual: ApiPathAliases::successorOf(path: '/apps/stackiq'.$stream));
+	}//end testAProtocolPathKeepsItsAliasWithoutDeprecation()
+
+	/**
 	 * No alias answers a request meant for a route the app declares under `/api/v1/`.
 	 *
 	 * @return void

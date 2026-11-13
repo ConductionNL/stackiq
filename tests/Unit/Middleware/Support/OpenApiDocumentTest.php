@@ -80,7 +80,8 @@ class OpenApiDocumentTest extends TestCase {
 		$this->assertSame(expected: [], actual: array_values(array_diff($protocol, $urls)), message: 'documented protocol paths without a route');
 		foreach ($declared['routes'] as $route) {
 			$url = '/'.ltrim((string) $route['url'], '/');
-			if (str_starts_with($url, '/api/v1/') === true && StandardProtocolPaths::matches(path: $url) === false) {
+			// A protocol path keeps a /api/v1/ alias, but is documented under its unversioned base only.
+			if (str_starts_with($url, '/api/v1/') === true && StandardProtocolPaths::matches(path: '/api/'.substr($url, strlen('/api/v1/'))) === false) {
 				$routed[] = strtoupper((string) ($route['verb'] ?? 'GET')).' '.self::shape(path: $url);
 			}
 		}
