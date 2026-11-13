@@ -30,6 +30,8 @@ use ReflectionProperty;
  * Pins the `API-Version` header and the problem details shape of API errors.
  *
  * @covers \OCA\Stackiq\Middleware\ApiContractMiddleware
+ * @uses   \OCA\Stackiq\Middleware\Support\ApiPathAliases
+ * @uses   \OCA\Stackiq\Middleware\Support\StandardProtocolPaths
  */
 class ApiContractMiddlewareTest extends TestCase {
 

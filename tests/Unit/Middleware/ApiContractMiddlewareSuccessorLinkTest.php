@@ -34,6 +34,7 @@ use ReflectionProperty;
  *
  * @covers \OCA\Stackiq\Middleware\ApiContractMiddleware
  * @uses   \OCA\Stackiq\Middleware\Support\ApiPathAliases
+ * @uses   \OCA\Stackiq\Middleware\Support\StandardProtocolPaths
  */
 final class ApiContractMiddlewareSuccessorLinkTest extends TestCase {
 
