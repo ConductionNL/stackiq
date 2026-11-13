@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service\Stackiq;
 
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
@@ -61,7 +62,7 @@ class ContactPersonHandlerFirstContactTest extends TestCase {
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
 			static function (string $id) use ($settingsService, $roleGroups) {
-				if ($id === 'OCA\Stackiq\Service\SettingsService') {
+				if ($id === RegisterConfigReaderInterface::class) {
 					return $settingsService;
 				}
 

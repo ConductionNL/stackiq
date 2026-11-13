@@ -189,7 +189,7 @@ class ContactpersoonService {
 						);
 						try {
 							$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-							$settingsService = $this->container->get('OCA\Stackiq\Service\SettingsService');
+							$settingsService = $this->container->get(RegisterConfigReaderInterface::class);
 							$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 							$orgObject = $objectService->find(
 								id: $organizationUuid,
