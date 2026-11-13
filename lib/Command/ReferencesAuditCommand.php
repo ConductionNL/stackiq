@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Command;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use Psr\Container\ContainerInterface;
 use Symfony\Component\Console\Command\Command;
 use Symfony\Component\Console\Input\InputInterface;
@@ -349,10 +351,11 @@ class ReferencesAuditCommand extends Command {
 			// one-field update through them quietly clears every field the
 			// read did not return.
 			$objectService->patchObject(
-				objectId: $id,
-				data: [self::REFERENCE_PROPERTY => $owner],
-				register: self::REGISTER,
-				schema: self::SATELLITE_SCHEMA,
+				patch: new ObjectPatch(
+					objectId: $id,
+					data: [self::REFERENCE_PROPERTY => $owner],
+					target: new ObjectFindTarget(register: self::REGISTER, schema: self::SATELLITE_SCHEMA)
+				),
 				_rbac: false,
 				_multitenancy: false
 			);

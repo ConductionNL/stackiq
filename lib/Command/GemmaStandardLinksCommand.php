@@ -23,6 +23,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Command;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectPatch;
 use OCA\Stackiq\Service\ArchiMate\GemmaStandardLinker;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -273,10 +275,14 @@ class GemmaStandardLinksCommand extends Command {
 		try {
 			// Patch, so the properties the read did not return keep their values.
 			$objectService->patchObject(
-				objectId: $change['id'],
-				data: $change['data'],
-				register: (string) $change['input']->getOption('register'),
-				schema: (string) $change['input']->getOption('element-schema'),
+				patch: new ObjectPatch(
+					objectId: $change['id'],
+					data: $change['data'],
+					target: new ObjectFindTarget(
+						register: (string) $change['input']->getOption('register'),
+						schema: (string) $change['input']->getOption('element-schema')
+					)
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
