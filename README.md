@@ -234,7 +234,7 @@ All checks must pass before a release. Run locally with `composer check:strict` 
 ### Test coverage
 
 <!-- coverage:start -->
-Measured test coverage: 44.4% of statements (PHP 46.7% of 31,545 statements, JavaScript 36.8% of 9,929 statements), at commit `3028649e` on 2026-11-11. The figures come from [`coverage-summary.json`](coverage-summary.json); refresh them with `composer coverage:publish`.
+Measured test coverage: 65.2% of statements (PHP 62.3% of 31,513 statements, JavaScript 75.5% of 8,869 statements), at commit `062e3700` on 2026-11-13. The figures come from [`coverage-summary.json`](coverage-summary.json); refresh them with `composer coverage:publish`.
 <!-- coverage:end -->
 
 ### API Tests (454 Assertions)
