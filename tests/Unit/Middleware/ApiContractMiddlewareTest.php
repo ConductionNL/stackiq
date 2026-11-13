@@ -205,6 +205,63 @@ class ApiContractMiddlewareTest extends TestCase {
 	}//end testStandardProtocolPathIsUntouched()
 
 	/**
+	 * The detail comes from detail, then message, then error, skipping empty
+	 * and non-string members; with none usable there is no detail. (A body's
+	 * own members are merged last, so they always keep their value.)
+	 *
+	 * @return void
+	 */
+	public function testDetailPrecedenceSkipsUnusableMembers(): void {
+		$cases = [
+			[['detail' => 'Own detail', 'message' => 'm', 'error' => 'e'], 'Own detail'],
+			[['message' => 'From message', 'error' => 'e'], 'From message'],
+			[['message' => '', 'error' => 'From error'], 'From error'],
+			[['message' => ['nested'], 'error' => 'From error'], 'From error'],
+			[['message' => 42, 'error' => ''], null],
+		];
+		foreach ($cases as [$body, $detail]) {
+			$data = $this->decorate(path: '/apps/stackiq/api/things', response: new JSONResponse(data: $body, statusCode: 422))->getData();
+
+			$this->assertSame(expected: 'Unprocessable Content', actual: $data['title']);
+			if ($detail === null) {
+				$this->assertArrayNotHasKey(key: 'detail', array: $data);
+				continue;
+			}
+
+			$this->assertSame(expected: $detail, actual: $data['detail']);
+		}
+	}//end testDetailPrecedenceSkipsUnusableMembers()
+
+	/**
+	 * A non-array error body and a body with its own problem type are left as
+	 * they are, with the plain JSON content type.
+	 *
+	 * @return void
+	 */
+	public function testScalarAndCustomTypedBodiesAreLeftAlone(): void {
+		$scalar = $this->decorate(path: '/apps/stackiq/api/things', response: new JSONResponse(data: 'plain failure', statusCode: 500));
+		$this->assertSame(expected: 'plain failure', actual: $scalar->getData());
+		$this->assertSame(expected: 'application/json; charset=utf-8', actual: $this->headersOf(response: $scalar)['Content-Type']);
+
+		$typed = ['type' => 'https://stackiq.example/problems/quota', 'detail' => 'Over quota'];
+		$custom = $this->decorate(path: '/apps/stackiq/api/things', response: new JSONResponse(data: $typed, statusCode: 429));
+		$this->assertSame(expected: $typed, actual: $custom->getData());
+	}//end testScalarAndCustomTypedBodiesAreLeftAlone()
+
+	/**
+	 * Status 399 is not an error; 400 is.
+	 *
+	 * @return void
+	 */
+	public function testTheErrorBoundaryIs400(): void {
+		$below = $this->decorate(path: '/apps/stackiq/api/things', response: new JSONResponse(data: ['message' => 'x'], statusCode: 399));
+		$this->assertSame(expected: ['message' => 'x'], actual: $below->getData());
+
+		$at = $this->decorate(path: '/apps/stackiq/api/things', response: new JSONResponse(data: ['message' => 'x'], statusCode: 400));
+		$this->assertSame(expected: 'Bad Request', actual: $at->getData()['title']);
+	}//end testTheErrorBoundaryIs400()
+
+	/**
 	 * The headers a response set, read without the server container that
 	 * Response::getHeaders() needs.
 	 *
