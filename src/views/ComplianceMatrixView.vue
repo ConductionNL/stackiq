@@ -281,6 +281,11 @@ import {
 	resolveUuid,
 } from '../utils/complianceMatrix.js'
 import { registerObjectTypeFromConfig } from '../utils/objectTypeCollection.js'
+import {
+	optionsByUuids,
+	setOptionalParam,
+	setUuidListParam,
+} from './complianceSelectionUrl.js'
 
 /**
  * @class ComplianceMatrixView
@@ -679,32 +684,29 @@ export default {
 			const url = new URL(window.location.href)
 
 			url.searchParams.set('columnSource', this.columnSource)
-
-			const standardUuids = this.selectedStandards
-				.map((option) => option.uuid)
-				.filter(Boolean)
-			if (standardUuids.length > 0) {
-				url.searchParams.set('standards', standardUuids.join(','))
-			} else {
-				url.searchParams.delete('standards')
+			for (const param of this.selectionListParams()) {
+				setUuidListParam(url.searchParams, param)
 			}
-
-			const bioMeasureUuids = this.selectedBioMeasures
-				.map((option) => option.uuid)
-				.filter(Boolean)
-			if (bioMeasureUuids.length > 0) {
-				url.searchParams.set('bioMeasures', bioMeasureUuids.join(','))
-			} else {
-				url.searchParams.delete('bioMeasures')
-			}
-
-			if (this.selectedOrganisation?.uuid) {
-				url.searchParams.set('org', this.selectedOrganisation.uuid)
-			} else {
-				url.searchParams.delete('org')
-			}
+			setOptionalParam(url.searchParams, {
+				name: 'org',
+				value: this.selectedOrganisation?.uuid,
+			})
 
 			window.history.replaceState({}, '', url.toString())
+		},
+
+		/**
+		 * The selected standards and BIO measures as the URL parameters that
+		 * carry their uuids.
+		 *
+		 * @return {Array<{name: string, value: Array}>} The parameters.
+		 * @spec openspec/specs/module-compliance-assessment/spec.md
+		 */
+		selectionListParams() {
+			return [
+				{ name: 'standards', value: this.selectedStandards },
+				{ name: 'bioMeasures', value: this.selectedBioMeasures },
+			]
 		},
 
 		/**
@@ -716,43 +718,45 @@ export default {
 		 * @spec openspec/specs/bio-compliance-assessment/spec.md
 		 */
 		restoreSelectionFromUrl() {
-			const url = new URL(window.location.href)
+			const params = new URL(window.location.href).searchParams
 
-			const columnSource = url.searchParams.get('columnSource')
+			this.restoreColumnSource(params.get('columnSource'))
+			const rawStandards = params.get('standards')
+			if (rawStandards) {
+				this.selectedStandards = optionsByUuids(this.standardOptions, rawStandards)
+			}
+			const rawBioMeasures = params.get('bioMeasures')
+			if (rawBioMeasures) {
+				this.selectedBioMeasures = optionsByUuids(this.bioMaatregelOptions, rawBioMeasures)
+			}
+			this.restoreOrganisation(params.get('org'))
+		},
+
+		/**
+		 * Restore the column source when the URL names a known one.
+		 *
+		 * @param {string|null} columnSource The column source.
+		 * @return {void}
+		 * @spec openspec/specs/module-compliance-assessment/spec.md
+		 */
+		restoreColumnSource(columnSource) {
 			if (
 				columnSource === COLUMN_SOURCE.BIO_MAATREGEL
 				|| columnSource === COLUMN_SOURCE.STANDAARDVERSIE
 			) {
 				this.columnSource = columnSource
 			}
+		},
 
-			const rawStandards = url.searchParams.get('standards')
-			if (rawStandards) {
-				const wanted = new Set(
-					rawStandards
-						.split(',')
-						.map((s) => s.trim())
-						.filter(Boolean),
-				)
-				this.selectedStandards = this.standardOptions.filter((option) =>
-					wanted.has(option.uuid),
-				)
-			}
-
-			const rawBioMeasures = url.searchParams.get('bioMeasures')
-			if (rawBioMeasures) {
-				const wanted = new Set(
-					rawBioMeasures
-						.split(',')
-						.map((s) => s.trim())
-						.filter(Boolean),
-				)
-				this.selectedBioMeasures = this.bioMaatregelOptions.filter(
-					(option) => wanted.has(option.uuid),
-				)
-			}
-
-			const rawOrg = url.searchParams.get('org')
+		/**
+		 * Restore the organisation scope from its uuid, null for an unknown
+		 * one; no uuid keeps the current scope.
+		 *
+		 * @param {string|null} rawOrg The organisation uuid.
+		 * @return {void}
+		 * @spec openspec/specs/bio-compliance-assessment/spec.md
+		 */
+		restoreOrganisation(rawOrg) {
 			if (rawOrg) {
 				this.selectedOrganisation =
 					this.organisationOptions.find((option) => option.uuid === rawOrg)

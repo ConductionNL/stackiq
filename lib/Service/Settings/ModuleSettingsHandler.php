@@ -45,6 +45,24 @@ class ModuleSettingsHandler {
 	private const APP_NAME = 'stackiq';
 
 	/**
+	 * The app config key of each AMEF field, in the order they are written.
+	 */
+	private const AMEF_CONFIG_KEYS = [
+		'enabled' => 'amef_enabled',
+		'version' => 'amef_version',
+		'exportPath' => 'amef_export_path',
+		'includeModules' => 'amef_include_modules',
+	];
+
+	/**
+	 * The AMEF fields stored as a 'true'/'false' flag.
+	 */
+	private const AMEF_FLAG_FIELDS = [
+		'enabled',
+		'includeModules',
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IAppConfig $config The application configuration service.
@@ -87,36 +105,36 @@ class ModuleSettingsHandler {
 	public function setAmefConfig(array $data): array {
 		$this->validateModuleConfig(data: $data);
 
-		if (isset($data['enabled']) === true) {
-			$enabledStr = 'false';
-			if ($data['enabled'] === true) {
-				$enabledStr = 'true';
+		foreach (self::AMEF_CONFIG_KEYS as $field => $key) {
+			if (isset($data[$field]) === true) {
+				$this->config->setValueString(self::APP_NAME, $key, $this->amefConfigValue(field: $field, value: $data[$field]));
 			}
-
-			$this->config->setValueString(self::APP_NAME, 'amef_enabled', $enabledStr);
-		}
-
-		if (isset($data['version']) === true) {
-			$this->config->setValueString(self::APP_NAME, 'amef_version', (string)$data['version']);
-		}
-
-		if (isset($data['exportPath']) === true) {
-			$this->config->setValueString(self::APP_NAME, 'amef_export_path', (string)$data['exportPath']);
-		}
-
-		if (isset($data['includeModules']) === true) {
-			$includeStr = 'false';
-			if ($data['includeModules'] === true) {
-				$includeStr = 'true';
-			}
-
-			$this->config->setValueString(self::APP_NAME, 'amef_include_modules', $includeStr);
 		}
 
 		$this->logger->info('ModuleSettingsHandler: Updated AMEF configuration', ['data' => $data]);
 
 		return $this->getAmefConfig();
 	}//end setAmefConfig()
+
+	/**
+	 * The stored string of one AMEF field: a flag is 'true' only for boolean true.
+	 *
+	 * @param string $field The AMEF field.
+	 * @param mixed $value The submitted value.
+	 *
+	 * @return string The config value.
+	 */
+	private function amefConfigValue(string $field, mixed $value): string {
+		if (in_array($field, self::AMEF_FLAG_FIELDS, true) === false) {
+			return (string)$value;
+		}
+
+		if ($value === true) {
+			return 'true';
+		}
+
+		return 'false';
+	}//end amefConfigValue()
 
 	/**
 	 * Validate module configuration data.

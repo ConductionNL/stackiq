@@ -16,7 +16,7 @@
     },
     "servers": [
         {
-            "url": "https://{host}/index.php/apps/stackiq/api",
+            "url": "https://{host}/index.php/apps/stackiq/api/v1",
             "description": "The Stackiq API on a Nextcloud instance.",
             "variables": {
                 "host": {

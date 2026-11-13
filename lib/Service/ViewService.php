@@ -187,54 +187,87 @@ class ViewService {
 		);
 
 		try {
-			// Get specific view from OpenRegister.
-			$view = $this->getViewFromRegister(viewId: $viewId);
-
-			if ($view === null) {
-				return [
-					'success' => false,
-					'error' => "View with ID '$viewId' not found",
-					'view' => null,
-				];
-			}
-
-			// Transform view to include critical API fields.
-			$view = $this->transformView(view: $view);
-
-			// Apply enrichments based on options.
-			if (empty($options) === false) {
-				$view = $this->enrichView(view: $view, options: $options);
-
-				// Apply module-to-viewNode expansion if modules are enabled.
-				if (isset($options['include_modules']) === true && $options['include_modules'] === true) {
-					$views = $this->expandModulesToViewNodes(views: [$view]);
-					// Get the expanded view back.
-					$view = $views[0] ?? $view;
-				}
-			}
-
-			return [
-				'success' => true,
-				'view' => $view,
-				'enrichments_applied' => $this->getAppliedEnrichments(options: $options),
-			];
+			return $this->viewResponse(viewId: $viewId, options: $options);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get view',
-				[
-					'view_id' => $viewId,
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
+			return $this->viewFailure(viewId: $viewId, error: $e);
+		}
+	}//end getView()
 
+	/**
+	 * The response for one view: not found, or the transformed and enriched view.
+	 *
+	 * @param string $viewId The view identifier.
+	 * @param array $options Query options including enrichment flags.
+	 *
+	 * @return array View object with optional enrichments or not-found response.
+	 */
+	private function viewResponse(string $viewId, array $options): array {
+		// Get specific view from OpenRegister.
+		$view = $this->getViewFromRegister(viewId: $viewId);
+		if ($view === null) {
 			return [
 				'success' => false,
-				'error' => $e->getMessage(),
+				'error' => "View with ID '$viewId' not found",
 				'view' => null,
 			];
-		}//end try
-	}//end getView()
+		}
+
+		return [
+			'success' => true,
+			'view' => $this->enrichedView(view: $this->transformView(view: $view), options: $options),
+			'enrichments_applied' => $this->getAppliedEnrichments(options: $options),
+		];
+	}//end viewResponse()
+
+	/**
+	 * Apply the requested enrichments to one view, and expand its modules when asked.
+	 *
+	 * @param array $view The transformed view.
+	 * @param array $options Query options including enrichment flags.
+	 *
+	 * @return array The enriched view.
+	 */
+	private function enrichedView(array $view, array $options): array {
+		if (empty($options) === true) {
+			return $view;
+		}
+
+		$view = $this->enrichView(view: $view, options: $options);
+
+		// Apply module-to-viewNode expansion if modules are enabled.
+		if ($this->shouldIncludeModules(options: $options) === true) {
+			$views = $this->expandModulesToViewNodes(views: [$view]);
+			// Get the expanded view back.
+			$view = $views[0] ?? $view;
+		}
+
+		return $view;
+	}//end enrichedView()
+
+	/**
+	 * Log a failed view read and answer it.
+	 *
+	 * @param string $viewId The view identifier.
+	 * @param \Exception $error The failure.
+	 *
+	 * @return array The error response.
+	 */
+	private function viewFailure(string $viewId, \Exception $error): array {
+		$this->logger->error(
+			'Failed to get view',
+			[
+				'view_id' => $viewId,
+				'error' => $error->getMessage(),
+				'trace' => $error->getTraceAsString(),
+			]
+		);
+
+		return [
+			'success' => false,
+			'error' => $error->getMessage(),
+			'view' => null,
+		];
+	}//end viewFailure()
 
 	/**
 	 * Get views from OpenRegister system with response-level caching.
@@ -247,20 +280,68 @@ class ViewService {
 	private function getViewsFromRegister(): array {
 		// Check cache first.
 		$cacheKey = $this->getViewsCacheKey();
+		$cached = $this->cachedViews(cacheKey: $cacheKey);
+		if ($cached !== null) {
+			return $cached;
+		}
+
+		$objectService = $this->requireObjectService();
+		$target = $this->viewTarget();
+
+		// Query for all view objects. Bounded — an unset `_limit` means
+		// Doctrine's setMaxResults(null), i.e. no LIMIT clause at all
+		// (full-table scan). 500 is a safe ceiling for the view index load.
+		$views = $this->serialiseViews(viewEntities: $objectService->searchObjects(['@self' => $target, '_limit' => 500]));
+
+		// Cache the result.
+		$this->viewsCache->set(key: $cacheKey, value: $views, ttl: self::CACHE_TTL);
+		$this->logViewsRetrieved(target: $target, views: $views);
+		return $views;
+	}//end getViewsFromRegister()
+
+	/**
+	 * The views list cached for this caller, or null.
+	 *
+	 * @param string $cacheKey The caller's cache key.
+	 *
+	 * @return mixed The cached list, or null when nothing is cached.
+	 */
+	private function cachedViews(string $cacheKey): mixed {
 		$cached = $this->viewsCache->get(key: $cacheKey);
 		if ($cached !== null) {
 			$this->logger->debug(
 				message: 'Returning cached views',
 				context: ['views_count' => count(value: $cached)]
 			);
-			return $cached;
 		}
 
+		return $cached;
+	}//end cachedViews()
+
+	/**
+	 * The OpenRegister object service; the views cannot be read without it.
+	 *
+	 * @return ObjectServiceInterface The object service.
+	 *
+	 * @throws \RuntimeException When OpenRegister is not available.
+	 */
+	private function requireObjectService(): ObjectServiceInterface {
 		$objectService = $this->getObjectService();
 		if ($objectService === null) {
 			throw new \RuntimeException(message: 'OpenRegister ObjectService not available');
 		}
 
+		return $objectService;
+	}//end requireObjectService()
+
+	/**
+	 * The register and view schema of the AMEF configuration.
+	 *
+	 * @return array The register and schema.
+	 *
+	 * @throws \RuntimeException When either is not configured.
+	 */
+	private function viewTarget(): array {
 		// Get AMEF configuration for view schema.
 		$amefConfig = $this->settingsService->getAmefConfig();
 		$registerId = $amefConfig['register_id'] ?? $amefConfig['register'] ?? null;
@@ -270,21 +351,21 @@ class ViewService {
 			throw new \RuntimeException(message: 'AMEF configuration not found for views');
 		}
 
-		// Query for all view objects. Bounded — an unset `_limit` means
-		// Doctrine's setMaxResults(null), i.e. no LIMIT clause at all
-		// (full-table scan). 500 is a safe ceiling for the view index load.
-		$query = [
-			'@self' => [
-				'register' => $registerId,
-				'schema' => $viewSchemaId,
-			],
-			'_limit' => 500,
+		return [
+			'register' => $registerId,
+			'schema' => $viewSchemaId,
 		];
+	}//end viewTarget()
 
-		$viewEntities = $objectService->searchObjects($query);
-
-		// Serialize ObjectEntity instances to arrays.
-		$views = array_map(
+	/**
+	 * Serialize ObjectEntity instances to arrays; arrays and other rows are kept.
+	 *
+	 * @param array $viewEntities The rows OpenRegister returned.
+	 *
+	 * @return array The views.
+	 */
+	private function serialiseViews(array $viewEntities): array {
+		return array_map(
 			callback: function ($view) {
 				if (is_array(value: $view) === false
 					&& method_exists(object_or_class: $view, method: 'jsonSerialize') === true
@@ -296,21 +377,26 @@ class ViewService {
 			},
 			array: $viewEntities
 		);
+	}//end serialiseViews()
 
-		// Cache the result.
-		$this->viewsCache->set(key: $cacheKey, value: $views, ttl: self::CACHE_TTL);
-
+	/**
+	 * Log how many views were read and cached.
+	 *
+	 * @param array $target The register and view schema.
+	 * @param array $views The views.
+	 *
+	 * @return void
+	 */
+	private function logViewsRetrieved(array $target, array $views): void {
 		$this->logger->debug(
 			message: 'Retrieved and cached views from register',
 			context: [
-				'register_id' => $registerId,
-				'view_schema_id' => $viewSchemaId,
+				'register_id' => $target['register'],
+				'view_schema_id' => $target['schema'],
 				'views_count' => count(value: $views),
 			]
 		);
-
-		return $views;
-	}//end getViewsFromRegister()
+	}//end logViewsRetrieved()
 
 	/**
 	 * Build the views list cache key for the current caller.
@@ -1060,76 +1146,7 @@ class ViewService {
 		$this->logger->debug(message: 'Getting regular gebruik data for view enrichment');
 
 		try {
-			$objectService = $this->getObjectService();
-			if ($objectService === null) {
-				return [];
-			}
-
-			$currentOrg = $this->getCurrentOrganisation();
-
-			// Use voorzieningen config for the correct gebruik register and schema.
-			$voorzConfig = $this->settingsService->getVoorzieningenConfig();
-			$registerId = $voorzConfig['register'] ?? null;
-			$gebruikSchemaId = $voorzConfig['gebruik_schema'] ?? null;
-
-			if ($registerId === null || $gebruikSchemaId === null) {
-				$this->logger->warning(message: 'Voorzieningen register or gebruik schema not configured');
-				return [];
-			}
-
-			$allGebruik = [];
-
-			try {
-				$query = [
-					'@self' => [
-						'register' => $registerId,
-						'schema' => $gebruikSchemaId,
-					],
-					'_limit' => 500,
-				];
-
-				// Filter by organisation so only owned gebruik is returned.
-				if ($currentOrg !== null) {
-					$query['@self']['organisation'] = $currentOrg;
-				}
-
-				$gebruikItems = $objectService->searchObjects($query);
-				$this->processGebruikItems(
-					gebruikItems: $gebruikItems,
-					allGebruik: $allGebruik,
-					currentOrg: $currentOrg ?? '',
-					type: 'regular'
-				);
-
-				$this->logger->debug(
-					message: 'Retrieved regular gebruik from voorzieningen register',
-					context: [
-						'schema_id' => $gebruikSchemaId,
-						'gebruik_count' => count(value: $gebruikItems),
-						'organisation' => $currentOrg,
-					]
-				);
-			} catch (\Exception $e) {
-				$this->logger->warning(
-					message: 'Failed to get regular gebruik',
-					context: [
-						'schema_id' => $gebruikSchemaId,
-						'error' => $e->getMessage(),
-					]
-				);
-			}//end try
-
-			$allGebruik = $this->extendGebruikWithModules(allGebruik: $allGebruik);
-
-			$this->logger->debug(
-				message: 'Total regular gebruik retrieved',
-				context: [
-					'total_element_refs' => count(value: $allGebruik),
-					'current_org' => $currentOrg,
-				]
-			);
-
-			return $allGebruik;
+			return $this->loadOwnedGebruik();
 		} catch (\Exception $e) {
 			$this->logger->error(
 				message: 'Failed to get gebruik data',
@@ -1138,6 +1155,158 @@ class ViewService {
 			return [];
 		}//end try
 	}//end getGebruikData()
+
+	/**
+	 * Load the gebruik owned by the current organisation, with its modules linked.
+	 *
+	 * @return array Gebruik data indexed by elementRef.
+	 */
+	private function loadOwnedGebruik(): array {
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			return [];
+		}
+
+		$currentOrg = $this->getCurrentOrganisation();
+
+		// Use voorzieningen config for the correct gebruik register and schema.
+		$target = $this->gebruikTarget(missingConfigWarning: 'Voorzieningen register or gebruik schema not configured');
+		if ($target === null) {
+			return [];
+		}
+
+		$query = $this->ownedGebruikQuery(target: $target, currentOrg: $currentOrg);
+		$allGebruik = $this->extendGebruikWithModules(allGebruik: $this->searchOwnedGebruik(objectService: $objectService, query: $query));
+		$this->logOwnedGebruikTotal(allGebruik: $allGebruik, currentOrg: $currentOrg);
+		return $allGebruik;
+	}//end loadOwnedGebruik()
+
+	/**
+	 * The register and gebruik schema of the voorzieningen config, or null when either is missing.
+	 *
+	 * @param string $missingConfigWarning The warning logged when the config is incomplete.
+	 *
+	 * @return array|null The register and schema, or null.
+	 */
+	private function gebruikTarget(string $missingConfigWarning): ?array {
+		$voorzConfig = $this->settingsService->getVoorzieningenConfig();
+		$registerId = $voorzConfig['register'] ?? null;
+		$gebruikSchemaId = $voorzConfig['gebruik_schema'] ?? null;
+
+		if ($registerId === null || $gebruikSchemaId === null) {
+			$this->logger->warning(message: $missingConfigWarning);
+			return null;
+		}
+
+		return [
+			'register' => $registerId,
+			'schema' => $gebruikSchemaId,
+		];
+	}//end gebruikTarget()
+
+	/**
+	 * The query for the gebruik the current organisation owns.
+	 *
+	 * @param array $target The register and gebruik schema.
+	 * @param string|null $currentOrg The current organisation uuid.
+	 *
+	 * @return array The query.
+	 */
+	private function ownedGebruikQuery(array $target, ?string $currentOrg): array {
+		$query = [
+			'@self' => $target,
+			'_limit' => 500,
+		];
+
+		// Filter by organisation so only owned gebruik is returned.
+		if ($currentOrg !== null) {
+			$query['@self']['organisation'] = $currentOrg;
+		}
+
+		return $query;
+	}//end ownedGebruikQuery()
+
+	/**
+	 * Search the owned gebruik; a failed search is logged and yields none.
+	 *
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param array $query The owned gebruik query.
+	 *
+	 * @return array Gebruik data indexed by elementRef.
+	 */
+	private function searchOwnedGebruik(ObjectServiceInterface $objectService, array $query): array {
+		try {
+			return $this->readOwnedGebruik(objectService: $objectService, query: $query);
+		} catch (\Exception $e) {
+			$this->logger->warning(
+				message: 'Failed to get regular gebruik',
+				context: [
+					'schema_id' => $query['@self']['schema'],
+					'error' => $e->getMessage(),
+				]
+			);
+			return [];
+		}//end try
+	}//end searchOwnedGebruik()
+
+	/**
+	 * Read the owned gebruik and group it by elementRef.
+	 *
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param array $query The owned gebruik query.
+	 *
+	 * @return array Gebruik data indexed by elementRef.
+	 */
+	private function readOwnedGebruik(ObjectServiceInterface $objectService, array $query): array {
+		$allGebruik = [];
+		$gebruikItems = $objectService->searchObjects($query);
+		$this->processGebruikItems(
+			gebruikItems: $gebruikItems,
+			allGebruik: $allGebruik,
+			currentOrg: $query['@self']['organisation'] ?? '',
+			type: 'regular'
+		);
+
+		$this->logOwnedGebruikRead(query: $query, gebruikItems: $gebruikItems);
+		return $allGebruik;
+	}//end readOwnedGebruik()
+
+	/**
+	 * Log how much owned gebruik one search returned.
+	 *
+	 * @param array $query The owned gebruik query.
+	 * @param array $gebruikItems The gebruik it returned.
+	 *
+	 * @return void
+	 */
+	private function logOwnedGebruikRead(array $query, array $gebruikItems): void {
+		$this->logger->debug(
+			message: 'Retrieved regular gebruik from voorzieningen register',
+			context: [
+				'schema_id' => $query['@self']['schema'],
+				'gebruik_count' => count(value: $gebruikItems),
+				'organisation' => $query['@self']['organisation'] ?? null,
+			]
+		);
+	}//end logOwnedGebruikRead()
+
+	/**
+	 * Log how many elementRefs carry owned gebruik.
+	 *
+	 * @param array $allGebruik Gebruik data indexed by elementRef.
+	 * @param string|null $currentOrg The current organisation uuid.
+	 *
+	 * @return void
+	 */
+	private function logOwnedGebruikTotal(array $allGebruik, ?string $currentOrg): void {
+		$this->logger->debug(
+			message: 'Total regular gebruik retrieved',
+			context: [
+				'total_element_refs' => count(value: $allGebruik),
+				'current_org' => $currentOrg,
+			]
+		);
+	}//end logOwnedGebruikTotal()
 
 	/**
 	 * Process gebruik items, group them by elementRef, and attach type metadata.
@@ -1501,74 +1670,7 @@ class ViewService {
 		$this->logger->debug(message: 'Getting deelnames gebruik data for view enrichment');
 
 		try {
-			$objectService = $this->getObjectService();
-			if ($objectService === null) {
-				return [];
-			}
-
-			$currentOrg = $this->getCurrentOrganisation();
-			if ($currentOrg === null) {
-				return [];
-			}
-
-			// Use voorzieningen config for the correct gebruik register and schema.
-			$voorzConfig = $this->settingsService->getVoorzieningenConfig();
-			$registerId = $voorzConfig['register'] ?? null;
-			$gebruikSchemaId = $voorzConfig['gebruik_schema'] ?? null;
-
-			if ($registerId === null || $gebruikSchemaId === null) {
-				$this->logger->warning(message: 'Voorzieningen register or gebruik schema not configured for deelnames');
-				return [];
-			}
-
-			$allDeelnames = [];
-
-			try {
-				$query = [
-					'@self' => [
-						'register' => $registerId,
-						'schema' => $gebruikSchemaId,
-					],
-					// Match objects where this org appears as a deelnemer.
-					'participants' => $currentOrg,
-					'_limit' => 500,
-				];
-
-				// Both _rbac and _multitenancy must be false to find objects owned by other organisations.
-				$deelnamesItems = $objectService->searchObjects($query, _rbac: false, _multitenancy: false);
-				$this->processGebruikItems(
-					gebruikItems: $deelnamesItems,
-					allGebruik: $allDeelnames,
-					currentOrg: $currentOrg,
-					type: 'deelnames'
-				);
-
-				$this->logger->debug(
-					message: 'Retrieved deelnames gebruik data',
-					context: [
-						'schema_id' => $gebruikSchemaId,
-						'deelnames_count' => count(value: $deelnamesItems),
-						'organisation_in_deelnemers' => $currentOrg,
-					]
-				);
-			} catch (\Exception $e) {
-				$this->logger->warning(
-					message: 'Failed to get deelnames gebruik data; view will render without deelnames',
-					context: [
-						'schema_id' => $gebruikSchemaId,
-						'error' => $e->getMessage(),
-					]
-				);
-			}//end try
-
-			$allDeelnames = $this->extendGebruikWithModules(allGebruik: $allDeelnames);
-
-			$this->logger->debug(
-				message: 'Total deelnames gebruik retrieved',
-				context: ['total_element_refs' => count(value: $allDeelnames)]
-			);
-
-			return $allDeelnames;
+			return $this->loadDeelnamesGebruik();
 		} catch (\Exception $e) {
 			$this->logger->error(
 				message: 'Failed to get deelnames gebruik data',
@@ -1577,6 +1679,128 @@ class ViewService {
 			return [];
 		}//end try
 	}//end getDeelnamesGebruikData()
+
+	/**
+	 * Load the gebruik the current organisation takes part in, with its modules linked.
+	 *
+	 * @return array Deelnames gebruik data indexed by elementRef.
+	 */
+	private function loadDeelnamesGebruik(): array {
+		$objectService = $this->getObjectService();
+		if ($objectService === null) {
+			return [];
+		}
+
+		$query = $this->deelnamesGebruikQuery();
+		if ($query === null) {
+			return [];
+		}
+
+		$allDeelnames = $this->extendGebruikWithModules(allGebruik: $this->searchDeelnamesGebruik(objectService: $objectService, query: $query));
+		$this->logDeelnamesGebruikTotal(allDeelnames: $allDeelnames);
+		return $allDeelnames;
+	}//end loadDeelnamesGebruik()
+
+	/**
+	 * The query for the gebruik in which the current organisation appears as a deelnemer.
+	 *
+	 * @return array|null The query, or null without an organisation or a configured register and schema.
+	 */
+	private function deelnamesGebruikQuery(): ?array {
+		$currentOrg = $this->getCurrentOrganisation();
+		if ($currentOrg === null) {
+			return null;
+		}
+
+		// Use voorzieningen config for the correct gebruik register and schema.
+		$target = $this->gebruikTarget(missingConfigWarning: 'Voorzieningen register or gebruik schema not configured for deelnames');
+		if ($target === null) {
+			return null;
+		}
+
+		// Match objects where this org appears as a deelnemer.
+		return ['@self' => $target, 'participants' => $currentOrg, '_limit' => 500];
+	}//end deelnamesGebruikQuery()
+
+	/**
+	 * Search the deelnames gebruik; a failed search is logged and yields none.
+	 *
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param array $query The deelnames gebruik query.
+	 *
+	 * @return array Deelnames gebruik data indexed by elementRef.
+	 */
+	private function searchDeelnamesGebruik(ObjectServiceInterface $objectService, array $query): array {
+		try {
+			return $this->readDeelnamesGebruik(objectService: $objectService, query: $query);
+		} catch (\Exception $e) {
+			$this->logger->warning(
+				message: 'Failed to get deelnames gebruik data; view will render without deelnames',
+				context: [
+					'schema_id' => $query['@self']['schema'],
+					'error' => $e->getMessage(),
+				]
+			);
+			return [];
+		}//end try
+	}//end searchDeelnamesGebruik()
+
+	/**
+	 * Read the deelnames gebruik of other organisations and group it by elementRef.
+	 *
+	 * @param ObjectServiceInterface $objectService The OpenRegister object service.
+	 * @param array $query The deelnames gebruik query.
+	 *
+	 * @return array Deelnames gebruik data indexed by elementRef.
+	 */
+	private function readDeelnamesGebruik(ObjectServiceInterface $objectService, array $query): array {
+		$allDeelnames = [];
+
+		// Both _rbac and _multitenancy must be false to find objects owned by other organisations.
+		$deelnamesItems = $objectService->searchObjects($query, _rbac: false, _multitenancy: false);
+		$this->processGebruikItems(
+			gebruikItems: $deelnamesItems,
+			allGebruik: $allDeelnames,
+			currentOrg: $query['participants'],
+			type: 'deelnames'
+		);
+
+		$this->logDeelnamesGebruikRead(query: $query, deelnamesItems: $deelnamesItems);
+		return $allDeelnames;
+	}//end readDeelnamesGebruik()
+
+	/**
+	 * Log how much deelnames gebruik one search returned.
+	 *
+	 * @param array $query The deelnames gebruik query.
+	 * @param array $deelnamesItems The gebruik it returned.
+	 *
+	 * @return void
+	 */
+	private function logDeelnamesGebruikRead(array $query, array $deelnamesItems): void {
+		$this->logger->debug(
+			message: 'Retrieved deelnames gebruik data',
+			context: [
+				'schema_id' => $query['@self']['schema'],
+				'deelnames_count' => count(value: $deelnamesItems),
+				'organisation_in_deelnemers' => $query['participants'],
+			]
+		);
+	}//end logDeelnamesGebruikRead()
+
+	/**
+	 * Log how many elementRefs carry deelnames gebruik.
+	 *
+	 * @param array $allDeelnames Deelnames gebruik data indexed by elementRef.
+	 *
+	 * @return void
+	 */
+	private function logDeelnamesGebruikTotal(array $allDeelnames): void {
+		$this->logger->debug(
+			message: 'Total deelnames gebruik retrieved',
+			context: ['total_element_refs' => count(value: $allDeelnames)]
+		);
+	}//end logDeelnamesGebruikTotal()
 
 	/**
 	 * Get products for a specific node based on elementRef linkage.

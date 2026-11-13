@@ -559,6 +559,17 @@ class SbomImportService {
 			return $relation;
 		}
 
+		return self::carriedUuid(relation: $relation);
+	}//end resolveRelationUuid()
+
+	/**
+	 * The uuid (else id) an array or object relation value carries.
+	 *
+	 * @param mixed $relation The raw relation value.
+	 *
+	 * @return string|null The carried uuid, or null when the value carries none.
+	 */
+	private static function carriedUuid(mixed $relation): ?string {
 		if (is_array($relation) === true) {
 			return $relation['uuid'] ?? ($relation['id'] ?? null);
 		}
@@ -568,7 +579,7 @@ class SbomImportService {
 		}
 
 		return null;
-	}//end resolveRelationUuid()
+	}//end carriedUuid()
 
 	/**
 	 * Resolve the register/schema coordinates + ObjectService this service

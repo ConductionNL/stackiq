@@ -93,18 +93,34 @@ class GebruikBulkHandler {
 
 		$errors = [];
 		foreach ($items as $index => $item) {
-			if (is_array($item) === false) {
-				$errors[] = sprintf('Item at index %d is not an array.', $index);
-				continue;
-			}
-
-			if (isset($item['consumer']) === false || isset($item['provider']) === false) {
-				$errors[] = sprintf('Item at index %d is missing required fields: afnemer, aanbieder.', $index);
+			$error = $this->itemError(item: $item, index: $index);
+			if ($error !== null) {
+				$errors[] = $error;
 			}
 		}
 
 		return $errors;
 	}//end validateBulkInput()
+
+	/**
+	 * The validation message of one bulk item, or null when it is valid.
+	 *
+	 * @param mixed $item The item.
+	 * @param int|string $index The item's index in the batch.
+	 *
+	 * @return string|null The message, or null.
+	 */
+	private function itemError(mixed $item, int|string $index): ?string {
+		if (is_array($item) === false) {
+			return sprintf('Item at index %d is not an array.', $index);
+		}
+
+		if (isset($item['consumer']) === false || isset($item['provider']) === false) {
+			return sprintf('Item at index %d is missing required fields: afnemer, aanbieder.', $index);
+		}
+
+		return null;
+	}//end itemError()
 
 	/**
 	 * Create a single gebruik item via ObjectService.

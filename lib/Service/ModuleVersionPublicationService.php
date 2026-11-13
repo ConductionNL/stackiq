@@ -120,14 +120,7 @@ class ModuleVersionPublicationService {
 	public function objectSaved(ObjectEntityInterface $object, ?ObjectEntityInterface $previous = null): int {
 		$schema = (string) $object->getSchema();
 		if ($schema === (string) $this->settingsService->getSchemaIdForObjectType('module')) {
-			if ($previous !== null
-				&& self::mirrorOf(module: (array) $previous->getObject()) === self::mirrorOf(module: (array) $object->getObject())
-			) {
-				return 0;
-			}
-
-			$this->queueVersions(moduleUuid: (string) $object->getUuid(), deleted: false);
-			return 0;
+			return $this->moduleSaved(module: $object, previous: $previous);
 		}
 
 		if ($schema === (string) $this->settingsService->getSchemaIdForObjectType('moduleVersion')) {
@@ -136,6 +129,25 @@ class ModuleVersionPublicationService {
 
 		return 0;
 	}//end objectSaved()
+
+	/**
+	 * Queue the update of a saved module's versions, unless its publication stayed as it was.
+	 *
+	 * @param ObjectEntityInterface      $module   The saved module.
+	 * @param ObjectEntityInterface|null $previous The module before an update, or null for a new one.
+	 *
+	 * @return integer Always 0: the job writes the versions.
+	 */
+	private function moduleSaved(ObjectEntityInterface $module, ?ObjectEntityInterface $previous): int {
+		if ($previous !== null
+			&& self::mirrorOf(module: (array) $previous->getObject()) === self::mirrorOf(module: (array) $module->getObject())
+		) {
+			return 0;
+		}
+
+		$this->queueVersions(moduleUuid: (string) $module->getUuid(), deleted: false);
+		return 0;
+	}//end moduleSaved()
 
 	/**
 	 * React to a deleted object: the versions of a deleted module stop following a publication.
@@ -208,45 +220,75 @@ class ModuleVersionPublicationService {
 		$objects  = $this->objectService();
 		$register = $this->settingsService->getRegisterIdForObjectType('moduleVersion');
 		$schema   = $this->settingsService->getSchemaIdForObjectType('moduleVersion');
-		$result   = ['written' => 0, 'failed' => 0];
 		if ($objects === null || $register === null || $schema === null) {
-			return $result;
+			return ['written' => 0, 'failed' => 0];
 		}
 
-		$offset = 0;
+		$query = ['register' => $register, 'schema' => $schema, 'module' => $moduleUuid, '_limit' => self::VERSION_LIMIT];
+		$run   = new ModuleVersionCopyRun(versionQuery: $query, mirror: $mirror);
 		do {
-			try {
-				$versions = (array) $objects->searchObjects(
-					query: [
-						'register' => $register,
-						'schema'   => $schema,
-						'module'   => $moduleUuid,
-						'_limit'   => self::VERSION_LIMIT,
-						'_offset'  => $offset,
-					],
-					_rbac: false,
-					_multitenancy: false
-				);
-			} catch (Throwable $e) {
-				$this->logFailure(
-					message: 'ModuleVersionPublicationService: could not read the versions',
-					context: ['module' => $moduleUuid, 'error' => $e->getMessage()],
-					depublishes: (self::isPublicNow(mirror: $mirror) === false)
-				);
-				$result['failed']++;
-				return $result;
-			}
-
-			$page = $this->writeVersions(objects: $objects, versions: $versions, mirror: $mirror);
-			$result['written'] += $page['written'];
-			$result['failed']  += $page['failed'];
-
-			$offset   += self::VERSION_LIMIT;
-			$pageSize  = count($versions);
+			$pageSize = $this->copyNextPage(objects: $objects, run: $run);
 		} while ($pageSize === self::VERSION_LIMIT);
 
-		return $result;
+		return $run->result;
 	}//end copyOntoVersions()
+
+	/**
+	 * Read the next page of versions and copy the mirror onto those that differ.
+	 *
+	 * @param ObjectServiceInterface $objects The object service.
+	 * @param ModuleVersionCopyRun   $run     The copy in progress.
+	 *
+	 * @return integer The size of the page read, or -1 when it could not be read.
+	 */
+	private function copyNextPage(ObjectServiceInterface $objects, ModuleVersionCopyRun $run): int {
+		$versions = $this->readVersionPage(objects: $objects, run: $run);
+		if ($versions === null) {
+			return -1;
+		}
+
+		$run->addPage(page: $this->writeVersions(objects: $objects, versions: $versions, mirror: $run->mirror));
+		$run->offset += self::VERSION_LIMIT;
+		return count($versions);
+	}//end copyNextPage()
+
+	/**
+	 * Read the next page of versions; a failed search is logged and counted.
+	 *
+	 * @param ObjectServiceInterface $objects The object service.
+	 * @param ModuleVersionCopyRun   $run     The copy in progress.
+	 *
+	 * @return array<int, mixed>|null The versions, or null when the search failed.
+	 */
+	private function readVersionPage(ObjectServiceInterface $objects, ModuleVersionCopyRun $run): ?array {
+		try {
+			return (array) $objects->searchObjects(
+				query: $run->pageQuery(),
+				_rbac: false,
+				_multitenancy: false
+			);
+		} catch (Throwable $e) {
+			$this->logVersionReadFailure(run: $run, error: $e);
+			$run->result['failed']++;
+			return null;
+		}
+	}//end readVersionPage()
+
+	/**
+	 * Log a version search that failed: critical when the copy would have depublished them.
+	 *
+	 * @param ModuleVersionCopyRun $run   The copy in progress.
+	 * @param Throwable            $error The search failure.
+	 *
+	 * @return void
+	 */
+	private function logVersionReadFailure(ModuleVersionCopyRun $run, Throwable $error): void {
+		$this->logFailure(
+			message: 'ModuleVersionPublicationService: could not read the versions',
+			context: ['module' => $run->versionQuery['module'], 'error' => $error->getMessage()],
+			depublishes: (self::isPublicNow(mirror: $run->mirror) === false)
+		);
+	}//end logVersionReadFailure()
 
 	/**
 	 * Write a mirror onto each version of one page.
