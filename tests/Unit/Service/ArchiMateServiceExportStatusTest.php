@@ -337,6 +337,35 @@ class ArchiMateServiceExportStatusTest extends TestCase {
 	}//end testPaginatedQueryIsBounded()
 
 	/**
+	 * Without pagination the query is only bounded; a truthy flag with a zero
+	 * limit offsets the query but adds no pagination block, and a caller's
+	 * own @self keys are merged into the register and schema.
+	 *
+	 * @return void
+	 */
+	public function testQueryShapesWithoutOrWithEmptyPagination(): void {
+		$queries = [];
+		$this->objectService->method('searchObjects')->willReturnCallback(
+			function (array $query) use (&$queries): array {
+				$queries[] = $query;
+				return [];
+			}
+		);
+
+		$this->service->getElementObjects();
+		$this->service->getViewObjects(['@self' => ['owner' => 'x'], 'limit' => 0, 'offset' => '5', 'use_pagination' => 1]);
+
+		$this->assertSame(
+			[
+				['@self' => ['register' => 8, 'schema' => 32], '_limit' => 1000],
+				['@self' => ['register' => 8, 'schema' => 34, 'owner' => 'x'], '_limit' => 0, '_offset' => 5],
+			],
+			$queries
+		);
+
+	}//end testQueryShapesWithoutOrWithEmptyPagination()
+
+	/**
 	 * An unconfigured schema or a failing search returns no objects.
 	 *
 	 * @return void

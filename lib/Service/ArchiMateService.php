@@ -802,83 +802,14 @@ class ArchiMateService {
 				return [];
 			}
 
-			// AMEF object types use a single register ID, not per-type register IDs.
-			// Check if this is an AMEF object type.
-			$amefObjectTypes = [
-				'model',
-				'element',
-				'relationship',
-				'view',
-				'property_definition',
-				'organization',
-				'property',
-			];
-			$isAmefType = in_array($schemaType, $amefObjectTypes, true) === true;
-
-			// Use AMEF register ID for AMEF types, otherwise use per-type register ID.
-			$registerId = $this->settingsService->getRegisterIdForObjectType($schemaType);
-			if ($isAmefType === true) {
-				$registerId = $this->getAmefRegisterId();
-			}
-
-			$schemaId = $this->settingsService->getSchemaIdForObjectType($schemaType);
-
-			if ($registerId === null || $schemaId === null) {
-				$errorMessage = "ArchiMateService: Register or {$schemaType} schema not configured";
-				if ($isAmefType === true) {
-					$errorMessage = "ArchiMateService: AMEF register or {$schemaType} schema not configured";
-				}
-
-				$this->logger->error(
-					$errorMessage,
-					[
-						'registerId' => $registerId,
-						'schemaId' => $schemaId,
-						'isAmefType' => $isAmefType,
-						'schemaType' => $schemaType,
-					]
-				);
+			$ids = $this->registerAndSchemaFor(schemaType: $schemaType);
+			if ($ids === null) {
 				return [];
 			}
 
-			// Extract pagination parameters.
-			$limit = $query['limit'] ?? 1000;
-			// Default limit for large datasets.
-			$offset = $query['offset'] ?? 0;
+			[$registerId, $schemaId] = $ids;
 			$usePagination = $query['use_pagination'] ?? false;
-
-			// Remove pagination parameters from query.
-			unset($query['limit'], $query['offset'], $query['use_pagination']);
-
-			// Build base query for register and schema.
-			$baseQuery = [
-				'@self' => [
-					'register' => (int)$registerId,
-					'schema' => (int)$schemaId,
-				],
-			];
-
-			// Merge with provided query.
-			$finalQuery = array_merge_recursive($baseQuery, $query);
-
-			// Add pagination if requested.
-			if ($usePagination !== false && $limit > 0) {
-				$finalQuery['@pagination'] = [
-					'limit' => (int)$limit,
-					'offset' => (int)$offset,
-				];
-			}
-
-			// Always bound the actual query: OpenRegister's searchObjects()
-			// only reads the top-level `_limit`/`_offset` keys (see
-			// MagicMapper/MagicSearchHandler) — `@pagination` above is not
-			// read by the query layer, so this call was unbounded regardless
-			// of the `usePagination` toggle. `$limit` already defaults to
-			// 1000 above, so this is a straight bound, not a behavior change.
-			$finalQuery['_limit'] = (int)$limit;
-			if ($usePagination !== false) {
-				$finalQuery['_offset'] = (int)$offset;
-			}
+			$finalQuery = $this->paginatedQuery(registerId: $registerId, schemaId: $schemaId, query: $query);
 
 			$paginationValue = 'disabled';
 			if ($usePagination === true) {
@@ -897,11 +828,6 @@ class ArchiMateService {
 
 			// Use searchObjects method for filtering.
 			$objects = $objectService->searchObjects($finalQuery);
-
-			$paginationValue = 'disabled';
-			if ($usePagination === true) {
-				$paginationValue = 'enabled';
-			}
 
 			$this->logger->debug(
 				"ArchiMateService: Retrieved {$schemaType} objects",
@@ -926,6 +852,109 @@ class ArchiMateService {
 			return [];
 		}//end try
 	}//end getObjectsWithPagination()
+
+	/**
+	 * The register and schema ids for an object type, or null (logged) when either is not configured.
+	 *
+	 * AMEF object types use the single AMEF register, other types their own register.
+	 *
+	 * @param string $schemaType The schema type
+	 *
+	 * @return array{0: mixed, 1: mixed}|null
+	 */
+	private function registerAndSchemaFor(string $schemaType): ?array {
+		$amefObjectTypes = [
+			'model',
+			'element',
+			'relationship',
+			'view',
+			'property_definition',
+			'organization',
+			'property',
+		];
+		$isAmefType = in_array($schemaType, $amefObjectTypes, true) === true;
+
+		// Use AMEF register ID for AMEF types, otherwise use per-type register ID.
+		$registerId = $this->settingsService->getRegisterIdForObjectType($schemaType);
+		if ($isAmefType === true) {
+			$registerId = $this->getAmefRegisterId();
+		}
+
+		$schemaId = $this->settingsService->getSchemaIdForObjectType($schemaType);
+
+		if ($registerId !== null && $schemaId !== null) {
+			return [$registerId, $schemaId];
+		}
+
+		$errorMessage = "ArchiMateService: Register or {$schemaType} schema not configured";
+		if ($isAmefType === true) {
+			$errorMessage = "ArchiMateService: AMEF register or {$schemaType} schema not configured";
+		}
+
+		$this->logger->error(
+			$errorMessage,
+			[
+				'registerId' => $registerId,
+				'schemaId' => $schemaId,
+				'isAmefType' => $isAmefType,
+				'schemaType' => $schemaType,
+			]
+		);
+		return null;
+	}//end registerAndSchemaFor()
+
+	/**
+	 * The search query for one register and schema: the caller's filters,
+	 * an optional pagination block and the bound the query layer reads.
+	 *
+	 * @param mixed $registerId The register id
+	 * @param mixed $schemaId   The schema id
+	 * @param array $query      Query criteria plus `limit`, `offset` and `use_pagination`
+	 *
+	 * @return array The query for searchObjects()
+	 */
+	private function paginatedQuery(mixed $registerId, mixed $schemaId, array $query): array {
+		// Extract pagination parameters.
+		$limit = $query['limit'] ?? 1000;
+		// Default limit for large datasets.
+		$offset = $query['offset'] ?? 0;
+		$usePagination = $query['use_pagination'] ?? false;
+
+		// Remove pagination parameters from query.
+		unset($query['limit'], $query['offset'], $query['use_pagination']);
+
+		// Build base query for register and schema, merged with the provided query.
+		$finalQuery = array_merge_recursive(
+			[
+				'@self' => [
+					'register' => (int)$registerId,
+					'schema' => (int)$schemaId,
+				],
+			],
+			$query
+		);
+
+		// Add pagination if requested.
+		if ($usePagination !== false && $limit > 0) {
+			$finalQuery['@pagination'] = [
+				'limit' => (int)$limit,
+				'offset' => (int)$offset,
+			];
+		}
+
+		// Always bound the actual query: OpenRegister's searchObjects()
+		// only reads the top-level `_limit`/`_offset` keys (see
+		// MagicMapper/MagicSearchHandler) — `@pagination` above is not
+		// read by the query layer, so this call was unbounded regardless
+		// of the `usePagination` toggle. `$limit` already defaults to
+		// 1000 above, so this is a straight bound, not a behavior change.
+		$finalQuery['_limit'] = (int)$limit;
+		if ($usePagination !== false) {
+			$finalQuery['_offset'] = (int)$offset;
+		}
+
+		return $finalQuery;
+	}//end paginatedQuery()
 
 	/**
 	 * Check if import is in progress
