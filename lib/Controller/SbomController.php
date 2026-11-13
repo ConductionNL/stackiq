@@ -38,9 +38,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Exception\UnsupportedSbomFormatException;
-use OCA\Stackiq\Service\SbomImportService;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\SbomImportServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Http;
@@ -96,14 +96,14 @@ class SbomController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param IUserSession $userSession The user session (auth guard).
 	 * @param IGroupManager $groupManager Group membership (role/admin guard).
-	 * @param SbomImportService $importService The SBOM import service.
+	 * @param SbomImportServiceInterface $importService The SBOM import service.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
-		private readonly SbomImportService $importService,
+		private readonly SbomImportServiceInterface $importService,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
@@ -250,8 +250,8 @@ class SbomController extends Controller {
 	 *                                                                           The validated upload, or a 400 for an unknown format.
 	 */
 	private function withRequestedFormat(string $contents, string $fileName): array|JSONResponse {
-		$format = (string)$this->request->getParam('format', SbomImportService::SUPPORTED_FORMATS[0]);
-		if (in_array($format, SbomImportService::SUPPORTED_FORMATS, true) === false) {
+		$format = (string)$this->request->getParam('format', SbomImportServiceInterface::SUPPORTED_FORMATS[0]);
+		if (in_array($format, SbomImportServiceInterface::SUPPORTED_FORMATS, true) === false) {
 			return $this->badRequest(message: 'Unknown SBOM format: ' . $format, error: 'UNKNOWN_FORMAT');
 		}
 

@@ -30,6 +30,7 @@ namespace OCA\Stackiq\Service;
 
 use InvalidArgumentException;
 use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\ItsmExchangeServiceInterface;
 use OCA\Stackiq\Service\Itsm\ItsmFlowGateway;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;
@@ -41,7 +42,7 @@ use Throwable;
  *
  * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
  */
-class ItsmExchangeService {
+class ItsmExchangeService implements ItsmExchangeServiceInterface {
 
 	/**
 	 * App setting that holds the desk, the organisation and the flow uuids.

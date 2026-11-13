@@ -22,7 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\Service\FacetService;
+use OCA\Stackiq\Kernel\Contracts\FacetServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -42,13 +42,13 @@ class FacetController extends Controller {
 	 *
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request object.
-	 * @param FacetService $facetService The facet aggregation service.
+	 * @param FacetServiceInterface $facetService The facet aggregation service.
 	 * @param LoggerInterface $logger The logger service.
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly FacetService $facetService,
+		private readonly FacetServiceInterface $facetService,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: $appName, request: $request);

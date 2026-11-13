@@ -62,8 +62,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\MergeOrganisatieServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Stackiq\OrganizationHandler;
 use OCP\App\IAppManager;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -92,7 +93,7 @@ use Psr\Log\LoggerInterface;
  * (`CriticalActionPerformedEvent`), the event dispatcher and the progress tracker. The count is
  * the breadth of the merge itself, not an accidental dependency tangle.
  */
-class MergeOrganisatieService {
+class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 	/**
 	 * The tombstone status value written to a merged-away source organisation.
 	 *

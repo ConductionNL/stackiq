@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service\Settings;
 
 use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\RoleGroupSettingsInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -39,7 +40,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/settings-service/spec.md
  */
-class RoleGroupSettings {
+class RoleGroupSettings implements RoleGroupSettingsInterface {
 
 	/**
 	 * The name each role group list goes by in result messages and logs.
@@ -51,7 +52,6 @@ class RoleGroupSettings {
 		'organizationAdmin' => 'organization admin groups',
 		'superUser' => 'super user groups',
 	];
-
 
 	/**
 	 * Constructor.

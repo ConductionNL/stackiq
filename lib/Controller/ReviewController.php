@@ -31,8 +31,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Controller;
 
 use OCA\Stackiq\Kernel\AppIdentity;
-use OCA\Stackiq\Service\ReviewAggregateService;
-use OCA\Stackiq\Service\ReviewService;
+use OCA\Stackiq\Kernel\Contracts\ReviewAggregateServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ReviewServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -52,13 +52,13 @@ class ReviewController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param ReviewService $reviews The review submission service.
-	 * @param ReviewAggregateService $aggregate The review aggregate/read service.
+	 * @param ReviewServiceInterface $reviews The review submission service.
+	 * @param ReviewAggregateServiceInterface $aggregate The review aggregate/read service.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly ReviewService $reviews,
-		private readonly ReviewAggregateService $aggregate,
+		private readonly ReviewServiceInterface $reviews,
+		private readonly ReviewAggregateServiceInterface $aggregate,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()

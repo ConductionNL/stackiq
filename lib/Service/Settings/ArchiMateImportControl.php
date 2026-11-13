@@ -26,6 +26,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service\Settings;
 
 use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\ArchiMateImportControlInterface;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -38,7 +39,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/settings-service/spec.md
  */
-class ArchiMateImportControl {
+class ArchiMateImportControl implements ArchiMateImportControlInterface {
 
 	/**
 	 * Constructor.

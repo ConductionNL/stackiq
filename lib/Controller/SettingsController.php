@@ -27,16 +27,16 @@ namespace OCA\Stackiq\Controller;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ConfigurationService;
 use OCA\Stackiq\Exception\CmdbImportException;
+use OCA\Stackiq\Kernel\Contracts\ArchiMateImportControlInterface;
+use OCA\Stackiq\Kernel\Contracts\ArchiMateServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\EmailSettingsInterface;
+use OCA\Stackiq\Kernel\Contracts\ProgressTrackerInterface;
+use OCA\Stackiq\Kernel\Contracts\RoleGroupSettingsInterface;
 use OCA\Stackiq\Service\ArchiMateImportService;
-use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
-use OCA\Stackiq\Service\ProgressTracker;
-use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
-use OCA\Stackiq\Service\Settings\RoleGroupSettings;
-use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
@@ -107,12 +107,12 @@ class SettingsController extends Controller {
 	 * @param SettingsService $settingsService The settings service.
 	 * @param CronjobSettings $cronjobSettings The cronjob configuration.
 	 * @param OrganizationSyncService $orgSyncSvc The organization sync service.
-	 * @param ArchiMateService $archiMateService The ArchiMate import/export service.
-	 * @param RoleGroupSettings $roleGroupSettings The role group lists.
-	 * @param ProgressTracker $progressTracker The progress tracking service.
-	 * @param ArchiMateImportControl $archiMateImportControl Clears, stops and cancels the ArchiMate import status.
+	 * @param ArchiMateServiceInterface $archiMateService The ArchiMate import/export service.
+	 * @param RoleGroupSettingsInterface $roleGroupSettings The role group lists.
+	 * @param ProgressTrackerInterface $progressTracker The progress tracking service.
+	 * @param ArchiMateImportControlInterface $archiMateImportControl Clears, stops and cancels the ArchiMate import status.
 	 * @param EolSyncService $eolSyncService The EOL feed sync orchestration service.
-	 * @param EmailSettings $emailSettings The stored e-mail settings and templates.
+	 * @param EmailSettingsInterface $emailSettings The stored e-mail settings and templates.
 	 * @param LoggerInterface $logger The logger instance.
 	 * @param ConnectionReportService|null $connectionReports Asks integriq to look again after an email settings save.
 	 * @param CmdbImportProfile|null $cmdbImportProfile The CMDB import profile and packs; null builds the shipped one.
@@ -135,12 +135,12 @@ class SettingsController extends Controller {
 		private readonly SettingsService $settingsService,
 		private readonly CronjobSettings $cronjobSettings,
 		private readonly OrganizationSyncService $orgSyncSvc,
-		private readonly ArchiMateService $archiMateService,
-		private readonly RoleGroupSettings $roleGroupSettings,
-		private readonly ProgressTracker $progressTracker,
-		private readonly ArchiMateImportControl $archiMateImportControl,
+		private readonly ArchiMateServiceInterface $archiMateService,
+		private readonly RoleGroupSettingsInterface $roleGroupSettings,
+		private readonly ProgressTrackerInterface $progressTracker,
+		private readonly ArchiMateImportControlInterface $archiMateImportControl,
 		private readonly EolSyncService $eolSyncService,
-		private readonly EmailSettings $emailSettings,
+		private readonly EmailSettingsInterface $emailSettings,
 		private readonly LoggerInterface $logger,
 		private readonly ?ConnectionReportService $connectionReports = null,
 		private readonly ?CmdbImportProfile $cmdbImportProfile = null,

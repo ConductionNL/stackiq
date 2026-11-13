@@ -22,7 +22,7 @@
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\Service\ViewService;
+use OCA\Stackiq\Kernel\Contracts\ViewServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -57,14 +57,14 @@ class ViewController extends Controller {
 	 *
 	 * @param string $appName The app name
 	 * @param IRequest $request The request object
-	 * @param ViewService $viewService The view service for business logic
+	 * @param ViewServiceInterface $viewService The view service for business logic
 	 * @param LoggerInterface $logger The logger service
 	 * @param IUserSession $userSession The user session service
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly ViewService $viewService,
+		private readonly ViewServiceInterface $viewService,
 		private readonly LoggerInterface $logger,
 		private readonly IUserSession $userSession,
 	) {

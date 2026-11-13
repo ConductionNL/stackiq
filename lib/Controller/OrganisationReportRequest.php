@@ -20,7 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\Service\OrganisationReportAccess;
+use OCA\Stackiq\Kernel\Contracts\OrganisationReportAccessInterface;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -44,12 +44,12 @@ final class OrganisationReportRequest {
 	 *
 	 * @param IUserSession             $userSession The user session.
 	 * @param IRequest                 $request     The request carrying `?organisation=`.
-	 * @param OrganisationReportAccess $access      Who may read which organisation's report.
+	 * @param OrganisationReportAccessInterface $access      Who may read which organisation's report.
 	 */
 	public function __construct(
 		private readonly IUserSession $userSession,
 		private readonly IRequest $request,
-		private readonly OrganisationReportAccess $access,
+		private readonly OrganisationReportAccessInterface $access,
 	) {
 	}//end __construct()
 

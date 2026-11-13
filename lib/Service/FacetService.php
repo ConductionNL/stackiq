@@ -28,6 +28,7 @@ namespace OCA\Stackiq\Service;
 use InvalidArgumentException;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
+use OCA\Stackiq\Kernel\Contracts\FacetServiceInterface;
 use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -63,7 +64,7 @@ use RuntimeException;
  * deliberate follow-up; splitting it is a behaviour-affecting refactor and is out of scope for a
  * quality-gate-only change.
  */
-class FacetService {
+class FacetService implements FacetServiceInterface {
 
 	/**
 	 * Distributed cache for facet responses.

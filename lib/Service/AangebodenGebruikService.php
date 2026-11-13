@@ -23,9 +23,10 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\AangebodenGebruikServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -63,7 +64,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/aangeboden-gebruik-api/spec.md#requirement-the-system-shall-list-offered-usage-records-scoped-to-the-callers-role-req-001
  */
-class AangebodenGebruikService {
+class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 
 	/**
 	 * Query key => option keys it is read from, in order of preference; cast to int.

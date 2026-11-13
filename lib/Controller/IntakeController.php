@@ -34,7 +34,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Controller;
 
 use OCA\Stackiq\Kernel\AppIdentity;
-use OCA\Stackiq\Service\IntakeService;
+use OCA\Stackiq\Kernel\Contracts\IntakeServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -51,11 +51,11 @@ class IntakeController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param IntakeService $intake The intake service.
+	 * @param IntakeServiceInterface $intake The intake service.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly IntakeService $intake,
+		private readonly IntakeServiceInterface $intake,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()

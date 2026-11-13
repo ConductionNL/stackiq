@@ -22,6 +22,7 @@ namespace OCA\Stackiq\Service;
 
 use DateTimeImmutable;
 use Exception;
+use OCA\Stackiq\Kernel\Contracts\DataQualityReportServiceInterface;
 use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -36,7 +37,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
  */
-class DataQualityReportService {
+class DataQualityReportService implements DataQualityReportServiceInterface {
 	/**
 	 * How many of the least complete entries the report names.
 	 */
