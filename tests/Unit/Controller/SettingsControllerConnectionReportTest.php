@@ -31,6 +31,7 @@ use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\SettingsService;
@@ -101,6 +102,7 @@ class SettingsControllerConnectionReportTest extends TestCase {
 			cronjobSettings: $this->createMock(CronjobSettings::class),
 			orgSyncSvc: $this->createMock(originalClassName: OrganizationSyncService::class),
 			archiMateService: $this->createMock(originalClassName: ArchiMateService::class),
+			roleGroupSettings: $this->createMock(originalClassName: RoleGroupSettings::class),
 			progressTracker: $this->createMock(originalClassName: ProgressTracker::class),
 			eolSyncService: $this->createMock(originalClassName: EolSyncService::class),
 			emailSettings: $emailSettings,

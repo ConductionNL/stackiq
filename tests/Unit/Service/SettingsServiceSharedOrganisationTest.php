@@ -19,6 +19,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
@@ -144,6 +145,7 @@ class SettingsServiceSharedOrganisationTest extends TestCase {
 		return new SettingsService(
 			config: $config,
 			request: $this->createMock(IRequest::class),
+			roleGroupSettings: $this->createMock(RoleGroupSettings::class),
 			container: $container,
 			appManager: $appManager,
 			logger: $this->createMock(LoggerInterface::class),

@@ -9584,7 +9584,7 @@
 		{
 			"id": "ops-health-endpoint",
 			"area": "operations",
-			"name": "Let monitoring check the app's health and read its metrics without signing in.",
+			"name": "Let monitoring check the app's health without signing in, and let an admin read its metrics.",
 			"origin": "own-code",
 			"vng-softwarecatalogus": "unknown",
 			"sap-leanix": "unknown",
@@ -9607,14 +9607,14 @@
 			"provider": "stackiq",
 			"providerHow": "read-from-code",
 			"feature": "open-platform",
-			"note": "Added in the closing round of 12 Nov 2026 for an open change that covered no row.",
+			"note": "Reworded on 13 Nov to the deliberate spec (decision 407, ADR-006): the health endpoint is public, the metrics endpoint is admin-only. Added in the closing round of 12 Nov 2026 for an open change that covered no row.",
 			"evidence": {
 				"stackiq": "Not built: appinfo/routes.php has no /api/health route; settings#status at /api/settings/status needs a session and returns configuration status (openspec/changes/adopt-apphost, 0 of 19 tasks)."
 			},
 			"source": "closing-round-2026-11-12",
 			"screen": {
 				"board": null,
-				"reason": "Backend only: a public health and metrics endpoint has no screen."
+				"reason": "Backend only: a health and metrics endpoint has no screen."
 			}
 		}
 	],
