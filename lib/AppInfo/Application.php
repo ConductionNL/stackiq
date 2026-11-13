@@ -257,20 +257,35 @@ class Application extends App implements IBootstrap {
 	 *
 	 * Single-responsibility helper extracted from `register()` per
 	 * `openspec/changes/method-decomposition/tasks.md` task 9.1.
+	 * Each domain has its own registrar; they run in a fixed order.
 	 *
 	 * @param IRegistrationContext $context Registration context
 	 *
 	 * @return void
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-9-1
-	 *
-	 * @SuppressWarnings(PHPMD.ExcessiveMethodLength) 498 lines of flat, branch-free DI
-	 * wiring — one `registerService()` closure per domain service. The length is genuine
-	 * and this method SHOULD be split into per-domain registrars the way
-	 * `registerHandlerServices()` already was; that split is a deliberate follow-up and is
-	 * deferred here only because it is a behaviour change, not a quality-gate change.
 	 */
 	private function registerDomainServices(IRegistrationContext $context): void {
+		$this->registerOrganisationServices(context: $context);
+		$this->registerSettingsServices(context: $context);
+		$this->registerSyncServices(context: $context);
+		$this->registerModuleServices(context: $context);
+		$this->registerReviewAndSbomServices(context: $context);
+		$this->registerArchiMateServices(context: $context);
+		$this->registerViewServices(context: $context);
+		$this->registerContractServices(context: $context);
+		$this->registerFederationServices(context: $context);
+		$this->registerEolServices(context: $context);
+		$this->registerControllerAndWidgets(context: $context);
+	}//end registerDomainServices()
+
+	/**
+	 * Register the organisation, merge and contact person services.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 * @return void
+	 */
+	private function registerOrganisationServices(IRegistrationContext $context): void {
 		// Organization event listeners removed - now using cron job for organization synchronization.
 		// Contact person event listeners are still active for real-time processing.
 		// Register new focused services.
@@ -327,7 +342,15 @@ class Application extends App implements IBootstrap {
 				);
 			}
 		);
+	}//end registerOrganisationServices()
 
+	/**
+	 * Register the email and settings services.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 * @return void
+	 */
+	private function registerSettingsServices(IRegistrationContext $context): void {
 		// Register email service.
 		$context->registerService(
 			SymfonyEmailService::class,
@@ -357,7 +380,15 @@ class Application extends App implements IBootstrap {
 				);
 			}
 		);
+	}//end registerSettingsServices()
 
+	/**
+	 * Register the organisation, contacts and gebruik sync services.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 * @return void
+	 */
+	private function registerSyncServices(IRegistrationContext $context): void {
 		// Register organization sync service.
 		$context->registerService(
 			OrganizationSyncService::class,
@@ -405,7 +436,15 @@ class Application extends App implements IBootstrap {
 				);
 			}
 		);
+	}//end registerSyncServices()
 
+	/**
+	 * Register the module compliance, registration, publication, intake and moderation services.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 * @return void
+	 */
+	private function registerModuleServices(IRegistrationContext $context): void {
 		// Event listener uses direct service access like OpenCatalogi - no service registration needed.
 		// Register module compliance service.
 		$context->registerService(
@@ -469,7 +508,15 @@ class Application extends App implements IBootstrap {
 				);
 			}
 		);
+	}//end registerModuleServices()
 
+	/**
+	 * Register the review, module version and SBOM services.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 * @return void
+	 */
+	private function registerReviewAndSbomServices(IRegistrationContext $context): void {
 		// Register the authenticated review-submission service (catalog-ratings,
 		// stackiq#375). Author identity comes from IUserSession, never
 		// from client input.
@@ -533,7 +580,15 @@ class Application extends App implements IBootstrap {
 				);
 			}
 		);
+	}//end registerReviewAndSbomServices()
 
+	/**
+	 * Register the ArchiMate import and export services.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 * @return void
+	 */
+	private function registerArchiMateServices(IRegistrationContext $context): void {
 		// Register ArchiMate import service.
 		$context->registerService(
 			ArchiMateImportService::class,
@@ -579,7 +634,15 @@ class Application extends App implements IBootstrap {
 				);
 			}
 		);
+	}//end registerArchiMateServices()
 
+	/**
+	 * Register the view, facet and progress tracking services.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 * @return void
+	 */
+	private function registerViewServices(IRegistrationContext $context): void {
 		// Register View service for ArchiMate views with enrichment capabilities.
 		$context->registerService(
 			ViewService::class,
@@ -626,7 +689,15 @@ class Application extends App implements IBootstrap {
 				);
 			}
 		);
+	}//end registerViewServices()
 
+	/**
+	 * Register the contact sync job and the contract status and approval services.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 * @return void
+	 */
+	private function registerContractServices(IRegistrationContext $context): void {
 		// Register background job for organization contact synchronization.
 		$context->registerService(
 			OrganizationContactSyncJob::class,
@@ -680,7 +751,15 @@ class Application extends App implements IBootstrap {
 				);
 			}
 		);
+	}//end registerContractServices()
 
+	/**
+	 * Register the federation configuration, service and job.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 * @return void
+	 */
+	private function registerFederationServices(IRegistrationContext $context): void {
 		// Register the federation config + service + scheduled job.
 		$context->registerService(
 			FederationConfig::class,
@@ -722,7 +801,15 @@ class Application extends App implements IBootstrap {
 				);
 			}
 		);
+	}//end registerFederationServices()
 
+	/**
+	 * Register the EOL matcher, sync service and job.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 * @return void
+	 */
+	private function registerEolServices(IRegistrationContext $context): void {
 		// Register the EOL matcher + sync orchestration + scheduled job
 		// (eol-feed-integration). EolMatcherService has zero OCP dependencies
 		// by design (design.md "Nextcloud Integration" — pure matching logic).
@@ -756,7 +843,15 @@ class Application extends App implements IBootstrap {
 				);
 			}
 		);
+	}//end registerEolServices()
 
+	/**
+	 * Register the contact persons controller and the dashboard widgets.
+	 *
+	 * @param IRegistrationContext $context Registration context
+	 * @return void
+	 */
+	private function registerControllerAndWidgets(IRegistrationContext $context): void {
 		// Register ContactpersonenController with explicit dependencies for /me endpoint.
 		$context->registerService(
 			ContactpersonenController::class,
@@ -788,7 +883,7 @@ class Application extends App implements IBootstrap {
 
 		// Dashboard widgets — see lib/Dashboard/*.php and src/*Widget.js.
 		$context->registerDashboardWidget(ConceptOrganisatiesWidget::class);
-	}//end registerDomainServices()
+	}//end registerControllerAndWidgets()
 
 	/**
 	 * Wire all OpenRegister event listeners.
