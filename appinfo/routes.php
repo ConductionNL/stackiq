@@ -18,7 +18,8 @@ declare(strict_types=1);
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-$table = [
+// Every unversioned API route is also served under /api/v1/; see ApiPathAliases.
+return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
     'routes' => [
         // Dashboard routes
         // First-time setup wizard (ADR-042) - the standard CnSetupWizard contract.
@@ -338,25 +339,4 @@ $table = [
         // match an empty path.
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => ''], 'postfix' => 'spa'],
     ],
-];
-
-// Versioned aliases. Every `/api/...` route also answers on `/api/v1/...`, the
-// base URL openapi.json publishes, so the documented major version is real.
-// The unversioned URLs stay for the frontend and existing callers. Each alias
-// takes a `v1` postfix so its route name differs from the original's, and the
-// aliases go before the SPA catch-all, which must stay the last route.
-$routes = $table['routes'];
-$catchAll = array_pop($routes);
-$versioned = [];
-foreach ($routes as $route) {
-    if (str_starts_with($route['url'], '/api/') === true) {
-        $alias = $route;
-        $alias['url'] = '/api/v1/' . substr($route['url'], strlen('/api/'));
-        $alias['postfix'] = ($route['postfix'] ?? '') . 'v1';
-        $versioned[] = $alias;
-    }
-}
-
-$table['routes'] = array_merge($routes, $versioned, [$catchAll]);
-
-return $table;
+]);
