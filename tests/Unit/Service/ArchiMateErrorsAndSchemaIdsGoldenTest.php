@@ -38,6 +38,7 @@ use ReflectionMethod;
  * @covers \OCA\Stackiq\Service\ArchiMateImportService
  *
  * @spec openspec/specs/archimate-import/spec.md
+ * @uses \OCA\Stackiq\Service\ArchiMate\AmefConfigReader
  */
 class ArchiMateErrorsAndSchemaIdsGoldenTest extends TestCase {
 

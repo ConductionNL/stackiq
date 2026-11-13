@@ -39,6 +39,8 @@ use Psr\Log\AbstractLogger;
  * @covers \OCA\Stackiq\Service\ArchiMateService
  *
  * @spec openspec/specs/archimate-import/spec.md
+ * @uses \OCA\Stackiq\Service\ArchiMate\AmefRegisterId
+ * @uses \OCA\Stackiq\Service\ArchiMate\ObjectServiceLookup
  */
 class ArchiMateOrgExportGoldenTest extends TestCase {
 

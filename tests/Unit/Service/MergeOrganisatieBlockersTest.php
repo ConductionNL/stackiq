@@ -41,6 +41,8 @@ use Psr\Log\AbstractLogger;
  * @covers \OCA\Stackiq\Service\MergeOrganisatieService
  *
  * @spec openspec/specs/organisation-merge/spec.md#requirement-merge-requests-must-be-validated-and-rejected-with-blockers-before-any-write
+ * @uses \OCA\Stackiq\Service\FieldRepoint
+ * @uses \OCA\Stackiq\Service\MergeRun
  */
 class MergeOrganisatieBlockersTest extends TestCase {
 
