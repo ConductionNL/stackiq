@@ -225,47 +225,7 @@ class ArchiMateImportService {
 	 * @spec   openspec/specs/archimate-import/spec.md
 	 */
 	public function xmlToArray(\SimpleXMLElement $xml): array {
-		// PERFORMANCE OPTIMIZATION: Initialize result only.
-		$result = [];
-
-		// OPTIMIZATION: Extract non-namespaced attributes (skip redundant processing).
-		$attributes = $xml->attributes();
-		if (count($attributes) > 0) {
-			$attrBag = [];
-			foreach ($attributes as $attrName => $attrValue) {
-				$name = (string)$attrName;
-				$value = (string)$attrValue;
-				// OPTIMIZATION: Only apply str_replace for namespaced names (e.g. xsi:type -> _xsi_type).
-				if (strpos($name, ':') !== false) {
-					$underscoredKey = '_' . str_replace(':', '_', $name);
-				} else {
-					$underscoredKey = '_' . $name;
-				}
-
-				$result[$underscoredKey] = $value;
-				$attrBag[$name] = $value;
-			}
-
-			$result['_attributes'] = $attrBag;
-		}
-
-		// OPTIMIZATION: Extract namespaced attributes (simplified processing).
-		foreach ($xml->getNameSpaces(true) as $prefix => $nsUri) {
-			$nsAttributes = $xml->attributes($prefix, true);
-			if (count($nsAttributes) > 0) {
-				foreach ($nsAttributes as $attrName => $attrValue) {
-					$name = (string)$attrName;
-					$value = (string)$attrValue;
-					$underscoredKey = '_' . $prefix . '__' . $name;
-					$result[$underscoredKey] = $value;
-					if (isset($result['_attributes']) === false) {
-						$result['_attributes'] = [];
-					}
-
-					$result['_attributes'][$prefix . ':' . $name] = $value;
-				}
-			}
-		}
+		$result = $this->xmlAttributes(xml: $xml);
 
 		// Extract children.
 		$children = $xml->children();
@@ -279,23 +239,8 @@ class ArchiMateImportService {
 			return $result;
 		}
 
-		// OPTIMIZATION: Process child elements with faster array operations.
 		foreach ($children as $child) {
-			$childName = $child->getName();
-			$childValue = $this->xmlToArray(xml: $child);
-
-			// OPTIMIZATION: Use isset instead of array_key_exists (faster).
-			if (isset($result[$childName]) === false) {
-				$result[$childName] = $childValue;
-			} else {
-				// OPTIMIZATION: Fast array conversion without expensive isAssoc check.
-				if (is_array($result[$childName]) === false || isset($result[$childName][0]) === false) {
-					// Convert to indexed array if it's a single value or associative array.
-					$result[$childName] = [$result[$childName]];
-				}
-
-				$result[$childName][] = $childValue;
-			}
+			$this->appendXmlChild(result: $result, childName: $child->getName(), childValue: $this->xmlToArray(xml: $child));
 		}
 
 		// Preserve text content when children exist.
@@ -306,6 +251,69 @@ class ArchiMateImportService {
 
 		return $result;
 	}//end xmlToArray()
+
+	/**
+	 * The attributes of an XML element, underscored and in the legacy `_attributes` bag
+	 *
+	 * @param \SimpleXMLElement $xml The XML element
+	 *
+	 * @return array The `_name` / `_prefix__name` keys and the `_attributes` bag, empty without attributes
+	 */
+	private function xmlAttributes(\SimpleXMLElement $xml): array {
+		$result = [];
+
+		// OPTIMIZATION: Extract non-namespaced attributes (skip redundant processing).
+		$attributes = $xml->attributes();
+		if (count($attributes) > 0) {
+			$attrBag = [];
+			foreach ($attributes as $attrName => $attrValue) {
+				$name = (string)$attrName;
+				$value = (string)$attrValue;
+				// Namespaced names (e.g. xsi:type) become _xsi_type.
+				$result['_' . str_replace(':', '_', $name)] = $value;
+				$attrBag[$name] = $value;
+			}
+
+			$result['_attributes'] = $attrBag;
+		}
+
+		// OPTIMIZATION: Extract namespaced attributes (simplified processing).
+		foreach ($xml->getNameSpaces(true) as $prefix => $nsUri) {
+			foreach ($xml->attributes($prefix, true) as $attrName => $attrValue) {
+				$name = (string)$attrName;
+				$value = (string)$attrValue;
+				$result['_' . $prefix . '__' . $name] = $value;
+				$result['_attributes'][$prefix . ':' . $name] = $value;
+			}
+		}
+
+		return $result;
+	}//end xmlAttributes()
+
+	/**
+	 * Add a converted child element; repeated children become a list
+	 *
+	 * @param array  $result     The converted parent, updated in place
+	 * @param string $childName  The child element name
+	 * @param array  $childValue The converted child
+	 *
+	 * @return void
+	 */
+	private function appendXmlChild(array &$result, string $childName, array $childValue): void {
+		// OPTIMIZATION: Use isset instead of array_key_exists (faster).
+		if (isset($result[$childName]) === false) {
+			$result[$childName] = $childValue;
+			return;
+		}
+
+		// OPTIMIZATION: Fast array conversion without expensive isAssoc check.
+		if (is_array($result[$childName]) === false || isset($result[$childName][0]) === false) {
+			// Convert to indexed array if it's a single value or associative array.
+			$result[$childName] = [$result[$childName]];
+		}
+
+		$result[$childName][] = $childValue;
+	}//end appendXmlChild()
 
 	/**
 	 * OPTIMIZED: Import ArchiMate XML file using OpenRegister-style performance optimization
@@ -1882,45 +1890,42 @@ class ArchiMateImportService {
 
 		$map = [];
 		// Find propertyDefinitions section (handle possible alternative names).
-		$propertyDefs = null;
-		if (isset($data['propertyDefinitions']) === true) {
-			$propertyDefs = $data['propertyDefinitions'];
-		} elseif (isset($data['property_definitions']) === true) {
-			$propertyDefs = $data['property_definitions'];
-		}
+		$propertyDefs = $data['propertyDefinitions'] ?? $data['property_definitions'] ?? null;
 
 		if ($propertyDefs !== false && isset($propertyDefs['propertyDefinition']) === true) {
 			$defs = $propertyDefs['propertyDefinition'];
-			if (isset($defs[0]) === true) {
-				// Array of propertyDefinition.
-				foreach ($defs as $def) {
-					if (isset($def['_attributes']['identifier']) === true && isset($def['name']) === true) {
-						if (is_array($def['name']) === true
-							&& isset($def['name']['_value']) === true
-						) {
-							$map[$def['_attributes']['identifier']] = $def['name']['_value'];
-						} else {
-							$map[$def['_attributes']['identifier']] = $def['name'];
-						}
-					}
+			// A single propertyDefinition is not wrapped in a list.
+			if (isset($defs[0]) === false) {
+				$defs = [$defs];
+			}
+
+			foreach ($defs as $def) {
+				if (isset($def['_attributes']['identifier']) === true && isset($def['name']) === true) {
+					$map[$def['_attributes']['identifier']] = $this->propertyDefinitionName(name: $def['name']);
 				}
-			} elseif (isset($defs['_attributes']['identifier']) === true && isset($defs['name']) === true) {
-				// Single propertyDefinition.
-				if (is_array($defs['name']) === true
-					&& isset($defs['name']['_value']) === true
-				) {
-					$map[$defs['_attributes']['identifier']] = $defs['name']['_value'];
-				} else {
-					$map[$defs['_attributes']['identifier']] = $defs['name'];
-				}
-			}//end if
-		}//end if
+			}
+		}
 
 		// OPTIMIZATION: Cache the result for subsequent calls during the same import.
 		$this->propMapCache = $map;
 
 		return $map;
 	}//end extractPropertyDefinitionMap()
+
+	/**
+	 * The name of a property definition: its `_value` when it has one, else the name as parsed
+	 *
+	 * @param mixed $name The parsed name
+	 *
+	 * @return mixed The name
+	 */
+	private function propertyDefinitionName(mixed $name): mixed {
+		if (is_array($name) === true && isset($name['_value']) === true) {
+			return $name['_value'];
+		}
+
+		return $name;
+	}//end propertyDefinitionName()
 
 	/**
 	 * Get property mapping information for debugging and reference
@@ -2852,44 +2857,12 @@ class ArchiMateImportService {
 				// Label information.
 			];
 
-			// Extract bend points if present.
 			if (isset($connection['bendpoint']) === true) {
-				// Normalise to indexed array: single bendpoint is a plain assoc array.
-				if (isset($connection['bendpoint'][0]) === true) {
-					$bendpoints = $connection['bendpoint'];
-				} else {
-					$bendpoints = [$connection['bendpoint']];
-				}
+				$viewRelationship['bendpoints'] = $this->connectionBendpoints(bendpoint: $connection['bendpoint']);
+			}
 
-				foreach ($bendpoints as $bendpoint) {
-					if (isset($bendpoint['_attributes']) === true) {
-						$xValue = (int)($bendpoint['_attributes']['x'] ?? 0);
-						$yValue = (int)($bendpoint['_attributes']['y'] ?? 0);
-
-						$viewRelationship['bendpoints'][] = [
-							'x' => $xValue,
-							'y' => $yValue,
-						];
-					}
-				}
-			}//end if
-
-			// Extract label information if present.
 			if (isset($connection['label']) === true) {
-				$label = [];
-
-				if (is_array($connection['label']) === true && isset($connection['label']['_value']) === true) {
-					$label['text'] = $connection['label']['_value'];
-				} elseif (is_string($connection['label']) === true) {
-					$label['text'] = $connection['label'];
-				}
-
-				// Extract label markup/style if present.
-				if (isset($connection['style']) === true) {
-					$label['markup'] = [$this->extractLabelMarkup(style: $connection['style'])];
-				}
-
-				$viewRelationship['label'] = $label;
+				$viewRelationship['label'] = $this->connectionLabel(connection: $connection);
 			}
 
 			$viewRelationships[] = $viewRelationship;
@@ -2897,6 +2870,57 @@ class ArchiMateImportService {
 
 		return $viewRelationships;
 	}//end extractViewRelationshipsRecursively()
+
+	/**
+	 * The bend points of a connection
+	 *
+	 * @param mixed $bendpoint The parsed bendpoint element(s): one assoc array or a list
+	 *
+	 * @return array The bend points as x and y, skipping those without attributes
+	 */
+	private function connectionBendpoints(mixed $bendpoint): array {
+		// Normalise to indexed array: single bendpoint is a plain assoc array.
+		$bendpoints = [$bendpoint];
+		if (isset($bendpoint[0]) === true) {
+			$bendpoints = $bendpoint;
+		}
+
+		$points = [];
+		foreach ($bendpoints as $point) {
+			if (isset($point['_attributes']) === true) {
+				$points[] = [
+					'x' => (int)($point['_attributes']['x'] ?? 0),
+					'y' => (int)($point['_attributes']['y'] ?? 0),
+				];
+			}
+		}
+
+		return $points;
+	}//end connectionBendpoints()
+
+	/**
+	 * The label of a connection: its text and, when styled, its markup
+	 *
+	 * @param array $connection The parsed connection, with a label
+	 *
+	 * @return array The label
+	 */
+	private function connectionLabel(array $connection): array {
+		$label = [];
+
+		if (is_array($connection['label']) === true && isset($connection['label']['_value']) === true) {
+			$label['text'] = $connection['label']['_value'];
+		} elseif (is_string($connection['label']) === true) {
+			$label['text'] = $connection['label'];
+		}
+
+		// Extract label markup/style if present.
+		if (isset($connection['style']) === true) {
+			$label['markup'] = [$this->extractLabelMarkup(style: $connection['style'])];
+		}
+
+		return $label;
+	}//end connectionLabel()
 
 	/**
 	 * Extract label markup information from connection style
