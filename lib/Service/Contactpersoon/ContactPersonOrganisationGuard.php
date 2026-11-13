@@ -23,7 +23,7 @@ namespace OCA\Stackiq\Service\Contactpersoon;
 use OCA\OpenRegister\Db\Organisation;
 use OCA\OpenRegister\Db\OrganisationMapper;
 use OCA\OpenRegister\Service\ObjectService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\AppFramework\Db\DoesNotExistException;
 use Throwable;
 use OCP\IGroupManager;
@@ -76,7 +76,7 @@ class ContactPersonOrganisationGuard {
 	 * @param IUserManager       $userManager        Tells whether a name is an existing account.
 	 * @param OrganisationMapper $organisationMapper Finds the OpenRegister organisation and its members.
 	 * @param ObjectService      $objectService      Reads the organisatie object's status.
-	 * @param SettingsService    $settingsService    Names the organisatie register and schema.
+	 * @param RegisterConfigReaderInterface    $settingsService    Names the organisatie register and schema.
 	 */
 	public function __construct(
 		private readonly IUserSession $userSession,
@@ -84,7 +84,7 @@ class ContactPersonOrganisationGuard {
 		private readonly IUserManager $userManager,
 		private readonly OrganisationMapper $organisationMapper,
 		private readonly ObjectService $objectService,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 	) {
 	}//end __construct()
 

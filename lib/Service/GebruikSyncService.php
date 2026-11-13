@@ -27,6 +27,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use DateTime;
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
@@ -67,20 +68,20 @@ class GebruikSyncService {
 	/**
 	 * Service for retrieving configuration settings.
 	 *
-	 * @var SettingsService
+	 * @var RegisterConfigReaderInterface
 	 */
-	private SettingsService $settingsService;
+	private RegisterConfigReaderInterface $settingsService;
 
 	/**
 	 * Constructor for GebruikSyncService.
 	 *
 	 * @param LoggerInterface $logger Logger for debugging and error reporting
-	 * @param SettingsService $settingsService Service for retrieving configuration settings
+	 * @param RegisterConfigReaderInterface $settingsService Service for retrieving configuration settings
 	 * @param ObjectServiceInterface $objectService OpenRegister object access (ADR-084 contract)
 	 */
 	public function __construct(
 		LoggerInterface $logger,
-		SettingsService $settingsService,
+		RegisterConfigReaderInterface $settingsService,
 		private readonly ObjectServiceInterface $objectService,
 	) {
 		$this->logger = $logger;
