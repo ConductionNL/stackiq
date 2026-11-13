@@ -1807,34 +1807,62 @@ class ArchiMateImportService {
 
 		// Try JSON config with the actual keys.
 		foreach ($candidates as $key) {
+			$id = null;
 			if (array_key_exists($key, $amefConfig) === true) {
-				$raw = $amefConfig[$key];
-				if ($raw !== '' && $raw !== null && is_numeric((string)$raw) === true) {
-					$id = (int)$raw;
-					if ($id > 0) {
-						return $id;
-					}
-				}
+				$id = $this->positiveSchemaId(raw: $amefConfig[$key]);
+			}
+
+			if ($id !== null) {
+				return $id;
 			}
 		}
 
 		// Fallback to legacy individual app config keys if not present in JSON.
 		foreach ($candidates as $key) {
-			$raw = $this->config->getValueString('stackiq', $key, '');
-			if ($this->config->getValueString('stackiq', 'amef_' . $key, '') !== '') {
-				$raw = $this->config->getValueString('stackiq', 'amef_' . $key, '');
-			}
-
-			if ($raw !== '' && is_numeric((string)$raw) === true) {
-				$id = (int)$raw;
-				if ($id > 0) {
-					return $id;
-				}
+			$id = $this->positiveSchemaId(raw: $this->legacyAmefSchemaValue(key: $key));
+			if ($id !== null) {
+				return $id;
 			}
 		}
 
 		return null;
 	}//end getAmefSchemaIdForType()
+
+	/**
+	 * A configured schema id when it is a positive number
+	 *
+	 * @param mixed $raw The configured value
+	 *
+	 * @return int|null The schema id, or null when the value is empty, not numeric or not positive
+	 */
+	private function positiveSchemaId(mixed $raw): ?int {
+		if ($raw === '' || $raw === null || is_numeric((string)$raw) === false) {
+			return null;
+		}
+
+		$id = (int)$raw;
+		if ($id > 0) {
+			return $id;
+		}
+
+		return null;
+	}//end positiveSchemaId()
+
+	/**
+	 * The legacy app config value of a schema key; the `amef_` prefixed key wins when set
+	 *
+	 * @param string $key The schema key
+	 *
+	 * @return string The configured value, empty when neither key is set
+	 */
+	private function legacyAmefSchemaValue(string $key): string {
+		$raw = $this->config->getValueString('stackiq', $key, '');
+		if ($this->config->getValueString('stackiq', 'amef_' . $key, '') !== '') {
+			$raw = $this->config->getValueString('stackiq', 'amef_' . $key, '');
+		}
+
+		return $raw;
+	}//end legacyAmefSchemaValue()
 
 	/**
 	 * Get schema ID for a section using the object type locator (no hardcoded fallbacks)
@@ -4109,46 +4137,66 @@ class ArchiMateImportService {
 
 				$detailedErrors['total_count'] += $sectionErrorCount;
 
-				// Group errors by type/message for better presentation.
-				$errorGroups = [];
-				foreach ($sectionErrors as $error) {
-					$errorMessage = ($error['message'] ?? 'Unknown error');
-					if (is_string($error) === true) {
-						$errorMessage = $error;
-					}
-
-					$errorType = $this->categorizeError(errorMessage: $errorMessage);
-
-					if (isset($errorGroups[$errorType]) === false) {
-						$errorGroups[$errorType] = [
-							'type' => $errorType,
-							'message' => $errorMessage,
-							'count' => 0,
-							'examples' => [],
-						];
-					}
-
-					$errorGroups[$errorType]['count']++;
-
-					// Add example object ID if available (limit to 5 examples).
-					if (count($errorGroups[$errorType]['examples']) < 5) {
-						if (is_array($error) === true && isset($error['object_id']) === true) {
-							$errorGroups[$errorType]['examples'][] = $error['object_id'];
-						}
-					}
-				}//end foreach
-
 				$detailedErrors['by_section'][$section] = [
 					'section_name' => ucfirst(str_replace('_', ' ', $section)),
 					'total_errors' => $sectionErrorCount,
-					'error_groups' => array_values($errorGroups),
+					'error_groups' => array_values($this->groupSectionErrors(sectionErrors: $sectionErrors)),
 				];
-			}//end if
+			}
+		}
+
+		$detailedErrors['omschrijving'] = $this->mostCommonErrors(bySection: $detailedErrors['by_section']);
+
+		return $detailedErrors;
+	}//end extractDetailedErrors()
+
+	/**
+	 * Group a section's errors by category, with up to five example object ids each
+	 *
+	 * @param array $sectionErrors The section's errors: messages, or arrays with a message and an object id
+	 *
+	 * @return array The error groups by category
+	 */
+	private function groupSectionErrors(array $sectionErrors): array {
+		$errorGroups = [];
+		foreach ($sectionErrors as $error) {
+			$errorMessage = ($error['message'] ?? 'Unknown error');
+			if (is_string($error) === true) {
+				$errorMessage = $error;
+			}
+
+			$errorType = $this->categorizeError(errorMessage: $errorMessage);
+
+			if (isset($errorGroups[$errorType]) === false) {
+				$errorGroups[$errorType] = [
+					'type' => $errorType,
+					'message' => $errorMessage,
+					'count' => 0,
+					'examples' => [],
+				];
+			}
+
+			$errorGroups[$errorType]['count']++;
+
+			// Add example object ID if available (limit to 5 examples).
+			if (count($errorGroups[$errorType]['examples']) < 5 && is_array($error) === true && isset($error['object_id']) === true) {
+				$errorGroups[$errorType]['examples'][] = $error['object_id'];
+			}
 		}//end foreach
 
-		// Create summary of most common errors across all sections.
+		return $errorGroups;
+	}//end groupSectionErrors()
+
+	/**
+	 * The ten most common error categories across all sections
+	 *
+	 * @param array $bySection The error report per section
+	 *
+	 * @return array The categories with their first message, total count and affected sections, most frequent first
+	 */
+	private function mostCommonErrors(array $bySection): array {
 		$allErrors = [];
-		foreach ($detailedErrors['by_section'] as $sectionData) {
+		foreach ($bySection as $sectionData) {
 			foreach ($sectionData['error_groups'] as $errorGroup) {
 				$errorType = $errorGroup['type'];
 				if (isset($allErrors[$errorType]) === false) {
@@ -4167,10 +4215,8 @@ class ArchiMateImportService {
 
 		// Sort by frequency and take top 10.
 		uasort($allErrors, fn ($a, $b) => $b['total_count'] - $a['total_count']);
-		$detailedErrors['omschrijving'] = array_slice(array_values($allErrors), 0, 10);
-
-		return $detailedErrors;
-	}//end extractDetailedErrors()
+		return array_slice(array_values($allErrors), 0, 10);
+	}//end mostCommonErrors()
 
 	/**
 	 * Categorize error types for better grouping and presentation
