@@ -74,21 +74,63 @@ class AnonymousRegistrationListener implements IEventListener {
 	 * @spec openspec/specs/organisation-registration/spec.md#requirement-req-orr-001-an-organisation-registered-without-an-account-is-pending-until-reviewed
 	 */
 	public function handle(Event $event): void {
-		if (($event instanceof ObjectCreatingEvent) === false || $this->commandLine === true || $this->userSession->getUser() !== null) {
+		if (($event instanceof ObjectCreatingEvent) === false || $this->isAnonymousRequest() === false) {
 			return;
 		}
 
-		$schema = (string)($this->settingsService->getVoorzieningenConfig()['organisatie_schema'] ?? '');
-		if ($schema === '' || (string)$event->getObject()->getSchema() !== $schema) {
+		if ($this->isOrganisationCreate(event: $event) === false) {
 			return;
 		}
 
 		if ($this->organisationHolds(uuid: $event->getObject()->getUuid()) === true) {
-			$event->setErrors(['message' => 'This organisation could not be registered.']);
-			$event->stopPropagation();
+			$this->refuse(event: $event);
 			return;
 		}
 
+		$this->markPending(event: $event);
+	}//end handle()
+
+	/**
+	 * Whether the request comes from no signed-in user and not from the command line.
+	 *
+	 * @return bool
+	 */
+	private function isAnonymousRequest(): bool {
+		return $this->commandLine !== true && $this->userSession->getUser() === null;
+	}//end isAnonymousRequest()
+
+	/**
+	 * Whether the event creates an object of the configured organisation schema.
+	 *
+	 * @param ObjectCreatingEvent $event The dispatched event.
+	 *
+	 * @return bool
+	 */
+	private function isOrganisationCreate(ObjectCreatingEvent $event): bool {
+		$schema = (string)($this->settingsService->getVoorzieningenConfig()['organisatie_schema'] ?? '');
+		return $schema !== '' && (string)$event->getObject()->getSchema() === $schema;
+	}//end isOrganisationCreate()
+
+	/**
+	 * Refuse the create, saying only that the organisation could not be registered.
+	 *
+	 * @param ObjectCreatingEvent $event The dispatched event.
+	 *
+	 * @return void
+	 */
+	private function refuse(ObjectCreatingEvent $event): void {
+		$event->setErrors(['message' => 'This organisation could not be registered.']);
+		$event->stopPropagation();
+	}//end refuse()
+
+	/**
+	 * Stamp the create as pending and unpublished.
+	 *
+	 * @param ObjectCreatingEvent $event The dispatched event.
+	 *
+	 * @return void
+	 */
+	private function markPending(ObjectCreatingEvent $event): void {
 		// Merge, never replace: another listener may already have modified the data.
 		$event->setModifiedData(
 			array_merge(
@@ -96,7 +138,7 @@ class AnonymousRegistrationListener implements IEventListener {
 				['registrationStatus' => 'pending', 'publicationDate' => null]
 			)
 		);
-	}//end handle()
+	}//end markPending()
 
 	/**
 	 * Whether an OpenRegister organisation holds this uuid.

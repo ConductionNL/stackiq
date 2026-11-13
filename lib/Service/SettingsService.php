@@ -12,14 +12,18 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\Service\Settings\EmailTemplateDefaults;
+use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\Settings\SettingsObjectCounts;
 use OCA\Stackiq\Service\Settings\VoorzieningenConfigNormalizer;
 use OCP\App\IAppManager;
@@ -151,21 +155,11 @@ class SettingsService implements ObjectTypeLocatorInterface {
 	private const SHARED_ORGANISATION_SCHEMA = 'nc-organisation';
 
 	/**
-	 * The name each role group list goes by in result messages and logs.
-	 *
-	 * @var array<string, string>
-	 */
-	private const ROLE_GROUP_LABELS = [
-		'generic' => 'generic user groups',
-		'organizationAdmin' => 'organization admin groups',
-		'superUser' => 'super user groups',
-	];
-
-	/**
 	 * SettingsService constructor
 	 *
 	 * @param IAppConfig $config App configuration interface
 	 * @param IRequest $request Request interface
+	 * @param RoleGroupSettings $roleGroupSettings The role group lists.
 	 * @param ContainerInterface $container Container for dependency injection
 	 * @param IAppManager $appManager App manager interface
 	 * @param LoggerInterface $logger Logger interface
@@ -173,15 +167,18 @@ class SettingsService implements ObjectTypeLocatorInterface {
 	 * @param IL10N $l10n Localization service, used for the
 	 *                    user-facing register-verification warning text
 	 *                    surfaced via getConfigurationStatus().
+	 * @param EmailSettings $emailSettings The stored e-mail settings and templates.
 	 */
 	public function __construct(
 		private readonly IAppConfig $config,
 		private readonly IRequest $request,
+		private readonly RoleGroupSettings $roleGroupSettings,
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
 		private readonly LoggerInterface $logger,
 		private readonly IGroupManager $groupManager,
 		private readonly IL10N $l10n,
+		private readonly EmailSettings $emailSettings,
 	) {
 		$this->appName = 'stackiq';
 	}//end __construct()
@@ -2076,180 +2073,6 @@ class SettingsService implements ObjectTypeLocatorInterface {
 	}//end persistRegisterVerificationStatus()
 
 	/**
-	 * Gets the list of generic user groups from configuration
-	 *
-	 * @return array Array of generic user groups
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function getGenericUserGroups(): array {
-		$groupsJson = $this->config->getValueString($this->appName, 'generic_user_groups', '');
-
-		if (empty($groupsJson) === true) {
-			// Return only truly generic groups as default (not role-specific).
-			// Role-specific groups are now assigned based on organization type.
-			return [
-				'software-catalog-users'
-			];
-		}
-
-		$groups = json_decode($groupsJson, true);
-		if (is_array($groups) === true) {
-			return $groups;
-		}
-
-		return [];
-	}//end getGenericUserGroups()
-
-	/**
-	 * Sets the list of generic user groups in configuration
-	 *
-	 * @param array $groups Array of generic user groups
-	 *
-	 * @return void
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function setGenericUserGroups(array $groups): void {
-		$groupsJson = json_encode($groups, JSON_THROW_ON_ERROR);
-		$this->config->setValueString($this->appName, 'generic_user_groups', $groupsJson);
-
-		$this->logger->info(
-			'Updated generic user groups configuration',
-			[
-				'groups' => $groups,
-			]
-		);
-	}//end setGenericUserGroups()
-
-	/**
-	 * Gets the list of organization admin groups from configuration
-	 *
-	 * Returns the list an admin saved under `organization_admin_groups`, or an
-	 * empty list when nothing is saved. There is no default list: commit
-	 * bc4dc9ea dropped the old default (organisaties-beheerder) on purpose,
-	 * and first contacts are not added to these groups automatically (see
-	 * ContactPersonHandler::assignUserGroups()). Until stackiq#1136 this getter
-	 * returned an empty list unconditionally, which discarded the saved
-	 * setting as well.
-	 *
-	 * @return array Array of organization admin groups
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function getOrganizationAdminGroups(): array {
-		$groupsJson = $this->config->getValueString($this->appName, 'organization_admin_groups', '');
-
-		if (empty($groupsJson) === true) {
-			return [];
-		}
-
-		$groups = json_decode($groupsJson, true);
-		if (is_array($groups) === true) {
-			return $groups;
-		}
-
-		return [];
-	}//end getOrganizationAdminGroups()
-
-	/**
-	 * Sets the list of organization admin groups in configuration
-	 *
-	 * @param array $groups Array of organization admin groups
-	 *
-	 * @return void
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function setOrganizationAdminGroups(array $groups): void {
-		$groupsJson = json_encode($groups, JSON_THROW_ON_ERROR);
-		$this->config->setValueString($this->appName, 'organization_admin_groups', $groupsJson);
-
-		$this->logger->info(
-			'Updated organization admin groups configuration',
-			[
-				'groups' => $groups,
-			]
-		);
-	}//end setOrganizationAdminGroups()
-
-	/**
-	 * Gets the list of super user groups from configuration
-	 *
-	 * @return array Array of super user groups
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function getSuperUserGroups(): array {
-		$groupsJson = $this->config->getValueString($this->appName, 'super_user_groups', '');
-
-		if (empty($groupsJson) === true) {
-			// Return default groups if no configuration exists.
-			return [
-				'admin',
-				'software-catalog-admins',
-			];
-		}
-
-		$groups = json_decode($groupsJson, true);
-		if (is_array($groups) === true) {
-			return $groups;
-		}
-
-		return [];
-	}//end getSuperUserGroups()
-
-	/**
-	 * Sets the list of super user groups in configuration
-	 *
-	 * @param array $groups Array of super user groups
-	 *
-	 * @return void
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function setSuperUserGroups(array $groups): void {
-		$groupsJson = json_encode($groups, JSON_THROW_ON_ERROR);
-		$this->config->setValueString($this->appName, 'super_user_groups', $groupsJson);
-
-		$this->logger->info(
-			'Updated super user groups configuration',
-			[
-				'groups' => $groups,
-			]
-		);
-	}//end setSuperUserGroups()
-
-	/**
-	 * Validates a list of group names
-	 *
-	 * @param array $groups Array of group names to validate
-	 *
-	 * @return array Array with validation results
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function validateGroups(array $groups): array {
-		$results = [
-			'valid' => [],
-			'invalid' => [],
-			'errors' => [],
-		];
-
-		foreach ($groups as $groupName) {
-			if (empty($groupName) === true || is_string($groupName) === false) {
-				$results['invalid'][] = $groupName;
-				$results['errors'][] = 'Group name cannot be empty';
-				continue;
-			}
-
-			// Check for invalid characters.
-			if (preg_match('/[^a-zA-Z0-9._-]/', $groupName) === 1) {
-				$results['invalid'][] = $groupName;
-				$results['errors'][] = "Group name '{$groupName}' contains invalid characters";
-				continue;
-			}
-
-			$results['valid'][] = $groupName;
-		}
-
-		return $results;
-	}//end validateGroups()
-
-	/**
 	 * Creates and configures required user groups for the software catalog
 	 *
 	 * This is the public method that creates user groups and returns status information.
@@ -2318,16 +2141,16 @@ class SettingsService implements ObjectTypeLocatorInterface {
 
 			// Update the configuration with only truly generic groups (not role-specific).
 			// Role-specific groups are now assigned based on organization type.
-			$this->setGenericUserGroups(
+			$this->roleGroupSettings->setGenericUserGroups(
 				groups: [
 					'software-catalog-users',
 				]
 			);
 
 			// No automatic organization admin groups - can be configured via settings.
-			$this->setOrganizationAdminGroups(groups: []);
+			$this->roleGroupSettings->setOrganizationAdminGroups(groups: []);
 
-			$this->setSuperUserGroups(
+			$this->roleGroupSettings->setSuperUserGroups(
 				groups: [
 					// Keep existing admin group.
 					'admin',
@@ -2438,16 +2261,16 @@ class SettingsService implements ObjectTypeLocatorInterface {
 
 			// Update the configuration with only truly generic groups (not role-specific).
 			// Role-specific groups are now assigned based on organization type, not as generic groups.
-			$this->setGenericUserGroups(
+			$this->roleGroupSettings->setGenericUserGroups(
 				groups: [
 					'software-catalog-users',
 				]
 			);
 
 			// No automatic organization admin groups - can be configured via settings.
-			$this->setOrganizationAdminGroups(groups: []);
+			$this->roleGroupSettings->setOrganizationAdminGroups(groups: []);
 
-			$this->setSuperUserGroups(
+			$this->roleGroupSettings->setSuperUserGroups(
 				groups: [
 					// Keep existing admin group.
 					'admin',
@@ -2473,422 +2296,6 @@ class SettingsService implements ObjectTypeLocatorInterface {
 			throw new \RuntimeException('Failed to create required user groups: ' . $e->getMessage());
 		}//end try
 	}//end createRequiredUserGroups()
-
-	/**
-	 * Gets all available groups with their information
-	 *
-	 * @return array Array of group information
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function getAllGroups(): array {
-		$groups = [];
-
-		// Get group manager if possible.
-		if ($this->appManager->isInstalled('user_management') === true) {
-			try {
-				$groupManager = $this->groupManager;
-				$allGroups = $groupManager->search('');
-
-				foreach ($allGroups as $group) {
-					$groups[] = [
-						'id' => $group->getGID(),
-						'displayName' => $group->getDisplayName(),
-						'memberCount' => count($group->getUsers()),
-						'isGeneric' => in_array($group->getGID(), $this->getGenericUserGroups()) === true,
-					];
-				}
-			} catch (\Exception $e) {
-				$this->logger->error('Failed to get all groups: ' . $e->getMessage());
-			}
-		}
-
-		return $groups;
-	}//end getAllGroups()
-
-	/**
-	 * The email settings that carry a secret value.
-	 *
-	 * Single source of truth for three call sites that must agree, and previously
-	 * did not: the two GET responses redact these, and updateEmailSettings() skips
-	 * a value that comes back as the mask so a save cannot overwrite the real
-	 * secret with the placeholder. Adding a provider means adding its secret here
-	 * — not to a fourth private list.
-	 *
-	 * @var array<int, string>
-	 */
-	public const SECRET_EMAIL_FIELDS = [
-		'smtpPassword',
-		'sendgridApiKey',
-		'mailgunApiKey',
-		'postmarkApiKey',
-		'sesSecretKey',
-		'mailjetSecretKey',
-	];
-
-	/**
-	 * The placeholder a redacted secret is rendered as.
-	 *
-	 * @var string
-	 */
-	public const SECRET_MASK = '••••••••';
-
-	/**
-	 * Redact every secret in an email-settings array for an HTTP response.
-	 *
-	 * `getEmailSettings()` itself must keep returning the REAL values — SymfonyEmailService
-	 * reads it to actually send mail — so redaction belongs at the response boundary, not
-	 * in the getter. A set secret becomes the mask; an unset one stays empty, so the UI can
-	 * still tell "configured" from "not configured" without ever receiving the value.
-	 *
-	 * @param array<string, mixed> $settings Raw settings from getEmailSettings().
-	 *
-	 * @return array<string, mixed> The settings, safe to return over HTTP.
-	 *
-	 * @spec openspec/specs/settings-service/spec.md
-	 */
-	public function redactEmailSecrets(array $settings): array {
-		foreach (self::SECRET_EMAIL_FIELDS as $field) {
-			if (array_key_exists($field, $settings) === false) {
-				continue;
-			}
-
-			$masked = '';
-			if (empty($settings[$field]) === false) {
-				$masked = self::SECRET_MASK;
-			}
-
-			$settings[$field] = $masked;
-		}
-
-		return $settings;
-	}//end redactEmailSecrets()
-
-	/**
-	 * Gets email configuration settings
-	 *
-	 * WARNING: returns REAL secret values — it is what SymfonyEmailService uses to send
-	 * mail. Never hand the result straight to an HTTP response; run it through
-	 * redactEmailSecrets() first.
-	 *
-	 * @return array Email settings configuration
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function getEmailSettings(): array {
-		$this->logger->debug('Stackiq: Loading email settings from configuration');
-
-		$app = $this->appName;
-		$settings = [
-			'enabled' => $this->config->getValueString(
-				$app,
-				'email_enabled',
-				'false'
-			) === 'true',
-			'senderEmail' => $this->config->getValueString(
-				$app,
-				'sender_email',
-				'noreply@softwarecatalogus.nl'
-			),
-			'senderName' => $this->config->getValueString(
-				$app,
-				'sender_name',
-				'Software Catalogus'
-			),
-			'testReceiverOverride' => $this->config->getValueString(
-				$app,
-				'test_receiver_override',
-				''
-			),
-			'organizationRegistrationEnabled' => $this->config->getValueString(
-				$app,
-				'email_org_registration_enabled',
-				'true'
-			) === 'true',
-			'organizationActivationEnabled' => $this->config->getValueString(
-				$app,
-				'email_org_activation_enabled',
-				'true'
-			) === 'true',
-			'userCreationEnabled' => $this->config->getValueString(
-				$app,
-				'email_user_creation_enabled',
-				'true'
-			) === 'true',
-			'userOrganisationEnabled' => $this->config->getValueString(
-				$app,
-				'email_user_organisation_enabled',
-				'true'
-			) === 'true',
-
-			// Symfony Mailer transport configuration.
-			'transportType' => $this->config->getValueString(
-				$app,
-				'email_transport_type',
-				'smtp'
-			),
-
-			// SMTP configuration.
-			'smtpHost' => $this->config->getValueString(
-				$app,
-				'email_smtp_host',
-				'localhost'
-			),
-			'smtpPort' => (int)$this->config->getValueString(
-				$app,
-				'email_smtp_port',
-				'587'
-			),
-			'smtpEncryption' => $this->config->getValueString(
-				$app,
-				'email_smtp_encryption',
-				'tls'
-			),
-			'smtpUsername' => $this->config->getValueString(
-				$app,
-				'email_smtp_username',
-				''
-			),
-			'smtpPassword' => $this->config->getValueString(
-				$app,
-				'email_smtp_password',
-				''
-			),
-
-			// SendGrid configuration.
-			'sendgridApiKey' => $this->config->getValueString(
-				$app,
-				'email_sendgrid_api_key',
-				''
-			),
-
-			// Mailgun configuration.
-			'mailgunApiKey' => $this->config->getValueString(
-				$app,
-				'email_mailgun_api_key',
-				''
-			),
-			'mailgunDomain' => $this->config->getValueString(
-				$app,
-				'email_mailgun_domain',
-				''
-			),
-
-			// Postmark configuration.
-			'postmarkApiKey' => $this->config->getValueString(
-				$app,
-				'email_postmark_api_key',
-				''
-			),
-
-			// Amazon SES configuration.
-			'sesAccessKey' => $this->config->getValueString(
-				$app,
-				'email_ses_access_key',
-				''
-			),
-			'sesSecretKey' => $this->config->getValueString(
-				$app,
-				'email_ses_secret_key',
-				''
-			),
-			'sesRegion' => $this->config->getValueString(
-				$app,
-				'email_ses_region',
-				'us-east-1'
-			),
-
-			// Mailjet configuration.
-			'mailjetApiKey' => $this->config->getValueString(
-				$app,
-				'email_mailjet_api_key',
-				''
-			),
-			'mailjetSecretKey' => $this->config->getValueString(
-				$app,
-				'email_mailjet_secret_key',
-				''
-			),
-
-			// Templates.
-			'templates' => [
-				'organization_registration' => $this->getEmailTemplate(templateName: 'organization_registration'),
-				'organization_activation' => $this->getEmailTemplate(templateName: 'organization_activation'),
-				'user_creation' => $this->getEmailTemplate(templateName: 'user_creation'),
-			],
-		];
-
-		$this->logger->info(
-			'Stackiq: Email settings loaded from configuration',
-			[
-				'enabled' => $settings['enabled'],
-				'transport_type' => $settings['transportType'],
-				'sender_email' => $settings['senderEmail'],
-				'has_mailjet_api_key' => empty($settings['mailjetApiKey']) === false,
-				'mailjet_api_key_length' => strlen($settings['mailjetApiKey']),
-				'has_mailjet_secret_key' => empty($settings['mailjetSecretKey']) === false,
-				'mailjet_secret_key_length' => strlen($settings['mailjetSecretKey']),
-				'test_receiver_override' => $settings['testReceiverOverride'],
-			]
-		);
-
-		return $settings;
-	}//end getEmailSettings()
-
-	/**
-	 * Updates email configuration settings
-	 *
-	 * @param array $emailSettings Email settings to update
-	 *
-	 * @return array Updated email settings
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function updateEmailSettings(array $emailSettings): array {
-		$allowedSettings = [
-			'enabled' => 'email_enabled',
-			'senderEmail' => 'sender_email',
-			'senderName' => 'sender_name',
-			'testReceiverOverride' => 'test_receiver_override',
-			'organizationRegistrationEnabled' => 'email_org_registration_enabled',
-			'organizationActivationEnabled' => 'email_org_activation_enabled',
-			'userCreationEnabled' => 'email_user_creation_enabled',
-			'userOrganisationEnabled' => 'email_user_organisation_enabled',
-
-			// Symfony Mailer transport configuration.
-			'transportType' => 'email_transport_type',
-
-			// SMTP configuration.
-			'smtpHost' => 'email_smtp_host',
-			'smtpPort' => 'email_smtp_port',
-			'smtpEncryption' => 'email_smtp_encryption',
-			'smtpUsername' => 'email_smtp_username',
-			'smtpPassword' => 'email_smtp_password',
-
-			// SendGrid configuration.
-			'sendgridApiKey' => 'email_sendgrid_api_key',
-
-			// Mailgun configuration.
-			'mailgunApiKey' => 'email_mailgun_api_key',
-			'mailgunDomain' => 'email_mailgun_domain',
-
-			// Postmark configuration.
-			'postmarkApiKey' => 'email_postmark_api_key',
-
-			// Amazon SES configuration.
-			'sesAccessKey' => 'email_ses_access_key',
-			'sesSecretKey' => 'email_ses_secret_key',
-			'sesRegion' => 'email_ses_region',
-
-			// Mailjet configuration.
-			'mailjetApiKey' => 'email_mailjet_api_key',
-			'mailjetSecretKey' => 'email_mailjet_secret_key',
-		];
-		$updatedSettings = [];
-
-		foreach ($allowedSettings as $settingKey => $configKey) {
-			if (array_key_exists($settingKey, $emailSettings) === true) {
-				$value = $emailSettings[$settingKey];
-
-				// Skip the masked placeholder — the client is echoing back the redacted value;
-				// preserve the real stored secret. Keyed off the same constant the GET responses
-				// redact with, so a new provider cannot be masked on read but clobbered on write.
-				if (in_array($settingKey, self::SECRET_EMAIL_FIELDS, true) === true && $value === self::SECRET_MASK) {
-					continue;
-				}
-
-				// Convert boolean values to strings.
-				if (is_bool($value) === true) {
-					if ($value === true) {
-						$value = 'true';
-					} else {
-						$value = 'false';
-					}
-				}
-
-				$this->config->setValueString($this->appName, $configKey, (string)$value);
-				$updatedSettings[$settingKey] = $this->config->getValueString($this->appName, $configKey);
-			}//end if
-		}//end foreach
-
-		$this->logger->info(
-			'Email settings updated successfully',
-			[
-				'updatedKeys' => array_keys($updatedSettings),
-			]
-		);
-
-		return $updatedSettings;
-	}//end updateEmailSettings()
-
-	/**
-	 * Gets email template content for a specific template
-	 *
-	 * @param string $templateName The template name (organization_registration, organization_activation, user_creation)
-	 *
-	 * @return string The template content
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function getEmailTemplate(string $templateName): string {
-		$configKey = "email_template_{$templateName}";
-		$defaultTemplate = $this->getDefaultEmailTemplate(templateName: $templateName);
-
-		return $this->config->getValueString($this->appName, $configKey, $defaultTemplate);
-	}//end getEmailTemplate()
-
-	/**
-	 * Updates email template content
-	 *
-	 * @param string $templateName The template name
-	 * @param string $templateContent The template content
-	 *
-	 * @return bool True if update was successful
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function updateEmailTemplate(string $templateName, string $templateContent): bool {
-		try {
-			$configKey = "email_template_{$templateName}";
-			$this->config->setValueString($this->appName, $configKey, $templateContent);
-
-			$this->logger->info(
-				'Email template updated successfully',
-				[
-					'templateName' => $templateName,
-				]
-			);
-
-			return true;
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update email template: ' . $e->getMessage(),
-				[
-					'templateName' => $templateName,
-				]
-			);
-			return false;
-		}//end try
-	}//end updateEmailTemplate()
-
-	/**
-	 * Gets default email template content
-	 *
-	 * @param string $templateName The template name
-	 *
-	 * @return string Default template content
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function getDefaultEmailTemplate(string $templateName): string {
-		return (new EmailTemplateDefaults())->template(templateName: $templateName);
-	}//end getDefaultEmailTemplate()
-
-	/**
-	 * Gets available email template variables for a specific template
-	 *
-	 * @param string $templateName The template name
-	 *
-	 * @return array Available template variables
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function getEmailTemplateVariables(string $templateName): array {
-		return (new EmailTemplateDefaults())->variables(templateName: $templateName);
-	}//end getEmailTemplateVariables()
 
 	/**
 	 * Gets debug information for settings
@@ -2933,13 +2340,13 @@ class SettingsService implements ObjectTypeLocatorInterface {
 
 			// Get group configurations.
 			$debugInfo['userGroups'] = [
-				'generic' => $this->getGenericUserGroups(),
-				'organizationAdmin' => $this->getOrganizationAdminGroups(),
-				'superUser' => $this->getSuperUserGroups(),
+				'generic' => $this->roleGroupSettings->getGenericUserGroups(),
+				'organizationAdmin' => $this->roleGroupSettings->getOrganizationAdminGroups(),
+				'superUser' => $this->roleGroupSettings->getSuperUserGroups(),
 			];
 
 			// Get email settings (without sensitive data).
-			$emailSettings = $this->getEmailSettings();
+			$emailSettings = $this->emailSettings->getEmailSettings();
 			unset($emailSettings['smtpPassword']);
 			unset($emailSettings['sendgridApiKey']);
 			unset($emailSettings['mailgunApiKey']);
@@ -3004,7 +2411,7 @@ class SettingsService implements ObjectTypeLocatorInterface {
 
 			// Use provided settings or fall back to stored settings.
 			if (empty($emailSettings) === true) {
-				$emailSettings = $this->getEmailSettings();
+				$emailSettings = $this->emailSettings->getEmailSettings();
 				$this->logger->info('Stackiq: Loaded email settings from storage');
 			} else {
 				$this->logger->info('Stackiq: Using provided email settings');
@@ -3140,7 +2547,7 @@ class SettingsService implements ObjectTypeLocatorInterface {
 
 			// Use provided settings or fall back to stored settings.
 			if (empty($emailSettings) === true) {
-				$emailSettings = $this->getEmailSettings();
+				$emailSettings = $this->emailSettings->getEmailSettings();
 				$this->logger->info('Stackiq: Loaded email settings from storage');
 			} else {
 				$this->logger->info('Stackiq: Using provided email settings');
@@ -4005,6 +3412,49 @@ class SettingsService implements ObjectTypeLocatorInterface {
 	}//end loadConfiguration()
 
 	/**
+	 * Schema slugs that identify the catalog register when its slug is not `stackiq`.
+	 */
+	private const VOORZIENINGEN_EXPECTED_SLUGS = [
+		'sector',
+		'suite',
+		'catalogService',
+		'vulnerability',
+		'contactPerson',
+		'organization',
+		'usage',
+		'catalogContract',
+		'connection',
+		'software-review',
+		'module',
+		'compliancy',
+		'moduleversie',
+		'moduleVersion',
+	];
+
+	/**
+	 * Voorzieningen configuration key per schema slug. Both moduleversie and
+	 * moduleVersion map to the same key.
+	 */
+	private const VOORZIENINGEN_SLUG_TO_KEY = [
+		'organization' => 'organisatie_schema',
+		'contactPerson' => 'contactpersoon_schema',
+		'suite' => 'suite_schema',
+		'catalogService' => 'dienst_schema',
+		'vulnerability' => 'kwetsbaarheid_schema',
+		'usage' => 'gebruik_schema',
+		'catalogContract' => 'contract_schema',
+		'connection' => 'koppeling_schema',
+		'software-review' => 'beoordeeling_schema',
+		'module' => 'module_schema',
+		'compliancy' => 'compliancy_schema',
+		'moduleversie' => 'moduleVersie_schema',
+		'moduleVersion' => 'moduleVersie_schema',
+		'sector' => 'sector_schema',
+		'sbomComponent' => 'sbomComponent_schema',
+		'maintenanceWindow' => 'maintenanceWindow_schema',
+	];
+
+	/**
 	 * Configure Voorzieningen register and schemas
 	 *
 	 * @return array Voorzieningen configuration result
@@ -4044,119 +3494,7 @@ class SettingsService implements ObjectTypeLocatorInterface {
 				];
 			}
 
-			// Get schema mapper to fetch schema details if needed.
-			$schemaMapper = null;
-			try {
-				$schemaMapper = $this->container->get(\OCA\OpenRegister\Db\SchemaMapper::class);
-			} catch (\Exception $e) {
-				$this->logger->warning(
-					'SchemaMapper not available for Voorzieningen detection',
-					['error' => $e->getMessage()]
-				);
-			}
-
-			// Find the catalog register by slug OR by presence of expected schema slugs.
-			// The slug moved `voorzieningen` -> `stackiq`; MigrateRegisterSlug renames
-			// the row before this ever runs, and the schema-slug fallback below still
-			// finds the register on an install where that rename was refused.
-			$targetRegister = null;
-			$expectedSlugs = [
-				'sector',
-				'suite',
-				'catalogService',
-				'vulnerability',
-				'contactPerson',
-				'organization',
-				'usage',
-				'catalogContract',
-				'connection',
-				'software-review',
-				'module',
-				'compliancy',
-				'moduleversie',
-				'moduleVersion',
-			];
-
-			foreach ($registers as $register) {
-				// Convert Register entity to array if needed.
-				if ($register instanceof \OCA\OpenRegister\Db\Register) {
-					$register = $register->jsonSerialize();
-				}
-
-				$slug = strtolower($register['slug'] ?? '');
-				if ($slug === 'stackiq') {
-					// Fetch full schema details for the register.
-					$schemas = $register['schemas'] ?? [];
-					$schemaDetails = [];
-					foreach ($schemas as $schema) {
-						if (is_array($schema) === true && isset($schema['slug']) === true) {
-							// Schema is already a full object.
-							$schemaDetails[] = $schema;
-						} elseif ((is_int($schema) === true || is_numeric($schema) === true) && $schemaMapper !== null) {
-							// Schema is an ID - fetch details using SchemaMapper.
-							try {
-								$schemaEntity = $schemaMapper->find((int)$schema);
-								if ($schemaEntity !== null) {
-									$schemaDetails[] = $schemaEntity->jsonSerialize();
-								}
-							} catch (\Exception $e) {
-								$this->logger->warning(
-									'Failed to fetch schema details',
-									['schemaId' => $schema, 'error' => $e->getMessage()]
-								);
-							}
-						}
-					}
-
-					$register['schemas'] = $schemaDetails;
-					$targetRegister = $register;
-					break;
-				}//end if
-
-				// Heuristic: count matching schemas.
-				$schemaSlugs = [];
-				foreach (($register['schemas'] ?? []) as $schema) {
-					if (is_array($schema) === true && isset($schema['slug']) === true) {
-						$schemaSlugs[] = strtolower($schema['slug']);
-					} elseif ((is_int($schema) === true || is_numeric($schema) === true) && $schemaMapper !== null) {
-						try {
-							$schemaEntity = $schemaMapper->find((int)$schema);
-							if ($schemaEntity !== null) {
-								$schemaArray = $schemaEntity->jsonSerialize();
-								$schemaSlugs[] = strtolower($schemaArray['slug'] ?? '');
-							}
-						} catch (\Exception $e) {
-							// Skip schemas that can't be fetched.
-						}
-					}
-				}
-
-				$matches = array_intersect($expectedSlugs, $schemaSlugs);
-				if (count($matches) >= 6) {
-					// Good confidence.
-					// Fetch full schema details.
-					$schemas = $register['schemas'] ?? [];
-					$schemaDetails = [];
-					foreach ($schemas as $schema) {
-						if (is_array($schema) === true && isset($schema['slug']) === true) {
-							$schemaDetails[] = $schema;
-						} elseif ((is_int($schema) === true || is_numeric($schema) === true) && $schemaMapper !== null) {
-							try {
-								$schemaEntity = $schemaMapper->find((int)$schema);
-								if ($schemaEntity !== null) {
-									$schemaDetails[] = $schemaEntity->jsonSerialize();
-								}
-							} catch (\Exception $e) {
-								// Skip.
-							}
-						}
-					}
-
-					$register['schemas'] = $schemaDetails;
-					$targetRegister = $register;
-				}//end if
-			}//end foreach
-
+			$targetRegister = $this->findVoorzieningenRegister(registers: $registers, schemaMapper: $this->voorzieningenSchemaMapper());
 			if ($targetRegister === null) {
 				return [
 					'success' => false,
@@ -4164,95 +3502,7 @@ class SettingsService implements ObjectTypeLocatorInterface {
 				];
 			}
 
-			// Map schema slugs to configuration keys based on actual register schemas.
-			$slugToKey = [
-				'organization' => 'organisatie_schema',
-				'contactPerson' => 'contactpersoon_schema',
-				'suite' => 'suite_schema',
-				'catalogService' => 'dienst_schema',
-				'vulnerability' => 'kwetsbaarheid_schema',
-				'usage' => 'gebruik_schema',
-				'catalogContract' => 'contract_schema',
-				'connection' => 'koppeling_schema',
-				'software-review' => 'beoordeeling_schema',
-				'module' => 'module_schema',
-				'compliancy' => 'compliancy_schema',
-				'moduleversie' => 'moduleVersie_schema',
-				// Handle both moduleversie and moduleVersie.
-				'moduleVersion' => 'moduleVersie_schema',
-				'sector' => 'sector_schema',
-				'sbomComponent' => 'sbomComponent_schema',
-				'maintenanceWindow' => 'maintenanceWindow_schema',
-			];
-
-			$config = [ 'register' => (string)($targetRegister['id'] ?? '') ];
-
-			$this->logger->info(
-				'DEBUG: About to process schemas',
-				[
-					'register_id' => $targetRegister['id'],
-					'schemas_count' => count($targetRegister['schemas'] ?? []),
-					'slugToKey_map' => $slugToKey,
-				]
-			);
-
-			foreach (($targetRegister['schemas'] ?? []) as $schema) {
-				$originalSlug = $schema['slug'] ?? '';
-				$lowercaseSlug = strtolower($originalSlug);
-
-				$hasMappingOriginalValue = 'NO';
-				if (isset($slugToKey[$originalSlug]) === true) {
-					$hasMappingOriginalValue = 'YES';
-				}
-
-				$hasMappingLowercaseValue = 'NO';
-				if (isset($slugToKey[$lowercaseSlug]) === true) {
-					$hasMappingLowercaseValue = 'YES';
-				}
-
-				$this->logger->info(
-					'DEBUG: Processing schema',
-					[
-						'original_slug' => $originalSlug,
-						'lowercase_slug' => $lowercaseSlug,
-						'schema_id' => $schema['id'] ?? 'NO_ID',
-						'has_mapping_original' => $hasMappingOriginalValue,
-						'has_mapping_lowercase' => $hasMappingLowercaseValue,
-					]
-				);
-
-				$mappingKey = null;
-				$usedSlug = null;
-
-				// Try original case first, then lowercase.
-				if (isset($slugToKey[$originalSlug]) === true) {
-					$mappingKey = $slugToKey[$originalSlug];
-					$usedSlug = $originalSlug;
-				} elseif (isset($slugToKey[$lowercaseSlug]) === true) {
-					$mappingKey = $slugToKey[$lowercaseSlug];
-					$usedSlug = $lowercaseSlug;
-				}
-
-				if ($mappingKey !== null) {
-					$config[$mappingKey] = (string)$schema['id'];
-					$this->logger->info(
-						'DEBUG: Mapped schema successfully',
-						[
-							'used_slug' => $usedSlug,
-							'config_key' => $mappingKey,
-							'schema_id' => $schema['id'],
-						]
-					);
-				} else {
-					$this->logger->debug(
-						'DEBUG: No mapping found for schema slug',
-						[
-							'original_slug' => $originalSlug,
-							'lowercase_slug' => $lowercaseSlug,
-						]
-					);
-				}
-			}//end foreach
+			$config = $this->mapVoorzieningenSchemas(targetRegister: $targetRegister);
 
 			$this->logger->info('DEBUG: Final config before persist', ['config' => $config]);
 
@@ -4272,6 +3522,190 @@ class SettingsService implements ObjectTypeLocatorInterface {
 			];
 		}//end try
 	}//end configureVoorzieningen()
+
+	/**
+	 * The OpenRegister schema mapper, or null when it is not available.
+	 *
+	 * @return object|null The schema mapper.
+	 */
+	private function voorzieningenSchemaMapper(): ?object {
+		try {
+			return $this->container->get(\OCA\OpenRegister\Db\SchemaMapper::class);
+		} catch (\Exception $e) {
+			$this->logger->warning(
+				'SchemaMapper not available for Voorzieningen detection',
+				['error' => $e->getMessage()]
+			);
+			return null;
+		}
+	}//end voorzieningenSchemaMapper()
+
+	/**
+	 * Find the catalog register by slug, or by the presence of expected schema slugs.
+	 *
+	 * The slug moved `voorzieningen` -> `stackiq`; MigrateRegisterSlug renames the
+	 * row before this ever runs, and the schema-slug fallback still finds the
+	 * register on an install where that rename was refused. The `stackiq` register
+	 * wins at once; otherwise the last register with six or more expected schema
+	 * slugs is used.
+	 *
+	 * @param iterable    $registers    The registers, as entities or arrays.
+	 * @param object|null $schemaMapper The schema mapper, if available.
+	 *
+	 * @return array|null The register with full schema details, or null.
+	 */
+	private function findVoorzieningenRegister(iterable $registers, ?object $schemaMapper): ?array {
+		$targetRegister = null;
+		foreach ($registers as $register) {
+			if ($register instanceof \OCA\OpenRegister\Db\Register) {
+				$register = $register->jsonSerialize();
+			}
+
+			$schemas = $register['schemas'] ?? [];
+			if (strtolower($register['slug'] ?? '') === 'stackiq') {
+				[$details, $failures] = $this->voorzieningenSchemaDetails(schemas: $schemas, schemaMapper: $schemaMapper);
+				foreach ($failures as [$schemaId, $error]) {
+					$this->logger->warning(
+						'Failed to fetch schema details',
+						['schemaId' => $schemaId, 'error' => $error]
+					);
+				}
+
+				$register['schemas'] = $details;
+				return $register;
+			}
+
+			$schemaSlugs = array_map(
+				static fn (array $schema): string => strtolower($schema['slug'] ?? ''),
+				$this->voorzieningenSchemaDetails(schemas: $schemas, schemaMapper: $schemaMapper)[0]
+			);
+			if (count(array_intersect(self::VOORZIENINGEN_EXPECTED_SLUGS, $schemaSlugs)) >= 6) {
+				$register['schemas'] = $this->voorzieningenSchemaDetails(schemas: $schemas, schemaMapper: $schemaMapper)[0];
+				$targetRegister = $register;
+			}
+		}
+
+		return $targetRegister;
+	}//end findVoorzieningenRegister()
+
+	/**
+	 * Full schema objects for a register's schemas: inline objects with a slug
+	 * are kept, numeric ids are fetched through the schema mapper, and anything
+	 * else or anything that cannot be fetched is skipped.
+	 *
+	 * @param array       $schemas      The register's schemas, as objects or ids.
+	 * @param object|null $schemaMapper The schema mapper, if available.
+	 *
+	 * @return array{0: array, 1: list<array{0: int|string, 1: string}>} The schema objects, and each schema id that failed with its error.
+	 */
+	private function voorzieningenSchemaDetails(array $schemas, ?object $schemaMapper): array {
+		$details  = [];
+		$failures = [];
+		foreach ($schemas as $schema) {
+			if (is_array($schema) === true && isset($schema['slug']) === true) {
+				$details[] = $schema;
+				continue;
+			}
+
+			if ((is_int($schema) === false && is_numeric($schema) === false) || $schemaMapper === null) {
+				continue;
+			}
+
+			try {
+				$schemaEntity = $schemaMapper->find((int)$schema);
+				if ($schemaEntity !== null) {
+					$details[] = $schemaEntity->jsonSerialize();
+				}
+			} catch (\Exception $e) {
+				$failures[] = [$schema, $e->getMessage()];
+			}
+		}//end foreach
+
+		return [$details, $failures];
+	}//end voorzieningenSchemaDetails()
+
+	/**
+	 * Map the register's schemas to Voorzieningen configuration keys, trying
+	 * each slug in its original case before lowercase.
+	 *
+	 * @param array $targetRegister The register with full schema details.
+	 *
+	 * @return array<string, string> The configuration.
+	 */
+	private function mapVoorzieningenSchemas(array $targetRegister): array {
+		$slugToKey = self::VOORZIENINGEN_SLUG_TO_KEY;
+		$config    = [ 'register' => (string)($targetRegister['id'] ?? '') ];
+
+		$this->logger->info(
+			'DEBUG: About to process schemas',
+			[
+				'register_id' => $targetRegister['id'],
+				'schemas_count' => count($targetRegister['schemas'] ?? []),
+				'slugToKey_map' => $slugToKey,
+			]
+		);
+
+		foreach (($targetRegister['schemas'] ?? []) as $schema) {
+			$originalSlug  = $schema['slug'] ?? '';
+			$lowercaseSlug = strtolower($originalSlug);
+
+			$this->logger->info(
+				'DEBUG: Processing schema',
+				[
+					'original_slug' => $originalSlug,
+					'lowercase_slug' => $lowercaseSlug,
+					'schema_id' => $schema['id'] ?? 'NO_ID',
+					'has_mapping_original' => $this->yesNo(flag: isset($slugToKey[$originalSlug])),
+					'has_mapping_lowercase' => $this->yesNo(flag: isset($slugToKey[$lowercaseSlug])),
+				]
+			);
+
+			$usedSlug = null;
+			if (isset($slugToKey[$originalSlug]) === true) {
+				$usedSlug = $originalSlug;
+			} elseif (isset($slugToKey[$lowercaseSlug]) === true) {
+				$usedSlug = $lowercaseSlug;
+			}
+
+			if ($usedSlug === null) {
+				$this->logger->debug(
+					'DEBUG: No mapping found for schema slug',
+					[
+						'original_slug' => $originalSlug,
+						'lowercase_slug' => $lowercaseSlug,
+					]
+				);
+				continue;
+			}
+
+			$config[$slugToKey[$usedSlug]] = (string)$schema['id'];
+			$this->logger->info(
+				'DEBUG: Mapped schema successfully',
+				[
+					'used_slug' => $usedSlug,
+					'config_key' => $slugToKey[$usedSlug],
+					'schema_id' => $schema['id'],
+				]
+			);
+		}//end foreach
+
+		return $config;
+	}//end mapVoorzieningenSchemas()
+
+	/**
+	 * 'YES' or 'NO' for a log context flag.
+	 *
+	 * @param bool $flag The flag.
+	 *
+	 * @return string 'YES' or 'NO'.
+	 */
+	private function yesNo(bool $flag): string {
+		if ($flag === true) {
+			return 'YES';
+		}
+
+		return 'NO';
+	}//end yesNo()
 
 	/**
 	 * Configure AMEF register and schemas
@@ -4504,9 +3938,9 @@ class SettingsService implements ObjectTypeLocatorInterface {
 		// Get email config and include templates.
 		$emailConfig = $this->getEmailConfig();
 		$emailConfig['templates'] = [
-			'organization_registration' => $this->getEmailTemplate(templateName: 'organization_registration'),
-			'organization_activation' => $this->getEmailTemplate(templateName: 'organization_activation'),
-			'user_creation' => $this->getEmailTemplate(templateName: 'user_creation'),
+			'organization_registration' => $this->emailSettings->getEmailTemplate(templateName: 'organization_registration'),
+			'organization_activation' => $this->emailSettings->getEmailTemplate(templateName: 'organization_activation'),
+			'user_creation' => $this->emailSettings->getEmailTemplate(templateName: 'user_creation'),
 		];
 
 		// Get Voorzieningen and AMEF configs (without object counts for performance).
@@ -4519,9 +3953,9 @@ class SettingsService implements ObjectTypeLocatorInterface {
 			'email' => $emailConfig,
 			'archimate' => $this->getArchiMateStatus(),
 			'userGroups' => [
-				'generic' => $this->getGenericUserGroups(),
-				'organizationAdmin' => $this->getOrganizationAdminGroups(),
-				'superUser' => $this->getSuperUserGroups(),
+				'generic' => $this->roleGroupSettings->getGenericUserGroups(),
+				'organizationAdmin' => $this->roleGroupSettings->getOrganizationAdminGroups(),
+				'superUser' => $this->roleGroupSettings->getSuperUserGroups(),
 			],
 		];
 	}//end getConsolidatedConfiguration()
@@ -5193,114 +4627,6 @@ class SettingsService implements ObjectTypeLocatorInterface {
 		return $this->objectCounts()->statistics();
 	}//end getObjectCountsStatistics()
 
-	/**
-	 * Get all email templates with error handling
-	 * This handles template iteration and individual failures
-	 *
-	 * @return array All email templates
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function getAllEmailTemplates(): array {
-		$templateTypes = [
-			'organization_registration',
-			'organization_activation',
-			'user_creation',
-			'user_organisation',
-		];
-		$templates = [];
-
-		foreach ($templateTypes as $templateName) {
-			try {
-				$templates[$templateName] = $this->getEmailTemplate(templateName: $templateName);
-			} catch (\Exception $e) {
-				$this->logger->warning("Failed to get template {$templateName}", ['error' => $e->getMessage()]);
-				$templates[$templateName] = null;
-			}
-		}
-
-		return $templates;
-	}//end getAllEmailTemplates()
-
-	/**
-	 * Update generic user groups with validation
-	 *
-	 * @param array $groups Groups to set.
-	 *
-	 * @return array Update result with validation.
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function updateGenericUserGroups(array $groups): array {
-		return $this->updateRoleGroups(groups: $groups, role: 'generic');
-	}//end updateGenericUserGroups()
-
-	/**
-	 * Update organization admin groups with validation
-	 *
-	 * @param array $groups Groups to set.
-	 *
-	 * @return array Update result with validation.
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function updateOrganizationAdminGroups(array $groups): array {
-		return $this->updateRoleGroups(groups: $groups, role: 'organizationAdmin');
-	}//end updateOrganizationAdminGroups()
-
-	/**
-	 * Update super user groups with validation
-	 *
-	 * @param array $groups Groups to set.
-	 *
-	 * @return array Update result with validation.
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function updateSuperUserGroups(array $groups): array {
-		return $this->updateRoleGroups(groups: $groups, role: 'superUser');
-	}//end updateSuperUserGroups()
-
-	/**
-	 * Validate a role's group list and store it when every name is valid.
-	 *
-	 * @param array  $groups Groups to set.
-	 * @param string $role   The role: generic, organizationAdmin or superUser.
-	 *
-	 * @psalm-param 'generic'|'organizationAdmin'|'superUser' $role
-	 *
-	 * @return array Update result with validation.
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	private function updateRoleGroups(array $groups, string $role): array {
-		$label = self::ROLE_GROUP_LABELS[$role];
-		try {
-			$validation = $this->validateGroups(groups: $groups);
-
-			if (empty($validation['invalid']) === false) {
-				return [
-					'success' => false,
-					'message' => 'Invalid group names provided',
-					'validation' => $validation,
-				];
-			}
-
-			match ($role) {
-				'generic' => $this->setGenericUserGroups(groups: $validation['valid']),
-				'organizationAdmin' => $this->setOrganizationAdminGroups(groups: $validation['valid']),
-				'superUser' => $this->setSuperUserGroups(groups: $validation['valid']),
-			};
-
-			return [
-				'success' => true,
-				'message' => ucfirst($label) . ' updated successfully',
-				'groups' => $validation['valid'],
-			];
-		} catch (\Exception $e) {
-			$this->logger->error('SettingsService: Failed to update ' . $label, ['exception' => $e->getMessage()]);
-			return [
-				'success' => false,
-				'message' => 'Failed to update ' . $label . ': ' . $e->getMessage(),
-			];
-		}//end try
-	}//end updateRoleGroups()
-
 	// ======================================================.
 	// FOCUSED ENDPOINT METHODS FOR PERFORMANCE OPTIMIZATION.
 	// ======================================================.
@@ -5380,8 +4706,8 @@ class SettingsService implements ObjectTypeLocatorInterface {
 			// secrets (SymfonyEmailService needs them to send); this method's result goes
 			// straight into an HTTP response, so the SMTP password and the SendGrid /
 			// Mailgun / Postmark / SES / Mailjet keys must never ride along.
-			$emailSettings = $this->redactEmailSecrets(settings: $this->getEmailSettings());
-			$emailTemplates = $this->getAllEmailTemplates();
+			$emailSettings = $this->emailSettings->redactEmailSecrets(settings: $this->emailSettings->getEmailSettings());
+			$emailTemplates = $this->emailSettings->getAllEmailTemplates();
 
 			return [
 				'success' => true,
@@ -5414,7 +4740,7 @@ class SettingsService implements ObjectTypeLocatorInterface {
 	public function updateEmailConfig(array $config): array {
 		try {
 			// No isset($config) guard: it is a required, non-nullable parameter.
-			$result = $this->updateEmailSettings(emailSettings: $config);
+			$result = $this->emailSettings->updateEmailSettings(emailSettings: $config);
 			if ($result['success'] === false) {
 				return $result;
 			}
@@ -5723,100 +5049,6 @@ class SettingsService implements ObjectTypeLocatorInterface {
 			];
 		}
 	}//end getObjectsStatistics()
-
-	/**
-	 * Get user groups configuration only
-	 *
-	 * @return array User groups configuration
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function getUserGroupsConfig(): array {
-		try {
-			$config = [
-				'generic' => $this->getGenericUserGroups(),
-				'organizationAdmin' => $this->getOrganizationAdminGroups(),
-				'superUser' => $this->getSuperUserGroups(),
-				'allGroups' => $this->getAllGroups(),
-			];
-
-			return [
-				'success' => true,
-				'config' => $config,
-				'timestamp' => time(),
-			];
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get user groups config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return [
-				'success' => false,
-				'message' => 'Failed to get user groups config: ' . $e->getMessage(),
-			];
-		}//end try
-	}//end getUserGroupsConfig()
-
-	/**
-	 * Update user groups configuration
-	 *
-	 * @param array $config User groups configuration data
-	 *
-	 * @return array Result of the update operation
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function updateUserGroupsConfig(array $config): array {
-		try {
-			$results = [];
-
-			if (isset($config['generic']) === true) {
-				$results['generic'] = $this->updateGenericUserGroups(groups: $config['generic']);
-			}
-
-			if (isset($config['organizationAdmin']) === true) {
-				$results['organizationAdmin'] = $this->updateOrganizationAdminGroups(groups: $config['organizationAdmin']);
-			}
-
-			if (isset($config['superUser']) === true) {
-				$results['superUser'] = $this->updateSuperUserGroups(groups: $config['superUser']);
-			}
-
-			// Check if any updates failed.
-			$failed = array_filter(
-				$results,
-				function ($result) {
-					return $result['success'] === false;
-				}
-			);
-
-			if (empty($failed) === false) {
-				return [
-					'success' => false,
-					'message' => 'Some user group updates failed',
-					'results' => $results,
-				];
-			}
-
-			return [
-				'success' => true,
-				'message' => 'User groups configuration updated successfully',
-				'config' => $this->getUserGroupsConfig(),
-			];
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update user groups config',
-				[
-					'exception' => $e->getMessage(),
-					'config' => $config,
-				]
-			);
-			return [
-				'success' => false,
-				'message' => 'Failed to update user groups config: ' . $e->getMessage(),
-			];
-		}//end try
-	}//end updateUserGroupsConfig()
 
 	/**
 	 * Get catalog location
@@ -6172,229 +5404,6 @@ class SettingsService implements ObjectTypeLocatorInterface {
 	// ======================================================.
 
 	/**
-	 * Get all cronjob configurations.
-	 *
-	 * @deprecated Cronjob context is no longer needed since sync operations use _rbac: false.
-	 *             Will be removed in a future version.
-	 *
-	 * @return array The cronjob configurations indexed by job name
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function getCronjobConfig(): array {
-		try {
-			$configJson = $this->config->getValueString($this->appName, 'cronjob_config', '{}');
-			$config = json_decode($configJson, true);
-
-			if (is_array($config) === false) {
-				$config = [];
-			}
-
-			// Define available cronjobs with their metadata.
-			$availableCronjobs = $this->getAvailableCronjobs();
-
-			// Merge stored config with defaults for each cronjob.
-			$result = [];
-			foreach ($availableCronjobs as $jobId => $jobMeta) {
-				$result[$jobId] = [
-					'id' => $jobId,
-					'name' => $jobMeta['name'],
-					'description' => $jobMeta['description'],
-					'interval' => $jobMeta['interval'],
-					'userId' => $config[$jobId]['userId'] ?? null,
-					'organisationUuid' => $config[$jobId]['organisationUuid'] ?? null,
-					'enabled' => $config[$jobId]['enabled'] ?? true,
-				];
-			}
-
-			return [
-				'success' => true,
-				'cronjobs' => $result,
-				'timestamp' => time(),
-			];
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get cronjob config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return [
-				'success' => false,
-				'message' => 'Failed to get cronjob config: ' . $e->getMessage(),
-				'cronjobs' => [],
-			];
-		}//end try
-	}//end getCronjobConfig()
-
-	/**
-	 * Whether an admin left a cronjob switched on in the cronjob settings.
-	 *
-	 * Reads the `enabled` flag `updateCronjobConfig()` stores under
-	 * `cronjob_config`. A job that was never saved is on, as the settings
-	 * screen shows it (`getCronjobConfig()` defaults `enabled` to true).
-	 *
-	 * @param string $jobId The cronjob identifier, e.g. `organization_contact_sync`.
-	 *
-	 * @return bool False only when the admin switched the job off.
-	 *
-	 * @spec openspec/changes/operations-sync-status-and-progress/tasks.md#task-3
-	 */
-	public function isCronjobEnabled(string $jobId): bool {
-		$config = json_decode($this->config->getValueString($this->appName, 'cronjob_config', '{}'), true);
-		if (is_array($config) === false || is_array($config[$jobId] ?? null) === false) {
-			return true;
-		}
-
-		$enabled = ($config[$jobId]['enabled'] ?? true);
-
-		return in_array($enabled, [false, 0, '0', 'false'], true) === false;
-	}//end isCronjobEnabled()
-
-	/**
-	 * Get list of available cronjobs with their metadata.
-	 *
-	 * @deprecated Cronjob context is no longer needed since sync operations use _rbac: false.
-	 *
-	 * @return array List of cronjob definitions
-	 */
-	private function getAvailableCronjobs(): array {
-		return [
-			'organization_contact_sync' => [
-				'name' => 'Organization Contact Sync',
-				'description' => 'Syncs organizations and contacts between Stackiq and OpenRegister.',
-				'interval' => 300,
-				// 5 minutes.
-				'class' => 'OCA\\Stackiq\\BackgroundJob\\OrganizationContactSyncJob',
-			],
-		];
-	}//end getAvailableCronjobs()
-
-	/**
-	 * Update cronjob configuration.
-	 *
-	 * @param array $data The cronjob configuration data.
-	 *
-	 * @return array Result of the update operation.
-	 *
-	 * @deprecated Cronjob context is no longer needed since sync operations use _rbac: false.
-	 *             Will be removed in a future version.
-	 * @spec       openspec/specs/settings-service/spec.md
-	 */
-	public function updateCronjobConfig(array $data): array {
-		try {
-			// Get existing config.
-			$configJson = $this->config->getValueString($this->appName, 'cronjob_config', '{}');
-			$config = json_decode($configJson, true);
-
-			if (is_array($config) === false) {
-				$config = [];
-			}
-
-			// Update configuration for the specified cronjob.
-			$jobId = $data['jobId'] ?? null;
-			if ($jobId === null) {
-				return [
-					'success' => false,
-					'message' => 'Job ID is required',
-				];
-			}
-
-			// Validate that the job exists.
-			$availableCronjobs = $this->getAvailableCronjobs();
-			if (isset($availableCronjobs[$jobId]) === false) {
-				return [
-					'success' => false,
-					'message' => 'Unknown cronjob: ' . $jobId,
-				];
-			}
-
-			// Update the config for this job.
-			$config[$jobId] = [
-				'userId' => $data['userId'] ?? null,
-				'organisationUuid' => $data['organisationUuid'] ?? null,
-				'enabled' => $data['enabled'] ?? true,
-			];
-
-			// Save the updated config.
-			$this->config->setValueString(
-				$this->appName,
-				'cronjob_config',
-				json_encode($config, JSON_PRETTY_PRINT)
-			);
-
-			$this->logger->info(
-				'Cronjob configuration updated',
-				[
-					'jobId' => $jobId,
-					'userId' => $config[$jobId]['userId'],
-					'organisationUuid' => $config[$jobId]['organisationUuid'],
-				]
-			);
-
-			return [
-				'success' => true,
-				'message' => 'Cronjob configuration updated successfully',
-				'config' => $config[$jobId],
-			];
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to update cronjob config',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return [
-				'success' => false,
-				'message' => 'Failed to update cronjob config: ' . $e->getMessage(),
-			];
-		}//end try
-	}//end updateCronjobConfig()
-
-	/**
-	 * Get cronjob context for a specific job.
-	 *
-	 * @param string $jobId The cronjob identifier.
-	 *
-	 * @return array|null The context configuration or null if not configured.
-	 *
-	 * @deprecated Cronjob context is no longer needed since sync operations use _rbac: false.
-	 *             Will be removed in a future version.
-	 * @spec       openspec/specs/settings-service/spec.md
-	 */
-	public function getCronjobContext(string $jobId): ?array {
-		try {
-			$configJson = $this->config->getValueString($this->appName, 'cronjob_config', '{}');
-			$config = json_decode($configJson, true);
-
-			if (is_array($config) === false || isset($config[$jobId]) === false) {
-				return null;
-			}
-
-			$jobConfig = $config[$jobId];
-
-			// Only return if both user and organisation are configured.
-			if (empty($jobConfig['userId']) === true || empty($jobConfig['organisationUuid']) === true) {
-				return null;
-			}
-
-			return [
-				'userId' => $jobConfig['userId'],
-				'organisationUuid' => $jobConfig['organisationUuid'],
-				'enabled' => $jobConfig['enabled'] ?? true,
-			];
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get cronjob context',
-				[
-					'jobId' => $jobId,
-					'exception' => $e->getMessage(),
-				]
-			);
-			return null;
-		}//end try
-	}//end getCronjobContext()
-
-	/**
 	 * Get available users for cronjob configuration.
 	 *
 	 * @deprecated Cronjob context is no longer needed since sync operations use _rbac: false.
@@ -6423,7 +5432,7 @@ class SettingsService implements ObjectTypeLocatorInterface {
 			}
 
 			// Also include users from super user groups if configured.
-			$superUserGroups = $this->getSuperUserGroups();
+			$superUserGroups = $this->roleGroupSettings->getSuperUserGroups();
 			foreach ($superUserGroups as $groupName) {
 				$group = $groupManager->get($groupName);
 				if ($group !== null) {
@@ -6459,227 +5468,6 @@ class SettingsService implements ObjectTypeLocatorInterface {
 			];
 		}//end try
 	}//end getAvailableUsersForCronjobs()
-
-	/**
-	 * Get available organisations for cronjob configuration.
-	 *
-	 * @deprecated Cronjob context is no longer needed since sync operations use _rbac: false.
-	 *             Will be removed in a future version.
-	 *
-	 * @return array List of organisations with uuid and name
-	 * @spec   openspec/specs/settings-service/spec.md
-	 */
-	public function getAvailableOrganisationsForCronjobs(): array {
-		try {
-			if (in_array('openregister', $this->appManager->getInstalledApps()) === false) {
-				return [
-					'success' => false,
-					'message' => 'OpenRegister is not installed',
-					'organisations' => [],
-				];
-			}
-
-			$organisationMapper = $this->container->get(\OCA\OpenRegister\Db\OrganisationMapper::class);
-
-			// Get all organisations. The mapper applies no RBAC; an unbounded ListQuery
-			// asks for every row (findAll() is paged and takes int limit/offset).
-			$organisations = $organisationMapper->findList(query: \OCA\OpenRegister\Db\ListQuery::unbounded());
-
-			$result = [];
-			foreach ($organisations as $org) {
-				$result[] = [
-					'uuid' => $org->getUuid(),
-					'name' => $org->getName(),
-					'description' => $org->getDescription(),
-				];
-			}
-
-			return [
-				'success' => true,
-				'organisations' => $result,
-			];
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get available organisations for cronjobs',
-				[
-					'exception' => $e->getMessage(),
-				]
-			);
-			return [
-				'success' => false,
-				'message' => 'Failed to get available organisations: ' . $e->getMessage(),
-				'organisations' => [],
-			];
-		}//end try
-	}//end getAvailableOrganisationsForCronjobs()
-
-	// ===.
-	// EOL SYNC CONFIGURATION (eol-feed-integration).
-	// ===.
-
-	/**
-	 * The IAppConfig key backing the EOL sync configuration blob.
-	 *
-	 * @var string
-	 */
-	private const EOL_SYNC_CONFIG_KEY = 'eol_sync_config';
-
-	/**
-	 * The IAppConfig key backing the EOL sync last-run status blob.
-	 *
-	 * @var string
-	 */
-	private const EOL_SYNC_STATUS_KEY = 'eol_sync_status';
-
-	/**
-	 * The register slug the sibling Integriq `endoflife-date-source` change
-	 * provisions `eol_product`/`eol_cycle` into, used as the default when no
-	 * admin override is configured.
-	 *
-	 * Was `openconnector`. That register was renamed to `integriq` in the fleet
-	 * rename and this default was left behind, so a default configuration has
-	 * been resolving a register that does not answer to that name. It failed
-	 * silently, because the feature is opt-in and an unresolvable register reads
-	 * as "no EOL data" rather than as an error.
-	 *
-	 * @var string
-	 */
-	private const EOL_DEFAULT_REGISTER = 'integriq';
-
-	/**
-	 * The default `eol_product` schema slug (design.md Decision 5).
-	 *
-	 * Was `eolProduct`, renamed to snake_case in Integriq along with
-	 * `eolCycle`; they were the only two camelCase slugs in that register.
-	 *
-	 * @var string
-	 */
-	private const EOL_DEFAULT_PRODUCT_SCHEMA = 'eol_product';
-
-	/**
-	 * The default `eol_cycle` schema slug (design.md Decision 5).
-	 *
-	 * Was `eolCycle`. See the note on the product schema above.
-	 *
-	 * @var string
-	 */
-	private const EOL_DEFAULT_CYCLE_SCHEMA = 'eol_cycle';
-
-	/**
-	 * The default scheduled-sync interval in seconds (24 hours).
-	 *
-	 * @var integer
-	 */
-	private const EOL_DEFAULT_INTERVAL_SECONDS = 86400;
-
-	/**
-	 * Get the EOL sync configuration: whether the feature is enabled, the
-	 * register/schema slugs to read `eol_product`/`eol_cycle` from, and the
-	 * scheduled-sync interval. Defaults match what the sibling Integriq
-	 * `endoflife-date-source` change provisions (design.md Decision 5) —
-	 * the feature is disabled by default until an admin opts in.
-	 *
-	 * @return array{enabled: bool, register: string, productSchema: string, cycleSchema: string, intervalSeconds: int}
-	 *
-	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-products-are-mapped-to-endoflife-date-via-per-module-config
-	 */
-	public function getEolSyncConfig(): array {
-		$configJson = $this->config->getValueString($this->appName, self::EOL_SYNC_CONFIG_KEY, '{}');
-		$decoded = json_decode($configJson, true);
-		if (is_array($decoded) === false) {
-			$decoded = [];
-		}
-
-		return [
-			'enabled' => ($decoded['enabled'] ?? false) === true,
-			'register' => (string)($decoded['register'] ?? self::EOL_DEFAULT_REGISTER),
-			'productSchema' => (string)($decoded['productSchema'] ?? self::EOL_DEFAULT_PRODUCT_SCHEMA),
-			'cycleSchema' => (string)($decoded['cycleSchema'] ?? self::EOL_DEFAULT_CYCLE_SCHEMA),
-			'intervalSeconds' => (int)($decoded['intervalSeconds'] ?? self::EOL_DEFAULT_INTERVAL_SECONDS),
-		];
-	}//end getEolSyncConfig()
-
-	/**
-	 * Persist the EOL sync configuration. Unknown keys are ignored; missing
-	 * keys keep their current value (partial updates are supported, unlike
-	 * the OpenRegister object PUT semantics this config intentionally does
-	 * NOT share — this is a flat IAppConfig blob, not an OR object).
-	 *
-	 * @param array $data The submitted configuration fields.
-	 *
-	 * @return array{success: bool, config: array} The persisted configuration.
-	 *
-	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-products-are-mapped-to-endoflife-date-via-per-module-config
-	 */
-	public function updateEolSyncConfig(array $data): array {
-		$current = $this->getEolSyncConfig();
-
-		if (array_key_exists('enabled', $data) === true) {
-			$current['enabled'] = ($data['enabled'] === true || $data['enabled'] === 'true');
-		}
-
-		if (array_key_exists('register', $data) === true && trim((string)$data['register']) !== '') {
-			$current['register'] = trim((string)$data['register']);
-		}
-
-		if (array_key_exists('productSchema', $data) === true && trim((string)$data['productSchema']) !== '') {
-			$current['productSchema'] = trim((string)$data['productSchema']);
-		}
-
-		if (array_key_exists('cycleSchema', $data) === true && trim((string)$data['cycleSchema']) !== '') {
-			$current['cycleSchema'] = trim((string)$data['cycleSchema']);
-		}
-
-		if (array_key_exists('intervalSeconds', $data) === true && (int)$data['intervalSeconds'] > 0) {
-			$current['intervalSeconds'] = (int)$data['intervalSeconds'];
-		}
-
-		$this->config->setValueString($this->appName, self::EOL_SYNC_CONFIG_KEY, json_encode($current));
-
-		return [
-			'success' => true,
-			'config' => $current,
-		];
-	}//end updateEolSyncConfig()
-
-	/**
-	 * Get the last-recorded EOL sync status: whether the feed is currently
-	 * available, a reason when it is not, and the outcome counts of the most
-	 * recent run. Defaults to an "unavailable / never run" status before the
-	 * first run.
-	 *
-	 * @return array{available: bool, reason: string|null, matched: int, skipped: int, lastRunAt: string|null}
-	 *
-	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-the-feature-degrades-gracefully-when-the-feed-is-unavailable
-	 */
-	public function getEolSyncStatus(): array {
-		$statusJson = $this->config->getValueString($this->appName, self::EOL_SYNC_STATUS_KEY, '{}');
-		$decoded = json_decode($statusJson, true);
-		if (is_array($decoded) === false) {
-			$decoded = [];
-		}
-
-		return [
-			'available' => ($decoded['available'] ?? false) === true,
-			'reason' => $decoded['reason'] ?? 'not-yet-run',
-			'matched' => (int)($decoded['matched'] ?? 0),
-			'skipped' => (int)($decoded['skipped'] ?? 0),
-			'lastRunAt' => $decoded['lastRunAt'] ?? null,
-		];
-	}//end getEolSyncStatus()
-
-	/**
-	 * Persist the outcome of an EOL sync run (scheduled or manual).
-	 *
-	 * @param array $status The status fields (`available`, `reason`, `matched`, `skipped`, `lastRunAt`).
-	 *
-	 * @return void
-	 *
-	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-the-feature-degrades-gracefully-when-the-feed-is-unavailable
-	 */
-	public function setEolSyncStatus(array $status): void {
-		$this->config->setValueString($this->appName, self::EOL_SYNC_STATUS_KEY, json_encode($status));
-	}//end setEolSyncStatus()
 
 	/**
 	 * After a fragment merge, give every schema the highest version any file declared.

@@ -3,6 +3,9 @@
 /**
  * Composition-root argument tests.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * `lib/AppInfo/Application.php` registers a handful of services with a
  * hand-written factory closure — `return new Foo(bar: $container->get(...))`
  * — instead of letting Nextcloud autowire them. That is a deliberate choice

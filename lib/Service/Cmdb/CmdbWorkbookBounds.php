@@ -116,7 +116,7 @@ class CmdbWorkbookBounds {
 	 * @return int
 	 */
 	private static function entriesAt(XMLReader $xml, ?int &$textDepth): int {
-		if ($xml->nodeType === XMLReader::END_ELEMENT && $xml->depth === $textDepth) {
+		if (self::closesText(xml: $xml, textDepth: $textDepth) === true) {
 			$textDepth = null;
 			return 0;
 		}
@@ -125,13 +125,38 @@ class CmdbWorkbookBounds {
 			return 0;
 		}
 
+		return self::elementEntries(xml: $xml, textDepth: $textDepth);
+	}//end entriesAt()
+
+	/**
+	 * Whether the reader is on the end of the shared or inline string it is inside.
+	 *
+	 * @param XMLReader $xml The reader, on a node.
+	 * @param int|null $textDepth The depth of the shared or inline string the reader is inside, or null.
+	 *
+	 * @return bool
+	 */
+	private static function closesText(XMLReader $xml, ?int $textDepth): bool {
+		return $xml->nodeType === XMLReader::END_ELEMENT && $xml->depth === $textDepth;
+	}//end closesText()
+
+	/**
+	 * The entries the element the reader is on adds: 1 for a shared string or a run inside a text, else 0.
+	 *
+	 * @param XMLReader $xml The reader, on an element.
+	 * @param int|null $textDepth The depth of the shared or inline string the reader is inside, or null; set when
+	 *                            the element opens one.
+	 *
+	 * @return int
+	 */
+	private static function elementEntries(XMLReader $xml, ?int &$textDepth): int {
 		if ($textDepth === null && self::opensText(xml: $xml) === true) {
 			$textDepth = self::depthUnlessEmpty(xml: $xml);
 			return (int)($xml->localName === 'si');
 		}
 
 		return (int)($textDepth !== null && $xml->localName === 'r');
-	}//end entriesAt()
+	}//end elementEntries()
 
 	/**
 	 * The depth of the element the reader is on, or null for an empty element, which has no end to wait for.
@@ -236,26 +261,54 @@ class CmdbWorkbookBounds {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
 	 */
 	private static function sharedStringWeights(XMLReader $xml): array {
-		$byNamespace = [];
-		$positions = [];
-		$namespace = null;
+		$strings = ['byNamespace' => [], 'positions' => [], 'namespace' => null];
 		while ($xml->read() === true) {
-			if ($xml->depth === 1 && $xml->nodeType === XMLReader::ELEMENT) {
-				$namespace = null;
-				if ($xml->localName === 'si') {
-					$namespace = $xml->namespaceURI;
-					$positions[$namespace] = (($positions[$namespace] ?? -1) + 1);
-					$byNamespace[$namespace][$positions[$namespace]] = 0;
-				}
-			}
-
-			if ($namespace !== null && $xml->depth >= 1) {
-				$byNamespace[$namespace][$positions[$namespace]] += self::nodeWeight(xml: $xml);
-			}
+			self::weighNode(xml: $xml, strings: $strings);
 		}
 
-		return self::heaviestByIndex(tables: $byNamespace);
+		return self::heaviestByIndex(tables: $strings['byNamespace']);
 	}//end sharedStringWeights()
+
+	/**
+	 * Add what the node the reader is on weighs to the shared string it is inside, opening a new one on an `<si>`.
+	 *
+	 * @param XMLReader $xml The reader, on a node.
+	 * @param array<string, mixed> $strings The weights so far by namespace and position (byNamespace), the last
+	 *                                      position per namespace (positions) and the namespace of the `<si>` the
+	 *                                      reader is inside (namespace); updated.
+	 *
+	 * @return void
+	 */
+	private static function weighNode(XMLReader $xml, array &$strings): void {
+		if ($xml->depth === 1 && $xml->nodeType === XMLReader::ELEMENT) {
+			$strings['namespace'] = self::openSharedString(xml: $xml, strings: $strings);
+		}
+
+		$namespace = $strings['namespace'];
+		if ($namespace !== null && $xml->depth >= 1) {
+			$strings['byNamespace'][$namespace][$strings['positions'][$namespace]] += self::nodeWeight(xml: $xml);
+		}
+	}//end weighNode()
+
+	/**
+	 * Number the `<si>` the reader is on within its namespace and start its weight at 0.
+	 *
+	 * @param XMLReader $xml The reader, on a child element of the part's root.
+	 * @param array<string, mixed> $strings The weights and positions so far; updated.
+	 *
+	 * @return string|null The namespace of the `<si>`, or null for any other element.
+	 */
+	private static function openSharedString(XMLReader $xml, array &$strings): ?string {
+		if ($xml->localName !== 'si') {
+			return null;
+		}
+
+		$namespace = $xml->namespaceURI;
+		$strings['positions'][$namespace] = (($strings['positions'][$namespace] ?? -1) + 1);
+		$strings['byNamespace'][$namespace][$strings['positions'][$namespace]] = 0;
+
+		return $namespace;
+	}//end openSharedString()
 
 	/**
 	 * Merge weight tables, keeping the heaviest weight at each index.
@@ -313,19 +366,42 @@ class CmdbWorkbookBounds {
 	private static function referencedWeight(XMLReader $xml, array $weights, int $total, int $budget): int {
 		$shared = false;
 		while ($total <= $budget && $xml->read() === true) {
-			if ($xml->nodeType !== XMLReader::ELEMENT) {
-				continue;
-			}
-
-			if ($xml->localName === 'c') {
-				$shared = ($xml->getAttribute('t') === 's');
-			} elseif ($shared === true && $xml->localName === 'v') {
+			$shared = self::inSharedStringCell(xml: $xml, shared: $shared);
+			if ($shared === true && self::isElementNamed(xml: $xml, name: 'v') === true) {
 				$total += self::valueWeight(xml: $xml, weights: $weights);
 			}
 		}
 
 		return $total;
 	}//end referencedWeight()
+
+	/**
+	 * Whether the reader is inside a shared-string cell: a `<c>` element decides it, any other node keeps it.
+	 *
+	 * @param XMLReader $xml The reader, on a node.
+	 * @param bool $shared Whether the reader was inside a shared-string cell before this node.
+	 *
+	 * @return bool
+	 */
+	private static function inSharedStringCell(XMLReader $xml, bool $shared): bool {
+		if (self::isElementNamed(xml: $xml, name: 'c') === true) {
+			return $xml->getAttribute('t') === 's';
+		}
+
+		return $shared;
+	}//end inSharedStringCell()
+
+	/**
+	 * Whether the reader is on an element with this local name.
+	 *
+	 * @param XMLReader $xml The reader, on a node.
+	 * @param string $name The local name.
+	 *
+	 * @return bool
+	 */
+	private static function isElementNamed(XMLReader $xml, string $name): bool {
+		return $xml->nodeType === XMLReader::ELEMENT && $xml->localName === $name;
+	}//end isElementNamed()
 
 	/**
 	 * The weight of the shared string a `<v>` element points at.
@@ -340,22 +416,51 @@ class CmdbWorkbookBounds {
 	 * @return int
 	 */
 	private static function valueWeight(XMLReader $xml, array $weights): int {
-		$depth = $xml->depth;
-		$own = '';
-		$all = '';
-		if ($xml->isEmptyElement === false) {
-			while ($xml->read() === true && $xml->depth > $depth) {
-				if (self::isText(xml: $xml) === true) {
-					$all .= $xml->value;
-					if ($xml->depth === ($depth + 1)) {
-						$own .= $xml->value;
-					}
-				}
-			}
+		$texts = self::valueTexts(xml: $xml);
+
+		return max(($weights[(int)$texts['own']] ?? 0), ($weights[(int)$texts['all']] ?? 0));
+	}//end valueWeight()
+
+	/**
+	 * The element's own text and all the text inside it.
+	 *
+	 * @param XMLReader $xml The reader, on the `<v>` element; it is left on its end.
+	 *
+	 * @return array{depth: int, own: string, all: string}
+	 */
+	private static function valueTexts(XMLReader $xml): array {
+		$texts = ['depth' => $xml->depth, 'own' => '', 'all' => ''];
+		if ($xml->isEmptyElement === true) {
+			return $texts;
 		}
 
-		return max(($weights[(int)$own] ?? 0), ($weights[(int)$all] ?? 0));
-	}//end valueWeight()
+		while ($xml->read() === true && $xml->depth > $texts['depth']) {
+			$texts = self::withText(xml: $xml, texts: $texts);
+		}
+
+		return $texts;
+	}//end valueTexts()
+
+	/**
+	 * Add the text node the reader is on to all the text, and to the own text when it is a direct child.
+	 *
+	 * @param XMLReader $xml The reader, inside the `<v>` element.
+	 * @param array{depth: int, own: string, all: string} $texts The `<v>` element's depth and its texts so far.
+	 *
+	 * @return array{depth: int, own: string, all: string}
+	 */
+	private static function withText(XMLReader $xml, array $texts): array {
+		if (self::isText(xml: $xml) === false) {
+			return $texts;
+		}
+
+		$texts['all'] .= $xml->value;
+		if ($xml->depth === ($texts['depth'] + 1)) {
+			$texts['own'] .= $xml->value;
+		}
+
+		return $texts;
+	}//end withText()
 
 	/**
 	 * Whether the reader is on a text node: text, CDATA or whitespace.
@@ -439,17 +544,43 @@ class CmdbWorkbookBounds {
 			return null;
 		}
 
-		try {
-			$content = (string)$scanner->scan($content);
-		} catch (Throwable) {
+		$scanned = self::scanned(scanner: $scanner, content: $content);
+		if ($scanned === null) {
 			return null;
 		}
 
+		return self::readerOf(content: $scanned);
+	}//end openPart()
+
+	/**
+	 * The part's content after PhpSpreadsheet's XmlScanner, or null when the scanner refuses it.
+	 *
+	 * @param object $scanner PhpSpreadsheet's XmlScanner.
+	 * @param string $content The part's content.
+	 *
+	 * @return string|null
+	 */
+	private static function scanned(object $scanner, string $content): ?string {
+		try {
+			return (string)$scanner->scan($content);
+		} catch (Throwable) {
+			return null;
+		}
+	}//end scanned()
+
+	/**
+	 * An XMLReader on the content, without network access, or null when it is not XML.
+	 *
+	 * @param string $content The scanned content.
+	 *
+	 * @return XMLReader|null
+	 */
+	private static function readerOf(string $content): ?XMLReader {
 		$xml = new XMLReader();
 		if ($xml->XML($content, null, LIBXML_NONET) === false) {
 			return null;
 		}
 
 		return $xml;
-	}//end openPart()
+	}//end readerOf()
 }//end class

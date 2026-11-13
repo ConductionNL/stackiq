@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * The concept-organisations widget filters on one status and writes another.
  * Both must be members of the real organization schema's status enum, and the
  * accept payload must validate against the real status property, or the widget

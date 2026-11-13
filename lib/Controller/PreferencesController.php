@@ -18,6 +18,9 @@
  * @version GIT: <git_id>
  *
  * @link https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -64,29 +67,12 @@ class PreferencesController extends Controller {
 	 * @spec            openspec/specs/dashboard-views-api/spec.md
 	 */
 	public function getPreference(string $key): JSONResponse {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
+		$target = $this->preferenceTarget(key: $key);
+		if ($target instanceof JSONResponse) {
+			return $target;
 		}
 
-		$safeKey = $this->sanitizeKey(key: $key);
-		if ($safeKey === '') {
-			return new JSONResponse(data: ['message' => 'Invalid key'], statusCode: Http::STATUS_BAD_REQUEST);
-		}
-
-		$value = $this->config->getUserValue(
-			userId: $user->getUID(),
-			appName: AppIdentity::APP_ID,
-			key: 'pref_' . $safeKey,
-			default: ''
-		);
-
-		$stored = null;
-		if ($value !== '') {
-			$stored = $value;
-		}
-
-		return new JSONResponse(data: ['value' => $stored]);
+		return new JSONResponse(data: ['value' => $this->storedPreference(target: $target)]);
 	}//end getPreference()
 
 	/**
@@ -102,6 +88,30 @@ class PreferencesController extends Controller {
 	 * @spec            openspec/specs/dashboard-views-api/spec.md
 	 */
 	public function setPreference(string $key, string $value = ''): JSONResponse {
+		$target = $this->preferenceTarget(key: $key);
+		if ($target instanceof JSONResponse) {
+			return $target;
+		}
+
+		if ($value === '') {
+			$this->clearPreference(target: $target);
+			return new JSONResponse(data: ['value' => null]);
+		}
+
+		$this->writePreference(target: $target, value: $value);
+
+		return new JSONResponse(data: ['value' => $value]);
+	}//end setPreference()
+
+	/**
+	 * Resolve where the preference lives, or the refusal: 401 when nobody is
+	 * logged in, 400 when the key sanitises to nothing.
+	 *
+	 * @param string $key The raw preference key.
+	 *
+	 * @return PreferenceTarget|JSONResponse
+	 */
+	private function preferenceTarget(string $key): PreferenceTarget|JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(data: ['message' => 'Not logged in'], statusCode: Http::STATUS_UNAUTHORIZED);
@@ -112,25 +122,62 @@ class PreferencesController extends Controller {
 			return new JSONResponse(data: ['message' => 'Invalid key'], statusCode: Http::STATUS_BAD_REQUEST);
 		}
 
-		if ($value === '') {
-			$this->config->deleteUserValue(
-				userId: $user->getUID(),
-				appName: AppIdentity::APP_ID,
-				key: 'pref_' . $safeKey
-			);
+		return new PreferenceTarget(userId: $user->getUID(), configKey: 'pref_' . $safeKey);
+	}//end preferenceTarget()
 
-			return new JSONResponse(data: ['value' => null]);
-		}
-
-		$this->config->setUserValue(
-			userId: $user->getUID(),
+	/**
+	 * The stored value of a preference, or null when none is stored.
+	 *
+	 * @param PreferenceTarget $target Where the preference lives.
+	 *
+	 * @return string|null
+	 */
+	private function storedPreference(PreferenceTarget $target): ?string {
+		$value = $this->config->getUserValue(
+			userId: $target->userId,
 			appName: AppIdentity::APP_ID,
-			key: 'pref_' . $safeKey,
-			value: $value
+			key: $target->configKey,
+			default: ''
 		);
 
-		return new JSONResponse(data: ['value' => $value]);
-	}//end setPreference()
+		if ($value === '') {
+			return null;
+		}
+
+		return $value;
+	}//end storedPreference()
+
+	/**
+	 * Delete a stored preference.
+	 *
+	 * @param PreferenceTarget $target Where the preference lives.
+	 *
+	 * @return void
+	 */
+	private function clearPreference(PreferenceTarget $target): void {
+		$this->config->deleteUserValue(
+			userId: $target->userId,
+			appName: AppIdentity::APP_ID,
+			key: $target->configKey
+		);
+	}//end clearPreference()
+
+	/**
+	 * Store a preference value.
+	 *
+	 * @param PreferenceTarget $target Where the preference lives.
+	 * @param string           $value  The value to store.
+	 *
+	 * @return void
+	 */
+	private function writePreference(PreferenceTarget $target, string $value): void {
+		$this->config->setUserValue(
+			userId: $target->userId,
+			appName: AppIdentity::APP_ID,
+			key: $target->configKey,
+			value: $value
+		);
+	}//end writePreference()
 
 	/**
 	 * Restrict keys to a safe charset so callers cannot reach arbitrary

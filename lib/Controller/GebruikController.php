@@ -15,6 +15,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Stackiq\Controller;
@@ -95,22 +98,7 @@ class GebruikController extends Controller {
 	 */
 	#[AnonRateLimit(limit: 120, period: 60)]
 	public function getGebruiken(): JSONResponse {
-		// Open-data posture (open-data-publishing): gebruik is inherently
-		// organisation-scoped, so an anonymous caller receives the documented
-		// empty-result envelope — never RBAC-scoped internal data.
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse($this->getEmptyResult());
-		}
-
-		$roles = $this->resolveUserRoles(user: $user);
-		if ($roles['hasAccess'] === false) {
-			return new JSONResponse($this->getEmptyResult());
-		}
-
-		$options = $this->request->getParams();
-
-		$scoped = $this->applyAanbodScopeToOptions(roles: $roles, options: $options);
+		$scoped = $this->scopedGebruikOptions();
 		if ($scoped === null) {
 			return new JSONResponse($this->getEmptyResult());
 		}
@@ -121,6 +109,34 @@ class GebruikController extends Controller {
 			return new JSONResponse(['error' => $e->getMessage()], statusCode: 500);
 		}
 	}//end getGebruiken()
+
+	/**
+	 * The request options scoped to what the calling user may read, or null
+	 * when the caller gets the empty result (anonymous, no role, or a scope
+	 * that resolves to nothing).
+	 *
+	 * @return array<string,mixed>|null
+	 *
+	 * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-every-rbac-bypassing-gebruik-koppeling-contract-read-must-evaluate-its-deny-check-before-issuing-the-bypass-query-req-001
+	 */
+	private function scopedGebruikOptions(): ?array {
+		// Open-data posture (open-data-publishing): gebruik is inherently
+		// organisation-scoped, so an anonymous caller receives the documented
+		// empty-result envelope — never RBAC-scoped internal data.
+		$user = $this->userSession->getUser();
+		if ($user === null) {
+			return null;
+		}
+
+		$roles = $this->resolveUserRoles(user: $user);
+		if ($roles['hasAccess'] === false) {
+			return null;
+		}
+
+		$options = $this->request->getParams();
+
+		return $this->applyAanbodScopeToOptions(roles: $roles, options: $options);
+	}//end scopedGebruikOptions()
 
 	/**
 	 * Resolve the calling user's role flags + organisation UUID.
@@ -137,20 +153,58 @@ class GebruikController extends Controller {
 	 * @spec openspec/specs/vendor-visibility-rbac/spec.md#requirement-gebruik-beheerder-reads-of-gebruik-objects-must-be-scoped-to-the-caller-s-own-organisation-req-003
 	 */
 	private function resolveUserRoles(\OCP\IUser $user): array {
+		$flags   = $this->roleFlags(groupNames: $this->groupNamesOf(user: $user));
+		$orgUuid = $this->organisationOf(user: $user);
+
+		return $flags + [
+			'hasAccess' => self::hasAnyRole(flags: $flags),
+			'orgUuid' => $orgUuid,
+		];
+
+	}//end resolveUserRoles()
+
+	/**
+	 * The ids of the groups the user is a member of.
+	 *
+	 * @param \OCP\IUser $user The authenticated user.
+	 *
+	 * @return array<int,string>
+	 */
+	private function groupNamesOf(\OCP\IUser $user): array {
 		$groups = $this->groupManager->getUserGroups(user: $user);
-		$groupNames = array_map(
+		return array_map(
 			function (IGroup $group) {
 				return $group->getGID();
 			},
 			$groups
 		);
 
-		$orgUuid = (string)$this->config->getUserValue(
+	}//end groupNamesOf()
+
+	/**
+	 * The organisation UUID stored on the user's account ('' when unset).
+	 *
+	 * @param \OCP\IUser $user The authenticated user.
+	 *
+	 * @return string
+	 */
+	private function organisationOf(\OCP\IUser $user): string {
+		return (string)$this->config->getUserValue(
 			userId: $user->getUID(),
 			appName: 'core',
 			key: 'organisation'
 		);
 
+	}//end organisationOf()
+
+	/**
+	 * The role flags the group ids grant.
+	 *
+	 * @param array<int,string> $groupNames The user's group ids.
+	 *
+	 * @return array{isAdmin:bool,isBeheerder:bool,isAanbod:bool,isAmbtenaar:bool}
+	 */
+	private function roleFlags(array $groupNames): array {
 		$isAdmin = in_array(needle: 'admin', haystack: $groupNames);
 		$isMaintainer = in_array(needle: 'gebruik-beheerder', haystack: $groupNames);
 		$isAanbod = in_array(needle: 'aanbod-beheerder', haystack: $groupNames);
@@ -167,16 +221,24 @@ class GebruikController extends Controller {
 			'isBeheerder' => $isMaintainer,
 			'isAanbod' => $isAanbod,
 			'isAmbtenaar' => $isAmbtenaar,
-			'hasAccess' => (
-				$isAdmin === true
-				|| $isMaintainer === true
-				|| $isAanbod === true
-				|| $isAmbtenaar === true
-			),
-			'orgUuid' => $orgUuid,
 		];
 
-	}//end resolveUserRoles()
+	}//end roleFlags()
+
+	/**
+	 * Whether any of the role flags grants access to gebruik reads.
+	 *
+	 * @param array{isAdmin:bool,isBeheerder:bool,isAanbod:bool,isAmbtenaar:bool} $flags The role flags.
+	 *
+	 * @return bool
+	 */
+	private static function hasAnyRole(array $flags): bool {
+		return $flags['isAdmin'] === true
+			|| $flags['isBeheerder'] === true
+			|| $flags['isAanbod'] === true
+			|| $flags['isAmbtenaar'] === true;
+
+	}//end hasAnyRole()
 
 	/**
 	 * Apply organisation-scoping to query options, per the vendor-visibility-
@@ -363,6 +425,17 @@ class GebruikController extends Controller {
 			);
 		}
 
+		return $this->participantGebruiken(orgUuid: $orgUuid);
+	}//end getGebruikenForDeelnemer()
+
+	/**
+	 * Read the gebruiken the caller's organisation participates in.
+	 *
+	 * @param string $orgUuid The caller's organisation UUID (never empty).
+	 *
+	 * @return JSONResponse
+	 */
+	private function participantGebruiken(string $orgUuid): JSONResponse {
 		// The scope is forced AFTER getParams(), so a caller cannot supply or
 		// override `deelnemers` and read another organisation's usage.
 		//
@@ -383,7 +456,7 @@ class GebruikController extends Controller {
 		} catch (Exception $e) {
 			return new JSONResponse(['error' => $e->getMessage()], statusCode: 500);
 		}
-	}//end getGebruikenForDeelnemer()
+	}//end participantGebruiken()
 
 	/**
 	 * Returns an empty result set with the standard paginated response structure.
@@ -399,14 +472,23 @@ class GebruikController extends Controller {
 			'limit' => 1000,
 			'offset' => 0,
 			'facets' => [],
-			'@self' => [
-				'source' => 'database',
-				'query' => [],
-				'rbac' => false,
-				'multi' => false,
-				'published' => false,
-				'deleted' => false,
-			],
+			'@self' => $this->emptyResultSelf(),
 		];
 	}//end getEmptyResult()
+
+	/**
+	 * The @self block of the empty result set.
+	 *
+	 * @return array
+	 */
+	private function emptyResultSelf(): array {
+		return [
+			'source' => 'database',
+			'query' => [],
+			'rbac' => false,
+			'multi' => false,
+			'published' => false,
+			'deleted' => false,
+		];
+	}//end emptyResultSelf()
 }//end class

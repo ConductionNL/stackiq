@@ -113,17 +113,28 @@ class MergeController extends Controller {
 		$result = $this->mergeService->execute(sourceUuid: $uuid, targetUuid: $targetUuid, actorUid: $actorUid);
 
 		if ($result['ok'] === false) {
-			return new JSONResponse(
-				data: [
-					'message' => 'Merge request rejected.',
-					'blockers' => $result['blockers'],
-				],
-				statusCode: Http::STATUS_CONFLICT
-			);
+			return self::rejected(result: $result);
 		}
 
 		return new JSONResponse(data: $result);
 	}//end execute()
+
+	/**
+	 * The 409 answered when the merge service rejects the request.
+	 *
+	 * @param array<string,mixed> $result The service result, with its `blockers`.
+	 *
+	 * @return JSONResponse
+	 */
+	private static function rejected(array $result): JSONResponse {
+		return new JSONResponse(
+			data: [
+				'message' => 'Merge request rejected.',
+				'blockers' => $result['blockers'],
+			],
+			statusCode: Http::STATUS_CONFLICT
+		);
+	}//end rejected()
 
 	/**
 	 * Admin-only authorization guard (IDOR guard). Returns a JSONResponse to

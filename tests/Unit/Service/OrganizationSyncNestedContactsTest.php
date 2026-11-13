@@ -65,6 +65,45 @@ final class OrganizationSyncNestedContactsTest extends TestCase {
 		}
 	}//end testAnInlineContactForANewOrAMemberAccountIsProcessed()
 
+	public function testOnlyStringNamesOfExistingAccountsOutsideTheOrganisationCount(): void {
+		$users = $this->createMock(IUserManager::class);
+		$asked = [];
+		$users->method('get')->willReturnCallback(
+			function (string $name) use (&$asked): ?IUser {
+				$asked[] = $name;
+				if (in_array($name, ['outsider', 'member'], true) === false) {
+					return null;
+				}
+
+				$user = $this->createMock(IUser::class);
+				$user->method('getUID')->willReturn($name);
+				return $user;
+			}
+		);
+		$container = $this->createMock(ContainerInterface::class);
+		$container->method('get')->with('OCP\IUserManager')->willReturn($users);
+
+		$reflection = new \ReflectionClass(OrganizationSyncService::class);
+		$service    = $reflection->newInstanceWithoutConstructor();
+		$reflection->getProperty('container')->setValue($service, $container);
+		$check = new \ReflectionMethod(OrganizationSyncService::class, 'namesAccountOutside');
+
+		$organisation = new Organisation();
+		$organisation->setUsers(['member']);
+		$cases = [
+			[['email' => 42, 'e-mailadres' => ['outsider'], 'username' => '   '], $organisation, false, []],
+			[['username' => ' member ', 'email' => 'nobody'], $organisation, false, ['nobody', 'member']],
+			[['email' => 'member', 'e-mailadres' => 'outsider', 'username' => 'outsider'], $organisation, true, ['member', 'outsider']],
+			[['username' => 'member'], new \stdClass(), true, ['member']],
+			[[], new \stdClass(), false, []],
+		];
+		foreach ($cases as [$contact, $entity, $expected, $lookups]) {
+			$asked = [];
+			self::assertSame($expected, $check->invoke($service, $contact, $entity), json_encode($contact));
+			self::assertSame($lookups, $asked, json_encode($contact));
+		}
+	}//end testOnlyStringNamesOfExistingAccountsOutsideTheOrganisationCount()
+
 	/**
 	 * Run the nested contact processing for an organisation whose only member is `member`.
 	 *

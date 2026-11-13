@@ -5,14 +5,20 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -51,14 +57,20 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -97,14 +109,20 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -143,7 +161,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -187,7 +208,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -231,7 +255,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -277,7 +304,8 @@
 				{
 					"method": "PUT",
 					"headers": {
-						"Content-Type": "application/json"
+						"Content-Type": "application/json",
+						"requesttoken": null
 					},
 					"body": "{\"tags\":[\"x\",\"y\"]}"
 				}
@@ -321,14 +349,20 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -363,14 +397,20 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -405,14 +445,20 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -447,7 +493,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -491,7 +540,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -535,7 +587,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -581,7 +636,8 @@
 				{
 					"method": "PUT",
 					"headers": {
-						"Content-Type": "application/json"
+						"Content-Type": "application/json",
+						"requesttoken": null
 					},
 					"body": "{\"tags\":[\"x\",\"y\"]}"
 				}
@@ -625,7 +681,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -660,7 +719,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -695,7 +757,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -730,7 +795,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -767,7 +835,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -804,7 +875,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -843,7 +917,8 @@
 				{
 					"method": "PUT",
 					"headers": {
-						"Content-Type": "application/json"
+						"Content-Type": "application/json",
+						"requesttoken": null
 					},
 					"body": "{\"tags\":[\"x\",\"y\"]}"
 				}
@@ -882,7 +957,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -917,7 +995,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -952,7 +1033,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/11",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -987,7 +1071,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -1024,7 +1111,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -1061,7 +1151,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/4/7/obj-1/files/12",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -1100,7 +1193,8 @@
 				{
 					"method": "PUT",
 					"headers": {
-						"Content-Type": "application/json"
+						"Content-Type": "application/json",
+						"requesttoken": null
 					},
 					"body": "{\"tags\":[\"x\",\"y\"]}"
 				}
@@ -1282,14 +1376,20 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -1328,14 +1428,20 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -1374,14 +1480,20 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -1420,7 +1532,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -1464,7 +1579,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -1508,7 +1626,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -1554,7 +1675,8 @@
 				{
 					"method": "PUT",
 					"headers": {
-						"Content-Type": "application/json"
+						"Content-Type": "application/json",
+						"requesttoken": null
 					},
 					"body": "{\"tags\":[\"x\",\"y\"]}"
 				}
@@ -1598,14 +1720,20 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -1640,14 +1768,20 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -1682,14 +1816,20 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -1724,7 +1864,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -1768,7 +1911,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -1812,7 +1958,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -1858,7 +2007,8 @@
 				{
 					"method": "PUT",
 					"headers": {
-						"Content-Type": "application/json"
+						"Content-Type": "application/json",
+						"requesttoken": null
 					},
 					"body": "{\"tags\":[\"x\",\"y\"]}"
 				}
@@ -1902,7 +2052,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -1937,7 +2090,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -1972,7 +2128,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -2007,7 +2166,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -2044,7 +2206,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -2081,7 +2246,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -2120,7 +2288,8 @@
 				{
 					"method": "PUT",
 					"headers": {
-						"Content-Type": "application/json"
+						"Content-Type": "application/json",
+						"requesttoken": null
 					},
 					"body": "{\"tags\":[\"x\",\"y\"]}"
 				}
@@ -2159,7 +2328,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -2194,7 +2366,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -2229,7 +2404,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/11",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -2264,7 +2442,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/publish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -2301,7 +2482,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12/depublish",
 				{
-					"method": "POST"
+					"method": "POST",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -2338,7 +2522,10 @@
 				"fetch",
 				"/index.php/apps/openregister/api/objects/reg-uuid/9/obj-2/files/12",
 				{
-					"method": "DELETE"
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": null
+					}
 				}
 			],
 			[
@@ -2377,7 +2564,8 @@
 				{
 					"method": "PUT",
 					"headers": {
-						"Content-Type": "application/json"
+						"Content-Type": "application/json",
+						"requesttoken": null
 					},
 					"body": "{\"tags\":[\"x\",\"y\"]}"
 				}

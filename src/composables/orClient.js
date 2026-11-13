@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * orClient — centralised OpenRegister object-API client for Stackiq.
  *
  * Provides a single place where the OpenRegister object URL is built and the

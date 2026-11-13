@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * seatLabels: the words the seats panel and the Seats section show for a
  * licence metric and a seat state, in the reader's language.
  *

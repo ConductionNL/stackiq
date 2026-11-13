@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * complianceMatrix — pure data mapper for the module ✕ standard compliance matrix.
  *
  * "Does application X support standard Y?" is the procurement question a

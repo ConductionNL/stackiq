@@ -1,4 +1,8 @@
 <!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
+<!--
  - @copyright Copyright (c) 2023 Ruben Linde <info@conduction.nl>
  - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
@@ -648,6 +652,7 @@ async function postJson(url, payload) {
 	const response = await fetch(url, {
 		method: 'POST',
 		headers: {
+			requesttoken: OC.requestToken,
 			'Content-Type': 'application/json',
 			'X-Requested-With': 'XMLHttpRequest',
 		},

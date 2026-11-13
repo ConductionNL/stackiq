@@ -170,9 +170,18 @@ import {
 import PackageVariantClosed from 'vue-material-design-icons/PackageVariantClosed.vue'
 import TrayArrowUp from 'vue-material-design-icons/TrayArrowUp.vue'
 import { objectStore } from '../../store/store.js'
-import { resolveUuid } from '../../utils/lifecyclePhase.js'
+import {
+	activeObjectOf,
+	collectionResults,
+	findByUuid,
+} from '../../utils/activeRecord.js'
+import { recordUuid, resolveUuid } from '../../utils/lifecyclePhase.js'
 import { fetchObjectTypeCollection } from '../../utils/objectTypeCollection.js'
 import { matchComponents } from '../../utils/sbomVulnerabilityMatch.js'
+import {
+	distinctLicenseCount,
+	moduleVersionComponents,
+} from './sbomComponents.js'
 
 /**
  * @class SbomComponentsPanel
@@ -270,27 +279,13 @@ export default {
 		 * @spec openspec/specs/sbom-import/spec.md#requirement-moduleversie-records-sbom-import-provenance
 		 */
 		moduleVersion() {
-			const active =
-				typeof objectStore.getActiveObject === 'function'
-					? objectStore.getActiveObject('moduleVersion')
-					: null
-			if (
-				active
-				&& resolveUuid(
-					active.uuid ?? active.id ?? active['@self']?.id ?? active,
-				) === String(this.objectId)
-			) {
+			const active = activeObjectOf(objectStore, 'moduleVersion')
+			const wanted = String(this.objectId)
+			if (active && recordUuid(active) === wanted) {
 				return active
 			}
-			return (
-				(objectStore.getCollection('moduleVersion')?.results || []).find(
-					(v) =>
-						resolveUuid(v.uuid ?? v.id ?? v['@self']?.id ?? v)
-						=== String(this.objectId),
-				)
-				|| active
-				|| null
-			)
+			const results = collectionResults(objectStore, 'moduleVersion')
+			return findByUuid(results, wanted) || active || null
 		},
 
 		/**
@@ -325,18 +320,7 @@ export default {
 		 */
 		components() {
 			const all = objectStore.getCollection('sbomComponent')?.results || []
-			return all
-				.filter(
-					(c) =>
-						resolveUuid((c.object || c).moduleVersion)
-						=== String(this.objectId),
-				)
-				.slice()
-				.sort((a, b) =>
-					String((a.object || a).name || '').localeCompare(
-						String((b.object || b).name || ''),
-					),
-				)
+			return moduleVersionComponents(all, String(this.objectId))
 		},
 
 		/**
@@ -410,18 +394,7 @@ export default {
 		 * @spec openspec/specs/sbom-import/spec.md#requirement-the-module-version-detail-page-shows-imported-components-with-summary-counts
 		 */
 		distinctLicenseCount() {
-			const set = new Set()
-			for (const component of this.components) {
-				const licenses = (component.object || component).licenses
-				if (Array.isArray(licenses)) {
-					for (const license of licenses) {
-						if (typeof license === 'string' && license !== '') {
-							set.add(license)
-						}
-					}
-				}
-			}
-			return set.size
+			return distinctLicenseCount(this.components)
 		},
 
 		/**
@@ -574,7 +547,7 @@ export default {
 				// the correct boundary (mirrors ArchiMate import's upload path).
 				const response = await fetch(url, {
 					method: 'POST',
-					headers: { 'X-Requested-With': 'XMLHttpRequest' },
+					headers: { requesttoken: OC.requestToken, 'X-Requested-With': 'XMLHttpRequest' },
 					body: formData,
 				})
 				const result = await response.json()

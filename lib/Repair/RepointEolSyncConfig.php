@@ -3,6 +3,9 @@
  * Re-points a stored EOL sync configuration at the register and schema slugs
  * that still exist.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The EOL feature reads endoflife.date lifecycle data out of a register the
  * sibling Integriq app provisions. It addresses that register and its two
  * schemas by SLUG, held in the `eol_sync_config` app-config blob, and all three
@@ -38,9 +41,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://www.conduction.nl
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
