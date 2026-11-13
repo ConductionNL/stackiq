@@ -34,6 +34,7 @@ use OCA\Stackiq\Service\ConnectionReportService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\Settings\CronjobSettings;
@@ -109,6 +110,7 @@ class SettingsController extends Controller {
 	 * @param ArchiMateService $archiMateService The ArchiMate import/export service.
 	 * @param RoleGroupSettings $roleGroupSettings The role group lists.
 	 * @param ProgressTracker $progressTracker The progress tracking service.
+	 * @param ArchiMateImportControl $archiMateImportControl Clears, stops and cancels the ArchiMate import status.
 	 * @param EolSyncService $eolSyncService The EOL feed sync orchestration service.
 	 * @param EmailSettings $emailSettings The stored e-mail settings and templates.
 	 * @param LoggerInterface $logger The logger instance.
@@ -136,6 +138,7 @@ class SettingsController extends Controller {
 		private readonly ArchiMateService $archiMateService,
 		private readonly RoleGroupSettings $roleGroupSettings,
 		private readonly ProgressTracker $progressTracker,
+		private readonly ArchiMateImportControl $archiMateImportControl,
 		private readonly EolSyncService $eolSyncService,
 		private readonly EmailSettings $emailSettings,
 		private readonly LoggerInterface $logger,
@@ -2546,7 +2549,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$result = $this->settingsService->clearArchiMateImportStatus();
+			$result = $this->archiMateImportControl->clearArchiMateImportStatus();
 
 			return new JSONResponse(
 				[
@@ -2580,7 +2583,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$result = $this->settingsService->killArchiMateImport();
+			$result = $this->archiMateImportControl->killArchiMateImport();
 
 			return new JSONResponse(
 				[
@@ -2621,7 +2624,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$result = $this->settingsService->cancelArchiMateImport(operationId: $operationId);
+			$result = $this->archiMateImportControl->cancelArchiMateImport(operationId: $operationId);
 			$message = 'ArchiMate import cancellation failed';
 			if ($result['cancelled'] === true) {
 				$message = 'ArchiMate import cancellation succeeded';
@@ -2650,7 +2653,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$this->settingsService->clearArchiMateExportStatus();
+			$this->archiMateImportControl->clearArchiMateExportStatus();
 
 			return new JSONResponse(
 				[

@@ -25,6 +25,8 @@ use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\Settings\CronjobSettings;
@@ -125,6 +127,12 @@ final class SettingsControllerOrgExportPermissionTest extends TestCase {
 		);
 
 		$settingsService = new SettingsService(
+			catalogue: new CatalogueLocator(
+				config: $appConfig,
+				appManager: $this->createMock(IAppManager::class),
+				container: $this->createMock(ContainerInterface::class),
+				logger: $this->createMock(LoggerInterface::class)
+			),
 			config: $appConfig,
 			request: $this->createMock(IRequest::class),
 			roleGroupSettings: $roleGroups,
@@ -191,6 +199,7 @@ final class SettingsControllerOrgExportPermissionTest extends TestCase {
 			$archiMateService,
 			$roleGroups,
 			$this->createMock(ProgressTracker::class),
+			$this->createMock(ArchiMateImportControl::class),
 			$this->createMock(EolSyncService::class),
 			$this->createMock(EmailSettings::class),
 			$this->createMock(LoggerInterface::class)

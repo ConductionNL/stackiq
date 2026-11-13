@@ -77,6 +77,7 @@ use OCA\Stackiq\Service\ReviewService;
 use OCA\Stackiq\Service\SbomImportService;
 use OCA\Stackiq\Service\SbomParserService;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\Settings\EolSyncSettings;
@@ -164,7 +165,7 @@ class Application extends App implements IBootstrap {
 		);
 		$context->registerServiceAlias(
 			ObjectTypeLocatorInterface::class,
-			SettingsService::class
+			CatalogueLocator::class
 		);
 		$context->registerServiceAlias(
 			RegisterConfigReaderInterface::class,
@@ -373,6 +374,7 @@ class Application extends App implements IBootstrap {
 			SettingsService::class,
 			function ($container) {
 				return new SettingsService(
+					catalogue: $container->get(CatalogueLocator::class),
 					config: $container->get(IAppConfig::class),
 					request: $container->get('OCP\IRequest'),
 					roleGroupSettings: $container->get(RoleGroupSettings::class),
@@ -671,7 +673,7 @@ class Application extends App implements IBootstrap {
 			function ($container) {
 				return new FacetService(
 					container: $container,
-					settingsService: $container->get(SettingsService::class),
+					catalogue: $container->get(CatalogueLocator::class),
 					archiMateService: $container->get(ArchiMateService::class),
 					queryBuilder: $container->get(ViewQueryBuilder::class),
 					userSession: $container->get('OCP\IUserSession'),
