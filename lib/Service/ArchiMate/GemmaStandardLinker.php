@@ -152,21 +152,49 @@ class GemmaStandardLinker {
 			return;
 		}
 
-		$component = $this->pair(ends: $ends, kinds: [$state['components'], $state['standards']]);
-		$role      = $relationship['verbindingsrol'] ?? null;
-		if ($component !== null && $role !== null) {
-			$state['roles'][$component[0]] ??= ['recommendedStandards' => [], 'mandatoryStandards' => []];
-			$property = self::ROLE_PROPERTY[strtolower((string) $this->reader->roleText(role: $role))] ?? null;
-			if ($property !== null) {
-				$state['roles'][$component[0]][$property][] = $component[1];
-			}
+		$link = new GemmaRelationshipEnds();
+		$link->relationship = $relationship;
+		$link->ends = $ends;
+		$this->collectRole(link: $link, state: $state);
+		$this->collectVersion(link: $link, state: $state);
+	}//end collect()
+
+	/**
+	 * Record the standard a reference component links in a role.
+	 *
+	 * @param GemmaRelationshipEnds               $link  The relationship and its ends.
+	 * @param array<string, array<string, mixed>> $state The state to fill in.
+	 *
+	 * @return void
+	 */
+	private function collectRole(GemmaRelationshipEnds $link, array &$state): void {
+		$component = $this->pair(ends: $link->ends, kinds: [$state['components'], $state['standards']]);
+		$role      = $link->relationship['verbindingsrol'] ?? null;
+		if ($component === null || $role === null) {
+			return;
 		}
 
-		$version = $this->pair(ends: $ends, kinds: [$state['versions'], $state['standards']]);
-		if ($version !== null && $this->reader->relationType(relationship: $relationship) === 'Specialization') {
+		$state['roles'][$component[0]] ??= ['recommendedStandards' => [], 'mandatoryStandards' => []];
+		$property = self::ROLE_PROPERTY[strtolower((string) $this->reader->roleText(role: $role))] ?? null;
+		if ($property !== null) {
+			$state['roles'][$component[0]][$property][] = $component[1];
+		}
+	}//end collectRole()
+
+	/**
+	 * Record the standard a standard version specialises.
+	 *
+	 * @param GemmaRelationshipEnds               $link  The relationship and its ends.
+	 * @param array<string, array<string, mixed>> $state The state to fill in.
+	 *
+	 * @return void
+	 */
+	private function collectVersion(GemmaRelationshipEnds $link, array &$state): void {
+		$version = $this->pair(ends: $link->ends, kinds: [$state['versions'], $state['standards']]);
+		if ($version !== null && $this->reader->relationType(relationship: $link->relationship) === 'Specialization') {
 			$state['versionOf'][$version[0]] = $version[1];
 		}
-	}//end collect()
+	}//end collectVersion()
 
 	/**
 	 * Order a relationship's two ends as [first kind, second kind], in either direction.

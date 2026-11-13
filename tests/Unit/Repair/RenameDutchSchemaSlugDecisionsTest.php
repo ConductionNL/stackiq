@@ -31,6 +31,7 @@ use PHPUnit\Framework\TestCase;
  * phpcs:disable CustomSniffs.Functions.NamedParameters
  *
  * @covers \OCA\Stackiq\Repair\RenameDutchSchemaSlugDecisions
+ * @uses \OCA\Stackiq\Repair\SlugRenamePlanner
  */
 final class RenameDutchSchemaSlugDecisionsTest extends TestCase {
 

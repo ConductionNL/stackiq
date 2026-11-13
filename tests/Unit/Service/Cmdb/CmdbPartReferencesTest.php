@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for CmdbPartReferences: an oversized part the import reads is refused, naming the sheet when a read worksheet points at it, and an oversized part only unread worksheets point at is handed back to be blanked.
+ * Tests for the CMDB oversized-part check.
  *
  * @category  Test
  * @package   OCA\Stackiq\Tests\Unit\Service\Cmdb
@@ -12,6 +12,8 @@
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
+ *
+ * phpcs:disable CustomSniffs.Functions.NamedParameters
  */
 
 declare(strict_types=1);
@@ -24,49 +26,45 @@ use PHPUnit\Framework\TestCase;
 use ZipArchive;
 
 /**
- * Tests for CmdbPartReferences.
+ * Which oversized workbook parts refuse the import and which are left unread.
  *
  * @covers \OCA\Stackiq\Service\Cmdb\CmdbPartReferences
  * @uses   \OCA\Stackiq\Service\Cmdb\CmdbWorkbookBounds
  * @uses   \OCA\Stackiq\Exception\CmdbImportException
  */
-final class CmdbPartReferencesTest extends TestCase {
-
+class CmdbPartReferencesTest extends TestCase {
 	/**
-	 * The workbook under test.
+	 * The workbook written for the test.
 	 *
 	 * @var string
 	 */
-	private string $path;
+	private string $path = '';
 
 	/**
-	 * Build a workbook with two worksheets, Applicaties and Archief.
+	 * Write a workbook with two sheets, Apps and Notes, and a media part.
 	 *
 	 * @return void
 	 */
 	protected function setUp(): void {
-		parent::setUp();
-		$this->path = tempnam(sys_get_temp_dir(), 'cmdb').'.xlsx';
+		$this->path = (string)tempnam(sys_get_temp_dir(), 'cmdb');
 		$zip        = new ZipArchive();
-		$zip->open($this->path, ZipArchive::CREATE);
+		$zip->open($this->path, ZipArchive::OVERWRITE);
 		$zip->addFromString(
 			'xl/workbook.xml',
-			'<workbook xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><sheets>'
-			.'<sheet name="Applicaties" sheetId="1" r:id="rId1"/><sheet name="Archief" sheetId="2" r:id="rId2"/>'
-			.'</sheets></workbook>'
+			'<workbook xmlns:r="urn:r"><sheets><sheet name="Apps" sheetId="1" r:id="rId1"/>'
+			.'<sheet name="Notes" sheetId="2" r:id="rId2"/><sheet sheetId="3" r:id="rId3"/></sheets></workbook>'
 		);
 		$zip->addFromString(
 			'xl/_rels/workbook.xml.rels',
 			'<Relationships>'
-			.'<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
-			.'<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>'
-			.'<Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/sharedStrings" Target="sharedStrings.xml"/>'
+			.'<Relationship Id="rId1" Type="http://x/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>'
+			.'<Relationship Id="rId2" Type="http://x/officeDocument/2006/relationships/Worksheet" Target="/xl/worksheets/sheet%202.xml"/>'
+			.'<Relationship Id="rId9" Type="http://x/officeDocument/2006/relationships/styles" Target="styles.xml"/>'
 			.'</Relationships>'
 		);
 		$zip->addFromString('xl/worksheets/sheet1.xml', '<worksheet/>');
-		$zip->addFromString('xl/worksheets/sheet2.xml', '<worksheet/>');
 		$zip->close();
-	}//end setUp()
+	}
 
 	/**
 	 * Remove the workbook.
@@ -75,116 +73,115 @@ final class CmdbPartReferencesTest extends TestCase {
 	 */
 	protected function tearDown(): void {
 		@unlink($this->path);
-		parent::tearDown();
-	}//end tearDown()
+	}
 
 	/**
-	 * A pass-through scanner.
+	 * A scanner that passes content through.
 	 *
 	 * @return object The scanner.
 	 */
 	private function scanner(): object {
 		return new class {
+			/**
+			 * @param string $content Part content.
+			 *
+			 * @return string The same content.
+			 */
 			public function scan(string $content): string {
 				return $content;
 			}
 		};
-	}//end scanner()
+	}
 
 	/**
-	 * The size assertion, returning the refusal when there is one.
+	 * Run the check and return the refusal it threw.
 	 *
-	 * @param array<string,int> $oversized    The oversized parts.
-	 * @param array<int,string> $sourceSheets The sheets the import reads.
+	 * @param array<string, int> $oversized    Part to unpacked size.
+	 * @param array<int, string> $sourceSheets Sheets the import reads.
 	 *
-	 * @return array<int,string>|CmdbImportException The parts to blank, or the refusal.
+	 * @return CmdbImportException The refusal.
 	 */
-	private function assess(array $oversized, array $sourceSheets = ['Applicaties']): array|CmdbImportException {
+	private function refusal(array $oversized, array $sourceSheets): CmdbImportException {
 		try {
-			return (new CmdbPartReferences())->assertPartSizes(
-				path: $this->path,
-				oversized: $oversized,
-				sourceSheets: $sourceSheets,
-				limit: 1000,
-				scanner: $this->scanner()
-			);
+			(new CmdbPartReferences())->assertPartSizes($this->path, $oversized, $sourceSheets, 100, $this->scanner());
 		} catch (CmdbImportException $e) {
 			return $e;
 		}
-	}//end assess()
+
+		self::fail('Expected the oversized part to refuse the import');
+	}
 
 	/**
-	 * Without oversized parts nothing is read and nothing is blanked.
+	 * Nothing oversized means nothing to check, not even the file.
 	 *
 	 * @return void
 	 */
-	public function testNoOversizedPartsReadsNothing(): void {
-		$scanner = new class {
-			public function scan(string $content): string {
-				throw new \LogicException('must not scan');
-			}
-		};
+	public function testNoOversizedPartReturnsNothing(): void {
+		self::assertSame([], (new CmdbPartReferences())->assertPartSizes('/does/not/exist.xlsx', [], ['Apps'], 100, $this->scanner()));
+	}
 
-		self::assertSame(
-			[],
-			(new CmdbPartReferences())->assertPartSizes(
-				path: $this->path,
-				oversized: [],
-				sourceSheets: [],
-				limit: 1,
-				scanner: $scanner
-			)
+	/**
+	 * An oversized sheet the import does not read is returned to be left blank.
+	 *
+	 * @return void
+	 */
+	public function testAnOversizedUnreadSheetIsReturned(): void {
+		$blank = (new CmdbPartReferences())->assertPartSizes(
+			$this->path,
+			['xl/worksheets/sheet 2.xml' => 500],
+			['Apps'],
+			100,
+			$this->scanner()
 		);
-	}//end testNoOversizedPartsReadsNothing()
+
+		self::assertSame(['xl/worksheets/sheet 2.xml'], $blank);
+	}
 
 	/**
-	 * A part only an unread worksheet points at is handed back to be blanked.
+	 * An oversized sheet the import reads refuses, naming the sheet, matched case- and space-insensitively.
 	 *
 	 * @return void
 	 */
-	public function testAPartOfAnUnreadSheetIsBlanked(): void {
-		self::assertSame(['xl/worksheets/sheet2.xml'], $this->assess(['xl/worksheets/sheet2.xml' => 5000]));
-	}//end testAPartOfAnUnreadSheetIsBlanked()
+	public function testAnOversizedReadSheetRefusesNamingIt(): void {
+		$refusal = $this->refusal(['xl/worksheets/SHEET1.xml' => 500], ['  apps ']);
 
-	/**
-	 * A part a read worksheet points at is refused, naming the sheet; the source sheet matches in any case.
-	 *
-	 * @return void
-	 */
-	public function testAPartOfAReadSheetIsRefusedNamingIt(): void {
-		$refusal = $this->assess(['xl/worksheets/sheet1.xml' => 5000], [' applicaties ']);
-
-		self::assertInstanceOf(CmdbImportException::class, $refusal);
 		self::assertSame(CmdbImportException::WORKBOOK_TOO_LARGE, $refusal->getErrorCode());
 		self::assertSame(
-			['maxPartBytes' => 1000, 'part' => 'xl/worksheets/sheet1.xml', 'size' => 5000, 'sheet' => 'Applicaties'],
+			['maxPartBytes' => 100, 'part' => 'xl/worksheets/SHEET1.xml', 'size' => 500, 'sheet' => 'Apps'],
 			$refusal->getDetails()
 		);
-	}//end testAPartOfAReadSheetIsRefusedNamingIt()
+		self::assertSame('A part of the workbook the import reads unpacks to more bytes than the profile allows', $refusal->getMessage());
+	}
 
 	/**
-	 * Relationship parts and parts no worksheet owns are always refused, without a sheet.
+	 * A url-encoded target matches its decoded part, and reading that sheet refuses.
 	 *
 	 * @return void
 	 */
-	public function testPartsOutsideTheWorksheetsAreRefused(): void {
-		foreach (['xl/_rels/workbook.xml.rels', '[Content_Types].xml', 'xl/sharedStrings.xml'] as $part) {
-			$refusal = $this->assess([$part => 2000]);
+	public function testAnEncodedTargetMatchesTheDecodedPart(): void {
+		self::assertSame('Notes', $this->refusal(['xl/worksheets/sheet 2.xml' => 500], ['Notes'])->getDetails()['sheet']);
+	}
 
-			self::assertInstanceOf(CmdbImportException::class, $refusal, $part);
-			self::assertSame(['maxPartBytes' => 1000, 'part' => $part, 'size' => 2000], $refusal->getDetails());
+	/**
+	 * Relationship and content-type parts, parts no sheet points at, and non-sheet targets always refuse without a sheet.
+	 *
+	 * @return void
+	 */
+	public function testPartsOutsideTheSheetsAlwaysRefuse(): void {
+		foreach (['xl/_rels/workbook.xml.rels', '[Content_Types].xml', 'xl/media/image1.png', 'xl/styles.xml'] as $part) {
+			$details = $this->refusal([$part => 500], [])->getDetails();
+			self::assertSame(['maxPartBytes' => 100, 'part' => $part, 'size' => 500], $details, $part);
 		}
-	}//end testPartsOutsideTheWorksheetsAreRefused()
+	}
 
 	/**
-	 * The unread parts are collected until the first part that must be refused.
+	 * The first oversized read part refuses even when an unread one comes before it.
 	 *
 	 * @return void
 	 */
-	public function testTheFirstReadPartStopsTheCheck(): void {
-		$refusal = $this->assess(['xl/worksheets/sheet2.xml' => 5000, 'xl/worksheets/sheet1.xml' => 5000]);
+	public function testAnUnreadPartDoesNotHideALaterReadOne(): void {
+		$refusal = $this->refusal(['xl/worksheets/sheet 2.xml' => 300, 'xl/worksheets/sheet1.xml' => 400], ['Apps']);
 
-		self::assertInstanceOf(CmdbImportException::class, $refusal);
-		self::assertSame('Applicaties', $refusal->getDetails()['sheet']);
-	}//end testTheFirstReadPartStopsTheCheck()
-}//end class
+		self::assertSame('xl/worksheets/sheet1.xml', $refusal->getDetails()['part']);
+	}
+}

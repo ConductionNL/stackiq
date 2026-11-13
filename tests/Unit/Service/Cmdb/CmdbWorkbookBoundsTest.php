@@ -1,7 +1,7 @@
 <?php
 
 /**
- * Unit tests for CmdbWorkbookBounds: every XML part of a workbook is handed over in order, the shared-string count stops above its limit, and the shared-string text the cells reference is held to the per-sheet budget.
+ * Tests for the CMDB workbook size bounds.
  *
  * @category  Test
  * @package   OCA\Stackiq\Tests\Unit\Service\Cmdb
@@ -12,35 +12,37 @@
  *
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
+ *
+ * phpcs:disable CustomSniffs.Functions.NamedParameters
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service\Cmdb;
 
+
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbWorkbookBounds;
 use PHPUnit\Framework\TestCase;
-use XMLReader;
+use RuntimeException;
 use ZipArchive;
 
 /**
- * Tests for CmdbWorkbookBounds.
+ * The shared-string count and referenced-text limits, measured by streaming the workbook parts.
  *
  * @covers \OCA\Stackiq\Service\Cmdb\CmdbWorkbookBounds
  * @uses   \OCA\Stackiq\Exception\CmdbImportException
  */
-final class CmdbWorkbookBoundsTest extends TestCase {
-
+class CmdbWorkbookBoundsTest extends TestCase {
 	/**
-	 * Temporary workbooks to remove.
+	 * Workbook files written by a test, removed afterwards.
 	 *
-	 * @var array<int,string>
+	 * @var array<int, string>
 	 */
 	private array $files = [];
 
 	/**
-	 * Remove the temporary workbooks.
+	 * Remove the workbooks the test wrote.
 	 *
 	 * @return void
 	 */
@@ -48,169 +50,200 @@ final class CmdbWorkbookBoundsTest extends TestCase {
 		foreach ($this->files as $file) {
 			@unlink($file);
 		}
-
-		parent::tearDown();
-	}//end tearDown()
+	}
 
 	/**
-	 * A zip with the given parts.
+	 * Write a zip with the given parts.
 	 *
-	 * @param array<string,string> $parts Part name to content.
+	 * @param array<string, string> $parts Part name to content.
 	 *
 	 * @return string The path.
 	 */
 	private function workbook(array $parts): string {
-		$path = tempnam(sys_get_temp_dir(), 'cmdb').'.xlsx';
+		$path = tempnam(sys_get_temp_dir(), 'cmdb');
 		$zip  = new ZipArchive();
-		$zip->open($path, ZipArchive::CREATE);
+		$zip->open($path, ZipArchive::OVERWRITE);
 		foreach ($parts as $name => $content) {
 			$zip->addFromString($name, $content);
 		}
-
 		$zip->close();
 		$this->files[] = $path;
-
 		return $path;
-	}//end workbook()
+	}
 
 	/**
-	 * A scanner that passes every part, or refuses the ones containing a marker.
-	 *
-	 * @param string|null $refuse The marker of parts to refuse.
+	 * A scanner that passes content through.
 	 *
 	 * @return object The scanner.
 	 */
-	private function scanner(?string $refuse = null): object {
-		return new class ($refuse) {
-			public function __construct(private readonly ?string $refuse) {
-			}
-
+	private function scanner(): object {
+		return new class {
+			/**
+			 * @param string $content Part content.
+			 *
+			 * @return string The same content.
+			 */
 			public function scan(string $content): string {
-				if ($this->refuse !== null && str_contains($content, $this->refuse) === true) {
-					throw new \RuntimeException('refused');
-				}
-
 				return $content;
 			}
 		};
-	}//end scanner()
+	}
 
 	/**
-	 * Every non-empty, scanned, well-formed part reaches the consumer with its name, in zip order.
+	 * Run a bound and return the refusal it threw, or null.
 	 *
-	 * @return void
-	 */
-	public function testEachPartHandsOverTheReadableParts(): void {
-		$path = $this->workbook(
-			[
-				'xl/workbook.xml'  => '<workbook/>',
-				'xl/empty.xml'     => '',
-				'xl/refused.xml'   => '<x>DOCTYPE</x>',
-				'xl/sheet1.xml'    => '<worksheet><row/></worksheet>',
-			]
-		);
-		$seen = [];
-
-		(new CmdbWorkbookBounds())->eachPart(
-			path: $path,
-			scanner: $this->scanner(refuse: 'DOCTYPE'),
-			consume: static function (XMLReader $xml, string $name) use (&$seen): void {
-				$xml->read();
-				$seen[] = [$name, $xml->localName];
-			}
-		);
-
-		self::assertSame([['xl/workbook.xml', 'workbook'], ['xl/sheet1.xml', 'worksheet']], $seen);
-	}//end testEachPartHandsOverTheReadableParts()
-
-	/**
-	 * A file that is not a zip hands over nothing.
+	 * @param callable $bound The bound to run.
 	 *
-	 * @return void
+	 * @return CmdbImportException|null The refusal.
 	 */
-	public function testANonZipHandsOverNothing(): void {
-		$path = tempnam(sys_get_temp_dir(), 'cmdb');
-		file_put_contents($path, 'not a zip');
-		$this->files[] = $path;
-		$called = false;
-
-		(new CmdbWorkbookBounds())->eachPart(
-			path: $path,
-			scanner: $this->scanner(),
-			consume: static function () use (&$called): void {
-				$called = true;
-			}
-		);
-
-		self::assertFalse($called);
-	}//end testANonZipHandsOverNothing()
-
-	/**
-	 * Shared strings and runs inside them or inline strings count; the limit itself is allowed.
-	 *
-	 * @return void
-	 */
-	public function testTheSharedStringCountIncludesRuns(): void {
-		$path = $this->workbook(
-			[
-				'xl/sharedStrings.xml'     => '<sst><si><t>a</t></si><si><r><t>b</t></r><r><t>c</t></r></si><si/></sst>',
-				'xl/worksheets/sheet1.xml' => '<worksheet><c t="inlineStr"><is><r><t>d</t></r></is></c></worksheet>',
-			]
-		);
-		$bounds = new CmdbWorkbookBounds();
-
-		// Three <si>, two runs inside one, one run inside an inline string: 6.
-		$bounds->assertSharedStringCount(path: $path, limit: 6, scanner: $this->scanner());
-
+	private function refusal(callable $bound): ?CmdbImportException {
 		try {
-			$bounds->assertSharedStringCount(path: $path, limit: 5, scanner: $this->scanner());
-			self::fail('Expected the count to be refused');
+			$bound();
 		} catch (CmdbImportException $e) {
-			self::assertSame(CmdbImportException::WORKBOOK_TOO_LARGE, $e->getErrorCode());
-			self::assertSame(['maxSharedStrings' => 5], $e->getDetails());
+			return $e;
 		}
-	}//end testTheSharedStringCountIncludesRuns()
+
+		return null;
+	}
 
 	/**
-	 * The referenced shared-string text is held to the limit divided over the sheets.
-	 *
-	 * Each `<si><t>hello</t></si>` weighs 16 + 16 + 5 = 37; two shared-string
-	 * cells reference it, a plain string cell does not count: 74 in total.
+	 * Plain and rich entries count one per string plus one per rich run.
 	 *
 	 * @return void
 	 */
-	public function testTheReferencedTextIsHeldToThePerSheetBudget(): void {
-		$path   = $this->workbook(
-			[
-				'xl/sharedStrings.xml'     => '<sst><si><t>hello</t></si></sst>',
-				'xl/worksheets/sheet1.xml' => '<worksheet><c t="s"><v>0</v></c><c t="s"><v>0</v></c><c t="str"><v>0</v></c></worksheet>',
-			]
-		);
+	public function testSharedStringsCountEntriesAndRichRuns(): void {
+		$path = $this->workbook([
+			'xl/sharedStrings.xml' => '<sst xmlns="urn:x"><si><t>a</t></si><si><r><t>b</t></r><r><t>c</t></r></si><si/></sst>',
+		]);
 		$bounds = new CmdbWorkbookBounds();
 
-		$bounds->assertReferencedStringBytes(path: $path, limit: 74, sheetCount: 1, scanner: $this->scanner());
-		$bounds->assertReferencedStringBytes(path: $path, limit: 148, sheetCount: 2, scanner: $this->scanner());
+		self::assertNull($this->refusal(fn () => $bounds->assertSharedStringCount($path, 5, $this->scanner())));
 
-		foreach ([[73, 1], [147, 2]] as [$limit, $sheets]) {
-			try {
-				$bounds->assertReferencedStringBytes(path: $path, limit: $limit, sheetCount: $sheets, scanner: $this->scanner());
-				self::fail('Expected the referenced text to be refused');
-			} catch (CmdbImportException $e) {
-				self::assertSame(['maxReferencedStringBytes' => $limit], $e->getDetails());
-			}
-		}
-	}//end testTheReferencedTextIsHeldToThePerSheetBudget()
+		$refusal = $this->refusal(fn () => $bounds->assertSharedStringCount($path, 4, $this->scanner()));
+		self::assertNotNull($refusal);
+		self::assertSame(CmdbImportException::WORKBOOK_TOO_LARGE, $refusal->getErrorCode());
+		self::assertSame(['maxSharedStrings' => 4], $refusal->getDetails());
+		self::assertSame('The shared-strings table holds more entries than the profile allows', $refusal->getMessage());
+	}
 
 	/**
-	 * A workbook without shared strings is never refused on referenced text.
+	 * Inline strings in a sheet count their rich runs, and the count spans every part.
 	 *
 	 * @return void
 	 */
-	public function testWithoutSharedStringsNothingIsReferenced(): void {
-		$path = $this->workbook(['xl/worksheets/sheet1.xml' => '<worksheet><c t="s"><v>0</v></c></worksheet>']);
+	public function testInlineRunsAcrossPartsAreCounted(): void {
+		$path = $this->workbook([
+			'xl/sharedStrings.xml'      => '<sst><si><t>a</t></si></sst>',
+			'xl/worksheets/sheet1.xml' => '<worksheet><sheetData><row><c t="inlineStr">'
+				.'<is><r><t>x</t></r><r><t>y</t></r></is></c></row></sheetData></worksheet>',
+		]);
+		$bounds = new CmdbWorkbookBounds();
 
-		(new CmdbWorkbookBounds())->assertReferencedStringBytes(path: $path, limit: 0, sheetCount: 1, scanner: $this->scanner());
+		self::assertNull($this->refusal(fn () => $bounds->assertSharedStringCount($path, 3, $this->scanner())));
+		self::assertNotNull($this->refusal(fn () => $bounds->assertSharedStringCount($path, 2, $this->scanner())));
+	}
 
-		$this->addToAssertionCount(1);
-	}//end testWithoutSharedStringsNothingIsReferenced()
-}//end class
+	/**
+	 * A path that is no zip and a part the scanner rejects are not measured.
+	 *
+	 * @return void
+	 */
+	public function testUnreadableInputIsNotMeasured(): void {
+		$bounds = new CmdbWorkbookBounds();
+		$notZip = tempnam(sys_get_temp_dir(), 'cmdb');
+		file_put_contents($notZip, 'plain text');
+		$this->files[] = $notZip;
+		$rejecting = new class {
+			/**
+			 * @param string $content Part content.
+			 *
+			 * @return string Never.
+			 */
+			public function scan(string $content): string {
+				throw new RuntimeException('entity found');
+			}
+		};
+		$path = $this->workbook(['xl/sharedStrings.xml' => '<sst><si/><si/><si/></sst>', 'empty.xml' => '']);
+
+		self::assertNull($this->refusal(fn () => $bounds->assertSharedStringCount($notZip, 0, $this->scanner())));
+		self::assertNull($this->refusal(fn () => $bounds->assertSharedStringCount($path, 0, $rejecting)));
+		self::assertNotNull($this->refusal(fn () => $bounds->assertSharedStringCount($path, 0, $this->scanner())));
+	}
+
+	/**
+	 * A shared string weighs 16 per element plus its text bytes; a cell referencing it spends that weight.
+	 *
+	 * @return void
+	 */
+	public function testReferencedTextIsWeighedAgainstThePerSheetBudget(): void {
+		// The string "hello" weighs 16 (si) + 16 (t) + 5 = 37.
+		$path = $this->workbook([
+			'xl/sharedStrings.xml'      => '<sst><si><t>hello</t></si></sst>',
+			'xl/worksheets/sheet1.xml' => '<worksheet><sheetData><row><c t="s"><v>0</v></c><c><v>0</v></c></row></sheetData></worksheet>',
+		]);
+		$bounds = new CmdbWorkbookBounds();
+
+		self::assertNull($this->refusal(fn () => $bounds->assertReferencedStringBytes($path, 37, 1, $this->scanner())));
+		self::assertNull($this->refusal(fn () => $bounds->assertReferencedStringBytes($path, 74, 2, $this->scanner())));
+
+		$refusal = $this->refusal(fn () => $bounds->assertReferencedStringBytes($path, 73, 2, $this->scanner()));
+		self::assertNotNull($refusal);
+		self::assertSame(['maxReferencedStringBytes' => 73], $refusal->getDetails());
+		self::assertSame('The cells of the workbook reference more shared-string text than the profile allows', $refusal->getMessage());
+	}
+
+	/**
+	 * Every shared-string cell spends its weight, and a workbook without shared strings is not measured.
+	 *
+	 * @return void
+	 */
+	public function testEveryReferenceCountsAndNoTableMeansNoBound(): void {
+		$sheet = '<worksheet><sheetData><row><c t="s"><v>0</v></c><c t="s"><v>0</v></c><c t="s"><v/></c></row></sheetData></worksheet>';
+		$path  = $this->workbook([
+			'xl/sharedStrings.xml'      => '<sst><si><t>hello</t></si></sst>',
+			'xl/worksheets/sheet1.xml' => $sheet,
+		]);
+		$bounds = new CmdbWorkbookBounds();
+
+		// Two references to "hello" and one empty value, which reads as index 0 too.
+		self::assertNull($this->refusal(fn () => $bounds->assertReferencedStringBytes($path, 111, 1, $this->scanner())));
+		self::assertNotNull($this->refusal(fn () => $bounds->assertReferencedStringBytes($path, 110, 1, $this->scanner())));
+
+		$noTable = $this->workbook(['xl/worksheets/sheet1.xml' => $sheet]);
+		self::assertNull($this->refusal(fn () => $bounds->assertReferencedStringBytes($noTable, 0, 1, $this->scanner())));
+	}
+
+	/**
+	 * The heaviest table wins per index when several parts hold shared strings.
+	 *
+	 * @return void
+	 */
+	public function testTheHeaviestTableWinsPerIndex(): void {
+		$path = $this->workbook([
+			'a/sharedStrings.xml'       => '<sst><si><t>hi</t></si></sst>',
+			'b/sharedStrings.xml'       => '<sst><si><t>much longer text</t></si></sst>',
+			'xl/worksheets/sheet1.xml' => '<worksheet><sheetData><row><c t="s"><v>0</v></c></row></sheetData></worksheet>',
+		]);
+		$bounds = new CmdbWorkbookBounds();
+
+		// 16 + 16 + 16 bytes of "much longer text".
+		self::assertNull($this->refusal(fn () => $bounds->assertReferencedStringBytes($path, 48, 1, $this->scanner())));
+		self::assertNotNull($this->refusal(fn () => $bounds->assertReferencedStringBytes($path, 47, 1, $this->scanner())));
+	}
+
+	/**
+	 * eachPart hands every readable part to the consumer with its name.
+	 *
+	 * @return void
+	 */
+	public function testEachPartVisitsReadablePartsInOrder(): void {
+		$path  = $this->workbook(['one.xml' => '<a/>', 'broken.xml' => '', 'two.xml' => '<b/>']);
+		$names = [];
+
+		(new CmdbWorkbookBounds())->eachPart($path, $this->scanner(), static function (\XMLReader $xml, string $name) use (&$names): void {
+			$names[] = $name;
+		});
+
+		self::assertSame(['one.xml', 'two.xml'], $names);
+	}
+}
