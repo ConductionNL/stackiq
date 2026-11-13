@@ -647,7 +647,7 @@ class ContactPersonHandler {
 			// A first contact is NOT added to the organisation admin groups.
 			// That automatic assignment was switched off on purpose in commit
 			// bc4dc9ea ("users should be assigned groups explicitly via the
-			// admin UI"), by making SettingsService::getOrganizationAdminGroups()
+			// admin UI"), by making getOrganizationAdminGroups() (now RoleGroupSettings)
 			// return an empty list. stackiq#1136 made that getter read the saved
 			// list again for the settings page and the export permission, so
 			// the assignment is left out here instead of being revived.
