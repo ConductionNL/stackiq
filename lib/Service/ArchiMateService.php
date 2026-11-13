@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
@@ -98,7 +99,7 @@ class ArchiMateService {
 	 * @param IAppManager $appManager App manager service
 	 * @param ContainerInterface $container PSR-11 container interface
 	 * @param LoggerInterface $logger Logger service
-	 * @param SettingsService $settingsService Settings service for schema and organization configuration
+	 * @param RegisterConfigReaderInterface $settingsService Settings service for schema and organization configuration
 	 * @param ArchiMateImportService $importService Import service for XML parsing
 	 * @param ArchiMateExportService $exportService Export service for XML generation
 	 * @param ProgressTracker $progressTracker Progress store a running import reads its cancel from
@@ -109,7 +110,7 @@ class ArchiMateService {
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly ArchiMateImportService $importService,
 		private readonly ArchiMateExportService $exportService,
 		private readonly ProgressTracker $progressTracker,

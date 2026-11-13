@@ -62,6 +62,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\Stackiq\OrganizationHandler;
 use OCP\App\IAppManager;
@@ -153,7 +154,7 @@ class MergeOrganisatieService {
 	 * @param IGroupManager $groupManager Group manager (NC group membership migration).
 	 * @param LoggerInterface $logger Logger interface (structured audit + diagnostic entries).
 	 * @param IEventDispatcher $eventDispatcher Event dispatcher (NC's `CriticalActionPerformedEvent` audit mechanism).
-	 * @param SettingsService $settingsService Settings service (register/schema id resolution).
+	 * @param RegisterConfigReaderInterface $settingsService Settings service (register/schema id resolution).
 	 * @param OrganisatieService $organisationService Organisatie service (keeps the OR core Organisation.active flag in sync via mapStatus).
 	 * @param ProgressTracker $progressTracker Progress tracker (SSE progress-tracking mechanism).
 	 * @param OrganizationHandler $organizationHandler Organization handler (NC group creation/lookup for the target org).
@@ -164,7 +165,7 @@ class MergeOrganisatieService {
 		private readonly IGroupManager $groupManager,
 		private readonly LoggerInterface $logger,
 		private readonly IEventDispatcher $eventDispatcher,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly OrganisatieService $organisationService,
 		private readonly ProgressTracker $progressTracker,
 		private readonly OrganizationHandler $organizationHandler,
