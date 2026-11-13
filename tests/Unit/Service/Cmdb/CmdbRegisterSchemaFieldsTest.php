@@ -178,4 +178,28 @@ class CmdbRegisterSchemaFieldsTest extends TestCase {
 			$this->assertSame('The stackiq register definition cannot be read, so the CMDB import packs cannot be checked', $e->getMessage());
 		}
 	}//end testAMissingRegisterFailsClosed()
+
+	/**
+	 * An object configuration that is not an object marks nothing; the other markers still count.
+	 *
+	 * @return void
+	 */
+	public function testANonObjectConfigurationIsIgnored(): void {
+		$register = [
+			'components' => [
+				'schemas' => [
+					'module' => [
+						'properties' => [
+							'plain' => ['type' => 'string', 'objectConfiguration' => 'related-object'],
+							'linked' => ['type' => 'string', 'format' => 'uuid', 'objectConfiguration' => 'x'],
+						],
+					],
+				],
+			],
+		];
+
+		$fields = (new CmdbRegisterSchemaFields(settingsDirectory: $this->settings(register: $register)))->fields();
+
+		$this->assertSame(['module' => ['plain' => '', 'linked' => 'relation']], $fields);
+	}//end testANonObjectConfigurationIsIgnored()
 }//end class
