@@ -164,7 +164,7 @@ describe('ViewObject editability', () => {
 })
 
 describe('ViewObject handleRowClick', () => {
-	const click = (key, state, target = {}) => {
+	const click = (key, { target = {}, ...state } = {}) => {
 		const vm = viewModel(state)
 		vm.selectProperty = vi.fn()
 		const event = { target: { tagName: 'TD', closest: () => null, ...target } }
@@ -181,9 +181,9 @@ describe('ViewObject handleRowClick', () => {
 	})
 
 	it('ignores clicks on controls, the selected row and locked rows', () => {
-		expect(click('free', {}, { tagName: 'INPUT' })).toEqual([])
-		expect(click('free', {}, { tagName: 'BUTTON' })).toEqual([])
-		expect(click('free', {}, { closest: () => ({}) })).toEqual([])
+		expect(click('free', { target: { tagName: 'INPUT' } })).toEqual([])
+		expect(click('free', { target: { tagName: 'BUTTON' } })).toEqual([])
+		expect(click('free', { target: { closest: () => ({}) } })).toEqual([])
 		expect(click('free', { selectedProperty: 'free' })).toEqual([])
 		expect(click('fixed', {})).toEqual([])
 		expect(click('locked', { objectProperties: [['locked', 'set']] })).toEqual(
