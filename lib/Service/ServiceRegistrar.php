@@ -29,7 +29,8 @@ use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
 /**
- * States how the services are wired: the interface aliases, the handler
+ * States how the services are wired: the interface aliases, the contract
+ * bindings, the handler
  * factories and, in a fixed order, the domain service factories. The AppInfo
  * bootstrap calls this instead of naming each service.
  *
@@ -76,6 +77,7 @@ final class ServiceRegistrar {
 			SettingsService::class
 		);
 
+		(new ContractBindings())->register(context: $context);
 		(new ServiceFactories())->registerHandlerServices(context: $context);
 	}//end register()
 

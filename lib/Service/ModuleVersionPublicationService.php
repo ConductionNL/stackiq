@@ -37,6 +37,7 @@ namespace OCA\Stackiq\Service;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\BackgroundJob\ModuleVersionPublicationJob;
+use OCA\Stackiq\Kernel\Contracts\ModuleVersionPublicationServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\BackgroundJob\IJobList;
 use Psr\Container\ContainerInterface;
@@ -48,7 +49,7 @@ use Throwable;
  *
  * @spec openspec/specs/publication-field-rules/spec.md#requirement-req-pfr-002-a-module-version-is-public-only-while-its-application-is
  */
-class ModuleVersionPublicationService {
+class ModuleVersionPublicationService implements ModuleVersionPublicationServiceInterface {
 
 	/**
 	 * How many versions one search reads; a module with more is read page by page.

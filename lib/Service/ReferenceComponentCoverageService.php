@@ -20,9 +20,10 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use DateTimeImmutable;
 use Exception;
+use OCA\Stackiq\Kernel\Contracts\ReferenceComponentCoverageServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -34,7 +35,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
  */
-class ReferenceComponentCoverageService {
+class ReferenceComponentCoverageService implements ReferenceComponentCoverageServiceInterface {
 	/**
 	 * The most reference components read, as FacetService bounds its element lookups.
 	 */

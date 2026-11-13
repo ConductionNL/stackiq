@@ -21,7 +21,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Controller;
 
 use Exception;
-use OCA\Stackiq\Service\DataQualityReportService;
+use OCA\Stackiq\Kernel\Contracts\DataQualityReportServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -39,13 +39,13 @@ class DataQualityReportController extends Controller {
 	 *
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
-	 * @param DataQualityReportService $reportService Builds the report.
+	 * @param DataQualityReportServiceInterface $reportService Builds the report.
 	 * @param OrganisationReportRequest $reportRequest The requested organisation and whether the user may read it.
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly DataQualityReportService $reportService,
+		private readonly DataQualityReportServiceInterface $reportService,
 		private readonly OrganisationReportRequest $reportRequest,
 	) {
 		parent::__construct(appName: $appName, request: $request);

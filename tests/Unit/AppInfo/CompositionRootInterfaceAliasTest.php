@@ -43,7 +43,7 @@ class CompositionRootInterfaceAliasTest extends TestCase {
 	 */
 	private function registeredAliases(): array {
 		$source = '';
-		foreach (['lib/AppInfo/Application.php', 'lib/Service/ServiceRegistrar.php'] as $file) {
+		foreach (['lib/AppInfo/Application.php', 'lib/Service/ServiceRegistrar.php', 'lib/Service/ContractBindings.php'] as $file) {
 			$source .= (string) file_get_contents(dirname(__DIR__, 3) . '/' . $file);
 		}
 

@@ -36,6 +36,7 @@ use DateTimeImmutable;
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\PortfolioReportServiceInterface;
 use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -47,7 +48,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md
  */
-class PortfolioReportService {
+class PortfolioReportService implements PortfolioReportServiceInterface {
 	/**
 	 * The four Gartner TIME quadrant values, matching the gebruik schema's
 	 * `timeClassification` enum.

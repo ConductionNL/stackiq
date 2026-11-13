@@ -24,9 +24,10 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
+use OCA\Stackiq\Kernel\Contracts\ArchiMateServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -67,7 +68,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.UnusedPrivateField)
  * @SuppressWarnings(PHPMD.CountInLoopExpression)
  */
-class ArchiMateService {
+class ArchiMateService implements ArchiMateServiceInterface {
 	/**
 	 * Configuration keys for ArchiMate processing
 	 */

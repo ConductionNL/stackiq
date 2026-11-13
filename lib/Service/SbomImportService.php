@@ -38,9 +38,10 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use DateTime;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\SbomImportServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -51,7 +52,7 @@ use RuntimeException;
  *
  * @spec openspec/specs/sbom-import/spec.md
  */
-class SbomImportService {
+class SbomImportService implements SbomImportServiceInterface {
 	/**
 	 * Maximum objects per OR bulk create/delete call — bounds a single
 	 * unbounded bulk-save call for large SBOMs (design Decision 4 /
@@ -65,13 +66,6 @@ class SbomImportService {
 	 * batches with progress reporting").
 	 */
 	private const PROGRESS_THRESHOLD = 50;
-
-	/**
-	 * Supported SBOM upload formats.
-	 *
-	 * @var array<int,string>
-	 */
-	public const SUPPORTED_FORMATS = ['cyclonedx-json', 'spdx-json'];
 
 	/**
 	 * Constructor.

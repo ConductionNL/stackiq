@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Kernel\Contracts\ProgressTrackerInterface;
 use OCP\IAppConfig;
 use OCP\ICacheFactory;
 use OCP\IConfig;
@@ -51,7 +52,7 @@ use Psr\Log\LoggerInterface;
  * @version   GIT: 1.0.0
  * @link      https://github.com/ConductionNL/stackiq
  */
-class ProgressTracker {
+class ProgressTracker implements ProgressTrackerInterface {
 	/**
 	 * Operation phases and their relative weights for progress calculation
 	 */

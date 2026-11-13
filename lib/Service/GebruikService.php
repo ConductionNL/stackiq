@@ -21,6 +21,7 @@ namespace OCA\Stackiq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\GebruikServiceInterface;
 use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -29,7 +30,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Service for handling gebruik-related operations
  */
-class GebruikService {
+class GebruikService implements GebruikServiceInterface {
 	/**
 	 * Constructor for GebruikService.
 	 *
