@@ -29,6 +29,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\BackgroundJob\OrganizationContactSyncJob;
 use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
 use OCA\Stackiq\Service\OrganizationSyncService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
@@ -54,6 +55,7 @@ use RuntimeException;
  */
 #[CoversClass(OrganizationContactSyncJob::class)]
 #[UsesClass(SettingsService::class)]
+#[UsesClass(CatalogueLocator::class)]
 #[UsesClass(SystemContactWrites::class)]
 #[UsesClass(VoorzieningenConfigNormalizer::class)]
 class OrganizationContactSyncJobLinkRefreshTest extends TestCase {
@@ -304,7 +306,15 @@ class OrganizationContactSyncJobLinkRefreshTest extends TestCase {
 			static fn (string $app, string $key, string $default = ''): string => ($store[$key] ?? $default)
 		);
 
+		$logger = $this->createMock(LoggerInterface::class);
+
 		return new SettingsService(
+			catalogue: new CatalogueLocator(
+				config: $config,
+				appManager: $appManager,
+				container: $this->container,
+				logger: $logger
+			),
 			config: $config,
 			request: $this->createMock(IRequest::class),
 			roleGroupSettings: $this->createMock(RoleGroupSettings::class),
