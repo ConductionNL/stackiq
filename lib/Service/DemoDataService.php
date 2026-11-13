@@ -29,7 +29,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\AppInfo\AppIdentity;
+use OCA\Stackiq\Kernel\AppIdentity;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;

@@ -41,6 +41,7 @@ use OCA\Stackiq\EventListener\ModuleRegistrationSubscriber;
 use OCA\Stackiq\EventListener\ModuleVersionPublicationListener;
 use OCA\Stackiq\EventListener\TestEventListener;
 use OCA\Stackiq\EventListener\UserProfileUpdatedEventListener;
+use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Middleware\ApiContractMiddleware;
 use OCA\Stackiq\Service\ContractApprovalService;
 use OCA\Stackiq\Service\ServiceRegistrar;

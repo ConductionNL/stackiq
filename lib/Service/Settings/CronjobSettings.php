@@ -24,7 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Settings;
 
-use OCA\Stackiq\AppInfo\AppIdentity;
+use OCA\Stackiq\Kernel\AppIdentity;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;

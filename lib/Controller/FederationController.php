@@ -33,7 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\AppInfo\AppIdentity;
+use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Service\Federation\FederationService;
 use OCA\Stackiq\Settings\StackiqAdmin;
 use OCP\AppFramework\Controller;

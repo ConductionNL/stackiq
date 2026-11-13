@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\AppInfo\AppIdentity;
+use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Service\ReviewAggregateService;
 use OCA\Stackiq\Service\ReviewService;
 use OCP\AppFramework\Controller;

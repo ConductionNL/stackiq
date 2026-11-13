@@ -35,7 +35,7 @@ namespace OCA\Stackiq\Service;
 use DateTimeImmutable;
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Stackiq\AppInfo\AppIdentity;
+use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;

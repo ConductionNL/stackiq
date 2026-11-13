@@ -38,7 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\AppInfo\AppIdentity;
+use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Exception\UnsupportedSbomFormatException;
 use OCA\Stackiq\Service\SbomImportService;
 use OCP\AppFramework\Controller;

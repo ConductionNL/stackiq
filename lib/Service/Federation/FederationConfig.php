@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Federation;
 
-use OCA\Stackiq\AppInfo\AppIdentity;
+use OCA\Stackiq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 
 /**

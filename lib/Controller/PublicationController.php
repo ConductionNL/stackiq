@@ -33,7 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\AppInfo\AppIdentity;
+use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Service\PublicationService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
