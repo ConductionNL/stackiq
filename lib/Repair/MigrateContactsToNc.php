@@ -35,7 +35,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Repair;
 
 use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
-use OCA\Stackiq\AppInfo\AppIdentity;
+use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\StackiqContactSyncService;
 use OCP\App\IAppManager;

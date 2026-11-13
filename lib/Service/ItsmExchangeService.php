@@ -29,7 +29,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use InvalidArgumentException;
-use OCA\Stackiq\AppInfo\AppIdentity;
+use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Service\Itsm\ItsmFlowGateway;
 use OCP\IAppConfig;
 use OCP\IURLGenerator;

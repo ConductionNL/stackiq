@@ -6,8 +6,8 @@
  * Code that only needs the app id reads it here, so it does not depend on
  * the Application bootstrap class.
  *
- * @category  AppInfo
- * @package   OCA\Stackiq\AppInfo
+ * @category  Kernel
+ * @package   OCA\Stackiq\Kernel
  * @author    Conduction b.v. <info@conduction.nl>
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
@@ -22,13 +22,13 @@
 
 declare(strict_types=1);
 
-namespace OCA\Stackiq\AppInfo;
+namespace OCA\Stackiq\Kernel;
 
 /**
  * The app id as one constant.
  *
- * @category AppInfo
- * @package  OCA\Stackiq\AppInfo
+ * @category Kernel
+ * @package  OCA\Stackiq\Kernel
  *
  * @spec openspec/specs/method-decomposition/spec.md
  */

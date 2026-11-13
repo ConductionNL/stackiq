@@ -40,7 +40,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Repair;
 
 use Closure;
-use OCA\Stackiq\AppInfo\AppIdentity;
+use OCA\Stackiq\Kernel\AppIdentity;
 use OCP\IConfig;
 use OCP\IUser;
 use OCP\IUserManager;
