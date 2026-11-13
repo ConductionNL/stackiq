@@ -42,6 +42,7 @@ if (class_exists('OCA\\OpenRegister\\Exception\\OrganisationSlugConflictExceptio
  * @uses   \OCA\Stackiq\Service\OrganisationSlug
  *
  * @spec openspec/specs/organisatie-service/spec.md
+ * @uses \OCA\Stackiq\Service\OrganisationCreation
  */
 class OrganisatieServiceSlugConflictTest extends TestCase {
 

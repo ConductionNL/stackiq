@@ -43,6 +43,7 @@ use Psr\Log\AbstractLogger;
  * @uses   \OCA\Stackiq\Service\Settings\VoorzieningenConfigNormalizer
  *
  * @spec openspec/specs/settings-service/spec.md
+ * @uses \OCA\Stackiq\Service\Settings\CatalogueLocator
  */
 class SettingsServiceObjectCountsGoldenTest extends TestCase {
 
