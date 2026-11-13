@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Contactpersoon\ContactPersonUserDetails;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
@@ -73,7 +74,7 @@ class ContactpersoonService {
 	 * @param ContainerInterface $container Container interface.
 	 * @param IAppManager $appManager App manager.
 	 * @param IAppConfig $config Configuration service.
-	 * @param SettingsService $settingsService Settings service.
+	 * @param RegisterConfigReaderInterface $settingsService Settings service.
 	 */
 	public function __construct(
 		private readonly ContactPersonHandler $contactPersonHandler,
@@ -83,7 +84,7 @@ class ContactpersoonService {
 		private readonly ContainerInterface $container,
 		private readonly IAppManager $appManager,
 		private readonly IAppConfig $config,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 	) {
 
 	}//end __construct()
@@ -188,7 +189,7 @@ class ContactpersoonService {
 						);
 						try {
 							$objectService = $this->container->get('OCA\OpenRegister\Service\ObjectService');
-							$settingsService = $this->container->get('OCA\Stackiq\Service\SettingsService');
+							$settingsService = $this->container->get(RegisterConfigReaderInterface::class);
 							$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 							$orgObject = $objectService->find(
 								id: $organizationUuid,

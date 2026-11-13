@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCP\App\IAppManager;
@@ -70,7 +71,7 @@ class AangebodenGebruikService {
 	 * @param IAppManager $appManager App manager service for checking available apps
 	 * @param ContainerInterface $container PSR-11 container interface for dependency injection
 	 * @param LoggerInterface $logger Logger service for debugging and error reporting
-	 * @param SettingsService $settingsService Settings service for retrieving configuration
+	 * @param RegisterConfigReaderInterface $settingsService Settings service for retrieving configuration
 	 * @param IUserSession $userSession User session service for current user context
 	 */
 	public function __construct(
@@ -78,7 +79,7 @@ class AangebodenGebruikService {
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly IUserSession $userSession,
 	) {
 	}//end __construct()

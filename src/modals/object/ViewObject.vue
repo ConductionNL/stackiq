@@ -1973,6 +1973,11 @@ import {
 	startsLikeDate,
 	themeLabel,
 } from './dateTimeDisplay.js'
+import {
+	dateTimeFormatOf,
+	dateTimeToStorage,
+	pickerValueToStorage,
+} from './dateTimeStorage.js'
 import { FILE_ACTIONS } from './objectFileActions.js'
 import {
 	assertSaved,
@@ -1990,6 +1995,13 @@ import {
 	referenceTitle,
 	timestampRows,
 } from './objectMetadata.js'
+import {
+	cleanedFormData,
+	objectPayload,
+	referencedSchemaProperties,
+	schemaPropertiesById,
+	withSchemaDefaults,
+} from './objectPayload.js'
 import {
 	orderedPropertyRows,
 	schemaDefaultValue,
@@ -3097,47 +3109,7 @@ export default {
 			// Get schema information to determine the correct format
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-			const format = schemaProperty?.format
-
-			// Helper to format date in local TZ as YYYY-MM-DD
-			const toLocalDateString = (date) => {
-				if (!(date instanceof Date) || isNaN(date.getTime())) return ''
-				const yyyy = date.getFullYear()
-				const mm = String(date.getMonth() + 1).padStart(2, '0')
-				const dd = String(date.getDate()).padStart(2, '0')
-				return `${yyyy}-${mm}-${dd}`
-			}
-
-			let processedValue = newValue
-
-			// Handle Date objects from NcDateTimePicker
-			if (newValue instanceof Date && !isNaN(newValue.getTime())) {
-				try {
-					switch (format) {
-						case 'date':
-							processedValue = toLocalDateString(newValue)
-							break
-						case 'time':
-							processedValue = newValue
-								.toTimeString()
-								.split(' ')[0]
-								.substring(0, 5)
-							break
-						case 'date-time':
-							processedValue = newValue.toISOString()
-							break
-						default:
-							processedValue = newValue.toISOString()
-					}
-				} catch (e) {
-					processedValue = ''
-				}
-			} else if (newValue === null || newValue === undefined) {
-				processedValue = ''
-			}
-
-			// Update the form data
-			this.formData[key] = processedValue
+			this.formData[key] = pickerValueToStorage(newValue, schemaProperty?.format)
 		},
 
 		/**
@@ -3146,80 +3118,13 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		processDateTimeValue(key, value) {
-			// Get schema information to determine if this is a date/time field
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-
-			if (!schemaProperty || schemaProperty.type !== 'string') {
+			const format = dateTimeFormatOf(schemaProperty)
+			if (!format) {
 				return value
 			}
-
-			const format = schemaProperty.format
-			if (!format || !['date', 'time', 'date-time'].includes(format)) {
-				return value
-			}
-
-			// Helper to format date in local TZ as YYYY-MM-DD
-			const toLocalDateString = (date) => {
-				if (!(date instanceof Date) || isNaN(date.getTime())) return ''
-				const yyyy = date.getFullYear()
-				const mm = String(date.getMonth() + 1).padStart(2, '0')
-				const dd = String(date.getDate()).padStart(2, '0')
-				return `${yyyy}-${mm}-${dd}`
-			}
-
-			// If value is empty or null, return empty string
-			if (!value || value === '') {
-				return ''
-			}
-
-			// Handle Date objects from NcDateTimePicker
-			if (value instanceof Date) {
-				try {
-					switch (format) {
-						case 'date':
-							// Return YYYY-MM-DD format **in local timezone**
-							return toLocalDateString(value)
-						case 'time':
-							// Return HH:MM format for consistency with HTML time input
-							return value.toTimeString().split(' ')[0].substring(0, 5)
-						case 'date-time':
-							// Return full ISO string
-							return value.toISOString()
-						default:
-							return value.toISOString()
-					}
-				} catch (e) {
-					return ''
-				}
-			}
-
-			// Handle string values (legacy or fallback)
-			try {
-				switch (format) {
-					case 'date':
-						// Expect YYYY-MM-DD string already in local TZ
-						return value
-					case 'time':
-						// HTML time input returns HH:MM, keep as HH:MM for consistency
-						if (value.length === 5 && value.match(/^\d{2}:\d{2}$/)) {
-							return value // Keep as HH:MM
-						}
-						return value
-					case 'date-time': {
-						// HTML datetime-local input returns YYYY-MM-DDTHH:MM
-						if (value.length === 16) {
-							// Add seconds and timezone
-							return `${value}:00.000Z`
-						}
-						return value
-					}
-					default:
-						return value
-				}
-			} catch (e) {
-				return value
-			}
+			return dateTimeToStorage(value, format)
 		},
 
 		/**
@@ -4358,40 +4263,20 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getSchemaProperties() {
-			let properties = {}
-
 			// For new objects, use the selected schema
 			if (this.isNewObject && this.selectedSchema) {
-				const fullSchema = objectStore.availableSchemas.find(
-					(schema) => schema.id === this.selectedSchema.id,
+				return schemaPropertiesById(
+					objectStore.availableSchemas,
+					this.selectedSchema.id,
 				)
-				properties = fullSchema?.properties || {}
-			} else if (this.currentObject && this.currentObject['@self']?.schema) {
-				// For existing objects, try to get schema from the object's schema reference
-				const schemaRef = this.currentObject['@self'].schema
-				let schemaId = null
-
-				// Handle both object and string schema references
-				if (typeof schemaRef === 'object') {
-					schemaId = schemaRef.id || schemaRef.uuid
-				} else {
-					schemaId = schemaRef
-				}
-
-				if (schemaId) {
-					const fullSchema = objectStore.availableSchemas.find(
-						(schema) => schema.id === schemaId,
-					)
-					if (fullSchema?.properties) {
-						properties = fullSchema.properties
-					}
-				}
-			} else if (this.currentSchema?.properties) {
-				// Try to get schema properties from the catalogStore
-				properties = this.currentSchema.properties
 			}
-
-			return properties
+			// For existing objects, use the object's schema reference
+			const schemaRef = this.currentObject?.['@self']?.schema
+			if (schemaRef) {
+				const schemas = objectStore.availableSchemas
+				return referencedSchemaProperties(schemas, schemaRef)
+			}
+			return this.currentSchema?.properties || {}
 		},
 
 		// Helper method to rebuild object with schema properties after API operations
@@ -4410,39 +4295,9 @@ export default {
 				},
 			}
 
-			// Get schema properties to ensure we don't lose any
-			const schemaProperties = this.getSchemaProperties()
-
 			// Add missing schema properties with default values
-			for (const [key, schemaProperty] of Object.entries(schemaProperties)) {
-				if (!Object.hasOwn(mergedObject, key)) {
-					// Add with appropriate default value based on type
-					let defaultValue = ''
-					switch (schemaProperty.type) {
-						case 'string':
-							defaultValue = schemaProperty.const || ''
-							break
-						case 'number':
-						case 'integer':
-							defaultValue = 0
-							break
-						case 'boolean':
-							defaultValue = false
-							break
-						case 'array':
-							defaultValue = []
-							break
-						case 'object':
-							defaultValue = {}
-							break
-						default:
-							defaultValue = ''
-					}
-					mergedObject[key] = defaultValue
-				}
-			}
-
-			return mergedObject
+			const schemaProperties = this.getSchemaProperties()
+			return withSchemaDefaults(mergedObject, schemaProperties)
 		},
 
 		/**
@@ -4452,33 +4307,7 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		cleanFormData() {
-			const cleaned = {}
-
-			// If formData is somehow an array, convert it properly
-			if (Array.isArray(this.formData)) {
-				// This should never happen, but just in case
-				return {}
-			}
-
-			// Copy all valid properties from formData
-			for (const [key, value] of Object.entries(this.formData || {})) {
-				// Only include valid property names:
-				// - Must be a string
-				// - Must not be empty
-				// - Must not be purely numeric (array indices)
-				// - Must not be special Vue/internal keys
-				if (
-					typeof key === 'string'
-					&& key.length > 0
-					&& !/^\d+$/.test(key)
-					&& !key.startsWith('_')
-					&& !key.startsWith('$')
-				) {
-					cleaned[key] = value
-				}
-			}
-
-			return cleaned
+			return cleanedFormData(this.formData)
 		},
 
 		/**
@@ -4489,80 +4318,9 @@ export default {
 		 */
 		buildCompleteObjectData() {
 			const schemaProperties = this.getSchemaProperties()
-			const cleanedFormData = this.cleanFormData()
-			const currentObjectData = this.currentObject || {}
-
-			// Start with current object data (excluding id but keeping @self for updates)
-			const objectData = {}
-			for (const [key, value] of Object.entries(currentObjectData)) {
-				if (key !== 'id') {
-					objectData[key] = value
-				}
-			}
-
-			// Add all schema properties with appropriate values
-			for (const [propertyKey, schemaProperty] of Object.entries(
-				schemaProperties,
-			)) {
-				if (Object.hasOwn(cleanedFormData, propertyKey)) {
-					// Check if property was marked for deletion (undefined)
-					if (cleanedFormData[propertyKey] === undefined) {
-						// For schema properties, don't include undefined values - let backend handle defaults
-						// This effectively removes the property from the payload
-						delete objectData[propertyKey]
-					} else {
-						// Use edited value from formData
-						objectData[propertyKey] = cleanedFormData[propertyKey]
-					}
-				} else if (Object.hasOwn(currentObjectData, propertyKey)) {
-					// Keep existing value from current object
-					objectData[propertyKey] = currentObjectData[propertyKey]
-				} else {
-					// Property doesn't exist, set appropriate default or null
-					let defaultValue = null
-
-					// Only set non-null defaults for specific cases
-					switch (schemaProperty.type) {
-						case 'string':
-							defaultValue = schemaProperty.const || null
-							break
-						case 'number':
-						case 'integer':
-							defaultValue = null // Let backend handle defaults
-							break
-						case 'boolean':
-							defaultValue = null // Let backend handle defaults
-							break
-						case 'array':
-							defaultValue = null // Let backend handle defaults
-							break
-						case 'object':
-							defaultValue = null // Let backend handle defaults
-							break
-						default:
-							defaultValue = null
-					}
-
-					objectData[propertyKey] = defaultValue
-				}
-			}
-
-			// Also include any edited properties that might not be in the schema
-			// But only include valid property names (not numeric indices) and not undefined values
-			for (const [key, value] of Object.entries(cleanedFormData)) {
-				if (
-					!Object.hasOwn(schemaProperties, key)
-					&& typeof key === 'string'
-					&& key.length > 0
-					&& !/^\d+$/.test(key)
-					&& value !== undefined
-				) {
-					// Don't include properties marked for deletion
-					objectData[key] = value
-				}
-			}
-
-			return objectData
+			const edits = this.cleanFormData()
+			const current = this.currentObject || {}
+			return objectPayload({ current, edits }, schemaProperties)
 		},
 
 		// Property dropping methods

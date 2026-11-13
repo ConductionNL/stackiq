@@ -850,6 +850,7 @@ export default {
 					method,
 					body: JSON.stringify(dataToSave),
 					headers: {
+						requesttoken: OC.requestToken,
 						'Content-Type': 'application/json',
 					},
 				})

@@ -105,41 +105,64 @@ class MigrateBackgroundJobClasses implements IRepairStep {
 	 */
 	public function run(IOutput $output): void {
 		try {
-			$removed = 0;
-
-			foreach (self::LEGACY_JOB_CLASSES as $legacyClass) {
-				// The remove() call is a no-op when the row is absent, so has() is
-				// only an accounting call — it keeps the reported count honest on a
-				// re-run rather than claiming work that did not happen.
-				// PHPStan wants a class-string<IJob> here, which this method can
-				// never supply: the whole point is to deregister jobs whose class
-				// NO LONGER EXISTS after the namespace rename. A loadable
-				// class-string would mean there was nothing to clean up. The
-				// stored rows are matched by their literal class name, which is
-				// exactly what IJobList compares against.
-				// @phpstan-ignore argument.type
-				if ($this->jobList->has($legacyClass, null) === false) {
-					continue;
-				}
-
-				// @phpstan-ignore argument.type
-				$this->jobList->remove($legacyClass, null);
-				$removed++;
-			}
+			$removed = $this->removeLegacyJobs();
 
 			$output->info(
 				sprintf('Stackiq: deregistered %d orphaned background job(s) from the legacy namespace', $removed)
 			);
 		} catch (Throwable $e) {
 			// Swallowed deliberately — see the docblock.
-			$this->logger->error(
-				'Stackiq: failed to deregister legacy background jobs: ' . $e->getMessage(),
-				[
-					'app' => AppIdentity::APP_ID,
-					'exception' => $e,
-				]
-			);
-			$output->warning('Stackiq: legacy background job cleanup failed; see the log.');
+			$this->reportCleanupFailure(error: $e, output: $output);
 		}//end try
 	}//end run()
+
+	/**
+	 * Remove every legacy job registration that is present.
+	 *
+	 * @return int Number of registrations removed.
+	 */
+	private function removeLegacyJobs(): int {
+		$removed = 0;
+
+		foreach (self::LEGACY_JOB_CLASSES as $legacyClass) {
+			// The remove() call is a no-op when the row is absent, so has() is
+			// only an accounting call — it keeps the reported count honest on a
+			// re-run rather than claiming work that did not happen.
+			// PHPStan wants a class-string<IJob> here, which this method can
+			// never supply: the whole point is to deregister jobs whose class
+			// NO LONGER EXISTS after the namespace rename. A loadable
+			// class-string would mean there was nothing to clean up. The
+			// stored rows are matched by their literal class name, which is
+			// exactly what IJobList compares against.
+			// @phpstan-ignore argument.type
+			if ($this->jobList->has($legacyClass, null) === false) {
+				continue;
+			}
+
+			// @phpstan-ignore argument.type
+			$this->jobList->remove($legacyClass, null);
+			$removed++;
+		}
+
+		return $removed;
+	}//end removeLegacyJobs()
+
+	/**
+	 * Log the failed cleanup and warn on the repair output.
+	 *
+	 * @param Throwable $error  What went wrong.
+	 * @param IOutput   $output Repair output.
+	 *
+	 * @return void
+	 */
+	private function reportCleanupFailure(Throwable $error, IOutput $output): void {
+		$this->logger->error(
+			'Stackiq: failed to deregister legacy background jobs: ' . $error->getMessage(),
+			[
+				'app' => AppIdentity::APP_ID,
+				'exception' => $error,
+			]
+		);
+		$output->warning('Stackiq: legacy background job cleanup failed; see the log.');
+	}//end reportCleanupFailure()
 }//end class

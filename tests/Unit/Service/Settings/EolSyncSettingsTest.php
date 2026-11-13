@@ -184,4 +184,62 @@ class EolSyncSettingsTest extends TestCase {
 		$this->assertSame(2, $status['skipped']);
 		$this->assertSame('2026-07-23T12:00:00+00:00', $status['lastRunAt']);
 	}//end testStatusRoundTripsAfterARun()
+	/**
+	 * Malformed stored JSON reads as the defaults, for the config and the status alike.
+	 *
+	 * @return void
+	 */
+	public function testMalformedStoredJsonReadsAsTheDefaults(): void {
+		$store = [
+			'eol_sync_config' => 'not json',
+			'eol_sync_status' => '"a string"',
+		];
+		$service = $this->makeService($store);
+
+		$this->assertSame(
+			[
+				'enabled' => false,
+				'register' => 'integriq',
+				'productSchema' => 'eol_product',
+				'cycleSchema' => 'eol_cycle',
+				'intervalSeconds' => 86400,
+			],
+			$service->getEolSyncConfig()
+		);
+		$this->assertSame(
+			['available' => false, 'reason' => 'not-yet-run', 'matched' => 0, 'skipped' => 0, 'lastRunAt' => null],
+			$service->getEolSyncStatus()
+		);
+	}//end testMalformedStoredJsonReadsAsTheDefaults()
+
+	/**
+	 * An update ignores blank names and a non-positive interval, trims names and accepts "true" for enabled.
+	 *
+	 * @return void
+	 */
+	public function testAnUpdateIgnoresBlankNamesAndNonPositiveIntervals(): void {
+		$store = [];
+		$service = $this->makeService($store);
+		$service->updateEolSyncConfig(['intervalSeconds' => 600, 'cycleSchema' => ' cycles ']);
+
+		$result = $service->updateEolSyncConfig(
+			['enabled' => 'true', 'register' => '  ', 'productSchema' => '', 'cycleSchema' => ' ', 'intervalSeconds' => 0]
+		);
+
+		$this->assertTrue($result['success']);
+		$this->assertSame(
+			[
+				'enabled' => true,
+				'register' => 'integriq',
+				'productSchema' => 'eol_product',
+				'cycleSchema' => 'cycles',
+				'intervalSeconds' => 600,
+			],
+			$result['config']
+		);
+		$this->assertSame($result['config'], $service->getEolSyncConfig());
+
+		$this->assertSame(600, $service->updateEolSyncConfig(['intervalSeconds' => -5])['config']['intervalSeconds']);
+		$this->assertFalse($service->updateEolSyncConfig(['enabled' => 'yes'])['config']['enabled']);
+	}//end testAnUpdateIgnoresBlankNamesAndNonPositiveIntervals()
 }//end class

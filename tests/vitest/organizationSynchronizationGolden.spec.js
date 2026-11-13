@@ -82,6 +82,7 @@ const REPLIES = {
  * @return {object} The instance.
  */
 function instance(reply, state) {
+	globalThis.OC = { requestToken: 'token-1' }
 	globalThis.fetch = async (url, options) => {
 		trace.push(['fetch', url, options ?? null])
 		if (reply.networkDown) throw new Error('network down')
@@ -129,6 +130,7 @@ const RUNS = {
 
 afterEach(() => {
 	delete globalThis.fetch
+	delete globalThis.OC
 })
 
 describe('OrganizationSynchronization requests golden', () => {

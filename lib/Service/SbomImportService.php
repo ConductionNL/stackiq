@@ -38,6 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use DateTime;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use Psr\Container\ContainerInterface;
@@ -76,14 +77,14 @@ class SbomImportService {
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container The DI container (lazy OR lookup).
-	 * @param SettingsService $settingsService Resolves register/schema ids.
+	 * @param RegisterConfigReaderInterface $settingsService Resolves register/schema ids.
 	 * @param SbomParserService $parser The pure SBOM parser.
 	 * @param ProgressTracker $progressTracker Progress reporting for large imports.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly SbomParserService $parser,
 		private readonly ProgressTracker $progressTracker,
 		private readonly LoggerInterface $logger,
@@ -559,6 +560,17 @@ class SbomImportService {
 			return $relation;
 		}
 
+		return self::carriedUuid(relation: $relation);
+	}//end resolveRelationUuid()
+
+	/**
+	 * The uuid (else id) an array or object relation value carries.
+	 *
+	 * @param mixed $relation The raw relation value.
+	 *
+	 * @return string|null The carried uuid, or null when the value carries none.
+	 */
+	private static function carriedUuid(mixed $relation): ?string {
 		if (is_array($relation) === true) {
 			return $relation['uuid'] ?? ($relation['id'] ?? null);
 		}
@@ -568,7 +580,7 @@ class SbomImportService {
 		}
 
 		return null;
-	}//end resolveRelationUuid()
+	}//end carriedUuid()
 
 	/**
 	 * Resolve the register/schema coordinates + ObjectService this service

@@ -652,6 +652,7 @@ async function postJson(url, payload) {
 	const response = await fetch(url, {
 		method: 'POST',
 		headers: {
+			requesttoken: OC.requestToken,
 			'Content-Type': 'application/json',
 			'X-Requested-With': 'XMLHttpRequest',
 		},

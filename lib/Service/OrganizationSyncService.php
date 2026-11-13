@@ -23,6 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\OrganisationMapper;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
@@ -100,9 +101,9 @@ class OrganizationSyncService {
 	/**
 	 * Settings service instance
 	 *
-	 * @var SettingsService The settings service for configuration
+	 * @var RegisterConfigReaderInterface The settings service for configuration
 	 */
-	private SettingsService $settingsService;
+	private RegisterConfigReaderInterface $settingsService;
 
 	/**
 	 * Logger instance
@@ -126,7 +127,7 @@ class OrganizationSyncService {
 	 * @param SymfonyEmailService $emailService The email service.
 	 * @param IAppConfig $config The configuration service.
 	 * @param LoggerInterface $logger The logger instance.
-	 * @param SettingsService $settingsService The settings service.
+	 * @param RegisterConfigReaderInterface $settingsService The settings service.
 	 * @param IDBConnection $db The database connection.
 	 * @param ContactPersonHandler $contactpersonHandler The contact person handler.
 	 * @param ContainerInterface $container The DI container.
@@ -152,7 +153,7 @@ class OrganizationSyncService {
 		SymfonyEmailService $emailService,
 		IAppConfig $config,
 		LoggerInterface $logger,
-		SettingsService $settingsService,
+		RegisterConfigReaderInterface $settingsService,
 		private IDBConnection $db,
 		private readonly ContactPersonHandler $contactpersonHandler,
 		ContainerInterface $container,
@@ -679,21 +680,60 @@ class OrganizationSyncService {
 	 * @spec openspec/specs/method-decomposition/spec.md
 	 */
 	public function performFullSync(int $minutesBack = 10): array {
-		if ($minutesBack === 0) {
-			$syncModeValue = 'full';
-		} else {
-			$syncModeValue = 'incremental';
-		}
+		$run = $this->startFullSync(minutesBack: $minutesBack);
 
+		try {
+			return $this->runFullSync(run: $run);
+		} catch (\Exception $e) {
+			return $this->failFullSync(run: $run, exception: $e);
+		}//end try
+
+	}//end performFullSync()
+
+	/**
+	 * Log the start of a full sync and set up its statistics.
+	 *
+	 * @param int $minutesBack Number of minutes to look back for changes (0 = all objects)
+	 *
+	 * @return FullSyncRun The run
+	 */
+	private function startFullSync(int $minutesBack): FullSyncRun {
 		$this->logger->info(
 			'OrganizationSyncService: Starting comprehensive organization synchronization',
 			[
 				'minutesBack' => $minutesBack,
-				'syncMode' => $syncModeValue,
+				'syncMode' => self::fullSyncModeOf(minutesBack: $minutesBack),
 			]
 		);
 
-		$stats = [
+		$run = new FullSyncRun();
+		$run->minutesBack = $minutesBack;
+		$run->stats = self::newFullSyncStats();
+		return $run;
+	}//end startFullSync()
+
+	/**
+	 * The sync mode of a time window.
+	 *
+	 * @param int $minutesBack Number of minutes to look back (0 = all objects)
+	 *
+	 * @return string 'full' for a window of 0, 'incremental' otherwise
+	 */
+	private static function fullSyncModeOf(int $minutesBack): string {
+		if ($minutesBack === 0) {
+			return 'full';
+		}
+
+		return 'incremental';
+	}//end fullSyncModeOf()
+
+	/**
+	 * The statistics of a full sync that starts now.
+	 *
+	 * @return array<string, mixed> The statistics
+	 */
+	private static function newFullSyncStats(): array {
+		return [
 			'organizationsProcessed' => 0,
 			'entitiesCreated' => 0,
 			'entitiesUpdated' => 0,
@@ -705,84 +745,161 @@ class OrganizationSyncService {
 			'endTime' => null,
 			'duration' => null,
 		];
+	}//end newFullSyncStats()
 
+	/**
+	 * Sync every organisatie object of the window with its organisation entity.
+	 *
+	 * @param FullSyncRun $run The run
+	 *
+	 * @return array Synchronization results and statistics
+	 */
+	private function runFullSync(FullSyncRun $run): array {
+		// Check configuration.
+		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+		$run->register = ($voorzieningenConfig['register'] ?? '');
+		$run->organizationSchema = ($voorzieningenConfig['organisatie_schema'] ?? '');
+		$run->contactSchema = ($voorzieningenConfig['contactpersoon_schema'] ?? '');
+		if (empty($run->register) === true || empty($run->organizationSchema) === true) {
+			return $this->refuseUnconfiguredFullSync(run: $run);
+		}
+
+		// Process each organisatie object.
+		foreach ($this->fullSyncObjects(run: $run) as $organisationObject) {
+			$this->syncOrganisationObject(run: $run, organisationObject: $organisationObject);
+		}
+
+		return $this->completeFullSync(run: $run);
+	}//end runFullSync()
+
+	/**
+	 * Record that the sync is not configured.
+	 *
+	 * @param FullSyncRun $run The run
+	 *
+	 * @return array The statistics, with the error
+	 */
+	private function refuseUnconfiguredFullSync(FullSyncRun $run): array {
+		$error = 'Missing configuration: register or organization schema not configured';
+		$this->logger->error('OrganizationSyncService: ' . $error);
+		$run->stats['errors'][] = $error;
+		return $run->stats;
+	}//end refuseUnconfiguredFullSync()
+
+	/**
+	 * Get organisatie objects based on time window.
+	 *
+	 * @param FullSyncRun $run The run, with the register and organisatie schema
+	 *
+	 * @return array The organisatie objects
+	 */
+	private function fullSyncObjects(FullSyncRun $run): array {
+		$organisationObjects = $this->getOrganisationObjectsByTimeWindow(
+			register: $run->register,
+			organizationSchema: $run->organizationSchema,
+			minutesBack: $run->minutesBack
+		);
+		$this->logFullSyncObjects(run: $run, organisationObjects: $organisationObjects);
+		return $organisationObjects;
+	}//end fullSyncObjects()
+
+	/**
+	 * Log the organisatie objects found for the window.
+	 *
+	 * @param FullSyncRun $run                 The run
+	 * @param array       $organisationObjects The organisatie objects
+	 *
+	 * @return void
+	 */
+	private function logFullSyncObjects(FullSyncRun $run, array $organisationObjects): void {
+		$this->logger->info(
+			'OrganizationSyncService: Found organisatie objects',
+			[
+				'count' => count($organisationObjects),
+				'minutesBack' => $run->minutesBack,
+				'syncMode' => self::fullSyncModeOf(minutesBack: $run->minutesBack),
+			]
+		);
+	}//end logFullSyncObjects()
+
+	/**
+	 * Sync one organisatie object, recording a failure and going on with the next.
+	 *
+	 * @param FullSyncRun $run                The run
+	 * @param object      $organisationObject The organisatie object
+	 *
+	 * @return void
+	 */
+	private function syncOrganisationObject(FullSyncRun $run, object $organisationObject): void {
 		try {
-			// Check configuration.
-			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-			$register = ($voorzieningenConfig['register'] ?? '');
-			$organizationSchema = ($voorzieningenConfig['organisatie_schema'] ?? '');
-			$contactSchema = ($voorzieningenConfig['contactpersoon_schema'] ?? '');
-
-			if (empty($register) === true || empty($organizationSchema) === true) {
-				$error = 'Missing configuration: register or organization schema not configured';
-				$this->logger->error('OrganizationSyncService: ' . $error);
-				$stats['errors'][] = $error;
-				return $stats;
-			}
-
-			// Get organisatie objects based on time window.
-			$organisationObjects = $this->getOrganisationObjectsByTimeWindow(
-				register: $register,
-				organizationSchema: $organizationSchema,
-				minutesBack: $minutesBack
+			$this->processOrganisationObject(
+				organisationObject: $organisationObject,
+				register: $run->register,
+				contactSchema: $run->contactSchema,
+				stats: $run->stats
 			);
-			$syncModeValue = 'incremental';
-			if ($minutesBack === 0) {
-				$syncModeValue = 'full';
-			}
-
-			$this->logger->info(
-				'OrganizationSyncService: Found organisatie objects',
-				[
-					'count' => count($organisationObjects),
-					'minutesBack' => $minutesBack,
-					'syncMode' => $syncModeValue,
-				]
-			);
-
-			// Process each organisatie object.
-			foreach ($organisationObjects as $organisationObject) {
-				try {
-					$this->processOrganisationObject(
-						organisationObject: $organisationObject,
-						register: $register,
-						contactSchema: $contactSchema,
-						stats: $stats
-					);
-					$stats['organizationsProcessed']++;
-				} catch (\Exception $e) {
-					$error = 'Failed to process organisatie object ' . $organisationObject->getId() . ': ' . $e->getMessage();
-					$this->logger->error(
-						'OrganizationSyncService: ' . $error,
-						[
-							'exception' => $e,
-							'objectId' => $organisationObject->getId(),
-						]
-					);
-					$stats['errors'][] = $error;
-				}
-			}//end foreach
-
-			$stats['endTime'] = date('Y-m-d H:i:s');
-			$startTime = new \DateTime($stats['startTime']);
-			$endTime = new \DateTime($stats['endTime']);
-			$stats['duration'] = $endTime->diff($startTime)->format('%H:%I:%S');
-
-			$this->logger->info('OrganizationSyncService: Completed comprehensive synchronization', $stats);
-
-			return $stats;
+			$run->stats['organizationsProcessed']++;
 		} catch (\Exception $e) {
-			$error = 'Synchronization failed: ' . $e->getMessage();
-			$this->logger->error(
-				'OrganizationSyncService: ' . $error,
-				['exception' => $e]
-			);
-			$stats['errors'][] = $error;
-			$stats['endTime'] = date('Y-m-d H:i:s');
-			return $stats;
-		}//end try
+			$run->stats['errors'][] = $this->logFailedOrganisationObject(organisationObject: $organisationObject, exception: $e);
+		}
+	}//end syncOrganisationObject()
 
-	}//end performFullSync()
+	/**
+	 * Log that an organisatie object could not be processed.
+	 *
+	 * @param object     $organisationObject The organisatie object
+	 * @param \Exception $exception          What failed
+	 *
+	 * @return string The error recorded in the statistics
+	 */
+	private function logFailedOrganisationObject(object $organisationObject, \Exception $exception): string {
+		$error = 'Failed to process organisatie object ' . $organisationObject->getId() . ': ' . $exception->getMessage();
+		$this->logger->error(
+			'OrganizationSyncService: ' . $error,
+			[
+				'exception' => $exception,
+				'objectId' => $organisationObject->getId(),
+			]
+		);
+		return $error;
+	}//end logFailedOrganisationObject()
+
+	/**
+	 * Record the end time and duration of a full sync, and log its statistics.
+	 *
+	 * @param FullSyncRun $run The run
+	 *
+	 * @return array Synchronization results and statistics
+	 */
+	private function completeFullSync(FullSyncRun $run): array {
+		$run->stats['endTime'] = date('Y-m-d H:i:s');
+		$startTime = new \DateTime($run->stats['startTime']);
+		$endTime = new \DateTime($run->stats['endTime']);
+		$run->stats['duration'] = $endTime->diff($startTime)->format('%H:%I:%S');
+
+		$this->logger->info('OrganizationSyncService: Completed comprehensive synchronization', $run->stats);
+
+		return $run->stats;
+	}//end completeFullSync()
+
+	/**
+	 * Record that the sync failed.
+	 *
+	 * @param FullSyncRun $run       The run
+	 * @param \Exception  $exception What failed
+	 *
+	 * @return array The statistics, with the error and the end time
+	 */
+	private function failFullSync(FullSyncRun $run, \Exception $exception): array {
+		$error = 'Synchronization failed: ' . $exception->getMessage();
+		$this->logger->error(
+			'OrganizationSyncService: ' . $error,
+			['exception' => $exception]
+		);
+		$run->stats['errors'][] = $error;
+		$run->stats['endTime'] = date('Y-m-d H:i:s');
+		return $run->stats;
+	}//end failFullSync()
 
 	/**
 	 * Gets organisatie objects filtered by time window
@@ -973,60 +1090,117 @@ class OrganizationSyncService {
 	private function ensureOrganisationEntity(object $organisationObject, array $run): ?object {
 		try {
 			// Get the full object data - the passed object might not have all fields populated.
-			$organisationId = $organisationObject->getUuid();
+			$run['organisationId'] = $organisationObject->getUuid();
 			$organisationObject = $this->fullOrganisationObject(organisationObject: $organisationObject);
-			$objectData = $organisationObject->getObject();
+			$run = $this->organisationEntityRun(organisationObject: $organisationObject, run: $run);
 
-			$this->logger->debug(
-				'Ensuring organisation entity',
-				[
-					'app' => 'stackiq',
-					'organisatieId' => $organisationId,
-					'name' => ($objectData['name'] ?? 'Unknown'),
-					'status' => ($objectData['status'] ?? 'Unknown'),
-				]
-			);
-
-			// Get configuration for object updates.
-			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-			$run['organisationId'] = $organisationId;
-			$run['organisationObject'] = $organisationObject;
-			$run['objectData'] = $objectData;
-			$run['register'] = ($voorzieningenConfig['register'] ?? '');
-			$run['organizationSchema'] = ($voorzieningenConfig['organisatie_schema'] ?? '');
-
-			// Try to find existing organisation entity.
-			try {
-				$organisationEntity = $this->organisationMapper->findByUuid($organisationId);
-				if ($this->isBoundOrganisation(organisationEntity: $organisationEntity, run: $run) === false) {
-					$this->refuseUuidConflict(run: $run);
-					return null;
-				}
-
-				return $this->refreshOrganisationEntity(organisationEntity: $organisationEntity, run: $run);
-			} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
-				if ($this->slugIsTaken(run: $run) === true) {
-					return null;
-				}
-
-				return $this->createOrganisationEntity(run: $run);
-			}
+			return $this->findOrCreateOrganisationEntity(run: $run);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'💥 ENSURE ORGANISATION ENTITY EXCEPTION',
-				[
-					'app' => 'stackiq',
-					'organisatieId' => $organisationObject->getId(),
-					'exception' => $e->getMessage(),
-					'file' => $e->getFile(),
-					'line' => $e->getLine(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
+			$this->logEnsureOrganisationEntityFailure(organisationObject: $organisationObject, exception: $e);
 			return null;
 		}//end try
 
 	}//end ensureOrganisationEntity()
+
+	/**
+	 * Add the organisatie object, its data and the configured register and schema to the ensure run.
+	 *
+	 * @param object $organisationObject The complete organisatie object.
+	 * @param array  $run                The ensure run, with the organisatie id.
+	 *
+	 * @return array The ensure run
+	 */
+	private function organisationEntityRun(object $organisationObject, array $run): array {
+		$run['organisationObject'] = $organisationObject;
+		$run['objectData'] = $organisationObject->getObject();
+		$this->logEnsuringOrganisationEntity(run: $run);
+
+		// Get configuration for object updates.
+		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+		$run['register'] = ($voorzieningenConfig['register'] ?? '');
+		$run['organizationSchema'] = ($voorzieningenConfig['organisatie_schema'] ?? '');
+		return $run;
+	}//end organisationEntityRun()
+
+	/**
+	 * Log the organisatie whose organisation entity is ensured.
+	 *
+	 * @param array $run The ensure run, with the organisatie id and data.
+	 *
+	 * @return void
+	 */
+	private function logEnsuringOrganisationEntity(array $run): void {
+		$this->logger->debug(
+			'Ensuring organisation entity',
+			[
+				'app' => 'stackiq',
+				'organisatieId' => $run['organisationId'],
+				'name' => ($run['objectData']['name'] ?? 'Unknown'),
+				'status' => ($run['objectData']['status'] ?? 'Unknown'),
+			]
+		);
+	}//end logEnsuringOrganisationEntity()
+
+	/**
+	 * Refresh the organisation entity with the organisatie's uuid, or create it when there is none.
+	 *
+	 * @param array $run The ensure run (see ensureOrganisationEntity).
+	 *
+	 * @return object|null The organisation entity, or null when it is refused
+	 */
+	private function findOrCreateOrganisationEntity(array $run): ?object {
+		// Try to find existing organisation entity.
+		try {
+			$organisationEntity = $this->organisationMapper->findByUuid($run['organisationId']);
+			return $this->refreshBoundOrganisationEntity(organisationEntity: $organisationEntity, run: $run);
+		} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
+			if ($this->slugIsTaken(run: $run) === true) {
+				return null;
+			}
+
+			return $this->createOrganisationEntity(run: $run);
+		}
+
+	}//end findOrCreateOrganisationEntity()
+
+	/**
+	 * Refresh an organisation entity that belongs to the organisatie, or refuse one that does not.
+	 *
+	 * @param object $organisationEntity The organisation with the organisatie's uuid.
+	 * @param array  $run                The ensure run (see ensureOrganisationEntity).
+	 *
+	 * @return object|null The refreshed entity, or null when it does not belong to the organisatie
+	 */
+	private function refreshBoundOrganisationEntity(object $organisationEntity, array $run): ?object {
+		if ($this->isBoundOrganisation(organisationEntity: $organisationEntity, run: $run) === false) {
+			$this->refuseUuidConflict(run: $run);
+			return null;
+		}
+
+		return $this->refreshOrganisationEntity(organisationEntity: $organisationEntity, run: $run);
+	}//end refreshBoundOrganisationEntity()
+
+	/**
+	 * Log why the organisation entity could not be ensured.
+	 *
+	 * @param object     $organisationObject The organisatie object.
+	 * @param \Exception $exception          What failed.
+	 *
+	 * @return void
+	 */
+	private function logEnsureOrganisationEntityFailure(object $organisationObject, \Exception $exception): void {
+		$this->logger->error(
+			'💥 ENSURE ORGANISATION ENTITY EXCEPTION',
+			[
+				'app' => 'stackiq',
+				'organisatieId' => $organisationObject->getId(),
+				'exception' => $exception->getMessage(),
+				'file' => $exception->getFile(),
+				'line' => $exception->getLine(),
+				'trace' => $exception->getTraceAsString(),
+			]
+		);
+	}//end logEnsureOrganisationEntityFailure()
 
 	/**
 	 * The organisatie object as stored, or the one given when it cannot be fetched.
@@ -1454,49 +1628,87 @@ class OrganizationSyncService {
 	 * @return object|null The new entity, or what creation returned when it failed
 	 */
 	private function createOrganisationEntity(array $run): ?object {
-		$organisationId = $run['organisationId'];
-		$this->logger->debug(
-			'Creating new organisation entity',
-			[
-				'app' => 'stackiq',
-				'organisatieId' => $organisationId,
-				'name' => ($run['objectData']['name'] ?? 'Unknown'),
-			]
-		);
+		$this->logCreatingOrganisationEntity(run: $run);
 
 		try {
 			$organisationEntity = $this->organisationService->createOrganisationInOpenRegister($run['objectData']);
 		} catch (\RuntimeException $e) {
-			if (is_a($e, OrganisationSlug::CONFLICT_EXCEPTION) === false) {
-				throw $e;
-			}
-
-			$this->refuseSlugConflict(run: $run, existingUuid: null);
-			return null;
+			return $this->refuseCreationSlugConflict(exception: $e, run: $run);
 		}
 
 		if (empty($organisationEntity) === true) {
-			$this->logger->error(
-				'❌ ORGANISATION ENTITY CREATION FAILED',
-				[
-					'app' => 'stackiq',
-					'organisatieId' => $organisationId,
-				]
-			);
+			$this->logOrganisationEntityCreationFailed(run: $run);
 			return $organisationEntity;
 		}
 
-		$run['stats']['entitiesCreated']++;
+		return $this->completeNewOrganisationEntity(organisationEntity: $organisationEntity, run: $run);
+	}//end createOrganisationEntity()
+
+	/**
+	 * Log the organisation entity about to be created.
+	 *
+	 * @param array $run The ensure run (see ensureOrganisationEntity).
+	 *
+	 * @return void
+	 */
+	private function logCreatingOrganisationEntity(array $run): void {
 		$this->logger->debug(
-			'New organisation entity created',
+			'Creating new organisation entity',
 			[
 				'app' => 'stackiq',
-				'organisatieId' => $organisationId,
-				'entityId' => $organisationEntity->getId(),
-				'active' => $organisationEntity->getActive(),
-				'name' => $organisationEntity->getName(),
+				'organisatieId' => $run['organisationId'],
+				'name' => ($run['objectData']['name'] ?? 'Unknown'),
 			]
 		);
+	}//end logCreatingOrganisationEntity()
+
+	/**
+	 * Refuse a creation that failed on a taken slug; any other failure is thrown on.
+	 *
+	 * @param \RuntimeException $exception Why the creation failed.
+	 * @param array             $run       The ensure run (see ensureOrganisationEntity).
+	 *
+	 * @return null Always null: no entity was created
+	 *
+	 * @throws \RuntimeException When the creation failed for another reason than a taken slug.
+	 */
+	private function refuseCreationSlugConflict(\RuntimeException $exception, array $run): null {
+		if (is_a($exception, OrganisationSlug::CONFLICT_EXCEPTION) === false) {
+			throw $exception;
+		}
+
+		$this->refuseSlugConflict(run: $run, existingUuid: null);
+		return null;
+	}//end refuseCreationSlugConflict()
+
+	/**
+	 * Log that creating the organisation entity returned nothing.
+	 *
+	 * @param array $run The ensure run (see ensureOrganisationEntity).
+	 *
+	 * @return void
+	 */
+	private function logOrganisationEntityCreationFailed(array $run): void {
+		$this->logger->error(
+			'❌ ORGANISATION ENTITY CREATION FAILED',
+			[
+				'app' => 'stackiq',
+				'organisatieId' => $run['organisationId'],
+			]
+		);
+	}//end logOrganisationEntityCreationFailed()
+
+	/**
+	 * Count a new organisation entity, mail the new organisation and make the entity the object's owner.
+	 *
+	 * @param object $organisationEntity The new entity.
+	 * @param array  $run                The ensure run (see ensureOrganisationEntity).
+	 *
+	 * @return object The new entity
+	 */
+	private function completeNewOrganisationEntity(object $organisationEntity, array $run): object {
+		$run['stats']['entitiesCreated']++;
+		$this->logNewOrganisationEntity(organisationEntity: $organisationEntity, run: $run);
 
 		// Send registration email for new organization (skip for backfill).
 		if (empty($run['sendEmails']) === false) {
@@ -1507,7 +1719,28 @@ class OrganizationSyncService {
 		$this->makeEntityOwner(organisationEntity: $organisationEntity, run: $run);
 
 		return $organisationEntity;
-	}//end createOrganisationEntity()
+	}//end completeNewOrganisationEntity()
+
+	/**
+	 * Log a new organisation entity.
+	 *
+	 * @param object $organisationEntity The new entity.
+	 * @param array  $run                The ensure run (see ensureOrganisationEntity).
+	 *
+	 * @return void
+	 */
+	private function logNewOrganisationEntity(object $organisationEntity, array $run): void {
+		$this->logger->debug(
+			'New organisation entity created',
+			[
+				'app' => 'stackiq',
+				'organisatieId' => $run['organisationId'],
+				'entityId' => $organisationEntity->getId(),
+				'active' => $organisationEntity->getActive(),
+				'name' => $organisationEntity->getName(),
+			]
+		);
+	}//end logNewOrganisationEntity()
 
 	/**
 	 * Send an organisation its registration or activation e-mail and log whether it went out.
@@ -1663,77 +1896,7 @@ class OrganizationSyncService {
 	 */
 	private function processContactPerson(object $contactPerson, array &$stats): ?string {
 		try {
-			$contactData = $contactPerson->getObject();
-			// Schema uses 'e-mailadres' but some data may use 'email'.
-			$email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
-			$existingUsername = ($contactData['username'] ?? '');
-
-			if (empty($email) === true) {
-				$this->logger->debug(
-					'OrganizationSyncService: Contact person has no email, skipping',
-					[
-						'contactId' => $contactPerson->getId(),
-					]
-				);
-				return null;
-			}
-
-			// Check if user already exists.
-			$userManager = $this->container->get('OCP\IUserManager');
-			// Use the stored username when available, otherwise fall back to email as username.
-			if (empty($existingUsername) === false) {
-				$username = $existingUsername;
-			} else {
-				$username = $email;
-			}
-
-			$user = $userManager->get($username);
-
-			if ($user === null) {
-				// Create user account.
-				$this->logger->info(
-					'OrganizationSyncService: Creating user account for contact person',
-					[
-						'contactId' => $contactPerson->getId(),
-						'email' => $email,
-						'username' => $username,
-					]
-				);
-
-				$success = $this->contactPersonService->processContactpersoon($contactPerson, false);
-				if (empty($success) === false) {
-					$stats['usersCreated']++;
-					$this->logger->info(
-						'OrganizationSyncService: Successfully created user account',
-						[
-							'contactId' => $contactPerson->getId(),
-							'username' => $username,
-						]
-					);
-				} else {
-					$this->logger->error(
-						'OrganizationSyncService: Failed to create user account',
-						[
-							'contactId' => $contactPerson->getId(),
-							'username' => $username,
-						]
-					);
-				}
-			}//end if
-
-			// Contact exists without a stored username — record the resolved username for future syncs.
-			if (empty($existingUsername) === true) {
-				$this->logger->debug(
-					'OrganizationSyncService: Updating contact person with username',
-					[
-						'contactId' => $contactPerson->getId(),
-						'username' => $username,
-					]
-				);
-				$stats['usersUpdated']++;
-			}
-
-			return $username;
+			return $this->ensureContactAccount(contactPerson: $contactPerson, stats: $stats);
 		} catch (\Exception $e) {
 			$this->logger->error(
 				'OrganizationSyncService: Failed to process contact person',
@@ -1746,6 +1909,158 @@ class OrganizationSyncService {
 		}//end try
 
 	}//end processContactPerson()
+
+	/**
+	 * Make sure a contact person with an e-mail has a user account, and count what was done.
+	 *
+	 * @param object $contactPerson The contact person object
+	 * @param array  $stats         Statistics array (passed by reference)
+	 *
+	 * @return string|null The username, or null when the contact person has no e-mail
+	 */
+	private function ensureContactAccount(object $contactPerson, array &$stats): ?string {
+		$account = $this->contactAccountOf(contactPerson: $contactPerson);
+		if ($account === null) {
+			return null;
+		}
+
+		// Check if user already exists.
+		$userManager = $this->container->get('OCP\IUserManager');
+		if ($userManager->get($account->username) === null) {
+			$this->createContactAccount(account: $account, stats: $stats);
+		}
+
+		// Contact exists without a stored username — record the resolved username for future syncs.
+		if ($account->hasStoredUsername === false) {
+			$this->countResolvedUsername(account: $account, stats: $stats);
+		}
+
+		return $account->username;
+	}//end ensureContactAccount()
+
+	/**
+	 * The account of a contact person: its e-mail and its username.
+	 *
+	 * @param object $contactPerson The contact person object
+	 *
+	 * @return ContactAccount|null The account, or null when the contact person has no e-mail
+	 */
+	private function contactAccountOf(object $contactPerson): ?ContactAccount {
+		$contactData = $contactPerson->getObject();
+		// Schema uses 'e-mailadres' but some data may use 'email'.
+		if (empty($contactData['email'] ?? $contactData['e-mailadres'] ?? '') === true) {
+			$this->logContactWithoutEmail(contactPerson: $contactPerson);
+			return null;
+		}
+
+		return self::newContactAccount(contactPerson: $contactPerson, contactData: $contactData);
+	}//end contactAccountOf()
+
+	/**
+	 * The account of a contact person with an e-mail.
+	 *
+	 * @param object $contactPerson The contact person object
+	 * @param array  $contactData   Its data
+	 *
+	 * @return ContactAccount The account
+	 */
+	private static function newContactAccount(object $contactPerson, array $contactData): ContactAccount {
+		$existingUsername = ($contactData['username'] ?? '');
+
+		$account = new ContactAccount();
+		$account->contactPerson = $contactPerson;
+		$account->email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+		// Use the stored username when available, otherwise fall back to email as username.
+		$account->hasStoredUsername = empty($existingUsername) === false;
+		$account->username = $account->email;
+		if ($account->hasStoredUsername === true) {
+			$account->username = $existingUsername;
+		}
+
+		return $account;
+	}//end newContactAccount()
+
+	/**
+	 * Log that a contact person has no e-mail and gets no account.
+	 *
+	 * @param object $contactPerson The contact person object
+	 *
+	 * @return void
+	 */
+	private function logContactWithoutEmail(object $contactPerson): void {
+		$this->logger->debug(
+			'OrganizationSyncService: Contact person has no email, skipping',
+			[
+				'contactId' => $contactPerson->getId(),
+			]
+		);
+	}//end logContactWithoutEmail()
+
+	/**
+	 * Create the user account of a contact person, counting it when it was made.
+	 *
+	 * @param ContactAccount $account The account to create
+	 * @param array          $stats   Statistics array (passed by reference)
+	 *
+	 * @return void
+	 */
+	private function createContactAccount(ContactAccount $account, array &$stats): void {
+		$this->logger->info(
+			'OrganizationSyncService: Creating user account for contact person',
+			[
+				'contactId' => $account->contactPerson->getId(),
+				'email' => $account->email,
+				'username' => $account->username,
+			]
+		);
+
+		$success = $this->contactPersonService->processContactpersoon($account->contactPerson, false);
+		if (empty($success) === false) {
+			$stats['usersCreated']++;
+		}
+
+		$this->logContactAccountCreation(account: $account, success: empty($success) === false);
+	}//end createContactAccount()
+
+	/**
+	 * Log whether the user account of a contact person was created.
+	 *
+	 * @param ContactAccount $account The account
+	 * @param bool           $success Whether it was created
+	 *
+	 * @return void
+	 */
+	private function logContactAccountCreation(ContactAccount $account, bool $success): void {
+		$context = [
+			'contactId' => $account->contactPerson->getId(),
+			'username' => $account->username,
+		];
+		if ($success === true) {
+			$this->logger->info('OrganizationSyncService: Successfully created user account', $context);
+			return;
+		}
+
+		$this->logger->error('OrganizationSyncService: Failed to create user account', $context);
+	}//end logContactAccountCreation()
+
+	/**
+	 * Count the username resolved for a contact person that stored none.
+	 *
+	 * @param ContactAccount $account The account
+	 * @param array          $stats   Statistics array (passed by reference)
+	 *
+	 * @return void
+	 */
+	private function countResolvedUsername(ContactAccount $account, array &$stats): void {
+		$this->logger->debug(
+			'OrganizationSyncService: Updating contact person with username',
+			[
+				'contactId' => $account->contactPerson->getId(),
+				'username' => $account->username,
+			]
+		);
+		$stats['usersUpdated']++;
+	}//end countResolvedUsername()
 
 	/**
 	 * Updates organisation entity with all usernames
@@ -2500,66 +2815,138 @@ class OrganizationSyncService {
 	 */
 	private function processRelatedContactPersons(string $organizationUuid, array &$stats): void {
 		try {
-			$this->logger->debug(
-				'Finding related contact persons',
-				[
-					'app' => 'stackiq',
-					'organizationId' => $organizationUuid,
-				]
-			);
-
-			// Get configuration.
-			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-			$run = [
-				'organizationUuid' => $organizationUuid,
-				'register' => ($voorzieningenConfig['register'] ?? ''),
-				'contactSchema' => ($voorzieningenConfig['contactpersoon_schema'] ?? ''),
-			];
-
-			if (empty($run['register']) === true || empty($run['contactSchema']) === true) {
-				$this->logger->warning(
-					'[FLOW] Related contact processing skipped - configuration missing',
-					[
-						'organizationId' => $organizationUuid,
-						'register' => $run['register'],
-						'contactSchema' => $run['contactSchema'],
-					]
-				);
-				return;
-			}
-
-			$relatedContacts = $this->findRelatedContacts(run: $run);
-			if (empty($relatedContacts) === true) {
-				return;
-			}
-
-			$this->logger->info(
-				'👥 PROCESSING RELATED CONTACT PERSONS',
-				[
-					'app' => 'stackiq',
-					'organizationId' => $organizationUuid,
-					'contactCount' => count($relatedContacts),
-				]
-			);
-
-			$run['stats'] = &$stats;
-			foreach ($relatedContacts as $contactObject) {
-				$this->processRelatedContact(contactObject: $contactObject, run: $run);
-			}
+			$this->processRelatedContactPersonsOf(organizationUuid: $organizationUuid, stats: $stats);
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'[FLOW] Failed to process related contact persons',
-				[
-					'organizationId' => $organizationUuid,
-					'exception' => $e->getMessage(),
-					'file' => $e->getFile(),
-					'line' => $e->getLine(),
-				]
-			);
-			$stats['errors'][] = 'Failed to process related contact persons: ' . $e->getMessage();
+			$stats['errors'][] = $this->logRelatedContactPersonsFailure(organizationUuid: $organizationUuid, exception: $e);
 		}//end try
 
 	}//end processRelatedContactPersons()
+
+	/**
+	 * Find the related contactpersoon objects of an organisation and process each.
+	 *
+	 * @param string $organizationUuid The organization UUID.
+	 * @param array  $stats            The statistics array to update.
+	 *
+	 * @return void
+	 */
+	private function processRelatedContactPersonsOf(string $organizationUuid, array &$stats): void {
+		$run = $this->relatedContactPersonsRun(organizationUuid: $organizationUuid);
+		if ($run === null) {
+			return;
+		}
+
+		$relatedContacts = $this->findRelatedContacts(run: $run);
+		if (empty($relatedContacts) === true) {
+			return;
+		}
+
+		$this->logProcessingRelatedContactPersons(run: $run, relatedContacts: $relatedContacts);
+		$run['stats'] = &$stats;
+		foreach ($relatedContacts as $contactObject) {
+			$this->processRelatedContact(contactObject: $contactObject, run: $run);
+		}
+	}//end processRelatedContactPersonsOf()
+
+	/**
+	 * The related contact run of an organisation: its uuid and the configured register and contact schema.
+	 *
+	 * @param string $organizationUuid The organization UUID.
+	 *
+	 * @return array|null The run, or null when the register or contact schema is not configured.
+	 */
+	private function relatedContactPersonsRun(string $organizationUuid): ?array {
+		$this->logFindingRelatedContactPersons(organizationUuid: $organizationUuid);
+
+		// Get configuration.
+		$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+		$run = [
+			'organizationUuid' => $organizationUuid,
+			'register' => ($voorzieningenConfig['register'] ?? ''),
+			'contactSchema' => ($voorzieningenConfig['contactpersoon_schema'] ?? ''),
+		];
+		if (empty($run['register']) === true || empty($run['contactSchema']) === true) {
+			$this->logRelatedContactPersonsUnconfigured(run: $run);
+			return null;
+		}
+
+		return $run;
+	}//end relatedContactPersonsRun()
+
+	/**
+	 * Log that the related contact persons of an organisation are looked up.
+	 *
+	 * @param string $organizationUuid The organization UUID.
+	 *
+	 * @return void
+	 */
+	private function logFindingRelatedContactPersons(string $organizationUuid): void {
+		$this->logger->debug(
+			'Finding related contact persons',
+			[
+				'app' => 'stackiq',
+				'organizationId' => $organizationUuid,
+			]
+		);
+	}//end logFindingRelatedContactPersons()
+
+	/**
+	 * Log that related contact processing is skipped for a missing configuration.
+	 *
+	 * @param array $run The related contact run.
+	 *
+	 * @return void
+	 */
+	private function logRelatedContactPersonsUnconfigured(array $run): void {
+		$this->logger->warning(
+			'[FLOW] Related contact processing skipped - configuration missing',
+			[
+				'organizationId' => $run['organizationUuid'],
+				'register' => $run['register'],
+				'contactSchema' => $run['contactSchema'],
+			]
+		);
+	}//end logRelatedContactPersonsUnconfigured()
+
+	/**
+	 * Log the related contact persons about to be processed.
+	 *
+	 * @param array $run             The related contact run.
+	 * @param array $relatedContacts The related contactpersoon objects.
+	 *
+	 * @return void
+	 */
+	private function logProcessingRelatedContactPersons(array $run, array $relatedContacts): void {
+		$this->logger->info(
+			'👥 PROCESSING RELATED CONTACT PERSONS',
+			[
+				'app' => 'stackiq',
+				'organizationId' => $run['organizationUuid'],
+				'contactCount' => count($relatedContacts),
+			]
+		);
+	}//end logProcessingRelatedContactPersons()
+
+	/**
+	 * Log that processing the related contact persons failed.
+	 *
+	 * @param string     $organizationUuid The organization UUID.
+	 * @param \Exception $exception        What failed.
+	 *
+	 * @return string The error recorded in the statistics
+	 */
+	private function logRelatedContactPersonsFailure(string $organizationUuid, \Exception $exception): string {
+		$this->logger->error(
+			'[FLOW] Failed to process related contact persons',
+			[
+				'organizationId' => $organizationUuid,
+				'exception' => $exception->getMessage(),
+				'file' => $exception->getFile(),
+				'line' => $exception->getLine(),
+			]
+		);
+		return 'Failed to process related contact persons: ' . $exception->getMessage();
+	}//end logRelatedContactPersonsFailure()
 
 	/**
 	 * Find the contactpersoon objects of an organisation: by their organization field, then by

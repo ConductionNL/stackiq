@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCP\App\IAppManager;
@@ -98,7 +99,7 @@ class ArchiMateService {
 	 * @param IAppManager $appManager App manager service
 	 * @param ContainerInterface $container PSR-11 container interface
 	 * @param LoggerInterface $logger Logger service
-	 * @param SettingsService $settingsService Settings service for schema and organization configuration
+	 * @param RegisterConfigReaderInterface $settingsService Settings service for schema and organization configuration
 	 * @param ArchiMateImportService $importService Import service for XML parsing
 	 * @param ArchiMateExportService $exportService Export service for XML generation
 	 * @param ProgressTracker $progressTracker Progress store a running import reads its cancel from
@@ -109,7 +110,7 @@ class ArchiMateService {
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly ArchiMateImportService $importService,
 		private readonly ArchiMateExportService $exportService,
 		private readonly ProgressTracker $progressTracker,
@@ -248,18 +249,7 @@ class ArchiMateService {
 				// Will be logged by export service.
 			];
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'ArchiMate export failed',
-				[
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			return [
-				'success' => false,
-				'error' => $e->getMessage(),
-			];
+			return $this->exportFailure(message: 'ArchiMate export failed', exception: $e);
 		}//end try
 	}//end exportToArchiMate()
 
@@ -292,24 +282,11 @@ class ArchiMateService {
 
 			// Look up the organization from Voorzieningen register.
 			$voorzConfig = $this->settingsService->getVoorzieningenConfig();
-			[$orgRegisterId, $orgSchemaId] = $this->resolveOrgRegisterAndSchema(voorzConfig: $voorzConfig);
-			if ($orgRegisterId === null || $orgSchemaId === null) {
-				throw new \RuntimeException('Organization register/schema not configured');
-			}
-
-			// Look up the organization directly by UUID.
-			try {
-				$orgEntity = $objectService->find(
-					id: $organizationUuid,
-					register: $orgRegisterId,
-					schema: $orgSchemaId,
-					_rbac: false,
-					_multitenancy: false
-				);
-			} catch (\Exception $e) {
-				$orgEntity = null;
-			}
-
+			[$orgEntity, $orgRegisterId] = $this->findExportOrganisation(
+				objectService: $objectService,
+				voorzConfig: $voorzConfig,
+				organizationUuid: $organizationUuid
+			);
 			if ($orgEntity === null) {
 				return [
 					'success' => false,
@@ -321,122 +298,15 @@ class ArchiMateService {
 			$orgName = $organization['name'] ?? $organization['@self']['name'] ?? 'Unknown';
 
 			// Get AMEF config and base objects.
-			$registerId = $this->getAmefRegisterId();
-			if ($registerId === null) {
-				throw new \RuntimeException('AMEF register ID is not configured');
-			}
-
+			$registerId = $this->requireAmefRegisterId();
 			$schemaIdMap = $this->createSchemaIdMap();
 
-			// Query organization's gebruik and modules from Voorzieningen register.
-			if (empty($voorzConfig['gebruik_schema']) === false) {
-				$gebruikSchemaId = $voorzConfig['gebruik_schema'];
-			} else {
-				$gebruikSchemaId = null;
-			}
-
-			$gebruikData = [];
-			if (empty($gebruikSchemaId) === false) {
-				$gebruikQuery = [
-					'@self' => [
-						'register' => $orgRegisterId,
-						'schema' => $gebruikSchemaId,
-						'organisation' => $organizationUuid,
-					],
-					'_limit' => 10000,
-				];
-				$gebruikData = $objectService->searchObjects(query: $gebruikQuery, _rbac: false, _multitenancy: false);
-			}
-
-			if (empty($voorzConfig['module_schema']) === false) {
-				$moduleSchemaId = $voorzConfig['module_schema'];
-			} else {
-				$moduleSchemaId = null;
-			}
-
-			$modulesData = [];
-			if (empty($moduleSchemaId) === false) {
-				$modulesQuery = [
-					'@self' => [
-						'register' => $orgRegisterId,
-						'schema' => $moduleSchemaId,
-						'organisation' => $organizationUuid,
-					],
-					'_limit' => 10000,
-				];
-				$modulesData = $objectService->searchObjects(query: $modulesQuery, _rbac: false, _multitenancy: false);
-			}
-
-			// Query deelname gebruik if enabled (gebruik objects where this org is in deelnemers).
-			$deelnamesData = [];
-			if ($options['deelnames'] ?? false) {
-				if (empty($gebruikSchemaId) === false) {
-					$deelnameQuery = [
-						'@self' => [
-							'register' => $orgRegisterId,
-							'schema' => $gebruikSchemaId,
-						],
-						'participants' => $organizationUuid,
-						'_limit' => 10000,
-					];
-					$deelnamesData = $objectService->searchObjects(
-						query: $deelnameQuery,
-						_rbac: false,
-						_multitenancy: false
-					);
-					$this->logger->info(
-						'Retrieved deelname gebruik for org export',
-						[
-							'deelnames_count' => count($deelnamesData),
-							'organization_uuid' => $organizationUuid,
-						]
-					);
-
-					// Deelname modules belong to other orgs, so query all modules (without org filter).
-					// to resolve names for the export.
-					if (empty($deelnamesData) === false && $moduleSchemaId === true) {
-						$allModulesQuery = [
-							'@self' => [
-								'register' => $orgRegisterId,
-								'schema' => $moduleSchemaId,
-							],
-							'_limit' => 10000,
-						];
-						$allModules = $objectService->searchObjects(
-							query: $allModulesQuery,
-							_rbac: false,
-							_multitenancy: false
-						);
-						// Merge into modulesData, deduplicating by ID.
-						$existingIds = [];
-						foreach ($modulesData as $m) {
-							if (is_array($m) === true) {
-								$mid = $m['id'] ?? $m['@self']['id'] ?? null;
-							} else {
-								$mid = null;
-							}
-
-							if (empty($mid) === false) {
-								$existingIds[$mid] = true;
-							}
-						}
-
-						foreach ($allModules as $mod) {
-							if (is_object($mod) === true && method_exists($mod, 'jsonSerialize') === true) {
-								$modArr = $mod->jsonSerialize();
-							} else {
-								$modArr = $mod;
-							}
-
-							$modId = $modArr['id'] ?? $modArr['@self']['id'] ?? null;
-							if ($modId !== false && isset($existingIds[$modId]) === false) {
-								$modulesData[] = $mod;
-								$existingIds[$modId] = true;
-							}
-						}
-					}//end if
-				}//end if
-			}//end if
+			[$gebruikData, $modulesData, $deelnamesData] = $this->collectOrgExportData(
+				objectService: $objectService,
+				voorzConfig: $voorzConfig,
+				orgScope: ['register' => $orgRegisterId, 'organisation' => $organizationUuid],
+				options: $options
+			);
 
 			// Delegate to export service.
 			$xml = $this->exportService->exportOrganizationArchiMateXml(
@@ -460,20 +330,233 @@ class ArchiMateService {
 				'file_name' => $fileName,
 			];
 		} catch (\Exception $e) {
-			$this->logger->error(
-				'Organization ArchiMate export failed',
-				[
-					'error' => $e->getMessage(),
-					'trace' => $e->getTraceAsString(),
-				]
-			);
-
-			return [
-				'success' => false,
-				'error' => $e->getMessage(),
-			];
+			return $this->exportFailure(message: 'Organization ArchiMate export failed', exception: $e);
 		}//end try
 	}//end exportOrgArchiMate()
+
+	/**
+	 * Log a failed export and answer it
+	 *
+	 * @param string     $message   The log message
+	 * @param \Exception $exception The failure
+	 *
+	 * @return array{success: false, error: string} The failed export result
+	 */
+	private function exportFailure(string $message, \Exception $exception): array {
+		$this->logger->error(
+			$message,
+			[
+				'error' => $exception->getMessage(),
+				'trace' => $exception->getTraceAsString(),
+			]
+		);
+
+		return [
+			'success' => false,
+			'error' => $exception->getMessage(),
+		];
+	}//end exportFailure()
+
+	/**
+	 * Look up the organization to export directly by UUID
+	 *
+	 * @param ObjectServiceInterface $objectService    The object service
+	 * @param array                  $voorzConfig      The voorzieningen configuration
+	 * @param string                 $organizationUuid The organization UUID
+	 *
+	 * @return array{0: mixed, 1: mixed} The organization object, or null when it is missing or
+	 *                                   the lookup fails, and the organization register id
+	 *
+	 * @throws \RuntimeException When the organization register or schema is not configured
+	 */
+	private function findExportOrganisation(ObjectServiceInterface $objectService, array $voorzConfig, string $organizationUuid): array {
+		[$orgRegisterId, $orgSchemaId] = $this->resolveOrgRegisterAndSchema(voorzConfig: $voorzConfig);
+		if ($orgRegisterId === null || $orgSchemaId === null) {
+			throw new \RuntimeException('Organization register/schema not configured');
+		}
+
+		// Look up the organization directly by UUID.
+		try {
+			$orgEntity = $objectService->find(
+				id: $organizationUuid,
+				register: $orgRegisterId,
+				schema: $orgSchemaId,
+				_rbac: false,
+				_multitenancy: false
+			);
+		} catch (\Exception $e) {
+			$orgEntity = null;
+		}
+
+		return [$orgEntity, $orgRegisterId];
+	}//end findExportOrganisation()
+
+	/**
+	 * The AMEF register id
+	 *
+	 * @return int The AMEF register id
+	 *
+	 * @throws \RuntimeException When the AMEF register is not configured
+	 */
+	private function requireAmefRegisterId(): int {
+		$registerId = $this->getAmefRegisterId();
+		if ($registerId === null) {
+			throw new \RuntimeException('AMEF register ID is not configured');
+		}
+
+		return $registerId;
+	}//end requireAmefRegisterId()
+
+	/**
+	 * The organization's gebruik, modules and deelname gebruik from the Voorzieningen register
+	 *
+	 * @param ObjectServiceInterface $objectService The object service
+	 * @param array                  $voorzConfig   The voorzieningen configuration
+	 * @param array                  $orgScope      The organization register id ('register') and UUID ('organisation')
+	 * @param array                  $options       The export options; 'deelnames' adds the deelname gebruik
+	 *
+	 * @return array{0: array, 1: array, 2: array} The gebruik, the modules and the deelname gebruik
+	 */
+	private function collectOrgExportData(
+		ObjectServiceInterface $objectService,
+		array $voorzConfig,
+		array $orgScope,
+		array $options
+	): array {
+		$gebruikSchemaId = null;
+		if (empty($voorzConfig['gebruik_schema']) === false) {
+			$gebruikSchemaId = $voorzConfig['gebruik_schema'];
+		}
+
+		$moduleSchemaId = null;
+		if (empty($voorzConfig['module_schema']) === false) {
+			$moduleSchemaId = $voorzConfig['module_schema'];
+		}
+
+		$gebruikData = $this->searchOrgObjects(objectService: $objectService, orgScope: $orgScope, schemaId: $gebruikSchemaId);
+		$modulesData = $this->searchOrgObjects(objectService: $objectService, orgScope: $orgScope, schemaId: $moduleSchemaId);
+
+		// Query deelname gebruik if enabled (gebruik objects where this org is in deelnemers).
+		$deelnamesData = [];
+		if (empty($options['deelnames']) === false && empty($gebruikSchemaId) === false) {
+			$deelnamesData = $this->searchDeelnames(objectService: $objectService, orgScope: $orgScope, gebruikSchemaId: $gebruikSchemaId);
+
+			// Deelname modules belong to other orgs, so query all modules (without org filter).
+			// to resolve names for the export.
+			if (empty($deelnamesData) === false && $moduleSchemaId === true) {
+				$modulesData = $this->mergeAllModules(
+					objectService: $objectService,
+					query: ['@self' => ['register' => $orgScope['register'], 'schema' => $moduleSchemaId], '_limit' => 10000],
+					modulesData: $modulesData
+				);
+			}
+		}
+
+		return [$gebruikData, $modulesData, $deelnamesData];
+	}//end collectOrgExportData()
+
+	/**
+	 * The objects of one schema owned by the organization, without RBAC or multitenancy
+	 *
+	 * @param ObjectServiceInterface $objectService The object service
+	 * @param array                  $orgScope      The organization register id ('register') and UUID ('organisation')
+	 * @param mixed                  $schemaId      The schema id; none means no objects
+	 *
+	 * @return array The objects found
+	 */
+	private function searchOrgObjects(ObjectServiceInterface $objectService, array $orgScope, mixed $schemaId): array {
+		if (empty($schemaId) === true) {
+			return [];
+		}
+
+		$query = [
+			'@self' => [
+				'register' => $orgScope['register'],
+				'schema' => $schemaId,
+				'organisation' => $orgScope['organisation'],
+			],
+			'_limit' => 10000,
+		];
+		return $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
+	}//end searchOrgObjects()
+
+	/**
+	 * The gebruik objects that list the organization as a participant
+	 *
+	 * @param ObjectServiceInterface $objectService   The object service
+	 * @param array                  $orgScope        The organization register id ('register') and UUID ('organisation')
+	 * @param mixed                  $gebruikSchemaId The gebruik schema id
+	 *
+	 * @return array The deelname gebruik
+	 */
+	private function searchDeelnames(ObjectServiceInterface $objectService, array $orgScope, mixed $gebruikSchemaId): array {
+		$deelnameQuery = [
+			'@self' => [
+				'register' => $orgScope['register'],
+				'schema' => $gebruikSchemaId,
+			],
+			'participants' => $orgScope['organisation'],
+			'_limit' => 10000,
+		];
+		$deelnamesData = $objectService->searchObjects(
+			query: $deelnameQuery,
+			_rbac: false,
+			_multitenancy: false
+		);
+		$this->logger->info(
+			'Retrieved deelname gebruik for org export',
+			[
+				'deelnames_count' => count($deelnamesData),
+				'organization_uuid' => $orgScope['organisation'],
+			]
+		);
+
+		return $deelnamesData;
+	}//end searchDeelnames()
+
+	/**
+	 * The modules found plus every module of the register, deduplicated by id
+	 *
+	 * @param ObjectServiceInterface $objectService The object service
+	 * @param array                  $query         The query for all modules
+	 * @param array                  $modulesData   The modules found so far
+	 *
+	 * @return array The merged modules
+	 */
+	private function mergeAllModules(ObjectServiceInterface $objectService, array $query, array $modulesData): array {
+		$allModules = $objectService->searchObjects(
+			query: $query,
+			_rbac: false,
+			_multitenancy: false
+		);
+		// Merge into modulesData, deduplicating by ID.
+		$existingIds = [];
+		foreach ($modulesData as $m) {
+			$mid = null;
+			if (is_array($m) === true) {
+				$mid = $m['id'] ?? $m['@self']['id'] ?? null;
+			}
+
+			if (empty($mid) === false) {
+				$existingIds[$mid] = true;
+			}
+		}
+
+		foreach ($allModules as $mod) {
+			$modArr = $mod;
+			if (is_object($mod) === true && method_exists($mod, 'jsonSerialize') === true) {
+				$modArr = $mod->jsonSerialize();
+			}
+
+			$modId = $modArr['id'] ?? $modArr['@self']['id'] ?? null;
+			if ($modId !== false && isset($existingIds[$modId]) === false) {
+				$modulesData[] = $mod;
+				$existingIds[$modId] = true;
+			}
+		}
+
+		return $modulesData;
+	}//end mergeAllModules()
 
 	/**
 	 * Resolves the organisation register + schema id pair for an org-scoped export.

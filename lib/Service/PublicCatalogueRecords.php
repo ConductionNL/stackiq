@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use DateTimeImmutable;
 use OCP\IL10N;
 use Psr\Container\ContainerInterface;
@@ -43,14 +44,14 @@ class PublicCatalogueRecords {
 	/**
 	 * Constructor.
 	 *
-	 * @param SettingsService $settingsService Resolves the register and schema ids.
+	 * @param RegisterConfigReaderInterface $settingsService Resolves the register and schema ids.
 	 * @param ContainerInterface $container Lazy OpenRegister lookups.
 	 * @param PortfolioReportDerivation $relations Normalises results and relation ids.
 	 * @param LoggerInterface $logger Logger.
 	 * @param IL10N $l10n Translates the record's labels.
 	 */
 	public function __construct(
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly ContainerInterface $container,
 		private readonly PortfolioReportDerivation $relations,
 		private readonly LoggerInterface $logger,
@@ -107,8 +108,55 @@ class PublicCatalogueRecords {
 			return null;
 		}
 
+		return $this->publishedRecord(module: $module);
+	}//end record()
+
+	/**
+	 * The public record of a published application.
+	 *
+	 * @param array<string, mixed> $module The application.
+	 *
+	 * @return array<string, mixed> `{title, subtitle, summary, columns, rows}`.
+	 */
+	private function publishedRecord(array $module): array {
+		$summary = $this->recordSummary(module: $module);
+		$rows = $this->componentRows(module: $module);
+
+		return [
+			'title' => (string)($module['name'] ?? ''),
+			'subtitle' => (string)($module['shortDescription'] ?? ''),
+			'summary' => $summary,
+			'columns' => [['key' => 'component', 'label' => $this->l10n->t('Reference component')]],
+			'rows' => $rows,
+		];
+	}//end publishedRecord()
+
+	/**
+	 * The supplier, licence and website of an application.
+	 *
+	 * @param array<string, mixed> $module The application.
+	 *
+	 * @return list<array{label: string, value: string}> The summary lines.
+	 */
+	private function recordSummary(array $module): array {
 		$supplierId = $this->relations->resolveRelationId(value: $module['provider'] ?? null);
 		$suppliers = $this->names(ids: [$supplierId], schemaKey: 'organisatie_schema', amef: false);
+
+		return [
+			['label' => $this->l10n->t('Supplier'), 'value' => $suppliers[$supplierId] ?? ''],
+			['label' => $this->l10n->t('Licence'), 'value' => $this->licence(module: $module)],
+			['label' => $this->l10n->t('Website'), 'value' => (string)($module['website'] ?? '')],
+		];
+	}//end recordSummary()
+
+	/**
+	 * One row per reference component of an application that has a name, in order.
+	 *
+	 * @param array<string, mixed> $module The application.
+	 *
+	 * @return list<array{component: string}> The rows.
+	 */
+	private function componentRows(array $module): array {
 		$componentIds = array_map(
 			fn (mixed $value): string => $this->relations->resolveRelationId(value: $value),
 			(array)($module['referenceComponents'] ?? [])
@@ -122,18 +170,8 @@ class PublicCatalogueRecords {
 			}
 		}
 
-		return [
-			'title' => (string)($module['name'] ?? ''),
-			'subtitle' => (string)($module['shortDescription'] ?? ''),
-			'summary' => [
-				['label' => $this->l10n->t('Supplier'), 'value' => $suppliers[$supplierId] ?? ''],
-				['label' => $this->l10n->t('Licence'), 'value' => $this->licence(module: $module)],
-				['label' => $this->l10n->t('Website'), 'value' => (string)($module['website'] ?? '')],
-			],
-			'columns' => [['key' => 'component', 'label' => $this->l10n->t('Reference component')]],
-			'rows' => $rows,
-		];
-	}//end record()
+		return $rows;
+	}//end componentRows()
 
 	/**
 	 * Whether an application is published now.

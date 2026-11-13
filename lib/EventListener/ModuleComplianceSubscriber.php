@@ -24,7 +24,7 @@ namespace OCA\Stackiq\EventListener;
 
 use OCA\Stackiq\Service\ModuleComplianceService;
 use OCA\Stackiq\Service\ModuleVersionService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
@@ -102,8 +102,8 @@ class ModuleComplianceSubscriber implements IEventListener {
 	 * @return bool True when the object is a module
 	 */
 	private function isModuleObject(object $object, LoggerInterface $logger): bool {
-		$settingsService = $this->container->get(SettingsService::class);
-		$moduleSchemaId = $settingsService->getSchemaIdForObjectType('module');
+		$catalogue = $this->container->get(CatalogueLocator::class);
+		$moduleSchemaId = $catalogue->getSchemaIdForObjectType('module');
 
 		if ($moduleSchemaId === null) {
 			$logger->debug(

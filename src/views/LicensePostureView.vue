@@ -218,16 +218,30 @@ import Refresh from 'vue-material-design-icons/Refresh.vue'
 import { useLiveCollections } from '../composables/useLiveCollections.js'
 import { objectStore } from '../store/store.js'
 import {
-	LICENSE_TYPE,
+	licenceMixCounts,
 	perOrganisationPosture,
 	perVendorRollup,
 	portfolioPosture,
 	SEAT_STATE,
 	seatRows,
 } from '../utils/licensePosture.js'
-import { resolveUuid } from '../utils/lifecyclePhase.js'
+import { indexByUuid } from '../utils/lifecyclePhase.js'
 import { fetchObjectTypeCollection } from '../utils/objectTypeCollection.js'
 import { licenceMetricLabel, seatStateLabel } from '../utils/seatLabels.js'
+
+/**
+ * A record's display name (of its object envelope when it has one), else
+ * the given UUID.
+ *
+ * @param {object} record The record.
+ * @param {string} id Its UUID.
+ * @return {string} The name.
+ * @spec openspec/specs/software-license-posture/spec.md
+ */
+function displayNameOr(record, id) {
+	const data = record.object || record
+	return data.name || data.title || id
+}
 
 /**
  * @class LicensePostureView
@@ -342,16 +356,10 @@ export default {
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
 		organisatieIndex() {
-			const index = {}
-			for (const org of objectStore.getCollection('organization')?.results
-				|| []) {
-				const data = org.object || org
-				const id = resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org)
-				if (id) {
-					index[id] = data.name || data.title || id
-				}
-			}
-			return index
+			return indexByUuid(
+				objectStore.getCollection('organization')?.results || [],
+				displayNameOr,
+			)
 		},
 
 		/**
@@ -361,15 +369,7 @@ export default {
 		 * @spec openspec/specs/software-license-posture/spec.md
 		 */
 		moduleNameIndex() {
-			const index = {}
-			for (const m of this.modules) {
-				const data = m.object || m
-				const id = resolveUuid(m.uuid ?? m.id ?? m['@self']?.id ?? m)
-				if (id) {
-					index[id] = data.name || data.title || id
-				}
-			}
-			return index
+			return indexByUuid(this.modules, displayNameOr)
 		},
 
 		/**
@@ -402,23 +402,7 @@ export default {
 		 */
 		vendorRows() {
 			return perVendorRollup(this.modules, this.usages, this.contracts)
-				.map((row) => ({
-					vendorId: row.vendorId,
-					vendorName:
-						this.organisatieIndex[row.vendorId]
-						|| row.vendorId
-						|| t('stackiq', 'Unknown vendor'),
-					deployments: row.deployments,
-					mix: {
-						openCount: row.mix[LICENSE_TYPE.OPEN] || 0,
-						closedCount: row.mix[LICENSE_TYPE.CLOSED] || 0,
-						unknownCount: row.mix[LICENSE_TYPE.UNKNOWN] || 0,
-					},
-					costLabel:
-						row.annualCost === null
-							? '—'
-							: this.formatCurrency(row.annualCost),
-				}))
+				.map((row) => this.vendorRow(row))
 				.sort((a, b) => b.deployments - a.deployments)
 		},
 
@@ -529,6 +513,50 @@ export default {
 		 */
 		async fetchType(type) {
 			await fetchObjectTypeCollection(objectStore, type)
+		},
+
+		/**
+		 * The display name of a vendor, else its id, else a placeholder.
+		 *
+		 * @param {string} vendorId The vendor id.
+		 * @return {string} The name.
+		 * @spec openspec/specs/software-license-posture/spec.md
+		 */
+		vendorLabel(vendorId) {
+			return (
+				this.organisatieIndex[vendorId]
+				|| vendorId
+				|| t('stackiq', 'Unknown vendor')
+			)
+		},
+
+		/**
+		 * A yearly cost as a currency label, or a dash when unknown.
+		 *
+		 * @param {number|null} annualCost The cost.
+		 * @return {string} The label.
+		 * @spec openspec/specs/software-license-posture/spec.md
+		 */
+		costText(annualCost) {
+			return annualCost === null ? '—' : this.formatCurrency(annualCost)
+		},
+
+		/**
+		 * One vendor rollup row resolved to its display name, licence mix
+		 * counts and cost label.
+		 *
+		 * @param {object} row The rollup row.
+		 * @return {object} The vendor row.
+		 * @spec openspec/specs/software-license-posture/spec.md
+		 */
+		vendorRow(row) {
+			return {
+				vendorId: row.vendorId,
+				vendorName: this.vendorLabel(row.vendorId),
+				deployments: row.deployments,
+				mix: licenceMixCounts(row.mix),
+				costLabel: this.costText(row.annualCost),
+			}
 		},
 
 		/**

@@ -39,6 +39,7 @@ use Psr\Log\LoggerInterface;
  * Golden cases for syncing a profile update onto its contactpersoon.
  *
  * @covers \OCA\Stackiq\EventListener\UserProfileUpdatedEventListener
+ * @uses   \OCA\Stackiq\EventListener\ProfileContactSync
  *
  * @spec openspec/specs/method-decomposition/spec.md
  */

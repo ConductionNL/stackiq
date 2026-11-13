@@ -64,6 +64,16 @@ class CmdbImportController extends Controller {
 	public const FILE_FIELD = 'cmdbFile';
 
 	/**
+	 * The spellings a boolean form field accepts, trimmed and lowercased.
+	 */
+	private const BOOLEAN_VALUES = [
+		'true' => true,
+		'1' => true,
+		'false' => false,
+		'0' => false,
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
@@ -164,6 +174,23 @@ class CmdbImportController extends Controller {
 			return $this->missingUpload(maxBytes: $maxBytes);
 		}
 
+		$rejection = $this->uploadRejection(upload: $upload, maxBytes: $maxBytes);
+		if ($rejection !== null) {
+			return $rejection;
+		}
+
+		return $this->xlsxOptions(upload: $upload);
+	}//end validateRequest()
+
+	/**
+	 * The error for an upload that was not stored or is too large, or null when it may be read.
+	 *
+	 * @param array<string, mixed> $upload The uploaded file, as uploadedFile() describes it.
+	 * @param int $maxBytes The profile's maximum file size.
+	 *
+	 * @return JSONResponse|null The first error, or null.
+	 */
+	private function uploadRejection(array $upload, int $maxBytes): ?JSONResponse {
 		if ($upload['serverError'] !== null) {
 			// The upload reached PHP but could not be stored: a server problem, not the admin's.
 			$this->logger->error('CmdbImportController: the upload could not be stored', ['uploadError' => $upload['serverError']]);
@@ -180,6 +207,17 @@ class CmdbImportController extends Controller {
 			return $this->error(code: 'FILE_TOO_LARGE', status: Http::STATUS_REQUEST_ENTITY_TOO_LARGE, details: ['maxBytes' => $maxBytes]);
 		}
 
+		return null;
+	}//end uploadRejection()
+
+	/**
+	 * Check that the upload is an xlsx file, then read the import options.
+	 *
+	 * @param array<string, mixed> $upload The uploaded file, as uploadedFile() describes it.
+	 *
+	 * @return array{path: string, options: array<string, mixed>}|JSONResponse The import input, or the first error.
+	 */
+	private function xlsxOptions(array $upload): array|JSONResponse {
 		try {
 			$this->importService->assertXlsx(path: $upload['tmpName'], fileName: $upload['name']);
 		} catch (CmdbImportException $e) {
@@ -187,7 +225,7 @@ class CmdbImportController extends Controller {
 		}
 
 		return $this->readOptions(path: $upload['tmpName'], fileName: $upload['name']);
-	}//end validateRequest()
+	}//end xlsxOptions()
 
 	/**
 	 * The answer when no upload arrived: 413 when the body was over post_max_size, else 400.
@@ -560,6 +598,17 @@ class CmdbImportController extends Controller {
 			return $default;
 		}
 
+		return $this->booleanValue(value: $value);
+	}//end booleanParam()
+
+	/**
+	 * A boolean, or a `true`/`false`/`1`/`0` string or integer, as a boolean.
+	 *
+	 * @param mixed $value The present, non-empty form value.
+	 *
+	 * @return bool|null Null for any other value.
+	 */
+	private function booleanValue(mixed $value): ?bool {
 		if (is_bool($value) === true) {
 			return $value;
 		}
@@ -568,12 +617,8 @@ class CmdbImportController extends Controller {
 			return null;
 		}
 
-		return match (strtolower(trim((string)$value))) {
-			'true', '1' => true,
-			'false', '0' => false,
-			default => null,
-		};
-	}//end booleanParam()
+		return self::BOOLEAN_VALUES[strtolower(trim((string)$value))] ?? null;
+	}//end booleanValue()
 
 	/**
 	 * A text form field.

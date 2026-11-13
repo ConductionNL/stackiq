@@ -36,7 +36,7 @@ namespace OCA\Stackiq\Repair;
 
 use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
 use OCA\Stackiq\AppInfo\AppIdentity;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\StackiqContactSyncService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -72,7 +72,7 @@ class MigrateContactsToNc implements IRepairStep {
 	 * Constructor.
 	 *
 	 * @param IAppManager $appManager The app manager.
-	 * @param SettingsService $settingsService The settings service (register/schema id resolution).
+	 * @param RegisterConfigReaderInterface $settingsService The settings service (register/schema id resolution).
 	 * @param StackiqContactSyncService $contactSync The contacts bridge.
 	 * @param IAppConfig $appConfig The app config (convergence marker).
 	 * @param LoggerInterface $logger The logger.
@@ -81,7 +81,7 @@ class MigrateContactsToNc implements IRepairStep {
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly StackiqContactSyncService $contactSync,
 		private readonly IAppConfig $appConfig,
 		private readonly LoggerInterface $logger,

@@ -83,7 +83,19 @@ class IntakeController extends Controller {
 			);
 		}
 
-		// Acknowledge only — never echo the stored object back to the anonymous caller.
+		return self::acknowledged(result: $result);
+	}//end submit()
+
+	/**
+	 * The 202 acknowledgement of a queued registration.
+	 *
+	 * Acknowledge only — never echo the stored object back to the anonymous caller.
+	 *
+	 * @param array<string,mixed> $result The intake result, with `uuid` and `status`.
+	 *
+	 * @return JSONResponse
+	 */
+	private static function acknowledged(array $result): JSONResponse {
 		return new JSONResponse(
 			data: [
 				'ok' => true,
@@ -93,5 +105,5 @@ class IntakeController extends Controller {
 			],
 			statusCode: Http::STATUS_ACCEPTED
 		);
-	}//end submit()
+	}//end acknowledged()
 }//end class

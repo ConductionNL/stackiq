@@ -18,7 +18,8 @@ declare(strict_types=1);
  * SPDX-License-Identifier: EUPL-1.2
  */
 
-return [
+// Every unversioned API route is also served under /api/v1/; see ApiPathAliases.
+return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
     'routes' => [
         // Dashboard routes
         // First-time setup wizard (ADR-042) - the standard CnSetupWizard contract.
@@ -338,4 +339,4 @@ return [
         // match an empty path.
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => ''], 'postfix' => 'spa'],
     ],
-];
+]);

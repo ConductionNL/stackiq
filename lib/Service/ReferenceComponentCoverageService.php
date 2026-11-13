@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use DateTimeImmutable;
 use Exception;
 use OCP\App\IAppManager;
@@ -42,7 +43,7 @@ class ReferenceComponentCoverageService {
 	/**
 	 * Constructor.
 	 *
-	 * @param SettingsService $settingsService Resolves the register and schema ids.
+	 * @param RegisterConfigReaderInterface $settingsService Resolves the register and schema ids.
 	 * @param IAppManager $appManager Checks OpenRegister is installed.
 	 * @param ContainerInterface $container Lazy OpenRegister lookups.
 	 * @param LoggerInterface $logger Logger.
@@ -50,7 +51,7 @@ class ReferenceComponentCoverageService {
 	 * @param PortfolioReportDerivation $relations Normalises results and relation ids.
 	 */
 	public function __construct(
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
@@ -73,7 +74,7 @@ class ReferenceComponentCoverageService {
 	public function build(string $organisationUuid): array {
 		$source   = $this->usageSource();
 		$page     = $this->organisationUsages(organisationUuid: $organisationUuid, source: $source);
-		$modules  = $this->modules(usages: $page['usages'], registerId: $source['register'], schemaId: $source['module']);
+		$modules  = $this->modules(usages: $page['usages'], source: $source);
 		$coverage = $this->coverage(usages: $page['usages'], modules: $modules);
 
 		return [
@@ -172,8 +173,6 @@ class ReferenceComponentCoverageService {
 	 * @throws Exception When OpenRegister or the register configuration is unavailable.
 	 *
 	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
-	 *
-	 * @SuppressWarnings(PHPMD.StaticAccess) csvSafeCell() is the portfolio report's pure cell guard, shared so both CSVs escape alike.
 	 */
 	public function buildCsv(string $organisationUuid): string {
 		$coverage = $this->build(organisationUuid: $organisationUuid);
@@ -181,19 +180,7 @@ class ReferenceComponentCoverageService {
 		$handle = fopen('php://temp', 'r+');
 		fputcsv($handle, ['group', 'referenceComponent', 'state', 'fillable', 'applications']);
 		foreach ($coverage['components'] as $row) {
-			$fillable = 'no';
-			if ($row['fillable'] === true) {
-				$fillable = 'yes';
-			}
-
-			$cells = [
-				$row['group'],
-				$row['name'],
-				$row['state'],
-				$fillable,
-				implode(' | ', array_column($row['applications'], 'moduleName')),
-			];
-			fputcsv($handle, array_map(static fn (string $cell): string => PortfolioReportService::csvSafeCell(value: $cell), $cells));
+			fputcsv($handle, self::csvCells(row: $row));
 		}
 
 		rewind($handle);
@@ -202,6 +189,31 @@ class ReferenceComponentCoverageService {
 
 		return $csv;
 	}//end buildCsv()
+
+	/**
+	 * The CSV cells of one reference component row, each through the formula guard.
+	 *
+	 * @param array<string,mixed> $row One component row of the coverage.
+	 *
+	 * @return array<int,string> The cells: group, name, state, fillable, applications.
+	 *
+	 * @SuppressWarnings(PHPMD.StaticAccess) csvSafeCell() is the portfolio report's pure cell guard, shared so both CSVs escape alike.
+	 */
+	private static function csvCells(array $row): array {
+		$fillable = 'no';
+		if ($row['fillable'] === true) {
+			$fillable = 'yes';
+		}
+
+		$cells = [
+			$row['group'],
+			$row['name'],
+			$row['state'],
+			$fillable,
+			implode(' | ', array_column($row['applications'], 'moduleName')),
+		];
+		return array_map(static fn (string $cell): string => PortfolioReportService::csvSafeCell(value: $cell), $cells);
+	}//end csvCells()
 
 	/**
 	 * The GEMMA reference components, bounded.
@@ -227,26 +239,47 @@ class ReferenceComponentCoverageService {
 	 * The modules the usages name, by id.
 	 *
 	 * @param array<int,array<string,mixed>> $usages The usages.
-	 * @param int $registerId The voorzieningen register.
-	 * @param int $schemaId The module schema.
+	 * @param array{register:int,usage:int,module:int} $source The voorzieningen register and its schemas.
 	 *
 	 * @return array<string,array<string,mixed>> Modules by id.
 	 */
-	private function modules(array $usages, int $registerId, int $schemaId): array {
-		$ids = array_values(array_unique(array_filter(array_map(
-			fn (array $usage): string => $this->relations->resolveRelationId(value: $usage['module'] ?? null),
-			$usages
-		))));
-		if ($ids === [] || $schemaId === 0) {
+	private function modules(array $usages, array $source): array {
+		$ids = $this->moduleIds(usages: $usages);
+		if ($ids === [] || $source['module'] === 0) {
 			return [];
 		}
 
 		$modules = $this->lookup(query: [
-			'@self' => ['register' => $registerId, 'schema' => $schemaId],
+			'@self' => ['register' => $source['register'], 'schema' => $source['module']],
 			'id' => $ids,
 			'_limit' => count($ids),
 		]);
 
+		return $this->modulesById(modules: $modules);
+	}//end modules()
+
+	/**
+	 * The distinct module ids the usages name.
+	 *
+	 * @param array<int,array<string,mixed>> $usages The usages.
+	 *
+	 * @return array<int,string>
+	 */
+	private function moduleIds(array $usages): array {
+		return array_values(array_unique(array_filter(array_map(
+			fn (array $usage): string => $this->relations->resolveRelationId(value: $usage['module'] ?? null),
+			$usages
+		))));
+	}//end moduleIds()
+
+	/**
+	 * The modules keyed by their id.
+	 *
+	 * @param array<int,array<string,mixed>> $modules The modules.
+	 *
+	 * @return array<string,array<string,mixed>>
+	 */
+	private function modulesById(array $modules): array {
 		$byId = [];
 		foreach ($modules as $module) {
 			$id = $this->relations->resolveRelationId(value: $module['id'] ?? ($module['@self']['id'] ?? null));
@@ -254,7 +287,7 @@ class ReferenceComponentCoverageService {
 		}
 
 		return $byId;
-	}//end modules()
+	}//end modulesById()
 
 	/**
 	 * One bounded OpenRegister search, RBAC off after the controller's organisation check.
