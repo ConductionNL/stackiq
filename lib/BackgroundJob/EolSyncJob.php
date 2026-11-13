@@ -93,14 +93,25 @@ class EolSyncJob extends TimedJob {
 			// EolSyncService::run() is designed to never throw (it degrades
 			// to a recorded status instead), but this guard keeps a future
 			// regression there from breaking the shared cron pass.
-			$this->logger->error(
-				'[EolSyncJob] Fatal error during EOL sync — cron pass protected',
-				[
-					'error' => $e->getMessage(),
-					'file' => $e->getFile(),
-					'line' => $e->getLine(),
-				]
-			);
+			$this->logFatal(error: $e);
 		}//end try
 	}//end run()
+
+	/**
+	 * Log a sync run that threw.
+	 *
+	 * @param \Throwable $error What was thrown.
+	 *
+	 * @return void
+	 */
+	private function logFatal(\Throwable $error): void {
+		$this->logger->error(
+			'[EolSyncJob] Fatal error during EOL sync — cron pass protected',
+			[
+				'error' => $error->getMessage(),
+				'file' => $error->getFile(),
+				'line' => $error->getLine(),
+			]
+		);
+	}//end logFatal()
 }//end class

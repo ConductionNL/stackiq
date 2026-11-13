@@ -13,9 +13,12 @@ declare(strict_types=1);
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2024 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
-return [
+$table = [
     'routes' => [
         // Dashboard routes
         // First-time setup wizard (ADR-042) - the standard CnSetupWizard contract.
@@ -24,6 +27,8 @@ return [
         ['name' => 'setup#saveConfig', 'url' => '/api/setup/config',           'verb' => 'POST'],
         ['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
         ['name' => 'dashboard#index', 'url' => '/api/dashboard', 'verb' => 'GET'],
+        // The OpenAPI document, public (spec api-contract).
+        ['name' => 'openApi#show', 'url' => '/api/openapi.json', 'verb' => 'GET'],
 
         // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g. CnSupportDialog).
         ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
@@ -334,3 +339,24 @@ return [
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => ''], 'postfix' => 'spa'],
     ],
 ];
+
+// Versioned aliases. Every `/api/...` route also answers on `/api/v1/...`, the
+// base URL openapi.json publishes, so the documented major version is real.
+// The unversioned URLs stay for the frontend and existing callers. Each alias
+// takes a `v1` postfix so its route name differs from the original's, and the
+// aliases go before the SPA catch-all, which must stay the last route.
+$routes = $table['routes'];
+$catchAll = array_pop($routes);
+$versioned = [];
+foreach ($routes as $route) {
+    if (str_starts_with($route['url'], '/api/') === true) {
+        $alias = $route;
+        $alias['url'] = '/api/v1/' . substr($route['url'], strlen('/api/'));
+        $alias['postfix'] = ($route['postfix'] ?? '') . 'v1';
+        $versioned[] = $alias;
+    }
+}
+
+$table['routes'] = array_merge($routes, $versioned, [$catchAll]);
+
+return $table;

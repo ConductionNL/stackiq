@@ -26,6 +26,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\EolMatcherService;
 use OCA\Stackiq\Service\EolSyncService;
+use OCA\Stackiq\Service\Settings\EolSyncSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
@@ -66,10 +67,11 @@ class EolSyncServiceTest extends TestCase {
 		$config['enabled'] = false;
 
 		$settingsService = $this->createMock(SettingsService::class);
-		$settingsService->method('getEolSyncConfig')->willReturn($config);
+		$eolSettings = $this->createMock(EolSyncSettings::class);
+		$eolSettings->method('getEolSyncConfig')->willReturn($config);
 		// ObjectService must never be requested when disabled.
 		$settingsService->expects($this->never())->method('getObjectService');
-		$settingsService->expects($this->once())->method('setEolSyncStatus')->with(
+		$eolSettings->expects($this->once())->method('setEolSyncStatus')->with(
 			$this->callback(function (array $status): bool {
 				return $status['available'] === false && $status['reason'] === 'disabled'
 					&& $status['matched'] === 0 && $status['skipped'] === 0;
@@ -78,6 +80,7 @@ class EolSyncServiceTest extends TestCase {
 
 		$service = new EolSyncService(
 			settingsService: $settingsService,
+			eolSyncSettings: $eolSettings,
 			matcher: new EolMatcherService(),
 			timeFactory: $this->timeFactory(),
 			logger: $this->createMock(LoggerInterface::class)
@@ -98,12 +101,14 @@ class EolSyncServiceTest extends TestCase {
 	 */
 	public function testOpenRegisterNotInstalledDegradesGracefully(): void {
 		$settingsService = $this->createMock(SettingsService::class);
-		$settingsService->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
+		$eolSettings = $this->createMock(EolSyncSettings::class);
+		$eolSettings->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
 		$settingsService->method('isOpenRegisterInstalled')->willReturn(false);
 		$settingsService->expects($this->never())->method('getObjectService');
 
 		$service = new EolSyncService(
 			settingsService: $settingsService,
+			eolSyncSettings: $eolSettings,
 			matcher: new EolMatcherService(),
 			timeFactory: $this->timeFactory(),
 			logger: $this->createMock(LoggerInterface::class)
@@ -124,7 +129,8 @@ class EolSyncServiceTest extends TestCase {
 	 */
 	public function testUnresolvableRegisterDegradesGracefully(): void {
 		$settingsService = $this->createMock(SettingsService::class);
-		$settingsService->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
+		$eolSettings = $this->createMock(EolSyncSettings::class);
+		$eolSettings->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
 		$settingsService->method('isOpenRegisterInstalled')->willReturn(true);
 		$settingsService->method('getRegisterIdForObjectType')->willReturn(1);
 		$settingsService->method('getSchemaIdForObjectType')->willReturn(2);
@@ -137,6 +143,7 @@ class EolSyncServiceTest extends TestCase {
 
 		$service = new EolSyncService(
 			settingsService: $settingsService,
+			eolSyncSettings: $eolSettings,
 			matcher: new EolMatcherService(),
 			timeFactory: $this->timeFactory(),
 			logger: $this->createMock(LoggerInterface::class)
@@ -156,13 +163,15 @@ class EolSyncServiceTest extends TestCase {
 	 */
 	public function testModuleSchemaNotConfiguredDegradesGracefully(): void {
 		$settingsService = $this->createMock(SettingsService::class);
-		$settingsService->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
+		$eolSettings = $this->createMock(EolSyncSettings::class);
+		$eolSettings->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
 		$settingsService->method('isOpenRegisterInstalled')->willReturn(true);
 		$settingsService->method('getObjectService')->willReturn($this->createMock(ObjectServiceInterface::class));
 		$settingsService->method('getRegisterIdForObjectType')->willReturn(null);
 
 		$service = new EolSyncService(
 			settingsService: $settingsService,
+			eolSyncSettings: $eolSettings,
 			matcher: new EolMatcherService(),
 			timeFactory: $this->timeFactory(),
 			logger: $this->createMock(LoggerInterface::class)
@@ -183,7 +192,8 @@ class EolSyncServiceTest extends TestCase {
 	 */
 	public function testSuccessfulRunMatchesStampsAndReportsStatus(): void {
 		$settingsService = $this->createMock(SettingsService::class);
-		$settingsService->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
+		$eolSettings = $this->createMock(EolSyncSettings::class);
+		$eolSettings->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
 		$settingsService->method('isOpenRegisterInstalled')->willReturn(true);
 		$settingsService->method('getRegisterIdForObjectType')->willReturn(10);
 		$settingsService->method('getSchemaIdForObjectType')->willReturnMap(
@@ -222,7 +232,7 @@ class EolSyncServiceTest extends TestCase {
 		$settingsService->method('getObjectService')->willReturn($objectService);
 
 		$recordedStatus = null;
-		$settingsService->expects($this->once())->method('setEolSyncStatus')->with(
+		$eolSettings->expects($this->once())->method('setEolSyncStatus')->with(
 			$this->callback(function (array $status) use (&$recordedStatus): bool {
 				$recordedStatus = $status;
 				return true;
@@ -231,6 +241,7 @@ class EolSyncServiceTest extends TestCase {
 
 		$service = new EolSyncService(
 			settingsService: $settingsService,
+			eolSyncSettings: $eolSettings,
 			matcher: new EolMatcherService(),
 			timeFactory: $this->timeFactory(),
 			logger: $this->createMock(LoggerInterface::class)
@@ -259,7 +270,8 @@ class EolSyncServiceTest extends TestCase {
 	 */
 	public function testUnmappedModuleIsNeverProcessed(): void {
 		$settingsService = $this->createMock(SettingsService::class);
-		$settingsService->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
+		$eolSettings = $this->createMock(EolSyncSettings::class);
+		$eolSettings->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
 		$settingsService->method('isOpenRegisterInstalled')->willReturn(true);
 		$settingsService->method('getRegisterIdForObjectType')->willReturn(10);
 		$settingsService->method('getSchemaIdForObjectType')->willReturnMap(
@@ -289,6 +301,7 @@ class EolSyncServiceTest extends TestCase {
 
 		$service = new EolSyncService(
 			settingsService: $settingsService,
+			eolSyncSettings: $eolSettings,
 			matcher: new EolMatcherService(),
 			timeFactory: $this->timeFactory(),
 			logger: $this->createMock(LoggerInterface::class)
@@ -303,22 +316,24 @@ class EolSyncServiceTest extends TestCase {
 
 	/**
 	 * getConfig()/updateConfig()/getStatus() are thin delegators onto
-	 * SettingsService — the actual persistence/merge behaviour is covered
-	 * by SettingsServiceEolConfigTest.
+	 * EolSyncSettings — the actual persistence/merge behaviour is covered
+	 * by EolSyncSettingsTest.
 	 *
 	 * @return void
 	 */
-	public function testConfigAndStatusDelegateToSettingsService(): void {
+	public function testConfigAndStatusDelegateToEolSyncSettings(): void {
 		$settingsService = $this->createMock(SettingsService::class);
-		$settingsService->expects($this->once())->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
-		$settingsService->expects($this->once())->method('updateEolSyncConfig')->with(['enabled' => false])
+		$eolSettings = $this->createMock(EolSyncSettings::class);
+		$eolSettings->expects($this->once())->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
+		$eolSettings->expects($this->once())->method('updateEolSyncConfig')->with(['enabled' => false])
 			->willReturn(['success' => true, 'config' => self::DEFAULT_CONFIG]);
-		$settingsService->expects($this->once())->method('getEolSyncStatus')->willReturn(
+		$eolSettings->expects($this->once())->method('getEolSyncStatus')->willReturn(
 			['available' => true, 'reason' => null, 'matched' => 3, 'skipped' => 1, 'lastRunAt' => '2026-07-23T12:00:00+00:00']
 		);
 
 		$service = new EolSyncService(
 			settingsService: $settingsService,
+			eolSyncSettings: $eolSettings,
 			matcher: new EolMatcherService(),
 			timeFactory: $this->timeFactory(),
 			logger: $this->createMock(LoggerInterface::class)
@@ -327,5 +342,5 @@ class EolSyncServiceTest extends TestCase {
 		$this->assertSame(self::DEFAULT_CONFIG, $service->getConfig());
 		$this->assertSame(['success' => true, 'config' => self::DEFAULT_CONFIG], $service->updateConfig(['enabled' => false]));
 		$this->assertSame(3, $service->getStatus()['matched']);
-	}//end testConfigAndStatusDelegateToSettingsService()
+	}//end testConfigAndStatusDelegateToEolSyncSettings()
 }//end class

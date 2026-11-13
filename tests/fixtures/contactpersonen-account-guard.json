@@ -1,0 +1,447 @@
+{
+    "enableUser anonymous": {
+        "status": 401,
+        "body": {
+            "message": "Not authenticated"
+        },
+        "calls": []
+    },
+    "enableUser ordinary user": {
+        "status": 403,
+        "body": {
+            "message": "Insufficient permissions"
+        },
+        "calls": [
+            [
+                "isAdmin",
+                "bob"
+            ],
+            [
+                "isInGroup",
+                "bob",
+                "gebruik-beheerder"
+            ],
+            [
+                "isInGroup",
+                "bob",
+                "aanbod-beheerder"
+            ]
+        ]
+    },
+    "enableUser administrator": {
+        "status": 200,
+        "body": {
+            "success": true,
+            "message": "User account enabled successfully"
+        },
+        "calls": [
+            [
+                "isAdmin",
+                "admin"
+            ],
+            [
+                "isInGroup",
+                "admin",
+                "gebruik-beheerder"
+            ],
+            [
+                "isInGroup",
+                "admin",
+                "aanbod-beheerder"
+            ],
+            [
+                "enableUserForContactpersoon",
+                "cp-1"
+            ],
+            [
+                "log.info",
+                "User account enabled",
+                {
+                    "contactpersoonId": "cp-1",
+                    "enabled_by": "admin"
+                }
+            ]
+        ]
+    },
+    "enableUser gebruik-beheerder": {
+        "status": 200,
+        "body": {
+            "success": true,
+            "message": "User account enabled successfully"
+        },
+        "calls": [
+            [
+                "isAdmin",
+                "gb"
+            ],
+            [
+                "isInGroup",
+                "gb",
+                "gebruik-beheerder"
+            ],
+            [
+                "enableUserForContactpersoon",
+                "cp-1"
+            ],
+            [
+                "log.info",
+                "User account enabled",
+                {
+                    "contactpersoonId": "cp-1",
+                    "enabled_by": "gb"
+                }
+            ]
+        ]
+    },
+    "enableUser aanbod-beheerder": {
+        "status": 200,
+        "body": {
+            "success": true,
+            "message": "User account enabled successfully"
+        },
+        "calls": [
+            [
+                "isAdmin",
+                "ab"
+            ],
+            [
+                "isInGroup",
+                "ab",
+                "gebruik-beheerder"
+            ],
+            [
+                "isInGroup",
+                "ab",
+                "aanbod-beheerder"
+            ],
+            [
+                "enableUserForContactpersoon",
+                "cp-1"
+            ],
+            [
+                "log.info",
+                "User account enabled",
+                {
+                    "contactpersoonId": "cp-1",
+                    "enabled_by": "ab"
+                }
+            ]
+        ]
+    },
+    "disableUser anonymous": {
+        "status": 401,
+        "body": {
+            "message": "Not authenticated"
+        },
+        "calls": []
+    },
+    "disableUser ordinary user": {
+        "status": 403,
+        "body": {
+            "message": "Insufficient permissions"
+        },
+        "calls": [
+            [
+                "isAdmin",
+                "bob"
+            ],
+            [
+                "isInGroup",
+                "bob",
+                "gebruik-beheerder"
+            ],
+            [
+                "isInGroup",
+                "bob",
+                "aanbod-beheerder"
+            ]
+        ]
+    },
+    "disableUser administrator": {
+        "status": 200,
+        "body": {
+            "success": true,
+            "message": "User account disabled successfully"
+        },
+        "calls": [
+            [
+                "isAdmin",
+                "admin"
+            ],
+            [
+                "isInGroup",
+                "admin",
+                "gebruik-beheerder"
+            ],
+            [
+                "isInGroup",
+                "admin",
+                "aanbod-beheerder"
+            ],
+            [
+                "disableUserForContactpersoon",
+                "cp-1"
+            ],
+            [
+                "log.info",
+                "User account disabled",
+                {
+                    "contactpersoonId": "cp-1",
+                    "disabled_by": "admin"
+                }
+            ]
+        ]
+    },
+    "disableUser gebruik-beheerder": {
+        "status": 200,
+        "body": {
+            "success": true,
+            "message": "User account disabled successfully"
+        },
+        "calls": [
+            [
+                "isAdmin",
+                "gb"
+            ],
+            [
+                "isInGroup",
+                "gb",
+                "gebruik-beheerder"
+            ],
+            [
+                "disableUserForContactpersoon",
+                "cp-1"
+            ],
+            [
+                "log.info",
+                "User account disabled",
+                {
+                    "contactpersoonId": "cp-1",
+                    "disabled_by": "gb"
+                }
+            ]
+        ]
+    },
+    "disableUser aanbod-beheerder": {
+        "status": 200,
+        "body": {
+            "success": true,
+            "message": "User account disabled successfully"
+        },
+        "calls": [
+            [
+                "isAdmin",
+                "ab"
+            ],
+            [
+                "isInGroup",
+                "ab",
+                "gebruik-beheerder"
+            ],
+            [
+                "isInGroup",
+                "ab",
+                "aanbod-beheerder"
+            ],
+            [
+                "disableUserForContactpersoon",
+                "cp-1"
+            ],
+            [
+                "log.info",
+                "User account disabled",
+                {
+                    "contactpersoonId": "cp-1",
+                    "disabled_by": "ab"
+                }
+            ]
+        ]
+    },
+    "getBulkUserInfo anonymous": {
+        "status": 401,
+        "body": {
+            "message": "Not authenticated"
+        },
+        "calls": []
+    },
+    "getBulkUserInfo ordinary user": {
+        "status": 403,
+        "body": {
+            "message": "Insufficient permissions"
+        },
+        "calls": [
+            [
+                "isAdmin",
+                "bob"
+            ],
+            [
+                "isInGroup",
+                "bob",
+                "gebruik-beheerder"
+            ],
+            [
+                "isInGroup",
+                "bob",
+                "aanbod-beheerder"
+            ]
+        ]
+    },
+    "getBulkUserInfo administrator": {
+        "status": 400,
+        "body": {
+            "success": false,
+            "message": "No contactpersoon IDs provided"
+        },
+        "calls": [
+            [
+                "isAdmin",
+                "admin"
+            ],
+            [
+                "isInGroup",
+                "admin",
+                "gebruik-beheerder"
+            ],
+            [
+                "isInGroup",
+                "admin",
+                "aanbod-beheerder"
+            ],
+            [
+                "log.info",
+                "Controller: getBulkUserInfo called",
+                {
+                    "input": null,
+                    "contactpersoonIds": []
+                }
+            ]
+        ]
+    },
+    "getBulkUserInfo gebruik-beheerder": {
+        "status": 400,
+        "body": {
+            "success": false,
+            "message": "No contactpersoon IDs provided"
+        },
+        "calls": [
+            [
+                "isAdmin",
+                "gb"
+            ],
+            [
+                "isInGroup",
+                "gb",
+                "gebruik-beheerder"
+            ],
+            [
+                "log.info",
+                "Controller: getBulkUserInfo called",
+                {
+                    "input": null,
+                    "contactpersoonIds": []
+                }
+            ]
+        ]
+    },
+    "getBulkUserInfo aanbod-beheerder": {
+        "status": 400,
+        "body": {
+            "success": false,
+            "message": "No contactpersoon IDs provided"
+        },
+        "calls": [
+            [
+                "isAdmin",
+                "ab"
+            ],
+            [
+                "isInGroup",
+                "ab",
+                "gebruik-beheerder"
+            ],
+            [
+                "isInGroup",
+                "ab",
+                "aanbod-beheerder"
+            ],
+            [
+                "log.info",
+                "Controller: getBulkUserInfo called",
+                {
+                    "input": null,
+                    "contactpersoonIds": []
+                }
+            ]
+        ]
+    },
+    "enableUser fails": {
+        "status": 500,
+        "body": {
+            "success": false,
+            "message": "Failed to enable user account: account store down"
+        },
+        "calls": [
+            [
+                "isAdmin",
+                "admin"
+            ],
+            [
+                "isInGroup",
+                "admin",
+                "gebruik-beheerder"
+            ],
+            [
+                "isInGroup",
+                "admin",
+                "aanbod-beheerder"
+            ],
+            [
+                "enableUserForContactpersoon",
+                "cp-1"
+            ],
+            [
+                "log.error",
+                "Failed to enable user account",
+                {
+                    "contactpersoonId": "cp-1",
+                    "error": "account store down"
+                }
+            ]
+        ]
+    },
+    "disableUser fails": {
+        "status": 500,
+        "body": {
+            "success": false,
+            "message": "Failed to disable user account: account store down"
+        },
+        "calls": [
+            [
+                "isAdmin",
+                "admin"
+            ],
+            [
+                "isInGroup",
+                "admin",
+                "gebruik-beheerder"
+            ],
+            [
+                "isInGroup",
+                "admin",
+                "aanbod-beheerder"
+            ],
+            [
+                "disableUserForContactpersoon",
+                "cp-1"
+            ],
+            [
+                "log.error",
+                "Failed to disable user account",
+                {
+                    "contactpersoonId": "cp-1",
+                    "error": "account store down"
+                }
+            ]
+        ]
+    }
+}

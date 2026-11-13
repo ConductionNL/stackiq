@@ -1,0 +1,740 @@
+{
+    "getEmailSettings ok": [
+        200,
+        {
+            "success": true,
+            "emailSettings": {
+                "host": "redacted"
+            }
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "getEmailSettings",
+                []
+            ],
+            [
+                "redactEmailSecrets",
+                [
+                    {
+                        "host": "h"
+                    }
+                ]
+            ]
+        ],
+        []
+    ],
+    "getEmailSettings throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get email settings: service down"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "getEmailSettings",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get email settings",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "updateEmailSettings ok": [
+        200,
+        {
+            "success": true,
+            "message": "Email settings updated successfully",
+            "emailSettings": {
+                "host": "h"
+            }
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "updateEmailSettings",
+                [
+                    {
+                        "template": "T",
+                        "smtpPassword": "secret",
+                        "note": "n"
+                    }
+                ]
+            ]
+        ],
+        []
+    ],
+    "updateEmailSettings throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to update email settings: service down"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "updateEmailSettings",
+                [
+                    {
+                        "template": "T",
+                        "smtpPassword": "secret",
+                        "note": "n"
+                    }
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to update email settings",
+                {
+                    "exception": "service down",
+                    "requestData": {
+                        "template": "T",
+                        "smtpPassword": "***",
+                        "note": "n"
+                    }
+                }
+            ]
+        ]
+    ],
+    "getEmailTemplates ok": [
+        200,
+        {
+            "success": true,
+            "templates": {
+                "welcome": "W"
+            }
+        },
+        [
+            [
+                "getAllEmailTemplates",
+                []
+            ]
+        ],
+        []
+    ],
+    "getEmailTemplates throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get email templates: service down"
+        },
+        [
+            [
+                "getAllEmailTemplates",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get email templates",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "getEmailTemplate ok": [
+        200,
+        {
+            "success": true,
+            "template": "W",
+            "templateName": "welcome"
+        },
+        [
+            [
+                "getEmailTemplate",
+                [
+                    "welcome"
+                ]
+            ]
+        ],
+        []
+    ],
+    "getEmailTemplate throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get email template welcome: service down"
+        },
+        [
+            [
+                "getEmailTemplate",
+                [
+                    "welcome"
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get email template welcome",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "updateEmailTemplate ok": [
+        200,
+        {
+            "success": true,
+            "message": "Template welcome updated successfully"
+        },
+        [
+            [
+                "updateEmailTemplate",
+                [
+                    "welcome",
+                    "T"
+                ]
+            ]
+        ],
+        []
+    ],
+    "updateEmailTemplate throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to update email template welcome: service down"
+        },
+        [
+            [
+                "updateEmailTemplate",
+                [
+                    "welcome",
+                    "T"
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to update email template welcome",
+                {
+                    "exception": "service down",
+                    "requestData": {
+                        "template": "T",
+                        "smtpPassword": "***",
+                        "note": "n"
+                    }
+                }
+            ]
+        ]
+    ],
+    "getEmailTemplateDefault ok": [
+        200,
+        {
+            "success": true,
+            "template": "D",
+            "templateName": "welcome"
+        },
+        [
+            [
+                "getDefaultEmailTemplate",
+                [
+                    "welcome"
+                ]
+            ]
+        ],
+        []
+    ],
+    "getEmailTemplateDefault throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get default email template welcome: service down"
+        },
+        [
+            [
+                "getDefaultEmailTemplate",
+                [
+                    "welcome"
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get default email template welcome",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "getEmailTemplateVariables ok": [
+        200,
+        {
+            "success": true,
+            "variables": [
+                "name"
+            ],
+            "templateName": "welcome"
+        },
+        [
+            [
+                "getEmailTemplateVariables",
+                [
+                    "welcome"
+                ]
+            ]
+        ],
+        []
+    ],
+    "getEmailTemplateVariables throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get email template variables for welcome: service down"
+        },
+        [
+            [
+                "getEmailTemplateVariables",
+                [
+                    "welcome"
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get email template variables for welcome",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "getAllGroups ok": [
+        200,
+        {
+            "success": true,
+            "groups": [
+                "admin"
+            ]
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "getAllGroups",
+                []
+            ]
+        ],
+        []
+    ],
+    "getAllGroups throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get all groups: service down"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "getAllGroups",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get all groups",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "clearArchiMateImportStatus ok": [
+        200,
+        {
+            "success": true,
+            "message": "ArchiMate import status cleared successfully",
+            "details": {
+                "cleared": 1
+            }
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "clearArchiMateImportStatus",
+                []
+            ]
+        ],
+        []
+    ],
+    "clearArchiMateImportStatus throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to clear ArchiMate import status: service down"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "clearArchiMateImportStatus",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to clear ArchiMate import status",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "killArchiMateImport ok": [
+        200,
+        {
+            "success": true,
+            "message": "ArchiMate import termination completed",
+            "details": {
+                "killed": 1
+            }
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "killArchiMateImport",
+                []
+            ]
+        ],
+        []
+    ],
+    "killArchiMateImport throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to kill ArchiMate import process: service down"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "killArchiMateImport",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to kill ArchiMate import process",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "cancelArchiMateImport ok": [
+        200,
+        {
+            "success": true,
+            "message": "ArchiMate import cancellation succeeded",
+            "details": {
+                "cancelled": true
+            }
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "cancelArchiMateImport",
+                [
+                    null
+                ]
+            ]
+        ],
+        []
+    ],
+    "cancelArchiMateImport throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to cancel ArchiMate import: service down"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "cancelArchiMateImport",
+                [
+                    null
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to cancel ArchiMate import",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "clearArchiMateExportStatus ok": [
+        200,
+        {
+            "success": true,
+            "message": "ArchiMate export status cleared successfully"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "clearArchiMateExportStatus",
+                []
+            ]
+        ],
+        []
+    ],
+    "clearArchiMateExportStatus throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to clear ArchiMate export status: service down"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "clearArchiMateExportStatus",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to clear ArchiMate export status",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "getArchiMateSettings throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get ArchiMate settings: service down"
+        },
+        [
+            [
+                "getArchiMateStatus",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get ArchiMate settings",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "getObjectCounts ok": [
+        200,
+        {
+            "success": true,
+            "objectCounts": {
+                "apps": 2
+            }
+        },
+        [
+            [
+                "getObjectCountsStatistics",
+                []
+            ]
+        ],
+        []
+    ],
+    "getObjectCounts throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get object counts: service down"
+        },
+        [
+            [
+                "getObjectCountsStatistics",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get object counts",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "getCronjobConfig ok": [
+        200,
+        {
+            "enabled": true
+        },
+        [
+            [
+                "getCronjobConfig",
+                []
+            ]
+        ],
+        []
+    ],
+    "getCronjobConfig throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get cronjob config: service down"
+        },
+        [
+            [
+                "getCronjobConfig",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get cronjob config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "updateCronjobConfig ok": [
+        200,
+        {
+            "success": true
+        },
+        [
+            [
+                "updateCronjobConfig",
+                [
+                    {
+                        "template": "T",
+                        "smtpPassword": "secret",
+                        "note": "n"
+                    }
+                ]
+            ]
+        ],
+        []
+    ],
+    "updateCronjobConfig throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to update cronjob config: service down"
+        },
+        [
+            [
+                "updateCronjobConfig",
+                [
+                    {
+                        "template": "T",
+                        "smtpPassword": "secret",
+                        "note": "n"
+                    }
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to update cronjob config",
+                {
+                    "exception": "service down",
+                    "requestData": {
+                        "template": "T",
+                        "smtpPassword": "***",
+                        "note": "n"
+                    }
+                }
+            ]
+        ]
+    ]
+}

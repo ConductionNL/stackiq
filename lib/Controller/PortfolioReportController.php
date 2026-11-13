@@ -26,14 +26,12 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Controller;
 
 use Exception;
-use OCA\Stackiq\Service\OrganisationReportAccess;
 use OCA\Stackiq\Service\PortfolioReportService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\DataDownloadResponse;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
-use OCP\IUserSession;
 
 /**
  * Controller for the portfolio rationalization report endpoint.
@@ -46,16 +44,14 @@ class PortfolioReportController extends Controller {
 	 *
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request object.
-	 * @param IUserSession $userSession The user session service.
 	 * @param PortfolioReportService $reportService The report aggregation service.
-	 * @param OrganisationReportAccess $access Who may read which organisation's report.
+	 * @param OrganisationReportRequest $reportRequest The requested organisation and whether the user may read it.
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly IUserSession $userSession,
 		private readonly PortfolioReportService $reportService,
-		private readonly OrganisationReportAccess $access,
+		private readonly OrganisationReportRequest $reportRequest,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -80,20 +76,12 @@ class PortfolioReportController extends Controller {
 	 * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-csv-export-of-the-portfolio-report
 	 */
 	public function index() {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
+		$refusal = $this->reportRequest->refusal();
+		if ($refusal !== null) {
+			return $refusal;
 		}
 
-		$organisation = (string)$this->request->getParam('organisation', '');
-		if ($organisation === '') {
-			return new JSONResponse(['message' => 'organisation is required'], Http::STATUS_BAD_REQUEST);
-		}
-
-		if ($this->access->mayRead(user: $user, organisationUuid: $organisation) === false) {
-			// Fail closed: denied BEFORE any report query is built.
-			return new JSONResponse(['message' => 'Not authorised for this organisation'], Http::STATUS_FORBIDDEN);
-		}
+		$organisation = $this->reportRequest->organisation();
 
 		$format = (string)$this->request->getParam('format', 'json');
 

@@ -3,6 +3,9 @@
 /**
  * Stackiq ContractApprovalController.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Thin HTTP seam for delegating a contract approval / sign-off / renewal
  * DECISION to decidesk (cross-app interface contract #1) via the in-process
  * `IEventDispatcher` event contract. It owns NO approval workflow — it raises
@@ -35,9 +38,6 @@
  * @link https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/contract-decision-delegation/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

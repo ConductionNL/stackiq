@@ -1,4 +1,8 @@
 <!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
+<!--
  - @copyright Copyright (c) 2023 Ruben Linde <info@conduction.nl>
  - @license EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  -
@@ -997,6 +1001,7 @@ export default {
 					{
 						method: 'POST',
 						headers: {
+							requesttoken: OC.requestToken,
 							'X-Requested-With': 'XMLHttpRequest',
 						},
 						body: formData,

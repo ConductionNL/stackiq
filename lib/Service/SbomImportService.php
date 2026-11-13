@@ -3,6 +3,9 @@
 /**
  * SBOM Import Service.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Orchestrates importing a parsed SBOM (see {@see SbomParserService}) for a
  * single `moduleVersie`: resolves the target version, soft-deletes its
  * previous (non-deleted) `sbomComponent` set, bulk-saves the newly parsed
@@ -29,9 +32,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/sbom-import/spec.md#requirement-re-import-replaces-the-previous-component-set-and-is-soft-delete-aware
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -559,6 +559,17 @@ class SbomImportService {
 			return $relation;
 		}
 
+		return self::carriedUuid(relation: $relation);
+	}//end resolveRelationUuid()
+
+	/**
+	 * The uuid (else id) an array or object relation value carries.
+	 *
+	 * @param mixed $relation The raw relation value.
+	 *
+	 * @return string|null The carried uuid, or null when the value carries none.
+	 */
+	private static function carriedUuid(mixed $relation): ?string {
 		if (is_array($relation) === true) {
 			return $relation['uuid'] ?? ($relation['id'] ?? null);
 		}
@@ -568,7 +579,7 @@ class SbomImportService {
 		}
 
 		return null;
-	}//end resolveRelationUuid()
+	}//end carriedUuid()
 
 	/**
 	 * Resolve the register/schema coordinates + ObjectService this service

@@ -32,6 +32,7 @@ use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
+use OCA\Stackiq\Service\ObjectDataBag;
 
 /**
  * Orchestrates federation by delegating to OpenCatalogi services.
@@ -517,7 +518,7 @@ class FederationService {
 
 		$mirrors = [];
 		foreach ($items as $object) {
-			$data = $this->toDataBag(object: $object);
+			$data = (new ObjectDataBag())->fromItem(object: $object);
 			if ($this->isPeerSourced(objectData: $data) === true
 				&& (string)($data['_source']['instance'] ?? '') === $peerUrl
 			) {
@@ -631,34 +632,6 @@ class FederationService {
 
 		return ['register' => (int)$register, 'schema' => (int)$schema];
 	}//end resolveMirrorTarget()
-
-	/**
-	 * Normalise an ObjectService result item to a data bag (with its OR id).
-	 *
-	 * @param mixed $object The result item (ObjectEntity or array).
-	 *
-	 * @return array<string,mixed> The data bag.
-	 */
-	private function toDataBag(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (method_exists($object, 'getUuid') === true && empty($data['id']) === true) {
-				$data['id'] = $object->getUuid();
-			}
-
-			if (is_array($data) === true) {
-				return $data;
-			}
-
-			return [];
-		}
-
-		return [];
-	}//end toDataBag()
 
 	/**
 	 * Get the OpenRegister ObjectService from the DI container.

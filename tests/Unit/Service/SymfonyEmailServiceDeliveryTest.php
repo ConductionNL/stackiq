@@ -15,13 +15,16 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/email-delivery/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service;
 
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\IAppConfig;
 use PHPUnit\Framework\TestCase;
@@ -129,7 +132,7 @@ class SymfonyEmailServiceDeliveryTest extends TestCase {
 	 * @return SymfonyEmailService
 	 */
 	private function makeService(array $emailSettings): SymfonyEmailService {
-		$settings = $this->createMock(SettingsService::class);
+		$settings = $this->createMock(EmailSettings::class);
 		$settings->method('getEmailSettings')->willReturn($emailSettings);
 		$this->log = new EmailDeliveryLogSpy();
 

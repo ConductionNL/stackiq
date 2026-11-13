@@ -3,6 +3,9 @@
 /**
  * Stackiq SbomController.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Upload endpoint for importing a Software Bill of Materials (CycloneDX
  * 1.5/1.6 JSON, optionally SPDX 2.x JSON) against a specific `moduleVersie`.
  * Mirrors `SettingsController::importArchiMate`'s upload → parse → object
@@ -29,9 +32,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/sbom-import/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

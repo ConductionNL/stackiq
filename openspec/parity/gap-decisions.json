@@ -995,8 +995,8 @@
   "row": "conn-integration-registry",
   "matrix": "stackiq",
   "decision": "existing",
-  "reason": "Owned by ConductionNL/integriq. Its open change connection-registry covers the integrations overview; stackiq's half is the open change adopt-connection-registry (19 of 20 tasks). Recorded as instructed by the coordinator; the matrix row is the integriq lane's to set.",
-  "change": "connection-registry (ConductionNL/integriq)",
+  "reason": "Owned by ConductionNL/integriq, whose change connection-registry was archived on 29 Sep. Stackiq's half is the open change adopt-connection-registry (tasks 1-5 ticked; the live e2e run and archive, task 6.1, are left).",
+  "change": "adopt-connection-registry",
   "decidedOn": "2026-09-27"
  },
  {

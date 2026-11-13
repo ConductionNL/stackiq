@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Follow and cancel a running ArchiMate import from the settings page.
  *
  * The import is one long request, so the page names the operation up front

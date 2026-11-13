@@ -21,6 +21,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://conduction.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -110,8 +113,7 @@ class SetupController extends Controller {
 	 */
 	#[AuthorizedAdminSetting(StackiqAdmin::class)]
 	public function status(): JSONResponse {
-		$demoDecided = $this->appConfig->getValueString(AppIdentity::APP_ID, self::DEMO_DECIDED_KEY, '') !== '';
-		$picked      = $this->appConfig->getValueString(AppIdentity::APP_ID, self::DATASET_KEY, '');
+		$steps = $this->stepStatus();
 
 		return new JSONResponse(
 			data: [
@@ -124,18 +126,31 @@ class SetupController extends Controller {
 				// Every id of `manifest.setup.steps`, asserted by the status
 				// contract test: a step the server never reports stays open,
 				// and an open step reopens the wizard on every page.
-				'steps'     => [
-					'welcome' => ['done' => true],
-					// Answered once a card was picked ("None" included) or a load
-					// ran. A pick without a load still counts: a wizard that
-					// predates `loadAction` can only record the pick.
-					'demo-data' => ['done' => ($demoDecided === true || $picked !== '')],
-					'done' => ['done' => true],
-				],
+				'steps'     => $steps,
 			]
 		);
 
 	}//end status()
+
+	/**
+	 * Whether each setup step is done.
+	 *
+	 * @return array<string, array{done: bool}>
+	 */
+	private function stepStatus(): array {
+		$demoDecided = $this->appConfig->getValueString(AppIdentity::APP_ID, self::DEMO_DECIDED_KEY, '') !== '';
+		$picked      = $this->appConfig->getValueString(AppIdentity::APP_ID, self::DATASET_KEY, '');
+
+		return [
+			'welcome' => ['done' => true],
+			// Answered once a card was picked ("None" included) or a load
+			// ran. A pick without a load still counts: a wizard that
+			// predates `loadAction` can only record the pick.
+			'demo-data' => ['done' => ($demoDecided === true || $picked !== '')],
+			'done' => ['done' => true],
+		];
+
+	}//end stepStatus()
 
 	/**
 	 * Persist the wizard's `choice` answer.
@@ -156,12 +171,7 @@ class SetupController extends Controller {
 			return new JSONResponse(data: ['success' => true, 'config' => []]);
 		}
 
-		// The step is not `multiple`, but the wizard's contract allows a list, so
-		// both shapes are read rather than one of them reaching `(string)`.
-		$submitted = $value;
-		if (is_array($value) === true) {
-			$submitted = ($value[0] ?? null);
-		}
+		$submitted = self::submittedValue(value: $value);
 
 		$refusal = $this->refuseDataset(value: $submitted);
 		if ($refusal !== null) {
@@ -174,6 +184,25 @@ class SetupController extends Controller {
 		return new JSONResponse(data: ['success' => true, 'config' => [self::DATASET_KEY => $datasetId]]);
 
 	}//end saveConfig()
+
+	/**
+	 * The single value a posted answer carries.
+	 *
+	 * The step is not `multiple`, but the wizard's contract allows a list, so
+	 * both shapes are read rather than one of them reaching `(string)`.
+	 *
+	 * @param mixed $value The posted value.
+	 *
+	 * @return mixed The value, or the first element of a posted list.
+	 */
+	private static function submittedValue(mixed $value): mixed {
+		if (is_array($value) === true) {
+			return ($value[0] ?? null);
+		}
+
+		return $value;
+
+	}//end submittedValue()
 
 	/**
 	 * Run a privileged server-side setup action.
@@ -374,10 +403,7 @@ class SetupController extends Controller {
 	 */
 	private function refuseDataset(mixed $value): ?JSONResponse {
 		if (is_scalar($value) === false) {
-			return new JSONResponse(
-				data: ['success' => false, 'message' => 'A dataset is named by a string.'],
-				statusCode: Http::STATUS_BAD_REQUEST,
-			);
+			return self::datasetRefusal(message: 'A dataset is named by a string.');
 		}
 
 		$known = array_column($this->demoDataService->listChoices(), 'id');
@@ -385,10 +411,22 @@ class SetupController extends Controller {
 			return null;
 		}
 
+		return self::datasetRefusal(message: 'No dataset is called "' . (string)$value . '".');
+
+	}//end refuseDataset()
+
+	/**
+	 * The 400 answered for a dataset value that is refused.
+	 *
+	 * @param string $message Why it is refused.
+	 *
+	 * @return JSONResponse
+	 */
+	private static function datasetRefusal(string $message): JSONResponse {
 		return new JSONResponse(
-			data: ['success' => false, 'message' => 'No dataset is called "' . (string)$value . '".'],
+			data: ['success' => false, 'message' => $message],
 			statusCode: Http::STATUS_BAD_REQUEST,
 		);
 
-	}//end refuseDataset()
+	}//end datasetRefusal()
 }//end class

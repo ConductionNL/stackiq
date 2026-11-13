@@ -9,6 +9,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service\Stackiq;
 
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\SymfonyEmailService;
@@ -31,7 +32,8 @@ use ReflectionMethod;
  *
  * Commit bc4dc9ea switched that automatic assignment off on purpose ("users
  * should be assigned groups explicitly via the admin UI") by making
- * SettingsService::getOrganizationAdminGroups() return an empty list. That
+ * SettingsService::getOrganizationAdminGroups() (now in RoleGroupSettings)
+ * return an empty list. That
  * also discarded the saved setting everywhere else. With the getter reading
  * the saved list again, this test pins the deliberate choice: even when
  * groups are saved, a first contact is not put into them.
@@ -53,13 +55,18 @@ class ContactPersonHandlerFirstContactTest extends TestCase {
 	 */
 	public function testFirstContactIsNotAddedToSavedOrganisationAdminGroups(): void {
 		$settingsService = $this->createMock(SettingsService::class);
-		$settingsService->method('getOrganizationAdminGroups')->willReturn(['org-admins']);
+		$roleGroups = $this->createMock(RoleGroupSettings::class);
+		$roleGroups->method('getOrganizationAdminGroups')->willReturn(['org-admins']);
 
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(
-			static function (string $id) use ($settingsService) {
+			static function (string $id) use ($settingsService, $roleGroups) {
 				if ($id === 'OCA\Stackiq\Service\SettingsService') {
 					return $settingsService;
+				}
+
+				if ($id === RoleGroupSettings::class) {
+					return $roleGroups;
 				}
 
 				throw new \RuntimeException('Unexpected container lookup: ' . $id);

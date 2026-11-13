@@ -274,29 +274,7 @@ class CmdbImportReport {
 			return $stored;
 		}
 
-		$rank = static function (array $row): int {
-			if ($row['outcome'] === self::FAILED) {
-				return 0;
-			}
-
-			if ($row['outcome'] === self::SKIPPED) {
-				return 1;
-			}
-
-			if ($row['warnings'] !== []) {
-				return 2;
-			}
-
-			return 3;
-		};
-
-		$ordered = [];
-		foreach ($this->rows as $index => $row) {
-			$ordered[] = [$rank($row), $index, $row];
-		}
-
-		usort($ordered, static fn (array $left, array $right): int => [$left[0], $left[1]] <=> [$right[0], $right[1]]);
-		$kept = array_column(array_slice($ordered, 0, max(0, $maxRows)), 2);
+		$kept = array_slice($this->rowsByAttention(), 0, max(0, $maxRows));
 
 		$stored['rows'] = $kept;
 		$stored['rowsStored'] = count($kept);
@@ -304,4 +282,42 @@ class CmdbImportReport {
 
 		return $stored;
 	}//end toStoredArray()
+
+	/**
+	 * Every row, the ones that need attention first, each group in processing order.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 */
+	private function rowsByAttention(): array {
+		$ordered = [];
+		foreach ($this->rows as $index => $row) {
+			$ordered[] = [self::attentionRank(row: $row), $index, $row];
+		}
+
+		usort($ordered, static fn (array $left, array $right): int => [$left[0], $left[1]] <=> [$right[0], $right[1]]);
+		return array_column($ordered, 2);
+	}//end rowsByAttention()
+
+	/**
+	 * How much a row needs attention: failed, then skipped, then warned, then the rest.
+	 *
+	 * @param array<string, mixed> $row A report row.
+	 *
+	 * @return int The rank, 0 first.
+	 */
+	private static function attentionRank(array $row): int {
+		if ($row['outcome'] === self::FAILED) {
+			return 0;
+		}
+
+		if ($row['outcome'] === self::SKIPPED) {
+			return 1;
+		}
+
+		if ($row['warnings'] !== []) {
+			return 2;
+		}
+
+		return 3;
+	}//end attentionRank()
 }//end class

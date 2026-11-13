@@ -14,6 +14,9 @@
  *
  * @spec openspec/specs/settings-service/spec.md#requirement-the-system-shall-run-auto-configuration-import-and-configuration-maintenance-req-003
  * @spec openspec/specs/settings-service/spec.md#requirement-the-system-shall-read-and-persist-every-configuration-domain-req-002
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -21,6 +24,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\SchemaMapper;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -71,11 +76,13 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 				[
 					$this->createMock(IAppConfig::class),
 					$this->createMock(IRequest::class),
+					$this->createMock(RoleGroupSettings::class),
 					$container,
 					$this->createMock(IAppManager::class),
 					$logger,
 					$this->createMock(IGroupManager::class),
 					$this->createMock(IL10N::class),
+					$this->createMock(EmailSettings::class),
 				]
 			)
 			->onlyMethods(['getSchemaIdForObjectType'])
@@ -196,11 +203,13 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 		$service = new SettingsService(
 			$config,
 			$this->createMock(IRequest::class),
+			$this->createMock(RoleGroupSettings::class),
 			$this->createMock(ContainerInterface::class),
 			$this->createMock(IAppManager::class),
 			$this->createMock(LoggerInterface::class),
 			$this->createMock(IGroupManager::class),
-			$this->createMock(IL10N::class)
+			$this->createMock(IL10N::class),
+			$this->createMock(EmailSettings::class),
 		);
 
 		$reflection = new ReflectionMethod($service, 'getRegisterVerificationStatus');
@@ -237,11 +246,13 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 		$service = new SettingsService(
 			$config,
 			$this->createMock(IRequest::class),
+			$this->createMock(RoleGroupSettings::class),
 			$this->createMock(ContainerInterface::class),
 			$this->createMock(IAppManager::class),
 			$this->createMock(LoggerInterface::class),
 			$this->createMock(IGroupManager::class),
-			$l10n
+			$l10n,
+			$this->createMock(EmailSettings::class),
 		);
 
 		$reflection = new ReflectionMethod($service, 'getRegisterVerificationStatus');

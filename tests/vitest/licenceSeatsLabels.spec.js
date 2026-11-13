@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * The words of the seats panel and the Seats section, and the wiring that puts
  * the panel on the contract page and the section on the License posture page.
  *

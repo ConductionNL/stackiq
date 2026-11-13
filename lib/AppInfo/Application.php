@@ -14,6 +14,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2024 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -43,6 +46,7 @@ use OCA\Stackiq\EventListener\ContactPersonOrganisationListener;
 use OCA\Stackiq\EventListener\ModuleRegistrationSubscriber;
 use OCA\Stackiq\EventListener\TestEventListener;
 use OCA\Stackiq\EventListener\UserProfileUpdatedEventListener;
+use OCA\Stackiq\Middleware\ApiContractMiddleware;
 use OCA\Stackiq\Service\ArchiMateExportService;
 use OCA\Stackiq\Service\ArchiMateImportService;
 use OCA\Stackiq\Service\ArchiMateService;
@@ -73,7 +77,11 @@ use OCA\Stackiq\Service\ReviewService;
 use OCA\Stackiq\Service\SbomImportService;
 use OCA\Stackiq\Service\SbomParserService;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
+use OCA\Stackiq\Service\Settings\EolSyncSettings;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
 use OCA\Stackiq\Service\Stackiq\HierarchyHandler;
@@ -167,6 +175,9 @@ class Application extends App implements IBootstrap {
 		$this->registerEventListeners(context: $context);
 
 		$this->registerDomainServices(context: $context);
+
+		// API-Version header and problem details on the JSON API (spec api-contract).
+		$context->registerMiddleware(ApiContractMiddleware::class);
 	}//end register()
 
 	/**
@@ -324,7 +335,7 @@ class Application extends App implements IBootstrap {
 				return new SymfonyEmailService(
 					config: $container->get(IAppConfig::class),
 					logger: $container->get('Psr\Log\LoggerInterface'),
-					settingsService: $container->get(SettingsService::class)
+					emailSettings: $container->get(EmailSettings::class)
 				);
 			}
 		);
@@ -336,11 +347,13 @@ class Application extends App implements IBootstrap {
 				return new SettingsService(
 					config: $container->get(IAppConfig::class),
 					request: $container->get('OCP\IRequest'),
+					roleGroupSettings: $container->get(RoleGroupSettings::class),
 					container: $container,
 					appManager: $container->get('OCP\App\IAppManager'),
 					logger: $container->get('Psr\Log\LoggerInterface'),
 					groupManager: $container->get(IGroupManager::class),
-					l10n: $container->get('OCP\IL10N')
+					l10n: $container->get('OCP\IL10N'),
+					emailSettings: $container->get(EmailSettings::class)
 				);
 			}
 		);
@@ -623,6 +636,7 @@ class Application extends App implements IBootstrap {
 					orgSyncService: $container->get(OrganizationSyncService::class),
 					contactSync: $container->get(StackiqContactSyncService::class),
 					settingsService: $container->get(SettingsService::class),
+					cronjobSettings: $container->get(CronjobSettings::class),
 					appManager: $container->get(IAppManager::class),
 					logger: $container->get(LoggerInterface::class)
 				);
@@ -723,6 +737,7 @@ class Application extends App implements IBootstrap {
 			function ($container) {
 				return new EolSyncService(
 					settingsService: $container->get(SettingsService::class),
+					eolSyncSettings: $container->get(EolSyncSettings::class),
 					matcher: $container->get(EolMatcherService::class),
 					timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
 					logger: $container->get(LoggerInterface::class),

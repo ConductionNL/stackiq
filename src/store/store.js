@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2024 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 // The store script handles app wide variables (or state), for the use of these variables and there governing concepts read the design.md
 import pinia from '../pinia.js'
 import { useCatalogStore } from './modules/catalog.js'

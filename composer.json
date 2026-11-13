@@ -15,6 +15,12 @@
         }
     },
     "scripts": {
+        "coverage:publish": [
+            "@putenv XDEBUG_MODE=coverage",
+            "@php -d pcov.enabled=1 vendor/bin/phpunit -c phpunit.xml --do-not-fail-on-risky --coverage-clover=coverage/clover.xml",
+            "npm run test:coverage",
+            "@php scripts/coverage-publish.php"
+        ],
         "post-install-cmd": [
             "@composer bin all install --ansi"
         ],

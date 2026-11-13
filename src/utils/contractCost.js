@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * contractCost — annualised cost derivation for catalog contracts.
  *
  * A contract carries `kosten` (amount) and `kostenPeriode` (period). The

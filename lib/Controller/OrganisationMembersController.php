@@ -3,6 +3,9 @@
 /**
  * Stackiq OrganisationMembersController.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Self-service colleague access (VNG Softwarecatalogus #65): lets a
  * `beheerder` of an organisation grant or revoke an EXISTING Nextcloud
  * user's membership of that organisation, without an administrator.
@@ -33,9 +36,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/multi-org-membership/spec.md#requirement-granting-or-revoking-organisation-access-must-be-restricted-to-a-beheerder-of-that-organisation-req-004
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -113,12 +113,26 @@ class OrganisationMembersController extends Controller {
 		}
 
 		if ($this->userManager->get($userId) === null) {
-			return new JSONResponse(
-				data: ['error' => 'User not found'],
-				statusCode: Http::STATUS_NOT_FOUND
-			);
+			return self::userNotFound();
 		}
 
+		$failure = $this->joinMembership(uuid: $uuid, userId: $userId);
+		if ($failure !== null) {
+			return $failure;
+		}
+
+		return self::membershipChanged(message: 'Successfully granted organisation access', userId: $userId);
+	}//end grant()
+
+	/**
+	 * Add the user to the organisation through OpenRegister.
+	 *
+	 * @param string $uuid   The organisation UUID.
+	 * @param string $userId The existing Nextcloud user id to grant access to.
+	 *
+	 * @return JSONResponse|null The 400 response when OpenRegister refuses, null on success.
+	 */
+	private function joinMembership(string $uuid, string $userId): ?JSONResponse {
 		try {
 			$organisationService = $this->getOrganisationService();
 			$organisationService->joinOrganisation(organisationUuid: $uuid, targetUserId: $userId);
@@ -127,20 +141,11 @@ class OrganisationMembersController extends Controller {
 				'[OrganisationMembersController] Failed to grant organisation access',
 				['organisationUuid' => $uuid, 'userId' => $userId, 'error' => $e->getMessage()]
 			);
-			return new JSONResponse(
-				data: ['error' => $e->getMessage()],
-				statusCode: Http::STATUS_BAD_REQUEST
-			);
+			return self::badRequest(error: $e);
 		}
 
-		return new JSONResponse(
-			data: [
-				'message' => 'Successfully granted organisation access',
-				'userId' => $userId,
-			],
-			statusCode: Http::STATUS_OK
-		);
-	}//end grant()
+		return null;
+	}//end joinMembership()
 
 	/**
 	 * Revoke an existing member's access to an organisation.
@@ -162,6 +167,23 @@ class OrganisationMembersController extends Controller {
 			return $guard;
 		}
 
+		$failure = $this->leaveMembership(uuid: $uuid, userId: $userId);
+		if ($failure !== null) {
+			return $failure;
+		}
+
+		return self::membershipChanged(message: 'Successfully revoked organisation access', userId: $userId);
+	}//end revoke()
+
+	/**
+	 * Remove the user from the organisation through OpenRegister.
+	 *
+	 * @param string $uuid   The organisation UUID.
+	 * @param string $userId The Nextcloud user id to revoke access from.
+	 *
+	 * @return JSONResponse|null The 400 response when OpenRegister refuses, null on success.
+	 */
+	private function leaveMembership(string $uuid, string $userId): ?JSONResponse {
 		try {
 			$organisationService = $this->getOrganisationService();
 			$organisationService->leaveOrganisation(organisationUuid: $uuid, targetUserId: $userId);
@@ -170,20 +192,55 @@ class OrganisationMembersController extends Controller {
 				'[OrganisationMembersController] Failed to revoke organisation access',
 				['organisationUuid' => $uuid, 'userId' => $userId, 'error' => $e->getMessage()]
 			);
-			return new JSONResponse(
-				data: ['error' => $e->getMessage()],
-				statusCode: Http::STATUS_BAD_REQUEST
-			);
+			return self::badRequest(error: $e);
 		}
 
+		return null;
+	}//end leaveMembership()
+
+	/**
+	 * The 404 answered when the user to grant access to does not exist.
+	 *
+	 * @return JSONResponse
+	 */
+	private static function userNotFound(): JSONResponse {
+		return new JSONResponse(
+			data: ['error' => 'User not found'],
+			statusCode: Http::STATUS_NOT_FOUND
+		);
+	}//end userNotFound()
+
+	/**
+	 * The 400 answered when OpenRegister refuses a membership change.
+	 *
+	 * @param \Exception $error What OpenRegister threw.
+	 *
+	 * @return JSONResponse
+	 */
+	private static function badRequest(\Exception $error): JSONResponse {
+		return new JSONResponse(
+			data: ['error' => $error->getMessage()],
+			statusCode: Http::STATUS_BAD_REQUEST
+		);
+	}//end badRequest()
+
+	/**
+	 * The 200 answered after a membership change.
+	 *
+	 * @param string $message What changed.
+	 * @param string $userId  The user whose access changed.
+	 *
+	 * @return JSONResponse
+	 */
+	private static function membershipChanged(string $message, string $userId): JSONResponse {
 		return new JSONResponse(
 			data: [
-				'message' => 'Successfully revoked organisation access',
+				'message' => $message,
 				'userId' => $userId,
 			],
 			statusCode: Http::STATUS_OK
 		);
-	}//end revoke()
+	}//end membershipChanged()
 
 	/**
 	 * Beheerder-of-this-organisation authorization guard (IDOR guard).

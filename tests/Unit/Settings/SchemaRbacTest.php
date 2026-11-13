@@ -5,6 +5,9 @@
  * schemas' OpenRegister RBAC read rules (vendor-visibility-rbac REQ-008,
  * schema-rbac-hardening).
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Neither `koppeling` nor `organisatie` has an app-local controller, so a
  * read of either schema through OpenRegister's standard (non-`_rbac:false`)
  * object API is gated solely by this schema config. Before this change, all

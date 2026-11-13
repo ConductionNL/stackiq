@@ -12,6 +12,9 @@
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -644,7 +647,7 @@ class ContactPersonHandler {
 			// A first contact is NOT added to the organisation admin groups.
 			// That automatic assignment was switched off on purpose in commit
 			// bc4dc9ea ("users should be assigned groups explicitly via the
-			// admin UI"), by making SettingsService::getOrganizationAdminGroups()
+			// admin UI"), by making getOrganizationAdminGroups() (now RoleGroupSettings)
 			// return an empty list. stackiq#1136 made that getter read the saved
 			// list again for the settings page and the export permission, so
 			// the assignment is left out here instead of being revived.

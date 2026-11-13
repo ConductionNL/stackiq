@@ -3,6 +3,9 @@
 /**
  * Repair step that carries `oc_appconfig` rows across the app-id rename.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Nextcloud namespaces `oc_appconfig` BY APP ID and offers no in-place app-id
  * upgrade, so the moment `stackiq` became `stackiq` every row this app
  * had ever written became unreachable. Nothing errors: every reader in this
@@ -32,9 +35,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-app-config-survives-the-rename
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -228,36 +228,71 @@ class MigrateAppConfigKeys implements IRepairStep {
 	 * @spec openspec/specs/app-id-rename/spec.md#requirement-stored-app-config-survives-the-rename
 	 */
 	protected function copyValue(string $key, mixed $value): bool {
-		if (is_bool($value) === true) {
-			$this->appConfig->setValueBool(AppIdentity::APP_ID, $key, $value);
-			return true;
-		}
-
-		if (is_int($value) === true) {
-			$this->appConfig->setValueInt(AppIdentity::APP_ID, $key, $value);
-			return true;
-		}
-
-		if (is_float($value) === true) {
-			$this->appConfig->setValueFloat(AppIdentity::APP_ID, $key, $value);
+		if (is_bool($value) === true || is_int($value) === true || is_float($value) === true) {
+			$this->copyScalar(key: $key, value: $value);
 			return true;
 		}
 
 		if (is_array($value) === true) {
-			if ($value === []) {
-				return false;
-			}
-
-			$this->appConfig->setValueArray(AppIdentity::APP_ID, $key, $value);
-			return true;
+			return $this->copyArray(key: $key, value: $value);
 		}
 
-		$string = (string)$value;
-		if ($string === '') {
+		return $this->copyString(key: $key, value: (string)$value);
+	}//end copyValue()
+
+	/**
+	 * Write a boolean, integer or float in its own type.
+	 *
+	 * @param string           $key   The config key.
+	 * @param bool|int|float   $value The value.
+	 *
+	 * @return void
+	 */
+	private function copyScalar(string $key, bool|int|float $value): void {
+		if (is_bool($value) === true) {
+			$this->appConfig->setValueBool(AppIdentity::APP_ID, $key, $value);
+			return;
+		}
+
+		if (is_int($value) === true) {
+			$this->appConfig->setValueInt(AppIdentity::APP_ID, $key, $value);
+			return;
+		}
+
+		$this->appConfig->setValueFloat(AppIdentity::APP_ID, $key, $value);
+	}//end copyScalar()
+
+	/**
+	 * Write a non-empty array.
+	 *
+	 * @param string            $key   The config key.
+	 * @param array<mixed>      $value The value.
+	 *
+	 * @return bool True when it was written.
+	 */
+	private function copyArray(string $key, array $value): bool {
+		if ($value === []) {
 			return false;
 		}
 
-		$this->appConfig->setValueString(AppIdentity::APP_ID, $key, $string);
+		$this->appConfig->setValueArray(AppIdentity::APP_ID, $key, $value);
 		return true;
-	}//end copyValue()
+	}//end copyArray()
+
+	/**
+	 * Write a non-empty string.
+	 *
+	 * @param string $key   The config key.
+	 * @param string $value The value.
+	 *
+	 * @return bool True when it was written.
+	 */
+	private function copyString(string $key, string $value): bool {
+		if ($value === '') {
+			return false;
+		}
+
+		$this->appConfig->setValueString(AppIdentity::APP_ID, $key, $value);
+		return true;
+	}//end copyString()
 }//end class

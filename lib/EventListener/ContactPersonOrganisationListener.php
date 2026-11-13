@@ -70,12 +70,12 @@ class ContactPersonOrganisationListener implements IEventListener {
 		}
 
 		if ($event instanceof ObjectCreatingEvent) {
-			$this->check(event: $event, object: $event->getObject(), oldData: null);
+			$this->check(event: $event, oldData: null);
 			return;
 		}
 
 		if ($event instanceof ObjectUpdatingEvent) {
-			$this->check(event: $event, object: $event->getNewObject(), oldData: $event->getOldObject()?->getObject());
+			$this->check(event: $event, oldData: $event->getOldObject()?->getObject());
 		}
 	}//end handle()
 
@@ -83,25 +83,62 @@ class ContactPersonOrganisationListener implements IEventListener {
 	 * Stop the write when it is a contact person the guard does not allow.
 	 *
 	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event   The pre-save event.
-	 * @param ObjectEntity                            $object  The object being written.
 	 * @param array<string, mixed>|null               $oldData The stored data, or null on a create.
 	 *
 	 * @return void
 	 */
-	private function check(ObjectCreatingEvent|ObjectUpdatingEvent $event, ObjectEntity $object, ?array $oldData): void {
-		$configured = (string)($this->settingsService->getVoorzieningenConfig()['contactpersoon_schema'] ?? '');
-		if ($configured === '' || (string)$object->getSchema() !== $configured) {
+	private function check(ObjectCreatingEvent|ObjectUpdatingEvent $event, ?array $oldData): void {
+		$object = $this->writtenObject(event: $event);
+		if ($this->isContactPerson(object: $object) === false) {
 			return;
 		}
 
 		$data = array_merge(($object->getObject() ?? []), $event->getModifiedData());
-		if ($this->guard->needsCheck(contactData: $data, oldData: $oldData) === false
-			|| $this->guard->allows(contactData: $data, oldData: $oldData) === true
-		) {
+		if ($this->mayWrite(contactData: $data, oldData: $oldData) === true) {
 			return;
 		}
 
 		$event->setErrors(['message' => 'This contact person could not be saved.']);
 		$event->stopPropagation();
 	}//end check()
+
+	/**
+	 * The object being written: the new object of an update, the object of a create.
+	 *
+	 * @param ObjectCreatingEvent|ObjectUpdatingEvent $event The pre-save event.
+	 *
+	 * @return ObjectEntity
+	 */
+	private function writtenObject(ObjectCreatingEvent|ObjectUpdatingEvent $event): ObjectEntity {
+		if ($event instanceof ObjectUpdatingEvent) {
+			return $event->getNewObject();
+		}
+
+		return $event->getObject();
+	}//end writtenObject()
+
+	/**
+	 * Whether the object is of the configured contact person schema.
+	 *
+	 * @param ObjectEntity $object The object being written.
+	 *
+	 * @return bool
+	 */
+	private function isContactPerson(ObjectEntity $object): bool {
+		$configured = (string)($this->settingsService->getVoorzieningenConfig()['contactpersoon_schema'] ?? '');
+		return $configured !== '' && (string)$object->getSchema() === $configured;
+	}//end isContactPerson()
+
+	/**
+	 * Whether the write may go ahead: it needs no check, or the guard allows it.
+	 *
+	 * @param array<string, mixed>      $contactData The contact person's data as it will be saved.
+	 * @param array<string, mixed>|null $oldData     The stored data, or null on a create.
+	 *
+	 * @return bool
+	 */
+	private function mayWrite(array $contactData, ?array $oldData): bool {
+		return $this->guard->needsCheck(contactData: $contactData, oldData: $oldData) === false
+			|| $this->guard->allows(contactData: $contactData, oldData: $oldData) === true;
+	}//end mayWrite()
 }//end class

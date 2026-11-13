@@ -3,6 +3,9 @@
 /**
  * The CMDB import packs in OpenRegister's migration-pack store.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The four sheet packs (module, manufacturer, usage, business owner) are
  * seeded into OpenRegister's `MigrationPackService` as built-in packs, so an
  * administrator can view and edit them in OpenRegister. Each seeded definition
@@ -29,9 +32,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -170,6 +170,17 @@ class CmdbImportPackStore {
 			return [];
 		}
 
+		return $this->validPackIds(decoded: $decoded);
+	}//end recordedPackIds()
+
+	/**
+	 * The recorded entries that are a pack slug with a positive row id.
+	 *
+	 * @param array<mixed, mixed> $decoded The decoded config value.
+	 *
+	 * @return array<string, int>
+	 */
+	private function validPackIds(array $decoded): array {
 		$ids = [];
 		foreach ($decoded as $slug => $id) {
 			if (is_string($slug) === true && is_int($id) === true && $id > 0) {
@@ -178,7 +189,7 @@ class CmdbImportPackStore {
 		}
 
 		return $ids;
-	}//end recordedPackIds()
+	}//end validPackIds()
 
 	/**
 	 * Refuse the shipped files once the packs were stored in OpenRegister.
@@ -569,18 +580,28 @@ class CmdbImportPackStore {
 			return $this->appConfig;
 		}
 
+		$this->appConfig = $this->containerAppConfig();
+		return $this->appConfig;
+	}//end appConfig()
+
+	/**
+	 * The app config the container holds, or null when it holds none.
+	 *
+	 * @return IAppConfig|null
+	 */
+	private function containerAppConfig(): ?IAppConfig {
 		try {
 			if ($this->container->has(IAppConfig::class) === true) {
 				$config = $this->container->get(IAppConfig::class);
 				if ($config instanceof IAppConfig) {
-					$this->appConfig = $config;
+					return $config;
 				}
 			}
 		} catch (Throwable $e) {
 			// No app config in this container: nothing is recorded.
-			$this->appConfig = null;
+			return null;
 		}
 
-		return $this->appConfig;
-	}//end appConfig()
+		return null;
+	}//end containerAppConfig()
 }//end class

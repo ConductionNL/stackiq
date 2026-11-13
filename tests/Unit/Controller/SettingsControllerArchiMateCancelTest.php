@@ -13,6 +13,9 @@
  * @link https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/archimate-import-progress/spec.md#requirement-req-aip-002-an-admin-shall-be-able-to-cancel-a-running-import
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -24,6 +27,9 @@ use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http;
@@ -70,10 +76,13 @@ class SettingsControllerArchiMateCancelTest extends TestCase {
 			$groupManager,
 			$userSession,
 			$settingsService,
+			$this->createMock(CronjobSettings::class),
 			$this->createMock(OrganizationSyncService::class),
 			$this->createMock(ArchiMateService::class),
+			$this->createMock(RoleGroupSettings::class),
 			$this->createMock(ProgressTracker::class),
 			$this->createMock(EolSyncService::class),
+			$this->createMock(EmailSettings::class),
 			$this->createMock(LoggerInterface::class)
 		);
 	}//end controller()

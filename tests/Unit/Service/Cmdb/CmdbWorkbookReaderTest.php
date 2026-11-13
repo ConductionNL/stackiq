@@ -513,7 +513,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 	 * differently from PhpSpreadsheet charges the light entry: an entry of another namespace before the
 	 * headers (PhpSpreadsheet numbers only its own), a decoy `<v>` of another namespace before the real one
 	 * (PhpSpreadsheet reads only its own), a table whose part name does not end in `.xml`, and a `<v>` whose
-	 * own text differs from all the text inside it (PhpSpreadsheet reads its own text).
+	 * own text differs from all the text inside it (PhpSpreadsheet reads its own text), either way round.
 	 *
 	 * @return void
 	 */
@@ -528,6 +528,7 @@ class CmdbWorkbookReaderTest extends TestCase {
 			'a decoy value of another namespace' => self::sharedStringWorkbook(entry: $rich, cells: 50, value: '<o:v xmlns:o="urn:x">99</o:v><v>2</v>'),
 			'a table not named .xml' => self::sharedStringWorkbook(entry: $rich, cells: 50, part: 'sharedStrings.bin'),
 			'a value with a child element' => self::sharedStringWorkbook(entry: $rich, cells: 50, value: '<v><o:x xmlns:o="urn:x">9</o:x>2</v>'),
+			'a value whose text is all in a child element' => self::sharedStringWorkbook(entry: $rich, cells: 50, value: '<v><o:x xmlns:o="urn:x">2</o:x></v>'),
 		];
 		$directory = CmdbTestSupport::profileDirectory(overrides: ['maxReferencedStringBytes' => 400000]);
 		$reader = new class extends CmdbWorkbookReader {

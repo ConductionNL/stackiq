@@ -16,6 +16,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/aangeboden-gebruik-api/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -40,6 +43,8 @@ use Psr\Log\AbstractLogger;
  * Golden cases for the koppelingen and gebruik lookup by uuid.
  *
  * @covers \OCA\Stackiq\Service\AangebodenGebruikService
+ * @uses \OCA\Stackiq\Service\EmptyListing
+ * @uses \OCA\Stackiq\Service\OpenRegisterLookup
  *
  * @spec openspec/specs/aangeboden-gebruik-api/spec.md
  */

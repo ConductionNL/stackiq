@@ -18,6 +18,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -26,6 +29,8 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Service\ConfigLookup;
 use OCA\OpenRegister\Service\RegisterResolverService;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -97,11 +102,13 @@ class SettingsServiceResolverWiringTest extends TestCase {
 		return new SettingsService(
 			$this->config,
 			$this->request,
+			$this->createMock(RoleGroupSettings::class),
 			$this->container,
 			$this->appManager,
 			$this->logger,
 			$this->groupManager,
 			$this->l10n,
+			$this->createMock(EmailSettings::class),
 		);
 
 	}//end makeService()

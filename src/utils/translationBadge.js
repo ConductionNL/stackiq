@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * translationBadge — compute the "(translated from X)" badge for list rows.
  *
  * OpenRegister serves translatable object properties in the language the
