@@ -61,13 +61,14 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use DateTimeImmutable;
 use DateTimeZone;
 use JsonSerializable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Object\ObjectStateRequest;
 use OCA\Stackiq\Exception\CmdbImportException;
+use OCA\Stackiq\Kernel\Contracts\CmdbExportImportServiceInterface;
+use OCA\Stackiq\Kernel\LogSafeMessage;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\Cmdb\CmdbImportReport;
 use OCA\Stackiq\Service\Cmdb\CmdbImportRequest;
@@ -76,9 +77,10 @@ use OCA\Stackiq\Service\Cmdb\CmdbImportRun;
 use OCA\Stackiq\Service\Cmdb\CmdbMatchSchema;
 use OCA\Stackiq\Service\Cmdb\CmdbOwnerIdentity;
 use OCA\Stackiq\Service\Cmdb\CmdbOwnerLookup;
-use OCA\Stackiq\Service\Cmdb\OpenRegisterInstance;
 use OCA\Stackiq\Service\Cmdb\CmdbRowNormaliser;
 use OCA\Stackiq\Service\Cmdb\CmdbWorkbookReader;
+use OCA\Stackiq\Service\Cmdb\OpenRegisterInstance;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IL10N;
 use OCP\IUserSession;
@@ -112,7 +114,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassLength) Most of the length is docblocks that state
  * the matching rules; the code itself is under the threshold.
  */
-class CmdbExportImportService {
+class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	/**
 	 * The ProgressTracker operation type of an import.
 	 */
@@ -145,11 +147,6 @@ class CmdbExportImportService {
 	 * OpenRegister's object mapper, whose restoreObject() empties the trash of one object (not a public contract).
 	 */
 	public const OBJECT_MAPPER_CLASS = 'OCA\OpenRegister\Db\MagicMapper';
-
-	/**
-	 * What happens to records missing from the export when the request does not say.
-	 */
-	public const DEFAULT_MISSING_RECORDS = 'archive';
 
 	/**
 	 * The start of every archive reason the import writes, so the audit trail says who archived and why.
@@ -3799,8 +3796,8 @@ class CmdbExportImportService {
 	 * Only the first line is kept, at most 300 characters. Every value of the
 	 * row of three characters or more is replaced by "…", longest first, and
 	 * every e-mail address by "<e-mail>". The owner step logs no message at
-	 * all, so no contact data can reach the log. Public so the controller logs
-	 * an unexpected failure the same way.
+	 * all, so no contact data can reach the log. Delegates to
+	 * Kernel\LogSafeMessage, which the controller uses too.
 	 *
 	 * @param string $step The step that failed.
 	 * @param Throwable $e The exception.
@@ -3811,20 +3808,7 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
 	 */
 	public static function logSafeMessage(string $step, Throwable $e, array $values): string {
-		if ($step === 'owners') {
-			return '';
-		}
-
-		$lines = preg_split('/\R/u', $e->getMessage());
-		$message = mb_substr(trim((string)($lines[0] ?? '')), 0, 300);
-		$message = (string)preg_replace('/[^\s@<>"\'(),;:=]+@[^\s@<>"\'(),;:]+/u', '<e-mail>', $message);
-		$secrets = array_filter(array_unique(array_map('strval', $values)), static fn (string $value): bool => mb_strlen($value) >= 3);
-		usort($secrets, static fn (string $left, string $right): int => (mb_strlen($right) <=> mb_strlen($left)));
-		foreach ($secrets as $secret) {
-			$message = str_ireplace($secret, '…', $message);
-		}
-
-		return $message;
+		return LogSafeMessage::of(step: $step, e: $e, values: $values);
 	}//end logSafeMessage()
 
 	/**

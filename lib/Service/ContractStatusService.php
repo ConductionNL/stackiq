@@ -28,6 +28,7 @@ namespace OCA\Stackiq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ContractStatusServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -35,7 +36,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Server-side maintenance of contract status (Actief → Verlopen).
  */
-class ContractStatusService {
+class ContractStatusService implements ContractStatusServiceInterface {
 	/**
 	 * The active status from which a contract may expire.
 	 */

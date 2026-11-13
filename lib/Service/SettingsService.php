@@ -21,9 +21,10 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Stackiq\Service\Settings\CatalogueLocator;
-use OCA\Stackiq\Service\Settings\EmailTemplateDefaults;
 use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\EmailTemplateDefaults;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\Settings\SettingsObjectCounts;
@@ -75,7 +76,7 @@ use Symfony\Component\Mime\Email;
  *
  * @spec openspec/specs/settings-service/spec.md
  */
-class SettingsService implements RegisterConfigReaderInterface {
+class SettingsService implements RegisterConfigReaderInterface, SettingsServiceInterface {
 
 	/**
 	 * The application name for identification and configuration purposes
@@ -84,12 +85,6 @@ class SettingsService implements RegisterConfigReaderInterface {
 	 */
 	private string $appName;
 
-	/**
-	 * Object type => the app-config key its schema id is stored under; see CatalogueLocator::LEGACY_SCHEMA_KEY.
-	 *
-	 * @var array<string, string>
-	 */
-	public const LEGACY_SCHEMA_KEY = CatalogueLocator::LEGACY_SCHEMA_KEY;
 
 	/**
 	 * SettingsService constructor

@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service\Settings;
 
 use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\CronjobSettingsInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -38,7 +39,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/settings-service/spec.md
  */
-class CronjobSettings {
+class CronjobSettings implements CronjobSettingsInterface {
 
 	/**
 	 * Constructor.

@@ -24,8 +24,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
+use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
 use OCA\Stackiq\Service\Contactpersoon\ContactPersonUserDetails;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
 use OCA\Stackiq\Service\Stackiq\HierarchyHandler;
@@ -63,7 +64,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
-class ContactpersoonService {
+class ContactpersoonService implements ContactpersoonServiceInterface {
 	/**
 	 * ContactpersoonService constructor.
 	 *

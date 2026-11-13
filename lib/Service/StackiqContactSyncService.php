@@ -30,6 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Kernel\Contracts\StackiqContactSyncServiceInterface;
 use OCP\Constants;
 use OCP\Contacts\IManager as IContactsManager;
 use OCP\IUserSession;
@@ -55,7 +56,7 @@ use Throwable;
  * The Contacts API is also an optional dependency, so every entry point carries an availability
  * guard. Both are breadth of mapping rather than depth of logic.
  */
-class StackiqContactSyncService {
+class StackiqContactSyncService implements StackiqContactSyncServiceInterface {
 
 	/**
 	 * Nextcloud's CardDAV backend, which creates an address book (not part of OCP).

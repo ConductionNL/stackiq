@@ -23,12 +23,13 @@ namespace OCA\Stackiq\Service\Contactpersoon;
 use OCA\OpenRegister\Db\Organisation;
 use OCA\OpenRegister\Db\OrganisationMapper;
 use OCA\OpenRegister\Service\ObjectService;
+use OCA\Stackiq\Kernel\Contracts\ContactPersonOrganisationGuardInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\AppFramework\Db\DoesNotExistException;
-use Throwable;
 use OCP\IGroupManager;
 use OCP\IUserManager;
 use OCP\IUserSession;
+use Throwable;
 
 /**
  * The contact sync turns a contact person into an account that joins the contact's
@@ -42,7 +43,7 @@ use OCP\IUserSession;
  *
  * @spec openspec/specs/contactpersoon-sync/spec.md#requirement-the-system-shall-only-accept-a-contact-person-from-someone-who-may-add-members-to-its-organisation-req-003
  */
-class ContactPersonOrganisationGuard {
+class ContactPersonOrganisationGuard implements ContactPersonOrganisationGuardInterface {
 	/**
 	 * The groups whose members may add members to their own organisation.
 	 */

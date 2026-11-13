@@ -42,8 +42,8 @@ use OCA\Stackiq\EventListener\ModuleVersionPublicationListener;
 use OCA\Stackiq\EventListener\TestEventListener;
 use OCA\Stackiq\EventListener\UserProfileUpdatedEventListener;
 use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\ContractApprovalServiceInterface;
 use OCA\Stackiq\Middleware\ApiContractMiddleware;
-use OCA\Stackiq\Service\ContractApprovalService;
 use OCA\Stackiq\Service\ServiceRegistrar;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -211,7 +211,7 @@ class Application extends App implements IBootstrap {
 		// matches on the concrete event class, but the guard is kept so this
 		// stays symmetric with ContractApprovalService::isDelegationConfigured()
 		// on the outbound side.
-		foreach (ContractApprovalService::DECISION_CONCLUDED_EVENTS as $concludedEvent) {
+		foreach (ContractApprovalServiceInterface::DECISION_CONCLUDED_EVENTS as $concludedEvent) {
 			if (class_exists($concludedEvent) === false) {
 				continue;
 			}

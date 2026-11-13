@@ -44,7 +44,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Portal;
 
-use OCA\Stackiq\Service\PublicCatalogueRecords;
+use OCA\Stackiq\Kernel\Contracts\PublicCatalogueRecordsInterface;
 
 /**
  * Declares what an external portal subject may see in Stackiq.
@@ -222,10 +222,10 @@ class PortalContributionProvider {
 	/**
 	 * Constructor.
 	 *
-	 * @param PublicCatalogueRecords|null $catalogue The published applications; null leaves the public list empty.
+	 * @param PublicCatalogueRecordsInterface|null $catalogue The published applications; null leaves the public list empty.
 	 */
 	public function __construct(
-		private readonly ?PublicCatalogueRecords $catalogue = null,
+		private readonly ?PublicCatalogueRecordsInterface $catalogue = null,
 	) {
 	}//end __construct()
 
