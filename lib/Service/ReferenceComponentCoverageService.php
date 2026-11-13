@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use DateTimeImmutable;
 use Exception;
 use OCP\App\IAppManager;
@@ -42,7 +43,7 @@ class ReferenceComponentCoverageService {
 	/**
 	 * Constructor.
 	 *
-	 * @param SettingsService $settingsService Resolves the register and schema ids.
+	 * @param RegisterConfigReaderInterface $settingsService Resolves the register and schema ids.
 	 * @param IAppManager $appManager Checks OpenRegister is installed.
 	 * @param ContainerInterface $container Lazy OpenRegister lookups.
 	 * @param LoggerInterface $logger Logger.
@@ -50,7 +51,7 @@ class ReferenceComponentCoverageService {
 	 * @param PortfolioReportDerivation $relations Normalises results and relation ids.
 	 */
 	public function __construct(
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,

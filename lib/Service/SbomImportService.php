@@ -38,6 +38,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use DateTime;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use Psr\Container\ContainerInterface;
@@ -76,14 +77,14 @@ class SbomImportService {
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container The DI container (lazy OR lookup).
-	 * @param SettingsService $settingsService Resolves register/schema ids.
+	 * @param RegisterConfigReaderInterface $settingsService Resolves register/schema ids.
 	 * @param SbomParserService $parser The pure SBOM parser.
 	 * @param ProgressTracker $progressTracker Progress reporting for large imports.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly SbomParserService $parser,
 		private readonly ProgressTracker $progressTracker,
 		private readonly LoggerInterface $logger,
