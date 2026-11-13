@@ -35,6 +35,7 @@ use Symfony\Component\Console\Tester\CommandTester;
  * Cases for an unreadable or empty satellite schema.
  *
  * @covers \OCA\Stackiq\Command\ReferencesAuditCommand
+ * @uses   \OCA\Stackiq\Command\ObjectPages
  *
  * @spec openspec/specs/contract-administration/spec.md
  */
