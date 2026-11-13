@@ -64,6 +64,24 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/aangeboden-gebruik-api/spec.md#requirement-the-system-shall-list-offered-usage-records-scoped-to-the-callers-role-req-001
  */
 class AangebodenGebruikService {
+
+	/**
+	 * Query key => option keys it is read from, in order of preference; cast to int.
+	 *
+	 * @var array<string, array<string>>
+	 */
+	private const PAGINATION_FILTERS = [
+		'_limit' => ['_limit', 'limit'],
+		'_offset' => ['_offset', 'offset'],
+		'_page' => ['_page'],
+	];
+
+	/**
+	 * Options copied into the query unchanged when non-empty, in this order.
+	 *
+	 * @var array<string>
+	 */
+	private const PASS_THROUGH_FILTERS = ['_source', 'status', 'suite', 'startDate', 'endDate'];
 	/**
 	 * Constructor for AangebodenGebruikService
 	 *
@@ -1289,49 +1307,41 @@ class AangebodenGebruikService {
 	 * @return array Extended query with additional filters
 	 */
 	private function addQueryFilters(array $baseQuery, array $options): array {
-		// Add limit if specified (handle both 'limit' and '_limit').
-		$limit = $options['_limit'] ?? $options['limit'] ?? null;
-		if ($limit !== null && is_numeric(value: $limit) === true) {
-			$baseQuery['_limit'] = (int)$limit;
+		// Pagination: cast to int, first non-null spelling wins (handle both 'limit' and '_limit').
+		foreach (self::PAGINATION_FILTERS as $queryKey => $optionKeys) {
+			$value = $this->firstNonNullOption(options: $options, keys: $optionKeys);
+			if ($value !== null && is_numeric(value: $value) === true) {
+				$baseQuery[$queryKey] = (int)$value;
+			}
 		}
 
-		// Add offset if specified (handle both 'offset' and '_offset').
-		$offset = $options['_offset'] ?? $options['offset'] ?? null;
-		if ($offset !== null && is_numeric(value: $offset) === true) {
-			$baseQuery['_offset'] = (int)$offset;
-		}
-
-		// Add page if specified (alternative to offset).
-		if (isset($options['_page']) === true && is_numeric(value: $options['_page']) === true) {
-			$baseQuery['_page'] = (int)$options['_page'];
-		}
-
-		// Add source parameter if specified (for forcing database access).
-		if (isset($options['_source']) === true && empty($options['_source']) === false) {
-			$baseQuery['_source'] = $options['_source'];
-		}
-
-		// Add status filter if specified.
-		if (isset($options['status']) === true && empty($options['status']) === false) {
-			$baseQuery['status'] = $options['status'];
-		}
-
-		// Add suite filter if specified.
-		if (isset($options['suite']) === true && empty($options['suite']) === false) {
-			$baseQuery['suite'] = $options['suite'];
-		}
-
-		// Add date filters if specified.
-		if (isset($options['startDate']) === true && empty($options['startDate']) === false) {
-			$baseQuery['startDate'] = $options['startDate'];
-		}
-
-		if (isset($options['endDate']) === true && empty($options['endDate']) === false) {
-			$baseQuery['endDate'] = $options['endDate'];
+		// Source (for forcing database access), status, suite and date filters: copied when non-empty.
+		foreach (self::PASS_THROUGH_FILTERS as $key) {
+			if (isset($options[$key]) === true && empty($options[$key]) === false) {
+				$baseQuery[$key] = $options[$key];
+			}
 		}
 
 		return $baseQuery;
 	}//end addQueryFilters()
+
+	/**
+	 * The value of the first option key that is set and not null.
+	 *
+	 * @param array         $options The options.
+	 * @param array<string> $keys    The option keys, in order of preference.
+	 *
+	 * @return mixed The value, or null when none is set.
+	 */
+	private function firstNonNullOption(array $options, array $keys): mixed {
+		foreach ($keys as $key) {
+			if (isset($options[$key]) === true) {
+				return $options[$key];
+			}
+		}
+
+		return null;
+	}//end firstNonNullOption()
 
 	/**
 	 * Delete (deny) a gebruik or koppeling object with security validation

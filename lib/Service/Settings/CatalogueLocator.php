@@ -100,6 +100,60 @@ class CatalogueLocator implements ObjectTypeLocatorInterface {
 	private const SHARED_ORGANISATION_SCHEMA = 'nc-organisation';
 
 	/**
+	 * Object type => key in the AMEF JSON config holding its schema id.
+	 *
+	 * Note relation vs relationship. Property definitions are root-level AMEF
+	 * objects. The 'property' mapping was removed: properties are never
+	 * root-level AMEF objects, only nested within other elements.
+	 *
+	 * @var array<string, string>
+	 */
+	private const AMEF_SCHEMA_KEYS = [
+		'model' => 'model_schema',
+		'element' => 'element_schema',
+		'relationship' => 'relation_schema',
+		'view' => 'view_schema',
+		'property_definition' => 'property_definition_schema',
+		'organization' => 'organization_schema',
+	];
+
+	/**
+	 * Object type => key in the voorzieningen config holding its schema id.
+	 *
+	 * Every catalog object type stored in the voorzieningen register must
+	 * be mapped here, or getSchemaIdForObjectType() returns null for it
+	 * even though its `<type>_schema` id is present in the config — which
+	 * silently killed the ratings feature (`beoordeeling` was unmapped, so
+	 * ReviewService/ReviewAggregateService read "not configured" forever).
+	 * The object type on the LEFT is the schema slug and moves with it.
+	 * The config KEY on the right is a stored app-config key and does NOT:
+	 * renaming it is a data migration across roughly forty sites in this
+	 * class alone, including differently-prefixed families
+	 * (`voorzieningen_contactpersoon_schema`) and compound keys
+	 * (`koppeling_gebruik_schema`). Renaming a subset would resolve some
+	 * types and silently leave others reporting "not configured", which is
+	 * how the ratings feature died once already. Tracked as its own change.
+	 *
+	 * @var array<string, string>
+	 */
+	private const VOORZIENINGEN_SCHEMA_KEYS = [
+		'module' => 'module_schema',
+		'compliancy' => 'compliancy_schema',
+		'moduleVersion' => 'moduleVersie_schema',
+		'sbomComponent' => 'sbomComponent_schema',
+		'software-review' => 'beoordeeling_schema',
+		'catalogService' => 'dienst_schema',
+		'usage' => 'gebruik_schema',
+		'catalogContract' => 'contract_schema',
+		'connection' => 'koppeling_schema',
+		'suite' => 'suite_schema',
+		'vulnerability' => 'kwetsbaarheid_schema',
+		'sector' => 'sector_schema',
+		// Planned maintenance on a product (lifecycle-maintenance-and-supplier-roadmap).
+		'maintenanceWindow' => 'maintenanceWindow_schema',
+	];
+
+	/**
 	 * Cache for schema IDs by object type to avoid repeated database queries
 	 *
 	 * @var array<string, int|null>
@@ -263,7 +317,6 @@ class CatalogueLocator implements ObjectTypeLocatorInterface {
 		}
 
 		$startTime = microtime(true);
-		$result = null;
 
 		$voorzieningenConfig = $this->getVoorzieningenConfig();
 
@@ -275,120 +328,15 @@ class CatalogueLocator implements ObjectTypeLocatorInterface {
 			]
 		);
 
-		// First try register-specific configuration.
-		// Check for AMEF register specific schemas from JSON config.
-		$amefConfig = $this->config->getValueString(AppIdentity::APP_ID, 'amef_config', '{}');
-		if (empty($amefConfig) === false && $amefConfig !== '{}') {
-			$decodedAmefConfig = json_decode($amefConfig, true);
-			if (is_array($decodedAmefConfig) === true) {
-				// Map object types to their corresponding AMEF config keys.
-				$amefKeyMap = [
-					'model' => 'model_schema',
-					'element' => 'element_schema',
-					'relationship' => 'relation_schema',
-					// Note: relation vs relationship.
-					'view' => 'view_schema',
-					'property_definition' => 'property_definition_schema',
-					// Property definitions are root-level AMEF objects.
-					'organization' => 'organization_schema',
-					// NOTE: 'property' mapping removed - properties are never
-					// root-level AMEF objects, only nested within other elements.
-				];
+		// First try register-specific configuration: the AMEF JSON config.
+		$result = $this->amefJsonSchemaId(objectType: $objectType);
 
-				$amefKey = $amefKeyMap[$objectType] ?? null;
-
-				if (isset($decodedAmefConfig[$amefKey]) === true) {
-					$schemaId = $decodedAmefConfig[$amefKey];
-					if (empty($schemaId) === false) {
-						$result = (int)$schemaId;
-						$this->logger->debug(
-							'SettingsService: Found schema ID in AMEF JSON config',
-							[
-								'objectType' => $objectType,
-								'amefKey' => $amefKey,
-								'schemaId' => $result,
-							]
-						);
-					}
-				}
-			}//end if
-		}//end if
-
-		$voorzieningenKeyMap = [
-			'module' => 'module_schema',
-			'compliancy' => 'compliancy_schema',
-			'moduleVersion' => 'moduleVersie_schema',
-			'sbomComponent' => 'sbomComponent_schema',
-			// Every catalog object type stored in the voorzieningen register must
-			// be mapped here, or getSchemaIdForObjectType() returns null for it
-			// even though its `<type>_schema` id is present in the config — which
-			// silently killed the ratings feature (`beoordeeling` was unmapped, so
-			// ReviewService/ReviewAggregateService read "not configured" forever).
-			// The object type on the LEFT is the schema slug and moves with it.
-			// The config KEY on the right is a stored app-config key and does NOT:
-			// renaming it is a data migration across roughly forty sites in this
-			// class alone, including differently-prefixed families
-			// (`voorzieningen_contactpersoon_schema`) and compound keys
-			// (`koppeling_gebruik_schema`). Renaming a subset would resolve some
-			// types and silently leave others reporting "not configured", which is
-			// how the ratings feature died once already. Tracked as its own change.
-			'software-review' => 'beoordeeling_schema',
-			'catalogService' => 'dienst_schema',
-			'usage' => 'gebruik_schema',
-			'catalogContract' => 'contract_schema',
-			'connection' => 'koppeling_schema',
-			'suite' => 'suite_schema',
-			'vulnerability' => 'kwetsbaarheid_schema',
-			'sector' => 'sector_schema',
-			// Planned maintenance on a product (lifecycle-maintenance-and-supplier-roadmap).
-			'maintenanceWindow' => 'maintenanceWindow_schema',
-		];
-
-		// Only check voorzieningen config if object type exists in the key map.
-		if ($result === null && isset($voorzieningenKeyMap[$objectType]) === true) {
-			$voorzieningenKey = $voorzieningenKeyMap[$objectType];
-			if (isset($voorzieningenConfig[$voorzieningenKey]) === true) {
-				$result = (int)$voorzieningenConfig[$voorzieningenKey];
-			}
+		if ($result === null) {
+			$result = $this->voorzieningenSchemaId(objectType: $objectType, voorzieningenConfig: $voorzieningenConfig);
 		}
 
-		// `organisatie` and `organization` used to be two object types resolving
-		// to two schemas. They are one now, so the two branches that handled them
-		// separately are one branch — and the ORDER inverted with the merge:
-		// `amef_organization_schema` points at the ArchiMate schema, which is the
-		// one that was absorbed and is now retired, holding no rows. Preferring
-		// it would resolve every organisation lookup to an empty schema, so the
-		// merged voorzieningen schema wins and AMEF is the last resort.
 		if ($result === null && $objectType === 'organization') {
-			$schemaId = ($voorzieningenConfig['organisatie_schema'] ?? '');
-
-			if (empty($schemaId) === true) {
-				$schemaId = $this->config->getValueString(AppIdentity::APP_ID, 'amef_organization_schema', '');
-			}
-
-			if (empty($schemaId) === false) {
-				$result = (int)$schemaId;
-			}
-		}
-
-		// LAST, deliberately. The organisation is OpenRegister's now — a schema
-		// slug is global per organisation, so this app shipping its own
-		// `organization` is what collided with opencatalogi's — and
-		// `nc-organisation` is the projection every app shares.
-		//
-		// But it resolves only when nothing local did. Putting it FIRST was the
-		// obvious shape and the wrong one: the projection always exists, so it
-		// would win on an instance that has not yet run
-		// `openregister:organisations:adopt`, and that instance's rows still
-		// live in the local schema. Every picker would come back empty with
-		// nothing reporting why.
-		//
-		// This ordering needs no operator timing. An un-migrated instance keeps
-		// resolving locally; a fresh install has no local schema and lands on the
-		// projection; and once `prune-retired` has removed the local schema, so
-		// does a migrated one.
-		if ($result === null && $objectType === 'organization') {
-			$result = $this->sharedOrganisationSchemaId();
+			$result = $this->organisationSchemaId(voorzieningenConfig: $voorzieningenConfig);
 		}
 
 		if ($objectType === 'contactPerson' && $result === null) {
@@ -398,43 +346,187 @@ class CatalogueLocator implements ObjectTypeLocatorInterface {
 			}
 		}
 
-		// Fall back to generic configuration for backward compatibility.
-		// @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
-		// Prefer the OR RegisterResolverService when available so per-install admin
-		// overrides go through the same `<context>_schema` resolution pipeline used by
-		// every other Conduction app (request-scoped caching + tenant-aware). Falls back
-		// to the bare IAppConfig read when OR is absent or the resolver pre-dates W21-B.
+		// Fall back to generic configuration for backward compatibility (see legacyConfiguredId).
 		if ($result === null) {
-			$resolver = $this->getRegisterResolverService();
-			$schemaId = '';
-
-			if ($resolver !== null) {
-				try {
-					$schemaId = $resolver->lookupId(
-						lookup: new \OCA\OpenRegister\Service\ConfigLookup(
-							appId: AppIdentity::APP_ID,
-							configKey: "{$objectType}_schema",
-							default: '',
-						)
-					);
-				} catch (\Throwable $e) {
-					// MissingConfigException or transient resolver failure — fall through to legacy read.
-					$schemaId = '';
-				}
-			}
-
-			if ($schemaId === '') {
-				$schemaId = $this->config->getValueString(AppIdentity::APP_ID, "{$objectType}_schema", '');
-			}
-
-			if (empty($schemaId) === false) {
-				$result = (int)$schemaId;
-			}
-		}//end if
+			$result = $this->legacyConfiguredId(configKey: "{$objectType}_schema");
+		}
 
 		// Cache the result (even if null) to avoid repeated lookups.
 		$this->schemaIdCache[$objectType] = $result;
 
+		$this->logSchemaLookup(objectType: $objectType, result: $result, startTime: $startTime);
+
+		return $result;
+	}//end getSchemaIdForObjectType()
+
+	/**
+	 * The schema id the AMEF JSON config holds for an object type, or null.
+	 *
+	 * @param string $objectType The object type.
+	 *
+	 * @return int|null The schema id, or null when the AMEF config has none.
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	private function amefJsonSchemaId(string $objectType): ?int {
+		$amefConfig = $this->config->getValueString(AppIdentity::APP_ID, 'amef_config', '{}');
+		if (empty($amefConfig) === true || $amefConfig === '{}') {
+			return null;
+		}
+
+		$decodedAmefConfig = json_decode($amefConfig, true);
+		if (is_array($decodedAmefConfig) === false) {
+			return null;
+		}
+
+		$amefKey = self::AMEF_SCHEMA_KEYS[$objectType] ?? null;
+		if (isset($decodedAmefConfig[$amefKey]) === false) {
+			return null;
+		}
+
+		$schemaId = $decodedAmefConfig[$amefKey];
+		if (empty($schemaId) === true) {
+			return null;
+		}
+
+		$result = (int)$schemaId;
+		$this->logger->debug(
+			'SettingsService: Found schema ID in AMEF JSON config',
+			[
+				'objectType' => $objectType,
+				'amefKey' => $amefKey,
+				'schemaId' => $result,
+			]
+		);
+
+		return $result;
+	}//end amefJsonSchemaId()
+
+	/**
+	 * The schema id the voorzieningen config holds for a catalog object type, or null.
+	 *
+	 * Only object types in VOORZIENINGEN_SCHEMA_KEYS are read here.
+	 *
+	 * @param string               $objectType          The object type.
+	 * @param array<string, mixed> $voorzieningenConfig The voorzieningen config.
+	 *
+	 * @return int|null The schema id, or null when the type is unmapped or its key is absent.
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	private function voorzieningenSchemaId(string $objectType, array $voorzieningenConfig): ?int {
+		if (isset(self::VOORZIENINGEN_SCHEMA_KEYS[$objectType]) === false) {
+			return null;
+		}
+
+		$voorzieningenKey = self::VOORZIENINGEN_SCHEMA_KEYS[$objectType];
+		if (isset($voorzieningenConfig[$voorzieningenKey]) === false) {
+			return null;
+		}
+
+		return (int)$voorzieningenConfig[$voorzieningenKey];
+	}//end voorzieningenSchemaId()
+
+	/**
+	 * The organisation schema id from the local configuration, else the shared projection.
+	 *
+	 * `organisatie` and `organization` used to be two object types resolving
+	 * to two schemas. They are one now, so the two branches that handled them
+	 * separately are one branch — and the ORDER inverted with the merge:
+	 * `amef_organization_schema` points at the ArchiMate schema, which is the
+	 * one that was absorbed and is now retired, holding no rows. Preferring
+	 * it would resolve every organisation lookup to an empty schema, so the
+	 * merged voorzieningen schema wins and AMEF is the last local resort.
+	 *
+	 * The shared projection comes LAST, deliberately. The organisation is
+	 * OpenRegister's now — a schema slug is global per organisation, so this
+	 * app shipping its own `organization` is what collided with opencatalogi's
+	 * — and `nc-organisation` is the projection every app shares.
+	 *
+	 * But it resolves only when nothing local did. Putting it FIRST was the
+	 * obvious shape and the wrong one: the projection always exists, so it
+	 * would win on an instance that has not yet run
+	 * `openregister:organisations:adopt`, and that instance's rows still
+	 * live in the local schema. Every picker would come back empty with
+	 * nothing reporting why.
+	 *
+	 * This ordering needs no operator timing. An un-migrated instance keeps
+	 * resolving locally; a fresh install has no local schema and lands on the
+	 * projection; and once `prune-retired` has removed the local schema, so
+	 * does a migrated one.
+	 *
+	 * @param array<string, mixed> $voorzieningenConfig The voorzieningen config.
+	 *
+	 * @return int|null The schema id, or null when none resolves.
+	 * @spec   openspec/changes/stackiq-uses-the-shared-organisation/specs/shared-organisation/spec.md#requirement-the-organisation-is-openregisters-req-sso-101
+	 */
+	private function organisationSchemaId(array $voorzieningenConfig): ?int {
+		$schemaId = ($voorzieningenConfig['organisatie_schema'] ?? '');
+
+		if (empty($schemaId) === true) {
+			$schemaId = $this->config->getValueString(AppIdentity::APP_ID, 'amef_organization_schema', '');
+		}
+
+		if (empty($schemaId) === false) {
+			return (int)$schemaId;
+		}
+
+		return $this->sharedOrganisationSchemaId();
+	}//end organisationSchemaId()
+
+	/**
+	 * The id stored under a generic `<type>_schema` / `<type>_register` key, or null.
+	 *
+	 * Prefers the OR RegisterResolverService when available so per-install admin
+	 * overrides go through the same resolution pipeline used by every other
+	 * Conduction app (request-scoped caching + tenant-aware). Falls back to the
+	 * bare IAppConfig read when OR is absent, the resolver pre-dates W21-B, or
+	 * it answers nothing.
+	 *
+	 * @param string $configKey The app-config key.
+	 *
+	 * @return int|null The id, or null when the key is empty or absent.
+	 * @spec   openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
+	 */
+	private function legacyConfiguredId(string $configKey): ?int {
+		$resolver = $this->getRegisterResolverService();
+		$configuredId = '';
+
+		if ($resolver !== null) {
+			try {
+				$configuredId = $resolver->lookupId(
+					lookup: new \OCA\OpenRegister\Service\ConfigLookup(
+						appId: AppIdentity::APP_ID,
+						configKey: $configKey,
+						default: '',
+					)
+				);
+			} catch (\Throwable $e) {
+				// MissingConfigException or transient resolver failure — fall through to legacy read.
+				$configuredId = '';
+			}
+		}
+
+		if ($configuredId === '') {
+			$configuredId = $this->config->getValueString(AppIdentity::APP_ID, $configKey, '');
+		}
+
+		if (empty($configuredId) === false) {
+			return (int)$configuredId;
+		}
+
+		return null;
+	}//end legacyConfiguredId()
+
+	/**
+	 * Log the outcome of an uncached schema id lookup.
+	 *
+	 * @param string   $objectType The object type.
+	 * @param int|null $result     The schema id found, or null.
+	 * @param float    $startTime  When the lookup started (microtime).
+	 *
+	 * @return void
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	private function logSchemaLookup(string $objectType, ?int $result, float $startTime): void {
 		$lookupTime = round((microtime(true) - $startTime) * 1000, 2);
 
 		if ($result !== null) {
@@ -447,19 +539,18 @@ class CatalogueLocator implements ObjectTypeLocatorInterface {
 					'fromCache' => false,
 				]
 			);
-		} else {
-			$this->logger->debug(
-				'SettingsService: No schema ID found, cached null result',
-				[
-					'objectType' => $objectType,
-					'lookupTime' => $lookupTime . 'ms',
-					'fromCache' => false,
-				]
-			);
+			return;
 		}
 
-		return $result;
-	}//end getSchemaIdForObjectType()
+		$this->logger->debug(
+			'SettingsService: No schema ID found, cached null result',
+			[
+				'objectType' => $objectType,
+				'lookupTime' => $lookupTime . 'ms',
+				'fromCache' => false,
+			]
+		);
+	}//end logSchemaLookup()
 
 	/**
 	 * The id of OpenRegister's shared organisation projection, or null.
@@ -549,61 +640,15 @@ class CatalogueLocator implements ObjectTypeLocatorInterface {
 			}
 		}
 
-		// Check Voorzieningen register for every catalog object type. All catalog
-		// schemas (organisatie, contactpersoon, module, gebruik, contract,
-		// koppeling, beoordeeling, suite, kwetsbaarheid, sector, …) live in the one
-		// voorzieningen register, but this method previously mapped it only for
-		// organisatie/contactpersoon — so a caller resolving e.g. `beoordeeling`
-		// got null and the feature read as "not configured" (ratings submit,
-		// aggregate and moderation were all dead this way). Mirror the schema-side
-		// key map: any type with a `<type>_schema` in the voorzieningen config
-		// belongs to the voorzieningen register.
-		$voorzieningenConfig = $this->getVoorzieningenConfig();
-		$isVoorzieningenType = in_array($objectType, ['organization', 'contactPerson', 'contact'], true);
-		if ($isVoorzieningenType === false) {
-			$isVoorzieningenType = isset($voorzieningenConfig[$this->voorzieningenSchemaKey(objectType: $objectType)]);
-		}
-
-		if ($result === null && $isVoorzieningenType === true) {
-			if (isset($voorzieningenConfig['register']) === true && empty($voorzieningenConfig['register']) === false) {
-				$result = (int)$voorzieningenConfig['register'];
-			}
-		}
-
-		// @spec openspec/changes/softwarecatalog-adopt-or-abstractions/tasks.md#phase-2
-		// Fallback to legacy per-object-type register config — route through the OR
-		// RegisterResolverService when available so per-install admin overrides flow
-		// through the same `<context>_register` resolution pipeline used by every
-		// other Conduction app (request-scoped caching + tenant-aware). Falls back
-		// to the bare IAppConfig read when OR is absent or the resolver pre-dates W21-B.
+		$voorzieningenRegisterId = $this->voorzieningenRegisterId(objectType: $objectType);
 		if ($result === null) {
-			$resolver = $this->getRegisterResolverService();
-			$registerId = '';
+			$result = $voorzieningenRegisterId;
+		}
 
-			if ($resolver !== null) {
-				try {
-					$registerId = $resolver->lookupId(
-						lookup: new \OCA\OpenRegister\Service\ConfigLookup(
-							appId: AppIdentity::APP_ID,
-							configKey: "{$objectType}_register",
-							default: '',
-						)
-					);
-				} catch (\Throwable $e) {
-					// MissingConfigException or transient resolver failure — fall through to legacy read.
-					$registerId = '';
-				}
-			}
-
-			if ($registerId === '') {
-				$registerId = $this->config->getValueString(AppIdentity::APP_ID, "{$objectType}_register", '');
-			}
-
-			$result = null;
-			if (empty($registerId) === false) {
-				$result = (int)$registerId;
-			}
-		}//end if
+		// Fallback to legacy per-object-type register config (see legacyConfiguredId).
+		if ($result === null) {
+			$result = $this->legacyConfiguredId(configKey: "{$objectType}_register");
+		}
 
 		// Cache the result (even if null) to avoid repeated lookups.
 		$this->registerIdCache[$objectType] = $result;
@@ -619,6 +664,41 @@ class CatalogueLocator implements ObjectTypeLocatorInterface {
 
 		return $result;
 	}//end getRegisterIdForObjectType()
+
+	/**
+	 * The voorzieningen register id for a catalog object type, or null.
+	 *
+	 * All catalog schemas (organisatie, contactpersoon, module, gebruik, contract,
+	 * koppeling, beoordeeling, suite, kwetsbaarheid, sector, …) live in the one
+	 * voorzieningen register, but this lookup previously mapped it only for
+	 * organisatie/contactpersoon — so a caller resolving e.g. `beoordeeling`
+	 * got null and the feature read as "not configured" (ratings submit,
+	 * aggregate and moderation were all dead this way). Mirror the schema-side
+	 * key map: any type with a `<type>_schema` in the voorzieningen config
+	 * belongs to the voorzieningen register.
+	 *
+	 * @param string $objectType The object type.
+	 *
+	 * @return int|null The register id, or null when the type is not a catalog type or no register is set.
+	 * @spec   openspec/specs/settings-service/spec.md
+	 */
+	private function voorzieningenRegisterId(string $objectType): ?int {
+		$voorzieningenConfig = $this->getVoorzieningenConfig();
+		$isVoorzieningenType = in_array($objectType, ['organization', 'contactPerson', 'contact'], true);
+		if ($isVoorzieningenType === false) {
+			$isVoorzieningenType = isset($voorzieningenConfig[$this->voorzieningenSchemaKey(objectType: $objectType)]);
+		}
+
+		if ($isVoorzieningenType === false) {
+			return null;
+		}
+
+		if (isset($voorzieningenConfig['register']) === true && empty($voorzieningenConfig['register']) === false) {
+			return (int)$voorzieningenConfig['register'];
+		}
+
+		return null;
+	}//end voorzieningenRegisterId()
 
 	/**
 	 * Clear cached schema and register IDs
