@@ -20,8 +20,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use DateTimeImmutable;
+use OCA\Stackiq\Kernel\Contracts\PublicCatalogueRecordsInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\IL10N;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -35,7 +36,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/portal-public-software-catalogue/specs/portal-contribution/spec.md#requirement-req-port-005-stackiq-offers-the-published-applications-as-a-public-record-list
  */
-class PublicCatalogueRecords {
+class PublicCatalogueRecords implements PublicCatalogueRecordsInterface {
 	/**
 	 * The most applications the list reads.
 	 */

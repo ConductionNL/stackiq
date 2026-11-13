@@ -22,11 +22,11 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\BackgroundJob;
 
+use OCA\Stackiq\Kernel\Contracts\CronjobSettingsInterface;
+use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\StackiqContactSyncServiceInterface;
 use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
-use OCA\Stackiq\Service\OrganizationSyncService;
-use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
-use OCA\Stackiq\Service\StackiqContactSyncService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -61,27 +61,27 @@ class OrganizationContactSyncJob extends TimedJob {
 	/**
 	 * Organization synchronization service
 	 *
-	 * @var OrganizationSyncService The service handling sync operations
+	 * @var OrganizationSyncServiceInterface The service handling sync operations
 	 */
-	private OrganizationSyncService $orgSyncService;
+	private OrganizationSyncServiceInterface $orgSyncService;
 
 	/**
 	 * Constructor for OrganizationContactSyncJob
 	 *
 	 * @param ITimeFactory $timeFactory The time factory for job scheduling
-	 * @param OrganizationSyncService $orgSyncService The sync service
-	 * @param StackiqContactSyncService $contactSync The Nextcloud-Contacts bridge
+	 * @param OrganizationSyncServiceInterface $orgSyncService The sync service
+	 * @param StackiqContactSyncServiceInterface $contactSync The Nextcloud-Contacts bridge
 	 * @param RegisterConfigReaderInterface $settingsService The settings service (register/schema id resolution)
-	 * @param CronjobSettings $cronjobSettings The cronjob settings (whether this job is switched on)
+	 * @param CronjobSettingsInterface $cronjobSettings The cronjob settings (whether this job is switched on)
 	 * @param IAppManager $appManager The Nextcloud app manager
 	 * @param LoggerInterface $logger The logger
 	 */
 	public function __construct(
 		ITimeFactory $timeFactory,
-		OrganizationSyncService $orgSyncService,
-		private readonly StackiqContactSyncService $contactSync,
+		OrganizationSyncServiceInterface $orgSyncService,
+		private readonly StackiqContactSyncServiceInterface $contactSync,
 		private readonly RegisterConfigReaderInterface $settingsService,
-		private readonly CronjobSettings $cronjobSettings,
+		private readonly CronjobSettingsInterface $cronjobSettings,
 		private readonly IAppManager $appManager,
 		private readonly LoggerInterface $logger,
 	) {

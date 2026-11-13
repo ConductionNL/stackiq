@@ -24,9 +24,10 @@ namespace OCA\Stackiq\Controller;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\OrganisationService as OpenRegisterOrganisationService;
 use OCA\Stackiq\Kernel\AppIdentity;
-use OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard;
-use OCA\Stackiq\Service\ContactpersoonService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface;
+use OCA\Stackiq\Kernel\Contracts\ContactPersonOrganisationGuardInterface;
+use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\SettingsServiceInterface;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 
 /**
@@ -59,11 +60,9 @@ final class ControllerRegistrar {
 				return new ContactpersonenController(
 					appName: AppIdentity::APP_ID,
 					request: $container->get('OCP\IRequest'),
-					settingsService: $container->get(SettingsService::class),
-					contactPersonHandler: $container->get(
-						'OCA\Stackiq\Service\Stackiq\ContactPersonHandler'
-					),
-					contactSvc: $container->get(ContactpersoonService::class),
+					settingsService: $container->get(SettingsServiceInterface::class),
+					contactPersonHandler: $container->get(ContactPersonHandlerInterface::class),
+					contactSvc: $container->get(ContactpersoonServiceInterface::class),
 					userManager: $container->get('OCP\IUserManager'),
 					groupManager: $container->get('OCP\IGroupManager'),
 					userSession: $container->get('OCP\IUserSession'),
@@ -76,7 +75,7 @@ final class ControllerRegistrar {
 					// tests/Unit/AppInfo/CompositionRootArgumentsTest.php.
 					objectService: $container->get(ObjectServiceInterface::class),
 					organisationService: $container->get(OpenRegisterOrganisationService::class),
-					organisationGuard: $container->get(ContactPersonOrganisationGuard::class)
+					organisationGuard: $container->get(ContactPersonOrganisationGuardInterface::class)
 				);
 			}
 		);

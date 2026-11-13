@@ -26,12 +26,13 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service\Federation;
 
 use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\FederationConfigInterface;
 use OCP\IAppConfig;
 
 /**
  * Immutable view of the federation configuration.
  */
-class FederationConfig {
+class FederationConfig implements FederationConfigInterface {
 	/**
 	 * Default OpenCatalogi directory URL.
 	 */

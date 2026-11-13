@@ -24,8 +24,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ModuleRegistrationServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
@@ -36,7 +37,7 @@ use Psr\Log\LoggerInterface;
  * @category Service
  * @package  OCA\Stackiq\Service
  */
-class ModuleRegistrationService {
+class ModuleRegistrationService implements ModuleRegistrationServiceInterface {
 	/**
 	 * Mapping from organisatie.type to module.registeredBy.
 	 */

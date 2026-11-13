@@ -21,14 +21,14 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\BackgroundJob;
 
-use OCA\Stackiq\Service\ContractStatusService;
-use OCA\Stackiq\Service\EolSyncService;
-use OCA\Stackiq\Service\Federation\FederationConfig;
-use OCA\Stackiq\Service\Federation\FederationService;
-use OCA\Stackiq\Service\OrganizationSyncService;
-use OCA\Stackiq\Service\Settings\CronjobSettings;
-use OCA\Stackiq\Service\SettingsService;
-use OCA\Stackiq\Service\StackiqContactSyncService;
+use OCA\Stackiq\Kernel\Contracts\ContractStatusServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\CronjobSettingsInterface;
+use OCA\Stackiq\Kernel\Contracts\EolSyncServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\FederationConfigInterface;
+use OCA\Stackiq\Kernel\Contracts\FederationServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\StackiqContactSyncServiceInterface;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Bootstrap\IRegistrationContext;
 use Psr\Log\LoggerInterface;
@@ -62,10 +62,10 @@ final class JobRegistrar {
 			function ($container) {
 				return new OrganizationContactSyncJob(
 					timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
-					orgSyncService: $container->get(OrganizationSyncService::class),
-					contactSync: $container->get(StackiqContactSyncService::class),
-					settingsService: $container->get(SettingsService::class),
-					cronjobSettings: $container->get(CronjobSettings::class),
+					orgSyncService: $container->get(OrganizationSyncServiceInterface::class),
+					contactSync: $container->get(StackiqContactSyncServiceInterface::class),
+					settingsService: $container->get(SettingsServiceInterface::class),
+					cronjobSettings: $container->get(CronjobSettingsInterface::class),
 					appManager: $container->get(IAppManager::class),
 					logger: $container->get(LoggerInterface::class)
 				);
@@ -77,7 +77,7 @@ final class JobRegistrar {
 			function ($container) {
 				return new ContractStatusJob(
 					timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
-					statusService: $container->get(ContractStatusService::class),
+					statusService: $container->get(ContractStatusServiceInterface::class),
 					appManager: $container->get(IAppManager::class),
 					logger: $container->get(LoggerInterface::class)
 				);
@@ -89,8 +89,8 @@ final class JobRegistrar {
 			function ($container) {
 				return new FederationSyncJob(
 					timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
-					federation: $container->get(FederationService::class),
-					config: $container->get(FederationConfig::class),
+					federation: $container->get(FederationServiceInterface::class),
+					config: $container->get(FederationConfigInterface::class),
 					logger: $container->get(LoggerInterface::class)
 				);
 			}
@@ -101,7 +101,7 @@ final class JobRegistrar {
 			function ($container) {
 				return new EolSyncJob(
 					timeFactory: $container->get('OCP\AppFramework\Utility\ITimeFactory'),
-					eolSyncService: $container->get(EolSyncService::class),
+					eolSyncService: $container->get(EolSyncServiceInterface::class),
 					logger: $container->get(LoggerInterface::class)
 				);
 			}

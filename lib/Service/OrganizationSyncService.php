@@ -23,9 +23,10 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\OrganisationMapper;
+use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
@@ -63,7 +64,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/organization-sync/spec.md#requirement-the-system-shall-process-individual-organisationcontact-records-and-ensure-their-openregister-entity-req-002
  */
-class OrganizationSyncService {
+class OrganizationSyncService implements OrganizationSyncServiceInterface {
 
 	/**
 	 * App config key prefix under which an administrator's link is recorded, per organisatie uuid.

@@ -38,6 +38,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ContractApprovalServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\EventDispatcher\IEventDispatcher;
 use Psr\Container\ContainerInterface;
@@ -56,7 +57,7 @@ use RuntimeException;
  * auto-approve contracts, so that defensive branching is the point of the class and the
  * complexity is inherent rather than accidental.
  */
-class ContractApprovalService {
+class ContractApprovalService implements ContractApprovalServiceInterface {
 	/**
 	 * The fully-qualified request-event class spellings, NEWEST FIRST — the
 	 * in-process existence guard (the decision app installed + autoloaded) for
@@ -76,52 +77,6 @@ class ContractApprovalService {
 		'\\OCA\\Decidiq\\Event\\DecisionRequestedEvent',
 		'\\OCA\\Decidesk\\Event\\DecisionRequestedEvent',
 	];
-
-	/**
-	 * The fully-qualified conclusion-event class spellings, NEWEST FIRST — what
-	 * {@see \OCA\Stackiq\AppInfo\Application} attaches the inbound listener to.
-	 *
-	 * THE INBOUND HALF OF THE SAME PROBLEM AS THE CONSTANT ABOVE, and it stayed
-	 * broken after that one was fixed. Application.php imported
-	 * `OCA\Decidesk\Event\DecisionConcludedEvent` and registered `::class`,
-	 * which resolves at COMPILE TIME to a string nothing dispatches any more, so
-	 * the listener attached to a name that never fires. Nothing errors: an
-	 * event with no listener and a listener on no event look identical from
-	 * here, and the contract simply never leaves `In onderhandeling`.
-	 *
-	 * Measured 2026-09-09 against decidiq development d72839c:
-	 * OCA\Decidiq\Event\DecisionConcludedEvent EXISTS with the full getter
-	 * surface this app reads (getSourceApp, getSubjectId, getExternalReference,
-	 * getDecisionId, getStatus); OCA\Decidesk\Event\DecisionConcludedEvent is
-	 * MISSING. The old spelling is kept regardless — an instance pinned to a
-	 * release from before that rename still dispatches it, and dropping it here
-	 * re-breaks the integration in the other direction.
-	 *
-	 * @var array<int, string>
-	 */
-	public const DECISION_CONCLUDED_EVENTS = [
-		'\\OCA\\Decidiq\\Event\\DecisionConcludedEvent',
-		'\\OCA\\Decidesk\\Event\\DecisionConcludedEvent',
-	];
-
-	/**
-	 * This consumer app id, stamped on the request event as `sourceApp` and
-	 * used by the conclusion listener to filter inbound events.
-	 *
-	 * FROZEN at `stackiq` through the app-id rename. This value is not
-	 * a name we own at read time — it is PERSISTED on decidesk's Decision rows
-	 * when the approval is raised, and `DecisionConcludedListener` matches
-	 * inbound conclusions against it. Every decision already open was stamped
-	 * `stackiq`; moving the constant makes the filter miss them, so
-	 * their outcomes are dropped on the floor and the contract never leaves
-	 * `In onderhandeling`. Nothing errors — a filtered-out event looks exactly
-	 * like an event that was never sent.
-	 *
-	 * It can only move in a coordinated change that also rewrites the stored
-	 * `sourceApp` on decidesk's existing rows, or that accepts both spellings
-	 * on the read side first.
-	 */
-	public const SOURCE_APP = 'stackiq';
 
 	/**
 	 * The decisionType raised for a first activation of an `In onderhandeling`
@@ -155,16 +110,6 @@ class ContractApprovalService {
 	 * decidesk outcome — never set on local authority).
 	 */
 	public const STATUS_ACTIVE = 'Active';
-
-	/**
-	 * Projection state: no decision raised.
-	 */
-	public const APPROVAL_NONE = 'none';
-
-	/**
-	 * Projection state: a decidesk Decision is open.
-	 */
-	public const APPROVAL_PENDING = 'pending';
 
 	/**
 	 * Projection state: decidesk reported an adopting outcome.

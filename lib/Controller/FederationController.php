@@ -34,7 +34,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Controller;
 
 use OCA\Stackiq\Kernel\AppIdentity;
-use OCA\Stackiq\Service\Federation\FederationService;
+use OCA\Stackiq\Kernel\Contracts\FederationServiceInterface;
 use OCA\Stackiq\Settings\StackiqAdmin;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -50,11 +50,11 @@ class FederationController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param FederationService $federation The federation service.
+	 * @param FederationServiceInterface $federation The federation service.
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly FederationService $federation,
+		private readonly FederationServiceInterface $federation,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);
 	}//end __construct()

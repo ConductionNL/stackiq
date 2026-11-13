@@ -22,6 +22,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service\Stackiq;
 
 use OCA\OpenRegister\Service\Organisation\NewOrganisation;
+use OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface;
 use OCA\Stackiq\Service\OrganisationSlug;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\SymfonyEmailService;
@@ -63,7 +64,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
-class ContactPersonHandler {
+class ContactPersonHandler implements ContactPersonHandlerInterface {
 	/**
 	 * ContactPersonHandler constructor
 	 *

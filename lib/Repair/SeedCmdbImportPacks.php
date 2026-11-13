@@ -34,7 +34,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Repair;
 
-use OCA\Stackiq\Service\Cmdb\CmdbImportPackStore;
+use OCA\Stackiq\Kernel\Contracts\CmdbImportPackStoreInterface;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -51,14 +51,14 @@ class SeedCmdbImportPacks implements IRepairStep {
 	 * Constructor.
 	 *
 	 * @param CmdbImportProfile $profile Reads and validates the shipped packs.
-	 * @param CmdbImportPackStore $store OpenRegister's migration-pack store.
+	 * @param CmdbImportPackStoreInterface $store OpenRegister's migration-pack store.
 	 * @param LoggerInterface $logger Logger for seed diagnostics.
 	 *
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-2
 	 */
 	public function __construct(
 		private readonly CmdbImportProfile $profile,
-		private readonly CmdbImportPackStore $store,
+		private readonly CmdbImportPackStoreInterface $store,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -172,8 +172,8 @@ class SeedCmdbImportPacks implements IRepairStep {
 		$where = (string)($shipped['id'] ?? '') . ' (id ' . $stored['id'] . ')';
 
 		return match (true) {
-			$stored['outcome'] === CmdbImportPackStore::SEEDED => [false, 'Seeded CMDB import pack ' . $where],
-			$stored['outcome'] === CmdbImportPackStore::UPDATED => [
+			$stored['outcome'] === CmdbImportPackStoreInterface::SEEDED => [false, 'Seeded CMDB import pack ' . $where],
+			$stored['outcome'] === CmdbImportPackStoreInterface::UPDATED => [
 				false,
 				'Updated unedited CMDB import pack ' . $where . ' to version ' . $stored['version'],
 			],

@@ -26,6 +26,7 @@ namespace OCA\Stackiq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
+use OCA\Stackiq\Kernel\Contracts\ArchiMateImportServiceInterface;
 use OCA\Stackiq\Service\ArchiMate\ArchiMateImportScope;
 use OCA\Stackiq\Service\ArchiMate\GemmaStandardLinker;
 use OCA\Stackiq\Service\ProgressTracker;
@@ -74,7 +75,7 @@ use SimpleXMLElement;
  *
  * @spec openspec/specs/archimate-import/spec.md#requirement-the-system-shall-parse-an-archimate-amef-file-into-catalog-objects-req-001
  */
-class ArchiMateImportService {
+class ArchiMateImportService implements ArchiMateImportServiceInterface {
 
 	/**
 	 * NOTE: Default schema IDs removed - all schema IDs must be configured via AMEF settings.
@@ -121,11 +122,6 @@ class ArchiMateImportService {
 	 * The result lists of an OpenRegister saveObjects call, in the order they are aggregated.
 	 */
 	private const SAVE_BUCKETS = ['saved', 'updated', 'unchanged', 'invalid'];
-
-	/**
-	 * Operation ids a page may name for an import it follows.
-	 */
-	public const OPERATION_ID_PATTERN = '/^archimate_import_[A-Za-z0-9]{8,64}$/';
 
 	/**
 	 * The progress operation of the running import, or null when it is not tracked.
@@ -2491,7 +2487,6 @@ class ArchiMateImportService {
 
 		return $extracted;
 	}//end extractViewNodesAndConnections()
-
 
 	/**
 	 * Extract view nodes with proper JSON structure for frontend consumption
