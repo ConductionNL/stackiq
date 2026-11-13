@@ -159,4 +159,23 @@ class CmdbRegisterSchemaFieldsTest extends TestCase {
 		$this->expectExceptionMessage('The stackiq register fragment broken.json cannot be read, so the CMDB import packs cannot be checked');
 		$reader->fields();
 	}//end testAnUnreadableFragmentFailsClosed()
+
+	/**
+	 * A missing register file fails closed before any fragment is read.
+	 *
+	 * @return void
+	 */
+	public function testAMissingRegisterFailsClosed(): void {
+		$directory = $this->settings(register: [], fragments: ['a.json' => ['components' => []]]);
+		unlink($directory . '/softwarecatalogus_register.json');
+		$reader = new CmdbRegisterSchemaFields(settingsDirectory: $directory);
+
+		try {
+			$reader->fields();
+			$this->fail('MAPPING_UNAVAILABLE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame(CmdbImportException::MAPPING_UNAVAILABLE, $e->getErrorCode());
+			$this->assertSame('The stackiq register definition cannot be read, so the CMDB import packs cannot be checked', $e->getMessage());
+		}
+	}//end testAMissingRegisterFailsClosed()
 }//end class
