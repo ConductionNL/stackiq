@@ -319,4 +319,45 @@ class ContactPersonHandlerOrganisationEntityTest extends TestCase {
 			$this->logged('info', 'ContactPersonHandler: No organization entity, user not added')
 		);
 	}//end testAnOrganisationMissingFromOpenRegisterAddsNobody()
+	public function testAFailingOpenRegisterLookupAddsNobody(): void {
+		$this->mapper->method('findByUuid')->willThrowException(new DoesNotExistException('missing'));
+		$this->objects->expects($this->once())->method('find')
+			->with('org-1', [], false, '5', '1', false, false)
+			->willThrowException(new RuntimeException('index offline'));
+		$this->mapper->expects($this->never())->method('findBySlug');
+		$this->mapper->expects($this->never())->method('update');
+
+		$this->handler()->addUserToOrganizationEntity(self::contact(['organisation' => 'org-1']), 'anna');
+
+		$errors = $this->logged('error', 'ContactPersonHandler: Failed to ensure organization entity');
+		$this->assertCount(1, $errors);
+		$this->assertSame('org-1', $errors[0]['organizationUuid']);
+		$this->assertSame('index offline', $errors[0]['error']);
+		$this->assertSame(
+			[['organizationUuid' => 'org-1']],
+			$this->logged('info', 'ContactPersonHandler: No organization entity, user not added')
+		);
+		$this->assertSame([], $this->logged('info', 'ContactPersonHandler: Successfully added user to organization entity'));
+	}//end testAFailingOpenRegisterLookupAddsNobody()
+
+	public function testUnreadableContactDataIsLoggedNotThrown(): void {
+		$this->mapper->expects($this->never())->method('findByUuid');
+		$this->mapper->expects($this->never())->method('update');
+		$contact = new class {
+			public function getId(): string {
+				return 'contact-1';
+			}
+
+			public function getObject(): array {
+				throw new RuntimeException('object data unreadable');
+			}
+		};
+
+		$this->handler()->addUserToOrganizationEntity($contact, 'anna', 'org-1');
+
+		$this->assertSame(
+			[['objectId' => 'contact-1', 'username' => 'anna', 'error' => 'object data unreadable']],
+			$this->logged('error', 'ContactPersonHandler: Exception in addUserToOrganizationEntity')
+		);
+	}//end testUnreadableContactDataIsLoggedNotThrown()
 }//end class

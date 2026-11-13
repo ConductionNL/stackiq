@@ -333,4 +333,50 @@ class ContactPersonHandlerCreateUserTest extends TestCase {
 		$this->assertArrayNotHasKey('anna@gemeente.nl/core/organisation', $this->preferences);
 	}//end testAnUnwritablePreferenceStoreStillReturnsTheAccount()
 
+	/**
+	 * An account found by its username (not by the email) also takes the contact's organisation,
+	 * and a single role given as a string does not stop the account from being reused.
+	 *
+	 * @return void
+	 */
+	public function testAnAccountFoundByUsernameTakesTheContactsOrganisation(): void {
+		$handler = $this->handler();
+		$anna    = $this->user(uid: 'anna', email: 'anna@gemeente.nl');
+		$this->users->method('userExists')->with('anna@gemeente.nl')->willReturn(false);
+		$this->users->method('get')->with('anna')->willReturn($anna);
+		$this->users->expects($this->never())->method('createUser');
+		$this->mail->expects($this->never())->method('sendUserCreationEmail');
+
+		$contact = self::contact(['email' => 'anna@gemeente.nl', 'username' => 'anna', 'organisation' => 'org-9', 'roles' => 'Ambtenaar']);
+
+		$this->assertSame($anna, $handler->createUserAccount($contact));
+		$this->assertSame(
+			['anna/core/organisation' => 'org-9', 'anna/openregister/active_organisation' => 'org-9'],
+			$this->preferences
+		);
+		$this->assertNull($contact->written);
+	}//end testAnAccountFoundByUsernameTakesTheContactsOrganisation()
+
+	/**
+	 * A new account for a contact without any name part is displayed by its email address.
+	 *
+	 * @return void
+	 */
+	public function testANewAccountWithoutANameIsDisplayedByItsEmail(): void {
+		$handler = $this->handler();
+		$this->random->method('generate')->willReturn('Aa1!');
+		$anna = $this->user(uid: 'anna@gemeente.nl', email: 'anna@gemeente.nl');
+		$anna->expects($this->once())->method('setDisplayName')->with('Anna@Gemeente.nl');
+		$this->users->method('userExists')->willReturn(false);
+		$this->users->method('get')->willReturn(null);
+		$this->users->expects($this->once())->method('createUser')->with('anna@gemeente.nl', 'Aa1!Aa1!Aa1!Aa1!')->willReturn($anna);
+		$this->mail->method('sendUserCreationEmail')->willReturn(true);
+
+		$contact = self::contact(['email' => 'Anna@Gemeente.nl']);
+
+		$this->assertSame($anna, $handler->createUserAccount($contact));
+		$this->assertSame('anna@gemeente.nl', $contact->written['username']);
+		$this->assertSame([], $this->preferences);
+	}//end testANewAccountWithoutANameIsDisplayedByItsEmail()
+
 }//end class
