@@ -57,6 +57,8 @@ class AanbodServiceAcceptDenyTest extends TestCase {
 
 	private bool $openRegisterInstalled = true;
 
+	private bool $signedIn = true;
+
 	private AanbodService $service;
 
 	/**
@@ -83,7 +85,7 @@ class AanbodServiceAcceptDenyTest extends TestCase {
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('alice');
 		$this->userSession = $this->createMock(IUserSession::class);
-		$this->userSession->method('getUser')->willReturn($user);
+		$this->userSession->method('getUser')->willReturnCallback(fn (): ?IUser => $this->signedIn === true ? $user : null);
 
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturnCallback(
@@ -259,6 +261,58 @@ class AanbodServiceAcceptDenyTest extends TestCase {
 		);
 
 	}//end testOtherOrganisationMayNotAccept()
+
+	/**
+	 * Without a signed-in user there is no active organisation: accept and deny refuse and write nothing.
+	 *
+	 * @return void
+	 */
+	public function testWithoutAUserNothingIsWritten(): void {
+		$this->signedIn = false;
+		$this->findReturns($this->aanbod(['consumer' => self::ACTING_ORG]));
+		$this->objectService->expects($this->never())->method('saveObject');
+		$this->objectService->expects($this->never())->method('deleteObject');
+
+		$this->assertSame(
+			['success' => false, 'error' => 'No current organization available', 'aanbod' => null],
+			$this->service->acceptAanbod('aanbod-1')
+		);
+		$this->assertSame(
+			['success' => false, 'error' => 'No current organization available', 'deleted' => false],
+			$this->service->denyAanbod('aanbod-1')
+		);
+
+	}//end testWithoutAUserNothingIsWritten()
+
+	/**
+	 * A refused accept and a refused deny keep their exact shape, key order included.
+	 *
+	 * @return void
+	 */
+	public function testNotAllowedResultsKeepTheirShape(): void {
+		$this->findReturns($this->aanbod(['consumer' => ['id' => 'org-a']]));
+		$this->objectService->expects($this->never())->method('saveObject');
+		$this->objectService->expects($this->never())->method('deleteObject');
+
+		$debug = [
+			'afnemer_in_object' => ['id' => 'org-a'],
+			'resolved_afnemer_id' => 'org-a',
+			'aanbieder_in_object' => null,
+			'resolved_aanbieder_id' => null,
+			'current_org' => self::ACTING_ORG,
+		];
+		$error = 'Operation not allowed: active organization is not the afnemer or aanbieder';
+
+		$this->assertSame(
+			['success' => false, 'error' => $error, 'aanbod' => null, 'debug' => $debug],
+			$this->service->acceptAanbod('aanbod-1')
+		);
+		$this->assertSame(
+			['success' => false, 'error' => $error, 'deleted' => false, 'debug' => $debug],
+			$this->service->denyAanbod('aanbod-1')
+		);
+
+	}//end testNotAllowedResultsKeepTheirShape()
 
 	/**
 	 * Accept refuses an empty id, a missing organisation and an unknown aanbod.
