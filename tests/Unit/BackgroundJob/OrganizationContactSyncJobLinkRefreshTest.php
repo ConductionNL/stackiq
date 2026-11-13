@@ -29,6 +29,9 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\BackgroundJob\OrganizationContactSyncJob;
 use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
 use OCA\Stackiq\Service\OrganizationSyncService;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\StackiqContactSyncService;
 use OCA\Stackiq\Service\Settings\VoorzieningenConfigNormalizer;
@@ -269,11 +272,16 @@ class OrganizationContactSyncJobLinkRefreshTest extends TestCase {
 			);
 		}
 
+		// The job is switched on; the switch itself is covered by OrganizationContactSyncJobTest.
+		$cronjobs = $this->createMock(CronjobSettings::class);
+		$cronjobs->method('isCronjobEnabled')->willReturn(true);
+
 		$job = new OrganizationContactSyncJob(
 			$this->createMock(ITimeFactory::class),
 			($sync ?? $this->createMock(OrganizationSyncService::class)),
 			$contacts,
 			$this->settings($store, $appManager),
+			$cronjobs,
 			$appManager,
 			$logger
 		);
@@ -299,11 +307,13 @@ class OrganizationContactSyncJobLinkRefreshTest extends TestCase {
 		return new SettingsService(
 			config: $config,
 			request: $this->createMock(IRequest::class),
+			roleGroupSettings: $this->createMock(RoleGroupSettings::class),
 			container: $this->container,
 			appManager: $appManager,
 			logger: $this->createMock(LoggerInterface::class),
 			groupManager: $this->createMock(IGroupManager::class),
-			l10n: $this->createMock(IL10N::class)
+			l10n: $this->createMock(IL10N::class),
+			emailSettings: $this->createMock(EmailSettings::class)
 		);
 	}//end settings()
 }//end class
