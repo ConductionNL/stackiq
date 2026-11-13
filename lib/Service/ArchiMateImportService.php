@@ -2150,69 +2150,22 @@ class ArchiMateImportService {
 	 */
 	private function findItemsInSection(array $sectionData, string $sectionName): array {
 		// OPTIMIZATION: Removed debug logging from section processing.
-		$items = [];
-
 		// No is_array() safety check: $sectionData is declared array, so PHP
 		// rejects anything else at the call boundary before this could run.
 
 		// Get section structure configuration from AMEF config.
 		$config = $this->getSectionStructureConfig(sectionName: $sectionName);
 
-		// Special handling for views with diagrams structure.
-		if ($sectionName === 'views') {
-			// Handle nested structure: <views><diagrams><view>.
-			if (isset($sectionData['diagrams']) === true) {
-				if (isset($sectionData['diagrams']['view']) === true) {
-					$viewArray = $sectionData['diagrams']['view'];
-
-					// Handle single view vs array of views.
-					if (isset($viewArray[0]) === false && isset($viewArray['_attributes']) === true) {
-						// Single view.
-						$items = [$viewArray];
-					} else {
-						// Array of views.
-						$items = $viewArray;
-					}
-				}
-			} else {
-				// Direct views structure (fallback).
-				if (isset($sectionData['view']) === true) {
-					$items = $sectionData['view'];
-				}
-			}
-		} else {
-			// Try to find items using the configured paths for other sections.
-			foreach ($config['nested_paths'] as $path) {
-				$currentData = $sectionData;
-				$pathValid = true;
-
-				foreach ($path as $key) {
-					if (isset($currentData[$key]) === true) {
-						$currentData = $currentData[$key];
-					} else {
-						$pathValid = false;
-						break;
-					}
-				}
-
-				if ($pathValid !== false && is_array($currentData) === true) {
-					// Check if this is a direct array of items or needs further processing.
-					if (isset($currentData[0]) === true || $this->isAssociativeArray(array: $currentData) === true) {
-						$items = $currentData;
-						break;
-					}
-				}
-			}//end foreach
-		}//end if
+		// Special handling for views with diagrams structure; the other
+		// sections are found through their configured paths.
+		$items = match ($sectionName) {
+			'views' => $this->findViewItems(sectionData: $sectionData),
+			default => $this->findItemsOnPaths(sectionData: $sectionData, paths: $config['nested_paths']),
+		};
 
 		// If no items found through nested paths, try direct tags.
 		if (empty($items) === true) {
-			foreach ($config['direct_tags'] as $tag) {
-				if (isset($sectionData[$tag]) === true) {
-					$items = $sectionData[$tag];
-					break;
-				}
-			}
+			$items = $this->findItemsUnderTag(sectionData: $sectionData, tags: $config['direct_tags']);
 		}
 
 		// If still no items found, treat the section itself as items.
@@ -2232,6 +2185,81 @@ class ArchiMateImportService {
 
 		return $items;
 	}//end findItemsInSection()
+
+	/**
+	 * The views of a views section: <views><diagrams><view>, or <views><view> as fallback
+	 *
+	 * @param array $sectionData The views section
+	 *
+	 * @return mixed The view or views found, or an empty array
+	 */
+	private function findViewItems(array $sectionData): mixed {
+		if (isset($sectionData['diagrams']) === false) {
+			// Direct views structure (fallback).
+			return ($sectionData['view'] ?? []);
+		}
+
+		if (isset($sectionData['diagrams']['view']) === false) {
+			return [];
+		}
+
+		$viewArray = $sectionData['diagrams']['view'];
+
+		// Handle single view vs array of views.
+		if (isset($viewArray[0]) === false && isset($viewArray['_attributes']) === true) {
+			return [$viewArray];
+		}
+
+		return $viewArray;
+	}//end findViewItems()
+
+	/**
+	 * The items at the first configured path that leads to a list or map
+	 *
+	 * @param array $sectionData The section data
+	 * @param array $paths       The configured paths, each a list of keys
+	 *
+	 * @return array The items found, or an empty array
+	 */
+	private function findItemsOnPaths(array $sectionData, array $paths): array {
+		foreach ($paths as $path) {
+			$currentData = $sectionData;
+			foreach ($path as $key) {
+				if (isset($currentData[$key]) === false) {
+					continue 2;
+				}
+
+				$currentData = $currentData[$key];
+			}
+
+			// Check if this is a direct array of items or needs further processing.
+			if (is_array($currentData) === true
+				&& (isset($currentData[0]) === true || $this->isAssociativeArray(array: $currentData) === true)
+			) {
+				return $currentData;
+			}
+		}
+
+		return [];
+	}//end findItemsOnPaths()
+
+	/**
+	 * The value under the first configured tag the section has
+	 *
+	 * @param array $sectionData The section data
+	 * @param array $tags        The configured tags
+	 *
+	 * @return mixed The value found, or an empty array
+	 */
+	private function findItemsUnderTag(array $sectionData, array $tags): mixed {
+		foreach ($tags as $tag) {
+			if (isset($sectionData[$tag]) === true) {
+				return $sectionData[$tag];
+			}
+		}
+
+		return [];
+	}//end findItemsUnderTag()
 
 	/**
 	 * Extract identifier from item data
@@ -3899,152 +3927,17 @@ class ArchiMateImportService {
 
 		// If we have access to the actual save results from ObjectService, use those.
 		if ($this->lastSaveResult !== null) {
-			$saveResult = $this->lastSaveResult;
-
-			// DEBUG: Log what we got from ObjectService.
-			$this->logger->info(
-				'[ArchiMate] Using lastSaveResult for statistics',
-				[
-					'saved_count' => count($saveResult['saved'] ?? []),
-					'updated_count' => count($saveResult['updated'] ?? []),
-					'unchanged_count' => count($saveResult['unchanged'] ?? []),
-					'invalid_count' => count($saveResult['invalid'] ?? []),
-					'keys_present' => array_keys($saveResult),
-				]
-			);
-
-			// Count objects by section type from the actual processed objects.
-			$allProcessedObjects = array_merge(
-				$saveResult['saved'] ?? [],
-				$saveResult['updated'] ?? [],
-				$saveResult['unchanged'] ?? [],
-				// For invalid objects, extract the original object from the error structure.
-				array_map(fn ($item) => $item['object'] ?? [], $saveResult['invalid'] ?? [])
-			);
-
-			foreach ($allProcessedObjects as $object) {
-				// Convert ObjectEntity to array if needed.
-				if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-					$object = $object->jsonSerialize();
-				}
-
-				$sectionType = $object['section'] ?? null;
-
-				// Map section types (singular or plural) to statistics keys.
-				$sectionKey = match ($sectionType) {
-					'elements', 'element', 'model' => 'elements',
-					'relationships', 'relationship' => 'relationships',
-					'organizations', 'organization' => 'organizations',
-					'views', 'view' => 'views',
-					'property_definitions', 'property_definition' => 'property_definitions',
-					default => null
-				};
-
-				// Fallback: use @self.schema to determine section.
-				if ($sectionKey === null
-					&& $this->cachedConfig !== null
-					&& isset($this->cachedConfig['schemaIds']) === true
-				) {
-					$objSchemaId = $object['@self']['schema'] ?? null;
-					if ($objSchemaId !== null) {
-						$singularToPlural = [
-							'element' => 'elements',
-							'relationship' => 'relationships',
-							'organization' => 'organizations',
-							'view' => 'views',
-							'property_definition' => 'property_definitions',
-							'model' => 'elements',
-						];
-						foreach ($this->cachedConfig['schemaIds'] as $type => $schemaId) {
-							if ((int)$schemaId === (int)$objSchemaId) {
-								$sectionKey = $singularToPlural[$type] ?? 'elements';
-								break;
-							}
-						}
-					}
-
-					$sectionKey = $sectionKey ?? 'elements';
-				} elseif ($sectionKey === null) {
-					$sectionKey = 'elements';
-				}//end if
-
-				// No "skip unknown section types" guard: the branch above pins
-				// $sectionKey to a key $statistics always has, so it never fired.
-
-				// Determine if this object was created, updated, or had errors.
-				$objectId = $object['@self']['id'] ?? $object['identifier'] ?? null;
-
-				// Check if this object is in the saved (created) list.
-				$wasCreated = empty(
-					array_filter(
-						$saveResult['saved'] ?? [],
-						fn ($saved) => ($saved->getUuid() === $objectId)
-					)
-				) === false;
-
-				// Check if this object is in the updated list.
-				$wasUpdated = empty(
-					array_filter(
-						$saveResult['updated'] ?? [],
-						fn ($updated) => ($updated->getUuid() === $objectId)
-					)
-				) === false;
-
-				// Check if this object was unchanged (no changes).
-				$unchangedObjects = $saveResult['unchanged'] ?? [];
-				$wasSkipped = empty(
-					array_filter(
-						$unchangedObjects,
-						fn ($unchanged) => ($unchanged->getUuid() === $objectId)
-					)
-				) === false;
-
-				// Check if this object had validation errors.
-				$hasErrors = empty(
-					array_filter(
-						$saveResult['invalid'] ?? [],
-						fn ($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId)
-					)
-				) === false;
-
-				if ($wasCreated === true) {
-					$statistics[$sectionKey]['created']++;
-				} elseif ($wasUpdated === true) {
-					$statistics[$sectionKey]['updated']++;
-				} elseif ($wasSkipped === true) {
-					$statistics[$sectionKey]['unchanged']++;
-				} elseif ($hasErrors === true) {
-					// Add to errors array for this section.
-					$errorInfo = array_filter(
-						$saveResult['invalid'] ?? [],
-						fn ($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId)
-					);
-
-					if (empty($errorInfo) === false) {
-						$firstError = array_values($errorInfo)[0];
-						$errorMessage = 'Unknown validation error';
-						if (is_array($firstError) === true && isset($firstError['error']) === true) {
-							$errorMessage = $firstError['error'];
-						}
-
-						$statistics[$sectionKey]['errors'][] = $errorMessage;
-					}
-				} else {
-					// This shouldn't happen, but leave as fallback.
-					$statistics[$sectionKey]['unchanged']++;
-				}//end if
-			}//end foreach
+			$this->countSaveResult(statistics: $statistics, saveResult: $this->lastSaveResult);
 		} else {
 			// Fallback to old method if no save result is available.
 			$sections = ['elements', 'relationships', 'organizations', 'views', 'property_definitions'];
 			foreach ($sections as $section) {
 				if (isset($normalizedData[$section]) === true) {
-					$count = count($normalizedData[$section]);
 					// Assume all objects were created (legacy behavior).
-					$statistics[$section]['created'] = $count;
+					$statistics[$section]['created'] = count($normalizedData[$section]);
 				}
 			}
-		}//end if
+		}
 
 		// Calculate summary totals from actual statistics.
 		$summary = [
@@ -4085,6 +3978,169 @@ class ArchiMateImportService {
 
 		return $statistics;
 	}//end calculateObjectStatistics()
+
+	/**
+	 * Count every object of ObjectService's save result in its section's statistics
+	 *
+	 * @param array $statistics The statistics per section, updated in place
+	 * @param array $saveResult The saved, updated, unchanged and invalid objects
+	 *
+	 * @return void
+	 */
+	private function countSaveResult(array &$statistics, array $saveResult): void {
+		// DEBUG: Log what we got from ObjectService.
+		$this->logger->info(
+			'[ArchiMate] Using lastSaveResult for statistics',
+			[
+				'saved_count' => count($saveResult['saved'] ?? []),
+				'updated_count' => count($saveResult['updated'] ?? []),
+				'unchanged_count' => count($saveResult['unchanged'] ?? []),
+				'invalid_count' => count($saveResult['invalid'] ?? []),
+				'keys_present' => array_keys($saveResult),
+			]
+		);
+
+		// Count objects by section type from the actual processed objects.
+		$allProcessedObjects = array_merge(
+			$saveResult['saved'] ?? [],
+			$saveResult['updated'] ?? [],
+			$saveResult['unchanged'] ?? [],
+			// For invalid objects, extract the original object from the error structure.
+			array_map(fn ($item) => $item['object'] ?? [], $saveResult['invalid'] ?? [])
+		);
+
+		foreach ($allProcessedObjects as $object) {
+			// Convert ObjectEntity to array if needed.
+			if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
+				$object = $object->jsonSerialize();
+			}
+
+			// No "skip unknown section types" guard: statisticsSection() always
+			// returns a key $statistics has.
+			$sectionKey = $this->statisticsSection(object: $object);
+
+			// Determine if this object was created, updated, or had errors.
+			$objectId = $object['@self']['id'] ?? $object['identifier'] ?? null;
+
+			$this->countSaveOutcome(
+				sectionStats: $statistics[$sectionKey],
+				saveResult: $saveResult,
+				objectId: $objectId
+			);
+		}//end foreach
+	}//end countSaveResult()
+
+	/**
+	 * The statistics section an imported object counts in
+	 *
+	 * The object's section (singular or plural) decides; without one, the
+	 * section whose cached schema id matches the object's schema; else elements.
+	 *
+	 * @param array $object The serialised object
+	 *
+	 * @return string The statistics key
+	 */
+	private function statisticsSection(array $object): string {
+		$sectionKey = match ($object['section'] ?? null) {
+			'elements', 'element', 'model' => 'elements',
+			'relationships', 'relationship' => 'relationships',
+			'organizations', 'organization' => 'organizations',
+			'views', 'view' => 'views',
+			'property_definitions', 'property_definition' => 'property_definitions',
+			default => null
+		};
+
+		// Fallback: use @self.schema to determine section.
+		if ($sectionKey === null && isset($this->cachedConfig['schemaIds']) === true) {
+			$sectionKey = $this->sectionOfSchema(schemaId: $object['@self']['schema'] ?? null);
+		}
+
+		return $sectionKey ?? 'elements';
+	}//end statisticsSection()
+
+	/**
+	 * The statistics section of the cached schema type a schema id belongs to
+	 *
+	 * @param mixed $schemaId The object's schema id
+	 *
+	 * @return string|null The statistics key, or null when no cached schema matches
+	 */
+	private function sectionOfSchema(mixed $schemaId): ?string {
+		if ($schemaId === null) {
+			return null;
+		}
+
+		$singularToPlural = [
+			'element' => 'elements',
+			'relationship' => 'relationships',
+			'organization' => 'organizations',
+			'view' => 'views',
+			'property_definition' => 'property_definitions',
+			'model' => 'elements',
+		];
+		foreach ($this->cachedConfig['schemaIds'] as $type => $configuredSchemaId) {
+			if ((int)$configuredSchemaId === (int)$schemaId) {
+				return $singularToPlural[$type] ?? 'elements';
+			}
+		}
+
+		return null;
+	}//end sectionOfSchema()
+
+	/**
+	 * Count one object as created, updated, unchanged or failed in its section
+	 *
+	 * @param array $sectionStats The section's statistics, updated in place
+	 * @param array $saveResult   The saved, updated, unchanged and invalid objects
+	 * @param mixed $objectId     The object's id
+	 *
+	 * @return void
+	 */
+	private function countSaveOutcome(array &$sectionStats, array $saveResult, mixed $objectId): void {
+		$found = [];
+		foreach (['saved' => 'created', 'updated' => 'updated', 'unchanged' => 'unchanged'] as $bucket => $counter) {
+			$found[$counter] = $this->bucketHasUuid(objects: ($saveResult[$bucket] ?? []), uuid: $objectId);
+		}
+
+		// The validation errors of this object.
+		$errorInfo = array_filter(
+			$saveResult['invalid'] ?? [],
+			fn ($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId)
+		);
+
+		foreach ($found as $counter => $wasFound) {
+			if ($wasFound === true) {
+				$sectionStats[$counter]++;
+				return;
+			}
+		}
+
+		if (empty($errorInfo) === true) {
+			// This shouldn't happen, but leave as fallback.
+			$sectionStats['unchanged']++;
+			return;
+		}
+
+		$firstError = array_values($errorInfo)[0];
+		$errorMessage = 'Unknown validation error';
+		if (is_array($firstError) === true && isset($firstError['error']) === true) {
+			$errorMessage = $firstError['error'];
+		}
+
+		$sectionStats['errors'][] = $errorMessage;
+	}//end countSaveOutcome()
+
+	/**
+	 * Whether a bucket of the save result holds an object with this UUID
+	 *
+	 * @param array $objects The bucket's objects
+	 * @param mixed $uuid    The UUID looked for
+	 *
+	 * @return bool True when an object in the bucket has the UUID
+	 */
+	private function bucketHasUuid(array $objects, mixed $uuid): bool {
+		return empty(array_filter($objects, fn ($object) => ($object->getUuid() === $uuid))) === false;
+	}//end bucketHasUuid()
 
 	/**
 	 * Extract detailed error information from import statistics for frontend display
