@@ -604,7 +604,7 @@ class MaintenanceRecipientsListenerTest extends TestCase {
 	 * @return void
 	 */
 	public function testTheListenerIsRegistered(): void {
-		$source = (string) file_get_contents(__DIR__ . '/../../../lib/AppInfo/Application.php');
+		$source = (string) file_get_contents(__DIR__ . '/../../../lib/EventListener/ListenerRegistrar.php');
 
 		$this->assertMatchesRegularExpression(
 			'/registerEventListener\(\s*ObjectCreatedEvent::class,\s*MaintenanceRecipientsListener::class\s*\)/',
