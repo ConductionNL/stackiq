@@ -42,6 +42,7 @@ use PHPUnit\Framework\TestCase;
  * @covers \OCA\Stackiq\EventListener\ContactPersonOrganisationListener
  * @covers \OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard
  * @covers \OCA\Stackiq\Service\Contactpersoon\SystemContactWrites
+ * @uses   \OCA\Stackiq\Service\Contactpersoon\ContactPersonWrite
  */
 final class ContactPersonOrganisationListenerTest extends TestCase {
 	private const SCHEMA = '41';
