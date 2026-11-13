@@ -30,10 +30,10 @@ use OCA\OpenRegister\Event\ObjectLockedEvent;
 use OCA\OpenRegister\Event\ObjectRevertedEvent;
 use OCA\OpenRegister\Event\ObjectUnlockedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
+use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\GebruikSyncServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\SettingsServiceInterface;
-use OCA\Stackiq\Service\ContactpersoonService;
-use OCA\Stackiq\Service\GebruikSyncService;
-use OCA\Stackiq\Service\SettingsService;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
@@ -114,8 +114,8 @@ class StackiqEventListener implements IEventListener {
 	public function handle(Event $event): void {
 		try {
 			$logger = $this->container->get(LoggerInterface::class);
-			$contactSvc = $this->container->get(ContactpersoonService::class);
-			$settingsService = $this->container->get(SettingsService::class);
+			$contactSvc = $this->container->get(ContactpersoonServiceInterface::class);
+			$settingsService = $this->container->get(SettingsServiceInterface::class);
 
 			$logger->info(
 				'Stackiq: Processing event',
@@ -281,7 +281,7 @@ class StackiqEventListener implements IEventListener {
 	): void {
 		$objectId = $object->getUuid();
 		try {
-			$orgSyncService = $this->container->get('OCA\Stackiq\Service\OrganizationSyncService');
+			$orgSyncService = $this->container->get(OrganizationSyncServiceInterface::class);
 			$result = $orgSyncService->processSpecificOrganization($object);
 			$logger->info(
 				'Stackiq: Successfully processed organization ' . $phase,
@@ -326,7 +326,7 @@ class StackiqEventListener implements IEventListener {
 	): void {
 		$objectId = $object->getUuid();
 		try {
-			$gebruikSyncService = $this->container->get(GebruikSyncService::class);
+			$gebruikSyncService = $this->container->get(GebruikSyncServiceInterface::class);
 			$result = $gebruikSyncService->processSpecificGebruik($object);
 			$logger->info(
 				'Stackiq: Successfully processed gebruik ' . $phase,

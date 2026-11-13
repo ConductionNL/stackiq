@@ -22,6 +22,7 @@ namespace OCA\Stackiq\Tests\Unit\EventListener;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
 use OCA\Stackiq\EventListener\UserProfileUpdatedEventListener;
+use OCA\Stackiq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\EventDispatcher\Event;
 use OCP\IUser;
@@ -138,7 +139,7 @@ final class UserProfileUpdatedEventListenerHandleTest extends TestCase {
 	public function testIrrelevantChangesAreNotSynced(): void {
 		$settings = $this->createMock(originalClassName: SettingsService::class);
 		$settings->expects($this->never())->method('getVoorzieningenConfig');
-		$container = $this->container(services: [LoggerInterface::class => $this->logger(), SettingsService::class => $settings]);
+		$container = $this->container(services: [LoggerInterface::class => $this->logger(), SettingsServiceInterface::class => $settings]);
 
 		$this->listener(container: $container)->handle($this->event(changes: ['avatar', 'language']));
 
@@ -162,7 +163,7 @@ final class UserProfileUpdatedEventListenerHandleTest extends TestCase {
 	public function testRelevantChangesStartTheSync(): void {
 		$settings = $this->createMock(originalClassName: SettingsService::class);
 		$settings->expects($this->once())->method('getVoorzieningenConfig')->willReturn([]);
-		$container = $this->container(services: [LoggerInterface::class => $this->logger(), SettingsService::class => $settings]);
+		$container = $this->container(services: [LoggerInterface::class => $this->logger(), SettingsServiceInterface::class => $settings]);
 
 		$this->listener(container: $container)->handle($this->event(changes: ['avatar', 'lastName', 'email']));
 
@@ -183,7 +184,7 @@ final class UserProfileUpdatedEventListenerHandleTest extends TestCase {
 	 */
 	public function testAFailingSyncIsLoggedAsAnError(): void {
 		$container = $this->container(
-			services: [LoggerInterface::class => $this->logger(), SettingsService::class => new RuntimeException(message: 'settings unavailable')]
+			services: [LoggerInterface::class => $this->logger(), SettingsServiceInterface::class => new RuntimeException(message: 'settings unavailable')]
 		);
 
 		$this->listener(container: $container)->handle($this->event(changes: ['firstName']));

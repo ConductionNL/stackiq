@@ -27,16 +27,17 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Controller;
 
 use OCA\Stackiq\Controller\SettingsController;
+use OCA\Stackiq\Kernel\Contracts\ModuleComplianceServiceInterface;
 use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\ModuleComplianceService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
-use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
 use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IAppConfig;
@@ -763,7 +764,7 @@ class SettingsControllerGeneralEndpointsTest extends TestCase {
 	#[DataProvider('bulkSyncFailureProvider')]
 	public function testBulkSyncStandardsMapsFailureToStatus(\Exception $error, int $expected): void {
 		$this->signIn(uid: 'admin', isAdmin: true);
-		$this->container->method('get')->with(ModuleComplianceService::class)->willThrowException($error);
+		$this->container->method('get')->with(ModuleComplianceServiceInterface::class)->willThrowException($error);
 
 		$response = $this->controller()->bulkSyncStandards();
 
@@ -787,7 +788,7 @@ class SettingsControllerGeneralEndpointsTest extends TestCase {
 		$this->signIn(uid: 'admin', isAdmin: true);
 		$compliance = $this->createMock(ModuleComplianceService::class);
 		$compliance->expects($this->once())->method('bulkSyncModuleStandards')->willReturn(['synced' => 7]);
-		$this->container->method('get')->with(ModuleComplianceService::class)->willReturn($compliance);
+		$this->container->method('get')->with(ModuleComplianceServiceInterface::class)->willReturn($compliance);
 
 		$response = $this->controller()->bulkSyncStandards();
 

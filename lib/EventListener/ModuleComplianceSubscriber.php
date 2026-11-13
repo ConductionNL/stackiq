@@ -22,9 +22,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\EventListener;
 
-use OCA\Stackiq\Service\ModuleComplianceService;
-use OCA\Stackiq\Service\ModuleVersionService;
-use OCA\Stackiq\Service\Settings\CatalogueLocator;
+use OCA\Stackiq\Kernel\Contracts\ModuleComplianceServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ModuleVersionServiceInterface;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
@@ -102,7 +102,7 @@ class ModuleComplianceSubscriber implements IEventListener {
 	 * @return bool True when the object is a module
 	 */
 	private function isModuleObject(object $object, LoggerInterface $logger): bool {
-		$catalogue = $this->container->get(CatalogueLocator::class);
+		$catalogue = $this->container->get(ObjectTypeLocatorInterface::class);
 		$moduleSchemaId = $catalogue->getSchemaIdForObjectType('module');
 
 		if ($moduleSchemaId === null) {
@@ -129,7 +129,7 @@ class ModuleComplianceSubscriber implements IEventListener {
 	 */
 	private function dispatchComplianceUpdate(object $object, LoggerInterface $logger): void {
 		try {
-			$complianceSvc = $this->container->get(ModuleComplianceService::class);
+			$complianceSvc = $this->container->get(ModuleComplianceServiceInterface::class);
 			$complianceSvc->handleModuleComplianceUpdate($object);
 
 			$logger->info(
@@ -163,7 +163,7 @@ class ModuleComplianceSubscriber implements IEventListener {
 	 */
 	private function dispatchEnsureDefaultVersion(object $object, LoggerInterface $logger): void {
 		try {
-			$moduleVersionService = $this->container->get(ModuleVersionService::class);
+			$moduleVersionService = $this->container->get(ModuleVersionServiceInterface::class);
 			$moduleVersionService->ensureDefaultVersion($object);
 		} catch (\Exception $e) {
 			$logger->error(

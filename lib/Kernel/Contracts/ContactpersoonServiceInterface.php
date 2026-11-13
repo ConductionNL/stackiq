@@ -90,4 +90,33 @@ interface ContactpersoonServiceInterface {
 	 * @spec   openspec/specs/contactpersoon-sync/spec.md
 	 */
 	public function getContactPersonsWithUserDetailsForOrganization(string $organizationUuid): array;
+
+	/**
+	 * Processes a contactpersoon object to create a user account.
+	 *
+	 * If the contactpersoon object doesn't have a user or the user is missing,
+	 * this method will create a user account with appropriate status.
+	 *
+	 * @param object $contactPersonObject The contactpersoon object to process.
+	 * @param bool $isUpdate Whether this is an update operation.
+	 *
+	 * @return bool True if processing was successful.
+	 *
+	 * @throws \Exception If processing fails.
+	 *
+	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isUpdate is a simple create-vs-update toggle
+	 *
+	 * @spec openspec/specs/method-decomposition/spec.md
+	 */
+	public function processContactpersoon(object $contactPersonObject, bool $isUpdate = false): bool;
+
+	/**
+	 * Handles contact person deletion
+	 *
+	 * @param object $contactObject The contact object being deleted
+	 *
+	 * @return void
+	 * @spec   openspec/specs/contactpersoon-sync/spec.md
+	 */
+	public function handleContactDeletion(object $contactObject): void;
 }//end interface
