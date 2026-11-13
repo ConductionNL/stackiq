@@ -48,6 +48,10 @@ use Psr\Log\NullLogger;
  * @uses   \OCA\Stackiq\Service\ArchiMate\ArchiMateImportScope
  * @uses   \OCA\Stackiq\Service\ArchiMate\GemmaObjectReader
  * @uses   \OCA\Stackiq\Service\ArchiMate\GemmaStandardLinker
+ * @uses \OCA\Stackiq\Service\ArchiMate\AmefConfigReader
+ * @uses \OCA\Stackiq\Service\ArchiMate\AmefRegisterId
+ * @uses \OCA\Stackiq\Service\ArchiMate\CamelCaseNames
+ * @uses \OCA\Stackiq\Service\ArchiMate\ObjectServiceLookup
  *
  * @spec openspec/specs/archimate-import/spec.md
  */
