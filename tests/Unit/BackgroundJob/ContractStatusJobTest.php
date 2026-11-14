@@ -200,7 +200,7 @@ class ContractStatusJobTest extends TestCase {
 
 	/**
 	 * A past-end-date active contract is saved as Expired; a future one is left alone,
-	 * and the job logs the number transitioned.
+	 * and the job logs how many contracts moved to each status.
 	 *
 	 * @return void
 	 */
@@ -208,10 +208,22 @@ class ContractStatusJobTest extends TestCase {
 		$this->openRegisterReady();
 		$past = ['status' => 'Active', 'endDate' => '2000-01-31', 'name' => 'Old'];
 		$future = ['status' => 'Active', 'endDate' => '2999-12-31', 'name' => 'New'];
-		$this->objects->expects($this->once())
+		// contracts-expiry-and-owner: one pass over Active, then Expiring contracts.
+		$this->objects->expects($this->exactly(2))
 			->method('searchObjects')
-			->with(['register' => 7, 'schema' => 12, 'status' => 'Active', '_limit' => 5000], false, false)
-			->willReturn([$this->contract('u-past', $past), $this->contract('u-future', $future)]);
+			->willReturnCallback(
+				function (array $query, bool $rbac, bool $multitenancy) use ($past, $future): array {
+					$this->assertSame(['register' => 7, 'schema' => 12, '_limit' => 5000], array_diff_key($query, ['status' => true]));
+					$this->assertFalse($rbac);
+					$this->assertFalse($multitenancy);
+					if ($query['status'] === 'Active') {
+						return [$this->contract('u-past', $past), $this->contract('u-future', $future)];
+					}
+
+					$this->assertSame('Expiring', $query['status']);
+					return [];
+				}
+			);
 		$this->objects->expects($this->once())
 			->method('saveObject')
 			->with(['status' => 'Expired', 'endDate' => '2000-01-31', 'name' => 'Old'], [], '7', '12', 'u-past');
@@ -219,7 +231,7 @@ class ContractStatusJobTest extends TestCase {
 		$this->runJob($this->job());
 
 		$this->assertSame(
-			['info', '[ContractStatusJob] Contract status pass complete', ['transitioned' => 1]],
+			['info', '[ContractStatusJob] Contract status pass complete', ['expiring' => 0, 'expired' => 1, 'active' => 0]],
 			end($this->logs)
 		);
 
@@ -242,7 +254,7 @@ class ContractStatusJobTest extends TestCase {
 		$this->assertSame(
 			[
 				['info', 'ContractStatusService: contract register/schema not configured, skipping run', []],
-				['info', '[ContractStatusJob] Contract status pass complete', ['transitioned' => 0]],
+				['info', '[ContractStatusJob] Contract status pass complete', ['expiring' => 0, 'expired' => 0, 'active' => 0]],
 			],
 			$this->logs
 		);

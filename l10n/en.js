@@ -1265,7 +1265,11 @@ OC.L10N.register(
         "Gap, fillable": "Gap, fillable",
         "Gap": "Gap",
         "Licence": "Licence",
-        "Software catalogue": "Software catalogue"
+        "Software catalogue": "Software catalogue",
+        "Expiring": "Expiring",
+        "Expired": "Expired",
+        "Responsible user": "Responsible user",
+        "The Nextcloud user who answers for this contract and is warned before it expires.": "The Nextcloud user who answers for this contract and is warned before it expires."
     },
     "nplurals=2; plural=(n != 1);"
 )
