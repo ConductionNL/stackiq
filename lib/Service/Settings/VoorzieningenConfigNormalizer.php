@@ -50,6 +50,8 @@ final class VoorzieningenConfigNormalizer {
 		'sector_schema',
 		'sbomComponent_schema',
 		'maintenanceWindow_schema',
+		'attestationRound_schema',
+		'attestationRequest_schema',
 	];
 
 	/**

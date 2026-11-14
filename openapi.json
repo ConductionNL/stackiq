@@ -138,6 +138,10 @@
         {
             "name": "view",
             "description": "Controller for handling view-related API operations"
+        },
+        {
+            "name": "attestation",
+            "description": "Confirmation rounds: owners confirm or correct their entries."
         }
     ],
     "paths": {
@@ -5766,6 +5770,81 @@
                                 }
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/attestation-rounds": {
+            "post": {
+                "operationId": "attestation-start",
+                "summary": "Start a confirmation round over an organisation's usages or products",
+                "description": "Start a round over `scopeSchema` (usage or module) of `organisation`, due `deadline`. The caller must be an admin or a maintainer of the organisation. The answer lists the entries no request could be sent for.",
+                "tags": [
+                    "attestation"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "organisation",
+                                    "scopeSchema",
+                                    "deadline"
+                                ],
+                                "properties": {
+                                    "organisation": {
+                                        "type": "string",
+                                        "format": "uuid"
+                                    },
+                                    "scopeSchema": {
+                                        "type": "string",
+                                        "enum": [
+                                            "usage",
+                                            "module"
+                                        ]
+                                    },
+                                    "deadline": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "The round, its request count and the unassigned entries.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
                     }
                 }
             }

@@ -15,7 +15,9 @@
         "moduleVersie_schema": "",
         "sector_schema": "",
         "sbomComponent_schema": "",
-        "maintenanceWindow_schema": ""
+        "maintenanceWindow_schema": "",
+        "attestationRound_schema": "",
+        "attestationRequest_schema": ""
     },
     "register only": {
         "register": "7",
@@ -33,7 +35,9 @@
         "moduleVersie_schema": "",
         "sector_schema": "",
         "sbomComponent_schema": "",
-        "maintenanceWindow_schema": ""
+        "maintenanceWindow_schema": "",
+        "attestationRound_schema": "",
+        "attestationRequest_schema": ""
     },
     "null register": {
         "register": "",
@@ -51,7 +55,9 @@
         "moduleVersie_schema": "",
         "sector_schema": "",
         "sbomComponent_schema": "",
-        "maintenanceWindow_schema": ""
+        "maintenanceWindow_schema": "",
+        "attestationRound_schema": "",
+        "attestationRequest_schema": ""
     },
     "mixed": {
         "register": "3",
@@ -69,7 +75,9 @@
         "moduleVersie_schema": "1",
         "sector_schema": "",
         "sbomComponent_schema": "1.5",
-        "maintenanceWindow_schema": ""
+        "maintenanceWindow_schema": "",
+        "attestationRound_schema": "",
+        "attestationRequest_schema": ""
     },
     "every key": {
         "register": "",
@@ -87,6 +95,8 @@
         "moduleVersie_schema": "5",
         "sector_schema": "5",
         "sbomComponent_schema": "5",
-        "maintenanceWindow_schema": "5"
+        "maintenanceWindow_schema": "5",
+        "attestationRound_schema": "",
+        "attestationRequest_schema": ""
     }
 }

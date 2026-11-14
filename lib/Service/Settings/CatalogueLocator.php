@@ -108,6 +108,9 @@ class CatalogueLocator implements ObjectTypeLocatorInterface {
 		'sector' => 'sector_schema',
 		// Planned maintenance on a product (lifecycle-maintenance-and-supplier-roadmap).
 		'maintenanceWindow' => 'maintenanceWindow_schema',
+		// Owner confirmation rounds (landscape-owner-attestation).
+		'attestationRound' => 'attestationRound_schema',
+		'attestationRequest' => 'attestationRequest_schema',
 	];
 
 	/**

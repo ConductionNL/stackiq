@@ -7,8 +7,9 @@
 - **files**: `lib/Settings/register.d/owner-attestation.json`
 - **acceptance_criteria**:
   - GIVEN the merged register WHEN it is imported THEN attestationRound and attestationRequest exist with their lifecycle and notification rules
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Settings/OwnerAttestationFragmentTest.php`)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Settings/OwnerAttestationFragmentTest.php`)
+- Note: the two schemas live in `lib/Settings/softwarecatalogus_register.json`, not in a `register.d` fragment: `ReviewModerationOverlayReachesTheSchemaTest` requires a fragment to overlay a schema the base register declares. The request also carries the round's `deadline` and `scopeOrganisation`, so the reminder filter and the maintainers' read rule work on the request itself.
 
 ### Task 2: Start a round
 - **spec_ref**: openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
@@ -16,8 +17,9 @@
 - **acceptance_criteria**:
   - GIVEN four usages with owners and one without WHEN an organisation admin starts a round THEN four requests exist and one entry is reported unassigned
   - GIVEN a user who is not an organisation admin WHEN they post a round THEN the answer is 403
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Service/AttestationServiceTest.php`, `tests/Unit/Controller/AttestationControllerTest.php`)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Service/AttestationServiceTest.php`, `tests/Unit/Controller/AttestationControllerTest.php`)
+- Note: the access rule is `AttestationRoundAccess` (admin, or `maintainer` and a member of the organisation per OpenRegister); owners resolve through `MaintenanceRecipientService::contactUserIds()`. Services are autowired, so `Application.php` needed no change.
 
 ### Task 3: Confirm, correct and overdue
 - **spec_ref**: openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
