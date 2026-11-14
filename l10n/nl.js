@@ -745,6 +745,8 @@ OC.L10N.register(
         "Module versions": "Moduleversies",
         "Documentation": "Documentatie",
         "Features & roadmap": "Functies en roadmap",
+        "Features and roadmap": "Functies en roadmap",
+        "Extensions": "Uitbreidingen",
         "Flows": "Flows",
         "Organisation relationships": "Organisatierelaties",
         "No services registered for this organisation yet": "Nog geen diensten geregistreerd voor deze organisatie",

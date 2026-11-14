@@ -32,6 +32,7 @@ import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import FacetedCatalogIndexView from './views/FacetedCatalogIndexView.vue'
+import FeaturesRoadmapTabs from './views/FeaturesRoadmapTabs.vue'
 import KwetsbaarhedenView from './views/KwetsbaarhedenView.vue'
 import LicensePostureView from './views/LicensePostureView.vue'
 import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
@@ -209,4 +210,10 @@ export default {
 	// bodyWidgets, same escape hatch as ContractApprovalPanel).
 	// @spec openspec/specs/catalog-ratings/spec.md#requirement-module-and-dienst-detail-pages-must-display-an-aggregate-rating-computed-only-from-approved-reviews
 	ReviewsPanel,
+	// --- Features and roadmap with its Extensions tab (features-roadmap-page). ---
+	// The library's roadmap and store pages are one page type each; this puts
+	// both under one page as two tabs, so the footer Store entry and the
+	// roadmap are one place. Both halves stay the library components.
+	// @spec openspec/changes/features-roadmap-page/specs/features-roadmap/spec.md#requirement-the-uitbreidingen-tab-lists-the-extensions-from-the-store-req-frm-002
+	FeaturesRoadmapTabs,
 }
