@@ -23,8 +23,10 @@ import OrganisatieCard from './components/cards/OrganisatieCard.vue'
 import ApplicationContractsPanel from './components/contracts/ApplicationContractsPanel.vue'
 import ContractApprovalPanel from './components/contracts/ContractApprovalPanel.vue'
 import ContractSeatsPanel from './components/contracts/ContractSeatsPanel.vue'
+import ClaimedUsageList from './components/organisations/ClaimedUsageList.vue'
 import ContactPersonName from './components/organisations/ContactPersonName.vue'
 import OrganisationMergePanel from './components/organisations/OrganisationMergePanel.vue'
+import ClaimAnswerNotice from './components/portfolio/ClaimAnswerNotice.vue'
 import UsageRiskSignals from './components/portfolio/UsageRiskSignals.vue'
 import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
 import ProductRoadmap from './components/roadmap/ProductRoadmap.vue'
@@ -125,6 +127,10 @@ export default {
 	// leveranciersovername). Rendered as an OrganisatieDetail bodyWidget.
 	// No built-in widget expresses a cross-object relation re-pointing action.
 	OrganisationMergePanel,
+	// Claimed usage of a supplier's offering, with Accept and Decline (supplier-accepts-claimed-usage).
+	ClaimedUsageList,
+	// On a usage page, the supplier's decline of the claim (supplier-accepts-claimed-usage).
+	ClaimAnswerNotice,
 
 	// --- Lib gap: CVSS-derived severity index + severity-band quick filters. ---
 	// The Vulnerabilities index shows a DERIVED severity band (from cvssScore),

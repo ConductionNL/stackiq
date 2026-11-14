@@ -253,6 +253,139 @@
                 ]
             }
         },
+        "/aanbod/claimed": {
+            "get": {
+                "operationId": "claimed-usage-index",
+                "summary": "The usages other organisations claim of the active organisation's products",
+                "description": "Lists the unanswered usages whose provider is the active organisation and that another organisation owns, with the claiming organisation, product, version and claim date. `organisation` names the active organisation the claims are of.",
+                "tags": [
+                    "aanbod"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The claims",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                }
+            }
+        },
+        "/aanbod/claimed/{uuid}/accept": {
+            "put": {
+                "operationId": "claimed-usage-accept",
+                "summary": "Accept a usage claimed of the active organisation's product",
+                "description": "Records `providerResponse: accepted` with date and user on the usage. Only the usage's provider may answer; anyone else gets 403 and nothing is written. The usage is not deleted.",
+                "tags": [
+                    "aanbod"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The answered usage",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The usage.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/aanbod/claimed/{uuid}/decline": {
+            "put": {
+                "operationId": "claimed-usage-decline",
+                "summary": "Decline a usage claimed of the active organisation's product",
+                "description": "Records `providerResponse: declined` with date and user on the usage, which stays the claiming organisation's record. Only the usage's provider may answer; anyone else gets 403 and nothing is written.",
+                "tags": [
+                    "aanbod"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The answered usage",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The usage.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
         "/aangeboden-gebruik/afnemer": {
             "get": {
                 "operationId": "aangeboden-gebruik-get-gebruiks-where-afnemer",

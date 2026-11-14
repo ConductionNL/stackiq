@@ -67,6 +67,7 @@
 					{ "id": "5", "widgetId": "gb-service-desk", "gridX": 8, "gridY": 8, "gridWidth": 4, "gridHeight": 5 }
 				],
 				"bodyWidgets": [
+					{ "id": "gb-claim-answer", "component": "ClaimAnswerNotice", "props": { "objectId": "@objectId" }, "placement": "after-data", "colSpan": 12 },
 					{ "id": "gb-risk-signals", "component": "UsageRiskSignals", "props": { "objectId": "@objectId" }, "placement": "after-data", "colSpan": 12 }
 				],
 				"sidebar": {

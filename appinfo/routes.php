@@ -215,6 +215,10 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
 
         // Aanbod API endpoints for managing offers (gebruik, dienst, module, koppeling)
         ['name' => 'aanbod#getAanbod', 'url' => '/api/aanbod', 'verb' => 'GET'],
+        // Usages other organisations claim of the active organisation's products (supplier-accepts-claimed-usage).
+        ['name' => 'claimedUsage#index', 'url' => '/api/aanbod/claimed', 'verb' => 'GET'],
+        ['name' => 'claimedUsage#accept', 'url' => '/api/aanbod/claimed/{uuid}/accept', 'verb' => 'PUT'],
+        ['name' => 'claimedUsage#decline', 'url' => '/api/aanbod/claimed/{uuid}/decline', 'verb' => 'PUT'],
         ['name' => 'aanbod#acceptAanbod', 'url' => '/api/aanbod/{uuid}/accept', 'verb' => 'PUT'],
         ['name' => 'aanbod#denyAanbod', 'url' => '/api/aanbod/{uuid}/deny', 'verb' => 'DELETE'],
 
