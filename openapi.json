@@ -44,6 +44,10 @@
             "description": "Controller for handling offered usage (aangeboden gebruik) API operations"
         },
         {
+            "name": "ask",
+            "description": "A question about the catalogue, answered from the entries the caller may read"
+        },
+        {
             "name": "cmdb-import",
             "description": "CMDB import and cancel, for Nextcloud admins only and CSRF-protected"
         },
@@ -138,6 +142,10 @@
         {
             "name": "setup",
             "description": "First-time setup wizard endpoints"
+        },
+        {
+            "name": "usage",
+            "description": "Connection suggestions of a usage: list, accept and dismiss, for the usage's own organisation"
         },
         {
             "name": "view",
@@ -2437,14 +2445,6 @@
                         "headers": {
                             "API-Version": {
                                 "$ref": "#/components/headers/API-Version"
-                            }
-                        },
-                        "content": {
-                            "application/json": {
-                                "schema": {
-                                    "type": "object",
-                                    "additionalProperties": true
-                                }
                             }
                         }
                     }
