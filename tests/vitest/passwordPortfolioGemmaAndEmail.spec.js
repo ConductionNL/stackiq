@@ -15,7 +15,7 @@ import { createHash } from 'node:crypto'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 const toasts = vi.hoisted(() => [])
-const http = vi.hoisted(() => ({ get: vi.fn() }))
+const http = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }))
 vi.mock('@nextcloud/axios', () => ({ default: http }))
 vi.mock('@nextcloud/dialogs', () => ({
 	showError: (m) => toasts.push(['error', m]),
@@ -68,6 +68,7 @@ const sha1 = (text) => createHash('sha1').update(text, 'utf8').digest('hex').toU
 beforeEach(() => {
 	toasts.length = 0
 	http.get.mockReset()
+	http.post.mockReset()
 	organisatie.changePassword.mockReset()
 	vi.spyOn(console, 'error').mockImplementation(() => {})
 	vi.spyOn(console, 'info').mockImplementation(() => {})
@@ -295,8 +296,9 @@ describe('EmailConfiguration', () => {
 
 	it('reads and writes the email settings through the store', async () => {
 		const s = section()
+		http.get.mockResolvedValue({ data: { template: 'Stored' } })
 		await EmailConfiguration.created.call(s)
-		expect([s.templates, s.loading, s.canSave, s.emailSettings]).toEqual([{}, false, true, { host: 'smtp' }])
+		expect([s.templates.organization_registration, s.loading, s.canSave, s.emailSettings]).toEqual(['Stored', false, true, { host: 'smtp' }])
 		s.emailSettings = { host: 'mail' }
 		expect(settingsStore.emailSettings).toEqual({ host: 'mail' })
 		await s.saveEmailSettings()
@@ -334,10 +336,13 @@ describe('EmailConfiguration', () => {
 		expect([s.getActiveTemplateName(), s.getActiveTemplateDescription(), s.getActiveTemplateVariables()]).toEqual(['', '', {}])
 	})
 
-	it('says templates are not saved on the server yet', async () => {
+	it('resets from the default and saves through the backend', async () => {
 		const s = section()
+		http.get.mockResolvedValue({ data: { template: 'Default' } })
+		http.post.mockResolvedValue({ data: { success: true, message: 'Saved' } })
 		await s.resetTemplate()
 		await s.saveTemplate()
-		expect([s.templateSaveResult, s.savingTemplate, toasts.map((e) => e[0])]).toEqual([{ success: true, message: 'Template saved locally (backend implementation pending)' }, false, ['success', 'success']])
+		expect(http.post.mock.calls[0][1]).toEqual({ template: 'Default' })
+		expect([s.templateSaveResult, s.savingTemplate, toasts]).toEqual([{ success: true, message: 'Saved' }, false, [['success', 'Saved']]])
 	})
 })
