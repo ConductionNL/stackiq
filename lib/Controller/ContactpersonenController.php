@@ -392,6 +392,8 @@ class ContactpersonenController extends Controller {
 	 * method is still longer than it should be and SHOULD be decomposed further (task 5 of
 	 * `method-decomposition` already carved out the permission check); that is a deliberate
 	 * follow-up rather than something to smuggle into a quality-gate-only change.
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function convertToUser(string $contactPersonId): JSONResponse {
 		$authError = $this->validateConvertToUserPermission();
@@ -1383,6 +1385,8 @@ class ContactpersonenController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/contactpersonen-api/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function disableUser(string $contactPersonId): JSONResponse {
 		$refusal = $this->validateConvertToUserPermission();
@@ -1436,6 +1440,8 @@ class ContactpersonenController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/contactpersonen-api/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function enableUser(string $contactPersonId): JSONResponse {
 		$refusal = $this->validateConvertToUserPermission();

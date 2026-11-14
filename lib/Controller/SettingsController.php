@@ -423,6 +423,8 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md#requirement-settingscontroller-settings-crud-endpoints-req-decomp-013
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function update(): JSONResponse {
 		try {
@@ -462,6 +464,8 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md#requirement-settingscontroller-settings-crud-endpoints-req-decomp-013
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function create(): JSONResponse {
 		return $this->update();
@@ -570,6 +574,8 @@ class SettingsController extends Controller {
 	 * @return JSONResponse General configuration
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function getGeneralConfig(): JSONResponse {
 		try {
@@ -596,6 +602,8 @@ class SettingsController extends Controller {
 	 * @return JSONResponse Update result
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateGeneralConfig(): JSONResponse {
 		try {
@@ -627,6 +635,8 @@ class SettingsController extends Controller {
 	 * @return JSONResponse Sync configuration
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function getSyncConfig(): JSONResponse {
 		try {
@@ -653,6 +663,8 @@ class SettingsController extends Controller {
 	 * @return JSONResponse Update result
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateSyncConfig(): JSONResponse {
 		try {
@@ -684,6 +696,8 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function load(): JSONResponse {
 		try {
@@ -703,6 +717,8 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function initialize(): JSONResponse {
 		try {
@@ -788,6 +804,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function autoConfigure(): JSONResponse {
 		try {
@@ -867,6 +885,8 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function debug(): JSONResponse {
 		if ($this->userSession->getUser() === null) {
@@ -898,6 +918,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function sendTestEmail(): JSONResponse {
 		try {
@@ -972,6 +994,8 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function performSync(int $minutesBack = 0): JSONResponse {
 		try {
@@ -1138,6 +1162,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function resetAutoConfig(): JSONResponse {
 		try {
@@ -1171,6 +1197,8 @@ class SettingsController extends Controller {
 	 * @NoCSRFRequired
 	 *
 	 * @spec openspec/specs/method-decomposition/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function clearCache(): JSONResponse {
 		try {
@@ -1210,6 +1238,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function manualImport(): JSONResponse {
 		try {
@@ -1269,6 +1299,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function forceUpdate(): JSONResponse {
 		try {
@@ -1341,6 +1373,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function consolidatedAutoConfigure(): JSONResponse {
 		try {
@@ -1536,6 +1570,8 @@ class SettingsController extends Controller {
 	 *
 	 * @SuppressWarnings(PHPMD.Superglobals)
 	 * @spec                                 openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function importArchiMate(): JSONResponse {
 		$refusal = $this->adminRefusal();
@@ -2067,6 +2103,8 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Current email settings (secrets redacted)
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function getEmailSettings(): JSONResponse {
 		$refusal = $this->adminRefusal();
@@ -2101,6 +2139,8 @@ class SettingsController extends Controller {
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
 	 * @spec   openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateEmailSettings(): JSONResponse {
 		$refusal = $this->adminRefusal();
@@ -2175,6 +2215,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec            openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function getEmailTemplate(string $templateName): JSONResponse {
 		if ($this->userSession->getUser() === null) {
@@ -2261,6 +2303,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec            openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function getEmailTemplateDefault(string $templateName): JSONResponse {
 		if ($this->userSession->getUser() === null) {
@@ -2294,6 +2338,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec            openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function getEmailTemplateVariables(string $templateName): JSONResponse {
 		if ($this->userSession->getUser() === null) {
@@ -2358,6 +2404,8 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function setGenericUserGroups(): JSONResponse {
 		$refusal = $this->adminRefusal();
@@ -2417,6 +2465,8 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function setOrganizationAdminGroups(): JSONResponse {
 		$refusal = $this->adminRefusal();
@@ -2476,6 +2526,8 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function setSuperUserGroups(): JSONResponse {
 		$refusal = $this->adminRefusal();
@@ -2542,6 +2594,8 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Clear result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function clearArchiMateImportStatus(): JSONResponse {
 		$refusal = $this->adminRefusal();
@@ -2576,6 +2630,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function killArchiMateImport(): JSONResponse {
 		$refusal = $this->adminRefusal();
@@ -2609,6 +2665,8 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Cancellation result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function cancelArchiMateImport(): JSONResponse {
 		$refusal = $this->adminRefusal();
@@ -2646,6 +2704,8 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Clear result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function clearArchiMateExportStatus(): JSONResponse {
 		$refusal = $this->adminRefusal();
@@ -2751,6 +2811,8 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateArchiMateConfig(): JSONResponse {
 		return $this->configCall(
@@ -2790,6 +2852,8 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateEmailConfig(): JSONResponse {
 		return $this->configCall(
@@ -2821,6 +2885,8 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateAmefConfig(): JSONResponse {
 		return $this->configCall(
@@ -2852,6 +2918,8 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateVoorzieningenConfig(): JSONResponse {
 		return $this->configCall(
@@ -2907,6 +2975,8 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse User groups configuration
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function getUserGroupsConfig(): JSONResponse {
 		return $this->adminRefusal() ?? $this->configCall(
@@ -2922,6 +2992,8 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateUserGroupsConfig(): JSONResponse {
 		return $this->adminRefusal() ?? $this->configCall(
@@ -3077,6 +3149,8 @@ class SettingsController extends Controller {
 	 *
 	 * @NoCSRFRequired
 	 * @spec           openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function bulkSyncStandards(): JSONResponse {
 		$refusal = $this->adminRefusal();
@@ -3166,6 +3240,8 @@ class SettingsController extends Controller {
 	 *
 	 * @return JSONResponse Update result
 	 * @spec   openspec/specs/settings-admin-controller/spec.md
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateCronjobConfig(): JSONResponse {
 		try {
@@ -3245,6 +3321,8 @@ class SettingsController extends Controller {
 	 * @return JSONResponse The current EOL sync configuration.
 	 *
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-products-are-mapped-to-endoflife-date-via-per-module-config
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function getEolSyncConfig(): JSONResponse {
 		try {
@@ -3267,6 +3345,8 @@ class SettingsController extends Controller {
 	 * @return JSONResponse The updated EOL sync configuration.
 	 *
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-products-are-mapped-to-endoflife-date-via-per-module-config
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function updateEolSyncConfig(): JSONResponse {
 		try {
@@ -3287,6 +3367,8 @@ class SettingsController extends Controller {
 	 * @return JSONResponse The resulting sync status.
 	 *
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-eol-sync-runs-on-a-schedule-with-a-manual-trigger
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function triggerEolSync(): JSONResponse {
 		try {
@@ -3318,6 +3400,8 @@ class SettingsController extends Controller {
 	 * @return JSONResponse The current EOL sync status.
 	 *
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-the-feature-degrades-gracefully-when-the-feed-is-unavailable
+	 *
+	 * @auth admin-only no access attribute: Nextcloud's default lets administrators only.
 	 */
 	public function getEolSyncStatus(): JSONResponse {
 		try {

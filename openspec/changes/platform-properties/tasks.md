@@ -9,8 +9,10 @@
   - GIVEN `appinfo/info.xml` WHEN read THEN an XML comment above `<licence>` cites REQ-PLAT-001
   - GIVEN `lib/AppInfo/Application.php` WHEN read THEN its class docblock cites REQ-PLAT-001 and REQ-PLAT-002
   - GIVEN the Store page and the History tabs in `src/manifest.json` WHEN read THEN their `_note` cites REQ-PLAT-007 and REQ-PLAT-006
-- [ ] Implement
-- [ ] Test (`tests/validate-manifest.js`)
+- [x] Implement
+  - Done: an XML comment above `<licence>` and the Application class docblock cite REQ-PLAT-001/002; the Store page `_note` cites REQ-PLAT-007 and every History tab carries a `_note` citing REQ-PLAT-006.
+- [x] Test (`tests/validate-manifest.js`)
+  - `node tests/validate-manifest.js` passes.
 
 ### Task 2: Checks that keep the properties true
 - **spec_ref**: openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-the-catalogue-runs-on-the-customers-own-nextcloud-req-plat-001
@@ -19,8 +21,10 @@
   - GIVEN `appinfo/info.xml` and `LICENSE` WHEN the test reads them THEN both name the EUPL-1.2 (REQ-PLAT-001)
   - GIVEN `appinfo/routes.php` WHEN the test parses every routed controller method THEN each carries a Nextcloud access attribute, so the REST API keeps the schema rules (REQ-PLAT-002)
   - GIVEN the merged manifest WHEN the vitest reads every page of type detail THEN each one declares a History tab with an `audit` widget (REQ-PLAT-006)
-- [ ] Implement
-- [ ] Test (PHPUnit `PlatformPropertiesTest`, vitest `manifestHistoryTabs.spec.js`)
+- [x] Implement
+  - Done. The route check accepts an access attribute or an `@auth admin-only` line; 45 settings and contact-person routes kept Nextcloud's admin-only default without saying so, and now carry that line (no behaviour change).
+- [x] Test (PHPUnit `PlatformPropertiesTest`, vitest `manifestHistoryTabs.spec.js`)
+  - `tests/Unit/AppInfo/PlatformPropertiesTest.php` (3) and `tests/vitest/manifestHistoryTabs.spec.js` (15, every detail page of the merged manifest).
 
 ### Task 3: No hard-coded colours
 - **spec_ref**: openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-the-look-comes-from-the-theme-not-the-code-req-plat-003
