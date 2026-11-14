@@ -1,0 +1,623 @@
+{
+  "components": {
+    "registers": {
+      "stackiq": {
+        "schemas": [
+          "process",
+          "processStep"
+        ],
+        "configuration": {
+          "schemas": {
+            "process": {
+              "magicMapping": true,
+              "autoCreateTable": true
+            },
+            "processStep": {
+              "magicMapping": true,
+              "autoCreateTable": true
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "process": {
+        "slug": "process",
+        "title": "Business process",
+        "description": "A business process of the organisation, with its owner, status and the GEMMA reference process it follows. Its steps are processStep objects.",
+        "type": "object",
+        "version": "0.1.0",
+        "required": [
+          "name"
+        ],
+        "authorization": {
+          "create": [
+            "software-catalog-admins",
+            "organisatie-beheerder",
+            "organisaties-beheerder",
+            "functioneel-beheerder",
+            "gebruik-beheerder",
+            "aanbod-beheerder"
+          ],
+          "read": [
+            {
+              "group": "software-catalog-admins",
+              "crossOrganisation": true
+            },
+            {
+              "group": "organisatie-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisaties-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "functioneel-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
+          ],
+          "update": [
+            "software-catalog-admins",
+            {
+              "group": "organisatie-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisaties-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "functioneel-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
+          ],
+          "delete": [
+            "software-catalog-admins",
+            {
+              "group": "organisatie-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisaties-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "functioneel-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
+          ]
+        },
+        "configuration": {
+          "objectNameField": "name",
+          "objectDescriptionField": "description",
+          "allowFiles": true,
+          "autoPublish": false,
+          "jsonld": {
+            "type": "https://schema.org/HowTo"
+          },
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "draft",
+            "final": [],
+            "transitions": {
+              "activate": {
+                "from": [
+                  "draft"
+                ],
+                "to": "active",
+                "description": "Take the process into use."
+              },
+              "retire": {
+                "from": [
+                  "active"
+                ],
+                "to": "retired",
+                "description": "Retire the process."
+              },
+              "reopen": {
+                "from": [
+                  "retired"
+                ],
+                "to": "draft",
+                "description": "Reopen a retired process as a draft."
+              }
+            }
+          }
+        },
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "The name of the business process.",
+            "facetable": false,
+            "order": 1,
+            "table": {
+              "default": true
+            }
+          },
+          "description": {
+            "type": "string",
+            "format": "markdown",
+            "title": "Description",
+            "description": "What the process does, from its start to its result.",
+            "facetable": false,
+            "order": 2
+          },
+          "processOwner": {
+            "type": "object",
+            "title": "Process owner",
+            "description": "The person in the organisation responsible for the process.",
+            "facetable": false,
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/contactPerson",
+            "order": 3,
+            "table": {
+              "default": true
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "active",
+              "retired"
+            ],
+            "x-enum-labels": {
+              "draft": "Draft",
+              "active": "Active",
+              "retired": "Retired"
+            },
+            "default": "draft",
+            "title": "Status",
+            "description": "Draft while the process is described, active while it is followed, retired when it no longer is.",
+            "facetable": true,
+            "order": 4,
+            "table": {
+              "default": true
+            }
+          },
+          "referenceProcess": {
+            "type": "object",
+            "title": "GEMMA reference process",
+            "description": "The GEMMA reference process this process follows.",
+            "facetable": true,
+            "objectConfiguration": {
+              "handling": "related-object",
+              "queryParams": "type=BusinessProcess"
+            },
+            "$ref": "#/components/schemas/element",
+            "order": 5
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "title": "Tags",
+            "description": "Free tags to group processes.",
+            "facetable": true,
+            "order": 6,
+            "table": {
+              "default": true
+            }
+          }
+        }
+      },
+      "processStep": {
+        "slug": "processStep",
+        "title": "Process step",
+        "description": "One step of a business process: its place in the order, the applications in use that support it, its risk level and its compliance check.",
+        "type": "object",
+        "version": "0.1.0",
+        "required": [
+          "process",
+          "name",
+          "position"
+        ],
+        "authorization": {
+          "create": [
+            "software-catalog-admins",
+            "organisatie-beheerder",
+            "organisaties-beheerder",
+            "functioneel-beheerder",
+            "gebruik-beheerder",
+            "aanbod-beheerder"
+          ],
+          "read": [
+            {
+              "group": "software-catalog-admins",
+              "crossOrganisation": true
+            },
+            {
+              "group": "organisatie-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisaties-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "functioneel-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
+          ],
+          "update": [
+            "software-catalog-admins",
+            {
+              "group": "organisatie-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisaties-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "functioneel-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
+          ],
+          "delete": [
+            "software-catalog-admins",
+            {
+              "group": "organisatie-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "organisaties-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "functioneel-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "gebruik-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            }
+          ]
+        },
+        "configuration": {
+          "objectNameField": "name",
+          "objectDescriptionField": "description",
+          "allowFiles": true,
+          "autoPublish": false,
+          "jsonld": {
+            "type": "https://schema.org/HowToStep"
+          }
+        },
+        "properties": {
+          "process": {
+            "type": "object",
+            "title": "Process",
+            "description": "The business process this step belongs to.",
+            "facetable": true,
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/process",
+            "required": true,
+            "order": 1,
+            "table": {
+              "default": true
+            }
+          },
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "The name of the step.",
+            "facetable": false,
+            "order": 2,
+            "table": {
+              "default": true
+            }
+          },
+          "description": {
+            "type": "string",
+            "format": "markdown",
+            "title": "Description",
+            "description": "What happens in this step.",
+            "facetable": false,
+            "order": 3
+          },
+          "stepType": {
+            "type": "string",
+            "enum": [
+              "task",
+              "event",
+              "decision"
+            ],
+            "x-enum-labels": {
+              "task": "Task",
+              "event": "Event",
+              "decision": "Decision"
+            },
+            "default": "task",
+            "title": "Step type",
+            "description": "A task is work, an event starts or ends something, a decision chooses a way.",
+            "facetable": true,
+            "order": 4,
+            "table": {
+              "default": true
+            }
+          },
+          "position": {
+            "type": "integer",
+            "minimum": 1,
+            "title": "Position",
+            "description": "The order of the step within its process, starting at 1.",
+            "facetable": false,
+            "order": 5,
+            "table": {
+              "default": true
+            }
+          },
+          "follows": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "title": "Follows",
+            "description": "The steps this step follows. Empty means the step before it by position.",
+            "facetable": false,
+            "order": 6
+          },
+          "usages": {
+            "type": "array",
+            "title": "Supporting applications",
+            "description": "The applications in use that support this step.",
+            "facetable": true,
+            "items": {
+              "type": "object",
+              "objectConfiguration": {
+                "handling": "related-object"
+              },
+              "$ref": "#/components/schemas/usage"
+            },
+            "order": 7
+          },
+          "riskLevel": {
+            "type": "string",
+            "enum": [
+              "not assessed",
+              "low",
+              "medium",
+              "high"
+            ],
+            "x-enum-labels": {
+              "not assessed": "Not assessed",
+              "low": "Low",
+              "medium": "Medium",
+              "high": "High"
+            },
+            "default": "not assessed",
+            "title": "Risk level",
+            "description": "How much can go wrong in this step.",
+            "facetable": true,
+            "order": 8,
+            "table": {
+              "default": true
+            }
+          },
+          "riskNote": {
+            "type": "string",
+            "title": "Risk note",
+            "description": "Why the step has this risk level.",
+            "facetable": false,
+            "order": 9
+          },
+          "complianceCheck": {
+            "type": "string",
+            "enum": [
+              "not checked",
+              "compliant",
+              "not compliant",
+              "not applicable"
+            ],
+            "x-enum-labels": {
+              "not checked": "Not checked",
+              "compliant": "Compliant",
+              "not compliant": "Not compliant",
+              "not applicable": "Not applicable"
+            },
+            "default": "not checked",
+            "title": "Compliance check",
+            "description": "The outcome of the last compliance check of this step.",
+            "facetable": true,
+            "order": 10,
+            "table": {
+              "default": true
+            }
+          },
+          "complianceNote": {
+            "type": "string",
+            "title": "Compliance note",
+            "description": "What the compliance check found.",
+            "facetable": false,
+            "order": 11
+          },
+          "checkedOn": {
+            "type": "string",
+            "format": "date",
+            "title": "Checked on",
+            "description": "When the compliance check was last done.",
+            "facetable": false,
+            "order": 12
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "process",
+          "slug": "seed-proces-vergunningaanvraag",
+          "version": "0.1.0"
+        },
+        "name": "Behandelen vergunningaanvraag",
+        "description": "Van intake tot besluit op een aanvraag voor een vergunning.",
+        "status": "active",
+        "referenceProcess": "01f2e505-8245-44e5-860c-336a831eaae9",
+        "tags": [
+          "vergunningen"
+        ]
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "processStep",
+          "slug": "seed-stap-intake",
+          "version": "0.1.0"
+        },
+        "process": "@ref:process:seed-proces-vergunningaanvraag",
+        "name": "Intake vergunningaanvraag",
+        "stepType": "event",
+        "position": 1,
+        "usages": [
+          "@ref:usage:gebruik-topdesk-gem-leiden-deelnemers"
+        ],
+        "riskLevel": "low",
+        "complianceCheck": "compliant"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "processStep",
+          "slug": "seed-stap-toetsen",
+          "version": "0.1.0"
+        },
+        "process": "@ref:process:seed-proces-vergunningaanvraag",
+        "name": "Toetsen indieningsvereisten",
+        "stepType": "task",
+        "position": 2,
+        "usages": [],
+        "riskLevel": "medium",
+        "complianceCheck": "not checked"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "processStep",
+          "slug": "seed-stap-besluiten",
+          "version": "0.1.0"
+        },
+        "process": "@ref:process:seed-proces-vergunningaanvraag",
+        "name": "Besluiten vergunningaanvraag",
+        "stepType": "decision",
+        "position": 3,
+        "usages": [],
+        "riskLevel": "high",
+        "complianceCheck": "not compliant",
+        "complianceNote": "Besluit wordt nog niet gearchiveerd volgens de selectielijst."
+      }
+    ]
+  }
+}

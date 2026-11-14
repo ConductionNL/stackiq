@@ -88,6 +88,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 	 * @param SymfonyEmailService $_emailService Email service.
 	 * @param IConfig $config Config interface.
 	 * @param RoleGroupMap|null $roleGroupMap The catalogue role map; null reads it from the same app config.
+	 * @param ContactPersonEmail|null $contactPersonEmail Resolves the email address from the linked Nextcloud contact.
 	 *
 	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
 	 */
@@ -102,9 +103,30 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 		private readonly SymfonyEmailService $_emailService,
 		private readonly IConfig $config,
 		?RoleGroupMap $roleGroupMap = null,
+		private readonly ?ContactPersonEmail $contactPersonEmail = null,
 	) {
 		$this->roleGroupMap = $roleGroupMap ?? new RoleGroupMap(appConfig: $_config);
 	}//end __construct()
+
+	/**
+	 * The email address a contact person's account is made for.
+	 *
+	 * The linked Nextcloud contact's address when an email resolver is wired,
+	 * otherwise the address on the record.
+	 *
+	 * @param array<string, mixed> $contactData The contact person's properties.
+	 *
+	 * @return string The email address, or '' when there is none.
+	 *
+	 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contactpersoon-sync/spec.md
+	 */
+	private function contactPersonEmail(array $contactData): string {
+		if ($this->contactPersonEmail !== null) {
+			return $this->contactPersonEmail->of(contactData: $contactData);
+		}
+
+		return (string)($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+	}//end contactPersonEmail()
 
 	/**
 	 * Gets the OpenRegister ObjectService if available
@@ -318,7 +340,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 			/* @var array<string, mixed> $objectData */
 			$objectData = $contactPersonObject->getObject();
 			$contactId = $contactPersonObject->getId();
-			$email = $objectData['email'] ?? $objectData['e-mailadres'] ?? '';
+			$email = $this->contactPersonEmail(contactData: $objectData);
 			$organizationUuid = $objectData['organisation'] ?? $objectData['organization'] ?? '';
 
 			$this->_logger->debug(
