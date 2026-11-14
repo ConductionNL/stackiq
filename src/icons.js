@@ -36,6 +36,7 @@ import Database from 'vue-material-design-icons/Database.vue'
 import Domain from 'vue-material-design-icons/Domain.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import EyeOutline from 'vue-material-design-icons/EyeOutline.vue'
+import FileCertificateOutline from 'vue-material-design-icons/FileCertificateOutline.vue'
 import FileDocument from 'vue-material-design-icons/FileDocument.vue'
 import FileDocumentEdit from 'vue-material-design-icons/FileDocumentEdit.vue'
 import FileSign from 'vue-material-design-icons/FileSign.vue'
@@ -99,6 +100,7 @@ export default {
 	Domain,
 	Eye,
 	EyeOutline,
+	FileCertificateOutline,
 	FileDocument,
 	FileDocumentEdit,
 	FileSign,

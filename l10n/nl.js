@@ -1333,7 +1333,21 @@ OC.L10N.register(
         "Gap, fillable": "Gat, te vullen",
         "Gap": "Gat",
         "Licence": "Licentie",
-        "Software catalogue": "Softwarecatalogus"
+        "Software catalogue": "Softwarecatalogus",
+        "Compliance documents": "Compliancedocumenten",
+        "Compliance document": "Compliancedocument",
+        "The compliance documents about applications that you may read, with who published them and how long they are valid.": "De compliancedocumenten over applicaties die u mag lezen, met wie ze heeft gepubliceerd en hoe lang ze geldig zijn.",
+        "Publish a compliance document": "Compliancedocument publiceren",
+        "No compliance documents you may read for this application yet": "Nog geen compliancedocumenten die u mag lezen voor deze applicatie",
+        "Valid until": "Geldig tot",
+        "Audience": "Doelgroep",
+        "Publisher": "Uitgever",
+        "Processing agreements": "Verwerkersovereenkomsten",
+        "Pentest reports": "Pentestrapporten",
+        "Assurance reports": "Assurancerapporten",
+        "Certificates": "Certificaten",
+        "ENSIA statements": "ENSIA-verklaringen",
+        "Document": "Document"
     },
     "nplurals=2; plural=(n != 1);"
 )
