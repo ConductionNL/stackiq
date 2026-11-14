@@ -2309,7 +2309,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 */
 	private function searchPage(array $query, array $lens): array {
 		$page = $this->coordinates()['objectService']->searchObjects(
-			query: array_merge($query, $lens),
+			query: SearchBounds::bounded(query: array_merge($query, $lens)),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -3177,7 +3177,7 @@ class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	 */
 	private function lensResults(array $coordinates, array $query): array {
 		$results = $coordinates['objectService']->searchObjects(
-			query: $query,
+			query: SearchBounds::bounded(query: $query),
 			_rbac: false,
 			_multitenancy: false
 		);
