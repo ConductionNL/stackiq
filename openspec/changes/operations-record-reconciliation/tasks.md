@@ -8,8 +8,8 @@
 - **acceptance_criteria**:
   - GIVEN the merged register WHEN module and catalogService are read THEN both carry x-openregister-dedup and x-openregister-merge in configuration, recordStatus and mergedInto in properties, and higher versions
   - GIVEN existing rows WHEN the repair step runs THEN every module and service has recordStatus Active
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Settings/ReconciliationDeclarationTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Settings/ReconciliationDeclarationTest.php)
 
 ### Task 2: Share one reference map and complete the organisation merge
 - **spec_ref**: openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
@@ -17,8 +17,8 @@
 - **acceptance_criteria**:
   - GIVEN the merged register WHEN every $ref to module, catalogService or organization is collected THEN the map lists each one, and the test fails for a missing one
   - GIVEN an organisation merge WHEN it runs in dry run or execute THEN module.provider, catalogService.provider, usage.provider, organization.deelnames, organization.participants and model.organizations are counted and re-pointed
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Service/CatalogueReferenceMapTest.php and tests/Unit/Service/MergeOrganisatieServiceTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Service/CatalogueReferenceMapTest.php and tests/Unit/Service/MergeOrganisatieServiceTest.php)
 
 ### Task 3: Re-point references after OpenRegister merges applications or services
 - **spec_ref**: openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-003-after-openregister-merges-two-applications-or-services-every-catalogue-reference-shall-point-at-the-survivor
@@ -28,8 +28,8 @@
   - GIVEN an array holding both uuids WHEN the listener runs THEN it holds the survivor once
   - GIVEN an event for another schema WHEN the listener runs THEN it changes nothing
   - GIVEN a moved reference WHEN the listener finishes THEN one audit entry names it with the merge operation id
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/EventListener/CatalogueMergeRelinkerTest.php, constructing the real OpenRegister event class)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/EventListener/CatalogueMergeRelinkerTest.php, constructing the real OpenRegister event class)
 
 ### Task 4: Hide merged records and add the banner and the Find duplicates action
 - **spec_ref**: openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
@@ -39,6 +39,7 @@
   - GIVEN a Merged module WHEN its detail page opens THEN the banner links to the survivor
   - GIVEN an admin or functional administrator WHEN /modules, /diensten or /organisaties opens THEN Find duplicates opens OpenRegister's Duplicate candidates page, and other users do not see it
 - [ ] Implement
+  - Done: `FacetService` leaves Merged records out of the lists and facet counts (`FacetServiceMergedTest`). Open: the `MergedRecordBanner` widget on the detail page and the Find duplicates action on `/modules`, `/diensten` and `/organisaties`.
 - [ ] Test (PHPUnit tests/Unit/Service/FacetServiceTest.php and Playwright tests/e2e/spec-coverage/record-reconciliation.spec.ts)
 
 ### Task 5: Remove the unused merge modal, seed a duplicate and document the flow
@@ -49,6 +50,7 @@
   - GIVEN a fresh demo import WHEN OpenRegister's candidates page is opened for applications THEN the seeded pair is listed
   - GIVEN the docs WHEN a reader opens the feature page THEN it shows the steps with screenshots and says what a reversal does not restore yet
 - [ ] Implement
+  - Open: removing `MergeObject.vue` and `mergeObjects`, the seeded duplicate and the docs page.
 - [ ] Test (Playwright tests/e2e/spec-coverage/record-reconciliation.spec.ts against the demo data)
 
 ## Verification

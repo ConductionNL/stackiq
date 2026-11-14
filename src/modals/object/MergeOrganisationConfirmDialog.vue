@@ -122,7 +122,7 @@ export default {
 			default: '',
 		},
 
-		/** Dry-run `counts` object, keyed as MergeOrganisatieService counts: `{usage, contactPerson, aanbod, module, catalogService, catalogContract, compliancy, moduleOwnership, catalogServiceOwnership, groupMembers}`. */
+		/** Dry-run `counts` object, keyed as MergeOrganisatieService counts: `{usage, contactPerson, aanbod, module, catalogService, usageProvider, organizationDeelnames, organizationParticipants, catalogContractSupplier, modelOrganizations, aiSystemProvider, catalogContract, compliancy, moduleOwnership, catalogServiceOwnership, groupMembers}`. */
 		counts: {
 			type: Object,
 			default: () => ({}),
@@ -160,6 +160,13 @@ export default {
 				moduleOwnership: t('stackiq', 'Applications managed'),
 				catalogServiceOwnership: t('stackiq', 'Services managed'),
 				compliancy: t('stackiq', 'Compliance records'),
+				// operations-record-reconciliation REQ-RRC-005: the references the merge now also moves.
+				usageProvider: t('stackiq', 'Usage records as supplier'),
+				organizationDeelnames: t('stackiq', 'Participations'),
+				organizationParticipants: t('stackiq', 'Participants'),
+				catalogContractSupplier: t('stackiq', 'Contracts as supplier'),
+				modelOrganizations: t('stackiq', 'Models'),
+				aiSystemProvider: t('stackiq', 'AI systems supplied'),
 				groupMembers: t('stackiq', 'Group members'),
 			}
 

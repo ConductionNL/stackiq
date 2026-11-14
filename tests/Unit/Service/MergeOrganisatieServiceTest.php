@@ -107,6 +107,13 @@ class MergeOrganisatieServiceTest extends TestCase {
 				'aanbod' => 1,
 				'module' => 0,
 				'catalogService' => 0,
+				// operations-record-reconciliation REQ-RRC-005: every other organisation reference.
+				'usageProvider' => 0,
+				'organizationDeelnames' => 0,
+				'organizationParticipants' => 0,
+				'catalogContractSupplier' => 0,
+				'modelOrganizations' => 0,
+				'aiSystemProvider' => 0,
 				'catalogContract' => 1,
 				'compliancy' => 1,
 				'moduleOwnership' => 0,
@@ -662,6 +669,56 @@ class MergeOrganisatieServiceTest extends TestCase {
 		$this->assertSame('org-b', $this->findSave(schemaId: self::SCHEMA_IDS['module'], uuid: 'm2')['object']['@self']['organisation'] ?? null);
 		$this->assertSame('org-b', $this->findSave(schemaId: self::SCHEMA_IDS['catalogService'], uuid: 's2')['object']['@self']['organisation'] ?? null);
 	}//end testTheSuppliersApplicationsAndServicesMoveToTheTarget()
+
+	/**
+	 * The references the organisation merge missed before the shared map now
+	 * follow the target, in dry run and execute (REQ-RRC-005).
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-005-the-organisation-merge-must-re-point-every-reference-to-the-merged-organisation
+	 */
+	public function testTheReferencesTheMergeMissedNowFollowTheTarget(): void {
+		$organisations = [
+			'org-a' => $this->entity(['id' => 'org-a', 'status' => 'Active', 'group' => 'group-a']),
+			'org-b' => $this->entity(['id' => 'org-b', 'status' => 'Active', 'group' => 'group-b']),
+		];
+		$fixtures = [
+			'usage' => [
+				$this->entity(['id' => 'g1', 'consumer' => 'org-x', 'provider' => 'org-a'], uuid: 'g1'),
+			],
+			'organization' => [
+				$this->entity(['id' => 'o1', 'deelnames' => ['org-c', 'org-a'], 'participants' => ['org-a']], uuid: 'o1'),
+			],
+			'catalogContract' => [
+				$this->entity(['id' => 'c1', 'supplier' => 'org-a'], uuid: 'c1', organisation: 'org-x'),
+			],
+		];
+
+		$dryRun = $this->makeService(organisations: $organisations, typedFixtures: $fixtures, groupMembers: [])
+			->dryRun(sourceUuid: 'org-a', targetUuid: 'org-b');
+		$this->assertSame(0, $dryRun['counts']['usage']);
+		$this->assertSame(1, $dryRun['counts']['usageProvider']);
+		$this->assertSame(1, $dryRun['counts']['organizationDeelnames']);
+		$this->assertSame(1, $dryRun['counts']['organizationParticipants']);
+		$this->assertSame(1, $dryRun['counts']['catalogContractSupplier']);
+		$this->assertSame([], $this->savedCalls);
+
+		$this->makeService(organisations: $organisations, typedFixtures: $fixtures, groupMembers: [])
+			->execute(sourceUuid: 'org-a', targetUuid: 'org-b', actorUid: 'admin1');
+
+		$this->assertSame('org-b', $this->findSave(schemaId: self::SCHEMA_IDS['usage'], uuid: 'g1')['object']['provider'] ?? null);
+		$this->assertSame('org-b', $this->findSave(schemaId: self::SCHEMA_IDS['catalogContract'], uuid: 'c1')['object']['supplier'] ?? null);
+		$organisation = array_values(array_filter(
+			$this->savedCalls,
+			static fn (array $call): bool => $call['uuid'] === 'o1'
+		));
+		// One walk per list: the deelnames walk, then the participants walk,
+		// each saving the organisation (the double hands both the stored data).
+		$this->assertCount(2, $organisation, 'the organisation listing the source is re-pointed once per list');
+		$this->assertSame(['org-c', 'org-b'], $organisation[0]['object']['deelnames']);
+		$this->assertSame(['org-b'], $organisation[1]['object']['participants']);
+	}//end testTheReferencesTheMergeMissedNowFollowTheTarget()
 
 	/**
 	 * Build the full 5-type + group-member fixture set used by the parity tests.

@@ -409,8 +409,28 @@ class FacetService implements FacetServiceInterface {
 			$this->logPagingCeiling(schema: $request['schema']);
 		}
 
-		return $fetched['objects'];
+		return self::withoutMerged(objects: $fetched['objects']);
 	}//end fetchBaseObjects()
+
+	/**
+	 * The objects without those OpenRegister merged into another record, so
+	 * the lists and their facet counts leave them out. A merged record keeps
+	 * its own detail page.
+	 *
+	 * @param array<int, array<string, mixed>> $objects The normalised objects.
+	 *
+	 * @return array<int, array<string, mixed>>
+	 *
+	 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-004-merged-applications-and-services-shall-leave-the-lists-and-point-readers-to-the-survivor
+	 */
+	public static function withoutMerged(array $objects): array {
+		return array_values(
+			array_filter(
+				$objects,
+				static fn (array $object): bool => ($object['recordStatus'] ?? null) !== 'Merged'
+			)
+		);
+	}//end withoutMerged()
 
 	/**
 	 * The base query of a facet request: the configured register and schema,
