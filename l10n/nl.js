@@ -1333,7 +1333,16 @@ OC.L10N.register(
         "Gap, fillable": "Gat, te vullen",
         "Gap": "Gat",
         "Licence": "Licentie",
-        "Software catalogue": "Softwarecatalogus"
+        "Software catalogue": "Softwarecatalogus",
+        "Entry published": "Vermelding gepubliceerd",
+        "Entry withdrawn": "Vermelding ingetrokken",
+        "Not published": "Niet gepubliceerd",
+        "Publication date and time": "Publicatiedatum en -tijd",
+        "Publish now": "Nu publiceren",
+        "Publish on a date": "Op een datum publiceren",
+        "Published": "Gepubliceerd",
+        "Scheduled": "Gepland",
+        "Withdraw": "Intrekken"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -48,6 +48,12 @@ export async function runMassObjectAction(dialog, action) {
  */
 function applyMassResult(dialog, outcome) {
 	const { successful, failed, failedText } = outcome
+	// Entries the server refused with its own reason (publicationActions.js):
+	// the dialog lists each one with that reason (REQ-ODP-010).
+	const refused = failed.filter((f) => f && typeof f.message === 'string')
+	if (refused.length > 0) {
+		dialog.refused = refused
+	}
 	if (successful.length > 0) {
 		dialog.success = true
 		catalogStore.fetchPublications()

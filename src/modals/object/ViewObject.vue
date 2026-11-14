@@ -1872,22 +1872,6 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 					Add File
 				</NcButton>
 				<NcButton
-					v-if="shouldShowPublishAction(currentObject)"
-					@click="singlePublishObject">
-					<template #icon>
-						<Publish :size="20" />
-					</template>
-					Publish
-				</NcButton>
-				<NcButton
-					v-if="shouldShowDepublishAction(currentObject)"
-					@click="singleDepublishObject">
-					<template #icon>
-						<PublishOff :size="20" />
-					</template>
-					Depublish
-				</NcButton>
-				<NcButton
 					v-if="!isNewObject"
 					variant="error"
 					@click="singleDeleteObject">
@@ -1958,8 +1942,6 @@ import LockOutline from 'vue-material-design-icons/LockOutline.vue'
 import OpenInNew from 'vue-material-design-icons/OpenInNew.vue'
 import Pencil from 'vue-material-design-icons/Pencil.vue'
 import Plus from 'vue-material-design-icons/Plus.vue'
-import Publish from 'vue-material-design-icons/Publish.vue'
-import PublishOff from 'vue-material-design-icons/PublishOff.vue'
 import Tag from 'vue-material-design-icons/Tag.vue'
 import Upload from 'vue-material-design-icons/Upload.vue'
 import PaginationComponent from '../../components/PaginationComponent.vue'
@@ -2060,8 +2042,6 @@ export default {
 		Alert,
 		AlertCircle,
 		Plus,
-		Publish,
-		PublishOff,
 		Pencil,
 		ExclamationThick,
 		ArrowRight,
@@ -4159,64 +4139,6 @@ export default {
 		uploadFiles() {
 			// Open the upload files modal (same as in PublicationDetail.vue)
 			navigationStore.setDialog('uploadFiles')
-		},
-
-		/**
-		 * @param object
-		 * @spec openspec/specs/fe-object-modals/spec.md
-		 */
-		shouldShowPublishAction(object) {
-			if (!object || !object['@self']) return false
-			return (
-				object['@self'].published === null
-				|| object['@self'].published === undefined
-			)
-		},
-
-		/**
-		 * @param object
-		 * @spec openspec/specs/fe-object-modals/spec.md
-		 */
-		shouldShowDepublishAction(object) {
-			if (!object || !object['@self']) return false
-			return (
-				object['@self'].published !== null
-				&& object['@self'].published !== undefined
-			)
-		},
-
-		/**
-		 * @spec openspec/specs/fe-object-modals/spec.md
-		 */
-		singlePublishObject() {
-			if (!this.currentObject) return
-
-			// Set the single publication as selected object (as full object, not just ID)
-			const publicationObject = {
-				...this.currentObject,
-				id: this.currentObject['@self']?.id || this.currentObject.id,
-			}
-			objectStore.setSelectedObjects([publicationObject])
-
-			// Open the mass publish dialog
-			navigationStore.setDialog('massPublishObjects')
-		},
-
-		/**
-		 * @spec openspec/specs/fe-object-modals/spec.md
-		 */
-		singleDepublishObject() {
-			if (!this.currentObject) return
-
-			// Set the single publication as selected object (as full object, not just ID)
-			const publicationObject = {
-				...this.currentObject,
-				id: this.currentObject['@self']?.id || this.currentObject.id,
-			}
-			objectStore.setSelectedObjects([publicationObject])
-
-			// Open the mass depublish dialog
-			navigationStore.setDialog('massDepublishObjects')
 		},
 
 		/**

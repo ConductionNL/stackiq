@@ -38,6 +38,10 @@ import { objectStore } from '../../store/store.js'
 <script>
 import PublishOff from 'vue-material-design-icons/PublishOff.vue'
 import MassObjectDialog from './MassObjectDialog.vue'
+import {
+	publicationTarget,
+	runPublication,
+} from '../../services/publicationActions.js'
 
 export default {
 	name: 'MassDepublishObjects',
@@ -82,8 +86,14 @@ export default {
 		 */
 		massAction() {
 			return {
+				// Through stackiq's guarded publication endpoint, one call per
+				// entry, so its ownership guard runs for each (REQ-ODP-010).
 				run: () =>
-					objectStore.massDepublishObjects([...this.objectsToDepublish]),
+					runPublication(
+						'withdraw',
+						publicationTarget().objectType,
+						[...this.objectsToDepublish],
+					),
 
 				failedText: (count) =>
 					this.t('stackiq', 'Failed to depublish {count} objects', {

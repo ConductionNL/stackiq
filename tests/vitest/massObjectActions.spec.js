@@ -29,6 +29,15 @@ vi.mock('../../src/store/store.js', () => ({
 	objectStore: store.objectStore,
 }))
 
+// Publish and withdraw go through the guarded publication endpoint
+// (publish-and-lock-from-the-list); the fake answers like the store did and
+// is traced under its own name.
+vi.mock('../../src/services/publicationActions.js', () => ({
+	publicationTarget: () => ({ objectType: 'module' }),
+	runPublication: (kind, objectType, entries) =>
+		store.objectStore[`publication.${kind}`](objectType, entries),
+}))
+
 const { default: MassPublishObjects } =
 	await import('../../src/modals/object/MassPublishObjects.vue')
 const { default: MassDepublishObjects } =
@@ -47,8 +56,8 @@ const { default: MassObjectDialog } =
 const GOLDEN = path.resolve(import.meta.dirname, 'golden/massObjectActions.json')
 
 const dialogs = {
-	publish: [MassPublishObjects, 'massPublishObjects'],
-	depublish: [MassDepublishObjects, 'massDepublishObjects'],
+	publish: [MassPublishObjects, 'publication.publish'],
+	depublish: [MassDepublishObjects, 'publication.withdraw'],
 	lock: [MassLockObjects, 'massLockObjects'],
 	unlock: [MassUnlockObjects, 'massUnlockObjects'],
 	validate: [MassValidateObjects, 'massValidateObjects'],

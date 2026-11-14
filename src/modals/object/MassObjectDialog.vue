@@ -44,6 +44,14 @@ import { navigationStore, objectStore } from '../../store/store.js'
 		</NcNoteCard>
 		<NcNoteCard v-if="error" type="error">
 			<p>{{ error }}</p>
+			<ul
+				v-if="refused.length > 0"
+				class="mass-action-dialog__refused"
+				data-testid="mass-action-refused">
+				<li v-for="(item, index) in refused" :key="index">
+					<strong>{{ refusedName(item) }}</strong>: {{ item.message }}
+				</li>
+			</ul>
 		</NcNoteCard>
 
 		<template #actions>
@@ -119,6 +127,8 @@ export default {
 			result: null,
 			closeModalTimeout: null,
 			originalSelectedCount: 0,
+			// Entries the server refused, each with its reason (REQ-ODP-010).
+			refused: [],
 		}
 	},
 
@@ -160,6 +170,20 @@ export default {
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
+		/**
+		 * The name a refused entry is listed under.
+		 *
+		 * @param {{entry: object}} item A refused entry and its reason.
+		 * @return {string} The entry's name, else its id.
+		 * @spec openspec/changes/publish-and-lock-from-the-list/specs/open-data-publishing/spec.md#requirement-selected-entries-are-published-withdrawn-or-locked-together-from-the-list-req-odp-010
+		 */
+		refusedName(item) {
+			const entry = (item && item.entry) || {}
+			return String(
+				entry.name || entry.title || entry.id || entry['@self']?.id || '',
+			)
+		},
+
 		async runAction() {
 			await runMassObjectAction(this, this.action)
 		},
@@ -179,6 +203,12 @@ export default {
 </style>
 
 <style scoped>
+.mass-action-dialog__refused {
+	margin: 8px 0 0;
+	padding-inline-start: 20px;
+	list-style: disc;
+}
+
 /* Ensure mass action dialogs appear on top of other modals */
 .mass-action-dialog {
 	z-index: 10000 !important;

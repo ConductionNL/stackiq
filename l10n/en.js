@@ -1265,7 +1265,16 @@ OC.L10N.register(
         "Gap, fillable": "Gap, fillable",
         "Gap": "Gap",
         "Licence": "Licence",
-        "Software catalogue": "Software catalogue"
+        "Software catalogue": "Software catalogue",
+        "Entry published": "Entry published",
+        "Entry withdrawn": "Entry withdrawn",
+        "Not published": "Not published",
+        "Publication date and time": "Publication date and time",
+        "Publish now": "Publish now",
+        "Publish on a date": "Publish on a date",
+        "Published": "Published",
+        "Scheduled": "Scheduled",
+        "Withdraw": "Withdraw"
     },
     "nplurals=2; plural=(n != 1);"
 )

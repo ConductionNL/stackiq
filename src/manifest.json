@@ -503,6 +503,7 @@
 			"id": "ModuleDetail",
 			"route": "/modules/:id",
 			"type": "detail",
+			"actionsComponent": "PublicationAction",
 			"title": "Application",
 			"config": {
 				"register": "@resolve:voorzieningen_register",

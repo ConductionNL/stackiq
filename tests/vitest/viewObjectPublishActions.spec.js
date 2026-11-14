@@ -233,38 +233,25 @@ describe('ViewObject depublishObject', () => {
 })
 
 describe('ViewObject single-object actions', () => {
-	it('offers publish for an unpublished object and depublish for a published one', () => {
-		expect(methods.shouldShowPublishAction({ '@self': { published: null } })).toBe(true)
-		expect(methods.shouldShowPublishAction({ '@self': {} })).toBe(true)
-		expect(methods.shouldShowPublishAction({ '@self': { published: '2026-01-01' } })).toBe(false)
-		expect(methods.shouldShowPublishAction({ id: 'x' })).toBe(false)
-		expect(methods.shouldShowPublishAction(null)).toBe(false)
-
-		expect(methods.shouldShowDepublishAction({ '@self': { published: '2026-01-01' } })).toBe(true)
-		expect(methods.shouldShowDepublishAction({ '@self': { published: null } })).toBe(false)
-		expect(methods.shouldShowDepublishAction({ '@self': {} })).toBe(false)
-		expect(methods.shouldShowDepublishAction(undefined)).toBe(false)
+	it('no longer offers publish or depublish: the list selection strip and the entry page do (publish-and-lock-from-the-list task 3)', () => {
+		for (const removed of ['shouldShowPublishAction', 'shouldShowDepublishAction', 'singlePublishObject', 'singleDepublishObject']) {
+			expect(methods[removed]).toBeUndefined()
+		}
 	})
 
-	it.each([
-		['singlePublishObject', 'massPublishObjects'],
-		['singleDepublishObject', 'massDepublishObjects'],
-		['singleDeleteObject', 'massDeleteObject'],
-	])('%s selects the object under its @self id and opens %s', (method, dialog) => {
-		methods[method].call({ currentObject: { id: 'plain', title: 'T', '@self': { id: 'uuid' } } })
+	it('singleDeleteObject selects the object under its @self id and opens massDeleteObject', () => {
+		methods.singleDeleteObject.call({ currentObject: { id: 'plain', title: 'T', '@self': { id: 'uuid' } } })
 		expect(mocks.setSelectedObjects).toHaveBeenCalledWith([{ id: 'uuid', title: 'T', '@self': { id: 'uuid' } }])
-		expect(mocks.setDialog).toHaveBeenCalledWith(dialog)
+		expect(mocks.setDialog).toHaveBeenCalledWith('massDeleteObject')
 	})
 
 	it('selects the plain id without @self and does nothing without an object', () => {
-		methods.singlePublishObject.call({ currentObject: { id: 'plain' } })
+		methods.singleDeleteObject.call({ currentObject: { id: 'plain' } })
 		expect(mocks.setSelectedObjects).toHaveBeenCalledWith([{ id: 'plain' }])
 
 		mocks.setSelectedObjects.mockReset()
 		mocks.setDialog.mockReset()
-		for (const method of ['singlePublishObject', 'singleDepublishObject', 'singleDeleteObject']) {
-			methods[method].call({ currentObject: null })
-		}
+		methods.singleDeleteObject.call({ currentObject: null })
 		expect(mocks.setSelectedObjects).not.toHaveBeenCalled()
 		expect(mocks.setDialog).not.toHaveBeenCalled()
 	})
