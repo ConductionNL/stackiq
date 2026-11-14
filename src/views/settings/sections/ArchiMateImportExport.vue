@@ -22,10 +22,10 @@
 
 <template>
 	<AlwaysVisibleSection
-		name="ArchiMate Import/Export"
-		description="Import and export ArchiMate models to/from OpenRegister"
+		:name="t('stackiq', 'ArchiMate Import/Export')"
+		:description="t('stackiq', 'Import and export ArchiMate models to/from OpenRegister')"
 		:loading="store.loading"
-		loadingText="Preparing ArchiMate tools..."
+		:loadingText="t('stackiq', 'Preparing ArchiMate tools…')"
 		:hasInfoContent="true">
 		<!-- ArchiMate Operations Section -->
 		<div class="operations-section">
@@ -51,7 +51,7 @@
 						<span>{{
 							selectedFile
 								? selectedFile.name
-								: 'Choose ArchiMate XML file'
+								: t('stackiq', 'Choose ArchiMate XML file')
 						}}</span>
 						<span v-if="selectedFile" class="file-size">{{
 							formatFileSize(selectedFile.size)
@@ -69,16 +69,16 @@
 						class="success-results">
 						<!-- File Information -->
 						<div class="result-card">
-							<h5>File Information</h5>
+							<h5>{{ t('stackiq', 'File Information') }}</h5>
 							<div class="info-grid">
 								<div class="info-item">
-									<span class="label">File Name:</span>
+									<span class="label">{{ t('stackiq', 'File Name:') }}</span>
 									<span class="value">{{
 										importResult.file_info.name
 									}}</span>
 								</div>
 								<div class="info-item">
-									<span class="label">File Size:</span>
+									<span class="label">{{ t('stackiq', 'File Size:') }}</span>
 									<span class="value">{{
 										formatFileSize(importResult.file_info.size)
 									}}</span>
@@ -88,7 +88,7 @@
 
 						<!-- Performance Metrics -->
 						<div class="result-card">
-							<h5>Performance Metrics</h5>
+							<h5>{{ t('stackiq', 'Performance Metrics') }}</h5>
 							<div class="metrics-grid">
 								<div class="metric-item">
 									<div class="metric-value">
@@ -99,7 +99,7 @@
 											)
 										}}
 									</div>
-									<div class="metric-label">Total Time</div>
+									<div class="metric-label">{{ t('stackiq', 'Total Time') }}</div>
 								</div>
 								<div class="metric-item">
 									<div class="metric-value">
@@ -107,7 +107,7 @@
 											importResult.performance_metrics.objects_processed.toLocaleString()
 										}}
 									</div>
-									<div class="metric-label">Objects Processed</div>
+									<div class="metric-label">{{ t('stackiq', 'Objects Processed') }}</div>
 								</div>
 								<div class="metric-item">
 									<div class="metric-value">
@@ -118,7 +118,7 @@
 											)
 										}}/s
 									</div>
-									<div class="metric-label">Items per Second</div>
+									<div class="metric-label">{{ t('stackiq', 'Items per Second') }}</div>
 								</div>
 								<div class="metric-item">
 									<div class="metric-value">
@@ -129,17 +129,17 @@
 											)
 										}}
 									</div>
-									<div class="metric-label">Peak Memory</div>
+									<div class="metric-label">{{ t('stackiq', 'Peak Memory') }}</div>
 								</div>
 							</div>
 						</div>
 
 						<!-- Processing Breakdown -->
 						<div class="result-card">
-							<h5>Processing Breakdown</h5>
+							<h5>{{ t('stackiq', 'Processing Breakdown') }}</h5>
 							<div class="breakdown-list">
 								<div class="breakdown-item">
-									<span class="breakdown-label">XML Parsing</span>
+									<span class="breakdown-label">{{ t('stackiq', 'XML Parsing') }}</span>
 									<span class="breakdown-value">{{
 										formatTime(
 											importResult.performance_metrics
@@ -159,7 +159,7 @@
 								</div>
 								<div class="breakdown-item">
 									<span class="breakdown-label"
-										>Data Transformation</span
+										>{{ t('stackiq', 'Data Transformation') }}</span
 									>
 									<span class="breakdown-value">{{
 										formatTime(
@@ -180,7 +180,7 @@
 								</div>
 								<div class="breakdown-item">
 									<span class="breakdown-label"
-										>Database Save</span
+										>{{ t('stackiq', 'Database Save') }}</span
 									>
 									<span class="breakdown-value">{{
 										formatTime(
@@ -209,7 +209,7 @@
 								&& importResult.statistics.omschrijving
 							"
 							class="result-card">
-							<h5>Import Summary</h5>
+							<h5>{{ t('stackiq', 'Import Summary') }}</h5>
 							<div class="summary-grid">
 								<div class="summary-item created">
 									<div class="summary-number">
@@ -218,7 +218,7 @@
 												.total_objects_created
 										}}
 									</div>
-									<div class="summary-label">Created</div>
+									<div class="summary-label">{{ t('stackiq', 'Created') }}</div>
 								</div>
 								<div class="summary-item updated">
 									<div class="summary-number">
@@ -227,7 +227,7 @@
 												.total_objects_updated
 										}}
 									</div>
-									<div class="summary-label">Updated</div>
+									<div class="summary-label">{{ t('stackiq', 'Updated') }}</div>
 								</div>
 								<div class="summary-item unchanged">
 									<div class="summary-number">
@@ -236,7 +236,7 @@
 												.total_objects_unchanged
 										}}
 									</div>
-									<div class="summary-label">Unchanged</div>
+									<div class="summary-label">{{ t('stackiq', 'Unchanged') }}</div>
 								</div>
 								<button
 									type="button"
@@ -250,7 +250,7 @@
 										importResult.statistics.omschrijving
 											.total_errors === 0
 									"
-									:aria-label="`Show details for ${importResult.statistics.omschrijving.total_errors} import errors`"
+									:aria-label="n('stackiq', 'Show details for {count} import error', 'Show details for {count} import errors', importResult.statistics.omschrijving.total_errors, { count: importResult.statistics.omschrijving.total_errors })"
 									@click="showErrorDetails">
 									<div class="summary-number">
 										{{
@@ -258,14 +258,14 @@
 												.total_errors
 										}}
 									</div>
-									<div class="summary-label">Errors</div>
+									<div class="summary-label">{{ t('stackiq', 'Errors') }}</div>
 									<div
 										v-if="
 											importResult.statistics.omschrijving
 												.total_errors > 0
 										"
 										class="click-hint">
-										Click to view details
+										{{ t('stackiq', 'Click to view details') }}
 									</div>
 								</button>
 							</div>
@@ -280,10 +280,10 @@
 							class="error-details-modal">
 							<div class="error-details-content">
 								<div class="error-details-header">
-									<h5>Import Errors Details</h5>
+									<h5>{{ t('stackiq', 'Import Errors Details') }}</h5>
 									<NcButton
 										variant="tertiary-no-background"
-										aria-label="Close import error details"
+										:aria-label="t('stackiq', 'Close import error details')"
 										@click="hideErrorDetails">
 										<template #icon>
 											<Close :size="20" />
@@ -300,7 +300,7 @@
 													.total_count
 											}}</span>
 											<span class="stat-label"
-												>Total Errors</span
+												>{{ t('stackiq', 'Total Errors') }}</span
 											>
 										</div>
 										<div class="stat-item">
@@ -311,7 +311,7 @@
 												).length
 											}}</span>
 											<span class="stat-label"
-												>Affected Sections</span
+												>{{ t('stackiq', 'Affected Sections') }}</span
 											>
 										</div>
 									</div>
@@ -325,7 +325,7 @@
 											.length > 0
 									"
 									class="common-errors-section">
-									<h6>Most Common Issues</h6>
+									<h6>{{ t('stackiq', 'Most Common Issues') }}</h6>
 									<div class="common-errors-list">
 										<div
 											v-for="error in importResult.detailed_errors.omschrijving.slice(
@@ -346,9 +346,8 @@
 												<div class="error-meta">
 													<span class="error-count"
 														>{{
-															error.total_count
-														}}
-														occurrences</span
+															n('stackiq', '{count} occurrence', '{count} occurrences', error.total_count, { count: error.total_count })
+														}}</span
 													>
 													<span
 														v-if="
@@ -358,11 +357,8 @@
 																.length > 0
 														"
 														class="affected-sections">
-														in
 														{{
-															error.affected_sections.join(
-																', ',
-															)
+															t('stackiq', 'in {sections}', { sections: error.affected_sections.join(', ') })
 														}}
 													</span>
 												</div>
@@ -373,7 +369,7 @@
 
 								<!-- Errors by Section -->
 								<div class="errors-by-section">
-									<h6>Errors by Section</h6>
+									<h6>{{ t('stackiq', 'Errors by Section') }}</h6>
 									<div class="section-errors-list">
 										<div
 											v-for="(
@@ -388,9 +384,8 @@
 												</h6>
 												<span class="section-error-count"
 													>{{
-														sectionData.total_errors
-													}}
-													errors</span
+														n('stackiq', '{count} error', '{count} errors', sectionData.total_errors, { count: sectionData.total_errors })
+													}}</span
 												>
 											</div>
 											<div class="section-error-details">
@@ -426,7 +421,7 @@
 														"
 														class="error-examples">
 														<span class="examples-label"
-															>Examples:</span
+															>{{ t('stackiq', 'Examples:') }}</span
 														>
 														<span
 															class="examples-list"
@@ -451,14 +446,14 @@
 						<NcNoteCard type="error">
 							<div class="error-header">
 								<AlertCircle :size="24" />
-								<h4>Import Failed</h4>
+								<h4>{{ t('stackiq', 'Import Failed') }}</h4>
 							</div>
 							<div class="error-details">
 								<!-- Configuration Error -->
 								<div
 									v-if="isConfigurationError(importError.message)"
 									class="configuration-error">
-									<p><strong>Configuration Missing:</strong></p>
+									<p><strong>{{ t('stackiq', 'Configuration Missing:') }}</strong></p>
 									<div class="configuration-issues">
 										<p>
 											{{
@@ -480,25 +475,15 @@
 										</div>
 									</div>
 									<div class="configuration-help">
-										<h5>How to Fix:</h5>
+										<h5>{{ t('stackiq', 'How to Fix:') }}</h5>
 										<ol>
+											<li>{{ t('stackiq', 'Go to the Registers section in these settings') }}</li>
+											<li>{{ t('stackiq', 'Use the Auto-Configure button to automatically set up AMEF schemas') }}</li>
 											<li>
-												Go to the
-												<strong>Registers</strong> section in
-												these settings
+												{{ t('stackiq', 'Or manually configure each schema ID in the register settings') }}
 											</li>
 											<li>
-												Use the
-												<strong>Auto-Configure</strong>
-												button to automatically set up AMEF
-												schemas
-											</li>
-											<li>
-												Or manually configure each schema ID
-												in the register settings
-											</li>
-											<li>
-												Return here to try the import again
+												{{ t('stackiq', 'Return here to try the import again') }}
 											</li>
 										</ol>
 									</div>
@@ -507,16 +492,16 @@
 								<!-- General Error -->
 								<div v-else>
 									<p>
-										<strong>Error:</strong>
+										<strong>{{ t('stackiq', 'Error:') }}</strong>
 										{{
 											importError.message
-											|| 'Unknown error occurred during import'
+											|| t('stackiq', 'Unknown error occurred during import')
 										}}
 									</p>
 									<div
 										v-if="importError.details"
 										class="error-additional">
-										<h5>Additional Details:</h5>
+										<h5>{{ t('stackiq', 'Additional Details:') }}</h5>
 										<pre>{{
 											JSON.stringify(
 												importError.details,
@@ -566,7 +551,7 @@
 							<NcLoadingIcon v-if="importing" :size="20" />
 							<CloudUpload v-else :size="20" />
 						</template>
-						{{ importing ? 'Importing...' : 'Import' }}
+						{{ importing ? t('stackiq', 'Importing…') : t('stackiq', 'Import') }}
 					</NcButton>
 
 					<NcButton
@@ -584,45 +569,45 @@
 						<template #icon>
 							<Refresh :size="20" />
 						</template>
-						Reset Import
+						{{ t('stackiq', 'Reset Import') }}
 					</NcButton>
 				</div>
 			</div>
 
 			<!-- Export Section -->
 			<div class="export-section">
-				<h4>Export</h4>
-				<p>Export ArchiMate models filtered by organization</p>
+				<h4>{{ t('stackiq', 'Export') }}</h4>
+				<p>{{ t('stackiq', 'Export ArchiMate models filtered by organization') }}</p>
 
 				<div class="export-controls">
 					<div class="control-group">
-						<label for="organization-select">Organization:</label>
+						<label for="organization-select">{{ t('stackiq', 'Organization:') }}</label>
 						<NcSelect
 							id="organization-select"
 							v-model="selectedOrganization"
 							:options="organizationOptions"
-							inputLabel="Select Organization"
-							placeholder="Generic"
+							:inputLabel="t('stackiq', 'Select Organization')"
+							:placeholder="t('stackiq', 'Generic')"
 							:disabled="exporting" />
 					</div>
 
 					<div v-if="selectedOrganization" class="control-group">
-						<label>Include in organization export:</label>
+						<label>{{ t('stackiq', 'Include in organization export:') }}</label>
 						<div class="checkbox-group">
 							<NcCheckboxRadioSwitch
 								v-model="includeModules"
 								:disabled="exportingOrg">
-								Modules
+								{{ t('stackiq', 'Modules') }}
 							</NcCheckboxRadioSwitch>
 							<NcCheckboxRadioSwitch
 								v-model="includeDeelnames"
 								:disabled="exportingOrg">
-								Deelnames
+								{{ t('stackiq', 'Deelnames') }}
 							</NcCheckboxRadioSwitch>
 							<NcCheckboxRadioSwitch
 								v-model="includeGebruik"
 								:disabled="exportingOrg">
-								Gebruik
+								{{ t('stackiq', 'Gebruik') }}
 							</NcCheckboxRadioSwitch>
 						</div>
 					</div>
@@ -635,7 +620,7 @@
 							<NcLoadingIcon v-if="exporting" :size="20" />
 							<Download v-else :size="20" />
 						</template>
-						{{ exporting ? 'Exporting...' : 'Export Base' }}
+						{{ exporting ? t('stackiq', 'Exporting…') : t('stackiq', 'Export Base') }}
 					</NcButton>
 
 					<NcButton
@@ -646,7 +631,7 @@
 							<NcLoadingIcon v-if="exportingOrg" :size="20" />
 							<Download v-else :size="20" />
 						</template>
-						{{ exportingOrg ? 'Exporting...' : 'Organization Export' }}
+						{{ exportingOrg ? t('stackiq', 'Exporting…') : t('stackiq', 'Organization Export') }}
 					</NcButton>
 				</div>
 			</div>
@@ -655,16 +640,15 @@
 		<!-- Info Content Slot -->
 		<template #info-content>
 			<div class="archimate-info">
-				<h3>ArchiMate Operations</h3>
+				<h3>{{ t('stackiq', 'ArchiMate Operations') }}</h3>
 				<p>
-					Import and export ArchiMate models with organization filtering
-					support.
+					{{ t('stackiq', 'Import and export ArchiMate models with organization filtering support.') }}
 				</p>
 
-				<h4>Supported Formats</h4>
+				<h4>{{ t('stackiq', 'Supported Formats') }}</h4>
 				<ul>
 					<li>ArchiMate XML (.xml)</li>
-					<li>ArchiMate model files (.archimate)</li>
+					<li>{{ t('stackiq', 'ArchiMate model files (.archimate)') }}</li>
 				</ul>
 			</div>
 		</template>
@@ -685,6 +669,7 @@
  */
 
 import axios from '@nextcloud/axios'
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 // Nextcloud Vue components
 import {
 	NcButton,
@@ -786,7 +771,7 @@ function importResultOrThrow(result) {
 		return result
 	}
 	if (!result.success) {
-		throw new Error(result.error || result.message || 'Import failed')
+		throw new Error(result.error || result.message || t('stackiq', 'Import failed'))
 	}
 	return result
 }
@@ -836,7 +821,7 @@ export default {
 			includeModules: true,
 			includeDeelnames: false,
 			includeGebruik: false,
-			organizationOptions: [{ label: 'Generic', value: null }],
+			organizationOptions: [{ label: t('stackiq', 'Generic'), value: null }],
 		}
 	},
 
@@ -872,6 +857,27 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * The template's translate, imported rather than taken from the
+		 * app-wide mixin so the section translates wherever it is mounted.
+		 *
+		 * @param {...*} args - as `translate()` takes them.
+		 * @return {string}
+		 */
+		t(...args) {
+			return t(...args)
+		},
+
+		/**
+		 * The template's plural translate; see `t`.
+		 *
+		 * @param {...*} args - as `translatePlural()` takes them.
+		 * @return {string}
+		 */
+		n(...args) {
+			return n(...args)
+		},
+
 		/**
 		 * Handle file selection from file input
 		 *
@@ -1025,7 +1031,18 @@ export default {
 			}
 			this.importResult = result
 			OC.Notification.showTemporary(
-				`Successfully imported ${result.performance_metrics.objects_processed} objects in ${this.formatTime(result.performance_metrics.total_time_seconds)}`,
+				n(
+					'stackiq',
+					'Successfully imported {count} object in {time}',
+					'Successfully imported {count} objects in {time}',
+					result.performance_metrics.objects_processed,
+					{
+						count: result.performance_metrics.objects_processed,
+						time: this.formatTime(
+							result.performance_metrics.total_time_seconds,
+						),
+					},
+				),
 				{ type: 'success' },
 			)
 		},
@@ -1040,11 +1057,16 @@ export default {
 		failImport(error) {
 			console.error('Error importing ArchiMate file:', error)
 			this.importError = {
-				message: error.message || 'Failed to import ArchiMate file',
+				message:
+					error.message
+					|| t('stackiq', 'Failed to import ArchiMate file'),
+
 				details: error.details || null,
 			}
 			OC.Notification.showTemporary(
-				'Import failed: ' + this.importError.message,
+				t('stackiq', 'Import failed: {message}', {
+					message: this.importError.message,
+				}),
 				{ type: 'error' },
 			)
 		},
@@ -1117,7 +1139,10 @@ export default {
 					)
 
 					if (!response.ok) {
-						await throwExportError(response, 'Export failed')
+						await throwExportError(
+							response,
+							t('stackiq', 'Export failed'),
+						)
 					}
 					await downloadResponse(response, 'archimate_export.xml')
 
@@ -1126,9 +1151,13 @@ export default {
 						? this.organizationOptions.find(
 								(opt) => opt.value === this.selectedOrganization,
 							)?.label
-						: 'Generic'
+						: t('stackiq', 'Generic')
 					OC.Notification.showTemporary(
-						`ArchiMate file exported successfully for ${orgName}`,
+						t(
+							'stackiq',
+							'ArchiMate file exported successfully for {organization}',
+							{ organization: orgName },
+						),
 						{ type: 'success' },
 					)
 				}, 30000) // 30-second heartbeat interval
@@ -1136,9 +1165,14 @@ export default {
 				console.error('Error exporting ArchiMate file:', error)
 
 				// Show error notification
-				OC.Notification.showTemporary('Export failed: ' + error.message, {
-					type: 'error',
-				})
+				OC.Notification.showTemporary(
+					t('stackiq', 'Export failed: {message}', {
+						message: error.message,
+					}),
+					{
+						type: 'error',
+					},
+				)
 			} finally {
 				this.exporting = false
 			}
@@ -1177,23 +1211,29 @@ export default {
 					if (!response.ok) {
 						await throwExportError(
 							response,
-							'Organization export failed',
+							t('stackiq', 'Organization export failed'),
 						)
 					}
 					await downloadResponse(response, 'archimate_org_export.xml')
 
 					const orgLabel =
 						this.organizationOptions.find((opt) => opt.value === orgUuid)
-							?.label ?? 'Organization'
+							?.label ?? t('stackiq', 'Organization')
 					OC.Notification.showTemporary(
-						`Organization ArchiMate file exported for ${orgLabel}`,
+						t(
+							'stackiq',
+							'Organization ArchiMate file exported for {organization}',
+							{ organization: orgLabel },
+						),
 						{ type: 'success' },
 					)
 				}, 30000)
 			} catch (error) {
 				console.error('Error exporting organization ArchiMate file:', error)
 				OC.Notification.showTemporary(
-					'Organization export failed: ' + error.message,
+					t('stackiq', 'Organization export failed: {message}', {
+						message: error.message,
+					}),
 					{ type: 'error' },
 				)
 			} finally {
@@ -1263,15 +1303,15 @@ export default {
 		 */
 		formatErrorType(errorType) {
 			const typeMap = {
-				validation: 'Validation',
-				schema: 'Schema',
-				reference: 'Reference',
-				property: 'Property',
-				constraint: 'Constraint',
-				relationship: 'Relationship',
-				data_type: 'Data Type',
-				encoding: 'Encoding',
-				general: 'General',
+				validation: t('stackiq', 'Validation'),
+				schema: t('stackiq', 'Schema'),
+				reference: t('stackiq', 'Reference'),
+				property: t('stackiq', 'Property'),
+				constraint: t('stackiq', 'Constraint'),
+				relationship: t('stackiq', 'Relationship'),
+				data_type: t('stackiq', 'Data Type'),
+				encoding: t('stackiq', 'Encoding'),
+				general: t('stackiq', 'General'),
 			}
 			return (
 				typeMap[errorType]
@@ -1312,9 +1352,16 @@ export default {
 					/Schema ID for (\w+) '([^']+)' is not configured/,
 				)
 				if (schemaMatch) {
-					return `Missing configuration for ${schemaMatch[1]} schema (${schemaMatch[2]})`
+					return t(
+						'stackiq',
+						'Missing configuration for {type} schema ({name})',
+						{ type: schemaMatch[1], name: schemaMatch[2] },
+					)
 				}
-				return 'Required AMEF schema configuration is missing.'
+				return t(
+					'stackiq',
+					'Required AMEF schema configuration is missing.',
+				)
 			}
 
 			// Extract the main description before the missing items list (legacy format)
@@ -1323,7 +1370,10 @@ export default {
 			if (mainLine) {
 				return mainLine.replace('ArchiMate import ', 'Import ').trim()
 			}
-			return 'Required configuration is missing for ArchiMate import.'
+			return t(
+				'stackiq',
+				'Required configuration is missing for ArchiMate import.',
+			)
 		},
 
 		/**

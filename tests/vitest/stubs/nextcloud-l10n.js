@@ -34,6 +34,24 @@ export function translate(app, text, vars) {
 	)
 }
 
+/**
+ * `translatePlural()` for components that call `n()` directly: picks the
+ * singular for a count of one, else the plural, fills `%n` with the count and
+ * `{placeholder}`s from `vars`, as the real package does for an untranslated
+ * (English) string.
+ *
+ * @param {string} app - the app id.
+ * @param {string} singular - the singular source.
+ * @param {string} plural - the plural source.
+ * @param {number} count - the count.
+ * @param {object} [vars] - placeholder values.
+ * @return {string}
+ */
+export function translatePlural(app, singular, plural, count, vars) {
+	const text = String(count === 1 ? singular : plural).replace(/%n/g, String(count))
+	return translate(app, text, vars)
+}
+
 export function __setLanguage(lang) {
 	currentLanguage = lang
 }
@@ -45,4 +63,5 @@ export function __resetLanguage() {
 export default {
 	getLanguage,
 	translate,
+	translatePlural,
 }

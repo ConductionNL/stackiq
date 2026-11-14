@@ -7,17 +7,17 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 </script>
 
 <template>
-	<NcDialog name="Merge Objects" size="large" :canClose="false">
+	<NcDialog :name="t('stackiq', 'Merge Objects')" size="large" :canClose="false">
 		<!-- Register and Schema Information -->
 		<div class="detail-grid">
 			<div class="detail-item">
-				<span class="detail-label">Register:</span>
+				<span class="detail-label">{{ t('stackiq', 'Register:') }}</span>
 				<span class="detail-value">{{
 					catalogStore.catalogiItem?.title || catalogStore.catalogiItem?.id
 				}}</span>
 			</div>
 			<div class="detail-item">
-				<span class="detail-label">Schema:</span>
+				<span class="detail-label">{{ t('stackiq', 'Schema:') }}</span>
 				<span class="detail-value">{{
 					catalogStore.schemaItem?.title || catalogStore.schemaItem?.id
 				}}</span>
@@ -26,43 +26,44 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 
 		<!-- Information about merge restrictions (only show if not completed) -->
 		<NcNoteCard v-if="step !== 3" type="info">
-			Objects can only be merged if they belong to the same register and
-			schema. If you want to merge objects from different schemas or registers,
-			you need to migrate them first.
+			{{ t('stackiq', 'Objects can only be merged if they belong to the same register and schema. If you want to merge objects from different schemas or registers, you need to migrate them first.') }}
 		</NcNoteCard>
 
 		<!-- Step 1: Select Target Object -->
 		<div v-if="step === 1" class="merge-step step-1">
-			<h3 class="step-title">Select Target Object</h3>
+			<h3 class="step-title">{{ t('stackiq', 'Select Target Object') }}</h3>
 			<p>
-				Select the object to merge
-				<strong>{{
-					sourceObject?.['@self']?.name
-					|| sourceObject?.name
-					|| sourceObject?.['@self']?.title
-					|| sourceObject?.['@self']?.id
-				}}</strong>
-				into:
+				<template
+					v-for="(part, index) in t('stackiq', 'Select the object to merge {name} into:').split(/(\{name\})/)"
+					:key="index">
+					<strong v-if="part === '{name}'">{{
+						sourceObject?.['@self']?.name
+						|| sourceObject?.name
+						|| sourceObject?.['@self']?.title
+						|| sourceObject?.['@self']?.id
+					}}</strong>
+					<template v-else>{{ part }}</template>
+				</template>
 			</p>
 
 			<div class="search-container">
 				<NcTextField
 					v-model="searchTerm"
-					label="Search objects"
-					placeholder="Type to search for objects..."
+					:label="t('stackiq', 'Search objects')"
+					:placeholder="t('stackiq', 'Type to search for objects…')"
 					@update:modelValue="searchObjects" />
 			</div>
 
 			<div v-if="loading" class="loading-container">
 				<NcLoadingIcon :size="32" />
-				<p>Loading objects...</p>
+				<p>{{ t('stackiq', 'Loading objects…') }}</p>
 			</div>
 
 			<div
 				v-else-if="availableObjects.length"
 				class="object-list"
 				role="listbox"
-				aria-label="Merge target">
+				:aria-label="t('stackiq', 'Merge target')">
 				<!-- role/tabindex/keydown rather than a click-only div: picking the
 				     merge target is the consequential choice in this dialog, and a
 				     keyboard user could not make it at all. role="option" inside the
@@ -92,17 +93,17 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 							|| obj['@self']?.title
 							|| obj['@self']?.id
 						}}</strong>
-						<p class="object-id">ID: {{ obj['@self'].id }}</p>
+						<p class="object-id">{{ t('stackiq', 'ID: {id}', { id: obj['@self'].id }) }}</p>
 					</div>
 				</div>
 			</div>
 
-			<NcEmptyContent v-else-if="!loading" name="No objects found">
+			<NcEmptyContent v-else-if="!loading" :name="t('stackiq', 'No objects found')">
 				<template #description>
 					{{
 						searchTerm
-							? 'No objects match your search criteria'
-							: 'No objects available for merging'
+							? t('stackiq', 'No objects match your search criteria')
+							: t('stackiq', 'No objects available for merging')
 					}}
 				</template>
 			</NcEmptyContent>
@@ -110,22 +111,25 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 
 		<!-- Step 2: Merge Configuration -->
 		<div v-if="step === 2" class="merge-step">
-			<h3>Configure Merge</h3>
+			<h3>{{ t('stackiq', 'Configure Merge') }}</h3>
 			<p>
-				Merging
-				<strong>{{
-					sourceObject?.['@self']?.name
-					|| sourceObject?.name
-					|| sourceObject?.['@self']?.title
-					|| sourceObject?.['@self']?.id
-				}}</strong>
-				into
-				<strong>{{
-					selectedTargetObject?.['@self']?.name
-					|| selectedTargetObject?.name
-					|| selectedTargetObject?.['@self']?.title
-					|| selectedTargetObject?.['@self']?.id
-				}}</strong>
+				<template
+					v-for="(part, index) in t('stackiq', 'Merging {source} into {target}').split(/(\{source\}|\{target\})/)"
+					:key="index">
+					<strong v-if="part === '{source}'">{{
+						sourceObject?.['@self']?.name
+						|| sourceObject?.name
+						|| sourceObject?.['@self']?.title
+						|| sourceObject?.['@self']?.id
+					}}</strong>
+					<strong v-else-if="part === '{target}'">{{
+						selectedTargetObject?.['@self']?.name
+						|| selectedTargetObject?.name
+						|| selectedTargetObject?.['@self']?.title
+						|| selectedTargetObject?.['@self']?.id
+					}}</strong>
+					<template v-else>{{ part }}</template>
+				</template>
 			</p>
 
 			<!-- Property Comparison Table -->
@@ -133,10 +137,10 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 				<table class="merge-table">
 					<thead>
 						<tr>
-							<th scope="col">Property</th>
-							<th scope="col">Source</th>
-							<th scope="col">Target</th>
-							<th scope="col">Result Value</th>
+							<th scope="col">{{ t('stackiq', 'Property') }}</th>
+							<th scope="col">{{ t('stackiq', 'Source') }}</th>
+							<th scope="col">{{ t('stackiq', 'Target') }}</th>
+							<th scope="col">{{ t('stackiq', 'Result Value') }}</th>
 						</tr>
 					</thead>
 					<tbody>
@@ -163,10 +167,9 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 							</td>
 							<td class="merge-target">
 								<template v-if="property === 'id'">
-									<span class="fixed-value"
-										>{{ selectedTargetObject[property] }} (Target
-										ID)</span
-									>
+									<span class="fixed-value">{{
+										t('stackiq', '{id} (Target ID)', { id: selectedTargetObject[property] })
+									}}</span>
 								</template>
 								<template v-else>
 									<NcSelect
@@ -181,7 +184,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 												{ property },
 											)
 										"
-										:placeholder="'Choose value for ' + property"
+										:placeholder="t('stackiq', 'Choose value for {property}', { property })"
 										@update:modelValue="
 											onPropertySelectionChange(
 												property,
@@ -191,10 +194,10 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 									<NcTextField
 										v-if="mergedData[property] === 'custom'"
 										v-model="customValues[property]"
-										:label="'Custom value for ' + property"
+										:label="t('stackiq', 'Custom value for {property}', { property })"
 										:labelOutside="false"
 										:placeholder="
-											'Enter custom value for ' + property
+											t('stackiq', 'Enter custom value for {property}', { property })
 										"
 										class="custom-input" />
 								</template>
@@ -206,7 +209,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 
 			<!-- File Handling Options -->
 			<div class="options-section">
-				<h4>Files attached to source object: ({{ sourceFiles.length }})</h4>
+				<h4>{{ t('stackiq', 'Files attached to source object: ({count})', { count: sourceFiles.length }) }}</h4>
 
 				<div class="radio-options">
 					<NcCheckboxRadioSwitch
@@ -214,20 +217,20 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 						value="transfer"
 						name="fileAction"
 						type="radio">
-						Transfer to target object's folder
+						{{ t('stackiq', 'Transfer to target object\'s folder') }}
 					</NcCheckboxRadioSwitch>
 					<NcCheckboxRadioSwitch
 						v-model="fileAction"
 						value="delete"
 						name="fileAction"
 						type="radio">
-						Delete files
+						{{ t('stackiq', 'Delete files') }}
 					</NcCheckboxRadioSwitch>
 				</div>
 
 				<div class="table-toggle">
 					<NcButton variant="tertiary" @click="toggleFileList">
-						{{ showFileList ? 'Hide Files' : 'View Files' }}
+						{{ showFileList ? t('stackiq', 'Hide Files') : t('stackiq', 'View Files') }}
 						<template #icon>
 							<ChevronUp v-if="showFileList" :size="20" />
 							<ChevronDown v-else :size="20" />
@@ -239,9 +242,9 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 					<table class="file-table">
 						<thead>
 							<tr>
-								<th scope="col">Filename</th>
-								<th scope="col">Size</th>
-								<th scope="col">Type</th>
+								<th scope="col">{{ t('stackiq', 'Filename') }}</th>
+								<th scope="col">{{ t('stackiq', 'Size') }}</th>
+								<th scope="col">{{ t('stackiq', 'Type') }}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -265,13 +268,13 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 				<div
 					v-else-if="showFileList && !sourceFiles.length"
 					class="no-files">
-					<p>No files attached to source object</p>
+					<p>{{ t('stackiq', 'No files attached to source object') }}</p>
 				</div>
 			</div>
 
 			<!-- Relation Handling Options -->
 			<div class="options-section">
-				<h4>Relations to source object: ({{ sourceRelations.length }})</h4>
+				<h4>{{ t('stackiq', 'Relations to source object: ({count})', { count: sourceRelations.length }) }}</h4>
 
 				<div class="radio-options">
 					<NcCheckboxRadioSwitch
@@ -279,20 +282,20 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 						value="transfer"
 						name="relationAction"
 						type="radio">
-						Transfer to target object
+						{{ t('stackiq', 'Transfer to target object') }}
 					</NcCheckboxRadioSwitch>
 					<NcCheckboxRadioSwitch
 						v-model="relationAction"
 						value="drop"
 						name="relationAction"
 						type="radio">
-						Drop relations
+						{{ t('stackiq', 'Drop relations') }}
 					</NcCheckboxRadioSwitch>
 				</div>
 
 				<div class="table-toggle">
 					<NcButton variant="tertiary" @click="toggleRelationList">
-						{{ showRelationList ? 'Hide Relations' : 'View Relations' }}
+						{{ showRelationList ? t('stackiq', 'Hide Relations') : t('stackiq', 'View Relations') }}
 						<template #icon>
 							<ChevronUp v-if="showRelationList" :size="20" />
 							<ChevronDown v-else :size="20" />
@@ -306,9 +309,9 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 					<table class="relation-table">
 						<thead>
 							<tr>
-								<th scope="col">Related Object</th>
-								<th scope="col">Relation Type</th>
-								<th scope="col">Register/Schema</th>
+								<th scope="col">{{ t('stackiq', 'Related Object') }}</th>
+								<th scope="col">{{ t('stackiq', 'Relation Type') }}</th>
+								<th scope="col">{{ t('stackiq', 'Register/Schema') }}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -330,18 +333,18 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 										)
 									}}
 								</td>
-								<td>{{ relation.relationType || 'Related' }}</td>
+								<td>{{ relation.relationType || t('stackiq', 'Related') }}</td>
 								<td
 									:title="
-										(relation.register || 'N/A')
+										(relation.register || t('stackiq', 'N/A'))
 										+ ' / '
-										+ (relation.schema || 'N/A')
+										+ (relation.schema || t('stackiq', 'N/A'))
 									">
 									{{
 										truncateText(
-											(relation.register || 'N/A')
+											(relation.register || t('stackiq', 'N/A'))
 												+ ' / '
-												+ (relation.schema || 'N/A'),
+												+ (relation.schema || t('stackiq', 'N/A')),
 											30,
 										)
 									}}
@@ -354,97 +357,111 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 				<div
 					v-else-if="showRelationList && !sourceRelations.length"
 					class="no-relations">
-					<p>No relations to source object</p>
+					<p>{{ t('stackiq', 'No relations to source object') }}</p>
 				</div>
 			</div>
 		</div>
 
 		<!-- Step 3: Merge Report -->
 		<div v-if="step === 3" class="merge-step">
-			<h3 class="report-title">Merge Report</h3>
+			<h3 class="report-title">{{ t('stackiq', 'Merge Report') }}</h3>
 
 			<NcNoteCard v-if="mergeResult?.success" type="success">
-				<p>Objects successfully merged!</p>
+				<p>{{ t('stackiq', 'Objects successfully merged!') }}</p>
 			</NcNoteCard>
 			<NcNoteCard v-if="mergeResult && !mergeResult.success" type="error">
-				<p>Merge failed. Please check the details below.</p>
+				<p>{{ t('stackiq', 'Merge failed. Please check the details below.') }}</p>
 			</NcNoteCard>
 
 			<div v-if="mergeResult" class="merge-report">
 				<!-- Object Information -->
 				<div class="report-section">
-					<h4>Merge Summary</h4>
+					<h4>{{ t('stackiq', 'Merge Summary') }}</h4>
 					<div class="object-info">
 						<div class="object-detail">
-							<strong>Target Object (Result):</strong>
+							<strong>{{ t('stackiq', 'Target Object (Result):') }}</strong>
 							<div class="object-meta">
-								<span class="object-id"
-									>ID:
-									{{
-										selectedTargetObject?.['@self']?.id
-										|| selectedTargetObject?.id
-									}}</span
-								>
+								<span class="object-id">{{
+									t('stackiq', 'ID: {id}', {
+										id: selectedTargetObject?.['@self']?.id
+											|| selectedTargetObject?.id,
+									})
+								}}</span>
 								<span class="object-title">{{
 									selectedTargetObject?.['@self']?.name
 									|| selectedTargetObject?.name
 									|| selectedTargetObject?.['@self']?.title
 									|| selectedTargetObject?.title
-									|| 'Untitled'
+									|| t('stackiq', 'Untitled')
 								}}</span>
 							</div>
 						</div>
 						<div class="object-detail">
-							<strong>Source Object:</strong>
+							<strong>{{ t('stackiq', 'Source Object:') }}</strong>
 							<div class="object-meta">
-								<span class="object-id"
-									>ID:
-									{{
-										sourceObject?.['@self']?.id
-										|| sourceObject?.id
-									}}</span
-								>
+								<span class="object-id">{{
+									t('stackiq', 'ID: {id}', {
+										id: sourceObject?.['@self']?.id
+											|| sourceObject?.id,
+									})
+								}}</span>
 								<span class="object-title">{{
 									sourceObject?.['@self']?.name
 									|| sourceObject?.name
 									|| sourceObject?.['@self']?.title
 									|| sourceObject?.title
-									|| 'Untitled'
+									|| t('stackiq', 'Untitled')
 								}}</span>
-								<span class="object-status deleted"
-									>Status: Deleted</span
-								>
+								<span class="object-status deleted">{{ t('stackiq', 'Status: Deleted') }}</span>
 							</div>
 						</div>
 					</div>
 				</div>
 				<!-- Statistics -->
 				<div class="report-section">
-					<h4>Statistics</h4>
+					<h4>{{ t('stackiq', 'Statistics') }}</h4>
 					<ul>
 						<li>
-							Properties changed:
-							{{ mergeResult.statistics?.propertiesChanged || 0 }}
+							{{
+								t('stackiq', 'Properties changed: {count}', {
+									count: mergeResult.statistics?.propertiesChanged || 0,
+								})
+							}}
 						</li>
 						<li>
-							Files transferred:
-							{{ mergeResult.statistics?.filesTransferred || 0 }}
+							{{
+								t('stackiq', 'Files transferred: {count}', {
+									count: mergeResult.statistics?.filesTransferred || 0,
+								})
+							}}
 						</li>
 						<li>
-							Files deleted:
-							{{ mergeResult.statistics?.filesDeleted || 0 }}
+							{{
+								t('stackiq', 'Files deleted: {count}', {
+									count: mergeResult.statistics?.filesDeleted || 0,
+								})
+							}}
 						</li>
 						<li>
-							Relations transferred:
-							{{ mergeResult.statistics?.relationsTransferred || 0 }}
+							{{
+								t('stackiq', 'Relations transferred: {count}', {
+									count: mergeResult.statistics?.relationsTransferred || 0,
+								})
+							}}
 						</li>
 						<li>
-							Relations dropped:
-							{{ mergeResult.statistics?.relationsDropped || 0 }}
+							{{
+								t('stackiq', 'Relations dropped: {count}', {
+									count: mergeResult.statistics?.relationsDropped || 0,
+								})
+							}}
 						</li>
 						<li>
-							References updated:
-							{{ mergeResult.statistics?.referencesUpdated || 0 }}
+							{{
+								t('stackiq', 'References updated: {count}', {
+									count: mergeResult.statistics?.referencesUpdated || 0,
+								})
+							}}
 						</li>
 					</ul>
 				</div>
@@ -453,13 +470,13 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 				<div
 					v-if="mergeResult.actions?.properties?.length"
 					class="report-section">
-					<h4>Changed Properties</h4>
+					<h4>{{ t('stackiq', 'Changed Properties') }}</h4>
 					<table class="report-table">
 						<thead>
 							<tr>
-								<th scope="col">Property</th>
-								<th scope="col">Old Value</th>
-								<th scope="col">New Value</th>
+								<th scope="col">{{ t('stackiq', 'Property') }}</th>
+								<th scope="col">{{ t('stackiq', 'Old Value') }}</th>
+								<th scope="col">{{ t('stackiq', 'New Value') }}</th>
 							</tr>
 						</thead>
 						<tbody>
@@ -478,14 +495,14 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 				<div
 					v-if="mergeResult.actions?.files?.length"
 					class="report-section">
-					<h4>File Actions</h4>
+					<h4>{{ t('stackiq', 'File Actions') }}</h4>
 					<ul>
 						<li
 							v-for="fileActionItem in mergeResult.actions.files"
 							:key="fileActionItem.name">
 							{{ fileActionItem.name }}: {{ fileActionItem.action }}
 							<span v-if="!fileActionItem.success" class="error-text">
-								(Failed: {{ fileActionItem.error }})</span
+								{{ t('stackiq', '(Failed: {error})', { error: fileActionItem.error }, undefined, { escape: false }) }}</span
 							>
 						</li>
 					</ul>
@@ -493,7 +510,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 
 				<!-- Warnings -->
 				<div v-if="mergeResult.warnings?.length" class="report-section">
-					<h4>Warnings</h4>
+					<h4>{{ t('stackiq', 'Warnings') }}</h4>
 					<ul>
 						<li
 							v-for="warning in mergeResult.warnings"
@@ -506,7 +523,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 
 				<!-- Errors -->
 				<div v-if="mergeResult.errors?.length" class="report-section">
-					<h4>Errors</h4>
+					<h4>{{ t('stackiq', 'Errors') }}</h4>
 					<ul>
 						<li
 							v-for="error in mergeResult.errors"
@@ -524,7 +541,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ step === 3 ? 'Close' : 'Cancel' }}
+				{{ step === 3 ? t('stackiq', 'Close') : t('stackiq', 'Cancel') }}
 			</NcButton>
 
 			<NcButton
@@ -534,7 +551,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 				<template #icon>
 					<Eye :size="20" />
 				</template>
-				View Object
+				{{ t('stackiq', 'View Object') }}
 			</NcButton>
 
 			<NcButton
@@ -545,14 +562,14 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 				<template #icon>
 					<ArrowRight :size="20" />
 				</template>
-				Next
+				{{ t('stackiq', 'Next') }}
 			</NcButton>
 
 			<NcButton v-if="step === 2" variant="secondary" @click="previousStep">
 				<template #icon>
 					<ArrowLeft :size="20" />
 				</template>
-				Back
+				{{ t('stackiq', 'Back') }}
 			</NcButton>
 
 			<NcButton
@@ -564,13 +581,14 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<Merge v-else :size="20" />
 				</template>
-				Merge Objects
+				{{ t('stackiq', 'Merge Objects') }}
 			</NcButton>
 		</template>
 	</NcDialog>
 </template>
 
 <script>
+import { translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
 	NcCheckboxRadioSwitch,
@@ -839,14 +857,17 @@ export default {
 		 */
 		getMergeOptions(property) {
 			return [
-				...this.valueOption('From Source', this.sourceObject[property]),
 				...this.valueOption(
-					'From Target',
+					(value) => t('stackiq', 'From Source: {value}', { value }, undefined, { escape: false }),
+					this.sourceObject[property],
+				),
+				...this.valueOption(
+					(value) => t('stackiq', 'From Target: {value}', { value }, undefined, { escape: false }),
 					this.selectedTargetObject[property],
 				),
 				// Always add the custom option
 				{
-					label: 'Other/Custom',
+					label: t('stackiq', 'Other/Custom'),
 					value: 'custom',
 				},
 			]
@@ -855,16 +876,16 @@ export default {
 		/**
 		 * The dropdown option for one side's value, when that side has one.
 		 *
-		 * @param {string} prefix Which side the value comes from.
+		 * @param {function(string): string} labelFor Builds the translated label from the displayed value.
 		 * @param {unknown} value The side's value.
 		 * @return {Array<{label: string, value: unknown}>} One option, or none.
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
-		valueOption(prefix, value) {
+		valueOption(labelFor, value) {
 			if (!hasValue(value)) {
 				return []
 			}
-			return [{ label: `${prefix}: ${this.displayValue(value)}`, value }]
+			return [{ label: labelFor(this.displayValue(value)), value }]
 		},
 
 		/**
@@ -904,7 +925,7 @@ export default {
 		 */
 		displayValue(value, maxLength = 100) {
 			if (value === null || value === undefined) {
-				return 'N/A'
+				return t('stackiq', 'N/A')
 			}
 
 			const displayText =
@@ -1044,7 +1065,7 @@ export default {
 			console.error('Error performing merge:', error)
 			this.mergeResult = {
 				success: false,
-				errors: [error.message || 'An error occurred during merge'],
+				errors: [error.message || t('stackiq', 'An error occurred during merge')],
 			}
 			this.step = 3
 		},
@@ -1079,7 +1100,7 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		formatFileSize(bytes) {
-			if (!bytes) return 'N/A'
+			if (!bytes) return t('stackiq', 'N/A')
 			const sizes = ['Bytes', 'KB', 'MB', 'GB']
 			const i = Math.floor(Math.log(bytes) / Math.log(1024))
 			return (
@@ -1092,7 +1113,7 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getFileType(filename) {
-			if (!filename) return 'Unknown'
+			if (!filename) return t('stackiq', 'Unknown')
 			const ext = filename.split('.').pop()?.toLowerCase()
 			const types = {
 				pdf: 'PDF',
@@ -1102,15 +1123,15 @@ export default {
 				xlsx: 'Excel',
 				ppt: 'PowerPoint',
 				pptx: 'PowerPoint',
-				txt: 'Text',
-				jpg: 'Image',
-				jpeg: 'Image',
-				png: 'Image',
-				gif: 'Image',
-				zip: 'Archive',
-				rar: 'Archive',
+				txt: t('stackiq', 'Text'),
+				jpg: t('stackiq', 'Image'),
+				jpeg: t('stackiq', 'Image'),
+				png: t('stackiq', 'Image'),
+				gif: t('stackiq', 'Image'),
+				zip: t('stackiq', 'Archive'),
+				rar: t('stackiq', 'Archive'),
 			}
-			return types[ext] || ext?.toUpperCase() || 'Unknown'
+			return types[ext] || ext?.toUpperCase() || t('stackiq', 'Unknown')
 		},
 
 		/**
