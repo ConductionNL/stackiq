@@ -436,6 +436,7 @@
 					{ "id": "9", "widgetId": "org-usages", "gridX": 0, "gridY": 14, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"bodyWidgets": [
+					{ "id": "org-claimed-usage", "component": "ClaimedUsageList", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
 					{ "id": "org-merge", "component": "OrganisationMergePanel", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 }
 				],
 				"sidebar": {

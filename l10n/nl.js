@@ -1333,7 +1333,23 @@ OC.L10N.register(
         "Gap, fillable": "Gat, te vullen",
         "Gap": "Gat",
         "Licence": "Licentie",
-        "Software catalogue": "Softwarecatalogus"
+        "Software catalogue": "Softwarecatalogus",
+        "{organisation} says it uses {product}. Decline this claim? The usage stays theirs, and they see that you do not recognise it.": "{organisation} geeft aan {product} te gebruiken. Deze claim afwijzen? Het gebruik blijft van hen, en zij zien dat u het niet herkent.",
+        "Claimed on": "Geclaimd op",
+        "Claimed usage of our offering": "Geclaimd gebruik van ons aanbod",
+        "Decline": "Afwijzen",
+        "Decline claimed usage": "Geclaimd gebruik afwijzen",
+        "No claimed usage to answer.": "Geen geclaimd gebruik om te beantwoorden.",
+        "Organisations that say they use your product.": "Organisaties die aangeven uw product te gebruiken.",
+        "Product": "Product",
+        "The answer was not saved. Please try again.": "Het antwoord is niet opgeslagen. Probeer het opnieuw.",
+        "The supplier does not recognise this usage (declined on {date}).": "De leverancier herkent dit gebruik niet (afgewezen op {date}).",
+        "Supplier response": "Reactie leverancier",
+        "Supplier response by": "Reactie leverancier door",
+        "Supplier response date": "Datum reactie leverancier",
+        "The supplier's answer to this claimed usage: accepted or declined, written by Stackiq when the supplier answers.": "Het antwoord van de leverancier op dit geclaimde gebruik: geaccepteerd of afgewezen, vastgelegd door Stackiq wanneer de leverancier antwoordt.",
+        "The user of the supplier who answered this claimed usage.": "De gebruiker van de leverancier die op dit geclaimde gebruik antwoordde.",
+        "When the supplier answered this claimed usage.": "Wanneer de leverancier op dit geclaimde gebruik antwoordde."
     },
     "nplurals=2; plural=(n != 1);"
 )

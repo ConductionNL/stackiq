@@ -1260,6 +1260,22 @@
         "Gap, fillable": "Gap, fillable",
         "Gap": "Gap",
         "Licence": "Licence",
-        "Software catalogue": "Software catalogue"
+        "Software catalogue": "Software catalogue",
+        "{organisation} says it uses {product}. Decline this claim? The usage stays theirs, and they see that you do not recognise it.": "{organisation} says it uses {product}. Decline this claim? The usage stays theirs, and they see that you do not recognise it.",
+        "Claimed on": "Claimed on",
+        "Claimed usage of our offering": "Claimed usage of our offering",
+        "Decline": "Decline",
+        "Decline claimed usage": "Decline claimed usage",
+        "No claimed usage to answer.": "No claimed usage to answer.",
+        "Organisations that say they use your product.": "Organisations that say they use your product.",
+        "Product": "Product",
+        "The answer was not saved. Please try again.": "The answer was not saved. Please try again.",
+        "The supplier does not recognise this usage (declined on {date}).": "The supplier does not recognise this usage (declined on {date}).",
+        "Supplier response": "Supplier response",
+        "Supplier response by": "Supplier response by",
+        "Supplier response date": "Supplier response date",
+        "The supplier's answer to this claimed usage: accepted or declined, written by Stackiq when the supplier answers.": "The supplier's answer to this claimed usage: accepted or declined, written by Stackiq when the supplier answers.",
+        "The user of the supplier who answered this claimed usage.": "The user of the supplier who answered this claimed usage.",
+        "When the supplier answered this claimed usage.": "When the supplier answered this claimed usage."
     }
 }
