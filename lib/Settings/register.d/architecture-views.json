@@ -1,0 +1,154 @@
+{
+    "components": {
+        "registers": {
+            "vng-gemma": {
+                "schemas": [
+                    "view-version"
+                ],
+                "configuration": {
+                    "schemas": {
+                        "view-version": {
+                            "magicMapping": true,
+                            "autoCreateTable": true
+                        }
+                    }
+                }
+            }
+        },
+        "schemas": {
+            "view": {
+                "version": "0.0.9",
+                "properties": {
+                    "tags": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        },
+                        "title": "Tags",
+                        "description": "Free tags that group views, such as a domain or a project.",
+                        "facetable": true,
+                        "visible": true,
+                        "example": [
+                            "zaakgericht"
+                        ]
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "draft",
+                            "in review",
+                            "published",
+                            "retired"
+                        ],
+                        "default": "draft",
+                        "title": "Status",
+                        "description": "Where the view is in its review: draft, in review, published or retired.",
+                        "facetable": true,
+                        "visible": true,
+                        "example": "draft"
+                    },
+                    "origin": {
+                        "type": "string",
+                        "enum": [
+                            "imported",
+                            "drawn"
+                        ],
+                        "title": "Origin",
+                        "description": "Where the object comes from: `imported` by the GEMMA import, or `drawn` in the view editor. An object without an origin was imported before this field existed and counts as imported.",
+                        "facetable": true,
+                        "visible": true,
+                        "example": "drawn"
+                    },
+                    "basedOn": {
+                        "type": "string",
+                        "format": "uuid",
+                        "title": "Based on",
+                        "description": "The view this drawn view was copied from with Copy to edit.",
+                        "visible": true,
+                        "example": "5f0c2d1e-7a3b-4c8d-9e0f-1a2b3c4d5e6f"
+                    }
+                },
+                "configuration": {
+                    "x-openregister-lifecycle": {
+                        "field": "status",
+                        "initial": "draft",
+                        "final": [
+                            "retired"
+                        ],
+                        "transitions": {
+                            "submit": {
+                                "from": [
+                                    "draft"
+                                ],
+                                "to": "in review",
+                                "description": "Submit the view for review."
+                            },
+                            "publish": {
+                                "from": [
+                                    "in review"
+                                ],
+                                "to": "published",
+                                "description": "Publish the reviewed view."
+                            },
+                            "rework": {
+                                "from": [
+                                    "in review"
+                                ],
+                                "to": "draft",
+                                "description": "Send the view back for rework."
+                            },
+                            "retire": {
+                                "from": [
+                                    "published"
+                                ],
+                                "to": "retired",
+                                "description": "Retire the published view."
+                            },
+                            "reopen": {
+                                "from": [
+                                    "retired"
+                                ],
+                                "to": "draft",
+                                "description": "Reopen a retired view as a draft."
+                            }
+                        }
+                    }
+                }
+            },
+            "element": {
+                "version": "0.0.13",
+                "properties": {
+                    "origin": {
+                        "type": "string",
+                        "enum": [
+                            "imported",
+                            "drawn"
+                        ],
+                        "title": "Origin",
+                        "description": "Where the object comes from: `imported` by the GEMMA import, or `drawn` in the view editor. An object without an origin was imported before this field existed and counts as imported.",
+                        "facetable": true,
+                        "visible": true,
+                        "example": "drawn"
+                    }
+                }
+            },
+            "relation": {
+                "version": "0.0.10",
+                "properties": {
+                    "origin": {
+                        "type": "string",
+                        "enum": [
+                            "imported",
+                            "drawn"
+                        ],
+                        "title": "Origin",
+                        "description": "Where the object comes from: `imported` by the GEMMA import, or `drawn` in the view editor. An object without an origin was imported before this field existed and counts as imported.",
+                        "facetable": true,
+                        "visible": true,
+                        "example": "drawn"
+                    }
+                }
+            }
+        }
+    }
+}

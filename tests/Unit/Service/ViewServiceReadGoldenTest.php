@@ -216,13 +216,14 @@ class ViewServiceReadGoldenTest extends TestCase {
 		$this->rows['view'] = [$this->entity(data: ['id' => 'v1']), ['id' => 'v2'], 'raw'];
 		$key = 'views_list_' . hash('sha256', "alice\norg-own");
 
-		$this->assertSame([['id' => 'v1'], ['id' => 'v2'], 'raw'], $this->readList());
+		// architecture-views-editor: the list keeps only GEMMA views, so a row that is no view at all is left out too.
+		$this->assertSame([['id' => 'v1'], ['id' => 'v2']], $this->readList());
 		$this->assertSame(
 			[
 				['cache.get', $key],
 				['search', ['@self' => ['register' => 'amef', 'schema' => 'view'], '_limit' => 500]],
-				['cache.set', $key, [['id' => 'v1'], ['id' => 'v2'], 'raw'], 1800],
-				['debug', 'Retrieved and cached views from register', ['register_id' => 'amef', 'view_schema_id' => 'view', 'views_count' => 3]],
+				['cache.set', $key, [['id' => 'v1'], ['id' => 'v2']], 1800],
+				['debug', 'Retrieved and cached views from register', ['register_id' => 'amef', 'view_schema_id' => 'view', 'views_count' => 2]],
 			],
 			$this->calls
 		);

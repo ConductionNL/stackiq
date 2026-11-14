@@ -1,0 +1,71 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "architecture-views-editor: the Views index over the AMEF `view` schema (GEMMA imports and drawn views alike), with quick filters on owner and origin and the schema facets (tags, status, origin) in its sidebar. An Architecture group holds Standards and Views (menu-layout.json relocates both), so the top-level entry count stays the same (ADR-097). The ViewEditor page and its custom component come with the editor itself (tasks 4 to 6); until then a row opens in the standard view of the record.",
+	"menu": [
+		{
+			"id": "Architecture",
+			"label": "Architecture",
+			"icon": "ViewGridOutline",
+			"order": 50
+		},
+		{
+			"id": "Views",
+			"label": "Views",
+			"icon": "Sitemap",
+			"route": "Views",
+			"order": 51
+		}
+	],
+	"pages": [
+		{
+			"id": "Views",
+			"route": "/views",
+			"type": "index",
+			"title": "Views",
+			"config": {
+				"register": "@resolve:amef_register",
+				"schema": "view",
+				"columns": [
+					"name",
+					"viewpoint",
+					"status",
+					"tags",
+					"origin"
+				],
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "Mine",
+						"filter": {
+							"_owner": "@me"
+						},
+						"icon": "AccountBoxOutline"
+					},
+					{
+						"label": "Drawn",
+						"filter": {
+							"origin": "drawn"
+						},
+						"icon": "FileDocumentEdit"
+					},
+					{
+						"label": "Imported",
+						"filter": {
+							"origin": "imported"
+						},
+						"icon": "ArchiveOutline"
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		}
+	]
+}

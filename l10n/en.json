@@ -1260,6 +1260,11 @@
         "Gap, fillable": "Gap, fillable",
         "Gap": "Gap",
         "Licence": "Licence",
-        "Software catalogue": "Software catalogue"
+        "Software catalogue": "Software catalogue",
+        "Architecture": "Architecture",
+        "Views": "Views",
+        "Mine": "Mine",
+        "Drawn": "Drawn",
+        "Imported": "Imported"
     }
 }
