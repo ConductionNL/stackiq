@@ -11,8 +11,8 @@
   - GIVEN the process lifecycle WHEN the shape test reads it THEN every `from` and `to` value is a status enum value
   - GIVEN both schemas WHEN the shape test reads their read rules THEN they match on `_organisation` as `usage` does
   - GIVEN a fresh install WHEN the seed runs THEN the process and its three steps exist
-- [ ] Implement
-- [ ] Test (PHPUnit `ProcessMappingRegisterShapeTest`, `RegisterFragmentMergeTest`)
+- [x] Implement
+- [x] Test (PHPUnit `ProcessMappingRegisterShapeTest`, `RegisterFragmentMergeTest`)
 
 ### Task 2: Processes index, process page and step page
 - **spec_ref**: openspec/changes/architecture-process-mapping/specs/business-process-mapping/spec.md#requirement-req-bpm-001-a-municipal-information-manager-shall-record-a-business-process-with-ordered-steps
@@ -21,7 +21,7 @@
   - GIVEN the effective manifest WHEN it is built THEN `Processen`, `ProcesDetail` and `ProcesStapDetail` exist with the routes of the design
   - GIVEN the effective menu WHEN it renders THEN Processes sits under the Architecture group and the top-level count is unchanged
   - GIVEN a process page WHEN it renders THEN its steps list is sorted on position and its lifecycle actions show
-- [ ] Implement
+- [x] Implement
 - [ ] Test (`tests/validate-manifest.js`, Playwright `tests/e2e/workflows/process-mapping.spec.ts` create and lifecycle scenarios)
 
 ### Task 3: Step flow on CnGraphCanvas
@@ -31,7 +31,7 @@
   - GIVEN steps without a follows list WHEN the flow is built THEN edges run in position order
   - GIVEN a step that follows two steps WHEN the flow is built THEN it has two incoming edges
   - GIVEN a step with high risk or not compliant WHEN it renders THEN its node uses `--color-error` and says so in text
-- [ ] Implement
+- [x] Implement
 - [ ] Test (vitest `processStepFlow.spec.js`, Playwright flow scenario)
 
 ### Task 4: Supporting applications on the usage and step pages
@@ -40,7 +40,7 @@
 - **acceptance_criteria**:
   - GIVEN a step that names a usage WHEN that usage's page opens THEN the list "Process steps this application supports" shows the step and its process
   - GIVEN two stored usage uuids of which one is returned WHEN the step page renders THEN it shows the visible usage and says one is hidden
-- [ ] Implement
+- [x] Implement
 - [ ] Test (vitest `processStepUsages.spec.js`, Playwright usage page scenario)
 
 ### Task 5: Documentation and translations
