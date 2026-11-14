@@ -240,6 +240,8 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // submission (author/status always server-stamped, never from the
         // client) + public approved-only aggregate for module/dienst detail.
         ['name' => 'review#submit', 'url' => '/api/reviews', 'verb' => 'POST'],
+        // Ask the catalogue (insight-assistant-answers-and-action-trail D1): read only.
+        ['name' => 'ask#ask', 'url' => '/api/ask', 'verb' => 'POST'],
         ['name' => 'review#aggregate', 'url' => '/api/reviews/aggregate', 'verb' => 'GET'],
 
         // ORGANISATION MERGE (gemeentelijke herindeling / leveranciersovername) —

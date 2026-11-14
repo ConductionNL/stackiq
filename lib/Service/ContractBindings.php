@@ -26,6 +26,7 @@ use OCA\Stackiq\Kernel\Contracts\AangebodenGebruikServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ArchiMateImportControlInterface;
 use OCA\Stackiq\Kernel\Contracts\ArchiMateImportServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ArchiMateServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\AskServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\CmdbExportImportServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\CmdbImportPackStoreInterface;
 use OCA\Stackiq\Kernel\Contracts\ConnectionReportServiceInterface;
@@ -150,6 +151,7 @@ final class ContractBindings {
 		$context->registerServiceAlias(ReferenceComponentCoverageServiceInterface::class, ReferenceComponentCoverageService::class);
 		$context->registerServiceAlias(ReviewAggregateServiceInterface::class, ReviewAggregateService::class);
 		$context->registerServiceAlias(ReviewServiceInterface::class, ReviewService::class);
+		$context->registerServiceAlias(AskServiceInterface::class, AskService::class);
 		$context->registerServiceAlias(RoleGroupSettingsInterface::class, RoleGroupSettings::class);
 		$context->registerServiceAlias(SbomImportServiceInterface::class, SbomImportService::class);
 		$context->registerServiceAlias(SettingsServiceInterface::class, SettingsService::class);
