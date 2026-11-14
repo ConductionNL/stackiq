@@ -3376,6 +3376,34 @@
       },
       {
         "@self": {
+          "register": "stackiq",
+          "schema": "applicationInterface",
+          "slug": "api-case-registration-rest"
+        },
+        "name": "Case registration API",
+        "shortDescription": "Create and read cases over REST.",
+        "module": {},
+        "style": "REST",
+        "version": "1.2",
+        "specificationUrl": "https://example.org/openapi.json",
+        "documentationUrl": "https://example.org/docs",
+        "status": "in use"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "applicationInterface",
+          "slug": "api-case-events"
+        },
+        "name": "Case events",
+        "shortDescription": "Notifications when a case is created or changes status.",
+        "module": {},
+        "style": "event or message",
+        "version": "1.0",
+        "status": "in development"
+      },
+      {
+        "@self": {
           "register": "vng-gemma",
           "schema": "maintenanceWindow",
           "slug": "maintenance-database-upgrade"
