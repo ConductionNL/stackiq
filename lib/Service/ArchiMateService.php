@@ -319,7 +319,13 @@ class ArchiMateService implements ArchiMateServiceInterface {
 				$gebruikData,
 				$modulesData,
 				$deelnamesData,
-				$options
+				$options,
+				$this->orgConnections(
+					objectService: $objectService,
+					register: $orgRegisterId,
+					schemaId: $voorzConfig['koppeling_schema'] ?? null,
+					options: $options
+				)
 			);
 
 			// Generate file name: DD-MM-YYYY_Stackiq_AMEFF_export_OrgName.xml.
@@ -329,6 +335,7 @@ class ArchiMateService implements ArchiMateServiceInterface {
 				'success' => true,
 				'xml' => $xml,
 				'file_name' => $fileName,
+				'connections_skipped' => $this->exportService->lastSkippedConnections(),
 			];
 		} catch (\Exception $e) {
 			return $this->exportFailure(message: 'Organization ArchiMate export failed', exception: $e);
@@ -407,6 +414,33 @@ class ArchiMateService implements ArchiMateServiceInterface {
 
 		return $registerId;
 	}//end requireAmefRegisterId()
+
+	/**
+	 * The connections the organisation export may write as flows, when it is asked to (REQ-CDX-004).
+	 *
+	 * Every connection in the register is read; the flow writer keeps only those
+	 * whose ends are both in the exported model and counts the rest.
+	 *
+	 * @param ObjectServiceInterface $objectService The object service.
+	 * @param mixed $register The register the connections live in.
+	 * @param mixed $schemaId The connection schema, or null when none is configured.
+	 * @param array<string, bool> $options The export options.
+	 *
+	 * @return array<int, mixed> The connections, or none.
+	 *
+	 * @spec openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-004-the-organisation-archimate-export-can-carry-the-organisations-connections
+	 */
+	private function orgConnections(ObjectServiceInterface $objectService, mixed $register, mixed $schemaId, array $options): array {
+		if (($options['connections'] ?? false) !== true || empty($schemaId) === true) {
+			return [];
+		}
+
+		return $objectService->searchObjects(
+			query: ['@self' => ['register' => $register, 'schema' => $schemaId], '_limit' => 10000],
+			_rbac: false,
+			_multitenancy: false
+		);
+	}//end orgConnections()
 
 	/**
 	 * The organization's gebruik, modules and deelname gebruik from the Voorzieningen register

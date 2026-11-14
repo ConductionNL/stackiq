@@ -216,7 +216,8 @@ class ArchiMateServiceExportStatusTest extends TestCase {
 				[['n' => 1]],
 				[['n' => 2]],
 				[['n' => 3]],
-				['deelnames' => true]
+				['deelnames' => true],
+				[]
 			)
 			->willReturn('<org/>');
 
@@ -227,6 +228,8 @@ class ArchiMateServiceExportStatusTest extends TestCase {
 				'success' => true,
 				'xml' => '<org/>',
 				'file_name' => date('d-m-Y') . '_Stackiq_AMEFF_export_Gemeente_Test.xml',
+				// Without the connections option nothing is skipped (REQ-CDX-004).
+				'connections_skipped' => 0,
 			],
 			$result
 		);

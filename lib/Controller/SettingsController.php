@@ -1797,6 +1797,7 @@ class SettingsController extends Controller {
 				'modules' => $this->request->getParam('modules', 'true') === 'true',
 				'deelnames' => $this->request->getParam('deelnames', 'false') === 'true',
 				'usage' => $this->request->getParam('usage', 'false') === 'true',
+				'connections' => $this->request->getParam('connections', 'false') === 'true',
 			];
 
 			$result = $this->archiMateService->exportOrgArchiMate(organizationUuid: $organizationUuid, options: $options);
@@ -1816,7 +1817,11 @@ class SettingsController extends Controller {
 			$fileName = $result['file_name'] ?? 'archimate_org_export_' . date('Y-m-d_H-i-s') . '.xml';
 			$xmlContent = $result['xml'] ?? '<?xml version="1.0" encoding="UTF-8"?><model></model>';
 
-			return $this->buildXmlDownloadResponse(xmlContent: $xmlContent, fileName: $fileName);
+			$response = $this->buildXmlDownloadResponse(xmlContent: $xmlContent, fileName: $fileName);
+			// Connections with an end outside the exported model were skipped (REQ-CDX-004).
+			$response->addHeader('X-Stackiq-Connections-Skipped', (string)($result['connections_skipped'] ?? 0));
+
+			return $response;
 		} catch (\Exception $e) {
 			$this->logger->error('Organization ArchiMate export failed', ['error' => $e->getMessage(), 'trace' => $e->getTraceAsString()]);
 			$statusCode = $this->getHttpStatusForException(e: $e);

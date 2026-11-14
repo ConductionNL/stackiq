@@ -37,8 +37,9 @@
 - **acceptance_criteria**:
   - GIVEN an organisation with two connections between its applications WHEN the export runs with connections on THEN the file holds two flow relationships with transport properties
   - GIVEN a connection whose other end is outside the export WHEN the export runs THEN it is skipped and counted
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Service/ArchiMateExportConnectionsTest.php` against a fixture model; Playwright `tests/e2e/org-archimate-export.spec.ts` extended with the checkbox)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Service/ArchiMateExportConnectionsTest.php` against a fixture model; Playwright `tests/e2e/org-archimate-export.spec.ts` extended with the checkbox)
+- Progress: `connections=true` on the organisation export. `ArchiMate\ConnectionFlows` writes a flow per sending direction (two for bi-directional) between the exported application components, or to the national provision's element, with transport type, direction and status as properties; property definitions are added when a flow uses them. A connection with an end outside the model is skipped; the count is `connections_skipped` in the result and the `X-Stackiq-Connections-Skipped` header. The Connections checkbox is on the settings export. Tests: `tests/Unit/Service/ArchiMateExportConnectionsTest.php` (4) and the controller test. The Playwright case is left to an e2e run.
 
 ### Task 5: Documentation
 - **spec_ref**: openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-001-the-application-page-draws-the-applications-connections-as-a-map
