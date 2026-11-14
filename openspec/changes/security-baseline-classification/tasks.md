@@ -8,8 +8,8 @@
 - **acceptance_criteria**:
   - GIVEN the merged register WHEN usage is read THEN it has the nine properties, each with the owning-organisation read and update rule, and a higher version
   - GIVEN a Dutch instance WHEN the form renders THEN Beschikbaarheid, Integriteit and Vertrouwelijkheid and their reasons are Dutch
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Settings/BaselineClassificationDeclarationTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Settings/BaselineClassificationDeclarationTest.php)
 
 ### Task 2: Derive the overall level on every save
 - **spec_ref**: openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-002-the-overall-bbn-level-shall-be-the-highest-of-the-three-aspects-on-every-save
@@ -19,8 +19,8 @@
   - GIVEN no aspect WHEN the usage is saved THEN bbnLevel is empty
   - GIVEN an unchanged save WHEN the subscriber runs THEN it writes nothing
   - GIVEN an aspect change WHEN the subscriber runs THEN classifiedAt and classifiedBy are stamped
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/EventListener/UsageClassificationSubscriberTest.php, constructing the real OpenRegister event classes)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/EventListener/UsageClassificationSubscriberTest.php, constructing the real OpenRegister event classes)
 
 ### Task 3: Add the GEMMA suggestion and the summary endpoint
 - **spec_ref**: openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three

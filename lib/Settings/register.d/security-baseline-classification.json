@@ -1,0 +1,276 @@
+{
+  "_comment": "security-baseline-classification (board SkGebruik). An organisation classifies each application it uses on availability, integrity and confidentiality (BIO baseline levels BBN1 to BBN3), with a reason each. bbnLevel is the highest of the three, set by UsageClassificationSubscriber on every save. Every property carries the owning-organisation read and update rule usage.interneAnnotation uses, so a supplier that may read the usage of its product does not see the classification.",
+  "components": {
+    "schemas": {
+      "usage": {
+        "version": "1.5.11",
+        "properties": {
+          "availabilityLevel": {
+            "type": "string",
+            "enum": [
+              "BBN1",
+              "BBN2",
+              "BBN3"
+            ],
+            "title": "Availability",
+            "description": "The BIO baseline level for availability: how bad it is when the application is not there.",
+            "visible": true,
+            "hideOnCollection": true,
+            "facetable": true,
+            "order": 100,
+            "authorization": {
+              "read": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ],
+              "update": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ]
+            }
+          },
+          "availabilityReason": {
+            "type": "string",
+            "title": "Availability reason",
+            "description": "The main reason for the availability level.",
+            "visible": true,
+            "hideOnCollection": true,
+            "maxLength": 2000,
+            "order": 101,
+            "authorization": {
+              "read": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ],
+              "update": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ]
+            }
+          },
+          "integrityLevel": {
+            "type": "string",
+            "enum": [
+              "BBN1",
+              "BBN2",
+              "BBN3"
+            ],
+            "title": "Integrity",
+            "description": "The BIO baseline level for integrity: how bad it is when the data in the application is wrong.",
+            "visible": true,
+            "hideOnCollection": true,
+            "facetable": true,
+            "order": 102,
+            "authorization": {
+              "read": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ],
+              "update": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ]
+            }
+          },
+          "integrityReason": {
+            "type": "string",
+            "title": "Integrity reason",
+            "description": "The main reason for the integrity level.",
+            "visible": true,
+            "hideOnCollection": true,
+            "maxLength": 2000,
+            "order": 103,
+            "authorization": {
+              "read": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ],
+              "update": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ]
+            }
+          },
+          "confidentialityLevel": {
+            "type": "string",
+            "enum": [
+              "BBN1",
+              "BBN2",
+              "BBN3"
+            ],
+            "title": "Confidentiality",
+            "description": "The BIO baseline level for confidentiality: how bad it is when the data in the application leaks.",
+            "visible": true,
+            "hideOnCollection": true,
+            "facetable": true,
+            "order": 104,
+            "authorization": {
+              "read": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ],
+              "update": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ]
+            }
+          },
+          "confidentialityReason": {
+            "type": "string",
+            "title": "Confidentiality reason",
+            "description": "The main reason for the confidentiality level.",
+            "visible": true,
+            "hideOnCollection": true,
+            "maxLength": 2000,
+            "order": 105,
+            "authorization": {
+              "read": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ],
+              "update": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ]
+            }
+          },
+          "bbnLevel": {
+            "type": "string",
+            "enum": [
+              "BBN1",
+              "BBN2",
+              "BBN3"
+            ],
+            "title": "BBN level",
+            "description": "The highest of the three levels, worked out on every save; it cannot be set by hand.",
+            "visible": true,
+            "readOnly": true,
+            "facetable": true,
+            "order": 106,
+            "authorization": {
+              "read": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ],
+              "update": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ]
+            }
+          },
+          "classifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Classified at",
+            "description": "When one of the three levels last changed.",
+            "visible": true,
+            "readOnly": true,
+            "hideOnCollection": true,
+            "order": 107,
+            "authorization": {
+              "read": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ],
+              "update": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ]
+            }
+          },
+          "classifiedBy": {
+            "type": "string",
+            "title": "Classified by",
+            "description": "The user who last changed one of the three levels.",
+            "visible": true,
+            "readOnly": true,
+            "hideOnCollection": true,
+            "order": 108,
+            "authorization": {
+              "read": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ],
+              "update": [
+                {
+                  "group": "public",
+                  "match": {
+                    "_organisation": "$organisation"
+                  }
+                }
+              ]
+            }
+          }
+        }
+      }
+    }
+  }
+}
