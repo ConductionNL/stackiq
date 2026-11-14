@@ -21,6 +21,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use DateTimeImmutable;
+use OCA\Stackiq\Kernel\Contracts\PublicCatalogueRecordsInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\IL10N;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -34,7 +36,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/portal-public-software-catalogue/specs/portal-contribution/spec.md#requirement-req-port-005-stackiq-offers-the-published-applications-as-a-public-record-list
  */
-class PublicCatalogueRecords {
+class PublicCatalogueRecords implements PublicCatalogueRecordsInterface {
 	/**
 	 * The most applications the list reads.
 	 */
@@ -43,14 +45,14 @@ class PublicCatalogueRecords {
 	/**
 	 * Constructor.
 	 *
-	 * @param SettingsService $settingsService Resolves the register and schema ids.
+	 * @param RegisterConfigReaderInterface $settingsService Resolves the register and schema ids.
 	 * @param ContainerInterface $container Lazy OpenRegister lookups.
 	 * @param PortfolioReportDerivation $relations Normalises results and relation ids.
 	 * @param LoggerInterface $logger Logger.
 	 * @param IL10N $l10n Translates the record's labels.
 	 */
 	public function __construct(
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly ContainerInterface $container,
 		private readonly PortfolioReportDerivation $relations,
 		private readonly LoggerInterface $logger,

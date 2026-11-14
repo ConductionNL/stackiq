@@ -159,4 +159,47 @@ class CmdbRegisterSchemaFieldsTest extends TestCase {
 		$this->expectExceptionMessage('The stackiq register fragment broken.json cannot be read, so the CMDB import packs cannot be checked');
 		$reader->fields();
 	}//end testAnUnreadableFragmentFailsClosed()
+
+	/**
+	 * A missing register file fails closed before any fragment is read.
+	 *
+	 * @return void
+	 */
+	public function testAMissingRegisterFailsClosed(): void {
+		$directory = $this->settings(register: [], fragments: ['a.json' => ['components' => []]]);
+		unlink($directory . '/softwarecatalogus_register.json');
+		$reader = new CmdbRegisterSchemaFields(settingsDirectory: $directory);
+
+		try {
+			$reader->fields();
+			$this->fail('MAPPING_UNAVAILABLE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame(CmdbImportException::MAPPING_UNAVAILABLE, $e->getErrorCode());
+			$this->assertSame('The stackiq register definition cannot be read, so the CMDB import packs cannot be checked', $e->getMessage());
+		}
+	}//end testAMissingRegisterFailsClosed()
+
+	/**
+	 * An object configuration that is not an object marks nothing; the other markers still count.
+	 *
+	 * @return void
+	 */
+	public function testANonObjectConfigurationIsIgnored(): void {
+		$register = [
+			'components' => [
+				'schemas' => [
+					'module' => [
+						'properties' => [
+							'plain' => ['type' => 'string', 'objectConfiguration' => 'related-object'],
+							'linked' => ['type' => 'string', 'format' => 'uuid', 'objectConfiguration' => 'x'],
+						],
+					],
+				],
+			],
+		];
+
+		$fields = (new CmdbRegisterSchemaFields(settingsDirectory: $this->settings(register: $register)))->fields();
+
+		$this->assertSame(['module' => ['plain' => '', 'linked' => 'relation']], $fields);
+	}//end testANonObjectConfigurationIsIgnored()
 }//end class

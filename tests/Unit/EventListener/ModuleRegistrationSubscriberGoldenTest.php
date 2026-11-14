@@ -26,8 +26,10 @@ use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\Stackiq\EventListener\ModuleRegistrationSubscriber;
+use OCA\Stackiq\Kernel\Contracts\ModuleRegistrationServiceInterface;
 use OCA\Stackiq\Service\ModuleRegistrationService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -81,7 +83,7 @@ class ModuleRegistrationSubscriberGoldenTest extends TestCase {
 		});
 		$object->method('getId')->willReturn(42);
 
-		$settings = $this->createMock(SettingsService::class);
+		$settings = $this->createMock(CatalogueLocator::class);
 		$settings->method('getSchemaIdForObjectType')->willReturnCallback(function (string $type) use (&$trace, $case): ?int {
 			$trace[] = ['getSchemaIdForObjectType', $type];
 			return ($case['module'] ?? null);
@@ -98,7 +100,7 @@ class ModuleRegistrationSubscriberGoldenTest extends TestCase {
 			$trace[] = ['error', $message, $context];
 		});
 
-		$services  = [SettingsService::class => $settings, ModuleRegistrationService::class => $registration, LoggerInterface::class => $logger];
+		$services  = [ObjectTypeLocatorInterface::class => $settings, ModuleRegistrationServiceInterface::class => $registration, LoggerInterface::class => $logger];
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(function (string $id) use (&$trace, $services): object {
 			$trace[] = ['container.get', $id];

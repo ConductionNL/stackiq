@@ -25,8 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\BackgroundJob;
 
-use OCA\Stackiq\Service\Federation\FederationConfig;
-use OCA\Stackiq\Service\Federation\FederationService;
+use OCA\Stackiq\Kernel\Contracts\FederationConfigInterface;
+use OCA\Stackiq\Kernel\Contracts\FederationServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -39,14 +39,14 @@ class FederationSyncJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $timeFactory The time factory for scheduling.
-	 * @param FederationService $federation The federation service.
-	 * @param FederationConfig $config The federation config (interval).
+	 * @param FederationServiceInterface $federation The federation service.
+	 * @param FederationConfigInterface $config The federation config (interval).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $timeFactory,
-		private readonly FederationService $federation,
-		FederationConfig $config,
+		private readonly FederationServiceInterface $federation,
+		FederationConfigInterface $config,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $timeFactory);

@@ -21,6 +21,8 @@ namespace OCA\Stackiq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\GebruikServiceInterface;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -28,17 +30,17 @@ use Psr\Log\LoggerInterface;
 /**
  * Service for handling gebruik-related operations
  */
-class GebruikService {
+class GebruikService implements GebruikServiceInterface {
 	/**
 	 * Constructor for GebruikService.
 	 *
-	 * @param SettingsService $settingsService The settings service instance
+	 * @param CatalogueLocator $catalogue The voorzieningen register configuration
 	 * @param IAppManager $appManager The application manager
 	 * @param ContainerInterface $container The DI container
 	 * @param LoggerInterface $logger The logger instance
 	 */
 	public function __construct(
-		private readonly SettingsService $settingsService,
+		private readonly CatalogueLocator $catalogue,
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
@@ -55,9 +57,9 @@ class GebruikService {
 	 * @spec openspec/specs/gebruik-services/spec.md
 	 */
 	private function getGebruiksConfiguration(): array {
-		// Try to get voorzieningen configuration from SettingsService.
+		// Try to get voorzieningen configuration from CatalogueLocator.
 		try {
-			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
+			$voorzieningenConfig = $this->catalogue->getVoorzieningenConfig();
 
 			$this->logger->debug(
 				'Retrieved voorzieningen configuration',

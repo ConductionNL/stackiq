@@ -39,6 +39,7 @@ use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\Settings\CronjobSettings;
@@ -140,6 +141,7 @@ class SettingsControllerEmailArchiMateContractTest extends TestCase {
 			$this->archiMateService,
 			$this->createMock(RoleGroupSettings::class),
 			$this->createMock(ProgressTracker::class),
+			$this->createMock(ArchiMateImportControl::class),
 			$this->createMock(EolSyncService::class),
 			$this->emailSettings,
 			$this->createMock(LoggerInterface::class)

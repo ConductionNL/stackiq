@@ -23,9 +23,9 @@ namespace OCA\Stackiq\EventListener;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
-use OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard;
+use OCA\Stackiq\Kernel\Contracts\ContactPersonOrganisationGuardInterface;
 use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 
@@ -44,13 +44,13 @@ class ContactPersonOrganisationListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContactPersonOrganisationGuard $guard           Decides whether the caller may write the contact person.
-	 * @param SettingsService                $settingsService Names the contact person schema.
+	 * @param ContactPersonOrganisationGuardInterface $guard           Decides whether the caller may write the contact person.
+	 * @param RegisterConfigReaderInterface                $settingsService Names the contact person schema.
 	 * @param SystemContactWrites            $systemWrites    Tells whether stackiq itself is writing.
 	 */
 	public function __construct(
-		private readonly ContactPersonOrganisationGuard $guard,
-		private readonly SettingsService $settingsService,
+		private readonly ContactPersonOrganisationGuardInterface $guard,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly SystemContactWrites $systemWrites,
 	) {
 	}//end __construct()

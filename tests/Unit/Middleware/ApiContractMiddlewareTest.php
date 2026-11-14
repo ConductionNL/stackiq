@@ -30,6 +30,8 @@ use ReflectionProperty;
  * Pins the `API-Version` header and the problem details shape of API errors.
  *
  * @covers \OCA\Stackiq\Middleware\ApiContractMiddleware
+ * @uses   \OCA\Stackiq\Middleware\Support\ApiPathAliases
+ * @uses   \OCA\Stackiq\Middleware\Support\StandardProtocolPaths
  */
 class ApiContractMiddlewareTest extends TestCase {
 
@@ -44,6 +46,7 @@ class ApiContractMiddlewareTest extends TestCase {
 	private function decorate(string|false $path, Response $response): Response {
 		$request = $this->createMock(originalClassName: IRequest::class);
 		$request->method('getPathInfo')->willReturn($path);
+		$request->method('getRequestUri')->willReturn('/index.php'.(string) $path.'?q=1');
 		$appManager = $this->createMock(originalClassName: IAppManager::class);
 		$appManager->method('getAppVersion')->willReturn('1.2.3');
 
@@ -161,6 +164,50 @@ class ApiContractMiddlewareTest extends TestCase {
 		$this->assertSame(expected: '1.2.3', actual: $this->headersOf(response: $response)['API-Version']);
 		$this->assertSame(expected: 'gone', actual: $response->getData());
 	}//end testNonJsonErrorOnlyGetsTheHeader()
+
+	/**
+	 * An unversioned API path keeps answering and names its `/api/v1/` successor.
+	 *
+	 * @return void
+	 */
+	public function testUnversionedPathAnnouncesItsSuccessor(): void {
+		$response = $this->decorate(path: '/apps/stackiq/api/things/7/parts', response: new JSONResponse(data: ['id' => 7]));
+		$headers  = $this->headersOf(response: $response);
+
+		$this->assertSame(expected: ['id' => 7], actual: $response->getData());
+		$this->assertSame(expected: '@1794441600', actual: $headers['Deprecation']);
+		$this->assertSame(expected: '</index.php/apps/stackiq/api/v1/things/7/parts>; rel="successor-version"', actual: $headers['Link']);
+	}//end testUnversionedPathAnnouncesItsSuccessor()
+
+	/**
+	 * A versioned API path is not deprecated, and still carries the version.
+	 *
+	 * @return void
+	 */
+	public function testVersionedPathIsNotDeprecated(): void {
+		$headers = $this->headersOf(response: $this->decorate(path: '/apps/stackiq/api/v1/things/7', response: new JSONResponse(data: [])));
+
+		$this->assertSame(expected: '1.2.3', actual: $headers['API-Version']);
+		$this->assertArrayNotHasKey(key: 'Deprecation', array: $headers);
+		$this->assertArrayNotHasKey(key: 'Link', array: $headers);
+	}//end testVersionedPathIsNotDeprecated()
+
+	/**
+	 * A path that speaks a protocol defined elsewhere keeps the contract it always
+	 * had (version header, problem details) but is not announced as deprecated.
+	 *
+	 * @return void
+	 */
+	public function testStandardProtocolPathKeepsTheContractWithoutDeprecation(): void {
+		$response = $this->decorate(path: '/apps/stackiq/api/progress/1/stream', response: new JSONResponse(data: ['error' => 'x'], statusCode: 400));
+		$headers  = $this->headersOf(response: $response);
+
+		$this->assertSame(expected: '1.2.3', actual: $headers['API-Version']);
+		$this->assertSame(expected: 'x', actual: $response->getData()['error']);
+		$this->assertSame(expected: 400, actual: $response->getData()['status']);
+		$this->assertArrayNotHasKey(key: 'Deprecation', array: $headers);
+		$this->assertArrayNotHasKey(key: 'Link', array: $headers);
+	}//end testStandardProtocolPathKeepsTheContractWithoutDeprecation()
 
 	/**
 	 * The detail comes from detail, then message, then error, skipping empty

@@ -566,7 +566,7 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 
 		$this->assertStringContainsString(
 			'registerEventListener(ObjectDeletedEvent::class, ModuleVersionPublicationListener::class)',
-			(string) file_get_contents(__DIR__ . '/../../../lib/AppInfo/Application.php')
+			(string) file_get_contents(__DIR__ . '/../../../lib/EventListener/ListenerRegistrar.php')
 		);
 	}//end testTheListenerPassesUpdatesAndDeletes()
 
@@ -585,7 +585,7 @@ class ModuleVersionPublicationServiceTest extends TestCase {
 
 		(new ModuleVersionPublicationListener(publication: $service, logger: $this->createMock(LoggerInterface::class)))->handle(new ObjectCreatedEvent($object));
 
-		$app = (string) file_get_contents(__DIR__ . '/../../../lib/AppInfo/Application.php');
+		$app = (string) file_get_contents(__DIR__ . '/../../../lib/EventListener/ListenerRegistrar.php');
 		$this->assertStringContainsString('registerEventListener(ObjectCreatedEvent::class, ModuleVersionPublicationListener::class)', $app);
 		$this->assertStringContainsString('registerEventListener(ObjectUpdatedEvent::class, ModuleVersionPublicationListener::class)', $app);
 		$this->assertStringContainsString('OCA\\Stackiq\\Repair\\BackfillModuleVersionPublication', (string) file_get_contents(__DIR__ . '/../../../appinfo/info.xml'));

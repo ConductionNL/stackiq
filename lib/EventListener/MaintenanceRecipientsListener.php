@@ -30,7 +30,7 @@ namespace OCA\Stackiq\EventListener;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\Stackiq\BackgroundJob\MaintenanceRecipientsJob;
-use OCA\Stackiq\Service\MaintenanceRecipientService;
+use OCA\Stackiq\Kernel\Contracts\MaintenanceRecipientServiceInterface;
 use OCP\BackgroundJob\IJobList;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -48,12 +48,12 @@ class MaintenanceRecipientsListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param MaintenanceRecipientService $recipients The schema check.
+	 * @param MaintenanceRecipientServiceInterface $recipients The schema check.
 	 * @param IJobList                    $jobList    The background job list.
 	 * @param LoggerInterface             $logger     The logger.
 	 */
 	public function __construct(
-		private readonly MaintenanceRecipientService $recipients,
+		private readonly MaintenanceRecipientServiceInterface $recipients,
 		private readonly IJobList $jobList,
 		private readonly LoggerInterface $logger,
 	) {

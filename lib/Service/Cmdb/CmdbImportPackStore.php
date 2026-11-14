@@ -38,8 +38,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Cmdb;
 
-use OCA\Stackiq\AppInfo\AppIdentity;
 use OCA\Stackiq\Exception\CmdbImportException;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\CmdbImportPackStoreInterface;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -50,7 +51,7 @@ use Throwable;
  *
  * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
  */
-class CmdbImportPackStore {
+class CmdbImportPackStore implements CmdbImportPackStoreInterface {
 	/**
 	 * OpenRegister's migration-pack service (not a public contract).
 	 */
@@ -65,16 +66,6 @@ class CmdbImportPackStore {
 	 * The store resolved the pack as it was.
 	 */
 	public const FOUND = 'found';
-
-	/**
-	 * The store created the pack from the shipped file.
-	 */
-	public const SEEDED = 'seeded';
-
-	/**
-	 * The store replaced an unedited pack with a newer shipped one.
-	 */
-	public const UPDATED = 'updated';
 
 	/**
 	 * A class only an OpenRegister with the hardened pack store has.
@@ -93,7 +84,6 @@ class CmdbImportPackStore {
 	 * The exception OpenRegister throws when a pack was saved after the caller read it.
 	 */
 	public const PACK_CHANGED_CLASS = 'OCA\OpenRegister\Exception\PackChangedException';
-
 
 	/**
 	 * Decides whether OpenRegister's store may be used, and hands out its service.

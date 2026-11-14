@@ -25,7 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Settings;
 
-use OCA\Stackiq\AppInfo\AppIdentity;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\EmailSettingsInterface;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
 
@@ -37,7 +38,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/settings-service/spec.md
  */
-class EmailSettings {
+class EmailSettings implements EmailSettingsInterface {
 
 	/**
 	 * The email settings that carry a secret value.

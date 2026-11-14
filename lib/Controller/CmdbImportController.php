@@ -38,9 +38,10 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\AppInfo\AppIdentity;
 use OCA\Stackiq\Exception\CmdbImportException;
-use OCA\Stackiq\Service\CmdbExportImportService;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\CmdbExportImportServiceInterface;
+use OCA\Stackiq\Kernel\LogSafeMessage;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -77,7 +78,7 @@ class CmdbImportController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest $request The request.
-	 * @param CmdbExportImportService $importService The import service.
+	 * @param CmdbExportImportServiceInterface $importService The import service.
 	 * @param IL10N $l10n Translations of the error messages.
 	 * @param LoggerInterface $logger Logger.
 	 *
@@ -85,7 +86,7 @@ class CmdbImportController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly CmdbExportImportService $importService,
+		private readonly CmdbExportImportServiceInterface $importService,
 		private readonly IL10N $l10n,
 		private readonly LoggerInterface $logger,
 	) {
@@ -152,7 +153,7 @@ class CmdbImportController extends Controller {
 	private function failureContext(\Throwable $e): array {
 		return [
 			'exception' => get_class($e),
-			'error' => CmdbExportImportService::logSafeMessage(step: 'request', e: $e, values: []),
+			'error' => LogSafeMessage::of(step: 'request', e: $e, values: []),
 			'file' => $e->getFile(),
 			'line' => $e->getLine(),
 		];
@@ -336,7 +337,7 @@ class CmdbImportController extends Controller {
 	 * @spec openspec/changes/cmdb-import-archive-reconciliation/specs/cmdb-export-import/spec.md#requirement-records-missing-from-a-newer-export-shall-be-archived-by-default-or-kept-on-request-req-cmdb-012
 	 */
 	private function missingRecordsOption(): array|JSONResponse {
-		$missingRecords = $this->stringParam(name: 'missingRecords', default: CmdbExportImportService::DEFAULT_MISSING_RECORDS);
+		$missingRecords = $this->stringParam(name: 'missingRecords', default: CmdbExportImportServiceInterface::DEFAULT_MISSING_RECORDS);
 		if ($missingRecords === null) {
 			return $this->invalidField(field: 'missingRecords');
 		}

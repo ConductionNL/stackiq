@@ -1,0 +1,574 @@
+{
+    "{\"label\":\"x\"}": {
+        "nodes": []
+    },
+    "{\"_attributes\":{\"elementRef\":\"el-gemma\"}}": {
+        "nodes": []
+    },
+    "{\"_attributes\":{\"identifier\":\"n1\"}}": {
+        "nodes": [
+            {
+                "modelNodeId": null,
+                "viewNodeId": "n1",
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 50,
+                "parent": null,
+                "name": "Keyed by the empty string",
+                "type": null,
+                "color": "rgb(255, 255, 255)",
+                "borderColor": "rgb(0, 0, 0)",
+                "font": {
+                    "name": "Segoe UI, Arial",
+                    "size": 12,
+                    "style": "normal",
+                    "color": "rgb(0, 0, 0)"
+                },
+                "description": null,
+                "elementRef": null,
+                "elementProperties": {
+                    "name": "Keyed by the empty string"
+                }
+            }
+        ]
+    },
+    "[{\"_attributes\":{\"identifier\":\"n1\",\"x\":\"10\",\"y\":\"20\",\"w\":\"30\",\"h\":\"40\",\"xsi:type\":\"Label\"},\"label\":\"Tekst\"}]": {
+        "nodes": [
+            {
+                "modelNodeId": null,
+                "viewNodeId": "n1",
+                "x": 10,
+                "y": 20,
+                "width": 30,
+                "height": 40,
+                "parent": null,
+                "name": "Tekst",
+                "type": "label",
+                "color": "rgb(255, 255, 255)",
+                "borderColor": "rgb(0, 0, 0)",
+                "font": {
+                    "name": "Segoe UI, Arial",
+                    "size": 12,
+                    "style": "normal",
+                    "color": "rgb(0, 0, 0)"
+                },
+                "description": null,
+                "elementRef": null,
+                "elementProperties": {
+                    "name": "Keyed by the empty string"
+                }
+            }
+        ]
+    },
+    "[{\"_attributes\":{\"identifier\":\"n1\",\"xsi:type\":\"Element\",\"elementRef\":\"el-gemma\"},\"label\":{\"_value\":\"Eigen label\"},\"style\":{\"fillColor\":{\"_attributes\":{\"r\":\"1\",\"g\":\"2\",\"b\":\"3\"}}}}]": {
+        "nodes": [
+            {
+                "modelNodeId": "el-gemma",
+                "viewNodeId": "n1",
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 50,
+                "parent": null,
+                "name": "Eigen label",
+                "type": "applicatiecomponent",
+                "color": "rgb(1, 2, 3)",
+                "borderColor": "rgb(0, 0, 0)",
+                "font": {
+                    "name": "Segoe UI, Arial",
+                    "size": 12,
+                    "style": "normal",
+                    "color": "rgb(0, 0, 0)"
+                },
+                "description": "Beheert zaken",
+                "elementRef": "el-gemma",
+                "elementProperties": {
+                    "name": "Zaaksysteem",
+                    "omschrijving": "Beheert zaken",
+                    "section": "elements",
+                    "model_identifier": "model-1",
+                    "documentation": "ignored",
+                    "gemmaType": "Applicatiecomponent",
+                    "objectId": "obj-1",
+                    "bivScoreBbn": "hoog",
+                    "integrity": "midden",
+                    "properties": {
+                        "a": "b"
+                    }
+                },
+                "objectId": "obj-1",
+                "gemmaType": "Applicatiecomponent",
+                "bivScoreBbn": "hoog",
+                "integrity": "midden",
+                "elementSection": "elements",
+                "modelIdentifier": "model-1"
+            }
+        ]
+    },
+    "[{\"_attributes\":{\"identifier\":\"n1\",\"elementRef\":\"el-gemma\"},\"label\":{\"other\":\"x\"}}]": {
+        "nodes": [
+            {
+                "modelNodeId": "el-gemma",
+                "viewNodeId": "n1",
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 50,
+                "parent": null,
+                "name": "Zaaksysteem",
+                "type": "label",
+                "color": "rgb(255, 255, 255)",
+                "borderColor": "rgb(0, 0, 0)",
+                "font": {
+                    "name": "Segoe UI, Arial",
+                    "size": 12,
+                    "style": "normal",
+                    "color": "rgb(0, 0, 0)"
+                },
+                "description": "Beheert zaken",
+                "elementRef": "el-gemma",
+                "elementProperties": {
+                    "name": "Zaaksysteem",
+                    "omschrijving": "Beheert zaken",
+                    "section": "elements",
+                    "model_identifier": "model-1",
+                    "documentation": "ignored",
+                    "gemmaType": "Applicatiecomponent",
+                    "objectId": "obj-1",
+                    "bivScoreBbn": "hoog",
+                    "integrity": "midden",
+                    "properties": {
+                        "a": "b"
+                    }
+                },
+                "objectId": "obj-1",
+                "gemmaType": "Applicatiecomponent",
+                "bivScoreBbn": "hoog",
+                "integrity": "midden",
+                "elementSection": "elements",
+                "modelIdentifier": "model-1"
+            }
+        ]
+    },
+    "[{\"_attributes\":{\"identifier\":\"a\",\"elementRef\":\"el-gemma\"}},{\"_attributes\":{\"identifier\":\"b\",\"elementRef\":\"el-gemma-list\"}},{\"_attributes\":{\"identifier\":\"c\",\"elementRef\":\"el-gemma-idx\"}},{\"_attributes\":{\"identifier\":\"d\",\"elementRef\":\"el-gemma-none\"}},{\"_attributes\":{\"identifier\":\"e\",\"elementRef\":\"el-xsi\"}},{\"_attributes\":{\"identifier\":\"f\",\"elementRef\":\"el-xsi-plain\"}},{\"_attributes\":{\"identifier\":\"g\",\"elementRef\":\"el-bare\"}},{\"_attributes\":{\"identifier\":\"h\",\"elementRef\":\"unknown\"}},{\"_attributes\":{\"identifier\":\"i\"}},{\"_attributes\":{\"identifier\":\"j\",\"xsi:type\":\"Container\",\"elementRef\":\"el-gemma\"}}]": {
+        "nodes": [
+            {
+                "modelNodeId": "el-gemma",
+                "viewNodeId": "a",
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 50,
+                "parent": null,
+                "name": "Zaaksysteem",
+                "type": "applicatiecomponent",
+                "color": "rgb(255, 255, 255)",
+                "borderColor": "rgb(0, 0, 0)",
+                "font": {
+                    "name": "Segoe UI, Arial",
+                    "size": 12,
+                    "style": "normal",
+                    "color": "rgb(0, 0, 0)"
+                },
+                "description": "Beheert zaken",
+                "elementRef": "el-gemma",
+                "elementProperties": {
+                    "name": "Zaaksysteem",
+                    "omschrijving": "Beheert zaken",
+                    "section": "elements",
+                    "model_identifier": "model-1",
+                    "documentation": "ignored",
+                    "gemmaType": "Applicatiecomponent",
+                    "objectId": "obj-1",
+                    "bivScoreBbn": "hoog",
+                    "integrity": "midden",
+                    "properties": {
+                        "a": "b"
+                    }
+                },
+                "objectId": "obj-1",
+                "gemmaType": "Applicatiecomponent",
+                "bivScoreBbn": "hoog",
+                "integrity": "midden",
+                "elementSection": "elements",
+                "modelIdentifier": "model-1"
+            },
+            {
+                "modelNodeId": "el-gemma-list",
+                "viewNodeId": "b",
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 50,
+                "parent": null,
+                "name": "Lijst",
+                "type": "bedrijfsproces",
+                "color": "rgb(255, 255, 255)",
+                "borderColor": "rgb(0, 0, 0)",
+                "font": {
+                    "name": "Segoe UI, Arial",
+                    "size": 12,
+                    "style": "normal",
+                    "color": "rgb(0, 0, 0)"
+                },
+                "description": "Doc only",
+                "elementRef": "el-gemma-list",
+                "elementProperties": {
+                    "name": "Lijst",
+                    "gemmaType": {
+                        "_value": "Bedrijfsproces"
+                    },
+                    "documentation": "Doc only"
+                },
+                "gemmaType": {
+                    "_value": "Bedrijfsproces"
+                }
+            },
+            {
+                "modelNodeId": "el-gemma-idx",
+                "viewNodeId": "c",
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 50,
+                "parent": null,
+                "name": null,
+                "type": "dienst",
+                "color": "rgb(255, 255, 255)",
+                "borderColor": "rgb(0, 0, 0)",
+                "font": {
+                    "name": "Segoe UI, Arial",
+                    "size": 12,
+                    "style": "normal",
+                    "color": "rgb(0, 0, 0)"
+                },
+                "description": null,
+                "elementRef": "el-gemma-idx",
+                "elementProperties": {
+                    "gemmaType": [
+                        "Dienst"
+                    ]
+                },
+                "gemmaType": [
+                    "Dienst"
+                ]
+            },
+            {
+                "modelNodeId": "el-gemma-none",
+                "viewNodeId": "d",
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 50,
+                "parent": null,
+                "name": null,
+                "type": "unknown",
+                "color": "rgb(255, 255, 255)",
+                "borderColor": "rgb(0, 0, 0)",
+                "font": {
+                    "name": "Segoe UI, Arial",
+                    "size": 12,
+                    "style": "normal",
+                    "color": "rgb(0, 0, 0)"
+                },
+                "description": null,
+                "elementRef": "el-gemma-none",
+                "elementProperties": {
+                    "gemmaType": {
+                        "other": "x"
+                    }
+                },
+                "gemmaType": {
+                    "other": "x"
+                }
+            },
+            {
+                "modelNodeId": "el-xsi",
+                "viewNodeId": "e",
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 50,
+                "parent": null,
+                "name": "Service",
+                "type": "businessservice",
+                "color": "rgb(255, 255, 255)",
+                "borderColor": "rgb(0, 0, 0)",
+                "font": {
+                    "name": "Segoe UI, Arial",
+                    "size": 12,
+                    "style": "normal",
+                    "color": "rgb(0, 0, 0)"
+                },
+                "description": null,
+                "elementRef": "el-xsi",
+                "elementProperties": {
+                    "name": "Service"
+                }
+            },
+            {
+                "modelNodeId": "el-xsi-plain",
+                "viewNodeId": "f",
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 50,
+                "parent": null,
+                "name": null,
+                "type": "applicationcomponent",
+                "color": "rgb(255, 255, 255)",
+                "borderColor": "rgb(0, 0, 0)",
+                "font": {
+                    "name": "Segoe UI, Arial",
+                    "size": 12,
+                    "style": "normal",
+                    "color": "rgb(0, 0, 0)"
+                },
+                "description": null,
+                "elementRef": "el-xsi-plain",
+                "elementProperties": []
+            },
+            {
+                "modelNodeId": "el-bare",
+                "viewNodeId": "g",
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 50,
+                "parent": null,
+                "name": null,
+                "type": "element",
+                "color": "rgb(255, 255, 255)",
+                "borderColor": "rgb(0, 0, 0)",
+                "font": {
+                    "name": "Segoe UI, Arial",
+                    "size": 12,
+                    "style": "normal",
+                    "color": "rgb(0, 0, 0)"
+                },
+                "description": null,
+                "elementRef": "el-bare",
+                "elementProperties": {
+                    "availability": "laag",
+                    "confidentiality": "hoog"
+                },
+                "availability": "laag",
+                "confidentiality": "hoog"
+            },
+            {
+                "modelNodeId": "unknown",
+                "viewNodeId": "h",
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 50,
+                "parent": null,
+                "name": null,
+                "type": "element",
+                "color": "rgb(255, 255, 255)",
+                "borderColor": "rgb(0, 0, 0)",
+                "font": {
+                    "name": "Segoe UI, Arial",
+                    "size": 12,
+                    "style": "normal",
+                    "color": "rgb(0, 0, 0)"
+                },
+                "description": null,
+                "elementRef": "unknown"
+            },
+            {
+                "modelNodeId": null,
+                "viewNodeId": "i",
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 50,
+                "parent": null,
+                "name": "Keyed by the empty string",
+                "type": null,
+                "color": "rgb(255, 255, 255)",
+                "borderColor": "rgb(0, 0, 0)",
+                "font": {
+                    "name": "Segoe UI, Arial",
+                    "size": 12,
+                    "style": "normal",
+                    "color": "rgb(0, 0, 0)"
+                },
+                "description": null,
+                "elementRef": null,
+                "elementProperties": {
+                    "name": "Keyed by the empty string"
+                }
+            },
+            {
+                "modelNodeId": "el-gemma",
+                "viewNodeId": "j",
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 50,
+                "parent": null,
+                "name": "Zaaksysteem",
+                "type": "container",
+                "color": "rgb(255, 255, 255)",
+                "borderColor": "rgb(0, 0, 0)",
+                "font": {
+                    "name": "Segoe UI, Arial",
+                    "size": 12,
+                    "style": "normal",
+                    "color": "rgb(0, 0, 0)"
+                },
+                "description": "Beheert zaken",
+                "elementRef": "el-gemma",
+                "elementProperties": {
+                    "name": "Zaaksysteem",
+                    "omschrijving": "Beheert zaken",
+                    "section": "elements",
+                    "model_identifier": "model-1",
+                    "documentation": "ignored",
+                    "gemmaType": "Applicatiecomponent",
+                    "objectId": "obj-1",
+                    "bivScoreBbn": "hoog",
+                    "integrity": "midden",
+                    "properties": {
+                        "a": "b"
+                    }
+                },
+                "objectId": "obj-1",
+                "gemmaType": "Applicatiecomponent",
+                "bivScoreBbn": "hoog",
+                "integrity": "midden",
+                "elementSection": "elements",
+                "modelIdentifier": "model-1"
+            }
+        ]
+    },
+    "[{\"_attributes\":{\"identifier\":\"root\",\"elementRef\":\"el-xsi\"},\"node\":[{\"_attributes\":{\"identifier\":\"child-1\"},\"node\":{\"_attributes\":{\"identifier\":\"grandchild\"}}},{\"_attributes\":{\"identifier\":\"child-2\",\"elementRef\":\"el-bare\"}}]},{\"_attributes\":{\"identifier\":\"sibling\"},\"node\":{\"_attributes\":[]}}]": {
+        "nodes": [
+            {
+                "modelNodeId": "el-xsi",
+                "viewNodeId": "root",
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 50,
+                "parent": null,
+                "name": "Service",
+                "type": "businessservice",
+                "color": "rgb(255, 255, 255)",
+                "borderColor": "rgb(0, 0, 0)",
+                "font": {
+                    "name": "Segoe UI, Arial",
+                    "size": 12,
+                    "style": "normal",
+                    "color": "rgb(0, 0, 0)"
+                },
+                "description": null,
+                "elementRef": "el-xsi",
+                "elementProperties": {
+                    "name": "Service"
+                }
+            },
+            {
+                "modelNodeId": null,
+                "viewNodeId": "child-1",
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 50,
+                "parent": "root",
+                "name": "Keyed by the empty string",
+                "type": null,
+                "color": "rgb(255, 255, 255)",
+                "borderColor": "rgb(0, 0, 0)",
+                "font": {
+                    "name": "Segoe UI, Arial",
+                    "size": 12,
+                    "style": "normal",
+                    "color": "rgb(0, 0, 0)"
+                },
+                "description": null,
+                "elementRef": null,
+                "elementProperties": {
+                    "name": "Keyed by the empty string"
+                }
+            },
+            {
+                "modelNodeId": null,
+                "viewNodeId": "grandchild",
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 50,
+                "parent": "child-1",
+                "name": "Keyed by the empty string",
+                "type": null,
+                "color": "rgb(255, 255, 255)",
+                "borderColor": "rgb(0, 0, 0)",
+                "font": {
+                    "name": "Segoe UI, Arial",
+                    "size": 12,
+                    "style": "normal",
+                    "color": "rgb(0, 0, 0)"
+                },
+                "description": null,
+                "elementRef": null,
+                "elementProperties": {
+                    "name": "Keyed by the empty string"
+                }
+            },
+            {
+                "modelNodeId": "el-bare",
+                "viewNodeId": "child-2",
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 50,
+                "parent": "root",
+                "name": null,
+                "type": "element",
+                "color": "rgb(255, 255, 255)",
+                "borderColor": "rgb(0, 0, 0)",
+                "font": {
+                    "name": "Segoe UI, Arial",
+                    "size": 12,
+                    "style": "normal",
+                    "color": "rgb(0, 0, 0)"
+                },
+                "description": null,
+                "elementRef": "el-bare",
+                "elementProperties": {
+                    "availability": "laag",
+                    "confidentiality": "hoog"
+                },
+                "availability": "laag",
+                "confidentiality": "hoog"
+            },
+            {
+                "modelNodeId": null,
+                "viewNodeId": "sibling",
+                "x": 0,
+                "y": 0,
+                "width": 100,
+                "height": 50,
+                "parent": null,
+                "name": "Keyed by the empty string",
+                "type": null,
+                "color": "rgb(255, 255, 255)",
+                "borderColor": "rgb(0, 0, 0)",
+                "font": {
+                    "name": "Segoe UI, Arial",
+                    "size": 12,
+                    "style": "normal",
+                    "color": "rgb(0, 0, 0)"
+                },
+                "description": null,
+                "elementRef": null,
+                "elementProperties": {
+                    "name": "Keyed by the empty string"
+                }
+            }
+        ]
+    }
+}

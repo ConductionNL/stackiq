@@ -32,6 +32,7 @@ use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
 use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
@@ -106,6 +107,7 @@ class SettingsControllerConfigEndpointsGoldenTest extends TestCase {
 		$calls    = new \ArrayObject();
 		$settings = $this->createMock(originalClassName: SettingsService::class);
 		$collaborators = [
+			ArchiMateImportControl::class => $this->createMock(originalClassName: ArchiMateImportControl::class),
 			CronjobSettings::class => $this->createMock(originalClassName: CronjobSettings::class),
 			EmailSettings::class => $this->createMock(originalClassName: EmailSettings::class),
 			RoleGroupSettings::class => $this->createMock(originalClassName: RoleGroupSettings::class),
@@ -162,6 +164,7 @@ class SettingsControllerConfigEndpointsGoldenTest extends TestCase {
 			cronjobSettings: $collaborators[CronjobSettings::class],
 			emailSettings: $collaborators[EmailSettings::class],
 			roleGroupSettings: $collaborators[RoleGroupSettings::class],
+			archiMateImportControl: $collaborators[ArchiMateImportControl::class],
 			orgSyncSvc: $this->createMock(originalClassName: OrganizationSyncService::class),
 			archiMateService: $this->createMock(originalClassName: ArchiMateService::class),
 			progressTracker: $this->createMock(originalClassName: ProgressTracker::class),

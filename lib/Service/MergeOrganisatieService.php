@@ -63,6 +63,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\MergeOrganisatieServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Stackiq\OrganizationHandler;
 use OCP\App\IAppManager;
 use OCP\EventDispatcher\IEventDispatcher;
@@ -91,7 +93,7 @@ use Psr\Log\LoggerInterface;
  * (`CriticalActionPerformedEvent`), the event dispatcher and the progress tracker. The count is
  * the breadth of the merge itself, not an accidental dependency tangle.
  */
-class MergeOrganisatieService {
+class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 	/**
 	 * The tombstone status value written to a merged-away source organisation.
 	 *
@@ -153,7 +155,7 @@ class MergeOrganisatieService {
 	 * @param IGroupManager $groupManager Group manager (NC group membership migration).
 	 * @param LoggerInterface $logger Logger interface (structured audit + diagnostic entries).
 	 * @param IEventDispatcher $eventDispatcher Event dispatcher (NC's `CriticalActionPerformedEvent` audit mechanism).
-	 * @param SettingsService $settingsService Settings service (register/schema id resolution).
+	 * @param RegisterConfigReaderInterface $settingsService Settings service (register/schema id resolution).
 	 * @param OrganisatieService $organisationService Organisatie service (keeps the OR core Organisation.active flag in sync via mapStatus).
 	 * @param ProgressTracker $progressTracker Progress tracker (SSE progress-tracking mechanism).
 	 * @param OrganizationHandler $organizationHandler Organization handler (NC group creation/lookup for the target org).
@@ -164,7 +166,7 @@ class MergeOrganisatieService {
 		private readonly IGroupManager $groupManager,
 		private readonly LoggerInterface $logger,
 		private readonly IEventDispatcher $eventDispatcher,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly OrganisatieService $organisationService,
 		private readonly ProgressTracker $progressTracker,
 		private readonly OrganizationHandler $organizationHandler,

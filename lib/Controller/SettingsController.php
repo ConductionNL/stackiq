@@ -27,17 +27,19 @@ namespace OCA\Stackiq\Controller;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ConfigurationService;
 use OCA\Stackiq\Exception\CmdbImportException;
-use OCA\Stackiq\Service\ArchiMateImportService;
-use OCA\Stackiq\Service\ArchiMateService;
+use OCA\Stackiq\Kernel\Contracts\ArchiMateImportControlInterface;
+use OCA\Stackiq\Kernel\Contracts\ArchiMateImportServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ArchiMateServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ConnectionReportServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\CronjobSettingsInterface;
+use OCA\Stackiq\Kernel\Contracts\EmailSettingsInterface;
+use OCA\Stackiq\Kernel\Contracts\EolSyncServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ModuleComplianceServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ProgressTrackerInterface;
+use OCA\Stackiq\Kernel\Contracts\RoleGroupSettingsInterface;
+use OCA\Stackiq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
-use OCA\Stackiq\Service\ConnectionReportService;
-use OCA\Stackiq\Service\EolSyncService;
-use OCA\Stackiq\Service\OrganizationSyncService;
-use OCA\Stackiq\Service\ProgressTracker;
-use OCA\Stackiq\Service\Settings\RoleGroupSettings;
-use OCA\Stackiq\Service\Settings\EmailSettings;
-use OCA\Stackiq\Service\Settings\CronjobSettings;
-use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -103,16 +105,17 @@ class SettingsController extends Controller {
 	 * @param IAppManager $appManager The app manager.
 	 * @param IGroupManager $groupManager The group manager.
 	 * @param IUserSession $userSession The user session.
-	 * @param SettingsService $settingsService The settings service.
-	 * @param CronjobSettings $cronjobSettings The cronjob configuration.
-	 * @param OrganizationSyncService $orgSyncSvc The organization sync service.
-	 * @param ArchiMateService $archiMateService The ArchiMate import/export service.
-	 * @param RoleGroupSettings $roleGroupSettings The role group lists.
-	 * @param ProgressTracker $progressTracker The progress tracking service.
-	 * @param EolSyncService $eolSyncService The EOL feed sync orchestration service.
-	 * @param EmailSettings $emailSettings The stored e-mail settings and templates.
+	 * @param SettingsServiceInterface $settingsService The settings service.
+	 * @param CronjobSettingsInterface $cronjobSettings The cronjob configuration.
+	 * @param OrganizationSyncServiceInterface $orgSyncSvc The organization sync service.
+	 * @param ArchiMateServiceInterface $archiMateService The ArchiMate import/export service.
+	 * @param RoleGroupSettingsInterface $roleGroupSettings The role group lists.
+	 * @param ProgressTrackerInterface $progressTracker The progress tracking service.
+	 * @param ArchiMateImportControlInterface $archiMateImportControl Clears, stops and cancels the ArchiMate import status.
+	 * @param EolSyncServiceInterface $eolSyncService The EOL feed sync orchestration service.
+	 * @param EmailSettingsInterface $emailSettings The stored e-mail settings and templates.
 	 * @param LoggerInterface $logger The logger instance.
-	 * @param ConnectionReportService|null $connectionReports Asks integriq to look again after an email settings save.
+	 * @param ConnectionReportServiceInterface|null $connectionReports Asks integriq to look again after an email settings save.
 	 * @param CmdbImportProfile|null $cmdbImportProfile The CMDB import profile and packs; null builds the shipped one.
 	 * @param IL10N|null $l10n Translations of the CMDB mapping messages.
 	 * @param IURLGenerator|null $urlGenerator Builds the link to a CMDB mapping pack's editor in OpenRegister.
@@ -130,16 +133,17 @@ class SettingsController extends Controller {
 		private readonly IAppManager $appManager,
 		private readonly IGroupManager $groupManager,
 		private readonly IUserSession $userSession,
-		private readonly SettingsService $settingsService,
-		private readonly CronjobSettings $cronjobSettings,
-		private readonly OrganizationSyncService $orgSyncSvc,
-		private readonly ArchiMateService $archiMateService,
-		private readonly RoleGroupSettings $roleGroupSettings,
-		private readonly ProgressTracker $progressTracker,
-		private readonly EolSyncService $eolSyncService,
-		private readonly EmailSettings $emailSettings,
+		private readonly SettingsServiceInterface $settingsService,
+		private readonly CronjobSettingsInterface $cronjobSettings,
+		private readonly OrganizationSyncServiceInterface $orgSyncSvc,
+		private readonly ArchiMateServiceInterface $archiMateService,
+		private readonly RoleGroupSettingsInterface $roleGroupSettings,
+		private readonly ProgressTrackerInterface $progressTracker,
+		private readonly ArchiMateImportControlInterface $archiMateImportControl,
+		private readonly EolSyncServiceInterface $eolSyncService,
+		private readonly EmailSettingsInterface $emailSettings,
 		private readonly LoggerInterface $logger,
-		private readonly ?ConnectionReportService $connectionReports = null,
+		private readonly ?ConnectionReportServiceInterface $connectionReports = null,
 		private readonly ?CmdbImportProfile $cmdbImportProfile = null,
 		private readonly ?IL10N $l10n = null,
 		private readonly ?IURLGenerator $urlGenerator = null,
@@ -2546,7 +2550,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$result = $this->settingsService->clearArchiMateImportStatus();
+			$result = $this->archiMateImportControl->clearArchiMateImportStatus();
 
 			return new JSONResponse(
 				[
@@ -2580,7 +2584,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$result = $this->settingsService->killArchiMateImport();
+			$result = $this->archiMateImportControl->killArchiMateImport();
 
 			return new JSONResponse(
 				[
@@ -2615,13 +2619,13 @@ class SettingsController extends Controller {
 		$operationId = $this->request->getParam('operationId');
 		if ($operationId !== null
 			&& (is_string($operationId) === false
-			|| preg_match(ArchiMateImportService::OPERATION_ID_PATTERN, $operationId) !== 1)
+			|| preg_match(ArchiMateImportServiceInterface::OPERATION_ID_PATTERN, $operationId) !== 1)
 		) {
 			return new JSONResponse(['success' => false, 'message' => 'Invalid operation id'], Http::STATUS_BAD_REQUEST);
 		}
 
 		try {
-			$result = $this->settingsService->cancelArchiMateImport(operationId: $operationId);
+			$result = $this->archiMateImportControl->cancelArchiMateImport(operationId: $operationId);
 			$message = 'ArchiMate import cancellation failed';
 			if ($result['cancelled'] === true) {
 				$message = 'ArchiMate import cancellation succeeded';
@@ -2650,7 +2654,7 @@ class SettingsController extends Controller {
 		}
 
 		try {
-			$this->settingsService->clearArchiMateExportStatus();
+			$this->archiMateImportControl->clearArchiMateExportStatus();
 
 			return new JSONResponse(
 				[
@@ -3084,7 +3088,7 @@ class SettingsController extends Controller {
 			$this->logger->info('SettingsController: Starting bulk sync of module standards.');
 
 			// Get the ModuleComplianceService from the container.
-			$moduleComplianceService = $this->container->get(\OCA\Stackiq\Service\ModuleComplianceService::class);
+			$moduleComplianceService = $this->container->get(ModuleComplianceServiceInterface::class);
 
 			// Perform the bulk sync.
 			$results = $moduleComplianceService->bulkSyncModuleStandards();

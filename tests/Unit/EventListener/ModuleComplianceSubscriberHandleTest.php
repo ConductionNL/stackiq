@@ -24,9 +24,12 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\Stackiq\EventListener\ModuleComplianceSubscriber;
+use OCA\Stackiq\Kernel\Contracts\ModuleComplianceServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ModuleVersionServiceInterface;
 use OCA\Stackiq\Service\ModuleComplianceService;
 use OCA\Stackiq\Service\ModuleVersionService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\EventDispatcher\Event;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -56,11 +59,11 @@ class ModuleComplianceSubscriberHandleTest extends TestCase {
 	private ModuleVersionService&MockObject $versions;
 
 	/**
-	 * The settings service.
+	 * The catalogue locator.
 	 *
-	 * @var SettingsService&MockObject
+	 * @var CatalogueLocator&MockObject
 	 */
-	private SettingsService&MockObject $settings;
+	private CatalogueLocator&MockObject $settings;
 
 	/**
 	 * Logger that records every call.
@@ -77,7 +80,7 @@ class ModuleComplianceSubscriberHandleTest extends TestCase {
 	protected function setUp(): void {
 		$this->compliance = $this->createMock(ModuleComplianceService::class);
 		$this->versions   = $this->createMock(ModuleVersionService::class);
-		$this->settings   = $this->createMock(SettingsService::class);
+		$this->settings   = $this->createMock(CatalogueLocator::class);
 		$this->logger     = new class extends AbstractLogger {
 			/**
 			 * Recorded calls.
@@ -109,9 +112,9 @@ class ModuleComplianceSubscriberHandleTest extends TestCase {
 		$container->method('get')->willReturnCallback(
 			fn (string $id): object => match ($id) {
 				LoggerInterface::class => $this->logger,
-				SettingsService::class => $this->settings,
-				ModuleComplianceService::class => $this->compliance,
-				ModuleVersionService::class => $this->versions,
+				ObjectTypeLocatorInterface::class => $this->settings,
+				ModuleComplianceServiceInterface::class => $this->compliance,
+				ModuleVersionServiceInterface::class => $this->versions,
 			}
 		);
 

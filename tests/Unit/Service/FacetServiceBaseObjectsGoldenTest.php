@@ -27,7 +27,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\FacetService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\ViewQueryBuilder;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -66,7 +66,7 @@ class FacetServiceBaseObjectsGoldenTest extends TestCase {
 		$objectService->method('searchObjects')->willReturn([]);
 		$container = $this->createMock(ContainerInterface::class);
 		$container->method('get')->willReturnCallback(fn (string $id) => $id === ObjectService::class ? $objectService : null);
-		$settings = $this->createMock(SettingsService::class);
+		$settings = $this->createMock(CatalogueLocator::class);
 		$settings->method('getVoorzieningenConfig')->willReturn($config);
 		$archiMate = $this->createMock(ArchiMateService::class);
 		$archiMate->method('getElementObjects')->willReturn([]);
