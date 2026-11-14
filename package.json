@@ -87,6 +87,9 @@
     "serialize-javascript": ">=7.0.3",
     "@toast-ui/editor": {
       "dompurify": "^3.4.17"
+    },
+    "webdav": {
+      "minimatch": "^11.0.1"
     }
   },
   "devDependencies": {
