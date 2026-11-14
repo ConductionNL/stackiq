@@ -30,8 +30,8 @@
   - GIVEN facet keys, a quick filter and a search WHEN the endpoint runs THEN the rows are the ids `FacetService` matched, narrowed by the quick filter fields, read with RBAC on
   - GIVEN a schema whose `authorization` names `export` and a caller outside it WHEN the endpoint is called THEN it answers 403
   - GIVEN the facet ceiling was reached WHEN the file is written THEN its last row says the set was cut
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Controller/CatalogExportControllerTest.php and tests/Unit/Service/CatalogExportServiceTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Controller/CatalogExportControllerTest.php and tests/Unit/Service/CatalogExportServiceTest.php)
 
 ### Task 4: Add the Export menu to the Applications and Services pages
 - **spec_ref**: openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave

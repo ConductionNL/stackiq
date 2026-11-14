@@ -2524,6 +2524,60 @@
                 ]
             }
         },
+        "/catalog/{schema}/export": {
+            "get": {
+                "operationId": "catalog-export-export",
+                "summary": "Export the Applications or Services list as filtered",
+                "description": "Export the Applications (module) or Services (catalogService) list as CSV or XLSX: the objects the GEMMA facets and the search match, narrowed by the active quick filter, read with the caller's rights, in the page's columns. Query parameters: _gf_referenceComponent, _gf_standard, _gf_applicationService, _gf_domain (or the plain dimension names), search, quickFilter (JSON object), columns (JSON list of {key, label}), format (csv or xlsx). When the facet set stopped at its paging ceiling the file's last row says so. A schema whose authorization names export admits only those groups.",
+                "tags": [
+                    "catalog-export"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The file.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "text/csv": {
+                                "schema": {
+                                    "type": "string"
+                                }
+                            },
+                            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                                "schema": {
+                                    "type": "string",
+                                    "format": "binary"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "schema",
+                        "in": "path",
+                        "required": true,
+                        "description": "module or catalogService.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "module",
+                                "catalogService"
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
         "/federation/peers": {
             "post": {
                 "operationId": "federation-add-peer",

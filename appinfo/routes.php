@@ -209,6 +209,10 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-endpoint-returns-gemma-dimension-counts
         ['name' => 'facet#getFacets', 'url' => '/api/facets/{schema}', 'verb' => 'GET'],
 
+        // The Applications and Services lists as filtered, as CSV or XLSX (insight-exports-and-custom-reports).
+        // @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-002-the-applications-and-services-pages-shall-export-the-rows-the-facets-the-quick-filter-and-the-search-leave
+        ['name' => 'catalogExport#export', 'url' => '/api/catalog/{schema}/export', 'verb' => 'GET'],
+
         // ========================================================================
         // AANBOD API ENDPOINTS - Unified API for all aanbod types
         // ========================================================================
