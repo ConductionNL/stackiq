@@ -1331,6 +1331,10 @@
         "Software catalogue": "Software catalogue",
         "Shared": "Shared",
         "{name}, shared by {partner}": "{name}, shared by {partner}",
-        "+{count} more": "+{count} more"
+        "+{count} more": "+{count} more",
+        "Contacts": "Contacts",
+        "Calendar": "Calendar",
+        "Deck": "Deck",
+        "Bookmarks": "Bookmarks"
     }
 }

@@ -1399,6 +1399,10 @@
         "Software catalogue": "Softwarecatalogus",
         "Shared": "Gedeeld",
         "{name}, shared by {partner}": "{name}, gedeeld door {partner}",
-        "+{count} more": "+{count} meer"
+        "+{count} more": "+{count} meer",
+        "Contacts": "Contacten",
+        "Calendar": "Agenda",
+        "Deck": "Deck",
+        "Bookmarks": "Bladwijzers"
     }
 }
