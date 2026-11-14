@@ -57,14 +57,16 @@
 					{ "id": "gb-service-desk", "type": "data", "title": "Service desk", "icon": "Sitemap", "content": { "columns": 2, "include": [ "serviceDeskSystem", "serviceDeskRecordId", "serviceDeskUrl", "serviceDeskSyncedAt" ] } },
 					{ "id": "gb-assessment", "type": "data", "title": "Value assessment", "icon": "ScaleBalance", "content": { "columns": 2, "include": [ "businessValue", "technicalFit", "riskScore", "scoredOn", "timeClassification", "suggestedTimeClassification", "timeRationale", "timeReviewDate" ] } },
 					{ "id": "gb-files", "type": "integration", "integrationId": "files", "title": "Documents", "icon": "FolderOutline" },
-					{ "id": "gb-related", "type": "related", "title": "Connections and services", "icon": "LinkVariant" }
+					{ "id": "gb-related", "type": "related", "title": "Connections and services", "icon": "LinkVariant" },
+					{ "id": "gb-decisions", "type": "object-list", "title": "Architecture decisions", "icon": "ScaleBalance", "content": { "register": "@resolve:voorzieningen_register", "schema": "architectureDecision", "filter": { "applications": "@objectId" }, "columns": [ { "key": "title", "label": "Title" }, { "key": "status", "label": "Status" }, { "key": "category", "label": "Category" } ], "limit": 25, "rowRoute": "ArchitectuurbesluitDetail", "allowCreate": false, "emptyText": "No architecture decisions name this application in use yet" } }
 				],
 				"layout": [
 					{ "id": "1", "widgetId": "gb-data", "gridX": 0, "gridY": 0, "gridWidth": 8, "gridHeight": 8 },
 					{ "id": "2", "widgetId": "gb-files", "gridX": 8, "gridY": 0, "gridWidth": 4, "gridHeight": 4 },
 					{ "id": "3", "widgetId": "gb-related", "gridX": 8, "gridY": 4, "gridWidth": 4, "gridHeight": 4 },
 					{ "id": "4", "widgetId": "gb-assessment", "gridX": 0, "gridY": 8, "gridWidth": 8, "gridHeight": 5 },
-					{ "id": "5", "widgetId": "gb-service-desk", "gridX": 8, "gridY": 8, "gridWidth": 4, "gridHeight": 5 }
+					{ "id": "5", "widgetId": "gb-service-desk", "gridX": 8, "gridY": 8, "gridWidth": 4, "gridHeight": 5 },
+					{ "id": "6", "widgetId": "gb-decisions", "gridX": 0, "gridY": 13, "gridWidth": 12, "gridHeight": 4 }
 				],
 				"bodyWidgets": [
 					{ "id": "gb-risk-signals", "component": "UsageRiskSignals", "props": { "objectId": "@objectId" }, "placement": "after-data", "colSpan": 12 }
