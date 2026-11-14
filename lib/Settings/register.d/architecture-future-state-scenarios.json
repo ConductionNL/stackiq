@@ -1,0 +1,64 @@
+{
+  "components": {
+    "registers": {
+      "stackiq": {
+        "schemas": [
+          "scenario",
+          "scenarioChange"
+        ],
+        "configuration": {
+          "schemas": {
+            "scenario": {
+              "magicMapping": true,
+              "autoCreateTable": true
+            },
+            "scenarioChange": {
+              "magicMapping": true,
+              "autoCreateTable": true
+            }
+          }
+        }
+      }
+    },
+    "objects": [
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "scenario",
+          "slug": "seed-scenario-delft-2027",
+          "version": "1.0.0"
+        },
+        "name": "Servicedesk en schuldhulp in 2027",
+        "organisation": "@ref:organization:gemeente-delft",
+        "targetDate": "2027-06-30",
+        "status": "proposed"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "scenarioChange",
+          "slug": "seed-scenario-change-uitfaseren",
+          "version": "1.0.0"
+        },
+        "scenario": "@ref:scenario:seed-scenario-delft-2027",
+        "action": "phase out",
+        "usage": "@ref:usage:gebruik-suite4-gem-delft-eigenaar",
+        "effectiveDate": "2027-06-30",
+        "note": "Schuldhulp gaat naar de regio."
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "scenarioChange",
+          "slug": "seed-scenario-change-toevoegen",
+          "version": "1.0.0"
+        },
+        "scenario": "@ref:scenario:seed-scenario-delft-2027",
+        "action": "add",
+        "module": "topdesk-itsm",
+        "effectiveDate": "2027-03-01",
+        "note": "Eigen servicedesk in plaats van de gedeelde."
+      }
+    ]
+  }
+}

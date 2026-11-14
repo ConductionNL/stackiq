@@ -10,8 +10,8 @@
   - GIVEN a planned replacement on or before the date WHEN the landscape is derived THEN the successor module replaces the usage with its reference components
   - GIVEN a usage with only a current status, and one with nothing WHEN both landscapes are derived THEN the first is in both and the second is counted as not dated
   - GIVEN a scenario change and a plan replacement on one usage WHEN the scenario landscape is derived THEN the scenario wins and both sources are named
-- [ ] Implement
-- [ ] Test (PHPUnit `LandscapeAtDateDerivationTest`)
+- [x] Implement
+- [x] Test (PHPUnit `LandscapeAtDateDerivationTest`)
 
 ### Task 2: Comparison service, controller and route
 - **spec_ref**: openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
@@ -30,8 +30,8 @@
   - GIVEN the merged register WHEN it loads THEN the `stackiq` register lists `scenario` and `scenarioChange` with magic mapping on
   - GIVEN the scenario lifecycle WHEN the shape test reads it THEN every `from` and `to` value is a status enum value
   - GIVEN a fresh install WHEN the seed runs THEN the demo scenario and its two changes exist
-- [ ] Implement
-- [ ] Test (PHPUnit `ScenarioRegisterShapeTest`, `RegisterFragmentMergeTest`)
+- [x] Implement
+- [x] Test (PHPUnit `ScenarioRegisterShapeTest`, `RegisterFragmentMergeTest`)
 
 ### Task 4: Comparison view, scenario pages and the roadmap button
 - **spec_ref**: openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-003-an-information-manager-shall-write-a-scenario-of-additions-phase-outs-and-replacements
