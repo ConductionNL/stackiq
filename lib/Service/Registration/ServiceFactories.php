@@ -49,6 +49,8 @@ use OCA\Stackiq\Service\ProgressTracker;
 use OCA\Stackiq\Service\PublicationService;
 use OCA\Stackiq\Service\ReviewAggregateService;
 use OCA\Stackiq\Service\ReviewService;
+use OCA\Stackiq\Service\RoleGrantSync;
+use OCA\Stackiq\Service\RoleGroupMap;
 use OCA\Stackiq\Service\SbomImportService;
 use OCA\Stackiq\Service\SbomParserService;
 use OCA\Stackiq\Service\Settings\CatalogueLocator;
@@ -129,7 +131,8 @@ final class ServiceFactories {
 					_appManager: $c->get(IAppManager::class),
 					_logger: $c->get(LoggerInterface::class),
 					_emailService: $c->get(SymfonyEmailService::class),
-					config: $c->get(IConfig::class)
+					config: $c->get(IConfig::class),
+					roleGroupMap: $c->get(RoleGroupMap::class)
 				);
 			}
 		);
@@ -143,7 +146,8 @@ final class ServiceFactories {
 					_appConfig: $c->get(IAppConfig::class),
 					_container: $c,
 					_appManager: $c->get(IAppManager::class),
-					_logger: $c->get(LoggerInterface::class)
+					_logger: $c->get(LoggerInterface::class),
+					_roleGrantSync: $c->get(RoleGrantSync::class)
 				);
 			}
 		);

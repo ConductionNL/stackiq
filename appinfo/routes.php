@@ -192,6 +192,13 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'contactpersonen#disableUser', 'url' => '/api/contactpersonen/{contactpersoonId}/disable', 'verb' => 'POST'],
         ['name' => 'contactpersonen#enableUser', 'url' => '/api/contactpersonen/{contactpersoonId}/enable', 'verb' => 'POST'],
 
+        // Access review (organisations-role-mapping-and-access-review): a Nextcloud
+        // admin for any organisation, a functioneel-beheerder or organisatie-beheerder
+        // for their own active organisation; the controller checks before any read.
+        ['name' => 'accessReview#index', 'url' => '/api/access-review/{organisationUuid}', 'verb' => 'GET'],
+        ['name' => 'accessReview#confirm', 'url' => '/api/access-review/{contactPersonId}/confirm', 'verb' => 'POST'],
+        ['name' => 'accessReview#withdraw', 'url' => '/api/access-review/{contactPersonId}/withdraw', 'verb' => 'POST'],
+
         // ========================================================================
         // VIEW API ENDPOINTS - ArchiMate Views with Enrichment Support
         // ========================================================================

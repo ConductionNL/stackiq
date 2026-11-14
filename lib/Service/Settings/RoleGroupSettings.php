@@ -27,6 +27,7 @@ namespace OCA\Stackiq\Service\Settings;
 
 use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Kernel\Contracts\RoleGroupSettingsInterface;
+use OCA\Stackiq\Service\RoleGroupMap;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IGroupManager;
@@ -54,19 +55,31 @@ class RoleGroupSettings implements RoleGroupSettingsInterface {
 	];
 
 	/**
+	 * The role mapping, the organisation type roles and the review interval.
+	 *
+	 * @var RoleGroupMap
+	 */
+	private readonly RoleGroupMap $roleGroupMap;
+
+	/**
 	 * Constructor.
 	 *
-	 * @param IAppConfig      $config       The app config holding the group lists.
-	 * @param IAppManager     $appManager   Tells whether user_management is installed.
-	 * @param IGroupManager   $groupManager Lists the Nextcloud groups.
-	 * @param LoggerInterface $logger       The logger.
+	 * @param IAppConfig        $config       The app config holding the group lists.
+	 * @param IAppManager       $appManager   Tells whether user_management is installed.
+	 * @param IGroupManager     $groupManager Lists the Nextcloud groups.
+	 * @param LoggerInterface   $logger       The logger.
+	 * @param RoleGroupMap|null $roleGroupMap The catalogue role map; null reads it from the same app config.
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-001-a-nextcloud-admin-shall-map-each-catalogue-role-onto-groups-of-their-choice
 	 */
 	public function __construct(
 		private readonly IAppConfig $config,
 		private readonly IAppManager $appManager,
 		private readonly IGroupManager $groupManager,
 		private readonly LoggerInterface $logger,
+		?RoleGroupMap $roleGroupMap = null,
 	) {
+		$this->roleGroupMap = $roleGroupMap ?? new RoleGroupMap(appConfig: $config);
 	}//end __construct()
 
 	/**
@@ -357,17 +370,24 @@ class RoleGroupSettings implements RoleGroupSettingsInterface {
 	/**
 	 * Get user groups configuration only
 	 *
+	 * Next to the three group lists it carries the catalogue role mapping:
+	 * `roleMapping`, `organisationTypeRoles` and `accessReviewIntervalDays`.
+	 *
 	 * @return array User groups configuration
 	 * @spec   openspec/specs/settings-service/spec.md
+	 * @spec   openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-001-a-nextcloud-admin-shall-map-each-catalogue-role-onto-groups-of-their-choice
 	 */
 	public function getUserGroupsConfig(): array {
 		try {
-			$config = [
-				'generic' => $this->getGenericUserGroups(),
-				'organizationAdmin' => $this->getOrganizationAdminGroups(),
-				'superUser' => $this->getSuperUserGroups(),
-				'allGroups' => $this->getAllGroups(),
-			];
+			$config = array_merge(
+				[
+					'generic' => $this->getGenericUserGroups(),
+					'organizationAdmin' => $this->getOrganizationAdminGroups(),
+					'superUser' => $this->getSuperUserGroups(),
+					'allGroups' => $this->getAllGroups(),
+				],
+				$this->roleGroupMap->toArray()
+			);
 
 			return [
 				'success' => true,
@@ -391,10 +411,14 @@ class RoleGroupSettings implements RoleGroupSettingsInterface {
 	/**
 	 * Update user groups configuration
 	 *
+	 * The role mapping parts are validated and saved together by RoleGroupMap,
+	 * all or nothing.
+	 *
 	 * @param array $config User groups configuration data
 	 *
 	 * @return array Result of the update operation
 	 * @spec   openspec/specs/settings-service/spec.md
+	 * @spec   openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-001-a-nextcloud-admin-shall-map-each-catalogue-role-onto-groups-of-their-choice
 	 */
 	public function updateUserGroupsConfig(array $config): array {
 		try {
@@ -410,6 +434,11 @@ class RoleGroupSettings implements RoleGroupSettingsInterface {
 
 			if (isset($config['superUser']) === true) {
 				$results['superUser'] = $this->updateSuperUserGroups(groups: $config['superUser']);
+			}
+
+			$roleMapKeys = array_intersect_key($config, array_flip(['roleMapping', 'organisationTypeRoles', 'accessReviewIntervalDays']));
+			if ($roleMapKeys !== []) {
+				$results['roleMapping'] = $this->roleGroupMap->update(config: $roleMapKeys);
 			}
 
 			// Check if any updates failed.

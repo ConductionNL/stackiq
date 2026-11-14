@@ -24,6 +24,7 @@ namespace OCA\Stackiq\Service\Stackiq;
 use OCA\OpenRegister\Service\Organisation\NewOrganisation;
 use OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface;
 use OCA\Stackiq\Service\OrganisationSlug;
+use OCA\Stackiq\Service\RoleGroupMap;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\App\IAppManager;
@@ -63,8 +64,17 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
+ *
+ * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
  */
 class ContactPersonHandler implements ContactPersonHandlerInterface {
+	/**
+	 * The catalogue roles, their groups and the default role per organisation type.
+	 *
+	 * @var RoleGroupMap
+	 */
+	private readonly RoleGroupMap $roleGroupMap;
+
 	/**
 	 * ContactPersonHandler constructor
 	 *
@@ -77,6 +87,9 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 	 * @param LoggerInterface $_logger Logger interface.
 	 * @param SymfonyEmailService $_emailService Email service.
 	 * @param IConfig $config Config interface.
+	 * @param RoleGroupMap|null $roleGroupMap The catalogue role map; null reads it from the same app config.
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
 	 */
 	public function __construct(
 		private readonly IUserManager $_userManager,
@@ -88,7 +101,9 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 		private readonly LoggerInterface $_logger,
 		private readonly SymfonyEmailService $_emailService,
 		private readonly IConfig $config,
+		?RoleGroupMap $roleGroupMap = null,
 	) {
+		$this->roleGroupMap = $roleGroupMap ?? new RoleGroupMap(appConfig: $_config);
 	}//end __construct()
 
 	/**
@@ -1603,27 +1618,25 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 	/**
 	 * Maps organization type to role group based on business rules
 	 *
+	 * Reads the organisation type's default role from RoleGroupMap, keyed on
+	 * the stored English enum (Municipality, Supplier, Collaboration,
+	 * Community) and editable in the admin role mapping. #520 translated the
+	 * enum while this map kept the Dutch keys, so only Community matched
+	 * (stackiq#1137); the map now lives in one place for every path.
+	 *
 	 * @param string $organizationType The organization type (case-insensitive)
 	 *
 	 * @return string The role group name or empty string if no mapping exists
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
 	 */
 	private function getRoleGroupByOrganizationType(string $organizationType): string {
-		// Normalize the organization type to lowercase for comparison.
-		$normalizedType = strtolower(trim($organizationType));
+		$role = $this->roleGroupMap->defaultRoleForOrganisationType(organisationType: $organizationType);
+		if ($role === null) {
+			return '';
+		}
 
-		// Keyed on the organization.type enum as stored (Municipality,
-		// Supplier, Collaboration, Community), lower-cased. #520 translated the
-		// enum and migrated the rows, but this map kept the Dutch keys
-		// (gemeente, leverancier, samenwerking), so only Community matched and
-		// municipal and supplier contacts got no role group (stackiq#1137).
-		$typeToRoleMapping = [
-			'municipality' => 'gebruik-beheerder',
-			'supplier' => 'aanbod-beheerder',
-			'collaboration' => 'gebruik-beheerder',
-			'community' => 'aanbod-beheerder',
-		];
-
-		return $typeToRoleMapping[$normalizedType] ?? '';
+		return (string) $this->roleGroupMap->roleGroup(role: $role);
 	}//end getRoleGroupByOrganizationType()
 
 	/**

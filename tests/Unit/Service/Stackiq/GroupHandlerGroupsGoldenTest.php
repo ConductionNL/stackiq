@@ -25,6 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Service\Stackiq;
 
+use OCA\Stackiq\Service\RoleGrantSync;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -112,7 +113,7 @@ class GroupHandlerGroupsGoldenTest extends TestCase {
 	 *
 	 * @return GroupHandler
 	 */
-	private function handler(array $plan): GroupHandler {
+	private function handler(array $plan, ?RoleGrantSync $roleGrantSync=null): GroupHandler {
 		$this->trace = [];
 		$this->plan  = array_merge(['existing' => [], 'uncreatable' => [], 'failing' => [], 'configured' => '', 'memberOf' => []], $plan);
 
@@ -182,7 +183,8 @@ class GroupHandlerGroupsGoldenTest extends TestCase {
 			$config,
 			$this->createMock(originalClassName: ContainerInterface::class),
 			$this->createMock(originalClassName: IAppManager::class),
-			$logger
+			$logger,
+			$roleGrantSync
 		);
 
 	}//end handler()
@@ -284,75 +286,35 @@ class GroupHandlerGroupsGoldenTest extends TestCase {
 	}//end testFailingCreateEscapes()
 
 	/**
-	 * Holding a role adds the user to its group, losing it removes the user, except from the users group.
+	 * The role-based groups follow the role sync, the one role service every path uses.
+	 *
+	 * The handler no longer walks the generic groups itself: it hands the user
+	 * and the contact person data to RoleGrantSync, reads no group or config
+	 * on its own, and logs what the sync changed.
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
 	 *
 	 * @return void
 	 */
-	public function testRoleGroupsFollowTheRoles(): void {
-		$handler = $this->handler(
-			plan: [
-				'configured' => '["aanbod-beheerder"," Gebruik-Beheerder ","software-catalog-users","vng-raadpleger","ambtenaar","broken"]',
-				'existing'   => ['aanbod-beheerder', ' Gebruik-Beheerder ', 'software-catalog-users', 'vng-raadpleger'],
-				'memberOf'   => ['software-catalog-users', 'vng-raadpleger', 'ambtenaar'],
-				'failing'    => ['broken'],
-			]
-		);
+	public function testRoleGroupsFollowTheRoleSync(): void {
+		$user = $this->user();
+		$objectData = ['roles' => [' Aanbod-Beheerder', 'gebruik-beheerder', 42, 'Ambtenaar ']];
 
-		$handler->updateRoleBasedGroups($this->user(), ['roles' => [' Aanbod-Beheerder', 'gebruik-beheerder', 42, 'Ambtenaar ']]);
+		$sync = $this->createMock(originalClassName: RoleGrantSync::class);
+		$sync->expects($this->once())
+			->method('sync')
+			->with($user, $objectData)
+			->willReturn(['added' => ['aanbod-beheerder', 'gebruik-beheerder'], 'removed' => ['vng-raadpleger']]);
+
+		$handler = $this->handler(plan: ['configured' => '["aanbod-beheerder","software-catalog-users"]'], roleGrantSync: $sync);
+		$handler->updateRoleBasedGroups($user, $objectData);
 
 		$this->assertSame(
 			[
-				['log', 'info', 'Updating role-based groups for user', ['username' => 'alice', 'userRoles' => [' Aanbod-Beheerder', 'gebruik-beheerder', 42, 'Ambtenaar ']]],
-				['getValueString', 'stackiq', 'generic_user_groups'],
-				['get', 'aanbod-beheerder'],
-				['inGroup', 'aanbod-beheerder'],
-				['addUser', 'aanbod-beheerder'],
-				['log', 'info', 'Added user to role-based group', ['username' => 'alice', 'group' => 'aanbod-beheerder', 'role' => 'aanbod-beheerder']],
-				['get', ' Gebruik-Beheerder '],
-				['inGroup', ' Gebruik-Beheerder '],
-				['addUser', ' Gebruik-Beheerder '],
-				['log', 'info', 'Added user to role-based group', ['username' => 'alice', 'group' => ' Gebruik-Beheerder ', 'role' => ' Gebruik-Beheerder ']],
-				['get', 'software-catalog-users'],
-				['inGroup', 'software-catalog-users'],
-				['get', 'vng-raadpleger'],
-				['inGroup', 'vng-raadpleger'],
-				['removeUser', 'vng-raadpleger'],
-				['log', 'info', 'Removed user from role-based group', ['username' => 'alice', 'group' => 'vng-raadpleger']],
-				['get', 'ambtenaar'],
-				['createGroup', 'ambtenaar'],
-				['log', 'info', 'Created new group', ['groupName' => 'ambtenaar']],
-				['inGroup', 'ambtenaar'],
-				['get', 'broken'],
-				['createGroup', 'broken'],
-				['log', 'error', 'Failed to create group: backend refused', ['groupName' => 'broken']],
+				['log', 'info', 'Updated role-based groups for user', ['username' => 'alice', 'added' => ['aanbod-beheerder', 'gebruik-beheerder'], 'removed' => ['vng-raadpleger']]],
 			],
 			$this->trace
 		);
 
-	}//end testRoleGroupsFollowTheRoles()
-
-	/**
-	 * Missing or non-list roles count as no roles.
-	 *
-	 * @return void
-	 */
-	public function testMissingRolesRemoveTheUser(): void {
-		foreach ([[], ['roles' => 'aanbod-beheerder'], ['roles' => null]] as $objectData) {
-			$handler = $this->handler(plan: ['configured' => '["aanbod-beheerder"]', 'existing' => ['aanbod-beheerder'], 'memberOf' => ['aanbod-beheerder']]);
-			$handler->updateRoleBasedGroups($this->user(), $objectData);
-			$this->assertSame(
-				[
-					['log', 'info', 'Updating role-based groups for user', ['username' => 'alice', 'userRoles' => []]],
-					['getValueString', 'stackiq', 'generic_user_groups'],
-					['get', 'aanbod-beheerder'],
-					['inGroup', 'aanbod-beheerder'],
-					['removeUser', 'aanbod-beheerder'],
-					['log', 'info', 'Removed user from role-based group', ['username' => 'alice', 'group' => 'aanbod-beheerder']],
-				],
-				$this->trace,
-				var_export($objectData, true)
-			);
-		}
-
-	}//end testMissingRolesRemoveTheUser()
+	}//end testRoleGroupsFollowTheRoleSync()
 }//end class
