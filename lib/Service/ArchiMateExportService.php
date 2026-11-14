@@ -961,7 +961,8 @@ XML;
 			];
 
 			try {
-				$schemaObjects = $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
+				// Read across organisations, so only GEMMA content: drawn objects stay with their organisation.
+				$schemaObjects = ViewOrigin::importedOnly(objects: $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false));
 
 				// Inject 'section' field if missing (magic table objects don't store it).
 				$sectionName = $sectionNameMap[$schemaType] ?? $schemaType;
@@ -1007,7 +1008,7 @@ XML;
 			];
 
 			try {
-				$allObjects = $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
+				$allObjects = ViewOrigin::importedOnly(objects: $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false));
 			} catch (\Exception $e) {
 				$this->logger->error(
 					'Failed to retrieve objects from AMEF register',
