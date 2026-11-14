@@ -813,7 +813,7 @@ class ViewService implements ViewServiceInterface {
 	 */
 	private function indexProducts(ObjectServiceInterface $objectService, array $query): array {
 		$allProducts = $this->indexByElementRef(
-			rows: $objectService->searchObjects($query),
+			rows: $objectService->searchObjects(SearchBounds::bounded(query: $query)),
 			currentOrg: $query['@self']['organisation'] ?? null
 		);
 
@@ -1086,7 +1086,7 @@ class ViewService implements ViewServiceInterface {
 	 */
 	private function searchModuleSchema(ObjectServiceInterface $objectService, array $query): array {
 		try {
-			$modules = $objectService->searchObjects($query);
+			$modules = $objectService->searchObjects(SearchBounds::bounded(query: $query));
 			$this->logModuleSchemaRead(query: $query, modules: $modules);
 			return $modules;
 		} catch (\Exception $e) {
@@ -1261,7 +1261,7 @@ class ViewService implements ViewServiceInterface {
 	 */
 	private function readOwnedGebruik(ObjectServiceInterface $objectService, array $query): array {
 		$allGebruik = [];
-		$gebruikItems = $objectService->searchObjects($query);
+		$gebruikItems = $objectService->searchObjects(SearchBounds::bounded(query: $query));
 		$this->processGebruikItems(
 			gebruikItems: $gebruikItems,
 			allGebruik: $allGebruik,
@@ -1759,7 +1759,7 @@ class ViewService implements ViewServiceInterface {
 		$allDeelnames = [];
 
 		// Both _rbac and _multitenancy must be false to find objects owned by other organisations.
-		$deelnamesItems = $objectService->searchObjects($query, _rbac: false, _multitenancy: false);
+		$deelnamesItems = $objectService->searchObjects(SearchBounds::bounded(query: $query), _rbac: false, _multitenancy: false);
 		$this->processGebruikItems(
 			gebruikItems: $deelnamesItems,
 			allGebruik: $allDeelnames,

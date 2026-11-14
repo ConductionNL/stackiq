@@ -51,6 +51,7 @@ Vrij en open source onder de EUPL-licentie.
 **Ondersteuning:** Voor ondersteuning, neem contact op via support@conduction.nl. Voor een Service Level Agreement (SLA), neem contact op via sales@conduction.nl.
     ]]></description>
     <version>0.2.7-unstable.20261020120000</version>
+    <!-- @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-the-catalogue-runs-on-the-customers-own-nextcloud-req-plat-001 : a Nextcloud app on the customer's own server, EUPL-1.2 -->
     <licence>EUPL-1.2</licence>
     <author mail="info@conduction.nl" homepage="https://www.conduction.nl/">Conduction</author>
     <namespace>Stackiq</namespace>
@@ -230,6 +231,10 @@ Vrij en open source onder de EUPL-licentie.
 			     would rewrite a key nothing reads. Idempotent, and guarded on the
 			     exact stored value so an admin's own register is never touched. -->
 			<step>OCA\Stackiq\Repair\RepointEolSyncConfig</step>
+			<!-- Before the register import: rows that break a dependent value table
+			     (register.d/dependent-field-options.json) are cleared first, so their
+			     next edit is not refused for a field nobody touched. -->
+			<step>OCA\Stackiq\Repair\ClearDisallowedDependentValues</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
 			<step>OCA\Stackiq\Repair\MigrateContactsToNc</step>
 			<step>OCA\Stackiq\Repair\BackfillContractApprovalState</step>
@@ -260,6 +265,12 @@ Vrij en open source onder de EUPL-licentie.
 				throws, and does nothing without OpenRegister's store.
 			-->
 			<step>OCA\Stackiq\Repair\SeedCmdbImportPacks</step>
+			<!--
+				The organisation sync job honours its switch
+				(operations-sync-status-and-progress): warn once where it is off,
+				so nobody wonders why syncs stopped. Changes nothing.
+			-->
+			<step>OCA\Stackiq\Repair\LogSwitchedOffSync</step>
 		</post-migration>
 		<!--
 			FRESH INSTALL. Nextcloud does NOT run post-migration on a first install:
@@ -333,6 +344,10 @@ Vrij en open source onder de EUPL-licentie.
 			     would rewrite a key nothing reads. Idempotent, and guarded on the
 			     exact stored value so an admin's own register is never touched. -->
 			<step>OCA\Stackiq\Repair\RepointEolSyncConfig</step>
+			<!-- Before the register import: rows that break a dependent value table
+			     (register.d/dependent-field-options.json) are cleared first, so their
+			     next edit is not refused for a field nobody touched. -->
+			<step>OCA\Stackiq\Repair\ClearDisallowedDependentValues</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
 			<!-- A fresh install seeds the CMDB import packs too; see <post-migration> above. -->
 			<step>OCA\Stackiq\Repair\SeedCmdbImportPacks</step>

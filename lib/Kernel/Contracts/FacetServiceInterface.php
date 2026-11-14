@@ -65,4 +65,14 @@ interface FacetServiceInterface {
 	 * @spec openspec/specs/gemma-faceted-search/spec.md#requirement-facet-aggregation-results-are-cached
 	 */
 	public function getFacets(string $schema, array $filters = [], ?string $search = null, ?string $organization = null): array;
+
+	/**
+	 * The facet dimensions, always present in the response (even when empty):
+	 * the four GEMMA dimensions and the supplier (insight-supplier-facet). The
+	 * controller reads its filters from this list and src/services/facets.js
+	 * mirrors it, so the set moves together (D4).
+	 *
+	 * @var string[]
+	 */
+	public const DIMENSIONS = ['referenceComponent', 'standard', 'applicationService', 'domain', 'supplier'];
 }//end interface
