@@ -64,6 +64,8 @@ spl_autoload_register(function (string $class): void {
 		'OCA\\OpenRegister\\Event\\' => __DIR__ . '/Stubs/OpenRegister/Event/',
 		// OpenRegister's lifecycle guard contract (architecture-decision-register).
 		'OCA\\OpenRegister\\Lifecycle\\' => __DIR__ . '/Stubs/OpenRegister/Lifecycle/',
+		// OpenRegister's MCP provider interface (mcp-full-action-surface).
+		'OCA\\OpenRegister\\Mcp\\' => __DIR__ . '/Stubs/OpenRegister/Mcp/',
 	];
 
 	foreach ($prefixMap as $prefix => $dir) {

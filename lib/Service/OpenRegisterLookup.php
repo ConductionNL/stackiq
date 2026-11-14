@@ -27,6 +27,7 @@ namespace OCA\Stackiq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\OpenRegisterLookupInterface;
 use OCP\App\IAppManager;
 use OCP\IUserSession;
 use Psr\Container\ContainerInterface;
@@ -45,7 +46,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/method-decomposition/spec.md
  */
-final class OpenRegisterLookup {
+final class OpenRegisterLookup implements OpenRegisterLookupInterface {
 	/**
 	 * Constructor.
 	 *
