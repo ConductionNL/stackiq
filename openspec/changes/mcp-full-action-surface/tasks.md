@@ -22,22 +22,22 @@
 
 ## 2. Provider skeleton
 
-- [ ] 2.1 Add `lib/Mcp/StackiqToolProvider.php`
+- [x] 2.1 Add `lib/Mcp/StackiqToolProvider.php`
   (`OCA\Stackiq\Mcp`, implements
   `OCA\OpenRegister\Mcp\IMcpToolProvider`): descriptor constant
   (id, name, description, inputSchema, scope, reach, hints) + dispatch
   table; no business logic (decidesk `DecideskToolProvider` shape).
-- [ ] 2.2 Register the DI alias
+- [x] 2.2 Register the DI alias
   `OCA\OpenRegister\Mcp\IMcpToolProvider::stackiq` in
   `lib/AppInfo/Application.php` (mirror
   `decidesk/lib/AppInfo/Registrar/DomainServiceRegistrar.php:121`).
-- [ ] 2.3 Add `lib/Mcp/McpArgumentValidator.php` (port of decidesk's:
+- [x] 2.3 Add `lib/Mcp/McpArgumentValidator.php` (port of decidesk's:
   typed required/optional argument checking, validation error before any
   service call).
 
 ## 3. Authorisation gates
 
-- [ ] 3.1 Add `lib/Mcp/McpContractGate.php`: load contract →
+- [x] 3.1 Add `lib/Mcp/McpContractGate.php`: load contract →
   `not_found` → `ContractApprovalService::authorizeSubmit(contractUuid,
   groupNames, activeOrgUuid)`; helpers return real booleans, never
   wrapped in `catch(\Throwable)` (decidesk `McpMeetingGate` rules).
@@ -45,7 +45,7 @@
   `PublicationController::authorizeEntry()` semantics via
   `PublicationService::resolveEntry()` (admin OR owning
   `aanbod-beheerder`).
-- [ ] 3.3 Admin gates for moderation/merge/EOL/membership tools via
+- [x] 3.3 Admin gates for moderation/merge/EOL/membership tools via
   `IGroupManager::isAdmin()` — identical posture to the REST twins.
 
 ## 4. Read tools
@@ -60,7 +60,7 @@
 
 ## 5. Write tools
 
-- [ ] 5.1 Contract seam: `submitContractApproval`, `submitContractRenewal`
+- [x] 5.1 Contract seam: `submitContractApproval`, `submitContractRenewal`
   → `ContractApprovalService::submitForApproval()` behind
   `McpContractGate`.
 - [ ] 5.2 Publication seam: `publishObject`, `depublishObject` →
@@ -100,6 +100,17 @@
   (no orphan Dutch slugs); vulnerability the only schema with write verbs.
 - [ ] 6.6 `composer check:strict` clean (PHPCS, PHPMD, Psalm, PHPStan) —
   fix pre-existing issues encountered in touched files.
+
+## Build notes
+
+Built in a first slice: 2.1 to 2.3, 3.1, 3.3 and 5.1, plus `stackiq.getContractApprovalConfig` from 4.1.
+- `StackiqToolProvider` holds the descriptor constant and the dispatch table.
+- The alias in `Application::register()` is a pair of literals, so nothing autoloads at boot.
+- `McpContractGate` feeds `ContractApprovalService::authorizeSubmit()` the caller's groups and active organisation exactly as `ContractApprovalController` does. A contract that cannot be read is refused as forbidden, as the REST route answers 403, rather than reported as not_found.
+- `McpAdminGate` denies on any failing admin check.
+- `tests/Unit/Mcp/McpContractToolsTest.php` covers the non-owning, owning, admin, unauthenticated, bad-argument and unconfigured cases.
+
+Open: the derived register fragment (1.x), the publication gate (3.2), the other read tools (4.1), the remaining write tools (5.2 to 5.5), and the tests that depend on them.
 
 ## 7. Supersession + spec/docs
 

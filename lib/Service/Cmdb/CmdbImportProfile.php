@@ -44,6 +44,7 @@ namespace OCA\Stackiq\Service\Cmdb;
 
 use Closure;
 use OCA\Stackiq\Exception\CmdbImportException;
+use OCA\Stackiq\Kernel\Contracts\CmdbImportProfileInterface;
 use Psr\Container\ContainerInterface;
 use Throwable;
 
@@ -60,7 +61,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassLength) The same accessors with their docblocks, and the
  * loader that picks each pack's source; the store, the marker and the import rules are classes of their own.
  */
-class CmdbImportProfile {
+class CmdbImportProfile implements CmdbImportProfileInterface {
 	/**
 	 * OpenRegister's pack validator (not a public contract).
 	 */
