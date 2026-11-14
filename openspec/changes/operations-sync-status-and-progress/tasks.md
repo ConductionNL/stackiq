@@ -63,6 +63,7 @@
 - **acceptance_criteria**:
   - GIVEN the docs WHEN a reader opens the feature page THEN it shows the page with a last run and with a running sync, and says who can see it
 - [ ] Implement
+  - Done: `docs/features/sync-status-and-progress.md` (who can see it, schedule, last run, running sync, the API) and its entry in `docs/features/README.md`. Owed: the screenshots of the page with a last run and with a running sync, which need a live instance.
 - [ ] Test (docs build and a manual read against the running app)
 
 ## Verification
