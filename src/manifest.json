@@ -224,7 +224,7 @@
 		    "title": "Store",
 		    "description": "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current."
 		  },
-		  "_note": "ADR-114 Decision 4 / ADR-080. Declarative: openregister hosts the store plane, so this app writes NO store controller. With no registry configured the page renders the app's built-in items and makes NO network call."
+		  "_note": "platform-properties REQ-PLAT-007: the store adds configuration others published. ADR-114 Decision 4 / ADR-080. Declarative: openregister hosts the store plane, so this app writes NO store controller. With no registry configured the page renders the app's built-in items and makes NO network call."
 		},
 		{
 			"id": "Dashboard",
@@ -442,7 +442,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -493,7 +493,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -541,7 +541,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -607,7 +607,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -727,7 +727,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -781,7 +781,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -831,7 +831,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -883,7 +883,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -933,7 +933,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -1000,7 +1000,7 @@
 					"showMetadata": true,
 					"tabs": [
 						{ "id": "components", "label": "Components", "icon": "Package", "component": "SbomComponentsPanel" },
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -1036,7 +1036,7 @@
 					"showMetadata": true,
 					"tabs": [
 						{ "id": "exposure", "label": "Exposure", "icon": "ShieldOutline", "component": "VulnerabilityExposurePanel" },
-						{ "id": "audit", "label": "Audit trail", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "Audit trail", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
