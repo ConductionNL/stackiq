@@ -7,8 +7,8 @@
 - **files**: `src/manifest.json`, `tests/vitest/bioMeasuresPage.spec.js`
 - **acceptance_criteria**:
   - GIVEN the BioMaatregelen page WHEN read THEN its columns are code, name, thema, bioVersion and bbnLevel, and the detail `_note` names `bbnLevel`
-- [ ] Implement
-- [ ] Test (vitest `bioMeasuresPage.spec.js`)
+- [x] Implement
+- [x] Test (vitest `bioMeasuresPage.spec.js`)
 
 ### Task 2: Ship the BIO 2.0 measures
 - **spec_ref**: openspec/changes/bio-measures-shipped-and-not-met/specs/bio-compliance-assessment/spec.md#requirement-the-bio-20-measures-ship-with-the-app-and-show-their-level-req-bio-010
@@ -18,6 +18,7 @@
   - GIVEN an existing measure with the same code WHEN the register imports THEN it is not duplicated or overwritten (objects keyed on code)
 - [ ] Implement
 - [ ] Test (PHPUnit `BioMeasuresFragmentTest`)
+- Left open 14 Nov: the fragment needs the authoritative BIO 2.0 measure list (code, name, theme, BBN level, source URL); that list is not in this repository and is not written from memory.
 
 ### Task 3: A result on the compliance claim
 - **spec_ref**: openspec/changes/bio-measures-shipped-and-not-met/specs/bio-compliance-assessment/spec.md#requirement-a-compliance-claim-says-whether-the-application-meets-the-measure-req-bio-011
@@ -25,8 +26,8 @@
 - **acceptance_criteria**:
   - GIVEN the compliancy schema WHEN read THEN it has `result` with enum meets, does-not-meet and default meets
   - GIVEN claims without a result WHEN the repair step runs THEN each gets "meets", and a second run changes nothing
-- [ ] Implement
-- [ ] Test (PHPUnit `DefaultComplianceResultToMeetsTest`)
+- [x] Implement
+- [x] Test (PHPUnit `DefaultComplianceResultToMeetsTest`)
 
 ### Task 4: Four states in the matrix and the compliance list (board SkComplianceMatrix)
 - **spec_ref**: openspec/changes/bio-measures-shipped-and-not-met/specs/bio-compliance-assessment/spec.md#requirement-a-compliance-claim-says-whether-the-application-meets-the-measure-req-bio-011
@@ -34,5 +35,6 @@
 - **acceptance_criteria**:
   - GIVEN claims with and without evidence and with result does-not-meet WHEN the matrix renders THEN cells show Verified, Claimed, Does not meet or Unknown with the legend, and the summary counts Does not meet
   - GIVEN the md-compliance list WHEN it renders THEN it has a Result column, and the matrix reads `bioMeasure`, not `bioMaatregel`
-- [ ] Implement
-- [ ] Test (vitest `complianceMatrixStates.spec.js`)
+- [x] Implement
+- [x] Test (vitest `complianceMatrixStates.spec.js`)
+- Built 14 Nov: `CELL.NOT_MET` in `src/utils/complianceMatrix.js` (a claim with result does-not-meet; a claim that meets outranks it for the same pair), legend, cell icon, "Unknown" for no claim, and a summary counting all four states. The matrix already read `bioMeasure`.

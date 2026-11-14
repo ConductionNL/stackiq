@@ -1328,6 +1328,11 @@
         "Gap, fillable": "Gat, te vullen",
         "Gap": "Gat",
         "Licence": "Licentie",
-        "Software catalogue": "Softwarecatalogus"
+        "Software catalogue": "Softwarecatalogus",
+        "Does not meet": "Voldoet niet",
+        "Unknown (no claim)": "Onbekend (geen claim)",
+        "Verified: {verified} · Claimed: {claimed} · Does not meet: {notMet} · Unknown: {none}": "Geverifieerd: {verified} · Geclaimd: {claimed} · Voldoet niet: {notMet} · Onbekend: {none}",
+        "Result": "Resultaat",
+        "Whether the application meets the standard or BIO measure. No claim means unknown, not that it does not meet.": "Of de applicatie aan de standaard of BIO-maatregel voldoet. Geen claim betekent onbekend, niet dat ze niet voldoet."
     }
 }
