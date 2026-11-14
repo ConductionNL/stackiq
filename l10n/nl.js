@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "stackiq",
     {
@@ -1333,7 +1329,53 @@ OC.L10N.register(
         "Gap, fillable": "Gat, te vullen",
         "Gap": "Gat",
         "Licence": "Licentie",
-        "Software catalogue": "Softwarecatalogus"
+        "Software catalogue": "Softwarecatalogus",
+        "A short name for the decision.": "Een korte naam voor het besluit.",
+        "Accepted": "Geaccepteerd",
+        "Alternatives": "Alternatieven",
+        "Architecture decision": "Architectuurbesluit",
+        "Architecture decisions": "Architectuurbesluiten",
+        "Board decisions": "Bestuursbesluiten",
+        "Category": "Categorie",
+        "Consequences": "Gevolgen",
+        "Context": "Context",
+        "Data": "Gegevens",
+        "Decided on": "Besloten op",
+        "Decision": "Besluit",
+        "Decisions a board took on this in decidiq. References decidesk Decision objects; decidiq owns the making and signing.": "Besluiten die een bestuur hierover in decidiq nam. Verwijst naar besluiten in decidesk; decidiq gaat over het nemen en ondertekenen.",
+        "Deprecated": "Vervallen",
+        "Draft": "Concept",
+        "Elements": "Elementen",
+        "How far the decision reaches.": "Hoe ver het besluit reikt.",
+        "In review": "In beoordeling",
+        "Infrastructure": "Infrastructuur",
+        "Integration": "Integratie",
+        "Option": "Optie",
+        "Reason rejected": "Reden van afwijzing",
+        "Reviewer": "Beoordelaar",
+        "Security": "Beveiliging",
+        "Superseded": "Vervangen",
+        "Superseded by": "Vervangen door",
+        "Supersedes": "Vervangt",
+        "The GEMMA reference components, standards or other elements the decision affects.": "De GEMMA-referentiecomponenten, standaarden of andere elementen waarop het besluit van invloed is.",
+        "The Nextcloud user id of the colleague who reviews the decision. Required to submit it.": "De Nextcloud-gebruikersnaam van de collega die het besluit beoordeelt. Nodig om het in te dienen.",
+        "The applications in use the decision affects.": "De applicaties in gebruik waarop het besluit van invloed is.",
+        "The architecture area the decision is about.": "Het architectuurgebied waarover het besluit gaat.",
+        "The date the decision was accepted.": "De datum waarop het besluit is geaccepteerd.",
+        "The earlier decision this decision replaces.": "Het eerdere besluit dat dit besluit vervangt.",
+        "The later accepted decision that replaces this one.": "Het latere geaccepteerde besluit dat dit besluit vervangt.",
+        "The options that were not chosen, each with the reason.": "De opties waarvoor niet is gekozen, elk met de reden.",
+        "What follows from the decision.": "Wat uit het besluit volgt.",
+        "What was decided.": "Wat is besloten.",
+        "Where the decision stands in its review.": "Waar het besluit staat in de beoordeling.",
+        "Why a decision is needed.": "Waarom een besluit nodig is.",
+        "An architecture decision of the organisation: its context, the decision, the options not chosen and the consequences, reviewed by a second person.": "Een architectuurbesluit van de organisatie: de context, het besluit, de opties waarvoor niet is gekozen en de gevolgen, beoordeeld door een tweede persoon.",
+        "To review by me": "Door mij te beoordelen",
+        "Classification and review": "Classificatie en beoordeling",
+        "Applications in use and elements": "Applicaties in gebruik en elementen",
+        "The architecture decisions of your organisation, each reviewed by a second person and linked to the applications and GEMMA elements it affects.": "De architectuurbesluiten van je organisatie, elk beoordeeld door een tweede persoon en gekoppeld aan de applicaties en GEMMA-elementen waarop het van invloed is.",
+        "No architecture decisions name this application in use yet": "Nog geen architectuurbesluiten noemen deze applicatie in gebruik",
+        "No architecture decisions name this standard yet": "Nog geen architectuurbesluiten noemen deze standaard"
     },
     "nplurals=2; plural=(n != 1);"
 )

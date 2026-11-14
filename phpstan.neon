@@ -34,6 +34,10 @@ parameters:
         # ConnectionReportService names them by string behind class_exists.
         - tests/Stubs/Integriq/Event/ConnectionStatusReportedEvent.php
         - tests/Stubs/Integriq/Event/ConnectionRefreshRequestedEvent.php
+        # OpenRegister's lifecycle guard contract, which
+        # ArchitectureDecisionReviewGuard implements (architecture-decision-register).
+        - tests/Stubs/OpenRegister/Lifecycle/LifecycleGuardInterface.php
+        - tests/Stubs/OpenRegister/Lifecycle/GuardResult.php
 
     ignoreErrors:
         # OrganizationSyncService's `if ($contactObject !== null)` at the top of

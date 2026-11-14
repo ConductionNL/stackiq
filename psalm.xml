@@ -60,6 +60,10 @@
              psalm sees the constructor the service builds. -->
         <file name="tests/Stubs/Integriq/Event/ConnectionStatusReportedEvent.php" />
         <file name="tests/Stubs/Integriq/Event/ConnectionRefreshRequestedEvent.php" />
+        <!-- OpenRegister's lifecycle guard contract, which ArchitectureDecisionReviewGuard
+             implements (architecture-decision-register). Copies of openregister/lib/Lifecycle/. -->
+        <file name="tests/Stubs/OpenRegister/Lifecycle/LifecycleGuardInterface.php" preloadClasses="true" />
+        <file name="tests/Stubs/OpenRegister/Lifecycle/GuardResult.php" preloadClasses="true" />
     </stubs>
     <issueHandlers>
         <UndefinedDocblockClass errorLevel="suppress"/>

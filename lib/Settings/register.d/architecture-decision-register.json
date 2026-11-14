@@ -1,0 +1,39 @@
+{
+  "components": {
+    "objects": [
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "architectureDecision",
+          "slug": "seed-ab-zaakgericht-werken",
+          "version": "0.0.1"
+        },
+        "title": "Eén zaaksysteem voor alle domeinen",
+        "context": "Drie domeinen gebruiken elk een eigen zaaksysteem.",
+        "decision": "We gaan naar één zaaksysteem, domein voor domein.",
+        "category": "application",
+        "impact": "high",
+        "status": "accepted",
+        "reviewer": "admin",
+        "applications": [
+          "@ref:usage:gebruik-suite4-gem-delft-eigenaar"
+        ]
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "architectureDecision",
+          "slug": "seed-ab-api-first",
+          "version": "0.0.1"
+        },
+        "title": "Nieuwe koppelingen alleen via API's",
+        "context": "Bestandsuitwisseling via FTP is niet te volgen.",
+        "decision": "Een nieuwe koppeling gebruikt een gedocumenteerde API.",
+        "category": "integration",
+        "impact": "medium",
+        "status": "in review",
+        "reviewer": "admin"
+      }
+    ]
+  }
+}
