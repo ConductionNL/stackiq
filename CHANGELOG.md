@@ -2,6 +2,16 @@
 
 ## [Unreleased]
 ### Added
+- Integration leaves (adopt-integration-leaves): contact persons and
+  organisations link their Nextcloud contact (`contacts`), contracts and module
+  versions get a `calendar` tab, software reviews a `deck` tab, modules and
+  services `bookmarks`. A contract keeps its `decidesk-decisions` leaf.
+- Lifecycle dates on the calendar: saving a contract keeps one linked
+  "Contract ends: {contractNumber}" event on its end date, and saving a module
+  version one "End of support: {module} {version}" event on its end-of-support
+  date (including dates the EOL sync stamps again). A changed date moves the
+  event, a cleared date removes it, and an unavailable calendar only logs a
+  warning.
 - CMDB import: a Nextcloud admin imports a TOPdesk CMDB export (xlsx) for one
   municipality from the admin settings. Every application row of the two CMDB
   sheets becomes or updates a module, its vendor, a usage for the municipality

@@ -9,8 +9,8 @@
   - GIVEN two files that differ in one relationship target WHEN they are compared THEN exactly one changed relationship is reported with the field target
   - GIVEN a file and itself in another order WHEN they are compared THEN no difference is reported
   - GIVEN more than 50 differences in a category WHEN they are compared THEN 50 examples and the full counts come back
-- [ ] Implement
-- [ ] Test (PHPUnit `ArchiMateModelComparatorTest`)
+- [x] Implement
+- [x] Test (PHPUnit `ArchiMateModelComparatorTest`)
 
 ### Task 2: One conversion and one generation entry
 - **spec_ref**: openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing
@@ -59,6 +59,8 @@
   - GIVEN a Dutch instance WHEN the check renders THEN every label and summary reads in Dutch
 - [ ] Implement
 - [ ] Test (`tests/l10n` key parity, screenshot captured with Playwright)
+
+Built: Task 1. `ArchiMateModelComparator::compare()` with the file reading in `ArchiMateModelReader`. Open: tasks 2 to 6. Task 2 has to keep the import's per-step timings, progress phases and cancellation checks while moving the conversion into one method, so it gets its own pass.
 
 ## Verification
 

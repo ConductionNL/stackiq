@@ -10,8 +10,9 @@
   - GIVEN the search result WHEN hermiq replies THEN the answer holds `reply`, `sources` (cited refs only) and `searched`
   - GIVEN an empty search WHEN asked THEN hermiq is not called
   - GIVEN hermiq is absent WHEN asked THEN the answer is 503
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Service/AskServiceTest.php` with an ObjectService double on the real interface and a recorded converse reply; `tests/Unit/Controller/AskControllerTest.php` for 503 and the rate limit)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Service/AskServiceTest.php` with an ObjectService double on the real interface and a recorded converse reply; `tests/Unit/Controller/AskControllerTest.php` for 503 and the rate limit)
+  > Built: `AskService` (contract `AskServiceInterface`), `AskController`, route `POST /api/ask` (also documented in `openapi.json`). The search is one `searchObjectsPaginated` per schema, as the caller, until 20 entries; hermiq is resolved at runtime as `OCA\Hermiq\Kernel\Contracts\AssistantServiceInterface` and the citation instruction is appended to the question. Hermiq's own 400/403/404 pass through; any other assistant failure answers 502.
 
 ### Task 2: Ask panel
 - **spec_ref**: openspec/changes/insight-assistant-answers-and-action-trail/specs/assistant-insight/spec.md#requirement-req-ask-002-the-ask-panel-is-only-offered-when-hermiq-is-installed
