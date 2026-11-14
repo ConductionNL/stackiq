@@ -16,6 +16,14 @@
 			"type": "index",
 			"title": "Connections",
 			"config": {
+				"bulkActions": [
+					{
+						"id": "move-to-organisation",
+						"label": "Move to organisation",
+						"icon": "OfficeBuildingOutline",
+						"handler": "moveConnectionsToOrganisation"
+					}
+				],
 				"register": "@resolve:voorzieningen_register",
 				"schema": "connection",
 				"description": "Every connection between applications, and from an application to a national provision.",

@@ -16,6 +16,14 @@
 			"type": "index",
 			"title": "Applications in use",
 			"config": {
+				"bulkActions": [
+					{
+						"id": "move-to-organisation",
+						"label": "Move to organisation",
+						"icon": "OfficeBuildingOutline",
+						"handler": "moveUsagesToOrganisation"
+					}
+				],
 				"register": "@resolve:voorzieningen_register",
 				"schema": "usage",
 				"description": "The applications your organisation uses, with the version it runs, where it stands and who owns it.",

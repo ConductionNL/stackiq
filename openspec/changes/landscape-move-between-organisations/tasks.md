@@ -24,8 +24,8 @@
 - **files**: `src/dialogs/MoveToOrganisationDialog.vue`, `src/manifest.json` and `src/manifest.d/*.json` (mass and header actions), `l10n/en.json`, `l10n/nl.json`
 - **acceptance_criteria**:
   - GIVEN three selected usages WHEN the admin picks Move to organisation THEN the dialog lists the three and their connections that stay behind
-- [ ] Implement
-- [ ] Test (Playwright `tests/e2e/workflows/move-to-organisation.spec.ts`)
+- [x] Implement (`src/dialogs/MoveToOrganisationDialog.vue`, opened by the Move to organisation bulk action on Applications, Services, Applications in use, Connections and Contracts through the handlers in `src/services/moveToOrganisation.js`; the header action on detail pages is left: a detail page's header actions do not reach a named app handler yet)
+- [ ] Test (Playwright `tests/e2e/workflows/move-to-organisation.spec.ts`; vitest `moveToOrganisation.spec.js` and `moveToOrganisationDialog.spec.js` cover the handlers, the request and the dry-run lists)
 
 ### Task 4: Documentation
 - **spec_ref**: openspec/changes/landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-003-the-dry-run-shows-what-moves-and-what-stays-behind

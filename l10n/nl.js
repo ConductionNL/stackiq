@@ -5,8 +5,8 @@
 OC.L10N.register(
     "stackiq",
     {
-        "No mail transport is set, so registration, activation and account mails are not sent.": "Er is geen mailtransport ingesteld, dus registratie-, activatie- en accountmails worden niet verstuurd.",
         "Set up the mail transport": "Mailtransport instellen",
+        "No mail transport is set, so registration, activation and account mails are not sent.": "Er is geen mailtransport ingesteld, dus registratie-, activatie- en accountmails worden niet verstuurd.",
         "Licence metric": "Licentiemetriek",
         "What one licence covers, as the contract with the supplier states it.": "Waar één licentie voor geldt, zoals het contract met de leverancier het vastlegt.",
         "Licences bought": "Gekochte licenties",
@@ -1404,7 +1404,26 @@ OC.L10N.register(
         "Software catalogue": "Softwarecatalogus",
         "Shared": "Gedeeld",
         "{name}, shared by {partner}": "{name}, gedeeld door {partner}",
-        "+{count} more": "+{count} meer"
+        "+{count} more": "+{count} meer",
+        "Move to organisation": "Naar organisatie verplaatsen",
+        "Move {count} entry from {source} to another organisation.": "{count} item van {source} naar een andere organisatie verplaatsen.",
+        "Move {count} entries from {source} to another organisation.": "{count} items van {source} naar een andere organisatie verplaatsen.",
+        "{count} entry moved.": "{count} item verplaatst.",
+        "{count} entries moved.": "{count} items verplaatst.",
+        "Select the organisation to move to": "Kies de organisatie om naartoe te verplaatsen",
+        "Moving": "Wordt verplaatst",
+        "Nothing moves.": "Er wordt niets verplaatst.",
+        "Staying with {source}": "Blijft bij {source}",
+        "Preview": "Voorbeeld",
+        "Move": "Verplaatsen",
+        "This kind of entry cannot move between organisations": "Dit soort item kan niet tussen organisaties worden verplaatst",
+        "The target organisation is unknown or the same as the source": "De doelorganisatie is onbekend of gelijk aan de bronorganisatie",
+        "Not found": "Niet gevonden",
+        "Not owned by the source organisation": "Niet in eigendom van de bronorganisatie",
+        "Choose an active organisation first.": "Kies eerst een actieve organisatie.",
+        "Could not load your organisations.": "Je organisaties konden niet worden geladen.",
+        "Only an administrator of both organisations may move entries.": "Alleen een beheerder van beide organisaties mag items verplaatsen.",
+        "The move could not be planned or carried out.": "De verplaatsing kon niet worden voorbereid of uitgevoerd."
     },
     "nplurals=2; plural=(n != 1);"
 )

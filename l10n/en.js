@@ -5,8 +5,8 @@
 OC.L10N.register(
     "stackiq",
     {
-        "No mail transport is set, so registration, activation and account mails are not sent.": "No mail transport is set, so registration, activation and account mails are not sent.",
         "Set up the mail transport": "Set up the mail transport",
+        "No mail transport is set, so registration, activation and account mails are not sent.": "No mail transport is set, so registration, activation and account mails are not sent.",
         "Licence metric": "Licence metric",
         "What one licence covers, as the contract with the supplier states it.": "What one licence covers, as the contract with the supplier states it.",
         "Licences bought": "Licences bought",
@@ -1336,7 +1336,26 @@ OC.L10N.register(
         "Software catalogue": "Software catalogue",
         "Shared": "Shared",
         "{name}, shared by {partner}": "{name}, shared by {partner}",
-        "+{count} more": "+{count} more"
+        "+{count} more": "+{count} more",
+        "Move to organisation": "Move to organisation",
+        "Move {count} entry from {source} to another organisation.": "Move {count} entry from {source} to another organisation.",
+        "Move {count} entries from {source} to another organisation.": "Move {count} entries from {source} to another organisation.",
+        "{count} entry moved.": "{count} entry moved.",
+        "{count} entries moved.": "{count} entries moved.",
+        "Select the organisation to move to": "Select the organisation to move to",
+        "Moving": "Moving",
+        "Nothing moves.": "Nothing moves.",
+        "Staying with {source}": "Staying with {source}",
+        "Preview": "Preview",
+        "Move": "Move",
+        "This kind of entry cannot move between organisations": "This kind of entry cannot move between organisations",
+        "The target organisation is unknown or the same as the source": "The target organisation is unknown or the same as the source",
+        "Not found": "Not found",
+        "Not owned by the source organisation": "Not owned by the source organisation",
+        "Choose an active organisation first.": "Choose an active organisation first.",
+        "Could not load your organisations.": "Could not load your organisations.",
+        "Only an administrator of both organisations may move entries.": "Only an administrator of both organisations may move entries.",
+        "The move could not be planned or carried out.": "The move could not be planned or carried out."
     },
     "nplurals=2; plural=(n != 1);"
 )
