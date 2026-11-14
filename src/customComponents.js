@@ -30,6 +30,8 @@ import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
 import ProductRoadmap from './components/roadmap/ProductRoadmap.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
+import ProcessStepFlow from './views/architecture/ProcessStepFlow.vue'
+import ProcessStepUsages from './views/architecture/ProcessStepUsages.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import FacetedCatalogIndexView from './views/FacetedCatalogIndexView.vue'
 import FeaturesRoadmapTabs from './views/FeaturesRoadmapTabs.vue'
@@ -61,6 +63,13 @@ export default {
 	// the `cardComponent` of the now-decomposed Organisaties type='index' page
 	// (Phase 8). CnIndexPage's cardComponent config closed the prior lib gap.
 	OrganisatieCard,
+
+	// The steps of a business process as a read-only flow on CnGraphCanvas, and
+	// the applications that support a step with the hidden ones counted
+	// (architecture-process-mapping D3, D4): neither is a list a built-in
+	// widget expresses.
+	ProcessStepFlow,
+	ProcessStepUsages,
 
 	// --- Lib gap: settings sub-section orchestration. ---
 	// The lib's type='settings' rich-section widgets cover individual
