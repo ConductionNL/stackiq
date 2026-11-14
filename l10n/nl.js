@@ -5,8 +5,8 @@
 OC.L10N.register(
     "stackiq",
     {
-        "No mail transport is set, so registration, activation and account mails are not sent.": "Er is geen mailtransport ingesteld, dus registratie-, activatie- en accountmails worden niet verstuurd.",
         "Set up the mail transport": "Mailtransport instellen",
+        "No mail transport is set, so registration, activation and account mails are not sent.": "Er is geen mailtransport ingesteld, dus registratie-, activatie- en accountmails worden niet verstuurd.",
         "Licence metric": "Licentiemetriek",
         "What one licence covers, as the contract with the supplier states it.": "Waar één licentie voor geldt, zoals het contract met de leverancier het vastlegt.",
         "Licences bought": "Gekochte licenties",
@@ -1408,7 +1408,10 @@ OC.L10N.register(
         "Usage records as supplier": "Gebruiksrecords als leverancier",
         "Shared": "Gedeeld",
         "{name}, shared by {partner}": "{name}, gedeeld door {partner}",
-        "+{count} more": "+{count} meer"
+        "+{count} more": "+{count} meer",
+        "Find duplicates": "Dubbelingen zoeken",
+        "This entry was merged into another one.": "Dit item is samengevoegd met een ander item.",
+        "Merged into {name}": "Samengevoegd met {name}"
     },
     "nplurals=2; plural=(n != 1);"
 )

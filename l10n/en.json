@@ -1335,6 +1335,9 @@
         "Usage records as supplier": "Usage records as supplier",
         "Shared": "Shared",
         "{name}, shared by {partner}": "{name}, shared by {partner}",
-        "+{count} more": "+{count} more"
+        "+{count} more": "+{count} more",
+        "Find duplicates": "Find duplicates",
+        "This entry was merged into another one.": "This entry was merged into another one.",
+        "Merged into {name}": "Merged into {name}"
     }
 }

@@ -38,8 +38,11 @@
   - GIVEN a Merged module WHEN /modules and its facets load THEN it is not counted or listed
   - GIVEN a Merged module WHEN its detail page opens THEN the banner links to the survivor
   - GIVEN an admin or functional administrator WHEN /modules, /diensten or /organisaties opens THEN Find duplicates opens OpenRegister's Duplicate candidates page, and other users do not see it
-- [ ] Implement
-  - Done: `FacetService` leaves Merged records out of the lists and facet counts (`FacetServiceMergedTest`). Open: the `MergedRecordBanner` widget on the detail page and the Find duplicates action on `/modules`, `/diensten` and `/organisaties`.
+- [x] Implement
+  - `FacetService` leaves Merged records out of the lists and facet counts (`FacetServiceMergedTest`).
+  - `src/components/merge/MergedRecordBanner.vue`, a `before-body` widget on `ModuleDetail`, says the entry was merged and links to the survivor (the services list has no detail page).
+  - Find duplicates on `/modules` and `/diensten`: a link in the toolbar of `FacetedCatalogIndexView` to OpenRegister's `/duplicates` page, shown when `/api/me` answers `mayFindDuplicates` (a Nextcloud admin or a member of `functioneel-beheerder`, `SyncAccessPolicy::isAdministrator()`).
+  - Not on `/organisaties`: an index page's `headerActions` cannot be hidden per user in `@conduction/nextcloud-vue` 2.74, so the action would show to everyone; it waits for a visibility rule on header actions.
 - [ ] Test (PHPUnit tests/Unit/Service/FacetServiceTest.php and Playwright tests/e2e/spec-coverage/record-reconciliation.spec.ts)
 
 ### Task 5: Remove the unused merge modal, seed a duplicate and document the flow

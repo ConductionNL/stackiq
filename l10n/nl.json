@@ -1403,6 +1403,9 @@
         "Usage records as supplier": "Gebruiksrecords als leverancier",
         "Shared": "Gedeeld",
         "{name}, shared by {partner}": "{name}, gedeeld door {partner}",
-        "+{count} more": "+{count} meer"
+        "+{count} more": "+{count} meer",
+        "Find duplicates": "Dubbelingen zoeken",
+        "This entry was merged into another one.": "Dit item is samengevoegd met een ander item.",
+        "Merged into {name}": "Samengevoegd met {name}"
     }
 }

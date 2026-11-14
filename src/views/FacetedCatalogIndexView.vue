@@ -83,6 +83,16 @@ generic route-query-to-filter passthrough never sees it (see the
 					{{ view.name }}
 				</NcActionButton>
 			</NcActions>
+			<NcButton
+				v-if="mayFindDuplicates"
+				variant="tertiary"
+				:href="duplicateCandidatesHref"
+				data-testid="find-duplicates">
+				<template #icon>
+					<ContentDuplicate :size="20" />
+				</template>
+				{{ t('stackiq', 'Find duplicates') }}
+			</NcButton>
 		</div>
 
 		<p
@@ -141,7 +151,9 @@ generic route-query-to-filter passthrough never sees it (see the
 import { CnFacetSidebar, CnIndexPage } from '@conduction/nextcloud-vue'
 import { showError, showSuccess } from '@nextcloud/dialogs'
 import { translate as t } from '@nextcloud/l10n'
-import { NcActionButton, NcActionCaption, NcActions } from '@nextcloud/vue'
+import { generateUrl } from '@nextcloud/router'
+import { NcActionButton, NcActionCaption, NcActions, NcButton } from '@nextcloud/vue'
+import ContentDuplicate from 'vue-material-design-icons/ContentDuplicate.vue'
 import ContentSaveOutline from 'vue-material-design-icons/ContentSaveOutline.vue'
 import FolderOutline from 'vue-material-design-icons/FolderOutline.vue'
 import FolderStarOutline from 'vue-material-design-icons/FolderStarOutline.vue'
@@ -150,6 +162,7 @@ import { useFacetStore } from '../store/modules/facets.js'
 import { rowDetailLocation } from '../utils/applicationContracts.js'
 import { listNarrowingFilter } from '../utils/facetNarrowing.js'
 import { buildFacetDimensionSchema } from '../utils/facetSchema.js'
+import { duplicateCandidatesUrl } from '../utils/mergedRecord.js'
 
 /** Dimension key -> translated label, matching `FacetController`'s query params. */
 const DIMENSION_LABELS = {
@@ -195,6 +208,8 @@ export default {
 		NcActions,
 		NcActionButton,
 		NcActionCaption,
+		NcButton,
+		ContentDuplicate,
 		CnFacetSidebar,
 		CnIndexPage,
 		SaveFacetViewModal,
@@ -319,6 +334,8 @@ export default {
 			searchDebounceTimer: null,
 			activeQuickFilterIndex: initialQuickFilterIndex(this.quickFilters),
 			listRemount: 0,
+			mayFindDuplicates: false,
+			duplicateCandidatesHref: duplicateCandidatesUrl(generateUrl),
 		}
 	},
 
@@ -452,6 +469,7 @@ export default {
 	mounted() {
 		this.refetch()
 		this.facetStore.fetchSavedViews(this.schema)
+		this.loadMayFindDuplicates()
 	},
 
 	beforeUnmount() {
@@ -459,6 +477,27 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * Whether the user may open OpenRegister's duplicate candidates: a
+		 * Nextcloud admin or a functional administrator (`/api/me`). Anyone
+		 * else, or a failed lookup, does not see Find duplicates; the
+		 * candidates page checks access itself.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/operations-record-reconciliation/specs/record-reconciliation/spec.md#requirement-req-rrc-002-the-catalogue-pages-shall-lead-an-administrator-to-openregisters-duplicate-candidates
+		 */
+		async loadMayFindDuplicates() {
+			try {
+				const response = await fetch(generateUrl('/apps/stackiq/api/me'), {
+					headers: { requesttoken: globalThis.OC?.requestToken ?? '' },
+				})
+				const data = response.ok ? await response.json() : null
+				this.mayFindDuplicates = data?.mayFindDuplicates === true
+			} catch {
+				this.mayFindDuplicates = false
+			}
+		},
+
 		/**
 		 * Remember which quick-filter tab is active (single-select mode emits the
 		 * tab index; multi-select emits an array, which never selects the
