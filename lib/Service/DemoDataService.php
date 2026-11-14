@@ -234,7 +234,7 @@ class DemoDataService implements DemoDataServiceInterface {
 	}//end install()
 
 	/**
-	 * Hand the descriptor to OpenRegister's importer, schemas pinned first.
+	 * Hand the descriptor to OpenRegister's importer, relative dates resolved and schemas pinned first.
 	 *
 	 * @param array<string, mixed> $data The decoded descriptor.
 	 *
@@ -247,7 +247,7 @@ class DemoDataService implements DemoDataServiceInterface {
 
 		return $importer->importFromApp(
 			appId: self::CONFIG_APP_ID,
-			data: $this->pinSchemasToTheirRegisters(data: $data),
+			data: $this->pinSchemasToTheirRegisters(data: RelativeDemoDates::resolve(data: $data, now: new \DateTimeImmutable())),
 			version: $this->appManager->getAppVersion(AppIdentity::APP_ID),
 			force: true
 		);

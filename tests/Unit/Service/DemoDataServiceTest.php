@@ -198,6 +198,34 @@ class DemoDataServiceTest extends TestCase {
 		$this->assertTrue($importer->seen['force']);
 	}
 
+	public function testRelativeDatesAreResolvedAgainstTheImportDate(): void {
+		// The demo review dates are written relative (`-P7D`): a fixed date
+		// would leave "reviewed a week ago" a year old a year later.
+		file_put_contents(
+			$this->descriptor(),
+			json_encode(['components' => ['objects' => [['accessReviewedAt' => '-P7D'], ['accessReviewedAt' => '2020-01-01T00:00:00+00:00']]]])
+		);
+
+		$importer = new class {
+			public array $objects = [];
+
+			public function importFromApp(string $appId, array $data, string $version, bool $force): array {
+				$this->objects = $data['components']['objects'];
+				return [];
+			}
+		};
+		$this->container->method('get')->willReturn($importer);
+
+		$before = new \DateTimeImmutable('-7 days -1 minute');
+		$this->service()->install();
+		$after = new \DateTimeImmutable('-7 days +1 minute');
+
+		$stamped = new \DateTimeImmutable($importer->objects[0]['accessReviewedAt']);
+		$this->assertGreaterThanOrEqual($before->getTimestamp(), $stamped->getTimestamp());
+		$this->assertLessThanOrEqual($after->getTimestamp(), $stamped->getTimestamp());
+		$this->assertSame('2020-01-01T00:00:00+00:00', $importer->objects[1]['accessReviewedAt']);
+	}
+
 	public function testEachObjectIsPointedAtTheSchemaOfItsOwnRegister(): void {
 		file_put_contents(
 			$this->descriptor(),

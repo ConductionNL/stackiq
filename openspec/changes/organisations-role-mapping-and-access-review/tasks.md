@@ -64,6 +64,7 @@
   - GIVEN a fresh demo import WHEN the Access review page opens THEN it shows one current and two due rows
   - GIVEN the docs WHEN a reader opens the feature page THEN it explains role groups, mapped groups and the review with screenshots, and points SAML and OpenID Connect users to OpenRegister's derived grants
 - [ ] Implement
+      Built: `accessReviewedAt` on the first two demo contact persons as `-P7D` and `-P14M`, resolved against the import date by `RelativeDemoDates` in `DemoDataService` (the third has none), and `docs/features/role-mapping-and-access-review.md`. Left: the screenshots, which the Playwright specs capture on a live instance; the demo contact persons have no accounts, so whether the page shows the three rows needs that live check too.
 - [ ] Test (Playwright tests/e2e/spec-coverage/role-mapping.spec.ts and tests/e2e/spec-coverage/access-review.spec.ts against the demo data)
 
 ## Verification

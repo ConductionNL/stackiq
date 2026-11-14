@@ -283,6 +283,7 @@
           "slug": "contactperson-contactperson-1-1"
         },
         "contactsUid": "Voorbeeld Contactsuid 1",
+        "accessReviewedAt": "-P7D",
         "role": "Voorbeeld Role 1",
         "organization": {},
         "notifications": [
@@ -299,6 +300,7 @@
           "slug": "contactperson-contactperson-2-2"
         },
         "contactsUid": "Voorbeeld Contactsuid 2",
+        "accessReviewedAt": "-P14M",
         "role": "Voorbeeld Role 2",
         "organization": {},
         "notifications": [
