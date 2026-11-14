@@ -8,8 +8,8 @@
 - **acceptance_criteria**:
   - GIVEN a pentest report shared with municipality A WHEN municipality B lists compliance documents THEN it is not listed
   - GIVEN a public processing agreement WHEN an anonymous visitor reads the product's documents through the API THEN it is listed
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Settings/ComplianceDocumentsFragmentTest.php`, `tests/Unit/Settings/SchemaRbacTest.php` cases for the three audiences)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Settings/ComplianceDocumentsFragmentTest.php`, `tests/Unit/Settings/SchemaRbacTest.php` cases for the three audiences)
 
 ### Task 2: Product page section and the documents list
 - **spec_ref**: openspec/changes/sharing-compliance-documents/specs/shared-compliance-documents/spec.md#requirement-req-scd-001-an-organisation-publishes-a-compliance-document-about-a-product
