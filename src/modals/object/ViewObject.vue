@@ -1989,6 +1989,12 @@ import {
 	updateEndpoint,
 } from './objectFormData.js'
 import {
+	editorContent,
+	isUsableTitle,
+	sharedSchemaIds,
+	titleOption,
+} from './objectFormOptions.js'
+import {
 	lockDescription,
 	objectDisplayName,
 	objectSchemaName,
@@ -2026,6 +2032,11 @@ import {
 	presenceClass,
 	propertyErrorMessage,
 } from './propertyValidation.js'
+import {
+	assertPublicationDone,
+	publicationEndpoint,
+	publicationInit,
+} from './publicationRequest.js'
 
 import '@toast-ui/editor/dist/toastui-editor.css'
 
@@ -2307,15 +2318,9 @@ export default {
 			}
 
 			const selectedCatalogRegisterIds = fullCatalog.registers || []
-
 			return objectStore.availableRegisters
-				.filter((register) =>
-					selectedCatalogRegisterIds.includes(register.id),
-				)
-				.map((register) => ({
-					id: register.id,
-					label: register.title,
-				}))
+				.filter((register) => selectedCatalogRegisterIds.includes(register.id))
+				.map((register) => titleOption(register))
 		},
 
 		/**
@@ -2332,26 +2337,10 @@ export default {
 			const catalog = objectStore
 				.getCollection('catalog')
 				.results.find((catalog) => catalog.id === this.selectedCatalog.id)
-
 			if (!register || !catalog) {
 				return []
 			}
-
-			const registerSchemaIds =
-				register.schemas?.map((schema) => schema.id) || []
-			const catalogSchemaIds = catalog.schemas || []
-
-			// only get schema ids where the id is in both registerSchemaIds and catalogSchemaIds
-			const validSchemaIds = registerSchemaIds.filter((id) =>
-				catalogSchemaIds.includes(id),
-			)
-
-			return objectStore.availableSchemas
-				.filter((schema) => validSchemaIds.includes(schema.id))
-				.map((schema) => ({
-					id: schema.id,
-					label: schema.title,
-				}))
+			return this.schemaOptionsOf(sharedSchemaIds(register, catalog))
 		},
 
 		hasSelectedSchema() {
@@ -2553,6 +2542,19 @@ export default {
 	},
 
 	methods: {
+		/**
+		 * The available schemas with the given ids, as select options.
+		 *
+		 * @param {Array<string>} schemaIds The schema ids.
+		 * @return {Array<{id: string, label: string}>} The options.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		schemaOptionsOf(schemaIds) {
+			return objectStore.availableSchemas
+				.filter((schema) => schemaIds.includes(schema.id))
+				.map((schema) => titleOption(schema))
+		},
+
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
@@ -3163,16 +3165,7 @@ export default {
 
 			// Return the title if it exists and is not empty or just "new" (placeholder)
 			const title = schemaProperty?.title
-			if (
-				title
-				&& typeof title === 'string'
-				&& title.trim() !== ''
-				&& title.trim().toLowerCase() !== 'new'
-			) {
-				return title
-			}
-
-			return key
+			return isUsableTitle(title) ? title : key
 		},
 
 		/**
@@ -3386,26 +3379,9 @@ export default {
 		 */
 		updateMarkdownValue(key, editorInstance) {
 			// Get the current content from the editor as MARKDOWN
-			let content = ''
-
+			let content
 			try {
-				// Always prefer markdown output over HTML
-				if (
-					editorInstance
-					&& typeof editorInstance.getMarkdown === 'function'
-				) {
-					content = editorInstance.getMarkdown()
-				} else if (
-					editorInstance
-					&& typeof editorInstance.getHTML === 'function'
-				) {
-					// Fallback to HTML if markdown not available
-					content = editorInstance.getHTML()
-				} else {
-					// Fallback: if it's a string, use it directly
-					content =
-						typeof editorInstance === 'string' ? editorInstance : ''
-				}
+				content = editorContent(editorInstance)
 			} catch (error) {
 				console.warn('Error getting content from markdown editor:', error)
 				content = ''
@@ -3632,77 +3608,11 @@ export default {
 		async publishObject() {
 			this.isPublishing = true
 			try {
-				if (!this.currentObject) {
-					throw new Error('No object to publish')
-				}
-
-				const { registerId, schemaId } = this.getRegisterSchemaIds(
-					this.currentObject,
-				)
-				const objectId =
-					this.currentObject['@self']?.id || this.currentObject.id
-
-				let endpoint
-				let body = {}
-
-				if (this.showPublishModal && this.publishDate) {
-					// Publishing with a specific date from the modal
-					endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${objectId}`
-					body = {
-						...this.currentObject,
-						'@self': {
-							...this.currentObject['@self'],
-							published:
-								this.publishDate instanceof Date
-									? this.publishDate.toISOString()
-									: this.publishDate,
-						},
-					}
-				} else {
-					// Direct publish action (publish now)
-					endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${objectId}/publish`
-				}
-
-				const response = await fetch(endpoint, {
-					method: this.showPublishModal ? 'PUT' : 'POST',
-					headers: this.showPublishModal
-						? {
-								'Content-Type': 'application/json',
-								requesttoken: getRequestToken(),
-							}
-						: { requesttoken: getRequestToken() },
-					body: this.showPublishModal ? JSON.stringify(body) : undefined,
-				})
-
-				if (!response.ok) {
-					const errorText = await response.text()
-					throw new Error(
-						`Failed to publish object: ${response.status} ${response.statusText} - ${errorText}`,
-					)
-				}
-
-				const result = await response.json()
-
-				// Rebuild the object with schema properties like we do in objectProperties computed
-				const updatedObject = this.rebuildObjectWithSchemaProperties(result)
-
-				// Update the current object with the rebuilt data
-				objectStore.setActiveObject('publication', updatedObject)
-
-				// Refresh the publications list
-				catalogStore.fetchPublications()
-
+				await this.runPublicationAction(this.publishAction())
 				this.closePublishModal()
-				this.success = 'Object published successfully'
-				setTimeout(() => {
-					this.success = null
-				}, 3000)
+				this.reportPublicationSuccess('Object published successfully')
 			} catch (error) {
-				console.error('Failed to publish object:', error)
-				this.error = 'Failed to publish object: ' + error.message
-				setTimeout(() => {
-					this.error = null
-				}, 5000)
+				this.reportPublicationFailure('publish', error)
 			} finally {
 				this.isPublishing = false
 			}
@@ -3714,80 +3624,113 @@ export default {
 		async depublishObject() {
 			this.isDepublishing = true
 			try {
-				if (!this.currentObject) {
-					throw new Error('No object to depublish')
-				}
-
-				const { registerId, schemaId } = this.getRegisterSchemaIds(
-					this.currentObject,
-				)
-				const objectId =
-					this.currentObject['@self']?.id || this.currentObject.id
-
-				let endpoint
-				let body = {}
-
-				if (this.showDepublishModal && this.depublishDate) {
-					// Depublishing with a specific date from the modal
-					endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${objectId}`
-					body = {
-						...this.currentObject,
-						'@self': {
-							...this.currentObject['@self'],
-							depublished:
-								this.depublishDate instanceof Date
-									? this.depublishDate.toISOString()
-									: this.depublishDate,
-						},
-					}
-				} else {
-					// Direct depublish action (depublish now)
-					endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${objectId}/depublish`
-				}
-
-				const response = await fetch(endpoint, {
-					method: this.showDepublishModal ? 'PUT' : 'POST',
-					headers: this.showDepublishModal
-						? {
-								'Content-Type': 'application/json',
-								requesttoken: getRequestToken(),
-							}
-						: { requesttoken: getRequestToken() },
-					body: this.showDepublishModal ? JSON.stringify(body) : undefined,
-				})
-
-				if (!response.ok) {
-					const errorText = await response.text()
-					throw new Error(
-						`Failed to depublish object: ${response.status} ${response.statusText} - ${errorText}`,
-					)
-				}
-
-				const result = await response.json()
-
-				// Rebuild the object with schema properties like we do in objectProperties computed
-				const updatedObject = this.rebuildObjectWithSchemaProperties(result)
-
-				// Update the current object with the rebuilt data
-				objectStore.setActiveObject('publication', updatedObject)
-
-				// Refresh the publications list
-				catalogStore.fetchPublications()
-
+				await this.runPublicationAction(this.depublishAction())
 				this.closeDepublishModal()
-				this.success = 'Object depublished successfully'
-				setTimeout(() => {
-					this.success = null
-				}, 3000)
+				this.reportPublicationSuccess('Object depublished successfully')
 			} catch (error) {
-				console.error('Failed to depublish object:', error)
-				this.error = 'Failed to depublish object: ' + error.message
-				setTimeout(() => {
-					this.error = null
-				}, 5000)
+				this.reportPublicationFailure('depublish', error)
 			} finally {
 				this.isDepublishing = false
 			}
+		},
+
+		/**
+		 * The publish action: from the modal with its date, or publish now.
+		 *
+		 * @return {object} The action.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		publishAction() {
+			return {
+				verb: 'publish',
+				field: 'published',
+				modal: this.showPublishModal,
+				date: this.publishDate,
+			}
+		},
+
+		/**
+		 * The depublish action: from the modal with its date, or depublish now.
+		 *
+		 * @return {object} The action.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		depublishAction() {
+			return {
+				verb: 'depublish',
+				field: 'depublished',
+				modal: this.showDepublishModal,
+				date: this.depublishDate,
+			}
+		},
+
+		/**
+		 * Sends a publish or depublish action for the current object, then
+		 * makes the rebuilt result the active object and refreshes the
+		 * publications.
+		 *
+		 * @param {object} action The action: verb, @self field, modal and date.
+		 * @return {Promise<void>} Resolves once the result is applied.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		async runPublicationAction(action) {
+			if (!this.currentObject) {
+				throw new Error(`No object to ${action.verb}`)
+			}
+			const endpoint = publicationEndpoint(this.currentObjectUrl(), action)
+			const init = publicationInit(this.currentObject, action)
+			const response = await fetch(endpoint, init)
+			await assertPublicationDone(response, action.verb)
+			const result = await response.json()
+
+			// Rebuild the object with schema properties like we do in objectProperties computed
+			const updatedObject = this.rebuildObjectWithSchemaProperties(result)
+			objectStore.setActiveObject('publication', updatedObject)
+			// Refresh the publications list
+			catalogStore.fetchPublications()
+		},
+
+		/**
+		 * The API URL of the current object.
+		 *
+		 * @return {string} The URL.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		currentObjectUrl() {
+			const { registerId, schemaId } = this.getRegisterSchemaIds(
+				this.currentObject,
+			)
+			const objectId = this.currentObject['@self']?.id || this.currentObject.id
+			return `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${objectId}`
+		},
+
+		/**
+		 * Shows a success message for three seconds.
+		 *
+		 * @param {string} message The message.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		reportPublicationSuccess(message) {
+			this.success = message
+			setTimeout(() => {
+				this.success = null
+			}, 3000)
+		},
+
+		/**
+		 * Logs a failed publish or depublish and shows its error for five
+		 * seconds.
+		 *
+		 * @param {string} verb publish or depublish.
+		 * @param {Error} error The error.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		reportPublicationFailure(verb, error) {
+			console.error(`Failed to ${verb} object:`, error)
+			this.error = `Failed to ${verb} object: ` + error.message
+			setTimeout(() => {
+				this.error = null
+			}, 5000)
 		},
 
 		// Files tab methods

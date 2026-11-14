@@ -62,6 +62,13 @@ function context(overrides = {}) {
 	}
 	ctx.closePublishModal = methods.closePublishModal.bind(ctx)
 	ctx.closeDepublishModal = methods.closeDepublishModal.bind(ctx)
+	// The publish methods run through the component's own helpers; bind every
+	// method the overrides above do not stub.
+	for (const [name, fn] of Object.entries(methods)) {
+		if (!(name in ctx)) {
+			ctx[name] = fn.bind(ctx)
+		}
+	}
 	return ctx
 }
 

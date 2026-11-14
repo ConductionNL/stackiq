@@ -306,10 +306,7 @@
       "count": 71
     },
     "no-console": {
-      "count": 12
-    },
-    "no-useless-assignment": {
-      "count": 1
+      "count": 11
     },
     "vue/prefer-define-options": {
       "count": 1
