@@ -24,6 +24,7 @@ namespace OCA\Stackiq\EventListener;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
 use OCA\OpenRegister\Event\ObjectDeletedEvent;
+use OCA\OpenRegister\Event\ObjectsMergedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatingEvent;
 use OCA\OpenRegister\Event\UserProfileUpdatedEvent;
@@ -97,6 +98,9 @@ final class ListenerRegistrar {
 		$context->registerEventListener(ObjectCreatedEvent::class, MaintenanceRecipientsListener::class);
 
 		// A module version is public only while its application is (publication-field-rules).
+		// operations-record-reconciliation D3: after OpenRegister merges two
+		// applications or services, the catalogue's references follow the survivor.
+		$context->registerEventListener(ObjectsMergedEvent::class, CatalogueMergeRelinker::class);
 		$context->registerEventListener(ObjectCreatedEvent::class, ModuleVersionPublicationListener::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleVersionPublicationListener::class);
 		$context->registerEventListener(ObjectDeletedEvent::class, ModuleVersionPublicationListener::class);

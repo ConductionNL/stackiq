@@ -160,7 +160,7 @@ describe('MergeOrganisationConfirmDialog', () => {
 			show: true,
 			sourceName: 'Leverancier B',
 			targetName: 'Leverancier A',
-			counts: { usage: 4, contactPerson: 2, groupMembers: 1 },
+			counts: { usage: 4, contactPerson: 2, groupMembers: 1, organizationDeelnames: 3 },
 		})
 
 		expect(wrapper.find('p').text()).toBe('This will permanently fold Leverancier B into Leverancier A.')
@@ -176,6 +176,12 @@ describe('MergeOrganisationConfirmDialog', () => {
 			['Applications managed', '0'],
 			['Services managed', '0'],
 			['Compliance records', '0'],
+			['Usage records as supplier', '0'],
+			['Participations', '3'],
+			['Participants', '0'],
+			['Contracts as supplier', '0'],
+			['Models', '0'],
+			['AI systems supplied', '0'],
 			['Group members', '1'],
 		])
 		expect(wrapper.find('.NcNoteCard').exists()).toBe(false)

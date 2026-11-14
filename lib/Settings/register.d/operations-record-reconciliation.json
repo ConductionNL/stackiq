@@ -1,0 +1,103 @@
+{
+  "_comment": "operations-record-reconciliation (boards SkDatakwaliteit, SkOrganisatie). OpenRegister finds duplicate applications and services from x-openregister-dedup and merges them reversibly from x-openregister-merge (ADR-045); stackiq declares the rules, re-points its own references after a merge (CatalogueMergeRelinker) and leaves Merged records out of its lists.",
+  "components": {
+    "schemas": {
+      "module": {
+        "version": "0.3.13",
+        "configuration": {
+          "x-openregister-merge": {
+            "statusField": "recordStatus",
+            "survivorStatus": "Active",
+            "mergedStatus": "Merged",
+            "reversalWindowDays": 30
+          }
+        },
+        "properties": {
+          "recordStatus": {
+            "type": "string",
+            "enum": [
+              "Active",
+              "Merged"
+            ],
+            "default": "Active",
+            "title": "Record status",
+            "description": "Active, or Merged once OpenRegister merged this record into another application. A merged record leaves the lists and its page points at the survivor.",
+            "hideOnForm": true,
+            "facetable": false,
+            "visible": false
+          },
+          "mergedInto": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Merged into",
+            "description": "The application this record was merged into. Set by stackiq after OpenRegister's merge.",
+            "hideOnForm": true,
+            "facetable": false,
+            "visible": false
+          }
+        }
+      },
+      "catalogService": {
+        "version": "0.2.4",
+        "configuration": {
+          "x-openregister-dedup": {
+            "blockingKeys": [],
+            "matchRules": [
+              {
+                "field": "name",
+                "method": "normalized",
+                "weight": 0.4
+              },
+              {
+                "field": "name",
+                "method": "levenshtein",
+                "weight": 0.2
+              },
+              {
+                "field": "provider",
+                "method": "exact",
+                "weight": 0.3
+              },
+              {
+                "field": "website",
+                "method": "normalized",
+                "weight": 0.1
+              }
+            ],
+            "threshold": 0.7
+          },
+          "x-openregister-merge": {
+            "statusField": "recordStatus",
+            "survivorStatus": "Active",
+            "mergedStatus": "Merged",
+            "reversalWindowDays": 30
+          }
+        },
+        "properties": {
+          "recordStatus": {
+            "type": "string",
+            "enum": [
+              "Active",
+              "Merged"
+            ],
+            "default": "Active",
+            "title": "Record status",
+            "description": "Active, or Merged once OpenRegister merged this record into another service. A merged record leaves the lists and its page points at the survivor.",
+            "hideOnForm": true,
+            "facetable": false,
+            "visible": false
+          },
+          "mergedInto": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Merged into",
+            "description": "The service this record was merged into. Set by stackiq after OpenRegister's merge.",
+            "hideOnForm": true,
+            "facetable": false,
+            "visible": false
+          }
+        }
+      }
+    }
+  }
+}

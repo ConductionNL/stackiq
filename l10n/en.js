@@ -1265,7 +1265,11 @@ OC.L10N.register(
         "Gap, fillable": "Gap, fillable",
         "Gap": "Gap",
         "Licence": "Licence",
-        "Software catalogue": "Software catalogue"
+        "Software catalogue": "Software catalogue",
+        "AI systems supplied": "AI systems supplied",
+        "Contracts as supplier": "Contracts as supplier",
+        "Models": "Models",
+        "Usage records as supplier": "Usage records as supplier"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -235,6 +235,12 @@ Vrij en open source onder de EUPL-licentie.
 			<step>OCA\Stackiq\Repair\BackfillContractApprovalState</step>
 			<step>OCA\Stackiq\Repair\BackfillModuleVersionPublication</step>
 			<!--
+				operations-record-reconciliation: every existing application and
+				service gets recordStatus Active, after InitializeSettings imported
+				the property, so no row is left without one.
+			-->
+			<step>OCA\Stackiq\Repair\BackfillRecordStatus</step>
+			<!--
 				Must run AFTER the register sync that adds the English columns, so it
 				can tell the rename case from the back-fill case. Scoped by SCHEMA,
 				not by register: element/relation/view hold the GEMMA/GGM import and
