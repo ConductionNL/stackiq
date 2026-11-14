@@ -1406,7 +1406,16 @@ OC.L10N.register(
         "%n applications in use share a reference component with another one.": "%n applicaties in gebruik delen een referentiecomponent met een andere.",
         "Shared": "Gedeeld",
         "{name}, shared by {partner}": "{name}, gedeeld door {partner}",
-        "+{count} more": "+{count} meer"
+        "+{count} more": "+{count} meer",
+        "Applications ({count}): {names}": "Applicaties ({count}): {names}",
+        "Coverage on a GEMMA view": "Dekking op een GEMMA-view",
+        "Empty view": "Lege view",
+        "GEMMA view": "GEMMA-view",
+        "Pick a GEMMA view to see the coverage drawn on it.": "Kies een GEMMA-view om de dekking erop te zien.",
+        "Select a view": "Selecteer een view",
+        "The GEMMA views could not be loaded.": "De GEMMA-views konden niet worden geladen.",
+        "The view could not be loaded.": "De view kon niet worden geladen.",
+        "This view holds no elements.": "Deze view bevat geen elementen."
     },
     "nplurals=2; plural=(n != 1);"
 )

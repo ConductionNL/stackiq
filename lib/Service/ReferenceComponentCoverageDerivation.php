@@ -208,14 +208,20 @@ class ReferenceComponentCoverageDerivation {
 	}//end componentCoverage()
 
 	/**
-	 * What a component is: its name, group and documentation.
+	 * What a component is: its ArchiMate identifier, name, group and documentation.
+	 *
+	 * The identifier is what a node of a GEMMA view names as its `elementRef`,
+	 * so the coverage map can find the component's node (REQ-RCC-003).
 	 *
 	 * @param array<string, mixed> $component The reference component.
 	 *
-	 * @return array{name: string, group: string, documentation: string}
+	 * @return array{identifier: string, name: string, group: string, documentation: string}
+	 *
+	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-003-the-coverage-shall-be-drawn-on-a-gemma-view-as-a-map
 	 */
 	private static function componentFacts(array $component): array {
 		return [
+			'identifier' => (string)($component['identifier'] ?? ''),
 			'name' => (string)($component['name'] ?? ''),
 			'group' => (string)($component['grouping'] ?? ''),
 			'documentation' => (string)($component['documentation'] ?? ''),
