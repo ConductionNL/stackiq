@@ -25,6 +25,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\SchemaMapper;
 use OCA\OpenRegister\Service\RegisterService;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCP\App\IAppManager;
@@ -122,34 +123,32 @@ final class SettingsServiceConfigureVoorzieningenTest extends TestCase {
 			$registerService->method('findAll')->willReturn($registers);
 		}
 
-		$service = $this->getMockBuilder(SettingsService::class)
-			->setConstructorArgs(
-				[
-					$this->createMock(IAppConfig::class),
-					$this->createMock(IRequest::class),
-					$this->createMock(RoleGroupSettings::class),
-					$container,
-					$this->createMock(IAppManager::class),
-					$this->createMock(LoggerInterface::class),
-					$this->createMock(IGroupManager::class),
-					$this->createMock(IL10N::class),
-					$this->createMock(EmailSettings::class),
-				]
-			)
-			->onlyMethods(['getObjectService', 'getRegisterService', 'setVoorzieningenConfig'])
-			->getMock();
-
 		$objectService = null;
 		if ($this->objectServiceAvailable === true) {
 			$objectService = $this->createMock(ObjectServiceInterface::class);
 		}
 
-		$service->method('getObjectService')->willReturn($objectService);
-		$service->method('getRegisterService')->willReturn($registerService);
-		$service->method('setVoorzieningenConfig')->willReturnCallback(
+		// The OpenRegister services and the stored config live in CatalogueLocator.
+		$catalogue = $this->createMock(CatalogueLocator::class);
+		$catalogue->method('getObjectService')->willReturn($objectService);
+		$catalogue->method('getRegisterService')->willReturn($registerService);
+		$catalogue->method('setVoorzieningenConfig')->willReturnCallback(
 			function (array $config): void {
 				$this->persisted = $config;
 			}
+		);
+
+		$service = new SettingsService(
+			$catalogue,
+			$this->createMock(IAppConfig::class),
+			$this->createMock(IRequest::class),
+			$this->createMock(RoleGroupSettings::class),
+			$container,
+			$this->createMock(IAppManager::class),
+			$this->createMock(LoggerInterface::class),
+			$this->createMock(IGroupManager::class),
+			$this->createMock(IL10N::class),
+			$this->createMock(EmailSettings::class),
 		);
 
 		$method = new ReflectionMethod($service, 'configureVoorzieningen');

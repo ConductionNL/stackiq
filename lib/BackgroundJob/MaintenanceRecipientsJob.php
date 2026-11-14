@@ -25,7 +25,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\BackgroundJob;
 
-use OCA\Stackiq\Service\MaintenanceRecipientService;
+use OCA\Stackiq\Kernel\Contracts\MaintenanceRecipientServiceInterface;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\IJobList;
@@ -54,13 +54,13 @@ class MaintenanceRecipientsJob extends QueuedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory                $time       The time factory.
-	 * @param MaintenanceRecipientService $recipients The owner resolution.
+	 * @param MaintenanceRecipientServiceInterface $recipients The owner resolution.
 	 * @param IJobList                    $jobList    Queues the job again after a failure.
 	 * @param LoggerInterface             $logger     The logger.
 	 */
 	public function __construct(
 		ITimeFactory $time,
-		private readonly MaintenanceRecipientService $recipients,
+		private readonly MaintenanceRecipientServiceInterface $recipients,
 		private readonly IJobList $jobList,
 		private readonly LoggerInterface $logger,
 	) {

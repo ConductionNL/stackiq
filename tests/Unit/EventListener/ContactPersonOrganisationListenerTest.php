@@ -42,6 +42,7 @@ use PHPUnit\Framework\TestCase;
  * @covers \OCA\Stackiq\EventListener\ContactPersonOrganisationListener
  * @covers \OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard
  * @covers \OCA\Stackiq\Service\Contactpersoon\SystemContactWrites
+ * @uses   \OCA\Stackiq\Service\Contactpersoon\ContactPersonWrite
  */
 final class ContactPersonOrganisationListenerTest extends TestCase {
 	private const SCHEMA = '41';
@@ -422,7 +423,7 @@ final class ContactPersonOrganisationListenerTest extends TestCase {
 	}//end testAnotherSchemaIsLeftAlone()
 
 	public function testTheListenerIsRegisteredForCreatesAndUpdates(): void {
-		$source = (string)file_get_contents(__DIR__ . '/../../../lib/AppInfo/Application.php');
+		$source = (string)file_get_contents(__DIR__ . '/../../../lib/EventListener/ListenerRegistrar.php');
 
 		foreach (['ObjectCreatingEvent', 'ObjectUpdatingEvent'] as $event) {
 			self::assertMatchesRegularExpression(

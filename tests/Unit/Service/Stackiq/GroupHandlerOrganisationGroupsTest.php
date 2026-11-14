@@ -25,6 +25,7 @@ namespace OCA\Stackiq\Tests\Unit\Service\Stackiq;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -146,7 +147,7 @@ class GroupHandlerOrganisationGroupsTest extends TestCase {
 		$container->method('get')->willReturnCallback(
 			fn (string $id): object => match ($id) {
 				'OCA\OpenRegister\Service\ObjectService' => $this->objectService,
-				'OCA\Stackiq\Service\SettingsService' => $this->settings,
+				RegisterConfigReaderInterface::class => $this->settings,
 			}
 		);
 

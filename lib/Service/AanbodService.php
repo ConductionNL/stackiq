@@ -26,7 +26,10 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use Exception;
+use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\AanbodServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -61,7 +64,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
-class AanbodService {
+class AanbodService implements AanbodServiceInterface {
 	/**
 	 * Constructor for AanbodService.
 	 *
@@ -69,7 +72,7 @@ class AanbodService {
 	 * @param IAppManager $appManager App manager service for checking available apps
 	 * @param ContainerInterface $container PSR-11 container interface for dependency injection
 	 * @param LoggerInterface $logger Logger service for debugging and error reporting
-	 * @param SettingsService $settingsService Settings service for retrieving configuration
+	 * @param RegisterConfigReaderInterface $settingsService Settings service for retrieving configuration
 	 * @param IUserSession $userSession User session service for current user context
 	 */
 	public function __construct(
@@ -77,7 +80,7 @@ class AanbodService {
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly IUserSession $userSession,
 	) {
 	}//end __construct()
@@ -282,107 +285,27 @@ class AanbodService {
 			]
 		);
 
+		$failure = ['aanbod' => null];
+
 		try {
-			// Validate input.
-			if (empty($aanbodId) === true) {
-				return [
-					'success' => false,
-					'error' => 'Aanbod ID is required',
-					'aanbod' => null,
-				];
+			$context = $this->aanbodContext(aanbodId: $aanbodId, failure: $failure);
+			if (isset($context['refusal']) === true) {
+				return $context['refusal'];
 			}
 
-			// Get ObjectService from OpenRegister.
-			$objectService = $this->getObjectService();
-
-			// Get current organization.
-			$currentOrg = $this->getCurrentOrganisation();
-			if ($currentOrg === null) {
-				return [
-					'success' => false,
-					'error' => 'No current organization available',
-					'aanbod' => null,
-				];
-			}
-
-			// Find the aanbod object across all possible schemas (gebruik, koppeling, module, dienst).
-			$existingAanbod = $this->findAanbodObject(
-				objectService: $objectService,
-				aanbodId: $aanbodId
-			);
-
-			if ($existingAanbod === null) {
-				return [
-					'success' => false,
-					'error' => 'Aanbod object not found',
-					'aanbod' => null,
-				];
-			}
+			$currentOrg = $context['currentOrg'];
+			$roles = $context['roles'];
 
 			// Verify that the active organization is either afnemer or aanbieder.
-			$aanbodData = $existingAanbod->getObject();
-			$consumerInfo = $aanbodData['consumer'] ?? null;
-			$providerInfo = $aanbodData['provider'] ?? null;
-			$consumerId = $this->resolvePartyId(partyInfo: $consumerInfo);
-			$providerId = $this->resolvePartyId(partyInfo: $providerInfo);
-			$isConsumer = ($consumerId !== null && $consumerId === $currentOrg);
-			$isProvider = ($providerId !== null && $providerId === $currentOrg);
-
-			if ($isConsumer === false && $isProvider === false) {
-				return [
-					'success' => false,
-					'error' => 'Operation not allowed: active organization is not the afnemer or aanbieder',
-					'aanbod' => null,
-					'debug' => [
-						'afnemer_in_object' => $consumerInfo,
-						'resolved_afnemer_id' => $consumerId,
-						'aanbieder_in_object' => $providerInfo,
-						'resolved_aanbieder_id' => $providerId,
-						'current_org' => $currentOrg,
-					],
-				];
+			if ($roles['isConsumer'] === false && $roles['isProvider'] === false) {
+				return $this->notAllowed(roles: $roles, currentOrg: $currentOrg, failure: $failure);
 			}
 
-			// Update the @self.organisation and @self.owner properties.
-			// Both must be set so the accepting user has permission to read/update the object.
-			$currentUser = $this->userSession->getUser();
-			$selfData = ['organisation' => $currentOrg];
-			if ($currentUser !== null) {
-				$selfData['owner'] = $currentUser->getUID();
-			}
-
-			$aanbodData['@self'] = $selfData;
-
-			// Update registeredBy based on the accepting organisation's type.
-			$aanbodData = $this->updateRegisteredBy(
-				objectService: $objectService,
-				objectData: $aanbodData,
-				organisationUuid: $currentOrg
-			);
-
-			// Save the updated object with RBAC and multitenancy disabled.
-			// The PAYLOAD is what is sent — `setObject()` on the entity is not on
-			// the published ObjectEntityInterface (ADR-084) and the mutated copy
-			// was never read back anyway; `saveObject()` is PUT-semantic, so
-			// $aanbodData already carries every unchanged field forward.
-			$updatedAanbod = $objectService->saveObject(
-				object: $aanbodData,
-				register: $existingAanbod->getRegister(),
-				schema: $existingAanbod->getSchema(),
-				uuid: $aanbodId,
-				_rbac: false,
-				_multitenancy: false
-			);
-
-			$this->logger->info(
-				'Successfully accepted aanbod object',
-				[
-					'aanbod_id' => $aanbodId,
-					'organisation' => $currentOrg,
-					'owner' => $currentUser?->getUID(),
-					'is_afnemer' => $isConsumer,
-					'is_aanbieder' => $isProvider,
-				]
+			$updatedAanbod = $this->claimAanbod(
+				objectService: $context['objectService'],
+				existingAanbod: $context['aanbod'],
+				aanbodId: $aanbodId,
+				roles: $roles + ['currentOrg' => $currentOrg]
 			);
 
 			return [
@@ -401,11 +324,7 @@ class AanbodService {
 				]
 			);
 
-			return [
-				'success' => false,
-				'error' => 'Failed to accept aanbod: ' . $e->getMessage(),
-				'aanbod' => null,
-			];
+			return $this->refusal(error: 'Failed to accept aanbod: ' . $e->getMessage(), failure: $failure);
 		}//end try
 	}//end acceptAanbod()
 
@@ -431,98 +350,29 @@ class AanbodService {
 			]
 		);
 
+		$failure = ['deleted' => false];
+
 		try {
-			// Validate input.
-			if (empty($aanbodId) === true) {
-				return [
-					'success' => false,
-					'error' => 'Aanbod ID is required',
-					'deleted' => false,
-				];
+			$context = $this->aanbodContext(aanbodId: $aanbodId, failure: $failure);
+			if (isset($context['refusal']) === true) {
+				return $context['refusal'];
 			}
 
-			// Get ObjectService from OpenRegister.
-			$objectService = $this->getObjectService();
-
-			// Get current organization.
-			$currentOrg = $this->getCurrentOrganisation();
-			if ($currentOrg === null) {
-				return [
-					'success' => false,
-					'error' => 'No current organization available',
-					'deleted' => false,
-				];
-			}
-
-			// Find the aanbod object across all possible schemas (gebruik, koppeling, module, dienst).
-			$existingAanbod = $this->findAanbodObject(
-				objectService: $objectService,
-				aanbodId: $aanbodId
-			);
-
-			if ($existingAanbod === null) {
-				return [
-					'success' => false,
-					'error' => 'Aanbod object not found',
-					'deleted' => false,
-				];
-			}
-
-			$aanbodData = $existingAanbod->getObject();
+			$currentOrg = $context['currentOrg'];
+			$roles = $context['roles'];
 
 			// SECURITY CHECK: Verify that the active organization is either afnemer or aanbieder.
-			$consumerInfo = $aanbodData['consumer'] ?? null;
-			$providerInfo = $aanbodData['provider'] ?? null;
-			$consumerId = $this->resolvePartyId(partyInfo: $consumerInfo);
-			$providerId = $this->resolvePartyId(partyInfo: $providerInfo);
-			$isConsumer = ($consumerId !== null && $consumerId === $currentOrg);
-			$isProvider = ($providerId !== null && $providerId === $currentOrg);
+			if ($roles['isConsumer'] === false && $roles['isProvider'] === false) {
+				$this->logRefusedDelete(aanbodId: $aanbodId, currentOrg: $currentOrg, roles: $roles);
 
-			if ($isConsumer === false && $isProvider === false) {
-				$this->logger->warning(
-					'Unauthorized delete attempt - user is not afnemer or aanbieder',
-					[
-						'aanbod_id' => $aanbodId,
-						'current_org' => $currentOrg,
-						'afnemer_in_object' => $consumerInfo,
-						'resolved_afnemer_id' => $consumerId,
-						'aanbieder_in_object' => $providerInfo,
-						'resolved_aanbieder_id' => $providerId,
-					]
-				);
+				return $this->notAllowed(roles: $roles, currentOrg: $currentOrg, failure: $failure);
+			}
 
-				return [
-					'success' => false,
-					'error' => 'Operation not allowed: active organization is not the afnemer or aanbieder',
-					'deleted' => false,
-					'debug' => [
-						'afnemer_in_object' => $consumerInfo,
-						'resolved_afnemer_id' => $consumerId,
-						'aanbieder_in_object' => $providerInfo,
-						'resolved_aanbieder_id' => $providerId,
-						'current_org' => $currentOrg,
-					],
-				];
-			}//end if
-
-			// Delete the object with RBAC and multitenancy disabled.
-			$objectService->setRegister(register: $existingAanbod->getRegister());
-			$objectService->setSchema(schema: $existingAanbod->getSchema());
-
-			$deleteResult = $objectService->deleteObject(
-				uuid: $aanbodId,
-				_rbac: false,
-				_multitenancy: false
-			);
-
-			$this->logger->info(
-				'Successfully denied aanbod object',
-				[
-					'aanbod_id' => $aanbodId,
-					'organisation' => $currentOrg,
-					'is_afnemer' => $isConsumer,
-					'is_aanbieder' => $isProvider,
-				]
+			$this->removeAanbod(
+				objectService: $context['objectService'],
+				existingAanbod: $context['aanbod'],
+				aanbodId: $aanbodId,
+				roles: $roles + ['currentOrg' => $currentOrg]
 			);
 
 			return [
@@ -542,13 +392,240 @@ class AanbodService {
 				]
 			);
 
-			return [
-				'success' => false,
-				'error' => 'Failed to deny aanbod: ' . $e->getMessage(),
-				'deleted' => false,
-			];
+			return $this->refusal(error: 'Failed to deny aanbod: ' . $e->getMessage(), failure: $failure);
 		}//end try
 	}//end denyAanbod()
+
+	/**
+	 * What accept and deny both need before acting: the object service, the
+	 * active organisation, the aanbod and the organisation's party roles in it.
+	 *
+	 * @param string               $aanbodId The UUID of the aanbod object
+	 * @param array<string, mixed> $failure  The operation's failure fields
+	 *
+	 * @return array<string, mixed> Either `refusal` (the failed result), or `objectService`,
+	 *                              `currentOrg`, `aanbod` and `roles`.
+	 *
+	 * @throws Exception When OpenRegister service is not available
+	 */
+	private function aanbodContext(string $aanbodId, array $failure): array {
+		// Validate input.
+		if (empty($aanbodId) === true) {
+			return ['refusal' => $this->refusal(error: 'Aanbod ID is required', failure: $failure)];
+		}
+
+		// Get ObjectService from OpenRegister.
+		$objectService = $this->getObjectService();
+
+		// Get current organization.
+		$currentOrg = $this->getCurrentOrganisation();
+		if ($currentOrg === null) {
+			return ['refusal' => $this->refusal(error: 'No current organization available', failure: $failure)];
+		}
+
+		// Find the aanbod object across all possible schemas (gebruik, koppeling, module, dienst).
+		$existingAanbod = $this->findAanbodObject(
+			objectService: $objectService,
+			aanbodId: $aanbodId
+		);
+
+		if ($existingAanbod === null) {
+			return ['refusal' => $this->refusal(error: 'Aanbod object not found', failure: $failure)];
+		}
+
+		return [
+			'objectService' => $objectService,
+			'currentOrg' => $currentOrg,
+			'aanbod' => $existingAanbod,
+			'roles' => $this->partyRoles(aanbodData: $existingAanbod->getObject(), currentOrg: $currentOrg),
+		];
+	}//end aanbodContext()
+
+	/**
+	 * The afnemer and aanbieder of an aanbod as stored and as resolved, and
+	 * whether the active organisation is either.
+	 *
+	 * @param array  $aanbodData The aanbod object data
+	 * @param string $currentOrg The active organisation UUID
+	 *
+	 * @return array{consumerInfo: mixed, providerInfo: mixed, consumerId: string|null, providerId: string|null, isConsumer: bool, isProvider: bool}
+	 */
+	private function partyRoles(array $aanbodData, string $currentOrg): array {
+		$consumerInfo = $aanbodData['consumer'] ?? null;
+		$providerInfo = $aanbodData['provider'] ?? null;
+		$consumerId = $this->resolvePartyId(partyInfo: $consumerInfo);
+		$providerId = $this->resolvePartyId(partyInfo: $providerInfo);
+
+		return [
+			'consumerInfo' => $consumerInfo,
+			'providerInfo' => $providerInfo,
+			'consumerId' => $consumerId,
+			'providerId' => $providerId,
+			'isConsumer' => ($consumerId !== null && $consumerId === $currentOrg),
+			'isProvider' => ($providerId !== null && $providerId === $currentOrg),
+		];
+	}//end partyRoles()
+
+	/**
+	 * A failed accept or deny: success false, the error, then the operation's failure fields.
+	 *
+	 * @param string               $error   The error message
+	 * @param array<string, mixed> $failure The operation's failure fields
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function refusal(string $error, array $failure): array {
+		return array_merge(['success' => false, 'error' => $error], $failure);
+	}//end refusal()
+
+	/**
+	 * The refusal when the active organisation is neither afnemer nor aanbieder.
+	 *
+	 * @param array<string, mixed> $roles      The party roles
+	 * @param string               $currentOrg The active organisation UUID
+	 * @param array<string, mixed> $failure    The operation's failure fields
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function notAllowed(array $roles, string $currentOrg, array $failure): array {
+		$result = $this->refusal(
+			error: 'Operation not allowed: active organization is not the afnemer or aanbieder',
+			failure: $failure
+		);
+		$result['debug'] = [
+			'afnemer_in_object' => $roles['consumerInfo'],
+			'resolved_afnemer_id' => $roles['consumerId'],
+			'aanbieder_in_object' => $roles['providerInfo'],
+			'resolved_aanbieder_id' => $roles['providerId'],
+			'current_org' => $currentOrg,
+		];
+
+		return $result;
+	}//end notAllowed()
+
+	/**
+	 * Give the aanbod to the active organisation and user, and save it.
+	 *
+	 * Both @self.organisation and @self.owner are set so the accepting user
+	 * may read and update the object; registeredBy follows the organisation's type.
+	 *
+	 * @param ObjectServiceInterface $objectService  The OpenRegister object service
+	 * @param ObjectEntityInterface  $existingAanbod The found aanbod entity
+	 * @param string                 $aanbodId       The UUID of the aanbod object
+	 * @param array<string, mixed>   $roles          The party roles plus `currentOrg`, the active organisation UUID
+	 *
+	 * @return ObjectEntityInterface The saved entity
+	 */
+	private function claimAanbod(
+		ObjectServiceInterface $objectService,
+		ObjectEntityInterface $existingAanbod,
+		string $aanbodId,
+		array $roles
+	): ObjectEntityInterface {
+		$currentOrg = $roles['currentOrg'];
+		$aanbodData = $existingAanbod->getObject();
+
+		$currentUser = $this->userSession->getUser();
+		$selfData = ['organisation' => $currentOrg];
+		if ($currentUser !== null) {
+			$selfData['owner'] = $currentUser->getUID();
+		}
+
+		$aanbodData['@self'] = $selfData;
+
+		// Update registeredBy based on the accepting organisation's type.
+		$aanbodData = $this->updateRegisteredBy(
+			objectService: $objectService,
+			objectData: $aanbodData,
+			organisationUuid: $currentOrg
+		);
+
+		// Save the updated object with RBAC and multitenancy disabled.
+		// The PAYLOAD is what is sent — `setObject()` on the entity is not on
+		// the published ObjectEntityInterface (ADR-084) and the mutated copy
+		// was never read back anyway; `saveObject()` is PUT-semantic, so
+		// $aanbodData already carries every unchanged field forward.
+		$updatedAanbod = $objectService->saveObject(
+			object: $aanbodData,
+			register: $existingAanbod->getRegister(),
+			schema: $existingAanbod->getSchema(),
+			uuid: $aanbodId,
+			_rbac: false,
+			_multitenancy: false
+		);
+
+		$this->logger->info(
+			'Successfully accepted aanbod object',
+			[
+				'aanbod_id' => $aanbodId,
+				'organisation' => $currentOrg,
+				'owner' => $currentUser?->getUID(),
+				'is_afnemer' => $roles['isConsumer'],
+				'is_aanbieder' => $roles['isProvider'],
+			]
+		);
+
+		return $updatedAanbod;
+	}//end claimAanbod()
+
+	/**
+	 * Log a delete refused because the active organisation is neither afnemer nor aanbieder.
+	 *
+	 * @param string               $aanbodId   The UUID of the aanbod object
+	 * @param string               $currentOrg The active organisation UUID
+	 * @param array<string, mixed> $roles      The party roles
+	 *
+	 * @return void
+	 */
+	private function logRefusedDelete(string $aanbodId, string $currentOrg, array $roles): void {
+		$this->logger->warning(
+			'Unauthorized delete attempt - user is not afnemer or aanbieder',
+			[
+				'aanbod_id' => $aanbodId,
+				'current_org' => $currentOrg,
+				'afnemer_in_object' => $roles['consumerInfo'],
+				'resolved_afnemer_id' => $roles['consumerId'],
+				'aanbieder_in_object' => $roles['providerInfo'],
+				'resolved_aanbieder_id' => $roles['providerId'],
+			]
+		);
+	}//end logRefusedDelete()
+
+	/**
+	 * Delete the aanbod with RBAC and multitenancy disabled.
+	 *
+	 * @param ObjectServiceInterface $objectService  The OpenRegister object service
+	 * @param ObjectEntityInterface  $existingAanbod The found aanbod entity
+	 * @param string                 $aanbodId       The UUID of the aanbod object
+	 * @param array<string, mixed>   $roles          The party roles plus `currentOrg`, the active organisation UUID
+	 *
+	 * @return void
+	 */
+	private function removeAanbod(
+		ObjectServiceInterface $objectService,
+		ObjectEntityInterface $existingAanbod,
+		string $aanbodId,
+		array $roles
+	): void {
+		$objectService->setRegister(register: $existingAanbod->getRegister());
+		$objectService->setSchema(schema: $existingAanbod->getSchema());
+
+		$objectService->deleteObject(
+			uuid: $aanbodId,
+			_rbac: false,
+			_multitenancy: false
+		);
+
+		$this->logger->info(
+			'Successfully denied aanbod object',
+			[
+				'aanbod_id' => $aanbodId,
+				'organisation' => $roles['currentOrg'],
+				'is_afnemer' => $roles['isConsumer'],
+				'is_aanbieder' => $roles['isProvider'],
+			]
+		);
+	}//end removeAanbod()
 
 	/**
 	 * Resolve an afnemer / aanbieder party id from its polymorphic shape.

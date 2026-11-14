@@ -67,6 +67,8 @@ use JsonSerializable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\Object\ObjectStateRequest;
 use OCA\Stackiq\Exception\CmdbImportException;
+use OCA\Stackiq\Kernel\Contracts\CmdbExportImportServiceInterface;
+use OCA\Stackiq\Kernel\LogSafeMessage;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\Cmdb\CmdbImportReport;
 use OCA\Stackiq\Service\Cmdb\CmdbImportRequest;
@@ -74,9 +76,11 @@ use OCA\Stackiq\Service\Cmdb\CmdbImportRow;
 use OCA\Stackiq\Service\Cmdb\CmdbImportRun;
 use OCA\Stackiq\Service\Cmdb\CmdbMatchSchema;
 use OCA\Stackiq\Service\Cmdb\CmdbOwnerIdentity;
-use OCA\Stackiq\Service\Cmdb\OpenRegisterInstance;
+use OCA\Stackiq\Service\Cmdb\CmdbOwnerLookup;
 use OCA\Stackiq\Service\Cmdb\CmdbRowNormaliser;
 use OCA\Stackiq\Service\Cmdb\CmdbWorkbookReader;
+use OCA\Stackiq\Service\Cmdb\OpenRegisterInstance;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IL10N;
 use OCP\IUserSession;
@@ -110,7 +114,7 @@ use Throwable;
  * @SuppressWarnings(PHPMD.ExcessiveClassLength) Most of the length is docblocks that state
  * the matching rules; the code itself is under the threshold.
  */
-class CmdbExportImportService {
+class CmdbExportImportService implements CmdbExportImportServiceInterface {
 	/**
 	 * The ProgressTracker operation type of an import.
 	 */
@@ -143,11 +147,6 @@ class CmdbExportImportService {
 	 * OpenRegister's object mapper, whose restoreObject() empties the trash of one object (not a public contract).
 	 */
 	public const OBJECT_MAPPER_CLASS = 'OCA\OpenRegister\Db\MagicMapper';
-
-	/**
-	 * What happens to records missing from the export when the request does not say.
-	 */
-	public const DEFAULT_MISSING_RECORDS = 'archive';
 
 	/**
 	 * The start of every archive reason the import writes, so the audit trail says who archived and why.
@@ -348,7 +347,7 @@ class CmdbExportImportService {
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container Resolves OpenRegister services.
-	 * @param SettingsService $settingsService Register and schema ids.
+	 * @param RegisterConfigReaderInterface $settingsService Register and schema ids.
 	 * @param StackiqContactSyncService $contactSync Nextcloud Contacts bridge.
 	 * @param ProgressTracker $progressTracker Progress and cancel.
 	 * @param CmdbImportProfile $profile The import profile and packs.
@@ -368,7 +367,7 @@ class CmdbExportImportService {
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly StackiqContactSyncService $contactSync,
 		private readonly ProgressTracker $progressTracker,
 		private readonly CmdbImportProfile $profile,
@@ -1721,18 +1720,8 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-6
 	 */
 	private function resolveOwners(CmdbImportRow $row): array {
-		$rowNumber = $row->entry['row'];
-		$municipalityUuid = $row->run->municipalityUuid();
 		$owners = ['businessOwner' => null];
-		$identities = [];
-		foreach (array_keys($owners) as $target) {
-			$mapped = $this->map(target: $target, row: $row);
-			$name = trim((string)($mapped['data']['name'] ?? ''));
-			if ($mapped['missing'] === [] && $name !== '') {
-				$identities[$target] = $mapped['data'];
-			}
-		}
-
+		$identities = $this->ownerIdentities(row: $row, targets: array_keys($owners));
 		if ($identities === []) {
 			return $owners;
 		}
@@ -1742,31 +1731,92 @@ class CmdbExportImportService {
 			return $owners;
 		}
 
-		foreach ($identities as $target => $identity) {
-			$column = $this->ownerColumn(target: $target);
-			try {
-				$contactsUid = $this->resolveContactUid(identity: $identity, municipalityUuid: $municipalityUuid);
-				if ($contactsUid === null) {
-					$row->warnings[] = $this->l10n->t('Owner from column "%s" could not be resolved in Nextcloud Contacts', [$column]);
-					continue;
-				}
-
-				$owners[$target] = $this->resolveContactPerson(
-					contactsUid: $contactsUid,
-					municipalityUuid: $municipalityUuid,
-					role: trim((string)($identity['role'] ?? ''))
-				);
-			} catch (Throwable $e) {
-				$this->logger->warning(
-					'CmdbExportImportService: owner could not be resolved',
-					['row' => $rowNumber, 'column' => $column, 'exception' => get_class($e)]
-				);
-				$row->warnings[] = $this->l10n->t('Owner from column "%s" could not be resolved', [$column]);
-			}
-		}//end foreach
-
-		return $owners;
+		return array_replace($owners, $this->resolveOwnerContacts(row: $row, identities: $identities));
 	}//end resolveOwners()
+
+	/**
+	 * The mapped identity of every owner the row names, by target; an owner without a name or with a
+	 * missing required column is left out.
+	 *
+	 * @param CmdbImportRow $row The row.
+	 * @param array<int, string> $targets The owner targets.
+	 *
+	 * @return array<string, array<string, mixed>>
+	 */
+	private function ownerIdentities(CmdbImportRow $row, array $targets): array {
+		$identities = [];
+		foreach ($targets as $target) {
+			$mapped = $this->map(target: $target, row: $row);
+			$name = trim((string)($mapped['data']['name'] ?? ''));
+			if ($mapped['missing'] === [] && $name !== '') {
+				$identities[$target] = $mapped['data'];
+			}
+		}
+
+		return $identities;
+	}//end ownerIdentities()
+
+	/**
+	 * The contact person of every owner identity, by target; null for one that could not be resolved.
+	 *
+	 * @param CmdbImportRow $row The row: its warnings (appended to) and the run's municipality.
+	 * @param array<string, array<string, mixed>> $identities The owner identities, by target.
+	 *
+	 * @return array<string, string|null>
+	 */
+	private function resolveOwnerContacts(CmdbImportRow $row, array $identities): array {
+		$contacts = [];
+		foreach ($identities as $target => $identity) {
+			$lookup = new CmdbOwnerLookup(column: $this->ownerColumn(target: $target), identity: $identity);
+			$contacts[$target] = $this->resolveOwner(row: $row, lookup: $lookup);
+		}
+
+		return $contacts;
+	}//end resolveOwnerContacts()
+
+	/**
+	 * The contact person of one owner, or null after a warning (and a log line on a failure).
+	 *
+	 * @param CmdbImportRow $row The row: its sheet row number and its warnings (appended to).
+	 * @param CmdbOwnerLookup $lookup The owner's column and identity.
+	 *
+	 * @return string|null
+	 */
+	private function resolveOwner(CmdbImportRow $row, CmdbOwnerLookup $lookup): ?string {
+		try {
+			return $this->resolveOwnerContact(row: $row, lookup: $lookup);
+		} catch (Throwable $e) {
+			$this->logger->warning(
+				'CmdbExportImportService: owner could not be resolved',
+				['row' => $row->entry['row'], 'column' => $lookup->column, 'exception' => get_class($e)]
+			);
+			$row->warnings[] = $this->l10n->t('Owner from column "%s" could not be resolved', [$lookup->column]);
+			return null;
+		}
+	}//end resolveOwner()
+
+	/**
+	 * The contact person of one owner, found or created; null after a warning when Contacts has no contact.
+	 *
+	 * @param CmdbImportRow $row The row: its warnings (appended to) and the run's municipality.
+	 * @param CmdbOwnerLookup $lookup The owner's column and identity.
+	 *
+	 * @return string|null
+	 */
+	private function resolveOwnerContact(CmdbImportRow $row, CmdbOwnerLookup $lookup): ?string {
+		$municipalityUuid = $row->run->municipalityUuid();
+		$contactsUid = $this->resolveContactUid(identity: $lookup->identity, municipalityUuid: $municipalityUuid);
+		if ($contactsUid === null) {
+			$row->warnings[] = $this->l10n->t('Owner from column "%s" could not be resolved in Nextcloud Contacts', [$lookup->column]);
+			return null;
+		}
+
+		return $this->resolveContactPerson(
+			contactsUid: $contactsUid,
+			municipalityUuid: $municipalityUuid,
+			role: trim((string)($lookup->identity['role'] ?? ''))
+		);
+	}//end resolveOwnerContact()
 
 	/**
 	 * Resolve the Nextcloud contact of an owner identity.
@@ -1796,47 +1846,95 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	private function resolveContactUid(array $identity, string $municipalityUuid): ?string {
-		$parts = self::splitPersonName(name: (string)$identity['name']);
-		$displayName = trim($parts['voornaam'] . ' ' . $parts['achternaam']);
-		$email = trim((string)($identity['email'] ?? ''));
-		$numberUid = $this->ownerIdentity->contactUid(
+		$owner = self::ownerNames(identity: $identity);
+		$owner['numberUid'] = $this->ownerIdentity->contactUid(
 			employeeNumber: (string)($identity['employeeNumber'] ?? ''),
 			municipalityUuid: $municipalityUuid
 		);
 
-		$cacheKey = $this->ownerIdentity->cacheKey(contactUid: $numberUid, email: $email, displayName: $displayName);
-		if (array_key_exists($cacheKey, $this->contactUids) === true) {
-			return $this->contactUids[$cacheKey];
+		$cacheKey = $this->ownerIdentity->cacheKey(contactUid: $owner['numberUid'], email: $owner['email'], displayName: $owner['displayName']);
+		if (array_key_exists($cacheKey, $this->contactUids) === false) {
+			$this->contactUids[$cacheKey] = $this->ownerContactUid(owner: $owner);
 		}
 
-		$uid = $this->existingOwnerContact(numberUid: $numberUid, email: $email, displayName: $displayName);
-
-		if ($uid === null) {
-			$record = ['voornaam' => $parts['voornaam'], 'achternaam' => $parts['achternaam']];
-			if ($email !== '') {
-				$record['email'] = $email;
-			}
-
-			$role = trim((string)($identity['role'] ?? ''));
-			if ($role !== '') {
-				$record['role'] = $role;
-			}
-
-			$uid = $this->contactSync->syncToNamedAddressBook(
-				objectType: 'contactPerson',
-				record: $record,
-				addressBookUri: self::OWNER_ADDRESS_BOOK_URI,
-				displayName: $this->l10n->t('Stackiq CMDB owners'),
-				fixedUid: ($numberUid ?? $this->ownerIdentity->newContactUid())
-			);
-			if ($uid === '') {
-				$uid = null;
-			}
-		}
-
-		$this->contactUids[$cacheKey] = $uid;
-		return $uid;
+		return $this->contactUids[$cacheKey];
 	}//end resolveContactUid()
+
+	/**
+	 * An owner identity's name parts, display name, e-mail address and role, trimmed.
+	 *
+	 * @param array<string, mixed> $identity The owner pack's mapped fields.
+	 *
+	 * @return array{parts: array{voornaam: string, achternaam: string}, displayName: string, email: string, role: string}
+	 */
+	private static function ownerNames(array $identity): array {
+		$parts = self::splitPersonName(name: (string)$identity['name']);
+
+		return [
+			'parts' => $parts,
+			'displayName' => trim($parts['voornaam'] . ' ' . $parts['achternaam']),
+			'email' => trim((string)($identity['email'] ?? '')),
+			'role' => trim((string)($identity['role'] ?? '')),
+		];
+	}//end ownerNames()
+
+	/**
+	 * The owner's existing contact in the owners' address book, or a new one.
+	 *
+	 * @param array<string, mixed> $owner The owner's names, e-mail address, role and employee-number UID.
+	 *
+	 * @return string|null Null when Contacts did not create the contact.
+	 */
+	private function ownerContactUid(array $owner): ?string {
+		$uid = $this->existingOwnerContact(numberUid: $owner['numberUid'], email: $owner['email'], displayName: $owner['displayName']);
+		if ($uid !== null) {
+			return $uid;
+		}
+
+		return $this->createOwnerContact(owner: $owner);
+	}//end ownerContactUid()
+
+	/**
+	 * Create the owner's contact in the owners' address book, with the employee-number UID or a new one.
+	 *
+	 * @param array<string, mixed> $owner The owner's names, e-mail address, role and employee-number UID.
+	 *
+	 * @return string|null Null when Contacts did not create the contact.
+	 */
+	private function createOwnerContact(array $owner): ?string {
+		$uid = $this->contactSync->syncToNamedAddressBook(
+			objectType: 'contactPerson',
+			record: self::ownerRecord(owner: $owner),
+			addressBookUri: self::OWNER_ADDRESS_BOOK_URI,
+			displayName: $this->l10n->t('Stackiq CMDB owners'),
+			fixedUid: ($owner['numberUid'] ?? $this->ownerIdentity->newContactUid())
+		);
+		if ($uid === '') {
+			return null;
+		}
+
+		return $uid;
+	}//end createOwnerContact()
+
+	/**
+	 * The contact record of a new owner: the name parts, and the e-mail address and role when there are.
+	 *
+	 * @param array<string, mixed> $owner The owner's names, e-mail address and role.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function ownerRecord(array $owner): array {
+		$record = ['voornaam' => $owner['parts']['voornaam'], 'achternaam' => $owner['parts']['achternaam']];
+		if ($owner['email'] !== '') {
+			$record['email'] = $owner['email'];
+		}
+
+		if ($owner['role'] !== '') {
+			$record['role'] = $owner['role'];
+		}
+
+		return $record;
+	}//end ownerRecord()
 
 	/**
 	 * The contact an owner already has: by the UID from the employee number, else by e-mail address, else by exact name.
@@ -3577,32 +3675,41 @@ class CmdbExportImportService {
 	private static function missingUpdateRules(string $type, array $properties): array {
 		$missing = [];
 		foreach ((self::REQUIRED_UPDATE_RULES[$type] ?? []) as $property => $group) {
-			if (array_key_exists($property, $properties) === false) {
-				continue;
-			}
-
-			$definition = json_decode((string)json_encode($properties[$property]), true);
-			$update = ($definition['authorization']['update'] ?? null);
-			if (is_array($update) === false) {
-				$update = [];
-			}
-
-			$groups = [];
-			foreach ($update as $rule) {
-				if (is_array($rule) === true) {
-					$rule = ($rule['group'] ?? null);
-				}
-
-				$groups[] = $rule;
-			}
-
-			if (in_array($group, $groups, true) === false) {
+			if (array_key_exists($property, $properties) === true
+				&& in_array($group, self::updateRuleGroups(definition: $properties[$property]), true) === false
+			) {
 				$missing[] = $property . '.authorization.update';
 			}
 		}
 
 		return $missing;
 	}//end missingUpdateRules()
+
+	/**
+	 * The groups a property definition's update rule names: a group name, or a rule's `group`.
+	 *
+	 * @param mixed $definition The property definition, as an array or an object.
+	 *
+	 * @return array<int, mixed>
+	 */
+	private static function updateRuleGroups(mixed $definition): array {
+		$definition = json_decode((string)json_encode($definition), true);
+		$update = ($definition['authorization']['update'] ?? null);
+		if (is_array($update) === false) {
+			return [];
+		}
+
+		$groups = [];
+		foreach ($update as $rule) {
+			if (is_array($rule) === true) {
+				$rule = ($rule['group'] ?? null);
+			}
+
+			$groups[] = $rule;
+		}
+
+		return $groups;
+	}//end updateRuleGroups()
 
 	/**
 	 * The coordinates of the current run.
@@ -3689,8 +3796,8 @@ class CmdbExportImportService {
 	 * Only the first line is kept, at most 300 characters. Every value of the
 	 * row of three characters or more is replaced by "…", longest first, and
 	 * every e-mail address by "<e-mail>". The owner step logs no message at
-	 * all, so no contact data can reach the log. Public so the controller logs
-	 * an unexpected failure the same way.
+	 * all, so no contact data can reach the log. Delegates to
+	 * Kernel\LogSafeMessage, which the controller uses too.
 	 *
 	 * @param string $step The step that failed.
 	 * @param Throwable $e The exception.
@@ -3701,20 +3808,7 @@ class CmdbExportImportService {
 	 * @spec openspec/changes/cmdb-export-import/tasks.md#task-7
 	 */
 	public static function logSafeMessage(string $step, Throwable $e, array $values): string {
-		if ($step === 'owners') {
-			return '';
-		}
-
-		$lines = preg_split('/\R/u', $e->getMessage());
-		$message = mb_substr(trim((string)($lines[0] ?? '')), 0, 300);
-		$message = (string)preg_replace('/[^\s@<>"\'(),;:=]+@[^\s@<>"\'(),;:]+/u', '<e-mail>', $message);
-		$secrets = array_filter(array_unique(array_map('strval', $values)), static fn (string $value): bool => mb_strlen($value) >= 3);
-		usort($secrets, static fn (string $left, string $right): int => (mb_strlen($right) <=> mb_strlen($left)));
-		foreach ($secrets as $secret) {
-			$message = str_ireplace($secret, '…', $message);
-		}
-
-		return $message;
+		return LogSafeMessage::of(step: $step, e: $e, values: $values);
 	}//end logSafeMessage()
 
 	/**

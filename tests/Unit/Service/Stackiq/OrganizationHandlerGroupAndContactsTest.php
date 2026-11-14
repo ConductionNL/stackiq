@@ -25,6 +25,7 @@ namespace OCA\Stackiq\Tests\Unit\Service\Stackiq;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Stackiq\OrganizationHandler;
 use OCP\App\IAppManager;
 use OCP\IGroup;
@@ -127,7 +128,7 @@ class OrganizationHandlerGroupAndContactsTest extends TestCase {
 		$container->method('get')->willReturnCallback(
 			fn (string $id): object => match ($id) {
 				'OCA\OpenRegister\Service\ObjectService' => $this->objectService,
-				'OCA\Stackiq\Service\SettingsService' => $this->settings,
+				RegisterConfigReaderInterface::class => $this->settings,
 			}
 		);
 
@@ -497,6 +498,26 @@ class OrganizationHandlerGroupAndContactsTest extends TestCase {
 			['Failed to find existing contactgegevens: index offline', 'Failed to process contactPerson: Voorzieningen register ID not configured'],
 			$this->messages('error')
 		);
+	}
+
+	/**
+	 * A contact person without an email is not looked up: it is always saved as a new contactgegevens.
+	 *
+	 * @return void
+	 */
+	public function testAContactWithoutEmailIsCreatedWithoutALookup(): void {
+		$this->settings->method('getSchemaIdForObjectType')->willReturn(9);
+		$this->settings->method('getVoorzieningenRegisterId')->willReturn(5);
+		$this->objectService->expects($this->never())->method('findAll');
+		$this->objectService->expects($this->once())->method('saveObject')
+			->with($this->callback(static fn (array $o): bool => $o['email'] === '' && $o['voornaam'] === 'Ann'), [], 5, 9)
+			->willReturn($this->entity('cg-new'));
+
+		$result = $this->handler()->processContactpersonen($this->organisation(['id' => 'org-1', 'contactpersonen' => [['voornaam' => 'Ann']]]));
+
+		self::assertCount(1, $result);
+		self::assertContains('Creating new contactgegevens object', $this->messages('info'));
+		self::assertNotContains('Updating existing contactgegevens object', $this->messages('info'));
 	}
 
 	/**

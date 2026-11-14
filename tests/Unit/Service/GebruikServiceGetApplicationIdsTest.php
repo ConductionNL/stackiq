@@ -26,7 +26,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Stackiq\Service\GebruikService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
@@ -45,8 +45,8 @@ use Psr\Log\LoggerInterface;
  */
 class GebruikServiceGetApplicationIdsTest extends TestCase {
 
-	/** @var SettingsService|MockObject */
-	private SettingsService|MockObject $settingsService;
+	/** @var CatalogueLocator|MockObject */
+	private CatalogueLocator|MockObject $catalogue;
 
 	/** @var IAppManager|MockObject */
 	private IAppManager|MockObject $appManager;
@@ -70,7 +70,7 @@ class GebruikServiceGetApplicationIdsTest extends TestCase {
 	protected function setUp(): void {
 		parent::setUp();
 
-		$this->settingsService = $this->createMock(SettingsService::class);
+		$this->catalogue = $this->createMock(CatalogueLocator::class);
 		$this->appManager = $this->createMock(IAppManager::class);
 		$this->objectService = $this->createMock(ObjectServiceInterface::class);
 		$this->logger = $this->createMock(LoggerInterface::class);
@@ -86,8 +86,8 @@ class GebruikServiceGetApplicationIdsTest extends TestCase {
 			->with('OCA\OpenRegister\Service\ObjectService')
 			->willReturn($this->objectService);
 
-		// SettingsService returns a minimal voorzieningen config.
-		$this->settingsService
+		// CatalogueLocator returns a minimal voorzieningen config.
+		$this->catalogue
 			->method('getVoorzieningenConfig')
 			->willReturn(
 				[
@@ -98,7 +98,7 @@ class GebruikServiceGetApplicationIdsTest extends TestCase {
 			);
 
 		$this->service = new GebruikService(
-			$this->settingsService,
+			$this->catalogue,
 			$this->appManager,
 			$this->container,
 			$this->logger

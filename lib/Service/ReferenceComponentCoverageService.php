@@ -22,6 +22,8 @@ namespace OCA\Stackiq\Service;
 
 use DateTimeImmutable;
 use Exception;
+use OCA\Stackiq\Kernel\Contracts\ReferenceComponentCoverageServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -33,7 +35,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
  */
-class ReferenceComponentCoverageService {
+class ReferenceComponentCoverageService implements ReferenceComponentCoverageServiceInterface {
 	/**
 	 * The most reference components read, as FacetService bounds its element lookups.
 	 */
@@ -42,7 +44,7 @@ class ReferenceComponentCoverageService {
 	/**
 	 * Constructor.
 	 *
-	 * @param SettingsService $settingsService Resolves the register and schema ids.
+	 * @param RegisterConfigReaderInterface $settingsService Resolves the register and schema ids.
 	 * @param IAppManager $appManager Checks OpenRegister is installed.
 	 * @param ContainerInterface $container Lazy OpenRegister lookups.
 	 * @param LoggerInterface $logger Logger.
@@ -50,7 +52,7 @@ class ReferenceComponentCoverageService {
 	 * @param PortfolioReportDerivation $relations Normalises results and relation ids.
 	 */
 	public function __construct(
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,

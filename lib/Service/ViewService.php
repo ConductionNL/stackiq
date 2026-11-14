@@ -25,6 +25,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ViewServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\ICache;
@@ -62,7 +64,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  * @SuppressWarnings(PHPMD.UndefinedVariable)
  */
-class ViewService {
+class ViewService implements ViewServiceInterface {
 
 	/**
 	 * Distributed cache for views responses.
@@ -94,7 +96,7 @@ class ViewService {
 	 * @param IAppManager $appManager App manager service
 	 * @param ContainerInterface $container PSR-11 container interface
 	 * @param LoggerInterface $logger Logger service
-	 * @param SettingsService $settingsService Settings service for configuration
+	 * @param RegisterConfigReaderInterface $settingsService Settings service for configuration
 	 * @param IUserSession $userSession User session service for current user context
 	 * @param ICacheFactory $cacheFactory Cache factory for distributed caching
 	 */
@@ -103,7 +105,7 @@ class ViewService {
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly IUserSession $userSession,
 		ICacheFactory $cacheFactory,
 	) {

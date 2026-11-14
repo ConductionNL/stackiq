@@ -23,12 +23,13 @@ namespace OCA\Stackiq\Service\Contactpersoon;
 use OCA\OpenRegister\Db\Organisation;
 use OCA\OpenRegister\Db\OrganisationMapper;
 use OCA\OpenRegister\Service\ObjectService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Kernel\Contracts\ContactPersonOrganisationGuardInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\AppFramework\Db\DoesNotExistException;
-use Throwable;
 use OCP\IGroupManager;
 use OCP\IUserManager;
 use OCP\IUserSession;
+use Throwable;
 
 /**
  * The contact sync turns a contact person into an account that joins the contact's
@@ -42,7 +43,7 @@ use OCP\IUserSession;
  *
  * @spec openspec/specs/contactpersoon-sync/spec.md#requirement-the-system-shall-only-accept-a-contact-person-from-someone-who-may-add-members-to-its-organisation-req-003
  */
-class ContactPersonOrganisationGuard {
+class ContactPersonOrganisationGuard implements ContactPersonOrganisationGuardInterface {
 	/**
 	 * The groups whose members may add members to their own organisation.
 	 */
@@ -76,7 +77,7 @@ class ContactPersonOrganisationGuard {
 	 * @param IUserManager       $userManager        Tells whether a name is an existing account.
 	 * @param OrganisationMapper $organisationMapper Finds the OpenRegister organisation and its members.
 	 * @param ObjectService      $objectService      Reads the organisatie object's status.
-	 * @param SettingsService    $settingsService    Names the organisatie register and schema.
+	 * @param RegisterConfigReaderInterface    $settingsService    Names the organisatie register and schema.
 	 */
 	public function __construct(
 		private readonly IUserSession $userSession,
@@ -84,7 +85,7 @@ class ContactPersonOrganisationGuard {
 		private readonly IUserManager $userManager,
 		private readonly OrganisationMapper $organisationMapper,
 		private readonly ObjectService $objectService,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 	) {
 	}//end __construct()
 

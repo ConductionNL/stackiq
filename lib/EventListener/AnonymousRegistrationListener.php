@@ -22,7 +22,7 @@ namespace OCA\Stackiq\EventListener;
 
 use OCA\OpenRegister\Db\OrganisationMapper;
 use OCA\OpenRegister\Event\ObjectCreatingEvent;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -50,13 +50,13 @@ class AnonymousRegistrationListener implements IEventListener {
 	 * Constructor.
 	 *
 	 * @param IUserSession $userSession Tells whether someone is signed in.
-	 * @param SettingsService $settingsService Names the organisation schema.
+	 * @param RegisterConfigReaderInterface $settingsService Names the organisation schema.
 	 * @param OrganisationMapper $organisationMapper Tells whether an OpenRegister organisation holds a uuid.
 	 * @param bool|null $commandLine Whether this runs from the command line; null reads PHP_SAPI.
 	 */
 	public function __construct(
 		private readonly IUserSession $userSession,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly OrganisationMapper $organisationMapper,
 		private ?bool $commandLine = null,
 	) {

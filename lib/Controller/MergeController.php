@@ -31,8 +31,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\AppInfo\AppIdentity;
-use OCA\Stackiq\Service\MergeOrganisatieService;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\MergeOrganisatieServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -54,14 +54,14 @@ class MergeController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param IUserSession $userSession The user session (auth guard).
 	 * @param IGroupManager $groupManager Group membership (admin-only guard).
-	 * @param MergeOrganisatieService $mergeService The merge service.
+	 * @param MergeOrganisatieServiceInterface $mergeService The merge service.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		IRequest $request,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
-		private readonly MergeOrganisatieService $mergeService,
+		private readonly MergeOrganisatieServiceInterface $mergeService,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: AppIdentity::APP_ID, request: $request);

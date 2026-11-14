@@ -22,6 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Tests\Unit\Settings;
 
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\SettingsService;
@@ -189,6 +190,12 @@ class MaintenanceRoadmapFragmentTest extends TestCase {
 		$container->method('get')->willThrowException(new \Exception('not resolvable in a unit context'));
 
 		$settings = new SettingsService(
+			catalogue: new CatalogueLocator(
+				config: $config,
+				appManager: $this->createMock(IAppManager::class),
+				container: $container,
+				logger: $this->createMock(LoggerInterface::class)
+			),
 			config: $config,
 			request: $this->createMock(IRequest::class),
 			roleGroupSettings: $this->createMock(RoleGroupSettings::class),

@@ -24,10 +24,10 @@ namespace OCA\Stackiq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\OrganisationService;
-use OCA\Stackiq\Service\Contactpersoon\ContactPersonOrganisationGuard;
-use OCA\Stackiq\Service\ContactpersoonService;
-use OCA\Stackiq\Service\SettingsService;
-use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
+use OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface;
+use OCA\Stackiq\Kernel\Contracts\ContactPersonOrganisationGuardInterface;
+use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -65,16 +65,16 @@ class ContactpersonenController extends Controller {
 	/**
 	 * Settings service for configuration access.
 	 *
-	 * @var SettingsService
+	 * @var RegisterConfigReaderInterface
 	 */
-	private SettingsService $settingsService;
+	private RegisterConfigReaderInterface $settingsService;
 
 	/**
 	 * Contact person handler for user operations.
 	 *
-	 * @var ContactPersonHandler
+	 * @var ContactPersonHandlerInterface
 	 */
-	private ContactPersonHandler $contactPersonHandler;
+	private ContactPersonHandlerInterface $contactPersonHandler;
 
 	/**
 	 * User manager for user operations.
@@ -114,18 +114,18 @@ class ContactpersonenController extends Controller {
 	/**
 	 * Contactpersoon service for business logic.
 	 *
-	 * @var ContactpersoonService
+	 * @var ContactpersoonServiceInterface
 	 */
-	private ContactpersoonService $contactSvc;
+	private ContactpersoonServiceInterface $contactSvc;
 
 	/**
 	 * Constructor.
 	 *
 	 * @param string $appName The app name
 	 * @param IRequest $request The request object
-	 * @param SettingsService $settingsService Settings service
-	 * @param ContactPersonHandler $contactPersonHandler Contact person handler
-	 * @param ContactpersoonService $contactSvc Contactpersoon service
+	 * @param RegisterConfigReaderInterface $settingsService Settings service
+	 * @param ContactPersonHandlerInterface $contactPersonHandler Contact person handler
+	 * @param ContactpersoonServiceInterface $contactSvc Contactpersoon service
 	 * @param IUserManager $userManager User manager
 	 * @param IGroupManager $groupManager Group manager
 	 * @param IUserSession $userSession User session
@@ -134,16 +134,16 @@ class ContactpersonenController extends Controller {
 	 * @param ObjectServiceInterface $objectService OpenRegister object access (ADR-022/ADR-084 —
 	 *                                              the published contract, not the concrete service)
 	 * @param OrganisationService $organisationService Resolves the organisation a contactpersoon belongs to
-	 * @param ContactPersonOrganisationGuard $organisationGuard Decides whether the caller may add the contact to its organisation
+	 * @param ContactPersonOrganisationGuardInterface $organisationGuard Decides whether the caller may add the contact to its organisation
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		SettingsService $settingsService,
-		ContactPersonHandler $contactPersonHandler,
-		ContactpersoonService $contactSvc,
+		RegisterConfigReaderInterface $settingsService,
+		ContactPersonHandlerInterface $contactPersonHandler,
+		ContactpersoonServiceInterface $contactSvc,
 		IUserManager $userManager,
 		IGroupManager $groupManager,
 		IUserSession $userSession,
@@ -151,7 +151,7 @@ class ContactpersonenController extends Controller {
 		LoggerInterface $logger,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly OrganisationService $organisationService,
-		private readonly ContactPersonOrganisationGuard $organisationGuard,
+		private readonly ContactPersonOrganisationGuardInterface $organisationGuard,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 		$this->settingsService = $settingsService;

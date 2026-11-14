@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Db\SchemaMapper;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\SettingsService;
@@ -71,24 +72,22 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 
 		$logger = $this->createMock(LoggerInterface::class);
 
-		$service = $this->getMockBuilder(SettingsService::class)
-			->setConstructorArgs(
-				[
-					$this->createMock(IAppConfig::class),
-					$this->createMock(IRequest::class),
-					$this->createMock(RoleGroupSettings::class),
-					$container,
-					$this->createMock(IAppManager::class),
-					$logger,
-					$this->createMock(IGroupManager::class),
-					$this->createMock(IL10N::class),
-					$this->createMock(EmailSettings::class),
-				]
-			)
-			->onlyMethods(['getSchemaIdForObjectType'])
-			->getMock();
-
-		$service->method('getSchemaIdForObjectType')->willReturn($resolvedObjectType);
+		// The object-type resolution lives in CatalogueLocator; the double
+		// answers it, as the partial mock of SettingsService used to.
+		$catalogue = $this->createMock(CatalogueLocator::class);
+		$catalogue->method('getSchemaIdForObjectType')->willReturn($resolvedObjectType);
+		$service = new SettingsService(
+			$catalogue,
+			$this->createMock(IAppConfig::class),
+			$this->createMock(IRequest::class),
+			$this->createMock(RoleGroupSettings::class),
+			$container,
+			$this->createMock(IAppManager::class),
+			$logger,
+			$this->createMock(IGroupManager::class),
+			$this->createMock(IL10N::class),
+			$this->createMock(EmailSettings::class),
+		);
 
 		return [$service, $logger];
 	}//end makeServiceForVerification()
@@ -201,6 +200,12 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 		$config->method('getValueString')->willReturn('');
 
 		$service = new SettingsService(
+			new CatalogueLocator(
+				config: $config,
+				appManager: $this->createMock(IAppManager::class),
+				container: $this->createMock(ContainerInterface::class),
+				logger: $this->createMock(LoggerInterface::class)
+			),
 			$config,
 			$this->createMock(IRequest::class),
 			$this->createMock(RoleGroupSettings::class),
@@ -244,6 +249,12 @@ final class SettingsServiceRegisterVerificationTest extends TestCase {
 		$l10n->method('t')->willReturnCallback(static fn (string $text) => $text);
 
 		$service = new SettingsService(
+			new CatalogueLocator(
+				config: $config,
+				appManager: $this->createMock(IAppManager::class),
+				container: $this->createMock(ContainerInterface::class),
+				logger: $this->createMock(LoggerInterface::class)
+			),
 			$config,
 			$this->createMock(IRequest::class),
 			$this->createMock(RoleGroupSettings::class),

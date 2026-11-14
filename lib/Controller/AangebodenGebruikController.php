@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\Service\AangebodenGebruikService;
+use OCA\Stackiq\Kernel\Contracts\AangebodenGebruikServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\AnonRateLimit;
@@ -99,7 +99,7 @@ class AangebodenGebruikController extends Controller {
 	 * @param string $appName The name of the app
 	 * @param IRequest $request The HTTP request object
 	 * @param IUserSession $userSession The user session service for getting the current user
-	 * @param AangebodenGebruikService $gebruikSvc The business logic service
+	 * @param AangebodenGebruikServiceInterface $gebruikSvc The business logic service
 	 * @param LoggerInterface $logger The logger service for debugging and error reporting
 	 * @param IGroupManager $groupManager The group manager for group membership checks
 	 */
@@ -107,7 +107,7 @@ class AangebodenGebruikController extends Controller {
 		string $appName,
 		IRequest $request,
 		private readonly IUserSession $userSession,
-		private readonly AangebodenGebruikService $gebruikSvc,
+		private readonly AangebodenGebruikServiceInterface $gebruikSvc,
 		private readonly LoggerInterface $logger,
 		private readonly IGroupManager $groupManager,
 	) {

@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller\Settings;
 
-use OCA\Stackiq\Service\OrganizationSyncService;
+use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -39,13 +39,13 @@ class SyncHandler {
 	/**
 	 * Constructor.
 	 *
-	 * @param OrganizationSyncService $orgSyncService The organisation sync service.
+	 * @param OrganizationSyncServiceInterface $orgSyncService The organisation sync service.
 	 * @param LoggerInterface $logger Logger instance.
 	 *
 	 * @spec openspec/changes/method-decomposition/tasks.md#task-3
 	 */
 	public function __construct(
-		private readonly OrganizationSyncService $orgSyncService,
+		private readonly OrganizationSyncServiceInterface $orgSyncService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

@@ -35,7 +35,9 @@ namespace OCA\Stackiq\Service;
 use DateTimeImmutable;
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Stackiq\AppInfo\AppIdentity;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\PortfolioReportServiceInterface;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -46,7 +48,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md
  */
-class PortfolioReportService {
+class PortfolioReportService implements PortfolioReportServiceInterface {
 	/**
 	 * The four Gartner TIME quadrant values, matching the gebruik schema's
 	 * `timeClassification` enum.
@@ -122,7 +124,7 @@ class PortfolioReportService {
 	/**
 	 * Constructor.
 	 *
-	 * @param SettingsService $settingsService Resolves register/schema ids.
+	 * @param CatalogueLocator $catalogue Resolves register/schema ids.
 	 * @param IAppManager $appManager The application manager.
 	 * @param ContainerInterface $container The DI container (lazy OR lookup).
 	 * @param LoggerInterface $logger Logger.
@@ -130,7 +132,7 @@ class PortfolioReportService {
 	 * @param PortfolioReportDerivation $derivation Pure phase/EOL/cost/relation-id derivation helpers.
 	 */
 	public function __construct(
-		private readonly SettingsService $settingsService,
+		private readonly CatalogueLocator $catalogue,
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
@@ -775,7 +777,7 @@ class PortfolioReportService {
 	 * @throws Exception When the voorzieningen configuration is unavailable.
 	 */
 	private function getRegisterConfig(): array {
-		$config = $this->settingsService->getVoorzieningenConfig();
+		$config = $this->catalogue->getVoorzieningenConfig();
 
 		$registerId = $config['register'] ?? null;
 		if (empty($registerId) === true) {

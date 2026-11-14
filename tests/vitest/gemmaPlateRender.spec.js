@@ -4,153 +4,145 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * GemmaPlate as rendered. The logic spec drives loadCoverage and the helpers
- * on a bare context; this mounts the plate and pins what a user sees: with a
- * single organisation it loads at once and shows the summary and the grouped
- * components with their applications and state, a filter narrows the plate,
- * a component opens its detail (with who could fill a gap), a truncated
- * answer warns, a model-less answer says so, and a failed load shows why.
+ * Unit test for what the GEMMA plate renders: the empty, error and no-model
+ * states, the download link, the truncation warning and hint, the filters
+ * and the detail panel of a picked component.
  *
- * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-002-a-gemma-plate-shall-show-the-components-with-their-applications-with-filters-for-gaps-and-overlaps
+ * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md
  */
 
-import { mount } from '@vue/test-utils'
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
+import { flushPromises, mount } from '@vue/test-utils'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 const http = vi.hoisted(() => ({ get: vi.fn() }))
+const store = vi.hoisted(() => ({ organisations: [] }))
+
 vi.mock('@nextcloud/axios', () => ({ default: http }))
-vi.mock('@conduction/nextcloud-vue', () => ({
-	CnKpiGrid: { template: '<div class="kpis"><slot /></div>' },
-	CnStatsBlock: { props: ['title', 'count'], template: '<div class="stat">{{ title }}={{ count }}</div>' },
-	CnStatusBadge: { props: ['label', 'variant'], template: '<span class="badge" :data-variant="variant">{{ label }}</span>' },
+vi.mock('@nextcloud/router', () => ({ generateUrl: (path) => `/index.php${path}` }))
+vi.mock('@nextcloud/l10n', () => ({
+	translate: (app, text, vars = {}) => String(text).replace(/\{(\w+)\}/g, (m, k) => (k in vars ? String(vars[k]) : m)),
 }))
 vi.mock('../../src/composables/useLiveCollections.js', () => ({ useLiveCollections: vi.fn() }))
-const store = vi.hoisted(() => ({ objectStore: { collections: {}, getCollection(type) { return this.collections[type] } } }))
-vi.mock('../../src/store/store.js', () => store)
+vi.mock('../../src/store/store.js', () => ({
+	objectStore: { getCollection: () => ({ results: store.organisations }) },
+}))
+vi.mock('@conduction/nextcloud-vue', () => ({
+	CnKpiGrid: { template: '<div class="kpi"><slot /></div>' },
+	CnStatsBlock: { props: ['title', 'count', 'countLabel'], template: '<div class="stat">{{ title }}={{ count }}<span v-if="countLabel"> ({{ countLabel }})</span></div>' },
+	CnStatusBadge: { props: ['label', 'variant'], template: '<span class="badge" :data-variant="variant">{{ label }}</span>' },
+}))
 
 const { default: GemmaPlate } = await import('../../src/views/organisaties/GemmaPlate.vue')
 
 const stubs = {
 	NcButton: {
-		props: ['variant', 'href'],
+		props: ['href', 'variant', 'pressed'],
 		emits: ['click'],
-		template: '<button :data-variant="variant" :data-href="href" v-bind="$attrs" @click="$emit(\'click\')"><slot /></button>',
+		template: '<a v-if="href" :href="href"><slot /></a><button v-else :class="variant" @click="$emit(\'click\')"><slot /></button>',
 	},
-	NcSelect: { template: '<div class="org-select" />' },
+	NcEmptyContent: { props: ['name', 'description'], template: '<div class="empty">{{ name }}</div>' },
 	NcLoadingIcon: { template: '<i class="loading" />' },
 	NcNoteCard: { props: ['type'], template: '<div class="note" :data-type="type"><slot /></div>' },
-	NcEmptyContent: { props: ['name'], template: '<div class="empty" v-bind="$attrs">{{ name }}</div>' },
+	NcSelect: true,
+	Download: true,
 }
 
-const COVERAGE = {
-	truncated: false,
-	total: 3,
-	summary: { components: 3, covered: 1, gap: 1, fillable: 1, overlap: 1, usagesWithoutComponent: 2 },
+const coverage = {
+	truncated: true,
+	total: 250,
+	summary: { components: 3, covered: 1, gap: 1, fillable: 1, overlap: 1, usagesWithoutComponent: 4 },
 	components: [
-		{ id: 'c1', name: 'Zaakregistratie', group: 'Zaak', state: 'covered', applications: [{ moduleName: 'Zaaksysteem' }] },
-		{ id: 'c2', name: 'Archief', group: 'Zaak', state: 'gap', fillable: true, fillableBy: ['DMS', 'ECM'], applications: [], documentation: 'Keeps records.' },
-		{ id: 'c3', name: 'Portaal', state: 'overlap', applications: [{ moduleName: 'A' }, { moduleName: 'B' }] },
+		{ id: 'c1', name: 'Zaakregistratie', group: 'Bedrijfsvoering', state: 'covered', applications: [{ moduleName: 'Zaaksysteem' }] },
+		{ id: 'c2', name: 'Archief', group: 'Bedrijfsvoering', state: 'gap', fillable: true, fillableBy: ['DMS', 'ECM'], documentation: 'Duurzaam bewaren', applications: [] },
+		{ id: 'c3', name: 'Portaal', state: 'overlap', applications: [{ moduleName: 'A' }, { moduleName: '' }, { moduleName: 'B' }] },
 	],
 }
 
-const flush = () => new Promise((resolve) => setTimeout(resolve, 0))
-
 /**
- * Mount with one organisation so the plate loads at once.
+ * Mount the plate with one organisation, answering the coverage request.
  *
+ * @param {Function} answer Resolves or rejects the request.
  * @return {Promise<object>} The wrapper.
  */
-async function mountPlate() {
+async function mountWith(answer) {
+	store.organisations = [{ uuid: 'org-1', name: 'Gemeente A' }]
+	http.get.mockImplementation(answer)
 	const wrapper = mount(GemmaPlate, { global: { stubs } })
-	await flush()
-	await wrapper.vm.$nextTick()
+	await flushPromises()
 	return wrapper
 }
 
-const componentNames = (wrapper) => wrapper.findAll('.gemma-plate__component-name').map((n) => n.text())
+beforeEach(() => {
+	http.get.mockReset()
+	store.organisations = []
+})
 
 describe('GemmaPlate rendering', () => {
-	beforeEach(() => {
-		store.objectStore.collections = { organization: { results: [{ uuid: 'org-1', name: 'Gemeente A' }] } }
-		http.get.mockReset()
-		http.get.mockResolvedValue({ data: structuredClone(COVERAGE) })
+	it('asks for an organisation when none is chosen', async () => {
+		const wrapper = mount(GemmaPlate, { global: { stubs } })
+		await flushPromises()
+
+		expect(http.get).not.toHaveBeenCalled()
+		expect(wrapper.find('.empty').text()).toBe('Select an organisation')
+		expect(wrapper.find('[data-testid="gemma-plate-download"]').exists()).toBe(false)
 	})
 
-	afterEach(() => {
-		vi.restoreAllMocks()
+	it('shows the server message of a failed load', async () => {
+		const wrapper = await mountWith(async () => { throw { response: { data: { error: 'Forbidden organisation' } } } })
+
+		expect(wrapper.find('.note[data-type="error"]').text()).toBe('Forbidden organisation')
+		expect(wrapper.find('.loading').exists()).toBe(false)
 	})
 
-	it('loads the only organisation at once and shows its summary and grouped plate', async () => {
-		const wrapper = await mountPlate()
+	it('says the GEMMA model is missing when there are no components', async () => {
+		const wrapper = await mountWith(async () => ({ data: { ...coverage, components: [] } }))
+
+		expect(wrapper.find('[data-testid="gemma-plate-no-model"]').text()).toBe('No GEMMA model')
+	})
+
+	it('renders the summary, warnings, download link and grouped components', async () => {
+		const wrapper = await mountWith(async () => ({ data: coverage }))
 
 		expect(http.get).toHaveBeenCalledWith('/index.php/apps/stackiq/api/reference-component-coverage', { params: { organisation: 'org-1' } })
+		expect(wrapper.find('a').attributes('href')).toBe('/index.php/apps/stackiq/api/reference-component-coverage?organisation=org-1&format=csv')
+		expect(wrapper.find('.note[data-type="warning"]').text()).toBe('The plate covers the first applications in use of 250.')
 		expect(wrapper.findAll('.stat').map((s) => s.text())).toEqual([
-			'Reference components=3', 'Covered=1', 'Gaps=1', 'Overlap=1',
+			'Reference components=3', 'Covered=1', 'Gaps=1 (1 fillable with an application in use)', 'Overlap=1',
 		])
-		expect(wrapper.find('.gemma-plate__hint').text()).toBe('2 applications in use name no reference component, so they cover nothing on this plate.')
-		expect(wrapper.findAll('.gemma-plate__group-name').map((g) => g.text())).toEqual(['Zaak', 'Other'])
-		expect(componentNames(wrapper)).toEqual(['Zaakregistratie', 'Archief', 'Portaal'])
-		expect(wrapper.findAll('.gemma-plate__component-apps').map((a) => a.text())).toEqual(['Zaaksysteem', 'No application', 'A, B'])
+		expect(wrapper.find('.gemma-plate__hint').text()).toBe('4 applications in use name no reference component, so they cover nothing on this plate.')
+		expect(wrapper.findAll('.gemma-plate__group-name').map((h) => h.text())).toEqual(['Bedrijfsvoering', 'Other'])
+		expect(wrapper.findAll('.gemma-plate__component-apps').map((s) => s.text())).toEqual(['Zaaksysteem', 'No application', 'A, B'])
 		expect(wrapper.findAll('.gemma-plate__component .badge').map((b) => [b.text(), b.attributes('data-variant')])).toEqual([
 			['Covered', 'success'], ['Gap, fillable', 'error'], ['Overlap', 'warning'],
 		])
-		expect(wrapper.find('[data-testid="gemma-plate-download"]').attributes('data-href'))
-			.toBe('/index.php/apps/stackiq/api/reference-component-coverage?organisation=org-1&format=csv')
 	})
 
-	it('narrows the plate with a filter', async () => {
-		const wrapper = await mountPlate()
+	it('filters components and marks the active filter', async () => {
+		const wrapper = await mountWith(async () => ({ data: coverage }))
+		const names = () => wrapper.findAll('.gemma-plate__component-name').map((s) => s.text())
 
 		await wrapper.find('[data-testid="gemma-plate-filter-overlap"]').trigger('click')
-		expect(componentNames(wrapper)).toEqual(['Portaal'])
-		expect(wrapper.find('[data-testid="gemma-plate-filter-overlap"]').attributes('data-variant')).toBe('primary')
+		expect(names()).toEqual(['Portaal'])
+		expect(wrapper.find('[data-testid="gemma-plate-filter-overlap"]').classes()).toContain('primary')
 
 		await wrapper.find('[data-testid="gemma-plate-filter-fillable"]').trigger('click')
-		expect(componentNames(wrapper)).toEqual(['Archief'])
+		expect(names()).toEqual(['Archief'])
+
+		await wrapper.find('[data-testid="gemma-plate-filter-all"]').trigger('click')
+		expect(names()).toEqual(['Zaakregistratie', 'Archief', 'Portaal'])
 	})
 
-	it('opens a component in the detail pane with who could fill the gap', async () => {
-		const wrapper = await mountPlate()
-		expect(wrapper.find('[data-testid="gemma-plate-detail"]').exists()).toBe(false)
+	it('shows the detail of a picked component with who could fill it', async () => {
+		const wrapper = await mountWith(async () => ({ data: coverage }))
 
-		const archief = wrapper.findAll('.gemma-plate__component')[1]
-		await archief.trigger('click')
+		expect(wrapper.find('[data-testid="gemma-plate-detail"]').exists()).toBe(false)
+		await wrapper.findAll('.gemma-plate__component')[1].trigger('click')
 
 		const detail = wrapper.find('[data-testid="gemma-plate-detail"]')
 		expect(detail.find('h3').text()).toBe('Archief')
-		expect(detail.text()).toContain('Keeps records.')
+		expect(detail.text()).toContain('Duurzaam bewaren')
 		expect(detail.text()).toContain('Applications in use that offer it: DMS, ECM')
-		expect(archief.attributes('aria-pressed')).toBe('true')
+		expect(wrapper.findAll('.gemma-plate__component')[1].attributes('aria-pressed')).toBe('true')
 		expect(wrapper.findAll('.gemma-plate__component')[0].attributes('aria-pressed')).toBe('false')
-	})
-
-	it('warns when the plate was truncated', async () => {
-		http.get.mockResolvedValue({ data: { ...structuredClone(COVERAGE), truncated: true, total: 900 } })
-
-		const wrapper = await mountPlate()
-
-		expect(wrapper.find('.note[data-type="warning"]').text()).toBe('The plate covers the first applications in use of 900.')
-	})
-
-	it('says so when no GEMMA model is imported', async () => {
-		http.get.mockResolvedValue({ data: { ...structuredClone(COVERAGE), components: [] } })
-
-		const wrapper = await mountPlate()
-
-		expect(wrapper.find('[data-testid="gemma-plate-no-model"]').text()).toBe('No GEMMA model')
-		expect(wrapper.find('[data-testid="gemma-plate-groups"]').exists()).toBe(false)
-	})
-
-	it('shows why a load failed, and asks for an organisation when there are several', async () => {
-		http.get.mockRejectedValue({ response: { data: { message: 'Not a member' } } })
-		const failed = await mountPlate()
-		expect(failed.find('.note[data-type="error"]').text()).toBe('Not a member')
-		expect(failed.find('[data-testid="gemma-plate-download"]').exists()).toBe(false)
-
-		http.get.mockClear()
-		store.objectStore.collections = { organization: { results: [{ uuid: 'a', name: 'A' }, { uuid: 'b', name: 'B' }] } }
-		const several = await mountPlate()
-		expect(http.get).not.toHaveBeenCalled()
-		expect(several.find('.empty').text()).toBe('Select an organisation')
 	})
 })

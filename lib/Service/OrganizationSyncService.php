@@ -25,6 +25,8 @@ namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Db\OrganisationMapper;
+use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCP\IAppConfig;
 use OCP\IDBConnection;
@@ -62,7 +64,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/organization-sync/spec.md#requirement-the-system-shall-process-individual-organisationcontact-records-and-ensure-their-openregister-entity-req-002
  */
-class OrganizationSyncService {
+class OrganizationSyncService implements OrganizationSyncServiceInterface {
 
 	/**
 	 * App config key prefix under which an administrator's link is recorded, per organisatie uuid.
@@ -100,9 +102,9 @@ class OrganizationSyncService {
 	/**
 	 * Settings service instance
 	 *
-	 * @var SettingsService The settings service for configuration
+	 * @var RegisterConfigReaderInterface The settings service for configuration
 	 */
-	private SettingsService $settingsService;
+	private RegisterConfigReaderInterface $settingsService;
 
 	/**
 	 * Logger instance
@@ -126,7 +128,7 @@ class OrganizationSyncService {
 	 * @param SymfonyEmailService $emailService The email service.
 	 * @param IAppConfig $config The configuration service.
 	 * @param LoggerInterface $logger The logger instance.
-	 * @param SettingsService $settingsService The settings service.
+	 * @param RegisterConfigReaderInterface $settingsService The settings service.
 	 * @param IDBConnection $db The database connection.
 	 * @param ContactPersonHandler $contactpersonHandler The contact person handler.
 	 * @param ContainerInterface $container The DI container.
@@ -152,7 +154,7 @@ class OrganizationSyncService {
 		SymfonyEmailService $emailService,
 		IAppConfig $config,
 		LoggerInterface $logger,
-		SettingsService $settingsService,
+		RegisterConfigReaderInterface $settingsService,
 		private IDBConnection $db,
 		private readonly ContactPersonHandler $contactpersonHandler,
 		ContainerInterface $container,

@@ -27,12 +27,13 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Federation;
 
+use OCA\Stackiq\Kernel\Contracts\FederationServiceInterface;
 use OCA\Stackiq\Service\ConnectionReportService;
+use OCA\Stackiq\Service\ObjectDataBag;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
-use OCA\Stackiq\Service\ObjectDataBag;
 
 /**
  * Orchestrates federation by delegating to OpenCatalogi services.
@@ -44,7 +45,7 @@ use OCA\Stackiq\Service\ObjectDataBag;
  * repeated per delegated operation and SHOULD be collapsed behind a single resolver helper;
  * noting that as a deliberate follow-up rather than claiming 84 is a healthy number.
  */
-class FederationService {
+class FederationService implements FederationServiceInterface {
 	/**
 	 * The OpenCatalogi app id (the hard runtime dependency for federation).
 	 */

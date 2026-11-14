@@ -3,7 +3,7 @@
     "info": {
         "title": "Stackiq",
         "version": "0.2.7-unstable.20261020120000",
-        "description": "The JSON API of Stackiq, the software and application catalogue for Nextcloud: organisations, applications, components, contracts and their relations, the CMDB import, the service desk exchange, settings and the setup wizard. The catalogue objects themselves are stored in OpenRegister and read and written through its API; this document covers the endpoints Stackiq adds on top.",
+        "description": "The JSON API of Stackiq, the software and application catalogue for Nextcloud: organisations, applications, components, contracts and their relations, the CMDB import, the service desk exchange, settings and the setup wizard. The catalogue objects themselves are stored in OpenRegister and read and written through its API; this document covers the endpoints Stackiq adds on top.\n\nEvery path is served under `/api/v1/`, the version this document describes. The unversioned `/api/` paths keep working, are deprecated, and name their `/api/v1/` successor in a `Link` header next to a `Deprecation` header. Errors are RFC 9457 problem details (`application/problem+json`), and every response carries an `API-Version` header. Paths that implement an external standard keep the formats of that standard and are not described here.",
         "contact": {
             "name": "Conduction B.V.",
             "email": "info@conduction.nl",
@@ -17,7 +17,7 @@
     "servers": [
         {
             "url": "https://{host}/index.php/apps/stackiq/api/v1",
-            "description": "The Stackiq API on a Nextcloud instance.",
+            "description": "The Stackiq API on a Nextcloud instance, version 1.",
             "variables": {
                 "host": {
                     "default": "localhost",
@@ -3400,7 +3400,7 @@
             "get": {
                 "operationId": "open-api-show",
                 "summary": "The OpenAPI document of this API",
-                "description": "Returns this document. It needs no authentication and can be read from any origin.",
+                "description": "Returns this document, with `info.version` set to the installed version. It needs no login and can be read from any origin.",
                 "tags": [
                     "open-api"
                 ],
@@ -3875,6 +3875,18 @@
             }
         },
         "/progress/{operationId}/stream": {
+            "servers": [
+                {
+                    "url": "https://{host}/index.php/apps/stackiq/api",
+                    "description": "The unversioned base of the paths that implement an external standard, which keep their own URLs and formats.",
+                    "variables": {
+                        "host": {
+                            "default": "localhost",
+                            "description": "The host name of the Nextcloud instance."
+                        }
+                    }
+                }
+            ],
             "get": {
                 "operationId": "settings-stream-progress",
                 "summary": "Stream progress updates using Server-Sent Events",
