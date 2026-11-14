@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "stackiq",
     {
@@ -1265,7 +1261,24 @@ OC.L10N.register(
         "Gap, fillable": "Gap, fillable",
         "Gap": "Gap",
         "Licence": "Licence",
-        "Software catalogue": "Software catalogue"
+        "Software catalogue": "Software catalogue",
+        "Availability": "Availability",
+        "Availability reason": "Availability reason",
+        "Classified at": "Classified at",
+        "Classified by": "Classified by",
+        "Confidentiality": "Confidentiality",
+        "Confidentiality reason": "Confidentiality reason",
+        "Integrity": "Integrity",
+        "Integrity reason": "Integrity reason",
+        "The BIO baseline level for availability: how bad it is when the application is not there.": "The BIO baseline level for availability: how bad it is when the application is not there.",
+        "The BIO baseline level for confidentiality: how bad it is when the data in the application leaks.": "The BIO baseline level for confidentiality: how bad it is when the data in the application leaks.",
+        "The BIO baseline level for integrity: how bad it is when the data in the application is wrong.": "The BIO baseline level for integrity: how bad it is when the data in the application is wrong.",
+        "The highest of the three levels, worked out on every save; it cannot be set by hand.": "The highest of the three levels, worked out on every save; it cannot be set by hand.",
+        "The main reason for the availability level.": "The main reason for the availability level.",
+        "The main reason for the confidentiality level.": "The main reason for the confidentiality level.",
+        "The main reason for the integrity level.": "The main reason for the integrity level.",
+        "The user who last changed one of the three levels.": "The user who last changed one of the three levels.",
+        "When one of the three levels last changed.": "When one of the three levels last changed."
     },
     "nplurals=2; plural=(n != 1);"
 )

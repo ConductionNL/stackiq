@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "stackiq",
     {
@@ -1333,7 +1329,24 @@ OC.L10N.register(
         "Gap, fillable": "Gat, te vullen",
         "Gap": "Gat",
         "Licence": "Licentie",
-        "Software catalogue": "Softwarecatalogus"
+        "Software catalogue": "Softwarecatalogus",
+        "Availability": "Beschikbaarheid",
+        "Availability reason": "Reden beschikbaarheid",
+        "Classified at": "Geclassificeerd op",
+        "Classified by": "Geclassificeerd door",
+        "Confidentiality": "Vertrouwelijkheid",
+        "Confidentiality reason": "Reden vertrouwelijkheid",
+        "Integrity": "Integriteit",
+        "Integrity reason": "Reden integriteit",
+        "The BIO baseline level for availability: how bad it is when the application is not there.": "Het BIO-basisbeveiligingsniveau voor beschikbaarheid: hoe erg het is als de applicatie er niet is.",
+        "The BIO baseline level for confidentiality: how bad it is when the data in the application leaks.": "Het BIO-basisbeveiligingsniveau voor vertrouwelijkheid: hoe erg het is als de gegevens in de applicatie uitlekken.",
+        "The BIO baseline level for integrity: how bad it is when the data in the application is wrong.": "Het BIO-basisbeveiligingsniveau voor integriteit: hoe erg het is als de gegevens in de applicatie niet kloppen.",
+        "The highest of the three levels, worked out on every save; it cannot be set by hand.": "Het hoogste van de drie niveaus, bij elke opslag bepaald; het is niet met de hand in te stellen.",
+        "The main reason for the availability level.": "De belangrijkste reden voor het beschikbaarheidsniveau.",
+        "The main reason for the confidentiality level.": "De belangrijkste reden voor het vertrouwelijkheidsniveau.",
+        "The main reason for the integrity level.": "De belangrijkste reden voor het integriteitsniveau.",
+        "The user who last changed one of the three levels.": "De gebruiker die een van de drie niveaus het laatst wijzigde.",
+        "When one of the three levels last changed.": "Wanneer een van de drie niveaus het laatst wijzigde."
     },
     "nplurals=2; plural=(n != 1);"
 )

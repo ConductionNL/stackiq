@@ -82,6 +82,10 @@ final class ListenerRegistrar {
 		$context->registerEventListener(ObjectCreatedEvent::class, ModuleComplianceSubscriber::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleComplianceSubscriber::class);
 
+		// Security baseline classification — bbnLevel is the highest of the three aspects (REQ-BCL-002).
+		$context->registerEventListener(ObjectCreatedEvent::class, UsageClassificationSubscriber::class);
+		$context->registerEventListener(ObjectUpdatedEvent::class, UsageClassificationSubscriber::class);
+
 		// Module registration — sets registeredBy on each save.
 		$context->registerEventListener(ObjectCreatedEvent::class, ModuleRegistrationSubscriber::class);
 
