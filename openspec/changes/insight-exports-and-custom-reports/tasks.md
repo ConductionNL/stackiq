@@ -39,8 +39,9 @@
 - **acceptance_criteria**:
   - GIVEN a reference component facet and the BBN2 quick filter on `/modules` WHEN the user chooses Export as CSV THEN the request carries the `_gf_` keys, the quick filter and the search
   - GIVEN the export finishes WHEN the file opens THEN its columns are the page's columns
-- [ ] Implement
+- [x] Implement
 - [ ] Test (vitest tests/vitest/catalogExportUrl.spec.js and Playwright tests/e2e/spec-coverage/catalogue-exports.spec.ts)
+  > Built: the Export menu (CSV, Excel) in the view's toolbar, `catalogExportUrl()` and its vitest spec, and `facetedCatalogExport.spec.js` for the handler. The Playwright half needs a live instance.
 
 ### Task 5: Opt the list pages and schemas into the library's Export menu
 - **spec_ref**: openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-001-the-catalogue-list-pages-shall-offer-export-as-csv-and-excel-of-the-rows-the-page-shows

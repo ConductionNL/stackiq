@@ -1399,6 +1399,9 @@
         "Software catalogue": "Softwarecatalogus",
         "Shared": "Gedeeld",
         "{name}, shared by {partner}": "{name}, gedeeld door {partner}",
-        "+{count} more": "+{count} meer"
+        "+{count} more": "+{count} meer",
+        "Export": "Exporteren",
+        "Export as CSV": "Exporteren als CSV",
+        "Export as Excel": "Exporteren als Excel"
     }
 }
