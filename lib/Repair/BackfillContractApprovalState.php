@@ -109,6 +109,7 @@ class BackfillContractApprovalState implements IRepairStep {
 			return;
 		}
 
+		// System path (decision 409): a repair step, run by occ, that returns no contract field.
 		try {
 			$contracts = $objectService->setRegister($registerId)
 				->setSchema($schemaId)

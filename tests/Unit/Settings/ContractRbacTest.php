@@ -131,19 +131,57 @@ class ContractRbacTest extends TestCase {
 	}//end testAanbodBeheerderReadIsOrganisationScoped()
 
 	/**
-	 * TC-14 (config-shape form): `ambtenaar` retains a cross-organisation read
-	 * grant — admin/ambtenaar MUST retain read access regardless of
-	 * counterparty status.
+	 * Decision 409 (contracts-readable-by-owner-only): `ambtenaar` reads only
+	 * the contracts of its own organisation. Its former cross-organisation
+	 * grant is gone, and no bare group rule takes its place.
 	 *
 	 * @return void
+	 *
+	 * @spec openspec/changes/contracts-readable-by-owner-only/specs/vendor-visibility-rbac/spec.md#requirement-contracts-must-be-readable-only-by-the-owning-organisation-and-admins-req-006
 	 */
-	public function testAmbtenaarRetainsUnrestrictedRead(): void {
+	public function testAmbtenaarReadIsOrganisationScoped(): void {
 		$authorization = $this->loadContractAuthorization();
 
-		$this->assertContains(['group' => 'ambtenaar', 'crossOrganisation' => true], $authorization['read']);
+		$this->assertContains(['group' => 'ambtenaar', 'match' => ['_organisation' => '$organisation']], $authorization['read']);
+		$this->assertNotContains(['group' => 'ambtenaar', 'crossOrganisation' => true], $authorization['read']);
 		$this->assertNotContains('ambtenaar', $authorization['read'], 'a bare group rule reads only the own organisation');
 
-	}//end testAmbtenaarRetainsUnrestrictedRead()
+	}//end testAmbtenaarReadIsOrganisationScoped()
+
+	/**
+	 * Decision 409: every contract read grant is scoped to the caller's own
+	 * organisation, except `admin` and `software-catalog-admins`. That holds
+	 * for the base register and for every register.d fragment that touches
+	 * the contract schema.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/contracts-readable-by-owner-only/specs/vendor-visibility-rbac/spec.md#requirement-contracts-must-be-readable-only-by-the-owning-organisation-and-admins-req-006
+	 */
+	public function testOnlyTheAdminsReadAcrossOrganisations(): void {
+		$sources = ['softwarecatalogus_register.json' => $this->loadContractAuthorization()];
+		foreach (glob(dirname(__DIR__, 3) . '/lib/Settings/register.d/*.json') as $fragmentFile) {
+			$fragment = json_decode((string)file_get_contents($fragmentFile), true);
+			$contract = ($fragment['components']['schemas']['catalogContract'] ?? null);
+			if (is_array($contract) === true && isset($contract['authorization']) === true) {
+				$sources[basename($fragmentFile)] = $contract['authorization'];
+			}
+		}
+
+		foreach ($sources as $source => $authorization) {
+			foreach (($authorization['read'] ?? []) as $grant) {
+				$group = is_array($grant) === true ? ($grant['group'] ?? '') : $grant;
+				if (in_array($group, ['admin', 'software-catalog-admins'], true) === true) {
+					continue;
+				}
+
+				$this->assertIsArray($grant, $source . ': ' . $group . ' has a bare grant');
+				$this->assertArrayNotHasKey('crossOrganisation', $grant, $source . ': ' . $group . ' reads across organisations');
+				$this->assertSame('$organisation', ($grant['match']['_organisation'] ?? null), $source . ': ' . $group . ' is not scoped to its organisation');
+			}
+		}
+
+	}//end testOnlyTheAdminsReadAcrossOrganisations()
 
 	/**
 	 * schema-rbac-hardening / REQ-006 (extended), Decision 4:

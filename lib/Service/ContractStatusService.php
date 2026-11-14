@@ -140,6 +140,8 @@ class ContractStatusService implements ContractStatusServiceInterface {
 		];
 
 		try {
+			// System path (decision 409): the nightly expiry reads every organisation's
+			// contracts and returns none of their fields to a caller.
 			$contracts = $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
 		} catch (\Throwable $e) {
 			$this->logger->error(

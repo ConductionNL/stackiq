@@ -91,11 +91,15 @@ class PortfolioReportRowsTest extends TestCase {
 	 * @return array<int,array<string,mixed>>
 	 */
 	private function contracts(): array {
+		$ownA = ['@self' => ['organisation' => 'org-a']];
 		return [
-			['usage' => 'g-1', 'cost' => 10, 'costPeriod' => 'Monthly'],
-			['usage' => 'g-1', 'cost' => '99', 'costPeriod' => 'One-off'],
-			['usage' => ['id' => 'g-2'], 'cost' => 5, 'costPeriod' => 'Annually'],
-			['usage' => null, 'cost' => 1, 'costPeriod' => 'Annually'],
+			['usage' => 'g-1', 'cost' => 10, 'costPeriod' => 'Monthly'] + $ownA,
+			['usage' => 'g-1', 'cost' => '99', 'costPeriod' => 'One-off'] + $ownA,
+			['usage' => ['id' => 'g-2'], 'cost' => 5, 'costPeriod' => 'Annually', '_organisation' => 'org-a'],
+			['usage' => null, 'cost' => 1, 'costPeriod' => 'Annually'] + $ownA,
+			// Decision 409: a supplier's contract on org-a's usage, and one without a readable owner, are not org-a's to read.
+			['usage' => 'g-1', 'cost' => 1000, 'costPeriod' => 'Annually', '@self' => ['organisation' => 'supplier-v']],
+			['usage' => 'g-2', 'cost' => 7, 'costPeriod' => 'One-off'],
 		];
 	}//end contracts()
 

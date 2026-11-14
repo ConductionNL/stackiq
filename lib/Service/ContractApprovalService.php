@@ -661,6 +661,8 @@ class ContractApprovalService implements ContractApprovalServiceInterface {
 	 */
 	private function searchContracts(ObjectServiceInterface $objectService, array $query): array|int {
 		try {
+			// System path (decision 409): a decision outcome from decidesk is matched to
+			// its contract; no field of the contract goes back to a caller.
 			return $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
 		} catch (\Throwable $e) {
 			$this->logger->error(
@@ -734,6 +736,10 @@ class ContractApprovalService implements ContractApprovalServiceInterface {
 			return null;
 		}
 
+		// Decision 409: an unscoped read. The submit route reaches it only after
+		// authorizeSubmit() found the caller an admin or of the owning organisation,
+		// and the owner check itself reads nothing but `_organisation`; the outcome
+		// path is a system path from decidesk.
 		try {
 			return $objectService->find(
 				id: $contractUuid,
