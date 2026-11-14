@@ -526,7 +526,7 @@ class ArchiMateService implements ArchiMateServiceInterface {
 	 */
 	private function mergeAllModules(ObjectServiceInterface $objectService, array $query, array $modulesData): array {
 		$allModules = $objectService->searchObjects(
-			query: $query,
+			query: SearchBounds::bounded(query: $query),
 			_rbac: false,
 			_multitenancy: false
 		);
@@ -828,7 +828,7 @@ class ArchiMateService implements ArchiMateServiceInterface {
 			);
 
 			// Use searchObjects method for filtering.
-			$objects = $objectService->searchObjects($finalQuery);
+			$objects = $objectService->searchObjects(SearchBounds::bounded(query: $finalQuery));
 
 			$this->logger->debug(
 				"ArchiMateService: Retrieved {$schemaType} objects",

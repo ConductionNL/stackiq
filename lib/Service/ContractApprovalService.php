@@ -663,7 +663,7 @@ class ContractApprovalService implements ContractApprovalServiceInterface {
 		try {
 			// System path (decision 409): a decision outcome from decidesk is matched to
 			// its contract; no field of the contract goes back to a caller.
-			return $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
+			return $objectService->searchObjects(query: SearchBounds::bounded(query: $query), _rbac: false, _multitenancy: false);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'ContractApprovalService: failed to query contract by decision id',
