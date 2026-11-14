@@ -112,7 +112,7 @@ class ArchiMateImportServiceConvertTest extends TestCase {
 	}//end service()
 
 	/**
-	 * The objects keyed by their identifier, with the run's model identifier replaced.
+	 * The objects keyed by their identifier, with the run's model identifier and timestamps left out.
 	 *
 	 * The fixture carries no model identifier, so each run generates its own;
 	 * every object of a run must carry that run's identifier, and with it
@@ -131,6 +131,8 @@ class ArchiMateImportServiceConvertTest extends TestCase {
 				$object['model_identifier'] = '<model>';
 			}
 
+			// The time each run stamps on its objects is not part of the conversion.
+			unset($object['@self']['published'], $object['@self']['created'], $object['@self']['updated']);
 			$keyed[(string) ($object['identifier'] ?? json_encode($object))] = $object;
 		}
 
