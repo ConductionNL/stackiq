@@ -56,6 +56,7 @@ use OCA\Stackiq\Service\Settings\EmailSettings;
 use OCA\Stackiq\Service\Settings\EolSyncSettings;
 use OCA\Stackiq\Service\Settings\RoleGroupSettings;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Stackiq\ContactPersonEmail;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
 use OCA\Stackiq\Service\Stackiq\HierarchyHandler;
@@ -129,7 +130,8 @@ final class ServiceFactories {
 					_appManager: $c->get(IAppManager::class),
 					_logger: $c->get(LoggerInterface::class),
 					_emailService: $c->get(SymfonyEmailService::class),
-					config: $c->get(IConfig::class)
+					config: $c->get(IConfig::class),
+					contactPersonEmail: $c->get(ContactPersonEmail::class)
 				);
 			}
 		);
@@ -246,7 +248,8 @@ final class ServiceFactories {
 					container: $container,
 					appManager: $container->get('OCP\App\IAppManager'),
 					config: $container->get(IAppConfig::class),
-					settingsService: $container->get(SettingsService::class)
+					settingsService: $container->get(SettingsService::class),
+					contactPersonEmail: $container->get(ContactPersonEmail::class)
 				);
 			}
 		);

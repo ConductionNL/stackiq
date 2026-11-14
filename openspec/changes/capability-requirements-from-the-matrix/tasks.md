@@ -15,8 +15,8 @@
 - **files**: `lib/Service/ContactpersoonService.php`, `lib/Service/Stackiq/ContactPersonHandler.php`, `lib/Controller/ContactpersonenController.php`
 - **acceptance_criteria**:
   - GIVEN a contact person made with the current form WHEN it is converted THEN the account gets the email address of the linked Nextcloud contact
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Service/ContactpersoonServiceTest.php`)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Service/ContactpersoonServiceTest.php`)
 
 ### Task 3: A contract becomes Active only through an approved decision
 - **spec_ref**: openspec/changes/capability-requirements-from-the-matrix/specs/contract-decision-delegation/spec.md

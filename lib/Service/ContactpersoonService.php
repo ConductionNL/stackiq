@@ -27,6 +27,7 @@ namespace OCA\Stackiq\Service;
 use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
 use OCA\Stackiq\Service\Contactpersoon\ContactPersonUserDetails;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
+use OCA\Stackiq\Service\Stackiq\ContactPersonEmail;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
 use OCA\Stackiq\Service\Stackiq\HierarchyHandler;
@@ -76,6 +77,7 @@ class ContactpersoonService implements ContactpersoonServiceInterface {
 	 * @param IAppManager $appManager App manager.
 	 * @param IAppConfig $config Configuration service.
 	 * @param RegisterConfigReaderInterface $settingsService Settings service.
+	 * @param ContactPersonEmail|null $contactPersonEmail Resolves the email address from the linked Nextcloud contact.
 	 */
 	public function __construct(
 		private readonly ContactPersonHandler $contactPersonHandler,
@@ -86,9 +88,30 @@ class ContactpersoonService implements ContactpersoonServiceInterface {
 		private readonly IAppManager $appManager,
 		private readonly IAppConfig $config,
 		private readonly RegisterConfigReaderInterface $settingsService,
+		private readonly ?ContactPersonEmail $contactPersonEmail = null,
 	) {
 
 	}//end __construct()
+
+	/**
+	 * The email address a contact person's account is made for.
+	 *
+	 * The linked Nextcloud contact's address when an email resolver is wired,
+	 * otherwise the address on the record.
+	 *
+	 * @param array<string, mixed> $contactData The contact person's properties.
+	 *
+	 * @return string The email address, or '' when there is none.
+	 *
+	 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contactpersoon-sync/spec.md
+	 */
+	private function contactPersonEmailOf(array $contactData): string {
+		if ($this->contactPersonEmail !== null) {
+			return $this->contactPersonEmail->of(contactData: $contactData);
+		}
+
+		return (string)($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+	}//end contactPersonEmailOf()
 
 	/**
 	 * Tracks contact UUIDs currently being processed to prevent event recursion.
@@ -142,7 +165,7 @@ class ContactpersoonService implements ContactpersoonServiceInterface {
 
 			self::$processingContacts[$contactId] = true;
 
-			$emailValue = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+			$emailValue = $this->contactPersonEmailOf(contactData: $contactData);
 			$hasEmail = empty($emailValue) === false;
 			$hasOrganisation = empty($contactData['organisation']) === false;
 			$this->logger->info(
@@ -156,8 +179,9 @@ class ContactpersoonService implements ContactpersoonServiceInterface {
 			);
 
 			// Check if contactpersoon has required data.
-			// Schema uses 'e-mailadres' but some data may use 'email'.
-			$email = ($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+			// The linked Nextcloud contact holds the address; older records carry
+			// it themselves as 'email' or 'e-mailadres'.
+			$email = $emailValue;
 			if ($this->isContactPersonEmailUsable(email: $email, contactId: (string)$contactId) === false) {
 				return false;
 			}
