@@ -26,6 +26,7 @@ namespace OCA\Stackiq\Service\Settings;
 
 use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Kernel\Contracts\CronjobSettingsInterface;
+use OCA\Stackiq\Kernel\OrganizationContactSyncSchedule;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use Psr\Container\ContainerInterface;
@@ -148,8 +149,7 @@ class CronjobSettings implements CronjobSettingsInterface {
 			'organization_contact_sync' => [
 				'name' => 'Organization Contact Sync',
 				'description' => 'Syncs organizations and contacts between Stackiq and OpenRegister.',
-				'interval' => 300,
-				// 5 minutes.
+				'interval' => OrganizationContactSyncSchedule::INTERVAL_SECONDS,
 				'class' => 'OCA\\Stackiq\\BackgroundJob\\OrganizationContactSyncJob',
 			],
 		];

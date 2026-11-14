@@ -32,6 +32,15 @@
 		saveButtonText="Save Email Settings"
 		:hasInfoContent="true"
 		@save="saveEmailSettings">
+		<NcNoteCard
+			v-if="transportUnset"
+			type="warning"
+			data-testid="email-transport-warning">
+			<p>{{ t('stackiq', 'No mail transport is set, so registration, activation and account mails are not sent.') }}</p>
+			<NcButton variant="tertiary" @click="activeTab = 'settings'">
+				{{ t('stackiq', 'Set up the mail transport') }}
+			</NcButton>
+		</NcNoteCard>
 		<StandardTabs
 			:tabs="[
 				{ key: 'settings', title: 'Settings' },
@@ -562,7 +571,9 @@
  * @version 1.0.0
  */
 
+import axios from '@nextcloud/axios'
 import { showError, showSuccess } from '@nextcloud/dialogs'
+import { translate as t } from '@nextcloud/l10n'
 // Nextcloud Vue components
 import {
 	NcButton,
@@ -582,6 +593,7 @@ import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
 // Bootstrap Vue components for tabs
 import StandardTabs from '../../../components/StandardTabs.vue'
 import { settingsStore } from '../../../store/store.js'
+import { isTransportUnset, messageOf, templateUrl } from '../../../utils/emailTemplates.js'
 
 /**
  * The section's initial flags, fields and results.
@@ -723,6 +735,14 @@ export default {
 			// Always allow saving for email settings
 			return true
 		},
+
+		/**
+		 * @return {boolean} Whether no transport is set, so no mail goes out.
+		 * @spec openspec/changes/mail-template-editor-saves/specs/email-delivery/spec.md#requirement-the-settings-say-when-mail-is-not-being-sent-req-011
+		 */
+		transportUnset() {
+			return isTransportUnset(this.emailSettings)
+		},
 	},
 
 	async created() {
@@ -730,6 +750,8 @@ export default {
 	},
 
 	methods: {
+		t,
+
 		/**
 		 * Save email settings using the settings store
 		 *
@@ -799,16 +821,18 @@ export default {
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		async loadTemplates() {
-			try {
-				// Templates should be loaded from the settings store's consolidated config
-				// For now, we'll use empty templates until the backend provides this data
-				this.templates = {}
-				console.info(
-					'Email templates functionality is not yet implemented in the backend',
-				)
-			} catch (error) {
-				console.error('Failed to load templates:', error)
-			}
+			const templates = {}
+			await Promise.all(
+				this.availableTemplates.map(async ({ key }) => {
+					try {
+						const { data } = await axios.get(templateUrl(key))
+						templates[key] = data?.template || ''
+					} catch {
+						templates[key] = ''
+					}
+				}),
+			)
+			this.templates = templates
 		},
 
 		/**
@@ -862,7 +886,7 @@ export default {
 		 * @spec openspec/specs/fe-settings-ui/spec.md
 		 */
 		updateTemplateContent(content) {
-			this.templates[this.activeTemplate] = content
+			this.templates = { ...this.templates, [this.activeTemplate]: content }
 		},
 
 		/**
@@ -890,56 +914,47 @@ export default {
 		},
 
 		/**
-		 * Reset template to default
-		 * TODO: Implement template reset functionality when backend supports it
+		 * Load the active template's default into the editor. It is stored
+		 * when the administrator saves, like any other edit.
 		 *
-		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/mail-template-editor-saves/specs/email-delivery/spec.md#requirement-an-administrator-edits-and-saves-a-mail-template-req-010
 		 */
 		async resetTemplate() {
+			this.templateSaveResult = null
 			try {
-				// Template reset functionality is not yet implemented in the backend
-				console.info(
-					'Template reset functionality is not yet implemented in the backend',
-				)
-				showSuccess(
-					'Template reset functionality will be available in a future update',
-				)
+				const { data } = await axios.get(templateUrl(this.activeTemplate) + '/default')
+				this.updateTemplateContent(data?.template || '')
 			} catch (error) {
-				console.error('Failed to reset template:', error)
-				showError('Failed to reset template: ' + error.message)
+				showError(messageOf(error, 'The default template could not be loaded.'))
 			}
 		},
 
 		/**
-		 * Save template
-		 * TODO: Implement template save functionality when backend supports it
+		 * Store the active template through the backend. Success shows only
+		 * when the backend confirms it; otherwise its message shows.
 		 *
-		 * @spec openspec/specs/fe-settings-ui/spec.md
+		 * @return {Promise<void>}
+		 * @spec openspec/changes/mail-template-editor-saves/specs/email-delivery/spec.md#requirement-an-administrator-edits-and-saves-a-mail-template-req-010
 		 */
 		async saveTemplate() {
 			this.savingTemplate = true
 			this.templateSaveResult = null
 
 			try {
-				// Template save functionality is not yet implemented in the backend
-				console.info(
-					'Template save functionality is not yet implemented in the backend',
-				)
-				this.templateSaveResult = {
-					success: true,
-					message:
-						'Template saved locally (backend implementation pending)',
+				const { data } = await axios.post(templateUrl(this.activeTemplate), {
+					template: this.getActiveTemplateContent(),
+				})
+				if (data?.success !== true) {
+					throw new Error(data?.message || 'The template could not be saved.')
 				}
-				showSuccess(
-					'Template save functionality will be available in a future update',
-				)
+
+				this.templateSaveResult = { success: true, message: data.message || 'Template saved.' }
+				showSuccess(this.templateSaveResult.message)
 			} catch (error) {
-				console.error('Failed to save template:', error)
-				this.templateSaveResult = {
-					success: false,
-					message: 'Failed to save template: ' + error.message,
-				}
-				showError('Failed to save template: ' + error.message)
+				const message = messageOf(error, 'The template could not be saved.')
+				this.templateSaveResult = { success: false, message }
+				showError(message)
 			} finally {
 				this.savingTemplate = false
 			}

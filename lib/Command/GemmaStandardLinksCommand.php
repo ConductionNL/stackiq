@@ -23,7 +23,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Command;
 
-use OCA\Stackiq\Service\ArchiMate\GemmaStandardLinker;
+use OCA\Stackiq\Service\HelperFactory;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Symfony\Component\Console\Command\Command;
@@ -227,7 +227,7 @@ class GemmaStandardLinksCommand extends Command {
 	 * @return array<string, array<string, mixed>> The changed link properties by object id.
 	 */
 	private function changes(array $stored): array {
-		$linked  = (new GemmaStandardLinker(logger: $this->logger))->link(objects: $stored);
+		$linked  = (new HelperFactory())->gemmaStandardLinker(logger: $this->logger)->link(objects: $stored);
 		$changes = [];
 		foreach ($linked as $position => $object) {
 			foreach (self::LINK_PROPERTIES as $property) {
