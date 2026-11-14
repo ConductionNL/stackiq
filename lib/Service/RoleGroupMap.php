@@ -105,6 +105,13 @@ class RoleGroupMap {
 	private const KEY_REVIEW_INTERVAL = 'access_review_interval_days';
 
 	/**
+	 * App config key set once every current role group member's role is on their contact person.
+	 *
+	 * @var string
+	 */
+	private const KEY_GRANTS_SEEDED = 'role_grants_seeded';
+
+	/**
 	 * Constructor.
 	 *
 	 * @param IAppConfig $appConfig The app config holding the mapping.
@@ -286,6 +293,31 @@ class RoleGroupMap {
 
 		return $days;
 	}//end reviewIntervalDays()
+
+	/**
+	 * Whether every current role group member's role was written onto their contact person.
+	 *
+	 * Until it was, the automatic sync does not run, so nobody leaves a role
+	 * group they were put in by hand (the upgrade risk in the design).
+	 *
+	 * @return bool True once the seeding finished.
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
+	 */
+	public function grantsSeeded(): bool {
+		return $this->appConfig->getValueString(AppIdentity::APP_ID, self::KEY_GRANTS_SEEDED, '') === '1';
+	}//end grantsSeeded()
+
+	/**
+	 * Record that the seeding finished, so the automatic sync may run.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
+	 */
+	public function markGrantsSeeded(): void {
+		$this->appConfig->setValueString(AppIdentity::APP_ID, self::KEY_GRANTS_SEEDED, '1');
+	}//end markGrantsSeeded()
 
 	/**
 	 * The whole map as the admin settings read it.

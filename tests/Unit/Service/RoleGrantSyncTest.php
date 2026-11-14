@@ -382,6 +382,43 @@ final class RoleGrantSyncTest extends TestCase {
 	}//end testTheContactPersonIsFoundByUsername()
 
 	/**
+	 * An account with a contact person is synced to exactly its derived role groups.
+	 *
+	 * @return void
+	 */
+	public function testSyncCatalogueUserSyncsAnAccountWithAContactPerson(): void {
+		$this->stored['organisation_type_roles'] = json_encode(['Municipality' => null]);
+		$this->roleGroupsExist();
+		$this->groups['aanbod-beheerder'] = ['ann'];
+		$sync = $this->sync();
+
+		$contact = $this->createMock(ObjectEntityInterface::class);
+		$contact->method('getObject')->willReturn(['username' => 'ann', 'roles' => ['VNG-raadpleger']]);
+		$this->objectService->method('searchObjects')->willReturn([$contact]);
+
+		$result = $sync->syncCatalogueUser(user: $this->user());
+
+		$this->assertSame(['added' => ['vng-raadpleger'], 'removed' => ['aanbod-beheerder']], $result);
+		$this->assertSame(['remove aanbod-beheerder', 'add vng-raadpleger'], $this->changes);
+	}//end testSyncCatalogueUserSyncsAnAccountWithAContactPerson()
+
+	/**
+	 * An account without a contact person keeps every group it is in.
+	 *
+	 * @return void
+	 */
+	public function testSyncCatalogueUserLeavesAnAccountWithoutAContactPersonAlone(): void {
+		$this->roleGroupsExist();
+		$this->groups['gebruik-beheerder'] = ['ann'];
+		$sync = $this->sync();
+		$this->objectService->method('searchObjects')->willReturn([]);
+
+		$this->assertNull($sync->syncCatalogueUser(user: $this->user()));
+		$this->assertSame([], $this->changes);
+		$this->assertSame(['ann'], $this->groups['gebruik-beheerder']);
+	}//end testSyncCatalogueUserLeavesAnAccountWithoutAContactPersonAlone()
+
+	/**
 	 * A withdrawn role leaves only its own group, and only when no other source still grants it.
 	 *
 	 * @return void

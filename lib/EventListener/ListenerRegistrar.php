@@ -57,6 +57,8 @@ final class ListenerRegistrar {
 	public function register(IRegistrationContext $context): void {
 		// TEST event listener for easily triggerable Nextcloud events.
 		$context->registerEventListener(UserLoggedInEvent::class, TestEventListener::class);
+		// Role groups follow the roles a person derives, at every sign-in.
+		$context->registerEventListener(UserLoggedInEvent::class, RoleGrantLoginListener::class);
 
 		// OpenRegister object lifecycle events are NO LONGER broadcast to
 		// StackiqEventListener.

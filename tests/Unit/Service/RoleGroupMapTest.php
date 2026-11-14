@@ -270,4 +270,19 @@ final class RoleGroupMapTest extends TestCase {
 		$this->assertSame('NL:The role mapping was not saved.', $result['message']);
 		$this->assertSame(['NL:Ambtenaar is not a catalogue role.'], $result['errors']);
 	}//end testMessagesAreTranslated()
+
+	/**
+	 * The role groups read as unseeded until the seeding is recorded.
+	 *
+	 * @return void
+	 */
+	public function testTheSeedingIsRecorded(): void {
+		$map = $this->map();
+		$this->assertFalse($map->grantsSeeded());
+
+		$map->markGrantsSeeded();
+
+		$this->assertSame('1', $this->stored['role_grants_seeded']);
+		$this->assertTrue($map->grantsSeeded());
+	}//end testTheSeedingIsRecorded()
 }//end class

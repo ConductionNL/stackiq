@@ -30,8 +30,8 @@
   - GIVEN a real UserLoggedInEvent WHEN the listener runs THEN the user is synced
   - GIVEN a current role group member without the role WHEN the repair step runs THEN the role is written onto their contact person and logged
   - GIVEN many users WHEN the nightly job runs THEN it works in bounded batches
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Repair/SeedRolesFromGroupsTest.php and tests/Unit/BackgroundJob/RoleGrantSyncJobTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Repair/SeedRolesFromGroupsTest.php and tests/Unit/BackgroundJob/RoleGrantSyncJobTest.php)
 
 ### Task 4: Add the review fields and the review endpoints
 - **spec_ref**: openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-004-a-reviewer-shall-confirm-or-withdraw-a-persons-access-and-the-decision-shall-be-recorded

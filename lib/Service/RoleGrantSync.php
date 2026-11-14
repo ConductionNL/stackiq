@@ -37,10 +37,11 @@ use RuntimeException;
  * they no longer derive. It only ever changes the role groups RoleGroupMap
  * names, never any other group.
  *
- * This class is a callable service only. Nothing in the app runs sync() on
- * its own yet: running it at sign-in, nightly and after an upgrade that first
- * writes current members' roles onto their contact persons is a later step,
- * so that nobody loses a role group by surprise.
+ * It runs when a contact person's roles are saved, at sign-in
+ * (RoleGrantLoginListener) and nightly (RoleGrantSyncJob). The last two only
+ * run once RoleGrantSeeder has written every current role group member's role
+ * onto their contact person, so nobody loses a role group by surprise, and
+ * only for accounts that have a contact person (syncCatalogueUser()).
  *
  * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
  */
@@ -165,6 +166,27 @@ class RoleGrantSync {
 
 		return $result;
 	}//end sync()
+
+	/**
+	 * Sync a person who has a contact person; leave every other account alone.
+	 *
+	 * An account without a contact person is no catalogue user: its role
+	 * group memberships are an admin's own and are not changed.
+	 *
+	 * @param IUser $user The person's account.
+	 *
+	 * @return array{added: list<string>, removed: list<string>}|null The role groups joined and left, or null without a contact person.
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
+	 */
+	public function syncCatalogueUser(IUser $user): ?array {
+		$contactPerson = $this->findContactPerson(user: $user);
+		if ($contactPerson === null) {
+			return null;
+		}
+
+		return $this->sync(user: $user, contactPerson: $contactPerson);
+	}//end syncCatalogueUser()
 
 	/**
 	 * Take a person out of one role's group when they no longer derive the role.
