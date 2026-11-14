@@ -81,6 +81,25 @@ class ArchiMateExportService {
 	private const NESTED_CONTAINER_KEYS = ['elementProperties', 'properties', 'viewNodes'];
 
 	/**
+	 * The identifier of the "Gedeeld door" property definition the export adds.
+	 */
+	private const SHARED_BY_PROPDEF_ID = 'id-swc-propdef-gedeeld-door';
+
+	/**
+	 * The style of a nested application node, per kind: own or shared.
+	 */
+	private const APPLICATION_NODE_STYLES = [
+		'own' => [
+			'fillColor' => ['_r' => '200', '_g' => '255', '_b' => '200', '_a' => '100'],
+			'lineColor' => ['_r' => '0', '_g' => '150', '_b' => '0'],
+		],
+		'shared' => [
+			'fillColor' => ['_r' => '210', '_g' => '225', '_b' => '255', '_a' => '100'],
+			'lineColor' => ['_r' => '40', '_g' => '80', '_b' => '170'],
+		],
+	];
+
+	/**
 	 * Constructor.
 	 *
 	 * @param LoggerInterface $logger The logger instance.
@@ -2524,7 +2543,9 @@ XML;
 				moduleRefMap: $deelnameRefMap,
 				moduleNameMap: $deelnameNameMap,
 				sourcePropDefId: $sourcePropDefId,
-				prefix: 'deelname'
+				prefix: 'deelname',
+				kind: 'shared',
+				partnerMap: $this->buildPartnerMap(deelnamesData: $deelnamesData)
 			);
 			$deelnamesRelationships = $this->generateSpecializationRelationships(
 				moduleRefMap: $deelnameRefMap,
@@ -2664,6 +2685,51 @@ XML;
 	}//end buildModuleLookupMaps()
 
 	/**
+	 * The names of the partners that share each module, from deelname gebruik.
+	 *
+	 * The partner is the organisation that owns the gebruik: its consumer's
+	 * name, or the `_sourceOrganization` the view enrichment attaches.
+	 *
+	 * @param array $deelnamesData The deelname gebruik objects.
+	 *
+	 * @return array<string, list<string>> Module ID to partner names, in first-seen order.
+	 * @spec   openspec/changes/architecture-shared-usage-on-views
+	 */
+	private function buildPartnerMap(array $deelnamesData): array {
+		$partnerMap = [];
+		foreach ($deelnamesData as $usage) {
+			if (is_object($usage) === true && method_exists($usage, 'jsonSerialize') === true) {
+				$usage = $usage->jsonSerialize();
+			}
+
+			if (is_array($usage) === false) {
+				continue;
+			}
+
+			$moduleId = $usage['module'] ?? null;
+			if (is_string($moduleId) === false && is_int($moduleId) === false) {
+				continue;
+			}
+
+			$partner = $usage['_sourceOrganization'] ?? null;
+			if (empty($partner) === true && is_array($usage['consumer'] ?? null) === true) {
+				$partner = $usage['consumer']['name'] ?? null;
+			}
+
+			if (is_string($partner) === false || $partner === '') {
+				continue;
+			}
+
+			$partnerMap[$moduleId] ??= [];
+			if (in_array($partner, $partnerMap[$moduleId], true) === false) {
+				$partnerMap[$moduleId][] = $partner;
+			}
+		}//end foreach
+
+		return $partnerMap;
+	}//end buildPartnerMap()
+
+	/**
 	 * Check if a Bron property definition exists in base objects, add one if not.
 	 *
 	 * @param array $baseObjects The base objects to check.
@@ -2704,6 +2770,8 @@ XML;
 	 * @param array $moduleNameMap Module to name map.
 	 * @param string $sourcePropDefId Bron property definition ID.
 	 * @param string $prefix Optional prefix for IDs.
+	 * @param string $kind own for the organisation's own applications, shared for deelnames.
+	 * @param array $partnerMap Module ID to the names of the partners sharing it.
 	 *
 	 * @return array Array of element data arrays ready for XML generation.
 	 */
@@ -2712,6 +2780,8 @@ XML;
 		array $moduleNameMap,
 		string $sourcePropDefId,
 		string $prefix = '',
+		string $kind = 'own',
+		array $partnerMap = [],
 	): array {
 		$elements = [];
 		$idPrefix = 'id-swc-app-';
@@ -2723,12 +2793,19 @@ XML;
 			$appIdentifier = $idPrefix . $moduleId;
 			$name = $moduleNameMap[$moduleId] ?? 'Module';
 
+			$partner = null;
+			if ($kind === 'shared' && empty($partnerMap[$moduleId]) === false) {
+				$partner = implode(', ', $partnerMap[$moduleId]);
+			}
+
 			$elements[] = [
 				'identifier' => $appIdentifier,
 				'name' => $name,
 				'xsi_type' => 'ApplicationComponent',
 				'bronPropDefId' => $sourcePropDefId,
 				'moduleId' => $moduleId,
+				'kind' => $kind,
+				'partner' => $partner,
 			];
 		}
 
@@ -2806,28 +2883,7 @@ XML;
 
 		// Build a reverse lookup: refCompIdentifier => [(appIdentifier, relIdentifier, moduleName)].
 		// Derived from the actual generated elements and relationships (handles all prefixes).
-		$appNameMap = [];
-		foreach ($appElements as $el) {
-			$appNameMap[$el['identifier']] = $el['name'];
-		}
-
-		$refCompApps = [];
-		foreach ($relationships as $rel) {
-			$appIdentifier = $rel['source'];
-			$refCompIdentifier = $rel['target'];
-			$relIdentifier = $rel['identifier'];
-			$name = $appNameMap[$appIdentifier] ?? 'Module';
-
-			if (isset($refCompApps[$refCompIdentifier]) === false) {
-				$refCompApps[$refCompIdentifier] = [];
-			}
-
-			$refCompApps[$refCompIdentifier][] = [
-				'appIdentifier' => $appIdentifier,
-				'relIdentifier' => $relIdentifier,
-				'name' => $name,
-			];
-		}
+		$refCompApps = $this->buildRefCompApps(appElements: $appElements, relationships: $relationships);
 
 		// Iterate view objects.
 		foreach ($baseObjects as $obj) {
@@ -2880,6 +2936,61 @@ XML;
 		$this->logger->debug('Copied and enriched views', ['count' => count($viewCopies)]);
 		return $viewCopies;
 	}//end copyAndEnrichViews()
+
+	/**
+	 * The applications to nest per reference component, each with its kind.
+	 *
+	 * Every entry carries `kind` (own or shared) and `partner` (the partners'
+	 * names for a shared one, else null). An application both owned and
+	 * shared for the same reference component is listed once, as own.
+	 *
+	 * @param array $appElements Application elements.
+	 * @param array $relationships Relationship data.
+	 *
+	 * @return array Reference component identifier to its application entries.
+	 * @spec   openspec/changes/architecture-shared-usage-on-views
+	 */
+	private function buildRefCompApps(array $appElements, array $relationships): array {
+		$elementMap = [];
+		foreach ($appElements as $el) {
+			$elementMap[$el['identifier']] = $el;
+		}
+
+		$refCompApps = [];
+		$ownModules = [];
+		foreach ($relationships as $rel) {
+			$element = $elementMap[$rel['source']] ?? [];
+			$kind = ($element['kind'] ?? 'own');
+			if ($kind === 'own' && isset($element['moduleId']) === true) {
+				$ownModules[$rel['target']][(string)$element['moduleId']] = true;
+			}
+		}
+
+		foreach ($relationships as $rel) {
+			$appIdentifier = $rel['source'];
+			$refCompIdentifier = $rel['target'];
+			$element = $elementMap[$appIdentifier] ?? [];
+			$kind = ($element['kind'] ?? 'own');
+			$moduleId = $element['moduleId'] ?? null;
+
+			if ($kind === 'shared' && $moduleId !== null
+				&& isset($ownModules[$refCompIdentifier][(string)$moduleId]) === true
+			) {
+				continue;
+			}
+
+			$refCompApps[$refCompIdentifier] ??= [];
+			$refCompApps[$refCompIdentifier][] = [
+				'appIdentifier' => $appIdentifier,
+				'relIdentifier' => $rel['identifier'],
+				'name' => $element['name'] ?? 'Module',
+				'kind' => $kind,
+				'partner' => $element['partner'] ?? null,
+			];
+		}
+
+		return $refCompApps;
+	}//end buildRefCompApps()
 
 	/**
 	 * Extract "Titel view SWC" property value from view XML data.
@@ -2983,7 +3094,7 @@ XML;
 		// Inject into top-level nodes.
 		if (isset($viewData['node']) === true && is_array($viewData['node']) === true) {
 			$nodes = $viewData['node'];
-			if ($this->isList(arr: $nodes) === true) {
+			if ($this->isList(arr: $nodes) === false) {
 				$nodes = [$nodes];
 			}
 
@@ -2998,7 +3109,7 @@ XML;
 			if (empty($newConnections) === false) {
 				if (isset($viewData['connection']) === false) {
 					$viewData['connection'] = [];
-				} elseif ($this->isList(arr: $viewData['connection']) === true) {
+				} elseif ($this->isList(arr: $viewData['connection']) === false) {
 					$viewData['connection'] = [$viewData['connection']];
 				}
 
@@ -3043,7 +3154,7 @@ XML;
 				// Ensure nested nodes array.
 				if (isset($node['node']) === false) {
 					$node['node'] = [];
-				} elseif ($this->isList(arr: $node['node']) === true) {
+				} elseif ($this->isList(arr: $node['node']) === false) {
 					$node['node'] = [$node['node']];
 				}
 
@@ -3066,11 +3177,7 @@ XML;
 						'_y' => (string)max(20, $childY),
 						'_w' => (string)$childW,
 						'_h' => (string)$childH,
-						'style' => [
-							'fillColor' => ['_r' => '200', '_g' => '255', '_b' => '200', '_a' => '100'],
-							'lineColor' => ['_r' => '0', '_g' => '150', '_b' => '0'],
-							'font' => ['_name' => 'Segoe UI', '_size' => '9'],
-						],
+						'style' => $this->applicationNodeStyle(kind: $app['kind'] ?? 'own'),
 					];
 
 					$node['node'][] = $childNode;
@@ -3092,7 +3199,7 @@ XML;
 			// Recurse into nested nodes.
 			if (isset($node['node']) === true && is_array($node['node']) === true) {
 				$nestedNodes = $node['node'];
-				if ($this->isList(arr: $nestedNodes) === true) {
+				if ($this->isList(arr: $nestedNodes) === false) {
 					$nestedNodes = [$nestedNodes];
 				}
 
@@ -3108,6 +3215,24 @@ XML;
 
 		return $nodes;
 	}//end processNodesForInjection()
+
+	/**
+	 * The style of a nested application node: own green, shared blue.
+	 *
+	 * @param string $kind own or shared; anything else is styled as own.
+	 *
+	 * @return array The style array, in the StyleType order of the writer.
+	 * @spec   openspec/changes/architecture-shared-usage-on-views
+	 */
+	private function applicationNodeStyle(string $kind): array {
+		$colours = self::APPLICATION_NODE_STYLES[$kind] ?? self::APPLICATION_NODE_STYLES['own'];
+
+		return [
+			'fillColor' => $colours['fillColor'],
+			'lineColor' => $colours['lineColor'],
+			'font' => ['_name' => 'Segoe UI', '_size' => '9'],
+		];
+	}//end applicationNodeStyle()
 
 	/**
 	 * Build SWC organization folder items.
@@ -3257,6 +3382,7 @@ XML;
 		}
 
 		// Add SWC application elements.
+		$hasSharedBy = false;
 		foreach ($appElements as $appEl) {
 			$elNode = $elementsFolder->addChild('element');
 			$elNode->addAttribute('identifier', $appEl['identifier']);
@@ -3268,6 +3394,13 @@ XML;
 			$propEl = $propsEl->addChild('property');
 			$propEl->addAttribute('propertyDefinitionRef', $appEl['bronPropDefId']);
 			$propEl->addChild('value', 'Stackiq');
+			// A shared application names the partner that shares it.
+			if (($appEl['kind'] ?? 'own') === 'shared' && empty($appEl['partner']) === false) {
+				$sharedByProp = $propsEl->addChild('property');
+				$sharedByProp->addAttribute('propertyDefinitionRef', self::SHARED_BY_PROPDEF_ID);
+				$sharedByProp->addChild('value', htmlspecialchars($appEl['partner']));
+				$hasSharedBy = true;
+			}
 		}
 
 		// --- Relationships section ---.
@@ -3327,6 +3460,15 @@ XML;
 			$propDefNode->addAttribute('identifier', $sourcePropDefId);
 			$propDefNode->addAttribute('type', 'string');
 			$nameChild = $propDefNode->addChild('name', 'Bron');
+			$nameChild->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
+		}
+
+		// Add the Gedeeld door property definition when a shared element uses it.
+		if ($hasSharedBy === true) {
+			$propDefNode = $propDefsFolder->addChild('propertyDefinition');
+			$propDefNode->addAttribute('identifier', self::SHARED_BY_PROPDEF_ID);
+			$propDefNode->addAttribute('type', 'string');
+			$nameChild = $propDefNode->addChild('name', 'Gedeeld door');
 			$nameChild->addAttribute('xml:lang', 'nl', 'http://www.w3.org/XML/1998/namespace');
 		}
 
