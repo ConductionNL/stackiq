@@ -19,6 +19,7 @@
   - GIVEN the same rows WHEN the diagram renders twice THEN every node keeps its position
 - [ ] Implement
 - [ ] Test (vitest `tests/vitest/connectionLayout.spec.js` for a stable layered layout)
+- Progress: `src/utils/connectionLayout.js` (senders left, receivers right, the rest in the middle, each column by name; edges from the sender, labelled with the transport type) and `tests/vitest/connectionLayout.spec.js`, including the same positions whatever the row order. Left: `ConnectionsDiagram.vue` on `CnGraphCanvas` and the Diagram toggle in `src/manifest.d/connections.json`.
 
 ### Task 3: Downloads from the map
 - **spec_ref**: openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-003-a-user-can-download-an-applications-map-and-its-links
@@ -28,6 +29,7 @@
   - GIVEN the same map WHEN the user picks Download as SVG THEN an SVG with the drawn nodes downloads
 - [ ] Implement
 - [ ] Test (vitest `tests/vitest/connectionExport.spec.js` for CSV columns and escaping)
+- Progress: `src/utils/connectionExport.js` (CSV with the five columns, RFC 4180 quoting and formula neutralising; a standalone SVG document from the drawn element; a download helper) and `tests/vitest/connectionExport.spec.js`. Left: the action menu on `ConnectionMapWidget.vue`, which Task 1 builds, and PNG.
 
 ### Task 4: Connections in the organisation ArchiMate export
 - **spec_ref**: openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-004-the-organisation-archimate-export-can-carry-the-organisations-connections
