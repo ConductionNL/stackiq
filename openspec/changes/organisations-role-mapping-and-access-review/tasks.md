@@ -10,7 +10,7 @@
   - GIVEN an admin WHEN they save Gebruik-beheerder onto Inkoop and an interval of 180 days THEN the config returns both
   - GIVEN a non-admin WHEN they read or write the config THEN they get 403
 - [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Service/RoleGroupMapTest.php and tests/Unit/Controller/SettingsControllerUserGroupsTest.php)
+- [x] Test (PHPUnit tests/Unit/Service/RoleGroupMapTest.php and tests/Unit/Controller/SettingsControllerUserGroupsTest.php)
 
 ### Task 2: Keep role groups in step and fix the two broken paths
 - **spec_ref**: openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
@@ -20,8 +20,8 @@
   - GIVEN a person who no longer derives a role WHEN the sync runs THEN they leave that role group and keep every non-role group
   - GIVEN a Supplier contact without roles WHEN their account is created THEN they are in aanbod-beheerder
   - GIVEN the old updateGemeenteGroups() WHEN the code is searched THEN it is gone
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Service/RoleGrantSyncTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Service/RoleGrantSyncTest.php)
 
 ### Task 3: Run the sync at sign-in, on changes and nightly, after a safe upgrade
 - **spec_ref**: openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
@@ -41,8 +41,8 @@
   - GIVEN a functional administrator WHEN they list their own organisation THEN each row carries roles with sources, last sign-in, enabled, reviewed at and by, and due
   - GIVEN another organisation WHEN they list it THEN they get 403, and a Nextcloud admin gets 200
   - GIVEN their own contact person WHEN they confirm it THEN the endpoint refuses
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Controller/AccessReviewControllerTest.php and tests/Unit/Settings/AccessReviewDeclarationTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Controller/AccessReviewControllerTest.php and tests/Unit/Settings/AccessReviewDeclarationTest.php)
 
 ### Task 5: Add the Access review page under Organisations
 - **spec_ref**: openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-003-a-functional-administrator-shall-review-the-access-of-their-organisations-people

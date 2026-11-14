@@ -44,6 +44,10 @@
             "description": "Controller for handling offered usage (aangeboden gebruik) API operations"
         },
         {
+            "name": "access-review",
+            "description": "Review, per organisation, who holds which catalogue role and confirm or withdraw it"
+        },
+        {
             "name": "cmdb-import",
             "description": "CMDB import and cancel, for Nextcloud admins only and CSRF-protected"
         },
@@ -493,6 +497,181 @@
                         }
                     }
                 ]
+            }
+        },
+        "/access-review/{contactPersonId}/confirm": {
+            "post": {
+                "operationId": "access-review-confirm",
+                "summary": "Keep access: record that the reviewer confirmed the person's access now",
+                "description": "Keep access: writes accessReviewedAt and accessReviewedBy on the contact person through OpenRegister. A reviewer cannot confirm their own access.",
+                "tags": [
+                    "access-review"
+                ],
+                "parameters": [
+                    {
+                        "name": "contactPersonId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The contact person under review.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The recorded review.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/access-review/{contactPersonId}/withdraw": {
+            "post": {
+                "operationId": "access-review-withdraw",
+                "summary": "Remove role: take a role off the person's contact person and out of its role group",
+                "description": "Remove role: removes the role from the contact person's roles, records the review, and takes the person out of the role group when no other source still grants the role. A role that comes from a mapped group or the organisation type is refused with 409 naming its source. A reviewer cannot change their own access.",
+                "tags": [
+                    "access-review"
+                ],
+                "parameters": [
+                    {
+                        "name": "contactPersonId",
+                        "in": "path",
+                        "required": true,
+                        "description": "The contact person under review.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "role"
+                                ],
+                                "properties": {
+                                    "role": {
+                                        "type": "string",
+                                        "description": "The catalogue role to remove, such as Gebruik-beheerder."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The withdrawal.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/access-review/{organisationUuid}": {
+            "get": {
+                "operationId": "access-review-index",
+                "summary": "The people of an organisation who have an account, with their roles, sources and review state",
+                "description": "The people of an organisation who have an account, with their roles and where each comes from, last sign-in, whether the account is enabled, when their access was last reviewed and by whom, and whether a review is due. A Nextcloud admin may review any organisation; a member of functioneel-beheerder or organisatie-beheerder only their own active organisation. Refused before any read.",
+                "tags": [
+                    "access-review"
+                ],
+                "parameters": [
+                    {
+                        "name": "organisationUuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The organisation to review.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The review rows.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
             }
         },
         "/amef/config": {

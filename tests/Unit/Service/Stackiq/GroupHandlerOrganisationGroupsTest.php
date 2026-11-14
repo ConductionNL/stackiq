@@ -43,7 +43,6 @@ use RuntimeException;
  * Putting a contact person's user in their organisation's group, and the group configuration and listing.
  *
  * @covers \OCA\Stackiq\Service\Stackiq\GroupHandler
- * @uses   \OCA\Stackiq\Service\Stackiq\RoleGroupMembership
  */
 class GroupHandlerOrganisationGroupsTest extends TestCase {
 	/**
@@ -262,16 +261,15 @@ class GroupHandlerOrganisationGroupsTest extends TestCase {
 		$this->objectService->expects($this->never())->method('find');
 
 		$this->handler()->updateOrganizationGroups($this->user(), ['organisation' => 'org-1']);
-		$this->handler()->updateGemeenteGroups($this->user(), ['organisation' => 'org-1']);
 
 		self::assertSame(
-			['Register or schema ID not configured for organisatie.', 'Register or schema ID not configured for organisatie.'],
+			['Register or schema ID not configured for organisatie.'],
 			$this->messages('warning')
 		);
 	}
 
 	/**
-	 * Without OpenRegister both organisation steps log their failure instead of throwing.
+	 * Without OpenRegister the organisation step logs its failure instead of throwing.
 	 *
 	 * @return void
 	 */
@@ -279,30 +277,26 @@ class GroupHandlerOrganisationGroupsTest extends TestCase {
 		$this->openRegister = false;
 
 		$this->handler()->updateOrganizationGroups($this->user(), ['organisation' => 'org-1']);
-		$this->handler()->updateGemeenteGroups($this->user(), ['organisation' => 'org-1']);
 
 		self::assertSame(
-			[
-				'Failed to process organization group: OpenRegister service is not available.',
-				'Failed to process gemeente group: OpenRegister service is not available.',
-			],
+			['Failed to process organization group: OpenRegister service is not available.'],
 			$this->messages('error')
 		);
 	}
 
 	/**
-	 * A user from a gemeente is noted but gets no automatic group.
+	 * The gemeente step, which did nothing since the organisation types became English, is gone.
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
 	 *
 	 * @return void
 	 */
-	public function testAGemeenteUserIsOnlyNoted(): void {
-		$this->groupManager->expects($this->never())->method('get');
-		$this->organisationLookup(['id' => 'org-1', 'soort' => 'Gemeente']);
-
-		$this->handler()->updateGemeenteGroups($this->user(), ['organisation' => 'org-1']);
-		$this->handler()->updateGemeenteGroups($this->user(), []);
-
-		self::assertSame(['User from gemeente organization (no automatic ambtenaar group assignment)'], $this->messages('debug'));
+	public function testTheGemeenteStepIsGone(): void {
+		self::assertFalse(method_exists(GroupHandler::class, 'updateGemeenteGroups'));
+		self::assertStringNotContainsString(
+			'updateGemeenteGroups',
+			(string) file_get_contents(__DIR__ . '/../../../../lib/Service/Stackiq/GroupHandler.php')
+		);
 	}
 
 	/**

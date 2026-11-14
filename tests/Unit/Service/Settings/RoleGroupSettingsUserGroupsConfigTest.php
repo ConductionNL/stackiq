@@ -71,8 +71,12 @@ class RoleGroupSettingsUserGroupsConfigTest extends TestCase {
 				'superUser' => ['admin', 'software-catalog-admins'],
 				'allGroups' => [],
 			],
-			$answer['config']
+			array_intersect_key($answer['config'], array_flip(['generic', 'organizationAdmin', 'superUser', 'allGroups']))
 		);
+		// The catalogue role mapping rides along (organisations-role-mapping-and-access-review).
+		$this->assertSame(array_keys(\OCA\Stackiq\Service\RoleGroupMap::ROLES), array_keys($answer['config']['roleMapping']));
+		$this->assertSame(\OCA\Stackiq\Service\RoleGroupMap::DEFAULT_ORGANISATION_TYPE_ROLES, $answer['config']['organisationTypeRoles']);
+		$this->assertSame(365, $answer['config']['accessReviewIntervalDays']);
 		$this->assertIsInt($answer['timestamp']);
 	}//end testTheDefaultsAreAnswered()
 

@@ -25,6 +25,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service\Stackiq;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Service\RoleGrantSync;
+use OCA\Stackiq\Service\RoleGroupMap;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -54,6 +56,8 @@ use RuntimeException;
  * user exists, that the caller is allowed to change that membership, and that the derived
  * organisation groups stay consistent — and each of those has to fail closed rather than silently
  * no-op. The branching is authorization checking, which is exactly where it belongs in view.
+ *
+ * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
  */
 class GroupHandler {
 	/**
@@ -88,6 +92,9 @@ class GroupHandler {
 	 * @param ContainerInterface $_container Container interface
 	 * @param IAppManager $_appManager App manager interface
 	 * @param LoggerInterface $_logger Logger interface
+	 * @param RoleGrantSync|null $_roleGrantSync Keeps the role groups in step; null builds it on first use.
+	 *
+	 * @spec openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
 	 */
 	public function __construct(
 		private readonly IGroupManager $_groupManager,
@@ -96,8 +103,27 @@ class GroupHandler {
 		private readonly ContainerInterface $_container,
 		private readonly IAppManager $_appManager,
 		private readonly LoggerInterface $_logger,
+		private ?RoleGrantSync $_roleGrantSync = null,
 	) {
 	}//end __construct()
+
+	/**
+	 * The role sync, built from this handler's own collaborators when none was injected.
+	 *
+	 * @return RoleGrantSync The role sync.
+	 */
+	private function roleGrantSync(): RoleGrantSync {
+		if ($this->_roleGrantSync === null) {
+			$this->_roleGrantSync = new RoleGrantSync(
+				roleGroupMap: new RoleGroupMap(appConfig: $this->_appConfig),
+				groupManager: $this->_groupManager,
+				registerConfig: $this->_container->get(RegisterConfigReaderInterface::class),
+				logger: $this->_logger
+			);
+		}
+
+		return $this->_roleGrantSync;
+	}//end roleGrantSync()
 
 	/**
 	 * Gets the OpenRegister ObjectService if available
@@ -281,9 +307,6 @@ class GroupHandler {
 			// Handle organization groups.
 			$this->updateOrganizationGroups(user: $user, objectData: $objectData);
 
-			// Handle special gemeente groups.
-			$this->updateGemeenteGroups(user: $user, objectData: $objectData);
-
 			$this->_logger->info(
 				'Updated user groups successfully',
 				[
@@ -305,153 +328,31 @@ class GroupHandler {
 	/**
 	 * Updates role-based groups for a user
 	 *
+	 * Delegates to RoleGrantSync, the one role service every path uses: the
+	 * user ends up in exactly the role groups of the roles they derive from
+	 * their contact person's `roles`, their mapped groups and their
+	 * organisation's type, compared without regard to case. Only the role
+	 * groups RoleGroupMap names are changed, never a generic or other group.
+	 *
 	 * @param IUser $user The user to update
 	 * @param array $objectData The contactpersoon data
 	 *
 	 * @return void
 	 * @spec   openspec/specs/sc-handlers/spec.md
+	 * @spec   openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-002-a-person-shall-be-in-exactly-the-role-groups-of-the-roles-they-derive
 	 */
 	public function updateRoleBasedGroups(IUser $user, array $objectData): void {
-		$userRoles = self::rolesOf(objectData: $objectData);
+		$changes = $this->roleGrantSync()->sync(user: $user, contactPerson: $objectData);
 
 		$this->_logger->info(
-			'Updating role-based groups for user',
+			'Updated role-based groups for user',
 			[
 				'username' => $user->getUID(),
-				'userRoles' => $userRoles,
+				'added' => $changes['added'],
+				'removed' => $changes['removed'],
 			]
 		);
-
-		$userRolesLower = self::lowerCaseRoles(roles: $userRoles);
-
-		// Get the configured generic user groups.
-		foreach ($this->getGenericUserGroups() as $groupName) {
-			$this->updateRoleGroup(membership: $this->roleGroupMembership(user: $user, groupName: $groupName), userRolesLower: $userRolesLower);
-		}
 	}//end updateRoleBasedGroups()
-
-	/**
-	 * The roles of a contactpersoon.
-	 *
-	 * @param array $objectData The contactpersoon data.
-	 *
-	 * @return array The roles, or [] when they are missing or not a list.
-	 */
-	private static function rolesOf(array $objectData): array {
-		$userRoles = $objectData['roles'] ?? [];
-		if (is_array($userRoles) === false) {
-			return [];
-		}
-
-		return $userRoles;
-	}//end rolesOf()
-
-	/**
-	 * Role names are compared without regard to case: the roles enum is
-	 * capitalised (Aanbod-beheerder) while the role groups are lower case
-	 * (aanbod-beheerder), stackiq#1137.
-	 *
-	 * @param array $roles The roles.
-	 *
-	 * @return array The roles, trimmed and lower-cased.
-	 */
-	private static function lowerCaseRoles(array $roles): array {
-		return array_map(
-			static function ($role): string {
-				return strtolower(trim((string)$role));
-			},
-			$roles
-		);
-	}//end lowerCaseRoles()
-
-	/**
-	 * The user's membership of a role-based group, creating the group when it does not exist.
-	 *
-	 * @param IUser $user      The user.
-	 * @param mixed $groupName The configured group name.
-	 *
-	 * @return RoleGroupMembership|null The membership, or null when the group cannot be created.
-	 */
-	private function roleGroupMembership(IUser $user, mixed $groupName): ?RoleGroupMembership {
-		$group = $this->createGroupIfNotExists(groupName: $groupName);
-		if ($group === null) {
-			return null;
-		}
-
-		$membership = new RoleGroupMembership();
-		$membership->user = $user;
-		$membership->groupName = $groupName;
-		$membership->group = $group;
-		return $membership;
-	}//end roleGroupMembership()
-
-	/**
-	 * Add the user to the group when they hold its role, remove them when they no longer do.
-	 *
-	 * @param RoleGroupMembership|null $membership     The membership, or null when the group is not available.
-	 * @param array                    $userRolesLower The user's roles, trimmed and lower-cased.
-	 *
-	 * @return void
-	 */
-	private function updateRoleGroup(?RoleGroupMembership $membership, array $userRolesLower): void {
-		if ($membership === null) {
-			return;
-		}
-
-		$hasRole = in_array(needle: strtolower(trim($membership->groupName)), haystack: $userRolesLower, strict: true);
-		$inGroup = $membership->group->inGroup($membership->user);
-		if ($hasRole === $inGroup) {
-			return;
-		}
-
-		if ($hasRole === true) {
-			$this->addToRoleGroup(membership: $membership);
-			return;
-		}
-
-		$this->removeFromRoleGroup(membership: $membership);
-	}//end updateRoleGroup()
-
-	/**
-	 * Add the user to a role-based group.
-	 *
-	 * @param RoleGroupMembership $membership The membership.
-	 *
-	 * @return void
-	 */
-	private function addToRoleGroup(RoleGroupMembership $membership): void {
-		$membership->group->addUser($membership->user);
-		$this->_logger->info(
-			'Added user to role-based group',
-			[
-				'username' => $membership->user->getUID(),
-				'group' => $membership->groupName,
-				'role' => $membership->groupName,
-			]
-		);
-	}//end addToRoleGroup()
-
-	/**
-	 * Remove the user from a role-based group (except for system groups).
-	 *
-	 * Note: Removed 'ambtenaar' from protected groups since it's no longer automatically assigned.
-	 *
-	 * @param RoleGroupMembership $membership The membership.
-	 *
-	 * @return void
-	 */
-	private function removeFromRoleGroup(RoleGroupMembership $membership): void {
-		if (in_array(needle: $membership->groupName, haystack: ['software-catalog-users']) === false) {
-			$membership->group->removeUser($membership->user);
-			$this->_logger->info(
-				'Removed user from role-based group',
-				[
-					'username' => $membership->user->getUID(),
-					'group' => $membership->groupName,
-				]
-			);
-		}
-	}//end removeFromRoleGroup()
 
 	/**
 	 * Updates organization-based groups for a user
@@ -561,54 +462,6 @@ class GroupHandler {
 		);
 
 	}//end assignOrganizationGroup()
-
-	/**
-	 * Updates gemeente-specific groups for a user
-	 *
-	 * @param IUser $user The user to update
-	 * @param array $objectData The contactpersoon data
-	 *
-	 * @return void
-	 * @spec   openspec/specs/sc-handlers/spec.md
-	 */
-	public function updateGemeenteGroups(IUser $user, array $objectData): void {
-		$organizationUuid = $objectData['organisation'] ?? $objectData['organization'] ?? '';
-
-		if (empty($organizationUuid) === true) {
-			return;
-		}
-
-		try {
-			$orgData = $this->resolveOrganisationData(organisationUuid: $organizationUuid);
-			if ($orgData === null) {
-				return;
-			}
-
-			$actualUuid = $orgData['id'] ?? $organizationUuid;
-			$orgType = strtolower($orgData['type'] ?? $orgData['soort'] ?? '');
-
-			// Note: Removed automatic assignment of 'ambtenaar' group for gemeente organizations.
-			// The 'ambtenaar' group can still be created if needed, but users are not automatically assigned.
-			if ($orgType === 'gemeente') {
-				$this->_logger->debug(
-					'User from gemeente organization (no automatic ambtenaar group assignment)',
-					[
-						'username' => $user->getUID(),
-						'organizationUuid' => $actualUuid,
-						'organizationType' => $orgType,
-					]
-				);
-			}
-		} catch (\Exception $e) {
-			$this->_logger->error(
-				'Failed to process gemeente group: ' . $e->getMessage(),
-				[
-					'username' => $user->getUID(),
-					'organizationUuid' => $organizationUuid,
-				]
-			);
-		}//end try
-	}//end updateGemeenteGroups()
 
 	/**
 	 * Gets all available groups with their information
