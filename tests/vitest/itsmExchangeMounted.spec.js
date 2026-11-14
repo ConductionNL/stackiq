@@ -118,13 +118,29 @@ describe('ItsmExchange mounted', () => {
 		await wrapper.find('[data-testid="setup"]').trigger('click')
 		await flushPromises()
 		expect(api.calls.slice(1)).toEqual([
-			['itsm/setup', { method: 'POST', body: { desk: 'topdesk', organisation: 'o1', templateId: 'tpl-9' } }],
+			['itsm/setup', { method: 'POST', body: { desk: 'topdesk', organisation: 'o1', templateId: 'tpl-9', threshold: 'In production' } }],
 			['itsm/config'],
 		])
 		expect(dialogs.showSuccess).toHaveBeenCalledWith('2 flows are set up. The first import runs tonight.')
 		const date = new Date('2026-05-01T10:00:00Z').toLocaleDateString()
 		expect(notes(wrapper)).toEqual([['success', `Set up for TOPdesk on ${date}. The import runs every night at 02:00.`]])
 		expect(wrapper.find('[data-testid="setup"]').text()).toBe('Set up again')
+	})
+
+	it('offers the lifecycle states, preselects the stored threshold and posts the chosen one (REQ-PLAT-004)', async () => {
+		api.config = { desks: DESKS, enabled: true, desk: 'servicenow', organisation: 'o1', setUpAt: '2026-03-02T08:00:00Z', threshold: 'Planned', thresholds: ['Acquisition', 'Planned', 'In production', 'To be phased out', 'Phased out'] }
+		api.setup = { flows: { a: 1 } }
+		const wrapper = await mountSection()
+		const select = wrapper.find('[data-label="Send only from lifecycle state"]')
+		expect(select.attributes('data-options')).toBe('5')
+		expect(wrapper.vm.threshold).toEqual({ id: 'Planned', label: 'Planned' })
+
+		await select.setValue('4')
+		await wrapper.find('[data-testid="setup"]').trigger('click')
+		await flushPromises()
+		expect(api.calls.slice(1, 2)).toEqual([
+			['itsm/setup', { method: 'POST', body: { desk: 'servicenow', organisation: 'o1', templateId: '', threshold: 'Phased out' } }],
+		])
 	})
 
 	it('renders an existing set-up preselected, and the refusal after a failed set-up', async () => {

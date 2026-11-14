@@ -1399,6 +1399,8 @@
         "Software catalogue": "Softwarecatalogus",
         "Shared": "Gedeeld",
         "{name}, shared by {partner}": "{name}, gedeeld door {partner}",
-        "+{count} more": "+{count} meer"
+        "+{count} more": "+{count} meer",
+        "Send only from lifecycle state": "Pas versturen vanaf levenscyclusstatus",
+        "An application in an earlier lifecycle state stays in stackiq; it goes to the service desk once it reaches this state.": "Een applicatie in een eerdere levenscyclusstatus blijft in stackiq; ze gaat naar de servicedesk zodra ze deze status bereikt."
     }
 }

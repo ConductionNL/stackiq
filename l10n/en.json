@@ -1331,6 +1331,8 @@
         "Software catalogue": "Software catalogue",
         "Shared": "Shared",
         "{name}, shared by {partner}": "{name}, shared by {partner}",
-        "+{count} more": "+{count} more"
+        "+{count} more": "+{count} more",
+        "Send only from lifecycle state": "Send only from lifecycle state",
+        "An application in an earlier lifecycle state stays in stackiq; it goes to the service desk once it reaches this state.": "An application in an earlier lifecycle state stays in stackiq; it goes to the service desk once it reaches this state."
     }
 }

@@ -111,6 +111,22 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 	];
 
 	/**
+	 * The lifecycle states of an application in use, in the order it passes them.
+	 *
+	 * @var list<string>
+	 *
+	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
+	 */
+	public const LIFECYCLE_STATES = ['Acquisition', 'Planned', 'In production', 'To be phased out', 'Phased out'];
+
+	/**
+	 * The lifecycle state from which an application goes out when none was chosen: in use.
+	 *
+	 * @var string
+	 */
+	public const DEFAULT_THRESHOLD = 'In production';
+
+	/**
 	 * The flows the set-up creates: key => template file, feed and preset suffix.
 	 *
 	 * @var array<string, array{template: string, feed: string, preset: string, contractType?: string, feedLabel?: string}>
@@ -178,8 +194,46 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 			'flows'        => ($config['flows'] ?? []),
 			'setUpAt'      => ($config['setUpAt'] ?? null),
 			'desks'        => $desks,
+			'threshold'    => $this->storedThreshold(config: $config),
+			'thresholds'   => self::LIFECYCLE_STATES,
 		];
 	}//end status()
+
+	/**
+	 * The lifecycle states an application is sent from, given the threshold: it and every later one.
+	 *
+	 * @param string $threshold The first lifecycle state that is sent.
+	 *
+	 * @return list<string> The states sent, in lifecycle order.
+	 *
+	 * @throws InvalidArgumentException When the threshold is no lifecycle state.
+	 *
+	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
+	 */
+	public static function sentStates(string $threshold): array {
+		$position = array_search($threshold, self::LIFECYCLE_STATES, true);
+		if ($position === false) {
+			throw new InvalidArgumentException('Unknown lifecycle state "' . $threshold . '". Choose one of: ' . implode(', ', self::LIFECYCLE_STATES) . '.');
+		}
+
+		return array_slice(self::LIFECYCLE_STATES, $position);
+	}//end sentStates()
+
+	/**
+	 * The threshold the stored set-up holds, or the default for a set-up from before there was one.
+	 *
+	 * @param array<string, mixed> $config The stored set-up.
+	 *
+	 * @return string The threshold.
+	 */
+	private function storedThreshold(array $config): string {
+		$threshold = ($config['threshold'] ?? null);
+		if (is_string($threshold) === true && in_array($threshold, self::LIFECYCLE_STATES, true) === true) {
+			return $threshold;
+		}
+
+		return self::DEFAULT_THRESHOLD;
+	}//end storedThreshold()
 
 	/**
 	 * Fill every template for one desk and one organisation.
@@ -189,17 +243,28 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 	 * @param string $runAs        The user the scheduled imports run as.
 	 * @param string $location     The desk source's location; its scheme and host make the record links.
 	 * @param string $templateId   The desk's asset template for a new record (TOPdesk needs one), or empty.
+	 * @param string $threshold    The lifecycle state from which the outbound flow sends an application.
 	 *
 	 * @return array<string, array<string, mixed>> The filled flow documents, by flow key.
 	 *
-	 * @throws InvalidArgumentException When the desk is unknown or a template is missing.
+	 * @throws InvalidArgumentException When the desk or the threshold is unknown, or a template is missing.
 	 *
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
+	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 	 */
-	public function buildFlows(string $desk, string $organisation, string $runAs, string $location, string $templateId = ''): array {
+	public function buildFlows(
+		string $desk,
+		string $organisation,
+		string $runAs,
+		string $location,
+		string $templateId = '',
+		string $threshold = self::DEFAULT_THRESHOLD
+	): array {
 		if (isset(self::DESKS[$desk]) === false) {
 			throw new InvalidArgumentException('Unknown service desk "' . $desk . '". Choose one of: ' . implode(', ', array_keys(self::DESKS)) . '.');
 		}
+
+		$sentStates = self::sentStates(threshold: $threshold);
 
 		$profile = self::DESKS[$desk];
 		$appUrl  = rtrim($this->urlGenerator->getAbsoluteURL('/index.php/apps/' . AppIdentity::APP_ID), '/');
@@ -233,6 +298,7 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 				'DESK_BASE'       => $base,
 				'TEMPLATE_ID'     => $templateId,
 				'CALL_QUERY'      => $profile['callQuery'],
+				'SENT_STATES'     => $sentStates,
 			];
 			if ($key === 'file') {
 				$values['SYNC']   = 'itsm-file-applications';
@@ -260,12 +326,24 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 	 * @param string $organisation The uuid of the organisation whose applications are exchanged.
 	 * @param string $runAs        The user the scheduled imports run as.
 	 * @param string $templateId   The desk's asset template for new records, when the desk needs one.
+	 * @param string $threshold    The lifecycle state from which applications are sent; empty keeps the stored one.
 	 *
 	 * @return array<string, mixed> `created`, and either `flows` or `blocking` per flow key.
 	 *
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
+	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 	 */
-	public function setUp(string $desk, string $organisation, string $runAs, string $templateId = ''): array {
+	public function setUp(string $desk, string $organisation, string $runAs, string $templateId = '', string $threshold = ''): array {
+		if ($threshold === '') {
+			$threshold = $this->storedThreshold(config: $this->config());
+		}
+
+		if (in_array($threshold, self::LIFECYCLE_STATES, true) === false) {
+			return $this->refuse(
+				message: 'Nothing was created. "' . $threshold . '" is no lifecycle state; choose one of: ' . implode(', ', self::LIFECYCLE_STATES) . '.'
+			);
+		}
+
 		$found = $this->preconditions(desk: $desk, organisation: $organisation);
 		if (is_string($found) === true) {
 			return $this->refuse(message: $found);
@@ -280,7 +358,8 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 				organisation: $organisation,
 				runAs: $runAs,
 				location: (string) ($found['source']['location'] ?? ''),
-				templateId: $templateId
+				templateId: $templateId,
+				threshold: $threshold
 			);
 
 			$blocking = $this->blockingFindings(flows: $flows);
@@ -307,18 +386,18 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 			}
 		} catch (Throwable $e) {
 			$this->logger->error('[ItsmExchangeService] Saving the exchange flows failed', ['exception' => $e]);
-			$this->storeConfig(desk: $desk, organisation: $organisation, flows: array_merge($stored, $saved));
+			$this->storeConfig(desk: $desk, organisation: $organisation, flows: array_merge($stored, $saved), threshold: $threshold);
 			return $this->refuse(message: 'Saving the flows failed after ' . count($saved) . ' of ' . count($flows) . ': ' . $e->getMessage());
 		}
 
-		$this->storeConfig(desk: $desk, organisation: $organisation, flows: $saved);
+		$this->storeConfig(desk: $desk, organisation: $organisation, flows: $saved, threshold: $threshold);
 		$this->appConfig->setValueBool(AppIdentity::APP_ID, self::ENABLED_KEY, true);
 		$this->connectionReports?->itsmSetUp(
 			created: true,
 			message: count($saved) . ' flows set up for ' . self::DESKS[$desk]['label'] . '. The first import runs tonight.'
 		);
 
-		return ['created' => true, 'desk' => $desk, 'flows' => $saved];
+		return ['created' => true, 'desk' => $desk, 'threshold' => $threshold, 'flows' => $saved];
 	}//end setUp()
 
 	/**
@@ -545,14 +624,23 @@ class ItsmExchangeService implements ItsmExchangeServiceInterface {
 	 * @param string                $desk         The desk key.
 	 * @param string                $organisation The organisation uuid.
 	 * @param array<string, string> $flows        The flow uuids by key.
+	 * @param string                $threshold    The lifecycle state from which applications are sent.
 	 *
 	 * @return void
 	 */
-	private function storeConfig(string $desk, string $organisation, array $flows): void {
+	private function storeConfig(string $desk, string $organisation, array $flows, string $threshold): void {
 		$this->appConfig->setValueString(
 			AppIdentity::APP_ID,
 			self::CONFIG_KEY,
-			(string) json_encode(['desk' => $desk, 'organisation' => $organisation, 'flows' => $flows, 'setUpAt' => date(DATE_ATOM)])
+			(string) json_encode(
+				[
+					'desk'         => $desk,
+					'organisation' => $organisation,
+					'flows'        => $flows,
+					'threshold'    => $threshold,
+					'setUpAt'      => date(DATE_ATOM),
+				]
+			)
 		);
 	}//end storeConfig()
 

@@ -1,7 +1,7 @@
 {
   "name": "Service desk export: applications in use (%DESK_LABEL%)",
   "app": "stackiq",
-  "description": "Sends an application in use to the service desk when stackiq-owned fields change: licences, contract, BBN level, TIME class and publication. A record the service desk does not know yet is created there with every field, and its record id comes back. A change the import wrote is not sent back.",
+  "description": "Sends an application in use to the service desk when stackiq-owned fields change: licences, contract, BBN level, TIME class and publication. A record the service desk does not know yet is created there with every field, and its record id comes back. A change the import wrote is not sent back. An application goes out only from the lifecycle state the administrator chose (REQ-PLAT-004): its status must be one of the states the filter node `ours` lists.",
   "trigger": "object.updated",
   "triggerRegister": "%REGISTER%",
   "triggerSchema": "usage",
@@ -46,6 +46,14 @@
               "!!": {
                 "var": "json.module"
               }
+            },
+            {
+              "in": [
+                {
+                  "var": "json.status"
+                },
+                "%SENT_STATES%"
+              ]
             }
           ]
         }

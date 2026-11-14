@@ -65,6 +65,21 @@
 			<NcNoteCard v-if="organisationLoadError" type="warning">
 				{{ organisationLoadError }}
 			</NcNoteCard>
+			<NcSelect
+				v-model="threshold"
+				:options="thresholdOptions"
+				label="label"
+				:clearable="false"
+				:inputLabel="t('stackiq', 'Send only from lifecycle state')"
+				:placeholder="t('stackiq', 'In production')" />
+			<p class="help-text">
+				{{
+					t(
+						'stackiq',
+						'An application in an earlier lifecycle state stays in stackiq; it goes to the service desk once it reaches this state.',
+					)
+				}}
+			</p>
 			<NcTextField
 				v-if="desk && desk.id === 'topdesk'"
 				v-model="templateId"
@@ -173,10 +188,31 @@ export default defineComponent({
 			organisation: null,
 			refusal: '',
 			templateId: '',
+			threshold: null,
 		}
 	},
 
 	computed: {
+		/**
+		 * The lifecycle states the outbound flow can send from, in lifecycle order.
+		 *
+		 * @return {Array<{id: string, label: string}>} Options.
+		 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
+		 */
+		thresholdOptions() {
+			const labels = {
+				Acquisition: t('stackiq', 'Acquisition'),
+				Planned: t('stackiq', 'Planned'),
+				'In production': t('stackiq', 'In production'),
+				'To be phased out': t('stackiq', 'To be phased out'),
+				'Phased out': t('stackiq', 'Phased out'),
+			}
+			const states = this.status.thresholds?.length
+				? this.status.thresholds
+				: Object.keys(labels)
+			return states.map((state) => ({ id: state, label: labels[state] || state }))
+		},
+
 		/**
 		 * @return {string} The label of the desk that is set up.
 		 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
@@ -224,6 +260,10 @@ export default defineComponent({
 				this.organisation =
 					this.organisations.find(
 						(org) => org.id === this.status.organisation,
+					) || null
+				this.threshold =
+					this.thresholdOptions.find(
+						(option) => option.id === (this.status.threshold || 'In production'),
 					) || null
 			} catch (error) {
 				this.refusal = error.message
@@ -295,6 +335,7 @@ export default defineComponent({
 						desk: this.desk.id,
 						organisation: this.organisation.id,
 						templateId: this.templateId,
+						threshold: this.threshold?.id || '',
 					},
 				})
 				showSuccess(

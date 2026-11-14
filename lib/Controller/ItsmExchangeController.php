@@ -106,21 +106,29 @@ class ItsmExchangeController extends Controller {
 	 * @param string $desk         The desk key.
 	 * @param string $organisation The organisation uuid.
 	 * @param string $templateId   The desk's asset template for new records (TOPdesk), or empty.
+	 * @param string $threshold    The lifecycle state from which applications are sent; empty keeps the stored one.
 	 *
 	 * @AuthorizedAdminSetting(settings=OCA\Stackiq\Settings\StackiqAdmin)
 	 *
 	 * @return JSONResponse The outcome; 422 when nothing was created.
 	 *
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
+	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 	 */
 	#[AuthorizedAdminSetting(settings: StackiqAdmin::class)]
-	public function setUp(string $desk = '', string $organisation = '', string $templateId = ''): JSONResponse {
+	public function setUp(string $desk = '', string $organisation = '', string $templateId = '', string $threshold = ''): JSONResponse {
 		$user = $this->userSession->getUser();
 		if ($user === null) {
 			return new JSONResponse(['created' => false, 'message' => 'Sign in first.'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$result = $this->exchange->setUp(desk: $desk, organisation: $organisation, runAs: $user->getUID(), templateId: trim($templateId));
+		$result = $this->exchange->setUp(
+			desk: $desk,
+			organisation: $organisation,
+			runAs: $user->getUID(),
+			templateId: trim($templateId),
+			threshold: trim($threshold)
+		);
 		if ($result['created'] !== true) {
 			return new JSONResponse($result, Http::STATUS_UNPROCESSABLE_ENTITY);
 		}

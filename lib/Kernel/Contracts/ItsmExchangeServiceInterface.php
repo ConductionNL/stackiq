@@ -47,12 +47,14 @@ interface ItsmExchangeServiceInterface {
 	 * @param string $organisation The uuid of the organisation whose applications are exchanged.
 	 * @param string $runAs        The user the scheduled imports run as.
 	 * @param string $templateId   The desk's asset template for new records, when the desk needs one.
+	 * @param string $threshold    The lifecycle state from which applications are sent; empty keeps the stored one.
 	 *
 	 * @return array<string, mixed> `created`, and either `flows` or `blocking` per flow key.
 	 *
 	 * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
+	 * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004
 	 */
-	public function setUp(string $desk, string $organisation, string $runAs, string $templateId = ''): array;
+	public function setUp(string $desk, string $organisation, string $runAs, string $templateId = '', string $threshold = ''): array;
 
 	/**
 	 * What is set up today.

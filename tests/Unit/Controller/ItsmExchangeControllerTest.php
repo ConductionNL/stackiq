@@ -133,7 +133,7 @@ class ItsmExchangeControllerTest extends TestCase {
 	}//end testSetUpWithoutAUserIsUnauthorised()
 
 	/**
-	 * Set-up runs as the signed-in user with a trimmed template id.
+	 * Set-up runs as the signed-in user with a trimmed template id and lifecycle threshold (REQ-PLAT-004).
 	 *
 	 * @return void
 	 */
@@ -142,10 +142,10 @@ class ItsmExchangeControllerTest extends TestCase {
 		$user->method('getUID')->willReturn('beheerder');
 		$this->session->method('getUser')->willReturn($user);
 		$this->exchange->expects($this->once())->method('setUp')
-			->with('servicedesk', 'org-1', 'beheerder', 'tpl-9')
+			->with('servicedesk', 'org-1', 'beheerder', 'tpl-9', 'Planned')
 			->willReturn(['created' => true, 'desk' => 'servicedesk']);
 
-		$response = $this->controller()->setUp('servicedesk', 'org-1', '  tpl-9 ');
+		$response = $this->controller()->setUp('servicedesk', 'org-1', '  tpl-9 ', ' Planned ');
 
 		$this->assertSame(expected: Http::STATUS_OK, actual: $response->getStatus());
 		$this->assertSame(expected: ['created' => true, 'desk' => 'servicedesk'], actual: $response->getData());

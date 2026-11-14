@@ -44,8 +44,10 @@
   - GIVEN the exchange settings WHEN they render THEN a select "Send only from lifecycle state" lists the usage lifecycle states, default "In gebruik"
   - GIVEN a chosen state WHEN the administrator saves THEN `ItsmExchangeService::buildFlows()` writes it into the filter node of the outbound template and the stored config keeps it
   - GIVEN an application in use below the threshold WHEN it is saved THEN the outbound flow does not send it
-- [ ] Implement
-- [ ] Test (PHPUnit `ItsmExchangeLifecycleThresholdTest`)
+- [x] Implement
+  - Done. The usage lifecycle is Acquisition, Planned, In production ("In gebruik"), To be phased out, Phased out; the threshold sends that state and every later one. `buildFlows()` fills `%SENT_STATES%` into an `in` condition of the outbound template's `ours` filter node, `setUp()` takes the threshold (empty keeps the stored one, an unknown state creates nothing), and the stored set-up and `status()` keep it. The section offers the states in a select, default In production.
+- [x] Test (PHPUnit `ItsmExchangeLifecycleThresholdTest`)
+  - 7 tests: the states sent, a refused unknown state, the default keeping a planned application home (the filter is evaluated against usage payloads), only the outbound flow carrying it, a chosen threshold published and stored, a second set-up keeping it, and an unknown one creating nothing; plus the controller passing it through and the section posting it (vitest).
 
 ### Task 5: Webhooks section in the exchange settings (board SkInstellingenUitwisseling)
 - **spec_ref**: openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-another-system-is-notified-when-a-catalogue-entry-changes-req-plat-005
