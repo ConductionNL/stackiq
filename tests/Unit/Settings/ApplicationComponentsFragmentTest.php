@@ -96,4 +96,28 @@ class ApplicationComponentsFragmentTest extends TestCase {
 		$this->assertSame(['label' => 'All, including components', 'filter' => []], $filters[1]);
 		$this->assertCount(1, array_filter($filters, static fn (array $tab): bool => ($tab['default'] ?? false) === true));
 	}//end testThePagesShowComponents()
+
+	/**
+	 * The demo register holds one application with two components of the same supplier.
+	 *
+	 * @return void
+	 */
+	public function testTheDemoDataHasAnApplicationWithTwoComponents(): void {
+		$mock    = json_decode((string) file_get_contents(__DIR__ . '/../../../lib/Settings/stackiq_mock_register.json'), true);
+		$modules = [];
+		foreach ($mock['components']['objects'] as $object) {
+			if (($object['@self']['schema'] ?? '') === 'module') {
+				$modules[$object['@self']['slug']] = $object;
+			}
+		}
+
+		$parent     = $modules['module-voorbeeld-zaaksysteem'];
+		$components = array_filter($modules, static fn (array $module): bool => ($module['partOf'] ?? null) === '@ref:module-voorbeeld-zaaksysteem');
+
+		$this->assertArrayNotHasKey('partOf', $parent);
+		$this->assertSame(['module-voorbeeld-zaakportaal', 'module-voorbeeld-zaken-api'], array_keys($components));
+		foreach ($components as $component) {
+			$this->assertSame($parent['provider'], $component['provider'], 'a component belongs to the same supplier');
+		}
+	}//end testTheDemoDataHasAnApplicationWithTwoComponents()
 }//end class

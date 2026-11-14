@@ -9,7 +9,7 @@
   - GIVEN component C of application A WHEN A is read THEN its components list holds C
   - GIVEN application A WHEN a user sets A part of A THEN the save is refused with a message
 - [x] Implement
-  - `lib/Settings/register.d/application-components.json` adds `partOf` (related module, `x-relation-filter` on the same provider, `inversedBy: components`) and the computed `components` list. The cycle check is in `ModuleComponentGuard` behind a new `ModuleComponentListener` on `ObjectCreatingEvent`/`ObjectUpdatingEvent`, because `ModuleRegistrationService` runs only after the save. The demo application with two components in the mock register is not seeded yet.
+  - `lib/Settings/register.d/application-components.json` adds `partOf` (related module, `x-relation-filter` on the same provider, `inversedBy: components`) and the computed `components` list. The cycle check is in `ModuleComponentGuard` behind a new `ModuleComponentListener` on `ObjectCreatingEvent`/`ObjectUpdatingEvent`, because `ModuleRegistrationService` runs only after the save. The mock register (1.3.0) seeds the demo application "Voorbeeld Zaaksysteem" with two components of the same supplier, asserted by `ApplicationComponentsFragmentTest::testTheDemoDataHasAnApplicationWithTwoComponents`.
 - [x] Test (PHPUnit `tests/Unit/Settings/ApplicationComponentsFragmentTest.php`; `tests/Unit/Service/ModuleRegistrationServiceTest.php` cycle case if the service check is used)
   - `tests/Unit/Settings/ApplicationComponentsFragmentTest.php`, `tests/Unit/Service/ModuleComponentGuardTest.php`, `tests/Unit/EventListener/ModuleComponentListenerTest.php`.
 
@@ -29,6 +29,7 @@
 - **acceptance_criteria**:
   - GIVEN the docs site WHEN a reader opens Application components THEN recording a component and the list filter are explained with a screenshot
 - [ ] Implement
+  - `docs/features/application-components.md` is written (recording a component, the cycle refusal, the Components list, the list filter, the demo data) and linked from `docs/features/README.md`. Open: the screenshot `docs/images/application-components.png`, which needs a running instance.
 - [ ] Test (docs build, screenshot with Playwright)
 
 ## Verification
