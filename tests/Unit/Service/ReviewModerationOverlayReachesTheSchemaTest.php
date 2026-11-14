@@ -99,6 +99,16 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 		$fragments = glob($root.'/lib/Settings/register.d/*.json');
 		$this->assertNotEmpty($fragments);
 
+		// A fragment may also add a schema of its own, provided it registers it
+		// in a register's schema list (ADR-037); an overlay of a misspelt slug
+		// is registered nowhere and still counts as an orphan.
+		foreach ($fragments as $fragment) {
+			$overlay = json_decode((string)file_get_contents($fragment), true);
+			foreach (($overlay['components']['registers'] ?? []) as $register) {
+				$declared = array_merge($declared, ($register['schemas'] ?? []));
+			}
+		}
+
 		$orphans = [];
 		foreach ($fragments as $fragment) {
 			$overlay = json_decode((string)file_get_contents($fragment), true);
