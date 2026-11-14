@@ -8,7 +8,7 @@
  * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-005-an-owner-shall-save-named-versions-and-compare-two-of-them
  */
 import { describe, expect, it } from 'vitest'
-import { diffViews } from '../../src/utils/viewDiff.js'
+import { describeDiff, diffViews, statusesFor } from '../../src/utils/viewDiff.js'
 
 const node = (id, extra = {}) => ({ viewNodeId: id, parent: null, elementRef: `el-${id}`, x: 0, y: 0, width: 120, height: 55, name: id, type: 'Element', ...extra })
 const link = (id, extra = {}) => ({ viewRelationshipId: id, modelRelationshipId: `rel-${id}`, sourceId: 'a', targetId: 'b', type: 'Relationship', bendpoints: [], ...extra })
@@ -53,5 +53,36 @@ describe('diffViews', () => {
 			expect(diffViews(before, { nodes: [node('a', { [field]: value })] }).nodes.changed[0].fields).toEqual([field])
 		}
 		expect(diffViews(before, { nodes: [node('a', { documentation: 'ignored' })] }).unchanged).toBe(true)
+	})
+})
+
+describe('statusesFor and describeDiff', () => {
+	const before = { nodes: [node('a'), node('b'), node('c')], connections: [link('ab')] }
+	const after = { nodes: [node('a'), node('c', { name: 'Zaaksysteem', x: 40 }), node('d', { name: 'DMS' })], connections: [link('ab', { type: 'Flow' })] }
+
+	it('marks removed and changed on the earlier side, added and changed on the later side', () => {
+		const diff = diffViews(before, after)
+		const earlier = statusesFor(diff, 'before')
+		const later = statusesFor(diff, 'after')
+
+		expect([...earlier.nodes]).toEqual([['b', 'removed'], ['c', 'changed']])
+		expect([...later.nodes]).toEqual([['d', 'added'], ['c', 'changed']])
+		expect([...earlier.connections]).toEqual([['ab', 'changed']])
+		expect(later.nodes.has('a')).toBe(false)
+	})
+
+	it('lists every change once, nodes first, with the changed fields', () => {
+		expect(describeDiff(diffViews(before, after))).toEqual([
+			{ kind: 'node', change: 'added', id: 'd', name: 'DMS', fields: [] },
+			{ kind: 'node', change: 'removed', id: 'b', name: 'b', fields: [] },
+			{ kind: 'node', change: 'changed', id: 'c', name: 'Zaaksysteem', fields: ['name', 'x'] },
+			{ kind: 'connection', change: 'changed', id: 'ab', name: 'Flow', fields: ['type'] },
+		])
+	})
+
+	it('lists nothing for two equal snapshots in a different order', () => {
+		const diff = diffViews(before, { nodes: [...before.nodes].reverse(), connections: before.connections })
+		expect(describeDiff(diff)).toEqual([])
+		expect([...statusesFor(diff, 'after').nodes]).toEqual([])
 	})
 })

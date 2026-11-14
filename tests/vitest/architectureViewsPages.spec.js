@@ -64,4 +64,36 @@ describe('the Views page and the Architecture group', () => {
 		const without = buildManifest(base, load('architecture-views.json'), { ...menuLayout, relocations: { ...menuLayout.relocations, Standaarden: undefined, Views: undefined } })
 		expect(merged.menu.length).toBe(without.menu.length)
 	})
+
+	it('opens a row in the ViewEditor page and creates a view there, not in the generic form', () => {
+		const views = page('Views')
+		expect(views.config.rowRoute).toBe('ViewEditor')
+		expect(views.config.showAdd).toBe(false)
+		expect(views.config.headerActions).toEqual([
+			{ id: 'new-view', label: 'New view', icon: 'Plus', handler: 'navigate', route: 'ViewEditor', params: { id: 'new' } },
+		])
+	})
+
+	it('draws a view at /views/:id and compares its versions at /views/:id/compare', () => {
+		expect(page('ViewEditor')).toMatchObject({
+			route: '/views/:id',
+			type: 'custom',
+			component: 'ArchitectureViewEditor',
+			config: { register: '@resolve:amef_register', schema: 'view' },
+		})
+		expect(page('ViewCompare')).toMatchObject({
+			route: '/views/:id/compare',
+			type: 'custom',
+			component: 'ViewVersionCompare',
+			config: { register: '@resolve:amef_register', schema: 'view' },
+		})
+	})
+
+	it('registers both pages\' components in customComponents.js', () => {
+		const source = fs.readFileSync(path.resolve(__dirname, '../../src/customComponents.js'), 'utf8')
+		for (const name of ['ArchitectureViewEditor', 'ViewVersionCompare']) {
+			expect(source).toMatch(new RegExp(`import ${name} from './views/architecture/${name}\\.vue'`))
+			expect(source).toMatch(new RegExp(`^\\t${name},$`, 'm'))
+		}
+	})
 })

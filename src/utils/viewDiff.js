@@ -86,3 +86,44 @@ export function diffViews(before = {}, after = {}) {
 	const none = (part) => !part.added.length && !part.removed.length && !part.changed.length
 	return { nodes, connections, unchanged: none(nodes) && none(connections) }
 }
+
+/**
+ * The change status of every node and connection on one side of a compare:
+ * the earlier side shows `removed` and `changed`, the later side `added` and
+ * `changed`. Anything else is `unchanged`.
+ *
+ * @param {{nodes: object, connections: object}} diff A `diffViews` result.
+ * @param {'before'|'after'} side Which side is drawn.
+ * @return {{nodes: Map<string, string>, connections: Map<string, string>}}
+ * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-005-an-owner-shall-save-named-versions-and-compare-two-of-them
+ */
+export function statusesFor(diff, side) {
+	const mark = (part, key) => {
+		const statuses = new Map()
+		const own = side === 'before' ? part.removed : part.added
+		for (const item of own) statuses.set(String(item[key]), side === 'before' ? 'removed' : 'added')
+		for (const change of part.changed) statuses.set(String(change.id), 'changed')
+		return statuses
+	}
+	return { nodes: mark(diff.nodes, 'viewNodeId'), connections: mark(diff.connections, 'viewRelationshipId') }
+}
+
+/**
+ * The changes as a flat list for the text summary, nodes first, each list in id order.
+ *
+ * @param {{nodes: object, connections: object}} diff A `diffViews` result.
+ * @return {Array<{kind: 'node'|'connection', change: 'added'|'removed'|'changed', id: string, name: string, fields: string[]}>}
+ * @spec openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-005-an-owner-shall-save-named-versions-and-compare-two-of-them
+ */
+export function describeDiff(diff) {
+	const entries = []
+	const add = (kind, part, key) => {
+		const nameOf = (item) => String(item.name || item.type || item[key])
+		for (const item of part.added) entries.push({ kind, change: 'added', id: String(item[key]), name: nameOf(item), fields: [] })
+		for (const item of part.removed) entries.push({ kind, change: 'removed', id: String(item[key]), name: nameOf(item), fields: [] })
+		for (const change of part.changed) entries.push({ kind, change: 'changed', id: change.id, name: nameOf(change.after), fields: change.fields })
+	}
+	add('node', diff.nodes, 'viewNodeId')
+	add('connection', diff.connections, 'viewRelationshipId')
+	return entries
+}

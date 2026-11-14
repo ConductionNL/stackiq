@@ -38,7 +38,7 @@
   - GIVEN the editor WHEN the user places two elements, connects them and saves THEN a `view` with `origin` drawn holds both nodes and the connection
   - GIVEN a new element from the palette WHEN the view is saved THEN an `element` with `origin` drawn and the chosen ArchiMate type exists
   - GIVEN a colleague holds the lock WHEN the user opens the view THEN it is read-only with a notice naming the colleague
-- [ ] Implement
+- [x] Implement
 - [ ] Test (Playwright `architecture-views.spec.ts` draw and reopen, lock notice)
 
 ### Task 5: Relations behind connections
@@ -58,7 +58,7 @@
   - GIVEN an imported view WHEN it opens THEN no edit control renders and Copy to edit is offered
   - GIVEN Copy to edit WHEN it completes THEN a drawn view with a fresh identifier and `basedOn` opens in edit mode
   - GIVEN a re-import WHEN it runs THEN the drawn copy is unchanged
-- [ ] Implement
+- [x] Implement
 - [ ] Test (Playwright copy flow, PHPUnit `ArchitectureViewsImportIsolationTest`)
 
 ### Task 7: Save version and compare versions
@@ -68,7 +68,7 @@
   - GIVEN Save version WHEN it completes THEN a `view-version` holds the next number, the label and a copy of the nodes and connections
   - GIVEN two snapshots WHEN they are compared THEN added, removed and changed are keyed by node and connection id, and order alone is no change
   - GIVEN the compare page WHEN it renders THEN colours use `--color-success`, `--color-error` and `--color-warning` and the text list names every change
-- [ ] Implement
+- [x] Implement
 - [ ] Test (vitest `viewDiff.spec.js`, Playwright compare scenario)
 
 ### Task 8: Keep drawn objects out of the shared list, the single view read and the full export

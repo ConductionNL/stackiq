@@ -30,8 +30,10 @@ import ReviewsPanel from './components/reviews/ReviewsPanel.vue'
 import ProductRoadmap from './components/roadmap/ProductRoadmap.vue'
 import SbomComponentsPanel from './components/sbom/SbomComponentsPanel.vue'
 import VulnerabilityExposurePanel from './components/vulnerabilities/VulnerabilityExposurePanel.vue'
+import ArchitectureViewEditor from './views/architecture/ArchitectureViewEditor.vue'
 import ProcessStepFlow from './views/architecture/ProcessStepFlow.vue'
 import ProcessStepUsages from './views/architecture/ProcessStepUsages.vue'
+import ViewVersionCompare from './views/architecture/ViewVersionCompare.vue'
 import ComplianceMatrixView from './views/ComplianceMatrixView.vue'
 import FacetedCatalogIndexView from './views/FacetedCatalogIndexView.vue'
 import KwetsbaarhedenView from './views/KwetsbaarhedenView.vue'
@@ -69,6 +71,14 @@ export default {
 	// widget expresses.
 	ProcessStepFlow,
 	ProcessStepUsages,
+
+	// The architecture view editor and the version compare
+	// (architecture-views-editor D4, D6): an authoring canvas that places
+	// elements, draws connections backed by relation objects and takes the
+	// object lock, and two marked read-only canvases side by side. Neither is
+	// a page type or widget the library has.
+	ArchitectureViewEditor,
+	ViewVersionCompare,
 
 	// --- Lib gap: settings sub-section orchestration. ---
 	// The lib's type='settings' rich-section widgets cover individual
