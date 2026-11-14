@@ -661,7 +661,7 @@ class ContractApprovalService implements ContractApprovalServiceInterface {
 	 */
 	private function searchContracts(ObjectServiceInterface $objectService, array $query): array|int {
 		try {
-			return $objectService->searchObjects(query: $query, _rbac: false, _multitenancy: false);
+			return $objectService->searchObjects(query: SearchBounds::bounded(query: $query), _rbac: false, _multitenancy: false);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'ContractApprovalService: failed to query contract by decision id',

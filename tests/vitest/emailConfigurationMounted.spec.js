@@ -19,6 +19,9 @@ import { reactive } from 'vue'
 const dialogs = vi.hoisted(() => ({ showError: vi.fn(), showSuccess: vi.fn() }))
 vi.mock('@nextcloud/dialogs', () => dialogs)
 
+const http = vi.hoisted(() => ({ get: vi.fn(), post: vi.fn() }))
+vi.mock('@nextcloud/axios', () => ({ default: http }))
+
 const holder = vi.hoisted(() => ({ store: null }))
 vi.mock('../../src/store/store.js', () => ({
 	get settingsStore() {
@@ -120,6 +123,10 @@ beforeEach(() => {
 	vi.spyOn(console, 'error').mockImplementation(() => {})
 	dialogs.showError.mockClear()
 	dialogs.showSuccess.mockClear()
+	http.get.mockReset()
+	http.post.mockReset()
+	http.get.mockImplementation(async (url) => ({ data: { success: true, template: url.endsWith('/default') ? 'Standaardtekst' : '' } }))
+	http.post.mockResolvedValue({ data: { success: true } })
 })
 
 afterEach(() => {
@@ -248,11 +255,16 @@ describe('EmailConfiguration mounted', () => {
 		expect(editor().props('modelValue')).toBe('')
 
 		await button(wrapper, 'Reset to Default').trigger('click')
-		expect(dialogs.showSuccess).toHaveBeenCalledWith('Template reset functionality will be available in a future update')
+		await flushPromises()
+		expect(editor().props('modelValue')).toBe('Standaardtekst')
 
 		await button(wrapper, 'Save Template').trigger('click')
 		await flushPromises()
-		expect(wrapper.find('.save-results').text()).toBe('Template saved locally (backend implementation pending)')
+		expect(http.post).toHaveBeenCalledWith(
+			expect.stringContaining('/apps/stackiq/api/email/templates/' + other.key),
+			{ template: 'Standaardtekst' },
+		)
+		expect(wrapper.find('.save-results').text()).toBe('Template saved.')
 		expect(wrapper.vm.savingTemplate).toBe(false)
 	})
 

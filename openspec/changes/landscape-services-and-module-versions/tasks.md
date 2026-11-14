@@ -8,8 +8,8 @@
 - **acceptance_criteria**:
   - GIVEN the Moduleversies and ModuleversieDetail pages WHEN read THEN their `_note` cites REQ-MVR-001
   - GIVEN the merged manifest WHEN the vitest reads Moduleversies THEN it lists version, module, dateInDevelopment, dateInUse and status and has the "Planned releases" quick filter on status "in development"
-- [ ] Implement
-- [ ] Test (vitest `moduleVersionPages.spec.js`)
+- [x] Implement
+- [x] Test (vitest `moduleVersionPages.spec.js`)
 
 ### Task 2: Tag and test services
 - **spec_ref**: openspec/changes/landscape-services-and-module-versions/specs/catalogue-services/spec.md#requirement-a-suppliers-service-is-registered-over-one-or-more-applications-req-csv-001
@@ -17,8 +17,8 @@
 - **acceptance_criteria**:
   - GIVEN the Diensten page and the org-diensten widget WHEN read THEN their `_note` cites REQ-CSV-001
   - GIVEN `lib/Settings/softwarecatalogus_register.json` WHEN the test reads `catalogService` THEN name, provider and type are required and type holds the six service types
-- [ ] Implement
-- [ ] Test (PHPUnit `CatalogServiceSchemaTest`)
+- [x] Implement
+- [x] Test (PHPUnit `CatalogServiceSchemaTest`)
 
 ### Task 3: Matrix
 - **spec_ref**: openspec/changes/landscape-services-and-module-versions/specs/module-versions/spec.md

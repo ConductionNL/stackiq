@@ -138,6 +138,34 @@ class OrganizationContactSyncJobTest extends TestCase {
 	}//end runJob()
 
 	/**
+	 * The job and the cronjob settings show one interval.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-003-the-scheduled-sync-must-not-run-while-its-switch-is-off
+	 */
+	public function testTheJobAndTheSettingsShareOneInterval(): void {
+		$store = [];
+		$settings = $this->settings($store);
+		$job = new OrganizationContactSyncJob(
+			$this->createMock(ITimeFactory::class),
+			$this->createMock(OrganizationSyncService::class),
+			$this->createMock(StackiqContactSyncService::class),
+			$this->createMock(SettingsService::class),
+			$settings,
+			$this->createMock(IAppManager::class),
+			$this->createMock(LoggerInterface::class)
+		);
+
+		$this->assertSame(300, OrganizationContactSyncJob::INTERVAL_SECONDS);
+		$this->assertSame(OrganizationContactSyncJob::INTERVAL_SECONDS, $job->getInterval());
+		$this->assertSame(
+			OrganizationContactSyncJob::INTERVAL_SECONDS,
+			$settings->getCronjobConfig()['cronjobs'][OrganizationContactSyncJob::JOB_ID]['interval']
+		);
+	}//end testTheJobAndTheSettingsShareOneInterval()
+
+	/**
 	 * Real cronjob settings over an in-memory app config.
 	 *
 	 * @param array $store Reference to the backing key/value store.

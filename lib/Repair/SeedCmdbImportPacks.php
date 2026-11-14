@@ -35,7 +35,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Repair;
 
 use OCA\Stackiq\Kernel\Contracts\CmdbImportPackStoreInterface;
-use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
+use OCA\Stackiq\Kernel\Contracts\CmdbImportProfileInterface;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
@@ -50,14 +50,14 @@ class SeedCmdbImportPacks implements IRepairStep {
 	/**
 	 * Constructor.
 	 *
-	 * @param CmdbImportProfile $profile Reads and validates the shipped packs.
+	 * @param CmdbImportProfileInterface $profile Reads and validates the shipped packs.
 	 * @param CmdbImportPackStoreInterface $store OpenRegister's migration-pack store.
 	 * @param LoggerInterface $logger Logger for seed diagnostics.
 	 *
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-2
 	 */
 	public function __construct(
-		private readonly CmdbImportProfile $profile,
+		private readonly CmdbImportProfileInterface $profile,
 		private readonly CmdbImportPackStoreInterface $store,
 		private readonly LoggerInterface $logger,
 	) {
