@@ -3,7 +3,7 @@
   "components": {
     "schemas": {
       "module": {
-        "version": "0.3.13",
+        "version": "0.3.14",
         "configuration": {
           "x-openregister-merge": {
             "statusField": "recordStatus",

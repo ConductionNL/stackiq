@@ -275,7 +275,7 @@ class MergeOrganisatieBlockersTest extends TestCase {
 			[
 				'groupMembers', 'usage', 'contactPerson', 'aanbod', 'module', 'catalogService',
 				// operations-record-reconciliation REQ-RRC-005: every other organisation reference.
-				'usageProvider', 'organizationDeelnames', 'organizationParticipants', 'catalogContractSupplier', 'modelOrganizations', 'aiSystemProvider',
+				'usageProvider', 'organizationDeelnames', 'organizationParticipants', 'catalogContractSupplier', 'modelOrganizations', 'aiSystemProvider', 'scenarioOrganisation',
 				'catalogContract', 'compliancy', 'moduleOwnership', 'catalogServiceOwnership',
 			],
 			array_keys($preview['counts'])

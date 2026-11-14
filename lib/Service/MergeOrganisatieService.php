@@ -62,6 +62,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Organisation\OwnershipMap;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\MergeOrganisatieServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
@@ -129,20 +130,6 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 		'target-not-found' => 'Target organisation not found.',
 		'source-already-merged' => 'Source organisation has already been merged into a different target.',
 		'target-already-merged' => 'Target organisation has already been merged into another organisation.',
-	];
-
-	/**
-	 * Relation types re-pointed via the OpenRegister system-level `@self.organisation` field,
-	 * as count key => schema slug. Modules and services carry a `provider`
-	 * field too, so their ownership counts under its own key.
-	 *
-	 * @var array<string, string>
-	 */
-	private const SELF_ORGANISATION_RELATION_TYPES = [
-		'catalogContract' => 'catalogContract',
-		'compliancy' => 'compliancy',
-		'moduleOwnership' => 'module',
-		'catalogServiceOwnership' => 'catalogService',
 	];
 
 	/**
@@ -311,7 +298,7 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 		$operationId = $this->progressTracker->startOperation(
 			operationType: 'org_merge',
 			options: [
-				'total_items' => count(self::fieldRelationTypes()) + count(self::SELF_ORGANISATION_RELATION_TYPES),
+				'total_items' => count(self::fieldRelationTypes()) + count(OwnershipMap::SELF_ORGANISATION_RELATION_TYPES),
 				'statistics' => [],
 			],
 			ownerUid: $run->actorUid
@@ -355,7 +342,7 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 	 */
 	private function mergeStatus(MergeRun $run): string {
 		$relationSum = 0;
-		foreach (array_merge(array_keys(self::fieldRelationTypes()), array_keys(self::SELF_ORGANISATION_RELATION_TYPES)) as $type) {
+		foreach (array_merge(array_keys(self::fieldRelationTypes()), array_keys(OwnershipMap::SELF_ORGANISATION_RELATION_TYPES)) as $type) {
 			$relationSum += ($run->counts[$type] ?? 0);
 		}
 
@@ -421,7 +408,7 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 			$this->reportTypeProgress(type: $type, count: $counts[$type], commit: $run->commit);
 		}
 
-		foreach (self::SELF_ORGANISATION_RELATION_TYPES as $type => $schemaType) {
+		foreach (OwnershipMap::SELF_ORGANISATION_RELATION_TYPES as $type => $schemaType) {
 			$counts[$type] = $this->repointBySelfOrganisation(run: $run, objectType: $schemaType);
 			$this->reportTypeProgress(type: $type, count: $counts[$type], commit: $run->commit);
 		}
@@ -558,7 +545,7 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 	 * @spec openspec/specs/organisation-merge/spec.md#requirement-execute-must-re-point-every-relation-type-while-preserving-every-unrelated-field-on-each-object
 	 */
 	private function readOwningOrganisation(object $entity): ?string {
-		if (self::hasOrganisationAccessor(entity: $entity) === false) {
+		if (OwnershipMap::hasOrganisationAccessor(entity: $entity) === false) {
 			return null;
 		}
 
@@ -569,18 +556,6 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 
 		return $owningOrganisation;
 	}//end readOwningOrganisation()
-
-	/**
-	 * Whether an entity declares the organisation property or its accessor.
-	 *
-	 * @param object $entity The OpenRegister ObjectEntity to read.
-	 *
-	 * @return bool
-	 */
-	private static function hasOrganisationAccessor(object $entity): bool {
-		return property_exists($entity, 'organisation') === true
-			|| method_exists($entity, 'getOrganisation') === true;
-	}//end hasOrganisationAccessor()
 
 	/**
 	 * The entity's owning organisation as its accessor answers it.
@@ -966,7 +941,7 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 			$counts[$type] = 0;
 		}
 
-		foreach (array_keys(self::SELF_ORGANISATION_RELATION_TYPES) as $type) {
+		foreach (array_keys(OwnershipMap::SELF_ORGANISATION_RELATION_TYPES) as $type) {
 			$counts[$type] = 0;
 		}
 

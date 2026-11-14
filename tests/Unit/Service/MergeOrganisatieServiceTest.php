@@ -114,6 +114,7 @@ class MergeOrganisatieServiceTest extends TestCase {
 				'catalogContractSupplier' => 0,
 				'modelOrganizations' => 0,
 				'aiSystemProvider' => 0,
+				'scenarioOrganisation' => 0,
 				'catalogContract' => 1,
 				'compliancy' => 1,
 				'moduleOwnership' => 0,

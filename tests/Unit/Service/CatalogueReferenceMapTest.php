@@ -128,6 +128,7 @@ class CatalogueReferenceMapTest extends TestCase {
 				'catalogContractSupplier' => ['field' => 'supplier', 'arrayField' => null, 'schema' => 'catalogContract'],
 				'modelOrganizations' => ['field' => '', 'arrayField' => 'organizations', 'schema' => 'model'],
 				'aiSystemProvider' => ['field' => 'provider', 'arrayField' => null, 'schema' => 'aiSystem'],
+				'scenarioOrganisation' => ['field' => 'organisation', 'arrayField' => null, 'schema' => 'scenario'],
 			],
 			array_slice($types, 5, null, true)
 		);
