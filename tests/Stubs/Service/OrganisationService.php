@@ -24,6 +24,7 @@ declare(strict_types=1);
 namespace OCA\OpenRegister\Service;
 
 use OCA\OpenRegister\Db\Organisation;
+use OCA\OpenRegister\Service\Organisation\NewOrganisation;
 
 /**
  * Stub for OrganisationService with the surface used by Stackiq
@@ -35,16 +36,34 @@ abstract class OrganisationService {
 	 * Get the caller's active organisation, or null when none is set /
 	 * resolvable.
 	 *
+	 * @param array|null $preloadedOrgs Organisations already loaded for the caller.
+	 *
 	 * @return Organisation|null
 	 */
-	abstract public function getActiveOrganisation(): ?Organisation;
+	abstract public function getActiveOrganisation(?array $preloadedOrgs = null): ?Organisation;
+
+	/**
+	 * Get the default organisation, creating it when it does not exist yet.
+	 *
+	 * @return Organisation
+	 */
+	abstract public function ensureDefaultOrganisation(): Organisation;
+
+	/**
+	 * The uuid of the instance's default organisation, or null when none is set.
+	 *
+	 * @return string|null
+	 */
+	abstract public function getDefaultOrganisationUuid(): ?string;
 
 	/**
 	 * Get the caller's own organisations (session-scoped).
 	 *
+	 * @param bool $_useCache Whether to use the session cache.
+	 *
 	 * @return Organisation[]
 	 */
-	abstract public function getUserOrganisations(): array;
+	abstract public function getUserOrganisations(bool $_useCache = true): array;
 
 	/**
 	 * Add a user to an organisation. Real implementation performs no
@@ -71,5 +90,15 @@ abstract class OrganisationService {
 	 * @throws \Exception When the organisation is not found, or the target would be left with no organisation.
 	 */
 	abstract public function leaveOrganisation(string $organisationUuid, ?string $targetUserId = null): bool;
+
+	/**
+	 * Create an organisation; with addCurrentUser the signed-in user becomes its owner and a member.
+	 *
+	 * @param NewOrganisation $details        Name, description and uuid.
+	 * @param bool            $addCurrentUser Whether the signed-in user owns and joins it.
+	 *
+	 * @return Organisation
+	 */
+	abstract public function createOrganisation(NewOrganisation $details, bool $addCurrentUser = true): Organisation;
 
 }//end class

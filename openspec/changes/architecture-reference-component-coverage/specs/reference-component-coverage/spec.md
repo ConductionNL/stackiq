@@ -38,23 +38,23 @@ A municipality sees, per GEMMA reference component, which of its applications in
 - **THEN** the response SHALL be 403
 - **AND** no usage SHALL be read
 
-### Requirement: REQ-RCC-002 A coverage page SHALL list the components with filters for gaps and overlaps
+### Requirement: REQ-RCC-002 A GEMMA plate SHALL show the components with their applications, with filters for gaps and overlaps
 
-Stackiq SHALL offer a Reference component coverage page at `/reference-component-coverage` (page `ReferenceComponentCoverage`), reached from a card on the Reports page. After an organisation is picked it SHALL show the counts of gaps, fillable gaps, covered components and overlaps, the number of usages that name no component, and a table of components with their state and applications, with the quick filters All, Gaps, Fillable gaps and Overlap, and an Export CSV button. Without any reference component it SHALL say that the GEMMA model must be imported.
+Stackiq SHALL offer a GEMMA plate page at `/gemma-plaat` (page `GemmaPlate`, board SkGemmaPlaat), in the menu under Reports & Compliance. After an organisation is picked it SHALL show the counts of reference components, covered components, gaps (with how many are fillable) and overlaps, the number of usages that name no component, and every reference component grouped by its GEMMA grouping, each with the applications that cover it and its state in words, with the filters All, Gaps, Fillable gaps and Overlap. Choosing a component SHALL show its description, state, applications and, for a fillable gap, the applications in use that offer it. A Download button SHALL give the same rows as CSV. Without any reference component it SHALL say that the GEMMA model must be imported.
 
 #### Scenario: An information manager filters on overlap
 @e2e tests/e2e/workflows/reference-component-coverage.spec.ts
 
 - **GIVEN** two reference component elements and two usages of different modules that both name the first, created by the test fixture through OpenRegister's objects API
-- **WHEN** a municipal information manager opens Reports, chooses Reference component coverage, picks the organisation and chooses the quick filter Overlap
-- **THEN** the table SHALL show the first component with both applications
-- **AND** the summary SHALL read one overlap and one gap
+- **WHEN** a municipal information manager opens the GEMMA plate, picks the organisation and chooses the filter Overlap
+- **THEN** the first component SHALL read overlap with both applications
+- **AND** the second component, a gap, SHALL no longer show
 
 #### Scenario: The page explains an instance without GEMMA
-@e2e tests/e2e/workflows/reference-component-coverage.spec.ts
+@e2e exclude Needs an instance without the GEMMA model, which the shared e2e instance has; tests/Unit/Service/ReferenceComponentCoverageServiceTest.php asserts that without an element schema no component is read, which the page renders as "Import the GEMMA model to see coverage".
 
 - **GIVEN** an instance with no reference component elements
-- **WHEN** a municipal information manager opens the coverage page and picks an organisation
+- **WHEN** a municipal information manager opens the GEMMA plate and picks an organisation
 - **THEN** the page SHALL say that the GEMMA model must be imported to see coverage
 
 ### Requirement: REQ-RCC-003 The coverage SHALL be drawn on a GEMMA view as a map

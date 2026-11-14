@@ -1,0 +1,1099 @@
+{
+	"no raw config": {
+		"error": null,
+		"configuration": {
+			"amef_element_schema": {
+				"schema": null
+			},
+			"amef_organization_schema": {
+				"schema": null
+			},
+			"amef_relation_schema": {
+				"schema": null
+			},
+			"amef_view_schema": {
+				"schema": null
+			},
+			"amef_model_schema": {
+				"schema": null
+			},
+			"amef_property_definition_schema": {
+				"schema": null
+			},
+			"voorzieningen_sector_schema": {
+				"schema": null
+			},
+			"voorzieningen_suite_schema": {
+				"schema": null
+			},
+			"voorzieningen_dienst_schema": {
+				"schema": null
+			},
+			"voorzieningen_kwetsbaarheid_schema": {
+				"schema": null
+			},
+			"voorzieningen_contactpersoon_schema": {
+				"schema": null
+			},
+			"voorzieningen_organisatie_schema": {
+				"schema": null
+			},
+			"voorzieningen_gebruik_schema": {
+				"schema": null
+			},
+			"voorzieningen_contract_schema": {
+				"schema": null
+			},
+			"voorzieningen_koppeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_beoordeeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_module_schema": {
+				"schema": null
+			},
+			"voorzieningen_compliancy_schema": {
+				"schema": null
+			},
+			"voorzieningen_moduleVersie_schema": {
+				"schema": null
+			}
+		}
+	},
+	"empty raw config": {
+		"error": null,
+		"configuration": {
+			"amef_element_schema": {
+				"schema": null
+			},
+			"amef_organization_schema": {
+				"schema": null
+			},
+			"amef_relation_schema": {
+				"schema": null
+			},
+			"amef_view_schema": {
+				"schema": null
+			},
+			"amef_model_schema": {
+				"schema": null
+			},
+			"amef_property_definition_schema": {
+				"schema": null
+			},
+			"voorzieningen_sector_schema": {
+				"schema": null
+			},
+			"voorzieningen_suite_schema": {
+				"schema": null
+			},
+			"voorzieningen_dienst_schema": {
+				"schema": null
+			},
+			"voorzieningen_kwetsbaarheid_schema": {
+				"schema": null
+			},
+			"voorzieningen_contactpersoon_schema": {
+				"schema": null
+			},
+			"voorzieningen_organisatie_schema": {
+				"schema": null
+			},
+			"voorzieningen_gebruik_schema": {
+				"schema": null
+			},
+			"voorzieningen_contract_schema": {
+				"schema": null
+			},
+			"voorzieningen_koppeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_beoordeeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_module_schema": {
+				"schema": null
+			},
+			"voorzieningen_compliancy_schema": {
+				"schema": null
+			},
+			"voorzieningen_moduleVersie_schema": {
+				"schema": null
+			}
+		}
+	},
+	"every voorzieningen key": {
+		"error": null,
+		"configuration": {
+			"amef_element_schema": {
+				"schema": null
+			},
+			"amef_organization_schema": {
+				"schema": null
+			},
+			"amef_relation_schema": {
+				"schema": null
+			},
+			"amef_view_schema": {
+				"schema": null
+			},
+			"amef_model_schema": {
+				"schema": null
+			},
+			"amef_property_definition_schema": {
+				"schema": null
+			},
+			"voorzieningen_sector_schema": {
+				"schema": {
+					"label": "Sector",
+					"value": "1"
+				}
+			},
+			"voorzieningen_suite_schema": {
+				"schema": {
+					"label": "Suite",
+					"value": "2"
+				}
+			},
+			"voorzieningen_dienst_schema": {
+				"schema": {
+					"label": "Schema 3",
+					"value": "3"
+				}
+			},
+			"voorzieningen_kwetsbaarheid_schema": {
+				"schema": {
+					"label": "Element",
+					"value": "4"
+				}
+			},
+			"voorzieningen_contactpersoon_schema": {
+				"schema": {
+					"label": "Relation",
+					"value": "5"
+				}
+			},
+			"voorzieningen_organisatie_schema": {
+				"schema": {
+					"label": "View",
+					"value": "6"
+				}
+			},
+			"voorzieningen_gebruik_schema": {
+				"schema": {
+					"label": "Model",
+					"value": "7"
+				}
+			},
+			"voorzieningen_contract_schema": {
+				"schema": {
+					"label": "Property definition",
+					"value": "8"
+				}
+			},
+			"voorzieningen_koppeling_schema": {
+				"schema": {
+					"label": "Organisation",
+					"value": "9"
+				}
+			},
+			"voorzieningen_beoordeeling_schema": {
+				"schema": {
+					"label": "Sector",
+					"value": "1"
+				}
+			},
+			"voorzieningen_module_schema": {
+				"schema": {
+					"label": "Suite",
+					"value": "2"
+				}
+			},
+			"voorzieningen_compliancy_schema": {
+				"schema": {
+					"label": "Schema 3",
+					"value": "3"
+				}
+			},
+			"voorzieningen_moduleVersie_schema": {
+				"schema": {
+					"label": "Element",
+					"value": "4"
+				}
+			}
+		}
+	},
+	"voorzieningen string ids and unknown ids": {
+		"error": null,
+		"configuration": {
+			"amef_element_schema": {
+				"schema": null
+			},
+			"amef_organization_schema": {
+				"schema": null
+			},
+			"amef_relation_schema": {
+				"schema": null
+			},
+			"amef_view_schema": {
+				"schema": null
+			},
+			"amef_model_schema": {
+				"schema": null
+			},
+			"amef_property_definition_schema": {
+				"schema": null
+			},
+			"voorzieningen_sector_schema": {
+				"schema": {
+					"label": "Suite",
+					"value": "2"
+				}
+			},
+			"voorzieningen_suite_schema": {
+				"schema": null
+			},
+			"voorzieningen_dienst_schema": {
+				"schema": null
+			},
+			"voorzieningen_kwetsbaarheid_schema": {
+				"schema": null
+			},
+			"voorzieningen_contactpersoon_schema": {
+				"schema": null
+			},
+			"voorzieningen_organisatie_schema": {
+				"schema": null
+			},
+			"voorzieningen_gebruik_schema": {
+				"schema": null
+			},
+			"voorzieningen_contract_schema": {
+				"schema": null
+			},
+			"voorzieningen_koppeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_beoordeeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_module_schema": {
+				"schema": {
+					"label": "Organisation",
+					"value": "9"
+				}
+			},
+			"voorzieningen_compliancy_schema": {
+				"schema": null
+			},
+			"voorzieningen_moduleVersie_schema": {
+				"schema": null
+			}
+		}
+	},
+	"voorzieningen without options": {
+		"error": null,
+		"configuration": {
+			"amef_element_schema": {
+				"schema": null
+			},
+			"amef_organization_schema": {
+				"schema": null
+			},
+			"amef_relation_schema": {
+				"schema": null
+			},
+			"amef_view_schema": {
+				"schema": null
+			},
+			"amef_model_schema": {
+				"schema": null
+			},
+			"amef_property_definition_schema": {
+				"schema": null
+			},
+			"voorzieningen_sector_schema": {
+				"schema": null
+			},
+			"voorzieningen_suite_schema": {
+				"schema": null
+			},
+			"voorzieningen_dienst_schema": {
+				"schema": null
+			},
+			"voorzieningen_kwetsbaarheid_schema": {
+				"schema": null
+			},
+			"voorzieningen_contactpersoon_schema": {
+				"schema": null
+			},
+			"voorzieningen_organisatie_schema": {
+				"schema": null
+			},
+			"voorzieningen_gebruik_schema": {
+				"schema": null
+			},
+			"voorzieningen_contract_schema": {
+				"schema": null
+			},
+			"voorzieningen_koppeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_beoordeeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_module_schema": {
+				"schema": null
+			},
+			"voorzieningen_compliancy_schema": {
+				"schema": null
+			},
+			"voorzieningen_moduleVersie_schema": {
+				"schema": null
+			}
+		}
+	},
+	"amef singular keys": {
+		"error": null,
+		"configuration": {
+			"amef_element_schema": {
+				"schema": {
+					"label": "Element",
+					"value": "4"
+				}
+			},
+			"amef_organization_schema": {
+				"schema": {
+					"label": "Organisation",
+					"value": "9"
+				}
+			},
+			"amef_relation_schema": {
+				"schema": {
+					"label": "Relation",
+					"value": "5"
+				}
+			},
+			"amef_view_schema": {
+				"schema": {
+					"label": "View",
+					"value": "6"
+				}
+			},
+			"amef_model_schema": {
+				"schema": {
+					"label": "Model",
+					"value": "7"
+				}
+			},
+			"amef_property_definition_schema": {
+				"schema": {
+					"label": "Property definition",
+					"value": "8"
+				}
+			},
+			"voorzieningen_sector_schema": {
+				"schema": null
+			},
+			"voorzieningen_suite_schema": {
+				"schema": null
+			},
+			"voorzieningen_dienst_schema": {
+				"schema": null
+			},
+			"voorzieningen_kwetsbaarheid_schema": {
+				"schema": null
+			},
+			"voorzieningen_contactpersoon_schema": {
+				"schema": null
+			},
+			"voorzieningen_organisatie_schema": {
+				"schema": null
+			},
+			"voorzieningen_gebruik_schema": {
+				"schema": null
+			},
+			"voorzieningen_contract_schema": {
+				"schema": null
+			},
+			"voorzieningen_koppeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_beoordeeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_module_schema": {
+				"schema": null
+			},
+			"voorzieningen_compliancy_schema": {
+				"schema": null
+			},
+			"voorzieningen_moduleVersie_schema": {
+				"schema": null
+			}
+		}
+	},
+	"amef plural keys": {
+		"error": null,
+		"configuration": {
+			"amef_element_schema": {
+				"schema": {
+					"label": "Element",
+					"value": "4"
+				}
+			},
+			"amef_organization_schema": {
+				"schema": {
+					"label": "Organisation",
+					"value": "9"
+				}
+			},
+			"amef_relation_schema": {
+				"schema": {
+					"label": "Relation",
+					"value": "5"
+				}
+			},
+			"amef_view_schema": {
+				"schema": {
+					"label": "View",
+					"value": "6"
+				}
+			},
+			"amef_model_schema": {
+				"schema": {
+					"label": "Model",
+					"value": "7"
+				}
+			},
+			"amef_property_definition_schema": {
+				"schema": {
+					"label": "Property definition",
+					"value": "8"
+				}
+			},
+			"voorzieningen_sector_schema": {
+				"schema": null
+			},
+			"voorzieningen_suite_schema": {
+				"schema": null
+			},
+			"voorzieningen_dienst_schema": {
+				"schema": null
+			},
+			"voorzieningen_kwetsbaarheid_schema": {
+				"schema": null
+			},
+			"voorzieningen_contactpersoon_schema": {
+				"schema": null
+			},
+			"voorzieningen_organisatie_schema": {
+				"schema": null
+			},
+			"voorzieningen_gebruik_schema": {
+				"schema": null
+			},
+			"voorzieningen_contract_schema": {
+				"schema": null
+			},
+			"voorzieningen_koppeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_beoordeeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_module_schema": {
+				"schema": null
+			},
+			"voorzieningen_compliancy_schema": {
+				"schema": null
+			},
+			"voorzieningen_moduleVersie_schema": {
+				"schema": null
+			}
+		}
+	},
+	"amef singular wins over plural": {
+		"error": null,
+		"configuration": {
+			"amef_element_schema": {
+				"schema": null
+			},
+			"amef_organization_schema": {
+				"schema": {
+					"label": "Sector",
+					"value": "1"
+				}
+			},
+			"amef_relation_schema": {
+				"schema": null
+			},
+			"amef_view_schema": {
+				"schema": null
+			},
+			"amef_model_schema": {
+				"schema": null
+			},
+			"amef_property_definition_schema": {
+				"schema": {
+					"label": "Schema 3",
+					"value": "3"
+				}
+			},
+			"voorzieningen_sector_schema": {
+				"schema": null
+			},
+			"voorzieningen_suite_schema": {
+				"schema": null
+			},
+			"voorzieningen_dienst_schema": {
+				"schema": null
+			},
+			"voorzieningen_kwetsbaarheid_schema": {
+				"schema": null
+			},
+			"voorzieningen_contactpersoon_schema": {
+				"schema": null
+			},
+			"voorzieningen_organisatie_schema": {
+				"schema": null
+			},
+			"voorzieningen_gebruik_schema": {
+				"schema": null
+			},
+			"voorzieningen_contract_schema": {
+				"schema": null
+			},
+			"voorzieningen_koppeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_beoordeeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_module_schema": {
+				"schema": null
+			},
+			"voorzieningen_compliancy_schema": {
+				"schema": null
+			},
+			"voorzieningen_moduleVersie_schema": {
+				"schema": null
+			}
+		}
+	},
+	"amef dashed property key": {
+		"error": null,
+		"configuration": {
+			"amef_element_schema": {
+				"schema": null
+			},
+			"amef_organization_schema": {
+				"schema": null
+			},
+			"amef_relation_schema": {
+				"schema": null
+			},
+			"amef_view_schema": {
+				"schema": null
+			},
+			"amef_model_schema": {
+				"schema": null
+			},
+			"amef_property_definition_schema": {
+				"schema": {
+					"label": "Suite",
+					"value": "2"
+				}
+			},
+			"voorzieningen_sector_schema": {
+				"schema": null
+			},
+			"voorzieningen_suite_schema": {
+				"schema": null
+			},
+			"voorzieningen_dienst_schema": {
+				"schema": null
+			},
+			"voorzieningen_kwetsbaarheid_schema": {
+				"schema": null
+			},
+			"voorzieningen_contactpersoon_schema": {
+				"schema": null
+			},
+			"voorzieningen_organisatie_schema": {
+				"schema": null
+			},
+			"voorzieningen_gebruik_schema": {
+				"schema": null
+			},
+			"voorzieningen_contract_schema": {
+				"schema": null
+			},
+			"voorzieningen_koppeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_beoordeeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_module_schema": {
+				"schema": null
+			},
+			"voorzieningen_compliancy_schema": {
+				"schema": null
+			},
+			"voorzieningen_moduleVersie_schema": {
+				"schema": null
+			}
+		}
+	},
+	"amef falsy singular falls back to plural": {
+		"error": null,
+		"configuration": {
+			"amef_element_schema": {
+				"schema": null
+			},
+			"amef_organization_schema": {
+				"schema": null
+			},
+			"amef_relation_schema": {
+				"schema": null
+			},
+			"amef_view_schema": {
+				"schema": {
+					"label": "View",
+					"value": "6"
+				}
+			},
+			"amef_model_schema": {
+				"schema": {
+					"label": "Model",
+					"value": "7"
+				}
+			},
+			"amef_property_definition_schema": {
+				"schema": {
+					"label": "Property definition",
+					"value": "8"
+				}
+			},
+			"voorzieningen_sector_schema": {
+				"schema": null
+			},
+			"voorzieningen_suite_schema": {
+				"schema": null
+			},
+			"voorzieningen_dienst_schema": {
+				"schema": null
+			},
+			"voorzieningen_kwetsbaarheid_schema": {
+				"schema": null
+			},
+			"voorzieningen_contactpersoon_schema": {
+				"schema": null
+			},
+			"voorzieningen_organisatie_schema": {
+				"schema": null
+			},
+			"voorzieningen_gebruik_schema": {
+				"schema": null
+			},
+			"voorzieningen_contract_schema": {
+				"schema": null
+			},
+			"voorzieningen_koppeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_beoordeeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_module_schema": {
+				"schema": null
+			},
+			"voorzieningen_compliancy_schema": {
+				"schema": null
+			},
+			"voorzieningen_moduleVersie_schema": {
+				"schema": null
+			}
+		}
+	},
+	"amef without options": {
+		"error": null,
+		"configuration": {
+			"amef_element_schema": {
+				"schema": null
+			},
+			"amef_organization_schema": {
+				"schema": null
+			},
+			"amef_relation_schema": {
+				"schema": null
+			},
+			"amef_view_schema": {
+				"schema": null
+			},
+			"amef_model_schema": {
+				"schema": null
+			},
+			"amef_property_definition_schema": {
+				"schema": null
+			},
+			"voorzieningen_sector_schema": {
+				"schema": null
+			},
+			"voorzieningen_suite_schema": {
+				"schema": null
+			},
+			"voorzieningen_dienst_schema": {
+				"schema": null
+			},
+			"voorzieningen_kwetsbaarheid_schema": {
+				"schema": null
+			},
+			"voorzieningen_contactpersoon_schema": {
+				"schema": null
+			},
+			"voorzieningen_organisatie_schema": {
+				"schema": null
+			},
+			"voorzieningen_gebruik_schema": {
+				"schema": null
+			},
+			"voorzieningen_contract_schema": {
+				"schema": null
+			},
+			"voorzieningen_koppeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_beoordeeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_module_schema": {
+				"schema": null
+			},
+			"voorzieningen_compliancy_schema": {
+				"schema": null
+			},
+			"voorzieningen_moduleVersie_schema": {
+				"schema": null
+			}
+		}
+	},
+	"options with empty values": {
+		"error": null,
+		"configuration": {
+			"amef_element_schema": {
+				"schema": {
+					"label": "Schema 4",
+					"value": "4"
+				}
+			},
+			"amef_organization_schema": {
+				"schema": null
+			},
+			"amef_relation_schema": {
+				"schema": null
+			},
+			"amef_view_schema": {
+				"schema": null
+			},
+			"amef_model_schema": {
+				"schema": null
+			},
+			"amef_property_definition_schema": {
+				"schema": null
+			},
+			"voorzieningen_sector_schema": {
+				"schema": {
+					"label": "One",
+					"value": "1"
+				}
+			},
+			"voorzieningen_suite_schema": {
+				"schema": null
+			},
+			"voorzieningen_dienst_schema": {
+				"schema": null
+			},
+			"voorzieningen_kwetsbaarheid_schema": {
+				"schema": null
+			},
+			"voorzieningen_contactpersoon_schema": {
+				"schema": null
+			},
+			"voorzieningen_organisatie_schema": {
+				"schema": null
+			},
+			"voorzieningen_gebruik_schema": {
+				"schema": null
+			},
+			"voorzieningen_contract_schema": {
+				"schema": null
+			},
+			"voorzieningen_koppeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_beoordeeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_module_schema": {
+				"schema": null
+			},
+			"voorzieningen_compliancy_schema": {
+				"schema": null
+			},
+			"voorzieningen_moduleVersie_schema": {
+				"schema": null
+			}
+		}
+	},
+	"unknown ids keep the current selection": {
+		"error": null,
+		"configuration": {
+			"amef_element_schema": {
+				"schema": {
+					"value": "kept"
+				}
+			},
+			"amef_organization_schema": {
+				"schema": null
+			},
+			"amef_relation_schema": {
+				"schema": null
+			},
+			"amef_view_schema": {
+				"schema": null
+			},
+			"amef_model_schema": {
+				"schema": null
+			},
+			"amef_property_definition_schema": {
+				"schema": null
+			},
+			"voorzieningen_sector_schema": {
+				"schema": {
+					"value": "kept"
+				}
+			},
+			"voorzieningen_suite_schema": {
+				"schema": {
+					"value": "kept"
+				}
+			},
+			"voorzieningen_dienst_schema": {
+				"schema": null
+			},
+			"voorzieningen_kwetsbaarheid_schema": {
+				"schema": null
+			},
+			"voorzieningen_contactpersoon_schema": {
+				"schema": null
+			},
+			"voorzieningen_organisatie_schema": {
+				"schema": null
+			},
+			"voorzieningen_gebruik_schema": {
+				"schema": null
+			},
+			"voorzieningen_contract_schema": {
+				"schema": null
+			},
+			"voorzieningen_koppeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_beoordeeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_module_schema": {
+				"schema": null
+			},
+			"voorzieningen_compliancy_schema": {
+				"schema": null
+			},
+			"voorzieningen_moduleVersie_schema": {
+				"schema": null
+			}
+		}
+	},
+	"raw config with an undefined key": {
+		"error": null,
+		"configuration": {
+			"amef_element_schema": {
+				"schema": null
+			},
+			"amef_organization_schema": {
+				"schema": null
+			},
+			"amef_relation_schema": {
+				"schema": null
+			},
+			"amef_view_schema": {
+				"schema": null
+			},
+			"amef_model_schema": {
+				"schema": null
+			},
+			"amef_property_definition_schema": {
+				"schema": null
+			},
+			"voorzieningen_sector_schema": {
+				"schema": null
+			},
+			"voorzieningen_suite_schema": {
+				"schema": null
+			},
+			"voorzieningen_dienst_schema": {
+				"schema": null
+			},
+			"voorzieningen_kwetsbaarheid_schema": {
+				"schema": null
+			},
+			"voorzieningen_contactpersoon_schema": {
+				"schema": null
+			},
+			"voorzieningen_organisatie_schema": {
+				"schema": null
+			},
+			"voorzieningen_gebruik_schema": {
+				"schema": null
+			},
+			"voorzieningen_contract_schema": {
+				"schema": null
+			},
+			"voorzieningen_koppeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_beoordeeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_module_schema": {
+				"schema": null
+			},
+			"voorzieningen_compliancy_schema": {
+				"schema": null
+			},
+			"voorzieningen_moduleVersie_schema": {
+				"schema": null
+			}
+		}
+	},
+	"missing configuration entry": {
+		"error": "TypeError",
+		"configuration": {
+			"amef_element_schema": {
+				"schema": null
+			},
+			"amef_organization_schema": {
+				"schema": null
+			},
+			"amef_relation_schema": {
+				"schema": null
+			},
+			"amef_view_schema": {
+				"schema": null
+			},
+			"amef_model_schema": {
+				"schema": null
+			},
+			"amef_property_definition_schema": {
+				"schema": null
+			},
+			"voorzieningen_suite_schema": {
+				"schema": null
+			},
+			"voorzieningen_dienst_schema": {
+				"schema": null
+			},
+			"voorzieningen_kwetsbaarheid_schema": {
+				"schema": null
+			},
+			"voorzieningen_contactpersoon_schema": {
+				"schema": null
+			},
+			"voorzieningen_organisatie_schema": {
+				"schema": null
+			},
+			"voorzieningen_gebruik_schema": {
+				"schema": null
+			},
+			"voorzieningen_contract_schema": {
+				"schema": null
+			},
+			"voorzieningen_koppeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_beoordeeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_module_schema": {
+				"schema": null
+			},
+			"voorzieningen_compliancy_schema": {
+				"schema": null
+			},
+			"voorzieningen_moduleVersie_schema": {
+				"schema": null
+			}
+		}
+	},
+	"missing amef configuration entry": {
+		"error": "TypeError",
+		"configuration": {
+			"amef_organization_schema": {
+				"schema": null
+			},
+			"amef_relation_schema": {
+				"schema": null
+			},
+			"amef_view_schema": {
+				"schema": null
+			},
+			"amef_model_schema": {
+				"schema": null
+			},
+			"amef_property_definition_schema": {
+				"schema": null
+			},
+			"voorzieningen_sector_schema": {
+				"schema": null
+			},
+			"voorzieningen_suite_schema": {
+				"schema": null
+			},
+			"voorzieningen_dienst_schema": {
+				"schema": null
+			},
+			"voorzieningen_kwetsbaarheid_schema": {
+				"schema": null
+			},
+			"voorzieningen_contactpersoon_schema": {
+				"schema": null
+			},
+			"voorzieningen_organisatie_schema": {
+				"schema": null
+			},
+			"voorzieningen_gebruik_schema": {
+				"schema": null
+			},
+			"voorzieningen_contract_schema": {
+				"schema": null
+			},
+			"voorzieningen_koppeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_beoordeeling_schema": {
+				"schema": null
+			},
+			"voorzieningen_module_schema": {
+				"schema": null
+			},
+			"voorzieningen_compliancy_schema": {
+				"schema": null
+			},
+			"voorzieningen_moduleVersie_schema": {
+				"schema": null
+			}
+		}
+	}
+}

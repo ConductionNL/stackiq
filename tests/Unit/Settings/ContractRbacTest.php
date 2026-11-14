@@ -4,6 +4,9 @@
  * Verification test for the `contract` schema's OpenRegister RBAC read rule
  * (vendor-visibility-rbac REQ-006, extended by schema-rbac-hardening).
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Contract CRUD runs entirely through OpenRegister's own object store
  * (ADR-022, `contract-administration`) — there is no app-local contract
  * controller for reads. This capability's REQ-006 therefore verifies (and,
@@ -128,7 +131,7 @@ class ContractRbacTest extends TestCase {
 	}//end testAanbodBeheerderReadIsOrganisationScoped()
 
 	/**
-	 * TC-14 (config-shape form): `ambtenaar` retains an unrestricted read
+	 * TC-14 (config-shape form): `ambtenaar` retains a cross-organisation read
 	 * grant — admin/ambtenaar MUST retain read access regardless of
 	 * counterparty status.
 	 *
@@ -137,7 +140,8 @@ class ContractRbacTest extends TestCase {
 	public function testAmbtenaarRetainsUnrestrictedRead(): void {
 		$authorization = $this->loadContractAuthorization();
 
-		$this->assertContains('ambtenaar', $authorization['read']);
+		$this->assertContains(['group' => 'ambtenaar', 'crossOrganisation' => true], $authorization['read']);
+		$this->assertNotContains('ambtenaar', $authorization['read'], 'a bare group rule reads only the own organisation');
 
 	}//end testAmbtenaarRetainsUnrestrictedRead()
 
@@ -152,7 +156,8 @@ class ContractRbacTest extends TestCase {
 	public function testStackiqAdminsRetainsUnrestrictedRead(): void {
 		$authorization = $this->loadContractAuthorization();
 
-		$this->assertContains('software-catalog-admins', $authorization['read']);
+		$this->assertContains(['group' => 'software-catalog-admins', 'crossOrganisation' => true], $authorization['read']);
+		$this->assertNotContains('software-catalog-admins', $authorization['read'], 'a bare group rule reads only the own organisation');
 
 	}//end testStackiqAdminsRetainsUnrestrictedRead()
 

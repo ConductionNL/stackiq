@@ -15,6 +15,12 @@
         }
     },
     "scripts": {
+        "coverage:publish": [
+            "@putenv XDEBUG_MODE=coverage",
+            "@php -d pcov.enabled=1 -d pcov.directory=lib vendor/bin/phpunit -c phpunit.xml --do-not-fail-on-risky --coverage-clover=coverage/clover.xml",
+            "npm run test:coverage",
+            "@php scripts/coverage-publish.php"
+        ],
         "post-install-cmd": [
             "@composer bin all install --ansi"
         ],
@@ -83,7 +89,6 @@
         "conduction/hydra-gates": "^1.8.2",
         "cyclonedx/cyclonedx-php-composer": "^6.2",
         "edgedesign/phpqa": "^1.27",
-        "guzzlehttp/guzzle": "^8.2",
         "nextcloud/ocp": "^35.0",
         "phpcsstandards/phpcsextra": "^1.4",
         "phpmd/phpmd": "^2.15",

@@ -1,0 +1,64 @@
+{
+    "unreadable": [
+        [
+            "warning",
+            "RepointEolSyncConfig: could not read the EOL sync configuration; leaving it alone.",
+            {
+                "exception": "db gone"
+            }
+        ]
+    ],
+    "missing": [
+        [
+            "info",
+            "RepointEolSyncConfig: no stored configuration; the defaults already name the current slugs."
+        ]
+    ],
+    "not json": [
+        [
+            "warning",
+            "RepointEolSyncConfig: the stored EOL sync configuration is not a JSON object; leaving it alone.",
+            []
+        ]
+    ],
+    "already current": [
+        [
+            "info",
+            "RepointEolSyncConfig: the stored configuration already names the current slugs."
+        ]
+    ],
+    "stale": [
+        [
+            "setValueString",
+            "stackiq",
+            "eol_sync_config",
+            "{\"register\":\"integriq\",\"cycleSchema\":\"eol_cycle\",\"other\":1}"
+        ],
+        [
+            "info",
+            "RepointEolSyncConfig: 2 stale slug(s) re-pointed in the stored configuration."
+        ]
+    ],
+    "stale, unencodable": [
+        [
+            "warning",
+            "RepointEolSyncConfig: could not re-encode the EOL sync configuration; leaving it alone.",
+            []
+        ]
+    ],
+    "stale, unwritable": [
+        [
+            "setValueString",
+            "stackiq",
+            "eol_sync_config",
+            "{\"register\":\"integriq\",\"cycleSchema\":\"eol_cycle\",\"other\":1}"
+        ],
+        [
+            "warning",
+            "RepointEolSyncConfig: could not write the EOL sync configuration.",
+            {
+                "exception": "read only"
+            }
+        ]
+    ]
+}

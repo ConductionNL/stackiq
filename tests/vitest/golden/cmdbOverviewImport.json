@@ -1,0 +1,10 @@
+{
+"no file": {"trace":[],"importing":"unchanged","importOk":"unchanged","importMessage":"unchanged"},
+"started": {"trace":[["fetch","/nc/apps/stackiq/api/itsm/import","POST",{"requesttoken":"token-1"},"export.csv"]],"importing":false,"importOk":true,"importMessage":"[The import of {rows} rows has started. The applications appear as the run goes. {\"rows\":12}]"},
+"started as text": {"trace":[["fetch","/nc/apps/stackiq/api/itsm/import","POST",{"requesttoken":"token-1"},"export.csv"]],"importing":false,"importOk":false,"importMessage":"[The import did not start.]"},
+"refused with message": {"trace":[["fetch","/nc/apps/stackiq/api/itsm/import","POST",{"requesttoken":"token-1"},"export.csv"]],"importing":false,"importOk":false,"importMessage":"Set up the exchange first."},
+"refused without message": {"trace":[["fetch","/nc/apps/stackiq/api/itsm/import","POST",{"requesttoken":"token-1"},"export.csv"]],"importing":false,"importOk":false,"importMessage":"[The import did not start.]"},
+"server error with body": {"trace":[["fetch","/nc/apps/stackiq/api/itsm/import","POST",{"requesttoken":"token-1"},"export.csv"]],"importing":false,"importOk":false,"importMessage":"Boom"},
+"server error page": {"trace":[["fetch","/nc/apps/stackiq/api/itsm/import","POST",{"requesttoken":"token-1"},"export.csv"]],"importing":false,"importOk":false,"importMessage":"[The import did not start.]"},
+"network down": {"trace":[["fetch","/nc/apps/stackiq/api/itsm/import","POST",{"requesttoken":"token-1"},"export.csv"]],"importing":false,"importOk":false,"importMessage":"[The file could not be sent. Check your connection and try again.]"}
+}

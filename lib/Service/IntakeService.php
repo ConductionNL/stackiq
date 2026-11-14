@@ -33,13 +33,15 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Kernel\Contracts\IntakeServiceInterface;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * Validates + queues anonymous organisation registrations as pending.
  */
-class IntakeService {
+class IntakeService implements IntakeServiceInterface {
 	/**
 	 * The catalog object type anonymous registrations create.
 	 */
@@ -90,12 +92,12 @@ class IntakeService {
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container The DI container (lazy OR lookup).
-	 * @param SettingsService $settingsService Resolves register/schema ids.
+	 * @param ObjectTypeLocatorInterface $settingsService Resolves register/schema ids.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly ObjectTypeLocatorInterface $settingsService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -252,13 +254,7 @@ class IntakeService {
 	 * @return array{register:int, schema:int}|null The target, or null.
 	 */
 	private function resolveTarget(): ?array {
-		$register = $this->settingsService->getRegisterIdForObjectType(self::INTAKE_TYPE);
-		$schema = $this->settingsService->getSchemaIdForObjectType(self::INTAKE_TYPE);
-		if ($register === null || $schema === null) {
-			return null;
-		}
-
-		return ['register' => (int)$register, 'schema' => (int)$schema];
+		return (new ObjectTypeTarget(locator: $this->settingsService))->resolve(type: self::INTAKE_TYPE);
 	}//end resolveTarget()
 
 	/**
@@ -280,33 +276,7 @@ class IntakeService {
 	 * @return string|null The uuid, or null.
 	 */
 	private function entityUuid(mixed $entity): ?string {
-		if (is_object($entity) === true
-			&& (property_exists($entity, 'uuid') === true || method_exists($entity, 'getUuid') === true)
-		) {
-			try {
-				$uuid = $entity->getUuid();
-			} catch (\Throwable $e) {
-				$this->logger->warning('IntakeService: could not read uuid from saved entity', ['exception' => $e->getMessage()]);
-				return null;
-			}
-
-			if (is_string($uuid) === true && $uuid !== '') {
-				return $uuid;
-			}
-
-			return null;
-		}
-
-		if (is_array($entity) === true) {
-			$uuid = $entity['id'] ?? $entity['uuid'] ?? null;
-			if (is_string($uuid) === true) {
-				return $uuid;
-			}
-
-			return null;
-		}
-
-		return null;
+		return (new SavedEntityUuid(logger: $this->logger, owner: 'IntakeService'))->read(entity: $entity);
 	}//end entityUuid()
 
 	/**

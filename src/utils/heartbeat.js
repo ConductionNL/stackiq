@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Heartbeat utility for keeping long-running connections alive
  *
  * This utility prevents 504 gateway timeouts by sending periodic

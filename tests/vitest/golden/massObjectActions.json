@@ -1,0 +1,2535 @@
+{
+	"publish, all succeed, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": false,
+			"timerSet": true
+		},
+		"trace": [
+			[
+				"objectStore.massPublishObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"publish, all succeed, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": false,
+			"timerSet": true
+		},
+		"trace": [
+			[
+				"objectStore.massPublishObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"publish, some fail, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": "stackiq:Failed to publish {count} objects:{\"count\":1}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massPublishObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"publish, some fail, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": "stackiq:Failed to publish {count} objects:{\"count\":1}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massPublishObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"publish, all fail, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "stackiq:Failed to publish {count} objects:{\"count\":2}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massPublishObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"publish, all fail, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "stackiq:Failed to publish {count} objects:{\"count\":2}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massPublishObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"publish, nothing processed, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": false,
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massPublishObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"publish, nothing processed, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": false,
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massPublishObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"publish, store throws with a message, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "boom",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massPublishObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"publish, store throws with a message, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "boom",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massPublishObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"publish, store throws without a message, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "stackiq:An error occurred while publishing objects:null",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massPublishObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"publish, store throws without a message, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "stackiq:An error occurred while publishing objects:null",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massPublishObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"publish, all succeed, earlier error kept": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": "earlier",
+			"timerSet": true
+		},
+		"trace": [
+			[
+				"objectStore.massPublishObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"depublish, all succeed, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": false,
+			"timerSet": true
+		},
+		"trace": [
+			[
+				"objectStore.massDepublishObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"depublish, all succeed, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": false,
+			"timerSet": true
+		},
+		"trace": [
+			[
+				"objectStore.massDepublishObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"depublish, some fail, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": "stackiq:Failed to depublish {count} objects:{\"count\":1}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDepublishObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"depublish, some fail, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": "stackiq:Failed to depublish {count} objects:{\"count\":1}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDepublishObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"depublish, all fail, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "stackiq:Failed to depublish {count} objects:{\"count\":2}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDepublishObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"depublish, all fail, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "stackiq:Failed to depublish {count} objects:{\"count\":2}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDepublishObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"depublish, nothing processed, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": false,
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDepublishObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"depublish, nothing processed, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": false,
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDepublishObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"depublish, store throws with a message, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "boom",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDepublishObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"depublish, store throws with a message, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "boom",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDepublishObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"depublish, store throws without a message, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "stackiq:An error occurred while depublishing objects:null",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDepublishObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"depublish, store throws without a message, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "stackiq:An error occurred while depublishing objects:null",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDepublishObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"depublish, all succeed, earlier error kept": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": "earlier",
+			"timerSet": true
+		},
+		"trace": [
+			[
+				"objectStore.massDepublishObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"lock, all succeed, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": false,
+			"timerSet": true
+		},
+		"trace": [
+			[
+				"objectStore.massLockObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				],
+				"review",
+				60
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"lock, all succeed, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": false,
+			"timerSet": true
+		},
+		"trace": [
+			[
+				"objectStore.massLockObjects",
+				[],
+				"review",
+				60
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"lock, some fail, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": "stackiq:Failed to lock {count} objects:{\"count\":1}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massLockObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				],
+				"review",
+				60
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"lock, some fail, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": "stackiq:Failed to lock {count} objects:{\"count\":1}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massLockObjects",
+				[],
+				"review",
+				60
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"lock, all fail, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "stackiq:Failed to lock {count} objects:{\"count\":2}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massLockObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				],
+				"review",
+				60
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"lock, all fail, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "stackiq:Failed to lock {count} objects:{\"count\":2}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massLockObjects",
+				[],
+				"review",
+				60
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"lock, nothing processed, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": false,
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massLockObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				],
+				"review",
+				60
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"lock, nothing processed, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": false,
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massLockObjects",
+				[],
+				"review",
+				60
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"lock, store throws with a message, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "boom",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massLockObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				],
+				"review",
+				60
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"lock, store throws with a message, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "boom",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massLockObjects",
+				[],
+				"review",
+				60
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"lock, store throws without a message, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "stackiq:An error occurred while locking objects:null",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massLockObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				],
+				"review",
+				60
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"lock, store throws without a message, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "stackiq:An error occurred while locking objects:null",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massLockObjects",
+				[],
+				"review",
+				60
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"lock, all succeed, earlier error kept": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": "earlier",
+			"timerSet": true
+		},
+		"trace": [
+			[
+				"objectStore.massLockObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				],
+				"review",
+				60
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"unlock, all succeed, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": false,
+			"timerSet": true
+		},
+		"trace": [
+			[
+				"objectStore.massUnlockObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"unlock, all succeed, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": false,
+			"timerSet": true
+		},
+		"trace": [
+			[
+				"objectStore.massUnlockObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"unlock, some fail, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": "stackiq:Failed to unlock {count} objects:{\"count\":1}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massUnlockObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"unlock, some fail, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": "stackiq:Failed to unlock {count} objects:{\"count\":1}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massUnlockObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"unlock, all fail, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "stackiq:Failed to unlock {count} objects:{\"count\":2}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massUnlockObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"unlock, all fail, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "stackiq:Failed to unlock {count} objects:{\"count\":2}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massUnlockObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"unlock, nothing processed, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": false,
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massUnlockObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"unlock, nothing processed, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": false,
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massUnlockObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"unlock, store throws with a message, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "boom",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massUnlockObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"unlock, store throws with a message, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "boom",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massUnlockObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"unlock, store throws without a message, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "stackiq:An error occurred while unlocking objects:null",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massUnlockObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"unlock, store throws without a message, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "stackiq:An error occurred while unlocking objects:null",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massUnlockObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"unlock, all succeed, earlier error kept": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": "earlier",
+			"timerSet": true
+		},
+		"trace": [
+			[
+				"objectStore.massUnlockObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"validate, all succeed, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": false,
+			"timerSet": true
+		},
+		"trace": [
+			[
+				"objectStore.massValidateObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"validate, all succeed, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": false,
+			"timerSet": true
+		},
+		"trace": [
+			[
+				"objectStore.massValidateObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"validate, some fail, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": "stackiq:Failed to validate {count} objects:{\"count\":1}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massValidateObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"validate, some fail, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": "stackiq:Failed to validate {count} objects:{\"count\":1}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massValidateObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"validate, all fail, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "stackiq:Failed to validate {count} objects:{\"count\":2}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massValidateObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"validate, all fail, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "stackiq:Failed to validate {count} objects:{\"count\":2}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massValidateObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"validate, nothing processed, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": false,
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massValidateObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"validate, nothing processed, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": false,
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massValidateObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"validate, store throws with a message, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "boom",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massValidateObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"validate, store throws with a message, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "boom",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massValidateObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"validate, store throws without a message, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "stackiq:An error occurred while validating objects:null",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massValidateObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"validate, store throws without a message, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "stackiq:An error occurred while validating objects:null",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massValidateObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"validate, all succeed, earlier error kept": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": "earlier",
+			"timerSet": true
+		},
+		"trace": [
+			[
+				"objectStore.massValidateObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"delete, all succeed, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": false,
+			"timerSet": true
+		},
+		"trace": [
+			[
+				"objectStore.massDeleteObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"delete, all succeed, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": false,
+			"timerSet": true
+		},
+		"trace": [
+			[
+				"objectStore.massDeleteObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"delete, some fail, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": "stackiq:Failed to delete {count} objects:{\"count\":1}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDeleteObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"delete, some fail, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": "stackiq:Failed to delete {count} objects:{\"count\":1}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDeleteObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"delete, all fail, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "stackiq:Failed to delete {count} objects:{\"count\":2}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDeleteObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"delete, all fail, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "stackiq:Failed to delete {count} objects:{\"count\":2}",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDeleteObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"delete, nothing processed, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": false,
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDeleteObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"delete, nothing processed, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": false,
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDeleteObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"delete, store throws with a message, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "boom",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDeleteObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"delete, store throws with a message, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "boom",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDeleteObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"delete, store throws without a message, two selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "stackiq:An error occurred while deleting objects:null",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDeleteObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"delete, store throws without a message, nothing selected": {
+		"outcome": "resolved",
+		"state": {
+			"success": false,
+			"loading": false,
+			"error": "stackiq:An error occurred while deleting objects:null",
+			"timerSet": false
+		},
+		"trace": [
+			[
+				"objectStore.massDeleteObjects",
+				[]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"delete, all succeed, earlier error kept": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": "earlier",
+			"timerSet": true
+		},
+		"trace": [
+			[
+				"objectStore.massDeleteObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				]
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"lock, empty process and duration": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": false,
+			"timerSet": true
+		},
+		"trace": [
+			[
+				"objectStore.massLockObjects",
+				[
+					{
+						"id": "a"
+					},
+					{
+						"id": "b"
+					}
+				],
+				null,
+				null
+			],
+			[
+				"loading while running",
+				true
+			],
+			[
+				"catalogStore.fetchPublications"
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	}
+}

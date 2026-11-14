@@ -119,6 +119,17 @@ import ArrowRight from 'vue-material-design-icons/ArrowRight.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import MergeOrganisationConfirmDialog from '../../modals/object/MergeOrganisationConfirmDialog.vue'
 import { organisatieStore, settingsStore } from '../../store/store.js'
+import { mergeTargetOptions } from './organisationMergeTargets.js'
+
+/**
+ * Unwrap an OpenRegister object reply to the object itself.
+ *
+ * @param {object} data The reply body.
+ * @return {object} The object: the body itself when it carries `@self`, else its `object`, else the body.
+ */
+function sourceObject(data) {
+	return data && data['@self'] !== undefined ? data : data.object || data
+}
 
 /**
  * @class OrganisationMergePanel
@@ -234,21 +245,7 @@ export default {
 				return
 			}
 			try {
-				const url = generateUrl(
-					'/apps/openregister/api/objects/{register}/{schema}/{id}',
-					{
-						register: this.register,
-						schema: this.schema,
-						id: String(this.objectId),
-					},
-				)
-				const { data } = await axios.get(url)
-				const obj =
-					data && data['@self'] !== undefined ? data : data.object || data
-				this.sourceName =
-					obj.name || obj.name || t('stackiq', 'Unknown organisation')
-				this.status = obj.status || ''
-				this.mergedInto = obj.mergedInto || ''
+				this.applySource(await this.fetchSource())
 			} catch (e) {
 				// Non-fatal — the panel still renders merge controls with an
 				// empty source name rather than failing the whole detail page.
@@ -256,6 +253,36 @@ export default {
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Fetch the source organisation object from OpenRegister.
+		 *
+		 * @return {Promise<object>} The organisation object, unwrapped from its envelope.
+		 */
+		async fetchSource() {
+			const url = generateUrl(
+				'/apps/openregister/api/objects/{register}/{schema}/{id}',
+				{
+					register: this.register,
+					schema: this.schema,
+					id: String(this.objectId),
+				},
+			)
+			const { data } = await axios.get(url)
+			return sourceObject(data)
+		},
+
+		/**
+		 * Copy the source organisation's name, status and merge target.
+		 *
+		 * @param {object} obj The organisation object.
+		 * @return {void}
+		 */
+		applySource(obj) {
+			this.sourceName = obj.name || t('stackiq', 'Unknown organisation')
+			this.status = obj.status || ''
+			this.mergedInto = obj.mergedInto || ''
 		},
 
 		/**
@@ -274,36 +301,32 @@ export default {
 			}
 			this.loadingTargets = true
 			try {
-				const url = generateUrl(
-					'/apps/openregister/api/objects/{register}/{schema}',
-					{
-						register: this.register,
-						schema: this.schema,
-					},
-				)
-				const { data } = await axios.get(url, { params: { _limit: 500 } })
-				const results = data?.results || data?.data || []
-				this.targetOptions = results
-					.filter((org) => {
-						const id = org.id || org['@self']?.id
-						return (
-							String(id) !== String(this.objectId)
-							&& org.status !== 'merged'
-						)
-					})
-					.map((org) => ({
-						value: org.id || org['@self']?.id,
-						label:
-							org.name
-							|| org.name
-							|| org['@self']?.name
-							|| String(org.id),
-					}))
+				this.targetOptions = await this.fetchTargetOptions()
 			} catch (e) {
 				this.error = t('stackiq', 'Could not load target organisations.')
 			} finally {
 				this.loadingTargets = false
 			}
+		},
+
+		/**
+		 * Fetch the organisations of the register and schema and keep those
+		 * this one can be merged into, as select options.
+		 *
+		 * @return {Promise<Array<{value: (string|number), label: string}>>} The options.
+		 * @spec openspec/specs/organisation-merge/spec.md#requirement-merge-requests-must-be-validated-and-rejected-with-blockers-before-any-write
+		 */
+		async fetchTargetOptions() {
+			const url = generateUrl(
+				'/apps/openregister/api/objects/{register}/{schema}',
+				{
+					register: this.register,
+					schema: this.schema,
+				},
+			)
+			const { data } = await axios.get(url, { params: { _limit: 500 } })
+			const results = data?.results || data?.data || []
+			return mergeTargetOptions(results, this.objectId)
 		},
 
 		/**
@@ -317,27 +340,59 @@ export default {
 			if (!this.selectedTarget) {
 				return
 			}
-			this.previewing = true
-			this.error = ''
-			this.blockers = []
+			this.startPreview()
 			try {
-				const result = await organisatieStore.dryRunMerge(
-					String(this.objectId),
-					String(this.selectedTarget.value),
-				)
-				this.dryRunCounts = result.counts || {}
-				if (result.blockers && result.blockers.length > 0) {
-					this.blockers = result.blockers
-					return
-				}
-				this.confirmError = ''
-				this.showConfirm = true
+				this.applyDryRun(await this.dryRunSelectedMerge())
 			} catch (e) {
 				this.error =
 					e.message || t('stackiq', 'Could not preview the merge.')
 			} finally {
 				this.previewing = false
 			}
+		},
+
+		/**
+		 * Mark the preview as running and clear the previous error and
+		 * blockers.
+		 *
+		 * @return {void}
+		 * @spec openspec/specs/organisation-merge/spec.md#requirement-the-system-shall-preview-a-merge-with-per-relation-type-counts-before-any-write
+		 */
+		startPreview() {
+			this.previewing = true
+			this.error = ''
+			this.blockers = []
+		},
+
+		/**
+		 * Dry-run the merge into the selected target.
+		 *
+		 * @return {Promise<object>} The dry-run result: counts and blockers.
+		 * @spec openspec/specs/organisation-merge/spec.md#requirement-the-system-shall-preview-a-merge-with-per-relation-type-counts-before-any-write
+		 */
+		dryRunSelectedMerge() {
+			return organisatieStore.dryRunMerge(
+				String(this.objectId),
+				String(this.selectedTarget.value),
+			)
+		},
+
+		/**
+		 * Keep the dry-run counts, then show the blockers of an illegal merge
+		 * or open the confirm dialog for a legal one.
+		 *
+		 * @param {object} result The dry-run result.
+		 * @return {void}
+		 * @spec openspec/specs/organisation-merge/spec.md#requirement-the-system-shall-preview-a-merge-with-per-relation-type-counts-before-any-write
+		 */
+		applyDryRun(result) {
+			this.dryRunCounts = result.counts || {}
+			if (result.blockers && result.blockers.length > 0) {
+				this.blockers = result.blockers
+				return
+			}
+			this.confirmError = ''
+			this.showConfirm = true
 		},
 
 		/**

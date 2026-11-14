@@ -36,6 +36,7 @@ use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\Federation\FederationConfig;
 use OCA\Stackiq\Service\Federation\FederationMerger;
 use OCA\Stackiq\Service\Federation\FederationService;
+use OCA\Stackiq\Service\Settings\EolSyncSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
@@ -192,7 +193,7 @@ class ConnectionReportCallersTest extends TestCase {
 	}//end testFederationWithoutAReporterAnswersAsBefore()
 
 	/**
-	 * An EolSyncService around a settings service that holds the given config.
+	 * An EolSyncService around EOL sync settings that hold the given config.
 	 *
 	 * @param ConnectionReportService|null $reports The reporter, or none.
 	 * @param bool                         $enabled Whether the sync is switched on.
@@ -209,15 +210,18 @@ class ConnectionReportCallersTest extends TestCase {
 		];
 
 		$settings = $this->createMock(originalClassName: SettingsService::class);
-		$settings->method('getEolSyncConfig')->willReturn($config);
-		$settings->method('updateEolSyncConfig')->willReturn(['success' => true, 'config' => $config]);
 		$settings->method('isOpenRegisterInstalled')->willReturn(false);
+
+		$eolSettings = $this->createMock(originalClassName: EolSyncSettings::class);
+		$eolSettings->method('getEolSyncConfig')->willReturn($config);
+		$eolSettings->method('updateEolSyncConfig')->willReturn(['success' => true, 'config' => $config]);
 
 		$time = $this->createMock(originalClassName: ITimeFactory::class);
 		$time->method('getDateTime')->willReturn(new DateTime('2026-09-14T12:00:00+00:00'));
 
 		return new EolSyncService(
 			settingsService: $settings,
+			eolSyncSettings: $eolSettings,
 			matcher: new EolMatcherService(),
 			timeFactory: $time,
 			logger: $this->createMock(originalClassName: LoggerInterface::class),
@@ -274,14 +278,14 @@ class ConnectionReportCallersTest extends TestCase {
 	 * The hand-built factories pass the reporter by name.
 	 *
 	 * FederationService and EolSyncService are registered with explicit
-	 * factories in Application::register(). The constructor default is null,
+	 * factories in Service\Registration\ServiceFactories. The constructor default is null,
 	 * so a factory that leaves the argument out builds a service that never
 	 * reports, and nothing anywhere says so.
 	 *
 	 * @return void
 	 */
 	public function testTheHandBuiltFactoriesPassTheReporter(): void {
-		$source = (string) file_get_contents(dirname(__DIR__, 3) . '/lib/AppInfo/Application.php');
+		$source = (string) file_get_contents(dirname(__DIR__, 3) . '/lib/Service/Registration/ServiceFactories.php');
 
 		foreach (['FederationService', 'EolSyncService'] as $service) {
 			$matched = preg_match(

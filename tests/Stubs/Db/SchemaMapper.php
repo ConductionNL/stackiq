@@ -32,9 +32,17 @@ abstract class SchemaMapper {
 	 * @param string $slug The slug to search for.
 	 * @param int $limit Maximum number of results.
 	 * @param int $offset Offset for pagination.
+	 * @param bool $_rbac Whether to apply RBAC.
+	 * @param bool $_multitenancy Whether to apply the organisation filter.
 	 *
 	 * @return array<int, object> Array of matching schema entities.
 	 */
-	abstract public function findBySlug(string $slug, int $limit = 10, int $offset = 0): array;
+	abstract public function findBySlug(
+		string $slug,
+		int $limit = 10,
+		int $offset = 0,
+		bool $_rbac = true,
+		bool $_multitenancy = true,
+	): array;
 
 }//end class

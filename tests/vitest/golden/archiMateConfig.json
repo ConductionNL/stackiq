@@ -1,0 +1,320 @@
+{
+	"missing": {
+		"empty": [],
+		"none": [],
+		"schema not configured": [
+			"ApplicationComponent schema ID (for element objects)"
+		],
+		"register not configured": [
+			"AMEF Register ID"
+		],
+		"other not configured": [
+			"AMEF schema configuration"
+		],
+		"legacy list": [
+			"Register ID",
+			"-  Schema ID",
+			"Third"
+		],
+		"legacy list repeated header": [
+			"One",
+			"Two"
+		],
+		"legacy without list": [],
+		"legacy list at end": [
+			"A",
+			"B"
+		]
+	},
+	"organisations": {
+		"config request fails": {
+			"trace": [
+				[
+					"fetch",
+					"/index.php/apps/stackiq/api/voorzieningen/config",
+					{
+						"headers": {
+							"OCS-APIREQUEST": "true",
+							"requesttoken": "token"
+						}
+					}
+				],
+				[
+					"console.warn",
+					"Could not load organizations:",
+					"Failed to load config"
+				]
+			],
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			]
+		},
+		"config without register": {
+			"trace": [
+				[
+					"fetch",
+					"/index.php/apps/stackiq/api/voorzieningen/config",
+					{
+						"headers": {
+							"OCS-APIREQUEST": "true",
+							"requesttoken": "token"
+						}
+					}
+				],
+				[
+					"console.debug",
+					"Voorzieningen config not available, using default Generic option"
+				]
+			],
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			]
+		},
+		"config without schema": {
+			"trace": [
+				[
+					"fetch",
+					"/index.php/apps/stackiq/api/voorzieningen/config",
+					{
+						"headers": {
+							"OCS-APIREQUEST": "true",
+							"requesttoken": "token"
+						}
+					}
+				],
+				[
+					"console.debug",
+					"Voorzieningen config not available, using default Generic option"
+				]
+			],
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			]
+		},
+		"no config": {
+			"trace": [
+				[
+					"fetch",
+					"/index.php/apps/stackiq/api/voorzieningen/config",
+					{
+						"headers": {
+							"OCS-APIREQUEST": "true",
+							"requesttoken": "token"
+						}
+					}
+				],
+				[
+					"console.debug",
+					"Voorzieningen config not available, using default Generic option"
+				]
+			],
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			]
+		},
+		"organisations request fails": {
+			"trace": [
+				[
+					"fetch",
+					"/index.php/apps/stackiq/api/voorzieningen/config",
+					{
+						"headers": {
+							"OCS-APIREQUEST": "true",
+							"requesttoken": "token"
+						}
+					}
+				],
+				[
+					"fetch",
+					"/index.php/apps/openregister/api/objects/voorz/org?_limit=5000",
+					{
+						"headers": {
+							"OCS-APIREQUEST": "true",
+							"requesttoken": "token"
+						}
+					}
+				],
+				[
+					"console.warn",
+					"Could not load organizations:",
+					"Failed to load organizations"
+				]
+			],
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			]
+		},
+		"organisations as results": {
+			"trace": [
+				[
+					"fetch",
+					"/index.php/apps/stackiq/api/voorzieningen/config",
+					{
+						"headers": {
+							"OCS-APIREQUEST": "true",
+							"requesttoken": "token"
+						}
+					}
+				],
+				[
+					"fetch",
+					"/index.php/apps/openregister/api/objects/voorz/org?_limit=5000",
+					{
+						"headers": {
+							"OCS-APIREQUEST": "true",
+							"requesttoken": "token"
+						}
+					}
+				]
+			],
+			"organizationOptions": [
+				{
+					"label": "alpha",
+					"value": "a"
+				},
+				{
+					"label": "Bravo",
+					"value": "b"
+				},
+				{
+					"label": "Charlie",
+					"value": "c"
+				},
+				{
+					"label": "delta-uid",
+					"value": "d"
+				}
+			]
+		},
+		"organisations as a list": {
+			"trace": [
+				[
+					"fetch",
+					"/index.php/apps/stackiq/api/voorzieningen/config",
+					{
+						"headers": {
+							"OCS-APIREQUEST": "true",
+							"requesttoken": "token"
+						}
+					}
+				],
+				[
+					"fetch",
+					"/index.php/apps/openregister/api/objects/voorz/org?_limit=5000",
+					{
+						"headers": {
+							"OCS-APIREQUEST": "true",
+							"requesttoken": "token"
+						}
+					}
+				]
+			],
+			"organizationOptions": [
+				{
+					"label": "Xray",
+					"value": "x"
+				}
+			]
+		},
+		"organisations empty": {
+			"trace": [
+				[
+					"fetch",
+					"/index.php/apps/stackiq/api/voorzieningen/config",
+					{
+						"headers": {
+							"OCS-APIREQUEST": "true",
+							"requesttoken": "token"
+						}
+					}
+				],
+				[
+					"fetch",
+					"/index.php/apps/openregister/api/objects/voorz/org?_limit=5000",
+					{
+						"headers": {
+							"OCS-APIREQUEST": "true",
+							"requesttoken": "token"
+						}
+					}
+				]
+			],
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			]
+		},
+		"organisations not a list": {
+			"trace": [
+				[
+					"fetch",
+					"/index.php/apps/stackiq/api/voorzieningen/config",
+					{
+						"headers": {
+							"OCS-APIREQUEST": "true",
+							"requesttoken": "token"
+						}
+					}
+				],
+				[
+					"fetch",
+					"/index.php/apps/openregister/api/objects/voorz/org?_limit=5000",
+					{
+						"headers": {
+							"OCS-APIREQUEST": "true",
+							"requesttoken": "token"
+						}
+					}
+				]
+			],
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			]
+		},
+		"network failure": {
+			"trace": [
+				[
+					"fetch",
+					"/index.php/apps/stackiq/api/voorzieningen/config",
+					{
+						"headers": {
+							"OCS-APIREQUEST": "true",
+							"requesttoken": "token"
+						}
+					}
+				],
+				[
+					"console.warn",
+					"Could not load organizations:",
+					"Failed to fetch"
+				]
+			],
+			"organizationOptions": [
+				{
+					"label": "Generic",
+					"value": null
+				}
+			]
+		}
+	}
+}

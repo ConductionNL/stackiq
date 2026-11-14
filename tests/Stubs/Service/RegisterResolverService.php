@@ -5,8 +5,7 @@
  *
  * The real service lives in the OpenRegister app, which is not available as a
  * Composer dependency in the Stackiq test environment. This stub
- * declares the public surface that stackiq consumes (resolveSchemaId,
- * resolveRegisterId) so PHPUnit can create mocks against it.
+ * declares the public surface that stackiq consumes (lookupId) so PHPUnit can create mocks against it.
  *
  * SPDX-License-Identifier: EUPL-1.2
  *
@@ -24,37 +23,12 @@ namespace OCA\OpenRegister\Service;
 abstract class RegisterResolverService {
 
 	/**
-	 * Resolve a `<context>_register` config key to a slug or UUID string.
+	 * Read the configured slug/UUID/name of a lookup from app config.
 	 *
-	 * @param string $appId Consumer app id.
-	 * @param string $configKey Config key to read.
-	 * @param string|null $default Fallback when unset.
-	 * @param string|null $organisationUuid Optional org override.
+	 * @param ConfigLookup $lookup The app, config key and fallback to read.
 	 *
-	 * @return string
+	 * @return string The configured value, else the lookup's fallback.
 	 */
-	abstract public function resolveRegisterId(
-		string $appId,
-		string $configKey,
-		?string $default = null,
-		?string $organisationUuid = null,
-	): string;
-
-	/**
-	 * Resolve a `<context>_schema` config key to a slug or UUID string.
-	 *
-	 * @param string $appId Consumer app id.
-	 * @param string $configKey Config key to read.
-	 * @param string|null $default Fallback when unset.
-	 * @param string|null $organisationUuid Optional org override.
-	 *
-	 * @return string
-	 */
-	abstract public function resolveSchemaId(
-		string $appId,
-		string $configKey,
-		?string $default = null,
-		?string $organisationUuid = null,
-	): string;
+	abstract public function lookupId(ConfigLookup $lookup): string;
 
 }//end class

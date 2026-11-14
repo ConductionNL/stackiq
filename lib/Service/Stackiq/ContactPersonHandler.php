@@ -12,12 +12,19 @@
  * @copyright 2024 Conduction B.V. <info@conduction.nl>
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Stackiq;
 
+use OCA\OpenRegister\Service\Organisation\NewOrganisation;
+use OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface;
+use OCA\Stackiq\Service\OrganisationSlug;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -57,7 +64,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
-class ContactPersonHandler {
+class ContactPersonHandler implements ContactPersonHandlerInterface {
 	/**
 	 * ContactPersonHandler constructor
 	 *
@@ -642,7 +649,7 @@ class ContactPersonHandler {
 			// A first contact is NOT added to the organisation admin groups.
 			// That automatic assignment was switched off on purpose in commit
 			// bc4dc9ea ("users should be assigned groups explicitly via the
-			// admin UI"), by making SettingsService::getOrganizationAdminGroups()
+			// admin UI"), by making getOrganizationAdminGroups() (now RoleGroupSettings)
 			// return an empty list. stackiq#1136 made that getter read the saved
 			// list again for the settings page and the export permission, so
 			// the assignment is left out here instead of being revived.
@@ -983,7 +990,7 @@ class ContactPersonHandler {
 			}
 
 			// Get register and schema IDs dynamically from configuration.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$registerId = $settingsService->getVoorzieningenRegisterId();
 			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -993,7 +1000,7 @@ class ContactPersonHandler {
 			}
 
 			// Use find() method with proper register/schema context.
-			$organizationObject = $objectService->find($organizationId, [], false, $registerId, $organisationSchemaId);
+			$organizationObject = $objectService->find(id: $organizationId, _extend: [], files: false, register: $registerId, schema: $organisationSchemaId);
 
 			if (empty($organizationObject) === false) {
 				$organizationData = $organizationObject->getObject();
@@ -1210,7 +1217,7 @@ class ContactPersonHandler {
 			}//end if
 
 			// Sync e-mailadres to user's email property.
-			$email = $contactData['e-mailadres'] ?? $contactData['email'] ?? '';
+			$email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
 			if (empty($email) === false && $email !== $user->getEMailAddress()) {
 				$user->setEMailAddress($email);
 				$this->_logger->info(
@@ -1541,7 +1548,7 @@ class ContactPersonHandler {
 			);
 
 			// Get voorzieningen config for register and schema.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 			$register = $voorzieningenConfig['register'] ?? '';
 			$organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
@@ -1655,7 +1662,7 @@ class ContactPersonHandler {
 				try {
 					$objectService = $this->getObjectService();
 					// Get register and schema IDs dynamically from configuration.
-					$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+					$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 					$registerId = $settingsService->getVoorzieningenRegisterId();
 					$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -1665,11 +1672,11 @@ class ContactPersonHandler {
 					}
 
 					$organizationObject = $objectService->find(
-						$organizationId,
-						[],
-						false,
-						$registerId,
-						$organisationSchemaId
+						id: $organizationId,
+						_extend: [],
+						files: false,
+						register: $registerId,
+						schema: $organisationSchemaId
 					);
 					if (empty($organizationObject) === false) {
 						$organizationData = $organizationObject->getObject();
@@ -2104,7 +2111,7 @@ class ContactPersonHandler {
 			}
 
 			// Get the organization object.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$registerId = $settingsService->getVoorzieningenRegisterId();
 			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -2113,7 +2120,13 @@ class ContactPersonHandler {
 			}
 
 			try {
-				$organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisationSchemaId);
+				$organizationObject = $objectService->find(
+					id: $organizationUuid,
+					_extend: [],
+					files: false,
+					register: $registerId,
+					schema: $organisationSchemaId
+				);
 				$organizationData = $organizationObject->getObject();
 
 				// Check if the username is already in the organization's users.
@@ -2187,7 +2200,7 @@ class ContactPersonHandler {
 			}
 
 			// Get the organization object.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$registerId = $settingsService->getVoorzieningenRegisterId();
 			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -2197,7 +2210,13 @@ class ContactPersonHandler {
 			}
 
 			try {
-				$organizationObject = $objectService->find($organizationUuid, [], false, $registerId, $organisationSchemaId);
+				$organizationObject = $objectService->find(
+					id: $organizationUuid,
+					_extend: [],
+					files: false,
+					register: $registerId,
+					schema: $organisationSchemaId
+				);
 				$organizationData = $organizationObject->getObject();
 
 				// Add the username to the organization's users list.
@@ -2396,9 +2415,10 @@ class ContactPersonHandler {
 
 					$organisation = $this->ensureOrganizationEntity(organizationUuid: $organizationUuid);
 
+					// The reason there is none is logged by ensureOrganizationEntity().
 					if ($organisation === null) {
-						$this->_logger->error(
-							'ContactPersonHandler: Failed to create organization entity',
+						$this->_logger->info(
+							'ContactPersonHandler: No organization entity, user not added',
 							[
 								'organizationUuid' => $organizationUuid,
 							]
@@ -2490,7 +2510,7 @@ class ContactPersonHandler {
 			$objectService = $this->getObjectService();
 
 			// Get voorzieningen config for register and schema.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 			$register = $voorzieningenConfig['register'] ?? '';
 			$organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
@@ -2522,23 +2542,14 @@ class ContactPersonHandler {
 			$description = $organizationData['description'] ?? $organizationData['longDescription'] ?? null;
 			$organizationDescription = $description ?? $organizationData['description'] ?? '';
 
-			// Check if an entity with the same slug already exists (prevents unique constraint violation).
+			// Another organisation with this name's slug is never taken over: the
+			// organisatie stays without an entity until an administrator links it.
 			try {
-				$slug = strtolower(preg_replace('/[^a-z0-9]+/', '-', strtolower($organizationName)));
-				$slug = trim($slug, '-');
-				$existingBySlug = $organisationMapper->findBySlug($slug);
-				$this->_logger->info(
-					'ContactPersonHandler: Organization entity already exists (found by slug)',
-					[
-						'organizationUuid' => $organizationUuid,
-						'slug' => $slug,
-						'existingUuid' => $existingBySlug->getUuid(),
-						'existingName' => $existingBySlug->getName(),
-					]
-				);
-				return $existingBySlug;
+				$existingBySlug = $organisationMapper->findBySlug((new OrganisationSlug())->fromName(name: $organizationName));
+				$this->logSlugConflict(organizationUuid: $organizationUuid, existingUuid: $existingBySlug->getUuid());
+				return null;
 			} catch (\OCP\AppFramework\Db\DoesNotExistException $e) {
-				// No existing entity by slug — proceed with creation.
+				// No organisation has this slug: create one.
 			}
 
 			$this->_logger->info(
@@ -2554,11 +2565,13 @@ class ContactPersonHandler {
 
 			// Create organisation with specific UUID, without adding current user (as we're in admin context).
 			$organisation = $organisationService->createOrganisation(
-				name: $organizationName,
-				description: $organizationDescription,
-				addCurrentUser: false,
+				details: new NewOrganisation(
+					name: $organizationName,
+					description: $organizationDescription,
+					uuid: $organizationUuid
+				),
 				// Don't add current user (admin) to this organisation.
-				uuid: $organizationUuid
+				addCurrentUser: false
 			);
 
 			$this->_logger->info(
@@ -2572,6 +2585,11 @@ class ContactPersonHandler {
 
 			return $organisation;
 		} catch (\Exception $e) {
+			if (is_a($e, OrganisationSlug::CONFLICT_EXCEPTION) === true) {
+				$this->logSlugConflict(organizationUuid: $organizationUuid, existingUuid: null);
+				return null;
+			}
+
 			$this->_logger->error(
 				'ContactPersonHandler: Failed to ensure organization entity',
 				[
@@ -2585,6 +2603,24 @@ class ContactPersonHandler {
 			return null;
 		}//end try
 	}//end ensureOrganizationEntity()
+
+	/**
+	 * Log an organisatie left without an entity because its name's slug is taken.
+	 *
+	 * @param string      $organizationUuid The organisatie uuid.
+	 * @param string|null $existingUuid     The uuid of the organisation holding the slug, when known.
+	 *
+	 * @return void
+	 */
+	private function logSlugConflict(string $organizationUuid, ?string $existingUuid): void {
+		$this->_logger->warning(
+			'ContactPersonHandler: an organisation with this name already exists; the organisatie is left unlinked for an administrator',
+			[
+				'organizationUuid' => $organizationUuid,
+				'existingOrganisationUuid' => $existingUuid,
+			]
+		);
+	}//end logSlugConflict()
 
 	/**
 	 * Strips spaces and non-alphanumeric characters from voornaam/achternaam

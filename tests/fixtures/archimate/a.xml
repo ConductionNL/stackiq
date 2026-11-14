@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" identifier="test-model" name="Test ArchiMate Model">
+  <elements>
+    <element identifier="test-element-1" xsi:type="archimate:BusinessActor">
+      <name>Test Business Actor</name>
+      <properties>
+        <property identifier="test-prop-1">
+          <value>Test Property Value</value>
+        </property>
+      </properties>
+    </element>
+    <element identifier="test-element-2" xsi:type="archimate:BusinessRole">
+      <name>Test Business Role</name>
+    </element>
+  </elements>
+  <relationships>
+    <relationship identifier="test-rel-1" xsi:type="archimate:AssignmentRelationship">
+      <name>Test Assignment</name>
+      <source>
+        <element ref="test-element-1"/>
+      </source>
+      <target>
+        <element ref="test-element-2"/>
+      </target>
+    </relationship>
+  </relationships>
+  <views>
+    <view identifier="test-view-1" xsi:type="archimate:ArchimateDiagramModel">
+      <name>Test View</name>
+    </view>
+  </views>
+</model> 

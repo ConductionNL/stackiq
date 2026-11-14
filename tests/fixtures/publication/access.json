@@ -1,0 +1,752 @@
+{
+    "publish | no user": {
+        "status": 401,
+        "data": {
+            "message": "Not logged in"
+        },
+        "calls": []
+    },
+    "publish | type not publishable": {
+        "status": 400,
+        "data": {
+            "message": "Object type is not publishable"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ]
+        ]
+    },
+    "publish | entry not found": {
+        "status": 404,
+        "data": {
+            "message": "Entry not found"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ]
+        ]
+    },
+    "publish | peer-sourced entry": {
+        "status": 403,
+        "data": {
+            "message": "Peer-sourced entries cannot be published locally"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ]
+        ]
+    },
+    "publish | blank peer instance": {
+        "status": 200,
+        "data": {
+            "ok": true,
+            "publicatiedatum": "2026-01-01"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "getUserValue",
+                "alice",
+                "core",
+                "organisation"
+            ],
+            [
+                "publish",
+                "module",
+                "uuid-1",
+                null
+            ]
+        ]
+    },
+    "publish | source not an array": {
+        "status": 200,
+        "data": {
+            "ok": true,
+            "publicatiedatum": "2026-01-01"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "getUserValue",
+                "alice",
+                "core",
+                "organisation"
+            ],
+            [
+                "publish",
+                "module",
+                "uuid-1",
+                null
+            ]
+        ]
+    },
+    "publish | admin of another organisation": {
+        "status": 200,
+        "data": {
+            "ok": true,
+            "publicatiedatum": "2026-01-01"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "publish",
+                "module",
+                "uuid-1",
+                null
+            ]
+        ]
+    },
+    "publish | beheerder owns by organisation": {
+        "status": 200,
+        "data": {
+            "ok": true,
+            "publicatiedatum": "2026-01-01"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "getUserValue",
+                "alice",
+                "core",
+                "organisation"
+            ],
+            [
+                "publish",
+                "module",
+                "uuid-1",
+                null
+            ]
+        ]
+    },
+    "publish | beheerder owns by provider": {
+        "status": 200,
+        "data": {
+            "ok": true,
+            "publicatiedatum": "2026-01-01"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "getUserValue",
+                "alice",
+                "core",
+                "organisation"
+            ],
+            [
+                "publish",
+                "module",
+                "uuid-1",
+                null
+            ]
+        ]
+    },
+    "publish | beheerder of another organisation": {
+        "status": 403,
+        "data": {
+            "message": "You do not have permission to publish this entry"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "getUserValue",
+                "alice",
+                "core",
+                "organisation"
+            ],
+            [
+                "warning",
+                "PublicationController: publish refused (not entry owner)",
+                {
+                    "objectType": "module",
+                    "uuid": "uuid-1",
+                    "uid": "alice"
+                }
+            ]
+        ]
+    },
+    "publish | beheerder without organisation": {
+        "status": 403,
+        "data": {
+            "message": "You do not have permission to publish this entry"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "getUserValue",
+                "alice",
+                "core",
+                "organisation"
+            ],
+            [
+                "warning",
+                "PublicationController: publish refused (not entry owner)",
+                {
+                    "objectType": "module",
+                    "uuid": "uuid-1",
+                    "uid": "alice"
+                }
+            ]
+        ]
+    },
+    "publish | entry without owner": {
+        "status": 403,
+        "data": {
+            "message": "You do not have permission to publish this entry"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "getUserValue",
+                "alice",
+                "core",
+                "organisation"
+            ],
+            [
+                "warning",
+                "PublicationController: publish refused (not entry owner)",
+                {
+                    "objectType": "module",
+                    "uuid": "uuid-1",
+                    "uid": "alice"
+                }
+            ]
+        ]
+    },
+    "publish | user in neither group": {
+        "status": 403,
+        "data": {
+            "message": "You do not have permission to publish this entry"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "warning",
+                "PublicationController: publish refused (not entry owner)",
+                {
+                    "objectType": "module",
+                    "uuid": "uuid-1",
+                    "uid": "alice"
+                }
+            ]
+        ]
+    },
+    "publish | service refuses": {
+        "status": 400,
+        "data": {
+            "message": "already published"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "getUserValue",
+                "alice",
+                "core",
+                "organisation"
+            ],
+            [
+                "publish",
+                "module",
+                "uuid-1",
+                null
+            ]
+        ]
+    },
+    "depublish | no user": {
+        "status": 401,
+        "data": {
+            "message": "Not logged in"
+        },
+        "calls": []
+    },
+    "depublish | type not publishable": {
+        "status": 400,
+        "data": {
+            "message": "Object type is not publishable"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ]
+        ]
+    },
+    "depublish | entry not found": {
+        "status": 404,
+        "data": {
+            "message": "Entry not found"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ]
+        ]
+    },
+    "depublish | peer-sourced entry": {
+        "status": 403,
+        "data": {
+            "message": "Peer-sourced entries cannot be published locally"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ]
+        ]
+    },
+    "depublish | blank peer instance": {
+        "status": 200,
+        "data": {
+            "ok": true,
+            "publicatiedatum": "2026-01-01"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "getUserValue",
+                "alice",
+                "core",
+                "organisation"
+            ],
+            [
+                "depublish",
+                "module",
+                "uuid-1"
+            ]
+        ]
+    },
+    "depublish | source not an array": {
+        "status": 200,
+        "data": {
+            "ok": true,
+            "publicatiedatum": "2026-01-01"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "getUserValue",
+                "alice",
+                "core",
+                "organisation"
+            ],
+            [
+                "depublish",
+                "module",
+                "uuid-1"
+            ]
+        ]
+    },
+    "depublish | admin of another organisation": {
+        "status": 200,
+        "data": {
+            "ok": true,
+            "publicatiedatum": "2026-01-01"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "depublish",
+                "module",
+                "uuid-1"
+            ]
+        ]
+    },
+    "depublish | beheerder owns by organisation": {
+        "status": 200,
+        "data": {
+            "ok": true,
+            "publicatiedatum": "2026-01-01"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "getUserValue",
+                "alice",
+                "core",
+                "organisation"
+            ],
+            [
+                "depublish",
+                "module",
+                "uuid-1"
+            ]
+        ]
+    },
+    "depublish | beheerder owns by provider": {
+        "status": 200,
+        "data": {
+            "ok": true,
+            "publicatiedatum": "2026-01-01"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "getUserValue",
+                "alice",
+                "core",
+                "organisation"
+            ],
+            [
+                "depublish",
+                "module",
+                "uuid-1"
+            ]
+        ]
+    },
+    "depublish | beheerder of another organisation": {
+        "status": 403,
+        "data": {
+            "message": "You do not have permission to publish this entry"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "getUserValue",
+                "alice",
+                "core",
+                "organisation"
+            ],
+            [
+                "warning",
+                "PublicationController: publish refused (not entry owner)",
+                {
+                    "objectType": "module",
+                    "uuid": "uuid-1",
+                    "uid": "alice"
+                }
+            ]
+        ]
+    },
+    "depublish | beheerder without organisation": {
+        "status": 403,
+        "data": {
+            "message": "You do not have permission to publish this entry"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "getUserValue",
+                "alice",
+                "core",
+                "organisation"
+            ],
+            [
+                "warning",
+                "PublicationController: publish refused (not entry owner)",
+                {
+                    "objectType": "module",
+                    "uuid": "uuid-1",
+                    "uid": "alice"
+                }
+            ]
+        ]
+    },
+    "depublish | entry without owner": {
+        "status": 403,
+        "data": {
+            "message": "You do not have permission to publish this entry"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "getUserValue",
+                "alice",
+                "core",
+                "organisation"
+            ],
+            [
+                "warning",
+                "PublicationController: publish refused (not entry owner)",
+                {
+                    "objectType": "module",
+                    "uuid": "uuid-1",
+                    "uid": "alice"
+                }
+            ]
+        ]
+    },
+    "depublish | user in neither group": {
+        "status": 403,
+        "data": {
+            "message": "You do not have permission to publish this entry"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "warning",
+                "PublicationController: publish refused (not entry owner)",
+                {
+                    "objectType": "module",
+                    "uuid": "uuid-1",
+                    "uid": "alice"
+                }
+            ]
+        ]
+    },
+    "depublish | service refuses": {
+        "status": 400,
+        "data": {
+            "message": "already published"
+        },
+        "calls": [
+            [
+                "isPublishableType",
+                "module"
+            ],
+            [
+                "resolveEntry",
+                "module",
+                "uuid-1"
+            ],
+            [
+                "getUserGroups"
+            ],
+            [
+                "getUserValue",
+                "alice",
+                "core",
+                "organisation"
+            ],
+            [
+                "depublish",
+                "module",
+                "uuid-1"
+            ]
+        ]
+    }
+}

@@ -28,13 +28,15 @@ namespace OCA\Stackiq\Service;
 
 use DateTimeImmutable;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ContractStatusServiceInterface;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
  * Server-side maintenance of contract status (Actief → Verlopen).
  */
-class ContractStatusService {
+class ContractStatusService implements ContractStatusServiceInterface {
 	/**
 	 * The active status from which a contract may expire.
 	 */
@@ -49,12 +51,12 @@ class ContractStatusService {
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container The DI container (lazy OR lookup).
-	 * @param SettingsService $settingsService Resolves register/schema ids.
+	 * @param ObjectTypeLocatorInterface $settingsService Resolves register/schema ids.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly ObjectTypeLocatorInterface $settingsService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

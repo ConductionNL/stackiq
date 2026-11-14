@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" identifier="big">
+  <elements>
+    <element identifier="el-00" xsi:type="Role"><name>el-00</name></element>
+  </elements>
+  <relationships>
+  </relationships>
+  <propertyDefinitions>
+    <propertyDefinition identifier="pd-0"><name>Prop 0</name></propertyDefinition>
+  </propertyDefinitions>
+  <views>
+    <diagrams>
+      <view identifier="view-0"><name>View 0</name></view>
+    </diagrams>
+  </views>
+</model>

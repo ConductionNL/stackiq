@@ -36,6 +36,7 @@ require_once __DIR__ . '/../Support/FakeMigrationPackService.php';
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Service\Object\ObjectStateRequest;
 use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Service\Cmdb\CmdbImportPackMarker;
 use OCA\Stackiq\Service\Cmdb\CmdbImportPackStore;
@@ -170,6 +171,20 @@ class CmdbExportImportServiceTest extends TestCase {
 	private bool $contactsEnabled = true;
 
 	/**
+	 * The records the import handed to Contacts for new owner contacts, in order (not part of the golden).
+	 *
+	 * @var array<int, array<string, mixed>>
+	 */
+	private array $ownerRecords = [];
+
+	/**
+	 * What writing an owner contact answers instead of a uid: '' (not created) or 'throw'; null for the address book.
+	 *
+	 * @var string|null
+	 */
+	private ?string $ownerSyncAnswer = null;
+
+	/**
 	 * The in-memory distributed cache behind the ProgressTracker.
 	 *
 	 * @var array<string, mixed>
@@ -254,6 +269,20 @@ class CmdbExportImportServiceTest extends TestCase {
 	private ?\Throwable $findFailure = null;
 
 	/**
+	 * The mapping engine the container answers, when a test replaces OpenRegister's.
+	 *
+	 * @var object|null
+	 */
+	private ?object $engine = null;
+
+	/**
+	 * Every deleteObject() call: uuid and schema.
+	 *
+	 * @var array<int, array{0: string, 1: mixed}>
+	 */
+	private array $deletes = [];
+
+	/**
 	 * The locking provider every service of a test shares, as the instance does.
 	 *
 	 * @var ILockingProvider|null
@@ -280,6 +309,8 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->contacts = [];
 		$this->addressBooks = [];
 		$this->contactsEnabled = true;
+		$this->ownerRecords = [];
+		$this->ownerSyncAnswer = null;
 		$this->cache = [];
 		$this->cacheFailure = null;
 		$this->logLines = [];
@@ -289,6 +320,8 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->scopedCalls = [];
 		$this->searches = [];
 		$this->findFailure = null;
+		$this->engine = null;
+		$this->deletes = [];
 		$this->locks = $this->lockingProvider();
 	}//end setUp()
 
@@ -347,7 +380,66 @@ class CmdbExportImportServiceTest extends TestCase {
 	 */
 	protected function assertPostConditions(): void {
 		$this->assertSame([], $this->scopedCalls, 'every OpenRegister call passes _rbac: false and _multitenancy: false');
+		$this->checkGolden();
 	}//end assertPostConditions()
+
+	/**
+	 * Compare what the test left in the doubles with its recording, or record it
+	 * (RECORD_GOLDEN=1): the register, every save, archive state and transition,
+	 * every search, the log lines, the address books and the progress cache.
+	 *
+	 * Times and durations of the run, generated operation ids and generated uuids (by first
+	 * appearance) are replaced by placeholders.
+	 * Each case is stored as JSON text, so stored keys never become JSON keys.
+	 *
+	 * @return void
+	 */
+	private function checkGolden(): void {
+		$observed = [
+			'store'        => $this->store,
+			'saves'        => $this->saves,
+			'states'       => $this->states,
+			'transitions'  => $this->transitions,
+			'searches'     => $this->searches,
+			'logLines'     => $this->logLines,
+			'contacts'     => $this->contacts,
+			'addressBooks' => $this->addressBooks,
+			'cache'        => $this->cache,
+		];
+		$json = (string) json_encode($observed, (JSON_PARTIAL_OUTPUT_ON_ERROR | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE));
+		$json = (string) preg_replace('/' . gmdate('Y-m-d') . 'T[0-9:.]+(Z|[+-][0-9:]+)?/', '(now)', $json);
+		$json = (string) preg_replace('/' . date('Y-m-d') . 'T[0-9:.]+(Z|[+-][0-9:]+)?/', '(now)', $json);
+		$json = (string) preg_replace('/cmdb-[0-9a-f]{32}/', 'cmdb-(operation)', $json);
+		$json = (string) preg_replace('/stackiq-cmdb-pack-[0-9a-f]{8}/', 'stackiq-cmdb-pack-(dir)', $json);
+		$json = (string) preg_replace('/(?<![0-9])1[789][0-9]{8}(\\.[0-9]+)?(?![0-9])/', '"(epoch)"', $json);
+		$json = (string) preg_replace('/duration(\\\\?"):-?[0-9]+/', 'duration$1:0', $json);
+		$generated = [];
+		$json      = (string) preg_replace_callback(
+			'/(?!00000000-0000-4000-8000-)[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/',
+			static function (array $match) use (&$generated): string {
+				$generated[$match[0]] ??= '(uuid-' . (count($generated) + 1) . ')';
+				return $generated[$match[0]];
+			},
+			$json
+		);
+
+		$file  = __DIR__ . '/golden/cmdbExportImport.json';
+		$saved = [];
+		if (file_exists($file) === true) {
+			$saved = (array) json_decode((string) file_get_contents($file), true);
+		}
+
+		$key = $this->name() . ' ' . $this->dataName();
+		if (getenv('RECORD_GOLDEN') !== false) {
+			$saved[$key] = $json;
+			ksort($saved);
+			file_put_contents($file, json_encode($saved, (JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE)) . "\n");
+			return;
+		}
+
+		$this->assertArrayHasKey($key, $saved, 'No golden for ' . $key);
+		$this->assertSame($saved[$key], $json, 'golden ' . $key);
+	}//end checkGolden()
 
 	/**
 	 * The properties a schema declares, from the register and every register fragment.
@@ -530,6 +622,7 @@ class CmdbExportImportServiceTest extends TestCase {
 		$service->method('deleteObject')->willReturnCallback(
 			function (string $uuid, $register = null, $schema = null, bool $_rbac = true, bool $_multitenancy = true): bool {
 				$this->noteScope(method: 'deleteObject', rbac: $_rbac, multitenancy: $_multitenancy);
+				$this->deletes[] = [$uuid, $schema];
 				if ($this->deleteRefusedFor === $uuid) {
 					return false;
 				}
@@ -647,29 +740,23 @@ class CmdbExportImportServiceTest extends TestCase {
 			/**
 			 * Archive an object.
 			 *
-			 * @param string $identifier The uuid.
-			 * @param string|null $reason The reason.
-			 * @param string|null $register Ignored.
-			 * @param string|null $schema Ignored.
+			 * @param ObjectStateRequest $request The uuid and the reason.
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function archive(string $identifier, ?string $reason = null, ?string $register = null, ?string $schema = null): array {
-				return $this->test->changeState(verb: 'archive', uuid: $identifier, reason: $reason);
+			public function archiveWith(ObjectStateRequest $request): array {
+				return $this->test->changeState(verb: 'archive', uuid: $request->identifier, reason: $request->reason);
 			}
 
 			/**
 			 * Unarchive an object.
 			 *
-			 * @param string $identifier The uuid.
-			 * @param string|null $reason The reason.
-			 * @param string|null $register Ignored.
-			 * @param string|null $schema Ignored.
+			 * @param ObjectStateRequest $request The uuid and the reason.
 			 *
 			 * @return array<string, mixed>
 			 */
-			public function unarchive(string $identifier, ?string $reason = null, ?string $register = null, ?string $schema = null): array {
-				return $this->test->changeState(verb: 'unarchive', uuid: $identifier, reason: $reason);
+			public function unarchiveWith(ObjectStateRequest $request): array {
+				return $this->test->changeState(verb: 'unarchive', uuid: $request->identifier, reason: $request->reason);
 			}
 		};
 		$mapper = new class($test) {
@@ -885,6 +972,15 @@ class CmdbExportImportServiceTest extends TestCase {
 		$sync->method('syncToContacts')->willThrowException(new \LogicException('owners go into the named address book, not the first writable one'));
 		$sync->method('syncToNamedAddressBook')->willReturnCallback(
 			function (string $objectType, array $record, string $addressBookUri, string $displayName, ?string $fixedUid = null): ?string {
+				$this->ownerRecords[] = $record;
+				if ($this->ownerSyncAnswer === 'throw') {
+					throw new \RuntimeException('address book unavailable');
+				}
+
+				if ($this->ownerSyncAnswer !== null) {
+					return $this->ownerSyncAnswer;
+				}
+
 				$this->addressBooks[$addressBookUri] = $displayName;
 				$email = (string)($record['email'] ?? '');
 				foreach ($this->contacts as $uid => $contact) {
@@ -1009,8 +1105,8 @@ class CmdbExportImportServiceTest extends TestCase {
 	 *
 	 * @return CmdbWorkbookReader
 	 */
-	private function rowsReader(array $rows, ?array $archived = [], array $uncachedRows = [], array $uncachedKeyRows = [], array $absentSheets = []): CmdbWorkbookReader {
-		return new class($rows, $archived, $uncachedRows, $uncachedKeyRows, $absentSheets) extends CmdbWorkbookReader {
+	private function rowsReader(array $rows, ?array $archived = [], array $uncachedRows = [], array $uncachedKeyRows = [], array $absentSheets = [], bool $date1904 = false): CmdbWorkbookReader {
+		return new class($rows, $archived, $uncachedRows, $uncachedKeyRows, $absentSheets, $date1904) extends CmdbWorkbookReader {
 			/**
 			 * Constructor.
 			 *
@@ -1019,6 +1115,7 @@ class CmdbExportImportServiceTest extends TestCase {
 			 * @param array<int, int> $uncachedRows The archive sheet's rows without a cached APPID.
 			 * @param array<string, array<int, int>> $uncachedKeyRows The CMDB rows dropped as empty, per sheet.
 			 * @param array<int, string> $absentSheets The source sheets the workbook lacks.
+			 * @param bool $date1904 The workbook's date system.
 			 */
 			public function __construct(
 				private array $rows,
@@ -1026,6 +1123,7 @@ class CmdbExportImportServiceTest extends TestCase {
 				private array $uncachedRows,
 				private array $uncachedKeyRows = [],
 				private array $absentSheets = [],
+				private bool $date1904 = false,
 			) {
 			}
 
@@ -1042,7 +1140,7 @@ class CmdbExportImportServiceTest extends TestCase {
 				return [
 					'rows' => $this->rows,
 					'importWarnings' => [],
-					'date1904' => false,
+					'date1904' => $this->date1904,
 					'archive' => $archive,
 					'uncachedKeyRows' => $this->uncachedKeyRows,
 					'absentSheets' => $this->absentSheets,
@@ -1075,9 +1173,13 @@ class CmdbExportImportServiceTest extends TestCase {
 
 		[$archiveHandler, $objectMapper] = $this->archiveDoubles();
 		$container = $this->createMock(ContainerInterface::class);
-		$container->method('has')->willReturnCallback(fn (string $id): bool => $id === \OCP\L10N\IFactory::class || ($packs !== false && $id === CmdbImportPackStore::SERVICE_CLASS));
+		$container->method('has')->willReturnCallback(fn (string $id): bool => ($id === CmdbExportImportService::ENGINE_CLASS && $this->engine !== null) || $id === \OCP\L10N\IFactory::class || ($packs !== false && $id === CmdbImportPackStore::SERVICE_CLASS));
 		$container->method('get')->willReturnCallback(
 			function (string $id) use ($objectService, $schemaMapper, $packs, $archiveHandler, $objectMapper) {
+				if ($id === CmdbExportImportService::ENGINE_CLASS && $this->engine !== null) {
+					return $this->engine;
+				}
+
 				if ($id === \OCP\L10N\IFactory::class) {
 					return CmdbTestSupport::translationFactory(test: $this);
 				}
@@ -1561,6 +1663,54 @@ class CmdbExportImportServiceTest extends TestCase {
 
 		$this->assertSame([], $this->saves);
 	}//end testAModuleSchemaFromBefore038StopsTheImport()
+
+	/**
+	 * The admin-only update rule on externalKey is found as a group name or as a rule naming the group, in an
+	 * array or an object definition; anything else, and a missing rule, is reported. An undeclared property
+	 * is not reported here.
+	 *
+	 * @return void
+	 */
+	public function testMissingUpdateRulesReadEveryRuleShape(): void {
+		$missing = new \ReflectionMethod(CmdbExportImportService::class, 'missingUpdateRules');
+		$missing->setAccessible(true);
+		$rule = static fn (mixed $update): array => ['externalKey' => ['type' => 'string', 'authorization' => ['update' => $update]]];
+
+		$this->assertSame([], $missing->invoke(null, 'module', []));
+		$this->assertSame([], $missing->invoke(null, 'usage', ['externalKey' => []]));
+		$this->assertSame([], $missing->invoke(null, 'module', $rule(['admin'])));
+		$this->assertSame([], $missing->invoke(null, 'module', $rule([['group' => 'admin']])));
+		$this->assertSame([], $missing->invoke(null, 'module', ['externalKey' => (object)['authorization' => (object)['update' => [(object)['group' => 'admin']]]]]));
+		$this->assertSame(['externalKey.authorization.update'], $missing->invoke(null, 'module', ['externalKey' => ['type' => 'string']]));
+		$this->assertSame(['externalKey.authorization.update'], $missing->invoke(null, 'module', $rule('admin')));
+		$this->assertSame(['externalKey.authorization.update'], $missing->invoke(null, 'module', $rule([['group' => 'editors'], ['name' => 'admin'], 'Admin'])));
+	}//end testMissingUpdateRulesReadEveryRuleShape()
+
+	/**
+	 * A new owner contact gets the name parts, and the e-mail address and role when the row has them; an owner
+	 * named twice in one run is written to Contacts once.
+	 *
+	 * @return void
+	 */
+	public function testANewOwnerContactCarriesItsEmailAndRole(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$full = ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam', 'Applicatie Eigenaar (E-mail)' => ' v.achternaam@example.org ', 'Applicatie Eigenaar (Functie)' => ' Afdelingshoofd '];
+		$rows = [
+			$this->row(appId: '1', cells: $full, row: 2),
+			$this->row(appId: '2', cells: $full, row: 3),
+			$this->row(appId: '3', cells: ['Applicatie Eigenaar (Persoon)' => 'Tweede, Iemand'], row: 4),
+		];
+
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(
+			[
+				['voornaam' => 'Voornaam', 'achternaam' => 'Achternaam', 'email' => 'v.achternaam@example.org', 'role' => 'Afdelingshoofd'],
+				['voornaam' => 'Iemand', 'achternaam' => 'Tweede'],
+			],
+			$this->ownerRecords
+		);
+	}//end testANewOwnerContactCarriesItsEmailAndRole()
 
 	/**
 	 * A search on a property the schema does not declare yields nothing, as in OpenRegister.
@@ -3264,7 +3414,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function testAnOwnerWithAnEmployeeNumberIsMatchedOnItNotOnTheName(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
@@ -3296,7 +3446,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function testASharedEmailAddressDoesNotMergeOwnersWithTheirOwnNumber(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
@@ -3318,7 +3468,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function testAnOwnerFirstKnownByEmailGetsTheNumberContact(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
@@ -3339,7 +3489,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function testAPlaceholderInTheNumberColumnIsNoEmployeeNumber(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
@@ -3357,7 +3507,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function testAnOwnerWithoutANumberNeverTakesANumberContact(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
@@ -3376,7 +3526,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function testASecondEmailAddressOfAContactMatches(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
@@ -3392,7 +3542,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
 	 */
 	public function testAnOwnerWithOnlyAnEmailAddressIsMatchedOnIt(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
@@ -3414,7 +3564,7 @@ class CmdbExportImportServiceTest extends TestCase {
 	 *
 	 * @return void
 	 *
-	 * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-1
+	 * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-1
 	 */
 	public function testRenamedOwnerColumnsInOpenRegisterAreRead(): void {
 		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Rotterdam', type: 'Municipality');
@@ -3613,6 +3763,191 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame(['rowsRead' => 3, 'processed' => 3, 'created' => 2, 'updated' => 0, 'unchanged' => 0, 'skipped' => 0, 'failed' => 1, 'archived' => 0, 'unarchived' => 0, 'deleted' => 0, 'restored' => 0, 'warnings' => 0, 'unpublished' => 0], $report['summary']);
 		$this->assertCount(2, $this->store[self::MODULE]);
 	}//end testOneBadRowDoesNotStopTheOthers()
+
+	/**
+	 * A mapping engine that counts its calls, keeps the row numbers it is given, and throws on one call.
+	 *
+	 * Per row the calls are the module, the manufacturer, the owner and the usage, in that order.
+	 *
+	 * @param int $throwOnCall The call that throws, counted from 1; 0 for none.
+	 *
+	 * @return object
+	 */
+	private function countingEngine(int $throwOnCall): object {
+		return new class($throwOnCall) {
+			/**
+			 * The row numbers given, per call.
+			 *
+			 * @var array<int, int>
+			 */
+			public array $rowNumbers = [];
+
+			/**
+			 * Constructor.
+			 *
+			 * @param int $throwOnCall The call that throws.
+			 */
+			public function __construct(private int $throwOnCall) {
+			}
+
+			/**
+			 * Map nothing, or throw.
+			 *
+			 * @param array<string, mixed> $pack The pack.
+			 * @param array<string, mixed> $values The values.
+			 * @param int $rowNumber The row number.
+			 *
+			 * @return array{data: array<string, mixed>, errors: array<int, mixed>}
+			 */
+			public function mapRow(array $pack, array $values, int $rowNumber): array {
+				$this->rowNumbers[] = $rowNumber;
+				if (count($this->rowNumbers) === $this->throwOnCall) {
+					throw new RuntimeException('engine failed');
+				}
+
+				return ['data' => [], 'errors' => []];
+			}
+		};
+	}//end countingEngine()
+
+	/**
+	 * A failing mapping names its step: the module's mapping, or the owner's.
+	 *
+	 * @return void
+	 */
+	public function testAFailingMappingNamesItsStep(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		foreach ([1 => 'step "mapping" failed (RuntimeException)', 3 => 'step "owners" failed (RuntimeException)'] as $call => $reason) {
+			$this->engine = $this->countingEngine(throwOnCall: $call);
+
+			$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: (string) $call)]))
+				->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+
+			$this->assertSame('failed', $report['rows'][0]['outcome']);
+			$this->assertSame([$reason], $report['rows'][0]['reasons']);
+		}
+	}//end testAFailingMappingNamesItsStep()
+
+	/**
+	 * A supplier that cannot be saved fails the row at the manufacturer step.
+	 *
+	 * @return void
+	 */
+	public function testAFailingSupplierNamesItsStep(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->beforeSave = function (int $schema): void {
+			if ($schema === self::ORGANIZATION) {
+				throw new RuntimeException('no supplier');
+			}
+		};
+
+		$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1')]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+
+		$this->assertSame(['step "manufacturer" failed (RuntimeException)'], $report['rows'][0]['reasons']);
+	}//end testAFailingSupplierNamesItsStep()
+
+	/**
+	 * The engine gets the row's own sheet row number, for every pack it maps.
+	 *
+	 * @return void
+	 */
+	public function testTheEngineGetsTheSheetRowNumber(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$this->engine = $this->countingEngine(throwOnCall: 0);
+
+		$this->service(reader: $this->rowsReader(rows: [$this->row(appId: '1', row: 7)]))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+
+		$this->assertSame([7, 7, 7, 7], $this->engine->rowNumbers);
+	}//end testTheEngineGetsTheSheetRowNumber()
+
+	/**
+	 * A mapping error on an optional column warns on the row for the module and the
+	 * usage, and stays off the row for the manufacturer and the owner.
+	 *
+	 * @return void
+	 */
+	public function testOnlyTheModuleAndUsageMappingsWarnOnAnOptionalColumn(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$warning = ['Column "Optional": unreadable'];
+		foreach ([1 => $warning, 2 => [], 3 => [], 4 => $warning] as $call => $warnings) {
+			$this->engine = new class($call) {
+				/**
+				 * The calls made so far.
+				 *
+				 * @var int
+				 */
+				private int $calls = 0;
+
+				/**
+				 * Constructor.
+				 *
+				 * @param int $errorOnCall The call that reports the mapping error.
+				 */
+				public function __construct(private int $errorOnCall) {
+				}
+
+				/**
+				 * Map nothing, with a mapping error on one call.
+				 *
+				 * @param array<string, mixed> $pack The pack.
+				 * @param array<string, mixed> $values The values.
+				 * @param int $rowNumber The row number.
+				 *
+				 * @return array{data: array<string, mixed>, errors: array<int, array<string, string>>}
+				 */
+				public function mapRow(array $pack, array $values, int $rowNumber): array {
+					$this->calls++;
+					if ($this->calls !== $this->errorOnCall) {
+						return ['data' => [], 'errors' => []];
+					}
+
+					return ['data' => [], 'errors' => [['source' => 'Optional', 'message' => 'unreadable']]];
+				}
+			};
+
+			$report = $this->service(reader: $this->rowsReader(rows: [$this->row(appId: (string) $call)]))
+				->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+
+			$this->assertSame($warnings, $report['rows'][0]['warnings'], 'mapping call ' . $call);
+		}
+	}//end testOnlyTheModuleAndUsageMappingsWarnOnAnOptionalColumn()
+
+	/**
+	 * Dates are read in the workbook's own date system.
+	 *
+	 * @return void
+	 */
+	public function testAWorkbookInThe1904DateSystemIsReadAsSuch(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$row = $this->row(appId: '1', cells: ['End-of-Life Functioneel' => 45111]);
+
+		$this->service(reader: $this->rowsReader(rows: [$row], date1904: true))
+			->import(path: '', options: ['municipalityUuid' => 'muni-1', 'missingRecords' => 'keep']);
+
+		$stored = (string) json_encode($this->store);
+		$this->assertStringContainsString('2027-07-05', $stored);
+		$this->assertStringNotContainsString('2023-07-04', $stored);
+	}//end testAWorkbookInThe1904DateSystemIsReadAsSuch()
+
+	/**
+	 * A soft delete goes to the schema of the object: the usage's first, then the module's.
+	 *
+	 * @return void
+	 */
+	public function testADeleteGoesToTheSchemaOfTheObject(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$rows = [$this->row(appId: '1', row: 2), $this->row(appId: '2', row: 3)];
+		$this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+		$module = $this->moduleOf(appId: '2');
+		$usage  = $this->usageOf(moduleUuid: $module);
+
+		$this->service(reader: $this->rowsReader(rows: [$rows[0]]))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame([$usage, $module], array_column($this->deletes, 0));
+		$this->assertSame([self::USAGE, self::MODULE], array_map('intval', array_column($this->deletes, 1)));
+	}//end testADeleteGoesToTheSchemaOfTheObject()
 
 	/**
 	 * A duplicate APPID (also across the two sheets), a missing APPID and a missing Applicatie Naam are skipped with their reasons.
@@ -4041,4 +4376,35 @@ class CmdbExportImportServiceTest extends TestCase {
 		$this->assertSame(['voornaam' => 'Voornaam', 'achternaam' => 'Achternaam'], CmdbExportImportService::splitPersonName(name: 'Achternaam,  Voornaam '));
 		$this->assertSame(['voornaam' => '', 'achternaam' => 'Functioneel Beheer'], CmdbExportImportService::splitPersonName(name: 'Functioneel  Beheer'));
 	}//end testPersonNamesSplit()
+	/**
+	 * An owner whose contact cannot be created is skipped with a warning naming its column; a failure while
+	 * resolving one is logged and warned about, and the import goes on without the owner.
+	 *
+	 * @return void
+	 */
+	public function testAnUnresolvableOwnerIsSkippedWithAWarning(): void {
+		$this->seedOrganisation(uuid: 'muni-1', name: 'Gemeente Voorbeeldstad', type: 'Municipality');
+		$rows = [$this->row(appId: '1', cells: ['Applicatie Eigenaar (Persoon)' => 'Achternaam, Voornaam'])];
+
+		$this->ownerSyncAnswer = '';
+		$unresolved = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(
+			['Owner from column "Applicatie Eigenaar (Persoon)" could not be resolved in Nextcloud Contacts'],
+			$unresolved['rows'][0]['warnings']
+		);
+		$this->assertArrayNotHasKey('businessOwner', $this->objects(self::USAGE)[0]);
+		$this->assertSame([], $this->objects(self::CONTACT_PERSON));
+
+		$this->ownerSyncAnswer = 'throw';
+		$this->logLines = [];
+		$failed = $this->service(reader: $this->rowsReader(rows: $rows))->import(path: '', options: ['municipalityUuid' => 'muni-1']);
+
+		$this->assertSame(['Owner from column "Applicatie Eigenaar (Persoon)" could not be resolved'], $failed['rows'][0]['warnings']);
+		$this->assertContains(
+			'CmdbExportImportService: owner could not be resolved {"row":2,"column":"Applicatie Eigenaar (Persoon)","exception":"RuntimeException"}',
+			$this->logLines
+		);
+		$this->assertArrayNotHasKey('businessOwner', $this->objects(self::USAGE)[0]);
+	}//end testAnUnresolvableOwnerIsSkippedWithAWarning()
 }//end class

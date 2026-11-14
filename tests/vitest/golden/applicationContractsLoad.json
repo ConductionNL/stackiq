@@ -1,0 +1,206 @@
+{
+	"nothing": {
+		"calls": [
+			[
+				"usage",
+				{
+					"module": "app-1",
+					"_limit": 500
+				}
+			],
+			[
+				"catalogService",
+				{
+					"modules": "app-1",
+					"_limit": 500
+				}
+			]
+		],
+		"result": []
+	},
+	"null lists": {
+		"calls": [
+			[
+				"usage",
+				{
+					"module": "app-1",
+					"_limit": 500
+				}
+			],
+			[
+				"catalogService",
+				{
+					"modules": "app-1",
+					"_limit": 500
+				}
+			]
+		],
+		"result": []
+	},
+	"usages only": {
+		"calls": [
+			[
+				"usage",
+				{
+					"module": "app-1",
+					"_limit": 500
+				}
+			],
+			[
+				"catalogService",
+				{
+					"modules": "app-1",
+					"_limit": 500
+				}
+			],
+			[
+				"catalogContract",
+				{
+					"usage": [
+						"u1",
+						"u2"
+					],
+					"_limit": 500
+				}
+			]
+		],
+		"result": [
+			{
+				"id": "c1"
+			},
+			{
+				"id": "c2"
+			}
+		]
+	},
+	"services only": {
+		"calls": [
+			[
+				"usage",
+				{
+					"module": "app-1",
+					"_limit": 500
+				}
+			],
+			[
+				"catalogService",
+				{
+					"modules": "app-1",
+					"_limit": 500
+				}
+			],
+			[
+				"catalogContract",
+				{
+					"service": [
+						"s1"
+					],
+					"_limit": 500
+				}
+			]
+		],
+		"result": [
+			{
+				"id": "c3"
+			}
+		]
+	},
+	"both, overlapping": {
+		"calls": [
+			[
+				"usage",
+				{
+					"module": "app-1",
+					"_limit": 500
+				}
+			],
+			[
+				"catalogService",
+				{
+					"modules": "app-1",
+					"_limit": 500
+				}
+			],
+			[
+				"catalogContract",
+				{
+					"usage": [
+						"u1"
+					],
+					"_limit": 500
+				}
+			],
+			[
+				"catalogContract",
+				{
+					"service": [
+						"s1",
+						"s2"
+					],
+					"_limit": 500
+				}
+			]
+		],
+		"result": [
+			{
+				"id": "c1",
+				"from": "usage"
+			},
+			{
+				"id": "c2"
+			},
+			{
+				"@self": {
+					"id": "c4"
+				}
+			}
+		]
+	},
+	"rows without ids": {
+		"calls": [
+			[
+				"usage",
+				{
+					"module": "app-1",
+					"_limit": 500
+				}
+			],
+			[
+				"catalogService",
+				{
+					"modules": "app-1",
+					"_limit": 500
+				}
+			]
+		],
+		"result": []
+	},
+	"contract list null": {
+		"calls": [
+			[
+				"usage",
+				{
+					"module": "app-1",
+					"_limit": 500
+				}
+			],
+			[
+				"catalogService",
+				{
+					"modules": "app-1",
+					"_limit": 500
+				}
+			],
+			[
+				"catalogContract",
+				{
+					"usage": [
+						"u1"
+					],
+					"_limit": 500
+				}
+			]
+		],
+		"result": []
+	}
+}

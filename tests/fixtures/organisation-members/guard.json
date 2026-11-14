@@ -1,0 +1,11 @@
+{
+"anonymous": {"allowed":false,"status":401,"data":{"error":"Not authenticated"},"trace":[]},
+"not a beheerder": {"allowed":false,"status":403,"data":{"error":"Only a beheerder of this organisation may grant or revoke access"},"trace":[["isInGroup","anne","maintainer"],["warning","[OrganisationMembersController] Access refused (not a beheerder)",{"uid":"anne","organisationUuid":"org-1"}]]},
+"beheerder of target": {"allowed":true,"trace":[["isInGroup","bob","maintainer"],["getUserOrganisations"]]},
+"beheerder, target later": {"allowed":true,"trace":[["isInGroup","bob","maintainer"],["getUserOrganisations"]]},
+"beheerder elsewhere": {"allowed":false,"status":403,"data":{"error":"Only a beheerder of this organisation may grant or revoke access"},"trace":[["isInGroup","bob","maintainer"],["getUserOrganisations"],["warning","[OrganisationMembersController] Access refused (beheerder of a different organisation)",{"uid":"bob","organisationUuid":"org-1"}]]},
+"beheerder of none": {"allowed":false,"status":403,"data":{"error":"Only a beheerder of this organisation may grant or revoke access"},"trace":[["isInGroup","bob","maintainer"],["getUserOrganisations"],["warning","[OrganisationMembersController] Access refused (beheerder of a different organisation)",{"uid":"bob","organisationUuid":"org-1"}]]},
+"case differs": {"allowed":false,"status":403,"data":{"error":"Only a beheerder of this organisation may grant or revoke access"},"trace":[["isInGroup","bob","maintainer"],["getUserOrganisations"],["warning","[OrganisationMembersController] Access refused (beheerder of a different organisation)",{"uid":"bob","organisationUuid":"org-1"}]]},
+"empty target": {"allowed":false,"status":403,"data":{"error":"Only a beheerder of this organisation may grant or revoke access"},"trace":[["isInGroup","bob","maintainer"],["getUserOrganisations"],["warning","[OrganisationMembersController] Access refused (beheerder of a different organisation)",{"uid":"bob","organisationUuid":""}]]},
+"lookup fails": {"allowed":false,"status":403,"data":{"error":"Unable to verify organisation membership"},"trace":[["isInGroup","bob","maintainer"],["getUserOrganisations"],["error","[OrganisationMembersController] Failed to resolve caller organisations",{"uid":"bob","error":"session lost"}]]}
+}

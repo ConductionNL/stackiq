@@ -1,0 +1,184 @@
+{
+	"no mapping": [
+		{
+			"key": "sheets",
+			"label": "[Sheets read]",
+			"values": []
+		},
+		{
+			"key": "keyColumn",
+			"label": "[Match column]",
+			"values": []
+		},
+		{
+			"key": "nameColumn",
+			"label": "[Name column]",
+			"values": []
+		},
+		{
+			"key": "requiredColumns",
+			"label": "[Required columns]",
+			"values": []
+		},
+		{
+			"key": "dateColumns",
+			"label": "[Date columns]",
+			"values": []
+		}
+	],
+	"no profile": [
+		{
+			"key": "sheets",
+			"label": "[Sheets read]",
+			"values": []
+		},
+		{
+			"key": "keyColumn",
+			"label": "[Match column]",
+			"values": []
+		},
+		{
+			"key": "nameColumn",
+			"label": "[Name column]",
+			"values": []
+		},
+		{
+			"key": "requiredColumns",
+			"label": "[Required columns]",
+			"values": []
+		},
+		{
+			"key": "dateColumns",
+			"label": "[Date columns]",
+			"values": []
+		}
+	],
+	"empty profile": [
+		{
+			"key": "sheets",
+			"label": "[Sheets read]",
+			"values": []
+		},
+		{
+			"key": "keyColumn",
+			"label": "[Match column]",
+			"values": []
+		},
+		{
+			"key": "nameColumn",
+			"label": "[Name column]",
+			"values": []
+		},
+		{
+			"key": "requiredColumns",
+			"label": "[Required columns]",
+			"values": []
+		},
+		{
+			"key": "dateColumns",
+			"label": "[Date columns]",
+			"values": []
+		}
+	],
+	"full profile": [
+		{
+			"key": "sheets",
+			"label": "[Sheets read]",
+			"values": [
+				"Applicaties",
+				"Leveranciers",
+				"[object Object]",
+				"7"
+			]
+		},
+		{
+			"key": "keyColumn",
+			"label": "[Match column]",
+			"values": [
+				"ID"
+			]
+		},
+		{
+			"key": "nameColumn",
+			"label": "[Name column]",
+			"values": [
+				"0"
+			]
+		},
+		{
+			"key": "requiredColumns",
+			"label": "[Required columns]",
+			"values": [
+				"ID",
+				"Naam",
+				"3",
+				"null"
+			]
+		},
+		{
+			"key": "dateColumns",
+			"label": "[Date columns]",
+			"values": [
+				"Ingangsdatum"
+			]
+		}
+	],
+	"malformed profile": [
+		{
+			"key": "sheets",
+			"label": "[Sheets read]",
+			"values": []
+		},
+		{
+			"key": "keyColumn",
+			"label": "[Match column]",
+			"values": []
+		},
+		{
+			"key": "nameColumn",
+			"label": "[Name column]",
+			"values": []
+		},
+		{
+			"key": "requiredColumns",
+			"label": "[Required columns]",
+			"values": []
+		},
+		{
+			"key": "dateColumns",
+			"label": "[Date columns]",
+			"values": []
+		}
+	],
+	"boolean columns": [
+		{
+			"key": "sheets",
+			"label": "[Sheets read]",
+			"values": []
+		},
+		{
+			"key": "keyColumn",
+			"label": "[Match column]",
+			"values": [
+				"false"
+			]
+		},
+		{
+			"key": "nameColumn",
+			"label": "[Name column]",
+			"values": [
+				"true"
+			]
+		},
+		{
+			"key": "requiredColumns",
+			"label": "[Required columns]",
+			"values": []
+		},
+		{
+			"key": "dateColumns",
+			"label": "[Date columns]",
+			"values": []
+		}
+	]
+}

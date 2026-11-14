@@ -10,6 +10,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2024 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 namespace OCA\Stackiq\Controller;
@@ -53,17 +56,7 @@ class DashboardController extends Controller {
 	 */
 	public function page(?string $getParameter): TemplateResponse {
 		try {
-			$response = new TemplateResponse(
-				$this->appName,
-				'index',
-				[]
-			);
-
-			$csp = new ContentSecurityPolicy();
-			$csp->addAllowedConnectDomain('*');
-			$response->setContentSecurityPolicy($csp);
-
-			return $response;
+			return $this->indexPage();
 		} catch (\Exception $e) {
 			return new TemplateResponse(
 				$this->appName,
@@ -74,6 +67,25 @@ class DashboardController extends Controller {
 			);
 		}
 	}//end page()
+
+	/**
+	 * The app's index template with a policy that lets it connect anywhere.
+	 *
+	 * @return TemplateResponse
+	 */
+	private function indexPage(): TemplateResponse {
+		$response = new TemplateResponse(
+			$this->appName,
+			'index',
+			[]
+		);
+
+		$csp = new ContentSecurityPolicy();
+		$csp->addAllowedConnectDomain('*');
+		$response->setContentSecurityPolicy($csp);
+
+		return $response;
+	}//end indexPage()
 
 	/**
 	 * Returns an empty JSON result.

@@ -3,6 +3,9 @@
 /**
  * CMDB workbook reader.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Reads the CMDB sheets of a TOPdesk CMDB export (design D3):
  *
  * 1. Before PhpSpreadsheet is touched: the name ends in `.xlsx`, the file
@@ -54,9 +57,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/cmdb-export-import/tasks.md#task-4
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

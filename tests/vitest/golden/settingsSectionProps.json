@@ -1,0 +1,136 @@
+{
+	"AlwaysVisibleSection": {
+		"canSave": {
+			"type": "Boolean",
+			"default": true,
+			"required": false
+		},
+		"description": {
+			"type": "String",
+			"default": "",
+			"required": false
+		},
+		"docUrl": {
+			"type": "String",
+			"default": "",
+			"required": false
+		},
+		"hasInfoContent": {
+			"type": "Boolean",
+			"default": false,
+			"required": false
+		},
+		"loading": {
+			"type": "Boolean",
+			"default": false,
+			"required": false
+		},
+		"loadingText": {
+			"type": "String",
+			"default": "Loading...",
+			"required": false
+		},
+		"name": {
+			"type": "String",
+			"default": null,
+			"required": true
+		},
+		"refreshButtonText": {
+			"type": "String",
+			"default": "Refresh",
+			"required": false
+		},
+		"refreshing": {
+			"type": "Boolean",
+			"default": false,
+			"required": false
+		},
+		"saveButtonText": {
+			"type": "String",
+			"default": "Save",
+			"required": false
+		},
+		"saving": {
+			"type": "Boolean",
+			"default": false,
+			"required": false
+		},
+		"showRefreshButton": {
+			"type": "Boolean",
+			"default": false,
+			"required": false
+		},
+		"showSaveButton": {
+			"type": "Boolean",
+			"default": false,
+			"required": false
+		}
+	},
+	"CollapsibleSection": {
+		"canSave": {
+			"type": "Boolean",
+			"default": true,
+			"required": false
+		},
+		"defaultExpanded": {
+			"type": "Boolean",
+			"default": false,
+			"required": false
+		},
+		"description": {
+			"type": "String",
+			"default": "",
+			"required": false
+		},
+		"docUrl": {
+			"type": "String",
+			"default": "",
+			"required": false
+		},
+		"hasInfoContent": {
+			"type": "Boolean",
+			"default": false,
+			"required": false
+		},
+		"loading": {
+			"type": "Boolean",
+			"default": false,
+			"required": false
+		},
+		"name": {
+			"type": "String",
+			"default": null,
+			"required": true
+		},
+		"refreshButtonText": {
+			"type": "String",
+			"default": "Refresh",
+			"required": false
+		},
+		"refreshing": {
+			"type": "Boolean",
+			"default": false,
+			"required": false
+		},
+		"saveButtonText": {
+			"type": "String",
+			"default": "Save",
+			"required": false
+		},
+		"saving": {
+			"type": "Boolean",
+			"default": false,
+			"required": false
+		},
+		"showRefreshButton": {
+			"type": "Boolean",
+			"default": false,
+			"required": false
+		},
+		"showSaveButton": {
+			"type": "Boolean",
+			"default": false,
+			"required": false
+		}
+	}
+}

@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<model xmlns="http://www.opengroup.org/xsd/archimate/3.0/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" identifier="id-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx-export">
+  <elements>
+    <element identifier="el-07" xsi:type="Actor"><name>el-07</name></element>
+    <element identifier="el-08" xsi:type="Changed"><name>el-08</name></element>
+    <element identifier="el-09" xsi:type="Role"><name>el-09</name></element>
+    <element identifier="el-10" xsi:type="Changed"><name>el-10</name></element>
+    <element identifier="el-11" xsi:type="Actor"><name>el-11</name></element>
+    <element identifier="el-12" xsi:type="Changed"><name>el-12</name></element>
+    <element identifier="el-13" xsi:type="Actor"><name>el-13</name></element>
+    <element identifier="el-14" xsi:type="Changed"><name>el-14</name></element>
+    <element identifier="el-15" xsi:type="Role"><name>el-15</name></element>
+    <element identifier="el-16" xsi:type="Changed"><name>el-16</name></element>
+    <element identifier="el-17" xsi:type="Actor"><name>el-17</name></element>
+    <element identifier="el-18" xsi:type="Changed"><name>el-18</name></element>
+    <element identifier="el-19" xsi:type="Actor"><name>el-19</name></element>
+    <element identifier="new-0" xsi:type="Node"><name>new-0</name></element>
+    <element identifier="new-1" xsi:type="Node"><name>new-1</name></element>
+    <element identifier="new-2" xsi:type="Node"><name>new-2</name></element>
+    <element identifier="new-3" xsi:type="Node"><name>new-3</name></element>
+    <element identifier="new-4" xsi:type="Node"><name>new-4</name></element>
+    <element identifier="new-5" xsi:type="Node"><name>new-5</name></element>
+    <element identifier="dup" xsi:type="Second"><name>dup</name></element>
+  </elements>
+  <relationships>
+    <relationship identifier="rel-01" xsi:type="Serving" source="el-01" target="el-02"/>
+    <relationship identifier="rel-02" xsi:type="Serving" source="el-02" target="el-03"/>
+    <relationship identifier="rel-03" xsi:type="Serving" source="el-03" target="el-05"/>
+    <relationship identifier="rel-04" xsi:type="Serving" source="el-04" target="el-05"/>
+    <relationship identifier="rel-05" xsi:type="Serving" source="el-05" target="el-06"/>
+    <relationship identifier="rel-06" xsi:type="Serving" source="el-06" target="el-08"/>
+    <relationship identifier="rel-07" xsi:type="Serving" source="el-07" target="el-08"/>
+    <relationship identifier="rel-08" xsi:type="Serving" source="el-08" target="el-09"/>
+    <relationship identifier="rel-09" xsi:type="Serving" source="el-09" target="el-11"/>
+    <relationship identifier="rel-10" xsi:type="Serving" source="el-10" target="el-11"/>
+    <relationship identifier="rel-11" xsi:type="Serving" source="el-11" target="el-12"/>
+    <relationship identifier="rel-new" xsi:type="Access" source="x" target="y"/>
+  </relationships>
+  <organizations><item><label>Root</label><item identifierRef="el-03"/><item identifierRef="el-04"/><item identifierRef="el-05"/><item identifierRef="el-06"/><item identifierRef="el-07"/><item identifierRef="el-08"/><item identifierRef="el-09"/><item identifierRef="new-0"/></item></organizations>
+  <propertyDefinitions>
+    <propertyDefinition identifier="pd-0"><name>Renamed 0</name></propertyDefinition>
+    <propertyDefinition identifier="pd-1"><name>Prop 1</name></propertyDefinition>
+    <propertyDefinition identifier="pd-2"><name>Renamed 2</name></propertyDefinition>
+    <propertyDefinition identifier="pd-3"><name>Prop 3</name></propertyDefinition>
+    <propertyDefinition identifier="pd-4"><name>Renamed 4</name></propertyDefinition>
+    <propertyDefinition identifier="pd-5"><name>Prop 5</name></propertyDefinition>
+    <propertyDefinition identifier="pd-6"><name>Renamed 6</name></propertyDefinition>
+    <propertyDefinition identifier="pd-7"><name>Prop 7</name></propertyDefinition>
+    <propertyDefinition identifier="pd-8"><name>Renamed 8</name></propertyDefinition>
+    <propertyDefinition identifier="pd-extra"><name>Extra</name></propertyDefinition>
+  </propertyDefinitions>
+  <views>
+    <diagrams>
+      <view identifier="view-2"><name>View 2</name></view>
+      <view identifier="view-3"><name>View 3</name></view>
+      <view identifier="view-4"><name>View 4</name></view>
+      <view identifier="view-5"><name>View 5</name></view>
+      <view identifier="view-6"><name>View 6</name></view>
+      <view identifier="view-7"><name>View 7</name></view>
+      <view identifier="view-noname"></view>
+    </diagrams>
+  </views>
+</model>

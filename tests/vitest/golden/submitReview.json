@@ -1,0 +1,107 @@
+{
+	"invalid form": {
+		"trace": [],
+		"loading": "unchanged",
+		"error": "unchanged"
+	},
+	"submitted": {
+		"trace": [
+			[
+				"apiRequest",
+				"reviews",
+				{
+					"method": "POST",
+					"body": {
+						"review": {
+							"name": "Great app",
+							"rating": 4,
+							"longDescription": "Works well"
+						},
+						"subjectType": "module",
+						"subjectId": "m-1"
+					}
+				}
+			],
+			[
+				"showSuccess",
+				"[Thank you — your review was submitted for moderation]"
+			],
+			[
+				"emit",
+				"review-submitted"
+			],
+			[
+				"resetForm"
+			],
+			[
+				"emit",
+				"close"
+			]
+		],
+		"loading": false,
+		"error": ""
+	},
+	"submitted without text": {
+		"trace": [
+			[
+				"apiRequest",
+				"reviews",
+				{
+					"method": "POST",
+					"body": {
+						"review": {
+							"name": "Short",
+							"rating": 4,
+							"longDescription": ""
+						},
+						"subjectType": "module",
+						"subjectId": "m-1"
+					}
+				}
+			],
+			[
+				"showSuccess",
+				"[Thank you — your review was submitted for moderation]"
+			],
+			[
+				"emit",
+				"review-submitted"
+			],
+			[
+				"resetForm"
+			],
+			[
+				"emit",
+				"close"
+			]
+		],
+		"loading": false,
+		"error": ""
+	},
+	"request fails": {
+		"trace": [
+			[
+				"apiRequest",
+				"reviews",
+				{
+					"method": "POST",
+					"body": {
+						"review": {
+							"name": "Great app",
+							"rating": 4,
+							"longDescription": "Works well"
+						},
+						"subjectType": "module",
+						"subjectId": "m-1"
+					}
+				}
+			],
+			[
+				"showError",
+				"[Could not submit your review]: rate limited"
+			]
+		],
+		"loading": false,
+		"error": "rate limited"
+	}
+}

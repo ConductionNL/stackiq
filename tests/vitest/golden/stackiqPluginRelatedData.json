@@ -1,0 +1,653 @@
+{
+	"fetchRelatedData: logs with results and pagination": {
+		"result": "undefined",
+		"fetches": [
+			[
+				"/index.php/apps/openregister/api/objects/reg-application/sch-application/a1/audit-trails?{\"_limit\":5}&_lang=en",
+				{
+					"headers": {
+						"requesttoken": "token"
+					}
+				}
+			]
+		],
+		"errors": [],
+		"calls": [
+			[
+				"getSchemaConfig",
+				"application"
+			]
+		],
+		"loading": {
+			"application_a1_logs": false
+		},
+		"pagination": {
+			"application_logs": {
+				"total": 12,
+				"page": 2,
+				"pages": 3,
+				"limit": 5,
+				"next": null,
+				"prev": null
+			}
+		},
+		"relatedData": {
+			"application": {
+				"logs": [
+					{
+						"id": 1
+					}
+				]
+			}
+		}
+	},
+	"fetchRelatedData: logs without results": {
+		"result": "undefined",
+		"fetches": [
+			[
+				"/index.php/apps/openregister/api/objects/reg-application/sch-application/a1/audit-trails?_lang=en",
+				{
+					"headers": {
+						"requesttoken": "token"
+					}
+				}
+			]
+		],
+		"errors": [],
+		"calls": [
+			[
+				"getSchemaConfig",
+				"application"
+			]
+		],
+		"loading": {
+			"application_a1_logs": false
+		},
+		"pagination": {
+			"application_logs": {
+				"total": 0,
+				"page": 1,
+				"pages": 0,
+				"limit": 20,
+				"next": null,
+				"prev": null
+			}
+		},
+		"relatedData": {
+			"application": {
+				"logs": []
+			}
+		}
+	},
+	"fetchRelatedData: uses with default extend and api limit": {
+		"result": "undefined",
+		"fetches": [
+			[
+				"/index.php/apps/openregister/api/objects/reg-application/sch-application/a1/uses?{\"limit\":7,\"_extend\":\"@self.schema\"}&_lang=en",
+				{
+					"headers": {
+						"requesttoken": "token"
+					}
+				}
+			]
+		],
+		"errors": [],
+		"calls": [
+			[
+				"getSchemaConfig",
+				"application"
+			]
+		],
+		"loading": {
+			"application_a1_uses": false
+		},
+		"pagination": {
+			"application_uses": {
+				"total": 30,
+				"page": 1,
+				"pages": 3,
+				"limit": 10,
+				"next": "n",
+				"prev": "p"
+			}
+		},
+		"relatedData": {
+			"application": {
+				"uses": {
+					"results": [
+						1,
+						2
+					],
+					"total": 30,
+					"limit": "10",
+					"next": "n",
+					"prev": "p"
+				}
+			}
+		}
+	},
+	"fetchRelatedData: used with given extend and pages": {
+		"result": "undefined",
+		"fetches": [
+			[
+				"/index.php/apps/openregister/api/objects/reg-module/sch-module/m1/used?{\"_extend\":\"x\",\"_page\":3}&_lang=en",
+				{
+					"headers": {
+						"requesttoken": "token"
+					}
+				}
+			]
+		],
+		"errors": [],
+		"calls": [
+			[
+				"getSchemaConfig",
+				"module"
+			]
+		],
+		"loading": {
+			"module_m1_used": false
+		},
+		"pagination": {
+			"module_used": {
+				"total": 0,
+				"page": 3,
+				"pages": 9,
+				"limit": 20,
+				"next": null,
+				"prev": null
+			}
+		},
+		"relatedData": {
+			"module": {
+				"used": {
+					"results": [],
+					"page": 3,
+					"pages": 9
+				}
+			}
+		}
+	},
+	"fetchRelatedData: used without extend and plain limit": {
+		"result": "undefined",
+		"fetches": [
+			[
+				"/index.php/apps/openregister/api/objects/reg-module/sch-module/m1/used?{\"limit\":4,\"_extend\":\"@self.schema\"}&_lang=en",
+				{
+					"headers": {
+						"requesttoken": "token"
+					}
+				}
+			]
+		],
+		"errors": [],
+		"calls": [
+			[
+				"getSchemaConfig",
+				"module"
+			]
+		],
+		"loading": {
+			"module_m1_used": false
+		},
+		"pagination": {
+			"module_used": {
+				"total": 9,
+				"page": 1,
+				"pages": 3,
+				"limit": 4,
+				"next": null,
+				"prev": null
+			}
+		},
+		"relatedData": {
+			"module": {
+				"used": {
+					"results": [],
+					"total": 9
+				}
+			}
+		}
+	},
+	"fetchRelatedData: files default limit": {
+		"result": "undefined",
+		"fetches": [
+			[
+				"/index.php/apps/openregister/api/objects/reg-application/sch-application/a1/files?_lang=en",
+				{
+					"headers": {
+						"requesttoken": "token"
+					}
+				}
+			]
+		],
+		"errors": [],
+		"calls": [
+			[
+				"getSchemaConfig",
+				"application"
+			]
+		],
+		"loading": {
+			"application_a1_files": false
+		},
+		"pagination": {
+			"application_files": {
+				"total": 1001,
+				"page": 1,
+				"pages": 3,
+				"limit": 500,
+				"next": null,
+				"prev": null
+			}
+		},
+		"relatedData": {
+			"application": {
+				"files": {
+					"results": [],
+					"total": 1001
+				}
+			}
+		}
+	},
+	"fetchRelatedData: other type default limit": {
+		"result": "undefined",
+		"fetches": [
+			[
+				"/index.php/apps/openregister/api/objects/reg-application/sch-application/a1/contracts?_lang=en",
+				{
+					"headers": {
+						"requesttoken": "token"
+					}
+				}
+			]
+		],
+		"errors": [],
+		"calls": [
+			[
+				"getSchemaConfig",
+				"application"
+			]
+		],
+		"loading": {
+			"application_a1_contracts": false
+		},
+		"pagination": {
+			"application_contracts": {
+				"total": 41,
+				"page": 1,
+				"pages": 3,
+				"limit": 20,
+				"next": null,
+				"prev": null
+			}
+		},
+		"relatedData": {
+			"application": {
+				"contracts": {
+					"results": [],
+					"total": 41
+				}
+			}
+		}
+	},
+	"fetchRelatedData: no pagination fields": {
+		"result": "undefined",
+		"fetches": [
+			[
+				"/index.php/apps/openregister/api/objects/reg-application/sch-application/a1/uses?{\"_extend\":\"@self.schema\"}&_lang=en",
+				{
+					"headers": {
+						"requesttoken": "token"
+					}
+				}
+			]
+		],
+		"errors": [],
+		"calls": [
+			[
+				"getSchemaConfig",
+				"application"
+			]
+		],
+		"loading": {
+			"application_a1_uses": false
+		},
+		"pagination": {},
+		"relatedData": {
+			"application": {
+				"uses": {
+					"results": [
+						"r"
+					]
+				}
+			}
+		}
+	},
+	"fetchRelatedData: organisation config given": {
+		"result": "undefined",
+		"fetches": [
+			[
+				"/index.php/apps/openregister/api/objects/4/9/o1/audit-trails?{\"_limit\":20}&_lang=en",
+				{
+					"headers": {
+						"requesttoken": "token"
+					}
+				}
+			]
+		],
+		"errors": [],
+		"calls": [],
+		"loading": {
+			"organization_o1_logs": false
+		},
+		"pagination": {
+			"organization_logs": {
+				"total": 3,
+				"page": 1,
+				"pages": 1,
+				"limit": 20,
+				"next": null,
+				"prev": null
+			}
+		},
+		"relatedData": {
+			"organization": {
+				"logs": []
+			}
+		}
+	},
+	"fetchRelatedData: http error": {
+		"result": "undefined",
+		"fetches": [
+			[
+				"/index.php/apps/openregister/api/objects/reg-application/sch-application/a1/uses?{\"_extend\":\"@self.schema\"}&_lang=en",
+				{
+					"headers": {
+						"requesttoken": "token"
+					}
+				}
+			]
+		],
+		"errors": [
+			[
+				"Error fetching uses for application:",
+				"Error: Failed to fetch uses for application"
+			]
+		],
+		"calls": [
+			[
+				"getSchemaConfig",
+				"application"
+			]
+		],
+		"loading": {
+			"application_a1_uses": false
+		},
+		"pagination": {},
+		"relatedData": {}
+	},
+	"fetchRelatedData: network error": {
+		"result": "undefined",
+		"fetches": [
+			[
+				"/index.php/apps/openregister/api/objects/reg-application/sch-application/a1/audit-trails?_lang=en",
+				{
+					"headers": {
+						"requesttoken": "token"
+					}
+				}
+			]
+		],
+		"errors": [
+			[
+				"Error fetching logs for application:",
+				"Error: offline"
+			]
+		],
+		"calls": [
+			[
+				"getSchemaConfig",
+				"application"
+			]
+		],
+		"loading": {
+			"application_a1_logs": false
+		},
+		"pagination": {},
+		"relatedData": {}
+	},
+	"fetchRelatedData: settings not loaded": {
+		"result": "undefined",
+		"fetches": [
+			[
+				"/index.php/apps/openregister/api/objects/reg-application/sch-application/a1/audit-trails?_lang=en",
+				{
+					"headers": {
+						"requesttoken": "token"
+					}
+				}
+			]
+		],
+		"errors": [],
+		"calls": [
+			[
+				"fetchSettings"
+			],
+			[
+				"getSchemaConfig",
+				"application"
+			]
+		],
+		"loading": {
+			"application_a1_logs": false
+		},
+		"pagination": {},
+		"relatedData": {
+			"application": {
+				"logs": []
+			}
+		}
+	},
+	"fetchRelatedData: existing related data kept": {
+		"result": "undefined",
+		"fetches": [
+			[
+				"/index.php/apps/openregister/api/objects/reg-application/sch-application/a1/files?{\"_limit\":2}&_lang=en",
+				{
+					"headers": {
+						"requesttoken": "token"
+					}
+				}
+			]
+		],
+		"errors": [],
+		"calls": [
+			[
+				"getSchemaConfig",
+				"application"
+			]
+		],
+		"loading": {
+			"application_a1_files": false
+		},
+		"pagination": {
+			"other": {
+				"page": 1
+			},
+			"application_files": {
+				"total": 0,
+				"page": 1,
+				"pages": 0,
+				"limit": 2,
+				"next": null,
+				"prev": null
+			}
+		},
+		"relatedData": {
+			"application": {
+				"logs": [
+					{
+						"id": "old"
+					}
+				],
+				"files": {
+					"results": [],
+					"total": 0,
+					"page": 0,
+					"limit": 0
+				}
+			}
+		}
+	},
+	"fetchRelatedData: id from object register and missing schema": {
+		"result": "undefined",
+		"fetches": [
+			[
+				"/index.php/apps/openregister/api/objects/undefined/null/t1/audit-trails?_lang=en",
+				{
+					"headers": {
+						"requesttoken": "token"
+					}
+				}
+			]
+		],
+		"errors": [],
+		"calls": [],
+		"loading": {
+			"thing_t1_logs": false
+		},
+		"pagination": {},
+		"relatedData": {
+			"thing": {
+				"logs": []
+			}
+		}
+	},
+	"deleteObject legacy: string and object selections": {
+		"result": true,
+		"fetches": [
+			[
+				"/index.php/apps/openregister/api/objects/1/2/x1",
+				{
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": "token"
+					}
+				}
+			]
+		],
+		"calls": [
+			[
+				"setSelectedObjects",
+				[
+					"x2",
+					{
+						"id": "x3",
+						"@self": {
+							"id": "x1"
+						}
+					}
+				]
+			]
+		],
+		"loading": {
+			"delete_x1": false
+		},
+		"selectedObjects": [
+			"x2",
+			{
+				"id": "x3",
+				"@self": {
+					"id": "x1"
+				}
+			}
+		]
+	},
+	"deleteObject legacy: not selected": {
+		"result": true,
+		"fetches": [
+			[
+				"/index.php/apps/openregister/api/objects/1/2/x1",
+				{
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": "token"
+					}
+				}
+			]
+		],
+		"calls": [],
+		"loading": {
+			"delete_x1": false
+		},
+		"selectedObjects": [
+			"x2",
+			{
+				"id": "x3"
+			},
+			{
+				"@self": {
+					"id": "x4"
+				}
+			}
+		]
+	},
+	"deleteObject legacy: empty selection": {
+		"result": true,
+		"fetches": [
+			[
+				"/index.php/apps/openregister/api/objects/1/2/x1",
+				{
+					"method": "DELETE",
+					"headers": {
+						"requesttoken": "token"
+					}
+				}
+			]
+		],
+		"calls": [],
+		"loading": {
+			"delete_x1": false
+		},
+		"selectedObjects": []
+	},
+	"pagination getters": [
+		[
+			false,
+			false
+		],
+		[
+			false,
+			false
+		],
+		[
+			false,
+			false
+		],
+		[
+			true,
+			false
+		],
+		[
+			false,
+			true
+		],
+		[
+			true,
+			true
+		],
+		[
+			true,
+			true
+		],
+		[
+			false,
+			true
+		],
+		[
+			false,
+			true
+		]
+	]
+}

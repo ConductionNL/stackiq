@@ -83,7 +83,46 @@ import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { NcLoadingIcon, NcNoteCard } from '@nextcloud/vue'
 import { objectStore } from '../../store/store.js'
 import { refId } from '../../utils/maintenance.js'
+import { ensureObjectTypeOrSlug } from '../../utils/objectTypes.js'
 import { riskSignals } from '../../utils/valueAssessment.js'
+
+/**
+ * Read the app settings when the store has none yet. Opened straight from a
+ * link, this widget can mount before the app has read its settings; without
+ * them no type resolves.
+ *
+ * @return {Promise<void>}
+ */
+async function ensureSettings() {
+	if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {
+		await objectStore.fetchSettings()
+	}
+}
+
+/**
+ * Fetch the module version a usage runs, when it names one.
+ *
+ * @param {string} versionId The version's id, or ''.
+ * @return {Promise<object|null>|null} The version, or null without an id.
+ */
+function fetchVersion(versionId) {
+	return versionId ? objectStore.fetchObject('moduleVersion', versionId) : null
+}
+
+/**
+ * Fetch the vulnerabilities of a usage's application, when it names one.
+ *
+ * @param {string} moduleId The application's id, or ''.
+ * @return {Promise<Array<object>>|Array} The vulnerabilities, or none without an id.
+ */
+function fetchVulnerabilities(moduleId) {
+	return moduleId
+		? objectStore.fetchCollectionForOptions('vulnerability', {
+				modules: moduleId,
+				_limit: 200,
+			})
+		: []
+}
 
 export default {
 	name: 'UsageRiskSignals',
@@ -141,39 +180,32 @@ export default {
 			this.loading = true
 			this.error = false
 			try {
-				// Opened straight from a link, this widget can mount before the
-				// app has read its settings; without them no type resolves.
-				if (
-					!objectStore.settings
-					&& typeof objectStore.fetchSettings === 'function'
-				) {
-					await objectStore.fetchSettings()
-				}
-				this.ensureType('usage')
-				this.ensureType('moduleVersion')
-				this.ensureType('vulnerability')
-				const usage = await objectStore.fetchObject('usage', this.objectId)
-				const data = usage?.object || usage || {}
-				this.riskScore = Number.isInteger(data.riskScore)
-					? data.riskScore
-					: null
-				const moduleId = refId(data.module)
-				const versionId = refId(data.moduleVersion)
-				const version = versionId
-					? await objectStore.fetchObject('moduleVersion', versionId)
-					: null
-				const vulnerabilities = moduleId
-					? await objectStore.fetchCollectionForOptions('vulnerability', {
-							modules: moduleId,
-							_limit: 200,
-						})
-					: []
-				this.signals = riskSignals(version, vulnerabilities, moduleId)
+				await this.fetchSignals()
 			} catch {
 				this.error = true
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Fetch the usage and derive its risk score and signals.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-002-the-usage-page-shows-the-risk-signals-next-to-the-risk-score
+		 */
+		async fetchSignals() {
+			await ensureSettings()
+			this.ensureType('usage')
+			this.ensureType('moduleVersion')
+			this.ensureType('vulnerability')
+			const usage = await objectStore.fetchObject('usage', this.objectId)
+			const data = usage?.object || usage || {}
+			this.riskScore = Number.isInteger(data.riskScore) ? data.riskScore : null
+			const moduleId = refId(data.module)
+			const version = await fetchVersion(refId(data.moduleVersion))
+			const vulnerabilities = await fetchVulnerabilities(moduleId)
+			this.signals = riskSignals(version, vulnerabilities, moduleId)
 		},
 
 		/**
@@ -184,31 +216,7 @@ export default {
 		 * @spec openspec/specs/application-value-assessment/spec.md#requirement-req-ava-002-the-usage-page-shows-the-risk-signals-next-to-the-risk-score
 		 */
 		ensureType(type) {
-			if (
-				typeof objectStore.registerObjectType !== 'function'
-				|| objectStore.objectTypeRegistry?.[type]
-			) {
-				return
-			}
-			let config
-			try {
-				config = objectStore.getSchemaConfig?.(type)
-			} catch {
-				config = null
-			}
-			if (config?.register && config?.schema) {
-				objectStore.registerObjectType(type, config.schema, config.register)
-				return
-			}
-			// OpenRegister accepts the schema slug where it takes an id, so a type
-			// the settings do not map still resolves in the voorzieningen register.
-			const voorzieningen =
-				objectStore.settings?.voorzieningen
-				|| objectStore.settings?.voorzieningenConfig
-				|| {}
-			if (voorzieningen.register) {
-				objectStore.registerObjectType(type, type, voorzieningen.register)
-			}
+			ensureObjectTypeOrSlug(type)
 		},
 	},
 }

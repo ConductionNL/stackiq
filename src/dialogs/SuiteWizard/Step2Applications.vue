@@ -134,21 +134,7 @@ export default {
 				) {
 					await objectStore.fetchSettings()
 				}
-				const voorzieningenConfig =
-					objectStore.settings?.voorzieningen
-					|| objectStore.settings?.voorzieningenConfig
-					|| {}
-				const registerId = voorzieningenConfig.register
-				if (
-					typeof objectStore.registerObjectType === 'function'
-					&& registerId
-					&& !objectStore.objectTypeRegistry?.module
-				) {
-					objectStore.registerObjectType('module', 'module', registerId, {
-						registerSlug: 'stackiq',
-						schemaSlug: 'module',
-					})
-				}
+				this.registerModuleType()
 				if (typeof objectStore.fetchCollection === 'function') {
 					await objectStore.fetchCollection('module', { _limit: 1000 })
 				}
@@ -165,6 +151,42 @@ export default {
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Register the `module` object type on the configured register, unless
+		 * the store cannot register types, no register is configured, or
+		 * `module` is already registered.
+		 *
+		 * @return {void}
+		 * @spec openspec/specs/suite-wizard/spec.md#requirement-the-system-shall-register-the-suite-and-module-object-types-by-schema-slug
+		 */
+		registerModuleType() {
+			const registerId = this.moduleRegisterId()
+			if (
+				typeof objectStore.registerObjectType === 'function'
+				&& registerId
+				&& !objectStore.objectTypeRegistry?.module
+			) {
+				objectStore.registerObjectType('module', 'module', registerId, {
+					registerSlug: 'stackiq',
+					schemaSlug: 'module',
+				})
+			}
+		},
+
+		/**
+		 * The register id from the voorzieningen settings, under either key.
+		 *
+		 * @return {string|undefined} The register id
+		 * @spec openspec/specs/suite-wizard/spec.md#requirement-the-system-shall-register-the-suite-and-module-object-types-by-schema-slug
+		 */
+		moduleRegisterId() {
+			const voorzieningenConfig =
+				objectStore.settings?.voorzieningen
+				|| objectStore.settings?.voorzieningenConfig
+				|| {}
+			return voorzieningenConfig.register
 		},
 
 		/**

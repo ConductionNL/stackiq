@@ -16,6 +16,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md#requirement-req-msr-003-the-owners-of-every-usage-are-notified
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -24,6 +27,7 @@ namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IGroupManager;
 
@@ -44,11 +48,11 @@ class MaintenanceAnnouncerCheck {
 	/**
 	 * Constructor.
 	 *
-	 * @param SettingsService $settingsService The module register and schema lookups.
+	 * @param ObjectTypeLocatorInterface $settingsService The module register and schema lookups.
 	 * @param IGroupManager   $groupManager    The group manager, for the catalogue's administrators.
 	 */
 	public function __construct(
-		private readonly SettingsService $settingsService,
+		private readonly ObjectTypeLocatorInterface $settingsService,
 		private readonly IGroupManager $groupManager,
 	) {
 	}//end __construct()

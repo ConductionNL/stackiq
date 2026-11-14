@@ -43,9 +43,9 @@ describe('the Connections pages', () => {
 		const index = page('Koppelingen')
 		expect(index.route).toBe('/koppelingen')
 		expect(index.config.schema).toBe('connection')
-		expect(index.config.columns).toEqual(
-			expect.arrayContaining(['type', 'status', 'moduleA', 'moduleB']),
-		)
+		expect(
+			index.config.columns.map((c) => (typeof c === 'string' ? c : c.key)),
+		).toEqual(expect.arrayContaining(['type', 'status', 'moduleA', 'moduleB']))
 		expect(index.config.filterMenu).toBe(true)
 		const detail = page('KoppelingDetail')
 		expect(detail.route).toBe('/koppelingen/:id')

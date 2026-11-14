@@ -13,6 +13,9 @@
  * @version GIT: <git-id>
  *
  * @link https://conductio.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -90,3 +93,6 @@ foreach (['ConnectionStatusReportedEvent', 'ConnectionRefreshRequestedEvent'] as
 }
 
 unset($integriqStubEvent);
+
+// Doctrine and Symfony classes only the server ships; see bootstrap-stubs.php.
+require_once __DIR__ . '/bootstrap-stubs.php';

@@ -14,6 +14,9 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -22,6 +25,8 @@ namespace OCA\Stackiq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\AangebodenGebruikServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\IUserSession;
@@ -56,8 +61,28 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.Superglobals)
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
+ *
+ * @spec openspec/specs/aangeboden-gebruik-api/spec.md#requirement-the-system-shall-list-offered-usage-records-scoped-to-the-callers-role-req-001
  */
-class AangebodenGebruikService {
+class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
+
+	/**
+	 * Query key => option keys it is read from, in order of preference; cast to int.
+	 *
+	 * @var array<string, array<string>>
+	 */
+	private const PAGINATION_FILTERS = [
+		'_limit' => ['_limit', 'limit'],
+		'_offset' => ['_offset', 'offset'],
+		'_page' => ['_page'],
+	];
+
+	/**
+	 * Options copied into the query unchanged when non-empty, in this order.
+	 *
+	 * @var array<string>
+	 */
+	private const PASS_THROUGH_FILTERS = ['_source', 'status', 'suite', 'startDate', 'endDate'];
 	/**
 	 * Constructor for AangebodenGebruikService
 	 *
@@ -65,7 +90,7 @@ class AangebodenGebruikService {
 	 * @param IAppManager $appManager App manager service for checking available apps
 	 * @param ContainerInterface $container PSR-11 container interface for dependency injection
 	 * @param LoggerInterface $logger Logger service for debugging and error reporting
-	 * @param SettingsService $settingsService Settings service for retrieving configuration
+	 * @param RegisterConfigReaderInterface $settingsService Settings service for retrieving configuration
 	 * @param IUserSession $userSession User session service for current user context
 	 */
 	public function __construct(
@@ -73,7 +98,7 @@ class AangebodenGebruikService {
 		private readonly IAppManager $appManager,
 		private readonly ContainerInterface $container,
 		private readonly LoggerInterface $logger,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly IUserSession $userSession,
 	) {
 	}//end __construct()
@@ -109,25 +134,13 @@ class AangebodenGebruikService {
 			$currentOrg = $this->getCurrentOrganisation();
 			if ($currentOrg === null) {
 				$this->logger->warning('No current organization available for afnemer filtering');
-				return [
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'message' => 'No current organization available',
-				];
+				return (new EmptyListing())->page() + ['message' => 'No current organization available'];
 			}
 
 			// Get configuration for gebruiks register/schema.
 			$gebruiksConfig = $this->getGebruiksConfiguration();
 
-			// Use the first schema for now (can be extended for multi-schema support).
-			$schemaId = $gebruiksConfig['schemas'][0] ?? null;
-			if ($schemaId === null) {
-				throw new Exception('No gebruik schema configured');
-			}
+			$schemaId = $this->firstGebruikSchema(gebruiksConfig: $gebruiksConfig);
 
 			// Build query for afnemer filtering - search for objects where current org is afnemer.
 			// Note: We don't filter by organisation in @self since the objects are owned by leveranciers.
@@ -290,15 +303,7 @@ class AangebodenGebruikService {
 				]
 			);
 
-			return [
-				'results' => [],
-				'total' => 0,
-				'page' => 1,
-				'pages' => 0,
-				'limit' => 20,
-				'offset' => 0,
-				'error' => 'Failed to retrieve gebruiks: ' . $e->getMessage(),
-			];
+			return $this->emptyKoppelingenPage(error: 'Failed to retrieve gebruiks: ' . $e->getMessage());
 		}//end try
 	}//end getGebruiksWhereAfnemer()
 
@@ -321,191 +326,19 @@ class AangebodenGebruikService {
 	 *
 	 * @return array searchObjectsPaginated result with koppelingen and gebruiks for the UUID.
 	 *
-	 * @throws Exception When OpenRegister service is not available.
-	 *
 	 * @SuppressWarnings(PHPMD.BooleanArgumentFlag) $isAmbtenaar is a simple privilege toggle
 	 * @spec                                        openspec/specs/aangeboden-gebruik-api/spec.md
 	 */
 	public function getKoppelingenGebruikByUuid(string $uuid, array $options = [], bool $isAmbtenaar = false): array {
-		$this->logger->info(
-			'Getting koppelingen and gebruiks for UUID with extended access',
-			[
-				'uuid' => $uuid,
-				'options' => $options,
-				'isAmbtenaar' => $isAmbtenaar,
-			]
-		);
+		$request = [
+			'uuid' => $uuid,
+			'options' => $options,
+			'isAmbtenaar' => $isAmbtenaar,
+		];
+		$this->logger->info('Getting koppelingen and gebruiks for UUID with extended access', $request);
 
 		try {
-			// Validate input.
-			if (empty($uuid) === true) {
-				return [
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'error' => 'UUID is required',
-				];
-			}
-
-			// Get ObjectService from OpenRegister.
-			$objectService = $this->getObjectService();
-
-			// Get voorzieningen configuration.
-			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-			$registerId = $voorzieningenConfig['register'] ?? null;
-			$gebruikSchema = $voorzieningenConfig['gebruik_schema'] ?? null;
-			$koppeligenSchema = $voorzieningenConfig['koppeling_schema'] ?? null;
-
-			if ($registerId === null || $gebruikSchema === null || $koppeligenSchema === null) {
-				throw new Exception(
-					'Voorzieningen configuration not found. Please configure the schemas in the admin panel.'
-				);
-			}
-
-			// Check access permissions.
-			$currentOrg = $this->getCurrentOrganisation();
-			$hasAccess = false;
-
-			if ($isAmbtenaar === true) {
-				// Ambtenaar always has access.
-				$hasAccess = true;
-			} elseif ($currentOrg !== null) {
-				// Check if the application/module is owned by user's organization.
-				try {
-					$appObject = $objectService->find(id: $uuid, _rbac: false, _multitenancy: false);
-					if ($appObject !== null) {
-						$appData = $appObject->getObject();
-						$ownerOrg = $appData['@self']['organisation'] ?? null;
-						$hasAccess = ($ownerOrg === $currentOrg);
-					}
-				} catch (Exception $e) {
-					$this->logger->warning(
-						'Failed to check ownership for UUID',
-						[
-							'uuid' => $uuid,
-							'error' => $e->getMessage(),
-						]
-					);
-				}
-			}//end if
-
-			if ($hasAccess === false) {
-				return [
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-				];
-			}
-
-			// Get organization filter if provided (for ambtenaar).
-			$organisationFilter = null;
-			if ($isAmbtenaar === true && isset($options['organisation']) === true) {
-				$organisationFilter = $options['organisation'];
-			}
-
-			// Build search query using ObjectService's buildSearchQuery.
-			$searchQuery = $objectService->buildSearchQuery($options);
-
-			// Add register and schema filters.
-			$searchQuery['@self']['register'] = $registerId;
-			$searchQuery['@self']['schema'] = [$gebruikSchema, $koppeligenSchema];
-
-			// Force database source.
-			$searchQuery['_source'] = 'database';
-
-			// Check if UUID is an organisation UUID by trying to fetch it and checking its schema.
-			$isOrganisationUuid = false;
-			try {
-				$uuidObject = $objectService->find(id: $uuid, _rbac: false, _multitenancy: false);
-				if ($uuidObject !== null) {
-					$uuidData = $uuidObject->getObject();
-					$uuidSchema = $uuidData['@self']['schema'] ?? null;
-					$organisationSchemaId = $voorzieningenConfig['organisatie_schema'] ?? '15';
-					$isOrganisationUuid = ($uuidSchema === $organisationSchemaId);
-				}
-			} catch (Exception $e) {
-				$this->logger->debug(
-					'Could not fetch UUID object, assuming it is not an organisation',
-					[
-						'uuid' => $uuid,
-					]
-				);
-			}
-
-			// Handle organisation UUID filtering differently from suite/module UUIDs.
-			if ($isOrganisationUuid === true) {
-				// For organisation UUIDs, filter by @self.organisation.
-				$searchQuery['@self']['organisation'] = $uuid;
-
-				// Apply additional organisation filter if provided by ambtenaar.
-				if ($organisationFilter !== null) {
-					$this->logger->warning(
-						'Organisation filter parameter is ignored when UUID is already an organisation',
-						[
-							'uuid' => $uuid,
-							'filter' => $organisationFilter,
-						]
-					);
-				}
-
-				$this->logger->debug(
-					'Executing koppelingen-gebruik by organisation UUID',
-					[
-						'uuid' => $uuid,
-						'query' => $searchQuery,
-					]
-				);
-
-				// Execute paginated search without 'uses' parameter.
-				$searchResult = $objectService->searchObjectsPaginated(
-					query: $searchQuery,
-					_rbac: false,
-					_multitenancy: false,
-					deleted: false
-				);
-			}//end if
-
-			if ($isOrganisationUuid === false) {
-				// For suite/module UUIDs, use 'uses' parameter to filter by relations.
-				// Add organization filter if provided.
-				if ($organisationFilter !== null) {
-					$searchQuery['@self']['organisation'] = $organisationFilter;
-				}
-
-				$this->logger->debug(
-					'Executing koppelingen-gebruik by suite/module UUID',
-					[
-						'uuid' => $uuid,
-						'query' => $searchQuery,
-					]
-				);
-
-				// Execute paginated search using 'uses' parameter to filter by UUID in relations.
-				$searchResult = $objectService->searchObjectsPaginated(
-					query: $searchQuery,
-					_rbac: false,
-					_multitenancy: false,
-					deleted: false,
-					uses: $uuid
-				);
-			}//end if
-
-			$this->logger->debug(
-				'Koppelingen-gebruik by UUID search completed',
-				[
-					'uuid' => $uuid,
-					'total' => $searchResult['total'] ?? 0,
-					'results_count' => count($searchResult['results'] ?? []),
-				]
-			);
-
-			return $searchResult;
+			return $this->koppelingenGebruik(request: $request);
 		} catch (Exception $e) {
 			$this->logger->error(
 				'Failed to get koppelingen-gebruik by UUID',
@@ -516,17 +349,230 @@ class AangebodenGebruikService {
 				]
 			);
 
-			return [
-				'results' => [],
-				'total' => 0,
-				'page' => 1,
-				'pages' => 0,
-				'limit' => 20,
-				'offset' => 0,
-				'error' => 'Failed to retrieve objects: ' . $e->getMessage(),
-			];
-		}//end try
+			return $this->emptyKoppelingenPage(error: 'Failed to retrieve objects: ' . $e->getMessage());
+		}
 	}//end getKoppelingenGebruikByUuid()
+
+	/**
+	 * The koppelingen and gebruiks for a uuid, when the caller may read them.
+	 *
+	 * @param array{uuid: string, options: array, isAmbtenaar: bool} $request The uuid, query options and ambtenaar flag
+	 *
+	 * @return array searchObjectsPaginated result, or an empty page
+	 *
+	 * @throws Exception When OpenRegister or the voorzieningen configuration is not available.
+	 */
+	private function koppelingenGebruik(array $request): array {
+		// Validate input.
+		if (empty($request['uuid']) === true) {
+			return $this->emptyKoppelingenPage(error: 'UUID is required');
+		}
+
+		// Get ObjectService from OpenRegister.
+		$request['objectService'] = $this->getObjectService();
+
+		// Get voorzieningen configuration.
+		$request['config'] = $this->settingsService->getVoorzieningenConfig();
+		$registerId = $request['config']['register'] ?? null;
+		$gebruikSchema = $request['config']['gebruik_schema'] ?? null;
+		$koppeligenSchema = $request['config']['koppeling_schema'] ?? null;
+
+		if ($registerId === null || $gebruikSchema === null || $koppeligenSchema === null) {
+			throw new Exception(
+				'Voorzieningen configuration not found. Please configure the schemas in the admin panel.'
+			);
+		}
+
+		// Check access permissions.
+		if ($this->mayReadKoppelingen(request: $request) === false) {
+			return $this->emptyKoppelingenPage(error: null);
+		}
+
+		// Build search query using ObjectService's buildSearchQuery.
+		$searchQuery = $request['objectService']->buildSearchQuery($request['options']);
+
+		// Add register and schema filters.
+		$searchQuery['@self']['register'] = $registerId;
+		$searchQuery['@self']['schema'] = [$gebruikSchema, $koppeligenSchema];
+
+		// Force database source.
+		$searchQuery['_source'] = 'database';
+
+		$searchResult = $this->searchKoppelingen(request: $request, searchQuery: $searchQuery);
+
+		$this->logger->debug(
+			'Koppelingen-gebruik by UUID search completed',
+			[
+				'uuid' => $request['uuid'],
+				'total' => $searchResult['total'] ?? 0,
+				'results_count' => count($searchResult['results'] ?? []),
+			]
+		);
+
+		return $searchResult;
+	}//end koppelingenGebruik()
+
+	/**
+	 * Whether the caller may read the koppelingen of a uuid: an ambtenaar always, anyone
+	 * else only when their active organisation owns the object behind the uuid.
+	 *
+	 * @param array $request The uuid, ambtenaar flag and object service
+	 *
+	 * @return bool True when access is granted
+	 */
+	private function mayReadKoppelingen(array $request): bool {
+		$currentOrg = $this->getCurrentOrganisation();
+		if ($request['isAmbtenaar'] === true) {
+			return true;
+		}
+
+		if ($currentOrg === null) {
+			return false;
+		}
+
+		// Check if the application/module is owned by user's organization.
+		try {
+			$appObject = $request['objectService']->find(id: $request['uuid'], _rbac: false, _multitenancy: false);
+			if ($appObject !== null) {
+				$appData = $appObject->getObject();
+				$ownerOrg = $appData['@self']['organisation'] ?? null;
+				return $ownerOrg === $currentOrg;
+			}
+		} catch (Exception $e) {
+			$this->logger->warning(
+				'Failed to check ownership for UUID',
+				[
+					'uuid' => $request['uuid'],
+					'error' => $e->getMessage(),
+				]
+			);
+		}
+
+		return false;
+	}//end mayReadKoppelingen()
+
+	/**
+	 * Run the koppelingen search: by @self.organisation for an organisation uuid, by relation otherwise.
+	 *
+	 * An ambtenaar's organisation filter narrows a relation search; it is ignored for an organisation uuid.
+	 *
+	 * @param array $request     The uuid, options, ambtenaar flag, object service and configuration
+	 * @param array $searchQuery The query with register, schema and source set
+	 *
+	 * @return array searchObjectsPaginated result
+	 */
+	private function searchKoppelingen(array $request, array $searchQuery): array {
+		$uuid = $request['uuid'];
+
+		// Get organization filter if provided (for ambtenaar).
+		$organisationFilter = null;
+		if ($request['isAmbtenaar'] === true && isset($request['options']['organisation']) === true) {
+			$organisationFilter = $request['options']['organisation'];
+		}
+
+		if ($this->isOrganisationUuid(request: $request) === true) {
+			// For organisation UUIDs, filter by @self.organisation.
+			$searchQuery['@self']['organisation'] = $uuid;
+
+			if ($organisationFilter !== null) {
+				$this->logger->warning(
+					'Organisation filter parameter is ignored when UUID is already an organisation',
+					[
+						'uuid' => $uuid,
+						'filter' => $organisationFilter,
+					]
+				);
+			}
+
+			$this->logger->debug('Executing koppelingen-gebruik by organisation UUID', ['uuid' => $uuid, 'query' => $searchQuery]);
+
+			return $request['objectService']->searchObjectsPaginated(
+				query: $searchQuery,
+				_rbac: false,
+				_multitenancy: false,
+				deleted: false
+			);
+		}//end if
+
+		// For suite/module UUIDs, use 'uses' parameter to filter by relations.
+		if ($organisationFilter !== null) {
+			$searchQuery['@self']['organisation'] = $organisationFilter;
+		}
+
+		$this->logger->debug('Executing koppelingen-gebruik by suite/module UUID', ['uuid' => $uuid, 'query' => $searchQuery]);
+
+		return $request['objectService']->searchObjectsPaginated(
+			query: $searchQuery,
+			_rbac: false,
+			_multitenancy: false,
+			deleted: false,
+			uses: $uuid
+		);
+	}//end searchKoppelingen()
+
+	/**
+	 * Whether a uuid names an organisation: its object's schema is the configured organisation schema.
+	 *
+	 * @param array $request The uuid, object service and configuration
+	 *
+	 * @return bool True for an organisation uuid; false when the object cannot be fetched
+	 */
+	private function isOrganisationUuid(array $request): bool {
+		try {
+			$uuidObject = $request['objectService']->find(id: $request['uuid'], _rbac: false, _multitenancy: false);
+			if ($uuidObject !== null) {
+				$uuidData = $uuidObject->getObject();
+				$uuidSchema = $uuidData['@self']['schema'] ?? null;
+				$organisationSchemaId = $request['config']['organisatie_schema'] ?? '15';
+				return $uuidSchema === $organisationSchemaId;
+			}
+		} catch (Exception $e) {
+			$this->logger->debug(
+				'Could not fetch UUID object, assuming it is not an organisation',
+				[
+					'uuid' => $request['uuid'],
+				]
+			);
+		}
+
+		return false;
+	}//end isOrganisationUuid()
+
+	/**
+	 * An empty result page, with an error when one is given.
+	 *
+	 * @param string|null $error The error to report, or null
+	 *
+	 * @return array The empty page
+	 */
+	private function emptyKoppelingenPage(?string $error): array {
+		$page = (new EmptyListing())->page();
+		if ($error !== null) {
+			$page['error'] = $error;
+		}
+
+		return $page;
+	}//end emptyKoppelingenPage()
+
+	/**
+	 * The first gebruik schema of the gebruiks configuration.
+	 *
+	 * Uses the first schema for now (can be extended for multi-schema support).
+	 *
+	 * @param array<string, mixed> $gebruiksConfig The gebruiks register and schemas.
+	 *
+	 * @return mixed The schema id.
+	 *
+	 * @throws Exception When no gebruik schema is configured.
+	 */
+	private function firstGebruikSchema(array $gebruiksConfig): mixed {
+		$schemaId = $gebruiksConfig['schemas'][0] ?? null;
+		if ($schemaId === null) {
+			throw new Exception('No gebruik schema configured');
+		}
+
+		return $schemaId;
+	}//end firstGebruikSchema()
 
 	/**
 	 * Get all gebruiks objects (ignoring RBAC and multitenancy) - restricted to ambtenaar group
@@ -559,11 +605,7 @@ class AangebodenGebruikService {
 			// Get configuration for gebruiks register/schema.
 			$gebruiksConfig = $this->getGebruiksConfiguration();
 
-			// Use the first schema for now (can be extended for multi-schema support).
-			$schemaId = $gebruiksConfig['schemas'][0] ?? null;
-			if ($schemaId === null) {
-				throw new Exception('No gebruik schema configured');
-			}
+			$schemaId = $this->firstGebruikSchema(gebruiksConfig: $gebruiksConfig);
 
 			// Build query for all gebruiks - no organization filtering.
 			$query = [
@@ -617,15 +659,7 @@ class AangebodenGebruikService {
 				]
 			);
 
-			return [
-				'results' => [],
-				'total' => 0,
-				'page' => 1,
-				'pages' => 0,
-				'limit' => 20,
-				'offset' => 0,
-				'error' => 'Failed to retrieve gebruiks: ' . $e->getMessage(),
-			];
+			return $this->emptyKoppelingenPage(error: 'Failed to retrieve gebruiks: ' . $e->getMessage());
 		}//end try
 	}//end getAllGebruiksForAmbtenaar()
 
@@ -656,15 +690,7 @@ class AangebodenGebruikService {
 		try {
 			// Validate input.
 			if (empty($suiteId) === true) {
-				return [
-					'results' => [],
-					'total' => 0,
-					'page' => 1,
-					'pages' => 0,
-					'limit' => 20,
-					'offset' => 0,
-					'error' => 'Suite ID is required',
-				];
+				return $this->emptyKoppelingenPage(error: 'Suite ID is required');
 			}
 
 			// Get ObjectService from OpenRegister.
@@ -673,11 +699,7 @@ class AangebodenGebruikService {
 			// Get configuration for gebruiks register/schema.
 			$gebruiksConfig = $this->getGebruiksConfiguration();
 
-			// Use the first schema for now (can be extended for multi-schema support).
-			$schemaId = $gebruiksConfig['schemas'][0] ?? null;
-			if ($schemaId === null) {
-				throw new Exception('No gebruik schema configured');
-			}
+			$schemaId = $this->firstGebruikSchema(gebruiksConfig: $gebruiksConfig);
 
 			// Build query for all gebruiks that reference the specified UUID in their relations.
 			// Follow the same pattern as PublicationsController.php used() method.
@@ -737,15 +759,7 @@ class AangebodenGebruikService {
 				]
 			);
 
-			return [
-				'results' => [],
-				'total' => 0,
-				'page' => 1,
-				'pages' => 0,
-				'limit' => 20,
-				'offset' => 0,
-				'error' => 'Failed to retrieve usage: ' . $e->getMessage(),
-			];
+			return $this->emptyKoppelingenPage(error: 'Failed to retrieve usage: ' . $e->getMessage());
 		}//end try
 	}//end getSingleGebruikForAmbtenaar()
 
@@ -1108,30 +1122,7 @@ class AangebodenGebruikService {
 	 * @return string|null Current organisation identifier or null if no user session
 	 */
 	private function getCurrentOrganisation(): ?string {
-		$user = $this->userSession->getUser();
-		if ($user === null) {
-			return null;
-		}
-
-		try {
-			// Get the OpenRegister OrganisationService to get the active organisation.
-			$organisationService = $this->container->get('OCA\OpenRegister\Service\OrganisationService');
-			$activeOrg = $organisationService->getActiveOrganisation();
-
-			if ($activeOrg !== null) {
-				return $activeOrg->getUuid();
-			}
-
-			return null;
-		} catch (Exception $e) {
-			$this->logger->error(
-				'Failed to get current organisation from OpenRegister',
-				[
-					'error' => $e->getMessage(),
-				]
-			);
-			return null;
-		}
+		return $this->openRegisterLookup()->activeOrganisationUuid();
 	}//end getCurrentOrganisation()
 
 	/**
@@ -1141,16 +1132,22 @@ class AangebodenGebruikService {
 	 * @throws Exception When OpenRegister service is not available
 	 */
 	private function getObjectService(): ObjectServiceInterface {
-		if (in_array(needle: 'openregister', haystack: $this->appManager->getInstalledApps()) === false) {
-			throw new Exception('OpenRegister app is not installed');
-		}
-
-		try {
-			return $this->container->get('OCA\OpenRegister\Service\ObjectService');
-		} catch (Exception $e) {
-			throw new Exception('Failed to get OpenRegister service: ' . $e->getMessage());
-		}
+		return $this->openRegisterLookup()->objectService();
 	}//end getObjectService()
+
+	/**
+	 * The OpenRegister lookups, built from this service's app manager, container, session and logger.
+	 *
+	 * @return OpenRegisterLookup
+	 */
+	private function openRegisterLookup(): OpenRegisterLookup {
+		return new OpenRegisterLookup(
+			appManager: $this->appManager,
+			container: $this->container,
+			userSession: $this->userSession,
+			logger: $this->logger
+		);
+	}//end openRegisterLookup()
 
 	/**
 	 * Get configuration for gebruiks objects (register ID and schema IDs)
@@ -1166,27 +1163,12 @@ class AangebodenGebruikService {
 	}//end getGebruiksConfiguration()
 
 	/**
-	 * Get configuration for koppelingen objects (register ID and schema IDs)
-	 *
-	 * @return array Configuration with register_id and schemas array
-	 * @throws Exception When configuration is not available
-	 */
-	private function getKoppelingenConfiguration(): array {
-		return $this->resolveVoorzieningenSchemaConfig(
-			schemaKey: 'koppeling_schema',
-			labelForLogs: 'koppelingen'
-		);
-	}//end getKoppelingenConfiguration()
-
-	/**
 	 * Resolves a `{register_id, schemas: [schemaId]}` tuple for the supplied
 	 * voorzieningen-config schema key.
 	 *
-	 * Extracted from {@see getGebruiksConfiguration()} +
-	 * {@see getKoppelingenConfiguration()} as part of task 7.3 — the two
-	 * methods were 95% identical (differing only on the schema key and the
-	 * log label). Throws when either the register id or the requested schema
-	 * id is missing on the voorzieningen config.
+	 * Used by {@see getGebruiksConfiguration()}. Throws when either the
+	 * register id or the requested schema id is missing on the voorzieningen
+	 * config.
 	 *
 	 * @param string $schemaKey The voorzieningen-config schema key
 	 *                          (e.g. "gebruik_schema").
@@ -1237,286 +1219,6 @@ class AangebodenGebruikService {
 
 		throw new Exception(ucfirst($labelForLogs) . ' configuration not found. Please configure the schemas in the admin panel.');
 	}//end resolveVoorzieningenSchemaConfig()
-
-	/**
-	 * Get all objects for a specific schema using paginated search, optionally filtered by organization
-	 *
-	 * Uses ObjectService's buildSearchQuery() for proper query construction
-	 *
-	 * @param ObjectServiceInterface $objectService The OpenRegister object service
-	 * @param string $registerId The register ID
-	 * @param string $schemaId The schema ID
-	 * @param array $options Query options (includes request parameters for buildSearchQuery)
-	 * @param string|null $organisationFilter Optional organization UUID to filter by
-	 *
-	 * @return array Paginated result from searchObjectsPaginated
-	 *
-	 * @throws Exception When query fails
-	 */
-	private function getAllObjectsForSchema(
-		ObjectServiceInterface $objectService,
-		string $registerId,
-		string $schemaId,
-		array $options = [],
-		?string $organisationFilter = null,
-	): array {
-		// Use ObjectService's buildSearchQuery to properly handle request parameters.
-		$searchQuery = $objectService->buildSearchQuery($options);
-
-		// Add schema and register filters.
-		$searchQuery['@self']['schema'] = $schemaId;
-		$searchQuery['@self']['register'] = $registerId;
-
-		// Add organization filter if provided.
-		if ($organisationFilter !== null) {
-			$searchQuery['@self']['organisation'] = $organisationFilter;
-		}
-
-		// Force database source for real-time data.
-		$searchQuery['_source'] = 'database';
-
-		$this->logger->debug(
-			'Getting all objects for schema (paginated)',
-			[
-				'register' => $registerId,
-				'schema' => $schemaId,
-				'organisation_filter' => $organisationFilter,
-				'query' => $searchQuery,
-			]
-		);
-
-		// Execute search with RBAC and multitenancy disabled using paginated search.
-		$searchResult = $objectService->searchObjectsPaginated(
-			query: $searchQuery,
-			_rbac: false,
-			_multitenancy: false,
-			deleted: false
-		);
-
-		return $searchResult;
-	}//end getAllObjectsForSchema()
-
-	/**
-	 * Get all applications/modules owned by an organization
-	 *
-	 * @param ObjectServiceInterface $objectService The OpenRegister object service
-	 * @param string $organisationUuid The organization UUID
-	 *
-	 * @return array Array of application/module UUIDs
-	 *
-	 * @throws Exception When query fails
-	 */
-	private function getApplicationsOwnedByOrganisation(
-		ObjectServiceInterface $objectService,
-		string $organisationUuid,
-	): array {
-		try {
-			$voorzieningenConfig = $this->settingsService->getVoorzieningenConfig();
-			$registerId = $voorzieningenConfig['register'] ?? null;
-
-			if ($registerId === null) {
-				return [];
-			}
-
-			$appUuids = [];
-
-			// Check suite schema (applications).
-			if (isset($voorzieningenConfig['suite_schema']) === true) {
-				$suiteQuery = [
-					'@self' => [
-						'register' => $registerId,
-						'schema' => $voorzieningenConfig['suite_schema'],
-						'organisation' => $organisationUuid,
-					],
-					'_source' => 'database',
-					'_limit' => 500,
-				];
-
-				$suites = $objectService->searchObjects(
-					query: $suiteQuery,
-					_rbac: false,
-					_multitenancy: false
-				);
-
-				foreach ($suites as $suite) {
-					$suiteData = $suite;
-					if (is_array(value: $suite) === false) {
-						$suiteData = $suite->getObject();
-					}
-
-					$appUuids[] = $suiteData['uuid'] ?? $suiteData['id'] ?? null;
-				}
-			}//end if
-
-			// Check module schema.
-			if (isset($voorzieningenConfig['module_schema']) === true) {
-				$moduleQuery = [
-					'@self' => [
-						'register' => $registerId,
-						'schema' => $voorzieningenConfig['module_schema'],
-						'organisation' => $organisationUuid,
-					],
-					'_source' => 'database',
-					'_limit' => 500,
-				];
-
-				$modules = $objectService->searchObjects(
-					query: $moduleQuery,
-					_rbac: false,
-					_multitenancy: false
-				);
-
-				foreach ($modules as $module) {
-					$moduleData = $module;
-					if (is_array(value: $module) === false) {
-						$moduleData = $module->getObject();
-					}
-
-					$appUuids[] = $moduleData['uuid'] ?? $moduleData['id'] ?? null;
-				}
-			}//end if
-
-			// Filter out nulls.
-			$appUuids = array_filter($appUuids);
-
-			$this->logger->debug(
-				'Found applications owned by organization',
-				[
-					'organisation' => $organisationUuid,
-					'count' => count($appUuids),
-				]
-			);
-
-			return $appUuids;
-		} catch (Exception $e) {
-			$this->logger->error(
-				'Failed to get applications owned by organization',
-				[
-					'organisation' => $organisationUuid,
-					'error' => $e->getMessage(),
-				]
-			);
-			return [];
-		}//end try
-	}//end getApplicationsOwnedByOrganisation()
-
-	/**
-	 * Get objects related to a specific UUID via the uses relationship using paginated search
-	 *
-	 * Uses ObjectService's buildSearchQuery() for proper query construction
-	 *
-	 * @param ObjectServiceInterface $objectService The OpenRegister object service
-	 * @param string $registerId The register ID
-	 * @param string $schemaId The schema ID
-	 * @param string $relatedUuid The UUID to find relationships for
-	 * @param array $options Query options (includes request parameters for buildSearchQuery)
-	 * @param string|null $organisationFilter Optional organization UUID to filter by
-	 *
-	 * @return array Paginated result from searchObjectsPaginated
-	 *
-	 * @throws Exception When query fails
-	 */
-	private function getObjectsRelatedToUuid(
-		ObjectServiceInterface $objectService,
-		string $registerId,
-		string $schemaId,
-		string $relatedUuid,
-		array $options = [],
-		?string $organisationFilter = null,
-	): array {
-		// Use ObjectService's buildSearchQuery to properly handle request parameters.
-		$searchQuery = $objectService->buildSearchQuery($options);
-
-		// Add schema and register filters.
-		$searchQuery['@self']['schema'] = $schemaId;
-		$searchQuery['@self']['register'] = $registerId;
-
-		// Add organization filter if provided.
-		if ($organisationFilter !== null) {
-			$searchQuery['@self']['organisation'] = $organisationFilter;
-		}
-
-		// Force database source for real-time data.
-		$searchQuery['_source'] = 'database';
-
-		$this->logger->debug(
-			'Getting objects related to UUID (paginated)',
-			[
-				'register' => $registerId,
-				'schema' => $schemaId,
-				'related_uuid' => $relatedUuid,
-				'organisation_filter' => $organisationFilter,
-				'query' => $searchQuery,
-			]
-		);
-
-		// Execute search using the uses parameter to find relationships with pagination.
-		$searchResult = $objectService->searchObjectsPaginated(
-			query: $searchQuery,
-			_rbac: false,
-			_multitenancy: false,
-			deleted: false,
-			uses: $relatedUuid
-		);
-
-		return $searchResult;
-	}//end getObjectsRelatedToUuid()
-
-	/**
-	 * Check if an organization owns a specific application/module
-	 *
-	 * @param ObjectServiceInterface $objectService The OpenRegister object service
-	 * @param string $appUuid The application/module UUID
-	 * @param string $organisationUuid The organization UUID
-	 *
-	 * @return bool True if organization owns the application/module
-	 */
-	private function checkOrganisationOwnership(
-		ObjectServiceInterface $objectService,
-		string $appUuid,
-		string $organisationUuid,
-	): bool {
-		try {
-			// Get the application/module object.
-			$appObject = $objectService->find(
-				id: $appUuid,
-				_rbac: false,
-				_multitenancy: false
-			);
-
-			if ($appObject === null) {
-				return false;
-			}
-
-			// Check if the organization owns it.
-			$appData = $appObject->getObject();
-			$ownerOrg = $appData['@self']['organisation'] ?? null;
-
-			$isOwner = ($ownerOrg === $organisationUuid);
-
-			$this->logger->debug(
-				'Checked organization ownership',
-				[
-					'app_uuid' => $appUuid,
-					'organisation' => $organisationUuid,
-					'owner_org' => $ownerOrg,
-					'is_owner' => $isOwner,
-				]
-			);
-
-			return $isOwner;
-		} catch (Exception $e) {
-			$this->logger->error(
-				'Failed to check organization ownership',
-				[
-					'app_uuid' => $appUuid,
-					'organisation' => $organisationUuid,
-					'error' => $e->getMessage(),
-				]
-			);
-			return false;
-		}//end try
-	}//end checkOrganisationOwnership()
 
 	/**
 	 * Mapping from organisatie.type to registeredBy value
@@ -1606,49 +1308,41 @@ class AangebodenGebruikService {
 	 * @return array Extended query with additional filters
 	 */
 	private function addQueryFilters(array $baseQuery, array $options): array {
-		// Add limit if specified (handle both 'limit' and '_limit').
-		$limit = $options['_limit'] ?? $options['limit'] ?? null;
-		if ($limit !== null && is_numeric(value: $limit) === true) {
-			$baseQuery['_limit'] = (int)$limit;
+		// Pagination: cast to int, first non-null spelling wins (handle both 'limit' and '_limit').
+		foreach (self::PAGINATION_FILTERS as $queryKey => $optionKeys) {
+			$value = $this->firstNonNullOption(options: $options, keys: $optionKeys);
+			if ($value !== null && is_numeric(value: $value) === true) {
+				$baseQuery[$queryKey] = (int)$value;
+			}
 		}
 
-		// Add offset if specified (handle both 'offset' and '_offset').
-		$offset = $options['_offset'] ?? $options['offset'] ?? null;
-		if ($offset !== null && is_numeric(value: $offset) === true) {
-			$baseQuery['_offset'] = (int)$offset;
-		}
-
-		// Add page if specified (alternative to offset).
-		if (isset($options['_page']) === true && is_numeric(value: $options['_page']) === true) {
-			$baseQuery['_page'] = (int)$options['_page'];
-		}
-
-		// Add source parameter if specified (for forcing database access).
-		if (isset($options['_source']) === true && empty($options['_source']) === false) {
-			$baseQuery['_source'] = $options['_source'];
-		}
-
-		// Add status filter if specified.
-		if (isset($options['status']) === true && empty($options['status']) === false) {
-			$baseQuery['status'] = $options['status'];
-		}
-
-		// Add suite filter if specified.
-		if (isset($options['suite']) === true && empty($options['suite']) === false) {
-			$baseQuery['suite'] = $options['suite'];
-		}
-
-		// Add date filters if specified.
-		if (isset($options['startDate']) === true && empty($options['startDate']) === false) {
-			$baseQuery['startDate'] = $options['startDate'];
-		}
-
-		if (isset($options['endDate']) === true && empty($options['endDate']) === false) {
-			$baseQuery['endDate'] = $options['endDate'];
+		// Source (for forcing database access), status, suite and date filters: copied when non-empty.
+		foreach (self::PASS_THROUGH_FILTERS as $key) {
+			if (isset($options[$key]) === true && empty($options[$key]) === false) {
+				$baseQuery[$key] = $options[$key];
+			}
 		}
 
 		return $baseQuery;
 	}//end addQueryFilters()
+
+	/**
+	 * The value of the first option key that is set and not null.
+	 *
+	 * @param array         $options The options.
+	 * @param array<string> $keys    The option keys, in order of preference.
+	 *
+	 * @return mixed The value, or null when none is set.
+	 */
+	private function firstNonNullOption(array $options, array $keys): mixed {
+		foreach ($keys as $key) {
+			if (isset($options[$key]) === true) {
+				return $options[$key];
+			}
+		}
+
+		return null;
+	}//end firstNonNullOption()
 
 	/**
 	 * Delete (deny) a gebruik or koppeling object with security validation

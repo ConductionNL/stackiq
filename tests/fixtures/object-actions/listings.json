@@ -1,0 +1,3598 @@
+{
+    "aanbod/anonymous": [
+        401,
+        {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "message": "Not authenticated"
+        },
+        [],
+        [
+            [
+                "info",
+                "API: Rejecting unauthenticated aanbod request",
+                {
+                    "endpoint": "/api/aanbod",
+                    "method": "GET"
+                }
+            ]
+        ]
+    ],
+    "aanbod/ordinary": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting aanbod objects",
+                {
+                    "endpoint": "/api/aanbod",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for Aanbod",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "page": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Aanbod request completed",
+                {
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "aanbod/ambtenaar": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting aanbod objects",
+                {
+                    "endpoint": "/api/aanbod",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for Aanbod",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "page": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Aanbod request completed",
+                {
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "aanbod/admin": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting aanbod objects",
+                {
+                    "endpoint": "/api/aanbod",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for Aanbod",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "page": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Aanbod request completed",
+                {
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "aanbod/both": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting aanbod objects",
+                {
+                    "endpoint": "/api/aanbod",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for Aanbod",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "page": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Aanbod request completed",
+                {
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "aanbod/no-groups-exist": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting aanbod objects",
+                {
+                    "endpoint": "/api/aanbod",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for Aanbod",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "page": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Aanbod request completed",
+                {
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "aanbod/org-filter": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                {
+                    "_offset": 2,
+                    "offset": 2,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting aanbod objects",
+                {
+                    "endpoint": "/api/aanbod",
+                    "method": "GET",
+                    "query_params": {
+                        "organisation": "org-9",
+                        "offset": "2"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for Aanbod",
+                {
+                    "raw_params": {
+                        "limit": null,
+                        "offset": "2",
+                        "page": null
+                    },
+                    "parsed_options": {
+                        "_offset": 2,
+                        "offset": 2,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Aanbod request completed",
+                {
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "aanbod/org-filter-plain": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                {
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting aanbod objects",
+                {
+                    "endpoint": "/api/aanbod",
+                    "method": "GET",
+                    "query_params": {
+                        "organisation": "org-9"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for Aanbod",
+                {
+                    "raw_params": {
+                        "limit": null,
+                        "offset": null,
+                        "page": null
+                    },
+                    "parsed_options": {
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Aanbod request completed",
+                {
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "aanbod/service-error": [
+        500,
+        {
+            "results": [],
+            "error": "boom"
+        },
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting aanbod objects",
+                {
+                    "endpoint": "/api/aanbod",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for Aanbod",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "page": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Aanbod request completed",
+                {
+                    "total": 0,
+                    "results_count": 0,
+                    "has_error": true
+                }
+            ]
+        ]
+    ],
+    "aanbod/service-bare": [
+        200,
+        [],
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting aanbod objects",
+                {
+                    "endpoint": "/api/aanbod",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for Aanbod",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "page": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Aanbod request completed",
+                {
+                    "total": 0,
+                    "results_count": 0,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "aanbod/service-throws": [
+        500,
+        {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "error": "Internal server error: service down"
+        },
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting aanbod objects",
+                {
+                    "endpoint": "/api/aanbod",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for Aanbod",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "page": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "error",
+                "API: Failed to get aanbod objects",
+                {
+                    "error": "service down",
+                    "trace": "<trace>"
+                }
+            ]
+        ]
+    ],
+    "afnemer/anonymous": [
+        401,
+        {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "message": "Not authenticated"
+        },
+        [],
+        [
+            [
+                "info",
+                "API: Rejecting unauthenticated afnemer gebruiks request",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/afnemer",
+                    "method": "GET"
+                }
+            ]
+        ]
+    ],
+    "afnemer/ordinary": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting gebruiks where active org is afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/afnemer",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Afnemer gebruiks request completed",
+                {
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "afnemer/ambtenaar": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting gebruiks where active org is afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/afnemer",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Afnemer gebruiks request completed",
+                {
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "afnemer/admin": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting gebruiks where active org is afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/afnemer",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Afnemer gebruiks request completed",
+                {
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "afnemer/both": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting gebruiks where active org is afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/afnemer",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Afnemer gebruiks request completed",
+                {
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "afnemer/no-groups-exist": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting gebruiks where active org is afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/afnemer",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Afnemer gebruiks request completed",
+                {
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "afnemer/org-filter": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                {
+                    "_offset": 2,
+                    "offset": 2,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting gebruiks where active org is afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/afnemer",
+                    "method": "GET",
+                    "query_params": {
+                        "organisation": "org-9",
+                        "offset": "2"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": null,
+                        "offset": "2",
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_offset": 2,
+                        "offset": 2,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Afnemer gebruiks request completed",
+                {
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "afnemer/org-filter-plain": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                {
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting gebruiks where active org is afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/afnemer",
+                    "method": "GET",
+                    "query_params": {
+                        "organisation": "org-9"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": null,
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Afnemer gebruiks request completed",
+                {
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "afnemer/service-error": [
+        500,
+        {
+            "results": [],
+            "error": "boom"
+        },
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting gebruiks where active org is afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/afnemer",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Afnemer gebruiks request completed",
+                {
+                    "total": 0,
+                    "results_count": 0,
+                    "has_error": true
+                }
+            ]
+        ]
+    ],
+    "afnemer/service-bare": [
+        200,
+        [],
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting gebruiks where active org is afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/afnemer",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Afnemer gebruiks request completed",
+                {
+                    "total": 0,
+                    "results_count": 0,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "afnemer/service-throws": [
+        500,
+        {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "error": "Internal server error: service down"
+        },
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting gebruiks where active org is afnemer",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/afnemer",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "error",
+                "API: Failed to get afnemer gebruiks",
+                {
+                    "error": "service down",
+                    "trace": "<trace>"
+                }
+            ]
+        ]
+    ],
+    "koppelingen/anonymous": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                "app-1",
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                },
+                false
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting koppelingen and gebruiks for specific UUID",
+                {
+                    "endpoint": "/api/koppelingen-gebruik/{uuid}",
+                    "method": "GET",
+                    "uuid": "app-1",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "No user in session for group check",
+                {
+                    "group": "admin"
+                }
+            ],
+            [
+                "debug",
+                "No user in session for group check",
+                {
+                    "group": "ambtenaar"
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Koppelingen-gebruik by UUID request completed",
+                {
+                    "uuid": "app-1",
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "koppelingen/ordinary": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                "app-1",
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                },
+                false
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting koppelingen and gebruiks for specific UUID",
+                {
+                    "endpoint": "/api/koppelingen-gebruik/{uuid}",
+                    "method": "GET",
+                    "uuid": "app-1",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Koppelingen-gebruik by UUID request completed",
+                {
+                    "uuid": "app-1",
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "koppelingen/ambtenaar": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                "app-1",
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                },
+                true
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting koppelingen and gebruiks for specific UUID",
+                {
+                    "endpoint": "/api/koppelingen-gebruik/{uuid}",
+                    "method": "GET",
+                    "uuid": "app-1",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Koppelingen-gebruik by UUID request completed",
+                {
+                    "uuid": "app-1",
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "koppelingen/admin": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                "app-1",
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                },
+                true
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting koppelingen and gebruiks for specific UUID",
+                {
+                    "endpoint": "/api/koppelingen-gebruik/{uuid}",
+                    "method": "GET",
+                    "uuid": "app-1",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Koppelingen-gebruik by UUID request completed",
+                {
+                    "uuid": "app-1",
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "koppelingen/both": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                "app-1",
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                },
+                true
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting koppelingen and gebruiks for specific UUID",
+                {
+                    "endpoint": "/api/koppelingen-gebruik/{uuid}",
+                    "method": "GET",
+                    "uuid": "app-1",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Koppelingen-gebruik by UUID request completed",
+                {
+                    "uuid": "app-1",
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "koppelingen/no-groups-exist": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                "app-1",
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                },
+                false
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting koppelingen and gebruiks for specific UUID",
+                {
+                    "endpoint": "/api/koppelingen-gebruik/{uuid}",
+                    "method": "GET",
+                    "uuid": "app-1",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "warning",
+                "Group does not exist",
+                {
+                    "group": "admin"
+                }
+            ],
+            [
+                "warning",
+                "Group does not exist",
+                {
+                    "group": "ambtenaar"
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Koppelingen-gebruik by UUID request completed",
+                {
+                    "uuid": "app-1",
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "koppelingen/org-filter": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                "app-1",
+                {
+                    "_offset": 2,
+                    "offset": 2,
+                    "_source": "database",
+                    "organisation": "org-9"
+                },
+                true
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting koppelingen and gebruiks for specific UUID",
+                {
+                    "endpoint": "/api/koppelingen-gebruik/{uuid}",
+                    "method": "GET",
+                    "uuid": "app-1",
+                    "query_params": {
+                        "organisation": "org-9",
+                        "offset": "2"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": null,
+                        "offset": "2",
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_offset": 2,
+                        "offset": 2,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Koppelingen-gebruik by UUID request completed",
+                {
+                    "uuid": "app-1",
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "koppelingen/org-filter-plain": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                "app-1",
+                {
+                    "_source": "database"
+                },
+                false
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting koppelingen and gebruiks for specific UUID",
+                {
+                    "endpoint": "/api/koppelingen-gebruik/{uuid}",
+                    "method": "GET",
+                    "uuid": "app-1",
+                    "query_params": {
+                        "organisation": "org-9"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": null,
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Koppelingen-gebruik by UUID request completed",
+                {
+                    "uuid": "app-1",
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "koppelingen/service-error": [
+        500,
+        {
+            "results": [],
+            "error": "boom"
+        },
+        [
+            [
+                "app-1",
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                },
+                true
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting koppelingen and gebruiks for specific UUID",
+                {
+                    "endpoint": "/api/koppelingen-gebruik/{uuid}",
+                    "method": "GET",
+                    "uuid": "app-1",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Koppelingen-gebruik by UUID request completed",
+                {
+                    "uuid": "app-1",
+                    "total": 0,
+                    "results_count": 0,
+                    "has_error": true
+                }
+            ]
+        ]
+    ],
+    "koppelingen/service-bare": [
+        200,
+        [],
+        [
+            [
+                "app-1",
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                },
+                true
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting koppelingen and gebruiks for specific UUID",
+                {
+                    "endpoint": "/api/koppelingen-gebruik/{uuid}",
+                    "method": "GET",
+                    "uuid": "app-1",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Koppelingen-gebruik by UUID request completed",
+                {
+                    "uuid": "app-1",
+                    "total": 0,
+                    "results_count": 0,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "koppelingen/service-throws": [
+        500,
+        {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "error": "Internal server error: service down"
+        },
+        [
+            [
+                "app-1",
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                },
+                true
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting koppelingen and gebruiks for specific UUID",
+                {
+                    "endpoint": "/api/koppelingen-gebruik/{uuid}",
+                    "method": "GET",
+                    "uuid": "app-1",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "error",
+                "API: Failed to get koppelingen-gebruik by UUID",
+                {
+                    "uuid": "app-1",
+                    "error": "service down",
+                    "trace": "<trace>"
+                }
+            ]
+        ]
+    ],
+    "all/anonymous": [
+        200,
+        {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 1,
+            "limit": 20,
+            "offset": 0
+        },
+        [],
+        [
+            [
+                "info",
+                "API: Getting all gebruiks for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "No user in session for group check",
+                {
+                    "group": "admin"
+                }
+            ],
+            [
+                "debug",
+                "No user in session for group check",
+                {
+                    "group": "ambtenaar"
+                }
+            ],
+            [
+                "info",
+                "API: Returning empty results - user not in admin or ambtenaar group",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar",
+                    "user": "null"
+                }
+            ]
+        ]
+    ],
+    "all/ordinary": [
+        200,
+        {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 1,
+            "limit": 20,
+            "offset": 0
+        },
+        [],
+        [
+            [
+                "info",
+                "API: Getting all gebruiks for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": false
+                }
+            ],
+            [
+                "info",
+                "API: Returning empty results - user not in admin or ambtenaar group",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar",
+                    "user": "alice"
+                }
+            ]
+        ]
+    ],
+    "all/ambtenaar": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting all gebruiks for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Ambtenaar all gebruiks request completed",
+                {
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "all/admin": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting all gebruiks for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Ambtenaar all gebruiks request completed",
+                {
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "all/both": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting all gebruiks for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Ambtenaar all gebruiks request completed",
+                {
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "all/no-groups-exist": [
+        200,
+        {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 1,
+            "limit": 20,
+            "offset": 0
+        },
+        [],
+        [
+            [
+                "info",
+                "API: Getting all gebruiks for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "warning",
+                "Group does not exist",
+                {
+                    "group": "admin"
+                }
+            ],
+            [
+                "warning",
+                "Group does not exist",
+                {
+                    "group": "ambtenaar"
+                }
+            ],
+            [
+                "info",
+                "API: Returning empty results - user not in admin or ambtenaar group",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar",
+                    "user": "alice"
+                }
+            ]
+        ]
+    ],
+    "all/org-filter": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                {
+                    "_offset": 2,
+                    "offset": 2,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting all gebruiks for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar",
+                    "method": "GET",
+                    "query_params": {
+                        "organisation": "org-9",
+                        "offset": "2"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": null,
+                        "offset": "2",
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_offset": 2,
+                        "offset": 2,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Ambtenaar all gebruiks request completed",
+                {
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "all/org-filter-plain": [
+        200,
+        {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 1,
+            "limit": 20,
+            "offset": 0
+        },
+        [],
+        [
+            [
+                "info",
+                "API: Getting all gebruiks for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar",
+                    "method": "GET",
+                    "query_params": {
+                        "organisation": "org-9"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": false
+                }
+            ],
+            [
+                "info",
+                "API: Returning empty results - user not in admin or ambtenaar group",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar",
+                    "user": "alice"
+                }
+            ]
+        ]
+    ],
+    "all/service-error": [
+        500,
+        {
+            "results": [],
+            "error": "boom"
+        },
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting all gebruiks for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Ambtenaar all gebruiks request completed",
+                {
+                    "total": 0,
+                    "results_count": 0,
+                    "has_error": true
+                }
+            ]
+        ]
+    ],
+    "all/service-bare": [
+        200,
+        [],
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting all gebruiks for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Ambtenaar all gebruiks request completed",
+                {
+                    "total": 0,
+                    "results_count": 0,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "all/service-throws": [
+        500,
+        {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "error": "Internal server error: service down"
+        },
+        [
+            [
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting all gebruiks for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar",
+                    "method": "GET",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "error",
+                "API: Failed to get all gebruiks for ambtenaar",
+                {
+                    "error": "service down",
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar"
+                }
+            ]
+        ]
+    ],
+    "single/anonymous": [
+        200,
+        {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 1,
+            "limit": 20,
+            "offset": 0
+        },
+        [],
+        [
+            [
+                "info",
+                "API: Getting single gebruik for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar/{gebruikId}",
+                    "method": "GET",
+                    "gebruik_id": "use-1",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "No user in session for group check",
+                {
+                    "group": "admin"
+                }
+            ],
+            [
+                "debug",
+                "No user in session for group check",
+                {
+                    "group": "ambtenaar"
+                }
+            ],
+            [
+                "info",
+                "API: Returning empty results - user not in admin or ambtenaar group",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar/{gebruikId}",
+                    "gebruik_id": "use-1",
+                    "user": "null"
+                }
+            ]
+        ]
+    ],
+    "single/ordinary": [
+        200,
+        {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 1,
+            "limit": 20,
+            "offset": 0
+        },
+        [],
+        [
+            [
+                "info",
+                "API: Getting single gebruik for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar/{gebruikId}",
+                    "method": "GET",
+                    "gebruik_id": "use-1",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": false
+                }
+            ],
+            [
+                "info",
+                "API: Returning empty results - user not in admin or ambtenaar group",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar/{gebruikId}",
+                    "gebruik_id": "use-1",
+                    "user": "alice"
+                }
+            ]
+        ]
+    ],
+    "single/ambtenaar": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                "use-1",
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting single gebruik for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar/{gebruikId}",
+                    "method": "GET",
+                    "gebruik_id": "use-1",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Ambtenaar single gebruik request completed",
+                {
+                    "gebruik_id": "use-1",
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "single/admin": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                "use-1",
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting single gebruik for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar/{gebruikId}",
+                    "method": "GET",
+                    "gebruik_id": "use-1",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Ambtenaar single gebruik request completed",
+                {
+                    "gebruik_id": "use-1",
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "single/both": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                "use-1",
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting single gebruik for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar/{gebruikId}",
+                    "method": "GET",
+                    "gebruik_id": "use-1",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Ambtenaar single gebruik request completed",
+                {
+                    "gebruik_id": "use-1",
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "single/no-groups-exist": [
+        200,
+        {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 1,
+            "limit": 20,
+            "offset": 0
+        },
+        [],
+        [
+            [
+                "info",
+                "API: Getting single gebruik for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar/{gebruikId}",
+                    "method": "GET",
+                    "gebruik_id": "use-1",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "warning",
+                "Group does not exist",
+                {
+                    "group": "admin"
+                }
+            ],
+            [
+                "warning",
+                "Group does not exist",
+                {
+                    "group": "ambtenaar"
+                }
+            ],
+            [
+                "info",
+                "API: Returning empty results - user not in admin or ambtenaar group",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar/{gebruikId}",
+                    "gebruik_id": "use-1",
+                    "user": "alice"
+                }
+            ]
+        ]
+    ],
+    "single/org-filter": [
+        200,
+        {
+            "results": [
+                {
+                    "id": "a"
+                }
+            ],
+            "total": 1,
+            "page": 1,
+            "pages": 1
+        },
+        [
+            [
+                "use-1",
+                {
+                    "_offset": 2,
+                    "offset": 2,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting single gebruik for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar/{gebruikId}",
+                    "method": "GET",
+                    "gebruik_id": "use-1",
+                    "query_params": {
+                        "organisation": "org-9",
+                        "offset": "2"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": null,
+                        "offset": "2",
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_offset": 2,
+                        "offset": 2,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Ambtenaar single gebruik request completed",
+                {
+                    "gebruik_id": "use-1",
+                    "total": 1,
+                    "results_count": 1,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "single/org-filter-plain": [
+        200,
+        {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 1,
+            "limit": 20,
+            "offset": 0
+        },
+        [],
+        [
+            [
+                "info",
+                "API: Getting single gebruik for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar/{gebruikId}",
+                    "method": "GET",
+                    "gebruik_id": "use-1",
+                    "query_params": {
+                        "organisation": "org-9"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": false
+                }
+            ],
+            [
+                "info",
+                "API: Returning empty results - user not in admin or ambtenaar group",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar/{gebruikId}",
+                    "gebruik_id": "use-1",
+                    "user": "alice"
+                }
+            ]
+        ]
+    ],
+    "single/service-error": [
+        500,
+        {
+            "results": [],
+            "error": "boom"
+        },
+        [
+            [
+                "use-1",
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting single gebruik for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar/{gebruikId}",
+                    "method": "GET",
+                    "gebruik_id": "use-1",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Ambtenaar single gebruik request completed",
+                {
+                    "gebruik_id": "use-1",
+                    "total": 0,
+                    "results_count": 0,
+                    "has_error": true
+                }
+            ]
+        ]
+    ],
+    "single/service-bare": [
+        200,
+        [],
+        [
+            [
+                "use-1",
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting single gebruik for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar/{gebruikId}",
+                    "method": "GET",
+                    "gebruik_id": "use-1",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "info",
+                "API: Ambtenaar single gebruik request completed",
+                {
+                    "gebruik_id": "use-1",
+                    "total": 0,
+                    "results_count": 0,
+                    "has_error": false
+                }
+            ]
+        ]
+    ],
+    "single/service-throws": [
+        500,
+        {
+            "results": [],
+            "total": 0,
+            "page": 1,
+            "pages": 0,
+            "limit": 20,
+            "offset": 0,
+            "error": "Internal server error: service down"
+        },
+        [
+            [
+                "use-1",
+                {
+                    "_limit": 5,
+                    "limit": 5,
+                    "_source": "database"
+                }
+            ]
+        ],
+        [
+            [
+                "info",
+                "API: Getting single gebruik for ambtenaar (ignoring RBAC/multitenancy)",
+                {
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar/{gebruikId}",
+                    "method": "GET",
+                    "gebruik_id": "use-1",
+                    "query_params": {
+                        "limit": "5"
+                    }
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "admin",
+                    "isMember": false
+                }
+            ],
+            [
+                "debug",
+                "User group membership check",
+                {
+                    "user": "alice",
+                    "group": "ambtenaar",
+                    "isMember": true
+                }
+            ],
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "5",
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 5,
+                        "limit": 5,
+                        "_source": "database"
+                    }
+                }
+            ],
+            [
+                "error",
+                "API: Failed to get single gebruik for ambtenaar",
+                {
+                    "gebruik_id": "use-1",
+                    "error": "service down",
+                    "endpoint": "/api/aangeboden-gebruik/ambtenaar/{gebruikId}"
+                }
+            ]
+        ]
+    ]
+}

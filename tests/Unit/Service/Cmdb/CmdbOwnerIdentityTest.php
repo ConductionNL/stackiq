@@ -26,7 +26,7 @@ use Psr\Log\LoggerInterface;
 /**
  * How an owner is identified across imports.
  *
- * @spec openspec/changes/cmdb-import-owner-identity/tasks.md#task-2
+ * @spec openspec/changes/archive/2026-10-30-cmdb-import-owner-identity/tasks.md#task-2
  */
 class CmdbOwnerIdentityTest extends TestCase {
 	/**

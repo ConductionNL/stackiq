@@ -1,0 +1,134 @@
+{
+    "smtp": [
+        "Symfony\\Component\\Mailer\\Transport\\Smtp\\EsmtpTransport",
+        "smtp://mail.example.org",
+        []
+    ],
+    "sendmail": [
+        "Symfony\\Component\\Mailer\\Transport\\SendmailTransport",
+        "smtp://sendmail",
+        []
+    ],
+    "native": [
+        "Symfony\\Component\\Mailer\\Transport\\SendmailTransport",
+        "smtp://sendmail",
+        []
+    ],
+    "null": [
+        "Symfony\\Component\\Mailer\\Transport\\NullTransport",
+        "null://",
+        []
+    ],
+    "sendgrid": [
+        "Symfony\\Component\\Mailer\\Bridge\\Sendgrid\\Transport\\SendgridApiTransport",
+        "sendgrid+api://api.sendgrid.com",
+        []
+    ],
+    "mailgun": [
+        "Symfony\\Component\\Mailer\\Bridge\\Mailgun\\Transport\\MailgunApiTransport",
+        "mailgun+api://api.mailgun.net?domain=example.org",
+        []
+    ],
+    "postmark": [
+        "Symfony\\Component\\Mailer\\Bridge\\Postmark\\Transport\\PostmarkApiTransport",
+        "postmark+api://api.postmarkapp.com",
+        []
+    ],
+    "ses": [
+        "Symfony\\Component\\Mailer\\Bridge\\Amazon\\Transport\\SesApiAsyncAwsTransport",
+        "ses+api://a@eu-west-1",
+        []
+    ],
+    "mailjet": [
+        "Symfony\\Component\\Mailer\\Bridge\\Mailjet\\Transport\\MailjetApiTransport",
+        "mailjet+api://api.mailjet.com",
+        []
+    ],
+    "unknown": [
+        "Symfony\\Component\\Mailer\\Transport\\Smtp\\EsmtpTransport",
+        "smtp://mail.example.org:587",
+        [
+            [
+                "warning",
+                "Unknown transport type, falling back to SMTP",
+                {
+                    "transportType": "unknown"
+                }
+            ]
+        ]
+    ],
+    "default": [
+        "Symfony\\Component\\Mailer\\Transport\\Smtp\\EsmtpTransport",
+        []
+    ],
+    "missing-sendgrid": [
+        "InvalidArgumentException",
+        "SendGrid API key is required",
+        [
+            [
+                "error",
+                "Failed to create email transport",
+                {
+                    "transportType": "sendgrid",
+                    "error": "SendGrid API key is required"
+                }
+            ]
+        ]
+    ],
+    "missing-mailgun": [
+        "InvalidArgumentException",
+        "Mailgun API key and domain are required",
+        [
+            [
+                "error",
+                "Failed to create email transport",
+                {
+                    "transportType": "mailgun",
+                    "error": "Mailgun API key and domain are required"
+                }
+            ]
+        ]
+    ],
+    "missing-postmark": [
+        "InvalidArgumentException",
+        "Postmark API key is required",
+        [
+            [
+                "error",
+                "Failed to create email transport",
+                {
+                    "transportType": "postmark",
+                    "error": "Postmark API key is required"
+                }
+            ]
+        ]
+    ],
+    "missing-ses": [
+        "InvalidArgumentException",
+        "Amazon SES access key and secret key are required",
+        [
+            [
+                "error",
+                "Failed to create email transport",
+                {
+                    "transportType": "ses",
+                    "error": "Amazon SES access key and secret key are required"
+                }
+            ]
+        ]
+    ],
+    "missing-mailjet": [
+        "InvalidArgumentException",
+        "Mailjet API key and secret key are required",
+        [
+            [
+                "error",
+                "Failed to create email transport",
+                {
+                    "transportType": "mailjet",
+                    "error": "Mailjet API key and secret key are required"
+                }
+            ]
+        ]
+    ]
+}

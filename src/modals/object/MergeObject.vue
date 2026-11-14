@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <script setup>
 import { catalogStore, navigationStore, objectStore } from '../../store/store.js'
 </script>
@@ -586,6 +590,45 @@ import ChevronUp from 'vue-material-design-icons/ChevronUp.vue'
 import Eye from 'vue-material-design-icons/Eye.vue'
 import Merge from 'vue-material-design-icons/Merge.vue'
 
+/**
+ * Whether a property value counts as present for merging.
+ *
+ * @param {unknown} value The value.
+ * @return {boolean} False for undefined, null and the empty string.
+ */
+function hasValue(value) {
+	return value !== undefined && value !== null && value !== ''
+}
+
+/**
+ * The default merged value of a property: the target's value if it has
+ * one, else the source's, else 'custom'. Always the actual value, never
+ * the option object.
+ *
+ * @param {unknown} targetValue The target object's value.
+ * @param {unknown} sourceValue The source object's value.
+ * @return {unknown} The selected value.
+ */
+function defaultSelection(targetValue, sourceValue) {
+	if (hasValue(targetValue)) {
+		return targetValue
+	}
+	if (hasValue(sourceValue)) {
+		return sourceValue
+	}
+	return 'custom'
+}
+
+/**
+ * Whether a chosen value is a label/value option with a value.
+ *
+ * @param {*} value The chosen value.
+ * @return {boolean} Whether it is.
+ */
+function isOptionValue(value) {
+	return Boolean(value) && typeof value === 'object' && value.value !== undefined
+}
+
 export default {
 	name: 'MergeObject',
 	components: {
@@ -740,45 +783,9 @@ export default {
 			this.customValues = {}
 			this.propertySelections = {}
 
-			this.mergeableProperties.forEach((property) => {
-				if (property === 'id') {
-					// ID always uses target value
-					this.mergedData[property] = this.selectedTargetObject[property]
-				} else {
-					// Default selection logic:
-					// 1. Target value if it exists
-					// 2. Source value if target doesn't exist but source does
-					// 3. 'custom' if neither exists
-					const targetValue = this.selectedTargetObject[property]
-					const sourceValue = this.sourceObject[property]
-
-					let selectedValue
-					// Always store the actual value, never the option object
-					if (
-						targetValue !== undefined
-						&& targetValue !== null
-						&& targetValue !== ''
-					) {
-						selectedValue = targetValue
-					} else if (
-						sourceValue !== undefined
-						&& sourceValue !== null
-						&& sourceValue !== ''
-					) {
-						selectedValue = sourceValue
-					} else {
-						selectedValue = 'custom'
-						this.customValues[property] = ''
-					}
-
-					this.mergedData[property] = selectedValue
-
-					// Set up the selection object for the dropdown
-					const options = this.getMergeOptions(property)
-					this.propertySelections[property] =
-						options.find((opt) => opt.value === selectedValue) || null
-				}
-			})
+			this.mergeableProperties.forEach((property) =>
+				this.initializeProperty(property),
+			)
 
 			// eslint-disable-next-line no-console
 			console.log('Initial mergedData after setup:', this.mergedData)
@@ -790,41 +797,74 @@ export default {
 		},
 
 		/**
+		 * Set the default merged value and dropdown selection of one property.
+		 *
+		 * @param {string} property The property name.
+		 * @return {void}
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		initializeProperty(property) {
+			if (property === 'id') {
+				// ID always uses target value
+				this.mergedData[property] = this.selectedTargetObject[property]
+				return
+			}
+			const targetValue = this.selectedTargetObject[property]
+			const sourceValue = this.sourceObject[property]
+			if (!hasValue(targetValue) && !hasValue(sourceValue)) {
+				this.customValues[property] = ''
+			}
+			const selectedValue = defaultSelection(targetValue, sourceValue)
+			this.mergedData[property] = selectedValue
+			this.selectOption(property, selectedValue)
+		},
+
+		/**
+		 * Set up the selection object for a property's dropdown.
+		 *
+		 * @param {string} property The property name.
+		 * @param {unknown} value The selected value.
+		 * @return {void}
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		selectOption(property, value) {
+			const options = this.getMergeOptions(property)
+			this.propertySelections[property] =
+				options.find((opt) => opt.value === value) || null
+		},
+
+		/**
 		 * @param property
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getMergeOptions(property) {
-			const options = []
+			return [
+				...this.valueOption('From Source', this.sourceObject[property]),
+				...this.valueOption(
+					'From Target',
+					this.selectedTargetObject[property],
+				),
+				// Always add the custom option
+				{
+					label: 'Other/Custom',
+					value: 'custom',
+				},
+			]
+		},
 
-			if (
-				this.sourceObject[property] !== undefined
-				&& this.sourceObject[property] !== null
-				&& this.sourceObject[property] !== ''
-			) {
-				options.push({
-					label: `From Source: ${this.displayValue(this.sourceObject[property])}`,
-					value: this.sourceObject[property],
-				})
+		/**
+		 * The dropdown option for one side's value, when that side has one.
+		 *
+		 * @param {string} prefix Which side the value comes from.
+		 * @param {unknown} value The side's value.
+		 * @return {Array<{label: string, value: unknown}>} One option, or none.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		valueOption(prefix, value) {
+			if (!hasValue(value)) {
+				return []
 			}
-
-			if (
-				this.selectedTargetObject[property] !== undefined
-				&& this.selectedTargetObject[property] !== null
-				&& this.selectedTargetObject[property] !== ''
-			) {
-				options.push({
-					label: `From Target: ${this.displayValue(this.selectedTargetObject[property])}`,
-					value: this.selectedTargetObject[property],
-				})
-			}
-
-			// Always add the custom option
-			options.push({
-				label: 'Other/Custom',
-				value: 'custom',
-			})
-
-			return options
+			return [{ label: `${prefix}: ${this.displayValue(value)}`, value }]
 		},
 
 		/**
@@ -867,19 +907,12 @@ export default {
 				return 'N/A'
 			}
 
-			let displayText = ''
-			if (typeof value === 'object') {
-				displayText = JSON.stringify(value, null, 2)
-			} else {
-				displayText = String(value)
-			}
-
+			const displayText =
+				typeof value === 'object'
+					? JSON.stringify(value, null, 2)
+					: String(value)
 			// Truncate if too long
-			if (displayText.length > maxLength) {
-				return displayText.substring(0, maxLength) + '...'
-			}
-
-			return displayText
+			return this.truncateText(displayText, maxLength)
 		},
 
 		/**
@@ -903,67 +936,117 @@ export default {
 
 			this.loading = true
 			try {
-				// Prepare merged data with custom values resolved - ensure no ID is included
-				const finalMergedData = {}
-				// eslint-disable-next-line no-console
-				console.log('Raw mergedData before processing:', this.mergedData)
-
-				Object.keys(this.mergedData).forEach((property) => {
-					// Skip any ID-related properties
-					if (property === 'id' || property === '@self') {
-						return
-					}
-
-					if (this.mergedData[property] === 'custom') {
-						finalMergedData[property] = this.customValues[property] || ''
-					} else {
-						// Ensure we extract the actual value if it's an object with label/value structure
-						const value = this.mergedData[property]
-						if (
-							value
-							&& typeof value === 'object'
-							&& value.value !== undefined
-						) {
-							// eslint-disable-next-line no-console
-							console.log(
-								'Extracting value from object for',
-								property,
-								':',
-								value.value,
-							)
-							finalMergedData[property] = value.value
-						} else {
-							finalMergedData[property] = value
-						}
-					}
-				})
-
-				// eslint-disable-next-line no-console
-				console.log('Final merged data to send:', finalMergedData)
-
-				// Use the object store method for consistent API handling
-				const result = await objectStore.mergeObjects({
-					register: catalogStore.catalogiItem.id,
-					schema: catalogStore.schemaItem.id,
-					sourceObjectId: this.sourceObject['@self'].id,
-					target: this.selectedTargetObject['@self'].id,
-					object: finalMergedData,
-					fileAction: this.fileAction,
-					relationAction: this.relationAction,
-				})
-
+				const result = await this.submitMerge()
 				this.mergeResult = result.data
 				this.step = 3
 			} catch (error) {
-				console.error('Error performing merge:', error)
-				this.mergeResult = {
-					success: false,
-					errors: [error.message || 'An error occurred during merge'],
-				}
-				this.step = 3
+				this.reportMergeFailure(error)
 			} finally {
 				this.loading = false
 			}
+		},
+
+		/**
+		 * Sends the merge to the object store.
+		 *
+		 * @return {Promise<object>} The store's response.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		submitMerge() {
+			// Use the object store method for consistent API handling
+			return objectStore.mergeObjects(
+				this.mergeRequest(this.preparedMergeData()),
+			)
+		},
+
+		/**
+		 * The merged object to send, logged before and after it is built.
+		 *
+		 * @return {object} The merged object.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		preparedMergeData() {
+			// eslint-disable-next-line no-console
+			console.log('Raw mergedData before processing:', this.mergedData)
+			const finalMergedData = this.finalMergedData()
+			// eslint-disable-next-line no-console
+			console.log('Final merged data to send:', finalMergedData)
+			return finalMergedData
+		},
+
+		/**
+		 * The merged object to send: every chosen property except the ids,
+		 * with custom values and option values resolved.
+		 *
+		 * @return {object} The merged object.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		finalMergedData() {
+			const finalMergedData = {}
+			Object.keys(this.mergedData).forEach((property) => {
+				// Skip any ID-related properties
+				if (property === 'id' || property === '@self') {
+					return
+				}
+				finalMergedData[property] = this.resolvedMergeValue(property)
+			})
+			return finalMergedData
+		},
+
+		/**
+		 * The value chosen for a property: the custom value, the value of a
+		 * label/value option, or the chosen value itself.
+		 *
+		 * @param {string} property The property.
+		 * @return {*} The value.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		resolvedMergeValue(property) {
+			if (this.mergedData[property] === 'custom') {
+				return this.customValues[property] || ''
+			}
+			// Ensure we extract the actual value if it's an object with label/value structure
+			const value = this.mergedData[property]
+			if (!isOptionValue(value)) {
+				return value
+			}
+			// eslint-disable-next-line no-console
+			console.log('Extracting value from object for', property, ':', value.value)
+			return value.value
+		},
+
+		/**
+		 * The merge request for the store.
+		 *
+		 * @param {object} finalMergedData The merged object.
+		 * @return {object} The request.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		mergeRequest(finalMergedData) {
+			return {
+				register: catalogStore.catalogiItem.id,
+				schema: catalogStore.schemaItem.id,
+				sourceObjectId: this.sourceObject['@self'].id,
+				target: this.selectedTargetObject['@self'].id,
+				object: finalMergedData,
+				fileAction: this.fileAction,
+				relationAction: this.relationAction,
+			}
+		},
+
+		/**
+		 * Shows a failed merge on the result step.
+		 *
+		 * @param {Error} error The error.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		reportMergeFailure(error) {
+			console.error('Error performing merge:', error)
+			this.mergeResult = {
+				success: false,
+				errors: [error.message || 'An error occurred during merge'],
+			}
+			this.step = 3
 		},
 
 		/**

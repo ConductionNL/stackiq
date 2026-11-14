@@ -32,6 +32,10 @@ use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\ProgressTracker;
+use OCA\Stackiq\Service\Settings\ArchiMateImportControl;
+use OCA\Stackiq\Service\Settings\RoleGroupSettings;
+use OCA\Stackiq\Service\Settings\EmailSettings;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Tests\Unit\Support\CmdbTestSupport;
 use OCA\Stackiq\Tests\Unit\Support\FakeMigrationPackService;
@@ -136,10 +140,14 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 			$this->createMock(IGroupManager::class),
 			$this->createMock(IUserSession::class),
 			$this->createMock(SettingsService::class),
+			$this->createMock(CronjobSettings::class),
 			$this->createMock(OrganizationSyncService::class),
 			$this->createMock(ArchiMateService::class),
+			$this->createMock(RoleGroupSettings::class),
 			$this->createMock(ProgressTracker::class),
+			$this->createMock(ArchiMateImportControl::class),
 			$this->createMock(EolSyncService::class),
+			$this->createMock(EmailSettings::class),
 			($logger ?? $this->createMock(LoggerInterface::class)),
 			null,
 			$profile,
@@ -185,10 +193,25 @@ class SettingsControllerCmdbImportMappingTest extends TestCase {
 	 */
 	public function testTheRouteIsRegistered(): void {
 		$routes = require __DIR__ . '/../../../appinfo/routes.php';
-		$byName = array_column($routes['routes'], null, 'name');
+		// The /api/v1 aliases share each route's name and differ by postfix, so
+		// index the unversioned routes and the aliases separately.
+		$byName = array_column(
+			array: array_filter(array: $routes['routes'], callback: static fn (array $route): bool => isset($route['postfix']) === false),
+			column_key: null,
+			index_key: 'name'
+		);
+		$aliases = array_column(
+			array: array_filter(array: $routes['routes'], callback: static fn (array $route): bool => ($route['postfix'] ?? null) === 'v1'),
+			column_key: null,
+			index_key: 'name'
+		);
 		$this->assertSame(
 			['name' => 'settings#getCmdbImportMapping', 'url' => '/api/settings/cmdb-import/mapping', 'verb' => 'GET'],
 			$byName['settings#getCmdbImportMapping']
+		);
+		$this->assertSame(
+			expected: ['name' => 'settings#getCmdbImportMapping', 'url' => '/api/v1/settings/cmdb-import/mapping', 'verb' => 'GET', 'postfix' => 'v1'],
+			actual: $aliases['settings#getCmdbImportMapping']
 		);
 	}//end testTheRouteIsRegistered()
 

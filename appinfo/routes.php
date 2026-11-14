@@ -13,9 +13,13 @@ declare(strict_types=1);
  * @author   Conduction b.v. <info@conduction.nl>
  * @license  EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link     https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2024 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
-return [
+// Every unversioned API route is also served under /api/v1/; see ApiPathAliases.
+return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
     'routes' => [
         // Dashboard routes
         // First-time setup wizard (ADR-042) - the standard CnSetupWizard contract.
@@ -24,6 +28,8 @@ return [
         ['name' => 'setup#saveConfig', 'url' => '/api/setup/config',           'verb' => 'POST'],
         ['name' => 'dashboard#page', 'url' => '/', 'verb' => 'GET'],
         ['name' => 'dashboard#index', 'url' => '/api/dashboard', 'verb' => 'GET'],
+        // The OpenAPI document, public (spec api-contract).
+        ['name' => 'openApi#show', 'url' => '/api/openapi.json', 'verb' => 'GET'],
 
         // Generic per-user preferences (used by shared nextcloud-vue widgets, e.g. CnSupportDialog).
         ['name' => 'preferences#getPreference', 'url' => '/api/preferences/{key}', 'verb' => 'GET'],
@@ -318,6 +324,10 @@ return [
         // Portfolio rationalization report (TIME quadrants + EOL + cloud + cost), JSON or CSV (?format=csv).
         // @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md#requirement-portfolio-rationalization-report-aggregates-per-organisation
         ['name' => 'portfolioReport#index', 'url' => '/api/portfolio-report', 'verb' => 'GET'],
+        // @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
+        ['name' => 'dataQualityReport#index', 'url' => '/api/data-quality', 'verb' => 'GET'],
+        // @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
+        ['name' => 'referenceComponentCoverage#index', 'url' => '/api/reference-component-coverage', 'verb' => 'GET'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode routing)
         // `postfix` keeps this SPA catch-all from colliding with the bare-root
@@ -329,4 +339,4 @@ return [
         // match an empty path.
         ['name' => 'dashboard#page', 'url' => '/{path}', 'verb' => 'GET', 'requirements' => ['path' => '.+'], 'defaults' => ['path' => ''], 'postfix' => 'spa'],
     ],
-];
+]);

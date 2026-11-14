@@ -1,0 +1,289 @@
+{
+    "aangeboden-gebruik": [
+        200,
+        {
+            "api_version": "2.0.0",
+            "description": "Stackiq AangebodenGebruik API",
+            "base_url": "/api/aangeboden-gebruik",
+            "endpoints": [
+                {
+                    "method": "GET",
+                    "path": "/api/aangeboden-gebruik/afnemer",
+                    "description": "Get all gebruiks objects where the active organization is the afnemer (consumer)",
+                    "parameters": [
+                        {
+                            "name": "limit",
+                            "type": "integer",
+                            "required": false,
+                            "description": "Maximum number of results to return"
+                        },
+                        {
+                            "name": "offset",
+                            "type": "integer",
+                            "required": false,
+                            "description": "Number of results to skip for pagination"
+                        },
+                        {
+                            "name": "status",
+                            "type": "string",
+                            "required": false,
+                            "description": "Filter by usage status"
+                        },
+                        {
+                            "name": "product",
+                            "type": "string",
+                            "required": false,
+                            "description": "Filter by product ID"
+                        },
+                        {
+                            "name": "startDate",
+                            "type": "string",
+                            "required": false,
+                            "description": "Filter by start date (ISO 8601 format)"
+                        },
+                        {
+                            "name": "endDate",
+                            "type": "string",
+                            "required": false,
+                            "description": "Filter by end date (ISO 8601 format)"
+                        }
+                    ]
+                },
+                {
+                    "method": "GET",
+                    "path": "/api/aangeboden-gebruik/deelnemers",
+                    "description": "Get gebruiks with active org in deelnemers",
+                    "parameters": [
+                        {
+                            "name": "limit",
+                            "type": "integer",
+                            "required": false,
+                            "description": "Maximum number of results to return"
+                        },
+                        {
+                            "name": "offset",
+                            "type": "integer",
+                            "required": false,
+                            "description": "Number of results to skip for pagination"
+                        },
+                        {
+                            "name": "status",
+                            "type": "string",
+                            "required": false,
+                            "description": "Filter by usage status"
+                        }
+                    ]
+                },
+                {
+                    "method": "PUT",
+                    "path": "/api/aangeboden-gebruik/{gebruikId}/set-self",
+                    "description": "Set the @self property of a gebruik or koppeling to the active organization",
+                    "parameters": [
+                        {
+                            "name": "gebruikId",
+                            "type": "string",
+                            "required": true,
+                            "description": "The UUID of the gebruik object to update (in URL path)"
+                        }
+                    ]
+                },
+                {
+                    "method": "GET",
+                    "path": "/api/aangeboden-gebruik/docs",
+                    "description": "Get this API documentation",
+                    "parameters": []
+                },
+                {
+                    "method": "GET",
+                    "path": "/api/koppelingen-gebruik",
+                    "description": "Get all koppelingen and gebruiks objects with extended access control.",
+                    "parameters": [
+                        {
+                            "name": "organisation",
+                            "type": "string",
+                            "required": false,
+                            "description": "Filter by organization UUID (only for ambtenaar users)"
+                        },
+                        {
+                            "name": "limit",
+                            "type": "integer",
+                            "required": false,
+                            "description": "Maximum number of results to return"
+                        },
+                        {
+                            "name": "offset",
+                            "type": "integer",
+                            "required": false,
+                            "description": "Number of results to skip for pagination"
+                        }
+                    ]
+                },
+                {
+                    "method": "GET",
+                    "path": "/api/koppelingen-gebruik/{uuid}",
+                    "description": "Get koppelingen and gebruiks for a specific application/module UUID.",
+                    "parameters": [
+                        {
+                            "name": "uuid",
+                            "type": "string",
+                            "required": true,
+                            "description": "The UUID of the application/module (in URL path)"
+                        },
+                        {
+                            "name": "organisation",
+                            "type": "string",
+                            "required": false,
+                            "description": "Filter by organization UUID (only for ambtenaar users)"
+                        }
+                    ]
+                }
+            ],
+            "security": {
+                "afnemer_filtering": "Uses standard RBAC filtering based on organization association",
+                "deelnemers_filtering": "Uses RBAC-disabled search to find participation records",
+                "self_update_permission": "Only allowed if active organization is the afnemer or aanbieder"
+            },
+            "error_codes": {
+                "400": "Bad Request - Invalid parameters or missing required fields",
+                "403": "Forbidden - Operation not allowed",
+                "404": "Not Found - Gebruik object not found",
+                "500": "Internal Server Error - Server-side error occurred"
+            }
+        }
+    ],
+    "views": [
+        200,
+        {
+            "api_version": "1.0.0",
+            "description": "Stackiq View API - Query and enrich ArchiMate views",
+            "base_url": "/api/views",
+            "endpoints": [
+                {
+                    "method": "GET",
+                    "path": "/api/views",
+                    "description": "Get all views with optional enrichment",
+                    "parameters": [
+                        {
+                            "name": "include_products",
+                            "type": "boolean",
+                            "required": false,
+                            "description": "Include product data in view nodes"
+                        },
+                        {
+                            "name": "include_gebruik",
+                            "type": "boolean",
+                            "required": false,
+                            "description": "Include usage data in view nodes"
+                        },
+                        {
+                            "name": "include_deelnames_gebruik",
+                            "type": "boolean",
+                            "required": false,
+                            "description": "Include participation usage data in view nodes"
+                        }
+                    ],
+                    "response_example": {
+                        "success": true,
+                        "views": [
+                            {
+                                "id": "view-lv01",
+                                "name": "LV01 BGT basisregistratie en SVB view",
+                                "documentation": "Mocked from GEMMA LV01.",
+                                "viewNodes": [],
+                                "viewRelationships": []
+                            }
+                        ],
+                        "count": 1,
+                        "enrichments_applied": []
+                    }
+                },
+                {
+                    "method": "GET",
+                    "path": "/api/views/{viewId}",
+                    "description": "Get a specific view by ID with optional enrichment",
+                    "parameters": [
+                        {
+                            "name": "viewId",
+                            "type": "string",
+                            "required": true,
+                            "description": "The view identifier (in URL path)"
+                        },
+                        {
+                            "name": "include_products",
+                            "type": "boolean",
+                            "required": false,
+                            "description": "Include product data in view nodes"
+                        },
+                        {
+                            "name": "include_gebruik",
+                            "type": "boolean",
+                            "required": false,
+                            "description": "Include usage data in view nodes"
+                        },
+                        {
+                            "name": "include_deelnames_gebruik",
+                            "type": "boolean",
+                            "required": false,
+                            "description": "Include participation usage data in view nodes"
+                        }
+                    ],
+                    "response_example": {
+                        "success": true,
+                        "view": {
+                            "id": "view-lv01",
+                            "name": "LV01 BGT basisregistratie en SVB view",
+                            "documentation": "Mocked from GEMMA LV01.",
+                            "viewNodes": [],
+                            "viewRelationships": []
+                        },
+                        "enrichments_applied": []
+                    }
+                },
+                {
+                    "method": "GET",
+                    "path": "/api/views/docs",
+                    "description": "Get this API documentation",
+                    "parameters": [],
+                    "response_example": "(this response)"
+                }
+            ],
+            "enrichment_options": [
+                {
+                    "name": "products",
+                    "description": "Adds product information to nodes with product associations"
+                },
+                {
+                    "name": "usage",
+                    "description": "Adds usage/usage statistics to view nodes"
+                },
+                {
+                    "name": "deelnames_gebruik",
+                    "description": "Adds participation-based usage data to view nodes created from participation records"
+                }
+            ],
+            "boolean_parameter_formats": {
+                "accepted_true_values": [
+                    "true",
+                    "1",
+                    "yes",
+                    "on",
+                    true,
+                    1
+                ],
+                "accepted_false_values": [
+                    "false",
+                    "0",
+                    "no",
+                    "off",
+                    false,
+                    0
+                ],
+                "examples": [
+                    "/api/views?include_products=true",
+                    "/api/views?include_gebruik=1&include_products=false",
+                    "/api/views/view-123?include_deelnames_gebruik=yes"
+                ]
+            }
+        }
+    ]
+}

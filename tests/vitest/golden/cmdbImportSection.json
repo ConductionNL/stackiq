@@ -1,0 +1,338 @@
+{
+	"finished": {
+		"none | applications false": "Import for  finished. 0 rows read: 0 created, 0 updated, 0 unchanged.",
+		"none | applications true": "Import for  finished. 0 rows read: 0 created, 0 updated, 0 unchanged. 2 applications archived.",
+		"cancelled | applications false": "Import for Delft cancelled after 4 rows.",
+		"cancelled | applications true": "Import for Delft cancelled after 4 rows. 2 applications archived.",
+		"municipality created | applications false": "Import finished. The municipality Delft was created. 9 rows read: 2 created, 3 updated, 4 unchanged.",
+		"municipality created | applications true": "Import finished. The municipality Delft was created. 9 rows read: 2 created, 3 updated, 4 unchanged. 2 applications archived.",
+		"plain | applications false": "Import for Delft finished. 9 rows read: 0 created, 3 updated, 0 unchanged.",
+		"plain | applications true": "Import for Delft finished. 9 rows read: 0 created, 3 updated, 0 unchanged. 2 applications archived.",
+		"without municipality | applications false": "Import for  finished. 0 rows read: 0 created, 0 updated, 0 unchanged.",
+		"without municipality | applications true": "Import for  finished. 0 rows read: 0 created, 0 updated, 0 unchanged. 2 applications archived."
+	},
+	"municipalities": {
+		"not configured": {
+			"trace": [
+				[
+					"axios.get",
+					"/apps/stackiq/api/voorzieningen/config",
+					null
+				]
+			],
+			"state": {
+				"importing": "(unset)",
+				"cancelling": "(unset)",
+				"cancelStatus": "(unset)",
+				"error": "(unset)",
+				"report": "(unset)",
+				"progress": "(unset)",
+				"operationId": "(unset)",
+				"municipalityOptions": [
+					"before"
+				],
+				"municipalityLoadError": "The organisation register is not configured, so existing municipalities cannot be listed. You can still type the name of a municipality.",
+				"loadingMunicipalities": false
+			}
+		},
+		"listed": {
+			"trace": [
+				[
+					"axios.get",
+					"/apps/stackiq/api/voorzieningen/config",
+					null
+				],
+				[
+					"axios.get",
+					"/apps/openregister/api/objects/{register}/{schema} {\"register\":\"r\",\"schema\":\"s\"}",
+					{
+						"params": {
+							"type": "Municipality",
+							"_limit": 1000
+						}
+					}
+				]
+			],
+			"state": {
+				"importing": "(unset)",
+				"cancelling": "(unset)",
+				"cancelStatus": "(unset)",
+				"error": "(unset)",
+				"report": "(unset)",
+				"progress": "(unset)",
+				"operationId": "(unset)",
+				"municipalityOptions": [],
+				"municipalityLoadError": "",
+				"loadingMunicipalities": false
+			}
+		},
+		"no results key": {
+			"trace": [
+				[
+					"axios.get",
+					"/apps/stackiq/api/voorzieningen/config",
+					null
+				],
+				[
+					"axios.get",
+					"/apps/openregister/api/objects/{register}/{schema} {\"register\":\"r\",\"schema\":\"s\"}",
+					{
+						"params": {
+							"type": "Municipality",
+							"_limit": 1000
+						}
+					}
+				]
+			],
+			"state": {
+				"importing": "(unset)",
+				"cancelling": "(unset)",
+				"cancelStatus": "(unset)",
+				"error": "(unset)",
+				"report": "(unset)",
+				"progress": "(unset)",
+				"operationId": "(unset)",
+				"municipalityOptions": [],
+				"municipalityLoadError": "",
+				"loadingMunicipalities": false
+			}
+		},
+		"config fails": {
+			"trace": [
+				[
+					"axios.get",
+					"/apps/stackiq/api/voorzieningen/config",
+					null
+				]
+			],
+			"state": {
+				"importing": "(unset)",
+				"cancelling": "(unset)",
+				"cancelStatus": "(unset)",
+				"error": "(unset)",
+				"report": "(unset)",
+				"progress": "(unset)",
+				"operationId": "(unset)",
+				"municipalityOptions": [
+					"before"
+				],
+				"municipalityLoadError": "Existing municipalities could not be loaded. You can still type the name of a municipality.",
+				"loadingMunicipalities": false
+			}
+		},
+		"list fails": {
+			"trace": [
+				[
+					"axios.get",
+					"/apps/stackiq/api/voorzieningen/config",
+					null
+				],
+				[
+					"axios.get",
+					"/apps/openregister/api/objects/{register}/{schema} {\"register\":\"r\",\"schema\":\"s\"}",
+					{
+						"params": {
+							"type": "Municipality",
+							"_limit": 1000
+						}
+					}
+				]
+			],
+			"state": {
+				"importing": "(unset)",
+				"cancelling": "(unset)",
+				"cancelStatus": "(unset)",
+				"error": "(unset)",
+				"report": "(unset)",
+				"progress": "(unset)",
+				"operationId": "(unset)",
+				"municipalityOptions": [
+					"before"
+				],
+				"municipalityLoadError": "Existing municipalities could not be loaded. You can still type the name of a municipality.",
+				"loadingMunicipalities": false
+			}
+		}
+	},
+	"start": {
+		"cannot import": {
+			"trace": [],
+			"state": {
+				"importing": "before",
+				"cancelling": "(unset)",
+				"cancelStatus": "(unset)",
+				"error": "before",
+				"report": "before",
+				"progress": "before",
+				"operationId": "(unset)",
+				"municipalityOptions": "(unset)",
+				"municipalityLoadError": "(unset)",
+				"loadingMunicipalities": "(unset)"
+			}
+		},
+		"not a spreadsheet": {
+			"trace": [],
+			"state": {
+				"importing": "before",
+				"cancelling": "(unset)",
+				"cancelStatus": "(unset)",
+				"error": {
+					"error": "NOT_XLSX",
+					"details": {},
+					"message": "",
+					"status": 0
+				},
+				"report": null,
+				"progress": "before",
+				"operationId": "(unset)",
+				"municipalityOptions": "(unset)",
+				"municipalityLoadError": "(unset)",
+				"loadingMunicipalities": "(unset)"
+			}
+		},
+		"new municipality, succeeds": {
+			"trace": [
+				[
+					"startProgressPolling",
+					"cmdb-op-1"
+				],
+				[
+					"axios.post",
+					"/apps/stackiq/api/cmdb-import",
+					{
+						"form": {
+							"file": "export.xlsx",
+							"municipality": {
+								"uuid": null,
+								"name": "Nieuwdorp"
+							},
+							"updateExisting": false,
+							"publish": true,
+							"missingRecords": "keep",
+							"operationId": "cmdb-op-1"
+						}
+					}
+				],
+				[
+					"showReport",
+					{
+						"summary": {
+							"rowsRead": 1
+						}
+					}
+				],
+				[
+					"stopPolling"
+				]
+			],
+			"state": {
+				"importing": false,
+				"cancelling": false,
+				"cancelStatus": "",
+				"error": null,
+				"report": null,
+				"progress": null,
+				"operationId": null,
+				"municipalityOptions": "(unset)",
+				"municipalityLoadError": "(unset)",
+				"loadingMunicipalities": "(unset)"
+			}
+		},
+		"existing municipality, fails": {
+			"trace": [
+				[
+					"startProgressPolling",
+					"cmdb-op-1"
+				],
+				[
+					"axios.post",
+					"/apps/stackiq/api/cmdb-import",
+					{
+						"form": {
+							"file": "export.xlsx",
+							"municipality": {
+								"uuid": "m-1",
+								"name": "Delft"
+							},
+							"updateExisting": true,
+							"publish": false,
+							"missingRecords": "archive",
+							"operationId": "cmdb-op-1"
+						}
+					}
+				],
+				[
+					"stopPolling"
+				]
+			],
+			"state": {
+				"importing": false,
+				"cancelling": false,
+				"cancelStatus": "",
+				"error": {
+					"error": "MUNICIPALITY_REQUIRED",
+					"message": "m",
+					"details": {},
+					"status": 422,
+					"interrupted": false
+				},
+				"report": null,
+				"progress": null,
+				"operationId": null,
+				"municipalityOptions": "(unset)",
+				"municipalityLoadError": "(unset)",
+				"loadingMunicipalities": "(unset)"
+			}
+		},
+		"interrupted request": {
+			"trace": [
+				[
+					"startProgressPolling",
+					"cmdb-op-1"
+				],
+				[
+					"axios.post",
+					"/apps/stackiq/api/cmdb-import",
+					{
+						"form": {
+							"file": "export.xlsx",
+							"municipality": {
+								"uuid": "m-1",
+								"name": "Delft"
+							},
+							"updateExisting": true,
+							"publish": true,
+							"missingRecords": "archive",
+							"operationId": "cmdb-op-1"
+						}
+					}
+				],
+				[
+					"recoverInterruptedImport",
+					{
+						"error": "NETWORK_ERROR",
+						"message": "",
+						"details": {},
+						"status": 0,
+						"interrupted": true
+					}
+				],
+				[
+					"stopPolling"
+				]
+			],
+			"state": {
+				"importing": false,
+				"cancelling": false,
+				"cancelStatus": "",
+				"error": null,
+				"report": null,
+				"progress": null,
+				"operationId": null,
+				"municipalityOptions": "(unset)",
+				"municipalityLoadError": "(unset)",
+				"loadingMunicipalities": "(unset)"
+			}
+		}
+	}
+}

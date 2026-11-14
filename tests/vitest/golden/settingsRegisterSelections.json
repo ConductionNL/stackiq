@@ -1,0 +1,74 @@
+{
+	"no raw configs": {
+		"voorzieningenRegister": null,
+		"voorzieningenSchemas": [],
+		"amefRegister": null,
+		"amefSchemas": []
+	},
+	"null raw configs": {
+		"voorzieningenRegister": null,
+		"voorzieningenSchemas": [],
+		"amefRegister": null,
+		"amefSchemas": []
+	},
+	"raw configs without register": {
+		"voorzieningenRegister": null,
+		"voorzieningenSchemas": [],
+		"amefRegister": null,
+		"amefSchemas": []
+	},
+	"numeric register ids": {
+		"voorzieningenRegister": {
+			"label": "Voorzieningen",
+			"value": "3"
+		},
+		"voorzieningenSchemas": [
+			{
+				"id": 30
+			}
+		],
+		"amefRegister": {
+			"label": "Amef",
+			"value": "4"
+		},
+		"amefSchemas": []
+	},
+	"string ids and register_id fallback": {
+		"voorzieningenRegister": {
+			"label": "Register 5",
+			"value": "5"
+		},
+		"voorzieningenSchemas": [],
+		"amefRegister": {
+			"label": "Voorzieningen",
+			"value": "3"
+		},
+		"amefSchemas": [
+			{
+				"id": 30
+			}
+		]
+	},
+	"register wins over register_id": {
+		"voorzieningenRegister": null,
+		"voorzieningenSchemas": [],
+		"amefRegister": {
+			"label": "Register 5",
+			"value": "5"
+		},
+		"amefSchemas": []
+	},
+	"unknown registers keep the old selection": {
+		"voorzieningenRegister": {
+			"label": "old",
+			"value": "1"
+		},
+		"voorzieningenSchemas": [],
+		"amefRegister": null,
+		"amefSchemas": [
+			{
+				"id": "old"
+			}
+		]
+	}
+}

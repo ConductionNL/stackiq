@@ -1,0 +1,89 @@
+{
+    "create": [
+        {
+            "name": "New",
+            "_source": {
+                "instance": "https://peer.example.org",
+                "organisation": "Peer",
+                "peerEntryId": "new-1",
+                "syncedAt": "2026-02-02T00:00:00Z",
+                "stale": false,
+                "withdrawn": false
+            }
+        },
+        {
+            "name": "Uuid fallback",
+            "_source": {
+                "instance": "https://peer.example.org",
+                "organisation": "Peer",
+                "peerEntryId": "uuid-fallback",
+                "syncedAt": "2026-02-02T00:00:00Z",
+                "stale": false,
+                "withdrawn": false
+            }
+        },
+        {
+            "name": "Foreign",
+            "_source": {
+                "instance": "https://peer.example.org",
+                "organisation": "Peer",
+                "peerEntryId": "foreign-1",
+                "syncedAt": "2026-02-02T00:00:00Z",
+                "stale": false,
+                "withdrawn": false
+            }
+        }
+    ],
+    "update": [
+        {
+            "name": "Changed now",
+            "_source": {
+                "instance": "https://peer.example.org",
+                "organisation": "Peer",
+                "peerEntryId": "chg-1",
+                "syncedAt": "2026-02-02T00:00:00Z",
+                "stale": false,
+                "withdrawn": false
+            },
+            "id": "or-1"
+        },
+        {
+            "name": "Int id",
+            "_source": {
+                "instance": "https://peer.example.org",
+                "organisation": "Peer",
+                "peerEntryId": "42",
+                "syncedAt": "2026-02-02T00:00:00Z",
+                "stale": false,
+                "withdrawn": false
+            },
+            "id": "or-9"
+        },
+        {
+            "name": "Local has no OR id",
+            "_source": {
+                "instance": "https://peer.example.org",
+                "organisation": "Peer",
+                "peerEntryId": "noid-local",
+                "syncedAt": "2026-02-02T00:00:00Z",
+                "stale": false,
+                "withdrawn": false
+            }
+        }
+    ],
+    "withdraw": [
+        {
+            "id": "or-3",
+            "name": "Gone",
+            "_source": {
+                "instance": "https://peer.example.org",
+                "organisation": "Peer",
+                "peerEntryId": "gone-1",
+                "syncedAt": "2026-01-01T00:00:00Z",
+                "stale": true,
+                "withdrawn": true,
+                "withdrawnAt": "2026-02-02T00:00:00Z"
+            }
+        }
+    ]
+}

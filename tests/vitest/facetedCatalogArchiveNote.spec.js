@@ -62,7 +62,7 @@ function mountView(quickFilters = QUICK_FILTERS) {
 		global: {
 			mocks: {
 				$route: { query: {} },
-				$router: { push: vi.fn() },
+				$router: { push: vi.fn(), replace: vi.fn(async () => {}) },
 				t: (app, text) => text,
 			},
 			stubs: {
@@ -107,15 +107,27 @@ describe('FacetedCatalogIndexView on the Archived tab', () => {
 		expect(mountView(archivedFirst).find(NOTE).exists()).toBe(true)
 	})
 
-	it('drops the note when a facet or search change remounts the list on its default tab', async () => {
+	it('keeps the note when a search refetches the list without a remount', async () => {
+		const wrapper = mountView()
+		const index = wrapper.findComponent({ name: 'CnIndexPage' })
+		await index.vm.$emit('quick-filter-change', 1)
+
+		// The list watches its filter and refetches; it is not remounted, so
+		// it stays on the Archived tab.
+		wrapper.vm.facetStore.module.search = 'mail'
+		await wrapper.vm.$nextTick()
+		await wrapper.vm.$nextTick()
+
+		expect(wrapper.find(NOTE).exists()).toBe(true)
+	})
+
+	it('drops the note when a saved view remounts the list on its default tab', async () => {
 		const wrapper = mountView()
 		const index = wrapper.findComponent({ name: 'CnIndexPage' })
 		await index.vm.$emit('quick-filter-change', 1)
 		expect(wrapper.find(NOTE).exists()).toBe(true)
 
-		// A search term changes the key CnIndexPage is mounted under.
-		wrapper.vm.facetStore.module.search = 'mail'
-		await wrapper.vm.$nextTick()
+		await wrapper.vm.applySavedView({ selection: {}, search: 'mail' })
 		await wrapper.vm.$nextTick()
 
 		expect(wrapper.find(NOTE).exists()).toBe(false)

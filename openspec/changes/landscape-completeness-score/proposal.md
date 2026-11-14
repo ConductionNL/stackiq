@@ -31,12 +31,13 @@ No tender, feature request or roadmap row names these rows.
 2. Hidden `qualityScore` and `qualityStatus` fields on both schemas, so OpenRegister's statistics and listing work.
 3. A Data quality column on the Applications list and on Applications in use, and a score tile on the application page.
 4. A "Confirm this entry is current" action on the application and usage pages that sets `lastConfirmedAt`.
-5. A Data quality report, a card on the Reports page, with the score spread per type and the twenty weakest entries.
+5. A Data quality page (board SkDatakwaliteit) per organisation: the register score, average completeness, entries not confirmed, the score per declared rule and the entries with the lowest completeness first, with what is missing.
 
 ## Out of scope
 
 - Asking owners to confirm their entries by survey: `landscape-owner-attestation`, which sets the same `lastConfirmedAt`.
 - Scores for contracts, connections and compliance claims; the same annotation can be added per schema later.
+- Duplicates from several sources and the owner survey on the board: OpenRegister's duplicate listing and `landscape-owner-attestation` fill those sections later.
 - An admin screen for the rule set. The rules live in the register fragment and are edited like code, or in OpenRegister's schema editor.
 
 ## Risks

@@ -15,6 +15,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/federated-catalog-sync/specs/federated-catalog-sync/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -358,6 +361,11 @@ class FederationServiceTest extends TestCase {
 		$this->assertNotEmpty($saved);
 		$mirror = $saved[0];
 		$this->assertSame('https://peer.example', $mirror['_source']['instance']);
+		$this->assertSame(expected: 'Gemeente Peer', actual: $mirror['_source']['organisation']);
+		$this->assertMatchesRegularExpression(
+			pattern: '/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\+00:00$/',
+			string: $mirror['_source']['syncedAt']
+		);
 		$this->assertTrue($service->isPeerSourced($mirror));
 	}//end testPullPeerMergesNewEntries()
 

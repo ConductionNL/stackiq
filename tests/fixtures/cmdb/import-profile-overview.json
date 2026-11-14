@@ -1,0 +1,1404 @@
+{
+    "files": {
+        "profile": {
+            "id": "topdesk-cmdb",
+            "name": "TOPdesk CMDB export",
+            "version": "1.0.0",
+            "profileFile": "topdesk-profile.json",
+            "sheets": [
+                {
+                    "name": "Onbeh Applicaties CMDB",
+                    "constants": {
+                        "Beheer": "Beheer geregeld: nee"
+                    },
+                    "absentColumns": [
+                        "Nickname",
+                        "Applicatie Eigenaar (E-mail)",
+                        "Applicatie Eigenaar (Personeelsnummer)"
+                    ]
+                },
+                {
+                    "name": "Beheerde Applicaties CMDB",
+                    "constants": {
+                        "Beheer": "Beheer geregeld: ja"
+                    },
+                    "absentColumns": [
+                        "Applicatie Eigenaar (E-mail)",
+                        "Applicatie Eigenaar (Personeelsnummer)"
+                    ]
+                }
+            ],
+            "archiveSheet": "Gearchiveerde Applicaties",
+            "sheetPrecedence": [
+                "Beheerde Applicaties CMDB",
+                "Onbeh Applicaties CMDB"
+            ],
+            "keyColumn": "APPID",
+            "nameColumn": "Applicatie Naam",
+            "requiredColumns": [
+                "APPID",
+                "Applicatie Naam"
+            ],
+            "dateColumns": [
+                "Datum",
+                "Referentie datum wijziging",
+                "End-of-Life Functioneel"
+            ],
+            "idColumns": [
+                "APPID"
+            ],
+            "emptyValues": {
+                "BNN Classificatie": [
+                    "NB"
+                ]
+            },
+            "externalKeyPrefix": "topdesk",
+            "missingRecords": [
+                "keep",
+                "archive"
+            ]
+        },
+        "packs": [
+            {
+                "target": "module",
+                "file": "topdesk-module.json",
+                "id": "stackiq-topdesk-module",
+                "name": "TOPdesk CMDB export to stackiq module",
+                "version": "1.0.0",
+                "description": "One application row of a CMDB sheet becomes a stackiq module. A mapping marked required that fails skips the row; any other failing mapping drops that field with a warning. Nickname and Roepnaam both feed shortDescription; Roepnaam wins when both are filled. Applicatiesoort is kept as is in applicationType; only its SaaS/PaaS/IaaS/on-premises values also set the hosting model, every other kind leaves that empty without a warning.",
+                "fieldMappings": [
+                    {
+                        "source": "Applicatie Naam",
+                        "target": "name",
+                        "required": true,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "APPID",
+                        "target": "externalNumber",
+                        "required": true,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Applicatie Code",
+                        "target": "externalId",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Nickname",
+                        "target": "shortDescription",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Roepnaam",
+                        "target": "shortDescription",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Functionele Omschrijving",
+                        "target": "longDescription",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Applicatiesoort",
+                        "target": "applicationType",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Applicatiesoort",
+                        "target": "cloudDienstverleningsmodel",
+                        "required": false,
+                        "transform": {
+                            "type": "lookup",
+                            "map": {
+                                "Saas": [
+                                    "SaaS"
+                                ],
+                                "SaaS": [
+                                    "SaaS"
+                                ],
+                                "SAAS": [
+                                    "SaaS"
+                                ],
+                                "saas": [
+                                    "SaaS"
+                                ],
+                                "Paas": [
+                                    "PaaS"
+                                ],
+                                "PaaS": [
+                                    "PaaS"
+                                ],
+                                "PAAS": [
+                                    "PaaS"
+                                ],
+                                "Iaas": [
+                                    "IaaS"
+                                ],
+                                "IaaS": [
+                                    "IaaS"
+                                ],
+                                "IAAS": [
+                                    "IaaS"
+                                ],
+                                "On-premise": [
+                                    "On-premises (self-managed)"
+                                ],
+                                "On-premises": [
+                                    "On-premises (self-managed)"
+                                ],
+                                "On premise": [
+                                    "On-premises (self-managed)"
+                                ]
+                            },
+                            "default": null
+                        }
+                    },
+                    {
+                        "source": "BNN Classificatie",
+                        "target": "bbnLevel",
+                        "required": false,
+                        "transform": {
+                            "type": "lookup",
+                            "map": {
+                                "BBN1": "BBN1",
+                                "BBN 1": "BBN1",
+                                "bbn1": "BBN1",
+                                "bbn 1": "BBN1",
+                                "BNN1": "BBN1",
+                                "BNN 1": "BBN1",
+                                "BBN2": "BBN2",
+                                "BBN 2": "BBN2",
+                                "bbn2": "BBN2",
+                                "bbn 2": "BBN2",
+                                "BNN2": "BBN2",
+                                "BNN 2": "BBN2",
+                                "BBN3": "BBN3",
+                                "BBN 3": "BBN3",
+                                "bbn3": "BBN3",
+                                "bbn 3": "BBN3",
+                                "BNN3": "BBN3",
+                                "BNN 3": "BBN3",
+                                "1": "BBN1",
+                                "2": "BBN2",
+                                "2+": "BBN2+",
+                                "3": "BBN3",
+                                "BBN2+": "BBN2+",
+                                "BBN 2+": "BBN2+",
+                                "BNN2+": "BBN2+",
+                                "BNN 2+": "BBN2+"
+                            }
+                        }
+                    },
+                    {
+                        "source": "Datum",
+                        "target": "externalCreatedAt",
+                        "required": false,
+                        "transform": {
+                            "type": "date",
+                            "sourceFormat": "!Y-m-d",
+                            "targetFormat": "Y-m-d"
+                        }
+                    },
+                    {
+                        "source": "Referentie datum wijziging",
+                        "target": "externalModifiedAt",
+                        "required": false,
+                        "transform": {
+                            "type": "date",
+                            "sourceFormat": "!Y-m-d",
+                            "targetFormat": "Y-m-d"
+                        }
+                    }
+                ],
+                "defaults": [],
+                "createOnlyDefaults": {
+                    "type": "Application"
+                },
+                "createOnlyFields": [],
+                "neverWritten": [
+                    "publicationDate",
+                    "depublicationDate"
+                ],
+                "source": "file",
+                "packId": null,
+                "storedVersion": null,
+                "shippedVersion": "1.0.0",
+                "edited": null,
+                "newerShipped": false,
+                "updatePending": false,
+                "editable": true
+            },
+            {
+                "target": "manufacturer",
+                "file": "topdesk-manufacturer.json",
+                "id": "stackiq-topdesk-manufacturer",
+                "name": "TOPdesk CMDB export to stackiq supplier organisation",
+                "version": "1.0.0",
+                "description": "The Vendor column (the maker of the software) becomes one organisation of type Supplier per distinct name, registered as a Supplier so the public catalogue can show it as the module's provider. An empty Vendor means the row has no provider. Leverancier and Hostingpartij are not read.",
+                "fieldMappings": [
+                    {
+                        "source": "Vendor",
+                        "target": "name",
+                        "required": true,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    }
+                ],
+                "defaults": {
+                    "type": "Supplier",
+                    "status": "Active",
+                    "registeredBy": "Supplier"
+                },
+                "createOnlyDefaults": [],
+                "createOnlyFields": [],
+                "neverWritten": [],
+                "source": "file",
+                "packId": null,
+                "storedVersion": null,
+                "shippedVersion": "1.0.0",
+                "edited": null,
+                "newerShipped": false,
+                "updatePending": false,
+                "editable": true
+            },
+            {
+                "target": "municipality",
+                "file": "topdesk-municipality.json",
+                "id": "stackiq-topdesk-municipality",
+                "name": "CMDB import options to stackiq municipality",
+                "version": "1.0.0",
+                "description": "Maps the import options row (municipalityName), not a sheet row, to the consuming organisation of type Municipality.",
+                "fieldMappings": [
+                    {
+                        "source": "municipalityName",
+                        "target": "name",
+                        "required": true,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    }
+                ],
+                "defaults": {
+                    "type": "Municipality",
+                    "status": "Active"
+                },
+                "createOnlyDefaults": [],
+                "createOnlyFields": [],
+                "neverWritten": [],
+                "source": "file",
+                "packId": null,
+                "storedVersion": null,
+                "shippedVersion": "1.0.0",
+                "edited": null,
+                "newerShipped": false,
+                "updatePending": false,
+                "editable": false
+            },
+            {
+                "target": "usage",
+                "file": "topdesk-usage.json",
+                "id": "stackiq-topdesk-usage",
+                "name": "TOPdesk CMDB export to stackiq usage",
+                "version": "1.0.0",
+                "description": "The usage that links the application to the municipality. The internal note records whether maintenance is arranged (the sheet the row came from), the cluster and the owner's department. An unknown status or TIME value drops the field with a warning.",
+                "fieldMappings": [
+                    {
+                        "source": "Applicatie Status",
+                        "target": "status",
+                        "required": false,
+                        "transform": {
+                            "type": "lookup",
+                            "map": {
+                                "In productie": "In production",
+                                "In voorraad": "Planned",
+                                "In ontwikkeling": "Acquisition",
+                                "Uit te faseren": "To be phased out",
+                                "Uitgefaseerd": "Phased out",
+                                "Moet verwijderd worden": "To be phased out",
+                                "Verwijderd": "Phased out",
+                                "Besteld": "Acquisition",
+                                "Wordt getest": "Acquisition",
+                                "Stand-by voor continuïteit": "In production"
+                            }
+                        }
+                    },
+                    {
+                        "source": "Classificatie",
+                        "target": "timeClassification",
+                        "required": false,
+                        "transform": {
+                            "type": "lookup",
+                            "map": {
+                                "Tolerate": "Tolerate",
+                                "Tolereren": "Tolerate",
+                                "Invest": "Invest",
+                                "Investeren": "Invest",
+                                "Migrate": "Migrate",
+                                "Migreren": "Migrate",
+                                "Eliminate": "Eliminate",
+                                "Elimineren": "Eliminate",
+                                "1. Tolereren (wordt ingelezen)": "Tolerate"
+                            }
+                        }
+                    },
+                    {
+                        "source": "End-of-Life Functioneel",
+                        "target": "startDateOutPhased",
+                        "required": false,
+                        "transform": {
+                            "type": "date",
+                            "sourceFormat": "!Y-m-d",
+                            "targetFormat": "Y-m-d"
+                        }
+                    },
+                    {
+                        "source": "Beheer",
+                        "target": "interneAnnotation",
+                        "required": false,
+                        "transform": {
+                            "type": "concat",
+                            "fields": [
+                                "Cluster",
+                                "Applicatie Eigenaar (Afdeling)"
+                            ],
+                            "separator": " / "
+                        }
+                    }
+                ],
+                "defaults": [],
+                "createOnlyDefaults": [],
+                "createOnlyFields": [
+                    "interneAnnotation",
+                    "timeClassification"
+                ],
+                "neverWritten": [],
+                "source": "file",
+                "packId": null,
+                "storedVersion": null,
+                "shippedVersion": "1.0.0",
+                "edited": null,
+                "newerShipped": false,
+                "updatePending": false,
+                "editable": true
+            },
+            {
+                "target": "businessOwner",
+                "file": "topdesk-business-owner.json",
+                "id": "stackiq-topdesk-business-owner",
+                "name": "TOPdesk CMDB export to business owner identity",
+                "version": "1.1.0",
+                "description": "The application owner (Applicatie Eigenaar (Persoon)); the value may be a function instead of a name and is used as the display name either way. The import resolves it in Nextcloud Contacts and links a contactPerson of the municipality as usage.businessOwner, with the owner's function as its role. It matches on the employee number when the row has one, else on the e-mail address, else on the exact display name. The e-mail and employee number columns are optional; rename their source here when the export names them differently. No other person column is read.",
+                "fieldMappings": [
+                    {
+                        "source": "Applicatie Eigenaar (Persoon)",
+                        "target": "name",
+                        "required": true,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Applicatie Eigenaar (Functie)",
+                        "target": "role",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Applicatie Eigenaar (E-mail)",
+                        "target": "email",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Applicatie Eigenaar (Personeelsnummer)",
+                        "target": "employeeNumber",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    }
+                ],
+                "defaults": [],
+                "createOnlyDefaults": [],
+                "createOnlyFields": [],
+                "neverWritten": [],
+                "source": "file",
+                "packId": null,
+                "storedVersion": null,
+                "shippedVersion": "1.1.0",
+                "edited": null,
+                "newerShipped": false,
+                "updatePending": false,
+                "editable": true
+            }
+        ],
+        "openRegisterPacks": false
+    },
+    "view": {
+        "profile": {
+            "id": "topdesk-cmdb",
+            "name": "TOPdesk CMDB export",
+            "version": "1.0.0",
+            "profileFile": "topdesk-profile.json",
+            "sheets": [
+                {
+                    "name": "Onbeh Applicaties CMDB",
+                    "constants": {
+                        "Beheer": "Beheer geregeld: nee"
+                    },
+                    "absentColumns": [
+                        "Nickname",
+                        "Applicatie Eigenaar (E-mail)",
+                        "Applicatie Eigenaar (Personeelsnummer)"
+                    ]
+                },
+                {
+                    "name": "Beheerde Applicaties CMDB",
+                    "constants": {
+                        "Beheer": "Beheer geregeld: ja"
+                    },
+                    "absentColumns": [
+                        "Applicatie Eigenaar (E-mail)",
+                        "Applicatie Eigenaar (Personeelsnummer)"
+                    ]
+                }
+            ],
+            "archiveSheet": "Gearchiveerde Applicaties",
+            "sheetPrecedence": [
+                "Beheerde Applicaties CMDB",
+                "Onbeh Applicaties CMDB"
+            ],
+            "keyColumn": "APPID",
+            "nameColumn": "Applicatie Naam",
+            "requiredColumns": [
+                "APPID",
+                "Applicatie Naam"
+            ],
+            "dateColumns": [
+                "Datum",
+                "Referentie datum wijziging",
+                "End-of-Life Functioneel"
+            ],
+            "idColumns": [
+                "APPID"
+            ],
+            "emptyValues": {
+                "BNN Classificatie": [
+                    "NB"
+                ]
+            },
+            "externalKeyPrefix": "topdesk",
+            "missingRecords": [
+                "keep",
+                "archive"
+            ]
+        },
+        "packs": [
+            {
+                "target": "module",
+                "file": "topdesk-module.json",
+                "id": "stackiq-topdesk-module",
+                "name": "TOPdesk CMDB export to stackiq module",
+                "version": "2.0.1",
+                "description": "One application row of a CMDB sheet becomes a stackiq module. A mapping marked required that fails skips the row; any other failing mapping drops that field with a warning. Nickname and Roepnaam both feed shortDescription; Roepnaam wins when both are filled. Applicatiesoort is kept as is in applicationType; only its SaaS/PaaS/IaaS/on-premises values also set the hosting model, every other kind leaves that empty without a warning.",
+                "fieldMappings": [
+                    {
+                        "source": "Applicatie Naam",
+                        "target": "name",
+                        "required": true,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "APPID",
+                        "target": "externalNumber",
+                        "required": true,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Applicatie Code",
+                        "target": "externalId",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Nickname",
+                        "target": "shortDescription",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Roepnaam",
+                        "target": "shortDescription",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Functionele Omschrijving",
+                        "target": "longDescription",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Applicatiesoort",
+                        "target": "applicationType",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Applicatiesoort",
+                        "target": "cloudDienstverleningsmodel",
+                        "required": false,
+                        "transform": {
+                            "type": "lookup",
+                            "map": {
+                                "Saas": [
+                                    "SaaS"
+                                ],
+                                "SaaS": [
+                                    "SaaS"
+                                ],
+                                "SAAS": [
+                                    "SaaS"
+                                ],
+                                "saas": [
+                                    "SaaS"
+                                ],
+                                "Paas": [
+                                    "PaaS"
+                                ],
+                                "PaaS": [
+                                    "PaaS"
+                                ],
+                                "PAAS": [
+                                    "PaaS"
+                                ],
+                                "Iaas": [
+                                    "IaaS"
+                                ],
+                                "IaaS": [
+                                    "IaaS"
+                                ],
+                                "IAAS": [
+                                    "IaaS"
+                                ],
+                                "On-premise": [
+                                    "On-premises (self-managed)"
+                                ],
+                                "On-premises": [
+                                    "On-premises (self-managed)"
+                                ],
+                                "On premise": [
+                                    "On-premises (self-managed)"
+                                ],
+                                "Cloud": [
+                                    "SaaS"
+                                ]
+                            },
+                            "default": null
+                        }
+                    },
+                    {
+                        "source": "BNN Classificatie",
+                        "target": "bbnLevel",
+                        "required": false,
+                        "transform": {
+                            "type": "lookup",
+                            "map": {
+                                "BBN1": "BBN1",
+                                "BBN 1": "BBN1",
+                                "bbn1": "BBN1",
+                                "bbn 1": "BBN1",
+                                "BNN1": "BBN1",
+                                "BNN 1": "BBN1",
+                                "BBN2": "BBN2",
+                                "BBN 2": "BBN2",
+                                "bbn2": "BBN2",
+                                "bbn 2": "BBN2",
+                                "BNN2": "BBN2",
+                                "BNN 2": "BBN2",
+                                "BBN3": "BBN3",
+                                "BBN 3": "BBN3",
+                                "bbn3": "BBN3",
+                                "bbn 3": "BBN3",
+                                "BNN3": "BBN3",
+                                "BNN 3": "BBN3",
+                                "1": "BBN1",
+                                "2": "BBN2",
+                                "2+": "BBN2+",
+                                "3": "BBN3",
+                                "BBN2+": "BBN2+",
+                                "BBN 2+": "BBN2+",
+                                "BNN2+": "BBN2+",
+                                "BNN 2+": "BBN2+"
+                            }
+                        }
+                    },
+                    {
+                        "source": "Datum",
+                        "target": "externalCreatedAt",
+                        "required": false,
+                        "transform": {
+                            "type": "date",
+                            "sourceFormat": "!Y-m-d",
+                            "targetFormat": "Y-m-d"
+                        }
+                    },
+                    {
+                        "source": "Referentie datum wijziging",
+                        "target": "externalModifiedAt",
+                        "required": false,
+                        "transform": {
+                            "type": "date",
+                            "sourceFormat": "!Y-m-d",
+                            "targetFormat": "Y-m-d"
+                        }
+                    }
+                ],
+                "defaults": [],
+                "createOnlyDefaults": {
+                    "type": "Application"
+                },
+                "createOnlyFields": [],
+                "neverWritten": [
+                    "publicationDate",
+                    "depublicationDate"
+                ],
+                "source": "openregister",
+                "packId": 40,
+                "storedVersion": "2.0.1",
+                "shippedVersion": "1.0.0",
+                "edited": true,
+                "newerShipped": false,
+                "updatePending": false,
+                "editable": true
+            },
+            {
+                "target": "manufacturer",
+                "file": "topdesk-manufacturer.json",
+                "id": "stackiq-topdesk-manufacturer",
+                "name": "TOPdesk CMDB export to stackiq supplier organisation",
+                "version": "1.0.0",
+                "description": "The Vendor column (the maker of the software) becomes one organisation of type Supplier per distinct name, registered as a Supplier so the public catalogue can show it as the module's provider. An empty Vendor means the row has no provider. Leverancier and Hostingpartij are not read.",
+                "fieldMappings": [
+                    {
+                        "source": "Vendor",
+                        "target": "name",
+                        "required": true,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    }
+                ],
+                "defaults": {
+                    "type": "Supplier",
+                    "status": "Active",
+                    "registeredBy": "Supplier"
+                },
+                "createOnlyDefaults": [],
+                "createOnlyFields": [],
+                "neverWritten": [],
+                "source": "file",
+                "packId": null,
+                "storedVersion": null,
+                "shippedVersion": "1.0.0",
+                "edited": null,
+                "newerShipped": false,
+                "updatePending": false,
+                "editable": true
+            },
+            {
+                "target": "municipality",
+                "file": "topdesk-municipality.json",
+                "id": "stackiq-topdesk-municipality",
+                "name": "CMDB import options to stackiq municipality",
+                "version": "1.0.0",
+                "description": "Maps the import options row (municipalityName), not a sheet row, to the consuming organisation of type Municipality.",
+                "fieldMappings": [
+                    {
+                        "source": "municipalityName",
+                        "target": "name",
+                        "required": true,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    }
+                ],
+                "defaults": {
+                    "type": "Municipality",
+                    "status": "Active"
+                },
+                "createOnlyDefaults": [],
+                "createOnlyFields": [],
+                "neverWritten": [],
+                "source": "file",
+                "packId": null,
+                "storedVersion": null,
+                "shippedVersion": "1.0.0",
+                "edited": null,
+                "newerShipped": false,
+                "updatePending": false,
+                "editable": false
+            },
+            {
+                "target": "usage",
+                "file": "topdesk-usage.json",
+                "id": "stackiq-topdesk-usage",
+                "name": "TOPdesk CMDB export to stackiq usage",
+                "version": "1.0.0",
+                "description": "The usage that links the application to the municipality. The internal note records whether maintenance is arranged (the sheet the row came from), the cluster and the owner's department. An unknown status or TIME value drops the field with a warning.",
+                "fieldMappings": [
+                    {
+                        "source": "Applicatie Status",
+                        "target": "status",
+                        "required": false,
+                        "transform": {
+                            "type": "lookup",
+                            "map": {
+                                "In productie": "In production",
+                                "In voorraad": "Planned",
+                                "In ontwikkeling": "Acquisition",
+                                "Uit te faseren": "To be phased out",
+                                "Uitgefaseerd": "Phased out",
+                                "Moet verwijderd worden": "To be phased out",
+                                "Verwijderd": "Phased out",
+                                "Besteld": "Acquisition",
+                                "Wordt getest": "Acquisition",
+                                "Stand-by voor continuïteit": "In production"
+                            }
+                        }
+                    },
+                    {
+                        "source": "Classificatie",
+                        "target": "timeClassification",
+                        "required": false,
+                        "transform": {
+                            "type": "lookup",
+                            "map": {
+                                "Tolerate": "Tolerate",
+                                "Tolereren": "Tolerate",
+                                "Invest": "Invest",
+                                "Investeren": "Invest",
+                                "Migrate": "Migrate",
+                                "Migreren": "Migrate",
+                                "Eliminate": "Eliminate",
+                                "Elimineren": "Eliminate",
+                                "1. Tolereren (wordt ingelezen)": "Tolerate"
+                            }
+                        }
+                    },
+                    {
+                        "source": "End-of-Life Functioneel",
+                        "target": "startDateOutPhased",
+                        "required": false,
+                        "transform": {
+                            "type": "date",
+                            "sourceFormat": "!Y-m-d",
+                            "targetFormat": "Y-m-d"
+                        }
+                    },
+                    {
+                        "source": "Beheer",
+                        "target": "interneAnnotation",
+                        "required": false,
+                        "transform": {
+                            "type": "concat",
+                            "fields": [
+                                "Cluster",
+                                "Applicatie Eigenaar (Afdeling)"
+                            ],
+                            "separator": " / "
+                        }
+                    }
+                ],
+                "defaults": [],
+                "createOnlyDefaults": [],
+                "createOnlyFields": [
+                    "interneAnnotation",
+                    "timeClassification"
+                ],
+                "neverWritten": [],
+                "source": "openregister",
+                "packId": 41,
+                "storedVersion": "0.9.0",
+                "shippedVersion": "1.0.0",
+                "edited": false,
+                "newerShipped": false,
+                "updatePending": true,
+                "editable": true
+            },
+            {
+                "target": "businessOwner",
+                "file": "topdesk-business-owner.json",
+                "id": "stackiq-topdesk-business-owner",
+                "name": "TOPdesk CMDB export to business owner identity",
+                "version": "1.1.0",
+                "description": "The application owner (Applicatie Eigenaar (Persoon)); the value may be a function instead of a name and is used as the display name either way. The import resolves it in Nextcloud Contacts and links a contactPerson of the municipality as usage.businessOwner, with the owner's function as its role. It matches on the employee number when the row has one, else on the e-mail address, else on the exact display name. The e-mail and employee number columns are optional; rename their source here when the export names them differently. No other person column is read.",
+                "fieldMappings": [
+                    {
+                        "source": "Applicatie Eigenaar (Persoon)",
+                        "target": "name",
+                        "required": true,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Applicatie Eigenaar (Functie)",
+                        "target": "role",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Applicatie Eigenaar (E-mail)",
+                        "target": "email",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Applicatie Eigenaar (Personeelsnummer)",
+                        "target": "employeeNumber",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    }
+                ],
+                "defaults": [],
+                "createOnlyDefaults": [],
+                "createOnlyFields": [],
+                "neverWritten": [],
+                "source": "file",
+                "packId": null,
+                "storedVersion": null,
+                "shippedVersion": "1.1.0",
+                "edited": null,
+                "newerShipped": false,
+                "updatePending": false,
+                "editable": true
+            }
+        ],
+        "openRegisterPacks": true
+    },
+    "loaded": {
+        "profile": {
+            "id": "topdesk-cmdb",
+            "name": "TOPdesk CMDB export",
+            "version": "1.0.0",
+            "profileFile": "topdesk-profile.json",
+            "sheets": [
+                {
+                    "name": "Onbeh Applicaties CMDB",
+                    "constants": {
+                        "Beheer": "Beheer geregeld: nee"
+                    },
+                    "absentColumns": [
+                        "Nickname",
+                        "Applicatie Eigenaar (E-mail)",
+                        "Applicatie Eigenaar (Personeelsnummer)"
+                    ]
+                },
+                {
+                    "name": "Beheerde Applicaties CMDB",
+                    "constants": {
+                        "Beheer": "Beheer geregeld: ja"
+                    },
+                    "absentColumns": [
+                        "Applicatie Eigenaar (E-mail)",
+                        "Applicatie Eigenaar (Personeelsnummer)"
+                    ]
+                }
+            ],
+            "archiveSheet": "Gearchiveerde Applicaties",
+            "sheetPrecedence": [
+                "Beheerde Applicaties CMDB",
+                "Onbeh Applicaties CMDB"
+            ],
+            "keyColumn": "APPID",
+            "nameColumn": "Applicatie Naam",
+            "requiredColumns": [
+                "APPID",
+                "Applicatie Naam"
+            ],
+            "dateColumns": [
+                "Datum",
+                "Referentie datum wijziging",
+                "End-of-Life Functioneel"
+            ],
+            "idColumns": [
+                "APPID"
+            ],
+            "emptyValues": {
+                "BNN Classificatie": [
+                    "NB"
+                ]
+            },
+            "externalKeyPrefix": "topdesk",
+            "missingRecords": [
+                "keep",
+                "archive"
+            ]
+        },
+        "packs": [
+            {
+                "target": "module",
+                "file": "topdesk-module.json",
+                "id": "stackiq-topdesk-module",
+                "name": "TOPdesk CMDB export to stackiq module",
+                "version": "2.0.1",
+                "description": "One application row of a CMDB sheet becomes a stackiq module. A mapping marked required that fails skips the row; any other failing mapping drops that field with a warning. Nickname and Roepnaam both feed shortDescription; Roepnaam wins when both are filled. Applicatiesoort is kept as is in applicationType; only its SaaS/PaaS/IaaS/on-premises values also set the hosting model, every other kind leaves that empty without a warning.",
+                "fieldMappings": [
+                    {
+                        "source": "Applicatie Naam",
+                        "target": "name",
+                        "required": true,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "APPID",
+                        "target": "externalNumber",
+                        "required": true,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Applicatie Code",
+                        "target": "externalId",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Nickname",
+                        "target": "shortDescription",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Roepnaam",
+                        "target": "shortDescription",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Functionele Omschrijving",
+                        "target": "longDescription",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Applicatiesoort",
+                        "target": "applicationType",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Applicatiesoort",
+                        "target": "cloudDienstverleningsmodel",
+                        "required": false,
+                        "transform": {
+                            "type": "lookup",
+                            "map": {
+                                "Saas": [
+                                    "SaaS"
+                                ],
+                                "SaaS": [
+                                    "SaaS"
+                                ],
+                                "SAAS": [
+                                    "SaaS"
+                                ],
+                                "saas": [
+                                    "SaaS"
+                                ],
+                                "Paas": [
+                                    "PaaS"
+                                ],
+                                "PaaS": [
+                                    "PaaS"
+                                ],
+                                "PAAS": [
+                                    "PaaS"
+                                ],
+                                "Iaas": [
+                                    "IaaS"
+                                ],
+                                "IaaS": [
+                                    "IaaS"
+                                ],
+                                "IAAS": [
+                                    "IaaS"
+                                ],
+                                "On-premise": [
+                                    "On-premises (self-managed)"
+                                ],
+                                "On-premises": [
+                                    "On-premises (self-managed)"
+                                ],
+                                "On premise": [
+                                    "On-premises (self-managed)"
+                                ],
+                                "Cloud": [
+                                    "SaaS"
+                                ]
+                            },
+                            "default": null
+                        }
+                    },
+                    {
+                        "source": "BNN Classificatie",
+                        "target": "bbnLevel",
+                        "required": false,
+                        "transform": {
+                            "type": "lookup",
+                            "map": {
+                                "BBN1": "BBN1",
+                                "BBN 1": "BBN1",
+                                "bbn1": "BBN1",
+                                "bbn 1": "BBN1",
+                                "BNN1": "BBN1",
+                                "BNN 1": "BBN1",
+                                "BBN2": "BBN2",
+                                "BBN 2": "BBN2",
+                                "bbn2": "BBN2",
+                                "bbn 2": "BBN2",
+                                "BNN2": "BBN2",
+                                "BNN 2": "BBN2",
+                                "BBN3": "BBN3",
+                                "BBN 3": "BBN3",
+                                "bbn3": "BBN3",
+                                "bbn 3": "BBN3",
+                                "BNN3": "BBN3",
+                                "BNN 3": "BBN3",
+                                "1": "BBN1",
+                                "2": "BBN2",
+                                "2+": "BBN2+",
+                                "3": "BBN3",
+                                "BBN2+": "BBN2+",
+                                "BBN 2+": "BBN2+",
+                                "BNN2+": "BBN2+",
+                                "BNN 2+": "BBN2+"
+                            }
+                        }
+                    },
+                    {
+                        "source": "Datum",
+                        "target": "externalCreatedAt",
+                        "required": false,
+                        "transform": {
+                            "type": "date",
+                            "sourceFormat": "!Y-m-d",
+                            "targetFormat": "Y-m-d"
+                        }
+                    },
+                    {
+                        "source": "Referentie datum wijziging",
+                        "target": "externalModifiedAt",
+                        "required": false,
+                        "transform": {
+                            "type": "date",
+                            "sourceFormat": "!Y-m-d",
+                            "targetFormat": "Y-m-d"
+                        }
+                    }
+                ],
+                "defaults": [],
+                "createOnlyDefaults": {
+                    "type": "Application"
+                },
+                "createOnlyFields": [],
+                "neverWritten": [
+                    "publicationDate",
+                    "depublicationDate"
+                ],
+                "source": "openregister",
+                "packId": 40,
+                "storedVersion": "2.0.1",
+                "shippedVersion": "1.0.0",
+                "edited": true,
+                "newerShipped": false,
+                "updatePending": false,
+                "editable": true
+            },
+            {
+                "target": "manufacturer",
+                "file": "topdesk-manufacturer.json",
+                "id": "stackiq-topdesk-manufacturer",
+                "name": "TOPdesk CMDB export to stackiq supplier organisation",
+                "version": "1.0.0",
+                "description": "The Vendor column (the maker of the software) becomes one organisation of type Supplier per distinct name, registered as a Supplier so the public catalogue can show it as the module's provider. An empty Vendor means the row has no provider. Leverancier and Hostingpartij are not read.",
+                "fieldMappings": [
+                    {
+                        "source": "Vendor",
+                        "target": "name",
+                        "required": true,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    }
+                ],
+                "defaults": {
+                    "type": "Supplier",
+                    "status": "Active",
+                    "registeredBy": "Supplier"
+                },
+                "createOnlyDefaults": [],
+                "createOnlyFields": [],
+                "neverWritten": [],
+                "source": "openregister",
+                "packId": 42,
+                "storedVersion": "1.0.0",
+                "shippedVersion": "1.0.0",
+                "edited": false,
+                "newerShipped": false,
+                "updatePending": false,
+                "editable": true
+            },
+            {
+                "target": "municipality",
+                "file": "topdesk-municipality.json",
+                "id": "stackiq-topdesk-municipality",
+                "name": "CMDB import options to stackiq municipality",
+                "version": "1.0.0",
+                "description": "Maps the import options row (municipalityName), not a sheet row, to the consuming organisation of type Municipality.",
+                "fieldMappings": [
+                    {
+                        "source": "municipalityName",
+                        "target": "name",
+                        "required": true,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    }
+                ],
+                "defaults": {
+                    "type": "Municipality",
+                    "status": "Active"
+                },
+                "createOnlyDefaults": [],
+                "createOnlyFields": [],
+                "neverWritten": [],
+                "source": "file",
+                "packId": null,
+                "storedVersion": null,
+                "shippedVersion": "1.0.0",
+                "edited": null,
+                "newerShipped": false,
+                "updatePending": false,
+                "editable": false
+            },
+            {
+                "target": "usage",
+                "file": "topdesk-usage.json",
+                "id": "stackiq-topdesk-usage",
+                "name": "TOPdesk CMDB export to stackiq usage",
+                "version": "1.0.0",
+                "description": "The usage that links the application to the municipality. The internal note records whether maintenance is arranged (the sheet the row came from), the cluster and the owner's department. An unknown status or TIME value drops the field with a warning.",
+                "fieldMappings": [
+                    {
+                        "source": "Applicatie Status",
+                        "target": "status",
+                        "required": false,
+                        "transform": {
+                            "type": "lookup",
+                            "map": {
+                                "In productie": "In production",
+                                "In voorraad": "Planned",
+                                "In ontwikkeling": "Acquisition",
+                                "Uit te faseren": "To be phased out",
+                                "Uitgefaseerd": "Phased out",
+                                "Moet verwijderd worden": "To be phased out",
+                                "Verwijderd": "Phased out",
+                                "Besteld": "Acquisition",
+                                "Wordt getest": "Acquisition",
+                                "Stand-by voor continuïteit": "In production"
+                            }
+                        }
+                    },
+                    {
+                        "source": "Classificatie",
+                        "target": "timeClassification",
+                        "required": false,
+                        "transform": {
+                            "type": "lookup",
+                            "map": {
+                                "Tolerate": "Tolerate",
+                                "Tolereren": "Tolerate",
+                                "Invest": "Invest",
+                                "Investeren": "Invest",
+                                "Migrate": "Migrate",
+                                "Migreren": "Migrate",
+                                "Eliminate": "Eliminate",
+                                "Elimineren": "Eliminate",
+                                "1. Tolereren (wordt ingelezen)": "Tolerate"
+                            }
+                        }
+                    },
+                    {
+                        "source": "End-of-Life Functioneel",
+                        "target": "startDateOutPhased",
+                        "required": false,
+                        "transform": {
+                            "type": "date",
+                            "sourceFormat": "!Y-m-d",
+                            "targetFormat": "Y-m-d"
+                        }
+                    },
+                    {
+                        "source": "Beheer",
+                        "target": "interneAnnotation",
+                        "required": false,
+                        "transform": {
+                            "type": "concat",
+                            "fields": [
+                                "Cluster",
+                                "Applicatie Eigenaar (Afdeling)"
+                            ],
+                            "separator": " / "
+                        }
+                    }
+                ],
+                "defaults": [],
+                "createOnlyDefaults": [],
+                "createOnlyFields": [
+                    "interneAnnotation",
+                    "timeClassification"
+                ],
+                "neverWritten": [],
+                "source": "openregister",
+                "packId": 41,
+                "storedVersion": "1.0.0",
+                "shippedVersion": "1.0.0",
+                "edited": false,
+                "newerShipped": false,
+                "updatePending": false,
+                "editable": true
+            },
+            {
+                "target": "businessOwner",
+                "file": "topdesk-business-owner.json",
+                "id": "stackiq-topdesk-business-owner",
+                "name": "TOPdesk CMDB export to business owner identity",
+                "version": "1.1.0",
+                "description": "The application owner (Applicatie Eigenaar (Persoon)); the value may be a function instead of a name and is used as the display name either way. The import resolves it in Nextcloud Contacts and links a contactPerson of the municipality as usage.businessOwner, with the owner's function as its role. It matches on the employee number when the row has one, else on the e-mail address, else on the exact display name. The e-mail and employee number columns are optional; rename their source here when the export names them differently. No other person column is read.",
+                "fieldMappings": [
+                    {
+                        "source": "Applicatie Eigenaar (Persoon)",
+                        "target": "name",
+                        "required": true,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Applicatie Eigenaar (Functie)",
+                        "target": "role",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Applicatie Eigenaar (E-mail)",
+                        "target": "email",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    },
+                    {
+                        "source": "Applicatie Eigenaar (Personeelsnummer)",
+                        "target": "employeeNumber",
+                        "required": false,
+                        "transform": {
+                            "type": "trim"
+                        }
+                    }
+                ],
+                "defaults": [],
+                "createOnlyDefaults": [],
+                "createOnlyFields": [],
+                "neverWritten": [],
+                "source": "openregister",
+                "packId": 43,
+                "storedVersion": "1.1.0",
+                "shippedVersion": "1.1.0",
+                "edited": false,
+                "newerShipped": false,
+                "updatePending": false,
+                "editable": true
+            }
+        ],
+        "openRegisterPacks": true
+    },
+    "invalid stored": {
+        "code": "MAPPING_UNAVAILABLE",
+        "message": "OpenRegister migration pack stackiq-topdesk-usage (id 40) is invalid: fieldMappings[0].transform.type must be one of: trim, date, bool-map, concat, lookup, const (got 'uppercase')",
+        "details": {
+            "pack": "stackiq-topdesk-usage",
+            "packId": 40
+        }
+    },
+    "rule broken stored": {
+        "code": "MAPPING_UNAVAILABLE",
+        "message": "OpenRegister migration pack stackiq-topdesk-module (id 40) breaks a rule of the CMDB import: \"externalKey\" is set by the import and cannot be mapped",
+        "details": {
+            "pack": "stackiq-topdesk-module",
+            "packId": 40
+        }
+    }
+}

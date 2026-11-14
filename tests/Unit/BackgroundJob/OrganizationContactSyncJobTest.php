@@ -29,15 +29,14 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\BackgroundJob;
 
 use OCA\Stackiq\BackgroundJob\OrganizationContactSyncJob;
+use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
 use OCA\Stackiq\Service\OrganizationSyncService;
+use OCA\Stackiq\Service\Settings\CronjobSettings;
 use OCA\Stackiq\Service\SettingsService;
 use OCA\Stackiq\Service\StackiqContactSyncService;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\IAppConfig;
-use OCP\IGroupManager;
-use OCP\IL10N;
-use OCP\IRequest;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -88,15 +87,39 @@ class OrganizationContactSyncJobTest extends TestCase {
 	}//end testAnEnabledOrUnsavedJobSyncs()
 
 	/**
+	 * The sync writes as stackiq itself, so the contact person check lets them through,
+	 * and the mark is gone once the job returns.
+	 *
+	 * @return void
+	 */
+	public function testTheSyncRunsAsASystemWrite(): void {
+		$store = [];
+		$active = null;
+		$sync = $this->createMock(OrganizationSyncService::class);
+		$sync->method('performScheduledSync')->willReturnCallback(
+			function () use (&$active): void {
+				$active = (new SystemContactWrites())->isActive();
+			}
+		);
+		$contacts = $this->createMock(StackiqContactSyncService::class);
+		$contacts->method('isAvailable')->willReturn(false);
+
+		$this->runJob($sync, $contacts, $this->settings($store));
+
+		$this->assertTrue($active);
+		$this->assertFalse((new SystemContactWrites())->isActive());
+	}//end testTheSyncRunsAsASystemWrite()
+
+	/**
 	 * Run the job's protected run() once.
 	 *
 	 * @param OrganizationSyncService $sync The sync service double.
 	 * @param StackiqContactSyncService $contacts The contacts bridge double.
-	 * @param SettingsService $settings The real settings service.
+	 * @param CronjobSettings $settings The real cronjob settings.
 	 *
 	 * @return void
 	 */
-	private function runJob(OrganizationSyncService $sync, StackiqContactSyncService $contacts, SettingsService $settings): void {
+	private function runJob(OrganizationSyncService $sync, StackiqContactSyncService $contacts, CronjobSettings $settings): void {
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturn(['openregister']);
 
@@ -104,6 +127,7 @@ class OrganizationContactSyncJobTest extends TestCase {
 			$this->createMock(ITimeFactory::class),
 			$sync,
 			$contacts,
+			$this->createMock(SettingsService::class),
 			$settings,
 			$appManager,
 			$this->createMock(LoggerInterface::class)
@@ -114,13 +138,13 @@ class OrganizationContactSyncJobTest extends TestCase {
 	}//end runJob()
 
 	/**
-	 * A real SettingsService over an in-memory app config.
+	 * Real cronjob settings over an in-memory app config.
 	 *
 	 * @param array $store Reference to the backing key/value store.
 	 *
-	 * @return SettingsService
+	 * @return CronjobSettings
 	 */
-	private function settings(array &$store): SettingsService {
+	private function settings(array &$store): CronjobSettings {
 		$config = $this->createMock(IAppConfig::class);
 		$config->method('getValueString')->willReturnCallback(
 			function (string $app, string $key, string $default = '') use (&$store): string {
@@ -134,14 +158,11 @@ class OrganizationContactSyncJobTest extends TestCase {
 			}
 		);
 
-		return new SettingsService(
+		return new CronjobSettings(
 			config: $config,
-			request: $this->createMock(IRequest::class),
-			container: $this->createMock(ContainerInterface::class),
 			appManager: $this->createMock(IAppManager::class),
-			logger: $this->createMock(LoggerInterface::class),
-			groupManager: $this->createMock(IGroupManager::class),
-			l10n: $this->createMock(IL10N::class)
+			container: $this->createMock(ContainerInterface::class),
+			logger: $this->createMock(LoggerInterface::class)
 		);
 	}//end settings()
 }//end class

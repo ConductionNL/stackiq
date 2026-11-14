@@ -61,6 +61,44 @@ import {
 	isDetailsStepValid,
 } from '../utils/suiteWizard.js'
 
+/**
+ * Read the app settings when the store has none yet and can fetch them.
+ *
+ * @return {Promise<void>}
+ */
+async function readMissingSettings() {
+	if (!objectStore.settings && typeof objectStore.fetchSettings === 'function') {
+		await objectStore.fetchSettings()
+	}
+}
+
+/**
+ * The voorzieningen register id from the settings.
+ *
+ * @return {string|number|undefined} The register id, if configured.
+ */
+function voorzieningenRegisterId() {
+	const voorzieningenConfig =
+		objectStore.settings?.voorzieningen
+		|| objectStore.settings?.voorzieningenConfig
+		|| {}
+	return voorzieningenConfig.register
+}
+
+/**
+ * Whether the `suite` type can and must still be registered.
+ *
+ * @param {string|number|undefined} registerId The voorzieningen register id.
+ * @return {boolean} True when the store can register it, there is a register and the type is unknown.
+ */
+function canRegisterSuite(registerId) {
+	return Boolean(
+		typeof objectStore.registerObjectType === 'function'
+		&& registerId
+		&& !objectStore.objectTypeRegistry?.suite,
+	)
+}
+
 export default {
 	name: 'SuiteWizardDialog',
 
@@ -147,22 +185,9 @@ export default {
 		 * @spec openspec/specs/suite-wizard/spec.md#requirement-the-system-shall-register-the-suite-and-module-object-types-by-schema-slug
 		 */
 		async ensureSuiteTypeRegistered() {
-			if (
-				!objectStore.settings
-				&& typeof objectStore.fetchSettings === 'function'
-			) {
-				await objectStore.fetchSettings()
-			}
-			const voorzieningenConfig =
-				objectStore.settings?.voorzieningen
-				|| objectStore.settings?.voorzieningenConfig
-				|| {}
-			const registerId = voorzieningenConfig.register
-			if (
-				typeof objectStore.registerObjectType === 'function'
-				&& registerId
-				&& !objectStore.objectTypeRegistry?.suite
-			) {
+			await readMissingSettings()
+			const registerId = voorzieningenRegisterId()
+			if (canRegisterSuite(registerId)) {
 				objectStore.registerObjectType('suite', 'suite', registerId, {
 					registerSlug: 'stackiq',
 					schemaSlug: 'suite',

@@ -1,0 +1,169 @@
+{
+    "not configured": {
+        "queries": [],
+        "warnings": [
+            [
+                "FacetService: voorzieningen register/schema not configured",
+                {
+                    "schema": "module"
+                }
+            ]
+        ],
+        "totalMatched": 0
+    },
+    "no register": {
+        "queries": [],
+        "warnings": [
+            [
+                "FacetService: voorzieningen register/schema not configured",
+                {
+                    "schema": "module"
+                }
+            ]
+        ],
+        "totalMatched": 0
+    },
+    "one page": {
+        "queries": [
+            {
+                "@self": {
+                    "register": 1,
+                    "schema": 2
+                },
+                "_limit": 1000,
+                "_page": 1
+            }
+        ],
+        "warnings": [],
+        "totalMatched": 3
+    },
+    "organisation and search": {
+        "queries": [
+            {
+                "@self": {
+                    "register": 1,
+                    "schema": 2,
+                    "organisation": "org-1"
+                },
+                "_search": "word",
+                "_limit": 1000,
+                "_page": 1
+            }
+        ],
+        "warnings": [],
+        "totalMatched": 3
+    },
+    "full pages until the last": {
+        "queries": [
+            {
+                "@self": {
+                    "register": 1,
+                    "schema": 2
+                },
+                "_limit": 1000,
+                "_page": 1
+            },
+            {
+                "@self": {
+                    "register": 1,
+                    "schema": 2
+                },
+                "_limit": 1000,
+                "_page": 2
+            },
+            {
+                "@self": {
+                    "register": 1,
+                    "schema": 2
+                },
+                "_limit": 1000,
+                "_page": 3
+            }
+        ],
+        "warnings": [],
+        "totalMatched": 2007
+    },
+    "full page that is the last": {
+        "queries": [
+            {
+                "@self": {
+                    "register": 1,
+                    "schema": 2
+                },
+                "_limit": 1000,
+                "_page": 1
+            }
+        ],
+        "warnings": [],
+        "totalMatched": 1000
+    },
+    "past the ceiling": {
+        "queries": [
+            {
+                "@self": {
+                    "register": 1,
+                    "schema": 2
+                },
+                "_limit": 1000,
+                "_page": 1
+            },
+            {
+                "@self": {
+                    "register": 1,
+                    "schema": 2
+                },
+                "_limit": 1000,
+                "_page": 2
+            },
+            {
+                "@self": {
+                    "register": 1,
+                    "schema": 2
+                },
+                "_limit": 1000,
+                "_page": 3
+            },
+            {
+                "@self": {
+                    "register": 1,
+                    "schema": 2
+                },
+                "_limit": 1000,
+                "_page": 4
+            },
+            {
+                "@self": {
+                    "register": 1,
+                    "schema": 2
+                },
+                "_limit": 1000,
+                "_page": 5
+            }
+        ],
+        "warnings": [
+            [
+                "FacetService: base object set exceeded the documented paging ceiling — facet counts are computed over a bounded subset, not the full register",
+                {
+                    "schema": "module",
+                    "maxPages": 5,
+                    "limitPerPage": 1000
+                }
+            ]
+        ],
+        "totalMatched": 5000
+    },
+    "schema catalogService": {
+        "queries": [
+            {
+                "@self": {
+                    "register": 1,
+                    "schema": 3
+                },
+                "_limit": 1000,
+                "_page": 1
+            }
+        ],
+        "warnings": [],
+        "totalMatched": 3
+    }
+}

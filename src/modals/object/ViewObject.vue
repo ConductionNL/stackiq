@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 /** * @file ViewObject.vue * @module Modals/Object * @author Your Name * @copyright
 2024 Your Organization * @license EUPL-1.2
 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12 * @version 1.0.0 */
@@ -1913,6 +1917,7 @@ import { catalogStore, navigationStore, objectStore } from '../../store/store.js
 </template>
 
 <script>
+import { getRequestToken } from '@nextcloud/auth'
 import {
 	NcActionButton,
 	NcActions,
@@ -1960,6 +1965,67 @@ import Upload from 'vue-material-design-icons/Upload.vue'
 import PaginationComponent from '../../components/PaginationComponent.vue'
 import PublishedIcon from '../../components/PublishedIcon.vue'
 import { getTheme } from '../../services/getTheme.js'
+import {
+	formatForDisplay,
+	inputValueFor,
+	isTimeString,
+	pickerDateFor,
+	startsLikeDate,
+	themeLabel,
+} from './dateTimeDisplay.js'
+import {
+	dateTimeFormatOf,
+	dateTimeToStorage,
+	pickerValueToStorage,
+} from './dateTimeStorage.js'
+import { FILE_ACTIONS } from './objectFileActions.js'
+import {
+	assertSaved,
+	createEndpoint,
+	editableProperties,
+	formDataOf,
+	jsonRequest,
+	themeIds,
+	updateEndpoint,
+} from './objectFormData.js'
+import {
+	lockDescription,
+	objectDisplayName,
+	objectSchemaName,
+	referenceTitle,
+	timestampRows,
+} from './objectMetadata.js'
+import {
+	cleanedFormData,
+	objectPayload,
+	referencedSchemaProperties,
+	schemaPropertiesById,
+	withSchemaDefaults,
+} from './objectPayload.js'
+import {
+	orderedPropertyRows,
+	schemaDefaultValue,
+	schemaPropertyRows,
+} from './objectPropertyRows.js'
+import {
+	editabilityWarning,
+	isControlClick,
+	isEditable,
+	isImmutableByName,
+	schemaLockFlags,
+	themeIdList,
+} from './propertyEditing.js'
+import {
+	inputComponentOf,
+	inputTypeOf,
+	pickerTypeOf,
+} from './propertyInputKind.js'
+import {
+	isValidDateString,
+	isValidPropertyValue,
+	presenceClass,
+	propertyErrorMessage,
+} from './propertyValidation.js'
 
 import '@toast-ui/editor/dist/toastui-editor.css'
 
@@ -2086,121 +2152,12 @@ export default {
 			const objectData = this.currentObject || {}
 			const schemaProperties = this.getSchemaProperties()
 
-			const propertiesWithOrder = []
-			const propertiesWithoutOrder = []
-
-			// First, add all schema properties in their defined order
-			for (const [schemaKey, schemaProperty] of Object.entries(
-				schemaProperties,
-			)) {
-				let propertyValue
-				if (Object.hasOwn(objectData, schemaKey)) {
-					// Property exists in object, use its value
-					propertyValue = objectData[schemaKey]
-				} else {
-					// Property doesn't exist in object, use appropriate default value
-					let defaultValue = ''
-					switch (schemaProperty.type) {
-						case 'string':
-							defaultValue = schemaProperty.const || ''
-							break
-						case 'number':
-						case 'integer':
-							defaultValue = 0
-							break
-						case 'boolean':
-							defaultValue = false
-							break
-						case 'array':
-							defaultValue = []
-							break
-						case 'object':
-							defaultValue = {}
-							break
-						default:
-							defaultValue = ''
-					}
-					propertyValue = defaultValue
-				}
-
-				const propertyData = [schemaKey, propertyValue, schemaProperty]
-
-				// Check if property has an order value
-				if (
-					schemaProperty.order !== undefined
-					&& schemaProperty.order !== null
-				) {
-					propertiesWithOrder.push(propertyData)
-				} else {
-					propertiesWithoutOrder.push(propertyData)
-				}
-			}
-
-			// Then, add any additional properties from the object that aren't in the schema
-			const additionalProperties = []
-			for (const [objectKey, objectValue] of Object.entries(objectData)) {
-				// Skip metadata and properties already handled by schema
-				// Also skip properties that have been marked for deletion (undefined in formData)
-				if (
-					objectKey !== '@self'
-					&& objectKey !== 'id'
-					&& !Object.hasOwn(schemaProperties, objectKey)
-					&& !(this.formData[objectKey] === undefined)
-				) {
-					additionalProperties.push([objectKey, objectValue, null])
-				}
-			}
-
-			// Sort properties with order: ascending by order value, then alphabetically by key
-			propertiesWithOrder.sort((a, b) => {
-				const [keyA, , schemaA] = a
-				const [keyB, , schemaB] = b
-
-				// First sort by order (ascending)
-				const orderA = schemaA?.order || 0
-				const orderB = schemaB?.order || 0
-
-				if (orderA !== orderB) {
-					return orderA - orderB // Ascending order
-				}
-
-				// If same order, sort alphabetically
-				return keyA.localeCompare(keyB)
-			})
-
-			// Sort properties without order alphabetically by key
-			propertiesWithoutOrder.sort((a, b) => {
-				const [keyA] = a
-				const [keyB] = b
-				return keyA.localeCompare(keyB)
-			})
-
-			// Sort additional properties alphabetically for consistency
-			additionalProperties.sort(([keyA], [keyB]) => keyA.localeCompare(keyB))
-
-			// If we have no properties to show (new object with no schema), provide some basic ones
-			if (
-				propertiesWithoutOrder.length === 0
-				&& propertiesWithOrder.length === 0
-				&& additionalProperties.length === 0
-			) {
-				return [
-					['title', ''],
-					['description', ''],
-					['omschrijving', ''],
-					['category', ''],
-					['status', 'draft'],
-				]
-			}
-
-			// Combine: properties with order first (descending order), then properties without order, then additional properties
-			const combinedProperties = [
-				...propertiesWithOrder.map(([key, value]) => [key, value]),
-				...propertiesWithoutOrder.map(([key, value]) => [key, value]),
-				...additionalProperties,
-			]
-
-			return combinedProperties
+			// The schema properties in their defined order, then the object's own;
+			// basic rows when there are none (new object with no schema)
+			return orderedPropertyRows(
+				schemaPropertyRows(objectData, schemaProperties),
+				this.additionalPropertyRows(objectData, schemaProperties),
+			)
 		},
 
 		/**
@@ -2253,98 +2210,17 @@ export default {
 			if (!this.currentObject) return []
 
 			const obj = this.currentObject
-			const metadata = []
-
-			// ID
-			metadata.push(['ID', obj.id || 'Not set'])
-
-			// Version
-			metadata.push(['Version', obj['@self']?.version || 'Not set'])
-
-			// Register
-			const register = obj['@self']?.register
-			let registerDisplay = 'Not set'
-			if (register) {
-				if (typeof register === 'object') {
-					registerDisplay =
-						register.title || register.name || register.id || register
-				} else {
-					// Try to find the register title from available registers
-					const availableRegister = objectStore.availableRegisters.find(
-						(r) => r.id === register,
-					)
-					registerDisplay = availableRegister?.title || register
-				}
-			}
-			metadata.push(['Register', registerDisplay])
-
-			// Schema
-			const schema = obj['@self']?.schema
-			let schemaDisplay = 'Not set'
-			if (schema) {
-				if (typeof schema === 'object') {
-					schemaDisplay =
-						schema.title || schema.name || schema.id || schema
-				} else {
-					// Try to find the schema title from available schemas
-					const availableSchema = objectStore.availableSchemas.find(
-						(s) => s.id === schema,
-					)
-					schemaDisplay = availableSchema?.title || schema
-				}
-			}
-			metadata.push(['Schema', schemaDisplay])
-
-			// Locked
-			const locked = obj['@self']?.locked
-			let lockedDisplay = 'Not locked'
-			if (locked) {
-				if (typeof locked === 'object') {
-					const lockedBy = locked.lockedBy || 'Unknown user'
-					const lockedAt = locked.lockedAt
-						? new Date(locked.lockedAt).toLocaleString()
-						: 'Unknown time'
-					const process = locked.process ? ` (${locked.process})` : ''
-					lockedDisplay = `Locked by ${lockedBy} at ${lockedAt}${process}`
-				} else {
-					lockedDisplay = 'Locked'
-				}
-			}
-			metadata.push(['Locked', lockedDisplay])
-
-			// Created
-			metadata.push([
-				'Created',
-				obj['@self']?.created
-					? new Date(obj['@self'].created).toLocaleString()
-					: 'Not set',
-			])
-
-			// Updated
-			metadata.push([
-				'Updated',
-				obj['@self']?.updated
-					? new Date(obj['@self'].updated).toLocaleString()
-					: 'Not set',
-			])
-
-			// Published
-			metadata.push([
-				'Published',
-				obj['@self']?.published
-					? new Date(obj['@self'].published).toLocaleString()
-					: 'Not published',
-			])
-
-			// Depublished
-			metadata.push([
-				'Depublished',
-				obj['@self']?.depublished
-					? new Date(obj['@self'].depublished).toLocaleString()
-					: 'Not depublished',
-			])
-
-			return metadata
+			const self = obj['@self']
+			const registers = objectStore.availableRegisters
+			const schemas = objectStore.availableSchemas
+			return [
+				['ID', obj.id || 'Not set'],
+				['Version', self?.version || 'Not set'],
+				['Register', referenceTitle(self?.register, registers)],
+				['Schema', referenceTitle(self?.schema, schemas)],
+				['Locked', lockDescription(self?.locked)],
+				...timestampRows(self),
+			]
 		},
 
 		// Files tab computed properties
@@ -2688,41 +2564,8 @@ export default {
 
 			if (!this.currentObject) return 'View Object'
 
-			const name =
-				this.currentObject['@self']?.name
-				|| this.currentObject.name
-				|| this.currentObject.title
-				|| this.currentObject.id
-				|| 'Untitled'
-
-			// Try to get schema name from the object itself
-			let schemaName = 'Publication'
-
-			// Check if schema is an object with title/name properties
-			if (
-				this.currentObject.schema
-				&& typeof this.currentObject.schema === 'object'
-			) {
-				schemaName =
-					this.currentObject.schema.title
-					|| this.currentObject.schema.name
-					|| this.currentObject.schema.id
-					|| 'Publication'
-			} else if (
-				this.currentObject['@self']?.schema
-				&& typeof this.currentObject['@self'].schema === 'object'
-			) {
-				// Check if @self.schema is an object with title/name properties
-				schemaName =
-					this.currentObject['@self'].schema.title
-					|| this.currentObject['@self'].schema.name
-					|| this.currentObject['@self'].schema.id
-					|| 'Publication'
-			} else if (typeof this.currentObject['@self']?.schema === 'string') {
-				// If it's a string, use it directly
-				schemaName = this.currentObject['@self'].schema
-			}
-
+			const name = objectDisplayName(this.currentObject)
+			const schemaName = objectSchemaName(this.currentObject)
 			return `${name} (${schemaName})`
 		},
 
@@ -2780,76 +2623,69 @@ export default {
 		 */
 		initializeData() {
 			if (!this.currentObject) {
-				// For new objects, initialize with empty form data and auto-select if possible
-				this.formData = {}
-				this.jsonData = JSON.stringify({}, null, 2)
-
-				// Auto-select catalog if there's only one
-				const catalogs = objectStore.getCollection('catalog').results
-				if (catalogs.length === 1) {
-					this.selectedCatalog = {
-						id: catalogs[0].id,
-						label: catalogs[0].title,
-					}
-
-					// Use nextTick to ensure the computed properties are updated
-					this.$nextTick(() => {
-						// Auto-select register if there's only one
-						if (this.registerOptions.length === 1) {
-							this.selectedRegister = this.registerOptions[0]
-
-							this.$nextTick(() => {
-								// Auto-select schema if there's only one
-								if (this.schemaOptions.length === 1) {
-									this.selectedSchema = this.schemaOptions[0]
-								}
-							})
-						}
-					})
-				}
-
+				this.initializeNewObject()
 				return
 			}
 
-			const initial = this.currentObject
-			const filtered = {}
-			for (const key in initial) {
-				if (key !== '@self' && key !== 'id') {
-					// Ensure we have a safe copy of the value
-					try {
-						filtered[key] = JSON.parse(JSON.stringify(initial[key]))
-					} catch (e) {
-						// If JSON serialization fails, use the original value
-						filtered[key] = initial[key]
-					}
-				}
-			}
+			const filtered = editableProperties(this.currentObject)
 
 			// Ensure formData is always an object, never an array
 			this.formData = {}
-			// Create a safe copy for formData
-			try {
-				const parsedData = JSON.parse(JSON.stringify(filtered))
-				// Explicitly ensure it's an object
-				if (typeof parsedData === 'object' && !Array.isArray(parsedData)) {
-					this.formData = parsedData
-				} else {
-					this.formData = { ...filtered }
-				}
-			} catch (e) {
-				// Fallback if JSON serialization fails
-				this.formData = { ...filtered }
-			}
+			this.formData = formDataOf(filtered)
 
 			// Ensure themes are properly initialized as an array of IDs
-			if (this.formData.themes && Array.isArray(this.formData.themes)) {
-				// Convert any theme objects back to IDs if needed
-				this.formData.themes = this.formData.themes.map((theme) =>
-					typeof theme === 'object' ? theme.id : theme,
-				)
+			if (Array.isArray(this.formData.themes)) {
+				this.formData.themes = themeIds(this.formData.themes)
 			}
 
 			this.jsonData = JSON.stringify(filtered, null, 2)
+		},
+
+		/**
+		 * Empty form data for a new object, with the catalog selected when
+		 * there is only one.
+		 *
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		initializeNewObject() {
+			this.formData = {}
+			this.jsonData = JSON.stringify({}, null, 2)
+
+			// Auto-select catalog if there's only one
+			const catalogs = objectStore.getCollection('catalog').results
+			if (catalogs.length !== 1) {
+				return
+			}
+			this.selectedCatalog = {
+				id: catalogs[0].id,
+				label: catalogs[0].title,
+			}
+			// Use nextTick to ensure the computed properties are updated
+			this.$nextTick(() => this.autoSelectRegister())
+		},
+
+		/**
+		 * Selects the register when there is only one, then the schema.
+		 *
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		autoSelectRegister() {
+			if (this.registerOptions.length !== 1) {
+				return
+			}
+			this.selectedRegister = this.registerOptions[0]
+			this.$nextTick(() => this.autoSelectSchema())
+		},
+
+		/**
+		 * Selects the schema when there is only one.
+		 *
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		autoSelectSchema() {
+			if (this.schemaOptions.length === 1) {
+				this.selectedSchema = this.schemaOptions[0]
+			}
 		},
 
 		/**
@@ -2860,88 +2696,7 @@ export default {
 			this.error = null
 
 			try {
-				const isCreating = this.isNewObject
-
-				// For new objects, validate we have the required selections
-				if (
-					isCreating
-					&& (!this.selectedSchema
-						|| !this.selectedRegister
-						|| !this.selectedCatalog)
-				) {
-					this.error =
-						'Please select catalog, register, and schema before saving'
-					return
-				}
-
-				let objectData
-				let endpoint
-				let method
-
-				if (isCreating) {
-					// Create a new object using openregister API
-					// For new objects, build complete object with all schema properties
-					objectData = this.buildCompleteObjectData()
-					endpoint = `/index.php/apps/openregister/api/objects/${this.selectedRegister.id}/${this.selectedSchema.id}`
-					method = 'POST'
-				} else {
-					// Update existing object using openregister API
-					// For existing objects, merge current object with all schema properties
-					objectData = this.buildCompleteObjectData()
-					// Get register and schema info from the current object
-					const { registerId, schemaId } = this.getRegisterSchemaIds(
-						this.currentObject,
-					)
-					const objectId =
-						this.currentObject['@self']?.id || this.currentObject.id
-					endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${objectId}`
-					method = 'PUT'
-				}
-
-				const response = await fetch(endpoint, {
-					method,
-					headers: {
-						'Content-Type': 'application/json',
-					},
-					body: JSON.stringify(objectData),
-				})
-
-				if (!response.ok) {
-					const errorText = await response.text()
-					throw new Error(
-						`Failed to ${isCreating ? 'create' : 'update'} publication: ${response.status} ${response.statusText} - ${errorText}`,
-					)
-				}
-
-				const result = await response.json()
-				const schema = objectStore.availableSchemas.find(
-					(schema) => schema.id === Number(result['@self'].schema),
-				)
-				// Set the newly created/updated object as active in the object store
-				objectStore.setActiveObject('publication', {
-					...result,
-					'@self': { ...result['@self'], schema },
-				})
-
-				// Clear form data since we now have the saved object
-				this.formData = {}
-
-				this.success = `Publication ${isCreating ? 'created' : 'updated'} successfully`
-
-				// Refresh the publications list
-				catalogStore.fetchPublications()
-
-				// Close modal for edit mode, keep open for create mode (which transitions to edit mode)
-				if (!isCreating) {
-					// For existing objects (edit mode), close the modal after save
-					setTimeout(() => {
-						this.closeModal()
-					}, 1000) // Give time for success message to show
-				}
-
-				setTimeout(() => {
-					this.success = null
-				}, 3000)
+				await this.submitObject()
 			} catch (e) {
 				console.error('Save error:', e)
 				this.error = e.message || 'Failed to save object'
@@ -2949,6 +2704,107 @@ export default {
 			} finally {
 				this.isSaving = false
 			}
+		},
+
+		/**
+		 * Sends the object to the API (POST for a new object, PUT for an
+		 * existing one) and applies the saved result.
+		 *
+		 * @return {Promise<void>}
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		async submitObject() {
+			const isCreating = this.isNewObject
+
+			// For new objects, validate we have the required selections
+			if (isCreating && this.missingSelection()) {
+				this.error =
+					'Please select catalog, register, and schema before saving'
+				return
+			}
+
+			const objectData = this.buildCompleteObjectData()
+			const { endpoint, method } = this.saveTarget(isCreating)
+			const response = await fetch(endpoint, jsonRequest(method, objectData))
+			await assertSaved(response, isCreating)
+			this.applySavedObject(await response.json(), isCreating)
+		},
+
+		/**
+		 * Whether the catalog, register or schema of a new object is missing.
+		 *
+		 * @return {boolean} Whether one is.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		missingSelection() {
+			return !this.selectedSchema
+				|| !this.selectedRegister
+				|| !this.selectedCatalog
+		},
+
+		/**
+		 * The endpoint and method that save the object.
+		 *
+		 * @param {boolean} isCreating Whether the object is new.
+		 * @return {{endpoint: string, method: string}} The target.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		saveTarget(isCreating) {
+			if (isCreating) {
+				const registerId = this.selectedRegister.id
+				const endpoint = createEndpoint(registerId, this.selectedSchema.id)
+				return { endpoint, method: 'POST' }
+			}
+			// Get register and schema info from the current object
+			const ids = this.getRegisterSchemaIds(this.currentObject)
+			const objectId = this.currentObject['@self']?.id || this.currentObject.id
+			return { endpoint: updateEndpoint(ids, objectId), method: 'PUT' }
+		},
+
+		/**
+		 * Makes the saved object the active one, clears the form, reports the
+		 * save, refreshes the publications and schedules the follow-up.
+		 *
+		 * @param {object} result The saved object.
+		 * @param {boolean} isCreating Whether it was created.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		applySavedObject(result, isCreating) {
+			const schema = objectStore.availableSchemas.find(
+				(schema) => schema.id === Number(result['@self'].schema),
+			)
+			// Set the newly created/updated object as active in the object store
+			objectStore.setActiveObject('publication', {
+				...result,
+				'@self': { ...result['@self'], schema },
+			})
+
+			// Clear form data since we now have the saved object
+			this.formData = {}
+			this.success = `Publication ${isCreating ? 'created' : 'updated'} successfully`
+
+			// Refresh the publications list
+			catalogStore.fetchPublications()
+			this.scheduleAfterSave(isCreating)
+		},
+
+		/**
+		 * Closes the modal a second after an update (a created object stays
+		 * open in edit mode) and clears the success message after three.
+		 *
+		 * @param {boolean} isCreating Whether the object was created.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		scheduleAfterSave(isCreating) {
+			if (!isCreating) {
+				setTimeout(() => {
+					this.closeModal()
+				}, 1000) // Give time for success message to show
+			}
+
+			setTimeout(() => {
+				this.success = null
+			}, 3000)
 		},
 
 		/**
@@ -2998,24 +2854,7 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		isValidDate(value) {
-			if (!value || typeof value !== 'string') return false
-
-			// Don't treat simple strings like "test 12" as dates
-			if (value.length < 8) return false
-
-			// Check if it looks like a date format
-			const datePatterns = [
-				/^\d{4}-\d{2}-\d{2}/, // YYYY-MM-DD
-				/^\d{1,2}-\d{1,2}-\d{4}/, // M-D-YYYY or MM-DD-YYYY
-				/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/, // ISO datetime
-			]
-
-			const looksLikeDate = datePatterns.some((pattern) => pattern.test(value))
-			if (!looksLikeDate) return false
-
-			// Try to parse it
-			const date = new Date(value)
-			return date instanceof Date && !isNaN(date) && date.getFullYear() > 1900
+			return isValidDateString(value)
 		},
 
 		/**
@@ -3052,37 +2891,7 @@ export default {
 
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-			const format = schemaProperty?.format
-
-			try {
-				switch (format) {
-					case 'date':
-						// For date-only, show as date without time
-						if (
-							typeof value === 'string'
-							&& value.match(/^\d{4}-\d{2}-\d{2}$/)
-						) {
-							return new Date(value + 'T12:00:00').toLocaleDateString()
-						}
-						return new Date(value).toLocaleDateString()
-					case 'time':
-						// For time-only, show just the time part
-						if (
-							typeof value === 'string'
-							&& value.match(/^\d{2}:\d{2}(:\d{2})?$/)
-						) {
-							return value
-						}
-						return new Date(value).toLocaleTimeString()
-					case 'date-time':
-						// For date-time, show full date and time
-						return new Date(value).toLocaleString()
-					default:
-						return value
-				}
-			} catch (e) {
-				return value
-			}
+			return formatForDisplay(value, schemaProperty?.format)
 		},
 
 		/**
@@ -3125,30 +2934,26 @@ export default {
 			// Get schema properties
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-			const existsInObject =
-				this.currentObject && Object.hasOwn(this.currentObject, key)
-
-			if (!schemaProperty) {
-				// Property exists in object but not in schema - warning (yellow)
-				if (existsInObject) {
-					return 'property-warning'
-				}
-				return ''
-			}
-
-			if (!existsInObject) {
-				// Property exists in schema but not in object yet - neutral (no special class)
-				return 'property-new'
+			const existsInObject = this.hasObjectProperty(key)
+			if (!schemaProperty || !existsInObject) {
+				return presenceClass(schemaProperty, existsInObject)
 			}
 
 			// Property exists in both schema and object, validate the value
-			if (this.isValidPropertyValue(key, value, schemaProperty)) {
-				// Valid property - success (green)
-				return 'property-valid'
-			} else {
-				// Invalid property - error (red)
-				return 'property-invalid'
-			}
+			return isValidPropertyValue(value, schemaProperty)
+				? 'property-valid'
+				: 'property-invalid'
+		},
+
+		/**
+		 * Whether the object shown holds a property of its own.
+		 *
+		 * @param {string} key The property key.
+		 * @return {boolean} Whether it does.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		hasObjectProperty(key) {
+			return Boolean(this.currentObject) && Object.hasOwn(this.currentObject, key)
 		},
 
 		/**
@@ -3158,40 +2963,8 @@ export default {
 		 */
 		getPropertyErrorMessage(key, value) {
 			const schemaProperties = this.getSchemaProperties()
-			const schemaProperty = schemaProperties[key]
-
-			if (!schemaProperty) {
-				return `Property '${key}' is not defined in the current schema. This property exists in the object but is not part of the schema definition.`
-			}
-
-			// Check if required but empty
-			const isRequired = schemaProperty.required
-			if (
-				(value === null || value === undefined || value === '')
-				&& isRequired
-			) {
-				return `Required property '${key}' is missing or empty`
-			}
-
-			// Check type mismatch
-			const expectedType = schemaProperty.type
-			const actualType = Array.isArray(value) ? 'array' : typeof value
-
-			if (expectedType !== actualType) {
-				return `Property '${key}' should be ${expectedType} but is ${actualType}`
-			}
-
-			// Check format constraints
-			if (schemaProperty.format === 'date-time' && !this.isValidDate(value)) {
-				return `Property '${key}' should be a valid date-time format`
-			}
-
-			// Check const constraint
-			if (schemaProperty.const && value !== schemaProperty.const) {
-				return `Property '${key}' should be '${schemaProperty.const}' but is '${value}'`
-			}
-
-			return `Property '${key}' has an invalid value`
+			const property = schemaProperties[key]
+			return propertyErrorMessage({ key, value, property })
 		},
 
 		getPropertyWarningMessage(key, value) {
@@ -3210,26 +2983,7 @@ export default {
 		isPropertyEditable(key, value) {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-
-			// If no schema property, allow editing (it's a free-form property)
-			if (!schemaProperty) return true
-
-			// Check if property is const
-			if (schemaProperty.const !== undefined) {
-				return false // Const properties cannot be edited
-			}
-
-			// Check if property is immutable and already has a value
-			if (
-				schemaProperty.immutable
-				&& value !== null
-				&& value !== undefined
-				&& value !== ''
-			) {
-				return false // Immutable properties with values cannot be edited
-			}
-
-			return true
+			return isEditable(schemaProperty, value)
 		},
 
 		/**
@@ -3240,21 +2994,7 @@ export default {
 		getEditabilityWarning(key, value) {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-
-			if (schemaProperty?.const !== undefined) {
-				return `This property is constant and must always be '${schemaProperty.const}'. Const properties cannot be modified to maintain data integrity.`
-			}
-
-			if (
-				schemaProperty?.immutable
-				&& value !== null
-				&& value !== undefined
-				&& value !== ''
-			) {
-				return `This property is immutable and cannot be changed once it has a value. Current value: '${value}'. Immutable properties preserve data consistency.`
-			}
-
-			return null
+			return editabilityWarning(schemaProperty, value)
 		},
 
 		/**
@@ -3264,11 +3004,7 @@ export default {
 		 */
 		handleRowClick(key, event) {
 			// Don't select if clicking on an input or button
-			if (
-				event.target.tagName === 'INPUT'
-				|| event.target.tagName === 'BUTTON'
-				|| event.target.closest('.value-input-container')
-			) {
+			if (isControlClick(event)) {
 				return
 			}
 
@@ -3278,15 +3014,27 @@ export default {
 			}
 
 			// Check if property is editable
-			const value =
-				this.formData[key] !== undefined
-					? this.formData[key]
-					: this.objectProperties.find(([k]) => k === key)?.[1]
+			const value = this.rowValue(key)
 			if (!this.isPropertyEditable(key, value)) {
 				return
 			}
 
 			this.selectProperty(key)
+		},
+
+		/**
+		 * The value of a property row: the edited value, else the shown one.
+		 *
+		 * @param {string} key The property key.
+		 * @return {*} The value.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		rowValue(key) {
+			if (this.formData[key] !== undefined) {
+				return this.formData[key]
+			}
+			const row = this.objectProperties.find(([k]) => k === key)
+			return row?.[1]
 		},
 
 		/**
@@ -3325,11 +3073,7 @@ export default {
 
 			// Special handling for themes: extract IDs from selected objects
 			if (key === 'themes' && Array.isArray(newValue)) {
-				// Extract just the IDs from the selected theme objects
-				const themeIds = newValue.map((theme) =>
-					typeof theme === 'object' ? theme.id : theme,
-				)
-				this.formData[key] = themeIds
+				this.formData[key] = themeIdList(newValue)
 				return
 			}
 
@@ -3365,47 +3109,7 @@ export default {
 			// Get schema information to determine the correct format
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-			const format = schemaProperty?.format
-
-			// Helper to format date in local TZ as YYYY-MM-DD
-			const toLocalDateString = (date) => {
-				if (!(date instanceof Date) || isNaN(date.getTime())) return ''
-				const yyyy = date.getFullYear()
-				const mm = String(date.getMonth() + 1).padStart(2, '0')
-				const dd = String(date.getDate()).padStart(2, '0')
-				return `${yyyy}-${mm}-${dd}`
-			}
-
-			let processedValue = newValue
-
-			// Handle Date objects from NcDateTimePicker
-			if (newValue instanceof Date && !isNaN(newValue.getTime())) {
-				try {
-					switch (format) {
-						case 'date':
-							processedValue = toLocalDateString(newValue)
-							break
-						case 'time':
-							processedValue = newValue
-								.toTimeString()
-								.split(' ')[0]
-								.substring(0, 5)
-							break
-						case 'date-time':
-							processedValue = newValue.toISOString()
-							break
-						default:
-							processedValue = newValue.toISOString()
-					}
-				} catch (e) {
-					processedValue = ''
-				}
-			} else if (newValue === null || newValue === undefined) {
-				processedValue = ''
-			}
-
-			// Update the form data
-			this.formData[key] = processedValue
+			this.formData[key] = pickerValueToStorage(newValue, schemaProperty?.format)
 		},
 
 		/**
@@ -3414,80 +3118,13 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		processDateTimeValue(key, value) {
-			// Get schema information to determine if this is a date/time field
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-
-			if (!schemaProperty || schemaProperty.type !== 'string') {
+			const format = dateTimeFormatOf(schemaProperty)
+			if (!format) {
 				return value
 			}
-
-			const format = schemaProperty.format
-			if (!format || !['date', 'time', 'date-time'].includes(format)) {
-				return value
-			}
-
-			// Helper to format date in local TZ as YYYY-MM-DD
-			const toLocalDateString = (date) => {
-				if (!(date instanceof Date) || isNaN(date.getTime())) return ''
-				const yyyy = date.getFullYear()
-				const mm = String(date.getMonth() + 1).padStart(2, '0')
-				const dd = String(date.getDate()).padStart(2, '0')
-				return `${yyyy}-${mm}-${dd}`
-			}
-
-			// If value is empty or null, return empty string
-			if (!value || value === '') {
-				return ''
-			}
-
-			// Handle Date objects from NcDateTimePicker
-			if (value instanceof Date) {
-				try {
-					switch (format) {
-						case 'date':
-							// Return YYYY-MM-DD format **in local timezone**
-							return toLocalDateString(value)
-						case 'time':
-							// Return HH:MM format for consistency with HTML time input
-							return value.toTimeString().split(' ')[0].substring(0, 5)
-						case 'date-time':
-							// Return full ISO string
-							return value.toISOString()
-						default:
-							return value.toISOString()
-					}
-				} catch (e) {
-					return ''
-				}
-			}
-
-			// Handle string values (legacy or fallback)
-			try {
-				switch (format) {
-					case 'date':
-						// Expect YYYY-MM-DD string already in local TZ
-						return value
-					case 'time':
-						// HTML time input returns HH:MM, keep as HH:MM for consistency
-						if (value.length === 5 && value.match(/^\d{2}:\d{2}$/)) {
-							return value // Keep as HH:MM
-						}
-						return value
-					case 'date-time': {
-						// HTML datetime-local input returns YYYY-MM-DDTHH:MM
-						if (value.length === 16) {
-							// Add seconds and timezone
-							return `${value}:00.000Z`
-						}
-						return value
-					}
-					default:
-						return value
-				}
-			} catch (e) {
-				return value
-			}
+			return dateTimeToStorage(value, format)
 		},
 
 		/**
@@ -3497,29 +3134,7 @@ export default {
 		getPropertyInputType(key) {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-			if (!schemaProperty) return 'text'
-
-			const type = schemaProperty.type
-			const format = schemaProperty.format
-
-			// Handle different types and formats
-			switch (type) {
-				case 'string':
-					if (format === 'date') return 'date'
-					if (format === 'time') return 'time'
-					if (format === 'date-time') return 'datetime-local'
-					if (format === 'email') return 'email'
-					if (format === 'url' || format === 'uri') return 'url'
-					if (format === 'password') return 'password'
-					return 'text'
-				case 'number':
-				case 'integer':
-					return 'number'
-				case 'boolean':
-					return 'checkbox'
-				default:
-					return 'text'
-			}
+			return inputTypeOf(schemaProperty)
 		},
 
 		/**
@@ -3529,39 +3144,7 @@ export default {
 		getPropertyInputComponent(key) {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-			if (!schemaProperty) return 'NcTextField'
-
-			const type = schemaProperty.type
-			const format = schemaProperty.format
-
-			// Handle different types and formats
-			switch (type) {
-				case 'boolean':
-					return 'NcCheckboxRadioSwitch'
-				case 'string':
-					if (
-						format === 'date'
-						|| format === 'date-time'
-						|| format === 'time'
-					) {
-						return 'NcDateTimePicker'
-					}
-					if (format === 'text') {
-						return 'NcTextArea'
-					}
-					if (format === 'markdown') {
-						return 'Editor'
-					}
-					return 'NcTextField'
-				case 'number':
-				case 'integer':
-					return 'NcTextField'
-				case 'array':
-					return 'NcTextFieldArray'
-
-				default:
-					return 'NcTextField'
-			}
+			return inputComponentOf(schemaProperty)
 		},
 
 		/**
@@ -3839,17 +3422,7 @@ export default {
 		 */
 		getDisplayValue(key, value) {
 			if (key === 'themes') {
-				const themes = objectStore.getCollection('theme').results || []
-				const idToLabel = (id) => {
-					const themeObj = themes.find((t) => t.id === id)
-					return themeObj ? themeObj.title || `#${themeObj.id}` : id
-				}
-				const currentVal =
-					this.formData[key] !== undefined ? this.formData[key] : value
-				if (Array.isArray(currentVal)) {
-					return currentVal.map(idToLabel).join(', ')
-				}
-				return idToLabel(currentVal)
+				return this.themesDisplayValue(key, value)
 			}
 			// Get the schema information to determine format
 			const schemaProperties = this.getSchemaProperties()
@@ -3858,63 +3431,109 @@ export default {
 
 			// If we have an edited value in formData, use that
 			if (this.formData[key] !== undefined) {
-				const editedValue = this.formData[key]
-
-				// Handle specific format display
-				if (format === 'time' && typeof editedValue === 'string') {
-					// For time format, ensure we show HH:MM without seconds
-					if (editedValue.match(/^\d{2}:\d{2}(:\d{2})?$/)) {
-						return editedValue.substring(0, 5) // Remove seconds if present
-					}
-				}
-
-				// Handle date formatting for edited values
-				if (
-					this.isValidDate(editedValue)
-					&& typeof editedValue === 'string'
-					&& editedValue.includes('T')
-				) {
-					return new Date(editedValue).toLocaleString()
-				}
-				return editedValue
+				return this.editedDisplayValue(this.formData[key], format)
 			}
+			return this.originalDisplayValue(value, format)
+		},
 
-			// Handle original value
+		/**
+		 * The themes of the object by title: the edited value when there is
+		 * one, else the original.
+		 *
+		 * @param {string} key The property key.
+		 * @param {Array|string} value The original value.
+		 * @return {string} The text.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		themesDisplayValue(key, value) {
+			const themes = objectStore.getCollection('theme').results || []
+			const label = (id) => themeLabel(themes, id)
+			const currentVal = this.currentFormValue(key, value)
+			if (Array.isArray(currentVal)) {
+				return currentVal.map(label).join(', ')
+			}
+			return label(currentVal)
+		},
+
+		/**
+		 * An edited value as shown: a time without seconds, a date-time
+		 * string in the local format, anything else as it is.
+		 *
+		 * @param {*} editedValue The edited value.
+		 * @param {string|undefined} format The schema format.
+		 * @return {*} The text.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		editedDisplayValue(editedValue, format) {
+			if (format === 'time' && isTimeString(editedValue)) {
+				return editedValue.substring(0, 5) // Remove seconds if present
+			}
+			if (this.isDateTimeText(editedValue)) {
+				return new Date(editedValue).toLocaleString()
+			}
+			return editedValue
+		},
+
+		/**
+		 * An original value as shown: '' when missing, a time without
+		 * seconds, a date string in the local format, arrays and objects as
+		 * JSON, anything else as it is.
+		 *
+		 * @param {*} value The original value.
+		 * @param {string|undefined} format The schema format.
+		 * @return {*} The text.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		originalDisplayValue(value, format) {
 			if (value === null || value === undefined) {
 				return ''
 			}
-
-			// Handle specific format display for original values
-			if (format === 'time' && typeof value === 'string') {
-				// For time format, ensure we show HH:MM without seconds
-				if (value.match(/^\d{2}:\d{2}(:\d{2})?$/)) {
-					return value.substring(0, 5) // Remove seconds if present
-				}
+			if (format === 'time' && isTimeString(value)) {
+				return value.substring(0, 5) // Remove seconds if present
 			}
+			return this.formattedOriginalValue(value)
+		},
 
-			// Handle date formatting for original values - only if it's actually a date string
-			if (
-				this.isValidDate(value)
+		/**
+		 * An original value that is set and not a time, as shown: a date
+		 * string in the local format, arrays and objects as JSON, anything
+		 * else as it is.
+		 *
+		 * @param {*} value The original value.
+		 * @return {*} The text.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		formattedOriginalValue(value) {
+			if (this.isValidDate(value) && startsLikeDate(value)) {
+				return new Date(value).toLocaleString()
+			}
+			return typeof value === 'object' ? JSON.stringify(value) : value
+		},
+
+		/**
+		 * Whether a value is a valid date string with a time part.
+		 *
+		 * @param {*} value The value.
+		 * @return {boolean} Whether it is.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		isDateTimeText(value) {
+			return this.isValidDate(value)
 				&& typeof value === 'string'
-				&& (value.includes('T') || value.includes('-'))
-			) {
-				// Check if it looks like a date (has date separators)
-				const datePattern = /^\d{4}-\d{2}-\d{2}|^\d{1,2}-\d{1,2}-\d{4}/
-				if (datePattern.test(value)) {
-					return new Date(value).toLocaleString()
-				}
-			}
+				&& value.includes('T')
+		},
 
-			// For arrays and objects, format them nicely
-			if (Array.isArray(value)) {
-				return JSON.stringify(value)
-			}
-			if (typeof value === 'object' && value !== null) {
-				return JSON.stringify(value)
-			}
-
-			// Return the value as-is for everything else
-			return value
+		/**
+		 * The edited value of a property when there is one, else the given
+		 * value.
+		 *
+		 * @param {string} key The property key.
+		 * @param {*} value The original value.
+		 * @return {*} The current value.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		currentFormValue(key, value) {
+			return this.formData[key] !== undefined ? this.formData[key] : value
 		},
 
 		/**
@@ -3924,41 +3543,14 @@ export default {
 		 */
 		getDateTimeValue(key, value) {
 			// Get the current value (either from formData or original value)
-			const currentValue =
-				this.formData[key] !== undefined ? this.formData[key] : value
-
+			const currentValue = this.currentFormValue(key, value)
 			if (!currentValue) {
 				return ''
 			}
 
 			// Get the input type to determine the expected format
 			const inputType = this.getPropertyInputType(key)
-
-			// Convert to appropriate format for the input type
-			try {
-				const date = new Date(currentValue)
-				if (isNaN(date.getTime())) {
-					return ''
-				}
-
-				switch (inputType) {
-					case 'date':
-						// Format as YYYY-MM-DD
-						return date.toISOString().split('T')[0]
-					case 'time':
-						// Format as HH:MM for HTML time input
-						return date.toTimeString().split(' ')[0].substring(0, 5)
-					case 'datetime-local': {
-						// Format as YYYY-MM-DDTHH:MM
-						const isoString = date.toISOString()
-						return isoString.substring(0, 16) // Remove seconds and timezone
-					}
-					default:
-						return currentValue
-				}
-			} catch (e) {
-				return currentValue
-			}
+			return inputValueFor(currentValue, inputType)
 		},
 
 		/**
@@ -3968,9 +3560,7 @@ export default {
 		 */
 		getDateTimePickerValue(key, value) {
 			// Get the current value (either from formData or original value)
-			const currentValue =
-				this.formData[key] !== undefined ? this.formData[key] : value
-
+			const currentValue = this.currentFormValue(key, value)
 			if (!currentValue) {
 				return null
 			}
@@ -3978,48 +3568,7 @@ export default {
 			// Get schema information to handle different date formats properly
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-			const format = schemaProperty?.format
-
-			// NcDateTimePicker expects a Date object or null
-			try {
-				let date
-
-				if (format === 'date') {
-					// For date-only fields, ensure we create the date correctly
-					// to avoid timezone issues
-					if (
-						typeof currentValue === 'string'
-						&& currentValue.match(/^\d{4}-\d{2}-\d{2}$/)
-					) {
-						// Create date at noon to avoid timezone issues
-						date = new Date(currentValue + 'T12:00:00')
-					} else {
-						date = new Date(currentValue)
-					}
-				} else if (format === 'time') {
-					// For time-only fields, create a date with today's date
-					if (
-						typeof currentValue === 'string'
-						&& currentValue.match(/^\d{2}:\d{2}(:\d{2})?$/)
-					) {
-						const today = new Date().toISOString().split('T')[0]
-						date = new Date(today + 'T' + currentValue)
-					} else {
-						date = new Date(currentValue)
-					}
-				} else {
-					// For datetime fields, use as-is
-					date = new Date(currentValue)
-				}
-
-				if (isNaN(date.getTime())) {
-					return null
-				}
-
-				return date
-			} catch (e) {
-				return null
-			}
+			return pickerDateFor(currentValue, schemaProperty?.format)
 		},
 
 		/**
@@ -4029,35 +3578,7 @@ export default {
 		getDateTimePickerType(key) {
 			const schemaProperties = this.getSchemaProperties()
 			const schemaProperty = schemaProperties[key]
-
-			if (!schemaProperty || !schemaProperty.format) {
-				return 'datetime'
-			}
-
-			let pickerType = 'datetime'
-
-			// Map schema formats to NcDateTimePicker types
-			switch (schemaProperty.format) {
-				case 'date':
-					pickerType = 'date'
-					break
-				case 'date-time':
-					pickerType = 'datetime'
-					break
-				case 'time':
-					pickerType = 'time'
-					break
-				default:
-					// For string type with no specific format, default to datetime
-					if (schemaProperty.type === 'string') {
-						pickerType = 'datetime'
-					} else {
-						pickerType = 'datetime'
-					}
-					break
-			}
-
-			return pickerType
+			return pickerTypeOf(schemaProperty)
 		},
 
 		// Publish/Depublish methods
@@ -4147,8 +3668,9 @@ export default {
 					headers: this.showPublishModal
 						? {
 								'Content-Type': 'application/json',
+								requesttoken: getRequestToken(),
 							}
-						: undefined,
+						: { requesttoken: getRequestToken() },
 					body: this.showPublishModal ? JSON.stringify(body) : undefined,
 				})
 
@@ -4228,8 +3750,9 @@ export default {
 					headers: this.showDepublishModal
 						? {
 								'Content-Type': 'application/json',
+								requesttoken: getRequestToken(),
 							}
-						: undefined,
+						: { requesttoken: getRequestToken() },
 					body: this.showDepublishModal ? JSON.stringify(body) : undefined,
 				})
 
@@ -4342,24 +3865,10 @@ export default {
 		async onFilesPageChanged(page) {
 			if (!this.currentObject) return
 
-			const publication = this.currentObject
-			const { registerId, schemaId } = this.getRegisterSchemaIds(publication)
-			const publicationData = {
-				source: 'openregister',
-				schema: schemaId,
-				register: registerId,
-			}
-
-			await objectStore.fetchRelatedData(
-				'publication',
-				this.currentObject.id,
-				'files',
-				{
-					_page: page,
-					_limit: this.filesCurrentPageSize,
-				},
-				publicationData,
-			)
+			await this.refreshFiles(this.getRegisterSchemaIds(this.currentObject), {
+				_page: page,
+				_limit: this.filesCurrentPageSize,
+			})
 		},
 
 		/**
@@ -4369,198 +3878,31 @@ export default {
 		async onFilesPageSizeChanged(pageSize) {
 			if (!this.currentObject) return
 
-			const publication = this.currentObject
-			const { registerId, schemaId } = this.getRegisterSchemaIds(publication)
-			const publicationData = {
-				source: 'openregister',
-				schema: schemaId,
-				register: registerId,
-			}
-
-			await objectStore.fetchRelatedData(
-				'publication',
-				this.currentObject.id,
-				'files',
-				{
-					_page: 1,
-					_limit: pageSize,
-				},
-				publicationData,
-			)
+			await this.refreshFiles(this.getRegisterSchemaIds(this.currentObject), {
+				_page: 1,
+				_limit: pageSize,
+			})
 		},
 
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async publishSelectedFiles() {
-			if (this.selectedAttachments.length === 0) return
-
-			try {
-				this.publishLoading = [...this.selectedAttachments]
-
-				// Get the selected files
-				const selectedFiles = this.paginatedFiles.filter((file) =>
-					this.selectedAttachments.includes(file.id),
-				)
-
-				// Publish each file individually
-				for (const file of selectedFiles) {
-					const publication = this.currentObject
-					const { registerId, schemaId } =
-						this.getRegisterSchemaIds(publication)
-					const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}/publish`
-
-					const response = await fetch(endpoint, {
-						method: 'POST',
-					})
-
-					if (!response.ok) {
-						throw new Error(
-							`Failed to publish file ${file.title || file.name}: ${response.statusText}`,
-						)
-					}
-				}
-
-				// Refresh files list once after all operations with publication data
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
-
-				// Clear selection after successful operation
-				this.selectedAttachments = []
-			} catch (error) {
-				console.error('Error publishing files:', error)
-			} finally {
-				this.publishLoading = []
-			}
+			await this.runSelectedFileAction(FILE_ACTIONS.publish)
 		},
 
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async depublishSelectedFiles() {
-			if (this.selectedAttachments.length === 0) return
-
-			try {
-				this.depublishLoading = [...this.selectedAttachments]
-
-				// Get the selected files
-				const selectedFiles = this.paginatedFiles.filter((file) =>
-					this.selectedAttachments.includes(file.id),
-				)
-
-				// Depublish each file individually
-				for (const file of selectedFiles) {
-					const publication = this.currentObject
-					const { registerId, schemaId } =
-						this.getRegisterSchemaIds(publication)
-					const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}/depublish`
-
-					const response = await fetch(endpoint, {
-						method: 'POST',
-					})
-
-					if (!response.ok) {
-						throw new Error(
-							`Failed to depublish file ${file.title || file.name}: ${response.statusText}`,
-						)
-					}
-				}
-
-				// Refresh files list once after all operations with publication data
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
-
-				// Clear selection after successful operation
-				this.selectedAttachments = []
-			} catch (error) {
-				console.error('Error depublishing files:', error)
-			} finally {
-				this.depublishLoading = []
-			}
+			await this.runSelectedFileAction(FILE_ACTIONS.depublish)
 		},
 
 		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async deleteSelectedFiles() {
-			if (this.selectedAttachments.length === 0) return
-
-			try {
-				this.fileIdsLoading = [...this.selectedAttachments]
-
-				// Get the selected files
-				const selectedFiles = this.paginatedFiles.filter((item) =>
-					this.selectedAttachments.includes(item.id),
-				)
-
-				// Delete each selected file
-				for (const file of selectedFiles) {
-					const publication = this.currentObject
-					const { registerId, schemaId } =
-						this.getRegisterSchemaIds(publication)
-					const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}`
-
-					const response = await fetch(endpoint, {
-						method: 'DELETE',
-					})
-
-					if (!response.ok) {
-						throw new Error(
-							`Failed to delete file ${file.title || file.name}: ${response.statusText}`,
-						)
-					}
-				}
-
-				// Refresh files list once after all operations with publication data
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
-
-				// Clear selection - files list is automatically refreshed by the store methods
-				this.selectedAttachments = []
-			} catch (error) {
-				console.error('Failed to delete selected files:', error)
-			} finally {
-				this.fileIdsLoading = []
-			}
+			await this.runSelectedFileAction(FILE_ACTIONS.delete)
 		},
 
 		/**
@@ -4568,42 +3910,7 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async publishFile(file) {
-			try {
-				this.publishLoading.push(file.id)
-
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
-				const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}/publish`
-
-				const response = await fetch(endpoint, {
-					method: 'POST',
-				})
-
-				if (!response.ok) {
-					throw new Error(`Failed to publish file: ${response.statusText}`)
-				}
-
-				// Refresh files list with publication data
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
-			} catch (error) {
-				console.error('Failed to publish file:', error)
-			} finally {
-				this.publishLoading = this.publishLoading.filter(
-					(id) => id !== file.id,
-				)
-			}
+			await this.runFileAction(file, FILE_ACTIONS.publish)
 		},
 
 		/**
@@ -4611,44 +3918,7 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async depublishFile(file) {
-			try {
-				this.depublishLoading.push(file.id)
-
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
-				const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}/depublish`
-
-				const response = await fetch(endpoint, {
-					method: 'POST',
-				})
-
-				if (!response.ok) {
-					throw new Error(
-						`Failed to depublish file: ${response.statusText}`,
-					)
-				}
-
-				// Refresh files list with publication data
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
-			} catch (error) {
-				console.error('Failed to depublish file:', error)
-			} finally {
-				this.depublishLoading = this.depublishLoading.filter(
-					(id) => id !== file.id,
-				)
-			}
+			await this.runFileAction(file, FILE_ACTIONS.depublish)
 		},
 
 		/**
@@ -4656,42 +3926,123 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		async deleteFile(file) {
+			await this.runFileAction(file, FILE_ACTIONS.delete)
+		},
+
+		/**
+		 * Run a file action on every selected file, one request at a time, then refresh the files list once.
+		 *
+		 * @param {object} action The file action (FILE_ACTIONS).
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		async runSelectedFileAction(action) {
+			if (this.selectedAttachments.length === 0) return
+
 			try {
-				this.fileIdsLoading.push(file.id)
+				this[action.loading] = [...this.selectedAttachments]
+				await this.sendSelectedFileAction(action)
 
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
-				const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}`
+				// Refresh files list once after all operations with publication data
+				await this.refreshFiles(this.getRegisterSchemaIds(this.currentObject))
 
-				const response = await fetch(endpoint, {
-					method: 'DELETE',
+				// Clear selection after successful operation
+				this.selectedAttachments = []
+			} catch (error) {
+				console.error(action.bulkError, error)
+			} finally {
+				this[action.loading] = []
+			}
+		},
+
+		/**
+		 * Send a file action for each selected file; stop at the first refused request.
+		 *
+		 * @param {object} action The file action (FILE_ACTIONS).
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		async sendSelectedFileAction(action) {
+			const selectedFiles = this.paginatedFiles.filter((file) =>
+				this.selectedAttachments.includes(file.id),
+			)
+
+			for (const file of selectedFiles) {
+				const ids = this.getRegisterSchemaIds(this.currentObject)
+				const response = await fetch(this.fileUrl(file, ids) + action.suffix, {
+					method: action.method,
+					headers: { requesttoken: getRequestToken() },
 				})
 
 				if (!response.ok) {
-					throw new Error(`Failed to delete file: ${response.statusText}`)
+					throw new Error(
+						`Failed to ${action.verb} file ${file.title || file.name}: ${response.statusText}`,
+					)
+				}
+			}
+		},
+
+		/**
+		 * Run a file action on one file, then refresh the files list.
+		 *
+		 * @param {object} file The file.
+		 * @param {object} action The file action (FILE_ACTIONS).
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		async runFileAction(file, action) {
+			try {
+				this[action.loading].push(file.id)
+
+				const ids = this.getRegisterSchemaIds(this.currentObject)
+				const response = await fetch(this.fileUrl(file, ids) + action.suffix, {
+					method: action.method,
+					headers: { requesttoken: getRequestToken() },
+				})
+
+				if (!response.ok) {
+					throw new Error(`Failed to ${action.verb} file: ${response.statusText}`)
 				}
 
-				// Refresh files list with publication data
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
+				await this.refreshFiles(ids)
 			} catch (error) {
-				console.error('Failed to delete file:', error)
+				console.error(`Failed to ${action.verb} file:`, error)
 			} finally {
-				this.fileIdsLoading = this.fileIdsLoading.filter(
+				this[action.loading] = this[action.loading].filter(
 					(id) => id !== file.id,
 				)
 			}
+		},
+
+		/**
+		 * The API URL of a file of the current object.
+		 *
+		 * @param {object} file The file.
+		 * @param {{registerId: string|number, schemaId: string|number}} ids The register and schema ids of the object.
+		 * @return {string} The URL.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		fileUrl(file, ids) {
+			return `/index.php/apps/openregister/api/objects/${ids.registerId}/${ids.schemaId}/${this.currentObject.id}/files/${file.id}`
+		},
+
+		/**
+		 * Refresh the files list of the current object with its publication data.
+		 *
+		 * @param {{registerId: string|number, schemaId: string|number}} ids The register and schema ids of the object.
+		 * @param {object} query The page query; none refreshes the default page.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		async refreshFiles(ids, query = {}) {
+			const publicationData = {
+				source: 'openregister',
+				schema: ids.schemaId,
+				register: ids.registerId,
+			}
+			await objectStore.fetchRelatedData(
+				'publication',
+				this.currentObject.id,
+				'files',
+				query,
+				publicationData,
+			)
 		},
 
 		/**
@@ -4742,17 +4093,14 @@ export default {
 		 */
 		async saveTags(file, editedTags) {
 			try {
-				const publication = this.currentObject
-				const { registerId, schemaId } =
-					this.getRegisterSchemaIds(publication)
+				const ids = this.getRegisterSchemaIds(this.currentObject)
 
 				// Update file tags using the same approach as PublicationDetail.vue
-				const endpoint = `/index.php/apps/openregister/api/objects/${registerId}/${schemaId}/${publication.id}/files/${file.id}`
-
-				const response = await fetch(endpoint, {
+				const response = await fetch(this.fileUrl(file, ids), {
 					method: 'PUT',
 					headers: {
 						'Content-Type': 'application/json',
+						requesttoken: getRequestToken(),
 					},
 					body: JSON.stringify({
 						tags: editedTags,
@@ -4766,18 +4114,7 @@ export default {
 				}
 
 				// Refresh files list with publication data
-				const publicationData = {
-					source: 'openregister',
-					schema: schemaId,
-					register: registerId,
-				}
-				await objectStore.fetchRelatedData(
-					'publication',
-					this.currentObject.id,
-					'files',
-					{},
-					publicationData,
-				)
+				await this.refreshFiles(ids)
 
 				this.editingTags = null
 				this.editedTags = []
@@ -4901,43 +4238,45 @@ export default {
 
 		// Schema handling methods
 		/**
+		 * The object's own properties that are not in the schema, as rows
+		 * `[key, value, null]`: never the metadata, and only those the form holds
+		 * a value for (a property marked for deletion is undefined in the form).
+		 *
+		 * @param {object} objectData The object.
+		 * @param {object} schemaProperties The schema properties.
+		 * @return {Array} The rows.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		additionalPropertyRows(objectData, schemaProperties) {
+			return Object.entries(objectData)
+				.filter(
+					([objectKey]) =>
+						objectKey !== '@self'
+						&& objectKey !== 'id'
+						&& !Object.hasOwn(schemaProperties, objectKey)
+						&& !(this.formData[objectKey] === undefined),
+				)
+				.map(([objectKey, objectValue]) => [objectKey, objectValue, null])
+		},
+
+		/**
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		getSchemaProperties() {
-			let properties = {}
-
 			// For new objects, use the selected schema
 			if (this.isNewObject && this.selectedSchema) {
-				const fullSchema = objectStore.availableSchemas.find(
-					(schema) => schema.id === this.selectedSchema.id,
+				return schemaPropertiesById(
+					objectStore.availableSchemas,
+					this.selectedSchema.id,
 				)
-				properties = fullSchema?.properties || {}
-			} else if (this.currentObject && this.currentObject['@self']?.schema) {
-				// For existing objects, try to get schema from the object's schema reference
-				const schemaRef = this.currentObject['@self'].schema
-				let schemaId = null
-
-				// Handle both object and string schema references
-				if (typeof schemaRef === 'object') {
-					schemaId = schemaRef.id || schemaRef.uuid
-				} else {
-					schemaId = schemaRef
-				}
-
-				if (schemaId) {
-					const fullSchema = objectStore.availableSchemas.find(
-						(schema) => schema.id === schemaId,
-					)
-					if (fullSchema?.properties) {
-						properties = fullSchema.properties
-					}
-				}
-			} else if (this.currentSchema?.properties) {
-				// Try to get schema properties from the catalogStore
-				properties = this.currentSchema.properties
 			}
-
-			return properties
+			// For existing objects, use the object's schema reference
+			const schemaRef = this.currentObject?.['@self']?.schema
+			if (schemaRef) {
+				const schemas = objectStore.availableSchemas
+				return referencedSchemaProperties(schemas, schemaRef)
+			}
+			return this.currentSchema?.properties || {}
 		},
 
 		// Helper method to rebuild object with schema properties after API operations
@@ -4956,39 +4295,9 @@ export default {
 				},
 			}
 
-			// Get schema properties to ensure we don't lose any
-			const schemaProperties = this.getSchemaProperties()
-
 			// Add missing schema properties with default values
-			for (const [key, schemaProperty] of Object.entries(schemaProperties)) {
-				if (!Object.hasOwn(mergedObject, key)) {
-					// Add with appropriate default value based on type
-					let defaultValue = ''
-					switch (schemaProperty.type) {
-						case 'string':
-							defaultValue = schemaProperty.const || ''
-							break
-						case 'number':
-						case 'integer':
-							defaultValue = 0
-							break
-						case 'boolean':
-							defaultValue = false
-							break
-						case 'array':
-							defaultValue = []
-							break
-						case 'object':
-							defaultValue = {}
-							break
-						default:
-							defaultValue = ''
-					}
-					mergedObject[key] = defaultValue
-				}
-			}
-
-			return mergedObject
+			const schemaProperties = this.getSchemaProperties()
+			return withSchemaDefaults(mergedObject, schemaProperties)
 		},
 
 		/**
@@ -4998,33 +4307,7 @@ export default {
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
 		cleanFormData() {
-			const cleaned = {}
-
-			// If formData is somehow an array, convert it properly
-			if (Array.isArray(this.formData)) {
-				// This should never happen, but just in case
-				return {}
-			}
-
-			// Copy all valid properties from formData
-			for (const [key, value] of Object.entries(this.formData || {})) {
-				// Only include valid property names:
-				// - Must be a string
-				// - Must not be empty
-				// - Must not be purely numeric (array indices)
-				// - Must not be special Vue/internal keys
-				if (
-					typeof key === 'string'
-					&& key.length > 0
-					&& !/^\d+$/.test(key)
-					&& !key.startsWith('_')
-					&& !key.startsWith('$')
-				) {
-					cleaned[key] = value
-				}
-			}
-
-			return cleaned
+			return cleanedFormData(this.formData)
 		},
 
 		/**
@@ -5035,80 +4318,9 @@ export default {
 		 */
 		buildCompleteObjectData() {
 			const schemaProperties = this.getSchemaProperties()
-			const cleanedFormData = this.cleanFormData()
-			const currentObjectData = this.currentObject || {}
-
-			// Start with current object data (excluding id but keeping @self for updates)
-			const objectData = {}
-			for (const [key, value] of Object.entries(currentObjectData)) {
-				if (key !== 'id') {
-					objectData[key] = value
-				}
-			}
-
-			// Add all schema properties with appropriate values
-			for (const [propertyKey, schemaProperty] of Object.entries(
-				schemaProperties,
-			)) {
-				if (Object.hasOwn(cleanedFormData, propertyKey)) {
-					// Check if property was marked for deletion (undefined)
-					if (cleanedFormData[propertyKey] === undefined) {
-						// For schema properties, don't include undefined values - let backend handle defaults
-						// This effectively removes the property from the payload
-						delete objectData[propertyKey]
-					} else {
-						// Use edited value from formData
-						objectData[propertyKey] = cleanedFormData[propertyKey]
-					}
-				} else if (Object.hasOwn(currentObjectData, propertyKey)) {
-					// Keep existing value from current object
-					objectData[propertyKey] = currentObjectData[propertyKey]
-				} else {
-					// Property doesn't exist, set appropriate default or null
-					let defaultValue = null
-
-					// Only set non-null defaults for specific cases
-					switch (schemaProperty.type) {
-						case 'string':
-							defaultValue = schemaProperty.const || null
-							break
-						case 'number':
-						case 'integer':
-							defaultValue = null // Let backend handle defaults
-							break
-						case 'boolean':
-							defaultValue = null // Let backend handle defaults
-							break
-						case 'array':
-							defaultValue = null // Let backend handle defaults
-							break
-						case 'object':
-							defaultValue = null // Let backend handle defaults
-							break
-						default:
-							defaultValue = null
-					}
-
-					objectData[propertyKey] = defaultValue
-				}
-			}
-
-			// Also include any edited properties that might not be in the schema
-			// But only include valid property names (not numeric indices) and not undefined values
-			for (const [key, value] of Object.entries(cleanedFormData)) {
-				if (
-					!Object.hasOwn(schemaProperties, key)
-					&& typeof key === 'string'
-					&& key.length > 0
-					&& !/^\d+$/.test(key)
-					&& value !== undefined
-				) {
-					// Don't include properties marked for deletion
-					objectData[key] = value
-				}
-			}
-
-			return objectData
+			const edits = this.cleanFormData()
+			const current = this.currentObject || {}
+			return objectPayload({ current, edits }, schemaProperties)
 		},
 
 		// Property dropping methods
@@ -5128,14 +4340,20 @@ export default {
 				return false
 			}
 
-			// Show drop button if:
-			// 1. Property has a value (either in formData or original object)
-			// 2. Property exists in current object or has been edited
-			const hasFormValue = this.formData[key] !== undefined
-			const hasOriginalValue =
-				this.currentObject && Object.hasOwn(this.currentObject, key)
+			// Show drop button if the property was edited or the object has it
+			return this.formData[key] !== undefined || this.hasOwnObjectKey(key)
+		},
 
-			return hasFormValue || hasOriginalValue
+		/**
+		 * Whether the object shown has a property of its own; the object
+		 * itself when there is none.
+		 *
+		 * @param {string} key The property key.
+		 * @return {*} Truthy when it has.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		hasOwnObjectKey(key) {
+			return this.currentObject && Object.hasOwn(this.currentObject, key)
 		},
 
 		/**
@@ -5150,32 +4368,33 @@ export default {
 			const schemaProperty = schemaProperties[key]
 
 			// Check by property name patterns (case insensitive)
-			const immutablePatterns = ['immutable', 'readonly', 'constant']
-			const isImmutableByName = immutablePatterns.some((pattern) =>
-				key.toLowerCase().includes(pattern),
-			)
-
-			if (schemaProperty) {
-				const isConstant = schemaProperty.const !== undefined
-				const isImmutable =
-					schemaProperty.readOnly === true
-					|| schemaProperty.immutable === true
-
-				// Debug: Log all detection methods
-				if (process.env.NODE_ENV === 'development') {
-					// eslint-disable-next-line no-console
-					console.log(`Property ${key} detection:`, {
-						isConstant,
-						isImmutable,
-						isImmutableByName,
-						schemaProperty,
-					})
-				}
-
-				return isConstant || isImmutable || isImmutableByName
+			const immutableByName = isImmutableByName(key)
+			if (!schemaProperty) {
+				return immutableByName
 			}
 
-			return isImmutableByName
+			const flags = schemaLockFlags(schemaProperty)
+			this.logImmutability(key, {
+				...flags,
+				isImmutableByName: immutableByName,
+				schemaProperty,
+			})
+			return flags.isConstant || flags.isImmutable || immutableByName
+		},
+
+		/**
+		 * Logs how a property was found constant or immutable, in development.
+		 *
+		 * @param {string} key The property key.
+		 * @param {object} detection The detection results.
+		 * @spec openspec/specs/fe-object-modals/spec.md
+		 */
+		logImmutability(key, detection) {
+			// Debug: Log all detection methods
+			if (process.env.NODE_ENV === 'development') {
+				// eslint-disable-next-line no-console
+				console.log(`Property ${key} detection:`, detection)
+			}
 		},
 
 		/**
@@ -5199,47 +4418,12 @@ export default {
 		 */
 		dropProperty(key) {
 			const schemaProperties = this.getSchemaProperties()
-			const isSchemaProperty = Object.hasOwn(schemaProperties, key)
-
-			if (isSchemaProperty) {
+			if (Object.hasOwn(schemaProperties, key)) {
 				// For schema properties, reset to appropriate default/null value
 				const schemaProperty = schemaProperties[key]
-				let defaultValue = null
-
-				switch (schemaProperty.type) {
-					case 'string':
-						defaultValue = schemaProperty.const || ''
-						break
-					case 'number':
-					case 'integer':
-						defaultValue = 0
-						break
-					case 'boolean':
-						defaultValue = false
-						break
-					case 'array':
-						defaultValue = []
-						break
-					case 'object':
-						defaultValue = {}
-						break
-					default:
-						defaultValue = ''
-				}
-
-				// Set the default value in formData
-				this.formData[key] = defaultValue
+				this.formData[key] = schemaDefaultValue(schemaProperty)
 			} else {
-				// For non-schema properties, remove completely from formData
-				if (this.formData[key] !== undefined) {
-					delete this.formData[key]
-				}
-
-				// If it was in the original object, we need to track its removal
-				// We'll set it to a special marker that indicates deletion
-				if (this.currentObject && Object.hasOwn(this.currentObject, key)) {
-					this.formData[key] = undefined
-				}
+				this.removeExtraProperty(key)
 			}
 
 			// Clear selection if this property was selected
@@ -5248,58 +4432,34 @@ export default {
 			}
 		},
 
-		// Enhanced property validation and editing methods (from openregister version)
 		/**
-		 * @param key
-		 * @param value
-		 * @param schemaProperty
+		 * Removes a property outside the schema from the form data, and marks
+		 * it as deleted (undefined) when the object has it.
+		 *
+		 * @param {string} key The property key.
 		 * @spec openspec/specs/fe-object-modals/spec.md
 		 */
-		isValidPropertyValue(key, value, schemaProperty) {
-			// Handle null/undefined values
-			if (value === null || value === undefined || value === '') {
-				// Check if property is required
-				const isRequired = schemaProperty.required
-				return !isRequired // Valid if not required, invalid if required
+		removeExtraProperty(key) {
+			if (this.formData[key] !== undefined) {
+				delete this.formData[key]
 			}
 
-			// Validate based on schema type
-			switch (schemaProperty.type) {
-				case 'string':
-					if (typeof value !== 'string') return false
-					// Check format constraints
-					if (schemaProperty.format === 'date-time') {
-						return this.isValidDate(value)
-					}
-					// Check const constraint
-					if (schemaProperty.const && value !== schemaProperty.const) {
-						return false
-					}
-					return true
-
-				case 'number':
-					return typeof value === 'number' && !isNaN(value)
-
-				case 'boolean':
-					return typeof value === 'boolean'
-
-				case 'array':
-					return Array.isArray(value)
-
-				case 'object':
-					return (
-						typeof value === 'object'
-						&& value !== null
-						&& !Array.isArray(value)
-					)
-
-				default:
-					return true // Unknown type, assume valid
+			// If it was in the original object, we need to track its removal
+			// We'll set it to a special marker that indicates deletion
+			if (this.hasOwnObjectKey(key)) {
+				this.formData[key] = undefined
 			}
 		},
+
+		// Enhanced property validation and editing methods (from openregister version)
 	},
 }
 </script>
+
+<!-- Tab strip: the app-wide tab look of StandardTabs, included here because
+     the Files tab needs a component-rendered title (spinner / counter bubble)
+     and StandardTabs only accepts plain title strings. -->
+<style scoped src="../../components/standardTabs.css"></style>
 
 <style scoped>
 /* ViewObject-specific overrides only */
@@ -5493,103 +4653,6 @@ export default {
 
 .publishedIcon {
 	color: var(--color-success);
-}
-
-/* Tab strip. Mirrors src/components/StandardTabs.vue so the modal keeps the
-   app-wide tab look, but written out here because the Files tab needs a
-   component-rendered title (spinner / counter bubble) and StandardTabs only
-   accepts plain title strings. */
-.standard-tabs {
-	width: 100%;
-}
-
-.tab-navigation {
-	display: flex;
-	border: 1px solid var(--color-border);
-	border-bottom: none;
-	margin-bottom: 0;
-	background-color: var(--color-background-hover);
-	border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
-	padding: 0 8px;
-}
-
-.tab-button {
-	flex: 1;
-	padding: 12px 16px;
-	background: none;
-	border: none;
-	color: var(--color-text-lighter);
-	font-weight: 500;
-	font-size: 14px;
-	cursor: pointer;
-	transition: all 0.2s ease;
-	position: relative;
-	min-height: 48px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-}
-
-.tab-button:hover {
-	color: var(--color-main-text);
-	background-color: var(--color-background-hover);
-}
-
-.tab-button.active {
-	color: var(--color-primary);
-	background-color: var(--color-background);
-	font-weight: 600;
-	border: 1px solid var(--color-border);
-	border-bottom: 2px solid var(--color-background);
-	border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
-}
-
-.tab-button.active::after {
-	content: '';
-	position: absolute;
-	bottom: -2px;
-	left: 0;
-	right: 0;
-	height: 2px;
-	background-color: var(--color-primary);
-}
-
-.tab-content {
-	padding: 8px 0 0 0;
-	border: none;
-	border-top: none;
-	border-radius: 0;
-	background-color: transparent;
-}
-
-@media (max-width: 768px) {
-	.tab-navigation {
-		flex-direction: column;
-		border-bottom: none;
-		border-radius: var(--border-radius-large) var(--border-radius-large) 0 0;
-		padding: 8px;
-	}
-
-	.tab-button {
-		border-bottom: none;
-		border-radius: var(--border-radius);
-		margin-bottom: 4px;
-		min-height: 40px;
-	}
-
-	.tab-button.active {
-		background-color: var(--color-primary);
-		color: white;
-		border-bottom-color: transparent;
-	}
-
-	.tab-button.active::after {
-		display: none;
-	}
-
-	.tab-content {
-		border-top: 1px solid var(--color-border);
-	}
 }
 
 .tab-title {

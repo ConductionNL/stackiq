@@ -15,13 +15,16 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\AppInfo\Application;
+use OCA\Stackiq\Kernel\AppIdentity;
 use OCP\IAppConfig;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -241,7 +244,7 @@ class ProgressStore {
 			return;
 		}
 
-		$this->appConfig->deleteKey(Application::APP_ID, self::configKey(key: 'cancel_' . $operationId));
+		$this->appConfig->deleteKey(AppIdentity::APP_ID, self::configKey(key: 'cancel_' . $operationId));
 	}//end clearCancel()
 
 	/**
@@ -256,10 +259,10 @@ class ProgressStore {
 			return;
 		}
 
-		foreach ($this->appConfig->searchKeys(Application::APP_ID, self::CONFIG_PREFIX, lazy: true) as $configKey) {
-			$entry = $this->appConfig->getValueArray(Application::APP_ID, $configKey, [], lazy: true);
+		foreach ($this->appConfig->searchKeys(AppIdentity::APP_ID, self::CONFIG_PREFIX, lazy: true) as $configKey) {
+			$entry = $this->appConfig->getValueArray(AppIdentity::APP_ID, $configKey, [], lazy: true);
 			if ((int) ($entry['expires'] ?? 0) < time()) {
-				$this->appConfig->deleteKey(Application::APP_ID, $configKey);
+				$this->appConfig->deleteKey(AppIdentity::APP_ID, $configKey);
 			}
 		}
 	}//end removeExpired()
@@ -280,7 +283,7 @@ class ProgressStore {
 		}
 
 		$this->appConfig->clearCache();
-		$entry = $this->appConfig->getValueArray(Application::APP_ID, self::configKey(key: $key), [], lazy: true);
+		$entry = $this->appConfig->getValueArray(AppIdentity::APP_ID, self::configKey(key: $key), [], lazy: true);
 		if ((int) ($entry['expires'] ?? 0) < time()) {
 			return null;
 		}
@@ -303,7 +306,7 @@ class ProgressStore {
 		}
 
 		$this->appConfig->setValueArray(
-			Application::APP_ID,
+			AppIdentity::APP_ID,
 			self::configKey(key: $key),
 			['expires' => time() + self::STORE_TTL, 'value' => $value],
 			lazy: true

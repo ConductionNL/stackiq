@@ -1,0 +1,368 @@
+[
+	[
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 502,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": "0",
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		}
+	],
+	[
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 502,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": "0",
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		}
+	],
+	[
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 502,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": "0",
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		}
+	],
+	[
+		null,
+		null,
+		null,
+		null,
+		null,
+		null,
+		null
+	],
+	[
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_FAILED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_FAILED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_FAILED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_FAILED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 502,
+			"interrupted": true,
+			"error": "IMPORT_FAILED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": "0",
+			"interrupted": true,
+			"error": "IMPORT_FAILED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_FAILED"
+		}
+	],
+	[
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "NETWORK_ERROR"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "NETWORK_ERROR"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "NETWORK_ERROR"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "NETWORK_ERROR"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 502,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": "0",
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "NETWORK_ERROR"
+		}
+	],
+	[
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 502,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": "0",
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		}
+	],
+	[
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 502,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": "0",
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		},
+		{
+			"message": "",
+			"details": {},
+			"status": 0,
+			"interrupted": true,
+			"error": "IMPORT_INTERRUPTED"
+		}
+	]
+]

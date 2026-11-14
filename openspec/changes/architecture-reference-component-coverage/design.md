@@ -41,15 +41,20 @@ The controller runs the organisation check before any query and fails closed, as
 
 Rejected: computing coverage in the browser from OpenRegister facets on `usage.usedForReferenceComponents`. A facet has no bucket for a value no row holds, so gaps need the full component list anyway, and overlap needs the usages behind each count. The portfolio report moved the same kind of cross-register join to the backend for the same reason (its manifest note, `src/manifest.json:1040`).
 
-### D3. The page: summary, table and map
+### D3. The page: the GEMMA plate
 
-`ReferenceComponentCoverage.vue` follows `PortfolioReport.vue`: the same organisation picker (:61), Refresh and Export CSV buttons, and a truncation notice. Under that:
-
-- a summary with the four counts and "N applications in use name no reference component",
-- a `CnDataTable` of components with columns name, state, applications and fillable, and quick filters All, Gaps, Fillable gaps and Overlap,
-- `CoverageViewMap.vue`: a picker of imported GEMMA views from `GET /api/views` (`appinfo/routes.php:185`), and the chosen view drawn read-only through `viewGraph.js` on `CnGraphCanvas` (`@conduction/nextcloud-vue` 2.57.1, `src/components/CnGraphCanvas/CnGraphCanvas.vue`, `readOnly` at :196). Every node whose element is a reference component gets its state: a border in `--color-error` (gap), `--color-success` (covered) or `--color-warning` (overlap), and a text badge with the count and the application names, so colour is never the only signal.
-
-The page is reached from a second card on the Reports page, "Reference component coverage", next to Portfolio rationalization. No menu entry is added (ADR-097).
+The board (SkGemmaPlaat) draws the coverage as a plate: the reference components
+grouped as the GEMMA model groups them (the element's `grouping`), each tile with
+the applications that cover it and its state in words, and a border colour that
+repeats the state, so colour is never the only signal. `GemmaPlate.vue` has the
+portfolio report's organisation picker, a Download button for the CSV, a summary
+(components, covered, gaps with how many are fillable, overlap, and the usages
+that name no component), the filters All, Gaps, Fillable gaps and Overlap
+(`src/utils/referenceComponentCoverage.js`), and a detail panel for the chosen
+component. It is in the menu under Reports & Compliance, where the board puts
+GEMMA plates, as a child (ADR-097). Drawing the same states on an imported GEMMA
+view (`CoverageViewMap.vue`, Task 5) waits for `architecture-views-editor`'s
+read-only view rendering.
 
 Rejected: drawing the map with `ViewService` enrichment (`include_gebruik`). It groups usages by the single field `elementRef` (`lib/Service/ViewService.php:914`), so a usage for three components lands on at most one node.
 

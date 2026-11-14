@@ -1,0 +1,444 @@
+{
+    "aanbod/none": [
+        {
+            "_source": "database"
+        },
+        [
+            [
+                "debug",
+                "Parsed query options for Aanbod",
+                {
+                    "raw_params": {
+                        "limit": null,
+                        "offset": null,
+                        "page": null
+                    },
+                    "parsed_options": {
+                        "_source": "database"
+                    }
+                }
+            ]
+        ],
+        [
+            "_limit",
+            "limit",
+            "_offset",
+            "offset",
+            "_page",
+            "page"
+        ]
+    ],
+    "aanbod/plain": [
+        {
+            "_limit": 10,
+            "limit": 10,
+            "_offset": 5,
+            "offset": 5,
+            "_page": 2,
+            "_source": "database"
+        },
+        [
+            [
+                "debug",
+                "Parsed query options for Aanbod",
+                {
+                    "raw_params": {
+                        "limit": "10",
+                        "offset": "5",
+                        "page": "2"
+                    },
+                    "parsed_options": {
+                        "_limit": 10,
+                        "limit": 10,
+                        "_offset": 5,
+                        "offset": 5,
+                        "_page": 2,
+                        "_source": "database"
+                    }
+                }
+            ]
+        ],
+        [
+            "_limit",
+            "limit",
+            "_offset",
+            "offset",
+            "_page",
+            "page"
+        ]
+    ],
+    "aanbod/underscored": [
+        {
+            "_limit": 30,
+            "limit": 30,
+            "_offset": 0,
+            "offset": 0,
+            "_page": 3,
+            "_source": "database"
+        },
+        [
+            [
+                "debug",
+                "Parsed query options for Aanbod",
+                {
+                    "raw_params": {
+                        "limit": "30",
+                        "offset": "0",
+                        "page": "3"
+                    },
+                    "parsed_options": {
+                        "_limit": 30,
+                        "limit": 30,
+                        "_offset": 0,
+                        "offset": 0,
+                        "_page": 3,
+                        "_source": "database"
+                    }
+                }
+            ]
+        ],
+        [
+            "_limit",
+            "_offset",
+            "_page"
+        ]
+    ],
+    "aanbod/non-numeric": [
+        {
+            "_page": 1,
+            "_source": "database"
+        },
+        [
+            [
+                "debug",
+                "Parsed query options for Aanbod",
+                {
+                    "raw_params": {
+                        "limit": "ten",
+                        "offset": "",
+                        "page": "1.5"
+                    },
+                    "parsed_options": {
+                        "_page": 1,
+                        "_source": "database"
+                    }
+                }
+            ]
+        ],
+        [
+            "_limit",
+            "limit",
+            "_offset",
+            "offset",
+            "_page",
+            "page"
+        ]
+    ],
+    "aanbod/numeric-str": [
+        {
+            "_limit": 7,
+            "limit": 7,
+            "_offset": 10,
+            "offset": 10,
+            "_page": -2,
+            "_source": "database"
+        },
+        [
+            [
+                "debug",
+                "Parsed query options for Aanbod",
+                {
+                    "raw_params": {
+                        "limit": " 7",
+                        "offset": "1e1",
+                        "page": "-2"
+                    },
+                    "parsed_options": {
+                        "_limit": 7,
+                        "limit": 7,
+                        "_offset": 10,
+                        "offset": 10,
+                        "_page": -2,
+                        "_source": "database"
+                    }
+                }
+            ]
+        ],
+        [
+            "_limit",
+            "limit",
+            "_offset",
+            "_page",
+            "page"
+        ]
+    ],
+    "aanbod/filters": [
+        {
+            "_limit": 4,
+            "limit": 4,
+            "_source": "database"
+        },
+        [
+            [
+                "debug",
+                "Parsed query options for Aanbod",
+                {
+                    "raw_params": {
+                        "limit": 4,
+                        "offset": null,
+                        "page": null
+                    },
+                    "parsed_options": {
+                        "_limit": 4,
+                        "limit": 4,
+                        "_source": "database"
+                    }
+                }
+            ]
+        ],
+        [
+            "_limit",
+            "limit",
+            "_offset",
+            "offset",
+            "_page",
+            "page"
+        ]
+    ],
+    "gebruik/none": [
+        {
+            "_source": "database"
+        },
+        [
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": null,
+                        "offset": null,
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_source": "database"
+                    }
+                }
+            ]
+        ],
+        [
+            "_limit",
+            "limit",
+            "_offset",
+            "offset",
+            "_page",
+            "page",
+            "status",
+            "startDate",
+            "endDate"
+        ]
+    ],
+    "gebruik/plain": [
+        {
+            "_limit": 10,
+            "limit": 10,
+            "_offset": 5,
+            "offset": 5,
+            "_page": 2,
+            "_source": "database"
+        },
+        [
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "10",
+                        "offset": "5",
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 10,
+                        "limit": 10,
+                        "_offset": 5,
+                        "offset": 5,
+                        "_page": 2,
+                        "_source": "database"
+                    }
+                }
+            ]
+        ],
+        [
+            "_limit",
+            "limit",
+            "_offset",
+            "offset",
+            "_page",
+            "page",
+            "status",
+            "startDate",
+            "endDate"
+        ]
+    ],
+    "gebruik/underscored": [
+        {
+            "_limit": 30,
+            "limit": 30,
+            "_offset": 0,
+            "offset": 0,
+            "_page": 3,
+            "_source": "database"
+        },
+        [
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "30",
+                        "offset": "0",
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 30,
+                        "limit": 30,
+                        "_offset": 0,
+                        "offset": 0,
+                        "_page": 3,
+                        "_source": "database"
+                    }
+                }
+            ]
+        ],
+        [
+            "_limit",
+            "_offset",
+            "_page",
+            "status",
+            "startDate",
+            "endDate"
+        ]
+    ],
+    "gebruik/non-numeric": [
+        {
+            "_page": 1,
+            "_source": "database"
+        },
+        [
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": "ten",
+                        "offset": "",
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_page": 1,
+                        "_source": "database"
+                    }
+                }
+            ]
+        ],
+        [
+            "_limit",
+            "limit",
+            "_offset",
+            "offset",
+            "_page",
+            "page",
+            "status",
+            "startDate",
+            "endDate"
+        ]
+    ],
+    "gebruik/numeric-str": [
+        {
+            "_limit": 7,
+            "limit": 7,
+            "_offset": 10,
+            "offset": 10,
+            "_page": -2,
+            "_source": "database"
+        },
+        [
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": " 7",
+                        "offset": "1e1",
+                        "status": null,
+                        "startDate": null,
+                        "endDate": null
+                    },
+                    "parsed_options": {
+                        "_limit": 7,
+                        "limit": 7,
+                        "_offset": 10,
+                        "offset": 10,
+                        "_page": -2,
+                        "_source": "database"
+                    }
+                }
+            ]
+        ],
+        [
+            "_limit",
+            "limit",
+            "_offset",
+            "_page",
+            "page",
+            "status",
+            "startDate",
+            "endDate"
+        ]
+    ],
+    "gebruik/filters": [
+        {
+            "_limit": 4,
+            "limit": 4,
+            "_source": "database"
+        },
+        [
+            [
+                "debug",
+                "Parsed query options for AangebodenGebruik",
+                {
+                    "raw_params": {
+                        "limit": 4,
+                        "offset": null,
+                        "status": " actief ",
+                        "startDate": "2026-01-01",
+                        "endDate": " "
+                    },
+                    "parsed_options": {
+                        "_limit": 4,
+                        "limit": 4,
+                        "_source": "database"
+                    }
+                }
+            ]
+        ],
+        [
+            "_limit",
+            "limit",
+            "_offset",
+            "offset",
+            "_page",
+            "page",
+            "status",
+            "startDate",
+            "endDate"
+        ]
+    ]
+}

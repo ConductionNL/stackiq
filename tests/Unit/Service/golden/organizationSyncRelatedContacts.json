@@ -1,0 +1,1374 @@
+{
+    "related: no contact schema": {
+        "stats": {
+            "contactPersonsProcessed": 0,
+            "usersCreated": 0,
+            "usersUpdated": 0,
+            "errors": [
+                "earlier error"
+            ]
+        },
+        "trace": [
+            [
+                "log.debug",
+                "Finding related contact persons",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-1"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.warning",
+                "[FLOW] Related contact processing skipped - configuration missing",
+                {
+                    "organizationId": "org-1",
+                    "register": "5",
+                    "contactSchema": ""
+                }
+            ]
+        ]
+    },
+    "related: no register": {
+        "stats": {
+            "contactPersonsProcessed": 0,
+            "usersCreated": 0,
+            "usersUpdated": 0,
+            "errors": [
+                "earlier error"
+            ]
+        },
+        "trace": [
+            [
+                "log.debug",
+                "Finding related contact persons",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-1"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.warning",
+                "[FLOW] Related contact processing skipped - configuration missing",
+                {
+                    "organizationId": "org-1",
+                    "register": "",
+                    "contactSchema": "9"
+                }
+            ]
+        ]
+    },
+    "related: found by organization field": {
+        "stats": {
+            "contactPersonsProcessed": 2,
+            "usersCreated": 1,
+            "usersUpdated": 1,
+            "errors": [
+                "earlier error",
+                "user b failed"
+            ]
+        },
+        "trace": [
+            [
+                "log.debug",
+                "Finding related contact persons",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-1"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.info",
+                "[FLOW] Searching for related contact persons with organisatie field",
+                {
+                    "organizationId": "org-1",
+                    "register": "5",
+                    "contactSchema": "9",
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-1",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-1",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "log.info",
+                "👥 PROCESSING RELATED CONTACT PERSONS",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-1",
+                    "contactCount": 3
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Processing related contact person",
+                {
+                    "organizationId": "org-1",
+                    "contactId": "c-a",
+                    "contactEmail": "a@x.nl"
+                }
+            ],
+            [
+                "service.processSpecificContactPerson",
+                "c-a",
+                {
+                    "email": "a@x.nl",
+                    "organization": "org-1"
+                }
+            ],
+            [
+                "entity.setObject",
+                "c-b",
+                {
+                    "e-mailadres": "b@x.nl",
+                    "organization": "org-1"
+                }
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "e-mailadres": "b@x.nl",
+                        "organization": "org-1"
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-b",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Set missing organisatie field on related contact",
+                {
+                    "contactId": "c-b",
+                    "organizationUuid": "org-1"
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Processing related contact person",
+                {
+                    "organizationId": "org-1",
+                    "contactId": "c-b",
+                    "contactEmail": "b@x.nl"
+                }
+            ],
+            [
+                "service.processSpecificContactPerson",
+                "c-b",
+                {
+                    "e-mailadres": "b@x.nl",
+                    "organization": "org-1"
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Contact data incomplete, re-fetching full object",
+                {
+                    "organizationId": "org-1",
+                    "contactId": "c-c"
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "c-c",
+                    "register": "5",
+                    "schema": "9",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Processing related contact person",
+                {
+                    "organizationId": "org-1",
+                    "contactId": "c-c",
+                    "contactEmail": "c@x.nl"
+                }
+            ],
+            [
+                "service.processSpecificContactPerson",
+                "c-c",
+                {
+                    "email": "c@x.nl",
+                    "organization": "org-1"
+                }
+            ]
+        ]
+    },
+    "related: found by organisation field": {
+        "stats": {
+            "contactPersonsProcessed": 1,
+            "usersCreated": 0,
+            "usersUpdated": 1,
+            "errors": [
+                "earlier error"
+            ]
+        },
+        "trace": [
+            [
+                "log.debug",
+                "Finding related contact persons",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-2"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.info",
+                "[FLOW] Searching for related contact persons with organisatie field",
+                {
+                    "organizationId": "org-2",
+                    "register": "5",
+                    "contactSchema": "9",
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-2",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-2",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Retrying search with organisation field",
+                {
+                    "organizationId": "org-2",
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "_limit": 500,
+                        "organisation": "org-2"
+                    }
+                }
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "_limit": 500,
+                        "organisation": "org-2"
+                    }
+                }
+            ],
+            [
+                "log.info",
+                "👥 PROCESSING RELATED CONTACT PERSONS",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-2",
+                    "contactCount": 1
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Processing related contact person",
+                {
+                    "organizationId": "org-2",
+                    "contactId": "c-d",
+                    "contactEmail": "d@x.nl"
+                }
+            ],
+            [
+                "service.processSpecificContactPerson",
+                "c-d",
+                {
+                    "email": "d@x.nl",
+                    "organization": "org-2"
+                }
+            ]
+        ]
+    },
+    "related: fallback to the contactpersonen array": {
+        "stats": {
+            "contactPersonsProcessed": 2,
+            "usersCreated": 0,
+            "usersUpdated": 2,
+            "errors": [
+                "earlier error"
+            ]
+        },
+        "trace": [
+            [
+                "log.debug",
+                "Finding related contact persons",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-3"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.info",
+                "[FLOW] Searching for related contact persons with organisatie field",
+                {
+                    "organizationId": "org-3",
+                    "register": "5",
+                    "contactSchema": "9",
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-3",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-3",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Retrying search with organisation field",
+                {
+                    "organizationId": "org-3",
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "_limit": 500,
+                        "organisation": "org-3"
+                    }
+                }
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "_limit": 500,
+                        "organisation": "org-3"
+                    }
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] No contacts found by organisatie field, checking org contactpersonen array",
+                {
+                    "organizationId": "org-3"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "org-3",
+                    "register": "5",
+                    "schema": "7",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Raw org contactpersonen array",
+                {
+                    "organizationId": "org-3",
+                    "contactpersonen": [
+                        "c-e",
+                        "",
+                        42,
+                        "c-gone",
+                        "c-null",
+                        "c-f"
+                    ],
+                    "count": 6
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "c-e",
+                    "register": "5",
+                    "schema": "9",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "c-gone",
+                    "register": "5",
+                    "schema": "9",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.warning",
+                "[FLOW] Could not fetch contact from contactpersonen array",
+                {
+                    "organizationId": "org-3",
+                    "contactUuid": "c-gone",
+                    "exception": "contact gone"
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "c-null",
+                    "register": "5",
+                    "schema": "9",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "c-f",
+                    "register": "5",
+                    "schema": "9",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.info",
+                "👥 PROCESSING RELATED CONTACT PERSONS",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-3",
+                    "contactCount": 2
+                }
+            ],
+            [
+                "entity.setObject",
+                "c-e",
+                {
+                    "email": "e@x.nl",
+                    "organization": "org-3"
+                }
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "email": "e@x.nl",
+                        "organization": "org-3"
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-e",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Set missing organisatie field on related contact",
+                {
+                    "contactId": "c-e",
+                    "organizationUuid": "org-3"
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Processing related contact person",
+                {
+                    "organizationId": "org-3",
+                    "contactId": "c-e",
+                    "contactEmail": "e@x.nl"
+                }
+            ],
+            [
+                "service.processSpecificContactPerson",
+                "c-e",
+                {
+                    "email": "e@x.nl",
+                    "organization": "org-3"
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Processing related contact person",
+                {
+                    "organizationId": "org-3",
+                    "contactId": "c-f",
+                    "contactEmail": "f@x.nl"
+                }
+            ],
+            [
+                "service.processSpecificContactPerson",
+                "c-f",
+                {
+                    "email": "f@x.nl",
+                    "organization": "org-other"
+                }
+            ]
+        ]
+    },
+    "related: fallback org has no contacts": {
+        "stats": {
+            "contactPersonsProcessed": 0,
+            "usersCreated": 0,
+            "usersUpdated": 0,
+            "errors": [
+                "earlier error"
+            ]
+        },
+        "trace": [
+            [
+                "log.debug",
+                "Finding related contact persons",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-4"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.info",
+                "[FLOW] Searching for related contact persons with organisatie field",
+                {
+                    "organizationId": "org-4",
+                    "register": "5",
+                    "contactSchema": "9",
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-4",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-4",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Retrying search with organisation field",
+                {
+                    "organizationId": "org-4",
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "_limit": 500,
+                        "organisation": "org-4"
+                    }
+                }
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "_limit": 500,
+                        "organisation": "org-4"
+                    }
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] No contacts found by organisatie field, checking org contactpersonen array",
+                {
+                    "organizationId": "org-4"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "org-4",
+                    "register": "5",
+                    "schema": "7",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Raw org contactpersonen array",
+                {
+                    "organizationId": "org-4",
+                    "contactpersonen": [],
+                    "count": 0
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] No related contact persons found (including contactpersonen fallback)",
+                {
+                    "organizationId": "org-4"
+                }
+            ]
+        ]
+    },
+    "related: fallback org missing": {
+        "stats": {
+            "contactPersonsProcessed": 0,
+            "usersCreated": 0,
+            "usersUpdated": 0,
+            "errors": [
+                "earlier error"
+            ]
+        },
+        "trace": [
+            [
+                "log.debug",
+                "Finding related contact persons",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-5"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.info",
+                "[FLOW] Searching for related contact persons with organisatie field",
+                {
+                    "organizationId": "org-5",
+                    "register": "5",
+                    "contactSchema": "9",
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-5",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-5",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Retrying search with organisation field",
+                {
+                    "organizationId": "org-5",
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "_limit": 500,
+                        "organisation": "org-5"
+                    }
+                }
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "_limit": 500,
+                        "organisation": "org-5"
+                    }
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] No contacts found by organisatie field, checking org contactpersonen array",
+                {
+                    "organizationId": "org-5"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "org-5",
+                    "register": "5",
+                    "schema": "7",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Raw org contactpersonen array",
+                {
+                    "organizationId": "org-5",
+                    "contactpersonen": [],
+                    "count": 0
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] No related contact persons found (including contactpersonen fallback)",
+                {
+                    "organizationId": "org-5"
+                }
+            ]
+        ]
+    },
+    "related: fallback org lookup throws": {
+        "stats": {
+            "contactPersonsProcessed": 0,
+            "usersCreated": 0,
+            "usersUpdated": 0,
+            "errors": [
+                "earlier error"
+            ]
+        },
+        "trace": [
+            [
+                "log.debug",
+                "Finding related contact persons",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-6"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.info",
+                "[FLOW] Searching for related contact persons with organisatie field",
+                {
+                    "organizationId": "org-6",
+                    "register": "5",
+                    "contactSchema": "9",
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-6",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-6",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Retrying search with organisation field",
+                {
+                    "organizationId": "org-6",
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "_limit": 500,
+                        "organisation": "org-6"
+                    }
+                }
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "_limit": 500,
+                        "organisation": "org-6"
+                    }
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] No contacts found by organisatie field, checking org contactpersonen array",
+                {
+                    "organizationId": "org-6"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "org-6",
+                    "register": "5",
+                    "schema": "7",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.warning",
+                "[FLOW] Could not re-fetch org for contactpersonen fallback",
+                {
+                    "organizationId": "org-6",
+                    "exception": "org gone"
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] No related contact persons found (including contactpersonen fallback)",
+                {
+                    "organizationId": "org-6"
+                }
+            ]
+        ]
+    },
+    "related: refetch throws, process throws": {
+        "stats": {
+            "contactPersonsProcessed": 1,
+            "usersCreated": 0,
+            "usersUpdated": 1,
+            "errors": [
+                "earlier error",
+                "Related contact c-g: process failed"
+            ]
+        },
+        "trace": [
+            [
+                "log.debug",
+                "Finding related contact persons",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-7"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.info",
+                "[FLOW] Searching for related contact persons with organisatie field",
+                {
+                    "organizationId": "org-7",
+                    "register": "5",
+                    "contactSchema": "9",
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-7",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-7",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "log.info",
+                "👥 PROCESSING RELATED CONTACT PERSONS",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-7",
+                    "contactCount": 2
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Contact data incomplete, re-fetching full object",
+                {
+                    "organizationId": "org-7",
+                    "contactId": "c-g"
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "c-g",
+                    "register": "5",
+                    "schema": "9",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.warning",
+                "[FLOW] Failed to re-fetch contact object",
+                {
+                    "organizationId": "org-7",
+                    "contactId": "c-g",
+                    "exception": "refetch failed"
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Processing related contact person",
+                {
+                    "organizationId": "org-7",
+                    "contactId": "c-g",
+                    "contactEmail": "unknown"
+                }
+            ],
+            [
+                "service.processSpecificContactPerson",
+                "c-g",
+                {
+                    "organization": "org-7"
+                }
+            ],
+            [
+                "log.error",
+                "[FLOW] Failed to process related contact person",
+                {
+                    "organizationId": "org-7",
+                    "contactId": "c-g",
+                    "exception": "process failed"
+                }
+            ],
+            [
+                "entity.setObject",
+                "c-h",
+                {
+                    "email": "h@x.nl",
+                    "organization": "org-7"
+                }
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "email": "h@x.nl",
+                        "organization": "org-7"
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-h",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Set missing organisatie field on related contact",
+                {
+                    "contactId": "c-h",
+                    "organizationUuid": "org-7"
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Processing related contact person",
+                {
+                    "organizationId": "org-7",
+                    "contactId": "c-h",
+                    "contactEmail": "h@x.nl"
+                }
+            ],
+            [
+                "service.processSpecificContactPerson",
+                "c-h",
+                {
+                    "email": "h@x.nl",
+                    "organization": "org-7"
+                }
+            ]
+        ]
+    },
+    "related: refetch returns null": {
+        "stats": {
+            "contactPersonsProcessed": 1,
+            "usersCreated": 0,
+            "usersUpdated": 1,
+            "errors": [
+                "earlier error"
+            ]
+        },
+        "trace": [
+            [
+                "log.debug",
+                "Finding related contact persons",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-8"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.info",
+                "[FLOW] Searching for related contact persons with organisatie field",
+                {
+                    "organizationId": "org-8",
+                    "register": "5",
+                    "contactSchema": "9",
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-8",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-8",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "log.info",
+                "👥 PROCESSING RELATED CONTACT PERSONS",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-8",
+                    "contactCount": 1
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Contact data incomplete, re-fetching full object",
+                {
+                    "organizationId": "org-8",
+                    "contactId": "c-i"
+                }
+            ],
+            [
+                "objects.find",
+                {
+                    "id": "c-i",
+                    "register": "5",
+                    "schema": "9",
+                    "_rbac": false,
+                    "_multitenancy": false
+                }
+            ],
+            [
+                "log.info",
+                "[FLOW] Processing related contact person",
+                {
+                    "organizationId": "org-8",
+                    "contactId": "c-i",
+                    "contactEmail": "unknown"
+                }
+            ],
+            [
+                "service.processSpecificContactPerson",
+                "c-i",
+                {
+                    "organization": "org-8"
+                }
+            ]
+        ]
+    },
+    "related: save of the organisation field throws": {
+        "stats": {
+            "contactPersonsProcessed": 0,
+            "usersCreated": 0,
+            "usersUpdated": 0,
+            "errors": [
+                "earlier error",
+                "Related contact c-j: save failed"
+            ]
+        },
+        "trace": [
+            [
+                "log.debug",
+                "Finding related contact persons",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-9"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.info",
+                "[FLOW] Searching for related contact persons with organisatie field",
+                {
+                    "organizationId": "org-9",
+                    "register": "5",
+                    "contactSchema": "9",
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-9",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-9",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "log.info",
+                "👥 PROCESSING RELATED CONTACT PERSONS",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-9",
+                    "contactCount": 1
+                }
+            ],
+            [
+                "entity.setObject",
+                "c-j",
+                {
+                    "email": "j@x.nl",
+                    "organization": "org-9"
+                }
+            ],
+            [
+                "objects.saveObject",
+                {
+                    "object": {
+                        "email": "j@x.nl",
+                        "organization": "org-9"
+                    },
+                    "register": "reg-entity",
+                    "schema": "schema-entity",
+                    "uuid": "c-j",
+                    "silent": true,
+                    "_validation": false
+                }
+            ],
+            [
+                "log.error",
+                "[FLOW] Failed to process related contact person",
+                {
+                    "organizationId": "org-9",
+                    "contactId": "c-j",
+                    "exception": "save failed"
+                }
+            ]
+        ]
+    },
+    "related: search throws": {
+        "stats": {
+            "contactPersonsProcessed": 0,
+            "usersCreated": 0,
+            "usersUpdated": 0,
+            "errors": [
+                "earlier error",
+                "Failed to process related contact persons: search failed"
+            ]
+        },
+        "trace": [
+            [
+                "log.debug",
+                "Finding related contact persons",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-10"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.info",
+                "[FLOW] Searching for related contact persons with organisatie field",
+                {
+                    "organizationId": "org-10",
+                    "register": "5",
+                    "contactSchema": "9",
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-10",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "objects.searchObjects",
+                {
+                    "query": {
+                        "@self": {
+                            "register": 5,
+                            "schema": 9
+                        },
+                        "organization": "org-10",
+                        "_limit": 500
+                    }
+                }
+            ],
+            [
+                "log.error",
+                "[FLOW] Failed to process related contact persons",
+                {
+                    "organizationId": "org-10",
+                    "exception": "search failed",
+                    "file": "(file)",
+                    "line": "(line)"
+                }
+            ]
+        ]
+    },
+    "related: settings throw": {
+        "stats": {
+            "contactPersonsProcessed": 0,
+            "usersCreated": 0,
+            "usersUpdated": 0,
+            "errors": [
+                "earlier error",
+                "Failed to process related contact persons: settings down"
+            ]
+        },
+        "trace": [
+            [
+                "log.debug",
+                "Finding related contact persons",
+                {
+                    "app": "stackiq",
+                    "organizationId": "org-11"
+                }
+            ],
+            [
+                "settings.getVoorzieningenConfig"
+            ],
+            [
+                "log.error",
+                "[FLOW] Failed to process related contact persons",
+                {
+                    "organizationId": "org-11",
+                    "exception": "settings down",
+                    "file": "(file)",
+                    "line": "(line)"
+                }
+            ]
+        ]
+    }
+}

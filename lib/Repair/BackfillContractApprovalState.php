@@ -3,6 +3,9 @@
 /**
  * Repair step that backfills the contract approval-projection default.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * For every existing `contract` object in the `voorzieningen` register that
  * does not yet carry an `approvalState`, this step writes `approvalState =
  * none` so the projection field is present and queryable. It is idempotent
@@ -26,17 +29,14 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/contract-decision-delegation/spec.md
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Repair;
 
-use OCA\Stackiq\Service\ContractApprovalService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Kernel\Contracts\ContractApprovalServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
@@ -52,12 +52,12 @@ class BackfillContractApprovalState implements IRepairStep {
 	 * Constructor.
 	 *
 	 * @param IAppManager $appManager The app manager.
-	 * @param SettingsService $settingsService The settings service (register/schema id resolution).
+	 * @param RegisterConfigReaderInterface $settingsService The settings service (register/schema id resolution).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		private readonly IAppManager $appManager,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -112,7 +112,7 @@ class BackfillContractApprovalState implements IRepairStep {
 		try {
 			$contracts = $objectService->setRegister($registerId)
 				->setSchema($schemaId)
-				->findAll([], false, false);
+				->findAll(config: [], _rbac: false, _multitenancy: false);
 		} catch (\Throwable $e) {
 			$output->warning(sprintf('Could not read contract objects: %s', $e->getMessage()));
 			$this->logger->error('[BackfillContractApprovalState] Failed to read contracts', ['error' => $e->getMessage()]);
@@ -131,7 +131,7 @@ class BackfillContractApprovalState implements IRepairStep {
 				continue;
 			}
 
-			$data['approvalState'] = ContractApprovalService::APPROVAL_NONE;
+			$data['approvalState'] = ContractApprovalServiceInterface::APPROVAL_NONE;
 			// Status is intentionally never touched — existing Actief
 			// contracts are grandfathered, no retroactive decision is raised.
 			try {

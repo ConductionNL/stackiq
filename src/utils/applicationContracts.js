@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * The contracts behind an application, and routing a catalogue row to its page.
  *
  * A contract points at a usage and a service, not at the application, so the
@@ -29,31 +33,53 @@ function rowId(row) {
  * @spec openspec/specs/application-page/spec.md#requirement-req-apg-003-the-application-page-lists-the-contracts-behind-the-application
  */
 export async function loadApplicationContracts(applicationId, fetchList) {
-	const usages = await fetchList('usage', { module: applicationId, _limit: PAGE })
-	const services = await fetchList('catalogService', {
-		modules: applicationId,
-		_limit: PAGE,
-	})
-	const usageIds = (usages ?? []).map(rowId).filter(Boolean)
-	const serviceIds = (services ?? []).map(rowId).filter(Boolean)
+	const usageIds = idsOf(
+		await fetchList('usage', { module: applicationId, _limit: PAGE }),
+	)
+	const serviceIds = idsOf(
+		await fetchList('catalogService', { modules: applicationId, _limit: PAGE }),
+	)
+	const lists = [
+		await contractsWhere(fetchList, { usage: usageIds }),
+		await contractsWhere(fetchList, { service: serviceIds }),
+	]
+	return uniqueById(lists.flat())
+}
 
-	const lists = []
-	if (usageIds.length > 0) {
-		lists.push(
-			await fetchList('catalogContract', { usage: usageIds, _limit: PAGE }),
-		)
-	}
-	if (serviceIds.length > 0) {
-		lists.push(
-			await fetchList('catalogContract', {
-				service: serviceIds,
-				_limit: PAGE,
-			}),
-		)
-	}
+/**
+ * The ids of a list of rows, skipping rows without one.
+ *
+ * @param {object[]|null} rows The rows
+ * @return {string[]} The ids
+ */
+function idsOf(rows) {
+	return (rows ?? []).map(rowId).filter(Boolean)
+}
 
+/**
+ * The contracts linked to any of the ids, or none without ids.
+ *
+ * @param {(type: string, params: object) => Promise<object[]|null>} fetchList Resolves to the rows the user may read
+ * @param {{[relation: string]: string[]}} filter One relation and its ids
+ * @return {Promise<object[]|null>} The contracts
+ */
+async function contractsWhere(fetchList, filter) {
+	const [ids] = Object.values(filter)
+	if (ids.length === 0) {
+		return []
+	}
+	return fetchList('catalogContract', { ...filter, _limit: PAGE })
+}
+
+/**
+ * The contracts with an id, the first of each id only.
+ *
+ * @param {object[]} contracts The contracts
+ * @return {object[]} The unique contracts, in order
+ */
+function uniqueById(contracts) {
 	const byId = new Map()
-	for (const contract of lists.flat()) {
+	for (const contract of contracts) {
 		const id = rowId(contract)
 		if (id && !byId.has(id)) {
 			byId.set(id, contract)

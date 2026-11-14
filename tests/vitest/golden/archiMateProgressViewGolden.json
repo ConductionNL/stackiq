@@ -1,0 +1,183 @@
+[
+	null,
+	{
+		"label": "stackiq:Checking the file",
+		"percentage": 0,
+		"detail": ""
+	},
+	{
+		"label": "stackiq:Checking the file",
+		"percentage": 30,
+		"detail": "stackiq:3 of 10 objects saved"
+	},
+	{
+		"label": "stackiq:Checking the file",
+		"percentage": 0,
+		"detail": ""
+	},
+	{
+		"label": "stackiq:Checking the file",
+		"percentage": 0,
+		"detail": "stackiq:0 of 2 objects saved"
+	},
+	{
+		"label": "stackiq:Checking the file",
+		"percentage": 0,
+		"detail": ""
+	},
+	{
+		"label": "stackiq:Checking the file",
+		"percentage": 30,
+		"detail": "stackiq:3 of 10 objects saved"
+	},
+	{
+		"label": "stackiq:Checking the file",
+		"percentage": 0,
+		"detail": ""
+	},
+	{
+		"label": "stackiq:Checking the file",
+		"percentage": 0,
+		"detail": "stackiq:0 of 2 objects saved"
+	},
+	{
+		"label": "stackiq:Reading the model",
+		"percentage": 0,
+		"detail": ""
+	},
+	{
+		"label": "stackiq:Reading the model",
+		"percentage": 30,
+		"detail": "stackiq:3 of 10 objects saved"
+	},
+	{
+		"label": "stackiq:Reading the model",
+		"percentage": 0,
+		"detail": ""
+	},
+	{
+		"label": "stackiq:Reading the model",
+		"percentage": 0,
+		"detail": "stackiq:0 of 2 objects saved"
+	},
+	{
+		"label": "stackiq:Converting the model",
+		"percentage": 0,
+		"detail": ""
+	},
+	{
+		"label": "stackiq:Converting the model",
+		"percentage": 30,
+		"detail": "stackiq:3 of 10 objects saved"
+	},
+	{
+		"label": "stackiq:Converting the model",
+		"percentage": 0,
+		"detail": ""
+	},
+	{
+		"label": "stackiq:Converting the model",
+		"percentage": 0,
+		"detail": "stackiq:0 of 2 objects saved"
+	},
+	{
+		"label": "stackiq:Saving objects",
+		"percentage": 0,
+		"detail": ""
+	},
+	{
+		"label": "stackiq:Saving objects",
+		"percentage": 30,
+		"detail": "stackiq:3 of 10 objects saved"
+	},
+	{
+		"label": "stackiq:Saving objects",
+		"percentage": 0,
+		"detail": ""
+	},
+	{
+		"label": "stackiq:Saving objects",
+		"percentage": 0,
+		"detail": "stackiq:0 of 2 objects saved"
+	},
+	{
+		"label": "stackiq:Finishing the import",
+		"percentage": 0,
+		"detail": ""
+	},
+	{
+		"label": "stackiq:Finishing the import",
+		"percentage": 30,
+		"detail": "stackiq:3 of 10 objects saved"
+	},
+	{
+		"label": "stackiq:Finishing the import",
+		"percentage": 0,
+		"detail": ""
+	},
+	{
+		"label": "stackiq:Finishing the import",
+		"percentage": 0,
+		"detail": "stackiq:0 of 2 objects saved"
+	},
+	{
+		"label": "stackiq:Importing",
+		"percentage": 0,
+		"detail": ""
+	},
+	{
+		"label": "stackiq:Importing",
+		"percentage": 30,
+		"detail": "stackiq:3 of 10 objects saved"
+	},
+	{
+		"label": "stackiq:Importing",
+		"percentage": 0,
+		"detail": ""
+	},
+	{
+		"label": "stackiq:Importing",
+		"percentage": 0,
+		"detail": "stackiq:0 of 2 objects saved"
+	},
+	{
+		"label": "stackiq:Importing",
+		"percentage": 0,
+		"detail": ""
+	},
+	{
+		"label": "stackiq:Importing",
+		"percentage": 30,
+		"detail": "stackiq:3 of 10 objects saved"
+	},
+	{
+		"label": "stackiq:Importing",
+		"percentage": 0,
+		"detail": ""
+	},
+	{
+		"label": "stackiq:Importing",
+		"percentage": 0,
+		"detail": "stackiq:0 of 2 objects saved"
+	},
+	{
+		"label": "stackiq:Importing",
+		"percentage": 0,
+		"detail": ""
+	},
+	{
+		"label": "stackiq:Importing",
+		"percentage": 30,
+		"detail": "stackiq:3 of 10 objects saved"
+	},
+	{
+		"label": "stackiq:Importing",
+		"percentage": 0,
+		"detail": ""
+	},
+	{
+		"label": "stackiq:Importing",
+		"percentage": 0,
+		"detail": "stackiq:0 of 2 objects saved"
+	}
+]

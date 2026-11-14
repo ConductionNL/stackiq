@@ -1,0 +1,531 @@
+{
+	"getSchemaConfig: registered type": {
+		"result": {
+			"source": "openregister",
+			"schema": "s1",
+			"register": "r1"
+		}
+	},
+	"getSchemaConfig: no registry, no settings": {
+		"error": "Error: Settings not loaded"
+	},
+	"getSchemaConfig: registry miss, no settings": {
+		"error": "Error: Settings not loaded"
+	},
+	"getSchemaConfig: voorzieningen blob": {
+		"result": {
+			"source": "openregister",
+			"schema": 9,
+			"register": 3
+		}
+	},
+	"getSchemaConfig: voorzieningenConfig blob": {
+		"result": {
+			"source": "openregister",
+			"schema": 8,
+			"register": 4
+		}
+	},
+	"getSchemaConfig: voorzieningen without the schema falls to amef": {
+		"result": {
+			"source": "openregister",
+			"schema": 6,
+			"register": 5
+		}
+	},
+	"getSchemaConfig: voorzieningen without register falls to amefConfig": {
+		"result": {
+			"source": "openregister",
+			"schema": 2,
+			"register": 7
+		}
+	},
+	"getSchemaConfig: amef blob wins over amefConfig": {
+		"result": {
+			"source": "openregister",
+			"schema": 6,
+			"register": 5
+		}
+	},
+	"getSchemaConfig: amef without register falls to legacy": {
+		"result": {
+			"source": "openregister",
+			"schema": "x",
+			"register": "y"
+		}
+	},
+	"getSchemaConfig: legacy prefixed keys": {
+		"result": {
+			"source": "internal",
+			"schema": "vs",
+			"register": "vr"
+		}
+	},
+	"getSchemaConfig: legacy plain keys": {
+		"result": {
+			"source": "other",
+			"schema": "ps",
+			"register": "pr"
+		}
+	},
+	"getSchemaConfig: legacy shared register and default source": {
+		"result": {
+			"source": "openregister",
+			"schema": "ps",
+			"register": "gr"
+		}
+	},
+	"getSchemaConfig: legacy empty schema": {
+		"error": "Error: Invalid configuration for object type: gebruik. Schema: , Register: pr"
+	},
+	"getSchemaConfig: legacy missing register": {
+		"error": "Error: Invalid configuration for object type: gebruik. Schema: ps, Register: "
+	},
+	"getSchemaConfig: no configuration at all": {
+		"error": "Error: Invalid configuration for object type: gebruik. Schema: undefined, Register: undefined"
+	},
+	"saveObject: typed create": {
+		"result": {
+			"id": "a1",
+			"name": "n"
+		},
+		"fetch": [
+			[
+				"/url/app/null",
+				{
+					"method": "POST",
+					"headers": {
+						"requesttoken": "token",
+						"X-OpenRegister-Organisation": "org-1"
+					},
+					"body": "{\"name\":\"n\"}"
+				}
+			]
+		],
+		"args": [
+			"app",
+			{
+				"name": "n"
+			}
+		],
+		"objects": {
+			"app": {
+				"a1": {
+					"id": "a1",
+					"name": "n"
+				}
+			}
+		},
+		"calls": [
+			[
+				"_buildUrl",
+				"app",
+				null
+			]
+		]
+	},
+	"saveObject: typed update by id": {
+		"result": {
+			"id": "a1"
+		},
+		"fetch": [
+			[
+				"/url/app/a1",
+				{
+					"method": "PUT",
+					"headers": {
+						"requesttoken": "token",
+						"X-OpenRegister-Organisation": "org-1"
+					},
+					"body": "{\"id\":\"a1\",\"name\":\"n\"}"
+				}
+			]
+		],
+		"args": [
+			"app",
+			{
+				"id": "a1",
+				"name": "n"
+			}
+		],
+		"objects": {
+			"app": {
+				"a0": {},
+				"a1": {
+					"id": "a1"
+				}
+			}
+		},
+		"calls": [
+			[
+				"_buildUrl",
+				"app",
+				"a1"
+			]
+		]
+	},
+	"saveObject: typed update by @self id": {
+		"result": {
+			"id": "a2"
+		},
+		"fetch": [
+			[
+				"/url/app/a2",
+				{
+					"method": "PUT",
+					"headers": {
+						"requesttoken": "token",
+						"X-OpenRegister-Organisation": "org-1"
+					},
+					"body": "{\"@self\":{\"id\":\"a2\"}}"
+				}
+			]
+		],
+		"args": [
+			"app",
+			{
+				"@self": {
+					"id": "a2"
+				}
+			}
+		],
+		"objects": {
+			"app": {
+				"a2": {
+					"id": "a2"
+				}
+			}
+		},
+		"calls": [
+			[
+				"_buildUrl",
+				"app",
+				"a2"
+			]
+		]
+	},
+	"saveObject: typed answer without id": {
+		"result": {
+			"name": "n"
+		},
+		"fetch": [
+			[
+				"/url/app/null",
+				{
+					"method": "POST",
+					"headers": {
+						"requesttoken": "token",
+						"X-OpenRegister-Organisation": "org-1"
+					},
+					"body": "{\"name\":\"n\"}"
+				}
+			]
+		],
+		"args": [
+			"app",
+			{
+				"name": "n"
+			}
+		],
+		"objects": {},
+		"calls": [
+			[
+				"_buildUrl",
+				"app",
+				null
+			]
+		]
+	},
+	"saveObject: typed create next to another cached type": {
+		"result": {
+			"id": "a3"
+		},
+		"fetch": [
+			[
+				"/url/app/null",
+				{
+					"method": "POST",
+					"headers": {
+						"requesttoken": "token",
+						"X-OpenRegister-Organisation": "org-1"
+					},
+					"body": "{\"name\":\"n\"}"
+				}
+			]
+		],
+		"args": [
+			"app",
+			{
+				"name": "n"
+			}
+		],
+		"objects": {
+			"module": {
+				"m1": {
+					"id": "m1"
+				}
+			},
+			"app": {
+				"a3": {
+					"id": "a3"
+				}
+			}
+		},
+		"calls": [
+			[
+				"_buildUrl",
+				"app",
+				null
+			]
+		]
+	},
+	"saveObject: legacy without an item": {
+		"error": "Error: Object item, register and schema are required",
+		"fetch": [],
+		"args": [
+			"(undefined)",
+			{
+				"register": 3,
+				"schema": 7
+			}
+		],
+		"objects": {},
+		"calls": []
+	},
+	"saveObject: typed failure": {
+		"error": "Error: Failed to save app object",
+		"fetch": [
+			[
+				"/url/app/a1",
+				{
+					"method": "PUT",
+					"headers": {
+						"requesttoken": "token",
+						"X-OpenRegister-Organisation": "org-1"
+					},
+					"body": "{\"id\":\"a1\"}"
+				}
+			]
+		],
+		"args": [
+			"app",
+			{
+				"id": "a1"
+			}
+		],
+		"objects": {},
+		"calls": [
+			[
+				"_buildUrl",
+				"app",
+				"a1"
+			]
+		]
+	},
+	"saveObject: legacy create": {
+		"result": {
+			"status": 200,
+			"data": {
+				"id": "x"
+			}
+		},
+		"fetch": [
+			[
+				"/index.php/apps/openregister/api/objects/3/7",
+				{
+					"method": "POST",
+					"headers": {
+						"requesttoken": "token"
+					},
+					"body": "{\"name\":\"n\",\"@self\":{\"updated\":\"2026-11-02T10:20:30.000Z\"}}"
+				}
+			]
+		],
+		"args": [
+			{
+				"name": "n",
+				"@self": {
+					"updated": "2026-11-02T10:20:30.000Z"
+				}
+			},
+			{
+				"register": {
+					"id": 3
+				},
+				"schema": 7
+			}
+		],
+		"objects": {},
+		"calls": []
+	},
+	"saveObject: legacy update": {
+		"result": {
+			"status": 200,
+			"data": {
+				"id": "o1"
+			}
+		},
+		"fetch": [
+			[
+				"/index.php/apps/openregister/api/objects/3/su/o1",
+				{
+					"method": "PUT",
+					"headers": {
+						"requesttoken": "token"
+					},
+					"body": "{\"@self\":{\"id\":\"o1\",\"updated\":\"2026-11-02T10:20:30.000Z\"}}"
+				}
+			]
+		],
+		"args": [
+			{
+				"@self": {
+					"id": "o1",
+					"updated": "2026-11-02T10:20:30.000Z"
+				}
+			},
+			{
+				"register": 3,
+				"schema": {
+					"uuid": "su"
+				}
+			}
+		],
+		"objects": {},
+		"calls": []
+	},
+	"saveObject: legacy self without id": {
+		"result": {
+			"status": 200,
+			"data": {}
+		},
+		"fetch": [
+			[
+				"/index.php/apps/openregister/api/objects/3/7",
+				{
+					"method": "POST",
+					"headers": {
+						"requesttoken": "token"
+					},
+					"body": "{\"@self\":{\"updated\":\"2026-11-02T10:20:30.000Z\"}}"
+				}
+			]
+		],
+		"args": [
+			{
+				"@self": {
+					"updated": "2026-11-02T10:20:30.000Z"
+				}
+			},
+			{
+				"register": 3,
+				"schema": 7
+			}
+		],
+		"objects": {},
+		"calls": []
+	},
+	"saveObject: legacy failure": {
+		"error": "Error: Failed to save object: 500 Server Error",
+		"fetch": [
+			[
+				"/index.php/apps/openregister/api/objects/3/7",
+				{
+					"method": "POST",
+					"headers": {
+						"requesttoken": "token"
+					},
+					"body": "{\"name\":\"n\",\"@self\":{\"updated\":\"2026-11-02T10:20:30.000Z\"}}"
+				}
+			]
+		],
+		"args": [
+			{
+				"name": "n",
+				"@self": {
+					"updated": "2026-11-02T10:20:30.000Z"
+				}
+			},
+			{
+				"register": 3,
+				"schema": 7
+			}
+		],
+		"objects": {},
+		"calls": []
+	},
+	"saveObject: legacy missing config": {
+		"error": "Error: Object item, register and schema are required",
+		"fetch": [],
+		"args": [
+			{
+				"name": "n"
+			},
+			"(undefined)"
+		],
+		"objects": {},
+		"calls": []
+	},
+	"saveObject: legacy missing item": {
+		"error": "Error: Object item, register and schema are required",
+		"fetch": [],
+		"args": [
+			null,
+			{
+				"register": 3,
+				"schema": 7
+			}
+		],
+		"objects": {},
+		"calls": []
+	},
+	"saveObject: legacy missing schema": {
+		"error": "Error: Object item, register and schema are required",
+		"fetch": [],
+		"args": [
+			{
+				"name": "n"
+			},
+			{
+				"register": 3
+			}
+		],
+		"objects": {},
+		"calls": []
+	},
+	"saveObject: legacy register without id": {
+		"error": "Error: Could not extract register or schema ID",
+		"fetch": [],
+		"args": [
+			{
+				"name": "n"
+			},
+			{
+				"register": {
+					"title": "r"
+				},
+				"schema": 7
+			}
+		],
+		"objects": {},
+		"calls": []
+	},
+	"saveObject: legacy schema id zero": {
+		"error": "Error: Could not extract register or schema ID",
+		"fetch": [],
+		"args": [
+			{
+				"name": "n"
+			},
+			{
+				"register": 3,
+				"schema": {
+					"id": 0,
+					"_id": 0
+				}
+			}
+		],
+		"objects": {},
+		"calls": []
+	}
+}

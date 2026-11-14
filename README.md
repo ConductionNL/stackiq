@@ -136,6 +136,29 @@ npm run build
 php occ app:enable stackiq
 ```
 
+### Try it with Docker
+
+The repository builds an evaluation image: the official Nextcloud image with stackiq and OpenRegister installed and enabled. It is meant for trying the app out and for test environments. For production, install the app from the Nextcloud App Store.
+
+```bash
+docker compose -f docker-compose.yml up -d --build
+```
+
+Open http://localhost:8080/apps/stackiq/ and sign in as `admin` with password `admin`. The first start takes a minute or two. Set `NEXTCLOUD_ADMIN_PASSWORD` and `APP_PORT` to change the password and the port; `docker-compose.yml` lists every setting. `docker compose -f docker-compose.yml down -v` removes the stack and its data.
+
+Released versions are published as `ghcr.io/conductionnl/stackiq`, so leaving out `--build` uses the published image.
+
+### Run it on Kubernetes
+
+`charts/stackiq` wraps the official [Nextcloud Helm chart](https://github.com/nextcloud/helm) and runs the same image with PostgreSQL:
+
+```bash
+helm dependency build charts/stackiq
+helm install stackiq charts/stackiq --set nextcloud.nextcloud.host=stackiq.example.org
+```
+
+Change the passwords in `charts/stackiq/values.yaml` before you install it anywhere that matters.
+
 ## Development
 
 ### Start the environment
@@ -207,6 +230,12 @@ Every commit runs through the [Conduction quality workflow](https://github.com/C
 - **Stylelint** — CSS linting
 
 All checks must pass before a release. Run locally with `composer check:strict` (full PHP pipeline) or `npm run lint` (frontend).
+
+### Test coverage
+
+<!-- coverage:start -->
+Measured test coverage: 85.7% of statements (PHP 85.0% of 31,623 statements, JavaScript 87.9% of 8,915 statements), at commit `e75ababa` on 2026-11-13. The figures come from [`coverage-summary.json`](coverage-summary.json); refresh them with `composer coverage:publish`.
+<!-- coverage:end -->
 
 ### API Tests (454 Assertions)
 

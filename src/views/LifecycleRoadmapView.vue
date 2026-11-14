@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <template>
 	<div class="roadmapView">
 		<div class="rm-header">
@@ -133,12 +137,15 @@ import { navigationStore, objectStore } from '../store/store.js'
 import {
 	derivePhase,
 	endOfSupportState,
+	indexByUuid,
 	isEolApproaching,
 	parseDate,
 	PHASE,
 	phaseOrder,
+	recordUuid,
 	resolveUuid,
 } from '../utils/lifecyclePhase.js'
+import { fetchObjectTypeCollection } from '../utils/objectTypeCollection.js'
 
 const EOL_WINDOW_DAYS = 180
 
@@ -215,15 +222,10 @@ export default {
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		moduleVersieIndex() {
-			const index = {}
-			for (const mv of objectStore.getCollection('moduleVersion')?.results
-				|| []) {
-				const id = resolveUuid(mv.uuid ?? mv.id ?? mv['@self']?.id ?? mv)
-				if (id) {
-					index[id] = mv
-				}
-			}
-			return index
+			return indexByUuid(
+				objectStore.getCollection('moduleVersion')?.results || [],
+				(record) => record,
+			)
 		},
 
 		/**
@@ -233,14 +235,10 @@ export default {
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		moduleIndex() {
-			const index = {}
-			for (const m of objectStore.getCollection('module')?.results || []) {
-				const id = resolveUuid(m.uuid ?? m.id ?? m['@self']?.id ?? m)
-				if (id) {
-					index[id] = m
-				}
-			}
-			return index
+			return indexByUuid(
+				objectStore.getCollection('module')?.results || [],
+				(record) => record,
+			)
 		},
 
 		/**
@@ -252,7 +250,7 @@ export default {
 		organisationOptions() {
 			return (objectStore.getCollection('organization')?.results || []).map(
 				(org) => ({
-					uuid: resolveUuid(org.uuid ?? org.id ?? org['@self']?.id ?? org),
+					uuid: recordUuid(org),
 					label:
 						org.name
 						|| org.title
@@ -356,31 +354,7 @@ export default {
 		 * @spec openspec/specs/application-lifecycle-tracking/spec.md
 		 */
 		async fetchType(type) {
-			// Register the object type from the resolved config before fetching —
-			// the slug-based auto-registration only fires when the settings
-			// `availableRegisters` carries a register slugged exactly
-			// 'stackiq', which is not guaranteed on every instance. Without
-			// this the nc-vue object store throws "Object type <type> is not
-			// registered".
-			if (
-				typeof objectStore.registerObjectType === 'function'
-				&& !objectStore.objectTypeRegistry?.[type]
-			) {
-				let cfg = null
-				try {
-					cfg = objectStore.getSchemaConfig?.(type)
-				} catch (cfgError) {
-					// getSchemaConfig throws when no schema/register resolves;
-					// fall through so fetchCollection surfaces its own error.
-				}
-				if (cfg?.register && cfg?.schema) {
-					objectStore.registerObjectType(type, cfg.schema, cfg.register)
-				}
-			}
-
-			if (typeof objectStore.fetchCollection === 'function') {
-				await objectStore.fetchCollection(type, { _limit: 1000 })
-			}
+			await fetchObjectTypeCollection(objectStore, type)
 		},
 
 		/**

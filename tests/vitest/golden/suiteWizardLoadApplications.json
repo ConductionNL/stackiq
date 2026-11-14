@@ -1,0 +1,463 @@
+{
+	"settings present, module not registered": {
+		"outcome": "resolved",
+		"state": {
+			"loading": false,
+			"loadError": ""
+		},
+		"trace": [
+			[
+				"registerObjectType",
+				"module",
+				"module",
+				"reg-1",
+				{
+					"registerSlug": "stackiq",
+					"schemaSlug": "module"
+				}
+			],
+			[
+				"fetchCollection",
+				"module",
+				{
+					"_limit": 1000
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": ""
+				}
+			]
+		]
+	},
+	"settings present, module already registered": {
+		"outcome": "resolved",
+		"state": {
+			"loading": false,
+			"loadError": ""
+		},
+		"trace": [
+			[
+				"fetchCollection",
+				"module",
+				{
+					"_limit": 1000
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": ""
+				}
+			]
+		]
+	},
+	"register from voorzieningenConfig": {
+		"outcome": "resolved",
+		"state": {
+			"loading": false,
+			"loadError": ""
+		},
+		"trace": [
+			[
+				"registerObjectType",
+				"module",
+				"module",
+				"reg-2",
+				{
+					"registerSlug": "stackiq",
+					"schemaSlug": "module"
+				}
+			],
+			[
+				"fetchCollection",
+				"module",
+				{
+					"_limit": 1000
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": ""
+				}
+			]
+		]
+	},
+	"voorzieningen wins over voorzieningenConfig": {
+		"outcome": "resolved",
+		"state": {
+			"loading": false,
+			"loadError": ""
+		},
+		"trace": [
+			[
+				"registerObjectType",
+				"module",
+				"module",
+				"reg-1",
+				{
+					"registerSlug": "stackiq",
+					"schemaSlug": "module"
+				}
+			],
+			[
+				"fetchCollection",
+				"module",
+				{
+					"_limit": 1000
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": ""
+				}
+			]
+		]
+	},
+	"empty voorzieningen falls back": {
+		"outcome": "resolved",
+		"state": {
+			"loading": false,
+			"loadError": ""
+		},
+		"trace": [
+			[
+				"registerObjectType",
+				"module",
+				"module",
+				"reg-2",
+				{
+					"registerSlug": "stackiq",
+					"schemaSlug": "module"
+				}
+			],
+			[
+				"fetchCollection",
+				"module",
+				{
+					"_limit": 1000
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": ""
+				}
+			]
+		]
+	},
+	"no register id": {
+		"outcome": "resolved",
+		"state": {
+			"loading": false,
+			"loadError": ""
+		},
+		"trace": [
+			[
+				"fetchCollection",
+				"module",
+				{
+					"_limit": 1000
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": ""
+				}
+			]
+		]
+	},
+	"empty settings object": {
+		"outcome": "resolved",
+		"state": {
+			"loading": false,
+			"loadError": ""
+		},
+		"trace": [
+			[
+				"fetchCollection",
+				"module",
+				{
+					"_limit": 1000
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": ""
+				}
+			]
+		]
+	},
+	"no settings, fetched": {
+		"outcome": "resolved",
+		"state": {
+			"loading": false,
+			"loadError": ""
+		},
+		"trace": [
+			[
+				"fetchSettings"
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": ""
+				}
+			],
+			[
+				"registerObjectType",
+				"module",
+				"module",
+				"reg-1",
+				{
+					"registerSlug": "stackiq",
+					"schemaSlug": "module"
+				}
+			],
+			[
+				"fetchCollection",
+				"module",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"no settings, nothing fetched": {
+		"outcome": "resolved",
+		"state": {
+			"loading": false,
+			"loadError": ""
+		},
+		"trace": [
+			[
+				"fetchSettings"
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": ""
+				}
+			],
+			[
+				"fetchCollection",
+				"module",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"no settings and no fetchSettings": {
+		"outcome": "resolved",
+		"state": {
+			"loading": false,
+			"loadError": ""
+		},
+		"trace": [
+			[
+				"fetchCollection",
+				"module",
+				{
+					"_limit": 1000
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": ""
+				}
+			]
+		]
+	},
+	"no registerObjectType": {
+		"outcome": "resolved",
+		"state": {
+			"loading": false,
+			"loadError": ""
+		},
+		"trace": [
+			[
+				"fetchCollection",
+				"module",
+				{
+					"_limit": 1000
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": ""
+				}
+			]
+		]
+	},
+	"no fetchCollection": {
+		"outcome": "resolved",
+		"state": {
+			"loading": false,
+			"loadError": ""
+		},
+		"trace": [
+			[
+				"registerObjectType",
+				"module",
+				"module",
+				"reg-1",
+				{
+					"registerSlug": "stackiq",
+					"schemaSlug": "module"
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": false,
+					"error": ""
+				}
+			]
+		]
+	},
+	"registry without module key": {
+		"outcome": "resolved",
+		"state": {
+			"loading": false,
+			"loadError": ""
+		},
+		"trace": [
+			[
+				"registerObjectType",
+				"module",
+				"module",
+				"reg-1",
+				{
+					"registerSlug": "stackiq",
+					"schemaSlug": "module"
+				}
+			],
+			[
+				"fetchCollection",
+				"module",
+				{
+					"_limit": 1000
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": ""
+				}
+			]
+		]
+	},
+	"fetchSettings fails": {
+		"outcome": "resolved",
+		"state": {
+			"loading": false,
+			"loadError": "stackiq:Could not load applications. Please try again."
+		},
+		"trace": [
+			[
+				"fetchSettings"
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": ""
+				}
+			],
+			[
+				"console.error",
+				"Step2Applications: failed to load applications",
+				"Error: settings failed"
+			]
+		]
+	},
+	"fetchCollection fails": {
+		"outcome": "resolved",
+		"state": {
+			"loading": false,
+			"loadError": "stackiq:Could not load applications. Please try again."
+		},
+		"trace": [
+			[
+				"registerObjectType",
+				"module",
+				"module",
+				"reg-1",
+				{
+					"registerSlug": "stackiq",
+					"schemaSlug": "module"
+				}
+			],
+			[
+				"fetchCollection",
+				"module",
+				{
+					"_limit": 1000
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": ""
+				}
+			],
+			[
+				"console.error",
+				"Step2Applications: failed to load applications",
+				"Error: fetch failed"
+			]
+		]
+	},
+	"registerObjectType fails": {
+		"outcome": "resolved",
+		"state": {
+			"loading": false,
+			"loadError": "stackiq:Could not load applications. Please try again."
+		},
+		"trace": [
+			[
+				"registerObjectType",
+				"module",
+				"module",
+				"reg-1",
+				{
+					"registerSlug": "stackiq",
+					"schemaSlug": "module"
+				}
+			],
+			[
+				"console.error",
+				"Step2Applications: failed to load applications",
+				"Error: register failed"
+			],
+			[
+				"while running",
+				{
+					"loading": false,
+					"error": "stackiq:Could not load applications. Please try again."
+				}
+			]
+		]
+	}
+}

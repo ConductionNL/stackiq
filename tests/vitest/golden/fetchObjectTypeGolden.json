@@ -1,0 +1,901 @@
+{
+	"SbomComponentsPanel, unregistered, config resolves": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"SbomComponentsPanel, already registered": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"SbomComponentsPanel, no registry yet": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"SbomComponentsPanel, config throws": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"SbomComponentsPanel, config without schema": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"SbomComponentsPanel, no getSchemaConfig": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"SbomComponentsPanel, no registerObjectType": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"SbomComponentsPanel, no fetchCollection": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			]
+		]
+	},
+	"SbomComponentsPanel, fetchCollection rejects": {
+		"outcome": "rejected: fetch failed",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"VulnerabilityExposurePanel, unregistered, config resolves": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"VulnerabilityExposurePanel, already registered": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"VulnerabilityExposurePanel, no registry yet": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"VulnerabilityExposurePanel, config throws": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"VulnerabilityExposurePanel, config without schema": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"VulnerabilityExposurePanel, no getSchemaConfig": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"VulnerabilityExposurePanel, no registerObjectType": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"VulnerabilityExposurePanel, no fetchCollection": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			]
+		]
+	},
+	"VulnerabilityExposurePanel, fetchCollection rejects": {
+		"outcome": "rejected: fetch failed",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"LifecycleRoadmapView, unregistered, config resolves": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"LifecycleRoadmapView, already registered": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"LifecycleRoadmapView, no registry yet": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"LifecycleRoadmapView, config throws": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"LifecycleRoadmapView, config without schema": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"LifecycleRoadmapView, no getSchemaConfig": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"LifecycleRoadmapView, no registerObjectType": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"LifecycleRoadmapView, no fetchCollection": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			]
+		]
+	},
+	"LifecycleRoadmapView, fetchCollection rejects": {
+		"outcome": "rejected: fetch failed",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"LicensePostureView, unregistered, config resolves": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"LicensePostureView, already registered": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"LicensePostureView, no registry yet": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"LicensePostureView, config throws": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"LicensePostureView, config without schema": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"LicensePostureView, no getSchemaConfig": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"LicensePostureView, no registerObjectType": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"LicensePostureView, no fetchCollection": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			]
+		]
+	},
+	"LicensePostureView, fetchCollection rejects": {
+		"outcome": "rejected: fetch failed",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"KwetsbaarhedenView, unregistered, config resolves": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"KwetsbaarhedenView, already registered": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"KwetsbaarhedenView, no registry yet": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"KwetsbaarhedenView, config throws": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"KwetsbaarhedenView, config without schema": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"KwetsbaarhedenView, no getSchemaConfig": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"KwetsbaarhedenView, no registerObjectType": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"KwetsbaarhedenView, no fetchCollection": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			]
+		]
+	},
+	"KwetsbaarhedenView, fetchCollection rejects": {
+		"outcome": "rejected: fetch failed",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"ComplianceMatrixView, unregistered, config resolves": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"ComplianceMatrixView, already registered": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"ComplianceMatrixView, no registry yet": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"ComplianceMatrixView, config throws": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"ComplianceMatrixView, config without schema": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"ComplianceMatrixView, no getSchemaConfig": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"ComplianceMatrixView, no registerObjectType": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			]
+		]
+	},
+	"ComplianceMatrixView, no fetchCollection": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			]
+		]
+	},
+	"ComplianceMatrixView, fetchCollection rejects": {
+		"outcome": "resolved",
+		"trace": [
+			[
+				"getSchemaConfig",
+				"thing"
+			],
+			[
+				"registerObjectType",
+				"thing",
+				"s",
+				"r"
+			],
+			[
+				"fetchCollection",
+				"thing",
+				{
+					"_limit": 1000
+				}
+			],
+			[
+				"console.warn",
+				"ComplianceMatrixView: thing collection unavailable",
+				"Error: fetch failed"
+			]
+		]
+	}
+}

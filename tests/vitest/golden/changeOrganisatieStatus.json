@@ -1,0 +1,612 @@
+{
+	"activate": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": null
+		},
+		"trace": [
+			[
+				"objectStore.getActiveObject",
+				"organization"
+			],
+			[
+				"console.info",
+				"Changing organisation status:",
+				{
+					"organisatieId": "org-1",
+					"currentStatus": "Draft",
+					"newStatus": "Active"
+				}
+			],
+			[
+				"objectStore.patchObject",
+				"organization",
+				"org-1",
+				{
+					"status": "Active"
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": null
+				}
+			],
+			[
+				"navigationStore.setTransferData",
+				{
+					"action": "organisationActivated",
+					"organisationName": "Gemeente Zuiddrecht",
+					"status": "Active"
+				}
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"deactivate": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": null
+		},
+		"trace": [
+			[
+				"objectStore.getActiveObject",
+				"organization"
+			],
+			[
+				"console.info",
+				"Changing organisation status:",
+				{
+					"organisatieId": "org-1",
+					"currentStatus": "Draft",
+					"newStatus": "Inactive"
+				}
+			],
+			[
+				"objectStore.patchObject",
+				"organization",
+				"org-1",
+				{
+					"status": "Inactive"
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": null
+				}
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"activate, name only on @self": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": null
+		},
+		"trace": [
+			[
+				"objectStore.getActiveObject",
+				"organization"
+			],
+			[
+				"console.info",
+				"Changing organisation status:",
+				{
+					"organisatieId": "org-2",
+					"currentStatus": "(undefined)",
+					"newStatus": "Active"
+				}
+			],
+			[
+				"objectStore.patchObject",
+				"organization",
+				"org-2",
+				{
+					"status": "Active"
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": null
+				}
+			],
+			[
+				"navigationStore.setTransferData",
+				{
+					"action": "organisationActivated",
+					"organisationName": "Self only",
+					"status": "Active"
+				}
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"activate, no name at all": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": null
+		},
+		"trace": [
+			[
+				"objectStore.getActiveObject",
+				"organization"
+			],
+			[
+				"console.info",
+				"Changing organisation status:",
+				{
+					"organisatieId": "org-3",
+					"currentStatus": "(undefined)",
+					"newStatus": "Active"
+				}
+			],
+			[
+				"objectStore.patchObject",
+				"organization",
+				"org-3",
+				{
+					"status": "Active"
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": null
+				}
+			],
+			[
+				"navigationStore.setTransferData",
+				{
+					"action": "organisationActivated",
+					"organisationName": "(undefined)",
+					"status": "Active"
+				}
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"activate, lowercase status is not activation": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": null
+		},
+		"trace": [
+			[
+				"objectStore.getActiveObject",
+				"organization"
+			],
+			[
+				"console.info",
+				"Changing organisation status:",
+				{
+					"organisatieId": "org-1",
+					"currentStatus": "Draft",
+					"newStatus": "active"
+				}
+			],
+			[
+				"objectStore.patchObject",
+				"organization",
+				"org-1",
+				{
+					"status": "active"
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": null
+				}
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	},
+	"no active organisation": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "stackiq:Organisation or new status is missing:null"
+		},
+		"trace": [
+			[
+				"objectStore.getActiveObject",
+				"organization"
+			],
+			[
+				"console.error",
+				"Error changing organisation status:",
+				"Error: stackiq:Organisation or new status is missing:null"
+			],
+			[
+				"while running",
+				{
+					"loading": false,
+					"error": "stackiq:Organisation or new status is missing:null"
+				}
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"organisation without id": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "stackiq:Organisation or new status is missing:null"
+		},
+		"trace": [
+			[
+				"objectStore.getActiveObject",
+				"organization"
+			],
+			[
+				"console.error",
+				"Error changing organisation status:",
+				"Error: stackiq:Organisation or new status is missing:null"
+			],
+			[
+				"while running",
+				{
+					"loading": false,
+					"error": "stackiq:Organisation or new status is missing:null"
+				}
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"organisation with empty id": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "stackiq:Organisation or new status is missing:null"
+		},
+		"trace": [
+			[
+				"objectStore.getActiveObject",
+				"organization"
+			],
+			[
+				"console.error",
+				"Error changing organisation status:",
+				"Error: stackiq:Organisation or new status is missing:null"
+			],
+			[
+				"while running",
+				{
+					"loading": false,
+					"error": "stackiq:Organisation or new status is missing:null"
+				}
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"no new status": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "stackiq:Organisation or new status is missing:null"
+		},
+		"trace": [
+			[
+				"objectStore.getActiveObject",
+				"organization"
+			],
+			[
+				"console.error",
+				"Error changing organisation status:",
+				"Error: stackiq:Organisation or new status is missing:null"
+			],
+			[
+				"while running",
+				{
+					"loading": false,
+					"error": "stackiq:Organisation or new status is missing:null"
+				}
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"empty new status": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "stackiq:Organisation or new status is missing:null"
+		},
+		"trace": [
+			[
+				"objectStore.getActiveObject",
+				"organization"
+			],
+			[
+				"console.error",
+				"Error changing organisation status:",
+				"Error: stackiq:Organisation or new status is missing:null"
+			],
+			[
+				"while running",
+				{
+					"loading": false,
+					"error": "stackiq:Organisation or new status is missing:null"
+				}
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"no dialog properties": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "stackiq:Organisation or new status is missing:null"
+		},
+		"trace": [
+			[
+				"objectStore.getActiveObject",
+				"organization"
+			],
+			[
+				"console.error",
+				"Error changing organisation status:",
+				"Error: stackiq:Organisation or new status is missing:null"
+			],
+			[
+				"while running",
+				{
+					"loading": false,
+					"error": "stackiq:Organisation or new status is missing:null"
+				}
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"patch fails with a message": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "Forbidden"
+		},
+		"trace": [
+			[
+				"objectStore.getActiveObject",
+				"organization"
+			],
+			[
+				"console.info",
+				"Changing organisation status:",
+				{
+					"organisatieId": "org-1",
+					"currentStatus": "Draft",
+					"newStatus": "Active"
+				}
+			],
+			[
+				"objectStore.patchObject",
+				"organization",
+				"org-1",
+				{
+					"status": "Active"
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": null
+				}
+			],
+			[
+				"console.error",
+				"Error changing organisation status:",
+				"Error: Forbidden"
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"patch fails without a message": {
+		"outcome": "resolved",
+		"state": {
+			"success": null,
+			"loading": false,
+			"error": "stackiq:An error occurred while changing the status:null"
+		},
+		"trace": [
+			[
+				"objectStore.getActiveObject",
+				"organization"
+			],
+			[
+				"console.info",
+				"Changing organisation status:",
+				{
+					"organisatieId": "org-1",
+					"currentStatus": "Draft",
+					"newStatus": "Inactive"
+				}
+			],
+			[
+				"objectStore.patchObject",
+				"organization",
+				"org-1",
+				{
+					"status": "Inactive"
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": null
+				}
+			],
+			[
+				"console.error",
+				"Error changing organisation status:",
+				"Error"
+			],
+			[
+				"timers pending",
+				0
+			],
+			[
+				"after 1999 ms"
+			]
+		]
+	},
+	"earlier error is cleared": {
+		"outcome": "resolved",
+		"state": {
+			"success": true,
+			"loading": false,
+			"error": null
+		},
+		"trace": [
+			[
+				"objectStore.getActiveObject",
+				"organization"
+			],
+			[
+				"console.info",
+				"Changing organisation status:",
+				{
+					"organisatieId": "org-1",
+					"currentStatus": "Draft",
+					"newStatus": "Inactive"
+				}
+			],
+			[
+				"objectStore.patchObject",
+				"organization",
+				"org-1",
+				{
+					"status": "Inactive"
+				}
+			],
+			[
+				"while running",
+				{
+					"loading": true,
+					"error": null
+				}
+			],
+			[
+				"timers pending",
+				1
+			],
+			[
+				"after 1999 ms"
+			],
+			[
+				"closeDialog"
+			]
+		]
+	}
+}

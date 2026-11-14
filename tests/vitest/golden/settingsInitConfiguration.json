@@ -1,0 +1,493 @@
+{
+	"empty | selected none": {
+		"calls": [],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": null
+			},
+			"usage": {
+				"schema": null
+			},
+			"other": {
+				"schema": null
+			}
+		},
+		"selectedRegister": null
+	},
+	"empty | selected two": {
+		"calls": [],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": null
+			},
+			"usage": {
+				"schema": null
+			},
+			"other": {
+				"schema": null
+			}
+		},
+		"selectedRegister": {
+			"label": "Two",
+			"value": "2"
+		}
+	},
+	"empty | selected one": {
+		"calls": [],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": null
+			},
+			"usage": {
+				"schema": null
+			},
+			"other": {
+				"schema": null
+			}
+		},
+		"selectedRegister": {
+			"label": "One",
+			"value": "1"
+		}
+	},
+	"register and schemas | selected none": {
+		"calls": [
+			[
+				"updateSchemaOptions",
+				"1"
+			]
+		],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": {
+					"label": "Ten",
+					"value": "10"
+				}
+			},
+			"usage": {
+				"schema": {
+					"label": "Eleven",
+					"value": "11"
+				}
+			},
+			"other": {
+				"schema": {
+					"label": "Eleven",
+					"value": "11"
+				}
+			}
+		},
+		"selectedRegister": {
+			"label": "One",
+			"value": "1"
+		}
+	},
+	"register and schemas | selected two": {
+		"calls": [],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": null
+			},
+			"usage": {
+				"schema": null
+			},
+			"other": {
+				"schema": null
+			}
+		},
+		"selectedRegister": {
+			"label": "Two",
+			"value": "2"
+		}
+	},
+	"register and schemas | selected one": {
+		"calls": [],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": {
+					"label": "Ten",
+					"value": "10"
+				}
+			},
+			"usage": {
+				"schema": {
+					"label": "Eleven",
+					"value": "11"
+				}
+			},
+			"other": {
+				"schema": {
+					"label": "Eleven",
+					"value": "11"
+				}
+			}
+		},
+		"selectedRegister": {
+			"label": "One",
+			"value": "1"
+		}
+	},
+	"unknown register | selected none": {
+		"calls": [],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": null
+			},
+			"usage": {
+				"schema": null
+			},
+			"other": {
+				"schema": null
+			}
+		},
+		"selectedRegister": null
+	},
+	"unknown register | selected two": {
+		"calls": [],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": null
+			},
+			"usage": {
+				"schema": null
+			},
+			"other": {
+				"schema": null
+			}
+		},
+		"selectedRegister": {
+			"label": "Two",
+			"value": "2"
+		}
+	},
+	"unknown register | selected one": {
+		"calls": [],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": {
+					"label": "Ten",
+					"value": "10"
+				}
+			},
+			"usage": {
+				"schema": null
+			},
+			"other": {
+				"schema": null
+			}
+		},
+		"selectedRegister": {
+			"label": "One",
+			"value": "1"
+		}
+	},
+	"register without schema list | selected none": {
+		"calls": [
+			[
+				"updateSchemaOptions",
+				"2"
+			]
+		],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": null
+			},
+			"usage": {
+				"schema": null
+			},
+			"other": {
+				"schema": null
+			}
+		},
+		"selectedRegister": {
+			"label": "Two",
+			"value": "2"
+		}
+	},
+	"register without schema list | selected two": {
+		"calls": [],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": null
+			},
+			"usage": {
+				"schema": null
+			},
+			"other": {
+				"schema": null
+			}
+		},
+		"selectedRegister": {
+			"label": "Two",
+			"value": "2"
+		}
+	},
+	"register without schema list | selected one": {
+		"calls": [],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": {
+					"label": "Ten",
+					"value": "10"
+				}
+			},
+			"usage": {
+				"schema": {
+					"label": "Ten",
+					"value": "10"
+				}
+			},
+			"other": {
+				"schema": null
+			}
+		},
+		"selectedRegister": {
+			"label": "One",
+			"value": "1"
+		}
+	},
+	"register without schemas | selected none": {
+		"calls": [
+			[
+				"updateSchemaOptions",
+				"3"
+			]
+		],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": null
+			},
+			"usage": {
+				"schema": null
+			},
+			"other": {
+				"schema": null
+			}
+		},
+		"selectedRegister": {
+			"label": "Three",
+			"value": "3"
+		}
+	},
+	"register without schemas | selected two": {
+		"calls": [],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": null
+			},
+			"usage": {
+				"schema": null
+			},
+			"other": {
+				"schema": null
+			}
+		},
+		"selectedRegister": {
+			"label": "Two",
+			"value": "2"
+		}
+	},
+	"register without schemas | selected one": {
+		"calls": [],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": {
+					"label": "Ten",
+					"value": "10"
+				}
+			},
+			"usage": {
+				"schema": null
+			},
+			"other": {
+				"schema": null
+			}
+		},
+		"selectedRegister": {
+			"label": "One",
+			"value": "1"
+		}
+	},
+	"schema only | selected none": {
+		"calls": [],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": null
+			},
+			"usage": {
+				"schema": null
+			},
+			"other": {
+				"schema": null
+			}
+		},
+		"selectedRegister": null
+	},
+	"schema only | selected two": {
+		"calls": [],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": null
+			},
+			"usage": {
+				"schema": null
+			},
+			"other": {
+				"schema": null
+			}
+		},
+		"selectedRegister": {
+			"label": "Two",
+			"value": "2"
+		}
+	},
+	"schema only | selected one": {
+		"calls": [],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": {
+					"label": "Ten",
+					"value": "10"
+				}
+			},
+			"usage": {
+				"schema": null
+			},
+			"other": {
+				"schema": null
+			}
+		},
+		"selectedRegister": {
+			"label": "One",
+			"value": "1"
+		}
+	},
+	"unknown schema | selected none": {
+		"calls": [
+			[
+				"updateSchemaOptions",
+				"1"
+			]
+		],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": null
+			},
+			"usage": {
+				"schema": {
+					"label": "Eleven",
+					"value": "11"
+				}
+			},
+			"other": {
+				"schema": null
+			}
+		},
+		"selectedRegister": {
+			"label": "One",
+			"value": "1"
+		}
+	},
+	"unknown schema | selected two": {
+		"calls": [],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": null
+			},
+			"usage": {
+				"schema": null
+			},
+			"other": {
+				"schema": null
+			}
+		},
+		"selectedRegister": {
+			"label": "Two",
+			"value": "2"
+		}
+	},
+	"unknown schema | selected one": {
+		"calls": [],
+		"configuration": {
+			"existing": {
+				"schema": "kept"
+			},
+			"module": {
+				"schema": null
+			},
+			"usage": {
+				"schema": {
+					"label": "Eleven",
+					"value": "11"
+				}
+			},
+			"other": {
+				"schema": null
+			}
+		},
+		"selectedRegister": {
+			"label": "One",
+			"value": "1"
+		}
+	}
+}

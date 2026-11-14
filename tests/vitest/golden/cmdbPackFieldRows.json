@@ -1,0 +1,161 @@
+{
+	"no pack": [],
+	"null pack": [],
+	"no mappings": [],
+	"mappings not a list": [],
+	"empty mappings": [],
+	"odd mappings": [
+		{
+			"source": "",
+			"target": "",
+			"required": false,
+			"transform": ""
+		},
+		{
+			"source": "",
+			"target": "",
+			"required": false,
+			"transform": ""
+		},
+		{
+			"source": "",
+			"target": "",
+			"required": false,
+			"transform": ""
+		},
+		{
+			"source": "3",
+			"target": "",
+			"required": false,
+			"transform": ""
+		},
+		{
+			"source": "a",
+			"target": "b",
+			"required": true,
+			"transform": ""
+		}
+	],
+	"transforms": [
+		{
+			"source": "col0",
+			"target": "field0",
+			"required": true,
+			"transform": ""
+		},
+		{
+			"source": "col1",
+			"target": "field1",
+			"required": false,
+			"transform": ""
+		},
+		{
+			"source": "col2",
+			"target": "field2",
+			"required": true,
+			"transform": ""
+		},
+		{
+			"source": "col3",
+			"target": "field3",
+			"required": false,
+			"transform": "trim"
+		},
+		{
+			"source": "col4",
+			"target": "field4",
+			"required": true,
+			"transform": ""
+		},
+		{
+			"source": "col5",
+			"target": "field5",
+			"required": false,
+			"transform": ""
+		},
+		{
+			"source": "col6",
+			"target": "field6",
+			"required": true,
+			"transform": ""
+		},
+		{
+			"source": "col7",
+			"target": "field7",
+			"required": false,
+			"transform": ""
+		},
+		{
+			"source": "col8",
+			"target": "field8",
+			"required": true,
+			"transform": ""
+		},
+		{
+			"source": "col9",
+			"target": "field9",
+			"required": false,
+			"transform": ""
+		},
+		{
+			"source": "col10",
+			"target": "field10",
+			"required": true,
+			"transform": "date"
+		},
+		{
+			"source": "col11",
+			"target": "field11",
+			"required": false,
+			"transform": "7"
+		},
+		{
+			"source": "col12",
+			"target": "field12",
+			"required": true,
+			"transform": "lookup"
+		},
+		{
+			"source": "col13",
+			"target": "field13",
+			"required": false,
+			"transform": "lookup"
+		},
+		{
+			"source": "col14",
+			"target": "field14",
+			"required": true,
+			"transform": "lookup"
+		},
+		{
+			"source": "col15",
+			"target": "field15",
+			"required": false,
+			"transform": "lookup (0)"
+		},
+		{
+			"source": "col16",
+			"target": "field16",
+			"required": true,
+			"transform": "lookup (2)"
+		},
+		{
+			"source": "col17",
+			"target": "field17",
+			"required": false,
+			"transform": "lookup (3)"
+		},
+		{
+			"source": "col18",
+			"target": "field18",
+			"required": true,
+			"transform": "Lookup"
+		},
+		{
+			"source": "col19",
+			"target": "field19",
+			"required": false,
+			"transform": "date"
+		}
+	]
+}
