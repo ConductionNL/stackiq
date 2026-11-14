@@ -776,6 +776,46 @@
                 }
             }
         },
+        "/archimate/round-trip-check": {
+            "post": {
+                "operationId": "settings-check-archi-mate-round-trip",
+                "summary": "Check that an exchange file survives the import and export",
+                "description": "Check that an uploaded exchange file survives the import and export, writing nothing. Admin only and multipart only (archiMateFile); a file_path parameter is refused. mode is before-import (the default) or against-imported.",
+                "tags": [
+                    "settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The comparison per category with the mode, model identifier and time taken.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
         "/archimate/import/cancel": {
             "post": {
                 "operationId": "settings-cancel-archi-mate-import",
