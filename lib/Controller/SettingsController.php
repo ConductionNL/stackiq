@@ -37,6 +37,7 @@ use OCA\Stackiq\Kernel\Contracts\EolSyncServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ModuleComplianceServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ProgressTrackerInterface;
+use OCA\Stackiq\Service\SyncAccessPolicy;
 use OCA\Stackiq\Kernel\Contracts\RoleGroupSettingsInterface;
 use OCA\Stackiq\Kernel\Contracts\SettingsServiceInterface;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
@@ -1448,9 +1449,10 @@ class SettingsController extends Controller {
 	 *
 	 * Progress lives in a store every request reads (the distributed cache, or
 	 * the app config without a shared cache), so any request can load an
-	 * operation by its id. Its owner and Nextcloud admins may read it. An
-	 * operation without an owner, such as one a background job started, is
-	 * for admins only.
+	 * operation by its id. Its owner and Nextcloud admins may read it, and an
+	 * organisation sync also whoever SyncAccessPolicy lets see the sync. Any
+	 * other operation without an owner, such as one a background job started,
+	 * is for admins only.
 	 *
 	 * @param array  $progress The stored progress snapshot.
 	 * @param string $uid      The signed-in caller.
@@ -1465,7 +1467,14 @@ class SettingsController extends Controller {
 			return true;
 		}
 
-		return $this->groupManager->isAdmin($uid) === true;
+		if ($this->groupManager->isAdmin($uid) === true) {
+			return true;
+		}
+
+		// The organisation sync runs from cron with no owner: whoever may see
+		// the sync may follow it (operations-sync-status-and-progress D4).
+		return ($progress['operation_type'] ?? null) === 'organisation_sync'
+			&& (new SyncAccessPolicy(groupManager: $this->groupManager))->mayViewSync(uid: $uid) === true;
 	}//end mayReadProgress()
 
 	/**

@@ -59,6 +59,13 @@ class OrganizationContactSyncJob extends TimedJob {
 	public const JOB_ID = 'organization_contact_sync';
 
 	/**
+	 * How often the job runs, in seconds; the cronjob settings show the same value.
+	 *
+	 * @var integer
+	 */
+	public const INTERVAL_SECONDS = 300;
+
+	/**
 	 * Organization synchronization service
 	 *
 	 * @var OrganizationSyncServiceInterface The service handling sync operations
@@ -86,8 +93,7 @@ class OrganizationContactSyncJob extends TimedJob {
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $timeFactory);
-		$this->setInterval(seconds: 300);
-		// 5 minutes.
+		$this->setInterval(seconds: self::INTERVAL_SECONDS);
 		$this->orgSyncService = $orgSyncService;
 	}//end __construct()
 

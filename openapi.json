@@ -2403,6 +2403,50 @@
                 }
             }
         },
+        "/sync/status": {
+            "get": {
+                "operationId": "sync-status-status",
+                "summary": "The organisation sync's schedule, its last run and the running run",
+                "description": "The interval in seconds, whether the scheduled sync is switched on, the record of the last run and the running run (null when none runs). Nextcloud admins and functional administrators only.",
+                "tags": [
+                    "settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The sync status.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller may not see the synchronisation.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/eol-sync/trigger": {
             "post": {
                 "operationId": "settings-trigger-eol-sync",
