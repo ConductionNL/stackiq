@@ -2874,6 +2874,8 @@ class SettingsService implements RegisterConfigReaderInterface, SettingsServiceI
 		'sector' => 'sector_schema',
 		'sbomComponent' => 'sbomComponent_schema',
 		'maintenanceWindow' => 'maintenanceWindow_schema',
+		'attestationRound' => 'attestationRound_schema',
+		'attestationRequest' => 'attestationRequest_schema',
 	];
 
 	/**

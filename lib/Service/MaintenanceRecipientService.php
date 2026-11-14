@@ -292,6 +292,46 @@ class MaintenanceRecipientService implements MaintenanceRecipientServiceInterfac
 	}//end ownerUserIds()
 
 	/**
+	 * The Nextcloud user of each contact person, by contact person id.
+	 *
+	 * A contact person without a matching user is left out. A failed read is
+	 * thrown, so a caller never mistakes it for "nobody has an account".
+	 *
+	 * @param ObjectServiceInterface $objectService OpenRegister's object service.
+	 * @param array<int, string>     $contactIds    The contact person ids.
+	 *
+	 * @return array<string, string> User id per contact person id.
+	 *
+	 * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
+	 */
+	public function contactUserIds(ObjectServiceInterface $objectService, array $contactIds): array {
+		$contactIds = array_values(array_unique($contactIds));
+		$register   = $this->settingsService->getRegisterIdForObjectType('contactPerson');
+		$schema     = $this->settingsService->getSchemaIdForObjectType('contactPerson');
+		if ($contactIds === [] || $register === null || $schema === null) {
+			return [];
+		}
+
+		$people = $objectService->searchObjects(
+			query: ['register' => $register, 'schema' => $schema, '_limit' => count($contactIds)],
+			_rbac: false,
+			_multitenancy: false,
+			ids: $contactIds
+		);
+
+		$userIds = [];
+		foreach ((array) $people as $person) {
+			$uid = $this->userIdForContactPerson(person: $person->getObject());
+			$id  = (string) $person->getUuid();
+			if ($uid !== null && in_array($id, $contactIds, true) === true) {
+				$userIds[$id] = $uid;
+			}
+		}
+
+		return $userIds;
+	}//end contactUserIds()
+
+	/**
 	 * The contact person ids named as owner on the usages of a product.
 	 *
 	 * @param ObjectServiceInterface $objectService OpenRegister's object service.

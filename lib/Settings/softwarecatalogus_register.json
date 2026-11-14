@@ -3,7 +3,7 @@
   "info": {
     "title": "Software Catalog Register",
     "description": "Register containing AMEF and Voorzieningen schemas for the VNG Software Catalog application. This configuration includes schemas for applications, services, organizations, and compliance tracking.",
-    "version": "2.5.8",
+    "version": "2.5.9",
     "changelog": "2.5.8: schema properties no longer carry null validation keywords (minimum, maximum, multipleOf, minItems, maxItems, minLength, maxLength). OpenRegister's JSON Schema validator rejects a null there ('minimum must contain a valid number'), so no object could be created on a schema with hardValidation, such as element, and the E2E seed failed. Bumped: catalogService (0.2.2), contactPerson (0.0.29), organization (0.5.3), usage (1.5.3), element (0.0.12), view (0.0.8), model (0.0.44), property-definition (0.0.9), relation (0.0.9), module (0.3.4). The loader keeps the highest version per schema, so the fragments that carry the effective version of catalogService and organization (publication-field-rules.json: 0.2.3, 0.5.4) and of usage and module (topdesk-cmdb-import.json: 1.5.7, 0.3.9) are bumped too; an equal version is skipped on upgrade. 2.5.7: a contract no longer requires a catalogue service, because a licence bought for an application in use has none; the service desk exchange imports such licences (sharing-itsm-exchange). The fragment sharing-itsm-exchange.json adds the service desk reference to usage (1.5.4), connection (0.3.4) and catalogContract (0.1.4), and the licence fields vendorReference, currency and supplier to catalogContract. 2.5.6: contactsUid is no longer required on organization (0.5.2) and contactPerson (0.0.28). It is a link to the Nextcloud addressbook that the contacts sync fills in after the record exists (MigrateContactsToNc, OrganizationContactSyncJob), so a required column made OpenRegister create it NOT NULL and every seed organisation failed to save on a fresh install (the organization table stayed empty). OpenRegister drops the NOT NULL on the existing column when the schema syncs. 2.5.5: the maintenanceWindow schema (0.1.0) joins the stackiq register, for maintenance a supplier plans on its products, with the owners of every usage notified (lifecycle-maintenance-and-supplier-roadmap). 2.5.4: usage (1.5.2) gains businessOwner and technicalOwner, contact persons of the consumer organisation; a usage is named after its application and organisation; status becomes facetable for the Applications in use filters (landscape-usage-registration). 2.5.3: the aiSystem schema (0.1.0) joins the stackiq register, for the AI systems an organisation uses and their EU AI Act classification (landscape-ai-system-inventory). 2.5.2: the connection schema (0.3.3) asked its national provision picker for gemmaType Buitengemeentenlijke voorziening, a spelling the GEMMA model does not use (it says Buitengemeentelijke voorziening), so the picker found nothing; its name template named the keys gegevensuitwisselingRichting and buitengemeentelijkVoorziening and the values AnaarB, BnaarA and bi-directioneel, all renamed since, so a connection had no readable name; and type, status and dataExchangeDirection become facetable for the new Connections page (connections-catalogue-pages). 2.5.1: the x-openregister-lifecycle blocks of usage, catalogContract, connection and moduleVersion still named the Dutch states (Verwerving/Gepland/In productie/Uit te faseren/Uitgefaseerd, In onderhandeling/Actief/Verlopen, in ontwikkeling/in gebruik/einde ondersteuning/teruggetrokken) while their status enums and the rows RenameDutchCatalogValues migrated are English, so no transition was ever offered on those records (stackiq#1140). The states now use the enum values, and the four schema versions are bumped (usage 1.5.1, catalogContract 0.1.2, connection 0.3.2, moduleVersion 0.1.5) because a lifecycle-only edit does not deploy without one, as 2.4.4 records. 2.4.4: organization.status was left behind by #520's enum translation — its `default` was still 'Concept' and its whole x-openregister-lifecycle block still named Concept/Actief/Deactief, while the enum and the migrated rows are Draft/Active/Inactive/merged. A default outside its own enum makes every newly created organisation fall out of the Organisations index filter, and a lifecycle whose from/to values match no row offers no transition at all — neither raises an error. The schema version is bumped with it because a deployed version >= the declared one makes the import SKIP, and OpenRegister's schemaContentDiffers() escape hatch compares only properties/required/authorization — never `configuration` — so a lifecycle-only edit would never have deployed. 2.4.3: Re-authored Dutch schema-level titles to English (dienst, kwetsbaarheid, contactpersoon, organisatie, gebruik, koppeling, beoordeeling, module, bioMaatregel, moduleVersie, sbomComponent); schema keys unchanged, Dutch labels now come from the app's l10n translation files. 2.4.2: Moved SBOM provenance properties (sbomLastImportedAt, sbomFormat, sbomFileName, sbomComponents) from the organisatie schema to moduleVersie, where SBOM imports actually record them; without this the moduleVersie magic table lacked the columns so recordProvenance() writes were silently dropped and the import-status endpoint always reported 'never imported'. 2.4.1: Re-authored Dutch schema property titles to English (property keys unchanged); Dutch labels now come from the app's l10n translation files."
   },
   "x-openregister": {
@@ -817,7 +817,7 @@
       "stackiq": {
         "slug": "stackiq",
         "title": "Voorzieningen",
-        "version": "2.1.0",
+        "version": "2.1.1",
         "description": "Register voor voorzieningen uit de softwarecatalogus",
         "published": "2025-01-01T00:00:00+00:00",
         "schemas": [
@@ -837,7 +837,9 @@
           "sbomComponent",
           "bioMeasure",
           "aiSystem",
-          "maintenanceWindow"
+          "maintenanceWindow",
+          "attestationRound",
+          "attestationRequest"
         ],
         "source": "internal",
         "tablePrefix": "",
@@ -8229,6 +8231,349 @@
               }
             }
           ]
+        }
+      },
+      "attestationRound": {
+        "slug": "attestationRound",
+        "title": "Confirmation round",
+        "version": "0.1.0",
+        "icon": "ClipboardCheckOutline",
+        "description": "A round in which owners confirm or correct their entries by a deadline.",
+        "required": [
+          "name",
+          "deadline",
+          "scopeSchema",
+          "scopeOrganisation",
+          "status"
+        ],
+        "configuration": {
+          "objectNameField": "name",
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "open",
+            "final": [
+              "closed"
+            ],
+            "transitions": {
+              "close": {
+                "from": [
+                  "open"
+                ],
+                "to": "closed",
+                "description": "Close the round."
+              }
+            }
+          }
+        },
+        "authorization": {
+          "create": [
+            "admin"
+          ],
+          "read": [
+            "admin",
+            {
+              "group": "maintainer",
+              "match": {
+                "scopeOrganisation": "$organisation"
+              }
+            }
+          ],
+          "update": [
+            "admin"
+          ],
+          "delete": [
+            "admin"
+          ]
+        },
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "What the round is called, for example the quarter it covers.",
+            "maxLength": 200,
+            "visible": true,
+            "order": 1
+          },
+          "deadline": {
+            "type": "string",
+            "format": "date",
+            "title": "Deadline",
+            "description": "The date by which every owner should have answered.",
+            "visible": true,
+            "facetable": true,
+            "order": 2
+          },
+          "scopeSchema": {
+            "type": "string",
+            "enum": [
+              "usage",
+              "module"
+            ],
+            "title": "Entries",
+            "description": "Which entries the round covers: the applications the organisation uses, or the products it supplies.",
+            "visible": true,
+            "facetable": true,
+            "order": 3
+          },
+          "scopeOrganisation": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Organisation",
+            "description": "The organisation whose entries the round covers.",
+            "visible": true,
+            "facetable": true,
+            "order": 4
+          },
+          "startedBy": {
+            "type": "string",
+            "title": "Started by",
+            "description": "The user who started the round.",
+            "visible": true,
+            "hideOnForm": true,
+            "order": 5
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "open",
+              "closed"
+            ],
+            "default": "open",
+            "title": "Status",
+            "description": "Whether the round still collects answers.",
+            "visible": true,
+            "facetable": true,
+            "order": 6
+          },
+          "requestCount": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Requests",
+            "description": "How many requests the round sent. Written by the service.",
+            "visible": true,
+            "hideOnForm": true,
+            "order": 7
+          },
+          "answeredCount": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Answered",
+            "description": "How many requests were confirmed or corrected. Written by the service.",
+            "visible": true,
+            "hideOnForm": true,
+            "order": 8
+          },
+          "unassigned": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            },
+            "title": "Entries without an owner",
+            "description": "Entries no request could be sent for because no owner with an account is named. Assign an owner first.",
+            "visible": true,
+            "hideOnForm": true,
+            "order": 9
+          }
+        }
+      },
+      "attestationRequest": {
+        "slug": "attestationRequest",
+        "title": "Confirmation request",
+        "version": "0.1.0",
+        "icon": "AccountCheckOutline",
+        "description": "A request to one owner to confirm or correct one entry.",
+        "required": [
+          "round",
+          "entrySchema",
+          "entryId",
+          "assigneeUserId",
+          "status"
+        ],
+        "configuration": {
+          "objectNameField": "entryName"
+        },
+        "authorization": {
+          "create": [
+            "admin"
+          ],
+          "read": [
+            "admin",
+            {
+              "group": "maintainer",
+              "match": {
+                "scopeOrganisation": "$organisation"
+              }
+            },
+            {
+              "group": "authenticated",
+              "match": {
+                "assigneeUserId": "$userId"
+              },
+              "crossOrganisation": true
+            }
+          ],
+          "update": [
+            "admin",
+            {
+              "group": "authenticated",
+              "match": {
+                "assigneeUserId": "$userId"
+              },
+              "crossOrganisation": true
+            }
+          ],
+          "delete": [
+            "admin"
+          ]
+        },
+        "x-openregister-notifications": {
+          "request-created": {
+            "trigger": {
+              "type": "created"
+            },
+            "enabled": true,
+            "channels": [
+              "nc-notification",
+              "email"
+            ],
+            "recipients": [
+              {
+                "kind": "field",
+                "field": "assigneeUserId"
+              }
+            ],
+            "subject": {
+              "nl": "Bevestig uw gegevens: {{entryName}}",
+              "en": "Please confirm your entry: {{entryName}}"
+            }
+          },
+          "deadline-near": {
+            "trigger": {
+              "type": "scheduled",
+              "intervalSec": 86400,
+              "filter": {
+                "deadline": {
+                  "operator": "withinNext",
+                  "value": "P3D"
+                },
+                "status": {
+                  "operator": "equals",
+                  "value": "pending"
+                }
+              }
+            },
+            "enabled": true,
+            "channels": [
+              "nc-notification",
+              "email"
+            ],
+            "recipients": [
+              {
+                "kind": "field",
+                "field": "assigneeUserId"
+              }
+            ],
+            "subject": {
+              "nl": "Herinnering: bevestig {{entryName}} voor {{deadline}}",
+              "en": "Reminder: confirm {{entryName}} before {{deadline}}"
+            }
+          }
+        },
+        "properties": {
+          "round": {
+            "type": "object",
+            "title": "Round",
+            "description": "The round this request belongs to.",
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/attestationRound",
+            "visible": true,
+            "order": 1
+          },
+          "scopeOrganisation": {
+            "type": "string",
+            "format": "uuid",
+            "title": "Organisation",
+            "description": "The organisation of the round, so its maintainers can follow the request.",
+            "visible": false,
+            "order": 2
+          },
+          "entrySchema": {
+            "type": "string",
+            "enum": [
+              "usage",
+              "module"
+            ],
+            "title": "Entry type",
+            "description": "Whether the entry is an application in use or a product.",
+            "visible": true,
+            "facetable": true,
+            "order": 3
+          },
+          "entryId": {
+            "type": "string",
+            "title": "Entry",
+            "description": "The id of the entry to confirm.",
+            "visible": false,
+            "order": 4
+          },
+          "entryName": {
+            "type": "string",
+            "title": "Entry name",
+            "description": "The entry's name, for lists and the notification.",
+            "maxLength": 255,
+            "visible": true,
+            "order": 5
+          },
+          "assigneeUserId": {
+            "type": "string",
+            "title": "Owner",
+            "description": "The user asked to confirm the entry.",
+            "visible": true,
+            "facetable": true,
+            "order": 6
+          },
+          "assigneeContact": {
+            "type": "string",
+            "title": "Owner contact",
+            "description": "The contact person the owner was resolved from.",
+            "visible": false,
+            "order": 7
+          },
+          "deadline": {
+            "type": "string",
+            "format": "date",
+            "title": "Deadline",
+            "description": "The round's deadline, kept on the request for the reminder.",
+            "visible": true,
+            "facetable": true,
+            "order": 8
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "confirmed",
+              "corrected",
+              "overdue"
+            ],
+            "default": "pending",
+            "title": "Status",
+            "description": "Whether the owner confirmed the entry, corrected it, or has not answered yet.",
+            "visible": true,
+            "facetable": true,
+            "order": 9
+          },
+          "respondedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Answered on",
+            "description": "When the owner confirmed or corrected the entry.",
+            "visible": true,
+            "hideOnForm": true,
+            "order": 10
+          }
         }
       }
     },
