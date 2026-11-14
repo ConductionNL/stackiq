@@ -40,8 +40,8 @@
   - GIVEN /gebruik/:id WHEN Suggest from GEMMA is chosen THEN the three levels fill and nothing is saved until Save
   - GIVEN /gebruik WHEN it opens THEN BBN level is a column with quick filters BBN1, BBN2, BBN3 and Not classified
   - GIVEN /modules/:id with three classifying organisations WHEN it opens for a municipal user THEN the summary shows counts and no names
-- [ ] Implement
-- [ ] Test (vitest tests/vitest/usageClassificationPanel.spec.js and Playwright tests/e2e/spec-coverage/baseline-classification.spec.ts)
+- [x] Implement
+- [ ] Test (vitest tests/vitest/usageClassificationPanel.spec.js done; Playwright tests/e2e/spec-coverage/baseline-classification.spec.ts)
 
 ### Task 5: Seed classifications and document the feature
 - **spec_ref**: openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-004-municipalities-shall-see-how-organisations-classify-an-application-without-names-and-not-below-three

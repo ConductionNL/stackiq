@@ -5,8 +5,8 @@
 OC.L10N.register(
     "stackiq",
     {
-        "No mail transport is set, so registration, activation and account mails are not sent.": "No mail transport is set, so registration, activation and account mails are not sent.",
         "Set up the mail transport": "Set up the mail transport",
+        "No mail transport is set, so registration, activation and account mails are not sent.": "No mail transport is set, so registration, activation and account mails are not sent.",
         "Licence metric": "Licence metric",
         "What one licence covers, as the contract with the supplier states it.": "What one licence covers, as the contract with the supplier states it.",
         "Licences bought": "Licences bought",
@@ -1353,7 +1353,25 @@ OC.L10N.register(
         "Software catalogue": "Software catalogue",
         "Shared": "Shared",
         "{name}, shared by {partner}": "{name}, shared by {partner}",
-        "+{count} more": "+{count} more"
+        "+{count} more": "+{count} more",
+        "%n organisation classified this application": "%n organisation classified this application",
+        "%n organisations classified this application": "%n organisations classified this application",
+        "Aspect": "Aspect",
+        "Classified on {date} by {user}": "Classified on {date} by {user}",
+        "How organisations classify this application": "How organisations classify this application",
+        "Loading the classification": "Loading the classification",
+        "Loading the classifications": "Loading the classifications",
+        "Main reason": "Main reason",
+        "No suggestion could be made.": "No suggestion could be made.",
+        "Not classified": "Not classified",
+        "Security classification (BIO)": "Security classification (BIO)",
+        "Suggest from GEMMA": "Suggest from GEMMA",
+        "Suggested from %n reference component with a GEMMA score": "Suggested from %n reference component with a GEMMA score",
+        "Suggested from %n reference components with a GEMMA score": "Suggested from %n reference components with a GEMMA score",
+        "The classification could not be loaded.": "The classification could not be loaded.",
+        "The classification could not be saved.": "The classification could not be saved.",
+        "The classifications could not be loaded.": "The classifications could not be loaded.",
+        "The levels show once at least three organisations have classified it.": "The levels show once at least three organisations have classified it."
     },
     "nplurals=2; plural=(n != 1);"
 )

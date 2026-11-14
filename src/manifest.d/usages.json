@@ -26,6 +26,7 @@
 					{ "key": "businessOwner", "label": "Business owner", "widget": "contactName" },
 					{ "key": "technicalOwner", "label": "Technical owner", "widget": "contactName" },
 					"timeClassification",
+					{ "key": "bbnLevel", "label": "BBN level" },
 					"serviceDeskRecordId"
 				],
 				"filterMenu": true,
@@ -36,7 +37,11 @@
 					{ "label": "In production", "filter": { "status": "In production" }, "icon": "CheckCircle" },
 					{ "label": "To be phased out", "filter": { "status": "To be phased out" }, "icon": "AlertCircle" },
 					{ "label": "Phased out", "filter": { "status": "Phased out" } },
-					{ "label": "Archived", "filter": { "_archived": "true" }, "icon": "ArchiveOutline" }
+					{ "label": "Archived", "filter": { "_archived": "true" }, "icon": "ArchiveOutline" },
+					{ "label": "BBN1", "filter": { "bbnLevel": "BBN1" } },
+					{ "label": "BBN2", "filter": { "bbnLevel": "BBN2" } },
+					{ "label": "BBN3", "filter": { "bbnLevel": "BBN3" } },
+					{ "label": "Not classified", "filter": { "bbnLevel": "IS NULL" } }
 				],
 				"sidebar": { "enabled": true, "showMetadata": true },
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -69,7 +74,8 @@
 					{ "id": "6", "widgetId": "usage-process-steps", "gridX": 0, "gridY": 13, "gridWidth": 12, "gridHeight": 5 }
 				],
 				"bodyWidgets": [
-					{ "id": "gb-risk-signals", "component": "UsageRiskSignals", "props": { "objectId": "@objectId" }, "placement": "after-data", "colSpan": 12 }
+					{ "id": "gb-risk-signals", "component": "UsageRiskSignals", "props": { "objectId": "@objectId" }, "placement": "after-data", "colSpan": 12 },
+					{ "id": "gb-classification", "component": "UsageClassificationPanel", "props": { "objectId": "@objectId" }, "placement": "after-data", "colSpan": 12 }
 				],
 				"sidebar": {
 					"enabled": true,

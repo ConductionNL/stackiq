@@ -5,8 +5,8 @@
 OC.L10N.register(
     "stackiq",
     {
-        "No mail transport is set, so registration, activation and account mails are not sent.": "Er is geen mailtransport ingesteld, dus registratie-, activatie- en accountmails worden niet verstuurd.",
         "Set up the mail transport": "Mailtransport instellen",
+        "No mail transport is set, so registration, activation and account mails are not sent.": "Er is geen mailtransport ingesteld, dus registratie-, activatie- en accountmails worden niet verstuurd.",
         "Licence metric": "Licentiemetriek",
         "What one licence covers, as the contract with the supplier states it.": "Waar één licentie voor geldt, zoals het contract met de leverancier het vastlegt.",
         "Licences bought": "Gekochte licenties",
@@ -1421,7 +1421,25 @@ OC.L10N.register(
         "Software catalogue": "Softwarecatalogus",
         "Shared": "Gedeeld",
         "{name}, shared by {partner}": "{name}, gedeeld door {partner}",
-        "+{count} more": "+{count} meer"
+        "+{count} more": "+{count} meer",
+        "%n organisation classified this application": "%n organisatie heeft deze applicatie geclassificeerd",
+        "%n organisations classified this application": "%n organisaties hebben deze applicatie geclassificeerd",
+        "Aspect": "Aspect",
+        "Classified on {date} by {user}": "Geclassificeerd op {date} door {user}",
+        "How organisations classify this application": "Hoe organisaties deze applicatie classificeren",
+        "Loading the classification": "De classificatie wordt geladen",
+        "Loading the classifications": "De classificaties worden geladen",
+        "Main reason": "Belangrijkste reden",
+        "No suggestion could be made.": "Er kon geen suggestie worden gemaakt.",
+        "Not classified": "Niet geclassificeerd",
+        "Security classification (BIO)": "Beveiligingsclassificatie (BIO)",
+        "Suggest from GEMMA": "Voorstel uit GEMMA",
+        "Suggested from %n reference component with a GEMMA score": "Voorgesteld op basis van %n referentiecomponent met een GEMMA-score",
+        "Suggested from %n reference components with a GEMMA score": "Voorgesteld op basis van %n referentiecomponenten met een GEMMA-score",
+        "The classification could not be loaded.": "De classificatie kon niet worden geladen.",
+        "The classification could not be saved.": "De classificatie kon niet worden opgeslagen.",
+        "The classifications could not be loaded.": "De classificaties konden niet worden geladen.",
+        "The levels show once at least three organisations have classified it.": "De niveaus worden getoond zodra minstens drie organisaties de applicatie hebben geclassificeerd."
     },
     "nplurals=2; plural=(n != 1);"
 )
