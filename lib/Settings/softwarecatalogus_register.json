@@ -2004,7 +2004,7 @@
         "x-schema-org": "schema:Organization",
         "title": "Organization",
         "description": "An organisation that offers provisions. Absorbs the former ArchiMate `organization` schema: its identity and statutory identifiers (name, summary, description, oin, tooi, rsin, pki, image) and its ArchiMate round-trip `xml` are declared here, so there is one organisation schema rather than two that shared no property.",
-        "version": "0.5.3",
+        "version": "0.5.6",
         "omschrijving": "",
         "icon": "OfficeBuildingOutline",
         "required": [
@@ -2361,7 +2361,6 @@
               "Implementing organisation",
               "Social Domain collaboration",
               "Shared Service Center",
-              "samenwerkingtype",
               "Environmental agency",
               "ICT (for example Shared Service Center)",
               "Municipal reorganisation (planned)",
