@@ -215,16 +215,15 @@
 	],
 	"pages": [
 		{
-		  "id": "Store",
-		  "route": "/store",
-		  "type": "store",
-		  "title": "Store",
-		  "config": {
-		    "app": "stackiq",
-		    "title": "Store",
-		    "description": "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current."
-		  },
-		  "_note": "ADR-114 Decision 4 / ADR-080. Declarative: openregister hosts the store plane, so this app writes NO store controller. With no registry configured the page renders the app's built-in items and makes NO network call."
+			"id": "Store",
+			"route": "/store",
+			"type": "custom",
+			"title": "Store",
+			"component": "FeaturesRoadmapTabs",
+			"_note": "REQ-FRM-002: one entry for the store. This route only redirects old links and the footer Store entry to FeaturesRoadmap with tab=extensions, which renders the store list. ADR-114 Decision 4 / ADR-080: openregister hosts the store plane, so this app writes NO store controller.",
+			"config": {
+				"redirectToTab": "extensions"
+			}
 		},
 		{
 			"id": "Dashboard",
@@ -1088,10 +1087,17 @@
 		{
 			"id": "FeaturesRoadmap",
 			"route": "/features-roadmap",
-			"type": "roadmap",
+			"type": "custom",
 			"title": "Features & roadmap",
+			"component": "FeaturesRoadmapTabs",
+			"_note": "REQ-FRM-001: the Features and roadmap tab renders the library roadmap (CnFeaturesAndRoadmapPage), which groups openspec/features.overlay.json into Available, Beta and Coming soon; tests/vitest/featuresOverlay.spec.js pins the overlay shape. REQ-FRM-002: the Extensions tab renders the library store list (CnStorePage) with the same app, title and description the Store page had; Install shows for administrators only. `?tab=extensions` opens that tab.",
 			"config": {
-				"documentationUrl": "https://stackiq.conduction.nl"
+				"documentationUrl": "https://stackiq.conduction.nl",
+				"store": {
+					"app": "stackiq",
+					"title": "Store",
+					"description": "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current."
+				}
 			}
 		},
 		{

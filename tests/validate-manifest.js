@@ -161,6 +161,36 @@ function structuralLint(manifest) {
 	return errors
 }
 
+/**
+ * App rules the schema cannot express.
+ *
+ * REQ-FRM-002 (features-roadmap-page): the store has one entry. The Store
+ * page only redirects to FeaturesRoadmap's Extensions tab, the StoreMenu
+ * entry routes there, and FeaturesRoadmap renders the tabs.
+ *
+ * @param {object} manifest The manifest.
+ * @return {string[]} The violations.
+ */
+function appRules(manifest) {
+	const errors = []
+	const pages = new Map((manifest.pages || []).map((page) => [page.id, page]))
+	const roadmap = pages.get('FeaturesRoadmap')
+	const store = pages.get('Store')
+	if (!roadmap || roadmap.type !== 'custom' || roadmap.component !== 'FeaturesRoadmapTabs') {
+		errors.push('FeaturesRoadmap: must be type=custom with component FeaturesRoadmapTabs (REQ-FRM-002)')
+	} else if (!/REQ-FRM-001/.test(roadmap._note || '')) {
+		errors.push('FeaturesRoadmap: _note must cite REQ-FRM-001')
+	}
+	if (!store || store.component !== 'FeaturesRoadmapTabs' || store.config?.redirectToTab !== 'extensions') {
+		errors.push('Store: must redirect to the FeaturesRoadmap extensions tab (config.redirectToTab = "extensions")')
+	}
+	const storeMenu = (manifest.menu || []).find((item) => item.id === 'StoreMenu')
+	if (storeMenu && storeMenu.route !== 'Store' && storeMenu.route !== 'FeaturesRoadmap') {
+		errors.push('StoreMenu: must route to Store (which redirects) or FeaturesRoadmap')
+	}
+	return errors
+}
+
 function main() {
 	if (!fs.existsSync(MANIFEST_PATH)) {
 		console.error(`[validate-manifest] manifest not found: ${MANIFEST_PATH}`)
@@ -171,6 +201,14 @@ function main() {
 	console.log(`[validate-manifest] manifest: ${MANIFEST_PATH}`)
 	console.log(`[validate-manifest] manifest.version: ${manifest.version}`)
 	console.log(`[validate-manifest] pages: ${(manifest.pages || []).length}`)
+
+	const ruleErrors = appRules(manifest)
+	if (ruleErrors.length > 0) {
+		console.error('[validate-manifest] app rules: FAIL')
+		for (const err of ruleErrors) console.error(`  - ${err}`)
+		process.exit(1)
+	}
+	console.log('[validate-manifest] app rules: PASS')
 
 	const schemaPath = findSchemaPath()
 	if (!schemaPath) {
