@@ -8230,6 +8230,237 @@
             }
           ]
         }
+      },
+      "scenario": {
+        "slug": "scenario",
+        "title": "Scenario",
+        "description": "A future state of one organisation's landscape: a set of additions, phase-outs and replacements on top of the plan, compared with today on its target date (architecture-future-state-scenarios, REQ-FSS-003, REQ-FSS-004).",
+        "version": "0.1.0",
+        "icon": "CompareHorizontal",
+        "required": [
+          "name",
+          "organisation",
+          "targetDate",
+          "status"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "What the scenario is about.",
+            "maxLength": 255,
+            "order": 1,
+            "table": {
+              "default": true
+            }
+          },
+          "description": {
+            "type": "string",
+            "format": "markdown",
+            "title": "Description",
+            "description": "Why this scenario, and what it decides.",
+            "maxLength": 5000,
+            "order": 2
+          },
+          "organisation": {
+            "type": "object",
+            "title": "Organisation",
+            "description": "The organisation whose landscape the scenario changes.",
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/organization",
+            "order": 3,
+            "table": {
+              "default": true
+            }
+          },
+          "targetDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Target date",
+            "description": "The date the scenario's landscape is compared on.",
+            "order": 4,
+            "table": {
+              "default": true
+            }
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Where the scenario is in its lifecycle.",
+            "enum": [
+              "draft",
+              "proposed",
+              "adopted",
+              "rejected"
+            ],
+            "default": "draft",
+            "facetable": true,
+            "order": 5,
+            "table": {
+              "default": true
+            }
+          },
+          "appliedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Applied at",
+            "description": "When the adopted scenario was applied to the landscape; empty until then.",
+            "order": 6
+          }
+        },
+        "configuration": {
+          "objectNameField": "name",
+          "objectDescriptionField": "description",
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "draft",
+            "final": [
+              "adopted"
+            ],
+            "transitions": {
+              "propose": {
+                "from": [
+                  "draft"
+                ],
+                "to": "proposed",
+                "description": "Propose the scenario."
+              },
+              "adopt": {
+                "from": [
+                  "proposed"
+                ],
+                "to": "adopted",
+                "description": "Adopt the scenario."
+              },
+              "reject": {
+                "from": [
+                  "proposed"
+                ],
+                "to": "rejected",
+                "description": "Reject the scenario."
+              },
+              "rework": {
+                "from": [
+                  "proposed",
+                  "rejected"
+                ],
+                "to": "draft",
+                "description": "Take the scenario back to draft."
+              }
+            }
+          }
+        }
+      },
+      "scenarioChange": {
+        "slug": "scenarioChange",
+        "title": "Scenario change",
+        "description": "One change a scenario makes to the landscape: add an application, phase out a usage, or replace a usage's application (architecture-future-state-scenarios, REQ-FSS-003).",
+        "version": "0.1.0",
+        "icon": "SwapHorizontal",
+        "required": [
+          "scenario",
+          "action"
+        ],
+        "properties": {
+          "scenario": {
+            "type": "object",
+            "title": "Scenario",
+            "description": "The scenario this change belongs to.",
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/scenario",
+            "order": 1
+          },
+          "action": {
+            "type": "string",
+            "title": "Action",
+            "description": "What the change does.",
+            "enum": [
+              "add",
+              "phase out",
+              "replace"
+            ],
+            "facetable": true,
+            "order": 2,
+            "table": {
+              "default": true
+            }
+          },
+          "usage": {
+            "type": "object",
+            "title": "Usage",
+            "description": "The usage that is phased out or replaced; required for phase out and replace.",
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/usage",
+            "order": 3,
+            "table": {
+              "default": true
+            }
+          },
+          "module": {
+            "type": "object",
+            "title": "Application",
+            "description": "The application that is added or that replaces the usage's; required for add and replace.",
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/module",
+            "order": 4,
+            "table": {
+              "default": true
+            }
+          },
+          "referenceComponents": {
+            "type": "array",
+            "title": "Reference components",
+            "description": "The reference components the added or replacing application is used for.",
+            "items": {
+              "type": "object",
+              "objectConfiguration": {
+                "handling": "related-object",
+                "queryParams": "gemmaType=referentiecomponent"
+              },
+              "$ref": "#/components/schemas/element"
+            },
+            "order": 5
+          },
+          "effectiveDate": {
+            "type": "string",
+            "format": "date",
+            "title": "Effective date",
+            "description": "From when the change holds; the scenario's target date when empty.",
+            "order": 6,
+            "table": {
+              "default": true
+            }
+          },
+          "note": {
+            "type": "string",
+            "title": "Note",
+            "description": "Why this change.",
+            "maxLength": 2000,
+            "order": 7
+          },
+          "appliedTo": {
+            "type": "object",
+            "title": "Applied to",
+            "description": "The usage the change was written to when the scenario was applied, so a second apply changes nothing.",
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/usage",
+            "order": 8
+          }
+        },
+        "configuration": {
+          "objectNameField": "{{ action }}",
+          "objectDescriptionField": "note"
+        }
       }
     },
     "objects": [
