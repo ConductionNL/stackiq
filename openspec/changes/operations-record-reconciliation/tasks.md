@@ -53,6 +53,7 @@
   - GIVEN a fresh demo import WHEN OpenRegister's candidates page is opened for applications THEN the seeded pair is listed
   - GIVEN the docs WHEN a reader opens the feature page THEN it shows the steps with screenshots and says what a reversal does not restore yet
 - [ ] Implement
+  - Done: `MergeObject.vue`, its `mergeOrganisatie` branch in `Modals.vue`, `mergeObjects` in `stackiqPlugin.js` and their tests are removed, and the production build passes; the demo data sets `recordStatus: Active` on the seeded applications and services and adds `module-duplicate-1` (`RecordReconciliationSeedTest`); `docs/features/record-reconciliation.md` gives the steps and what a reversal does not restore. Open: the screenshots, which need a running instance.
   - Open: removing `MergeObject.vue` and `mergeObjects`, the seeded duplicate and the docs page.
 - [ ] Test (Playwright tests/e2e/spec-coverage/record-reconciliation.spec.ts against the demo data)
 
