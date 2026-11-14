@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "stackiq demo data",
-    "version": "1.2.0",
+    "version": "1.3.0",
     "description": "Demo data covering every schema this app supplies, offered as the first step of the app's setup walkthrough. Generated from the schemas themselves, so every object satisfies the schema that will validate it."
   },
   "x-openregister": {
@@ -1492,7 +1492,11 @@
         "technicalFit": 2,
         "riskScore": 3,
         "scoredOn": "2026-09-01",
-        "suggestedTimeClassification": "Migrate"
+        "suggestedTimeClassification": "Migrate",
+        "runsOn": [
+          "@ref:technology-db-1",
+          "@ref:technology-vm-1"
+        ]
       },
       {
         "@self": {
@@ -3078,7 +3082,11 @@
         "technicalFit": 1,
         "riskScore": 5,
         "scoredOn": "2026-09-01",
-        "suggestedTimeClassification": "Migrate"
+        "suggestedTimeClassification": "Migrate",
+        "runsOn": [
+          "@ref:technology-db-1",
+          "@ref:technology-vm-1"
+        ]
       },
       {
         "@self": {
@@ -3595,6 +3603,56 @@
         "effectiveDate": "2026-03-03",
         "note": "Voorbeeld Note 3",
         "appliedTo": {}
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "technologyComponent",
+          "slug": "technology-host-1"
+        },
+        "name": "Host 01",
+        "class": "Physical server",
+        "archimateType": "Node",
+        "organization": "@ref:organization-voorbeeld-name-1-1",
+        "status": "In use",
+        "manufacturer": "Dell",
+        "model": "PowerEdge R750",
+        "location": "Stadhuis",
+        "endOfSupport": "2029-12-31"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "technologyComponent",
+          "slug": "technology-vm-1"
+        },
+        "name": "App server 01",
+        "class": "Virtual machine",
+        "archimateType": "Node",
+        "organization": "@ref:organization-voorbeeld-name-1-1",
+        "status": "In use",
+        "runsOn": [
+          "@ref:technology-host-1"
+        ]
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "technologyComponent",
+          "slug": "technology-db-1"
+        },
+        "name": "Database 01",
+        "class": "Database",
+        "archimateType": "System software",
+        "organization": "@ref:organization-voorbeeld-name-1-1",
+        "status": "In use",
+        "software": "@ref:moduleversion-moduleversion-3-3",
+        "endOfSupport": "2026-03-03",
+        "eolSource": "Voorbeeld Eolsource 3",
+        "eolUpdatedOn": "2026-03-03T09:00:00+00:00",
+        "runsOn": [
+          "@ref:technology-vm-1"
+        ]
       }
     ]
   }

@@ -21,7 +21,7 @@
   - GIVEN a host with a virtual machine on it WHEN the host's detail page opens THEN the machine is listed under Runs on this component
   - GIVEN a component WHEN its detail page opens THEN the applications in use that run on it are listed and open GebruikDetail
   - GIVEN a component with status In use WHEN Phase out is chosen THEN its status is To be phased out
-- [ ] Implement
+- [x] Implement (menu child of Applications declared in the fragment itself, as the CMDB and Applications in use entries do, so `src/menu-layout.json` needs no relocation; vitest tests/vitest/technologyPages.spec.js)
 - [ ] Test (Playwright tests/e2e/spec-coverage/technology-components.spec.ts)
 
 ### Task 3: Show the Runs on panel with the support state on the usage page
@@ -31,7 +31,7 @@
   - GIVEN an end of support in the past, within 180 days, later, or empty WHEN supportState() runs THEN it returns ended, ending, supported or unknown
   - GIVEN a virtual machine without a date on an ended host WHEN the worst state is computed THEN it is ended
   - GIVEN the demo usage WHEN /gebruik/:id opens THEN Database 01 is listed as ended
-- [ ] Implement (`src/utils/technologyLifecycle.js` and its vitest spec are done; the panel and its manifest wiring are not)
+- [x] Implement (panel, its registration and the GebruikDetail body widget; vitest tests/vitest/usageRunsOnPanel.spec.js and tests/vitest/technologyLifecycle.spec.js pass; the Playwright half of the test line is open)
 - [ ] Test (vitest tests/vitest/technologyLifecycle.spec.js and Playwright tests/e2e/spec-coverage/technology-components.spec.ts)
 
 ### Task 4: Stamp end of support on components from the EOL sync
@@ -50,7 +50,7 @@
 - **acceptance_criteria**:
   - GIVEN a fresh demo import WHEN /technologie opens THEN it lists Host 01, App server 01 and Database 01
   - GIVEN the docs WHEN a reader opens the feature page THEN it shows the index, a detail page and the Runs on panel in screenshots, and says stackiq records and does not discover
-- [ ] Implement
+- [x] Implement (seed in stackiq_mock_register.json 1.3.0, asserted by tests/vitest/technologyPages.spec.js; docs/features/technology-components.md, screenshots wait for the demo instance)
 - [ ] Test (Playwright tests/e2e/spec-coverage/technology-components.spec.ts against the demo data)
 
 ## Verification
