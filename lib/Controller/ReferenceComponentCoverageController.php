@@ -21,8 +21,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Controller;
 
 use Exception;
+use OCA\Stackiq\Kernel\Contracts\PeerUsageServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ReferenceComponentCoverageServiceInterface;
-use OCA\Stackiq\Service\PeerUsageService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -43,14 +43,14 @@ class ReferenceComponentCoverageController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param ReferenceComponentCoverageServiceInterface $reportService Builds the report.
 	 * @param OrganisationReportRequest $reportRequest The requested organisation and whether the user may read it.
-	 * @param PeerUsageService|null $peerUsage What comparable organisations use (REQ-GPL-002).
+	 * @param PeerUsageServiceInterface|null $peerUsage What comparable organisations use (REQ-GPL-002).
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
 		private readonly ReferenceComponentCoverageServiceInterface $reportService,
 		private readonly OrganisationReportRequest $reportRequest,
-		private readonly ?PeerUsageService $peerUsage = null,
+		private readonly ?PeerUsageServiceInterface $peerUsage = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()

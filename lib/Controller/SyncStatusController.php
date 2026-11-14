@@ -23,12 +23,12 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\BackgroundJob\OrganizationContactSyncJob;
 use OCA\Stackiq\Kernel\AppIdentity;
 use OCA\Stackiq\Kernel\Contracts\CronjobSettingsInterface;
 use OCA\Stackiq\Kernel\Contracts\ProgressTrackerInterface;
+use OCA\Stackiq\Kernel\Contracts\SyncProgressInterface;
+use OCA\Stackiq\Kernel\OrganizationContactSyncSchedule;
 use OCA\Stackiq\Service\SyncAccessPolicy;
-use OCA\Stackiq\Service\SyncProgress;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -85,10 +85,10 @@ class SyncStatusController extends Controller {
 
 		return new JSONResponse(
 			[
-				'interval' => OrganizationContactSyncJob::INTERVAL_SECONDS,
-				'enabled'  => $this->cronjobSettings->isCronjobEnabled(jobId: OrganizationContactSyncJob::JOB_ID),
+				'interval' => OrganizationContactSyncSchedule::INTERVAL_SECONDS,
+				'enabled'  => $this->cronjobSettings->isCronjobEnabled(jobId: OrganizationContactSyncSchedule::JOB_ID),
 				'lastRun'  => $this->lastRun(),
-				'current'  => $this->progress->getCurrentOperation(operationType: SyncProgress::OPERATION_TYPE),
+				'current'  => $this->progress->getCurrentOperation(operationType: SyncProgressInterface::OPERATION_TYPE),
 			]
 		);
 	}//end status()

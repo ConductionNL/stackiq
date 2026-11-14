@@ -23,7 +23,6 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Controller;
 
 use OCA\Stackiq\Kernel\Contracts\FacetServiceInterface;
-use OCA\Stackiq\Service\FacetService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\IRequest;
@@ -206,7 +205,7 @@ class FacetController extends Controller {
 	 * @return array<string,array> Raw filters keyed by dimension.
 	 */
 	private function parseFilters(): array {
-		$dimensions = FacetService::DIMENSIONS;
+		$dimensions = FacetServiceInterface::DIMENSIONS;
 		$filters = [];
 
 		foreach ($dimensions as $dimension) {

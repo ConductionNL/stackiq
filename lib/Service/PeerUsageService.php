@@ -20,6 +20,7 @@ namespace OCA\Stackiq\Service;
 
 use DateTimeImmutable;
 use Exception;
+use OCA\Stackiq\Kernel\Contracts\PeerUsageServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
@@ -39,7 +40,7 @@ use Throwable;
  *
  * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
  */
-class PeerUsageService {
+class PeerUsageService implements PeerUsageServiceInterface {
 
 	/**
 	 * The smallest count shown; anything below reads "fewer than 3".

@@ -30,6 +30,7 @@ use OCA\Stackiq\Exception\CmdbImportException;
 use OCA\Stackiq\Kernel\Contracts\ArchiMateImportControlInterface;
 use OCA\Stackiq\Kernel\Contracts\ArchiMateImportServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ArchiMateServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\CmdbImportProfileInterface;
 use OCA\Stackiq\Kernel\Contracts\ConnectionReportServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\CronjobSettingsInterface;
 use OCA\Stackiq\Kernel\Contracts\EmailSettingsInterface;
@@ -38,10 +39,10 @@ use OCA\Stackiq\Kernel\Contracts\ModuleComplianceServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\OrganisationReportAccessInterface;
 use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ProgressTrackerInterface;
-use OCA\Stackiq\Service\SyncAccessPolicy;
 use OCA\Stackiq\Kernel\Contracts\RoleGroupSettingsInterface;
 use OCA\Stackiq\Kernel\Contracts\SettingsServiceInterface;
-use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
+use OCA\Stackiq\Service\HelperFactory;
+use OCA\Stackiq\Service\SyncAccessPolicy;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
@@ -117,7 +118,7 @@ class SettingsController extends Controller {
 	 * @param EmailSettingsInterface $emailSettings The stored e-mail settings and templates.
 	 * @param LoggerInterface $logger The logger instance.
 	 * @param ConnectionReportServiceInterface|null $connectionReports Asks integriq to look again after an email settings save.
-	 * @param CmdbImportProfile|null $cmdbImportProfile The CMDB import profile and packs; null builds the shipped one.
+	 * @param CmdbImportProfileInterface|null $cmdbImportProfile The CMDB import profile and packs; null builds the shipped one.
 	 * @param IL10N|null $l10n Translations of the CMDB mapping messages.
 	 * @param IURLGenerator|null $urlGenerator Builds the link to a CMDB mapping pack's editor in OpenRegister.
 	 * @param OrganisationReportAccessInterface|null $organisationAccess Who may export which organisation; resolved from the container when not given.
@@ -146,7 +147,7 @@ class SettingsController extends Controller {
 		private readonly EmailSettingsInterface $emailSettings,
 		private readonly LoggerInterface $logger,
 		private readonly ?ConnectionReportServiceInterface $connectionReports = null,
-		private readonly ?CmdbImportProfile $cmdbImportProfile = null,
+		private readonly ?CmdbImportProfileInterface $cmdbImportProfile = null,
 		private readonly ?IL10N $l10n = null,
 		private readonly ?IURLGenerator $urlGenerator = null,
 		private readonly ?OrganisationReportAccessInterface $organisationAccess = null,
@@ -3461,7 +3462,7 @@ class SettingsController extends Controller {
 	 * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-3
 	 */
 	public function getCmdbImportMapping(): JSONResponse {
-		$profile = ($this->cmdbImportProfile ?? new CmdbImportProfile(container: $this->container));
+		$profile = ($this->cmdbImportProfile ?? (new HelperFactory())->cmdbImportProfile(container: $this->container));
 
 		try {
 			$overview = $profile->mappingOverview();

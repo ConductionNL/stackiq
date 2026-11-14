@@ -885,7 +885,7 @@ class FacetServiceTest extends TestCase {
 	 */
 	public function testTheDimensionSetIsSharedAndKeysTheCache(): void {
 		$this->assertSame(['referenceComponent', 'standard', 'applicationService', 'domain', 'supplier'], FacetService::DIMENSIONS);
-		$this->assertStringContainsString('FacetService::DIMENSIONS', (string)file_get_contents(__DIR__ . '/../../../lib/Controller/FacetController.php'));
+		$this->assertStringContainsString('FacetServiceInterface::DIMENSIONS', (string)file_get_contents(__DIR__ . '/../../../lib/Controller/FacetController.php'));
 
 		$service = $this->makeService(objectService: $this->createMock(ObjectServiceInterface::class));
 		$method = new \ReflectionMethod($service, 'buildCacheKey');

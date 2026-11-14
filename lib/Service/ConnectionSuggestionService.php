@@ -30,6 +30,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\ConnectionSuggestionServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use RuntimeException;
 
@@ -41,7 +42,7 @@ use RuntimeException;
  *
  * @spec openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md
  */
-class ConnectionSuggestionService {
+class ConnectionSuggestionService implements ConnectionSuggestionServiceInterface {
 	/**
 	 * Reason: the other end is in the organisation's landscape.
 	 *

@@ -26,7 +26,7 @@ namespace OCA\Stackiq\EventListener;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Event\ObjectCreatedEvent;
 use OCA\OpenRegister\Event\ObjectUpdatedEvent;
-use OCA\Stackiq\Service\LifecycleCalendarService;
+use OCA\Stackiq\Kernel\Contracts\LifecycleCalendarServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
@@ -46,12 +46,12 @@ class LifecycleCalendarListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param LifecycleCalendarService   $calendar The lifecycle calendar sync.
+	 * @param LifecycleCalendarServiceInterface   $calendar The lifecycle calendar sync.
 	 * @param ObjectTypeLocatorInterface $settings Resolves the contract and module version schemas.
 	 * @param LoggerInterface            $logger   The logger.
 	 */
 	public function __construct(
-		private readonly LifecycleCalendarService $calendar,
+		private readonly LifecycleCalendarServiceInterface $calendar,
 		private readonly ObjectTypeLocatorInterface $settings,
 		private readonly LoggerInterface $logger,
 	) {

@@ -26,8 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Repair;
 
-use OCA\Stackiq\BackgroundJob\OrganizationContactSyncJob;
 use OCA\Stackiq\Kernel\Contracts\CronjobSettingsInterface;
+use OCA\Stackiq\Kernel\OrganizationContactSyncSchedule;
 use OCP\Migration\IOutput;
 use OCP\Migration\IRepairStep;
 use Psr\Log\LoggerInterface;
@@ -80,7 +80,7 @@ class LogSwitchedOffSync implements IRepairStep {
 	 */
 	public function run(IOutput $output): void {
 		try {
-			if ($this->cronjobSettings->isCronjobEnabled(OrganizationContactSyncJob::JOB_ID) === true) {
+			if ($this->cronjobSettings->isCronjobEnabled(OrganizationContactSyncSchedule::JOB_ID) === true) {
 				return;
 			}
 

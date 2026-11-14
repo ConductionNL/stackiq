@@ -30,7 +30,7 @@ namespace OCA\Stackiq\Controller;
 
 use OCA\OpenRegister\Service\OrganisationService;
 use OCA\Stackiq\Kernel\AppIdentity;
-use OCA\Stackiq\Service\OwnershipTransferService;
+use OCA\Stackiq\Kernel\Contracts\OwnershipTransferServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -64,7 +64,7 @@ class OwnershipTransferController extends Controller {
 	 * Constructor.
 	 *
 	 * @param IRequest                 $request             The request
-	 * @param OwnershipTransferService $transfers           Plans and moves
+	 * @param OwnershipTransferServiceInterface $transfers           Plans and moves
 	 * @param IUserSession             $userSession         The caller
 	 * @param IGroupManager            $groupManager        Admin and maintainer groups
 	 * @param OrganisationService      $organisationService The caller's organisations
@@ -74,7 +74,7 @@ class OwnershipTransferController extends Controller {
 	 */
 	public function __construct(
 		IRequest $request,
-		private readonly OwnershipTransferService $transfers,
+		private readonly OwnershipTransferServiceInterface $transfers,
 		private readonly IUserSession $userSession,
 		private readonly IGroupManager $groupManager,
 		private readonly OrganisationService $organisationService,

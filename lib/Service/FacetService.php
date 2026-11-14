@@ -104,16 +104,6 @@ class FacetService implements FacetServiceInterface {
 	private const SUPPORTED_SCHEMAS = ['module', 'catalogService'];
 
 	/**
-	 * The facet dimensions, always present in the response (even when empty):
-	 * the four GEMMA dimensions and the supplier (insight-supplier-facet). The
-	 * controller reads its filters from this list and src/services/facets.js
-	 * mirrors it, so the set moves together (D4).
-	 *
-	 * @var string[]
-	 */
-	public const DIMENSIONS = ['referenceComponent', 'standard', 'applicationService', 'domain', 'supplier'];
-
-	/**
 	 * The element property the domain dimension reads: the register's
 	 * `element` schema declares it as `domein`, and the GEMMA import stores
 	 * the "Domein" property under that lower-cased name.
