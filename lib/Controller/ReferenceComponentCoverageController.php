@@ -22,6 +22,7 @@ namespace OCA\Stackiq\Controller;
 
 use Exception;
 use OCA\Stackiq\Kernel\Contracts\ReferenceComponentCoverageServiceInterface;
+use OCA\Stackiq\Service\PeerUsageService;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -42,12 +43,14 @@ class ReferenceComponentCoverageController extends Controller {
 	 * @param IRequest $request The request.
 	 * @param ReferenceComponentCoverageServiceInterface $reportService Builds the report.
 	 * @param OrganisationReportRequest $reportRequest The requested organisation and whether the user may read it.
+	 * @param PeerUsageService|null $peerUsage What comparable organisations use (REQ-GPL-002).
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
 		private readonly ReferenceComponentCoverageServiceInterface $reportService,
 		private readonly OrganisationReportRequest $reportRequest,
+		private readonly ?PeerUsageService $peerUsage = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -79,4 +82,31 @@ class ReferenceComponentCoverageController extends Controller {
 			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);
 		}
 	}//end index()
+	/**
+	 * What comparable organisations use per reference component.
+	 *
+	 * The membership check runs before any query; the counts never name an
+	 * organisation and a count below 3 is withheld.
+	 *
+	 * @return JSONResponse The peer counts, or the refusal.
+	 *
+	 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+	 */
+	#[NoAdminRequired]
+	public function peers(): JSONResponse {
+		$refusal = $this->reportRequest->refusal();
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		if ($this->peerUsage === null) {
+			return new JSONResponse(['error' => 'Peer usage is not available'], Http::STATUS_SERVICE_UNAVAILABLE);
+		}
+
+		try {
+			return new JSONResponse($this->peerUsage->build(organisationUuid: $this->reportRequest->organisation()));
+		} catch (Exception $e) {
+			return new JSONResponse(['error' => $e->getMessage()], Http::STATUS_INTERNAL_SERVER_ERROR);
+		}
+	}//end peers()
 }//end class

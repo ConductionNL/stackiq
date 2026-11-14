@@ -4100,6 +4100,49 @@
                 }
             }
         },
+        "/reference-component-coverage/peers": {
+            "get": {
+                "operationId": "reference-component-coverage-peers",
+                "summary": "What comparable organisations use per reference component, for `?organisation=`, refused before any query when the user may not read it",
+                "description": "What comparable organisations (same type and inhabitants band, or the same type without an inhabitants value) use per reference component, for `?organisation=`, refused before any query when the user may not read it. Counts are distinct organisations; a count below 3 is null with `fewerThan: 3`, and no other organisation is named.",
+                "tags": [
+                    "reference-component-coverage"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The peer counts, or an error.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                }
+            }
+        },
         "/reviews": {
             "post": {
                 "operationId": "review-submit",
