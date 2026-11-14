@@ -53,7 +53,9 @@
   - GIVEN a role from a mapped group WHEN the row renders THEN it names the group and offers no Remove role for it
   - GIVEN a Nextcloud admin WHEN the page renders THEN it offers an organisation picker and Disable account
 - [ ] Implement
+      Built: the page fragment, the menu entry under Organisations with `permission: access.review`, `AccessReviewView` (registered in `src/customComponents.js`), its icon, and the English and Dutch strings. Left: `access.review` in the shell's permission list (`DashboardController`), which `operations-sync-status-and-progress` introduces and is not built yet; until it is, the entry shows for everyone and the endpoint refuses anyone but admins and the organisation's functional administrators.
 - [ ] Test (vitest tests/vitest/accessReviewView.spec.js and Playwright tests/e2e/spec-coverage/access-review.spec.ts)
+      vitest done (9 tests); the Playwright spec needs a live instance.
 
 ### Task 6: Seed review dates and document both features
 - **spec_ref**: openspec/changes/organisations-role-mapping-and-access-review/specs/role-mapping-and-access-review/spec.md#requirement-req-rma-003-a-functional-administrator-shall-review-the-access-of-their-organisations-people
