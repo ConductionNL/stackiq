@@ -1,0 +1,260 @@
+{
+	"$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+	"_note": "architecture-process-mapping: the organisation's business processes with ordered steps, their risk level and compliance check, and the applications in use that support each step. Processes sits under Applications, so the top-level menu does not grow (ADR-097); it moves to the Architecture group once architecture-views-editor adds it.",
+	"menu": [
+		{
+			"id": "Modules",
+			"children": [
+				{
+					"id": "Processen",
+					"label": "Business processes",
+					"icon": "SitemapOutline",
+					"route": "Processen",
+					"order": 10
+				}
+			]
+		}
+	],
+	"pages": [
+		{
+			"id": "Processen",
+			"route": "/processen",
+			"type": "index",
+			"title": "Business processes",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "process",
+				"description": "Your organisation's business processes, their steps and the applications that support them.",
+				"columns": [
+					"name",
+					"status",
+					{
+						"key": "processOwner",
+						"label": "Process owner",
+						"widget": "contactName"
+					},
+					"tags"
+				],
+				"filterMenu": true,
+				"quickFilters": [
+					{
+						"label": "All",
+						"filter": {},
+						"default": true
+					},
+					{
+						"label": "Active",
+						"filter": {
+							"status": "active"
+						},
+						"icon": "CheckCircle"
+					},
+					{
+						"label": "Draft",
+						"filter": {
+							"status": "draft"
+						}
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "ProcesDetail",
+			"route": "/processen/:id",
+			"type": "detail",
+			"title": "Business process",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "process",
+				"_note": "A process is read top-down: its data, then its steps in order, then the steps as a flow. Status transitions come from the schema's x-openregister-lifecycle.",
+				"lifecycleActions": {
+					"field": "status"
+				},
+				"widgets": [
+					{
+						"id": "pr-data",
+						"type": "data",
+						"title": "Business process",
+						"icon": "SitemapOutline",
+						"content": {
+							"columns": 2,
+							"include": [
+								"name",
+								"description",
+								"status",
+								"processOwner",
+								"referenceProcess",
+								"tags"
+							]
+						}
+					},
+					{
+						"id": "process-steps",
+						"type": "object-list",
+						"title": "Steps",
+						"icon": "FormatListNumbered",
+						"content": {
+							"register": "@resolve:voorzieningen_register",
+							"schema": "processStep",
+							"filter": {
+								"process": "@objectId"
+							},
+							"columns": [
+								"position",
+								"name",
+								"stepType",
+								"riskLevel",
+								"complianceCheck"
+							],
+							"sort": {
+								"position": "asc",
+								"name": "asc"
+							},
+							"limit": 100,
+							"rowRoute": "ProcesStapDetail",
+							"allowCreate": true,
+							"addLabel": "Add step",
+							"formIncludeFields": [
+								"name",
+								"description",
+								"stepType",
+								"position",
+								"follows",
+								"usages",
+								"riskLevel",
+								"riskNote",
+								"complianceCheck",
+								"complianceNote",
+								"checkedOn"
+							],
+							"emptyText": "No steps recorded for this process yet"
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "pr-data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 5
+					},
+					{
+						"id": "2",
+						"widgetId": "process-steps",
+						"gridX": 0,
+						"gridY": 5,
+						"gridWidth": 12,
+						"gridHeight": 6
+					}
+				],
+				"bodyWidgets": [
+					{
+						"id": "pr-step-flow",
+						"component": "ProcessStepFlow",
+						"props": {
+							"objectId": "@objectId"
+						},
+						"placement": "after-data",
+						"colSpan": 12
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		},
+		{
+			"id": "ProcesStapDetail",
+			"route": "/processtappen/:id",
+			"type": "detail",
+			"title": "Process step",
+			"config": {
+				"register": "@resolve:voorzieningen_register",
+				"schema": "processStep",
+				"widgets": [
+					{
+						"id": "ps-data",
+						"type": "data",
+						"title": "Process step",
+						"icon": "FormatListNumbered",
+						"content": {
+							"columns": 2,
+							"include": [
+								"process",
+								"name",
+								"description",
+								"stepType",
+								"position",
+								"follows",
+								"riskLevel",
+								"riskNote",
+								"complianceCheck",
+								"complianceNote",
+								"checkedOn"
+							]
+						}
+					}
+				],
+				"layout": [
+					{
+						"id": "1",
+						"widgetId": "ps-data",
+						"gridX": 0,
+						"gridY": 0,
+						"gridWidth": 12,
+						"gridHeight": 8
+					}
+				],
+				"bodyWidgets": [
+					{
+						"id": "ps-usages",
+						"component": "ProcessStepUsages",
+						"props": {
+							"objectId": "@objectId"
+						},
+						"placement": "after-data",
+						"colSpan": 12
+					}
+				],
+				"sidebar": {
+					"enabled": true,
+					"showMetadata": true,
+					"tabs": [
+						{
+							"id": "audit",
+							"label": "History",
+							"icon": "History",
+							"widgets": [
+								{
+									"type": "audit"
+								}
+							]
+						}
+					]
+				},
+				"documentationUrl": "https://stackiq.conduction.nl"
+			}
+		}
+	]
+}
