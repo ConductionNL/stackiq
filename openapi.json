@@ -68,6 +68,10 @@
             "description": "Serves one organisation's data quality report"
         },
         {
+            "name": "entry-type",
+            "description": "Change a catalogue entry between application, service and system software without recreating it"
+        },
+        {
             "name": "facet",
             "description": "Controller for the GEMMA-dimension facet aggregation endpoint"
         },
@@ -2317,6 +2321,155 @@
                     },
                     "500": {
                         "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/entries/{uuid}/type-change": {
+            "get": {
+                "operationId": "entry_type-preview",
+                "summary": "What a change to another type keeps, drops and is blocked by",
+                "description": "What a change of the entry to `target` (application, service or systemSoftware) keeps, drops with its values, and is blocked by. Writes nothing.",
+                "tags": [
+                    "entry-type"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`{uuid, currentType, targetType, carried, dropped, blockers, serviceTypes}`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem422"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The entry: an application, system software or a service.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "target",
+                        "in": "query",
+                        "required": true,
+                        "description": "The type to change into.",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "application",
+                                "service",
+                                "systemSoftware"
+                            ]
+                        }
+                    }
+                ]
+            },
+            "post": {
+                "operationId": "entry_type-change",
+                "summary": "Change the entry into another type, keeping its uuid",
+                "description": "Change the entry into `target`. A change between application and service moves the object with OpenRegister, keeping its uuid, history, files and relations; `serviceTypes` is required for a service. Refused with 409 while other entries point at it.",
+                "tags": [
+                    "entry-type"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`{uuid, targetType, moved, errors}`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "409": {
+                        "$ref": "#/components/responses/Problem409"
+                    },
+                    "422": {
+                        "$ref": "#/components/responses/Problem422"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The entry: an application, system software or a service.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "target"
+                                ],
+                                "properties": {
+                                    "target": {
+                                        "type": "string",
+                                        "enum": [
+                                            "application",
+                                            "service",
+                                            "systemSoftware"
+                                        ]
+                                    },
+                                    "serviceTypes": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
             }

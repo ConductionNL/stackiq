@@ -8,8 +8,8 @@
 - **acceptance_criteria**:
   - GIVEN an application without usages, versions or connections WHEN it is changed to a service THEN the same uuid answers as a catalogService with its history intact
   - GIVEN an application with a usage WHEN a change to service is asked THEN the preview lists the usage as a blocker and the change is refused
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Service/EntryTypeServiceTest.php` with an ObjectService double on the real interface; `tests/Unit/Controller/EntryTypeControllerTest.php` for 403, 409 and 422)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Service/EntryTypeServiceTest.php` with an ObjectService double on the real interface; `tests/Unit/Controller/EntryTypeControllerTest.php` for 403, 409 and 422)
 
 ### Task 2: Change type dialog and module type on the form
 - **spec_ref**: openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-002-the-user-sees-what-carries-over-before-confirming
