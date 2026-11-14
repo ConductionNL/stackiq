@@ -684,8 +684,42 @@ class PortfolioReportService implements PortfolioReportServiceInterface {
 			return [];
 		}
 
-		return $this->indexContractsByGebruik(contracts: $this->derivation->normalizeResults(results: $result['results'] ?? []));
+		$contracts = $this->derivation->normalizeResults(results: $result['results'] ?? []);
+
+		return $this->indexContractsByGebruik(contracts: $this->ownedContracts(contracts: $contracts, organisationUuid: $run->organisationUuid));
 	}//end fetchContractsForGebruiken()
+
+	/**
+	 * The contracts the reporting organisation owns.
+	 *
+	 * The search runs without RBAC, so it also finds a contract another
+	 * organisation (a supplier) keeps on this organisation's usage. A contract
+	 * is readable only by its owner (decision 409), so the report counts only
+	 * the contracts whose owning organisation is the reporting one, and drops
+	 * a contract whose owner it cannot read.
+	 *
+	 * @param array<int,array<string,mixed>> $contracts        The contract data bags.
+	 * @param string                         $organisationUuid The reporting organisation.
+	 *
+	 * @return array<int,array<string,mixed>> The contracts it owns.
+	 *
+	 * @spec openspec/changes/contracts-readable-by-owner-only/specs/vendor-visibility-rbac/spec.md#requirement-contracts-must-be-readable-only-by-the-owning-organisation-and-admins-req-006
+	 */
+	private function ownedContracts(array $contracts, string $organisationUuid): array {
+		if ($organisationUuid === '') {
+			return [];
+		}
+
+		return array_values(
+			array_filter(
+				$contracts,
+				static function (array $contract) use ($organisationUuid): bool {
+					$owner = ($contract['@self']['organisation'] ?? $contract['_organisation'] ?? '');
+					return is_string($owner) === true && $owner === $organisationUuid;
+				}
+			)
+		);
+	}//end ownedContracts()
 
 	/**
 	 * The bounded contract query for a set of gebruik ids.

@@ -3386,7 +3386,7 @@
             "aanbod-beheerder"
           ],
           "read": [
-            {"group": "ambtenaar", "crossOrganisation": true},
+            {"group": "ambtenaar", "match": {"_organisation": "$organisation"}},
             {"group": "software-catalog-admins", "crossOrganisation": true},
             {"group": "functioneel-beheerder", "match": {"_organisation": "$organisation"}},
             {"group": "gebruik-beheerder", "match": {"_organisation": "$organisation"}},
