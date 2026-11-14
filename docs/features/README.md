@@ -11,6 +11,7 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | [Software Registration](#software-registration) | Register and manage applications (voorzieningen) in the landscape |
 | [GEMMA Faceted Search](#gemma-faceted-search) | Filter the application/service catalogue by GEMMA architecture dimension, with live counts |
 | [Supplier Facet](supplier-facet.md) | Narrow applications and services by supplier, next to the GEMMA facets |
+| [Knowledge base](application-knowledge-base.md) | Link Nextcloud Collectives articles to applications and search them by title |
 | [Module Tracking](#module-tracking) | Break applications down into functional modules |
 | [Connection Mapping](#connection-mapping) | Map integrations (koppelingen) between applications and modules |
 | [Organisation and Contact Management](#organisation-and-contact-management) | Manage organisations and their contact persons |
