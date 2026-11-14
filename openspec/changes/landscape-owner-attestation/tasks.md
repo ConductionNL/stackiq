@@ -28,8 +28,9 @@
   - GIVEN a pending request WHEN its owner confirms THEN the entry's lastConfirmedAt is today and the request is confirmed
   - GIVEN a pending request WHEN another user edits the entry THEN the request stays pending
   - GIVEN a pending request past its deadline WHEN the job runs THEN it is overdue
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Listener/AttestationCorrectionListenerTest.php` with the real ObjectUpdatedEvent class, `tests/Unit/BackgroundJob/AttestationOverdueJobTest.php`)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Listener/AttestationCorrectionListenerTest.php` with the real ObjectUpdatedEvent class, `tests/Unit/BackgroundJob/AttestationOverdueJobTest.php`)
+- Note: confirm is `POST /api/attestation-requests/{id}/confirm` (`AttestationController::confirm()`, the assignee only, 403/404/409 otherwise) through `AttestationAnswerService`, which also marks corrections and overdue requests and keeps the round's `answeredCount`. The listener lives in `lib/EventListener/` with the app's other listeners, its test in `tests/Unit/EventListener/AttestationCorrectionListenerTest.php`. A save that changes only `lastConfirmedAt` or derived score fields is not a correction, so a confirmation never answers itself as corrected.
 
 ### Task 4: Owner and round pages
 - **spec_ref**: openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-004-the-round-shows-who-answered-and-who-is-overdue

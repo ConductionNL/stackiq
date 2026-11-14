@@ -6280,6 +6280,44 @@
                     }
                 }
             }
+        },
+        "/attestation-requests/{id}/confirm": {
+            "post": {
+                "operationId": "attestation-confirm",
+                "summary": "Confirm a confirmation request",
+                "description": "The request's assignee confirms the entry is current: the entry's lastConfirmedAt is set under their own rights and the request reads confirmed.",
+                "tags": [
+                    "attestation"
+                ],
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "format": "uuid"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The confirmed request."
+                    },
+                    "401": {
+                        "description": "Not signed in."
+                    },
+                    "403": {
+                        "description": "The caller is not the request's assignee."
+                    },
+                    "404": {
+                        "description": "The request or its entry was not found."
+                    },
+                    "409": {
+                        "description": "The request was already answered."
+                    }
+                }
+            }
         }
     },
     "components": {

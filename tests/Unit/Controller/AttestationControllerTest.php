@@ -11,7 +11,11 @@ namespace OCA\Stackiq\Tests\Unit\Controller;
 
 use InvalidArgumentException;
 use OCA\Stackiq\Controller\AttestationController;
+use DomainException;
+use OCA\Stackiq\Service\AttestationAnswerService;
 use OCA\Stackiq\Service\AttestationRoundAccess;
+use OutOfBoundsException;
+use UnexpectedValueException;
 use OCA\Stackiq\Service\AttestationService;
 use OCP\AppFramework\Http;
 use OCP\IGroupManager;
@@ -28,6 +32,7 @@ use RuntimeException;
  *
  * @covers \OCA\Stackiq\Controller\AttestationController
  * @covers \OCA\Stackiq\Service\AttestationRoundAccess
+ * @spec   openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-003-an-owner-confirms-or-corrects-each-entry
  *
  * @spec openspec/changes/landscape-owner-attestation/specs/owner-attestation/spec.md#requirement-req-oat-001-an-information-manager-starts-a-confirmation-round-for-a-scope
  */
@@ -116,16 +121,17 @@ final class AttestationControllerTest extends TestCase {
 	 * @param AttestationRoundAccess $access  The access check.
 	 * @param AttestationService     $service The round service.
 	 * @param array<string, string>  $params  The request parameters.
+	 * @param AttestationAnswerService|null $answers The answer service, a double when omitted.
 	 *
 	 * @return AttestationController
 	 */
-	private function controller(?IUser $user, AttestationRoundAccess $access, AttestationService $service, array $params = self::PARAMS): AttestationController {
+	private function controller(?IUser $user, AttestationRoundAccess $access, AttestationService $service, array $params = self::PARAMS, ?AttestationAnswerService $answers = null): AttestationController {
 		$request = $this->createMock(IRequest::class);
 		$request->method('getParam')->willReturnCallback(static fn (string $key, mixed $default = null): mixed => ($params[$key] ?? $default));
 		$session = $this->createMock(IUserSession::class);
 		$session->method('getUser')->willReturn($user);
 
-		return new AttestationController('stackiq', $request, $session, $access, $service, $this->createMock(LoggerInterface::class));
+		return new AttestationController('stackiq', $request, $session, $access, $service, $this->createMock(LoggerInterface::class), $answers ?? $this->createMock(AttestationAnswerService::class));
 	}//end controller()
 
 	/**
@@ -207,4 +213,47 @@ final class AttestationControllerTest extends TestCase {
 		$response = $this->controller($this->user('root'), $this->access(true, [], []), $broken)->start();
 		self::assertSame([Http::STATUS_INTERNAL_SERVER_ERROR, ['message' => 'The round could not be started']], [$response->getStatus(), $response->getData()]);
 	}//end testTheErrorAnswers()
+
+	/**
+	 * Confirm passes the signed-in user to the service and answers the confirmed request.
+	 *
+	 * @return void
+	 */
+	public function testTheOwnerConfirmsTheirRequest(): void {
+		$answers = $this->createMock(AttestationAnswerService::class);
+		$answers->expects(self::once())->method('confirm')->with('req-1', 'anna')->willReturn(['id' => 'req-1', 'status' => 'confirmed']);
+
+		$response = $this->controller($this->user('anna'), $this->access(false, [], []), $this->createMock(AttestationService::class), [], $answers)->confirm('req-1');
+
+		self::assertSame([Http::STATUS_OK, ['id' => 'req-1', 'status' => 'confirmed']], [$response->getStatus(), $response->getData()]);
+	}//end testTheOwnerConfirmsTheirRequest()
+
+	/**
+	 * Without a session the service is never asked; each refusal maps to its status.
+	 *
+	 * @return void
+	 */
+	public function testTheConfirmRefusals(): void {
+		$never = $this->createMock(AttestationAnswerService::class);
+		$never->expects(self::never())->method('confirm');
+		self::assertSame(Http::STATUS_UNAUTHORIZED, $this->controller(null, $this->access(false, [], []), $this->createMock(AttestationService::class), [], $never)->confirm('req-1')->getStatus());
+
+		$cases = [
+			[new DomainException('Only the owner this request was sent to can answer it'), Http::STATUS_FORBIDDEN],
+			[new OutOfBoundsException('Confirmation request not found'), Http::STATUS_NOT_FOUND],
+			[new UnexpectedValueException('This request was already answered'), Http::STATUS_CONFLICT],
+			[new RuntimeException('database gone'), Http::STATUS_INTERNAL_SERVER_ERROR],
+		];
+		foreach ($cases as [$exception, $status]) {
+			$answers = $this->createMock(AttestationAnswerService::class);
+			$answers->method('confirm')->willThrowException($exception);
+			$response = $this->controller($this->user('bob'), $this->access(false, [], []), $this->createMock(AttestationService::class), [], $answers)->confirm('req-1');
+			$message  = $exception->getMessage();
+			if ($status === Http::STATUS_INTERNAL_SERVER_ERROR) {
+				$message = 'The request could not be confirmed';
+			}
+
+			self::assertSame([$status, ['message' => $message]], [$response->getStatus(), $response->getData()]);
+		}
+	}//end testTheConfirmRefusals()
 }//end class

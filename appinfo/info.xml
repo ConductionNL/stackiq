@@ -100,6 +100,7 @@ Vrij en open source onder de EUPL-licentie.
 		<job>OCA\Stackiq\BackgroundJob\ContractStatusJob</job>
 		<job>OCA\Stackiq\BackgroundJob\FederationSyncJob</job>
 		<job>OCA\Stackiq\BackgroundJob\EolSyncJob</job>
+		<job>OCA\Stackiq\BackgroundJob\AttestationOverdueJob</job>
 	</background-jobs>
 
 	<repair-steps>
