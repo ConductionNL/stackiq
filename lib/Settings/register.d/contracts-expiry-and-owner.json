@@ -1,0 +1,29 @@
+{
+  "components": {
+    "schemas": {
+      "catalogContract": {
+        "version": "0.1.6",
+        "properties": {
+          "responsibleUser": {
+            "type": "string",
+            "referenceType": "nextcloud-user",
+            "title": "Responsible user",
+            "description": "The Nextcloud user who answers for this contract and is warned before it expires.",
+            "facetable": true,
+            "order": 17
+          }
+        },
+        "x-openregister-notifications": {
+          "contract-expiry": {
+            "recipients": [
+              {
+                "kind": "field",
+                "field": "responsibleUser"
+              }
+            ]
+          }
+        }
+      }
+    }
+  }
+}

@@ -561,12 +561,14 @@
 					"startDate",
 					"endDate",
 					"cost",
-					"status"
+					"status",
+					"responsibleUser"
 				],
 				"quickFilters": [
 					{ "label": "All", "filter": {}, "default": true },
 					{ "label": "Active", "filter": { "status": "Active" }, "icon": "CheckCircle" },
-					{ "label": "Expiring / expired", "filter": { "status": "Expired" }, "icon": "AlertCircle" },
+					{ "label": "Expiring", "filter": { "status": "Expiring" }, "icon": "AlertCircle" },
+					{ "label": "Expired", "filter": { "status": "Expired" }, "icon": "Calendar" },
 					{ "label": "In negotiation", "filter": { "status": "In negotiation" }, "icon": "Handshake" }
 				],
 				"sidebar": {

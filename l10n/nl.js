@@ -1333,7 +1333,11 @@ OC.L10N.register(
         "Gap, fillable": "Gat, te vullen",
         "Gap": "Gat",
         "Licence": "Licentie",
-        "Software catalogue": "Softwarecatalogus"
+        "Software catalogue": "Softwarecatalogus",
+        "Expiring": "Verloopt binnenkort",
+        "Expired": "Verlopen",
+        "Responsible user": "Verantwoordelijke gebruiker",
+        "The Nextcloud user who answers for this contract and is warned before it expires.": "De Nextcloud-gebruiker die verantwoordelijk is voor dit contract en voor het verlopen wordt gewaarschuwd."
     },
     "nplurals=2; plural=(n != 1);"
 )

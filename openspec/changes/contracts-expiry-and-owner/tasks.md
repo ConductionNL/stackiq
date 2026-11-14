@@ -10,8 +10,8 @@
   - GIVEN the register WHEN the `catalogContract` lifecycle is read THEN every state is an enum value and approach, extend and expire exist
   - GIVEN the register WHEN `responsibleUser` is read THEN it is a string with `referenceType` `nextcloud-user`
   - GIVEN the register WHEN the versions are read THEN the `catalogContract` version and `info.version` are higher than 0.1.1 and 2.5.0, with a changelog line
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Settings/ContractLifecycleDeclarationTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Settings/ContractLifecycleDeclarationTest.php)
 
 ### Task 2: Move contracts into and out of Expiring in the daily job
 - **spec_ref**: openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-001-the-contract-status-must-include-expiring-set-by-the-daily-contract-job-inside-the-notice-window
@@ -22,8 +22,8 @@
   - GIVEN an Expiring contract extended by two years WHEN the pass runs THEN it is saved as Active
   - GIVEN a contract In negotiation or Expired WHEN the pass runs THEN it is not saved
   - GIVEN `contract_expiry_window_days` is empty or zero WHEN the pass runs THEN it uses 90
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Service/ContractStatusServiceTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Service/ContractStatusServiceTest.php)
 
 ### Task 3: Split the Contracts quick filter and show the responsible user
 - **spec_ref**: openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-003-the-contracts-page-must-let-a-user-filter-on-expiring-and-on-expired-contracts-separately
@@ -33,7 +33,7 @@
   - GIVEN the Contracten page WHEN it renders THEN its columns include `responsibleUser`
   - GIVEN a Dutch instance WHEN the page renders THEN the filter and column labels are Dutch
   - GIVEN a quick filter whose value is not in the schema enum WHEN tests/vitest/manifestFilterEnumParity.spec.js runs THEN it fails, so quick filters get the same guard as `config.filter`
-- [ ] Implement
+- [x] Implement
 - [ ] Test (Playwright tests/e2e/spec-coverage/contract-expiry-and-owner.spec.ts, vitest tests/vitest/manifestFilterEnumParity.spec.js, and node tests/validate-manifest.js)
 
 ### Task 4: Pick the responsible user in the contract form
@@ -42,7 +42,7 @@
 - **acceptance_criteria**:
   - GIVEN the `catalogContract` schema WHEN the library resolves the field widget for `responsibleUser` THEN it is `user`
   - GIVEN an application owner on ContractDetail WHEN they pick a user and save THEN the detail shows that user
-- [ ] Implement
+- [x] Implement
 - [ ] Test (vitest tests/vitest/contractResponsibleUser.spec.js and the Playwright spec above)
 
 ### Task 5: Add the responsible user to the contract-expiry recipients
@@ -50,8 +50,8 @@
 - **files**: `lib/Settings/register.d/contracts-expiry-and-owner.json`, `tests/Unit/Settings/ContractLifecycleDeclarationTest.php`
 - **acceptance_criteria**:
   - GIVEN the merged `contract-expiry` rule WHEN its recipients are read THEN they include `{"kind": "field", "field": "responsibleUser"}`, the admins group and the manage rights recipient
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Settings/ContractLifecycleDeclarationTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Settings/ContractLifecycleDeclarationTest.php)
 
 ### Task 6: Seed an expiring contract and document the feature
 - **spec_ref**: openspec/changes/contracts-expiry-and-owner/specs/contract-expiry-and-owner/spec.md#requirement-req-ceo-001-the-contract-status-must-include-expiring-set-by-the-daily-contract-job-inside-the-notice-window

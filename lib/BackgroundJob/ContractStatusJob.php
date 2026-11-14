@@ -75,8 +75,9 @@ class ContractStatusJob extends TimedJob {
 		}
 
 		try {
-			$count = $this->statusService->expirePastContracts();
-			$this->logger->info('[ContractStatusJob] Contract status pass complete', ['transitioned' => $count]);
+			// REQ-CEO-001/002: one pass moves contracts into and out of Expiring and to Expired.
+			$counts = $this->statusService->updateContractStatuses();
+			$this->logger->info('[ContractStatusJob] Contract status pass complete', $counts);
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'[ContractStatusJob] Fatal error during contract status pass — cron pass protected',
