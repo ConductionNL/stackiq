@@ -1361,7 +1361,23 @@ OC.L10N.register(
         "The user id of the reviewer who last confirmed or changed this person's access.": "The user id of the reviewer who last confirmed or changed this person's access.",
         "Shared": "Shared",
         "{name}, shared by {partner}": "{name}, shared by {partner}",
-        "+{count} more": "+{count} more"
+        "+{count} more": "+{count} more",
+        "Role mapping": "Role mapping",
+        "Choose, per catalogue role, which of your own groups grant it. Members of those groups are kept in the role group the access rules use.": "Choose, per catalogue role, which of your own groups grant it. Members of those groups are kept in the role group the access rules use.",
+        "The role mapping is not loaded yet.": "The role mapping is not loaded yet.",
+        "Role": "Role",
+        "Role group": "Role group",
+        "Groups that grant this role": "Groups that grant this role",
+        "Groups that grant {role}": "Groups that grant {role}",
+        "No group": "No group",
+        "Default role per organisation type": "Default role per organisation type",
+        "A contact person of an organisation of this type holds this role.": "A contact person of an organisation of this type holds this role.",
+        "No role": "No role",
+        "Access review": "Access review",
+        "Review interval in days": "Review interval in days",
+        "A person is due for review when their access was not reviewed within this many days.": "A person is due for review when their access was not reviewed within this many days.",
+        "Collaboration": "Collaboration",
+        "Community": "Community"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -1424,6 +1424,22 @@
         "The user id of the reviewer who last confirmed or changed this person's access.": "De gebruikers-ID van de beoordelaar die de toegang van deze persoon het laatst heeft bevestigd of gewijzigd.",
         "Shared": "Gedeeld",
         "{name}, shared by {partner}": "{name}, gedeeld door {partner}",
-        "+{count} more": "+{count} meer"
+        "+{count} more": "+{count} meer",
+        "Role mapping": "Rolkoppeling",
+        "Choose, per catalogue role, which of your own groups grant it. Members of those groups are kept in the role group the access rules use.": "Kies per catalogusrol welke van uw eigen groepen die rol geven. Leden van die groepen worden bijgehouden in de rolgroep die de toegangsregels gebruiken.",
+        "The role mapping is not loaded yet.": "De rolkoppeling is nog niet geladen.",
+        "Role": "Rol",
+        "Role group": "Rolgroep",
+        "Groups that grant this role": "Groepen die deze rol geven",
+        "Groups that grant {role}": "Groepen die {role} geven",
+        "No group": "Geen groep",
+        "Default role per organisation type": "Standaardrol per organisatietype",
+        "A contact person of an organisation of this type holds this role.": "Een contactpersoon van een organisatie van dit type heeft deze rol.",
+        "No role": "Geen rol",
+        "Access review": "Toegangsbeoordeling",
+        "Review interval in days": "Beoordelingstermijn in dagen",
+        "A person is due for review when their access was not reviewed within this many days.": "Een persoon moet worden beoordeeld als de toegang niet binnen dit aantal dagen is beoordeeld.",
+        "Collaboration": "Samenwerkingsverband",
+        "Community": "Community"
     }
 }

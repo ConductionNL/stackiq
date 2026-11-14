@@ -9,7 +9,7 @@
   - GIVEN no saved mapping WHEN the map is read THEN each of the six roles has its lower-case role group and no source groups, and the four organisation types have their default roles on the English enum
   - GIVEN an admin WHEN they save Gebruik-beheerder onto Inkoop and an interval of 180 days THEN the config returns both
   - GIVEN a non-admin WHEN they read or write the config THEN they get 403
-- [ ] Implement
+- [x] Implement
 - [x] Test (PHPUnit tests/Unit/Service/RoleGroupMapTest.php and tests/Unit/Controller/SettingsControllerUserGroupsTest.php)
 
 ### Task 2: Keep role groups in step and fix the two broken paths
