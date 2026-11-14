@@ -224,7 +224,7 @@
 		    "title": "Store",
 		    "description": "Install catalogue configurations that other organisations have published: a way of describing software, or the flows that keep an entry current."
 		  },
-		  "_note": "ADR-114 Decision 4 / ADR-080. Declarative: openregister hosts the store plane, so this app writes NO store controller. With no registry configured the page renders the app's built-in items and makes NO network call."
+		  "_note": "platform-properties REQ-PLAT-007: the store adds configuration others published. ADR-114 Decision 4 / ADR-080. Declarative: openregister hosts the store plane, so this app writes NO store controller. With no registry configured the page renders the app's built-in items and makes NO network call."
 		},
 		{
 			"id": "Dashboard",
@@ -416,11 +416,11 @@
 				"schema": "organization",
 				"_note": "ADR-062 rollout (round 2): this page did not exist before — organisatie objects (vendors, municipalities, collaborations) were only reachable as index cards with no detail view (codeberg softwarecatalog#76). Vendor/organisation archetype: the organisatie schema itself carries only catalogue-role fields (contactsUid, type, status, registratiestatus, samenwerkingtype, geregistreerdDoor, publicatie dates) because identity (name, website, e-mail, KvK) lives in the linked Nextcloud contact via contactsUid, not on this OR object — so the body leads with those 8 catalogue fields (2-col) rather than name/address. Top-right: a stats-block KPI card counting the organisation's own diensten, modules and contactpersonen (all FK-scoped via aanbieder/organisatie = @objectId) so a reader sees portfolio size at a glance without opening any list. Below: three FK object-lists — Services (dienst.aanbieder) and Applications (module.aanbieder) are the org's supply-side offerings; Contact persons (contactpersoon.organisatie) links to the existing ContactpersoonDetail page. Services still have no dedicated index/detail page (a real fleet gap, follow-up remains). Applications now do — bio-compliance-assessment added Modules/ModuleDetail (BBN level and DPIA tracking needed somewhere to live), so org-modules now carries `rowRoute: ModuleDetail` and a bbnLevel column; org-diensten's rowRoute stays intentionally omitted. An organisation does not communicate itself (contact happens through the linked NC contact), so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab. Card-click navigation from the Organisaties index required a matching fix in OrganisatieCard.vue (the custom cardComponent never emitted the `click` event CnCardGrid/CnPageRenderer listen on for register+schema route resolution — clicking a card was previously a no-op).",
 				"widgets": [
-					{ "id": "org-data", "type": "data", "title": "Organisation", "icon": "OfficeBuilding", "content": { "columns": 2, "include": [ "contactsUid", "type", "status", "registrationStatus", "samenwerkingtype", "registeredBy", "publicationDate", "depublicationDate" ], "overrides": { "status": { "editable": false }, "registeredBy": { "editable": false } } } },
+					{ "id": "org-data", "type": "data", "title": "Organisation", "icon": "OfficeBuilding", "content": { "columns": 2, "include": [ "contactsUid", "type", "status", "registrationStatus", "samenwerkingtype", "inhabitants", "registeredBy", "publicationDate", "depublicationDate" ], "overrides": { "status": { "editable": false }, "registeredBy": { "editable": false } } } },
 					{ "id": "org-stats-services", "type": "stats-block", "title": "Services", "icon": "ChartBar", "content": { "entries": [ { "title": "Services", "register": "@resolve:voorzieningen_register", "schema": "catalogService", "metric": "count", "filter": { "provider": "@objectId" } } ] } },
 					{ "id": "org-stats-applications", "type": "stats-block", "title": "Applications", "icon": "ChartBar", "content": { "entries": [ { "title": "Applications", "register": "@resolve:voorzieningen_register", "schema": "module", "metric": "count", "filter": { "provider": "@objectId" } } ] } },
 					{ "id": "org-stats-contact-persons", "type": "stats-block", "title": "Contact persons", "icon": "ChartBar", "content": { "entries": [ { "title": "Contact persons", "register": "@resolve:voorzieningen_register", "schema": "contactPerson", "metric": "count", "filter": { "organization": "@objectId" } } ] } },
-					{ "id": "org-diensten", "type": "object-list", "title": "Services", "icon": "HandshakeOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "catalogService", "filter": { "provider": "@objectId" }, "columns": [ { "key": "type", "label": "Type" } ], "limit": 25, "emptyText": "No services registered for this organisation yet" } },
+					{ "id": "org-diensten", "_note": "REQ-CSV-001: openspec/changes/landscape-services-and-module-versions/specs/catalogue-services/spec.md#requirement-a-suppliers-service-is-registered-over-one-or-more-applications-req-csv-001.", "type": "object-list", "title": "Services", "icon": "HandshakeOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "catalogService", "filter": { "provider": "@objectId" }, "columns": [ { "key": "type", "label": "Type" } ], "limit": 25, "emptyText": "No services registered for this organisation yet" } },
 					{ "id": "org-modules", "type": "object-list", "title": "Applications", "icon": "Package", "content": { "register": "@resolve:voorzieningen_register", "schema": "module", "filter": { "provider": "@objectId" }, "columns": [ { "key": "name", "label": "Name" }, { "key": "licentietype", "label": "License type" }, { "key": "bbnLevel", "label": "BBN level" } ], "limit": 25, "rowRoute": "ModuleDetail", "viewAllRoute": "Modules", "viewAllQuery": { "provider": "@objectId" }, "emptyText": "No applications registered for this organisation yet" } },
 					{ "id": "org-usages", "type": "object-list", "title": "Applications in use", "icon": "OfficeBuilding", "content": { "register": "@resolve:voorzieningen_register", "schema": "usage", "filter": { "consumer": "@objectId" }, "columns": [ { "key": "module", "label": "Application", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "module", "labelField": "name" } }, { "key": "moduleVersion", "label": "Version", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "moduleVersion", "labelField": "version" } }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "GebruikDetail", "viewAllRoute": "Gebruik", "viewAllQuery": { "consumer": "@objectId" }, "allowCreate": false, "emptyText": "No applications in use recorded for this organisation yet" } },
 					{ "id": "org-contactpersonen", "type": "object-list", "title": "Contact persons", "icon": "AccountGroup", "content": { "register": "@resolve:voorzieningen_register", "schema": "contactPerson", "filter": { "organization": "@objectId" }, "columns": [ { "key": "id", "label": "Name", "widget": "contactName" }, { "key": "role", "label": "Function" }, { "key": "roles", "label": "Roles" } ], "limit": 25, "rowRoute": "ContactpersoonDetail", "emptyText": "No contact persons linked to this organisation yet" } }
@@ -442,7 +442,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -477,7 +477,7 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "contactPerson",
-				"_note": "Person archetype (a contact ROLE at an organisation). Body leads with the person's role data (function, roles, notification preferences, the linked Nextcloud contactsUid) 8-wide, with a Related panel 4-wide surfacing the owning organisation and any records that reference this person. The contactpersoon schema declares NO email/calendar linkedType (communication is handled through the linked Nextcloud contact via contactsUid, not stored on this catalogue role), so per the comms hard-rule NO Emails/Meetings widgets are placed on the body. Audit trail is rarely consulted for a contact role, so it stays as a sidebar tab.",
+				"_note": "Person archetype (a contact ROLE at an organisation). Body leads with the person's role data (function, roles, notification preferences, the linked Nextcloud contactsUid) 8-wide, with a Related panel 4-wide surfacing the owning organisation and any records that reference this person. The contactPerson schema declares the contacts linkedType (adopt-integration-leaves), so the linked Nextcloud contact (display name, email, avatar) shows as a leaf tab in the object sidebar instead of a bare contactsUid. It still declares NO email or calendar linkedType: communication goes through that contact, not this catalogue role, so per the comms hard-rule NO Emails/Meetings widgets are placed on the body. Audit trail is rarely consulted for a contact role, so it stays as a sidebar tab.",
 				"widgets": [
 					{ "id": "cp-data", "type": "data", "title": "Contact role", "icon": "AccountBoxOutline", "content": { "columns": 2 } },
 					{ "id": "cp-related", "type": "related", "title": "Organisation & links", "icon": "LinkVariant" }
@@ -493,7 +493,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -546,7 +546,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -589,7 +589,7 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "catalogContract",
-				"_note": "Document / agreement archetype. The reader of a contract needs terms and money up front, then the paperwork. Body: contract data (number, type, start/end dates, cost + period, status, both nested contact persons, documentReferentie, remarks) spans 8-wide top-left; a Documents (files) panel spans 4-wide full-height on the right because the signed contract, addenda and evidence are the primary attachments. Below the data, a Related panel links the contract's service (dienst) and usage (gebruik). A KPI stat surfaces the contract value at a glance. The contract schema declares NO email/calendar linkedType, so per the comms hard-rule NO Emails/Meetings widgets appear on the body (circulation happens via the linked Nextcloud contacts, not the catalogue record). Per the sidebar hard rule, the ContractApprovalPanel (decidesk-delegated approval workflow — a per-record action, not primary reading) moved OUT of the sidebar into a declarative body section (config.bodyWidgets, placed after the related row) so the sidebar stays audit-only. FIX (softwarecatalog audit): the panel previously rendered bare below the grid (CnBodySections gives a section only a plain `<h3>`, no card chrome) — ContractApprovalPanel now wraps its own content in CnWidgetWrapper (title + CheckCircleOutline icon), matching the chrome every other body widget carries; the now-redundant bodyWidgets `title` was dropped so the h3 doesn't duplicate it. Layout also reworked: ct-data (Contract details) now anchors gridX0/gridY0 spanning the full grid height so no whitespace hole sits between the KPI stat and the Files panel, ct-value moved to the top of the right column above ct-files, and ct-data's height was bumped from 5 to 7 (9 scalar contract fields at 2 columns need 5 rows; height5 was clipping the last row).",
+				"_note": "Document / agreement archetype. The reader of a contract needs terms and money up front, then the paperwork. Body: contract data (number, type, start/end dates, cost + period, status, both nested contact persons, documentReferentie, remarks) spans 8-wide top-left; a Documents (files) panel spans 4-wide full-height on the right because the signed contract, addenda and evidence are the primary attachments. Below the data, a Related panel links the contract's service (dienst) and usage (gebruik). A KPI stat surfaces the contract value at a glance. The catalogContract schema declares the calendar linkedType next to decidesk-decisions (adopt-integration-leaves): the object sidebar gets a calendar leaf tab, and LifecycleCalendarListener keeps one linked \"Contract ends\" event on the end date. It still declares NO email linkedType, and the comms hard-rule stands: NO Emails/Meetings widgets on the body (circulation happens via the linked Nextcloud contacts, not the catalogue record); the calendar lives in the sidebar tab only. Per the sidebar hard rule, the ContractApprovalPanel (decidesk-delegated approval workflow — a per-record action, not primary reading) moved OUT of the sidebar into a declarative body section (config.bodyWidgets, placed after the related row) so the sidebar stays audit-only. FIX (softwarecatalog audit): the panel previously rendered bare below the grid (CnBodySections gives a section only a plain `<h3>`, no card chrome) — ContractApprovalPanel now wraps its own content in CnWidgetWrapper (title + CheckCircleOutline icon), matching the chrome every other body widget carries; the now-redundant bodyWidgets `title` was dropped so the h3 doesn't duplicate it. Layout also reworked: ct-data (Contract details) now anchors gridX0/gridY0 spanning the full grid height so no whitespace hole sits between the KPI stat and the Files panel, ct-value moved to the top of the right column above ct-files, and ct-data's height was bumped from 5 to 7 (9 scalar contract fields at 2 columns need 5 rows; height5 was clipping the last row).",
 				"widgets": [
 					{ "id": "ct-value", "type": "stat", "title": "Contract value", "icon": "CurrencyEur", "content": { "label": "Contract value", "format": "currency", "source": { "register": "@resolve:voorzieningen_register", "schema": "catalogContract", "metric": "sum", "field": "cost", "filter": { "id": "@objectId" } } } },
 					{ "id": "ct-data", "type": "data", "title": "Contract details", "icon": "FileSign", "content": { "columns": 2 } },
@@ -612,7 +612,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -690,7 +690,7 @@
 			"type": "custom",
 			"title": "Services",
 			"component": "FacetedCatalogIndexView",
-			"_note": "Faceted index page (gemma-faceted-search) — see the Modules page's _note; identical component, schema: dienst. GEMMA links are transitive via dienst.modules (FacetService resolves them server-side).",
+			"_note": "Faceted index page (gemma-faceted-search) — see the Modules page's _note; identical component, schema: dienst. GEMMA links are transitive via dienst.modules (FacetService resolves them server-side). REQ-CSV-001: openspec/changes/landscape-services-and-module-versions/specs/catalogue-services/spec.md#requirement-a-suppliers-service-is-registered-over-one-or-more-applications-req-csv-001.",
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "catalogService",
@@ -733,7 +733,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -787,7 +787,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -837,7 +837,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -889,7 +889,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -939,7 +939,7 @@
 					"enabled": true,
 					"showMetadata": true,
 					"tabs": [
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -978,7 +978,7 @@
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
 			},
-			"_note": "Fixed a pre-existing bug: `releaseDatum` is not a moduleVersie property (see lib/Settings/softwarecatalogus_register.json) — replaced with the real lifecycle field `datumInGebruik` (date the version went live), the closest analog to a release date."
+			"_note": "Fixed a pre-existing bug: `releaseDatum` is not a moduleVersie property (see lib/Settings/softwarecatalogus_register.json) — replaced with the real lifecycle field `datumInGebruik` (date the version went live), the closest analog to a release date. REQ-MVR-001: openspec/changes/landscape-services-and-module-versions/specs/module-versions/spec.md#requirement-a-released-version-of-an-application-is-recorded-with-its-lifecycle-dates-req-mvr-001."
 		},
 		{
 			"id": "ModuleversieDetail",
@@ -988,7 +988,7 @@
 			"config": {
 				"register": "@resolve:voorzieningen_register",
 				"schema": "moduleVersion",
-				"_note": "Catalog / release archetype (moduleVersie — a released version of a module). Two questions dominate: what is this release and where is it in its lifecycle. Body: version data 8-wide (versie, package description, short + long markdown, status, geregistreerdDoor and the four lifecycle dates: in ontwikkeling / in gebruik / einde ondersteuning / teruggetrokken) with a Related panel 4-wide surfacing the parent module and its usages (gebruiken). Below, a compliancy object-list shows every compliance claim recorded against the parent module (compliance is tracked at module level via module.compliancy), and a release-notes / package Files panel holds changelogs and artefacts. A module version does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab.",
+				"_note": "Catalog / release archetype (moduleVersie — a released version of a module). Two questions dominate: what is this release and where is it in its lifecycle. Body: version data 8-wide (versie, package description, short + long markdown, status, geregistreerdDoor and the four lifecycle dates: in ontwikkeling / in gebruik / einde ondersteuning / teruggetrokken) with a Related panel 4-wide surfacing the parent module and its usages (gebruiken). Below, a compliancy object-list shows every compliance claim recorded against the parent module (compliance is tracked at module level via module.compliancy), and a release-notes / package Files panel holds changelogs and artefacts. A module version does not communicate, so per the comms hard-rule NO Emails/Meetings widgets appear. Audit trail stays a sidebar tab. REQ-MVR-001: openspec/changes/landscape-services-and-module-versions/specs/module-versions/spec.md#requirement-a-released-version-of-an-application-is-recorded-with-its-lifecycle-dates-req-mvr-001.",
 				"widgets": [
 					{ "id": "mv-data", "type": "data", "title": "Version details", "icon": "Package", "content": { "columns": 2 } },
 					{ "id": "mv-related", "type": "related", "title": "Module & usage", "icon": "LinkVariant" },
@@ -1006,7 +1006,7 @@
 					"showMetadata": true,
 					"tabs": [
 						{ "id": "components", "label": "Components", "icon": "Package", "component": "SbomComponentsPanel" },
-						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "History", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"
@@ -1042,7 +1042,7 @@
 					"showMetadata": true,
 					"tabs": [
 						{ "id": "exposure", "label": "Exposure", "icon": "ShieldOutline", "component": "VulnerabilityExposurePanel" },
-						{ "id": "audit", "label": "Audit trail", "icon": "History", "widgets": [ { "type": "audit" } ] }
+						{ "id": "audit", "label": "Audit trail", "icon": "History", "widgets": [ { "type": "audit" } ], "_note": "platform-properties REQ-PLAT-006: every record keeps its history, read from OpenRegister's audit trail by the audit widget." }
 					]
 				},
 				"documentationUrl": "https://stackiq.conduction.nl"

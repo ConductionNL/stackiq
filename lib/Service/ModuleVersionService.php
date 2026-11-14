@@ -214,7 +214,7 @@ class ModuleVersionService implements ModuleVersionServiceInterface {
 	 */
 	private function existingVersionList(array $lookup): array {
 		$existingVersions = $lookup['objectService']->searchObjects(
-			query: $this->versionQuery(lookup: $lookup),
+			query: SearchBounds::bounded(query: $this->versionQuery(lookup: $lookup)),
 			_rbac: false,
 			_multitenancy: false
 		);
