@@ -431,4 +431,63 @@ class ProgressTrackerTest extends TestCase {
 		$this->assertArrayHasKey('stackiq/other_setting', $this->appConfigRows);
 	}//end testExpiredAppConfigEntriesAreRemovedWhenAnOperationStarts()
 
+	/**
+	 * The running operation of a type is found from another request without
+	 * its id, and is gone once the operation completes.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 */
+	public function testTheCurrentOperationOfATypeIsFoundAndClearedOnCompletion(): void {
+		$writer = $this->trackerForRequest(null);
+		$this->assertNull($writer->getCurrentOperation('organisation_sync'));
+
+		$operationId = $writer->startOperation(operationType: 'organisation_sync');
+		$writer->setPhase('processing_contacts');
+
+		$current = $this->trackerForRequest('admin')->getCurrentOperation('organisation_sync');
+		$this->assertNotNull($current);
+		$this->assertSame($operationId, $current['operation_id']);
+		$this->assertSame('processing_contacts', $current['phase']);
+		$this->assertSame('Processing contact persons', $current['phase_description']);
+		$this->assertNull($this->trackerForRequest('admin')->getCurrentOperation('sbom-import'));
+
+		$writer->completeOperation();
+		$this->assertNull($this->trackerForRequest('admin')->getCurrentOperation('organisation_sync'));
+	}//end testTheCurrentOperationOfATypeIsFoundAndClearedOnCompletion()
+
+	/**
+	 * A failed or cancelled operation is not current; a newer run of the type
+	 * is not cleared by an older one ending.
+	 *
+	 * @return void
+	 */
+	public function testAnEndedOperationIsNotCurrentAndAnOlderOneDoesNotClearANewer(): void {
+		$failed = $this->trackerForRequest(null);
+		$failed->startOperation(operationType: 'organisation_sync');
+		$failed->failOperation('database gone');
+		$this->assertNull($this->trackerForRequest('admin')->getCurrentOperation('organisation_sync'));
+
+		$older = $this->trackerForRequest(null);
+		$older->startOperation(operationType: 'organisation_sync', operationId: 'organisation_sync_old');
+		$newer = $this->trackerForRequest(null);
+		$newer->startOperation(operationType: 'organisation_sync', operationId: 'organisation_sync_new');
+		$older->cancelOperation();
+
+		$this->assertSame('organisation_sync_new', $this->trackerForRequest('admin')->getCurrentOperation('organisation_sync')['operation_id']);
+	}//end testAnEndedOperationIsNotCurrentAndAnOlderOneDoesNotClearANewer()
+
+	/**
+	 * Without a memcache the current operation is found through the app config too.
+	 *
+	 * @return void
+	 */
+	public function testWithoutAMemcacheTheCurrentOperationIsFound(): void {
+		$writer      = $this->trackerForRequest(null, null);
+		$operationId = $writer->startOperation(operationType: 'organisation_sync');
+
+		$this->assertSame($operationId, $this->trackerForRequest('admin', null)->getCurrentOperation('organisation_sync')['operation_id']);
+	}//end testWithoutAMemcacheTheCurrentOperationIsFound()
+
 }//end class

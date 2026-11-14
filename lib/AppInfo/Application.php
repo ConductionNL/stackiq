@@ -28,7 +28,7 @@ use OCA\Stackiq\Controller\ControllerRegistrar;
 use OCA\Stackiq\Dashboard\ConceptOrganisatiesWidget;
 use OCA\Stackiq\EventListener\ListenerRegistrar;
 use OCA\Stackiq\Kernel\AppIdentity;
-use OCA\Stackiq\Middleware\ApiContractMiddleware;
+use OCA\Stackiq\Middleware\MiddlewareRegistrar;
 use OCA\Stackiq\Service\ServiceRegistrar;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -51,6 +51,9 @@ use Psr\Container\ContainerInterface;
  * @SuppressWarnings(PHPMD.CouplingBetweenObjects)
  *
  * @spec openspec/specs/settings-service/spec.md
+ *
+ * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-the-catalogue-runs-on-the-customers-own-nextcloud-req-plat-001
+ * @spec openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-catalogue-data-is-read-and-written-through-a-rest-api-req-plat-002
  */
 class Application extends App implements IBootstrap {
 	/**
@@ -86,8 +89,11 @@ class Application extends App implements IBootstrap {
 
 		$this->registerDomainServices(context: $context);
 
-		// API-Version header and problem details on the JSON API (spec api-contract).
-		$context->registerMiddleware(ApiContractMiddleware::class);
+		// StackIQ's MCP tool provider, under the key OpenRegister enumerates.
+		$this->registerMcpToolProvider(context: $context);
+
+		// The middleware registrations live with the Middleware component.
+		(new MiddlewareRegistrar())->register(context: $context);
 
 		$this->registerObservabilityControllers(context: $context);
 	}//end register()
@@ -309,4 +315,25 @@ class Application extends App implements IBootstrap {
 
 		return $appConfig->getValueString(self::APP_ID, 'voorzieningen_register', '');
 	}//end resolveVoorzieningenRegisterId()
+
+	/**
+	 * Register StackIQ's MCP tool provider under the key OpenRegister enumerates.
+	 *
+	 * OpenRegister looks a provider up as `'OCA\\OpenRegister\\Mcp\\IMcpToolProvider::' . $appId`,
+	 * so the suffix must stay this app's id. Both sides are strings: nothing is
+	 * autoloaded at registration, so an instance without OpenRegister boots as
+	 * before and never resolves it (mcp-full-action-surface task 2.2).
+	 *
+	 * @param IRegistrationContext $context The registration context.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/mcp-full-action-surface/specs/mcp-tool-surface/spec.md
+	 */
+	private function registerMcpToolProvider(IRegistrationContext $context): void {
+		$context->registerServiceAlias(
+			'OCA\\OpenRegister\\Mcp\\IMcpToolProvider::stackiq',
+			'OCA\\Stackiq\\Mcp\\StackiqToolProvider'
+		);
+	}//end registerMcpToolProvider()
 }//end class

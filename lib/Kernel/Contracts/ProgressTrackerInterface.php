@@ -47,4 +47,13 @@ interface ProgressTrackerInterface {
 	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
 	 */
 	public function getProgress(?string $operationId = null): ?array;
+
+	/**
+	 * The running operation of an operation type, or null when none runs.
+	 *
+	 * @param string $operationType The operation type, e.g. `organisation_sync`.
+	 *
+	 * @return array<string, mixed>|null The running operation's progress.
+	 */
+	public function getCurrentOperation(string $operationType): ?array;
 }//end interface
