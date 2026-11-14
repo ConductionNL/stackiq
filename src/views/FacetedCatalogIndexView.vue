@@ -121,6 +121,7 @@ generic route-query-to-filter passthrough never sees it (see the
 					:quickFilterMode="quickFilterMode"
 					:quickFilterMultiple="quickFilterMultiple"
 					:sidebar="sidebar"
+					:copy="copy"
 					:rowClickToView="Boolean(detailRoute)"
 					@search="onListSearch"
 					@rowClick="openDetail"
@@ -295,6 +296,18 @@ export default {
 		 * `onListSearch` hands it to the facet counts.
 		 */
 		sidebar: {
+			type: Object,
+			default: null,
+		},
+
+		/**
+		 * Copy settings, forwarded to `CnIndexPage` (manifest `config.copy`):
+		 * `include` lists the links a copy may take along, which the single and
+		 * mass copy dialogs then offer, ticked.
+		 *
+		 * @spec openspec/changes/applications-copy-with-links/specs/application-copy/spec.md#requirement-an-application-is-copied-with-the-links-the-user-picks-req-acp-001
+		 */
+		copy: {
 			type: Object,
 			default: null,
 		},
