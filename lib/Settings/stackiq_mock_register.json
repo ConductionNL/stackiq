@@ -1357,7 +1357,7 @@
           "schema": "usage",
           "slug": "usage-usage-1-1"
         },
-        "consumer": {},
+        "consumer": "@ref:organization-voorbeeld-name-1-1",
         "provider": {},
         "contactPerson": {},
         "participants": [
@@ -1369,8 +1369,15 @@
         "startDateOutPhasing": "2026-03-01",
         "startDateOutPhased": "2026-03-01",
         "status": "Acquisition",
+        "availabilityLevel": "BBN1",
+        "availabilityReason": "Een dag uitval is op te vangen",
+        "integrityLevel": "BBN2",
+        "integrityReason": "Fouten raken besluiten over inwoners",
+        "confidentialityLevel": "BBN2",
+        "confidentialityReason": "Bevat persoonsgegevens",
+        "bbnLevel": "BBN2",
         "interneAnnotation": "Voorbeeld Interneannotation 1",
-        "module": {},
+        "module": "@ref:module-voorbeeld-name-1-1",
         "moduleVersion": {},
         "usedForReferenceComponents": [
           {}
@@ -3595,6 +3602,51 @@
         "effectiveDate": "2026-03-03",
         "note": "Voorbeeld Note 3",
         "appliedTo": {}
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "organization",
+          "slug": "organization-classification-4"
+        },
+        "type": "Municipality",
+        "name": "Gemeente Voorbeeldstad",
+        "summary": "Voorbeeldgemeente voor de BIO-classificatie",
+        "status": "Active"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "usage",
+          "slug": "usage-classified-2"
+        },
+        "consumer": "@ref:organization-voorbeeld-name-3-3",
+        "module": "@ref:module-voorbeeld-name-1-1",
+        "status": "In production",
+        "availabilityLevel": "BBN2",
+        "availabilityReason": "Balieprocessen stoppen bij uitval",
+        "integrityLevel": "BBN2",
+        "integrityReason": "Fouten raken besluiten over inwoners",
+        "confidentialityLevel": "BBN3",
+        "confidentialityReason": "Bevat bijzondere persoonsgegevens",
+        "bbnLevel": "BBN3"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "usage",
+          "slug": "usage-classified-3"
+        },
+        "consumer": "@ref:organization-classification-4",
+        "module": "@ref:module-voorbeeld-name-1-1",
+        "status": "In production",
+        "availabilityLevel": "BBN1",
+        "availabilityReason": "Een dag uitval is op te vangen",
+        "integrityLevel": "BBN2",
+        "integrityReason": "Fouten raken besluiten over inwoners",
+        "confidentialityLevel": "BBN2",
+        "confidentialityReason": "Bevat persoonsgegevens",
+        "bbnLevel": "BBN2"
       }
     ]
   }

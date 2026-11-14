@@ -49,8 +49,8 @@
 - **acceptance_criteria**:
   - GIVEN a fresh demo import WHEN Voorbeeld Name 1 opens THEN the summary shows three organisations, BBN2 twice and BBN3 once
   - GIVEN the docs WHEN a reader opens the feature page THEN it shows the panel, the suggestion and the summary in screenshots and explains who sees what
-- [ ] Implement
-- [ ] Test (Playwright tests/e2e/spec-coverage/baseline-classification.spec.ts against the demo data)
+- [x] Implement
+- [ ] Test (Playwright tests/e2e/spec-coverage/baseline-classification.spec.ts against the demo data; PHPUnit tests/Unit/Settings/BaselineClassificationSeedTest.php checks the seed)
 
 ## Verification
 
