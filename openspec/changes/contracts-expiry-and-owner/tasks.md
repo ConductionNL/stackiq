@@ -59,7 +59,7 @@
 - **acceptance_criteria**:
   - GIVEN a fresh demo import WHEN the Contracts page opens THEN at least one contract reads Expiring and names a responsible user
   - GIVEN the docs WHEN a reader opens the feature page THEN it explains the window setting and shows a screenshot of the Expiring filter
-- [ ] Implement
+- [x] Implement
 - [ ] Test (Playwright tests/e2e/spec-coverage/contract-expiry-and-owner.spec.ts against the demo data)
 
 ## Verification

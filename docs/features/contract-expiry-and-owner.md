@@ -43,3 +43,7 @@ The Contracts page has a quick filter for each status: All, Active, Expiring, Ex
 Each contract can name one **responsible user**, picked from the users of this Nextcloud in the contract form. The field stores the user's Nextcloud id and is optional.
 
 The contract expiry warning goes to the software catalogue administrators, everyone with manage rights on the contract, and the responsible user.
+
+## Demo data
+
+The demo dataset (setup wizard, "demo data") holds one contract that reads **Expiring** and names `admin` as its responsible user. Its dates are relative to the day of the import, so it still ends inside the 90-day window whenever the demo data is installed: in the descriptor `lib/Settings/stackiq_mock_register.json` a demo date can be written as `{{today}}`, `{{today+45d}}`, `{{today-2y}}` or `{{today+3m}}`, and becomes a real date at import.
