@@ -22,7 +22,9 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service\Stackiq;
 
 use OCA\OpenRegister\Service\Organisation\NewOrganisation;
+use OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface;
 use OCA\Stackiq\Service\OrganisationSlug;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -62,7 +64,7 @@ use Psr\Log\LoggerInterface;
  * @SuppressWarnings(PHPMD.CamelCaseVariableName)
  * @SuppressWarnings(PHPMD.CamelCaseParameterName)
  */
-class ContactPersonHandler {
+class ContactPersonHandler implements ContactPersonHandlerInterface {
 	/**
 	 * ContactPersonHandler constructor
 	 *
@@ -647,7 +649,7 @@ class ContactPersonHandler {
 			// A first contact is NOT added to the organisation admin groups.
 			// That automatic assignment was switched off on purpose in commit
 			// bc4dc9ea ("users should be assigned groups explicitly via the
-			// admin UI"), by making SettingsService::getOrganizationAdminGroups()
+			// admin UI"), by making getOrganizationAdminGroups() (now RoleGroupSettings)
 			// return an empty list. stackiq#1136 made that getter read the saved
 			// list again for the settings page and the export permission, so
 			// the assignment is left out here instead of being revived.
@@ -988,7 +990,7 @@ class ContactPersonHandler {
 			}
 
 			// Get register and schema IDs dynamically from configuration.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$registerId = $settingsService->getVoorzieningenRegisterId();
 			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -1546,7 +1548,7 @@ class ContactPersonHandler {
 			);
 
 			// Get voorzieningen config for register and schema.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 			$register = $voorzieningenConfig['register'] ?? '';
 			$organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';
@@ -1660,7 +1662,7 @@ class ContactPersonHandler {
 				try {
 					$objectService = $this->getObjectService();
 					// Get register and schema IDs dynamically from configuration.
-					$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+					$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 					$registerId = $settingsService->getVoorzieningenRegisterId();
 					$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -2109,7 +2111,7 @@ class ContactPersonHandler {
 			}
 
 			// Get the organization object.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$registerId = $settingsService->getVoorzieningenRegisterId();
 			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -2198,7 +2200,7 @@ class ContactPersonHandler {
 			}
 
 			// Get the organization object.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$registerId = $settingsService->getVoorzieningenRegisterId();
 			$organisationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -2508,7 +2510,7 @@ class ContactPersonHandler {
 			$objectService = $this->getObjectService();
 
 			// Get voorzieningen config for register and schema.
-			$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+			$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 			$voorzieningenConfig = $settingsService->getVoorzieningenConfig();
 			$register = $voorzieningenConfig['register'] ?? '';
 			$organizationSchema = $voorzieningenConfig['organisatie_schema'] ?? '';

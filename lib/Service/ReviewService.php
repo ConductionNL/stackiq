@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Kernel\Contracts\ReviewServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\IUser;
 use OCP\IUserSession;
@@ -44,7 +45,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/catalog-ratings/spec.md
  */
-class ReviewService {
+class ReviewService implements ReviewServiceInterface {
 	/**
 	 * The catalog object type reviews live on.
 	 */

@@ -29,7 +29,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\FacetService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\ViewQueryBuilder;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -93,7 +93,7 @@ class FacetServiceTest extends TestCase {
 	 * Build a FacetService with the given (mocked) collaborators.
 	 *
 	 * @param ObjectServiceInterface|null $objectService Mocked ObjectService, or null to omit from container.
-	 * @param SettingsService|null $settingsService Mocked SettingsService (defaults to a working voorzieningen config).
+	 * @param CatalogueLocator|null $catalogue Mocked CatalogueLocator (defaults to a working voorzieningen config).
 	 * @param ArchiMateService|null $archiMateService Mocked ArchiMateService (defaults to empty lookups).
 	 * @param ICache|null $cache Mocked ICache (defaults to always-miss/no-op).
 	 * @param string|null $userId Simulated current user id, or null for "not logged in".
@@ -102,7 +102,7 @@ class FacetServiceTest extends TestCase {
 	 */
 	private function makeService(
 		?ObjectServiceInterface $objectService = null,
-		?SettingsService $settingsService = null,
+		?CatalogueLocator $catalogue = null,
 		?ArchiMateService $archiMateService = null,
 		?ICache $cache = null,
 		?string $userId = 'alice',
@@ -127,9 +127,9 @@ class FacetServiceTest extends TestCase {
 			}
 		);
 
-		if ($settingsService === null) {
-			$settingsService = $this->createMock(SettingsService::class);
-			$settingsService->method('getVoorzieningenConfig')->willReturn(
+		if ($catalogue === null) {
+			$catalogue = $this->createMock(CatalogueLocator::class);
+			$catalogue->method('getVoorzieningenConfig')->willReturn(
 				[
 					'register' => '10',
 					'module_schema' => '20',
@@ -163,7 +163,7 @@ class FacetServiceTest extends TestCase {
 
 		return new FacetService(
 			container: $container,
-			settingsService: $settingsService,
+			catalogue: $catalogue,
 			archiMateService: $archiMateService,
 			queryBuilder: new ViewQueryBuilder(),
 			userSession: $userSession,

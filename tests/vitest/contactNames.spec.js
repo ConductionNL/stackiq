@@ -94,6 +94,13 @@ describe('contactNames', () => {
 		expect(await contactNameResult(B)).toEqual({ name: null, failed: false })
 	})
 
+	it('answers a missing id without asking the endpoint', async () => {
+		expect(await contactNameResult('')).toEqual({ name: null, failed: false })
+		expect(await contactNameResult(null)).toEqual({ name: null, failed: false })
+		expect(await contactNameResult(undefined)).toEqual({ name: null, failed: false })
+		expect(http.get).not.toHaveBeenCalled()
+	})
+
 	it('reads the uuid from a string or a related object', () => {
 		expect(contactPersonId(` ${A} `)).toBe(A)
 		expect(contactPersonId({ id: A })).toBe(A)

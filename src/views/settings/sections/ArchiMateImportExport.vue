@@ -1001,6 +1001,7 @@ export default {
 					{
 						method: 'POST',
 						headers: {
+							requesttoken: OC.requestToken,
 							'X-Requested-With': 'XMLHttpRequest',
 						},
 						body: formData,

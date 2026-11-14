@@ -1,0 +1,194 @@
+{
+    "views {\"diagrams\":{\"view\":{\"_attributes\":{\"identifier\":\"id-1\"}}}}": {
+        "items": [
+            {
+                "_attributes": {
+                    "identifier": "id-1"
+                }
+            }
+        ]
+    },
+    "views {\"diagrams\":{\"view\":[{\"_attributes\":{\"identifier\":\"id-1\"}},{\"_attributes\":{\"identifier\":\"id-2\"}}]}}": {
+        "items": [
+            {
+                "_attributes": {
+                    "identifier": "id-1"
+                }
+            },
+            {
+                "_attributes": {
+                    "identifier": "id-2"
+                }
+            }
+        ]
+    },
+    "views {\"diagrams\":{\"view\":{\"name\":\"x\"}}}": {
+        "items": [
+            "x"
+        ]
+    },
+    "views {\"diagrams\":{\"other\":{\"_attributes\":{\"identifier\":\"id-1\"}}}}": {
+        "items": [
+            {
+                "_attributes": {
+                    "identifier": "id-1"
+                }
+            }
+        ]
+    },
+    "views {\"view\":[{\"_attributes\":{\"identifier\":\"id-1\"}},{\"_attributes\":{\"identifier\":\"id-2\"}}]}": {
+        "items": [
+            {
+                "_attributes": {
+                    "identifier": "id-1"
+                }
+            },
+            {
+                "_attributes": {
+                    "identifier": "id-2"
+                }
+            }
+        ]
+    },
+    "views {\"view\":{\"_attributes\":{\"identifier\":\"id-1\"}}}": {
+        "items": [
+            {
+                "_attributes": {
+                    "identifier": "id-1"
+                }
+            }
+        ]
+    },
+    "views {\"other\":\"x\"}": {
+        "items": [
+            {
+                "other": "x"
+            }
+        ]
+    },
+    "elements {\"model\":{\"elements\":{\"element\":[{\"_attributes\":{\"identifier\":\"id-1\"}},{\"_attributes\":{\"identifier\":\"id-2\"}}]}}}": {
+        "items": [
+            {
+                "_attributes": {
+                    "identifier": "id-1"
+                }
+            },
+            {
+                "_attributes": {
+                    "identifier": "id-2"
+                }
+            }
+        ]
+    },
+    "elements {\"model\":{\"elements\":{\"element\":{\"_attributes\":{\"identifier\":\"id-1\"}}}}}": {
+        "items": [
+            {
+                "_attributes": {
+                    "identifier": "id-1"
+                }
+            }
+        ]
+    },
+    "elements {\"elements\":{\"element\":\"text\"},\"element\":[{\"_attributes\":{\"identifier\":\"id-2\"}}]}": {
+        "items": [
+            "text"
+        ]
+    },
+    "elements {\"element\":[{\"_attributes\":{\"identifier\":\"id-1\"}},{\"_attributes\":{\"identifier\":\"id-2\"}}]}": {
+        "items": [
+            {
+                "_attributes": {
+                    "identifier": "id-1"
+                }
+            },
+            {
+                "_attributes": {
+                    "identifier": "id-2"
+                }
+            }
+        ]
+    },
+    "elements {\"element\":\"text\"}": {
+        "items": [
+            "text"
+        ]
+    },
+    "elements {\"elements\":{\"3\":{\"_attributes\":{\"identifier\":\"id-1\"}},\"7\":{\"_attributes\":{\"identifier\":\"id-2\"}}}}": {
+        "items": {
+            "3": {
+                "_attributes": {
+                    "identifier": "id-1"
+                }
+            },
+            "7": {
+                "_attributes": {
+                    "identifier": "id-2"
+                }
+            }
+        }
+    },
+    "elements {\"elements\":{\"element\":[]},\"elements2\":1}": {
+        "items": [
+            []
+        ]
+    },
+    "relationships {\"_attributes\":{\"identifier\":\"self\"}}": {
+        "items": [
+            {
+                "_attributes": {
+                    "identifier": "self"
+                }
+            }
+        ]
+    },
+    "organizations {\"organizations\":{\"item\":[{\"_attributes\":{\"identifier\":\"id-1\"}}]}}": {
+        "items": [
+            {
+                "_attributes": {
+                    "identifier": "id-1"
+                }
+            }
+        ]
+    },
+    "property_definitions {\"propertyDefinitions\":{\"propertyDefinition\":{\"_attributes\":{\"identifier\":\"id-1\"}}}}": {
+        "items": [
+            {
+                "_attributes": {
+                    "identifier": "id-1"
+                }
+            }
+        ]
+    },
+    "custom {\"custom\":[{\"_attributes\":{\"identifier\":\"id-1\"}},{\"_attributes\":{\"identifier\":\"id-2\"}}]}": {
+        "items": [
+            {
+                "_attributes": {
+                    "identifier": "id-1"
+                }
+            },
+            {
+                "_attributes": {
+                    "identifier": "id-2"
+                }
+            }
+        ]
+    },
+    "custom {\"other\":[{\"_attributes\":{\"identifier\":\"id-1\"}}]}": {
+        "items": [
+            {
+                "other": [
+                    {
+                        "_attributes": {
+                            "identifier": "id-1"
+                        }
+                    }
+                ]
+            }
+        ]
+    },
+    "elements []": {
+        "items": [
+            []
+        ]
+    }
+}

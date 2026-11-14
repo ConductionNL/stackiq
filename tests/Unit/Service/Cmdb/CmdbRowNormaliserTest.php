@@ -122,6 +122,24 @@ class CmdbRowNormaliserTest extends TestCase {
 	}//end testDateSystemsAndTheLeapYearBug()
 
 	/**
+	 * Serials below 1 or above the last Excel day stay as text; the phantom leap day and the 1904 system's early days.
+	 *
+	 * @return void
+	 */
+	public function testSerialBoundaries(): void {
+		$normaliser = new CmdbRowNormaliser();
+
+		$this->assertSame('0.5', $normaliser->normaliseDate(value: 0.5));
+		$this->assertSame('2958466', $normaliser->normaliseDate(value: 2958466));
+		$this->assertSame('9999-12-31', $normaliser->normaliseDate(value: 2958465));
+		$this->assertSame('-3', $normaliser->normaliseDate(value: '-3'));
+		$this->assertSame('1900-02-28', $normaliser->normaliseDate(value: '59.99'));
+		$this->assertSame('1900-03-01', $normaliser->normaliseDate(value: 60));
+		$this->assertSame('1904-01-02', $normaliser->normaliseDate(value: 1, date1904: true));
+		$this->assertSame('1904-03-01', $normaliser->normaliseDate(value: 60, date1904: true));
+	}//end testSerialBoundaries()
+
+	/**
 	 * Booleans become TRUE/FALSE text; whole floats lose their decimal part.
 	 *
 	 * @return void

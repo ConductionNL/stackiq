@@ -229,9 +229,6 @@
     "no-console": {
       "count": 3
     },
-    "no-useless-assignment": {
-      "count": 1
-    },
     "vue/prefer-define-options": {
       "count": 1
     }
@@ -303,16 +300,13 @@
       "count": 1
     },
     "@typescript-eslint/no-unused-vars": {
-      "count": 11
+      "count": 8
     },
     "jsdoc/require-param-type": {
       "count": 71
     },
     "no-console": {
       "count": 11
-    },
-    "no-useless-assignment": {
-      "count": 2
     },
     "vue/prefer-define-options": {
       "count": 1

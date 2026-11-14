@@ -33,6 +33,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Kernel\Contracts\IntakeServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -40,7 +41,7 @@ use Psr\Log\LoggerInterface;
 /**
  * Validates + queues anonymous organisation registrations as pending.
  */
-class IntakeService {
+class IntakeService implements IntakeServiceInterface {
 	/**
 	 * The catalog object type anonymous registrations create.
 	 */

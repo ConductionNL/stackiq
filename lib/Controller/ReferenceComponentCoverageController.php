@@ -21,7 +21,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Controller;
 
 use Exception;
-use OCA\Stackiq\Service\ReferenceComponentCoverageService;
+use OCA\Stackiq\Kernel\Contracts\ReferenceComponentCoverageServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -40,13 +40,13 @@ class ReferenceComponentCoverageController extends Controller {
 	 *
 	 * @param string $appName The app name.
 	 * @param IRequest $request The request.
-	 * @param ReferenceComponentCoverageService $reportService Builds the report.
+	 * @param ReferenceComponentCoverageServiceInterface $reportService Builds the report.
 	 * @param OrganisationReportRequest $reportRequest The requested organisation and whether the user may read it.
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly ReferenceComponentCoverageService $reportService,
+		private readonly ReferenceComponentCoverageServiceInterface $reportService,
 		private readonly OrganisationReportRequest $reportRequest,
 	) {
 		parent::__construct(appName: $appName, request: $request);

@@ -22,7 +22,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Examples;
 
-use OCA\Stackiq\Service\ContactpersoonService;
+use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -39,11 +39,11 @@ class ContactpersoonServiceExample {
 	/**
 	 * ContactpersoonServiceExample constructor
 	 *
-	 * @param ContactpersoonService $contactSvc The contactpersoon service
+	 * @param ContactpersoonServiceInterface $contactSvc The contactpersoon service
 	 * @param LoggerInterface $logger Logger interface
 	 */
 	public function __construct(
-		private readonly ContactpersoonService $contactSvc,
+		private readonly ContactpersoonServiceInterface $contactSvc,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()

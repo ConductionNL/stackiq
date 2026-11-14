@@ -30,6 +30,7 @@ use DateTimeImmutable;
 use DateTimeInterface;
 use OCA\OpenRegister\Contract\ObjectEntityInterface;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\MaintenanceRecipientServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\IUserManager;
 use Psr\Container\ContainerInterface;
@@ -41,7 +42,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md#requirement-req-msr-003-the-owners-of-every-usage-are-notified
  */
-class MaintenanceRecipientService {
+class MaintenanceRecipientService implements MaintenanceRecipientServiceInterface {
 
 	/**
 	 * The usage fields that name an owner.
@@ -142,6 +143,27 @@ class MaintenanceRecipientService {
 	 * @spec openspec/specs/maintenance-and-supplier-roadmap/spec.md#requirement-req-msr-003-the-owners-of-every-usage-are-notified
 	 */
 	public function recordRecipients(ObjectEntityInterface $window, ?DateTimeImmutable $now=null): ?array {
+		$recording = $this->startRecording(window: $window);
+		if ($recording === null) {
+			return null;
+		}
+
+		if ($this->announcers->mayAnnounce(objectService: $recording->objectService, window: $window, moduleId: $recording->moduleId) === false) {
+			$this->refuseForeignWindow(recording: $recording);
+			return null;
+		}
+
+		return $this->recordOwners(recording: $recording, now: $now);
+	}//end recordRecipients()
+
+	/**
+	 * The window's data, the product it names and the object service, when both are there.
+	 *
+	 * @param ObjectEntityInterface $window The maintenance window.
+	 *
+	 * @return RecipientRecording|null The recording, or null when the window names no product or OpenRegister is absent.
+	 */
+	private function startRecording(ObjectEntityInterface $window): ?RecipientRecording {
 		$data          = $window->getObject();
 		$moduleId      = self::referenceId(value: ($data['module'] ?? null));
 		$objectService = $this->getObjectService();
@@ -149,31 +171,59 @@ class MaintenanceRecipientService {
 			return null;
 		}
 
-		if ($this->announcers->mayAnnounce(objectService: $objectService, window: $window, moduleId: $moduleId) === false) {
-			$this->logger->warning(
-				'MaintenanceRecipientService: the window is not from the supplier of the product; no owners are notified',
-				['uuid' => $window->getUuid(), 'module' => $moduleId, 'organisation' => $window->getOrganisation()]
-			);
-			if (empty($data['notifyUserIds']) === false) {
-				$data['notifyUserIds'] = [];
-				$this->saveWindow(objectService: $objectService, window: $window, data: $data);
-			}
+		$recording                = new RecipientRecording();
+		$recording->window        = $window;
+		$recording->data          = $data;
+		$recording->moduleId      = $moduleId;
+		$recording->objectService = $objectService;
+		return $recording;
+	}//end startRecording()
 
+	/**
+	 * Refuse a window that is not from the supplier of the product, clearing the owners it names.
+	 *
+	 * @param RecipientRecording $recording The recording.
+	 *
+	 * @return void
+	 *
+	 * @throws \Throwable When the window cannot be written.
+	 */
+	private function refuseForeignWindow(RecipientRecording $recording): void {
+		$this->logger->warning(
+			'MaintenanceRecipientService: the window is not from the supplier of the product; no owners are notified',
+			['uuid' => $recording->window->getUuid(), 'module' => $recording->moduleId, 'organisation' => $recording->window->getOrganisation()]
+		);
+		if (empty($recording->data['notifyUserIds']) === false) {
+			$data = $recording->data;
+			$data['notifyUserIds'] = [];
+			$this->saveWindow(objectService: $recording->objectService, window: $recording->window, data: $data);
+		}
+	}//end refuseForeignWindow()
+
+	/**
+	 * Record the owners of every usage of the product, and the moment of resolution, on a window not resolved yet.
+	 *
+	 * @param RecipientRecording     $recording The recording.
+	 * @param DateTimeImmutable|null $now       The moment of resolution (defaults to now).
+	 *
+	 * @return array<int, string>|null The user ids written, or null when the window already carries a resolved time.
+	 *
+	 * @throws \Throwable When the owners cannot be read, or the window cannot be written.
+	 */
+	private function recordOwners(RecipientRecording $recording, ?DateTimeImmutable $now): ?array {
+		if (empty($recording->data['recipientsResolvedAt']) === false) {
 			return null;
 		}
 
-		if (empty($data['recipientsResolvedAt']) === false) {
-			return null;
-		}
+		$userIds = $this->ownerUserIds(objectService: $recording->objectService, moduleId: $recording->moduleId);
 
-		$userIds = $this->ownerUserIds(objectService: $objectService, moduleId: $moduleId);
-
+		$data                         = $recording->data;
 		$data['notifyUserIds']        = $userIds;
 		$data['recipientsResolvedAt'] = ($now ?? new DateTimeImmutable())->format(DateTimeInterface::ATOM);
-		$this->saveWindow(objectService: $objectService, window: $window, data: $data);
+		$this->saveWindow(objectService: $recording->objectService, window: $recording->window, data: $data);
 
 		return $userIds;
-	}//end recordRecipients()
+	}//end recordOwners()
 
 	/**
 	 * Write a maintenance window back, without RBAC: the two notification fields

@@ -22,10 +22,11 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\BackgroundJob;
 
+use OCA\Stackiq\Kernel\Contracts\CronjobSettingsInterface;
+use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\StackiqContactSyncServiceInterface;
 use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
-use OCA\Stackiq\Service\OrganizationSyncService;
-use OCA\Stackiq\Service\SettingsService;
-use OCA\Stackiq\Service\StackiqContactSyncService;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
@@ -60,25 +61,27 @@ class OrganizationContactSyncJob extends TimedJob {
 	/**
 	 * Organization synchronization service
 	 *
-	 * @var OrganizationSyncService The service handling sync operations
+	 * @var OrganizationSyncServiceInterface The service handling sync operations
 	 */
-	private OrganizationSyncService $orgSyncService;
+	private OrganizationSyncServiceInterface $orgSyncService;
 
 	/**
 	 * Constructor for OrganizationContactSyncJob
 	 *
 	 * @param ITimeFactory $timeFactory The time factory for job scheduling
-	 * @param OrganizationSyncService $orgSyncService The sync service
-	 * @param StackiqContactSyncService $contactSync The Nextcloud-Contacts bridge
-	 * @param SettingsService $settingsService The settings service (register/schema id resolution)
+	 * @param OrganizationSyncServiceInterface $orgSyncService The sync service
+	 * @param StackiqContactSyncServiceInterface $contactSync The Nextcloud-Contacts bridge
+	 * @param RegisterConfigReaderInterface $settingsService The settings service (register/schema id resolution)
+	 * @param CronjobSettingsInterface $cronjobSettings The cronjob settings (whether this job is switched on)
 	 * @param IAppManager $appManager The Nextcloud app manager
 	 * @param LoggerInterface $logger The logger
 	 */
 	public function __construct(
 		ITimeFactory $timeFactory,
-		OrganizationSyncService $orgSyncService,
-		private readonly StackiqContactSyncService $contactSync,
-		private readonly SettingsService $settingsService,
+		OrganizationSyncServiceInterface $orgSyncService,
+		private readonly StackiqContactSyncServiceInterface $contactSync,
+		private readonly RegisterConfigReaderInterface $settingsService,
+		private readonly CronjobSettingsInterface $cronjobSettings,
 		private readonly IAppManager $appManager,
 		private readonly LoggerInterface $logger,
 	) {
@@ -126,7 +129,7 @@ class OrganizationContactSyncJob extends TimedJob {
 
 		// An admin can switch the job off in the cronjob settings (for example
 		// during a migration); then neither the sync nor the link refresh runs.
-		if ($this->settingsService->isCronjobEnabled(jobId: self::JOB_ID) === false) {
+		if ($this->cronjobSettings->isCronjobEnabled(jobId: self::JOB_ID) === false) {
 			$this->logger->info('[OrganizationContactSyncJob] Switched off in the cronjob settings, skipping sync');
 			return;
 		}

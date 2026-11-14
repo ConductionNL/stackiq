@@ -4,11 +4,10 @@
  * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
  * SPDX-License-Identifier: EUPL-1.2
  *
- * Characterisation test for editing a property in the object view: whether
- * it is editable and the warning when not (const, immutable with a value),
- * which properties count as constant or immutable, selecting a row by
- * click, updating a value (themes as ids, dates converted), and dropping a
- * property (schema default, removal, deletion marker, selection cleared).
+ * How the object view decides, per property, which input to render, how to
+ * label it, whether it may be edited or dropped, and what dropping it does.
+ * The methods are called with a stand-in component instance whose schema is
+ * fixed per test, so each rule is pinned without mounting the whole modal.
  *
  * @spec openspec/specs/fe-object-modals/spec.md
  */
@@ -25,254 +24,303 @@ const { default: ViewObject } =
 	await import('../../src/modals/object/ViewObject.vue')
 
 const SCHEMA = {
-	free: { type: 'string' },
-	fixed: { type: 'string', const: 'C' },
-	zeroConst: { type: 'number', const: 0 },
-	locked: { type: 'string', immutable: true },
-	readOnlyProp: { type: 'string', readOnly: true },
-	count: { type: 'number' },
-	whole: { type: 'integer' },
-	flag: { type: 'boolean' },
-	list: { type: 'array' },
-	map: { type: 'object' },
-	other: { type: 'file' },
-	when: { type: 'string', format: 'date' },
-	themes: { type: 'array' },
+	title: { type: 'string', title: 'Title', description: 'The display name' },
+	sameTitle: { type: 'string', title: 'sameTitle', description: 'Only a description' },
+	placeholder: { type: 'string', title: ' New ' },
+	blankTitle: { type: 'string', title: '   ' },
+	bare: { type: 'string' },
+	born: { type: 'string', format: 'date' },
+	at: { type: 'string', format: 'time' },
+	stamp: { type: 'string', format: 'date-time' },
+	mail: { type: 'string', format: 'email' },
+	site: { type: 'string', format: 'url' },
+	link: { type: 'string', format: 'uri' },
+	secret: { type: 'string', format: 'password' },
+	notes: { type: 'string', format: 'text' },
+	body: { type: 'string', format: 'markdown' },
+	count: { type: 'integer', minimum: 1, maximum: 9 },
+	price: { type: 'number' },
+	active: { type: 'boolean' },
+	tags: { type: 'array' },
+	meta: { type: 'object' },
+	odd: { type: 'null' },
+	kind: { type: 'string', const: 'fixed' },
+	code: { type: 'string', immutable: true },
+	locked: { type: 'string', readOnly: true },
 }
 
 /**
- * A stand-in for the component with the given state and every method bound.
+ * A stand-in component instance with every ViewObject method bound to it.
  *
- * @param {object} state The component state.
- * @return {object} The stand-in.
+ * @param {object} state Instance state to start from.
+ * @return {object} The instance.
  */
-function viewModel(state = {}) {
-	const vm = {
+function instance(state = {}) {
+	const ctx = {
 		formData: {},
 		currentObject: null,
 		selectedProperty: null,
 		objectProperties: [],
-		getSchemaProperties: () => SCHEMA,
+		$nextTick: (callback) => callback?.(),
+		$refs: {},
 		...state,
 	}
-	for (const [name, fn] of Object.entries(ViewObject.methods)) {
-		if (!(name in vm)) {
-			vm[name] = fn.bind(vm)
-		}
+	for (const [name, method] of Object.entries(ViewObject.methods)) {
+		ctx[name] = method.bind(ctx)
 	}
-	return vm
+	ctx.getSchemaProperties = () => state.schema ?? SCHEMA
+	return ctx
 }
 
 afterEach(() => {
 	vi.restoreAllMocks()
-	vi.unstubAllEnvs()
+})
+
+describe('ViewObject input type and component per property', () => {
+	it('maps schema type and format to the HTML input type', () => {
+		const vm = instance()
+		const types = Object.fromEntries(
+			['born', 'at', 'stamp', 'mail', 'site', 'link', 'secret', 'bare', 'count', 'price', 'active', 'tags', 'unknown']
+				.map((key) => [key, vm.getPropertyInputType(key)]),
+		)
+
+		expect(types).toEqual({
+			born: 'date',
+			at: 'time',
+			stamp: 'datetime-local',
+			mail: 'email',
+			site: 'url',
+			link: 'url',
+			secret: 'password',
+			bare: 'text',
+			count: 'number',
+			price: 'number',
+			active: 'checkbox',
+			tags: 'text',
+			unknown: 'text',
+		})
+	})
+
+	it('maps schema type and format to the input component', () => {
+		const vm = instance()
+		const components = Object.fromEntries(
+			['active', 'born', 'stamp', 'at', 'notes', 'body', 'mail', 'count', 'price', 'tags', 'meta', 'unknown']
+				.map((key) => [key, vm.getPropertyInputComponent(key)]),
+		)
+
+		expect(components).toEqual({
+			active: 'NcCheckboxRadioSwitch',
+			born: 'NcDateTimePicker',
+			stamp: 'NcDateTimePicker',
+			at: 'NcDateTimePicker',
+			notes: 'NcTextArea',
+			body: 'Editor',
+			mail: 'NcTextField',
+			count: 'NcTextField',
+			price: 'NcTextField',
+			tags: 'NcTextFieldArray',
+			meta: 'NcTextField',
+			unknown: 'NcTextField',
+		})
+	})
+
+	it('gives integers a step of 1, numbers any step, and passes the bounds through', () => {
+		const vm = instance()
+
+		expect(vm.getPropertyStep('count')).toBe('1')
+		expect(vm.getPropertyStep('price')).toBe('any')
+		expect(vm.getPropertyStep('title')).toBeUndefined()
+		expect(vm.getPropertyMinimum('count')).toBe(1)
+		expect(vm.getPropertyMaximum('count')).toBe(9)
+		expect(vm.getPropertyMinimum('unknown')).toBeUndefined()
+	})
+})
+
+describe('ViewObject property labels', () => {
+	it('uses a real schema title, and the key for a blank, placeholder or missing one', () => {
+		const vm = instance()
+
+		expect(vm.getPropertyDisplayName('title')).toBe('Title')
+		expect(vm.getPropertyDisplayName('placeholder')).toBe('placeholder')
+		expect(vm.getPropertyDisplayName('blankTitle')).toBe('blankTitle')
+		expect(vm.getPropertyDisplayName('unknown')).toBe('unknown')
+	})
+
+	it('names an invalid key Unknown Property and warns', () => {
+		const warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
+		const vm = instance()
+
+		expect(vm.getPropertyDisplayName('')).toBe('Unknown Property')
+		expect(vm.getPropertyDisplayName(42)).toBe('Unknown Property')
+		expect(warn).toHaveBeenCalledTimes(2)
+	})
+
+	it('builds the tooltip from title and description, else the description, else the key', () => {
+		const vm = instance()
+
+		expect(vm.getPropertyTooltip('title')).toBe('Title: The display name')
+		expect(vm.getPropertyTooltip('sameTitle')).toBe('Only a description')
+		expect(vm.getPropertyTooltip('bare')).toBe('Property: bare')
+		expect(vm.getPropertyNewMessage('bare')).toBe(
+			"Property 'bare' is defined in the schema but doesn't have a value yet. Click to add a value.",
+		)
+	})
 })
 
 describe('ViewObject editability', () => {
-	it('decides whether a property is editable and why not', () => {
-		const vm = viewModel()
-		const cases = [
-			['unknown', 'x'],
-			['free', 'x'],
-			['fixed', 'C'],
-			['zeroConst', 0],
-			['locked', 'set'],
-			['locked', ''],
-			['locked', null],
-			['locked', undefined],
-			['locked', 0],
-			['readOnlyProp', 'x'],
-		]
-		expect(
-			cases.map(([key, value]) => [
-				vm.isPropertyEditable(key, value),
-				vm.getEditabilityWarning(key, value),
-			]),
-		).toEqual([
-			[true, null],
-			[true, null],
-			[
-				false,
-				"This property is constant and must always be 'C'. Const properties cannot be modified to maintain data integrity.",
-			],
-			[
-				false,
-				"This property is constant and must always be '0'. Const properties cannot be modified to maintain data integrity.",
-			],
-			[
-				false,
-				"This property is immutable and cannot be changed once it has a value. Current value: 'set'. Immutable properties preserve data consistency.",
-			],
-			[true, null],
-			[true, null],
-			[true, null],
-			[
-				false,
-				"This property is immutable and cannot be changed once it has a value. Current value: '0'. Immutable properties preserve data consistency.",
-			],
-			[true, null],
-		])
+	it('refuses a const property, and an immutable one only once it has a value', () => {
+		const vm = instance()
+
+		expect(vm.isPropertyEditable('unknown', 'x')).toBe(true)
+		expect(vm.isPropertyEditable('kind', undefined)).toBe(false)
+		expect(vm.isPropertyEditable('code', 'A-1')).toBe(false)
+		for (const empty of [null, undefined, '']) {
+			expect(vm.isPropertyEditable('code', empty)).toBe(true)
+		}
+		expect(vm.isPropertyEditable('title', 'x')).toBe(true)
 	})
 
-	it('knows constant and immutable properties, by schema or by name', () => {
-		vi.stubEnv('NODE_ENV', 'test')
-		const vm = viewModel()
-		const keys = [
-			'free',
-			'fixed',
-			'zeroConst',
-			'locked',
-			'readOnlyProp',
-			'unknown',
-			'myReadOnlyField',
-			'IMMUTABLE_id',
-			'constantValue',
-		]
-		expect(keys.map((key) => vm.isConstantOrImmutable(key))).toEqual([
-			false,
-			true,
-			true,
-			true,
-			true,
-			false,
-			true,
-			true,
-			true,
-		])
-	})
+	it('explains why a property cannot be edited, and says nothing when it can', () => {
+		const vm = instance()
 
-	it('logs the detection in development only', () => {
-		const log = vi.spyOn(console, 'log').mockImplementation(() => {})
-		vi.stubEnv('NODE_ENV', 'development')
-		viewModel().isConstantOrImmutable('locked')
-		viewModel().isConstantOrImmutable('unknown')
-		expect(log.mock.calls).toEqual([
-			[
-				'Property locked detection:',
-				{
-					isConstant: false,
-					isImmutable: true,
-					isImmutableByName: false,
-					schemaProperty: SCHEMA.locked,
-				},
-			],
-		])
-		vi.stubEnv('NODE_ENV', 'production')
-		viewModel().isConstantOrImmutable('locked')
-		expect(log).toHaveBeenCalledTimes(1)
-	})
-})
-
-describe('ViewObject handleRowClick', () => {
-	const click = (key, state, target = {}) => {
-		const vm = viewModel(state)
-		vm.selectProperty = vi.fn()
-		const event = { target: { tagName: 'TD', closest: () => null, ...target } }
-		vm.handleRowClick(key, event)
-		return vm.selectProperty.mock.calls
-	}
-
-	it('selects an editable row that is not selected yet', () => {
-		expect(click('free', {})).toEqual([['free']])
-		expect(click('locked', { formData: { locked: '' } })).toEqual([['locked']])
-		expect(click('locked', { objectProperties: [['locked', '']] })).toEqual([
-			['locked'],
-		])
-	})
-
-	it('ignores clicks on controls, the selected row and locked rows', () => {
-		expect(click('free', {}, { tagName: 'INPUT' })).toEqual([])
-		expect(click('free', {}, { tagName: 'BUTTON' })).toEqual([])
-		expect(click('free', {}, { closest: () => ({}) })).toEqual([])
-		expect(click('free', { selectedProperty: 'free' })).toEqual([])
-		expect(click('fixed', {})).toEqual([])
-		expect(click('locked', { objectProperties: [['locked', 'set']] })).toEqual(
-			[],
+		expect(vm.getEditabilityWarning('kind', 'other')).toBe(
+			"This property is constant and must always be 'fixed'. Const properties cannot be modified to maintain data integrity.",
 		)
-		expect(
-			click('locked', {
-				formData: { locked: 'x' },
-				objectProperties: [['locked', '']],
-			}),
-		).toEqual([])
+		expect(vm.getEditabilityWarning('code', 'A-1')).toBe(
+			"This property is immutable and cannot be changed once it has a value. Current value: 'A-1'. Immutable properties preserve data consistency.",
+		)
+		expect(vm.getEditabilityWarning('code', '')).toBeNull()
+		expect(vm.getEditabilityWarning('unknown', 'x')).toBeNull()
+	})
+
+	it('treats const, immutable, readOnly and protected names as constant or immutable', () => {
+		const vm = instance()
+
+		expect(vm.isConstantOrImmutable('kind')).toBe(true)
+		expect(vm.isConstantOrImmutable('code')).toBe(true)
+		expect(vm.isConstantOrImmutable('locked')).toBe(true)
+		expect(vm.isConstantOrImmutable('title')).toBe(false)
+		expect(vm.isConstantOrImmutable('ReadOnlyNote')).toBe(true)
+		expect(vm.isConstantOrImmutable('myConstantValue')).toBe(true)
+		expect(vm.isConstantOrImmutable('free')).toBe(false)
 	})
 })
 
-describe('ViewObject updatePropertyValue', () => {
-	it('stores theme ids, converted dates and plain values', () => {
-		const vm = viewModel({ formData: [1] })
-		vm.updatePropertyValue('themes', [{ id: 't1' }, 't2'])
-		expect(vm.formData).toEqual({ themes: ['t1', 't2'] })
-		vm.updatePropertyValue('themes', 't3')
-		expect(vm.formData.themes).toBe('t3')
-		vm.updatePropertyValue('when', new Date(2026, 0, 2))
-		expect(vm.formData.when).toBe('2026-01-02')
-		vm.updatePropertyValue('free', 'text')
-		expect(vm.formData.free).toBe('text')
-		const empty = viewModel({ formData: null })
-		empty.updatePropertyValue('free', 'y')
-		expect(empty.formData).toEqual({ free: 'y' })
+describe('ViewObject row selection', () => {
+	/**
+	 * A click event on an element.
+	 *
+	 * @param {string} tagName The element's tag.
+	 * @param {boolean} inInput Whether it sits in a value input container.
+	 * @return {object} The event.
+	 */
+	const click = (tagName = 'TD', inInput = false) => ({
+		target: { tagName, closest: () => (inInput ? {} : null) },
+	})
+
+	it('selects an editable row', () => {
+		const vm = instance({ objectProperties: [['title', 'Hello']] })
+
+		vm.handleRowClick('title', click())
+
+		expect(vm.selectedProperty).toBe('title')
+	})
+
+	it('ignores clicks on inputs, buttons and value containers', () => {
+		const vm = instance()
+
+		vm.handleRowClick('title', click('INPUT'))
+		vm.handleRowClick('title', click('BUTTON'))
+		vm.handleRowClick('title', click('SPAN', true))
+
+		expect(vm.selectedProperty).toBeNull()
+	})
+
+	it('keeps the selection on a second click and refuses a non-editable row', () => {
+		const vm = instance({
+			selectedProperty: 'title',
+			formData: { code: 'A-1' },
+		})
+		vm.handleRowClick('title', click())
+		expect(vm.selectedProperty).toBe('title')
+
+		const other = instance({ objectProperties: [['kind', 'fixed'], ['code', 'A-1']] })
+		other.handleRowClick('kind', click())
+		other.handleRowClick('code', click())
+		expect(other.selectedProperty).toBeNull()
+	})
+
+	it('reads the edited value before the original one when deciding', () => {
+		const vm = instance({ formData: { code: '' }, objectProperties: [['code', 'A-1']] })
+
+		vm.handleRowClick('code', click())
+
+		expect(vm.selectedProperty).toBe('code')
 	})
 })
 
-describe('ViewObject dropProperty', () => {
-	it('resets schema properties to their default', () => {
-		const vm = viewModel({ selectedProperty: 'fixed' })
-		for (const key of [
-			'free',
-			'fixed',
-			'count',
-			'whole',
-			'flag',
-			'list',
-			'map',
-			'other',
-		]) {
+describe('ViewObject dropping a property', () => {
+	it('offers the drop only for a set, mutable, non-metadata property', () => {
+		const vm = instance({
+			formData: { title: 'x' },
+			currentObject: { price: 3, kind: 'fixed' },
+		})
+
+		expect(vm.canDropProperty('@self')).toBe(false)
+		expect(vm.canDropProperty('id')).toBe(false)
+		expect(vm.canDropProperty('kind')).toBe(false)
+		expect(vm.canDropProperty('title')).toBe(true)
+		expect(vm.canDropProperty('price')).toBe(true)
+		expect(vm.canDropProperty('bare')).toBe(false)
+		expect(instance().canDropProperty('bare')).toBeFalsy()
+	})
+
+	it('names a reset for a schema property and a removal for a free one', () => {
+		const vm = instance()
+
+		expect(vm.getDropPropertyTooltip('title')).toBe("Reset 'Title' to empty value")
+		expect(vm.getDropPropertyTooltip('extra')).toBe("Remove 'extra' property completely")
+	})
+
+	it('resets a schema property to the empty value of its type', () => {
+		const vm = instance({ schema: { ...SCHEMA, fixedString: { type: 'string', const: 'K' } } })
+		for (const key of ['bare', 'fixedString', 'count', 'price', 'active', 'tags', 'meta', 'odd']) {
 			vm.dropProperty(key)
 		}
+
 		expect(vm.formData).toEqual({
-			free: '',
-			fixed: 'C',
+			bare: '',
+			fixedString: 'K',
 			count: 0,
-			whole: 0,
-			flag: false,
-			list: [],
-			map: {},
-			other: '',
+			price: 0,
+			active: false,
+			tags: [],
+			meta: {},
+			odd: '',
 		})
-		expect(vm.selectedProperty).toBe(null)
 	})
 
-	it('removes other properties and marks those of the object as deleted', () => {
-		const vm = viewModel({
-			formData: { extra: 'edited', loose: 'x' },
-			currentObject: { extra: 'orig', kept: 1 },
-			selectedProperty: 'kept',
+	it('removes a free property, marking one the stored object had, and clears its selection', () => {
+		const vm = instance({
+			formData: { draftOnly: 'x', stored: 'edited' },
+			currentObject: { stored: 'original' },
+			selectedProperty: 'stored',
 		})
-		vm.dropProperty('extra')
-		vm.dropProperty('loose')
-		vm.dropProperty('missing')
-		expect(vm.formData).toEqual({ extra: undefined })
-		expect(Object.keys(vm.formData)).toEqual(['extra'])
-		expect(vm.selectedProperty).toBe('kept')
-	})
-})
 
-describe('ViewObject canDropProperty', () => {
-	it('offers the drop button for set, mutable, non-metadata properties', () => {
-		vi.stubEnv('NODE_ENV', 'test')
-		const vm = viewModel({
-			formData: { free: 'x', fixed: 'C' },
-			currentObject: { count: 1, id: 'i' },
-		})
-		expect(
-			['@self', 'id', 'fixed', 'free', 'count', 'list'].map((key) =>
-				vm.canDropProperty(key),
-			),
-		).toEqual([false, false, false, true, true, false])
-		expect(viewModel({ currentObject: null }).canDropProperty('free')).toBe(null)
-		expect(viewModel({ currentObject: undefined }).canDropProperty('free')).toBe(
-			undefined,
-		)
+		vm.dropProperty('draftOnly')
+		vm.dropProperty('stored')
+
+		expect(Object.hasOwn(vm.formData, 'draftOnly')).toBe(false)
+		expect(Object.hasOwn(vm.formData, 'stored')).toBe(true)
+		expect(vm.formData.stored).toBeUndefined()
+		expect(vm.selectedProperty).toBeNull()
+	})
+
+	it('keeps another property selected when one is dropped', () => {
+		const vm = instance({ formData: { bare: 'x' }, selectedProperty: 'title' })
+
+		vm.dropProperty('bare')
+
+		expect(vm.selectedProperty).toBe('title')
 	})
 })

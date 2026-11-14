@@ -24,8 +24,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Stackiq\Service\SettingsService;
-use OCA\Stackiq\Service\StackiqContactSyncService;
+use OCA\Stackiq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\StackiqContactSyncServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -71,8 +71,8 @@ class ContactNamesController extends Controller {
 	 * @param IRequest $request The request object.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n Translations for the error messages.
-	 * @param SettingsService $settingsService Gives the register and contact person schema.
-	 * @param StackiqContactSyncService $contactSync Reads Nextcloud Contacts as the signed-in user.
+	 * @param SettingsServiceInterface $settingsService Gives the register and contact person schema.
+	 * @param StackiqContactSyncServiceInterface $contactSync Reads Nextcloud Contacts as the signed-in user.
 	 * @param ObjectServiceInterface $objectService OpenRegister object access, with the caller's rights.
 	 * @param LoggerInterface $logger The logger.
 	 */
@@ -81,8 +81,8 @@ class ContactNamesController extends Controller {
 		IRequest $request,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
-		private readonly SettingsService $settingsService,
-		private readonly StackiqContactSyncService $contactSync,
+		private readonly SettingsServiceInterface $settingsService,
+		private readonly StackiqContactSyncServiceInterface $contactSync,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly LoggerInterface $logger,
 	) {
@@ -238,7 +238,7 @@ class ContactNamesController extends Controller {
 	private function contactPersonSource(): ?array {
 		$config   = $this->settingsService->getVoorzieningenConfig();
 		$register = ($config['register'] ?? null);
-		$schema   = ($config[SettingsService::LEGACY_SCHEMA_KEY['contactPerson']] ?? null);
+		$schema   = ($config[SettingsServiceInterface::LEGACY_SCHEMA_KEY['contactPerson']] ?? null);
 		if (empty($register) === true || empty($schema) === true) {
 			$this->logger->warning('[ContactNames] The register or the contact person schema is not configured; no names are given');
 			return null;
