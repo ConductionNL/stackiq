@@ -2,18 +2,23 @@
 
 ## 1. Register fragment
 
-- [ ] 1.1 Add `lib/Settings/register.d/catalog-integration-leaves.json`
+- [x] 1.1 Add `lib/Settings/register.d/catalog-integration-leaves.json`
   declaring `configuration.linkedTypes` on: `contactPerson` +
   `organization` (`["contacts"]`), `contract`
   (`["decidesk-decisions", "calendar"]` — full array, see design.md §2),
   `moduleVersion` (`["calendar"]`), `assessment` (`["deck"]`), `module` +
   `service` (`["bookmarks"]`). Validate with `python3 -m json.tool`.
-- [ ] 1.2 Cross-check every leaf id against openregister HEAD:
+  - Done with today's slugs: `contract` is `catalogContract`, `assessment` is
+    `software-review`, `service` is `catalogService`. `deepMergeConfig()`
+    concatenates lists, so the fragment adds only `calendar` to the contract;
+    the full array would list `decidesk-decisions` twice
+    (`IntegrationLeavesFragmentTest`).
+- [x] 1.2 Cross-check every leaf id against openregister HEAD:
   `LinkedEntityService::legacyLinkedTypeIds()` plus
   `IntegrationRegistry::listIds()` must accept all of `contacts`,
   `calendar`, `deck`, `bookmarks` (they do at time of writing — re-verify
   at apply time, the gate suite changes under you).
-- [ ] 1.3 PHPUnit on `SettingsService::loadSettings()` merged output:
+- [x] 1.3 PHPUnit on `SettingsService::loadSettings()` merged output:
   `contract.configuration.linkedTypes` contains `decidesk-decisions` AND
   `calendar` exactly once each (guards the array-merge semantic either way);
   all seven schemas carry their declared leaf.
@@ -23,7 +28,7 @@
 
 ## 2. Lifecycle-date calendar sync
 
-- [ ] 2.1 Add `lib/Service/LifecycleCalendarService.php` with
+- [x] 2.1 Add `lib/Service/LifecycleCalendarService.php` with
   `syncContract(array $object): void` and
   `syncModuleVersion(array $object): void` — upsert one linked all-day
   event per tracked field (`contract.endDate`,
@@ -31,17 +36,21 @@
   path (the `X-OPENREGISTER-*` event surface `CalendarProvider::list()`
   renders); move on change, delete on clear, never duplicate (one tracked
   field = one event, deterministic marker).
-- [ ] 2.2 Add `lib/Listener/LifecycleCalendarListener.php` subscribed to
+- [x] 2.2 Add `lib/EventListener/LifecycleCalendarListener.php` (the app's listener directory) subscribed to
   OpenRegister's object-saved event; filter to the stackiq register
   and the `contract`/`moduleVersion` schemas resolved via
   `SettingsService` (no hard-coded register/schema ids); register the
   listener in `lib/AppInfo/Application.php` alongside the existing OR
   event listeners.
-- [ ] 2.3 Fail-soft: wrap calendar interaction so an unavailable Calendar
+  - Registered in `lib/EventListener/ListenerRegistrar.php`, where the other
+    OpenRegister object listeners are. OpenRegister's calendar codec writes
+    timed events only, so the "all-day" event runs from 00:00 to 00:00 UTC
+    the next day.
+- [x] 2.3 Fail-soft: wrap calendar interaction so an unavailable Calendar
   app (or no writable calendar) logs a warning and the object save still
   succeeds — mirror the graceful-degradation posture of the other
   integrations.
-- [ ] 2.4 Event titles in English per fleet convention:
+- [x] 2.4 Event titles in English per fleet convention:
   `Contract ends: {contractNumber}`,
   `End of support: {module name} {version}`.
 
@@ -52,18 +61,18 @@
   `ContractDetail`, `ModuleversieDetail`, `ReviewDetail`, `ModuleDetail`,
   service detail) — expected zero per-page wiring via the shared object
   sidebar; if a page suppresses sidebar tabs, wire it there.
-- [ ] 3.2 Rewrite the `_note` strings on `ContractDetail` and
+- [x] 3.2 Rewrite the `_note` strings on `ContractDetail` and
   `ContactpersoonDetail` in `src/manifest.json` that currently assert
   "declares NO email/calendar linkedType" — keep the comms hard-rule (no
   email widgets) documented, describe the new calendar/contacts leaves.
 
 ## 4. Tests
 
-- [ ] 4.1 PHPUnit `LifecycleCalendarServiceTest`: create-on-set,
+- [x] 4.1 PHPUnit `LifecycleCalendarServiceTest`: create-on-set,
   move-on-change (including a simulated EOL re-stamp of
   `dateEndSupport`), delete-on-clear, idempotent double-save, and
   fail-soft when the calendar double throws.
-- [ ] 4.2 PHPUnit `LifecycleCalendarListenerTest`: fires only for
+- [x] 4.2 PHPUnit `LifecycleCalendarListenerTest`: fires only for
   `contract`/`moduleVersion` saves in the stackiq register; ignores
   other schemas.
 - [ ] 4.3 Playwright: contacts tab on a seeded contactPerson
@@ -76,5 +85,5 @@
 
 - [ ] 5.1 Sync this change's spec delta into
   `openspec/specs/catalog-integration-leaves/spec.md` on archive.
-- [ ] 5.2 CHANGELOG entry under Unreleased: contacts/calendar/deck/bookmarks
+- [x] 5.2 CHANGELOG entry under Unreleased: contacts/calendar/deck/bookmarks
   leaf adoption + lifecycle-date calendar sync.
