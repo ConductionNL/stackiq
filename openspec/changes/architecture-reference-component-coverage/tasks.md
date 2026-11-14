@@ -58,7 +58,7 @@
   - GIVEN two rows that share a component WHEN the report is built THEN both carry `overlapsWith` and the payload counts two overlapping rows
   - GIVEN the CSV WHEN it is built THEN it has the `overlapsWith` column
   - GIVEN the page WHEN the report has overlap THEN an Overlap section lists each component with its applications
-- [ ] Implement
+- [x] Implement
 - [ ] Test (PHPUnit `PortfolioReportServiceOverlapTest`, Playwright portfolio overlap scenario)
 
 ### Task 7: Documentation and translations

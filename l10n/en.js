@@ -1265,7 +1265,9 @@ OC.L10N.register(
         "Gap, fillable": "Gap, fillable",
         "Gap": "Gap",
         "Licence": "Licence",
-        "Software catalogue": "Software catalogue"
+        "Software catalogue": "Software catalogue",
+        "%n application in use shares a reference component with another one.": "%n application in use shares a reference component with another one.",
+        "%n applications in use share a reference component with another one.": "%n applications in use share a reference component with another one."
     },
     "nplurals=2; plural=(n != 1);"
 )

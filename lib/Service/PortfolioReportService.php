@@ -110,6 +110,7 @@ class PortfolioReportService implements PortfolioReportServiceInterface {
 		'scoredOn',
 		'suggestedTimeClassification',
 		'timeMismatch',
+		'overlapsWith',
 	];
 
 	/**
@@ -171,6 +172,7 @@ class PortfolioReportService implements PortfolioReportServiceInterface {
 			'includedGebruiken' => count($rows['rows']),
 			'truncated' => $rows['truncated'],
 			'quadrants' => $this->aggregateQuadrants(rows: $rows['rows']),
+			'overlap' => count(array_filter($rows['rows'], static fn (array $row): bool => ($row['overlapsWith'] ?? []) !== [])),
 			'rows' => $rows['rows'],
 		];
 	}//end buildReport()
@@ -279,6 +281,7 @@ class PortfolioReportService implements PortfolioReportServiceInterface {
 			$row['scoredOn'] ?? '',
 			$row['suggestedTimeClassification'] ?? '',
 			$this->derivation->mismatchLabel(row: $row),
+			$this->derivation->overlapLabel(row: $row),
 		];
 	}//end csvFigureCells()
 
@@ -328,8 +331,14 @@ class PortfolioReportService implements PortfolioReportServiceInterface {
 
 		$run->contractsByGebruik = $this->fetchContractsForGebruiken(gebruikIds: $this->collectGebruikIds(usages: $usages), run: $run);
 
+		$rows = $this->derivation->withOverlap(
+			rows: $this->buildRowsFor(usages: $usages, run: $run),
+			usages: $usages,
+			componentNames: $this->componentNames(usages: $usages)
+		);
+
 		return [
-			'rows' => $this->buildRowsFor(usages: $usages, run: $run),
+			'rows' => $rows,
 			'total' => $total,
 			'ceiling' => $run->ceiling,
 			'truncated' => $total > count($usages),
@@ -726,6 +735,32 @@ class PortfolioReportService implements PortfolioReportServiceInterface {
 
 		return $indexed;
 	}//end indexContractsByGebruik()
+
+	/**
+	 * The names of the reference components the usages name, read once per
+	 * component through the relation cache.
+	 *
+	 * @param array<int,array<string,mixed>> $usages The usages.
+	 *
+	 * @return array<string,string> Names by component id; an unresolved component keeps its id.
+	 *
+	 * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+	 */
+	private function componentNames(array $usages): array {
+		$names = [];
+		foreach ($usages as $usage) {
+			foreach ($this->derivation->componentIdsOf(usage: $usage) as $componentId) {
+				if (isset($names[$componentId]) === true) {
+					continue;
+				}
+
+				$component = $this->fetchRelation(id: $componentId, schemaId: null);
+				$names[$componentId] = (string)($component['name'] ?? $component['title'] ?? $componentId);
+			}
+		}
+
+		return $names;
+	}//end componentNames()
 
 	/**
 	 * Fetch and cache a single related object (moduleVersie or module) by id.
