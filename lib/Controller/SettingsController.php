@@ -35,6 +35,7 @@ use OCA\Stackiq\Kernel\Contracts\CronjobSettingsInterface;
 use OCA\Stackiq\Kernel\Contracts\EmailSettingsInterface;
 use OCA\Stackiq\Kernel\Contracts\EolSyncServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ModuleComplianceServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\OrganisationReportAccessInterface;
 use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ProgressTrackerInterface;
 use OCA\Stackiq\Kernel\Contracts\RoleGroupSettingsInterface;
@@ -47,7 +48,6 @@ use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\Response;
 use OCP\AppFramework\Http\StreamResponse;
 use OCP\IAppConfig;
-use OCP\IConfig;
 use OCP\IGroupManager;
 use OCP\IL10N;
 use OCP\IRequest;
@@ -119,6 +119,7 @@ class SettingsController extends Controller {
 	 * @param CmdbImportProfile|null $cmdbImportProfile The CMDB import profile and packs; null builds the shipped one.
 	 * @param IL10N|null $l10n Translations of the CMDB mapping messages.
 	 * @param IURLGenerator|null $urlGenerator Builds the link to a CMDB mapping pack's editor in OpenRegister.
+	 * @param OrganisationReportAccessInterface|null $organisationAccess Who may export which organisation; resolved from the container when not given.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 *
@@ -147,6 +148,7 @@ class SettingsController extends Controller {
 		private readonly ?CmdbImportProfile $cmdbImportProfile = null,
 		private readonly ?IL10N $l10n = null,
 		private readonly ?IURLGenerator $urlGenerator = null,
+		private readonly ?OrganisationReportAccessInterface $organisationAccess = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -1673,7 +1675,7 @@ class SettingsController extends Controller {
 		// export their own organisation only, through the sibling route
 		// (stackiq#1136). The `organization` body value is not a filter the
 		// export applies, so it cannot scope this route.
-		$permissionError = $this->verifyOrgExportPermission(currentUser: $currentUser, organizationUuid: null);
+		$permissionError = $this->verifyOrgExportPermission(currentUser: $currentUser);
 		if ($permissionError !== null) {
 			return $permissionError;
 		}
@@ -1737,7 +1739,9 @@ class SettingsController extends Controller {
 			return new JSONResponse(['message' => 'Not authenticated'], Http::STATUS_UNAUTHORIZED);
 		}
 
-		$permissionError = $this->verifyOrgExportPermission(currentUser: $currentUser, organizationUuid: $organizationUuid);
+		// REQ-CER-003 (insight-exports-and-custom-reports): the same organisation
+		// rule as the portfolio report, refused before any export work starts.
+		$permissionError = $this->verifyOrgScope(currentUser: $currentUser, organizationUuid: $organizationUuid);
 		if ($permissionError !== null) {
 			return $permissionError;
 		}
@@ -1775,59 +1779,64 @@ class SettingsController extends Controller {
 	}//end exportOrgArchiMate()
 
 	/**
-	 * Verify that the current user has permission to export an organisation's ArchiMate file.
+	 * Refuse the full ArchiMate export to anyone but a Nextcloud admin.
 	 *
-	 * A Nextcloud admin may export anything. A member of one of the saved
-	 * organisation admin groups may export only their own active organisation
-	 * (user value `core`/`organisation`, the rule
-	 * PortfolioReportController::isAuthorisedForOrganisation() applies), so a
-	 * call without an organisation is admin-only. Before stackiq#1136 the group
-	 * list always read empty and only admins got through; restoring the read
-	 * without this scope would have let a group member export any
-	 * organisation by uuid.
+	 * @param \OCP\IUser $currentUser The authenticated caller.
 	 *
-	 * @param \OCP\IUser $currentUser The currently authenticated user.
-	 * @param string|null $organizationUuid The organisation asked for, or null for the whole register.
+	 * @return JSONResponse|null 403 for a non-admin, null when allowed.
 	 *
-	 * @return JSONResponse|null Forbidden response, or null when permitted.
-	 *
-	 * @spec openspec/changes/method-decomposition/tasks.md#task-3
+	 * @spec openspec/specs/settings-admin-controller/spec.md
 	 */
-	private function verifyOrgExportPermission(\OCP\IUser $currentUser, ?string $organizationUuid): ?JSONResponse {
+	private function verifyOrgExportPermission(\OCP\IUser $currentUser): ?JSONResponse {
 		if ($this->groupManager->isAdmin($currentUser->getUID()) === true) {
 			return null;
 		}
 
-		$forbidden = new JSONResponse(['message' => 'Admin or organisation-admin privileges required'], Http::STATUS_FORBIDDEN);
-		if ($organizationUuid === null || $organizationUuid === '') {
+		return new JSONResponse(['message' => 'Admin or organisation-admin privileges required'], Http::STATUS_FORBIDDEN);
+	}//end verifyOrgExportPermission()
+
+	/**
+	 * Refuse an organisation export to a caller outside that organisation.
+	 *
+	 * A Nextcloud admin may export any organisation. Everyone else follows the
+	 * rule the portfolio report uses: `admin` and `ambtenaar` may export any
+	 * organisation, every other user only their own active organisation. Fails
+	 * closed when the rule cannot be read.
+	 *
+	 * @param \OCP\IUser $currentUser      The authenticated caller.
+	 * @param string      $organizationUuid The organisation to export.
+	 *
+	 * @return JSONResponse|null 403 when refused, null when allowed.
+	 *
+	 * @spec openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-003-a-member-of-an-organisation-must-be-able-to-export-that-organisation-as-archimate-from-its-detail-page-and-only-that-organisation
+	 */
+	private function verifyOrgScope(\OCP\IUser $currentUser, string $organizationUuid): ?JSONResponse {
+		$forbidden = new JSONResponse(['message' => 'Not authorised for this organisation'], Http::STATUS_FORBIDDEN);
+		if ($organizationUuid === '') {
 			return $forbidden;
 		}
 
-		$isOrgAdmin = false;
-		foreach ($this->roleGroupSettings->getOrganizationAdminGroups() as $groupName) {
-			if ($this->groupManager->isInGroup($currentUser->getUID(), $groupName) === true) {
-				$isOrgAdmin = true;
-				break;
+		if ($this->groupManager->isAdmin($currentUser->getUID()) === true) {
+			return null;
+		}
+
+		$access = $this->organisationAccess;
+		if ($access === null) {
+			try {
+				$access = $this->container->get(OrganisationReportAccessInterface::class);
+			} catch (\Throwable) {
+				$access = null;
 			}
 		}
 
-		if ($isOrgAdmin === false) {
-			return $forbidden;
-		}
-
-		$ownOrganisation = (string)$this->container->get(IConfig::class)->getUserValue(
-			userId: $currentUser->getUID(),
-			appName: 'core',
-			key: 'organisation',
-			default: ''
-		);
-
-		if ($ownOrganisation !== $organizationUuid) {
+		if (($access instanceof OrganisationReportAccessInterface) === false
+			|| $access->mayRead(user: $currentUser, organisationUuid: $organizationUuid) === false
+		) {
 			return $forbidden;
 		}
 
 		return null;
-	}//end verifyOrgExportPermission()
+	}//end verifyOrgScope()
 
 	/**
 	 * Build an XML file download Response from content and filename.
