@@ -49,6 +49,7 @@
   - GIVEN the docs site WHEN a reader opens Confirmation rounds THEN starting a round, answering and following it are explained with a screenshot
 - [ ] Implement
 - [ ] Test (docs build, screenshot with Playwright)
+- Note: `docs/features/owner-attestation.md` is written (starting, notifications, answering, following a round, the endpoints) and linked from `docs/features/README.md`; the screenshot `docs/images/confirmation-round.png` needs a running instance, so Implement stays open until it is added.
 
 ## Verification
 
