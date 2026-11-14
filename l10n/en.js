@@ -1,3 +1,7 @@
+/**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
 OC.L10N.register(
     "stackiq",
     {
@@ -292,6 +296,11 @@ OC.L10N.register(
         "Phased out": "Phased out",
         "Phasing out": "Phasing out",
         "Phone": "Phone",
+        "Architecture": "Architecture",
+        "Views": "Views",
+        "Mine": "Mine",
+        "Drawn": "Drawn",
+        "Imported": "Imported",
         "Phone number": "Phone number",
         "Pick an organisation above to render its lifecycle roadmap.": "Pick an organisation above to render its lifecycle roadmap.",
         "Pick one or more standards above to render the compliance matrix.": "Pick one or more standards above to render the compliance matrix.",
@@ -1330,11 +1339,6 @@ OC.L10N.register(
         "Gap": "Gap",
         "Licence": "Licence",
         "Software catalogue": "Software catalogue",
-        "Architecture": "Architecture",
-        "Views": "Views",
-        "Mine": "Mine",
-        "Drawn": "Drawn",
-        "Imported": "Imported",
         "Shared": "Shared",
         "{name}, shared by {partner}": "{name}, shared by {partner}",
         "+{count} more": "+{count} more"
