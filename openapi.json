@@ -5769,6 +5769,188 @@
                     }
                 }
             }
+        },
+        "/usages/{uuid}/connection-suggestions": {
+            "get": {
+                "operationId": "connection-suggestion-index",
+                "summary": "The suggested connections of a usage",
+                "description": "Connections the catalogue knows for the usage's application whose other end the organisation uses or is a national provision, and the connections of a usage this one replaces. Only for the organisation that owns the usage.",
+                "tags": [
+                    "usage"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`results`: the suggestions.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "description": "The caller's active organisation is neither the usage's consumer nor a participant; nothing changed."
+                    },
+                    "404": {
+                        "description": "No such usage."
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The usage.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/usages/{uuid}/connection-suggestions/accept": {
+            "post": {
+                "operationId": "connection-suggestion-accept",
+                "summary": "Accept suggested connections",
+                "description": "Adds the chosen connections to the usage; a carried-over draft is created first with status in development.",
+                "tags": [
+                    "usage"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "description": "Suggestion ids; ids that are not current suggestions are ignored."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`accepted`: the connection uuids added.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "description": "The caller's active organisation is neither the usage's consumer nor a participant; nothing changed."
+                    },
+                    "404": {
+                        "description": "No such usage."
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The usage.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/usages/{uuid}/connection-suggestions/dismiss": {
+            "post": {
+                "operationId": "connection-suggestion-dismiss",
+                "summary": "Dismiss suggested connections",
+                "description": "Records the chosen suggestions on the usage so they are not suggested again.",
+                "tags": [
+                    "usage"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "description": "Suggestion ids; ids that are not current suggestions are ignored."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`dismissed`: the ids dismissed.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "description": "The caller's active organisation is neither the usage's consumer nor a participant; nothing changed."
+                    },
+                    "404": {
+                        "description": "No such usage."
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The usage.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
         }
     },
     "components": {
