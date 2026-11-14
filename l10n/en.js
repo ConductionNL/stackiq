@@ -436,6 +436,10 @@ OC.L10N.register(
         "Publications successfully deleted": "Publications successfully deleted",
         "Publication successfully deleted": "Publication successfully deleted",
         "Close": "Close",
+        "Contacts": "Contacts",
+        "Calendar": "Calendar",
+        "Deck": "Deck",
+        "Bookmarks": "Bookmarks",
         "Delete publication": "Delete publication",
         "Delete {count} publications": "Delete {count} publications",
         "Failed to delete {count} objects": "Failed to delete {count} objects",
@@ -1336,11 +1340,7 @@ OC.L10N.register(
         "Software catalogue": "Software catalogue",
         "Shared": "Shared",
         "{name}, shared by {partner}": "{name}, shared by {partner}",
-        "+{count} more": "+{count} more",
-        "Contacts": "Contacts",
-        "Calendar": "Calendar",
-        "Deck": "Deck",
-        "Bookmarks": "Bookmarks"
+        "+{count} more": "+{count} more"
     },
     "nplurals=2; plural=(n != 1);"
 )

@@ -450,6 +450,10 @@ OC.L10N.register(
         "Publications successfully deleted": "Publicaties succesvol verwijderd",
         "Publication successfully deleted": "Publicatie succesvol verwijderd",
         "Close": "Sluiten",
+        "Contacts": "Contacten",
+        "Calendar": "Agenda",
+        "Deck": "Deck",
+        "Bookmarks": "Bladwijzers",
         "Delete publication": "Publicatie verwijderen",
         "Delete {count} publications": "{count} publicaties verwijderen",
         "Failed to delete {count} objects": "Kon {count} objecten niet verwijderen",
@@ -1404,11 +1408,7 @@ OC.L10N.register(
         "Software catalogue": "Softwarecatalogus",
         "Shared": "Gedeeld",
         "{name}, shared by {partner}": "{name}, gedeeld door {partner}",
-        "+{count} more": "+{count} meer",
-        "Contacts": "Contacten",
-        "Calendar": "Agenda",
-        "Deck": "Deck",
-        "Bookmarks": "Bladwijzers"
+        "+{count} more": "+{count} meer"
     },
     "nplurals=2; plural=(n != 1);"
 )
