@@ -217,6 +217,10 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'aanbod#getAanbod', 'url' => '/api/aanbod', 'verb' => 'GET'],
         ['name' => 'aanbod#acceptAanbod', 'url' => '/api/aanbod/{uuid}/accept', 'verb' => 'PUT'],
         ['name' => 'aanbod#denyAanbod', 'url' => '/api/aanbod/{uuid}/deny', 'verb' => 'DELETE'],
+        // Derived connection suggestions of a usage (connections-derived-dependencies REQ-DCN-001..003).
+        ['name' => 'connectionSuggestion#index', 'url' => '/api/usages/{uuid}/connection-suggestions', 'verb' => 'GET'],
+        ['name' => 'connectionSuggestion#accept', 'url' => '/api/usages/{uuid}/connection-suggestions/accept', 'verb' => 'POST'],
+        ['name' => 'connectionSuggestion#dismiss', 'url' => '/api/usages/{uuid}/connection-suggestions/dismiss', 'verb' => 'POST'],
 
         // OPEN-DATA PUBLISH ENDPOINTS — set/clear publicatiedatum (the live OR
         // RBAC publish gate). Authenticated + per-object ownership guard (IDOR-safe).
