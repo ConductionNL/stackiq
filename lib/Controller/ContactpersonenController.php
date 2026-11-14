@@ -24,6 +24,7 @@ namespace OCA\Stackiq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\OrganisationService;
+use OCA\Stackiq\Service\Stackiq\ContactPersonEmail;
 use OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface;
 use OCA\Stackiq\Kernel\Contracts\ContactPersonOrganisationGuardInterface;
 use OCA\Stackiq\Kernel\Contracts\ContactpersoonServiceInterface;
@@ -135,6 +136,7 @@ class ContactpersonenController extends Controller {
 	 *                                              the published contract, not the concrete service)
 	 * @param OrganisationService $organisationService Resolves the organisation a contactpersoon belongs to
 	 * @param ContactPersonOrganisationGuardInterface $organisationGuard Decides whether the caller may add the contact to its organisation
+ * @param ContactPersonEmail|null $contactPersonEmail Resolves the email address from the linked Nextcloud contact.
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 */
@@ -152,6 +154,7 @@ class ContactpersonenController extends Controller {
 		private readonly ObjectServiceInterface $objectService,
 		private readonly OrganisationService $organisationService,
 		private readonly ContactPersonOrganisationGuardInterface $organisationGuard,
+		private readonly ?ContactPersonEmail $contactPersonEmail = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 		$this->settingsService = $settingsService;
@@ -163,6 +166,26 @@ class ContactpersonenController extends Controller {
 		$this->secureRandom = $secureRandom;
 		$this->logger = $logger;
 	}//end __construct()
+
+	/**
+	 * The email address a contact person's account is made for.
+	 *
+	 * The linked Nextcloud contact's address when an email resolver is wired,
+	 * otherwise the address on the record.
+	 *
+	 * @param array<string, mixed> $contactData The contact person's properties.
+	 *
+	 * @return string The email address, or '' when there is none.
+	 *
+	 * @spec openspec/changes/capability-requirements-from-the-matrix/specs/contactpersoon-sync/spec.md
+	 */
+	private function contactPersonEmailOf(array $contactData): string {
+		if ($this->contactPersonEmail !== null) {
+			return $this->contactPersonEmail->of(contactData: $contactData);
+		}
+
+		return (string)($contactData['email'] ?? $contactData['e-mailadres'] ?? '');
+	}//end contactPersonEmailOf()
 
 	/**
 	 * Get contactpersonen for an organisation with user status.
@@ -457,8 +480,9 @@ class ContactpersonenController extends Controller {
 				);
 			}
 
-			// Validate email address before attempting user creation.
-			$email = $contactData['email'] ?? $contactData['e-mailadres'] ?? '';
+			// Validate email address before attempting user creation. The
+			// linked Nextcloud contact holds it (contactsUid).
+			$email = $this->contactPersonEmailOf(contactData: $contactData);
 			$emailError = $this->contactPersonHandler->validateEmailForUsername($email);
 			if ($emailError !== null) {
 				return new JSONResponse(
