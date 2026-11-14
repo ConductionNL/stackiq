@@ -13,6 +13,7 @@ use OCA\Stackiq\Controller\ReferenceComponentCoverageController;
 use OCA\Stackiq\Controller\OrganisationReportRequest;
 use OCA\Stackiq\Service\ReferenceComponentCoverageService;
 use OCA\Stackiq\Service\OrganisationReportAccess;
+use OCA\Stackiq\Service\PeerUsageService;
 use OCP\AppFramework\Http;
 use OCP\IConfig;
 use OCP\IGroup;
@@ -54,10 +55,40 @@ final class ReferenceComponentCoverageControllerTest extends TestCase {
 		self::assertSame(Http::STATUS_OK, $response->getStatus());
 	}//end testACivilServantMayReadAnyOrganisation()
 
+	public function testPeersOfAnotherOrganisationAreRefusedBeforeAnyQuery(): void {
+		$peers = $this->createMock(PeerUsageService::class);
+		$peers->expects($this->never())->method('build');
+
+		$response = $this->controller(groups: ['gebruik-beheerder'], ownOrganisation: 'alblasserdam', service: $this->createMock(ReferenceComponentCoverageService::class), peers: $peers)->peers();
+
+		self::assertSame(Http::STATUS_FORBIDDEN, $response->getStatus());
+	}//end testPeersOfAnotherOrganisationAreRefusedBeforeAnyQuery()
+
+	public function testAMemberGetsThePeerCountsOfTheirOrganisation(): void {
+		$answer = ['organisation' => 'zuiddrecht', 'components' => [['referenceComponent' => 'zac', 'applications' => [['moduleId' => 'm', 'moduleName' => 'OpenZaak-UI', 'count' => 21]]]]];
+		$peers = $this->createMock(PeerUsageService::class);
+		$peers->expects($this->once())->method('build')->with('zuiddrecht')->willReturn($answer);
+
+		$response = $this->controller(groups: ['gebruik-beheerder'], ownOrganisation: 'zuiddrecht', service: $this->createMock(ReferenceComponentCoverageService::class), peers: $peers)->peers();
+
+		self::assertSame(Http::STATUS_OK, $response->getStatus());
+		self::assertSame($answer, $response->getData());
+	}//end testAMemberGetsThePeerCountsOfTheirOrganisation()
+
+	public function testPeersWithoutTheServiceOrOnAFailureAnswerAnError(): void {
+		$service = $this->createMock(ReferenceComponentCoverageService::class);
+		self::assertSame(Http::STATUS_SERVICE_UNAVAILABLE, $this->controller(groups: ['ambtenaar'], ownOrganisation: '', service: $service)->peers()->getStatus());
+
+		$peers = $this->createMock(PeerUsageService::class);
+		$peers->method('build')->willThrowException(new \Exception('Voorzieningen configuration not found.'));
+		$response = $this->controller(groups: ['ambtenaar'], ownOrganisation: '', service: $service, peers: $peers)->peers();
+		self::assertSame(Http::STATUS_INTERNAL_SERVER_ERROR, $response->getStatus());
+	}//end testPeersWithoutTheServiceOrOnAFailureAnswerAnError()
+
 	/**
 	 * @param array<int,string> $groups The user's groups.
 	 */
-	private function controller(array $groups, string $ownOrganisation, ReferenceComponentCoverageService $service): ReferenceComponentCoverageController {
+	private function controller(array $groups, string $ownOrganisation, ReferenceComponentCoverageService $service, ?PeerUsageService $peers = null): ReferenceComponentCoverageController {
 		$user = $this->createMock(IUser::class);
 		$user->method('getUID')->willReturn('pieter');
 		$session = $this->createMock(IUserSession::class);
@@ -79,7 +110,8 @@ final class ReferenceComponentCoverageControllerTest extends TestCase {
 			appName: 'stackiq',
 			request: $request,
 			reportService: $service,
-			reportRequest: new OrganisationReportRequest(userSession: $session, request: $request, access: new OrganisationReportAccess(groupManager: $groupManager, config: $config))
+			reportRequest: new OrganisationReportRequest(userSession: $session, request: $request, access: new OrganisationReportAccess(groupManager: $groupManager, config: $config)),
+			peerUsage: $peers
 		);
 	}//end controller()
 }//end class
