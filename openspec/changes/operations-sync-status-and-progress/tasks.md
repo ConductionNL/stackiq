@@ -10,8 +10,9 @@
   - GIVEN a running operation of a type WHEN the current entry is read THEN it names that operation, and after completeOperation() it is empty
   - GIVEN a caller who is not the owner, not an admin and not allowed by the policy WHEN they read an operation THEN they get 404
   - GIVEN SbomImportService and MergeOrganisatieService WHEN their existing tests run THEN they pass unchanged
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Service/ProgressTrackerTest.php and tests/Unit/Controller/SettingsControllerProgressTest.php)
+- [x] Implement
+  - The shared store was already in place (`ProgressStore`). Added: the `current_<type>` pointer (`getCurrentOperation()`, removed when the run completes, fails or is cancelled), the `processing_contacts` and `processing_users` phases (weight 0), `SyncAccessPolicy`, and the policy in `getProgress()` for `organisation_sync`.
+- [x] Test (PHPUnit tests/Unit/Service/ProgressTrackerTest.php and tests/Unit/Controller/SettingsControllerProgressTest.php)
 
 ### Task 2: Report sync progress and keep the last run
 - **spec_ref**: openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
@@ -19,8 +20,9 @@
 - **acceptance_criteria**:
   - GIVEN a scheduled or manual sync WHEN it runs THEN it starts an organisation_sync operation, moves through the organisations, contact persons and users phases, and completes it
   - GIVEN a run that ends WHEN recordSyncTime() runs THEN last_sync_result holds start, end, trigger, counts and error count
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Service/OrganizationSyncServiceTest.php)
+- [x] Implement
+  - Through `SyncProgress`, which the scheduled, the optimized manual and the manual sync all use; `last_sync_result` is an array value next to `last_sync_time`, also written for a failed scheduled run.
+- [x] Test (PHPUnit tests/Unit/Service/OrganizationSyncServiceTest.php)
 
 ### Task 3: Make the job honour its switch and share one interval
 - **spec_ref**: openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-003-the-scheduled-sync-must-not-run-while-its-switch-is-off
@@ -29,8 +31,9 @@
   - GIVEN the switch off WHEN run() is called THEN performScheduledSync() is not called and a log line says why
   - GIVEN no cronjob_config key WHEN run() is called THEN the sync runs
   - GIVEN the job and getAvailableCronjobs() WHEN their interval is read THEN both return INTERVAL_SECONDS
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/BackgroundJob/OrganizationContactSyncJobTest.php)
+- [x] Implement
+  - The switch was already honoured (`CronjobSettings::isCronjobEnabled()`). Added `INTERVAL_SECONDS`, read by the job and the cronjob metadata, and the repair step `LogSwitchedOffSync`.
+- [x] Test (PHPUnit tests/Unit/BackgroundJob/OrganizationContactSyncJobTest.php)
 
 ### Task 4: Add the sync status endpoint
 - **spec_ref**: openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
@@ -38,8 +41,8 @@
 - **acceptance_criteria**:
   - GIVEN an admin or a functional administrator WHEN they call GET /api/sync/status THEN they get interval, enabled, last run and the current run or null
   - GIVEN any other signed-in user WHEN they call it THEN they get 403
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Controller/SyncStatusControllerTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Controller/SyncStatusControllerTest.php)
 
 ### Task 5: Add the Synchronisation page and the permission list
 - **spec_ref**: openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators

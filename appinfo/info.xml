@@ -258,6 +258,12 @@ Vrij en open source onder de EUPL-licentie.
 				throws, and does nothing without OpenRegister's store.
 			-->
 			<step>OCA\Stackiq\Repair\SeedCmdbImportPacks</step>
+			<!--
+				The organisation sync job honours its switch
+				(operations-sync-status-and-progress): warn once where it is off,
+				so nobody wonders why syncs stopped. Changes nothing.
+			-->
+			<step>OCA\Stackiq\Repair\LogSwitchedOffSync</step>
 		</post-migration>
 		<!--
 			FRESH INSTALL. Nextcloud does NOT run post-migration on a first install:

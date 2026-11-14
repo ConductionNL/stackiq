@@ -308,6 +308,8 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'settings#updateEolSyncConfig', 'url' => '/api/eol-sync/config', 'verb' => 'POST'],
         ['name' => 'settings#triggerEolSync', 'url' => '/api/eol-sync/trigger', 'verb' => 'POST'],
         ['name' => 'settings#getEolSyncStatus', 'url' => '/api/eol-sync/status', 'verb' => 'GET'],
+        // The organisation sync's schedule, last run and running run (operations-sync-status-and-progress).
+        ['name' => 'syncStatus#status', 'url' => '/api/sync/status', 'verb' => 'GET'],
 
         // SERVICE DESK EXCHANGE (sharing-itsm-exchange): status for the CMDB
         // page, set-up and file import for admins. The flows themselves run
