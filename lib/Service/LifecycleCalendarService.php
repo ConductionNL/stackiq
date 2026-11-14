@@ -25,6 +25,7 @@ namespace OCA\Stackiq\Service;
 
 use DateTimeImmutable;
 use DateTimeZone;
+use OCA\Stackiq\Kernel\Contracts\LifecycleCalendarServiceInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use Throwable;
@@ -42,7 +43,7 @@ use Throwable;
  * The object is passed as `['uuid' => string, 'register' => int|string,
  * 'schema' => int|string, 'data' => array]`.
  */
-class LifecycleCalendarService {
+class LifecycleCalendarService implements LifecycleCalendarServiceInterface {
 
 	/**
 	 * OpenRegister's calendar event service, by name: stackiq references no

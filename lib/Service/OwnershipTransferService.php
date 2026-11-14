@@ -34,6 +34,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\OwnershipTransferServiceInterface;
 use OCA\Stackiq\Service\Organisation\OwnershipMap;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
@@ -44,7 +45,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/changes/landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-001-an-administrator-moves-chosen-entries-to-another-organisation-and-they-keep-their-identity
  */
-class OwnershipTransferService {
+class OwnershipTransferService implements OwnershipTransferServiceInterface {
 	/**
 	 * Linked entries that do not move with an entry: for a schema, the field
 	 * that lists the linked ids and the schema they live in.

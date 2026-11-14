@@ -24,6 +24,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Kernel\Contracts\SyncProgressInterface;
 use Psr\Container\ContainerInterface;
 use Throwable;
 
@@ -33,14 +34,7 @@ use Throwable;
  * Progress is a courtesy to whoever watches: without a tracker every call is
  * a no-op, and a tracker that throws never reaches the sync.
  */
-class SyncProgress {
-
-	/**
-	 * The operation type of the organisation sync.
-	 *
-	 * @var string
-	 */
-	public const OPERATION_TYPE = 'organisation_sync';
+class SyncProgress implements SyncProgressInterface {
 
 	/**
 	 * The counts the sync returns that the last-run record keeps.

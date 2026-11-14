@@ -21,8 +21,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\Service\ConnectionSuggestionService;
-use OCA\Stackiq\Service\OpenRegisterLookup;
+use OCA\Stackiq\Kernel\Contracts\ConnectionSuggestionServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\OpenRegisterLookupInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -44,15 +44,15 @@ class ConnectionSuggestionController extends Controller {
 	 *
 	 * @param string                      $appName     The app id.
 	 * @param IRequest                    $request     The request.
-	 * @param ConnectionSuggestionService $suggestions Derives, accepts and dismisses suggestions.
-	 * @param OpenRegisterLookup          $lookup      The caller's active organisation.
+	 * @param ConnectionSuggestionServiceInterface $suggestions Derives, accepts and dismisses suggestions.
+	 * @param OpenRegisterLookupInterface          $lookup      The caller's active organisation.
 	 * @param LoggerInterface             $logger      Logger for failures.
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
-		private readonly ConnectionSuggestionService $suggestions,
-		private readonly OpenRegisterLookup $lookup,
+		private readonly ConnectionSuggestionServiceInterface $suggestions,
+		private readonly OpenRegisterLookupInterface $lookup,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: $appName, request: $request);

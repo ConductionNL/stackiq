@@ -28,7 +28,7 @@ use OCA\Stackiq\Controller\ControllerRegistrar;
 use OCA\Stackiq\Dashboard\ConceptOrganisatiesWidget;
 use OCA\Stackiq\EventListener\ListenerRegistrar;
 use OCA\Stackiq\Kernel\AppIdentity;
-use OCA\Stackiq\Middleware\ApiContractMiddleware;
+use OCA\Stackiq\Middleware\MiddlewareRegistrar;
 use OCA\Stackiq\Service\ServiceRegistrar;
 use OCP\AppFramework\App;
 use OCP\AppFramework\Bootstrap\IBootContext;
@@ -91,8 +91,8 @@ class Application extends App implements IBootstrap {
 		// StackIQ's MCP tool provider, under the key OpenRegister enumerates.
 		$this->registerMcpToolProvider(context: $context);
 
-		// API-Version header and problem details on the JSON API (spec api-contract).
-		$context->registerMiddleware(ApiContractMiddleware::class);
+		// The middleware registrations live with the Middleware component.
+		(new MiddlewareRegistrar())->register(context: $context);
 	}//end register()
 
 	/**
