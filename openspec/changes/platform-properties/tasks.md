@@ -57,8 +57,10 @@
   - GIVEN an administrator WHEN they add a webhook with an address and the events "Applicatie gewijzigd" and "Contract gewijzigd" THEN it is created through OpenRegister's webhooks API, filtered to the module and contract schemas
   - GIVEN a listed webhook WHEN the administrator edits or removes it from its actions menu THEN OpenRegister holds the new state
   - GIVEN no webhook WHEN the section loads THEN it shows an empty state with "Add webhook"
-- [ ] Implement
-- [ ] Test (vitest `catalogueWebhooks.spec.js`)
+- [x] Implement
+  - Done. A webhook follows actions (Created, Changed, Deleted) on catalogue entries (Applications, Contracts, Applications in use): OpenRegister delivers each listed event class when every filter matches, so "Applicatie gewijzigd" and "Contract gewijzigd" are Changed on Applications and Contracts, written as `events: [ObjectUpdatedEvent]` and `filters: {register: [catalogue], schema: [module, contract]}`. The filters are lists, so OpenRegister compares them as "one of these" whatever type the payload carries the ids in. The register and schema ids come from `GET /api/voorzieningen/config`; only webhooks filtered to that register are listed. `src/utils/catalogueWebhooks.js` holds the mapping.
+- [x] Test (vitest `catalogueWebhooks.spec.js`)
+  - 12 tests: the scope, which webhooks are the catalogue's, form and body both ways, form problems, last delivery; the section listing, empty state, create, edit, remove and refusals; the dialog refusing an incomplete form and opening on the webhook it edits.
 
 ### Task 6: Matrix
 - **spec_ref**: openspec/changes/platform-properties/specs/platform-properties/spec.md
