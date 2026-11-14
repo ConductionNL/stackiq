@@ -28,8 +28,8 @@
   - GIVEN the before-import mode WHEN it runs on the fixture THEN no save method is called and every category is reported
   - GIVEN the against-imported mode and stored objects of the model WHEN it runs THEN it compares only objects with that model identifier
   - GIVEN no stored object with the model identifier WHEN the against-imported mode runs THEN it answers that the model is not imported
-- [ ] Implement
-- [ ] Test (PHPUnit `ArchiMateRoundTripServiceTest`)
+- [x] Implement
+- [x] Test (PHPUnit `ArchiMateRoundTripServiceTest`)
 
 ### Task 4: Admin route and removal of the old round trip
 - **spec_ref**: openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-003-only-an-admin-shall-run-the-check-and-the-old-round-trip-endpoint-shall-be-removed
