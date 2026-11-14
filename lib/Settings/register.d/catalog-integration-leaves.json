@@ -1,0 +1,41 @@
+{
+  "components": {
+    "schemas": {
+      "contactPerson": {
+        "configuration": {
+          "linkedTypes": ["contacts"]
+        }
+      },
+      "organization": {
+        "configuration": {
+          "linkedTypes": ["contacts"]
+        }
+      },
+      "catalogContract": {
+        "configuration": {
+          "linkedTypes": ["calendar"]
+        }
+      },
+      "moduleVersion": {
+        "configuration": {
+          "linkedTypes": ["calendar"]
+        }
+      },
+      "software-review": {
+        "configuration": {
+          "linkedTypes": ["deck"]
+        }
+      },
+      "module": {
+        "configuration": {
+          "linkedTypes": ["bookmarks"]
+        }
+      },
+      "catalogService": {
+        "configuration": {
+          "linkedTypes": ["bookmarks"]
+        }
+      }
+    }
+  }
+}

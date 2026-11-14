@@ -40,6 +40,7 @@ const EMPTY_FACETS = {
 	standard: { values: [] },
 	applicationService: { values: [] },
 	domain: { values: [] },
+	supplier: { values: [] },
 }
 
 describe('facets store — a schema without a slice', () => {
