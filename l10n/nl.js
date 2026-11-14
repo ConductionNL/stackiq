@@ -1333,7 +1333,10 @@ OC.L10N.register(
         "Gap, fillable": "Gat, te vullen",
         "Gap": "Gat",
         "Licence": "Licentie",
-        "Software catalogue": "Softwarecatalogus"
+        "Software catalogue": "Softwarecatalogus",
+        "Shared": "Gedeeld",
+        "{name}, shared by {partner}": "{name}, gedeeld door {partner}",
+        "+{count} more": "+{count} meer"
     },
     "nplurals=2; plural=(n != 1);"
 )
