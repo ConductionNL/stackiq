@@ -42,6 +42,7 @@ import GemmaPlateView from './views/organisaties/GemmaPlate.vue'
 import PortfolioReportView from './views/organisaties/PortfolioReport.vue'
 import StackiqSettingsPage from './views/settings/StackiqSettings.vue'
 import SuitesIndexView from './views/suites/SuitesIndexView.vue'
+import SyncStatusView from './views/sync/SyncStatusView.vue'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
 
 export default {
@@ -77,6 +78,11 @@ export default {
 	// orchestrates. Settings stays type='settings' but its single section
 	// delegates to this custom component.
 	StackiqSettingsPage,
+
+	// The organisation sync's schedule, last run and running progress
+	// (operations-sync-status-and-progress D5): it polls /api/sync/status while
+	// a run is going, which no built-in page type does.
+	SyncStatusView,
 
 	// --- Lib gap: dashboard widget extraction pending. ---
 

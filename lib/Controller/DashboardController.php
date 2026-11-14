@@ -17,11 +17,14 @@
 
 namespace OCA\Stackiq\Controller;
 
+use OCA\Stackiq\Service\SyncAccessPolicy;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\ContentSecurityPolicy;
 use OCP\AppFramework\Http\JSONResponse;
 use OCP\AppFramework\Http\TemplateResponse;
+use OCP\AppFramework\Services\IInitialState;
+use OCP\IGroupManager;
 use OCP\IRequest;
 use OCP\IUserSession;
 
@@ -32,11 +35,17 @@ class DashboardController extends Controller {
 	 * @param string $appName The app name
 	 * @param IRequest $request The request object
 	 * @param IUserSession $userSession The user session
+	 * @param IInitialState|null $initialState Hands the shell its permissions; null provides none.
+	 * @param IGroupManager|null $groupManager Tells a Nextcloud admin apart.
+	 * @param SyncAccessPolicy|null $syncAccess Who may see the organisation sync.
 	 */
 	public function __construct(
 		$appName,
 		IRequest $request,
 		private readonly IUserSession $userSession,
+		private readonly ?IInitialState $initialState = null,
+		private readonly ?IGroupManager $groupManager = null,
+		private readonly ?SyncAccessPolicy $syncAccess = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 	}//end __construct()
@@ -74,6 +83,8 @@ class DashboardController extends Controller {
 	 * @return TemplateResponse
 	 */
 	private function indexPage(): TemplateResponse {
+		$this->initialState?->provideInitialState('permissions', $this->permissions());
+
 		$response = new TemplateResponse(
 			$this->appName,
 			'index',
@@ -86,6 +97,33 @@ class DashboardController extends Controller {
 
 		return $response;
 	}//end indexPage()
+
+	/**
+	 * The permissions the shell's menu checks entries against: `user` for
+	 * every signed-in user, `admin` for a Nextcloud admin and `sync.view` for
+	 * whom the sync policy allows. Empty without a user.
+	 *
+	 * @return list<string>
+	 *
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-004-the-synchronisation-page-shall-show-the-schedule-the-last-run-and-a-running-sync-to-nextcloud-admins-and-functional-administrators
+	 */
+	private function permissions(): array {
+		$uid = $this->userSession->getUser()?->getUID();
+		if ($uid === null || $uid === '') {
+			return [];
+		}
+
+		$permissions = ['user'];
+		if ($this->groupManager?->isAdmin($uid) === true) {
+			$permissions[] = 'admin';
+		}
+
+		if ($this->syncAccess?->mayViewSync(uid: $uid) === true) {
+			$permissions[] = 'sync.view';
+		}
+
+		return $permissions;
+	}//end permissions()
 
 	/**
 	 * Returns an empty JSON result.
