@@ -315,4 +315,40 @@ class OrganizationSyncOrchestrationTest extends TestCase {
 		$this->service->recordSyncTime();
 
 	}//end testRecordSyncTimeWritesTheLastSyncTime()
+	/**
+	 * A scheduled run keeps its record in last_sync_result next to last_sync_time.
+	 *
+	 * @return void
+	 *
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-002-the-organisation-sync-shall-report-its-progress-and-keep-the-result-of-its-last-run
+	 */
+	public function testAScheduledRunKeepsItsLastResult(): void {
+		$this->settings->method('getVoorzieningenConfig')->willReturn([]);
+		$kept = null;
+		$this->config->expects($this->once())->method('setValueArray')->with('stackiq', 'last_sync_result', $this->isType('array'))
+			->willReturnCallback(function (string $app, string $key, array $value) use (&$kept): bool {
+				$kept = $value;
+				return true;
+			});
+
+		$this->service->performScheduledSync();
+
+		$this->assertSame('scheduled', $kept['trigger']);
+		$this->assertSame(0, $kept['organizationsProcessed']);
+		$this->assertSame(0, $kept['contactPersonsProcessed']);
+		$this->assertArrayHasKey('errorCount', $kept);
+		$this->assertMatchesRegularExpression('/^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/', $kept['finishedAt']);
+	}//end testAScheduledRunKeepsItsLastResult()
+
+	/**
+	 * recordSyncTime() with a record also keeps it; without one it writes only the time.
+	 *
+	 * @return void
+	 */
+	public function testRecordSyncTimeKeepsAGivenRecord(): void {
+		$this->config->expects($this->once())->method('setValueArray')->with('stackiq', 'last_sync_result', ['trigger' => 'manual', 'errorCount' => 0]);
+
+		$this->service->recordSyncTime(result: ['trigger' => 'manual', 'errorCount' => 0]);
+	}//end testRecordSyncTimeKeepsAGivenRecord()
+
 }//end class
