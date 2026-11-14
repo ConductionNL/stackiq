@@ -1534,6 +1534,33 @@ export const useSettingsStore = defineStore('settings', {
 		},
 
 		/**
+		 * Check that an exchange file survives the import and export, writing
+		 * nothing (architecture-round-trip-check REQ-ART-002). Posts the file as
+		 * `archiMateFile` with the mode; resolves with the report and rejects
+		 * with the server's message.
+		 *
+		 * @param {File} file The exchange file.
+		 * @param {('before-import'|'against-imported')} mode The mode.
+		 * @return {Promise<object>} The report per category.
+		 * @spec openspec/changes/architecture-round-trip-check/tasks.md#task-4
+		 */
+		async checkRoundTrip(file, mode = 'before-import') {
+			const formData = new FormData()
+			formData.append('archiMateFile', file)
+			formData.append('mode', mode)
+			const response = await fetch('/index.php/apps/stackiq/api/archimate/round-trip-check', {
+				method: 'POST',
+				headers: { requesttoken: OC.requestToken, 'X-Requested-With': 'XMLHttpRequest' },
+				body: formData,
+			})
+			const data = await response.json().catch(() => ({}))
+			if (!response.ok || data.success === false) {
+				throw new Error(data.message || `The round-trip check failed (${response.status})`)
+			}
+			return data
+		},
+
+		/**
 		 * Import ArchiMate file with proper error handling (async approach)
 		 *
 		 * @param {('speed'|'memory')} processingMode Processing strategy

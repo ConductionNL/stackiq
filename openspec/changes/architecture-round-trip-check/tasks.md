@@ -39,8 +39,8 @@
   - GIVEN a body with `file_path` WHEN it is posted THEN the answer is 400
   - GIVEN the route table WHEN it is read THEN `settings#testArchiMateRoundTrip` is gone and `settings#checkArchiMateRoundTrip` exists
   - GIVEN the source WHEN it is searched THEN `testRoundTrip`, `createTestArchiMateXml` and `createTempFile` are gone
-- [ ] Implement
-- [ ] Test (PHPUnit `SettingsControllerRoundTripCheckTest`, `SettingsRouteTableTest`, updated `SettingsControllerEmailArchiMateContractTest`)
+- [x] Implement
+- [x] Test (PHPUnit `SettingsControllerRoundTripCheckTest`, `SettingsRouteTableTest`, updated `SettingsControllerEmailArchiMateContractTest`)
 
 ### Task 5: Report on the admin settings page
 - **spec_ref**: openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-004-the-admin-settings-page-shall-show-the-round-trip-report

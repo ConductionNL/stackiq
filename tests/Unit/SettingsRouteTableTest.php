@@ -175,4 +175,14 @@ class SettingsRouteTableTest extends TestCase {
 		$store = (string)file_get_contents(__DIR__ . '/../../src/store/modules/settings.js');
 		$this->assertStringNotContainsString('test-round-trip', $store);
 	}
+
+	/**
+	 * The round-trip check is routed as a POST to its own URL (REQ-ART-003).
+	 *
+	 * @spec openspec/changes/architecture-round-trip-check/tasks.md#task-4
+	 */
+	public function testTheRoundTripCheckIsRoutedOnce(): void {
+		$this->assertCount(1, $this->match($this->routes(), 'settings#checkArchiMateRoundTrip', '/api/archimate/round-trip-check', 'POST'));
+		$this->assertTrue(method_exists(\OCA\Stackiq\Controller\SettingsController::class, 'checkArchiMateRoundTrip'));
+	}
 }

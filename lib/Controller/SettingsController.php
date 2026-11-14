@@ -39,6 +39,7 @@ use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\ProgressTrackerInterface;
 use OCA\Stackiq\Kernel\Contracts\RoleGroupSettingsInterface;
 use OCA\Stackiq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Stackiq\Service\ArchiMateRoundTripService;
 use OCA\Stackiq\Service\Cmdb\CmdbImportProfile;
 use OCP\App\IAppManager;
 use OCP\AppFramework\Controller;
@@ -119,6 +120,7 @@ class SettingsController extends Controller {
 	 * @param CmdbImportProfile|null $cmdbImportProfile The CMDB import profile and packs; null builds the shipped one.
 	 * @param IL10N|null $l10n Translations of the CMDB mapping messages.
 	 * @param IURLGenerator|null $urlGenerator Builds the link to a CMDB mapping pack's editor in OpenRegister.
+	 * @param ArchiMateRoundTripService|null $roundTrip Checks an exchange file survives the import and export (REQ-ART-002).
 	 *
 	 * @SuppressWarnings(PHPMD.ExcessiveParameterList)
 	 *
@@ -147,6 +149,7 @@ class SettingsController extends Controller {
 		private readonly ?CmdbImportProfile $cmdbImportProfile = null,
 		private readonly ?IL10N $l10n = null,
 		private readonly ?IURLGenerator $urlGenerator = null,
+		private readonly ?ArchiMateRoundTripService $roundTrip = null,
 	) {
 		parent::__construct(appName: $appName, request: $request);
 
@@ -1586,6 +1589,75 @@ class SettingsController extends Controller {
 			return new JSONResponse(['success' => false, 'message' => 'Import failed: ' . $e->getMessage(), 'error' => $e->getMessage()], $statusCode);
 		}//end try
 	}//end importArchiMate()
+
+	/**
+	 * Check that an uploaded exchange file survives the import and export, writing nothing.
+	 *
+	 * Admin only, and multipart only: a `file_path` body is refused like the
+	 * import refuses it, so the check never reads a server path. `mode` is
+	 * `before-import` (the default) or `against-imported`. The uploaded file is
+	 * PHP's own temporary file and is not copied.
+	 *
+	 * @return JSONResponse The comparison per category with the mode, model identifier and time taken.
+	 *
+	 * @NoCSRFRequired
+	 *
+	 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-003-only-an-admin-shall-run-the-check-and-the-old-round-trip-endpoint-shall-be-removed
+	 */
+	public function checkArchiMateRoundTrip(): JSONResponse {
+		$refusal = $this->adminRefusal() ?? $this->filePathRefusal();
+		if ($refusal !== null) {
+			return $refusal;
+		}
+
+		$upload = $this->parseArchiMateFileUpload();
+		if ($upload === null || $this->roundTrip === null) {
+			return new JSONResponse(
+				['success' => false, 'message' => 'Upload an ArchiMate exchange file as archiMateFile', 'error' => 'NO_FILE_UPLOADED'],
+				400
+			);
+		}
+
+		try {
+			$report = $this->roundTrip->check(
+				filePath: (string) $upload['filePath'],
+				mode: (string) $this->request->getParam('mode', ArchiMateRoundTripService::MODE_BEFORE_IMPORT)
+			);
+			return new JSONResponse(['success' => true, 'fileName' => $upload['fileName']] + $report);
+		} catch (\InvalidArgumentException $e) {
+			return new JSONResponse(['success' => false, 'message' => $e->getMessage(), 'error' => 'INVALID_REQUEST'], 400);
+		} catch (\Throwable $e) {
+			$this->logger->error('ArchiMate round-trip check failed', ['error' => $e->getMessage()]);
+			return new JSONResponse(
+				['success' => false, 'message' => 'The round-trip check failed: ' . $e->getMessage(), 'error' => 'CHECK_FAILED'],
+				500
+			);
+		}
+	}//end checkArchiMateRoundTrip()
+
+	/**
+	 * The 400 for a JSON body that names a server path, which only an upload may replace.
+	 *
+	 * @return JSONResponse|null
+	 *
+	 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-003-only-an-admin-shall-run-the-check-and-the-old-round-trip-endpoint-shall-be-removed
+	 */
+	private function filePathRefusal(): ?JSONResponse {
+		$data = json_decode((string) file_get_contents('php://input'), true);
+		$inBody = (is_array($data) === true && array_key_exists('file_path', $data) === true);
+		if ($inBody === true || $this->request->getParam('file_path') !== null) {
+			return new JSONResponse(
+				[
+					'success' => false,
+					'message' => 'The file_path parameter is not accepted. Please upload a file via multipart/form-data.',
+					'error'   => 'FILE_PATH_NOT_ALLOWED',
+				],
+				400
+			);
+		}
+
+		return null;
+	}//end filePathRefusal()
 
 	/**
 	 * Parse the uploaded ArchiMate file from the multipart request.
