@@ -101,6 +101,10 @@ final class ListenerRegistrar {
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleVersionPublicationListener::class);
 		$context->registerEventListener(ObjectDeletedEvent::class, ModuleVersionPublicationListener::class);
 
+		// One calendar event per contract end date and module end of support (adopt-integration-leaves).
+		$context->registerEventListener(ObjectCreatedEvent::class, LifecycleCalendarListener::class);
+		$context->registerEventListener(ObjectUpdatedEvent::class, LifecycleCalendarListener::class);
+
 		// Sync user profile updates into the contactpersoon mirror.
 		$context->registerEventListener(UserProfileUpdatedEvent::class, UserProfileUpdatedEventListener::class);
 

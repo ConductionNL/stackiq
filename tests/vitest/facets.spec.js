@@ -12,6 +12,8 @@
 
 import axios from '@nextcloud/axios'
 import { generateUrl } from '@nextcloud/router'
+import { readFileSync } from 'fs'
+import path from 'path'
 import { afterEach, describe, expect, it, vi } from 'vitest'
 import { buildFacetQueryParams, FACET_DIMENSIONS, fetchFacets } from '../../src/services/facets.js'
 
@@ -28,13 +30,25 @@ vi.mock('@nextcloud/router', () => ({
 }))
 
 describe('facets.FACET_DIMENSIONS', () => {
-	it('lists all four GEMMA dimensions', () => {
+	it('lists the four GEMMA dimensions and the supplier, in display order (REQ-SFC-003)', () => {
 		expect(FACET_DIMENSIONS).toEqual([
 			'referenceComponent',
 			'standard',
 			'applicationService',
 			'domain',
+			'supplier',
 		])
+	})
+
+	it('holds the same five names as FacetService::DIMENSIONS', () => {
+		const php = readFileSync(path.resolve(import.meta.dirname, '../../lib/Service/FacetService.php'), 'utf8')
+		const declared = php.match(/public const DIMENSIONS = \[([^\]]*)\]/)[1].match(/'([^']+)'/g).map((name) => name.slice(1, -1))
+		expect(declared).toEqual(FACET_DIMENSIONS)
+	})
+
+	it('sends supplier[] for a chosen supplier', () => {
+		const params = buildFacetQueryParams({ filters: { supplier: ['org-a', 'org-b'] } })
+		expect(params.getAll('supplier[]')).toEqual(['org-a', 'org-b'])
 	})
 })
 
