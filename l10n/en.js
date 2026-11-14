@@ -1336,7 +1336,13 @@ OC.L10N.register(
         "Software catalogue": "Software catalogue",
         "Shared": "Shared",
         "{name}, shared by {partner}": "{name}, shared by {partner}",
-        "+{count} more": "+{count} more"
+        "+{count} more": "+{count} more",
+        "Knowledge base": "Knowledge base",
+        "Knowledge articles": "Knowledge articles",
+        "Search knowledge articles": "Search knowledge articles",
+        "About this search": "About this search",
+        "The knowledge base needs the Collectives app. Ask an administrator to install it.": "The knowledge base needs the Collectives app. Ask an administrator to install it.",
+        "The search matches the titles of the articles in the collectives you are a member of. To search the text of the articles, use the search in [Collectives](/index.php/apps/collectives/).": "The search matches the titles of the articles in the collectives you are a member of. To search the text of the articles, use the search in [Collectives](/index.php/apps/collectives/)."
     },
     "nplurals=2; plural=(n != 1);"
 )

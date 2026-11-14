@@ -1404,7 +1404,13 @@ OC.L10N.register(
         "Software catalogue": "Softwarecatalogus",
         "Shared": "Gedeeld",
         "{name}, shared by {partner}": "{name}, gedeeld door {partner}",
-        "+{count} more": "+{count} meer"
+        "+{count} more": "+{count} meer",
+        "Knowledge base": "Kennisbank",
+        "Knowledge articles": "Kennisartikelen",
+        "Search knowledge articles": "Kennisartikelen zoeken",
+        "About this search": "Over deze zoekfunctie",
+        "The knowledge base needs the Collectives app. Ask an administrator to install it.": "De kennisbank heeft de app Collectives nodig. Vraag een beheerder om die te installeren.",
+        "The search matches the titles of the articles in the collectives you are a member of. To search the text of the articles, use the search in [Collectives](/index.php/apps/collectives/).": "De zoekfunctie zoekt in de titels van de artikelen in de collectives waarvan je lid bent. Gebruik de zoekfunctie in [Collectives](/index.php/apps/collectives/) om in de tekst van de artikelen te zoeken."
     },
     "nplurals=2; plural=(n != 1);"
 )
