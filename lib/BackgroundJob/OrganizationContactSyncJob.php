@@ -25,6 +25,7 @@ namespace OCA\Stackiq\BackgroundJob;
 use OCA\Stackiq\Kernel\Contracts\CronjobSettingsInterface;
 use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\StackiqContactSyncServiceInterface;
+use OCA\Stackiq\Kernel\OrganizationContactSyncSchedule;
 use OCA\Stackiq\Service\Contactpersoon\SystemContactWrites;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
@@ -56,7 +57,14 @@ class OrganizationContactSyncJob extends TimedJob {
 	 *
 	 * @var string
 	 */
-	public const JOB_ID = 'organization_contact_sync';
+	public const JOB_ID = OrganizationContactSyncSchedule::JOB_ID;
+
+	/**
+	 * How often the job runs, in seconds; the cronjob settings show the same value.
+	 *
+	 * @var integer
+	 */
+	public const INTERVAL_SECONDS = OrganizationContactSyncSchedule::INTERVAL_SECONDS;
 
 	/**
 	 * Organization synchronization service
@@ -86,8 +94,7 @@ class OrganizationContactSyncJob extends TimedJob {
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $timeFactory);
-		$this->setInterval(seconds: 300);
-		// 5 minutes.
+		$this->setInterval(seconds: self::INTERVAL_SECONDS);
 		$this->orgSyncService = $orgSyncService;
 	}//end __construct()
 

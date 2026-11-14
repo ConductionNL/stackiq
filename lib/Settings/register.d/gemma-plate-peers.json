@@ -1,0 +1,20 @@
+{
+  "$comment": "gemma-plate-views-peers-and-definitions (board SkGemmaPlaat, REQ-GPL-002): the number of inhabitants an organisation serves, so the GEMMA plate can compare it with organisations of the same type and inhabitants band (under 30,000; 30,000 to 60,000; 60,000 to 100,000; 100,000 to 250,000; above 250,000). Optional: without it, comparable falls back to the same type.",
+  "components": {
+    "schemas": {
+      "organization": {
+        "version": "0.5.6",
+        "properties": {
+          "inhabitants": {
+            "type": "integer",
+            "minimum": 0,
+            "title": "Inhabitants",
+            "description": "The number of inhabitants the organisation serves, used to compare it with organisations of a similar size. Leave empty when it does not apply.",
+            "visible": true,
+            "order": 23
+          }
+        }
+      }
+    }
+  }
+}
