@@ -8,8 +8,10 @@
 - **acceptance_criteria**:
   - GIVEN applications X and Y share a connection and the organisation uses both WHEN suggestions are asked for its usage of X THEN the connection is suggested with reason shared-landscape
   - GIVEN the organisation does not use Y WHEN suggestions are asked THEN that connection is not suggested
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Service/ConnectionSuggestionServiceTest.php` with an ObjectService double built on the real interface)
+- [x] Implement
+  - `lib/Service/ConnectionSuggestionService.php`; `dismissedConnectionSuggestions` on the usage in `lib/Settings/register.d/derived-connections.json`.
+- [x] Test (PHPUnit `tests/Unit/Service/ConnectionSuggestionServiceTest.php` with an ObjectService double built on the real interface)
+  - `ConnectionSuggestionServiceTest` over `ConnectionSuggestionStore`, an in-memory store on OpenRegister's `ObjectServiceInterface` contract.
 
 ### Task 2: Carry-over suggestions
 - **spec_ref**: openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-002-a-replacing-usage-is-offered-the-connections-of-the-usage-it-replaces
@@ -17,8 +19,9 @@
 - **acceptance_criteria**:
   - GIVEN an old usage of X at version 1 with two connections WHEN a usage of X at version 2 is created THEN both connections are suggested with reason carry-over
   - GIVEN an old usage whose planned replacement is Z WHEN a usage of Z is created THEN draft connections from Z to the same ends are suggested
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Service/ConnectionSuggestionServiceTest.php`, carry-over cases)
+- [x] Implement
+  - Same service: another version of the same application carries its connections over as they are; an application whose planned replacement is this one offers drafts in which the successor takes the replaced end, created with status `in development` on accept.
+- [x] Test (PHPUnit `tests/Unit/Service/ConnectionSuggestionServiceTest.php`, carry-over cases)
 
 ### Task 3: Endpoints with a per-object guard
 - **spec_ref**: openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-003-only-the-organisation-that-owns-the-usage-accepts-or-dismisses-its-suggestions
@@ -26,8 +29,10 @@
 - **acceptance_criteria**:
   - GIVEN a user of another organisation WHEN they post accept for this usage THEN the answer is 403 and nothing changes
   - GIVEN the owning organisation WHEN it accepts a suggestion THEN the connection is in usage.koppelingen
-- [ ] Implement
+- [x] Implement
+  - `ConnectionSuggestionController` (`#[NoAdminRequired]`, every method behind the consumer-or-participant guard, also the listing), three routes, and the three paths in `openapi.json`. The controller is autowired; `Application.php` needed no change.
 - [ ] Test (PHPUnit `tests/Unit/Controller/ConnectionSuggestionControllerTest.php`; Newman collection `postman/` request for the three routes)
+  - Done: `ConnectionSuggestionControllerTest` (403 on every route for another organisation with nothing written, owner accept, participant dismiss, 404). Owed: the Newman requests.
 
 ### Task 4: Suggested connections panel
 - **spec_ref**: openspec/changes/connections-derived-dependencies/specs/derived-connections/spec.md#requirement-req-dcn-001-stackiq-suggests-the-known-connections-of-an-application-inside-the-organisations-landscape

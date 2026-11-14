@@ -219,6 +219,10 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'aanbod#getAanbod', 'url' => '/api/aanbod', 'verb' => 'GET'],
         ['name' => 'aanbod#acceptAanbod', 'url' => '/api/aanbod/{uuid}/accept', 'verb' => 'PUT'],
         ['name' => 'aanbod#denyAanbod', 'url' => '/api/aanbod/{uuid}/deny', 'verb' => 'DELETE'],
+        // Derived connection suggestions of a usage (connections-derived-dependencies REQ-DCN-001..003).
+        ['name' => 'connectionSuggestion#index', 'url' => '/api/usages/{uuid}/connection-suggestions', 'verb' => 'GET'],
+        ['name' => 'connectionSuggestion#accept', 'url' => '/api/usages/{uuid}/connection-suggestions/accept', 'verb' => 'POST'],
+        ['name' => 'connectionSuggestion#dismiss', 'url' => '/api/usages/{uuid}/connection-suggestions/dismiss', 'verb' => 'POST'],
 
         // OPEN-DATA PUBLISH ENDPOINTS — set/clear publicatiedatum (the live OR
         // RBAC publish gate). Authenticated + per-object ownership guard (IDOR-safe).
@@ -242,6 +246,8 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // submission (author/status always server-stamped, never from the
         // client) + public approved-only aggregate for module/dienst detail.
         ['name' => 'review#submit', 'url' => '/api/reviews', 'verb' => 'POST'],
+        // Ask the catalogue (insight-assistant-answers-and-action-trail D1): read only.
+        ['name' => 'ask#ask', 'url' => '/api/ask', 'verb' => 'POST'],
         ['name' => 'review#aggregate', 'url' => '/api/reviews/aggregate', 'verb' => 'GET'],
 
         // ORGANISATION MERGE (gemeentelijke herindeling / leveranciersovername) —
@@ -249,6 +255,9 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // @spec openspec/specs/organisation-merge/spec.md#requirement-both-merge-endpoints-must-be-admin-only-with-an-explicit-per-object-authorization-guard
         ['name' => 'merge#dryRun', 'url' => '/api/organisaties/{uuid}/merge/dry-run', 'verb' => 'POST'],
         ['name' => 'merge#execute', 'url' => '/api/organisaties/{uuid}/merge', 'verb' => 'POST'],
+        // landscape-move-between-organisations: move chosen entries to another organisation, keeping their identity.
+        ['name' => 'ownershipTransfer#plan', 'url' => '/api/ownership-transfers/plan', 'verb' => 'POST'],
+        ['name' => 'ownershipTransfer#execute', 'url' => '/api/ownership-transfers/execute', 'verb' => 'POST'],
 
         // SELF-SERVICE COLLEAGUE ACCESS (multi-org-membership) — beheerder-of-this-
         // organisation gated (authorizeBeheerder() guard in the controller body,
@@ -310,6 +319,8 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         ['name' => 'settings#updateEolSyncConfig', 'url' => '/api/eol-sync/config', 'verb' => 'POST'],
         ['name' => 'settings#triggerEolSync', 'url' => '/api/eol-sync/trigger', 'verb' => 'POST'],
         ['name' => 'settings#getEolSyncStatus', 'url' => '/api/eol-sync/status', 'verb' => 'GET'],
+        // The organisation sync's schedule, last run and running run (operations-sync-status-and-progress).
+        ['name' => 'syncStatus#status', 'url' => '/api/sync/status', 'verb' => 'GET'],
 
         // SERVICE DESK EXCHANGE (sharing-itsm-exchange): status for the CMDB
         // page, set-up and file import for admins. The flows themselves run
@@ -329,6 +340,8 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // @spec openspec/changes/landscape-completeness-score/specs/catalogue-data-quality/spec.md#requirement-req-cdq-003-a-data-quality-page-shows-how-complete-and-current-an-organisation-s-register-is
         ['name' => 'dataQualityReport#index', 'url' => '/api/data-quality', 'verb' => 'GET'],
         // @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-001-stackiq-shall-give-each-reference-component-a-coverage-state-for-one-organisation
+        // @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
+        ['name' => 'referenceComponentCoverage#peers', 'url' => '/api/reference-component-coverage/peers', 'verb' => 'GET'],
         ['name' => 'referenceComponentCoverage#index', 'url' => '/api/reference-component-coverage', 'verb' => 'GET'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode routing)

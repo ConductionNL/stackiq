@@ -20,6 +20,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\ArchiMate;
 
+use OCA\Stackiq\Kernel\Contracts\GemmaStandardLinkerInterface;
 use Psr\Log\LoggerInterface;
 
 /**
@@ -40,7 +41,7 @@ use Psr\Log\LoggerInterface;
  *
  * @spec openspec/specs/archimate-import/spec.md
  */
-class GemmaStandardLinker {
+class GemmaStandardLinker implements GemmaStandardLinkerInterface {
 
 	/**
 	 * Reads the GEMMA facts off one object.

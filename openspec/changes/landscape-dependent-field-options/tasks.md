@@ -8,16 +8,16 @@
 - **acceptance_criteria**:
   - GIVEN a closed-source module WHEN a licence is saved on it THEN OpenRegister refuses with dependent-value-not-allowed
   - GIVEN the merged register WHEN the licence enum and the Open source row are compared THEN they hold the same values
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Settings/DependentFieldOptionsTest.php`)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Settings/DependentFieldOptionsTest.php`)
 
 ### Task 2: Clear disallowed values in existing rows
 - **spec_ref**: openspec/changes/landscape-dependent-field-options/specs/dependent-field-options/spec.md#requirement-req-dfo-002-existing-rows-that-break-a-table-are-cleaned-before-it-applies
 - **files**: `lib/Repair/ClearDisallowedDependentValues.php`, `appinfo/info.xml`
 - **acceptance_criteria**:
   - GIVEN a closed-source module with a licence WHEN the repair step runs THEN its licence is empty and the count is logged
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Repair/ClearDisallowedDependentValuesTest.php`)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Repair/ClearDisallowedDependentValuesTest.php`)
 
 ### Task 3: Adopt the library form support
 - **spec_ref**: openspec/changes/landscape-dependent-field-options/specs/dependent-field-options/spec.md#requirement-req-dfo-003-the-form-offers-only-the-allowed-options

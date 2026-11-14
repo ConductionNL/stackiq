@@ -1,0 +1,23 @@
+{
+ "_comment": "connections-derived-dependencies (REQ-DCN-001). The suggestion ids an organisation dismissed for a usage, so the Suggested connections panel does not offer them again. Written by ConnectionSuggestionService::dismiss() after the per-usage guard; hidden on the form. Suggestions themselves are computed on each request and never stored.",
+ "components": {
+  "schemas": {
+   "usage": {
+    "version": "1.5.11",
+    "properties": {
+     "dismissedConnectionSuggestions": {
+      "type": "array",
+      "items": {
+       "type": "string"
+      },
+      "title": "Dismissed connection suggestions",
+      "description": "Connections this organisation chose not to add to this usage. They are no longer suggested.",
+      "hideOnForm": true,
+      "visible": false,
+      "facetable": false
+     }
+    }
+   }
+  }
+ }
+}
