@@ -218,6 +218,9 @@
 			],
 			"domain": [
 				"domain-1"
+			],
+			"supplier": [
+				"supplier-1"
 			]
 		},
 		"search": "",
@@ -239,6 +242,9 @@
 			],
 			"domain": [
 				"domain-1"
+			],
+			"supplier": [
+				"supplier-1"
 			]
 		},
 		"search": "",
