@@ -208,4 +208,33 @@ class FacetControllerTest extends TestCase {
 		$this->assertSame('zaak', $capturedSearch);
 
 	}//end testGetFacetsForwardsArrayFilterParams()
+
+	/**
+	 * REQ-SFC-003: `supplier[]` reaches FacetService as a filter like the
+	 * other dimensions.
+	 *
+	 * @spec openspec/changes/insight-supplier-facet/specs/supplier-facet/spec.md#requirement-req-sfc-003-the-facet-dimension-set-must-be-the-same-in-the-service-the-controller-and-the-client
+	 *
+	 * @return void
+	 */
+	public function testGetFacetsForwardsTheSupplierFilter(): void {
+		$request = $this->createMock(IRequest::class);
+		$request->method('getParam')->willReturnCallback(
+			fn (string $key) => ['supplier' => ['org-a', 'org-b'], 'domain' => 'Bedrijfsvoering'][$key] ?? null
+		);
+
+		$captured = null;
+		$facetService = $this->createMock(FacetService::class);
+		$facetService->method('getFacets')->willReturnCallback(
+			function (string $schema, array $filters = []) use (&$captured): array {
+				$captured = $filters;
+				return ['_meta' => ['totalMatched' => 0, 'processingTimeMs' => 1.0, 'cached' => false]];
+			}
+		);
+
+		(new FacetController(appName: 'stackiq', request: $request, facetService: $facetService, logger: $this->createMock(LoggerInterface::class)))->getFacets('module');
+
+		$this->assertSame(['org-a', 'org-b'], $captured['supplier']);
+		$this->assertArrayHasKey('domain', $captured);
+	}//end testGetFacetsForwardsTheSupplierFilter()
 }//end class

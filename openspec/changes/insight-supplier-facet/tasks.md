@@ -12,8 +12,8 @@
   - GIVEN a supplier selection WHEN the facets are computed THEN matchedObjectIds holds only that supplier's objects and the supplier counts ignore the supplier selection
   - GIVEN an organisation without a name WHEN the label is built THEN the label is its id
   - GIVEN any request WHEN the organisation labels are read THEN it is one bounded query with an explicit limit
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Service/FacetServiceTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Service/FacetServiceTest.php)
 
 ### Task 2: Move the dimension set together and key the cache on it
 - **spec_ref**: openspec/changes/insight-supplier-facet/specs/supplier-facet/spec.md#requirement-req-sfc-003-the-facet-dimension-set-must-be-the-same-in-the-service-the-controller-and-the-client
@@ -22,8 +22,8 @@
   - GIVEN a request with supplier[] WHEN FacetController parses it THEN the supplier filter reaches FacetService
   - GIVEN the three declarations WHEN the tests run THEN they hold the same five names
   - GIVEN two dimension lists WHEN buildCacheKey() runs for the same request THEN the keys differ
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Controller/FacetControllerTest.php and tests/Unit/Service/FacetServiceTest.php, vitest src/services/facets.spec.js)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Controller/FacetControllerTest.php and tests/Unit/Service/FacetServiceTest.php, vitest src/services/facets.spec.js)
 
 ### Task 3: Show Supplier in the facet sidebar
 - **spec_ref**: openspec/changes/insight-supplier-facet/specs/supplier-facet/spec.md#requirement-req-sfc-002-the-applications-and-services-pages-shall-offer-supplier-as-a-facet-that-narrows-the-list
@@ -33,7 +33,7 @@
   - GIVEN a supplier chosen WHEN the URL updates THEN it carries _gf_supplier, and a reload restores the choice
   - GIVEN a saved facet view with a supplier WHEN it is applied THEN the supplier is chosen again
   - GIVEN a Dutch instance WHEN the sidebar renders THEN the facet title reads Leverancier
-- [ ] Implement
+- [x] Implement
 - [ ] Test (vitest tests/vitest/facetSchema.spec.js and tests/vitest/facetStore.spec.js, Playwright tests/e2e/spec-coverage/supplier-facet.spec.ts)
 
 ### Task 4: Seed suppliers and document the facet

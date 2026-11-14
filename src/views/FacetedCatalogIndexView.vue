@@ -157,6 +157,7 @@ const DIMENSION_LABELS = {
 	standard: () => t('stackiq', 'Standard'),
 	applicationService: () => t('stackiq', 'Application service'),
 	domain: () => t('stackiq', 'Domain'),
+	supplier: () => t('stackiq', 'Supplier'),
 }
 
 /**

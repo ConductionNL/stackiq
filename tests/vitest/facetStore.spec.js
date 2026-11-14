@@ -356,4 +356,34 @@ describe('facets store — saved views', () => {
 		expect(store.module.activeFilters).toEqual({})
 		expect(store.module.search).toBe('')
 	})
+
+describe('facets store — supplier (REQ-SFC-002)', () => {
+	beforeEach(() => {
+		setActivePinia(createPinia())
+	})
+
+	it('keeps a chosen supplier in the URL as _gf_supplier and restores it on reload', () => {
+		const store = useFacetStore()
+		store.setFilter('module', 'supplier', ['org-a'])
+		const query = store.filtersToQuery('module')
+		expect(query).toEqual({ _gf_supplier: ['org-a'] })
+
+		setActivePinia(createPinia())
+		const reloaded = useFacetStore()
+		reloaded.setFiltersFromQuery('module', query)
+		expect(reloaded.module.activeFilters).toEqual({ supplier: ['org-a'] })
+	})
+
+	it('chooses the supplier again when a saved view with one is applied', () => {
+		const store = useFacetStore()
+		store.applyView('module', { query: { filters: { supplier: ['org-b'] }, search: '' } })
+		expect(store.module.activeFilters).toEqual({ supplier: ['org-b'] })
+	})
+
+	it('hands the sidebar each supplier entry with its name as label, not its id', () => {
+		const store = useFacetStore()
+		store.module.data = { supplier: [{ value: 'org-a', label: 'Voorbeeld Name 2', count: 2 }] }
+		expect(store.facetDataFor('module').supplier.values).toEqual([{ value: 'org-a', label: 'Voorbeeld Name 2', count: 2 }])
+	})
+})
 })

@@ -28,6 +28,7 @@ const DIMENSION_LABELS = {
 	standard: () => 'Standard',
 	applicationService: () => 'Application service',
 	domain: () => 'Domain',
+	supplier: () => 'Supplier',
 }
 
 describe('buildFacetDimensionSchema', () => {
@@ -36,12 +37,13 @@ describe('buildFacetDimensionSchema', () => {
 			buildFacetDimensionSchema(DIMENSION_LABELS),
 		)
 
-		expect(filters).toHaveLength(4)
+		expect(filters).toHaveLength(5)
 		expect(filters.map((f) => f.key)).toEqual([
 			'referenceComponent',
 			'standard',
 			'applicationService',
 			'domain',
+			'supplier',
 		])
 	})
 
@@ -55,6 +57,7 @@ describe('buildFacetDimensionSchema', () => {
 			'Standard',
 			'Application service',
 			'Domain',
+			'Supplier',
 		])
 	})
 
@@ -83,5 +86,13 @@ describe('buildFacetDimensionSchema', () => {
 	it('returns an empty properties bag for an empty dimension set', () => {
 		expect(buildFacetDimensionSchema({})).toEqual({ properties: {} })
 		expect(buildFacetDimensionSchema(null)).toEqual({ properties: {} })
+	})
+
+	it('declares in the view the same five dimensions, Supplier included (REQ-SFC-002)', async () => {
+		const { readFileSync } = await import('fs')
+		const view = readFileSync(new URL('../../src/views/FacetedCatalogIndexView.vue', import.meta.url), 'utf8')
+		const block = view.match(/const DIMENSION_LABELS = \{([\s\S]*?)\n\}/)[1]
+		expect([...block.matchAll(/^\t(\w+):/gm)].map((m) => m[1])).toEqual(Object.keys(DIMENSION_LABELS))
+		expect(block).toContain("supplier: () => t('stackiq', 'Supplier')")
 	})
 })

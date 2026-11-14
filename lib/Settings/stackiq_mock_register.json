@@ -674,7 +674,7 @@
         ],
         "hostingJurisdiction": "NL",
         "hostingLocation": "NL",
-        "provider": {},
+        "provider": "@ref:organization-voorbeeld-name-2-2",
         "licentietype": "Closed source",
         "licence": "MIT License",
         "referenceComponents": [
@@ -725,7 +725,7 @@
         ],
         "hostingJurisdiction": "EU",
         "hostingLocation": "EU",
-        "provider": {},
+        "provider": "@ref:organization-voorbeeld-name-2-2",
         "licentietype": "Open source",
         "licence": "GNU General Public License (GPL)",
         "referenceComponents": [
@@ -776,7 +776,7 @@
         ],
         "hostingJurisdiction": "US",
         "hostingLocation": "US",
-        "provider": {},
+        "provider": "@ref:organization-voorbeeld-name-3-3",
         "licentietype": "Closed source",
         "licence": "Apache License 2.0",
         "referenceComponents": [
@@ -1235,7 +1235,7 @@
           "slug": "service-voorbeeld-name-1-1"
         },
         "name": "Voorbeeld Name 1",
-        "provider": {},
+        "provider": "@ref:organization-voorbeeld-name-2-2",
         "type": [
           "Functional management"
         ],
@@ -1260,7 +1260,7 @@
           "slug": "service-voorbeeld-name-2-2"
         },
         "name": "Voorbeeld Name 2",
-        "provider": {},
+        "provider": "@ref:organization-voorbeeld-name-2-2",
         "type": [
           "Application management"
         ],
@@ -1285,7 +1285,7 @@
           "slug": "service-voorbeeld-name-3-3"
         },
         "name": "Voorbeeld Name 3",
-        "provider": {},
+        "provider": "@ref:organization-voorbeeld-name-3-3",
         "type": [
           "Technical management"
         ],
