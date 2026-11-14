@@ -264,7 +264,7 @@ class ModuleVersionPublicationService implements ModuleVersionPublicationService
 	private function readVersionPage(ObjectServiceInterface $objects, ModuleVersionCopyRun $run): ?array {
 		try {
 			return (array) $objects->searchObjects(
-				query: $run->pageQuery(),
+				query: SearchBounds::bounded(query: $run->pageQuery()),
 				_rbac: false,
 				_multitenancy: false
 			);
