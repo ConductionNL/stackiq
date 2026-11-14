@@ -44,6 +44,10 @@
             "description": "Controller for handling offered usage (aangeboden gebruik) API operations"
         },
         {
+            "name": "ask",
+            "description": "A question about the catalogue, answered from the entries the caller may read"
+        },
+        {
             "name": "cmdb-import",
             "description": "CMDB import and cancel, for Nextcloud admins only and CSRF-protected"
         },
@@ -104,6 +108,10 @@
             "description": "Beheerder-gated grant/revoke of organisation membership for an existing Nextcloud user, delegating the actual mutation to OpenRegister"
         },
         {
+            "name": "ownership-transfer",
+            "description": "POST /api/ownership-transfers/plan and /execute: move entries between organisations."
+        },
+        {
             "name": "portfolio-report",
             "description": "Controller for the portfolio rationalization report endpoint"
         },
@@ -134,6 +142,10 @@
         {
             "name": "setup",
             "description": "First-time setup wizard endpoints"
+        },
+        {
+            "name": "usage",
+            "description": "Connection suggestions of a usage: list, accept and dismiss, for the usage's own organisation"
         },
         {
             "name": "view",
@@ -2403,6 +2415,42 @@
                 }
             }
         },
+        "/sync/status": {
+            "get": {
+                "operationId": "sync-status-status",
+                "summary": "The organisation sync's schedule, its last run and the running run",
+                "description": "The interval in seconds, whether the scheduled sync is switched on, the record of the last run and the running run (null when none runs). Nextcloud admins and functional administrators only.",
+                "tags": [
+                    "settings"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The sync status.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "403": {
+                        "description": "The caller may not see the synchronisation.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/eol-sync/trigger": {
             "post": {
                 "operationId": "settings-trigger-eol-sync",
@@ -3683,6 +3731,102 @@
                 ]
             }
         },
+        "/ownership-transfers/execute": {
+            "post": {
+                "operationId": "ownership-transfer-execute",
+                "summary": "Move entries to another organisation, keeping their identity",
+                "description": "Move entries to another organisation, keeping their identity (landscape-move-between-organisations). Re-points @self.organisation and the type's owning field on a full save. Same body and guard as the plan.",
+                "tags": [
+                    "ownership-transfer"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The plan: each entry as move or skip with the reason, and the linked entries that stay behind; on execute also `moved`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/ownership-transfers/plan": {
+            "post": {
+                "operationId": "ownership-transfer-plan",
+                "summary": "Dry run of moving entries to another organisation",
+                "description": "Dry run of moving entries to another organisation (landscape-move-between-organisations). Body: { objects: [{schema, id}], sourceOrganisation, targetOrganisation }. Only a Nextcloud admin, or an organisation administrator who is a member of both organisations, may call it; nothing is written.",
+                "tags": [
+                    "ownership-transfer"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The plan: each entry as move or skip with the reason, and the linked entries that stay behind; on execute also `moved`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
         "/portfolio-report": {
             "get": {
                 "operationId": "portfolio-report-index",
@@ -4100,6 +4244,49 @@
                 }
             }
         },
+        "/reference-component-coverage/peers": {
+            "get": {
+                "operationId": "reference-component-coverage-peers",
+                "summary": "What comparable organisations use per reference component, for `?organisation=`, refused before any query when the user may not read it",
+                "description": "What comparable organisations (same type and inhabitants band, or the same type without an inhabitants value) use per reference component, for `?organisation=`, refused before any query when the user may not read it. Counts are distinct organisations; a count below 3 is null with `fewerThan: 3`, and no other organisation is named.",
+                "tags": [
+                    "reference-component-coverage"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The peer counts, or an error.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                }
+            }
+        },
         "/reviews": {
             "post": {
                 "operationId": "review-submit",
@@ -4204,6 +4391,69 @@
                     }
                 ],
                 "security": []
+            }
+        },
+        "/ask": {
+            "post": {
+                "operationId": "ask-ask",
+                "summary": "Ask a question about the catalogue",
+                "description": "Searches the catalogue entries the caller may read (applications, services, organisations, usages, connections, compliancy and contracts, at most 20) and has the hermiq assistant answer from them. Nothing is written. `sources` holds the entries the reply cites; `searched` everything the answer was grounded on. An empty `searched` means nothing matched and the assistant was not asked.",
+                "tags": [
+                    "ask"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`{sessionId, reply, sources, searched}`; each entry is `{ref, schema, id, title, summary, url}`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/Problem429"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "question"
+                                ],
+                                "properties": {
+                                    "question": {
+                                        "type": "string",
+                                        "maxLength": 2000
+                                    },
+                                    "sessionId": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
         },
         "/settings": {
@@ -5768,6 +6018,188 @@
                         }
                     }
                 }
+            }
+        },
+        "/usages/{uuid}/connection-suggestions": {
+            "get": {
+                "operationId": "connection-suggestion-index",
+                "summary": "The suggested connections of a usage",
+                "description": "Connections the catalogue knows for the usage's application whose other end the organisation uses or is a national provision, and the connections of a usage this one replaces. Only for the organisation that owns the usage.",
+                "tags": [
+                    "usage"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`results`: the suggestions.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "description": "The caller's active organisation is neither the usage's consumer nor a participant; nothing changed."
+                    },
+                    "404": {
+                        "description": "No such usage."
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The usage.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/usages/{uuid}/connection-suggestions/accept": {
+            "post": {
+                "operationId": "connection-suggestion-accept",
+                "summary": "Accept suggested connections",
+                "description": "Adds the chosen connections to the usage; a carried-over draft is created first with status in development.",
+                "tags": [
+                    "usage"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "description": "Suggestion ids; ids that are not current suggestions are ignored."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`accepted`: the connection uuids added.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "description": "The caller's active organisation is neither the usage's consumer nor a participant; nothing changed."
+                    },
+                    "404": {
+                        "description": "No such usage."
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The usage.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
+            }
+        },
+        "/usages/{uuid}/connection-suggestions/dismiss": {
+            "post": {
+                "operationId": "connection-suggestion-dismiss",
+                "summary": "Dismiss suggested connections",
+                "description": "Records the chosen suggestions on the usage so they are not suggested again.",
+                "tags": [
+                    "usage"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "ids": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        },
+                                        "description": "Suggestion ids; ids that are not current suggestions are ignored."
+                                    }
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "`dismissed`: the ids dismissed.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "description": "The caller's active organisation is neither the usage's consumer nor a participant; nothing changed."
+                    },
+                    "404": {
+                        "description": "No such usage."
+                    }
+                },
+                "parameters": [
+                    {
+                        "name": "uuid",
+                        "in": "path",
+                        "required": true,
+                        "description": "The usage.",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ]
             }
         }
     },

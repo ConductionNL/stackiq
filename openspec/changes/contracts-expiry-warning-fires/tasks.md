@@ -10,8 +10,8 @@
   - GIVEN the register WHEN the trigger is read THEN `dedupeFields` is `["endDate"]` and the `endDate` clause is still `withinNext P90D`
   - GIVEN the register WHEN the subject is read THEN `nl` is `Contract verloopt: {{contractNumber}} (einddatum {{endDate}})` and `en` is `Contract expiring: {{contractNumber}} (end date {{endDate}})`
   - GIVEN the register WHEN the versions are read THEN `catalogContract.version` is above 0.1.2 and `info.version` above 2.5.7, with a changelog line naming this change
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Settings/ContractExpiryRuleTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Settings/ContractExpiryRuleTest.php)
 
 ### Task 2: Guard the rule against the schema
 - **spec_ref**: openspec/changes/contracts-expiry-warning-fires/specs/contract-expiry-warning/spec.md#requirement-req-cew-002-the-warning-must-name-the-contract-number-and-the-end-date
@@ -21,8 +21,8 @@
   - GIVEN the merged register WHEN the test runs THEN every field in `trigger.filter` and `trigger.dedupeFields` is a property of `catalogContract`
   - GIVEN the merged register WHEN the test runs THEN `Active` is in the status clause and in the `status` enum
   - GIVEN a copy of the rule with `{{contractNummer}}` WHEN the test's checker runs on it THEN it reports `contractNummer`
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Settings/ContractExpiryRuleTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Settings/ContractExpiryRuleTest.php)
 
 ### Task 3: Live check on a dev instance
 - **spec_ref**: openspec/changes/contracts-expiry-warning-fires/specs/contract-expiry-warning/spec.md#requirement-req-cew-003-the-warning-shall-come-once-per-end-date
@@ -38,7 +38,7 @@
 - **files**: `docs/features/contract-expiry-warning.md`
 - **acceptance_criteria**:
   - GIVEN the docs WHEN a reader opens the page THEN it says who gets the warning, when (90 days before the end date, once per end date) and that the first run after an upgrade warns about every contract already in the window
-- [ ] Implement
+- [x] Implement
 
 ## Verification
 
