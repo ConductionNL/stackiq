@@ -17,8 +17,8 @@
 - **files**: `lib/Settings/softwarecatalogus_register.json`, `src/manifest.json`, `tests/Unit/Settings/OrganizationInhabitantsTest.php`
 - **acceptance_criteria**:
   - GIVEN the organization schema WHEN read THEN it has an optional integer `inhabitants` (minimum 0) shown on the organisation page and form
-- [ ] Implement
-- [ ] Test (PHPUnit `OrganizationInhabitantsTest`)
+- [x] Implement
+- [x] Test (PHPUnit `OrganizationInhabitantsTest`)
 
 ### Task 3: Peer counts per reference component
 - **spec_ref**: openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
@@ -28,8 +28,8 @@
   - GIVEN a count below 3 WHEN returned THEN it is `null` with `fewerThan: 3`, and no organisation id or name appears anywhere in the response
   - GIVEN a caller who is not a member of the organisation WHEN calling THEN it is refused (the check in `OrganisationReportAccess` runs before the query)
   - GIVEN the organisation has no inhabitants value WHEN computing THEN comparable is the same `type`
-- [ ] Implement
-- [ ] Test (PHPUnit `PeerUsageServiceTest`, `ReferenceComponentCoverageControllerTest`)
+- [x] Implement
+- [x] Test (PHPUnit `PeerUsageServiceTest`, `ReferenceComponentCoverageControllerTest`)
 
 ### Task 4: The peers layer, table and side panel line
 - **spec_ref**: openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
