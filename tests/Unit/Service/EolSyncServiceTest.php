@@ -28,6 +28,7 @@ use OCA\Stackiq\Service\EolMatcherService;
 use OCA\Stackiq\Service\EolSyncService;
 use OCA\Stackiq\Service\Settings\EolSyncSettings;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\TechnologyComponentEolStamper;
 use OCP\AppFramework\Utility\ITimeFactory;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
@@ -343,4 +344,83 @@ class EolSyncServiceTest extends TestCase {
 		$this->assertSame(['success' => true, 'config' => self::DEFAULT_CONFIG], $service->updateConfig(['enabled' => false]));
 		$this->assertSame(3, $service->getStatus()['matched']);
 	}//end testConfigAndStatusDelegateToEolSyncSettings()
+
+	/**
+	 * A stamped version also stamps the two components that are it, through a bounded lookup.
+	 *
+	 * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-004-the-end-of-life-sync-shall-stamp-a-components-end-of-support-from-the-software-version-it-is
+	 * @return void
+	 */
+	public function testAStampedVersionStampsItsComponents(): void {
+		$settingsService = $this->createMock(SettingsService::class);
+		$eolSettings = $this->createMock(EolSyncSettings::class);
+		$eolSettings->method('getEolSyncConfig')->willReturn(self::DEFAULT_CONFIG);
+		$settingsService->method('isOpenRegisterInstalled')->willReturn(true);
+		$settingsService->method('getRegisterIdForObjectType')->willReturn(10);
+		$settingsService->method('getSchemaIdForObjectType')->willReturnMap(
+			[
+				['module', 20],
+				['moduleVersion', 21],
+				['technologyComponent', 22],
+			]
+		);
+
+		$components = [
+			['id' => 'db-1', 'name' => 'Database 01', 'class' => 'Database', 'software' => 'mv-uuid-1', 'serialNumber' => 'keep me'],
+			['@self' => ['id' => 'db-2'], 'name' => 'Database 02', 'class' => 'Database', 'software' => 'mv-uuid-1'],
+		];
+		$componentQueries = [];
+		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService->method('searchObjects')->willReturnCallback(
+			function (array $query) use ($components, &$componentQueries): array {
+				$schema = ($query['@self']['schema'] ?? null);
+				if ($schema === 20) {
+					return [['id' => 'module-uuid-1', 'eolProductSlug' => 'postgresql']];
+				}
+				if ($schema === 21) {
+					return [['id' => 'mv-uuid-1', 'module' => 'module-uuid-1', 'version' => '13.4']];
+				}
+				if ($schema === 22) {
+					$componentQueries[] = $query;
+					return $components;
+				}
+				return [];
+			}
+		);
+		$objectService->method('findAll')->willReturn([['product' => 'postgresql', 'cycle' => '13', 'eol' => '2026-03-03']]);
+
+		$saved = [];
+		$objectService->method('saveObject')->willReturnCallback(
+			function (array $object, ?array $extend = [], mixed $register = null, mixed $schema = null, ?string $uuid = null) use (&$saved) {
+				$saved[] = ['schema' => $schema, 'uuid' => $uuid, 'object' => $object];
+				return $this->createMock(\OCA\OpenRegister\Db\ObjectEntity::class);
+			}
+		);
+		$settingsService->method('getObjectService')->willReturn($objectService);
+
+		$service = new EolSyncService(
+			settingsService: $settingsService,
+			eolSyncSettings: $eolSettings,
+			matcher: new EolMatcherService(),
+			timeFactory: $this->timeFactory(),
+			logger: $this->createMock(LoggerInterface::class),
+			componentStamper: new TechnologyComponentEolStamper($settingsService, $this->createMock(LoggerInterface::class))
+		);
+
+		$this->assertSame(1, $service->run()['matched']);
+
+		$this->assertSame([21, 22, 22], array_column($saved, 'schema'));
+		$this->assertSame(['mv-uuid-1', 'db-1', 'db-2'], array_column($saved, 'uuid'));
+		foreach ([1, 2] as $i) {
+			$this->assertSame('2026-03-03', $saved[$i]['object']['endOfSupport']);
+			$this->assertSame('endoflife.date', $saved[$i]['object']['eolSource']);
+			$this->assertSame('2026-07-23T12:00:00+00:00', $saved[$i]['object']['eolUpdatedOn']);
+			$this->assertSame('mv-uuid-1', $saved[$i]['object']['software']);
+		}
+		$this->assertSame('keep me', $saved[1]['object']['serialNumber']);
+
+		$this->assertCount(1, $componentQueries);
+		$this->assertSame('mv-uuid-1', $componentQueries[0]['software']);
+		$this->assertSame(TechnologyComponentEolStamper::LIMIT, $componentQueries[0]['_limit']);
+	}//end testAStampedVersionStampsItsComponents()
 }//end class
