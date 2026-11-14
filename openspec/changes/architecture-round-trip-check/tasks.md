@@ -60,7 +60,9 @@
 - [ ] Implement
 - [ ] Test (`tests/l10n` key parity, screenshot captured with Playwright)
 
-Built: Task 1. `ArchiMateModelComparator::compare()` with the file reading in `ArchiMateModelReader`. Open: tasks 2 to 6. Task 2 has to keep the import's per-step timings, progress phases and cancellation checks while moving the conversion into one method, so it gets its own pass.
+Built: tasks 1 to 4, the implementation of task 5, and of task 6 the feature page and the English and Dutch strings. `ArchiMateModelComparator`/`ArchiMateModelReader` compare two files; `ArchiMateImportService::convertFileToObjects()` is the import's conversion, called by the optimised import; `ArchiMateExportService::generateXmlFromObjects()` is the export's generation, called by `exportArchiMateXml()`; `ArchiMateRoundTripService::check()` runs both modes; `SettingsController::checkArchiMateRoundTrip()` serves `POST /api/archimate/round-trip-check`; `ArchiMateRoundTripCheck.vue` shows the report, tested in `tests/vitest/archiMateRoundTripCheck.spec.js`. The old round-trip endpoint was already gone on development.
+
+Open: the Playwright spec of task 5 and the screenshot of task 6, which need a live instance.
 
 ## Verification
 

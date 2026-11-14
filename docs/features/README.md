@@ -16,7 +16,7 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | [Contract Management](#contract-management) | Track license and service agreements |
 | [Federated Synchronisation](#federated-synchronisation) | Sync catalogue data across organisations and sources |
 | [Automatic User Provisioning](#automatic-user-provisioning) | Create Nextcloud users from catalogue contacts |
-| [ArchiMate Import/Export](#archimate-importexport) | Exchange software landscape data in ArchiMate format |
+| [ArchiMate Import/Export](#archimate-importexport) | Exchange software landscape data in ArchiMate format, and [check a model file](archimate-import-export.md) survives the round trip |
 | [CMDB Import](#cmdb-import) | Import a municipality's TOPdesk CMDB export (xlsx) as applications, suppliers, usages and owners |
 | [Open Data Publishing](#open-data-publishing) | Expose the catalogue as a public open-data API |
 | [GEMMA Compliance](#gemma-compliance) | Built around VNG GEMMA Softwarecatalogus reference |
