@@ -4,14 +4,14 @@
 
 ### Task 1: Add the technologyComponent schema and usage.runsOn
 - **spec_ref**: openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-001-an-organisation-shall-record-technology-components-with-a-class-a-status-and-an-owner
-- **files**: `lib/Settings/register.d/operations-technology-components.json`, `tests/Unit/Settings/TechnologyComponentDeclarationTest.php`, `l10n/en.json`, `l10n/nl.json`
+- **files**: `lib/Settings/softwarecatalogus_register.json` (the schema: a fragment may only overlay a schema the base declares), `lib/Settings/register.d/operations-technology-components.json` (usage.runsOn), `tests/Unit/Settings/TechnologyComponentDeclarationTest.php`, `l10n/en.json`, `l10n/nl.json`
 - **acceptance_criteria**:
   - GIVEN the merged register WHEN technologyComponent is read THEN it has the properties in the design, is in the stackiq register with magicMapping and autoCreateTable, and its lifecycle states equal its status enum
   - GIVEN the merged register WHEN its read rule is read THEN it is organisation-scoped and names no supplier or public group
   - GIVEN the merged register WHEN usage is read THEN it has runsOn and a higher version than before
   - GIVEN a Dutch instance WHEN the form renders THEN the class and status values are Dutch
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Settings/TechnologyComponentDeclarationTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Settings/TechnologyComponentDeclarationTest.php)
 
 ### Task 2: Add the Technology index and detail pages under Applications
 - **spec_ref**: openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-002-the-technology-pages-shall-list-components-and-show-their-relations-both-ways
@@ -31,18 +31,18 @@
   - GIVEN an end of support in the past, within 180 days, later, or empty WHEN supportState() runs THEN it returns ended, ending, supported or unknown
   - GIVEN a virtual machine without a date on an ended host WHEN the worst state is computed THEN it is ended
   - GIVEN the demo usage WHEN /gebruik/:id opens THEN Database 01 is listed as ended
-- [ ] Implement
+- [ ] Implement (`src/utils/technologyLifecycle.js` and its vitest spec are done; the panel and its manifest wiring are not)
 - [ ] Test (vitest tests/vitest/technologyLifecycle.spec.js and Playwright tests/e2e/spec-coverage/technology-components.spec.ts)
 
 ### Task 4: Stamp end of support on components from the EOL sync
 - **spec_ref**: openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-004-the-end-of-life-sync-shall-stamp-a-components-end-of-support-from-the-software-version-it-is
-- **files**: `lib/Service/EolSyncService.php`, `tests/Unit/Service/EolSyncServiceTest.php`
+- **files**: `lib/Service/EolSyncService.php`, `lib/Service/TechnologyComponentEolStamper.php`, `tests/Unit/Service/TechnologyComponentEolStamperTest.php`, `tests/Unit/Service/EolSyncServiceTest.php`
 - **acceptance_criteria**:
   - GIVEN a stamped version with two components pointing at it WHEN the sync saves the version THEN both components carry the date, eolSource and eolUpdatedOn
   - GIVEN a component without software WHEN the sync runs THEN its typed endOfSupport is untouched
   - GIVEN many components WHEN they are looked up THEN the lookup has an explicit limit
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Service/EolSyncServiceTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Service/EolSyncServiceTest.php)
 
 ### Task 5: Seed components and document the feature
 - **spec_ref**: openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state

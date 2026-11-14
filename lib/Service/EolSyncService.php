@@ -61,6 +61,7 @@ class EolSyncService implements EolSyncServiceInterface {
 	 * @param ITimeFactory $timeFactory The time factory (sync-run timestamp).
 	 * @param LoggerInterface $logger The logger.
 	 * @param ConnectionReportService|null $connectionReports Tells integriq what a save or a run met.
+	 * @param TechnologyComponentEolStamper|null $componentStamper Stamps a version's end of support on its technology components.
 	 *
 	 * @spec openspec/changes/adopt-connection-registry/specs/admin-integrations/spec.md#requirement-req-stackiq-conn-002-a-save-asks-integriq-to-look-again-and-a-run-reports-what-it-met
 	 */
@@ -71,6 +72,7 @@ class EolSyncService implements EolSyncServiceInterface {
 		private readonly ITimeFactory $timeFactory,
 		private readonly LoggerInterface $logger,
 		private readonly ?ConnectionReportService $connectionReports = null,
+		private readonly ?TechnologyComponentEolStamper $componentStamper = null,
 	) {
 	}//end __construct()
 
@@ -419,6 +421,7 @@ class EolSyncService implements EolSyncServiceInterface {
 	 * @return void
 	 *
 	 * @spec openspec/specs/eol-feed-integration/spec.md#requirement-stamping-preserves-every-other-field-and-records-provenance
+	 * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-004-the-end-of-life-sync-shall-stamp-a-components-end-of-support-from-the-software-version-it-is
 	 */
 	private function saveStampedVersion(
 		ObjectServiceInterface $objectService,
@@ -446,7 +449,11 @@ class EolSyncService implements EolSyncServiceInterface {
 				'[EolSyncService] Failed to save a stamped moduleVersie — left untouched',
 				['uuid' => $uuid, 'error' => $e->getMessage()]
 			);
+			return;
 		}
+
+		// Operations-technology-components REQ-TCO-004: the components that are this version get its date.
+		$this->componentStamper?->stamp(objectService: $objectService, stampedVersion: $stampedVersion);
 	}//end saveStampedVersion()
 
 	/**
