@@ -243,7 +243,7 @@ class FacetServiceTest extends TestCase {
 
 		$result = $service->getFacets(schema: 'module');
 
-		foreach (['referenceComponent', 'standard', 'applicationService', 'domain'] as $dimension) {
+		foreach (['referenceComponent', 'standard', 'applicationService', 'domain', 'supplier'] as $dimension) {
 			$this->assertArrayHasKey($dimension, $result);
 			$this->assertSame([], $result[$dimension]);
 		}
@@ -760,4 +760,139 @@ class FacetServiceTest extends TestCase {
 		$this->assertSame(1, $result['_meta']['totalMatched']);
 
 	}//end testGetFacetsResolvesDienstFacetsWhenBothLookupsReturnObjectEntityInstances()
+
+	/**
+	 * A service whose own provider is the supplier, and organisations read
+	 * once, bounded, from the configured organisation schema.
+	 *
+	 * @param array      $baseObjects   What the base query returns.
+	 * @param array      $organisations What the organisation read returns.
+	 * @param array|null $orgQueries    Collects the organisation reads.
+	 *
+	 * @return FacetService
+	 */
+	private function supplierService(array $baseObjects, array $organisations, ?array &$orgQueries = null): FacetService {
+		$orgQueries = [];
+		$objectService = $this->createMock(ObjectServiceInterface::class);
+		$objectService->method('searchObjectsPaginated')->willReturn(['results' => $baseObjects, 'total' => count($baseObjects), 'page' => 1, 'pages' => 1]);
+		$objectService->method('searchObjects')->willReturnCallback(
+			function (array $query) use ($organisations, &$orgQueries): array {
+				if (($query['@self']['schema'] ?? null) === 30) {
+					$orgQueries[] = $query;
+					return $organisations;
+				}
+
+				return [];
+			}
+		);
+		$catalogue = $this->createMock(CatalogueLocator::class);
+		$catalogue->method('getVoorzieningenConfig')->willReturn(['register' => '10', 'module_schema' => '20', 'dienst_schema' => '21', 'organisatie_schema' => '30']);
+
+		return $this->makeService(objectService: $objectService, catalogue: $catalogue);
+	}//end supplierService()
+
+	/**
+	 * REQ-SFC-001: three modules from two suppliers give a supplier bucket of
+	 * two, valued by organisation id, labelled by name, counted 2 and 1; the
+	 * names come from one bounded read.
+	 *
+	 * @spec openspec/changes/insight-supplier-facet/specs/supplier-facet/spec.md#requirement-req-sfc-001-the-facet-endpoint-shall-return-a-supplier-facet-with-a-count-per-organisation
+	 *
+	 * @return void
+	 */
+	public function testSupplierFacetCountsPerOrganisation(): void {
+		$service = $this->supplierService(
+			baseObjects: [
+				['id' => 'm1', 'provider' => ['id' => 'org-a', 'name' => 'ignored']],
+				['id' => 'm2', 'provider' => 'org-a'],
+				['id' => 'm3', 'provider' => ['@self' => ['id' => 'org-b']]],
+				['id' => 'm4', 'provider' => []],
+			],
+			organisations: [['id' => 'org-a', 'name' => 'Voorbeeld Name 2'], ['id' => 'org-b', 'name' => 'Voorbeeld Name 3']],
+			orgQueries: $orgQueries
+		);
+
+		$result = $service->getFacets(schema: 'module');
+
+		$this->assertSame(
+			[
+				['value' => 'org-a', 'label' => 'Voorbeeld Name 2', 'count' => 2],
+				['value' => 'org-b', 'label' => 'Voorbeeld Name 3', 'count' => 1],
+			],
+			$result['supplier']
+		);
+		$this->assertCount(1, $orgQueries);
+		$this->assertSame(['org-a', 'org-b'], $orgQueries[0]['id']);
+		$this->assertSame(1000, $orgQueries[0]['_limit']);
+	}//end testSupplierFacetCountsPerOrganisation()
+
+	/**
+	 * Two organisations with the same name stay two entries, and one without
+	 * a name (or not returned) is labelled by its id.
+	 *
+	 * @return void
+	 */
+	public function testSupplierLabelsKeepSameNamedOrganisationsApartAndFallBackToTheId(): void {
+		$service = $this->supplierService(
+			baseObjects: [['id' => 'm1', 'provider' => 'org-a'], ['id' => 'm2', 'provider' => 'org-b'], ['id' => 'm3', 'provider' => 'org-c'], ['id' => 'm4', 'provider' => 'org-d']],
+			organisations: [['id' => 'org-a', 'name' => 'Gemeente'], ['id' => 'org-b', 'name' => 'Gemeente'], ['id' => 'org-c', 'name' => '  ']]
+		);
+
+		$labels = array_column($service->getFacets(schema: 'module')['supplier'], 'label', 'value');
+
+		$this->assertSame(['org-a' => 'Gemeente', 'org-b' => 'Gemeente', 'org-c' => 'org-c', 'org-d' => 'org-d'], $labels);
+	}//end testSupplierLabelsKeepSameNamedOrganisationsApartAndFallBackToTheId()
+
+	/**
+	 * A service counts under its own provider, not its modules' supplier (D3).
+	 *
+	 * @return void
+	 */
+	public function testAServiceCountsUnderItsOwnProvider(): void {
+		$service = $this->supplierService(
+			baseObjects: [['id' => 's1', 'provider' => 'org-svc', 'modules' => ['m9']]],
+			organisations: [['id' => 'org-svc', 'name' => 'Dienstverlener']]
+		);
+
+		$this->assertSame([['value' => 'org-svc', 'label' => 'Dienstverlener', 'count' => 1]], $service->getFacets(schema: 'catalogService')['supplier']);
+	}//end testAServiceCountsUnderItsOwnProvider()
+
+	/**
+	 * A supplier selection narrows matchedObjectIds, and the supplier counts
+	 * themselves ignore that selection (disjunctive, like the others).
+	 *
+	 * @return void
+	 */
+	public function testASupplierSelectionNarrowsTheMatchButNotItsOwnCounts(): void {
+		$service = $this->supplierService(
+			baseObjects: [['id' => 'm1', 'provider' => 'org-a'], ['id' => 'm2', 'provider' => 'org-a'], ['id' => 'm3', 'provider' => 'org-b']],
+			organisations: []
+		);
+
+		$result = $service->getFacets(schema: 'module', filters: ['supplier' => ['org-b']]);
+
+		$this->assertSame(['m3'], $result['_meta']['matchedObjectIds']);
+		$this->assertSame(['org-a' => 2, 'org-b' => 1], array_column($result['supplier'], 'count', 'value'));
+	}//end testASupplierSelectionNarrowsTheMatchButNotItsOwnCounts()
+
+	/**
+	 * REQ-SFC-003: the service and the controller read the same five names,
+	 * and the dimension set is part of the cache key.
+	 *
+	 * @spec openspec/changes/insight-supplier-facet/specs/supplier-facet/spec.md#requirement-req-sfc-003-the-facet-dimension-set-must-be-the-same-in-the-service-the-controller-and-the-client
+	 *
+	 * @return void
+	 */
+	public function testTheDimensionSetIsSharedAndKeysTheCache(): void {
+		$this->assertSame(['referenceComponent', 'standard', 'applicationService', 'domain', 'supplier'], FacetService::DIMENSIONS);
+		$this->assertStringContainsString('FacetService::DIMENSIONS', (string)file_get_contents(__DIR__ . '/../../../lib/Controller/FacetController.php'));
+
+		$service = $this->makeService(objectService: $this->createMock(ObjectServiceInterface::class));
+		$method = new \ReflectionMethod($service, 'buildCacheKey');
+		$method->setAccessible(true);
+		$before = $method->invoke($service, 'module', [], null, null, ['referenceComponent', 'standard', 'applicationService', 'domain']);
+		$after = $method->invoke($service, 'module', [], null, null, FacetService::DIMENSIONS);
+		$this->assertNotSame($before, $after);
+		$this->assertSame($after, $method->invoke($service, 'module', [], null, null));
+	}//end testTheDimensionSetIsSharedAndKeysTheCache()
 }//end class
