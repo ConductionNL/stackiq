@@ -3,9 +3,9 @@
 		"description": "settings-foldout layout"
 	},
 	"relocations": {
+		"SyncStatusMenu": "Organisaties",
 		"Komplianties": "ReportsCompliance",
-		"ComplianceMatrix": "ReportsCompliance",
-		"SyncStatusMenu": "Organisaties"
+		"ComplianceMatrix": "ReportsCompliance"
 	},
 	"removals": [],
 	"settingsSection": []
