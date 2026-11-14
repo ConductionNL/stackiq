@@ -2,7 +2,7 @@
   "openapi": "3.0.0",
   "info": {
     "title": "stackiq demo data",
-    "version": "1.1.0",
+    "version": "1.2.0",
     "description": "Demo data covering every schema this app supplies, offered as the first step of the app's setup walkthrough. Generated from the schemas themselves, so every object satisfies the schema that will validate it."
   },
   "x-openregister": {
@@ -3415,6 +3415,186 @@
         "endsAt": "2026-10-25T02:00:00+02:00",
         "impact": "no impact",
         "status": "completed"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "scenario",
+          "slug": "scenario-voorbeeld-name-1-1"
+        },
+        "name": "Voorbeeld Name 1",
+        "organisation": {},
+        "targetDate": "2026-03-01",
+        "status": "draft",
+        "description": "Voorbeeld markdown 0",
+        "appliedAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "scenario",
+          "slug": "scenario-voorbeeld-name-2-2"
+        },
+        "name": "Voorbeeld Name 2",
+        "organisation": {},
+        "targetDate": "2026-03-02",
+        "status": "proposed",
+        "description": "Voorbeeld markdown 1",
+        "appliedAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "scenario",
+          "slug": "scenario-voorbeeld-name-3-3"
+        },
+        "name": "Voorbeeld Name 3",
+        "organisation": {},
+        "targetDate": "2026-03-03",
+        "status": "adopted",
+        "description": "Voorbeeld markdown 2",
+        "appliedAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "scenarioChange",
+          "slug": "scenariochange-scenariochange-1-1"
+        },
+        "scenario": {},
+        "action": "add",
+        "usage": {},
+        "module": {},
+        "referenceComponents": [
+          {}
+        ],
+        "effectiveDate": "2026-03-01",
+        "note": "Voorbeeld Note 1",
+        "appliedTo": {}
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "scenarioChange",
+          "slug": "scenariochange-scenariochange-2-2"
+        },
+        "scenario": {},
+        "action": "phase out",
+        "usage": {},
+        "module": {},
+        "referenceComponents": [
+          {}
+        ],
+        "effectiveDate": "2026-03-02",
+        "note": "Voorbeeld Note 2",
+        "appliedTo": {}
+      },
+      {
+        "@self": {
+          "register": "stackiq",
+          "schema": "scenarioChange",
+          "slug": "scenariochange-scenariochange-3-3"
+        },
+        "scenario": {},
+        "action": "replace",
+        "usage": {},
+        "module": {},
+        "referenceComponents": [
+          {}
+        ],
+        "effectiveDate": "2026-03-03",
+        "note": "Voorbeeld Note 3",
+        "appliedTo": {}
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "scenario",
+          "slug": "scenario-voorbeeld-name-1-1"
+        },
+        "name": "Voorbeeld Name 1",
+        "organisation": {},
+        "targetDate": "2026-03-01",
+        "status": "draft",
+        "description": "Voorbeeld markdown 0",
+        "appliedAt": "2026-03-01T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "scenario",
+          "slug": "scenario-voorbeeld-name-2-2"
+        },
+        "name": "Voorbeeld Name 2",
+        "organisation": {},
+        "targetDate": "2026-03-02",
+        "status": "proposed",
+        "description": "Voorbeeld markdown 1",
+        "appliedAt": "2026-03-02T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "scenario",
+          "slug": "scenario-voorbeeld-name-3-3"
+        },
+        "name": "Voorbeeld Name 3",
+        "organisation": {},
+        "targetDate": "2026-03-03",
+        "status": "adopted",
+        "description": "Voorbeeld markdown 2",
+        "appliedAt": "2026-03-03T09:00:00+00:00"
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "scenarioChange",
+          "slug": "scenariochange-scenariochange-1-1"
+        },
+        "scenario": {},
+        "action": "add",
+        "usage": {},
+        "module": {},
+        "referenceComponents": [
+          {}
+        ],
+        "effectiveDate": "2026-03-01",
+        "note": "Voorbeeld Note 1",
+        "appliedTo": {}
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "scenarioChange",
+          "slug": "scenariochange-scenariochange-2-2"
+        },
+        "scenario": {},
+        "action": "phase out",
+        "usage": {},
+        "module": {},
+        "referenceComponents": [
+          {}
+        ],
+        "effectiveDate": "2026-03-02",
+        "note": "Voorbeeld Note 2",
+        "appliedTo": {}
+      },
+      {
+        "@self": {
+          "register": "vng-gemma",
+          "schema": "scenarioChange",
+          "slug": "scenariochange-scenariochange-3-3"
+        },
+        "scenario": {},
+        "action": "replace",
+        "usage": {},
+        "module": {},
+        "referenceComponents": [
+          {}
+        ],
+        "effectiveDate": "2026-03-03",
+        "note": "Voorbeeld Note 3",
+        "appliedTo": {}
       }
     ]
   }
