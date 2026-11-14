@@ -62,6 +62,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Service\Organisation\OwnershipMap;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\MergeOrganisatieServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
@@ -102,25 +103,6 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 	private const TOMBSTONE_STATUS = 'merged';
 
 	/**
-	 * Relation types re-pointed via a business-level object field (scalar and/or array).
-	 *
-	 * The optional `schema` key overrides the OpenRegister schema slug when it
-	 * differs from the relation-type key (`aanbod` lives on the `koppeling`
-	 * schema); `walkRelations()` falls back to the key via `?? $type`.
-	 *
-	 * @var array<string, array{field: string, arrayField: string|null, schema?: string}>
-	 */
-	private const FIELD_RELATION_TYPES = [
-		'usage' => ['field' => 'consumer', 'arrayField' => 'participants'],
-		'contactPerson' => ['field' => 'organization', 'arrayField' => null],
-		'aanbod' => ['field' => 'provider', 'arrayField' => null, 'schema' => 'connection'],
-		// The supplier's own applications and services (`provider`, a Vendor
-		// $ref to organization): after a takeover they belong to the target.
-		'module' => ['field' => 'provider', 'arrayField' => null],
-		'catalogService' => ['field' => 'provider', 'arrayField' => null],
-	];
-
-	/**
 	 * The message of each merge request blocker, by blocker type.
 	 *
 	 * @var array<string, string>
@@ -131,20 +113,6 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 		'target-not-found' => 'Target organisation not found.',
 		'source-already-merged' => 'Source organisation has already been merged into a different target.',
 		'target-already-merged' => 'Target organisation has already been merged into another organisation.',
-	];
-
-	/**
-	 * Relation types re-pointed via the OpenRegister system-level `@self.organisation` field,
-	 * as count key => schema slug. Modules and services carry a `provider`
-	 * field too, so their ownership counts under its own key.
-	 *
-	 * @var array<string, string>
-	 */
-	private const SELF_ORGANISATION_RELATION_TYPES = [
-		'catalogContract' => 'catalogContract',
-		'compliancy' => 'compliancy',
-		'moduleOwnership' => 'module',
-		'catalogServiceOwnership' => 'catalogService',
 	];
 
 	/**
@@ -313,7 +281,7 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 		$operationId = $this->progressTracker->startOperation(
 			operationType: 'org_merge',
 			options: [
-				'total_items' => count(self::FIELD_RELATION_TYPES) + count(self::SELF_ORGANISATION_RELATION_TYPES),
+				'total_items' => count(OwnershipMap::FIELD_RELATION_TYPES) + count(OwnershipMap::SELF_ORGANISATION_RELATION_TYPES),
 				'statistics' => [],
 			],
 			ownerUid: $run->actorUid
@@ -357,7 +325,7 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 	 */
 	private function mergeStatus(MergeRun $run): string {
 		$relationSum = 0;
-		foreach (array_merge(array_keys(self::FIELD_RELATION_TYPES), array_keys(self::SELF_ORGANISATION_RELATION_TYPES)) as $type) {
+		foreach (array_merge(array_keys(OwnershipMap::FIELD_RELATION_TYPES), array_keys(OwnershipMap::SELF_ORGANISATION_RELATION_TYPES)) as $type) {
 			$relationSum += ($run->counts[$type] ?? 0);
 		}
 
@@ -417,13 +385,13 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 	private function walkRelations(MergeRun $run): array {
 		$counts = $this->emptyCounts();
 
-		foreach (self::FIELD_RELATION_TYPES as $type => $mapping) {
+		foreach (OwnershipMap::FIELD_RELATION_TYPES as $type => $mapping) {
 			$repoint = $run->fieldRepoint(objectType: ($mapping['schema'] ?? $type), mapping: $mapping);
 			$counts[$type] = $this->repointByField(run: $run, repoint: $repoint);
 			$this->reportTypeProgress(type: $type, count: $counts[$type], commit: $run->commit);
 		}
 
-		foreach (self::SELF_ORGANISATION_RELATION_TYPES as $type => $schemaType) {
+		foreach (OwnershipMap::SELF_ORGANISATION_RELATION_TYPES as $type => $schemaType) {
 			$counts[$type] = $this->repointBySelfOrganisation(run: $run, objectType: $schemaType);
 			$this->reportTypeProgress(type: $type, count: $counts[$type], commit: $run->commit);
 		}
@@ -560,7 +528,7 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 	 * @spec openspec/specs/organisation-merge/spec.md#requirement-execute-must-re-point-every-relation-type-while-preserving-every-unrelated-field-on-each-object
 	 */
 	private function readOwningOrganisation(object $entity): ?string {
-		if (self::hasOrganisationAccessor(entity: $entity) === false) {
+		if (OwnershipMap::hasOrganisationAccessor(entity: $entity) === false) {
 			return null;
 		}
 
@@ -571,18 +539,6 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 
 		return $owningOrganisation;
 	}//end readOwningOrganisation()
-
-	/**
-	 * Whether an entity declares the organisation property or its accessor.
-	 *
-	 * @param object $entity The OpenRegister ObjectEntity to read.
-	 *
-	 * @return bool
-	 */
-	private static function hasOrganisationAccessor(object $entity): bool {
-		return property_exists($entity, 'organisation') === true
-			|| method_exists($entity, 'getOrganisation') === true;
-	}//end hasOrganisationAccessor()
 
 	/**
 	 * The entity's owning organisation as its accessor answers it.
@@ -964,11 +920,11 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 	 */
 	private function emptyCounts(): array {
 		$counts = ['groupMembers' => 0];
-		foreach (array_keys(self::FIELD_RELATION_TYPES) as $type) {
+		foreach (array_keys(OwnershipMap::FIELD_RELATION_TYPES) as $type) {
 			$counts[$type] = 0;
 		}
 
-		foreach (array_keys(self::SELF_ORGANISATION_RELATION_TYPES) as $type) {
+		foreach (array_keys(OwnershipMap::SELF_ORGANISATION_RELATION_TYPES) as $type) {
 			$counts[$type] = 0;
 		}
 
