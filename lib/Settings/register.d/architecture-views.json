@@ -17,7 +17,7 @@
         },
         "schemas": {
             "view": {
-                "version": "0.0.9",
+                "version": "0.0.10",
                 "properties": {
                     "tags": {
                         "type": "array",
@@ -113,10 +113,40 @@
                             }
                         }
                     }
+                },
+                "authorization": {
+                    "read": [
+                        {
+                            "group": "public",
+                            "match": {
+                                "origin": "imported"
+                            },
+                            "crossOrganisation": true
+                        },
+                        {
+                            "group": "public",
+                            "match": {
+                                "origin": {
+                                    "$exists": false
+                                }
+                            },
+                            "crossOrganisation": true
+                        },
+                        "vng-raadpleger",
+                        "software-catalog-users",
+                        "software-catalog-admins",
+                        "organisaties-beheerder",
+                        "organisatie-beheerder",
+                        "gebruik-raadpleger",
+                        "gebruik-beheerder",
+                        "functioneel-beheerder",
+                        "ambtenaar",
+                        "aanbod-beheerder"
+                    ]
                 }
             },
             "element": {
-                "version": "0.0.13",
+                "version": "0.0.14",
                 "properties": {
                     "origin": {
                         "type": "string",
@@ -130,10 +160,40 @@
                         "visible": true,
                         "example": "drawn"
                     }
+                },
+                "authorization": {
+                    "read": [
+                        {
+                            "group": "public",
+                            "match": {
+                                "origin": "imported"
+                            },
+                            "crossOrganisation": true
+                        },
+                        {
+                            "group": "public",
+                            "match": {
+                                "origin": {
+                                    "$exists": false
+                                }
+                            },
+                            "crossOrganisation": true
+                        },
+                        "vng-raadpleger",
+                        "software-catalog-users",
+                        "software-catalog-admins",
+                        "organisaties-beheerder",
+                        "organisatie-beheerder",
+                        "gebruik-raadpleger",
+                        "gebruik-beheerder",
+                        "functioneel-beheerder",
+                        "ambtenaar",
+                        "aanbod-beheerder"
+                    ]
                 }
             },
             "relation": {
-                "version": "0.0.10",
+                "version": "0.0.11",
                 "properties": {
                     "origin": {
                         "type": "string",
@@ -147,6 +207,36 @@
                         "visible": true,
                         "example": "drawn"
                     }
+                },
+                "authorization": {
+                    "read": [
+                        {
+                            "group": "public",
+                            "match": {
+                                "origin": "imported"
+                            },
+                            "crossOrganisation": true
+                        },
+                        {
+                            "group": "public",
+                            "match": {
+                                "origin": {
+                                    "$exists": false
+                                }
+                            },
+                            "crossOrganisation": true
+                        },
+                        "vng-raadpleger",
+                        "software-catalog-users",
+                        "software-catalog-admins",
+                        "organisaties-beheerder",
+                        "organisatie-beheerder",
+                        "gebruik-raadpleger",
+                        "gebruik-beheerder",
+                        "functioneel-beheerder",
+                        "ambtenaar",
+                        "aanbod-beheerder"
+                    ]
                 }
             }
         }

@@ -48,8 +48,8 @@
   - GIVEN no relation of the chosen type between two elements WHEN they are connected THEN one `relation` with `origin` drawn is created
   - GIVEN such a relation exists WHEN they are connected again THEN it is reused
   - GIVEN the view write fails after the relation write WHEN the user saves again THEN no second relation is created
-- [ ] Implement
-- [ ] Test (vitest `architectureViewStore.spec.js`)
+- [x] Implement
+- [x] Test (vitest `architectureViewStore.spec.js`)
 
 ### Task 6: Read-only imported views and Copy to edit
 - **spec_ref**: openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-002-imported-gemma-views-shall-open-read-only-and-shall-be-copied-before-editing

@@ -137,6 +137,38 @@ final class ArchitectureViewsRegisterShapeTest extends TestCase {
 	}//end testTheLifecycleNamesOnlyStatusValues()
 
 	/**
+	 * Public read on view, element and relation covers only GEMMA content: an
+	 * `imported` object or one with no origin. A drawn object is read by the
+	 * signed-in groups, inside their own organisation (REQ-AVE-006).
+	 *
+	 * @return void
+	 */
+	public function testPublicReadCoversOnlyImportedObjects(): void {
+		$merged = self::merged()['components']['schemas'];
+
+		foreach (['view', 'element', 'relation'] as $slug) {
+			$read = $merged[$slug]['authorization']['read'];
+			$public = array_values(array_filter($read, static fn (mixed $rule): bool => is_array($rule) === true && ($rule['group'] ?? null) === 'public'));
+			$this->assertSame(
+				[
+					['group' => 'public', 'match' => ['origin' => 'imported'], 'crossOrganisation' => true],
+					['group' => 'public', 'match' => ['origin' => ['$exists' => false]], 'crossOrganisation' => true],
+				],
+				$public,
+				$slug
+			);
+			$this->assertNotContains('public', $read, $slug);
+			foreach ($read as $rule) {
+				if (is_string($rule) === true) {
+					$this->assertNotSame('public', $rule, $slug);
+				}
+			}
+
+			$this->assertContains('software-catalog-users', $read, $slug);
+		}
+	}//end testPublicReadCoversOnlyImportedObjects()
+
+	/**
 	 * The three changed schemas carry versions above the shipped register's, so the import does not skip them.
 	 *
 	 * @return void
