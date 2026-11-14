@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "stackiq",
     {
@@ -1333,7 +1329,14 @@ OC.L10N.register(
         "Gap, fillable": "Gat, te vullen",
         "Gap": "Gat",
         "Licence": "Licentie",
-        "Software catalogue": "Softwarecatalogus"
+        "Software catalogue": "Softwarecatalogus",
+        "Confirm this entry is current": "Bevestig dat dit gegeven actueel is",
+        "Confirmed as current": "Bevestigd als actueel",
+        "This entry could not be confirmed": "Dit gegeven kon niet worden bevestigd",
+        "You may not change this entry.": "U mag dit gegeven niet wijzigen.",
+        "The confirmation could not be stored.": "De bevestiging kon niet worden opgeslagen.",
+        "When someone last confirmed this entry is current. The freshness rule halves its weight every year after.": "Wanneer iemand voor het laatst bevestigde dat dit gegeven actueel is. De versheidsregel halveert het gewicht daarna elk jaar.",
+        "Data quality score": "Datakwaliteitsscore"
     },
     "nplurals=2; plural=(n != 1);"
 )
