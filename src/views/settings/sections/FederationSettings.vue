@@ -416,7 +416,7 @@ export default defineComponent({
 
 .peer-badge--ok {
 	background-color: var(--color-success, var(--color-primary-element));
-	color: var(--color-primary-element-text, #fff);
+	color: var(--color-primary-element-text);
 }
 
 .peer-badge--stale {

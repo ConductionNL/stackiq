@@ -1042,21 +1042,21 @@ export default {
 }
 
 .status-success {
-	background-color: #d4edda;
-	color: #155724;
-	border: 1px solid #c3e6cb;
+	background-color: var(--color-background-hover);
+	color: var(--color-success-text);
+	border: 1px solid var(--color-success);
 }
 
 .status-tertiary {
-	background-color: #f8f9fa;
-	color: #6c757d;
-	border: 1px solid #dee2e6;
+	background-color: var(--color-background-hover);
+	color: var(--color-text-maxcontrast);
+	border: 1px solid var(--color-border);
 }
 
 .status-warning {
-	background-color: #fff3cd;
-	color: #856404;
-	border: 1px solid #ffeaa7;
+	background-color: var(--color-background-hover);
+	color: var(--color-warning-text);
+	border: 1px solid var(--color-warning);
 }
 
 .group-chip {
@@ -1066,9 +1066,9 @@ export default {
 	border-radius: 12px;
 	font-size: 11px;
 	font-weight: 500;
-	background-color: #e3f2fd;
-	color: #1565c0;
-	border: 1px solid #90caf9;
+	background-color: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
+	border: 1px solid var(--color-primary-element);
 	white-space: nowrap;
 }
 

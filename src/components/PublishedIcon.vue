@@ -49,13 +49,13 @@ export default {
 }
 
 .published-icon-svg {
-	color: var(--color-success, #46ba61);
+	color: var(--color-success);
 	font-weight: bold;
 	font-size: 14px;
 }
 
 .unpublished-icon-svg {
-	color: var(--color-warning, #f39c12);
+	color: var(--color-warning);
 	font-weight: bold;
 	font-size: 14px;
 }

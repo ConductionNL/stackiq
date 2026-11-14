@@ -2107,48 +2107,48 @@ button.omschrijving-item:disabled {
 
 /* Error type colors */
 .error-type-badge.validation {
-	background: #ffebee;
-	color: #c62828;
+	background: var(--color-background-hover);
+	color: var(--color-error-text);
 }
 
 .error-type-badge.schema {
-	background: #e3f2fd;
-	color: #1565c0;
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
 }
 
 .error-type-badge.reference {
-	background: #f3e5f5;
-	color: #7b1fa2;
+	background: var(--color-primary-element-light);
+	color: var(--color-primary-element-light-text);
 }
 
 .error-type-badge.property {
-	background: #e8f5e8;
-	color: #2e7d32;
+	background: var(--color-background-hover);
+	color: var(--color-success-text);
 }
 
 .error-type-badge.constraint {
-	background: #fff3e0;
-	color: #ef6c00;
+	background: var(--color-background-hover);
+	color: var(--color-warning-text);
 }
 
 .error-type-badge.relationship {
-	background: #fce4ec;
-	color: #ad1457;
+	background: var(--color-background-hover);
+	color: var(--color-error-text);
 }
 
 .error-type-badge.data_type {
-	background: #e0f2f1;
-	color: #00695c;
+	background: var(--color-background-hover);
+	color: var(--color-success-text);
 }
 
 .error-type-badge.encoding {
-	background: #f1f8e9;
-	color: #558b2f;
+	background: var(--color-background-hover);
+	color: var(--color-success-text);
 }
 
 .error-type-badge.general {
-	background: #f5f5f5;
-	color: #424242;
+	background: var(--color-background-hover);
+	color: var(--color-text-maxcontrast);
 }
 
 .error-message {

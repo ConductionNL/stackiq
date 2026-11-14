@@ -956,7 +956,7 @@ export default {
 }
 
 .cmv-cell--verified {
-	background: var(--color-success, #2d7d46);
+	background: var(--color-success);
 	background: color-mix(in srgb, var(--color-success) 12%, transparent);
 }
 

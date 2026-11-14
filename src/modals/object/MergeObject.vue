@@ -1468,11 +1468,11 @@ export default {
 
 /* number */
 .codeMirrorContainer.light :deep(.ͼd) {
-	color: #d19a66;
+	color: var(--color-warning-text);
 }
 
 .codeMirrorContainer.dark :deep(.ͼd) {
-	color: #9d6c3a;
+	color: var(--color-warning-text);
 }
 
 /* text cursor */
@@ -1483,50 +1483,50 @@ export default {
 /* selection color */
 .codeMirrorContainer.light :deep(.cm-line)::selection,
 .codeMirrorContainer.light :deep(.cm-line) ::selection {
-	background-color: #d7eaff !important;
-	color: black;
+	background-color: var(--color-primary-element-light) !important;
+	color: var(--color-primary-element-light-text);
 }
 
 .codeMirrorContainer.dark :deep(.cm-line)::selection,
 .codeMirrorContainer.dark :deep(.cm-line) ::selection {
-	background-color: #8fb3e6 !important;
-	color: black;
+	background-color: var(--color-primary-element-light) !important;
+	color: var(--color-primary-element-light-text);
 }
 
 /* string */
 .codeMirrorContainer.light :deep(.cm-line .ͼe)::selection {
-	color: #2d770f;
+	color: var(--color-success-text);
 }
 
 .codeMirrorContainer.dark :deep(.cm-line .ͼe)::selection {
-	color: #104e0c;
+	color: var(--color-success-text);
 }
 
 /* boolean */
 .codeMirrorContainer.light :deep(.cm-line .ͼc)::selection {
-	color: #221199;
+	color: var(--color-primary-element);
 }
 
 .codeMirrorContainer.dark :deep(.cm-line .ͼc)::selection {
-	color: #4026af;
+	color: var(--color-primary-element);
 }
 
 /* null */
 .codeMirrorContainer.light :deep(.cm-line .ͼb)::selection {
-	color: #770088;
+	color: var(--color-primary-element);
 }
 
 .codeMirrorContainer.dark :deep(.cm-line .ͼb)::selection {
-	color: #770088;
+	color: var(--color-primary-element);
 }
 
 /* number */
 .codeMirrorContainer.light :deep(.cm-line .ͼd)::selection {
-	color: #8c5c2c;
+	color: var(--color-warning-text);
 }
 
 .codeMirrorContainer.dark :deep(.cm-line .ͼd)::selection {
-	color: #623907;
+	color: var(--color-warning-text);
 }
 
 /* WCAG 2.3.3 — the selectable-row hover transition is decorative; the

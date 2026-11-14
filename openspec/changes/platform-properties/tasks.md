@@ -32,8 +32,10 @@
 - **acceptance_criteria**:
   - GIVEN `stylelint.config.js` WHEN `npm run stylelint` runs THEN `color-no-hex` fails on a hex colour outside a `var()` fallback
   - GIVEN the 10 files WHEN the rule runs THEN each colour is a Nextcloud theme variable (`--color-primary-element`, `--color-main-text`, `--color-error`, ...), with a hex only as a `var()` fallback
-- [ ] Implement
-- [ ] Test (`npm run stylelint`)
+- [x] Implement
+  - Done. `color-no-hex` is on in `stylelint.config.js`. Stylelint's rule has no `var()` exemption, so the few hex fallbacks went too: every Nextcloud theme variable is always defined. Badges read a theme text colour (`--color-success-text`, `--color-warning-text`, `--color-error-text`, `--color-primary-element-light-text`) on `--color-background-hover` or `--color-primary-element-light`; the JSON editor highlighting reads the same variables, so it follows a dark theme without a separate palette.
+- [x] Test (`npm run stylelint`)
+  - 0 errors over `src/` and `css/`; a probe file with `color: #123456` is refused by `color-no-hex`.
 
 ### Task 4: Lifecycle threshold on the service desk exchange (board SkInstellingenUitwisseling)
 - **spec_ref**: openspec/changes/platform-properties/specs/platform-properties/spec.md#requirement-entries-go-to-outside-systems-only-from-a-chosen-lifecycle-state-req-plat-004

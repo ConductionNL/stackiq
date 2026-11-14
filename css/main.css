@@ -141,7 +141,7 @@
 	user-select: none;
 	color: var(--color-text-maxcontrast);
 	background-color: var(--color-main-background);
-	border-color: #000;
+	border-color: var(--color-border-dark);
 }
 
 .filesListDragDropNoticeWrapper {
