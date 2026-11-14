@@ -32,7 +32,7 @@
 - **files**: `docs/features/move-to-organisation.md`, `docs/images/move-to-organisation.png`
 - **acceptance_criteria**:
   - GIVEN the docs site WHEN a reader opens Move to organisation THEN who may move, the dry run and what stays are explained with a screenshot
-- [ ] Implement
+- [ ] Implement (page `docs/features/move-to-organisation.md` written; the screenshot `docs/images/move-to-organisation.png` needs a running instance and is left)
 - [ ] Test (docs build, screenshot with Playwright)
 
 ## Verification
