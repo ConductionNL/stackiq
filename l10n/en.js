@@ -1379,7 +1379,27 @@ OC.L10N.register(
         "Step flow": "Step flow",
         "Shared": "Shared",
         "{name}, shared by {partner}": "{name}, shared by {partner}",
-        "+{count} more": "+{count} more"
+        "+{count} more": "+{count} more",
+        "Applications in use here": "Applications in use here",
+        "Hardware": "Hardware",
+        "No application in use runs on this component yet": "No application in use runs on this component yet",
+        "Nothing runs on this component yet": "Nothing runs on this component yet",
+        "Platform software": "Platform software",
+        "Runs on this component": "Runs on this component",
+        "Technology": "Technology",
+        "The servers, virtual machines, databases, network devices and other technology your organisation runs, and when their support ends.": "The servers, virtual machines, databases, network devices and other technology your organisation runs, and when their support ends.",
+        "A component it runs on is past its end of support": "A component it runs on is past its end of support",
+        "A component it runs on reaches its end of support within 180 days": "A component it runs on reaches its end of support within 180 days",
+        "Component": "Component",
+        "Every component it runs on is supported": "Every component it runs on is supported",
+        "Loading the components": "Loading the components",
+        "No technology component recorded for this application in use": "No technology component recorded for this application in use",
+        "Support ended": "Support ended",
+        "Support ends within 180 days": "Support ends within 180 days",
+        "Supported": "Supported",
+        "The components could not be loaded.": "The components could not be loaded.",
+        "The end of support of a component it runs on is not known": "The end of support of a component it runs on is not known",
+        "Under {name}:": "Under {name}:"
     },
     "nplurals=2; plural=(n != 1);"
 )

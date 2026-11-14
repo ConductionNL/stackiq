@@ -8,8 +8,8 @@
  * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
  */
 
-import { describe, expect, it } from 'vitest'
-import { exposure, supportState, worse } from '../../src/utils/technologyLifecycle.js'
+import { describe, expect, it, vi } from 'vitest'
+import { exposure, loadUsageExposure, supportState, worse } from '../../src/utils/technologyLifecycle.js'
 
 const TODAY = '2026-11-14'
 
@@ -80,5 +80,48 @@ describe('exposure', () => {
 		expect(worse('supported', 'unknown')).toBe('unknown')
 		expect(worse('ending', 'unknown')).toBe('ending')
 		expect(worse('ended', 'ending')).toBe('ended')
+	})
+})
+
+describe('loadUsageExposure', () => {
+	const store = {
+		usage: { u1: { object: { runsOn: [{ id: 'db' }, 'gone'] } } },
+		technologyComponent: {
+			db: { object: { name: 'Database 01', endOfSupport: '2026-03-03', runsOn: ['vm'] } },
+			vm: { name: 'App server 01', runsOn: ['host'] },
+			host: { name: 'Host 01', endOfSupport: '2029-12-31' },
+		},
+	}
+	const fetchObject = vi.fn(async (type, id) => {
+		if (id === 'gone') {
+			throw new Error('404')
+		}
+		return store[type]?.[id] ?? null
+	})
+
+	it('loads the usage, its components and those they run on, one level down', async () => {
+		fetchObject.mockClear()
+		const result = await loadUsageExposure('u1', fetchObject, TODAY)
+
+		expect(fetchObject.mock.calls).toEqual([
+			['usage', 'u1'],
+			['technologyComponent', 'db'],
+			['technologyComponent', 'vm'],
+			['technologyComponent', 'gone'],
+		])
+		expect(result.state).toBe('ended')
+		expect(result.components).toEqual([
+			{ id: 'db', name: 'Database 01', state: 'ended', through: null, endOfSupport: '2026-03-03' },
+			{ id: 'vm', name: 'App server 01', state: 'unknown', through: 'db', endOfSupport: null },
+			{ id: 'gone', name: 'gone', state: 'unknown', through: null, endOfSupport: null },
+		])
+	})
+
+	it('a usage that runs on nothing is unknown, with no component lookups', async () => {
+		fetchObject.mockClear()
+		const result = await loadUsageExposure('missing', fetchObject, TODAY)
+
+		expect(result).toEqual({ state: 'unknown', components: [] })
+		expect(fetchObject).toHaveBeenCalledTimes(1)
 	})
 })

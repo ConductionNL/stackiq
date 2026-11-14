@@ -143,3 +143,64 @@ export function exposure(runsOn, componentsById = {}, today = new Date()) {
 
 	return { state: rows.map((row) => row.state).reduce(worse, 'supported'), components: rows }
 }
+
+/**
+ * The data of an object the store returned: its `object` when wrapped.
+ *
+ * @param {object|null|undefined} value The object.
+ * @return {object|null}
+ */
+function dataOf(value) {
+	if (!value || typeof value !== 'object') {
+		return null
+	}
+	return value.object && typeof value.object === 'object' ? value.object : value
+}
+
+/**
+ * Load the exposure of one application in use: the usage, the components it
+ * runs on and, one level down, the components those run on. A component that
+ * cannot be loaded keeps its reference and reads `unknown`.
+ *
+ * @param {string} usageId The usage id.
+ * @param {function(string, string): Promise<object|null>} fetchObject Loads one object by schema slug and id.
+ * @param {string|Date} [today] The day to judge on (defaults to now).
+ * @return {Promise<{state: string, components: Array<{id: string|null, name: string, state: string, through: string|null, endOfSupport: string|null}>}>}
+ * @spec openspec/changes/operations-technology-components/specs/technology-components/spec.md#requirement-req-tco-003-an-application-in-use-shall-record-the-components-it-runs-on-and-show-their-support-state
+ */
+export async function loadUsageExposure(usageId, fetchObject, today = new Date()) {
+	const usage = dataOf(await fetchObject('usage', usageId))
+	const runsOn = Array.isArray(usage?.runsOn) ? usage.runsOn : []
+	const componentsById = {}
+	const load = async (reference) => {
+		const id = idOf(reference)
+		if (id === null || componentsById[id]) {
+			return componentsById[id] ?? null
+		}
+		try {
+			const component = dataOf(await fetchObject('technologyComponent', id))
+			if (component) {
+				componentsById[id] = component
+			}
+		} catch {
+			// An unreadable component stays a reference and reads unknown.
+		}
+		return componentsById[id] ?? null
+	}
+
+	for (const reference of runsOn) {
+		const component = await load(reference)
+		for (const lower of Array.isArray(component?.runsOn) ? component.runsOn : []) {
+			await load(lower)
+		}
+	}
+
+	const result = exposure(runsOn, componentsById, today)
+	return {
+		state: result.state,
+		components: result.components.map((row) => ({
+			...row,
+			endOfSupport: (row.id !== null ? componentsById[row.id]?.endOfSupport : null) || null,
+		})),
+	}
+}

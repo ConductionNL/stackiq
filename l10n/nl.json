@@ -1442,6 +1442,26 @@
         "Step flow": "Stappenstroom",
         "Shared": "Gedeeld",
         "{name}, shared by {partner}": "{name}, gedeeld door {partner}",
-        "+{count} more": "+{count} meer"
+        "+{count} more": "+{count} meer",
+        "Applications in use here": "Applicaties in gebruik hier",
+        "Hardware": "Hardware",
+        "No application in use runs on this component yet": "Nog geen applicatie in gebruik draait op deze component",
+        "Nothing runs on this component yet": "Er draait nog niets op deze component",
+        "Platform software": "Platformsoftware",
+        "Runs on this component": "Draait op deze component",
+        "Technology": "Technologie",
+        "The servers, virtual machines, databases, network devices and other technology your organisation runs, and when their support ends.": "De servers, virtuele machines, databases, netwerkapparaten en andere technologie die uw organisatie gebruikt, en wanneer de ondersteuning ervan eindigt.",
+        "A component it runs on is past its end of support": "Een component waarop deze applicatie draait is voorbij het einde van de ondersteuning",
+        "A component it runs on reaches its end of support within 180 days": "Een component waarop deze applicatie draait bereikt binnen 180 dagen het einde van de ondersteuning",
+        "Component": "Component",
+        "Every component it runs on is supported": "Elke component waarop deze applicatie draait wordt ondersteund",
+        "Loading the components": "De componenten worden geladen",
+        "No technology component recorded for this application in use": "Geen technologiecomponent vastgelegd voor deze applicatie in gebruik",
+        "Support ended": "Ondersteuning beëindigd",
+        "Support ends within 180 days": "Ondersteuning eindigt binnen 180 dagen",
+        "Supported": "Ondersteund",
+        "The components could not be loaded.": "De componenten konden niet worden geladen.",
+        "The end of support of a component it runs on is not known": "Het einde van de ondersteuning van een component waarop deze applicatie draait is niet bekend",
+        "Under {name}:": "Onder {name}:"
     }
 }
