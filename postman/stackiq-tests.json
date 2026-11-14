@@ -19109,6 +19109,335 @@
 							}
 						}
 					]
+				},
+				{
+					"name": "Connection suggestions (connections-derived-dependencies)",
+					"item": [
+						{
+							"name": "Pick a usage for the suggestion requests",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "OCS-APIRequest",
+										"value": "true",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{openregister_api}}/objects/{{register_name}}/{{schema_gebruik}}?_limit=1",
+									"host": [
+										"{{openregister_api}}"
+									],
+									"path": [
+										"objects",
+										"{{register_name}}",
+										"{{schema_gebruik}}?_limit=1"
+									]
+								},
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{admin_user}}"
+										},
+										{
+											"key": "password",
+											"value": "{{admin_pass}}"
+										}
+									]
+								}
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"A usage listing answers 200\", function() {",
+											"    pm.response.to.have.status(200);",
+											"});",
+											"const body = pm.response.json();",
+											"const first = (body.results || [])[0];",
+											"const id = first ? (first.id || (first['@self'] || {}).id || first.uuid) : '00000000-0000-0000-0000-000000000000';",
+											"pm.collectionVariables.set('suggestion_usage_id', id);"
+										],
+										"type": "text/javascript"
+									}
+								}
+							]
+						},
+						{
+							"name": "GET suggestions answers a list or refuses another organisation",
+							"request": {
+								"method": "GET",
+								"header": [
+									{
+										"key": "OCS-APIRequest",
+										"value": "true",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{stackiq_api}}/usages/{{suggestion_usage_id}}/connection-suggestions",
+									"host": [
+										"{{stackiq_api}}"
+									],
+									"path": [
+										"usages",
+										"{{suggestion_usage_id}}",
+										"connection-suggestions"
+									]
+								},
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{admin_user}}"
+										},
+										{
+											"key": "password",
+											"value": "{{admin_pass}}"
+										}
+									]
+								}
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"The listing is 200 for the owner or 403 for another organisation\", function() {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]);",
+											"});",
+											"if (pm.response.code === 200) {",
+											"    pm.test(\"Every suggestion has an id and a known reason\", function() {",
+											"        const results = pm.response.json().results;",
+											"        pm.expect(results).to.be.an('array');",
+											"        results.forEach(function (s) {",
+											"            pm.expect(s.id).to.be.a('string').and.not.empty;",
+											"            pm.expect(s.reason).to.be.oneOf(['shared-landscape', 'carry-over']);",
+											"        });",
+											"    });",
+											"}",
+											"if (pm.response.code === 403) {",
+											"    pm.test(\"A refusal says why\", function() {",
+											"        pm.expect(pm.response.json().error).to.be.a('string');",
+											"    });",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							]
+						},
+						{
+							"name": "POST dismiss with no ids changes nothing",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "OCS-APIRequest",
+										"value": "true",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{stackiq_api}}/usages/{{suggestion_usage_id}}/connection-suggestions/dismiss",
+									"host": [
+										"{{stackiq_api}}"
+									],
+									"path": [
+										"usages",
+										"{{suggestion_usage_id}}",
+										"connection-suggestions",
+										"dismiss"
+									]
+								},
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{admin_user}}"
+										},
+										{
+											"key": "password",
+											"value": "{{admin_pass}}"
+										}
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"raw": "{\"ids\": []}"
+								}
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Dismiss is 200 for the owner or 403 for another organisation\", function() {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]);",
+											"});",
+											"if (pm.response.code === 200) {",
+											"    pm.test(\"Nothing is dismissed\", function() {",
+											"        pm.expect(pm.response.json().dismissed).to.eql([]);",
+											"    });",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							]
+						},
+						{
+							"name": "POST accept with no ids changes nothing",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "OCS-APIRequest",
+										"value": "true",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{stackiq_api}}/usages/{{suggestion_usage_id}}/connection-suggestions/accept",
+									"host": [
+										"{{stackiq_api}}"
+									],
+									"path": [
+										"usages",
+										"{{suggestion_usage_id}}",
+										"connection-suggestions",
+										"accept"
+									]
+								},
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{admin_user}}"
+										},
+										{
+											"key": "password",
+											"value": "{{admin_pass}}"
+										}
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"raw": "{\"ids\": []}"
+								}
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Accept is 200 for the owner or 403 for another organisation\", function() {",
+											"    pm.expect(pm.response.code).to.be.oneOf([200, 403, 404]);",
+											"});",
+											"if (pm.response.code === 200) {",
+											"    pm.test(\"Nothing is accepted\", function() {",
+											"        pm.expect(pm.response.json().accepted).to.eql([]);",
+											"    });",
+											"}"
+										],
+										"type": "text/javascript"
+									}
+								}
+							]
+						},
+						{
+							"name": "POST accept for an unknown usage is 404",
+							"request": {
+								"method": "POST",
+								"header": [
+									{
+										"key": "OCS-APIRequest",
+										"value": "true",
+										"type": "text"
+									},
+									{
+										"key": "Content-Type",
+										"value": "application/json",
+										"type": "text"
+									}
+								],
+								"url": {
+									"raw": "{{stackiq_api}}/usages/00000000-0000-0000-0000-000000000000/connection-suggestions/accept",
+									"host": [
+										"{{stackiq_api}}"
+									],
+									"path": [
+										"usages",
+										"00000000-0000-0000-0000-000000000000",
+										"connection-suggestions",
+										"accept"
+									]
+								},
+								"auth": {
+									"type": "basic",
+									"basic": [
+										{
+											"key": "username",
+											"value": "{{admin_user}}"
+										},
+										{
+											"key": "password",
+											"value": "{{admin_pass}}"
+										}
+									]
+								},
+								"body": {
+									"mode": "raw",
+									"raw": "{\"ids\": [\"x\"]}"
+								}
+							},
+							"response": [],
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"An unknown usage is not found\", function() {",
+											"    pm.response.to.have.status(404);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							]
+						}
+					]
 				}
 			]
 		},
