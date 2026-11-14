@@ -21,7 +21,7 @@
   - GIVEN `/store` WHEN opened from an old link THEN it redirects to the Extensions tab
 - [x] Implement (the Store page renders FeaturesRoadmapTabs with `redirectToTab: extensions`, which replaces the route with FeaturesRoadmap `?tab=extensions`; StoreMenu keeps routing to Store, so both the menu and old `/store` links land on the tab)
 - [ ] Test (`tests/validate-manifest.js`, Playwright `tests/e2e/spec-coverage/features-roadmap.spec.ts`)
-  - `tests/validate-manifest.js` app rule and the vitest redirect case are in; the Playwright spec is left.
+  - `tests/validate-manifest.js` app rule and the vitest redirect case are in. The Playwright cases (`?tab=extensions` opens the Extensions tab; an old `/store` link redirects to it) are written in `tests/e2e/spec-coverage/features-roadmap.spec.ts` but not run here: they need a live instance.
 
 ### Task 3: Tag and test the status groups
 - **spec_ref**: openspec/changes/features-roadmap-page/specs/features-roadmap/spec.md#requirement-the-features-and-roadmap-page-groups-the-apps-features-by-status-req-frm-001
