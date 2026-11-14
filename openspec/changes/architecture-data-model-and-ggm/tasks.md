@@ -10,8 +10,8 @@
   - GIVEN the merged register WHEN it loads THEN `element.attributes` has name, dataType, isKey and description, and `relation` has both cardinality enums
   - GIVEN the fragment WHEN it is compared with development THEN `usage`, `element` and `relation` carry bumped versions
   - GIVEN a fresh install WHEN the seed runs THEN the two own entities, their relation and the usage link exist
-- [ ] Implement
-- [ ] Test (PHPUnit `DataModelRegisterShapeTest`, `RegisterFragmentMergeTest`)
+- [x] Implement
+- [x] Test (PHPUnit `DataModelRegisterShapeTest`, `RegisterFragmentMergeTest`)
 
 ### Task 2: Data model index and entity page
 - **spec_ref**: openspec/changes/architecture-data-model-and-ggm/specs/data-model-and-ggm/spec.md#requirement-req-dmg-001-stackiq-shall-show-the-data-entities-of-the-imported-model-on-a-data-model-page
