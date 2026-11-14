@@ -30,8 +30,8 @@
   - GIVEN three classifying organisations WHEN the summary runs THEN it returns counts per level per aspect and overall, and no organisation name or id
   - GIVEN two WHEN the summary runs THEN it returns only the organisation count
   - GIVEN a user of a supplier WHEN they call the summary THEN they get 403, and a municipal user gets 200
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Service/UsageClassificationServiceTest.php and tests/Unit/Controller/UsageClassificationControllerTest.php)
+- [x] Implement
+- [x] Test (PHPUnit tests/Unit/Service/UsageClassificationServiceTest.php and tests/Unit/Controller/UsageClassificationControllerTest.php)
 
 ### Task 4: Add the panels and the usage list column
 - **spec_ref**: openspec/changes/security-baseline-classification/specs/baseline-classification/spec.md#requirement-req-bcl-003-stackiq-shall-suggest-the-levels-from-gemmas-reference-components
