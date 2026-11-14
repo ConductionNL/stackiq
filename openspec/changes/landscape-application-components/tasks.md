@@ -8,8 +8,10 @@
 - **acceptance_criteria**:
   - GIVEN component C of application A WHEN A is read THEN its components list holds C
   - GIVEN application A WHEN a user sets A part of A THEN the save is refused with a message
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Settings/ApplicationComponentsFragmentTest.php`; `tests/Unit/Service/ModuleRegistrationServiceTest.php` cycle case if the service check is used)
+- [x] Implement
+  - `lib/Settings/register.d/application-components.json` adds `partOf` (related module, `x-relation-filter` on the same provider, `inversedBy: components`) and the computed `components` list. The cycle check is in `ModuleComponentGuard` behind a new `ModuleComponentListener` on `ObjectCreatingEvent`/`ObjectUpdatingEvent`, because `ModuleRegistrationService` runs only after the save. The demo application with two components in the mock register is not seeded yet.
+- [x] Test (PHPUnit `tests/Unit/Settings/ApplicationComponentsFragmentTest.php`; `tests/Unit/Service/ModuleRegistrationServiceTest.php` cycle case if the service check is used)
+  - `tests/Unit/Settings/ApplicationComponentsFragmentTest.php`, `tests/Unit/Service/ModuleComponentGuardTest.php`, `tests/Unit/EventListener/ModuleComponentListenerTest.php`.
 
 ### Task 2: Components on the application page and the list filter
 - **spec_ref**: openspec/changes/landscape-application-components/specs/application-components/spec.md#requirement-req-acm-002-the-application-page-lists-its-components
@@ -17,7 +19,8 @@
 - **acceptance_criteria**:
   - GIVEN application A with two components WHEN its page opens THEN the Components list shows both
   - GIVEN the Applications list WHEN it opens THEN components are hidden until the user picks All, including components
-- [ ] Implement
+- [x] Implement
+  - `ModuleDetail` gains the `md-components` list (filter `partOf: @objectId`, Add component; the create form seeds `partOf` from the filter) and shows `partOf` in its data widget. The `Modules` list opens on "Whole applications" (`partOf: IS NULL`) and offers "All, including components". English and Dutch strings were added to `l10n/en.json`/`nl.json`, and their `.js` was rebuilt.
 - [ ] Test (Playwright `tests/e2e/workflows/application-components.spec.ts`)
 
 ### Task 3: Documentation

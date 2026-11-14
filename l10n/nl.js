@@ -1333,7 +1333,14 @@ OC.L10N.register(
         "Gap, fillable": "Gat, te vullen",
         "Gap": "Gat",
         "Licence": "Licentie",
-        "Software catalogue": "Softwarecatalogus"
+        "Software catalogue": "Softwarecatalogus",
+        "Add component": "Component toevoegen",
+        "This application has no components": "Deze applicatie heeft geen componenten",
+        "Whole applications": "Hele applicaties",
+        "All, including components": "Alle, ook componenten",
+        "Part of": "Onderdeel van",
+        "The application this one is a component of, such as the case system a portal belongs to.": "De applicatie waarvan deze een component is, zoals het zaaksysteem waar een portaal bij hoort.",
+        "The applications that are a component of this one.": "De applicaties die een component van deze applicatie zijn."
     },
     "nplurals=2; plural=(n != 1);"
 )

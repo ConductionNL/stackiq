@@ -91,6 +91,10 @@ final class ListenerRegistrar {
 		// A contact person only from someone who may add members to its organisation.
 		$context->registerEventListener(ObjectCreatingEvent::class, ContactPersonOrganisationListener::class);
 		$context->registerEventListener(ObjectUpdatingEvent::class, ContactPersonOrganisationListener::class);
+
+		// An application cannot be part of itself or of one of its components (landscape-application-components).
+		$context->registerEventListener(ObjectCreatingEvent::class, ModuleComponentListener::class);
+		$context->registerEventListener(ObjectUpdatingEvent::class, ModuleComponentListener::class);
 		$context->registerEventListener(ObjectUpdatedEvent::class, ModuleRegistrationSubscriber::class);
 
 		// Queue the owner resolution when a supplier announces maintenance (lifecycle-maintenance-and-supplier-roadmap).
