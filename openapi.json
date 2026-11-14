@@ -68,6 +68,10 @@
             "description": "Serves one organisation's data quality report"
         },
         {
+            "name": "entry-confirmation",
+            "description": "Confirm an application or usage is current."
+        },
+        {
             "name": "facet",
             "description": "Controller for the GEMMA-dimension facet aggregation endpoint"
         },
@@ -1992,6 +1996,78 @@
                     },
                     "500": {
                         "$ref": "#/components/responses/Problem500"
+                    }
+                }
+            }
+        },
+        "/data-quality/confirm/{kind}/{id}": {
+            "post": {
+                "operationId": "entry-confirmation-confirm",
+                "summary": "Confirm the entry is current",
+                "description": "Sets lastConfirmedAt of one application (module) or usage to now and nothing else, so OpenRegister rescores it. Only a user who may update the entry can confirm it.",
+                "tags": [
+                    "entry-confirmation"
+                ],
+                "parameters": [
+                    {
+                        "name": "kind",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "module",
+                                "usage"
+                            ]
+                        },
+                        "description": "The kind of entry."
+                    },
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "The entry's id."
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "The moment stored, as `{lastConfirmedAt}`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "properties": {
+                                        "lastConfirmedAt": {
+                                            "type": "string",
+                                            "format": "date-time"
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    },
+                    "404": {
+                        "$ref": "#/components/responses/Problem404"
+                    },
+                    "500": {
+                        "$ref": "#/components/responses/Problem500"
+                    },
+                    "503": {
+                        "description": "OpenRegister or its configuration is unavailable."
                     }
                 }
             }

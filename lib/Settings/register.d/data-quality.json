@@ -1,5 +1,5 @@
 {
-  "_comment": "landscape-completeness-score (board SkDatakwaliteit). The rules OpenRegister scores a usage by on every save, and the body fields it writes the score to. The Data quality page (GET /api/data-quality) reads these same rules to count, per rule, how many of an organisation's usages meet them. The module schema already declared its rules; it gets the body fields so its score can be listed too.",
+  "_comment": "landscape-completeness-score (board SkDatakwaliteit). The rules OpenRegister scores a usage by on every save, and the body fields it writes the score to. The Data quality page (GET /api/data-quality) reads these same rules to count, per rule, how many of an organisation's usages meet them. The module schema already declared its rules; it gets the body fields so its score can be listed too, and lastConfirmedAt with a freshness rule appended to its rules (lists concatenate), so Confirm this entry is current resets an application's freshness.",
   "components": {
     "schemas": {
       "usage": {
@@ -49,8 +49,23 @@
         }
       },
       "module": {
-        "version": "0.3.11",
+        "version": "0.3.13",
+        "configuration": {
+          "x-openregister-quality": {
+            "rules": [
+              { "type": "freshness", "field": "lastConfirmedAt", "halfLifeDays": 365, "weight": 3 }
+            ]
+          }
+        },
         "properties": {
+          "lastConfirmedAt": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Last confirmed",
+            "description": "When someone last confirmed this entry is current. The freshness rule halves its weight every year after.",
+            "visible": true,
+            "order": 90
+          },
           "qualityScore": {
             "type": "number",
             "minimum": 0,

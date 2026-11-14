@@ -518,6 +518,7 @@
 					{ "id": "md-connections-out", "type": "object-list", "title": "Connections from this application", "icon": "LinkVariant", "content": { "register": "@resolve:voorzieningen_register", "schema": "connection", "filter": { "moduleA": "@objectId" }, "columns": [ { "key": "moduleB", "label": "To application", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "module", "labelField": "name" } }, { "key": "nonMunicipalProvision", "label": "To national provision" }, { "key": "type", "label": "Type" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "KoppelingDetail", "viewAllRoute": "Koppelingen", "viewAllQuery": { "moduleA": "@objectId" }, "allowCreate": false, "emptyText": "No connections start at this application" } },
 					{ "id": "md-connections-in", "type": "object-list", "title": "Connections to this application", "icon": "LinkVariant", "content": { "register": "@resolve:voorzieningen_register", "schema": "connection", "filter": { "moduleB": "@objectId" }, "columns": [ { "key": "moduleA", "label": "From application", "widget": "fkResolve", "widgetProps": { "register": "@resolve:voorzieningen_register", "schema": "module", "labelField": "name" } }, { "key": "type", "label": "Type" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "KoppelingDetail", "viewAllRoute": "Koppelingen", "viewAllQuery": { "moduleB": "@objectId" }, "allowCreate": false, "emptyText": "No connections end at this application" } },
 					{ "id": "md-ai-systems", "type": "object-list", "title": "AI systems", "icon": "RobotOutline", "content": { "register": "@resolve:voorzieningen_register", "schema": "aiSystem", "filter": { "module": "@objectId" }, "columns": [ { "key": "kind", "label": "Kind" }, { "key": "aiActRiskCategory", "label": "AI Act risk category" }, { "key": "status", "label": "Status" } ], "limit": 25, "rowRoute": "AiSystemDetail", "viewAllRoute": "AiSystems", "viewAllQuery": { "module": "@objectId" }, "allowCreate": false, "emptyText": "No AI systems registered for this application" } },
+					{ "id": "md-quality", "type": "data", "title": "Data quality", "icon": "ClipboardCheckOutline", "content": { "columns": 3, "include": [ "qualityStatus", "qualityScore", "lastConfirmedAt" ], "overrides": { "qualityStatus": { "editable": false }, "qualityScore": { "editable": false }, "lastConfirmedAt": { "editable": false } } } },
 					{ "id": "md-maintenance", "type": "object-list", "title": "Planned maintenance", "icon": "Calendar", "content": { "register": "@resolve:voorzieningen_register", "schema": "maintenanceWindow", "filter": { "module": "@objectId" }, "sort": { "field": "startsAt", "dir": "asc" }, "columns": [ { "key": "title", "label": "Title" }, { "key": "startsAt", "label": "Starts at" }, { "key": "endsAt", "label": "Ends at" }, { "key": "impact", "label": "Impact" }, { "key": "status", "label": "Status" } ], "limit": 25, "addLabel": "Announce maintenance", "formIncludeFields": [ "title", "description", "moduleVersion", "startsAt", "endsAt", "impact" ], "emptyText": "No maintenance planned on this application" } }
 				],
 				"layout": [
@@ -530,7 +531,11 @@
 					{ "id": "7", "widgetId": "md-connections-out", "gridX": 0, "gridY": 16, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "8", "widgetId": "md-connections-in", "gridX": 6, "gridY": 16, "gridWidth": 6, "gridHeight": 4 },
 					{ "id": "9", "widgetId": "md-ai-systems", "gridX": 0, "gridY": 20, "gridWidth": 12, "gridHeight": 4 },
-					{ "id": "10", "widgetId": "md-maintenance", "gridX": 0, "gridY": 24, "gridWidth": 12, "gridHeight": 4 }
+					{ "id": "10", "widgetId": "md-maintenance", "gridX": 0, "gridY": 24, "gridWidth": 12, "gridHeight": 4 },
+					{ "id": "11", "widgetId": "md-quality", "gridX": 0, "gridY": 28, "gridWidth": 12, "gridHeight": 3 }
+				],
+				"headerActions": [
+					{ "id": "confirm-current", "label": "Confirm this entry is current", "icon": "CheckCircle", "type": "api-call", "url": "/apps/stackiq/api/data-quality/confirm/module/@objectId", "method": "POST", "successMessage": "Confirmed as current", "errorMessage": "This entry could not be confirmed" }
 				],
 				"bodyWidgets": [
 					{ "id": "md-roadmap", "component": "ProductRoadmap", "props": { "objectId": "@objectId" }, "placement": "end", "colSpan": 12 },
@@ -633,7 +638,8 @@
 					{ "key": "licentietype", "label": "License type" },
 					{ "key": "publicationDate", "label": "Publication date" },
 					{ "key": "bbnLevel", "label": "BBN level" },
-					{ "key": "dpiaStatus", "label": "DPIA status" }
+					{ "key": "dpiaStatus", "label": "DPIA status" },
+					{ "key": "qualityStatus", "label": "Data quality" }
 				],
 				"quickFilters": [
 					{

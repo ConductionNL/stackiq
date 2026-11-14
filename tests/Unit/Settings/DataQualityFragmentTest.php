@@ -61,4 +61,19 @@ final class DataQualityFragmentTest extends TestCase {
 		self::assertTrue(version_compare($schemas['module']['version'], '0.3.11', '>='));
 		self::assertArrayHasKey('qualityScore', $schemas['module']['properties']);
 	}//end testTheMergedVersionsRiseSoTheImportRuns()
+
+	public function testTheModuleRulesGainFreshnessOnLastConfirmedAt(): void {
+		$module = $this->merged()['components']['schemas']['module'];
+		$rules = $module['configuration']['x-openregister-quality']['rules'];
+
+		// The base register's required rules stay; the fragment appends freshness.
+		self::assertContains('name', array_column($rules, 'field'));
+		self::assertContains(['type' => 'freshness', 'field' => 'lastConfirmedAt', 'halfLifeDays' => 365, 'weight' => 3], $rules);
+		foreach ($rules as $rule) {
+			self::assertArrayHasKey($rule['field'], $module['properties'], 'rule on a field module does not declare: ' . $rule['field']);
+		}
+
+		self::assertSame('date-time', $module['properties']['lastConfirmedAt']['format']);
+		self::assertTrue(version_compare($module['version'], '0.3.13', '>='));
+	}//end testTheModuleRulesGainFreshnessOnLastConfirmedAt()
 }//end class

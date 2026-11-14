@@ -1260,6 +1260,13 @@
         "Gap, fillable": "Gap, fillable",
         "Gap": "Gap",
         "Licence": "Licence",
-        "Software catalogue": "Software catalogue"
+        "Software catalogue": "Software catalogue",
+        "Confirm this entry is current": "Confirm this entry is current",
+        "Confirmed as current": "Confirmed as current",
+        "This entry could not be confirmed": "This entry could not be confirmed",
+        "You may not change this entry.": "You may not change this entry.",
+        "The confirmation could not be stored.": "The confirmation could not be stored.",
+        "When someone last confirmed this entry is current. The freshness rule halves its weight every year after.": "When someone last confirmed this entry is current. The freshness rule halves its weight every year after.",
+        "Data quality score": "Data quality score"
     }
 }
