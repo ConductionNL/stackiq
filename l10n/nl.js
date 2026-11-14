@@ -5,6 +5,8 @@
 OC.L10N.register(
     "stackiq",
     {
+        "No mail transport is set, so registration, activation and account mails are not sent.": "Er is geen mailtransport ingesteld, dus registratie-, activatie- en accountmails worden niet verstuurd.",
+        "Set up the mail transport": "Mailtransport instellen",
         "Licence metric": "Licentiemetriek",
         "What one licence covers, as the contract with the supplier states it.": "Waar één licentie voor geldt, zoals het contract met de leverancier het vastlegt.",
         "Licences bought": "Gekochte licenties",

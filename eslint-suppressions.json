@@ -437,7 +437,7 @@
       "count": 1
     },
     "no-console": {
-      "count": 9
+      "count": 3
     }
   },
   "src/views/settings/sections/EolSyncSettings.vue": {
