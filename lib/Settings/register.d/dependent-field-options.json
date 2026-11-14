@@ -1,0 +1,58 @@
+{
+  "_comment": "landscape-dependent-field-options (REQ-DFO-001). Which values of one option list are allowed for each value of another, as x-openregister-dependent-values tables OpenRegister enforces on save: a module's licence only when its licentietype is Open source, an organisation's samenwerkingtype only when its type is Collaboration. A controlling value not listed leaves the field unconstrained. The Repair step ClearDisallowedDependentValues reads these same tables and clears existing values that break them before the register import. A value added to the licence or samenwerkingtype enum must also be added to its row here; DependentFieldOptionsTest compares them.",
+  "components": {
+    "schemas": {
+      "module": {
+        "version": "0.3.13",
+        "properties": {
+          "licence": {
+            "x-openregister-dependent-values": {
+              "controlledBy": "licentietype",
+              "allowed": {
+                "Open source": [
+                  "MIT License",
+                  "GNU General Public License (GPL)",
+                  "Apache License 2.0",
+                  "BSD License (Berkeley Software Distribution)",
+                  "European Union Public Licence (EUPL), version 1.2"
+                ],
+                "Closed source": []
+              }
+            }
+          }
+        }
+      },
+      "organization": {
+        "version": "0.5.6",
+        "properties": {
+          "samenwerkingtype": {
+            "x-openregister-dependent-values": {
+              "controlledBy": "type",
+              "allowed": {
+                "Municipality": [],
+                "Supplier": [],
+                "Collaboration": [
+                  "Implementing organisation",
+                  "Social Domain collaboration",
+                  "Shared Service Center",
+                  "Environmental agency",
+                  "ICT (for example Shared Service Center)",
+                  "Municipal reorganisation (planned)",
+                  "Joint Arrangement (collaboration across multiple domains)",
+                  "Joint Arrangement",
+                  "DVO",
+                  "Central municipality arrangement",
+                  "Tax collaboration",
+                  "Operations organisation",
+                  "Archive service (regional)",
+                  "Administrative merger"
+                ],
+                "Community": []
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
