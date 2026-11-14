@@ -2,18 +2,18 @@
 
 ## 1. Derived layer (register fragment)
 
-- [ ] 1.1 Add `lib/Settings/register.d/mcp-full-action-surface.json`:
+- [x] 1.1 Add `lib/Settings/register.d/mcp-full-action-surface.json`:
   `configuration.x-openregister-mcp` with `search`/`get` (`scope: read`,
   honest hints, explicit `reach: user`) on the 14 schemas in design.md §3,
   plus `create`/`update` (`reach: instance`) on `vulnerability` only.
   Assert (script or PHPUnit) that every schema key in the fragment exists
   in the HEAD monolith — none of the retired Dutch slugs — and validate
   with `python3 -m json.tool`.
-- [ ] 1.2 Re-derive every `search.filters` list from the HEAD `properties`
+- [x] 1.2 Re-derive every `search.filters` list from the HEAD `properties`
   maps (design.md table — every name verified against HEAD at
   proposal time; re-verify at apply time); the merged register must pass
   `McpAnnotationValidator` with zero unknown-filter errors.
-- [ ] 1.3 Agent-facing English `description` prose per verb per schema
+- [x] 1.3 Agent-facing English `description` prose per verb per schema
   (what the LLM reads to choose the tool), reusing the superseded
   change's descriptions where the schema survived the rename.
 - [ ] 1.4 Import on the dev instance and verify the derived tool listing:
@@ -96,7 +96,7 @@
   validation error, zero service calls.
 - [ ] 6.4 PHPUnit `submitReview` pending-forcing;
   `previewOrganisationMerge` never reaches `execute()`.
-- [ ] 6.5 PHPUnit fragment/merge: schema key set unchanged after merge
+- [x] 6.5 PHPUnit fragment/merge: schema key set unchanged after merge
   (no orphan Dutch slugs); vulnerability the only schema with write verbs.
 - [ ] 6.6 `composer check:strict` clean (PHPCS, PHPMD, Psalm, PHPStan) —
   fix pre-existing issues encountered in touched files.
@@ -110,7 +110,13 @@ Built in a first slice: 2.1 to 2.3, 3.1, 3.3 and 5.1, plus `stackiq.getContractA
 - `McpAdminGate` denies on any failing admin check.
 - `tests/Unit/Mcp/McpContractToolsTest.php` covers the non-owning, owning, admin, unauthenticated, bad-argument and unconfigured cases.
 
-Open: the derived register fragment (1.x), the publication gate (3.2), the other read tools (4.1), the remaining write tools (5.2 to 5.5), and the tests that depend on them.
+Second slice (continuation), the derived fragment:
+- The slugs moved again after the proposal: `service`, `contract` and `assessment` are `catalogService`, `catalogContract` and `software-review` at HEAD, so the derived ids are `stackiq.catalogService.*`, `stackiq.catalogContract.*` and `stackiq.software-review.*`. Every filter in the design table was re-verified against those properties and all exist.
+- The annotation dialect (`McpVerbAnnotation`) refuses any key besides description, scope, filters and the three hints, so the fragment cannot write `reach`. OpenRegister's `ToolReachResolver` infers `user` for a derived `search`/`get` id and `instance` for `create`/`update`, which is the reach design.md §3 and §4 ask for.
+- `tests/Unit/Mcp/McpFragmentTest.php` checks the fragment against the merged register: same schema key set with and without it, no retired slug, every filter a real property, the closed verb/scope vocabulary, write verbs on `vulnerability` only, the AMEF schemas and `sector` unannotated.
+- 1.4 (import on a dev instance) is a live task and stays open.
+
+Open after the fragment: the publication gate (3.2), the other read tools (4.1), the remaining write tools (5.2 to 5.5), and the tests that depend on them.
 
 ## 7. Supersession + spec/docs
 
