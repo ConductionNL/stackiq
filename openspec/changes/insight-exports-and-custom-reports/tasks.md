@@ -49,8 +49,9 @@
   - GIVEN the merged register WHEN `catalogContract`, `organization`, `compliancy` and `moduleVersion` are read THEN each has `exportable: true`
   - GIVEN an OpenRegister release that keeps the schema flag WHEN `/komplianties` and `/moduleversies` open THEN the Export menu shows
   - GIVEN a nextcloud-vue release that forwards the page filter and the quick filter WHEN the pin moves to it THEN `/contracten` and `/organisaties` get `allowExport` in the same commit, and not before
-- [ ] Implement
-- [ ] Test (PHPUnit tests/Unit/Settings/CatalogExportFlagsTest.php and Playwright tests/e2e/spec-coverage/catalogue-exports.spec.ts)
+- [x] Implement
+- [ ] Test (PHPUnit tests/Unit/Settings/CatalogExportFlagsTest.php done; Playwright tests/e2e/spec-coverage/catalogue-exports.spec.ts)
+  > Built: the fragment flags the four schemas, `/komplianties` and `/moduleversies` set `allowExport`. Left by design: `/contracten` and `/organisaties` get `allowExport` with the nextcloud-vue pin that forwards their page and quick filters (no such release yet), and the menu shows only once OpenRegister keeps the schema flag.
 
 ### Task 6: Add the Custom reports page over OpenRegister export profiles
 - **spec_ref**: openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema
