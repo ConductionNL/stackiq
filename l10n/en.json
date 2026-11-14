@@ -1260,6 +1260,11 @@
         "Gap, fillable": "Gap, fillable",
         "Gap": "Gap",
         "Licence": "Licence",
-        "Software catalogue": "Software catalogue"
+        "Software catalogue": "Software catalogue",
+        "Does not meet": "Does not meet",
+        "Unknown (no claim)": "Unknown (no claim)",
+        "Verified: {verified} · Claimed: {claimed} · Does not meet: {notMet} · Unknown: {none}": "Verified: {verified} · Claimed: {claimed} · Does not meet: {notMet} · Unknown: {none}",
+        "Result": "Result",
+        "Whether the application meets the standard or BIO measure. No claim means unknown, not that it does not meet.": "Whether the application meets the standard or BIO measure. No claim means unknown, not that it does not meet."
     }
 }

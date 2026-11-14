@@ -233,6 +233,8 @@ Vrij en open source onder de EUPL-licentie.
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
 			<step>OCA\Stackiq\Repair\MigrateContactsToNc</step>
 			<step>OCA\Stackiq\Repair\BackfillContractApprovalState</step>
+			<!-- bio-measures-shipped-and-not-met: existing compliance claims get result=meets after InitializeSettings imports the property. Idempotent. -->
+			<step>OCA\Stackiq\Repair\DefaultComplianceResultToMeets</step>
 			<step>OCA\Stackiq\Repair\BackfillModuleVersionPublication</step>
 			<!--
 				Must run AFTER the register sync that adds the English columns, so it

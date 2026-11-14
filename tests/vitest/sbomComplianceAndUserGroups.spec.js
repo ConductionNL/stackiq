@@ -230,7 +230,7 @@ describe('ComplianceMatrixView', () => {
 	it('labels modules, states, cells and module facts', () => {
 		const v = view()
 		expect([v.moduleLabel({ name: 'A' }), v.moduleLabel({ object: { name: 'B' } }), v.moduleLabel({ uuid: 'u' })]).toEqual(['A', 'B', 'u'])
-		expect([v.stateLabel('verified'), v.stateLabel('claimed'), v.stateLabel('none')]).toEqual(['Verified', 'Claimed', 'None'])
+		expect([v.stateLabel('verified'), v.stateLabel('claimed'), v.stateLabel('none'), v.stateLabel('not-met')]).toEqual(['Verified', 'Claimed', 'Unknown', 'Does not meet'])
 		expect(v.cellAriaLabel({ module: { name: 'A' }, cells: { s1: { state: 'claimed' } } }, { uuid: 's1', label: 'StUF' })).toBe('A — StUF: Claimed')
 		expect([v.bbnLevelLabel({ bbnLevel: 'BBN2' }), v.bbnLevelLabel({})]).toEqual(['BBN2', 'Not set'])
 		expect(['executed', 'required', 'not required', undefined].map((dpiaStatus) => v.dpiaStatusLabel({ dpiaStatus }))).toEqual(['Executed', 'Required', 'Not required', 'Not set'])

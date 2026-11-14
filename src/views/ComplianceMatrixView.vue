@@ -143,10 +143,17 @@
 					{{ t('stackiq', 'Claimed (no evidence)') }}</span
 				>
 				<span class="cmv-legendItem"
+					><CloseCircle :size="16" class="cmv-iconNotMet" />
+					{{ t('stackiq', 'Does not meet') }}</span
+				>
+				<span class="cmv-legendItem"
 					><MinusCircle :size="16" class="cmv-iconNone" />
-					{{ t('stackiq', 'None') }}</span
+					{{ t('stackiq', 'Unknown (no claim)') }}</span
 				>
 			</div>
+			<p class="cmv-summary" data-testid="cmv-summary">
+				{{ t('stackiq', 'Verified: {verified} · Claimed: {claimed} · Does not meet: {notMet} · Unknown: {none}', cellCounts) }}
+			</p>
 
 			<table class="cmv-table">
 				<thead>
@@ -200,6 +207,12 @@
 									"
 									:size="18"
 									class="cmv-iconVerified" />
+								<CloseCircle
+									v-else-if="
+										row.cells[column.uuid].state === 'not-met'
+									"
+									:size="18"
+									class="cmv-iconNotMet" />
 								<HelpCircle
 									v-else
 									:size="18"
@@ -267,6 +280,7 @@ import {
 } from '@nextcloud/vue'
 import CheckboxMarkedCircleOutline from 'vue-material-design-icons/CheckboxMarkedCircleOutline.vue'
 import CheckCircle from 'vue-material-design-icons/CheckCircle.vue'
+import CloseCircle from 'vue-material-design-icons/CloseCircle.vue'
 import HelpCircle from 'vue-material-design-icons/HelpCircle.vue'
 import MinusCircle from 'vue-material-design-icons/MinusCircle.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
@@ -277,6 +291,7 @@ import {
 	buildComplianceMatrix,
 	COLUMN_SOURCE,
 	columnLabel,
+	countCellStates,
 	dataOf,
 	resolveUuid,
 } from '../utils/complianceMatrix.js'
@@ -295,7 +310,7 @@ import {
  *
  * Filter-first compliance matrix: modules × a selected column source
  * (GEMMA standard versions, or — since bio-compliance-assessment — BIO 2.0
- * measures), with verified / claimed / none cell states. The buyer-facing
+ * measures), with verified / claimed / does-not-meet / unknown cell states. The buyer-facing
  * answer to "does this application support standard/measure X, and is that
  * a claim or a fact?". In the BIO scope, optionally narrowed to a single
  * organisation's in-use applications, with each row also showing the
@@ -315,6 +330,7 @@ export default {
 		NcCheckboxRadioSwitch,
 		Refresh,
 		CheckCircle,
+		CloseCircle,
 		HelpCircle,
 		MinusCircle,
 		TableLarge,
@@ -566,6 +582,16 @@ export default {
 		},
 
 		/**
+		 * How many cells are in each state, for the summary under the legend.
+		 *
+		 * @return {{verified: number, claimed: number, notMet: number, none: number}} The counts.
+		 * @spec openspec/changes/bio-measures-shipped-and-not-met/specs/bio-compliance-assessment/spec.md#requirement-a-compliance-claim-says-whether-the-application-meets-the-measure-req-bio-011
+		 */
+		cellCounts() {
+			return countCellStates(this.matrix)
+		},
+
+		/**
 		 * The computed matrix for the current selection.
 		 *
 		 * @return {object} { rows, columns, unresolved, conflicted }.
@@ -807,7 +833,10 @@ export default {
 			if (state === 'claimed') {
 				return t('stackiq', 'Claimed')
 			}
-			return t('stackiq', 'None')
+			if (state === 'not-met') {
+				return t('stackiq', 'Does not meet')
+			}
+			return t('stackiq', 'Unknown')
 		},
 
 		/**
@@ -964,6 +993,15 @@ export default {
 	background: color-mix(in srgb, var(--color-warning) 12%, transparent);
 }
 
+.cmv-cell--not-met {
+	background: color-mix(in srgb, var(--color-error) 12%, transparent);
+}
+
+.cmv-summary {
+	margin: 8px 0;
+	color: var(--color-text-maxcontrast);
+}
+
 .cmv-cellButton {
 	display: inline-flex;
 	align-items: center;
@@ -988,6 +1026,10 @@ export default {
 
 .cmv-iconClaimed {
 	color: var(--color-warning);
+}
+
+.cmv-iconNotMet {
+	color: var(--color-error);
 }
 
 .cmv-iconNone {
