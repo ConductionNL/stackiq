@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 /** * ChangeOrganisatieStatusDialog.vue * Dialog for changing organisatie status with
 confirmation * @category Components * @package stackiq * @author Ruben Linde *
 @copyright 2024 * @license EUPL-1.2

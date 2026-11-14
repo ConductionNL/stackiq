@@ -13,6 +13,9 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -24,7 +27,7 @@ use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\DataQualityDerivation;
 use OCA\Stackiq\Service\DataQualityReportService;
 use OCA\Stackiq\Service\PortfolioReportDerivation;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCP\App\IAppManager;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -162,11 +165,11 @@ final class DataQualityReportBuildGoldenTest extends TestCase {
 		);
 		$appManager = $this->createMock(IAppManager::class);
 		$appManager->method('getInstalledApps')->willReturn(($case['apps'] ?? ['openregister']));
-		$settings = $this->createMock(SettingsService::class);
+		$settings = $this->createMock(CatalogueLocator::class);
 		$settings->method('getVoorzieningenConfig')->willReturn(($case['config'] ?? ['register' => '1', 'gebruik_schema' => '20']));
 
 		$service = new DataQualityReportService(
-			settingsService: $settings,
+			catalogue: $settings,
 			appManager: $appManager,
 			container: $container,
 			logger: new NullLogger(),

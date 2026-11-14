@@ -14,6 +14,9 @@
  * @link      https://github.com/nextcloud/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -23,6 +26,7 @@ namespace OCA\Stackiq\Service;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\OpenRegister\Service\ObjectService;
 use OCA\OpenRegister\Service\OrganisationService;
+use OCA\Stackiq\Kernel\Contracts\ArchiMateImportServiceInterface;
 use OCA\Stackiq\Service\ArchiMate\ArchiMateImportScope;
 use OCA\Stackiq\Service\ArchiMate\GemmaStandardLinker;
 use OCA\Stackiq\Service\ProgressTracker;
@@ -71,7 +75,7 @@ use SimpleXMLElement;
  *
  * @spec openspec/specs/archimate-import/spec.md#requirement-the-system-shall-parse-an-archimate-amef-file-into-catalog-objects-req-001
  */
-class ArchiMateImportService {
+class ArchiMateImportService implements ArchiMateImportServiceInterface {
 
 	/**
 	 * NOTE: Default schema IDs removed - all schema IDs must be configured via AMEF settings.
@@ -86,11 +90,11 @@ class ArchiMateImportService {
 	private array $lastSaveTiming = [];
 
 	/**
-	 * Cache for camelCase property name conversions to avoid redundant processing
+	 * CamelCase property names, with their conversion cache; created on first use.
 	 *
-	 * @var array<string, string>
+	 * @var ArchiMate\CamelCaseNames|null
 	 */
-	private array $camelCaseCache = [];
+	private ?ArchiMate\CamelCaseNames $camelCaseNames = null;
 
 	/**
 	 * Cache for identifier extraction patterns by section type
@@ -118,11 +122,6 @@ class ArchiMateImportService {
 	 * The result lists of an OpenRegister saveObjects call, in the order they are aggregated.
 	 */
 	private const SAVE_BUCKETS = ['saved', 'updated', 'unchanged', 'invalid'];
-
-	/**
-	 * Operation ids a page may name for an import it follows.
-	 */
-	public const OPERATION_ID_PATTERN = '/^archimate_import_[A-Za-z0-9]{8,64}$/';
 
 	/**
 	 * The progress operation of the running import, or null when it is not tracked.
@@ -222,47 +221,7 @@ class ArchiMateImportService {
 	 * @spec   openspec/specs/archimate-import/spec.md
 	 */
 	public function xmlToArray(\SimpleXMLElement $xml): array {
-		// PERFORMANCE OPTIMIZATION: Initialize result only.
-		$result = [];
-
-		// OPTIMIZATION: Extract non-namespaced attributes (skip redundant processing).
-		$attributes = $xml->attributes();
-		if (count($attributes) > 0) {
-			$attrBag = [];
-			foreach ($attributes as $attrName => $attrValue) {
-				$name = (string)$attrName;
-				$value = (string)$attrValue;
-				// OPTIMIZATION: Only apply str_replace for namespaced names (e.g. xsi:type -> _xsi_type).
-				if (strpos($name, ':') !== false) {
-					$underscoredKey = '_' . str_replace(':', '_', $name);
-				} else {
-					$underscoredKey = '_' . $name;
-				}
-
-				$result[$underscoredKey] = $value;
-				$attrBag[$name] = $value;
-			}
-
-			$result['_attributes'] = $attrBag;
-		}
-
-		// OPTIMIZATION: Extract namespaced attributes (simplified processing).
-		foreach ($xml->getNameSpaces(true) as $prefix => $nsUri) {
-			$nsAttributes = $xml->attributes($prefix, true);
-			if (count($nsAttributes) > 0) {
-				foreach ($nsAttributes as $attrName => $attrValue) {
-					$name = (string)$attrName;
-					$value = (string)$attrValue;
-					$underscoredKey = '_' . $prefix . '__' . $name;
-					$result[$underscoredKey] = $value;
-					if (isset($result['_attributes']) === false) {
-						$result['_attributes'] = [];
-					}
-
-					$result['_attributes'][$prefix . ':' . $name] = $value;
-				}
-			}
-		}
+		$result = $this->xmlAttributes(xml: $xml);
 
 		// Extract children.
 		$children = $xml->children();
@@ -276,23 +235,8 @@ class ArchiMateImportService {
 			return $result;
 		}
 
-		// OPTIMIZATION: Process child elements with faster array operations.
 		foreach ($children as $child) {
-			$childName = $child->getName();
-			$childValue = $this->xmlToArray(xml: $child);
-
-			// OPTIMIZATION: Use isset instead of array_key_exists (faster).
-			if (isset($result[$childName]) === false) {
-				$result[$childName] = $childValue;
-			} else {
-				// OPTIMIZATION: Fast array conversion without expensive isAssoc check.
-				if (is_array($result[$childName]) === false || isset($result[$childName][0]) === false) {
-					// Convert to indexed array if it's a single value or associative array.
-					$result[$childName] = [$result[$childName]];
-				}
-
-				$result[$childName][] = $childValue;
-			}
+			$this->appendXmlChild(result: $result, childName: $child->getName(), childValue: $this->xmlToArray(xml: $child));
 		}
 
 		// Preserve text content when children exist.
@@ -303,6 +247,69 @@ class ArchiMateImportService {
 
 		return $result;
 	}//end xmlToArray()
+
+	/**
+	 * The attributes of an XML element, underscored and in the legacy `_attributes` bag
+	 *
+	 * @param \SimpleXMLElement $xml The XML element
+	 *
+	 * @return array The `_name` / `_prefix__name` keys and the `_attributes` bag, empty without attributes
+	 */
+	private function xmlAttributes(\SimpleXMLElement $xml): array {
+		$result = [];
+
+		// OPTIMIZATION: Extract non-namespaced attributes (skip redundant processing).
+		$attributes = $xml->attributes();
+		if (count($attributes) > 0) {
+			$attrBag = [];
+			foreach ($attributes as $attrName => $attrValue) {
+				$name = (string)$attrName;
+				$value = (string)$attrValue;
+				// Namespaced names (e.g. xsi:type) become _xsi_type.
+				$result['_' . str_replace(':', '_', $name)] = $value;
+				$attrBag[$name] = $value;
+			}
+
+			$result['_attributes'] = $attrBag;
+		}
+
+		// OPTIMIZATION: Extract namespaced attributes (simplified processing).
+		foreach ($xml->getNameSpaces(true) as $prefix => $nsUri) {
+			foreach ($xml->attributes($prefix, true) as $attrName => $attrValue) {
+				$name = (string)$attrName;
+				$value = (string)$attrValue;
+				$result['_' . $prefix . '__' . $name] = $value;
+				$result['_attributes'][$prefix . ':' . $name] = $value;
+			}
+		}
+
+		return $result;
+	}//end xmlAttributes()
+
+	/**
+	 * Add a converted child element; repeated children become a list
+	 *
+	 * @param array  $result     The converted parent, updated in place
+	 * @param string $childName  The child element name
+	 * @param array  $childValue The converted child
+	 *
+	 * @return void
+	 */
+	private function appendXmlChild(array &$result, string $childName, array $childValue): void {
+		// OPTIMIZATION: Use isset instead of array_key_exists (faster).
+		if (isset($result[$childName]) === false) {
+			$result[$childName] = $childValue;
+			return;
+		}
+
+		// OPTIMIZATION: Fast array conversion without expensive isAssoc check.
+		if (is_array($result[$childName]) === false || isset($result[$childName][0]) === false) {
+			// Convert to indexed array if it's a single value or associative array.
+			$result[$childName] = [$result[$childName]];
+		}
+
+		$result[$childName][] = $childValue;
+	}//end appendXmlChild()
 
 	/**
 	 * OPTIMIZED: Import ArchiMate XML file using OpenRegister-style performance optimization
@@ -1145,33 +1152,8 @@ class ArchiMateImportService {
 
 		$schemaId = $modelSchemaIds;
 
-		// Extract a plain string name (schema column expects string, not array).
-		$nameString = null;
-		if (isset($metadata['name']) === true) {
-			if (is_array($metadata['name']) === true && isset($metadata['name']['_value']) === true) {
-				$nameString = (string)$metadata['name']['_value'];
-			} elseif (is_string($metadata['name']) === true) {
-				$nameString = $metadata['name'];
-			}
-		}
-
-		// Build xml field preserving full array structure for round-trip fidelity.
-		$xmlData = [];
-		if (isset($metadata['name']) === true) {
-			$xmlData['name'] = $metadata['name'];
-		}
-
-		if (isset($metadata['documentation']) === true) {
-			$xmlData['documentation'] = $metadata['documentation'];
-		}
-
-		if (isset($metadata['properties']) === true) {
-			$xmlData['properties'] = $metadata['properties'];
-		}
-
-		if (isset($metadata['propertyDefinitionMap']) === true) {
-			$xmlData['propertyDefinitionMap'] = $metadata['propertyDefinitionMap'];
-		}
+		$nameString = $this->plainModelName(metadata: $metadata);
+		$xmlData = $this->modelXmlFields(metadata: $metadata);
 
 		// Create object with @self structure and metadata at root level (no JSON serialization).
 		$object = [
@@ -1197,6 +1179,44 @@ class ArchiMateImportService {
 
 		return $merged;
 	}//end createModelObject()
+
+	/**
+	 * The plain string name of a model (the schema column expects a string, not an array).
+	 *
+	 * @param array<string, mixed> $metadata The model metadata.
+	 *
+	 * @return string|null The XML value or plain string name, or null when there is neither.
+	 */
+	private function plainModelName(array $metadata): ?string {
+		$nameString = null;
+		if (isset($metadata['name']) === true) {
+			if (is_array($metadata['name']) === true && isset($metadata['name']['_value']) === true) {
+				$nameString = (string)$metadata['name']['_value'];
+			} elseif (is_string($metadata['name']) === true) {
+				$nameString = $metadata['name'];
+			}
+		}
+
+		return $nameString;
+	}//end plainModelName()
+
+	/**
+	 * The xml field of a model, preserving the full array structure for round-trip fidelity.
+	 *
+	 * @param array<string, mixed> $metadata The model metadata.
+	 *
+	 * @return array<string, mixed> The name, documentation, properties and property definition map that are set.
+	 */
+	private function modelXmlFields(array $metadata): array {
+		$xmlData = [];
+		foreach (['name', 'documentation', 'properties', 'propertyDefinitionMap'] as $field) {
+			if (isset($metadata[$field]) === true) {
+				$xmlData[$field] = $metadata[$field];
+			}
+		}
+
+		return $xmlData;
+	}//end modelXmlFields()
 
 	/**
 	 * Create section object with @self structure and flattened XML data
@@ -1650,21 +1670,7 @@ class ArchiMateImportService {
 	 * @return ObjectServiceInterface|null ObjectService instance or null if not available
 	 */
 	private function getObjectService(): ?ObjectServiceInterface {
-		if ($this->appManager->isInstalled(appId: 'openregister') === false) {
-			return null;
-		}
-
-		try {
-			return $this->container->get(ObjectService::class);
-		} catch (\Exception $e) {
-			$this->logger->warning(
-				'Failed to get ObjectService',
-				[
-					'error' => $e->getMessage(),
-				]
-			);
-			return null;
-		}
+		return (new ArchiMate\ObjectServiceLookup(appManager: $this->appManager, container: $this->container, logger: $this->logger))->find();
 	}//end getObjectService()
 
 	/**
@@ -1744,97 +1750,13 @@ class ArchiMateImportService {
 	}//end getCurrentOrganisation()
 
 	/**
-	 * Read a configured id, failing closed on the empty default.
-	 *
-	 * The legacy fallback used to read every id with `''` as its default, so
-	 * an unconfigured instance produced a config array full of empty STRINGS.
-	 * Its consumers guard with `=== null` — `getAmefRegisterId()` and
-	 * `getAmefSchemaIdForType()` reject them with `is_numeric()` + `> 0` — and `'' === null` is
-	 * false. Today nothing reaches a query only because that fallback writes
-	 * PLURAL key names (`views_schema`) while every consumer reads SINGULAR
-	 * ones (`view_schema`), so the lookups miss and fall back to `null`. That
-	 * is an accident of naming, not a defence: adding the singular keys — the
-	 * obvious "cleanup" — would send `register => ''` straight into
-	 * `searchObjects()` as an UNPINNED query, and an unpinned query returns
-	 * rows, which reads exactly like a correct result.
-	 *
-	 * Returning null instead of `''` makes `?? null` downstream yield null,
-	 * which is what every consumer already checks for, and the warning names
-	 * the missing key so a misconfigured import stops reporting "0 objects"
-	 * with no explanation.
-	 *
-	 * @param string $key The app-config key holding the id.
-	 *
-	 * @return string|null The configured id, or null when it is unset.
-	 *
-	 * @spec openspec/specs/archimate-import/spec.md
-	 */
-	private function resolveConfiguredId(string $key): ?string {
-		$value = $this->config->getValueString('stackiq', $key, '');
-		if (trim($value) === '') {
-			$this->logger->warning(
-				'ArchiMate configuration is incomplete — this id is not configured, so it is omitted rather than passed on as an empty string',
-				['key' => $key]
-			);
-
-			return null;
-		}
-
-		return $value;
-	}//end resolveConfiguredId()
-
-	/**
 	 * Get AMEF configuration from app config
 	 *
 	 * @return array AMEF configuration
 	 * @spec   openspec/specs/archimate-import/spec.md
 	 */
 	public function getAmefConfig(): array {
-		$this->logger->info('Getting AMEF configuration');
-
-		try {
-			// Get configuration from app config using the correct method.
-			$config = $this->config->getValueString('stackiq', 'amef_config', '{}');
-			$decoded = json_decode($config, true);
-
-			if (is_array($decoded) === false) {
-				// Fallback to individual config values for backward
-				// compatibility. Every id is read through
-				// resolveConfiguredId(), which guards the empty default at the
-				// point of the read and omits the key entirely when it is
-				// unset — so `?? null` downstream yields null, which is what
-				// the consumers already check for.
-				$decoded = array_filter(
-					[
-						'register_id' => $this->resolveConfiguredId(key: 'amef_register'),
-						'model_schema_id' => $this->resolveConfiguredId(key: 'amef_model_schema'),
-						'elements_schema' => $this->resolveConfiguredId(key: 'amef_elements_schema'),
-						'relationships_schema' => $this->resolveConfiguredId(key: 'amef_relationships_schema'),
-						'views_schema' => $this->resolveConfiguredId(key: 'amef_views_schema'),
-						'organizations_schema' => $this->resolveConfiguredId(key: 'amef_organizations_schema'),
-						'folders_schema' => $this->resolveConfiguredId(key: 'amef_folders_schema'),
-						'property_definitions_schema' => $this->resolveConfiguredId(key: 'amef_property_definitions_schema'),
-					],
-					static function ($value) {
-						return $value !== null;
-					}
-				);
-			}//end if
-
-			return $decoded;
-		} catch (\Exception $e) {
-			$this->logger->error(
-				'Failed to get AMEF configuration',
-				[
-					'error' => $e->getMessage(),
-				]
-			);
-
-			return [
-				'success' => false,
-				'error' => $e->getMessage(),
-			];
-		}//end try
+		return (new ArchiMate\AmefConfigReader(config: $this->config, logger: $this->logger))->read();
 	}//end getAmefConfig()
 
 	/**
@@ -1844,28 +1766,7 @@ class ArchiMateImportService {
 	 */
 	private function getAmefRegisterId(): ?int {
 		// Retrieve AMEF configuration.
-		$amefConfig = $this->getAmefConfig();
-
-		// Try JSON config keys first: support both 'register_id' and 'register'.
-		$rawRegisterId = $amefConfig['register_id'] ?? $amefConfig['register'] ?? null;
-
-		// Fallback to legacy individual app config keys if not present in JSON.
-		if ($rawRegisterId === null || $rawRegisterId === '') {
-			$rawRegisterId = $this->config->getValueString('stackiq', 'amef_register_id', '');
-			if ($this->config->getValueString('stackiq', 'amef_register', '') !== '') {
-				$rawRegisterId = $this->config->getValueString('stackiq', 'amef_register', '');
-			}
-		}
-
-		// Validate and normalize to positive int.
-		if ($rawRegisterId !== '' && is_numeric((string)$rawRegisterId) === true) {
-			$registerId = (int)$rawRegisterId;
-			if ($registerId > 0) {
-				return $registerId;
-			}
-		}
-
-		return null;
+		return (new ArchiMate\AmefRegisterId(config: $this->config))->resolve(amefConfig: $this->getAmefConfig());
 	}//end getAmefRegisterId()
 
 	/**
@@ -1910,34 +1811,62 @@ class ArchiMateImportService {
 
 		// Try JSON config with the actual keys.
 		foreach ($candidates as $key) {
+			$id = null;
 			if (array_key_exists($key, $amefConfig) === true) {
-				$raw = $amefConfig[$key];
-				if ($raw !== '' && $raw !== null && is_numeric((string)$raw) === true) {
-					$id = (int)$raw;
-					if ($id > 0) {
-						return $id;
-					}
-				}
+				$id = $this->positiveSchemaId(raw: $amefConfig[$key]);
+			}
+
+			if ($id !== null) {
+				return $id;
 			}
 		}
 
 		// Fallback to legacy individual app config keys if not present in JSON.
 		foreach ($candidates as $key) {
-			$raw = $this->config->getValueString('stackiq', $key, '');
-			if ($this->config->getValueString('stackiq', 'amef_' . $key, '') !== '') {
-				$raw = $this->config->getValueString('stackiq', 'amef_' . $key, '');
-			}
-
-			if ($raw !== '' && is_numeric((string)$raw) === true) {
-				$id = (int)$raw;
-				if ($id > 0) {
-					return $id;
-				}
+			$id = $this->positiveSchemaId(raw: $this->legacyAmefSchemaValue(key: $key));
+			if ($id !== null) {
+				return $id;
 			}
 		}
 
 		return null;
 	}//end getAmefSchemaIdForType()
+
+	/**
+	 * A configured schema id when it is a positive number
+	 *
+	 * @param mixed $raw The configured value
+	 *
+	 * @return int|null The schema id, or null when the value is empty, not numeric or not positive
+	 */
+	private function positiveSchemaId(mixed $raw): ?int {
+		if ($raw === '' || $raw === null || is_numeric((string)$raw) === false) {
+			return null;
+		}
+
+		$id = (int)$raw;
+		if ($id > 0) {
+			return $id;
+		}
+
+		return null;
+	}//end positiveSchemaId()
+
+	/**
+	 * The legacy app config value of a schema key; the `amef_` prefixed key wins when set
+	 *
+	 * @param string $key The schema key
+	 *
+	 * @return string The configured value, empty when neither key is set
+	 */
+	private function legacyAmefSchemaValue(string $key): string {
+		$raw = $this->config->getValueString('stackiq', $key, '');
+		if ($this->config->getValueString('stackiq', 'amef_' . $key, '') !== '') {
+			$raw = $this->config->getValueString('stackiq', 'amef_' . $key, '');
+		}
+
+		return $raw;
+	}//end legacyAmefSchemaValue()
 
 	/**
 	 * Get schema ID for a section using the object type locator (no hardcoded fallbacks)
@@ -1985,45 +1914,42 @@ class ArchiMateImportService {
 
 		$map = [];
 		// Find propertyDefinitions section (handle possible alternative names).
-		$propertyDefs = null;
-		if (isset($data['propertyDefinitions']) === true) {
-			$propertyDefs = $data['propertyDefinitions'];
-		} elseif (isset($data['property_definitions']) === true) {
-			$propertyDefs = $data['property_definitions'];
-		}
+		$propertyDefs = $data['propertyDefinitions'] ?? $data['property_definitions'] ?? null;
 
 		if ($propertyDefs !== false && isset($propertyDefs['propertyDefinition']) === true) {
 			$defs = $propertyDefs['propertyDefinition'];
-			if (isset($defs[0]) === true) {
-				// Array of propertyDefinition.
-				foreach ($defs as $def) {
-					if (isset($def['_attributes']['identifier']) === true && isset($def['name']) === true) {
-						if (is_array($def['name']) === true
-							&& isset($def['name']['_value']) === true
-						) {
-							$map[$def['_attributes']['identifier']] = $def['name']['_value'];
-						} else {
-							$map[$def['_attributes']['identifier']] = $def['name'];
-						}
-					}
+			// A single propertyDefinition is not wrapped in a list.
+			if (isset($defs[0]) === false) {
+				$defs = [$defs];
+			}
+
+			foreach ($defs as $def) {
+				if (isset($def['_attributes']['identifier']) === true && isset($def['name']) === true) {
+					$map[$def['_attributes']['identifier']] = $this->propertyDefinitionName(name: $def['name']);
 				}
-			} elseif (isset($defs['_attributes']['identifier']) === true && isset($defs['name']) === true) {
-				// Single propertyDefinition.
-				if (is_array($defs['name']) === true
-					&& isset($defs['name']['_value']) === true
-				) {
-					$map[$defs['_attributes']['identifier']] = $defs['name']['_value'];
-				} else {
-					$map[$defs['_attributes']['identifier']] = $defs['name'];
-				}
-			}//end if
-		}//end if
+			}
+		}
 
 		// OPTIMIZATION: Cache the result for subsequent calls during the same import.
 		$this->propMapCache = $map;
 
 		return $map;
 	}//end extractPropertyDefinitionMap()
+
+	/**
+	 * The name of a property definition: its `_value` when it has one, else the name as parsed
+	 *
+	 * @param mixed $name The parsed name
+	 *
+	 * @return mixed The name
+	 */
+	private function propertyDefinitionName(mixed $name): mixed {
+		if (is_array($name) === true && isset($name['_value']) === true) {
+			return $name['_value'];
+		}
+
+		return $name;
+	}//end propertyDefinitionName()
 
 	/**
 	 * Get property mapping information for debugging and reference
@@ -2064,35 +1990,8 @@ class ArchiMateImportService {
 	 * @return string CamelCase version of the property name
 	 */
 	private function convertToCamelCase(string $propertyName): string {
-		// OPTIMIZATION: Check cache first to avoid redundant conversions.
-		if (isset($this->camelCaseCache[$propertyName]) === true) {
-			return $this->camelCaseCache[$propertyName];
-		}
-
-		// Remove any leading/trailing whitespace.
-		$propertyName = trim($propertyName);
-
-		// Split by spaces and convert to camelCase.
-		$words = explode(' ', $propertyName);
-
-		if (count($words) === 1) {
-			// Single word, just lowercase it.
-			$result = strtolower($words[0]);
-		} else {
-			// First word is lowercase, subsequent words are capitalized.
-			$camelCase = strtolower($words[0]);
-
-			for ($i = 1; $i < count($words); $i++) {
-				$camelCase .= ucfirst(strtolower($words[$i]));
-			}
-
-			$result = $camelCase;
-		}
-
-		// OPTIMIZATION: Cache the result for future use.
-		$this->camelCaseCache[$propertyName] = $result;
-
-		return $result;
+		$this->camelCaseNames ??= new ArchiMate\CamelCaseNames();
+		return $this->camelCaseNames->convertName(propertyName: $propertyName);
 	}//end convertToCamelCase()
 
 	/**
@@ -2280,69 +2179,22 @@ class ArchiMateImportService {
 	 */
 	private function findItemsInSection(array $sectionData, string $sectionName): array {
 		// OPTIMIZATION: Removed debug logging from section processing.
-		$items = [];
-
 		// No is_array() safety check: $sectionData is declared array, so PHP
 		// rejects anything else at the call boundary before this could run.
 
 		// Get section structure configuration from AMEF config.
 		$config = $this->getSectionStructureConfig(sectionName: $sectionName);
 
-		// Special handling for views with diagrams structure.
-		if ($sectionName === 'views') {
-			// Handle nested structure: <views><diagrams><view>.
-			if (isset($sectionData['diagrams']) === true) {
-				if (isset($sectionData['diagrams']['view']) === true) {
-					$viewArray = $sectionData['diagrams']['view'];
-
-					// Handle single view vs array of views.
-					if (isset($viewArray[0]) === false && isset($viewArray['_attributes']) === true) {
-						// Single view.
-						$items = [$viewArray];
-					} else {
-						// Array of views.
-						$items = $viewArray;
-					}
-				}
-			} else {
-				// Direct views structure (fallback).
-				if (isset($sectionData['view']) === true) {
-					$items = $sectionData['view'];
-				}
-			}
-		} else {
-			// Try to find items using the configured paths for other sections.
-			foreach ($config['nested_paths'] as $path) {
-				$currentData = $sectionData;
-				$pathValid = true;
-
-				foreach ($path as $key) {
-					if (isset($currentData[$key]) === true) {
-						$currentData = $currentData[$key];
-					} else {
-						$pathValid = false;
-						break;
-					}
-				}
-
-				if ($pathValid !== false && is_array($currentData) === true) {
-					// Check if this is a direct array of items or needs further processing.
-					if (isset($currentData[0]) === true || $this->isAssociativeArray(array: $currentData) === true) {
-						$items = $currentData;
-						break;
-					}
-				}
-			}//end foreach
-		}//end if
+		// Special handling for views with diagrams structure; the other
+		// sections are found through their configured paths.
+		$items = match ($sectionName) {
+			'views' => $this->findViewItems(sectionData: $sectionData),
+			default => $this->findItemsOnPaths(sectionData: $sectionData, paths: $config['nested_paths']),
+		};
 
 		// If no items found through nested paths, try direct tags.
 		if (empty($items) === true) {
-			foreach ($config['direct_tags'] as $tag) {
-				if (isset($sectionData[$tag]) === true) {
-					$items = $sectionData[$tag];
-					break;
-				}
-			}
+			$items = $this->findItemsUnderTag(sectionData: $sectionData, tags: $config['direct_tags']);
 		}
 
 		// If still no items found, treat the section itself as items.
@@ -2362,6 +2214,81 @@ class ArchiMateImportService {
 
 		return $items;
 	}//end findItemsInSection()
+
+	/**
+	 * The views of a views section: <views><diagrams><view>, or <views><view> as fallback
+	 *
+	 * @param array $sectionData The views section
+	 *
+	 * @return mixed The view or views found, or an empty array
+	 */
+	private function findViewItems(array $sectionData): mixed {
+		if (isset($sectionData['diagrams']) === false) {
+			// Direct views structure (fallback).
+			return ($sectionData['view'] ?? []);
+		}
+
+		if (isset($sectionData['diagrams']['view']) === false) {
+			return [];
+		}
+
+		$viewArray = $sectionData['diagrams']['view'];
+
+		// Handle single view vs array of views.
+		if (isset($viewArray[0]) === false && isset($viewArray['_attributes']) === true) {
+			return [$viewArray];
+		}
+
+		return $viewArray;
+	}//end findViewItems()
+
+	/**
+	 * The items at the first configured path that leads to a list or map
+	 *
+	 * @param array $sectionData The section data
+	 * @param array $paths       The configured paths, each a list of keys
+	 *
+	 * @return array The items found, or an empty array
+	 */
+	private function findItemsOnPaths(array $sectionData, array $paths): array {
+		foreach ($paths as $path) {
+			$currentData = $sectionData;
+			foreach ($path as $key) {
+				if (isset($currentData[$key]) === false) {
+					continue 2;
+				}
+
+				$currentData = $currentData[$key];
+			}
+
+			// Check if this is a direct array of items or needs further processing.
+			if (is_array($currentData) === true
+				&& (isset($currentData[0]) === true || $this->isAssociativeArray(array: $currentData) === true)
+			) {
+				return $currentData;
+			}
+		}
+
+		return [];
+	}//end findItemsOnPaths()
+
+	/**
+	 * The value under the first configured tag the section has
+	 *
+	 * @param array $sectionData The section data
+	 * @param array $tags        The configured tags
+	 *
+	 * @return mixed The value found, or an empty array
+	 */
+	private function findItemsUnderTag(array $sectionData, array $tags): mixed {
+		foreach ($tags as $tag) {
+			if (isset($sectionData[$tag]) === true) {
+				return $sectionData[$tag];
+			}
+		}
+
+		return [];
+	}//end findItemsUnderTag()
 
 	/**
 	 * Extract identifier from item data
@@ -2561,7 +2488,6 @@ class ArchiMateImportService {
 		return $extracted;
 	}//end extractViewNodesAndConnections()
 
-
 	/**
 	 * Extract view nodes with proper JSON structure for frontend consumption
 	 *
@@ -2599,132 +2525,18 @@ class ArchiMateImportService {
 		}
 
 		foreach ($nodeData as $node) {
-			if (isset($node['_attributes']) === false) {
-				continue;
-			}
-
 			$nodeId = $node['_attributes']['identifier'] ?? null;
-			$elementRef = $node['_attributes']['elementRef'] ?? null;
-
-			if ($nodeId === null) {
+			if (isset($node['_attributes']) === false || $nodeId === null) {
 				continue;
 			}
 
-			// Create viewNode with standardized structure.
-			$xValue = (int)($node['_attributes']['x'] ?? 0);
-			$yValue = (int)($node['_attributes']['y'] ?? 0);
-			$widthValue = (int)($node['_attributes']['w'] ?? 100);
-			$heightValue = (int)($node['_attributes']['h'] ?? 50);
-
-			$viewNode = [
-				'modelNodeId' => $elementRef,
-				// Reference to the ArchiMate element.
-				'viewNodeId' => $nodeId,
-				// Unique identifier within this view.
-				'x' => $xValue,
-				'y' => $yValue,
-				'width' => $widthValue,
-				'height' => $heightValue,
-				'parent' => null,
-				// Will be set to parent nodeId for nested nodes (see recursive processing below).
-				'name' => null,
-				'type' => $this->extractNodeType(node: $node),
-				// Extract type directly from node XML.
-				'color' => 'rgb(255, 255, 255)',
-				// Default white background.
-				'borderColor' => 'rgb(0, 0, 0)',
-				// Default black border.
-				'font' => [
-					'name' => 'Segoe UI, Arial',
-					'size' => 12,
-					'style' => 'normal',
-					'color' => 'rgb(0, 0, 0)',
-				],
-				'description' => null,
-				'elementRef' => $elementRef,
-			];
-
-			// Extract style information if present.
-			if (isset($node['style']) === true) {
-				$this->applyNodeStyle(viewNode: $viewNode, style: $node['style']);
-			}
-
-			// Extract label text for Label type nodes.
-			if (isset($node['label']) === true) {
-				if (is_array($node['label']) === true && isset($node['label']['_value']) === true) {
-					$viewNode['name'] = $node['label']['_value'];
-				} elseif (is_string($node['label']) === true) {
-					$viewNode['name'] = $node['label'];
-				}
-			}
+			$elementRef = $node['_attributes']['elementRef'] ?? null;
+			$viewNode = $this->buildViewNode(node: $node, elementRef: $elementRef);
 
 			// Enrich with element data if available and elementRef exists.
 			if ($elementRef !== false && isset($elementsLookup[$elementRef]) === true) {
-				$element = $elementsLookup[$elementRef];
-
-				// Use element name if node doesn't have its own label.
-				if ($viewNode['name'] === null && isset($element['name']) === true) {
-					$viewNode['name'] = $element['name'];
-				}
-
-				// Set description from element documentation.
-				if (isset($element['omschrijving']) === true) {
-					$viewNode['description'] = $element['omschrijving'];
-				} elseif (isset($element['documentation']) === true) {
-					$viewNode['description'] = $element['documentation'];
-				}
-
-				// Enhance type with element data if node type wasn't fully extracted.
-				if ($viewNode['type'] === null || $viewNode['type'] === 'element') {
-					if (isset($element['gemmaType']) === true) {
-						$gemmaType = $element['gemmaType'];
-						// Handle case where gemmaType might be an array.
-						if (is_array($gemmaType) === true) {
-							$gemmaType = $gemmaType['_value'] ?? $gemmaType[0] ?? 'unknown';
-						}
-
-						$viewNode['type'] = strtolower((string)$gemmaType);
-					} elseif (isset($element['xml']['_attributes']['xsi:type']) === true) {
-						$archiType = $element['xml']['_attributes']['xsi:type'];
-						// Convert ArchiMate type to simplified type
-						// (e.g., "archimate:BusinessService" -> "businessservice").
-						$viewNode['type'] = strtolower(preg_replace('/^archimate:|^[a-z]+:/', '', $archiType));
-					}
-				}
-
-				// Add all element properties to view node for full data access.
-				$viewNode['elementProperties'] = $this->extractElementProperties(element: $element);
-
-				// Add specific useful properties directly to the node.
-				if (isset($element['objectId']) === true) {
-					$viewNode['objectId'] = $element['objectId'];
-				}
-
-				// Add GEMMA-specific properties if they exist.
-				$gemmaProperties = [
-					'gemmaType',
-					'bivScoreBbn',
-					'belangrijksteReden',
-					'availability',
-					'integrity',
-					'confidentiality',
-				];
-				foreach ($gemmaProperties as $prop) {
-					if (isset($element[$prop]) === true) {
-						$viewNode[$prop] = $element[$prop];
-					}
-				}
-
-				// Store element section for reference.
-				if (isset($element['section']) === true) {
-					$viewNode['elementSection'] = $element['section'];
-				}
-
-				// Store model identifier for linking.
-				if (isset($element['model_identifier']) === true) {
-					$viewNode['modelIdentifier'] = $element['model_identifier'];
-				}
-			}//end if
+				$this->enrichViewNodeFromElement(viewNode: $viewNode, element: $elementsLookup[$elementRef]);
+			}
 
 			// Add parent node BEFORE its children so the frontend rendering.
 			// engine can look up parents via graph.getCell(parentId).
@@ -2733,25 +2545,170 @@ class ArchiMateImportService {
 			// Handle child nodes recursively (flatten hierarchy into single array
 			// while preserving parent-child relationships).
 			if (isset($node['node']) === true) {
-				$childNodes = $this->extractViewNodesRecursively(nodeData: $node['node'], elementsLookup: $elementsLookup);
-
-				// Set parent reference only for DIRECT children (those with parent === null).
-				// Grandchildren already have their parent set by the recursive call.
-				foreach ($childNodes as &$childNode) {
-					if ($childNode['parent'] === null) {
-						$childNode['parent'] = $nodeId;
-					}
-				}
-
-				unset($childNode);
-
-				// Add child nodes to the main flattened array (maintaining parent references).
-				$viewNodes = array_merge($viewNodes, $childNodes);
+				$viewNodes = array_merge(
+					$viewNodes,
+					$this->extractChildViewNodes(childData: $node['node'], parentId: $nodeId, elementsLookup: $elementsLookup)
+				);
 			}
 		}//end foreach
 
 		return $viewNodes;
 	}//end extractViewNodesRecursively()
+
+	/**
+	 * Build the view node of one diagram node, before element enrichment
+	 *
+	 * @param array $node       The diagram node as parsed from the XML
+	 * @param mixed $elementRef The identifier of the element the node shows, if any
+	 *
+	 * @return array The view node with geometry, type, default styling, node style and label
+	 */
+	private function buildViewNode(array $node, mixed $elementRef): array {
+		$viewNode = [
+			'modelNodeId' => $elementRef,
+			// Reference to the ArchiMate element.
+			'viewNodeId' => $node['_attributes']['identifier'],
+			// Unique identifier within this view.
+			'x' => (int)($node['_attributes']['x'] ?? 0),
+			'y' => (int)($node['_attributes']['y'] ?? 0),
+			'width' => (int)($node['_attributes']['w'] ?? 100),
+			'height' => (int)($node['_attributes']['h'] ?? 50),
+			'parent' => null,
+			// Will be set to parent nodeId for nested nodes (see extractChildViewNodes()).
+			'name' => null,
+			'type' => $this->extractNodeType(node: $node),
+			// Extract type directly from node XML.
+			'color' => 'rgb(255, 255, 255)',
+			// Default white background.
+			'borderColor' => 'rgb(0, 0, 0)',
+			// Default black border.
+			'font' => [
+				'name' => 'Segoe UI, Arial',
+				'size' => 12,
+				'style' => 'normal',
+				'color' => 'rgb(0, 0, 0)',
+			],
+			'description' => null,
+			'elementRef' => $elementRef,
+		];
+
+		// Extract style information if present.
+		if (isset($node['style']) === true) {
+			$this->applyNodeStyle(viewNode: $viewNode, style: $node['style']);
+		}
+
+		// Extract label text for Label type nodes.
+		if (isset($node['label']['_value']) === true && is_array($node['label']) === true) {
+			$viewNode['name'] = $node['label']['_value'];
+		} elseif (isset($node['label']) === true && is_string($node['label']) === true) {
+			$viewNode['name'] = $node['label'];
+		}
+
+		return $viewNode;
+	}//end buildViewNode()
+
+	/**
+	 * Enrich a view node with the name, description, type and properties of its element
+	 *
+	 * @param array $viewNode The view node, updated in place
+	 * @param array $element  The element the node shows
+	 *
+	 * @return void
+	 */
+	private function enrichViewNodeFromElement(array &$viewNode, array $element): void {
+		// Use element name if node doesn't have its own label.
+		if ($viewNode['name'] === null && isset($element['name']) === true) {
+			$viewNode['name'] = $element['name'];
+		}
+
+		// Set description from element documentation.
+		if (isset($element['omschrijving']) === true) {
+			$viewNode['description'] = $element['omschrijving'];
+		} elseif (isset($element['documentation']) === true) {
+			$viewNode['description'] = $element['documentation'];
+		}
+
+		// Enhance type with element data if node type wasn't fully extracted.
+		if ($viewNode['type'] === null || $viewNode['type'] === 'element') {
+			$viewNode['type'] = ($this->elementViewNodeType(element: $element) ?? $viewNode['type']);
+		}
+
+		// Add all element properties to view node for full data access.
+		$viewNode['elementProperties'] = $this->extractElementProperties(element: $element);
+
+		// Copy the object id, the GEMMA-specific properties, the element
+		// section and the model identifier when the element has them.
+		$copied = [
+			'objectId' => 'objectId',
+			'gemmaType' => 'gemmaType',
+			'bivScoreBbn' => 'bivScoreBbn',
+			'belangrijksteReden' => 'belangrijksteReden',
+			'availability' => 'availability',
+			'integrity' => 'integrity',
+			'confidentiality' => 'confidentiality',
+			'section' => 'elementSection',
+			'model_identifier' => 'modelIdentifier',
+		];
+		foreach ($copied as $from => $to) {
+			if (isset($element[$from]) === true) {
+				$viewNode[$to] = $element[$from];
+			}
+		}
+	}//end enrichViewNodeFromElement()
+
+	/**
+	 * The simplified view node type an element declares
+	 *
+	 * The GEMMA type wins over the ArchiMate xsi:type
+	 * (e.g., "archimate:BusinessService" -> "businessservice").
+	 *
+	 * @param array $element The element
+	 *
+	 * @return string|null The lowercased type, or null when the element declares none
+	 */
+	private function elementViewNodeType(array $element): ?string {
+		if (isset($element['gemmaType']) === true) {
+			$gemmaType = $element['gemmaType'];
+			// Handle case where gemmaType might be an array.
+			if (is_array($gemmaType) === true) {
+				$gemmaType = $gemmaType['_value'] ?? $gemmaType[0] ?? 'unknown';
+			}
+
+			return strtolower((string)$gemmaType);
+		}
+
+		if (isset($element['xml']['_attributes']['xsi:type']) === true) {
+			return strtolower(preg_replace('/^archimate:|^[a-z]+:/', '', $element['xml']['_attributes']['xsi:type']));
+		}
+
+		return null;
+	}//end elementViewNodeType()
+
+	/**
+	 * The flattened view nodes nested under a node, with their parent set
+	 *
+	 * Only the direct children (parent still null) get this node as parent;
+	 * deeper descendants already carry the parent the recursion gave them.
+	 *
+	 * @param mixed  $childData      The nested node data (single node or array of nodes)
+	 * @param mixed  $parentId       The identifier of the node they are nested under
+	 * @param array  $elementsLookup Lookup array of elements by identifier for enrichment
+	 *
+	 * @return array The flattened child view nodes
+	 */
+	private function extractChildViewNodes(mixed $childData, mixed $parentId, array $elementsLookup): array {
+		$childNodes = $this->extractViewNodesRecursively(nodeData: $childData, elementsLookup: $elementsLookup);
+
+		foreach ($childNodes as &$childNode) {
+			if ($childNode['parent'] === null) {
+				$childNode['parent'] = $parentId;
+			}
+		}
+
+		unset($childNode);
+
+		return $childNodes;
+	}//end extractChildViewNodes()
 
 	/**
 	 * Extract all properties from an element for view node enrichment
@@ -2923,44 +2880,12 @@ class ArchiMateImportService {
 				// Label information.
 			];
 
-			// Extract bend points if present.
 			if (isset($connection['bendpoint']) === true) {
-				// Normalise to indexed array: single bendpoint is a plain assoc array.
-				if (isset($connection['bendpoint'][0]) === true) {
-					$bendpoints = $connection['bendpoint'];
-				} else {
-					$bendpoints = [$connection['bendpoint']];
-				}
+				$viewRelationship['bendpoints'] = $this->connectionBendpoints(bendpoint: $connection['bendpoint']);
+			}
 
-				foreach ($bendpoints as $bendpoint) {
-					if (isset($bendpoint['_attributes']) === true) {
-						$xValue = (int)($bendpoint['_attributes']['x'] ?? 0);
-						$yValue = (int)($bendpoint['_attributes']['y'] ?? 0);
-
-						$viewRelationship['bendpoints'][] = [
-							'x' => $xValue,
-							'y' => $yValue,
-						];
-					}
-				}
-			}//end if
-
-			// Extract label information if present.
 			if (isset($connection['label']) === true) {
-				$label = [];
-
-				if (is_array($connection['label']) === true && isset($connection['label']['_value']) === true) {
-					$label['text'] = $connection['label']['_value'];
-				} elseif (is_string($connection['label']) === true) {
-					$label['text'] = $connection['label'];
-				}
-
-				// Extract label markup/style if present.
-				if (isset($connection['style']) === true) {
-					$label['markup'] = [$this->extractLabelMarkup(style: $connection['style'])];
-				}
-
-				$viewRelationship['label'] = $label;
+				$viewRelationship['label'] = $this->connectionLabel(connection: $connection);
 			}
 
 			$viewRelationships[] = $viewRelationship;
@@ -2968,6 +2893,57 @@ class ArchiMateImportService {
 
 		return $viewRelationships;
 	}//end extractViewRelationshipsRecursively()
+
+	/**
+	 * The bend points of a connection
+	 *
+	 * @param mixed $bendpoint The parsed bendpoint element(s): one assoc array or a list
+	 *
+	 * @return array The bend points as x and y, skipping those without attributes
+	 */
+	private function connectionBendpoints(mixed $bendpoint): array {
+		// Normalise to indexed array: single bendpoint is a plain assoc array.
+		$bendpoints = [$bendpoint];
+		if (isset($bendpoint[0]) === true) {
+			$bendpoints = $bendpoint;
+		}
+
+		$points = [];
+		foreach ($bendpoints as $point) {
+			if (isset($point['_attributes']) === true) {
+				$points[] = [
+					'x' => (int)($point['_attributes']['x'] ?? 0),
+					'y' => (int)($point['_attributes']['y'] ?? 0),
+				];
+			}
+		}
+
+		return $points;
+	}//end connectionBendpoints()
+
+	/**
+	 * The label of a connection: its text and, when styled, its markup
+	 *
+	 * @param array $connection The parsed connection, with a label
+	 *
+	 * @return array The label
+	 */
+	private function connectionLabel(array $connection): array {
+		$label = [];
+
+		if (is_array($connection['label']) === true && isset($connection['label']['_value']) === true) {
+			$label['text'] = $connection['label']['_value'];
+		} elseif (is_string($connection['label']) === true) {
+			$label['text'] = $connection['label'];
+		}
+
+		// Extract label markup/style if present.
+		if (isset($connection['style']) === true) {
+			$label['markup'] = [$this->extractLabelMarkup(style: $connection['style'])];
+		}
+
+		return $label;
+	}//end connectionLabel()
 
 	/**
 	 * Extract label markup information from connection style
@@ -3189,7 +3165,7 @@ class ArchiMateImportService {
 		// MEMORY CLEANUP: Free all intermediate lookups and caches before database operations.
 		$memoryBeforeCleanup = memory_get_usage(true);
 		unset($allLookups, $elementsLookup, $propDefMap, $scope);
-		$this->camelCaseCache = [];
+		$this->camelCaseNames = null;
 		// Clear property name cache.
 		$this->idPatternCache = [];
 		// Clear identifier pattern cache.
@@ -3436,33 +3412,8 @@ class ArchiMateImportService {
 	private function createModelObjectDirect(array $metadata, string $modelIdentifier): array {
 		$organisation = $this->getCurrentOrganisation();
 
-		// Extract a plain string name (schema column expects string, not array).
-		$nameString = null;
-		if (isset($metadata['name']) === true) {
-			if (is_array($metadata['name']) === true && isset($metadata['name']['_value']) === true) {
-				$nameString = (string)$metadata['name']['_value'];
-			} elseif (is_string($metadata['name']) === true) {
-				$nameString = $metadata['name'];
-			}
-		}
-
-		// Build xml field preserving full array structure for round-trip fidelity.
-		$xmlData = [];
-		if (isset($metadata['name']) === true) {
-			$xmlData['name'] = $metadata['name'];
-		}
-
-		if (isset($metadata['documentation']) === true) {
-			$xmlData['documentation'] = $metadata['documentation'];
-		}
-
-		if (isset($metadata['properties']) === true) {
-			$xmlData['properties'] = $metadata['properties'];
-		}
-
-		if (isset($metadata['propertyDefinitionMap']) === true) {
-			$xmlData['propertyDefinitionMap'] = $metadata['propertyDefinitionMap'];
-		}
+		$nameString = $this->plainModelName(metadata: $metadata);
+		$xmlData = $this->modelXmlFields(metadata: $metadata);
 
 		$regId = $this->cachedConfig['registerId'] ?? throw new \RuntimeException('No register ID.');
 		$schemaId = $this->cachedConfig['schemaIds']['model'] ?? throw new \RuntimeException('No model schema ID.');
@@ -4054,152 +4005,17 @@ class ArchiMateImportService {
 
 		// If we have access to the actual save results from ObjectService, use those.
 		if ($this->lastSaveResult !== null) {
-			$saveResult = $this->lastSaveResult;
-
-			// DEBUG: Log what we got from ObjectService.
-			$this->logger->info(
-				'[ArchiMate] Using lastSaveResult for statistics',
-				[
-					'saved_count' => count($saveResult['saved'] ?? []),
-					'updated_count' => count($saveResult['updated'] ?? []),
-					'unchanged_count' => count($saveResult['unchanged'] ?? []),
-					'invalid_count' => count($saveResult['invalid'] ?? []),
-					'keys_present' => array_keys($saveResult),
-				]
-			);
-
-			// Count objects by section type from the actual processed objects.
-			$allProcessedObjects = array_merge(
-				$saveResult['saved'] ?? [],
-				$saveResult['updated'] ?? [],
-				$saveResult['unchanged'] ?? [],
-				// For invalid objects, extract the original object from the error structure.
-				array_map(fn ($item) => $item['object'] ?? [], $saveResult['invalid'] ?? [])
-			);
-
-			foreach ($allProcessedObjects as $object) {
-				// Convert ObjectEntity to array if needed.
-				if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
-					$object = $object->jsonSerialize();
-				}
-
-				$sectionType = $object['section'] ?? null;
-
-				// Map section types (singular or plural) to statistics keys.
-				$sectionKey = match ($sectionType) {
-					'elements', 'element', 'model' => 'elements',
-					'relationships', 'relationship' => 'relationships',
-					'organizations', 'organization' => 'organizations',
-					'views', 'view' => 'views',
-					'property_definitions', 'property_definition' => 'property_definitions',
-					default => null
-				};
-
-				// Fallback: use @self.schema to determine section.
-				if ($sectionKey === null
-					&& $this->cachedConfig !== null
-					&& isset($this->cachedConfig['schemaIds']) === true
-				) {
-					$objSchemaId = $object['@self']['schema'] ?? null;
-					if ($objSchemaId !== null) {
-						$singularToPlural = [
-							'element' => 'elements',
-							'relationship' => 'relationships',
-							'organization' => 'organizations',
-							'view' => 'views',
-							'property_definition' => 'property_definitions',
-							'model' => 'elements',
-						];
-						foreach ($this->cachedConfig['schemaIds'] as $type => $schemaId) {
-							if ((int)$schemaId === (int)$objSchemaId) {
-								$sectionKey = $singularToPlural[$type] ?? 'elements';
-								break;
-							}
-						}
-					}
-
-					$sectionKey = $sectionKey ?? 'elements';
-				} elseif ($sectionKey === null) {
-					$sectionKey = 'elements';
-				}//end if
-
-				// No "skip unknown section types" guard: the branch above pins
-				// $sectionKey to a key $statistics always has, so it never fired.
-
-				// Determine if this object was created, updated, or had errors.
-				$objectId = $object['@self']['id'] ?? $object['identifier'] ?? null;
-
-				// Check if this object is in the saved (created) list.
-				$wasCreated = empty(
-					array_filter(
-						$saveResult['saved'] ?? [],
-						fn ($saved) => ($saved->getUuid() === $objectId)
-					)
-				) === false;
-
-				// Check if this object is in the updated list.
-				$wasUpdated = empty(
-					array_filter(
-						$saveResult['updated'] ?? [],
-						fn ($updated) => ($updated->getUuid() === $objectId)
-					)
-				) === false;
-
-				// Check if this object was unchanged (no changes).
-				$unchangedObjects = $saveResult['unchanged'] ?? [];
-				$wasSkipped = empty(
-					array_filter(
-						$unchangedObjects,
-						fn ($unchanged) => ($unchanged->getUuid() === $objectId)
-					)
-				) === false;
-
-				// Check if this object had validation errors.
-				$hasErrors = empty(
-					array_filter(
-						$saveResult['invalid'] ?? [],
-						fn ($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId)
-					)
-				) === false;
-
-				if ($wasCreated === true) {
-					$statistics[$sectionKey]['created']++;
-				} elseif ($wasUpdated === true) {
-					$statistics[$sectionKey]['updated']++;
-				} elseif ($wasSkipped === true) {
-					$statistics[$sectionKey]['unchanged']++;
-				} elseif ($hasErrors === true) {
-					// Add to errors array for this section.
-					$errorInfo = array_filter(
-						$saveResult['invalid'] ?? [],
-						fn ($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId)
-					);
-
-					if (empty($errorInfo) === false) {
-						$firstError = array_values($errorInfo)[0];
-						$errorMessage = 'Unknown validation error';
-						if (is_array($firstError) === true && isset($firstError['error']) === true) {
-							$errorMessage = $firstError['error'];
-						}
-
-						$statistics[$sectionKey]['errors'][] = $errorMessage;
-					}
-				} else {
-					// This shouldn't happen, but leave as fallback.
-					$statistics[$sectionKey]['unchanged']++;
-				}//end if
-			}//end foreach
+			$this->countSaveResult(statistics: $statistics, saveResult: $this->lastSaveResult);
 		} else {
 			// Fallback to old method if no save result is available.
 			$sections = ['elements', 'relationships', 'organizations', 'views', 'property_definitions'];
 			foreach ($sections as $section) {
 				if (isset($normalizedData[$section]) === true) {
-					$count = count($normalizedData[$section]);
 					// Assume all objects were created (legacy behavior).
-					$statistics[$section]['created'] = $count;
+					$statistics[$section]['created'] = count($normalizedData[$section]);
 				}
 			}
-		}//end if
+		}
 
 		// Calculate summary totals from actual statistics.
 		$summary = [
@@ -4242,6 +4058,169 @@ class ArchiMateImportService {
 	}//end calculateObjectStatistics()
 
 	/**
+	 * Count every object of ObjectService's save result in its section's statistics
+	 *
+	 * @param array $statistics The statistics per section, updated in place
+	 * @param array $saveResult The saved, updated, unchanged and invalid objects
+	 *
+	 * @return void
+	 */
+	private function countSaveResult(array &$statistics, array $saveResult): void {
+		// DEBUG: Log what we got from ObjectService.
+		$this->logger->info(
+			'[ArchiMate] Using lastSaveResult for statistics',
+			[
+				'saved_count' => count($saveResult['saved'] ?? []),
+				'updated_count' => count($saveResult['updated'] ?? []),
+				'unchanged_count' => count($saveResult['unchanged'] ?? []),
+				'invalid_count' => count($saveResult['invalid'] ?? []),
+				'keys_present' => array_keys($saveResult),
+			]
+		);
+
+		// Count objects by section type from the actual processed objects.
+		$allProcessedObjects = array_merge(
+			$saveResult['saved'] ?? [],
+			$saveResult['updated'] ?? [],
+			$saveResult['unchanged'] ?? [],
+			// For invalid objects, extract the original object from the error structure.
+			array_map(fn ($item) => $item['object'] ?? [], $saveResult['invalid'] ?? [])
+		);
+
+		foreach ($allProcessedObjects as $object) {
+			// Convert ObjectEntity to array if needed.
+			if (is_object($object) === true && method_exists($object, 'jsonSerialize') === true) {
+				$object = $object->jsonSerialize();
+			}
+
+			// No "skip unknown section types" guard: statisticsSection() always
+			// returns a key $statistics has.
+			$sectionKey = $this->statisticsSection(object: $object);
+
+			// Determine if this object was created, updated, or had errors.
+			$objectId = $object['@self']['id'] ?? $object['identifier'] ?? null;
+
+			$this->countSaveOutcome(
+				sectionStats: $statistics[$sectionKey],
+				saveResult: $saveResult,
+				objectId: $objectId
+			);
+		}//end foreach
+	}//end countSaveResult()
+
+	/**
+	 * The statistics section an imported object counts in
+	 *
+	 * The object's section (singular or plural) decides; without one, the
+	 * section whose cached schema id matches the object's schema; else elements.
+	 *
+	 * @param array $object The serialised object
+	 *
+	 * @return string The statistics key
+	 */
+	private function statisticsSection(array $object): string {
+		$sectionKey = match ($object['section'] ?? null) {
+			'elements', 'element', 'model' => 'elements',
+			'relationships', 'relationship' => 'relationships',
+			'organizations', 'organization' => 'organizations',
+			'views', 'view' => 'views',
+			'property_definitions', 'property_definition' => 'property_definitions',
+			default => null
+		};
+
+		// Fallback: use @self.schema to determine section.
+		if ($sectionKey === null && isset($this->cachedConfig['schemaIds']) === true) {
+			$sectionKey = $this->sectionOfSchema(schemaId: $object['@self']['schema'] ?? null);
+		}
+
+		return $sectionKey ?? 'elements';
+	}//end statisticsSection()
+
+	/**
+	 * The statistics section of the cached schema type a schema id belongs to
+	 *
+	 * @param mixed $schemaId The object's schema id
+	 *
+	 * @return string|null The statistics key, or null when no cached schema matches
+	 */
+	private function sectionOfSchema(mixed $schemaId): ?string {
+		if ($schemaId === null) {
+			return null;
+		}
+
+		$singularToPlural = [
+			'element' => 'elements',
+			'relationship' => 'relationships',
+			'organization' => 'organizations',
+			'view' => 'views',
+			'property_definition' => 'property_definitions',
+			'model' => 'elements',
+		];
+		foreach ($this->cachedConfig['schemaIds'] as $type => $configuredSchemaId) {
+			if ((int)$configuredSchemaId === (int)$schemaId) {
+				return $singularToPlural[$type] ?? 'elements';
+			}
+		}
+
+		return null;
+	}//end sectionOfSchema()
+
+	/**
+	 * Count one object as created, updated, unchanged or failed in its section
+	 *
+	 * @param array $sectionStats The section's statistics, updated in place
+	 * @param array $saveResult   The saved, updated, unchanged and invalid objects
+	 * @param mixed $objectId     The object's id
+	 *
+	 * @return void
+	 */
+	private function countSaveOutcome(array &$sectionStats, array $saveResult, mixed $objectId): void {
+		$found = [];
+		foreach (['saved' => 'created', 'updated' => 'updated', 'unchanged' => 'unchanged'] as $bucket => $counter) {
+			$found[$counter] = $this->bucketHasUuid(objects: ($saveResult[$bucket] ?? []), uuid: $objectId);
+		}
+
+		// The validation errors of this object.
+		$errorInfo = array_filter(
+			$saveResult['invalid'] ?? [],
+			fn ($invalid) => (($invalid['object']['@self']['id'] ?? null) === $objectId)
+		);
+
+		foreach ($found as $counter => $wasFound) {
+			if ($wasFound === true) {
+				$sectionStats[$counter]++;
+				return;
+			}
+		}
+
+		if (empty($errorInfo) === true) {
+			// This shouldn't happen, but leave as fallback.
+			$sectionStats['unchanged']++;
+			return;
+		}
+
+		$firstError = array_values($errorInfo)[0];
+		$errorMessage = 'Unknown validation error';
+		if (is_array($firstError) === true && isset($firstError['error']) === true) {
+			$errorMessage = $firstError['error'];
+		}
+
+		$sectionStats['errors'][] = $errorMessage;
+	}//end countSaveOutcome()
+
+	/**
+	 * Whether a bucket of the save result holds an object with this UUID
+	 *
+	 * @param array $objects The bucket's objects
+	 * @param mixed $uuid    The UUID looked for
+	 *
+	 * @return bool True when an object in the bucket has the UUID
+	 */
+	private function bucketHasUuid(array $objects, mixed $uuid): bool {
+		return empty(array_filter($objects, fn ($object) => ($object->getUuid() === $uuid))) === false;
+	}//end bucketHasUuid()
+
+	/**
 	 * Extract detailed error information from import statistics for frontend display
 	 *
 	 * @param array $statistics Import statistics containing section-wise error data
@@ -4264,46 +4243,66 @@ class ArchiMateImportService {
 
 				$detailedErrors['total_count'] += $sectionErrorCount;
 
-				// Group errors by type/message for better presentation.
-				$errorGroups = [];
-				foreach ($sectionErrors as $error) {
-					$errorMessage = ($error['message'] ?? 'Unknown error');
-					if (is_string($error) === true) {
-						$errorMessage = $error;
-					}
-
-					$errorType = $this->categorizeError(errorMessage: $errorMessage);
-
-					if (isset($errorGroups[$errorType]) === false) {
-						$errorGroups[$errorType] = [
-							'type' => $errorType,
-							'message' => $errorMessage,
-							'count' => 0,
-							'examples' => [],
-						];
-					}
-
-					$errorGroups[$errorType]['count']++;
-
-					// Add example object ID if available (limit to 5 examples).
-					if (count($errorGroups[$errorType]['examples']) < 5) {
-						if (is_array($error) === true && isset($error['object_id']) === true) {
-							$errorGroups[$errorType]['examples'][] = $error['object_id'];
-						}
-					}
-				}//end foreach
-
 				$detailedErrors['by_section'][$section] = [
 					'section_name' => ucfirst(str_replace('_', ' ', $section)),
 					'total_errors' => $sectionErrorCount,
-					'error_groups' => array_values($errorGroups),
+					'error_groups' => array_values($this->groupSectionErrors(sectionErrors: $sectionErrors)),
 				];
-			}//end if
+			}
+		}
+
+		$detailedErrors['omschrijving'] = $this->mostCommonErrors(bySection: $detailedErrors['by_section']);
+
+		return $detailedErrors;
+	}//end extractDetailedErrors()
+
+	/**
+	 * Group a section's errors by category, with up to five example object ids each
+	 *
+	 * @param array $sectionErrors The section's errors: messages, or arrays with a message and an object id
+	 *
+	 * @return array The error groups by category
+	 */
+	private function groupSectionErrors(array $sectionErrors): array {
+		$errorGroups = [];
+		foreach ($sectionErrors as $error) {
+			$errorMessage = ($error['message'] ?? 'Unknown error');
+			if (is_string($error) === true) {
+				$errorMessage = $error;
+			}
+
+			$errorType = $this->categorizeError(errorMessage: $errorMessage);
+
+			if (isset($errorGroups[$errorType]) === false) {
+				$errorGroups[$errorType] = [
+					'type' => $errorType,
+					'message' => $errorMessage,
+					'count' => 0,
+					'examples' => [],
+				];
+			}
+
+			$errorGroups[$errorType]['count']++;
+
+			// Add example object ID if available (limit to 5 examples).
+			if (count($errorGroups[$errorType]['examples']) < 5 && is_array($error) === true && isset($error['object_id']) === true) {
+				$errorGroups[$errorType]['examples'][] = $error['object_id'];
+			}
 		}//end foreach
 
-		// Create summary of most common errors across all sections.
+		return $errorGroups;
+	}//end groupSectionErrors()
+
+	/**
+	 * The ten most common error categories across all sections
+	 *
+	 * @param array $bySection The error report per section
+	 *
+	 * @return array The categories with their first message, total count and affected sections, most frequent first
+	 */
+	private function mostCommonErrors(array $bySection): array {
 		$allErrors = [];
-		foreach ($detailedErrors['by_section'] as $sectionData) {
+		foreach ($bySection as $sectionData) {
 			foreach ($sectionData['error_groups'] as $errorGroup) {
 				$errorType = $errorGroup['type'];
 				if (isset($allErrors[$errorType]) === false) {
@@ -4322,10 +4321,8 @@ class ArchiMateImportService {
 
 		// Sort by frequency and take top 10.
 		uasort($allErrors, fn ($a, $b) => $b['total_count'] - $a['total_count']);
-		$detailedErrors['omschrijving'] = array_slice(array_values($allErrors), 0, 10);
-
-		return $detailedErrors;
-	}//end extractDetailedErrors()
+		return array_slice(array_values($allErrors), 0, 10);
+	}//end mostCommonErrors()
 
 	/**
 	 * Categorize error types for better grouping and presentation

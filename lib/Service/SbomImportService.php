@@ -3,6 +3,9 @@
 /**
  * SBOM Import Service.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Orchestrates importing a parsed SBOM (see {@see SbomParserService}) for a
  * single `moduleVersie`: resolves the target version, soft-deletes its
  * previous (non-deleted) `sbomComponent` set, bulk-saves the newly parsed
@@ -29,9 +32,6 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/sbom-import/spec.md#requirement-re-import-replaces-the-previous-component-set-and-is-soft-delete-aware
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -40,6 +40,8 @@ namespace OCA\Stackiq\Service;
 
 use DateTime;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\SbomImportServiceInterface;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
@@ -50,7 +52,7 @@ use RuntimeException;
  *
  * @spec openspec/specs/sbom-import/spec.md
  */
-class SbomImportService {
+class SbomImportService implements SbomImportServiceInterface {
 	/**
 	 * Maximum objects per OR bulk create/delete call — bounds a single
 	 * unbounded bulk-save call for large SBOMs (design Decision 4 /
@@ -66,24 +68,17 @@ class SbomImportService {
 	private const PROGRESS_THRESHOLD = 50;
 
 	/**
-	 * Supported SBOM upload formats.
-	 *
-	 * @var array<int,string>
-	 */
-	public const SUPPORTED_FORMATS = ['cyclonedx-json', 'spdx-json'];
-
-	/**
 	 * Constructor.
 	 *
 	 * @param ContainerInterface $container The DI container (lazy OR lookup).
-	 * @param SettingsService $settingsService Resolves register/schema ids.
+	 * @param RegisterConfigReaderInterface $settingsService Resolves register/schema ids.
 	 * @param SbomParserService $parser The pure SBOM parser.
 	 * @param ProgressTracker $progressTracker Progress reporting for large imports.
 	 * @param LoggerInterface $logger Logger.
 	 */
 	public function __construct(
 		private readonly ContainerInterface $container,
-		private readonly SettingsService $settingsService,
+		private readonly RegisterConfigReaderInterface $settingsService,
 		private readonly SbomParserService $parser,
 		private readonly ProgressTracker $progressTracker,
 		private readonly LoggerInterface $logger,
@@ -559,6 +554,17 @@ class SbomImportService {
 			return $relation;
 		}
 
+		return self::carriedUuid(relation: $relation);
+	}//end resolveRelationUuid()
+
+	/**
+	 * The uuid (else id) an array or object relation value carries.
+	 *
+	 * @param mixed $relation The raw relation value.
+	 *
+	 * @return string|null The carried uuid, or null when the value carries none.
+	 */
+	private static function carriedUuid(mixed $relation): ?string {
 		if (is_array($relation) === true) {
 			return $relation['uuid'] ?? ($relation['id'] ?? null);
 		}
@@ -568,7 +574,7 @@ class SbomImportService {
 		}
 
 		return null;
-	}//end resolveRelationUuid()
+	}//end carriedUuid()
 
 	/**
 	 * Resolve the register/schema coordinates + ObjectService this service

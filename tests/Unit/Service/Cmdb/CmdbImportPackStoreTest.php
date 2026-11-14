@@ -374,6 +374,28 @@ class CmdbImportPackStoreTest extends TestCase {
 	}//end testARenamedPackFailsClosed()
 
 	/**
+	 * A recorded row that cannot be read is MAPPING_UNAVAILABLE naming the pack and the row, and nothing is seeded.
+	 *
+	 * @return void
+	 */
+	public function testAnUnreadableRecordedPackFailsClosed(): void {
+		$this->config[CmdbImportPackStore::CONFIG_KEY] = (string)json_encode(['stackiq-topdesk-usage' => 7]);
+		$this->service->findFailure = new RuntimeException('connection reset');
+
+		try {
+			$this->store()->resolve(shipped: $this->shippedUsage());
+			$this->fail('MAPPING_UNAVAILABLE expected');
+		} catch (CmdbImportException $e) {
+			$this->assertSame('MAPPING_UNAVAILABLE', $e->getErrorCode());
+			$this->assertSame('OpenRegister migration pack stackiq-topdesk-usage (id 7) could not be read: RuntimeException', $e->getMessage());
+			$this->assertSame(['pack' => 'stackiq-topdesk-usage', 'packId' => 7], $e->getDetails());
+			$this->assertInstanceOf(RuntimeException::class, $e->getPrevious());
+		}
+
+		$this->assertSame([], $this->service->writes, 'nothing seeded while the recorded row is unknown');
+	}//end testAnUnreadableRecordedPackFailsClosed()
+
+	/**
 	 * A pack whose recorded row was deleted is seeded again, and the new row id is recorded.
 	 *
 	 * @return void

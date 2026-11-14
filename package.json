@@ -21,8 +21,8 @@
     "watch": "NODE_ENV=development webpack --config webpack.config.js --progress --watch",
     "lint": "eslint src tests scripts",
     "lint-fix": "npm run lint -- --fix && npm run format:fix",
-    "test": "jest --silent",
-    "test-coverage": "jest --silent --coverage",
+    "test": "vitest run",
+    "test-coverage": "npm run test:coverage",
     "test:unit": "vitest run",
     "test:coverage": "vitest run --coverage --coverage.provider=v8 --coverage.reporter=json-summary --coverage.reporter=text-summary --coverage.include=src/** --coverage.reportsDirectory=coverage-vitest",
     "test:coverage-ratchet": "npm run test:coverage && bash tests/coverage-ratchet.sh vitest coverage-vitest/coverage-summary.json",
@@ -72,7 +72,7 @@
     "vue-codemirror6": "^1.0.0",
     "vue-draggable-plus": "^0.6.1",
     "vue-loader": "^17.4.2",
-    "vue-material-design-icons": "^5.3.0",
+    "vue-material-design-icons": "^5.3.1",
     "vue-router": "^4.6.4",
     "webpack": "^5.110.3",
     "webpack-cli": "^6.0.1",
@@ -84,7 +84,13 @@
     "fast-xml-parser": ">=4.5.4",
     "immutable": ">=5.1.5",
     "json5": ">=1.0.2",
-    "serialize-javascript": ">=7.0.3"
+    "serialize-javascript": ">=7.0.3",
+    "@toast-ui/editor": {
+      "dompurify": "^3.4.17"
+    },
+    "webdav": {
+      "minimatch": "^11.0.1"
+    }
   },
   "devDependencies": {
     "@babel/preset-env": "^7.22.9",

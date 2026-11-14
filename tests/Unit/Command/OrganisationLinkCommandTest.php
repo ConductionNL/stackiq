@@ -11,6 +11,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/organisatie-service/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -18,6 +21,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Command;
 
 use OCA\Stackiq\Command\OrganisationLinkCommand;
+use OCA\Stackiq\Kernel\Contracts\OrganizationSyncServiceInterface;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
@@ -168,7 +172,7 @@ class OrganisationLinkCommandTest extends TestCase {
 	 */
 	private function tester(OrganizationSyncService $sync): CommandTester {
 		$container = $this->createMock(ContainerInterface::class);
-		$container->method('get')->with(OrganizationSyncService::class)->willReturn($sync);
+		$container->method('get')->with(OrganizationSyncServiceInterface::class)->willReturn($sync);
 		return new CommandTester(new OrganisationLinkCommand($container));
 	}//end tester()
 }//end class

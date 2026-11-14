@@ -3,6 +3,9 @@
 /**
  * Registration / review moderation / approval queue.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * The admin-only counterpart to IntakeService (organisatie) and
  * ReviewService (beoordeeling) — a single generalised mechanism, not two
  * parallel ones (catalog-ratings, stackiq#375: "reuse the
@@ -36,15 +39,13 @@
  *
  * @spec openspec/specs/open-data-publishing/spec.md
  * @spec openspec/specs/catalog-ratings/spec.md#requirement-review-moderation-must-reuse-the-existing-moderation-queue-mechanism-not-a-second-one
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Kernel\Contracts\ModerationServiceInterface;
 use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -55,11 +56,7 @@ use Psr\Log\LoggerInterface;
  * @spec openspec/specs/open-data-publishing/spec.md
  * @spec openspec/specs/catalog-ratings/spec.md
  */
-class ModerationService {
-	/**
-	 * The moderated catalog object type (default / legacy — organisatie).
-	 */
-	public const MODERATED_TYPE = 'organization';
+class ModerationService implements ModerationServiceInterface {
 
 	/**
 	 * The review moderated catalog object type.
@@ -312,13 +309,7 @@ class ModerationService {
 	 * @return array{register:int, schema:int}|null The target, or null.
 	 */
 	private function resolveTarget(string $type): ?array {
-		$register = $this->settingsService->getRegisterIdForObjectType($type);
-		$schema = $this->settingsService->getSchemaIdForObjectType($type);
-		if ($register === null || $schema === null) {
-			return null;
-		}
-
-		return ['register' => (int)$register, 'schema' => (int)$schema];
+		return (new ObjectTypeTarget(locator: $this->settingsService))->resolve(type: $type);
 	}//end resolveTarget()
 
 	/**
@@ -329,24 +320,7 @@ class ModerationService {
 	 * @return array<string,mixed> The data bag.
 	 */
 	private function toDataBag(mixed $object): array {
-		if (is_array($object) === true) {
-			return $object;
-		}
-
-		if (is_object($object) === true && method_exists($object, 'getObject') === true) {
-			$data = $object->getObject();
-			if (method_exists($object, 'getUuid') === true && empty($data['id']) === true) {
-				$data['id'] = $object->getUuid();
-			}
-
-			if (is_array($data) === true) {
-				return $data;
-			}
-
-			return [];
-		}
-
-		return [];
+		return (new ObjectDataBag())->fromItem(object: $object);
 	}//end toDataBag()
 
 	/**

@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Pinia store for GEMMA view enrichment state.
  *
  * Manages the include_gebruik, include_deelnames_gebruik and include_products

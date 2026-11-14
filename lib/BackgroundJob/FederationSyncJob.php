@@ -25,8 +25,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\BackgroundJob;
 
-use OCA\Stackiq\Service\Federation\FederationConfig;
-use OCA\Stackiq\Service\Federation\FederationService;
+use OCA\Stackiq\Kernel\Contracts\FederationConfigInterface;
+use OCA\Stackiq\Kernel\Contracts\FederationServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -39,14 +39,14 @@ class FederationSyncJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $timeFactory The time factory for scheduling.
-	 * @param FederationService $federation The federation service.
-	 * @param FederationConfig $config The federation config (interval).
+	 * @param FederationServiceInterface $federation The federation service.
+	 * @param FederationConfigInterface $config The federation config (interval).
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $timeFactory,
-		private readonly FederationService $federation,
-		FederationConfig $config,
+		private readonly FederationServiceInterface $federation,
+		FederationConfigInterface $config,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $timeFactory);
@@ -70,14 +70,7 @@ class FederationSyncJob extends TimedJob {
 		}
 
 		try {
-			$result = $this->federation->announce();
-			$this->logger->info('[FederationSyncJob] Announce pass complete', ['result' => $result]);
-
-			// Pull subscribed peers (each peer is isolated — one unreachable
-			// peer cannot block the rest; failures mark mirrors stale, never
-			// silently delete them).
-			$pull = $this->federation->pullAllPeers();
-			$this->logger->info('[FederationSyncJob] Peer-pull pass complete', ['result' => $pull]);
+			$this->announceAndPull();
 		} catch (\Throwable $e) {
 			$this->logger->error(
 				'[FederationSyncJob] Fatal error during federation pass — cron pass protected',
@@ -85,4 +78,20 @@ class FederationSyncJob extends TimedJob {
 			);
 		}
 	}//end run()
+
+	/**
+	 * Announce this catalogue, then pull every subscribed peer.
+	 *
+	 * @return void
+	 */
+	private function announceAndPull(): void {
+		$result = $this->federation->announce();
+		$this->logger->info('[FederationSyncJob] Announce pass complete', ['result' => $result]);
+
+		// Pull subscribed peers (each peer is isolated — one unreachable
+		// peer cannot block the rest; failures mark mirrors stale, never
+		// silently delete them).
+		$pull = $this->federation->pullAllPeers();
+		$this->logger->info('[FederationSyncJob] Peer-pull pass complete', ['result' => $pull]);
+	}//end announceAndPull()
 }//end class

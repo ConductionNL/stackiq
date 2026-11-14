@@ -25,6 +25,7 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Tests\Unit\Controller;
 
 use OCA\Stackiq\Controller\PortfolioReportController;
+use OCA\Stackiq\Controller\OrganisationReportRequest;
 use OCA\Stackiq\Service\OrganisationReportAccess;
 use OCA\Stackiq\Service\PortfolioReportService;
 use OCP\AppFramework\Http\DataDownloadResponse;
@@ -89,9 +90,8 @@ class PortfolioReportControllerTest extends TestCase {
 		return new PortfolioReportController(
 			appName: 'stackiq',
 			request: $request,
-			userSession: $userSession,
 			reportService: $service ?? $this->createMock(PortfolioReportService::class),
-			access: new OrganisationReportAccess(groupManager: $groupManager, config: $config)
+			reportRequest: new OrganisationReportRequest(userSession: $userSession, request: $request, access: new OrganisationReportAccess(groupManager: $groupManager, config: $config))
 		);
 	}//end makeController()
 

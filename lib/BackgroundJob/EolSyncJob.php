@@ -30,7 +30,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\BackgroundJob;
 
-use OCA\Stackiq\Service\EolSyncService;
+use OCA\Stackiq\Kernel\Contracts\EolSyncServiceInterface;
 use OCP\AppFramework\Utility\ITimeFactory;
 use OCP\BackgroundJob\TimedJob;
 use Psr\Log\LoggerInterface;
@@ -48,12 +48,12 @@ class EolSyncJob extends TimedJob {
 	 * Constructor.
 	 *
 	 * @param ITimeFactory $timeFactory The time factory for job scheduling.
-	 * @param EolSyncService $eolSyncService The EOL sync orchestration service.
+	 * @param EolSyncServiceInterface $eolSyncService The EOL sync orchestration service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
 		ITimeFactory $timeFactory,
-		private readonly EolSyncService $eolSyncService,
+		private readonly EolSyncServiceInterface $eolSyncService,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(time: $timeFactory);
@@ -93,14 +93,25 @@ class EolSyncJob extends TimedJob {
 			// EolSyncService::run() is designed to never throw (it degrades
 			// to a recorded status instead), but this guard keeps a future
 			// regression there from breaking the shared cron pass.
-			$this->logger->error(
-				'[EolSyncJob] Fatal error during EOL sync — cron pass protected',
-				[
-					'error' => $e->getMessage(),
-					'file' => $e->getFile(),
-					'line' => $e->getLine(),
-				]
-			);
+			$this->logFatal(error: $e);
 		}//end try
 	}//end run()
+
+	/**
+	 * Log a sync run that threw.
+	 *
+	 * @param \Throwable $error What was thrown.
+	 *
+	 * @return void
+	 */
+	private function logFatal(\Throwable $error): void {
+		$this->logger->error(
+			'[EolSyncJob] Fatal error during EOL sync — cron pass protected',
+			[
+				'error' => $error->getMessage(),
+				'file' => $error->getFile(),
+				'line' => $error->getLine(),
+			]
+		);
+	}//end logFatal()
 }//end class

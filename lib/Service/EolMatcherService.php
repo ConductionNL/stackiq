@@ -153,17 +153,31 @@ class EolMatcherService {
 
 		$versionSegments = explode('.', $version);
 		$cycleSegments = explode('.', $cycle);
+		if (self::sharedSegmentsEqual(versionSegments: $versionSegments, cycleSegments: $cycleSegments) === false) {
+			return null;
+		}
 
+		return min(count($versionSegments), count($cycleSegments));
+	}//end matchDepth()
+
+	/**
+	 * Whether every segment the two lists share by index is equal.
+	 *
+	 * @param array<int, string> $versionSegments The module version's dot-separated segments.
+	 * @param array<int, string> $cycleSegments   The cycle label's dot-separated segments.
+	 *
+	 * @return bool
+	 */
+	private static function sharedSegmentsEqual(array $versionSegments, array $cycleSegments): bool {
 		$depth = min(count($versionSegments), count($cycleSegments));
-
 		for ($i = 0; $i < $depth; $i++) {
 			if ($versionSegments[$i] !== $cycleSegments[$i]) {
-				return null;
+				return false;
 			}
 		}
 
-		return $depth;
-	}//end matchDepth()
+		return true;
+	}//end sharedSegmentsEqual()
 
 	/**
 	 * Build the complete, PUT-semantic replacement object for a matched

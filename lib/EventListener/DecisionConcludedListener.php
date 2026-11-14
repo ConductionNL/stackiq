@@ -32,7 +32,7 @@ namespace OCA\Stackiq\EventListener;
 
 use OCA\Decidesk\Event\DecisionConcludedEvent as DecideskDecisionConcludedEvent;
 use OCA\Decidiq\Event\DecisionConcludedEvent as DecidiqDecisionConcludedEvent;
-use OCA\Stackiq\Service\ContractApprovalService;
+use OCA\Stackiq\Kernel\Contracts\ContractApprovalServiceInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Log\LoggerInterface;
@@ -48,11 +48,11 @@ class DecisionConcludedListener implements IEventListener {
 	/**
 	 * Constructor.
 	 *
-	 * @param ContractApprovalService $approvalService The approval-delegation service.
+	 * @param ContractApprovalServiceInterface $approvalService The approval-delegation service.
 	 * @param LoggerInterface $logger The logger.
 	 */
 	public function __construct(
-		private readonly ContractApprovalService $approvalService,
+		private readonly ContractApprovalServiceInterface $approvalService,
 		private readonly LoggerInterface $logger,
 	) {
 	}//end __construct()
@@ -113,7 +113,7 @@ class DecisionConcludedListener implements IEventListener {
 			return null;
 		}
 
-		if ($event->getSourceApp() !== ContractApprovalService::SOURCE_APP) {
+		if ($event->getSourceApp() !== ContractApprovalServiceInterface::SOURCE_APP) {
 			return null;
 		}
 

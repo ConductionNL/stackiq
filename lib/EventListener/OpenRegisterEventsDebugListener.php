@@ -19,6 +19,9 @@
  * @link https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -308,15 +311,27 @@ class OpenRegisterEventsDebugListener implements IEventListener {
 			'eventType' => 'ObjectUpdated',
 			'newObjectId' => $newObject->getId(),
 			'newObjectUuid' => $newObject->getUuid(),
-		] + $this->oldObjectIdentity(oldObject: $oldObject) + [
+		] + $this->oldObjectIdentity(oldObject: $oldObject) + $this->updatedObjectFacts(newObject: $newObject) + [
+			'oldObjectData' => $oldObjectData,
+		];
+	}//end objectUpdatedData()
+
+	/**
+	 * Where the updated object lives, who owns it, when it changed and its (safe) data.
+	 *
+	 * @param ObjectEntity $newObject The object after the update
+	 *
+	 * @return array<string, mixed>
+	 */
+	private function updatedObjectFacts(ObjectEntity $newObject): array {
+		return [
 			'registerId' => $newObject->getRegister(),
 			'schemaId' => $newObject->getSchema(),
 			'owner' => $newObject->getOwner(),
 			'updated' => $newObject->getUpdated()?->format('Y-m-d H:i:s'),
 			'newObjectData' => $this->getSafeObjectData(objectData: $newObject->getObject()),
-			'oldObjectData' => $oldObjectData,
 		];
-	}//end objectUpdatedData()
+	}//end updatedObjectFacts()
 
 	/**
 	 * The id and uuid of the object before an update, null when unknown.

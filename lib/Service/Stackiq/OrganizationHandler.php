@@ -15,12 +15,16 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Stackiq;
 
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
 use OCP\IGroup;
 use OCP\IGroupManager;
@@ -181,7 +185,7 @@ class OrganizationHandler {
 
 				// Save the updated organization with correct register/schema IDs.
 				$objectService = $this->getObjectService();
-				$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+				$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 				$registerId = $settingsService->getVoorzieningenRegisterId();
 				$organizationSchemaId = $settingsService->getSchemaIdForObjectType('organization');
 
@@ -347,7 +351,7 @@ class OrganizationHandler {
 			foreach ($contactpersonen as $index => $contactPerson) {
 				try {
 					// Get the contactgegevens schema ID from settings.
-					$settingsService = $this->_container->get('OCA\Stackiq\Service\SettingsService');
+					$settingsService = $this->_container->get(RegisterConfigReaderInterface::class);
 					$contactgegevensSchemaId = $settingsService->getSchemaIdForObjectType('contactgegevens');
 					$registerId = $settingsService->getVoorzieningenRegisterId();
 
@@ -671,60 +675,7 @@ class OrganizationHandler {
 	 */
 	public function getOrganizationBeheerders(string $organizationUuid): array {
 		try {
-			$beheerders = [];
-			$maintainerGroup = $this->_groupManager->get('maintainer');
-
-			if ($maintainerGroup === null) {
-				return [];
-			}
-
-			// Get all users in beheerder group.
-			$maintainerUsers = $maintainerGroup->getUsers();
-
-			// Filter users who belong to this organization.
-			foreach ($maintainerUsers as $user) {
-				if ($this->userBelongsToOrganization(user: $user, organizationUuid: $organizationUuid) === true) {
-					$beheerders[] = $user->getUID();
-				}
-			}
-
-			// Sort by user creation date (oldest first).
-			usort(
-				$beheerders,
-				function ($a, $b) {
-					$userA = $this->_userManager->get($a);
-					$userB = $this->_userManager->get($b);
-
-					// Get user creation timestamps (fallback to 0 if not available).
-					$timeA = 0;
-					if ($userA !== null) {
-						$lastLoginA = $userA->getLastLogin();
-						if ($lastLoginA !== 0) {
-							$timeA = (int)$lastLoginA;
-						}
-					}
-
-					$timeB = 0;
-					if ($userB !== null) {
-						$lastLoginB = $userB->getLastLogin();
-						if ($lastLoginB !== 0) {
-							$timeB = (int)$lastLoginB;
-						}
-					}
-
-					return $timeA <=> $timeB;
-				}
-			);
-
-			$this->_logger->info(
-				'Found organization beheerders',
-				[
-					'organization' => $organizationUuid,
-					'beheerders' => $beheerders,
-				]
-			);
-
-			return $beheerders;
+			return $this->listOrganizationBeheerders(organizationUuid: $organizationUuid);
 		} catch (\Exception $e) {
 			$this->_logger->error(
 				'Failed to get organization beheerders: ' . $e->getMessage(),
@@ -738,6 +689,79 @@ class OrganizationHandler {
 	}//end getOrganizationBeheerders()
 
 	/**
+	 * Lists the maintainers who belong to an organization, oldest login first.
+	 *
+	 * @param string $organizationUuid The organization UUID
+	 *
+	 * @return array Array of usernames who are beheerders in this organization
+	 */
+	private function listOrganizationBeheerders(string $organizationUuid): array {
+		$maintainerGroup = $this->_groupManager->get('maintainer');
+
+		if ($maintainerGroup === null) {
+			return [];
+		}
+
+		// Get all users in beheerder group.
+		$beheerders = $this->beheerdersAmong(users: $maintainerGroup->getUsers(), organizationUuid: $organizationUuid);
+
+		$this->_logger->info(
+			'Found organization beheerders',
+			[
+				'organization' => $organizationUuid,
+				'beheerders' => $beheerders,
+			]
+		);
+
+		return $beheerders;
+	}//end listOrganizationBeheerders()
+
+	/**
+	 * Picks the users who belong to an organization, sorted by last login (oldest first).
+	 *
+	 * @param array  $users            The maintainer users
+	 * @param string $organizationUuid The organization UUID
+	 *
+	 * @return array The usernames of the users who belong to the organization
+	 */
+	private function beheerdersAmong(array $users, string $organizationUuid): array {
+		$beheerders = [];
+
+		// Filter users who belong to this organization.
+		foreach ($users as $user) {
+			if ($this->userBelongsToOrganization(user: $user, organizationUuid: $organizationUuid) === true) {
+				$beheerders[] = $user->getUID();
+			}
+		}
+
+		// Sort by user creation date (oldest first).
+		usort(
+			$beheerders,
+			function ($a, $b) {
+				return $this->lastLoginOf(uid: $a) <=> $this->lastLoginOf(uid: $b);
+			}
+		);
+
+		return $beheerders;
+	}//end beheerdersAmong()
+
+	/**
+	 * The last login timestamp of a user, 0 when the user or the login is not available.
+	 *
+	 * @param string $uid The username
+	 *
+	 * @return int
+	 */
+	private function lastLoginOf(string $uid): int {
+		$user = $this->_userManager->get($uid);
+		if ($user === null) {
+			return 0;
+		}
+
+		return (int)$user->getLastLogin();
+	}//end lastLoginOf()
+
+	/**
 	 * Checks if a user belongs to an organization.
 	 *
 	 * @param IUser $user The user to check
@@ -748,24 +772,8 @@ class OrganizationHandler {
 	 */
 	public function userBelongsToOrganization(IUser $user, string $organizationUuid): bool {
 		try {
-			// Check if user is in the organization-specific group.
-			$organizationGroupName = $this->sanitizeGroupName(name: $organizationUuid);
-			$organizationGroup = $this->_groupManager->get($organizationGroupName);
-
-			if ($organizationGroup !== null && $organizationGroup->inGroup($user) === true) {
-				return true;
-			}
-
-			// Alternative approach: check user's groups for organization-specific groups.
-			$userGroups = $this->_groupManager->getUserGroups($user);
-			foreach ($userGroups as $group) {
-				// Check if any group name contains the organization UUID.
-				if (strpos(haystack: $group->getGID(), needle: $organizationUuid) !== false) {
-					return true;
-				}
-			}
-
-			return false;
+			return $this->isInOrganizationGroup(user: $user, organizationUuid: $organizationUuid) === true
+				|| $this->hasGroupNamingOrganization(user: $user, organizationUuid: $organizationUuid) === true;
 		} catch (\Exception $e) {
 			$this->_logger->error(
 				'Failed to check user organization membership: ' . $e->getMessage(),
@@ -777,6 +785,41 @@ class OrganizationHandler {
 			return false;
 		}//end try
 	}//end userBelongsToOrganization()
+
+	/**
+	 * Checks if a user is in the organization-specific group.
+	 *
+	 * @param IUser  $user             The user to check
+	 * @param string $organizationUuid The organization UUID
+	 *
+	 * @return bool True if the group exists and the user is in it
+	 */
+	private function isInOrganizationGroup(IUser $user, string $organizationUuid): bool {
+		$organizationGroupName = $this->sanitizeGroupName(name: $organizationUuid);
+		$organizationGroup = $this->_groupManager->get($organizationGroupName);
+
+		return $organizationGroup !== null && $organizationGroup->inGroup($user) === true;
+	}//end isInOrganizationGroup()
+
+	/**
+	 * Checks if any of the user's groups has a name that contains the organization UUID.
+	 *
+	 * @param IUser  $user             The user to check
+	 * @param string $organizationUuid The organization UUID
+	 *
+	 * @return bool True if such a group exists
+	 */
+	private function hasGroupNamingOrganization(IUser $user, string $organizationUuid): bool {
+		$userGroups = $this->_groupManager->getUserGroups($user);
+		foreach ($userGroups as $group) {
+			// Check if any group name contains the organization UUID.
+			if (strpos(haystack: $group->getGID(), needle: $organizationUuid) !== false) {
+				return true;
+			}
+		}
+
+		return false;
+	}//end hasGroupNamingOrganization()
 
 	/**
 	 * Builds a human-readable title for a contactpersoon row.

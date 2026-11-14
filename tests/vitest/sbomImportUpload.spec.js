@@ -51,6 +51,7 @@ afterEach(() => {
  * @return {Promise<object>} The requests and the panel state afterwards.
  */
 async function run(answer, state = {}) {
+	vi.stubGlobal('OC', { requestToken: 'token-1' })
 	vi.stubGlobal(
 		'fetch',
 		vi.fn(async (url, init) => {
@@ -101,7 +102,7 @@ describe('SbomComponentsPanel importSbom', () => {
 					'fetch',
 					'/apps/stackiq/api/moduleversies/{moduleVersieUuid}/sbom {"moduleVersieUuid":"42"}',
 					'POST',
-					{ 'X-Requested-With': 'XMLHttpRequest' },
+					{ requesttoken: 'token-1', 'X-Requested-With': 'XMLHttpRequest' },
 					[
 						['sbomFile', 'sbom.json'],
 						['format', 'cyclonedx-json'],

@@ -13,14 +13,17 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\EventListener;
 
-use OCA\Stackiq\Service\ModuleRegistrationService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Kernel\Contracts\ModuleRegistrationServiceInterface;
+use OCA\Stackiq\Service\Settings\ObjectTypeLocatorInterface;
 use OCP\EventDispatcher\Event;
 use OCP\EventDispatcher\IEventListener;
 use Psr\Container\ContainerInterface;
@@ -72,8 +75,8 @@ class ModuleRegistrationSubscriber implements IEventListener {
 	private function isModuleObject(object $object): bool {
 		$objectSchemaId = $object->getSchema();
 
-		$settingsService = $this->container->get(SettingsService::class);
-		$moduleSchemaId  = $settingsService->getSchemaIdForObjectType('module');
+		$catalogue = $this->container->get(ObjectTypeLocatorInterface::class);
+		$moduleSchemaId  = $catalogue->getSchemaIdForObjectType('module');
 
 		return $moduleSchemaId !== null && (int)$objectSchemaId === (int)$moduleSchemaId;
 	}//end isModuleObject()
@@ -87,7 +90,7 @@ class ModuleRegistrationSubscriber implements IEventListener {
 	 */
 	private function registerModule(object $object): void {
 		try {
-			$registrationSvc = $this->container->get(ModuleRegistrationService::class);
+			$registrationSvc = $this->container->get(ModuleRegistrationServiceInterface::class);
 			$registrationSvc->handleModuleRegistration($object);
 		} catch (\Exception $e) {
 			$logger = $this->container->get(LoggerInterface::class);

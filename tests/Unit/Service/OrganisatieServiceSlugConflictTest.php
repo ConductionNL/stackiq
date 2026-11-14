@@ -11,6 +11,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/organisatie-service/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -39,6 +42,7 @@ if (class_exists('OCA\\OpenRegister\\Exception\\OrganisationSlugConflictExceptio
  * @uses   \OCA\Stackiq\Service\OrganisationSlug
  *
  * @spec openspec/specs/organisatie-service/spec.md
+ * @uses \OCA\Stackiq\Service\OrganisationCreation
  */
 class OrganisatieServiceSlugConflictTest extends TestCase {
 

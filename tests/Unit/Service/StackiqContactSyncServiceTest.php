@@ -331,6 +331,30 @@ class StackiqContactSyncServiceTest extends TestCase {
 	}//end testASearchResultListsEveryEmailAddress()
 
 	/**
+	 * A blank query finds nothing, and results without a UID or from another book are left out.
+	 *
+	 * @return void
+	 */
+	public function testANamedSearchKeepsOnlyCardsOfTheNamedBook(): void {
+		$backend = $this->backend();
+		$backend->books['principals/users/admin|stackiq-cmdb-owners'] = ['id' => 7, 'displayname' => 'Stackiq CMDB owners'];
+		$contacts = [
+			['FN' => 'Zonder Uid', 'EMAIL' => 'a@example.org', 'addressbook-key' => '7'],
+			['UID' => 'other-1', 'FN' => 'Ander Boek', 'EMAIL' => 'a@example.org', 'addressbook-key' => '8'],
+			['UID' => 'owners-1', 'FN' => 'Eigen Boek', 'EMAIL' => 'a@example.org', 'addressbook-key' => 7],
+			['UID' => 'owners-2', 'FN' => 'Zonder Sleutel', 'EMAIL' => 'a@example.org'],
+		];
+		$service = $this->service(backend: $backend, contacts: $contacts);
+
+		$this->assertSame([], $service->searchNamedAddressBook(query: '   ', addressBookUri: 'stackiq-cmdb-owners', properties: ['EMAIL']));
+		$this->assertSame(
+			[['uid' => 'owners-1', 'name' => 'Eigen Boek', 'email' => 'a@example.org', 'emails' => ['a@example.org'], 'addressBookKey' => '7']],
+			$service->searchNamedAddressBook(query: 'a@example.org', addressBookUri: 'stackiq-cmdb-owners', properties: ['EMAIL'])
+		);
+		$this->assertSame('owners-1', $service->syncToNamedAddressBook(objectType: 'contactPerson', record: ['achternaam' => 'X', 'e-mailadres' => ' a@example.org '], addressBookUri: 'stackiq-cmdb-owners', displayName: 'Stackiq CMDB owners'));
+	}//end testANamedSearchKeepsOnlyCardsOfTheNamedBook()
+
+	/**
 	 * Without the named address book a search finds nothing and creates no address book.
 	 *
 	 * @return void

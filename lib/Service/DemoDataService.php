@@ -20,13 +20,17 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
  * @link https://conduction.nl
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\AppInfo\AppIdentity;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\DemoDataServiceInterface;
 use OCP\App\IAppManager;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
@@ -37,7 +41,7 @@ use RuntimeException;
  *
  * @spec exclude Demo-data import; ADR-111 rule 1, no per-app behavioural spec.
  */
-class DemoDataService {
+class DemoDataService implements DemoDataServiceInterface {
 	/**
 	 * App-relative path to the generated mock descriptor.
 	 *
@@ -83,24 +87,6 @@ class DemoDataService {
 	public function isAvailable(): bool {
 		return is_file($this->descriptorPath()) === true;
 	}//end isAvailable()
-
-	/**
-	 * The answer that means "plant nothing".
-	 *
-	 * 🔴 NOT THE ABSENCE OF AN ANSWER. An operator who declines has FINISHED the
-	 * step; a step that can never be marked done reopens the wizard over every
-	 * page (nextcloud-vue#806).
-	 *
-	 * @var string
-	 */
-	public const NONE_DATASET = 'none';
-
-	/**
-	 * The id of the dataset this app ships.
-	 *
-	 * @var string
-	 */
-	public const DEMO_DATASET = 'demo';
 
 	/**
 	 * Every answer the wizard's choice step may offer, declining included.
@@ -312,20 +298,39 @@ class DemoDataService {
 
 		$bySlug = [];
 		foreach ($objects as $index => $object) {
-			$register = (string) ($object['@self']['register'] ?? '');
-			$schema   = (string) ($object['@self']['schema'] ?? '');
-			if ($register === '' || $schema === '') {
-				continue;
-			}
-
-			$bySlug[$register] ??= $this->schemaIdsOfRegister(registerSlug: $register);
-			if (isset($bySlug[$register][$schema]) === true) {
-				$data['components']['objects'][$index]['@self']['schema'] = (string) $bySlug[$register][$schema];
+			$schemaId = $this->schemaIdInOwnRegister(object: $object, bySlug: $bySlug);
+			if ($schemaId !== '') {
+				$data['components']['objects'][$index]['@self']['schema'] = $schemaId;
 			}
 		}
 
 		return $data;
 	}//end pinSchemasToTheirRegisters()
+
+	/**
+	 * The id of a demo object's schema in the register it names, or '' when it names none or the register does
+	 * not list it.
+	 *
+	 * @param mixed                            $object The demo object.
+	 * @param array<string, array<string, int>> $bySlug The schema ids per register read so far; a register read
+	 *                                                 here is added.
+	 *
+	 * @return string
+	 */
+	private function schemaIdInOwnRegister(mixed $object, array &$bySlug): string {
+		$register = (string) ($object['@self']['register'] ?? '');
+		$schema   = (string) ($object['@self']['schema'] ?? '');
+		if ($register === '' || $schema === '') {
+			return '';
+		}
+
+		$bySlug[$register] ??= $this->schemaIdsOfRegister(registerSlug: $register);
+		if (isset($bySlug[$register][$schema]) === false) {
+			return '';
+		}
+
+		return (string) $bySlug[$register][$schema];
+	}//end schemaIdInOwnRegister()
 
 	/**
 	 * The schemas a register lists, as slug => id.

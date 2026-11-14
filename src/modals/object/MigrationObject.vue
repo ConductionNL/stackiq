@@ -1,3 +1,7 @@
+<!--
+  - SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+  - SPDX-License-Identifier: EUPL-1.2
+-->
 <script setup>
 import { navigationStore, objectStore } from '../../store/store.js'
 </script>
@@ -393,6 +397,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 </template>
 
 <script>
+import { getRequestToken } from '@nextcloud/auth'
 import {
 	NcButton,
 	NcDialog,
@@ -718,6 +723,7 @@ export default {
 						method: 'POST',
 						headers: {
 							'Content-Type': 'application/json',
+							requesttoken: getRequestToken(),
 						},
 						body: JSON.stringify({
 							sourceRegister: this.sourceRegister.id,

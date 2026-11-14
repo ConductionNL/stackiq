@@ -1,0 +1,67 @@
+{
+    "total": {
+        "lines": {
+            "total": 40246,
+            "covered": 34493,
+            "skipped": 0,
+            "pct": 85.71
+        },
+        "statements": {
+            "total": 40538,
+            "covered": 34719,
+            "skipped": 0,
+            "pct": 85.65
+        },
+        "functions": {
+            "total": 6139,
+            "covered": 5046,
+            "skipped": 0,
+            "pct": 82.2
+        }
+    },
+    "suites": {
+        "phpunit": {
+            "statements": {
+                "total": 31623,
+                "covered": 26883,
+                "skipped": 0,
+                "pct": 85.01
+            },
+            "functions": {
+                "total": 2877,
+                "covered": 2432,
+                "skipped": 0,
+                "pct": 84.53
+            },
+            "lines": {
+                "total": 31623,
+                "covered": 26883,
+                "skipped": 0,
+                "pct": 85.01
+            }
+        },
+        "vitest": {
+            "lines": {
+                "total": 8623,
+                "covered": 7610,
+                "skipped": 0,
+                "pct": 88.25
+            },
+            "statements": {
+                "total": 8915,
+                "covered": 7836,
+                "skipped": 0,
+                "pct": 87.9
+            },
+            "functions": {
+                "total": 3262,
+                "covered": 2614,
+                "skipped": 0,
+                "pct": 80.13
+            }
+        }
+    },
+    "measuredAt": "2026-11-13",
+    "commit": "e75ababa",
+    "generator": "scripts/coverage-publish.php"
+}

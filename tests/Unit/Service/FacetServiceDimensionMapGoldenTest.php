@@ -13,6 +13,9 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -21,7 +24,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\Stackiq\Service\ArchiMateService;
 use OCA\Stackiq\Service\FacetService;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\ViewQueryBuilder;
 use OCP\ICache;
 use OCP\ICacheFactory;
@@ -60,7 +63,7 @@ class FacetServiceDimensionMapGoldenTest extends TestCase {
 		$cacheFactory->method('createDistributed')->willReturn($cache);
 		$service = new FacetService(
 			$this->createMock(ContainerInterface::class),
-			$this->createMock(SettingsService::class),
+			$this->createMock(CatalogueLocator::class),
 			$archiMate,
 			new ViewQueryBuilder(),
 			$this->createMock(IUserSession::class),

@@ -11,6 +11,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/method-decomposition/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -21,6 +24,7 @@ use OCA\OpenRegister\Db\OrganisationMapper;
 use OCA\Stackiq\Service\ContactpersoonService;
 use OCA\Stackiq\Service\OrganizationSyncService;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\Stackiq\GroupHandler;
 use OCA\Stackiq\Service\Stackiq\HierarchyHandler;
@@ -122,7 +126,7 @@ class ContactpersoonBackupEntityTest extends TestCase {
 				'OCP\IUserManager'                          => $users,
 				'OCA\OpenRegister\Db\OrganisationMapper'    => $mapper,
 				'OCA\OpenRegister\Service\ObjectService'    => $objects,
-				'OCA\Stackiq\Service\SettingsService'       => $settings,
+				RegisterConfigReaderInterface::class       => $settings,
 				'OCA\Stackiq\Service\OrganizationSyncService' => $sync,
 			][$id] ?? null
 		);

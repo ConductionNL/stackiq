@@ -13,12 +13,16 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: 1.0.0
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\Stackiq\Kernel\Contracts\ProgressTrackerInterface;
 use OCP\IAppConfig;
 use OCP\ICacheFactory;
 use OCP\IConfig;
@@ -48,7 +52,7 @@ use Psr\Log\LoggerInterface;
  * @version   GIT: 1.0.0
  * @link      https://github.com/ConductionNL/stackiq
  */
-class ProgressTracker {
+class ProgressTracker implements ProgressTrackerInterface {
 	/**
 	 * Operation phases and their relative weights for progress calculation
 	 */
@@ -142,18 +146,61 @@ class ProgressTracker {
 		?string $ownerUid = null,
 		?string $operationId = null
 	): string {
-		if ($operationId === null) {
-			$operationId = uniqid(prefix: $operationType . '_', more_entropy: true);
-		}
-
-		if ($ownerUid === null) {
-			$ownerUid = $this->userSession->getUser()?->getUID();
-		}
+		$operationId = $this->resolveOperationId(operationType: $operationType, operationId: $operationId);
 
 		$this->progress = [
 			'operation_id' => $operationId,
 			'operation_type' => $operationType,
-			'owner_uid' => $ownerUid,
+			'owner_uid' => $this->resolveOwnerUid(ownerUid: $ownerUid),
+		] + $this->freshProgress(options: $options);
+
+		$this->store->removeExpired();
+		$this->saveProgress();
+		$this->logStarted();
+
+		return $operationId;
+	}//end startOperation()
+
+	/**
+	 * The caller's operation id, or a new one prefixed with the operation type.
+	 *
+	 * @param string      $operationType Type of operation (import, export).
+	 * @param string|null $operationId   The id the caller chose, or null.
+	 *
+	 * @return string The operation id.
+	 */
+	private function resolveOperationId(string $operationType, ?string $operationId): string {
+		if ($operationId === null) {
+			$operationId = uniqid(prefix: $operationType . '_', more_entropy: true);
+		}
+
+		return $operationId;
+	}//end resolveOperationId()
+
+	/**
+	 * The given owner, or the signed-in user of this request (null in a background job).
+	 *
+	 * @param string|null $ownerUid The owner the caller named, or null.
+	 *
+	 * @return string|null The owner UID.
+	 */
+	private function resolveOwnerUid(?string $ownerUid): ?string {
+		if ($ownerUid === null) {
+			$ownerUid = $this->userSession->getUser()?->getUID();
+		}
+
+		return $ownerUid;
+	}//end resolveOwnerUid()
+
+	/**
+	 * The state of an operation that has just started, after its id, type and owner.
+	 *
+	 * @param array $options Operation options and metadata (`total_items`, `statistics`).
+	 *
+	 * @return array<string, mixed> The progress fields.
+	 */
+	private function freshProgress(array $options): array {
+		return [
 			'status' => 'running',
 			'phase' => 'initializing',
 			'phase_description' => self::PHASES['initializing']['description'],
@@ -168,21 +215,23 @@ class ProgressTracker {
 			'warnings' => [],
 			'statistics' => $options['statistics'] ?? [],
 		];
+	}//end freshProgress()
 
-		$this->store->removeExpired();
-		$this->saveProgress();
-
+	/**
+	 * Log that the current operation started.
+	 *
+	 * @return void
+	 */
+	private function logStarted(): void {
 		$this->logger->info(
 			'Started progress tracking',
 			[
-				'operation_id' => $operationId,
-				'operation_type' => $operationType,
+				'operation_id' => $this->progress['operation_id'],
+				'operation_type' => $this->progress['operation_type'],
 				'total_items' => $this->progress['total_items'],
 			]
 		);
-
-		return $operationId;
-	}//end startOperation()
+	}//end logStarted()
 
 	/**
 	 * Set the current phase of the operation

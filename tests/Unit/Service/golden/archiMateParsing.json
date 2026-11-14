@@ -1,0 +1,298 @@
+{
+    "xml <name xml:lang=\"nl\">  Zaak  </name>": {
+        "result": {
+            "_xml__lang": "nl",
+            "_attributes": {
+                "xml:lang": "nl"
+            },
+            "_value": "Zaak"
+        }
+    },
+    "xml <name/>": {
+        "result": []
+    },
+    "xml <model identifier=\"m1\" version=\"3.1\"><name>Model</name><documentation>Doc</documentation></model>": {
+        "result": {
+            "_identifier": "m1",
+            "_version": "3.1",
+            "_attributes": {
+                "identifier": "m1",
+                "version": "3.1"
+            },
+            "name": {
+                "_value": "Model"
+            },
+            "documentation": {
+                "_value": "Doc"
+            }
+        }
+    },
+    "xml <elements><element identifier=\"a\"/><element identifier=\"b\"/><element identifier=\"c\"><name>C</name></element></elements>": {
+        "result": {
+            "element": [
+                {
+                    "_identifier": "a",
+                    "_attributes": {
+                        "identifier": "a"
+                    }
+                },
+                {
+                    "_identifier": "b",
+                    "_attributes": {
+                        "identifier": "b"
+                    }
+                },
+                {
+                    "_identifier": "c",
+                    "_attributes": {
+                        "identifier": "c"
+                    },
+                    "name": {
+                        "_value": "C"
+                    }
+                }
+            ]
+        }
+    },
+    "xml <model xmlns:xsi=\"http://www.w3.org/2001/XMLSchema-instance\"><element identifier=\"e1\" xsi:type=\"BusinessActor\"><name>Actor</name></element></model>": {
+        "result": {
+            "element": {
+                "_identifier": "e1",
+                "_attributes": {
+                    "identifier": "e1",
+                    "xsi:type": "BusinessActor"
+                },
+                "_xsi__type": "BusinessActor",
+                "name": {
+                    "_value": "Actor"
+                }
+            }
+        }
+    },
+    "xml <p>Before<b>bold</b>after</p>": {
+        "result": {
+            "b": {
+                "_value": "bold"
+            },
+            "_text": "Beforeafter"
+        }
+    },
+    "xml <list><item>one</item><item>two</item><item/></list>": {
+        "result": {
+            "item": [
+                {
+                    "_value": "one"
+                },
+                {
+                    "_value": "two"
+                },
+                []
+            ]
+        }
+    },
+    "xml <a xmlns:x=\"urn:x\" x:one=\"1\"><b x:two=\"2\">t</b></a>": {
+        "result": {
+            "_x__one": "1",
+            "_attributes": {
+                "x:one": "1"
+            },
+            "b": {
+                "_x__two": "2",
+                "_attributes": {
+                    "x:two": "2"
+                },
+                "_value": "t"
+            }
+        }
+    },
+    "properties []": {
+        "first": [],
+        "cached": []
+    },
+    "properties {\"propertyDefinitions\":{\"propertyDefinition\":[{\"_attributes\":{\"identifier\":\"p1\"},\"name\":\"Eigenaar\"},{\"_attributes\":{\"identifier\":\"p2\"},\"name\":{\"_value\":\"Status\"}},{\"_attributes\":{\"identifier\":\"p3\"},\"name\":{\"other\":\"x\"}},{\"name\":\"no id\"},{\"_attributes\":{\"identifier\":\"p5\"}}]}}": {
+        "first": {
+            "p1": "Eigenaar",
+            "p2": "Status",
+            "p3": {
+                "other": "x"
+            }
+        },
+        "cached": {
+            "p1": "Eigenaar",
+            "p2": "Status",
+            "p3": {
+                "other": "x"
+            }
+        }
+    },
+    "properties {\"property_definitions\":{\"propertyDefinition\":{\"_attributes\":{\"identifier\":\"p1\"},\"name\":{\"_value\":\"Eigenaar\"}}}}": {
+        "first": {
+            "p1": "Eigenaar"
+        },
+        "cached": {
+            "p1": "Eigenaar"
+        }
+    },
+    "properties {\"propertyDefinitions\":{\"propertyDefinition\":{\"_attributes\":{\"identifier\":\"p1\"},\"name\":\"Naam\"}}}": {
+        "first": {
+            "p1": "Naam"
+        },
+        "cached": {
+            "p1": "Naam"
+        }
+    },
+    "properties {\"propertyDefinitions\":{\"propertyDefinition\":{\"_attributes\":{\"identifier\":\"p1\"}}}}": {
+        "first": [],
+        "cached": []
+    },
+    "properties {\"propertyDefinitions\":{\"propertyDefinition\":[{\"_attributes\":{\"identifier\":\"c\"},\"name\":\"Camel\"}]},\"property_definitions\":{\"propertyDefinition\":[{\"_attributes\":{\"identifier\":\"s\"},\"name\":\"Snake\"}]}}": {
+        "first": {
+            "c": "Camel"
+        },
+        "cached": {
+            "c": "Camel"
+        }
+    },
+    "properties {\"propertyDefinitions\":{\"other\":[]}}": {
+        "first": [],
+        "cached": []
+    },
+    "connections {\"label\":\"x\"}": {
+        "result": []
+    },
+    "connections {\"_attributes\":{\"identifier\":\"c1\",\"target\":\"n2\"}}": {
+        "result": []
+    },
+    "connections {\"_attributes\":{\"source\":\"n1\",\"target\":\"n2\"}}": {
+        "result": []
+    },
+    "connections {\"_attributes\":{\"identifier\":\"c1\",\"source\":\"n1\"}}": {
+        "result": [
+            {
+                "modelRelationshipId": null,
+                "sourceId": "n1",
+                "targetId": null,
+                "viewRelationshipId": "c1",
+                "type": "association",
+                "bendpoints": [],
+                "label": []
+            }
+        ]
+    },
+    "connections {\"_attributes\":{\"identifier\":\"c1\",\"relationshipRef\":\"r1\",\"source\":\"n1\",\"target\":\"n2\",\"xsi:type\":\"Relationship\"}}": {
+        "result": [
+            {
+                "modelRelationshipId": "r1",
+                "sourceId": "n1",
+                "targetId": "n2",
+                "viewRelationshipId": "c1",
+                "type": "",
+                "bendpoints": [],
+                "label": []
+            }
+        ]
+    },
+    "connections [{\"_attributes\":{\"identifier\":\"c1\",\"relationshipRef\":\"r1\",\"source\":\"n1\",\"target\":\"n2\",\"xsi:type\":\"Relationship\"},\"bendpoint\":[{\"_attributes\":{\"x\":\"5\",\"y\":\"6\"}},{\"_attributes\":{\"x\":\"7\"}},{\"no\":\"attributes\"}]},{\"_attributes\":{\"identifier\":\"c1\",\"relationshipRef\":\"r1\",\"source\":\"n1\",\"target\":\"n2\",\"xsi:type\":\"Relationship\"},\"bendpoint\":{\"_attributes\":{\"x\":\"1\",\"y\":\"2\"}}}]": {
+        "result": [
+            {
+                "modelRelationshipId": "r1",
+                "sourceId": "n1",
+                "targetId": "n2",
+                "viewRelationshipId": "c1",
+                "type": "",
+                "bendpoints": [
+                    {
+                        "x": 5,
+                        "y": 6
+                    },
+                    {
+                        "x": 7,
+                        "y": 0
+                    }
+                ],
+                "label": []
+            },
+            {
+                "modelRelationshipId": "r1",
+                "sourceId": "n1",
+                "targetId": "n2",
+                "viewRelationshipId": "c1",
+                "type": "",
+                "bendpoints": [
+                    {
+                        "x": 1,
+                        "y": 2
+                    }
+                ],
+                "label": []
+            }
+        ]
+    },
+    "connections [{\"_attributes\":{\"identifier\":\"c1\",\"relationshipRef\":\"r1\",\"source\":\"n1\",\"target\":\"n2\",\"xsi:type\":\"Relationship\"},\"label\":\"Tekst\"},{\"_attributes\":{\"identifier\":\"c1\",\"relationshipRef\":\"r1\",\"source\":\"n1\",\"target\":\"n2\",\"xsi:type\":\"Relationship\"},\"label\":{\"_value\":\"Waarde\"},\"style\":{\"font\":{\"_attributes\":{\"name\":\"Arial\",\"size\":\"9\"}}}},{\"_attributes\":{\"identifier\":\"c1\",\"relationshipRef\":\"r1\",\"source\":\"n1\",\"target\":\"n2\",\"xsi:type\":\"Relationship\"},\"label\":{\"other\":\"x\"},\"style\":[]},{\"_attributes\":{\"identifier\":\"c1\",\"relationshipRef\":\"r1\",\"source\":\"n1\",\"target\":\"n2\",\"xsi:type\":\"Relationship\"},\"style\":{\"lineColor\":{\"_attributes\":{\"r\":\"1\",\"g\":\"2\",\"b\":\"3\"}}}}]": {
+        "result": [
+            {
+                "modelRelationshipId": "r1",
+                "sourceId": "n1",
+                "targetId": "n2",
+                "viewRelationshipId": "c1",
+                "type": "",
+                "bendpoints": [],
+                "label": {
+                    "text": "Tekst"
+                }
+            },
+            {
+                "modelRelationshipId": "r1",
+                "sourceId": "n1",
+                "targetId": "n2",
+                "viewRelationshipId": "c1",
+                "type": "",
+                "bendpoints": [],
+                "label": {
+                    "text": "Waarde",
+                    "markup": [
+                        {
+                            "style": {
+                                "fontSize": 9,
+                                "fontFamily": "Arial",
+                                "fontColor": "rgba(0, 0, 0, 1)",
+                                "fontStyle": "normal",
+                                "fontWeight": "normal"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "modelRelationshipId": "r1",
+                "sourceId": "n1",
+                "targetId": "n2",
+                "viewRelationshipId": "c1",
+                "type": "",
+                "bendpoints": [],
+                "label": {
+                    "markup": [
+                        {
+                            "style": {
+                                "fontSize": 11,
+                                "fontFamily": "Segoe UI, Arial",
+                                "fontColor": "rgba(0, 0, 0, 1)",
+                                "fontStyle": "normal",
+                                "fontWeight": "normal"
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                "modelRelationshipId": "r1",
+                "sourceId": "n1",
+                "targetId": "n2",
+                "viewRelationshipId": "c1",
+                "type": "",
+                "bendpoints": [],
+                "label": []
+            }
+        ]
+    }
+}

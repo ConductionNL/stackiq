@@ -3,6 +3,9 @@
 /**
  * CMDB import profile.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Loads `lib/Settings/cmdb-import/topdesk-profile.json` and the five
  * migration packs it names, validates every pack with OpenRegister's
  * `MigrationPack\PackDefinitionValidator`, and answers the questions the
@@ -33,9 +36,6 @@
  *
  * @spec openspec/changes/cmdb-export-import/tasks.md#task-3
  * @spec openspec/changes/cmdb-import-mapping-view/tasks.md#task-1
- *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);

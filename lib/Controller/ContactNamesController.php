@@ -24,8 +24,8 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Controller;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
-use OCA\Stackiq\Service\SettingsService;
-use OCA\Stackiq\Service\StackiqContactSyncService;
+use OCA\Stackiq\Kernel\Contracts\SettingsServiceInterface;
+use OCA\Stackiq\Kernel\Contracts\StackiqContactSyncServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\Attribute\NoAdminRequired;
@@ -71,8 +71,8 @@ class ContactNamesController extends Controller {
 	 * @param IRequest $request The request object.
 	 * @param IUserSession $userSession The user session.
 	 * @param IL10N $l10n Translations for the error messages.
-	 * @param SettingsService $settingsService Gives the register and contact person schema.
-	 * @param StackiqContactSyncService $contactSync Reads Nextcloud Contacts as the signed-in user.
+	 * @param SettingsServiceInterface $settingsService Gives the register and contact person schema.
+	 * @param StackiqContactSyncServiceInterface $contactSync Reads Nextcloud Contacts as the signed-in user.
 	 * @param ObjectServiceInterface $objectService OpenRegister object access, with the caller's rights.
 	 * @param LoggerInterface $logger The logger.
 	 */
@@ -81,8 +81,8 @@ class ContactNamesController extends Controller {
 		IRequest $request,
 		private readonly IUserSession $userSession,
 		private readonly IL10N $l10n,
-		private readonly SettingsService $settingsService,
-		private readonly StackiqContactSyncService $contactSync,
+		private readonly SettingsServiceInterface $settingsService,
+		private readonly StackiqContactSyncServiceInterface $contactSync,
 		private readonly ObjectServiceInterface $objectService,
 		private readonly LoggerInterface $logger,
 	) {
@@ -117,27 +117,59 @@ class ContactNamesController extends Controller {
 
 		$ids = $this->requestedIds();
 		if (count($ids) > self::MAX_IDS) {
-			return new JSONResponse(
-				['message' => $this->l10n->t('At most %s contact persons per request', [self::MAX_IDS]), 'error' => 'too-many-ids'],
-				Http::STATUS_BAD_REQUEST
-			);
+			return $this->tooManyIds();
 		}
 
+		return new JSONResponse(['names' => (object)$this->namesOf(ids: $ids)], Http::STATUS_OK);
+	}//end index()
+
+	/**
+	 * The 400 answer for more than MAX_IDS ids.
+	 *
+	 * @return JSONResponse
+	 */
+	private function tooManyIds(): JSONResponse {
+		return new JSONResponse(
+			['message' => $this->l10n->t('At most %s contact persons per request', [self::MAX_IDS]), 'error' => 'too-many-ids'],
+			Http::STATUS_BAD_REQUEST
+		);
+	}//end tooManyIds()
+
+	/**
+	 * The display names of the requested contact persons the caller may read; none without Contacts.
+	 *
+	 * @param array<int, string> $ids Contact person uuids, lower case.
+	 *
+	 * @return array<string, string> uuid => display name.
+	 */
+	private function namesOf(array $ids): array {
 		if ($ids === [] || $this->contactSync->isAvailable() === false) {
-			return new JSONResponse(['names' => (object)[]], Http::STATUS_OK);
+			return [];
 		}
 
 		$names = [];
 		foreach ($this->contactsUidsOf(ids: $ids) as $uuid => $contactsUid) {
-			$contact = $this->contactSync->findOwnContactByUid(uid: $contactsUid);
-			$name = self::firstValue(value: ($contact['FN'] ?? ''));
+			$name = $this->contactName(contactsUid: $contactsUid);
 			if ($name !== '') {
 				$names[$uuid] = $name;
 			}
 		}
 
-		return new JSONResponse(['names' => (object)$names], Http::STATUS_OK);
-	}//end index()
+		return $names;
+	}//end namesOf()
+
+	/**
+	 * The display name of a contact in the caller's own or shared address books, or ''.
+	 *
+	 * @param string $contactsUid The contact's UID.
+	 *
+	 * @return string
+	 */
+	private function contactName(string $contactsUid): string {
+		$contact = $this->contactSync->findOwnContactByUid(uid: $contactsUid);
+
+		return self::firstValue(value: ($contact['FN'] ?? ''));
+	}//end contactName()
 
 	/**
 	 * The distinct, well-formed uuids in the `ids` query parameter, lower case.
@@ -145,17 +177,8 @@ class ContactNamesController extends Controller {
 	 * @return array<int, string>
 	 */
 	private function requestedIds(): array {
-		$raw = $this->request->getParam('ids', []);
-		if (is_string($raw) === true) {
-			$raw = [$raw];
-		}
-
-		if (is_array($raw) === false) {
-			return [];
-		}
-
 		$ids = [];
-		foreach ($raw as $id) {
+		foreach (self::rawIds(raw: $this->request->getParam('ids', [])) as $id) {
 			if (is_string($id) === true && preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $id) === 1) {
 				$ids[strtolower($id)] = true;
 			}
@@ -163,6 +186,25 @@ class ContactNamesController extends Controller {
 
 		return array_keys($ids);
 	}//end requestedIds()
+
+	/**
+	 * The `ids` query parameter as a list: one string becomes a list of one, anything else but a list none.
+	 *
+	 * @param mixed $raw The parameter.
+	 *
+	 * @return array<array-key, mixed>
+	 */
+	private static function rawIds(mixed $raw): array {
+		if (is_string($raw) === true) {
+			return [$raw];
+		}
+
+		if (is_array($raw) === false) {
+			return [];
+		}
+
+		return $raw;
+	}//end rawIds()
 
 	/**
 	 * The `contactsUid` of each requested contact person the caller may read.
@@ -196,7 +238,7 @@ class ContactNamesController extends Controller {
 	private function contactPersonSource(): ?array {
 		$config   = $this->settingsService->getVoorzieningenConfig();
 		$register = ($config['register'] ?? null);
-		$schema   = ($config[SettingsService::LEGACY_SCHEMA_KEY['contactPerson']] ?? null);
+		$schema   = ($config[SettingsServiceInterface::LEGACY_SCHEMA_KEY['contactPerson']] ?? null);
 		if (empty($register) === true || empty($schema) === true) {
 			$this->logger->warning('[ContactNames] The register or the contact person schema is not configured; no names are given');
 			return null;

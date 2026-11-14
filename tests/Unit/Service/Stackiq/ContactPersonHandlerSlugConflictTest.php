@@ -11,6 +11,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/sc-handlers/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -22,6 +25,7 @@ use OCA\OpenRegister\Db\ObjectEntity;
 use OCA\OpenRegister\Db\Organisation;
 use OCA\OpenRegister\Db\OrganisationMapper;
 use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCA\Stackiq\Service\Stackiq\ContactPersonHandler;
 use OCA\Stackiq\Service\SymfonyEmailService;
 use OCP\App\IAppManager;
@@ -206,7 +210,7 @@ class ContactPersonHandlerSlugConflictTest extends TestCase {
 			fn (string $id) => [
 				'OCA\\OpenRegister\\Db\\OrganisationMapper'      => $mapper,
 				'OCA\OpenRegister\Service\ObjectService'        => $objects,
-				'OCA\Stackiq\Service\SettingsService'           => $settings,
+				RegisterConfigReaderInterface::class           => $settings,
 				'OCA\\OpenRegister\\Service\\OrganisationService' => $organisations,
 			][$id] ?? null
 		);

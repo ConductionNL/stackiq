@@ -28,6 +28,7 @@ use OCP\IL10N;
 use OCP\L10N\IFactory;
 use Psr\Container\ContainerInterface;
 use ReflectionClass;
+use ReflectionParameter;
 use Throwable;
 
 /**
@@ -57,20 +58,13 @@ class OpenRegisterInstance {
 	 */
 	public function build(string $class): ?object {
 		try {
-			$constructor = (new ReflectionClass($class))->getConstructor();
 			$arguments = [];
-			foreach (($constructor?->getParameters() ?? []) as $parameter) {
-				if ($parameter->isOptional() === true) {
-					break;
+			foreach (self::requiredParameters(class: $class) as $parameter) {
+				if (self::takesL10n(parameter: $parameter) === false) {
+					return null;
 				}
 
-				$type = $parameter->getType();
-				if ($type instanceof \ReflectionNamedType && $type->getName() === IL10N::class) {
-					$arguments[] = $this->l10n();
-					continue;
-				}
-
-				return null;
+				$arguments[] = $this->l10n();
 			}
 
 			return new $class(...$arguments);
@@ -78,6 +72,42 @@ class OpenRegisterInstance {
 			return null;
 		}
 	}//end build()
+
+	/**
+	 * The constructor parameters of a class up to its first optional one.
+	 *
+	 * @param string $class The class.
+	 *
+	 * @return array<int, ReflectionParameter>
+	 *
+	 * @throws \ReflectionException When the class does not exist.
+	 */
+	private static function requiredParameters(string $class): array {
+		$constructor = (new ReflectionClass($class))->getConstructor();
+		$required = [];
+		foreach (($constructor?->getParameters() ?? []) as $parameter) {
+			if ($parameter->isOptional() === true) {
+				break;
+			}
+
+			$required[] = $parameter;
+		}
+
+		return $required;
+	}//end requiredParameters()
+
+	/**
+	 * Whether a constructor parameter takes OpenRegister's translations.
+	 *
+	 * @param ReflectionParameter $parameter The parameter.
+	 *
+	 * @return bool
+	 */
+	private static function takesL10n(ReflectionParameter $parameter): bool {
+		$type = $parameter->getType();
+
+		return $type instanceof \ReflectionNamedType && $type->getName() === IL10N::class;
+	}//end takesL10n()
 
 	/**
 	 * OpenRegister's translations.

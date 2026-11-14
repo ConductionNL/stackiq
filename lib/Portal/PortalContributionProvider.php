@@ -3,6 +3,9 @@
 /**
  * Stackiq Portal Contribution Provider
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * Stackiq's contribution to the shared Portaliq external portal (hydra
  * ADR-046 + contract v2.1). Portaliq — the ONE shared portal for people WITHOUT
  * Nextcloud accounts — discovers this class by convention FQCN
@@ -30,9 +33,6 @@
  * @copyright 2026 Conduction B.V.
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  *
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- *
  * @version GIT: <git-id>
  *
  * @link https://conduction.nl
@@ -44,7 +44,7 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Portal;
 
-use OCA\Stackiq\Service\PublicCatalogueRecords;
+use OCA\Stackiq\Kernel\Contracts\PublicCatalogueRecordsInterface;
 
 /**
  * Declares what an external portal subject may see in Stackiq.
@@ -222,10 +222,10 @@ class PortalContributionProvider {
 	/**
 	 * Constructor.
 	 *
-	 * @param PublicCatalogueRecords|null $catalogue The published applications; null leaves the public list empty.
+	 * @param PublicCatalogueRecordsInterface|null $catalogue The published applications; null leaves the public list empty.
 	 */
 	public function __construct(
-		private readonly ?PublicCatalogueRecords $catalogue = null,
+		private readonly ?PublicCatalogueRecordsInterface $catalogue = null,
 	) {
 	}//end __construct()
 

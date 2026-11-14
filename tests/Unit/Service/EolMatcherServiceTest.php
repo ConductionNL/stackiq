@@ -271,4 +271,29 @@ class EolMatcherServiceTest extends TestCase {
 		$this->assertContains('mv-nomatch', $skippedIds);
 		$this->assertContains('mv-empty', $skippedIds);
 	}//end testMatchModuleVersionsPartitionsAMixedBatch()
+	/**
+	 * The match depth is the shorter segment count when every shared segment is equal, null otherwise or for
+	 * an empty input.
+	 *
+	 * @return void
+	 */
+	public function testMatchDepthOfEveryShape(): void {
+		$depth = new \ReflectionMethod(EolMatcherService::class, 'matchDepth');
+		$depth->setAccessible(true);
+
+		$cases = [
+			['', '1', null],
+			['1', '', null],
+			['', '', null],
+			['21.3.1', '21.3', 2],
+			['21', '21.3', 1],
+			['21.3', '21.3', 2],
+			['1.1.0', '1.2', null],
+			['2.0', '1.0', null],
+			['v1', 'v1', 1],
+		];
+		foreach ($cases as [$version, $cycle, $expected]) {
+			$this->assertSame($expected, $depth->invoke($this->matcher, $version, $cycle), $version . ' / ' . $cycle);
+		}
+	}//end testMatchDepthOfEveryShape()
 }//end class

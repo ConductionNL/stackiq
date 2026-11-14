@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Unit tests for the open-data projection serializer.
  *
  * @spec openspec/changes/open-data-publishing/specs/open-data-publishing/spec.md
@@ -78,6 +82,14 @@ describe('openDataProjection.isClean', () => {
 	it('rejects an object still carrying a PII field', () => {
 		expect(isClean({ name: 'x', email: 'leak@x' })).toBe(false)
 		expect(isClean({ name: 'x', contactPerson: {} })).toBe(false)
+	})
+	it('rejects anything that is not an object', () => {
+		expect(isClean(null)).toBe(false)
+		expect(isClean(undefined)).toBe(false)
+		expect(isClean('name')).toBe(false)
+	})
+	it('rejects an object still carrying @self metadata', () => {
+		expect(isClean({ name: 'x', '@self': {} })).toBe(false)
 	})
 	it('accepts a clean object', () => {
 		expect(isClean({ name: 'x', uuid: 'u', license: 'CC0-1.0' })).toBe(true)

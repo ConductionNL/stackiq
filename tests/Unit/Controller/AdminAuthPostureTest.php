@@ -3,6 +3,9 @@
 /**
  * Auth-posture regression tests for the endpoints hardened alongside #492.
  *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V.
+ * SPDX-License-Identifier: EUPL-1.2
+ *
  * WHY THIS TEST IS A SOURCE PARSER AND NOT A REQUEST TEST
  * ------------------------------------------------------
  * The thing being pinned is a DECLARATION, not a behaviour. Nextcloud's
@@ -28,9 +31,6 @@
  * A test that searched for the attribute form, or that stripped comments first,
  * would pass over exactly that mistake. So the assertion is deliberately made
  * against the same bytes the framework reads.
- *
- * SPDX-License-Identifier: EUPL-1.2
- * SPDX-FileCopyrightText: 2026 Conduction B.V.
  *
  * @category Tests
  * @package  OCA\Stackiq\Tests\Unit\Controller

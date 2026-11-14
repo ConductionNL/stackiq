@@ -26,7 +26,8 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
-use OCA\Stackiq\AppInfo\AppIdentity;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\ItsmFileImportServiceInterface;
 use OCA\Stackiq\Service\Itsm\ItsmFlowGateway;
 use OCP\IAppConfig;
 use Psr\Log\LoggerInterface;
@@ -38,7 +39,7 @@ use Throwable;
  *
  * @spec openspec/changes/sharing-itsm-exchange/specs/itsm-exchange/spec.md#requirement-req-itx-001-an-administrator-sets-up-the-exchange-without-stackiq-holding-a-credential
  */
-class ItsmFileImportService {
+class ItsmFileImportService implements ItsmFileImportServiceInterface {
 
 	/**
 	 * The most rows one import takes.
@@ -201,25 +202,53 @@ class ItsmFileImportService {
 				continue;
 			}
 
-			if (count($rows) > self::MAX_ROWS) {
+			if (self::addRow(rows: $rows, row: self::rowOf(header: $header, cells: $cells)) === false) {
 				break;
-			}
-
-			$row = [];
-			foreach ($header as $index => $column) {
-				$cell = trim((string) ($cells[$index] ?? ''));
-				if ($column !== '' && $cell !== '') {
-					$row[$column] = $cell;
-				}
-			}
-
-			if ($row !== []) {
-				$rows[] = $row;
 			}
 		}
 
 		return $rows;
 	}//end readRows()
+
+	/**
+	 * Add a row unless it is empty; refuse it once the rows are past MAX_ROWS.
+	 *
+	 * @param list<array<string, string>> $rows The rows read so far; the row is appended to them.
+	 * @param array<string, string>       $row  The row.
+	 *
+	 * @return bool False when the rows already hold more than MAX_ROWS, so reading stops.
+	 */
+	private static function addRow(array &$rows, array $row): bool {
+		if (count($rows) > self::MAX_ROWS) {
+			return false;
+		}
+
+		if ($row !== []) {
+			$rows[] = $row;
+		}
+
+		return true;
+	}//end addRow()
+
+	/**
+	 * One row keyed by the header, with the cells under an empty header and the empty cells left out.
+	 *
+	 * @param list<string> $header The trimmed header cells.
+	 * @param list<string> $cells  The row's cells.
+	 *
+	 * @return array<string, string>
+	 */
+	private static function rowOf(array $header, array $cells): array {
+		$row = [];
+		foreach ($header as $index => $column) {
+			$cell = trim((string) ($cells[$index] ?? ''));
+			if ($column !== '' && $cell !== '') {
+				$row[$column] = $cell;
+			}
+		}
+
+		return $row;
+	}//end rowOf()
 
 	/**
 	 * Read a file into rows of cells, by its extension.
@@ -262,6 +291,17 @@ class ItsmFileImportService {
 			return 'The file holds more than ' . self::MAX_ROWS . ' rows; one import takes at most ' . self::MAX_ROWS . '.';
 		}
 
+		return self::missingKeyReason(rows: $rows);
+	}//end checkRows()
+
+	/**
+	 * Why a row cannot be imported for lack of a key, or null when every row has one.
+	 *
+	 * @param list<array<string, string>> $rows The rows.
+	 *
+	 * @return string|null The reason, naming the first row without a key as the spreadsheet numbers it.
+	 */
+	private static function missingKeyReason(array $rows): ?string {
 		foreach ($rows as $index => $row) {
 			if (($row[self::KEY_COLUMN] ?? '') === '') {
 				return 'Row ' . ($index + 2) . ' has no ' . self::KEY_COLUMN . '. Every row needs one, so a second import updates instead of adding.';
@@ -269,7 +309,7 @@ class ItsmFileImportService {
 		}
 
 		return null;
-	}//end checkRows()
+	}//end missingKeyReason()
 
 	/**
 	 * Read a CSV file into rows of cells. Comma or semicolon, whichever the header uses.
@@ -285,27 +325,49 @@ class ItsmFileImportService {
 		}
 
 		try {
-			$first     = (string) fgets($handle);
-			$delimiter = ',';
-			if (substr_count($first, ';') > substr_count($first, ',')) {
-				$delimiter = ';';
-			}
-
+			$delimiter = self::csvDelimiter(header: (string) fgets($handle));
 			rewind($handle);
-			$isFirst = true;
-			while (($cells = fgetcsv($handle, null, $delimiter, '"', '\\')) !== false) {
-				$cells = array_map(static fn ($cell): string => (string) $cell, $cells);
-				if ($isFirst === true && isset($cells[0]) === true) {
-					$cells[0] = (string) preg_replace('/^\xEF\xBB\xBF/', '', $cells[0]);
-				}
-
-				$isFirst = false;
-				yield $cells;
-			}
+			yield from self::csvRows(handle: $handle, delimiter: $delimiter);
 		} finally {
 			fclose($handle);
 		}
 	}//end readCsv()
+
+	/**
+	 * The delimiter a CSV header uses: a semicolon when it has more semicolons than commas, else a comma.
+	 *
+	 * @param string $header The first line of the file.
+	 *
+	 * @return string
+	 */
+	private static function csvDelimiter(string $header): string {
+		if (substr_count($header, ';') > substr_count($header, ',')) {
+			return ';';
+		}
+
+		return ',';
+	}//end csvDelimiter()
+
+	/**
+	 * Read the rows of cells of an open CSV file, without the byte order mark before the first cell.
+	 *
+	 * @param resource $handle    The open file, at its start.
+	 * @param string   $delimiter The delimiter.
+	 *
+	 * @return \Generator<int, list<string>> The cells, row by row.
+	 */
+	private static function csvRows(mixed $handle, string $delimiter): \Generator {
+		$isFirst = true;
+		while (($cells = fgetcsv($handle, null, $delimiter, '"', '\\')) !== false) {
+			$cells = array_map(static fn ($cell): string => (string) $cell, $cells);
+			if ($isFirst === true && isset($cells[0]) === true) {
+				$cells[0] = (string) preg_replace('/^\xEF\xBB\xBF/', '', $cells[0]);
+			}
+
+			$isFirst = false;
+			yield $cells;
+		}
+	}//end csvRows()
 
 	/**
 	 * Read the first sheet of an XLSX file into rows of cells, with PhpSpreadsheet as OpenRegister ships it.

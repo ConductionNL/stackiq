@@ -16,6 +16,9 @@
  * @link      https://github.com/ConductionNL/stackiq
  *
  * @spec openspec/specs/settings-service/spec.md
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
@@ -24,6 +27,7 @@ namespace OCA\Stackiq\Tests\Unit\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Service\ArchiMateService;
+use OCA\Stackiq\Service\Settings\CatalogueLocator;
 use OCA\Stackiq\Service\SettingsService;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
@@ -39,6 +43,7 @@ use Psr\Log\AbstractLogger;
  * @uses   \OCA\Stackiq\Service\Settings\VoorzieningenConfigNormalizer
  *
  * @spec openspec/specs/settings-service/spec.md
+ * @uses \OCA\Stackiq\Service\Settings\CatalogueLocator
  */
 class SettingsServiceObjectCountsGoldenTest extends TestCase {
 
@@ -285,6 +290,7 @@ class SettingsServiceObjectCountsGoldenTest extends TestCase {
 			'container'  => $container,
 			'logger'     => $logger,
 			'appName'    => 'stackiq',
+			'catalogue'  => new CatalogueLocator(config: $config, appManager: $apps, container: $container, logger: $logger),
 		];
 		foreach ($properties as $name => $value) {
 			$reflection->getProperty($name)->setValue($service, $value);

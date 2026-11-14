@@ -10,14 +10,17 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Repair;
 
-use OCA\Stackiq\AppInfo\AppIdentity;
-use OCA\Stackiq\Service\SettingsService;
+use OCA\Stackiq\Kernel\AppIdentity;
+use OCA\Stackiq\Kernel\Contracts\SettingsServiceInterface;
 use OCP\App\IAppManager;
 use OCP\IAppConfig;
 use OCP\Migration\IOutput;
@@ -145,7 +148,7 @@ class InitializeSettings implements IRepairStep {
 		$this->seedDefaults();
 
 		// Get the settings service and initialize.
-		$settingsService = $this->container->get(SettingsService::class);
+		$settingsService = $this->container->get(SettingsServiceInterface::class);
 		$result = $settingsService->initialize();
 
 		// Mark this version as initialized regardless of partial failures.

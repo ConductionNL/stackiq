@@ -13,13 +13,16 @@
  * @license   EUPL-1.2 https://joinup.ec.europa.eu/collection/eupl/eupl-text-eupl-12
  * @version   GIT: <git_id>
  * @link      https://github.com/ConductionNL/stackiq
+ *
+ * SPDX-FileCopyrightText: 2025 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
  */
 
 declare(strict_types=1);
 
 namespace OCA\Stackiq\Controller;
 
-use OCA\Stackiq\Service\AanbodService;
+use OCA\Stackiq\Kernel\Contracts\AanbodServiceInterface;
 use OCP\AppFramework\Controller;
 use OCP\AppFramework\Http;
 use OCP\AppFramework\Http\JSONResponse;
@@ -87,14 +90,14 @@ class AanbodController extends Controller {
 	 * @param string $appName The name of the app
 	 * @param IRequest $request The HTTP request object
 	 * @param IUserSession $userSession The user session service for getting the current user
-	 * @param AanbodService $aanbodService The business logic service
+	 * @param AanbodServiceInterface $aanbodService The business logic service
 	 * @param LoggerInterface $logger The logger service for debugging and error reporting
 	 */
 	public function __construct(
 		string $appName,
 		IRequest $request,
 		private readonly IUserSession $userSession,
-		private readonly AanbodService $aanbodService,
+		private readonly AanbodServiceInterface $aanbodService,
 		private readonly LoggerInterface $logger,
 	) {
 		parent::__construct(appName: $appName, request: $request);

@@ -1,4 +1,8 @@
 /**
+ * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
+ * SPDX-License-Identifier: EUPL-1.2
+ */
+/**
  * Organisation status values the concept-organisations dashboard widget reads
  * and writes. They must be members of the `status` enum of the organization
  * schema in lib/Settings/softwarecatalogus_register.json, or OpenRegister

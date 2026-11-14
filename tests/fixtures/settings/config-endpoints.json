@@ -1,0 +1,1261 @@
+{
+    "getArchiMateConfig anonymous ok": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "getArchiMateConfig anonymous throws": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "getArchiMateConfig non-admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "getArchiMateConfig",
+                []
+            ]
+        ],
+        []
+    ],
+    "getArchiMateConfig non-admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get ArchiMate config: service down"
+        },
+        [
+            [
+                "getArchiMateConfig",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get ArchiMate config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "getArchiMateConfig admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "getArchiMateConfig",
+                []
+            ]
+        ],
+        []
+    ],
+    "getArchiMateConfig admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get ArchiMate config: service down"
+        },
+        [
+            [
+                "getArchiMateConfig",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get ArchiMate config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "updateArchiMateConfig anonymous ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "updateArchiMateConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        []
+    ],
+    "updateArchiMateConfig anonymous throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to update ArchiMate config: service down"
+        },
+        [
+            [
+                "updateArchiMateConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to update ArchiMate config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "updateArchiMateConfig non-admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "updateArchiMateConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        []
+    ],
+    "updateArchiMateConfig non-admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to update ArchiMate config: service down"
+        },
+        [
+            [
+                "updateArchiMateConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to update ArchiMate config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "updateArchiMateConfig admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "updateArchiMateConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        []
+    ],
+    "updateArchiMateConfig admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to update ArchiMate config: service down"
+        },
+        [
+            [
+                "updateArchiMateConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to update ArchiMate config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "getEmailConfig anonymous ok": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "getEmailConfig anonymous throws": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "getEmailConfig non-admin ok": [
+        403,
+        {
+            "message": "Admin privileges required"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "bob"
+                ]
+            ]
+        ],
+        []
+    ],
+    "getEmailConfig non-admin throws": [
+        403,
+        {
+            "message": "Admin privileges required"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "bob"
+                ]
+            ]
+        ],
+        []
+    ],
+    "getEmailConfig admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "getEmailConfigFocused",
+                []
+            ]
+        ],
+        []
+    ],
+    "getEmailConfig admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get email config: service down"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "getEmailConfigFocused",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get email config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "updateEmailConfig anonymous ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "updateEmailConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        []
+    ],
+    "updateEmailConfig anonymous throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to update email config: service down"
+        },
+        [
+            [
+                "updateEmailConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to update email config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "updateEmailConfig non-admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "updateEmailConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        []
+    ],
+    "updateEmailConfig non-admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to update email config: service down"
+        },
+        [
+            [
+                "updateEmailConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to update email config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "updateEmailConfig admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "updateEmailConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        []
+    ],
+    "updateEmailConfig admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to update email config: service down"
+        },
+        [
+            [
+                "updateEmailConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to update email config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "getAmefConfig anonymous ok": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "getAmefConfig anonymous throws": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "getAmefConfig non-admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "getAmefConfigFocused",
+                []
+            ]
+        ],
+        []
+    ],
+    "getAmefConfig non-admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get AMEF config: service down"
+        },
+        [
+            [
+                "getAmefConfigFocused",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get AMEF config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "getAmefConfig admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "getAmefConfigFocused",
+                []
+            ]
+        ],
+        []
+    ],
+    "getAmefConfig admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get AMEF config: service down"
+        },
+        [
+            [
+                "getAmefConfigFocused",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get AMEF config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "updateAmefConfig anonymous ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "updateAmefConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        []
+    ],
+    "updateAmefConfig anonymous throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to update AMEF config: service down"
+        },
+        [
+            [
+                "updateAmefConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to update AMEF config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "updateAmefConfig non-admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "updateAmefConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        []
+    ],
+    "updateAmefConfig non-admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to update AMEF config: service down"
+        },
+        [
+            [
+                "updateAmefConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to update AMEF config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "updateAmefConfig admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "updateAmefConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        []
+    ],
+    "updateAmefConfig admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to update AMEF config: service down"
+        },
+        [
+            [
+                "updateAmefConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to update AMEF config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "getVoorzieningenConfig anonymous ok": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "getVoorzieningenConfig anonymous throws": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "getVoorzieningenConfig non-admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "getVoorzieningenConfigFocused",
+                []
+            ]
+        ],
+        []
+    ],
+    "getVoorzieningenConfig non-admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get Voorzieningen config: service down"
+        },
+        [
+            [
+                "getVoorzieningenConfigFocused",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get Voorzieningen config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "getVoorzieningenConfig admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "getVoorzieningenConfigFocused",
+                []
+            ]
+        ],
+        []
+    ],
+    "getVoorzieningenConfig admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get Voorzieningen config: service down"
+        },
+        [
+            [
+                "getVoorzieningenConfigFocused",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get Voorzieningen config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "updateVoorzieningenConfig anonymous ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "updateVoorzieningenConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        []
+    ],
+    "updateVoorzieningenConfig anonymous throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to update Voorzieningen config: service down"
+        },
+        [
+            [
+                "updateVoorzieningenConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to update Voorzieningen config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "updateVoorzieningenConfig non-admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "updateVoorzieningenConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        []
+    ],
+    "updateVoorzieningenConfig non-admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to update Voorzieningen config: service down"
+        },
+        [
+            [
+                "updateVoorzieningenConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to update Voorzieningen config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "updateVoorzieningenConfig admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "updateVoorzieningenConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        []
+    ],
+    "updateVoorzieningenConfig admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to update Voorzieningen config: service down"
+        },
+        [
+            [
+                "updateVoorzieningenConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to update Voorzieningen config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "getObjectsCounts anonymous ok": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "getObjectsCounts anonymous throws": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "getObjectsCounts non-admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "getObjectsCounts",
+                []
+            ]
+        ],
+        []
+    ],
+    "getObjectsCounts non-admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get object counts: service down"
+        },
+        [
+            [
+                "getObjectsCounts",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get object counts",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "getObjectsCounts admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "getObjectsCounts",
+                []
+            ]
+        ],
+        []
+    ],
+    "getObjectsCounts admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get object counts: service down"
+        },
+        [
+            [
+                "getObjectsCounts",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get object counts",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "getObjectsStatistics anonymous ok": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "getObjectsStatistics anonymous throws": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "getObjectsStatistics non-admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "getObjectsStatistics",
+                []
+            ]
+        ],
+        []
+    ],
+    "getObjectsStatistics non-admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get object statistics: service down"
+        },
+        [
+            [
+                "getObjectsStatistics",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get object statistics",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "getObjectsStatistics admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "getObjectsStatistics",
+                []
+            ]
+        ],
+        []
+    ],
+    "getObjectsStatistics admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get object statistics: service down"
+        },
+        [
+            [
+                "getObjectsStatistics",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get object statistics",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "getUserGroupsConfig anonymous ok": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "getUserGroupsConfig anonymous throws": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "getUserGroupsConfig non-admin ok": [
+        403,
+        {
+            "message": "Admin privileges required"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "bob"
+                ]
+            ]
+        ],
+        []
+    ],
+    "getUserGroupsConfig non-admin throws": [
+        403,
+        {
+            "message": "Admin privileges required"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "bob"
+                ]
+            ]
+        ],
+        []
+    ],
+    "getUserGroupsConfig admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "getUserGroupsConfig",
+                []
+            ]
+        ],
+        []
+    ],
+    "getUserGroupsConfig admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to get user groups config: service down"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "getUserGroupsConfig",
+                []
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to get user groups config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ],
+    "updateUserGroupsConfig anonymous ok": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "updateUserGroupsConfig anonymous throws": [
+        401,
+        {
+            "message": "Not authenticated"
+        },
+        [],
+        []
+    ],
+    "updateUserGroupsConfig non-admin ok": [
+        403,
+        {
+            "message": "Admin privileges required"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "bob"
+                ]
+            ]
+        ],
+        []
+    ],
+    "updateUserGroupsConfig non-admin throws": [
+        403,
+        {
+            "message": "Admin privileges required"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "bob"
+                ]
+            ]
+        ],
+        []
+    ],
+    "updateUserGroupsConfig admin ok": [
+        200,
+        {
+            "answer": "a"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "updateUserGroupsConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        []
+    ],
+    "updateUserGroupsConfig admin throws": [
+        500,
+        {
+            "success": false,
+            "message": "Failed to update user groups config: service down"
+        },
+        [
+            [
+                "isAdmin",
+                [
+                    "admin"
+                ]
+            ],
+            [
+                "updateUserGroupsConfig",
+                [
+                    {
+                        "mode": "m",
+                        "smtpPassword": "secret"
+                    }
+                ]
+            ]
+        ],
+        [
+            [
+                "error",
+                "Failed to update user groups config",
+                {
+                    "exception": "service down"
+                }
+            ]
+        ]
+    ]
+}
