@@ -341,6 +341,8 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-shows-what-comparable-organisations-use-req-gpl-002
         ['name' => 'referenceComponentCoverage#peers', 'url' => '/api/reference-component-coverage/peers', 'verb' => 'GET'],
         ['name' => 'referenceComponentCoverage#index', 'url' => '/api/reference-component-coverage', 'verb' => 'GET'],
+        // @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+        ['name' => 'landscapeComparison#index', 'url' => '/api/landscape-comparison', 'verb' => 'GET'],
 
         // SPA catch-all — serves the Vue app for any frontend route (history mode routing)
         // `postfix` keeps this SPA catch-all from colliding with the bare-root

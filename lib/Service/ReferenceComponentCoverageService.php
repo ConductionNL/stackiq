@@ -87,6 +87,53 @@ class ReferenceComponentCoverageService implements ReferenceComponentCoverageSer
 	}//end build()
 
 	/**
+	 * The organisation's usages with the page counts, read with the coverage's bounded query.
+	 *
+	 * Shared with the landscape comparison so both read one organisation's
+	 * usages the same way. The caller has already checked the user may read
+	 * the organisation.
+	 *
+	 * @param string $organisationUuid The consuming organisation.
+	 *
+	 * @return array{usages: array<int, array<string, mixed>>, counts: array{total: int, truncated: bool}}
+	 *
+	 * @throws Exception When OpenRegister or the register configuration is unavailable.
+	 *
+	 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+	 */
+	public function readOrganisationUsages(string $organisationUuid): array {
+		return $this->organisationUsages(organisationUuid: $organisationUuid, source: $this->usageSource());
+	}//end readOrganisationUsages()
+
+	/**
+	 * Modules by id, one bounded read; empty for no ids.
+	 *
+	 * @param array<int, string> $moduleIds The module ids.
+	 *
+	 * @return array<string, array<string, mixed>> The modules, by id.
+	 *
+	 * @throws Exception When OpenRegister or the register configuration is unavailable.
+	 *
+	 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+	 */
+	public function readModules(array $moduleIds): array {
+		$ids = array_values(array_unique(array_filter(array_map('strval', $moduleIds), static fn (string $id): bool => $id !== '')));
+
+		return $this->modulesWithIds(ids: $ids, source: $this->usageSource());
+	}//end readModules()
+
+	/**
+	 * The GEMMA reference components, bounded; empty when no GEMMA model is imported.
+	 *
+	 * @return array<int, array<string, mixed>> The reference components.
+	 *
+	 * @spec openspec/changes/architecture-future-state-scenarios/specs/future-state-scenarios/spec.md#requirement-req-fss-002-an-information-manager-shall-compare-todays-landscape-with-the-plan-on-a-date
+	 */
+	public function readReferenceComponents(): array {
+		return $this->components();
+	}//end readReferenceComponents()
+
+	/**
 	 * The register and the usage and module schemas the coverage reads, checked to be usable.
 	 *
 	 * @return array{register: int, usage: int, module: int} The register and schema ids.
@@ -245,7 +292,18 @@ class ReferenceComponentCoverageService implements ReferenceComponentCoverageSer
 	 * @return array<string,array<string,mixed>> Modules by id.
 	 */
 	private function modules(array $usages, array $source): array {
-		$ids = $this->moduleIds(usages: $usages);
+		return $this->modulesWithIds(ids: $this->moduleIds(usages: $usages), source: $source);
+	}//end modules()
+
+	/**
+	 * The modules with these ids, by id, in one bounded read.
+	 *
+	 * @param array<int,string>                         $ids    The module ids.
+	 * @param array{register:int,usage:int,module:int} $source The voorzieningen register and its schemas.
+	 *
+	 * @return array<string,array<string,mixed>> Modules by id.
+	 */
+	private function modulesWithIds(array $ids, array $source): array {
 		if ($ids === [] || $source['module'] === 0) {
 			return [];
 		}
@@ -257,7 +315,7 @@ class ReferenceComponentCoverageService implements ReferenceComponentCoverageSer
 		]);
 
 		return $this->modulesById(modules: $modules);
-	}//end modules()
+	}//end modulesWithIds()
 
 	/**
 	 * The distinct module ids the usages name.
