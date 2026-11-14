@@ -1265,7 +1265,10 @@ OC.L10N.register(
         "Gap, fillable": "Gap, fillable",
         "Gap": "Gap",
         "Licence": "Licence",
-        "Software catalogue": "Software catalogue"
+        "Software catalogue": "Software catalogue",
+        "Shared": "Shared",
+        "{name}, shared by {partner}": "{name}, shared by {partner}",
+        "+{count} more": "+{count} more"
     },
     "nplurals=2; plural=(n != 1);"
 )
