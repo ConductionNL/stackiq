@@ -231,6 +231,10 @@ Vrij en open source onder de EUPL-licentie.
 			     would rewrite a key nothing reads. Idempotent, and guarded on the
 			     exact stored value so an admin's own register is never touched. -->
 			<step>OCA\Stackiq\Repair\RepointEolSyncConfig</step>
+			<!-- Before the register import: rows that break a dependent value table
+			     (register.d/dependent-field-options.json) are cleared first, so their
+			     next edit is not refused for a field nobody touched. -->
+			<step>OCA\Stackiq\Repair\ClearDisallowedDependentValues</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
 			<step>OCA\Stackiq\Repair\MigrateContactsToNc</step>
 			<step>OCA\Stackiq\Repair\BackfillContractApprovalState</step>
@@ -259,6 +263,12 @@ Vrij en open source onder de EUPL-licentie.
 				throws, and does nothing without OpenRegister's store.
 			-->
 			<step>OCA\Stackiq\Repair\SeedCmdbImportPacks</step>
+			<!--
+				The organisation sync job honours its switch
+				(operations-sync-status-and-progress): warn once where it is off,
+				so nobody wonders why syncs stopped. Changes nothing.
+			-->
+			<step>OCA\Stackiq\Repair\LogSwitchedOffSync</step>
 		</post-migration>
 		<!--
 			FRESH INSTALL. Nextcloud does NOT run post-migration on a first install:
@@ -332,6 +342,10 @@ Vrij en open source onder de EUPL-licentie.
 			     would rewrite a key nothing reads. Idempotent, and guarded on the
 			     exact stored value so an admin's own register is never touched. -->
 			<step>OCA\Stackiq\Repair\RepointEolSyncConfig</step>
+			<!-- Before the register import: rows that break a dependent value table
+			     (register.d/dependent-field-options.json) are cleared first, so their
+			     next edit is not refused for a field nobody touched. -->
+			<step>OCA\Stackiq\Repair\ClearDisallowedDependentValues</step>
 			<step>OCA\Stackiq\Repair\InitializeSettings</step>
 			<!-- A fresh install seeds the CMDB import packs too; see <post-migration> above. -->
 			<step>OCA\Stackiq\Repair\SeedCmdbImportPacks</step>

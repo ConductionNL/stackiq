@@ -306,7 +306,7 @@
       "count": 71
     },
     "no-console": {
-      "count": 12
+      "count": 11
     },
     "no-useless-assignment": {
       "count": 1
@@ -437,7 +437,7 @@
       "count": 1
     },
     "no-console": {
-      "count": 9
+      "count": 3
     }
   },
   "src/views/settings/sections/EolSyncSettings.vue": {
