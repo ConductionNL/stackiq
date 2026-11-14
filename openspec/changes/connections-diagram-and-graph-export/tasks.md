@@ -21,6 +21,7 @@
 - [ ] Implement
 - [ ] Test (vitest `tests/vitest/connectionLayout.spec.js` for a stable layered layout)
 - Progress: `src/utils/connectionLayout.js` (senders left, receivers right, the rest in the middle, each column by name; edges from the sender, labelled with the transport type) and `tests/vitest/connectionLayout.spec.js`, including the same positions whatever the row order. Left: `ConnectionsDiagram.vue` on `CnGraphCanvas` and the Diagram toggle in `src/manifest.d/connections.json`.
+- Blocked: `CnIndexPage` in `@conduction/nextcloud-vue` takes a custom component per row (`listComponent`) or per card (`cardComponent`), not one for the whole filtered list, and its `viewModes` are fixed (`table`, `cards`, `list`, `map`, `board`, `dateAxis`). A Diagram toggle over the fetched rows needs a library view mode or slot for that; the layout utility is ready for it.
 
 ### Task 3: Downloads from the map
 - **spec_ref**: openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-003-a-user-can-download-an-applications-map-and-its-links
@@ -48,8 +49,9 @@
 - **files**: `docs/features/connections.md`, `docs/images/connection-map.png`
 - **acceptance_criteria**:
   - GIVEN the docs site WHEN a reader opens Connections THEN the map, the diagram and the export option are explained with a screenshot
-- [ ] Implement
+- [x] Implement
 - [ ] Test (docs build, screenshot with Playwright)
+- Done: `docs/features/connections.md` explains the map, its downloads and the ArchiMate option. The screenshot (`docs/images/connection-map.png`) needs a Playwright run against a live instance and is left open.
 
 ## Verification
 
