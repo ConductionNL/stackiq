@@ -9,8 +9,8 @@
   - GIVEN an imported GEMMA view fixture with nested nodes WHEN it is drawn THEN every node sits at its stored position and size and children sit inside their parents
   - GIVEN connections with bendpoints WHEN they are drawn THEN each path runs through its bendpoints with the arrowhead of its relation type
   - GIVEN a name with markup WHEN it is drawn THEN it is escaped, and the SVG holds no script, external href or foreignObject
-- [ ] Implement
-- [ ] Test (PHPUnit `ViewImageServiceTest`)
+- [x] Implement
+- [x] Test (PHPUnit `ViewImageServiceTest`)
 
 ### Task 2: Image route with RBAC on
 - **spec_ref**: openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-001-stackiq-shall-draw-a-view-as-a-standalone-svg-from-its-stored-geometry
