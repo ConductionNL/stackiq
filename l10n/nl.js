@@ -1,12 +1,8 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "stackiq",
     {
-        "No mail transport is set, so registration, activation and account mails are not sent.": "Er is geen mailtransport ingesteld, dus registratie-, activatie- en accountmails worden niet verstuurd.",
         "Set up the mail transport": "Mailtransport instellen",
+        "No mail transport is set, so registration, activation and account mails are not sent.": "Er is geen mailtransport ingesteld, dus registratie-, activatie- en accountmails worden niet verstuurd.",
         "Licence metric": "Licentiemetriek",
         "What one licence covers, as the contract with the supplier states it.": "Waar één licentie voor geldt, zoals het contract met de leverancier het vastlegt.",
         "Licences bought": "Gekochte licenties",
@@ -1404,7 +1400,14 @@ OC.L10N.register(
         "Software catalogue": "Softwarecatalogus",
         "Shared": "Gedeeld",
         "{name}, shared by {partner}": "{name}, gedeeld door {partner}",
-        "+{count} more": "+{count} meer"
+        "+{count} more": "+{count} meer",
+        "Connection map": "Koppelingenkaart",
+        "This application": "Deze applicatie",
+        "Download as SVG": "Downloaden als SVG",
+        "Download as PNG": "Downloaden als PNG",
+        "Download links as CSV": "Koppelingen downloaden als CSV",
+        "The connections could not be loaded.": "De koppelingen konden niet worden geladen.",
+        "This application has no connections you can see.": "Deze applicatie heeft geen koppelingen die u kunt zien."
     },
     "nplurals=2; plural=(n != 1);"
 )

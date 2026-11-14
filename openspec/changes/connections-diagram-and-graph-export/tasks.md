@@ -8,8 +8,9 @@
 - **acceptance_criteria**:
   - GIVEN an application with three connections WHEN its page opens THEN the map shows the application in the centre and three linked nodes with transport labels
   - GIVEN a node on the map WHEN the user clicks it THEN the linked application or connection opens
-- [ ] Implement
-- [ ] Test (vitest `tests/vitest/connectionMap.spec.js` for nodes and edges from connections; Playwright `tests/e2e/workflows/connections.spec.ts` map case)
+- [x] Implement
+- [x] Test (vitest `tests/vitest/connectionMap.spec.js` for nodes and edges from connections; Playwright `tests/e2e/workflows/connections.spec.ts` map case)
+- Done: `ConnectionMapWidget` on `ModuleDetail` (`md-connection-map`), reading the connections with `moduleA` and with `moduleB` equal to the application through the object store, drawn with `CnRelationshipGraph` (radial, application at the root). `src/utils/connectionMap.js` builds the nodes (each linked end once, by name) and the edges (one per connection, from the sender, labelled with the transport type and an arrow, a provision dashed). A node opens the application; a line opens the connection. Test: `tests/vitest/connectionMap.spec.js` (4). The Playwright map case is left to an e2e run.
 
 ### Task 2: Diagram view on the connections list
 - **spec_ref**: openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-002-the-connections-list-can-be-shown-as-a-diagram-of-the-filtered-rows
@@ -27,9 +28,10 @@
 - **acceptance_criteria**:
   - GIVEN the map of an application WHEN the user picks Download links as CSV THEN a CSV with one line per connection downloads
   - GIVEN the same map WHEN the user picks Download as SVG THEN an SVG with the drawn nodes downloads
-- [ ] Implement
-- [ ] Test (vitest `tests/vitest/connectionExport.spec.js` for CSV columns and escaping)
+- [x] Implement
+- [x] Test (vitest `tests/vitest/connectionExport.spec.js` for CSV columns and escaping)
 - Progress: `src/utils/connectionExport.js` (CSV with the five columns, RFC 4180 quoting and formula neutralising; a standalone SVG document from the drawn element; a download helper) and `tests/vitest/connectionExport.spec.js`. Left: the action menu on `ConnectionMapWidget.vue`, which Task 1 builds, and PNG.
+- Done: the widget's action menu downloads the drawing as SVG and as PNG (the SVG drawn on a canvas) and the links as CSV, from the connections the user could read.
 
 ### Task 4: Connections in the organisation ArchiMate export
 - **spec_ref**: openspec/changes/connections-diagram-and-graph-export/specs/connection-diagram-and-export/spec.md#requirement-req-cdx-004-the-organisation-archimate-export-can-carry-the-organisations-connections

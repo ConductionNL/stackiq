@@ -1331,6 +1331,13 @@
         "Software catalogue": "Software catalogue",
         "Shared": "Shared",
         "{name}, shared by {partner}": "{name}, shared by {partner}",
-        "+{count} more": "+{count} more"
+        "+{count} more": "+{count} more",
+        "Connection map": "Connection map",
+        "This application": "This application",
+        "Download as SVG": "Download as SVG",
+        "Download as PNG": "Download as PNG",
+        "Download links as CSV": "Download links as CSV",
+        "The connections could not be loaded.": "The connections could not be loaded.",
+        "This application has no connections you can see.": "This application has no connections you can see."
     }
 }
