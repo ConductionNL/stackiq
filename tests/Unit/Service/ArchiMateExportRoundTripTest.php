@@ -371,4 +371,40 @@ final class ArchiMateExportRoundTripTest extends TestCase {
 		$this->assertSame(expected: ['id-el-1', 'id-el-2', 'el-3', 'id-el-4', 'id-el-5'], actual: self::identifiers(xml: $xml, tag: 'element'));
 		$this->assertSame(expected: ['id-rel-1', 'rel-2'], actual: self::identifiers(xml: $xml, tag: 'relationship'));
 	}//end testNoOptionsAddNoApplications()
+	/**
+	 * The full export generates through generateXmlFromObjects, which the
+	 * round-trip check calls: the same objects give the same document
+	 * (architecture-round-trip-check REQ-ART-002).
+	 *
+	 * @return void
+	 */
+	public function testTheExportGeneratesThroughTheCheckedGeneration(): void {
+		$logger = $this->createMock(originalClassName: LoggerInterface::class);
+		$spy = new class(logger: $logger) extends ArchiMateExportService {
+			/**
+			 * The object counts generateXmlFromObjects was called with.
+			 *
+			 * @var list<int>
+			 */
+			public array $generated = [];
+
+			/**
+			 * Record the call and generate as the export does.
+			 *
+			 * @param array $objects The AMEF objects.
+			 *
+			 * @return string
+			 */
+			public function generateXmlFromObjects(array $objects): string {
+				$this->generated[] = count($objects);
+				return parent::generateXmlFromObjects(objects: $objects);
+			}
+		};
+
+		$exported = $spy->exportArchiMateXml(objectService: $this->objects(), registerId: 7, schemaIdMap: $this->schemaIdMap);
+		$objects = $this->service()->getObjectsFromDatabase(objectService: $this->objects(), registerId: 7, schemaIdMap: $this->schemaIdMap);
+
+		$this->assertSame([count($objects)], $spy->generated);
+		$this->assertSame($exported, $this->service()->generateXmlFromObjects(objects: $objects));
+	}//end testTheExportGeneratesThroughTheCheckedGeneration()
 }//end class

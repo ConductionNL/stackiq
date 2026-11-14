@@ -18,8 +18,8 @@
 - **acceptance_criteria**:
   - GIVEN the fixture `lib/Settings/GEMMA_testdata_below_1_5mb.xml` WHEN it is converted by the optimised import with the save mocked and by `convertFileToObjects` THEN the object lists are equal
   - GIVEN `exportArchiMateXml` WHEN it runs THEN it calls `generateXmlFromObjects`, and the existing decomposition tests stay green
-- [ ] Implement
-- [ ] Test (PHPUnit `ArchiMateImportServiceConvertTest`, `ArchiMateImportServiceDecompositionTest`, `ArchiMateExportServiceDecompositionTest`)
+- [x] Implement
+- [x] Test (PHPUnit `ArchiMateImportServiceConvertTest`, `ArchiMateImportServiceDecompositionTest`, `ArchiMateExportServiceDecompositionTest`)
 
 ### Task 3: Round-trip service with two modes
 - **spec_ref**: openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing

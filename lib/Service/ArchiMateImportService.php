@@ -312,6 +312,66 @@ class ArchiMateImportService implements ArchiMateImportServiceInterface {
 	}//end appendXmlChild()
 
 	/**
+	 * Convert an exchange file into the objects the import saves, without saving.
+	 *
+	 * The steps before the save of {@see self::importArchiMateFileFromPathOptimized()},
+	 * in its order: the presence check, parsing, the model identifier and the
+	 * batch transformation, with the import's progress phases and cancellation
+	 * checks (both inert when no operation is tracked). The import calls this
+	 * method, and so does the round-trip check, so the check converts exactly
+	 * as the import does.
+	 *
+	 * @param string $filePath The exchange file.
+	 *
+	 * @return array `filePath`, `objects`, `modelIdentifier`, `cancelled`, and `timings`
+	 *               (`parse`, `memoryCleanup`, `modelIdentifier`, `transform`, in seconds).
+	 *
+	 * @throws \InvalidArgumentException When the path is empty or the file does not exist.
+	 *
+	 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing
+	 */
+	public function convertFileToObjects(string $filePath): array {
+		$this->initializeCache();
+		$result = [
+			'filePath'        => '',
+			'objects'         => [],
+			'modelIdentifier' => '',
+			'cancelled'       => false,
+			'timings'         => ['parse' => 0.0, 'memoryCleanup' => 0.0, 'modelIdentifier' => 0.0, 'transform' => 0.0],
+		];
+
+		$this->trackPhase(phase: 'validating');
+		$result['filePath'] = $this->validateArchiMateFile(options: ['filePath' => $filePath]);
+
+		$this->trackPhase(phase: 'parsing');
+		$started = microtime(true);
+		$xmlData = $this->parseArchiMateXml(filePath: $result['filePath']);
+		$result['timings']['parse'] = microtime(true) - $started;
+		if ($this->cancelRequested() === true) {
+			$result['cancelled'] = true;
+			return $result;
+		}
+
+		// PERFORMANCE OPTIMIZATION: Clean up memory after XML parsing.
+		$started = microtime(true);
+		$this->cleanupMemory();
+		$result['timings']['memoryCleanup'] = microtime(true) - $started;
+
+		$started = microtime(true);
+		$result['modelIdentifier'] = $this->extractModelIdentifier(xmlData: $xmlData);
+		$result['timings']['modelIdentifier'] = microtime(true) - $started;
+
+		// Parse ALL objects in one go (like CSV import).
+		$this->trackPhase(phase: 'analyzing');
+		$started = microtime(true);
+		$result['objects'] = $this->transformArchiMateXmlToObjectsBatch(xmlData: $xmlData, modelIdentifier: $result['modelIdentifier']);
+		$result['timings']['transform'] = microtime(true) - $started;
+		$result['cancelled'] = $this->cancelRequested();
+
+		return $result;
+	}//end convertFileToObjects()
+
+	/**
 	 * OPTIMIZED: Import ArchiMate XML file using OpenRegister-style performance optimization
 	 *
 	 * This method follows the same pattern as OpenRegister ImportService:
@@ -343,44 +403,21 @@ class ArchiMateImportService implements ArchiMateImportServiceInterface {
 			$cacheTime = microtime(true) - $cacheStartTime;
 
 			// Cache initialization completed.
-			// STEP 1: Parse XML to array (same as before).
-			$this->trackPhase(phase: 'validating');
-			$filePath = $this->validateArchiMateFile(options: $options);
-
-			$this->trackPhase(phase: 'parsing');
-			$parseStartTime = microtime(true);
-			$xmlData = $this->parseArchiMateXml(filePath: $filePath);
-			$parseTime = microtime(true) - $parseStartTime;
-
-			if ($this->cancelRequested() === true) {
+			// STEPS 1-3: validate, parse, extract the model identifier and
+			// transform, in the one conversion the round-trip check also runs
+			// (architecture-round-trip-check REQ-ART-002).
+			$conversion = $this->convertFileToObjects(filePath: (string)($options['filePath'] ?? $options['file_path'] ?? ''));
+			if ($conversion['cancelled'] === true) {
 				$this->progressTracker->cancelOperation();
 				return $this->cancelledResult();
 			}
 
-			// PERFORMANCE OPTIMIZATION: Clean up memory after XML parsing.
-			$memoryCleanupTime = 0;
-			$memCleanupStart = microtime(true);
-			$this->cleanupMemory();
-			$memoryCleanupTime = microtime(true) - $memCleanupStart;
-
-			// STEP 2: Extract model identifier.
-			$modelIdStartTime = microtime(true);
-			$modelIdentifier = $this->extractModelIdentifier(xmlData: $xmlData);
-			$modelIdentifierTime = microtime(true) - $modelIdStartTime;
-
-			// STEP 3: Parse ALL objects in one go (like CSV import).
-			$this->trackPhase(phase: 'analyzing');
-			$transformStartTime = microtime(true);
-			$allObjects = $this->transformArchiMateXmlToObjectsBatch(
-				xmlData: $xmlData,
-				modelIdentifier: $modelIdentifier
-			);
-			$transformTime = microtime(true) - $transformStartTime;
-
-			if ($this->cancelRequested() === true) {
-				$this->progressTracker->cancelOperation();
-				return $this->cancelledResult();
-			}
+			$filePath            = $conversion['filePath'];
+			$allObjects          = $conversion['objects'];
+			$parseTime           = $conversion['timings']['parse'];
+			$memoryCleanupTime   = $conversion['timings']['memoryCleanup'];
+			$modelIdentifierTime = $conversion['timings']['modelIdentifier'];
+			$transformTime       = $conversion['timings']['transform'];
 
 			// Parsed and transformed all objects.
 			// STEP 4: Single saveObjects() call (like CSV import).

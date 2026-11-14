@@ -1092,11 +1092,9 @@ XML;
 		);
 		$dbTime = microtime(true) - $startTime;
 
-		// Step 2: Process and generate XML in single optimized pass (no schema mapping needed).
-		$xml = $this->generateXmlDirectly(objects: $objects);
-
-		// Step 3: Run Quality Assurance checks on generated XML.
-		$this->runQualityAssuranceChecks(xmlString: $xml);
+		// Steps 2-3: generate the XML in one pass and run the quality checks,
+		// through the generation the round-trip check also runs (REQ-ART-002).
+		$xml = $this->generateXmlFromObjects(objects: $objects);
 
 		$totalTime = microtime(true) - $startTime;
 
@@ -1113,6 +1111,25 @@ XML;
 
 		return $xml;
 	}//end exportArchiMateXml()
+
+	/**
+	 * Generate an exchange file from AMEF objects and run the quality checks on it.
+	 *
+	 * The generation of {@see self::exportArchiMateXml()}, which calls this
+	 * method, so the round-trip check generates exactly as the export does.
+	 *
+	 * @param array $objects The AMEF objects, as the export reads them or the import's conversion produces them.
+	 *
+	 * @return string The exchange file.
+	 *
+	 * @spec openspec/changes/architecture-round-trip-check/specs/archimate-round-trip-check/spec.md#requirement-req-art-002-the-check-shall-run-before-an-import-or-against-an-imported-model-without-writing
+	 */
+	public function generateXmlFromObjects(array $objects): string {
+		$xml = $this->generateXmlDirectly(objects: $objects);
+		$this->runQualityAssuranceChecks(xmlString: $xml);
+
+		return $xml;
+	}//end generateXmlFromObjects()
 
 	/**
 	 * Generate XML directly from objects using section-based organization
