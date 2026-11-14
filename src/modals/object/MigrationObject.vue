@@ -8,30 +8,30 @@ import { navigationStore, objectStore } from '../../store/store.js'
 
 <template>
 	<NcDialog
-		:name="`Migrate ${selectedObjects.length} object${selectedObjects.length !== 1 ? 's' : ''}`"
+		:name="n('stackiq', 'Migrate {count} object', 'Migrate {count} objects', selectedObjects.length, { count: selectedObjects.length })"
 		size="large"
 		:canClose="false">
 		<!-- Source and Target Information -->
 		<div class="migration-overview">
 			<div class="source-info">
-				<h4>Source</h4>
+				<h4>{{ t('stackiq', 'Source') }}</h4>
 				<div class="info-card">
 					<div class="card-item">
 						<div class="card-label-with-icon">
 							<DatabaseOutline :size="16" />
-							<span class="card-label">Register:</span>
+							<span class="card-label">{{ t('stackiq', 'Register:') }}</span>
 						</div>
 						<span class="card-value">{{
-							sourceRegister?.title || sourceRegister?.id || 'Unknown'
+							sourceRegister?.title || sourceRegister?.id || t('stackiq', 'Unknown')
 						}}</span>
 					</div>
 					<div class="card-item">
 						<div class="card-label-with-icon">
 							<FileTreeOutline :size="16" />
-							<span class="card-label">Schema:</span>
+							<span class="card-label">{{ t('stackiq', 'Schema:') }}</span>
 						</div>
 						<span class="card-value">{{
-							sourceSchema?.title || sourceSchema?.id || 'Unknown'
+							sourceSchema?.title || sourceSchema?.id || t('stackiq', 'Unknown')
 						}}</span>
 					</div>
 				</div>
@@ -40,24 +40,24 @@ import { navigationStore, objectStore } from '../../store/store.js'
 			<div class="migration-arrow">→</div>
 
 			<div class="source-info">
-				<h4>Target</h4>
+				<h4>{{ t('stackiq', 'Target') }}</h4>
 				<div class="info-card">
 					<div class="card-item">
 						<div class="card-label-with-icon">
 							<DatabaseOutline :size="16" />
-							<span class="card-label">Register:</span>
+							<span class="card-label">{{ t('stackiq', 'Register:') }}</span>
 						</div>
 						<span class="card-value">{{
-							targetRegister?.title || 'Not selected'
+							targetRegister?.title || t('stackiq', 'Not selected')
 						}}</span>
 					</div>
 					<div class="card-item">
 						<div class="card-label-with-icon">
 							<FileTreeOutline :size="16" />
-							<span class="card-label">Schema:</span>
+							<span class="card-label">{{ t('stackiq', 'Schema:') }}</span>
 						</div>
 						<span class="card-value">{{
-							targetSchema?.title || 'Not selected'
+							targetSchema?.title || t('stackiq', 'Not selected')
 						}}</span>
 					</div>
 				</div>
@@ -66,15 +66,14 @@ import { navigationStore, objectStore } from '../../store/store.js'
 
 		<!-- Step 1: Confirm Selection -->
 		<div v-if="step === 1" class="migration-step step-1">
-			<h3 class="step-title">Confirm Object Selection</h3>
+			<h3 class="step-title">{{ t('stackiq', 'Confirm Object Selection') }}</h3>
 
 			<NcNoteCard type="info">
-				Review the selected objects below. You can remove any objects you
-				don't want to migrate by clicking the remove button.
+				{{ t('stackiq', 'Review the selected objects below. You can remove any objects you don\'t want to migrate by clicking the remove button.') }}
 			</NcNoteCard>
 
 			<div class="selected-objects-container">
-				<h4>Selected Objects ({{ selectedObjects.length }})</h4>
+				<h4>{{ t('stackiq', 'Selected Objects ({count})', { count: selectedObjects.length }) }}</h4>
 
 				<div v-if="selectedObjects.length" class="selected-objects-list">
 					<div
@@ -87,15 +86,15 @@ import { navigationStore, objectStore } from '../../store/store.js'
 								|| obj.name
 								|| obj.title
 								|| obj['@self']?.title
-								|| 'Unnamed Object'
+								|| t('stackiq', 'Unnamed Object')
 							}}</strong>
 							<p class="object-id">
-								ID: {{ obj.id || obj['@self']?.id }}
+								{{ t('stackiq', 'ID: {id}', { id: obj.id || obj['@self']?.id }) }}
 							</p>
 						</div>
 						<NcButton
 							variant="tertiary"
-							:aria-label="`Remove ${obj['@self']?.name || obj.name || obj.title || obj['@self']?.title || obj.id}`"
+							:aria-label="t('stackiq', 'Remove {name}', { name: obj['@self']?.name || obj.name || obj.title || obj['@self']?.title || obj.id }, undefined, { escape: false })"
 							@click="removeObject(obj.id)">
 							<template #icon>
 								<Close :size="20" />
@@ -104,9 +103,9 @@ import { navigationStore, objectStore } from '../../store/store.js'
 					</div>
 				</div>
 
-				<NcEmptyContent v-else name="No objects selected">
+				<NcEmptyContent v-else :name="t('stackiq', 'No objects selected')">
 					<template #description>
-						No objects are currently selected for migration.
+						{{ t('stackiq', 'No objects are currently selected for migration.') }}
 					</template>
 				</NcEmptyContent>
 			</div>
@@ -114,65 +113,72 @@ import { navigationStore, objectStore } from '../../store/store.js'
 
 		<!-- Step 2: Select Target Register and Schema -->
 		<div v-if="step === 2" class="migration-step">
-			<h3>Select Target Register and Schema</h3>
+			<h3>{{ t('stackiq', 'Select Target Register and Schema') }}</h3>
 			<p>
-				Choose the destination register and schema for the
-				{{ selectedObjects.length }} selected object{{
-					selectedObjects.length > 1 ? 's' : ''
-				}}:
+				{{
+					n(
+						'stackiq',
+						'Choose the destination register and schema for the {count} selected object:',
+						'Choose the destination register and schema for the {count} selected objects:',
+						selectedObjects.length,
+						{ count: selectedObjects.length },
+					)
+				}}
 			</p>
 
 			<!-- Target Register Selection -->
 			<div class="selection-section">
-				<h4>Target Register</h4>
+				<h4>{{ t('stackiq', 'Target Register') }}</h4>
 				<NcSelect
 					v-model="targetRegister"
 					:options="availableRegisters"
 					label="title"
 					trackBy="id"
 					:inputLabel="t('stackiq', 'Target register')"
-					placeholder="Select a register..."
+					:placeholder="t('stackiq', 'Select a register…')"
 					@update:modelValue="onRegisterChange" />
 			</div>
 
 			<!-- Target Schema Selection -->
 			<div v-if="targetRegister" class="selection-section">
-				<h4>Target Schema</h4>
+				<h4>{{ t('stackiq', 'Target Schema') }}</h4>
 				<NcSelect
 					v-model="targetSchema"
 					:options="availableSchemas"
 					label="title"
 					trackBy="id"
 					:inputLabel="t('stackiq', 'Target schema')"
-					placeholder="Select a schema..."
+					:placeholder="t('stackiq', 'Select a schema…')"
 					@update:modelValue="onSchemaChange" />
 			</div>
 		</div>
 
 		<!-- Step 3: Property Mapping -->
 		<div v-if="step === 3" class="migration-step">
-			<h3>Property Mapping</h3>
+			<h3>{{ t('stackiq', 'Property Mapping') }}</h3>
 			<p>
-				Map properties from the source schema to the target schema.
-				Properties not mapped will be discarded.
+				{{ t('stackiq', 'Map properties from the source schema to the target schema. Properties not mapped will be discarded.') }}
 			</p>
 
 			<NcNoteCard type="info">
-				Configure how properties should be mapped when migrating from source
-				schema
-				<strong>{{ sourceSchema?.title }}</strong> to target schema
-				<strong>{{ targetSchema?.title }}</strong>
+				<template
+					v-for="(part, index) in t('stackiq', 'Configure how properties should be mapped when migrating from source schema {source} to target schema {target}').split(/(\{source\}|\{target\})/)"
+					:key="index">
+					<strong v-if="part === '{source}'">{{ sourceSchema?.title }}</strong>
+					<strong v-else-if="part === '{target}'">{{ targetSchema?.title }}</strong>
+					<template v-else>{{ part }}</template>
+				</template>
 			</NcNoteCard>
 
 			<div class="mapping-container">
 				<div class="mapping-header">
 					<div class="source-header">
-						<h4>Source Properties</h4>
+						<h4>{{ t('stackiq', 'Source Properties') }}</h4>
 						<span class="schema-name">{{ sourceSchema?.title }}</span>
 					</div>
 					<div class="arrow-header">→</div>
 					<div class="target-header">
-						<h4>Target Properties</h4>
+						<h4>{{ t('stackiq', 'Target Properties') }}</h4>
 						<span class="schema-name">{{ targetSchema?.title }}</span>
 					</div>
 				</div>
@@ -204,7 +210,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 										{ property: sourceProperty.name },
 									)
 								"
-								placeholder="Map to target property..."
+								:placeholder="t('stackiq', 'Map to target property…')"
 								:clearable="true"
 								@update:modelValue="
 									updateMappingFromUI(sourceProperty.name)
@@ -217,38 +223,36 @@ import { navigationStore, objectStore } from '../../store/store.js'
 
 		<!-- Step 4: Migration Report -->
 		<div v-if="step === 4" class="migration-step">
-			<h3 class="report-title">Migration Report</h3>
+			<h3 class="report-title">{{ t('stackiq', 'Migration Report') }}</h3>
 
 			<NcNoteCard v-if="migrationResult?.success" type="success">
-				<p>Objects successfully migrated!</p>
+				<p>{{ t('stackiq', 'Objects successfully migrated!') }}</p>
 			</NcNoteCard>
 			<NcNoteCard
 				v-if="migrationResult && !migrationResult.success"
 				type="error">
-				<p>Migration failed. Please check the details below.</p>
+				<p>{{ t('stackiq', 'Migration failed. Please check the details below.') }}</p>
 			</NcNoteCard>
 
 			<div v-if="migrationResult" class="migration-report">
 				<!-- Migration Summary -->
 				<div class="report-section">
-					<h4>Migration Summary</h4>
+					<h4>{{ t('stackiq', 'Migration Summary') }}</h4>
 					<div class="migration-info">
 						<div class="migration-detail">
-							<strong>Source:</strong>
+							<strong>{{ t('stackiq', 'Source:') }}</strong>
 							<div class="migration-meta">
 								<span
 									>{{ sourceRegister?.title }} /
 									{{ sourceSchema?.title }}</span
 								>
-								<span class="object-count"
-									>{{ selectedObjects.length }} object{{
-										selectedObjects.length > 1 ? 's' : ''
-									}}</span
-								>
+								<span class="object-count">{{
+									n('stackiq', '{count} object', '{count} objects', selectedObjects.length, { count: selectedObjects.length })
+								}}</span>
 							</div>
 						</div>
 						<div class="migration-detail">
-							<strong>Target:</strong>
+							<strong>{{ t('stackiq', 'Target:') }}</strong>
 							<div class="migration-meta">
 								<span
 									>{{ targetRegister?.title }} /
@@ -261,24 +265,34 @@ import { navigationStore, objectStore } from '../../store/store.js'
 
 				<!-- Statistics -->
 				<div class="report-section">
-					<h4>Statistics</h4>
+					<h4>{{ t('stackiq', 'Statistics') }}</h4>
 					<ul>
 						<li>
-							Objects migrated:
-							{{ migrationResult.statistics?.objectsMigrated || 0 }}
-						</li>
-						<li>
-							Objects failed:
-							{{ migrationResult.statistics?.objectsFailed || 0 }}
-						</li>
-						<li>
-							Properties mapped:
-							{{ migrationResult.statistics?.propertiesMapped || 0 }}
-						</li>
-						<li>
-							Properties discarded:
 							{{
-								migrationResult.statistics?.propertiesDiscarded || 0
+								t('stackiq', 'Objects migrated: {count}', {
+									count: migrationResult.statistics?.objectsMigrated || 0,
+								})
+							}}
+						</li>
+						<li>
+							{{
+								t('stackiq', 'Objects failed: {count}', {
+									count: migrationResult.statistics?.objectsFailed || 0,
+								})
+							}}
+						</li>
+						<li>
+							{{
+								t('stackiq', 'Properties mapped: {count}', {
+									count: migrationResult.statistics?.propertiesMapped || 0,
+								})
+							}}
+						</li>
+						<li>
+							{{
+								t('stackiq', 'Properties discarded: {count}', {
+									count: migrationResult.statistics?.propertiesDiscarded || 0,
+								})
 							}}
 						</li>
 					</ul>
@@ -286,7 +300,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 
 				<!-- Migration Details -->
 				<div v-if="migrationResult.details?.length" class="report-section">
-					<h4>Migration Details</h4>
+					<h4>{{ t('stackiq', 'Migration Details') }}</h4>
 					<div class="migration-details">
 						<div
 							v-for="detail in migrationResult.details"
@@ -299,7 +313,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 								<span
 									class="status"
 									:class="[detail.success ? 'success' : 'error']">
-									{{ detail.success ? 'Success' : 'Failed' }}
+									{{ detail.success ? t('stackiq', 'Success') : t('stackiq', 'Failed') }}
 								</span>
 							</div>
 							<div v-if="detail.error" class="detail-error">
@@ -311,7 +325,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 
 				<!-- Warnings -->
 				<div v-if="migrationResult.warnings?.length" class="report-section">
-					<h4>Warnings</h4>
+					<h4>{{ t('stackiq', 'Warnings') }}</h4>
 					<ul>
 						<li
 							v-for="warning in migrationResult.warnings"
@@ -324,7 +338,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 
 				<!-- Errors -->
 				<div v-if="migrationResult.errors?.length" class="report-section">
-					<h4>Errors</h4>
+					<h4>{{ t('stackiq', 'Errors') }}</h4>
 					<ul>
 						<li
 							v-for="error in migrationResult.errors"
@@ -342,7 +356,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 				<template #icon>
 					<Cancel :size="20" />
 				</template>
-				{{ step === 4 ? 'Close' : 'Cancel' }}
+				{{ step === 4 ? t('stackiq', 'Close') : t('stackiq', 'Cancel') }}
 			</NcButton>
 
 			<NcButton
@@ -353,14 +367,14 @@ import { navigationStore, objectStore } from '../../store/store.js'
 				<template #icon>
 					<ArrowRight :size="20" />
 				</template>
-				Next
+				{{ t('stackiq', 'Next') }}
 			</NcButton>
 
 			<NcButton v-if="step === 2" variant="secondary" @click="previousStep">
 				<template #icon>
 					<ArrowLeft :size="20" />
 				</template>
-				Back
+				{{ t('stackiq', 'Back') }}
 			</NcButton>
 
 			<NcButton
@@ -371,14 +385,14 @@ import { navigationStore, objectStore } from '../../store/store.js'
 				<template #icon>
 					<ArrowRight :size="20" />
 				</template>
-				Next
+				{{ t('stackiq', 'Next') }}
 			</NcButton>
 
 			<NcButton v-if="step === 3" variant="secondary" @click="previousStep">
 				<template #icon>
 					<ArrowLeft :size="20" />
 				</template>
-				Back
+				{{ t('stackiq', 'Back') }}
 			</NcButton>
 
 			<NcButton
@@ -390,7 +404,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 					<NcLoadingIcon v-if="loading" :size="20" />
 					<DatabaseExport v-else :size="20" />
 				</template>
-				Migrate Objects
+				{{ t('stackiq', 'Migrate Objects') }}
 			</NcButton>
 		</template>
 	</NcDialog>
@@ -398,6 +412,7 @@ import { navigationStore, objectStore } from '../../store/store.js'
 
 <script>
 import { getRequestToken } from '@nextcloud/auth'
+import { translate as t } from '@nextcloud/l10n'
 import {
 	NcButton,
 	NcDialog,
@@ -502,7 +517,7 @@ export default {
 			}))
 
 			options.push({
-				label: '(Do not map)',
+				label: t('stackiq', '(Do not map)'),
 				value: null,
 			})
 
@@ -749,7 +764,7 @@ export default {
 				console.error('Error performing migration:', error)
 				this.migrationResult = {
 					success: false,
-					errors: [error.message || 'An error occurred during migration'],
+					errors: [error.message || t('stackiq', 'An error occurred during migration')],
 				}
 				this.step = 4
 			} finally {

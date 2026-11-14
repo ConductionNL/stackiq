@@ -6,69 +6,102 @@
 	<NcModal v-if="open" @close="closeBulkSyncDialog">
 		<div class="bulk-sync-dialog">
 			<div class="modal-header">
-				<h2>Bulk Sync Module Standards</h2>
+				<h2>{{ t('stackiq', 'Bulk Sync Module Standards') }}</h2>
 			</div>
 
 			<div class="modal-content">
 				<!-- Preview Section -->
 				<div v-if="!syncCompleted" class="preview-section">
-					<h3>What will happen:</h3>
+					<h3>{{ t('stackiq', 'What will happen:') }}</h3>
 					<ul class="preview-list">
-						<li>Scan all {{ complianceCount }} compliance objects</li>
 						<li>
-							Extract standaardversie references from each compliance
-							object
+							{{
+								n(
+									'stackiq',
+									'Scan all {count} compliance object',
+									'Scan all {count} compliance objects',
+									complianceCount,
+									{ count: complianceCount },
+								)
+							}}
 						</li>
 						<li>
-							Find the corresponding module for each compliance object
+							{{
+								t(
+									'stackiq',
+									'Extract standaardversie references from each compliance object',
+								)
+							}}
 						</li>
 						<li>
-							Update module standaarden arrays with extracted
-							standaardversie IDs
+							{{
+								t(
+									'stackiq',
+									'Find the corresponding module for each compliance object',
+								)
+							}}
 						</li>
-						<li>Save modules only if changes are needed</li>
+						<li>
+							{{
+								t(
+									'stackiq',
+									'Update module standaarden arrays with extracted standaardversie IDs',
+								)
+							}}
+						</li>
+						<li>{{ t('stackiq', 'Save modules only if changes are needed') }}</li>
 					</ul>
 
 					<div v-if="bulkSyncLoading" class="loading-section">
 						<NcLoadingIcon :size="24" />
-						<p>Processing compliance objects...</p>
+						<p>{{ t('stackiq', 'Processing compliance objects…') }}</p>
 						<div class="progress-info">
 							<p>
-								Processed: {{ syncProgress.processed }} /
-								{{ syncProgress.total }}
+								{{
+									t('stackiq', 'Processed: {processed} / {total}', {
+										processed: syncProgress.processed,
+										total: syncProgress.total,
+									})
+								}}
 							</p>
-							<p>Modules updated: {{ syncProgress.modulesUpdated }}</p>
+							<p>
+								{{
+									t('stackiq', 'Modules updated: {count}', {
+										count: syncProgress.modulesUpdated,
+									})
+								}}
+							</p>
 						</div>
 					</div>
 				</div>
 
 				<!-- Results Section -->
 				<div v-if="syncCompleted" class="results-section">
-					<h3>Sync Results:</h3>
+					<h3>{{ t('stackiq', 'Sync Results:') }}</h3>
 					<div class="results-stats">
 						<div class="stat-item">
 							<span class="stat-label"
-								>Compliance objects processed:</span
+								>{{ t('stackiq', 'Compliance objects processed:') }}</span
 							>
 							<span class="stat-value">{{
 								syncResults.totalProcessed
 							}}</span>
 						</div>
 						<div class="stat-item">
-							<span class="stat-label">Modules found:</span>
+							<span class="stat-label">{{ t('stackiq', 'Modules found:') }}</span>
 							<span class="stat-value">{{
 								syncResults.modulesFound
 							}}</span>
 						</div>
 						<div class="stat-item">
-							<span class="stat-label">Modules updated:</span>
+							<span class="stat-label">{{ t('stackiq', 'Modules updated:') }}</span>
 							<span class="stat-value success-value">{{
 								syncResults.modulesUpdated
 							}}</span>
 						</div>
 						<div class="stat-item">
 							<span class="stat-label"
-								>Modules already up-to-date:</span
+								>{{ t('stackiq', 'Modules already up-to-date:') }}</span
 							>
 							<span class="stat-value">{{
 								syncResults.modulesAlreadyUpToDate || 0
@@ -76,14 +109,14 @@
 						</div>
 						<div class="stat-item">
 							<span class="stat-label"
-								>Modules with no standards:</span
+								>{{ t('stackiq', 'Modules with no standards:') }}</span
 							>
 							<span class="stat-value warning-value">{{
 								syncResults.modulesWithNoStandards || 0
 							}}</span>
 						</div>
 						<div class="stat-item">
-							<span class="stat-label">Standards added:</span>
+							<span class="stat-label">{{ t('stackiq', 'Standards added:') }}</span>
 							<span class="stat-value">{{
 								syncResults.standardsAdded
 							}}</span>
@@ -95,17 +128,21 @@
 						v-if="syncResults.modules && syncResults.modules.length > 0"
 						class="modules-table-section">
 						<h4>
-							Processed Modules ({{ syncResults.modules.length }}):
+							{{
+								t('stackiq', 'Processed Modules ({count}):', {
+									count: syncResults.modules.length,
+								})
+							}}
 						</h4>
 						<div class="modules-table-container">
 							<table class="modules-table">
 								<thead>
 									<tr>
-										<th scope="col">Module Name</th>
-										<th scope="col">Status</th>
-										<th scope="col">Reason</th>
-										<th scope="col">Compliance Count</th>
-										<th scope="col">Standards Count</th>
+										<th scope="col">{{ t('stackiq', 'Module Name') }}</th>
+										<th scope="col">{{ t('stackiq', 'Status') }}</th>
+										<th scope="col">{{ t('stackiq', 'Reason') }}</th>
+										<th scope="col">{{ t('stackiq', 'Compliance Count') }}</th>
+										<th scope="col">{{ t('stackiq', 'Standards Count') }}</th>
 									</tr>
 								</thead>
 								<tbody>
@@ -142,7 +179,7 @@
 					</div>
 
 					<div v-if="syncResults.errors.length > 0" class="errors-section">
-						<h4>Errors:</h4>
+						<h4>{{ t('stackiq', 'Errors:') }}</h4>
 						<ul class="error-list">
 							<li
 								v-for="errorMsg in syncResults.errors"
@@ -160,10 +197,14 @@
 					:disabled="bulkSyncLoading"
 					variant="primary"
 					@click="startBulkSync">
-					{{ bulkSyncLoading ? 'Syncing...' : 'Start Sync' }}
+					{{
+						bulkSyncLoading
+							? t('stackiq', 'Syncing…')
+							: t('stackiq', 'Start Sync')
+					}}
 				</NcButton>
 				<NcButton @click="closeBulkSyncDialog">
-					{{ syncCompleted ? 'Close' : 'Cancel' }}
+					{{ syncCompleted ? t('stackiq', 'Close') : t('stackiq', 'Cancel') }}
 				</NcButton>
 			</div>
 		</div>
@@ -171,6 +212,7 @@
 </template>
 
 <script>
+import { translatePlural as n, translate as t } from '@nextcloud/l10n'
 import { NcButton, NcLoadingIcon, NcModal } from '@nextcloud/vue'
 import { defineComponent } from 'vue'
 
@@ -251,6 +293,10 @@ export default defineComponent({
 	},
 
 	methods: {
+		// Imported rather than taken from the app-wide mixin, so the dialog
+		// translates wherever it is mounted.
+		t,
+		n,
 		/**
 		 * Close the bulk sync dialog
 		 *
@@ -306,7 +352,11 @@ export default defineComponent({
 				this.$emit('synced')
 			} catch (error) {
 				console.error('Bulk sync failed:', error)
-				this.syncResults.errors.push(`Sync failed: ${error.message}`)
+				this.syncResults.errors.push(
+					t('stackiq', 'Sync failed: {message}', {
+						message: error.message,
+					}),
+				)
 				this.syncCompleted = true
 			} finally {
 				this.bulkSyncLoading = false
