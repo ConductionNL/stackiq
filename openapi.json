@@ -104,6 +104,10 @@
             "description": "Beheerder-gated grant/revoke of organisation membership for an existing Nextcloud user, delegating the actual mutation to OpenRegister"
         },
         {
+            "name": "ownership-transfer",
+            "description": "POST /api/ownership-transfers/plan and /execute: move entries between organisations."
+        },
+        {
             "name": "portfolio-report",
             "description": "Controller for the portfolio rationalization report endpoint"
         },
@@ -3681,6 +3685,102 @@
                         }
                     }
                 ]
+            }
+        },
+        "/ownership-transfers/execute": {
+            "post": {
+                "operationId": "ownership-transfer-execute",
+                "summary": "Move entries to another organisation, keeping their identity",
+                "description": "Move entries to another organisation, keeping their identity (landscape-move-between-organisations). Re-points @self.organisation and the type's owning field on a full save. Same body and guard as the plan.",
+                "tags": [
+                    "ownership-transfer"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The plan: each entry as move or skip with the reason, and the linked entries that stay behind; on execute also `moved`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
+            }
+        },
+        "/ownership-transfers/plan": {
+            "post": {
+                "operationId": "ownership-transfer-plan",
+                "summary": "Dry run of moving entries to another organisation",
+                "description": "Dry run of moving entries to another organisation (landscape-move-between-organisations). Body: { objects: [{schema, id}], sourceOrganisation, targetOrganisation }. Only a Nextcloud admin, or an organisation administrator who is a member of both organisations, may call it; nothing is written.",
+                "tags": [
+                    "ownership-transfer"
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "additionalProperties": true
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "The plan: each entry as move or skip with the reason, and the linked entries that stay behind; on execute also `moved`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "403": {
+                        "$ref": "#/components/responses/Problem403"
+                    }
+                }
             }
         },
         "/portfolio-report": {

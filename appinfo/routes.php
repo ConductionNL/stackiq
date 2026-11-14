@@ -247,6 +247,9 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // @spec openspec/specs/organisation-merge/spec.md#requirement-both-merge-endpoints-must-be-admin-only-with-an-explicit-per-object-authorization-guard
         ['name' => 'merge#dryRun', 'url' => '/api/organisaties/{uuid}/merge/dry-run', 'verb' => 'POST'],
         ['name' => 'merge#execute', 'url' => '/api/organisaties/{uuid}/merge', 'verb' => 'POST'],
+        // landscape-move-between-organisations: move chosen entries to another organisation, keeping their identity.
+        ['name' => 'ownershipTransfer#plan', 'url' => '/api/ownership-transfers/plan', 'verb' => 'POST'],
+        ['name' => 'ownershipTransfer#execute', 'url' => '/api/ownership-transfers/execute', 'verb' => 'POST'],
 
         // SELF-SERVICE COLLEAGUE ACCESS (multi-org-membership) — beheerder-of-this-
         // organisation gated (authorizeBeheerder() guard in the controller body,

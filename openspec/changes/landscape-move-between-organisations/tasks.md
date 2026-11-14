@@ -7,8 +7,8 @@
 - **files**: `lib/Service/Organisation/OwnershipMap.php`, `lib/Service/MergeOrganisatieService.php`
 - **acceptance_criteria**:
   - GIVEN the merge service WHEN it runs after the extraction THEN its dry run and execute give the same counts as before
-- [ ] Implement
-- [ ] Test (PHPUnit merge tests unchanged and green; `tests/Unit/Service/Organisation/OwnershipMapTest.php`)
+- [x] Implement
+- [x] Test (PHPUnit merge tests unchanged and green; `tests/Unit/Service/Organisation/OwnershipMapTest.php`)
 
 ### Task 2: Transfer service and endpoints
 - **spec_ref**: openspec/changes/landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-002-only-an-administrator-of-both-organisations-moves-entries
@@ -16,8 +16,8 @@
 - **acceptance_criteria**:
   - GIVEN two applications of organisation A WHEN an admin of A and B executes a transfer to B THEN both carry organisation B and provider B with the same uuids
   - GIVEN a user who administers only A WHEN they post a transfer to B THEN the answer is 403 and nothing changes
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Service/OwnershipTransferServiceTest.php`, `tests/Unit/Controller/OwnershipTransferControllerTest.php`; Newman request in `postman/stackiq-tests.json`)
+- [x] Implement
+- [x] Test (PHPUnit done; the Newman request is not added, it needs a running instance) (PHPUnit `tests/Unit/Service/OwnershipTransferServiceTest.php`, `tests/Unit/Controller/OwnershipTransferControllerTest.php`; Newman request in `postman/stackiq-tests.json`)
 
 ### Task 3: Move to organisation dialog
 - **spec_ref**: openspec/changes/landscape-move-between-organisations/specs/move-between-organisations/spec.md#requirement-req-mbo-003-the-dry-run-shows-what-moves-and-what-stays-behind
