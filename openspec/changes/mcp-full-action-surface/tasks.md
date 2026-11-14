@@ -41,7 +41,7 @@
   `not_found` → `ContractApprovalService::authorizeSubmit(contractUuid,
   groupNames, activeOrgUuid)`; helpers return real booleans, never
   wrapped in `catch(\Throwable)` (decidesk `McpMeetingGate` rules).
-- [ ] 3.2 Add `lib/Mcp/McpPublicationGate.php` reusing the
+- [x] 3.2 Add `lib/Mcp/McpPublicationGate.php` reusing the
   `PublicationController::authorizeEntry()` semantics via
   `PublicationService::resolveEntry()` (admin OR owning
   `aanbod-beheerder`).
@@ -50,7 +50,7 @@
 
 ## 4. Read tools
 
-- [ ] 4.1 Implement the curated read handlers (design.md §5 read table):
+- [x] 4.1 Implement the curated read handlers (design.md §5 read table):
   `getMyContactProfile`, `listOffers`, `listOfferedUsages`,
   `getPortfolioReport` (reject foreign org uuid for non-admins),
   `listPendingModerations`, `getReviewAggregate`,
@@ -63,14 +63,14 @@
 - [x] 5.1 Contract seam: `submitContractApproval`, `submitContractRenewal`
   → `ContractApprovalService::submitForApproval()` behind
   `McpContractGate`.
-- [ ] 5.2 Publication seam: `publishObject`, `depublishObject` →
+- [x] 5.2 Publication seam: `publishObject`, `depublishObject` →
   `PublicationService::publish()/depublish()` behind
   `McpPublicationGate`; descriptors declare `reach: external`.
-- [ ] 5.3 Moderation/review/intake: `approveRegistration`,
+- [x] 5.3 Moderation/review/intake: `approveRegistration`,
   `rejectRegistration` (`ModerationService`), `submitReview`
   (`ReviewService::submit()` — pending forced server-side),
   `registerOrganisation` (`IntakeService::validate()` + `submit()`).
-- [ ] 5.4 Offers/usages/membership/merge: `acceptOffer`, `declineOffer`
+- [x] 5.4 Offers/usages/membership/merge: `acceptOffer`, `declineOffer`
   (`AanbodService`), `claimUsage`, `declineUsage`
   (`AangebodenGebruikService`), `grantOrganisationMembership`,
   `revokeOrganisationMembership` (extract the
@@ -78,27 +78,27 @@
   service, or defer these two tools — record the decision here),
   `mergeOrganisations` (`MergeOrganisatieService::execute()`,
   admin-gated, `destructiveHint: true`).
-- [ ] 5.5 Ops: `importSbom` (`SbomImportService::importForModuleVersie()`,
+- [x] 5.5 Ops: `importSbom` (`SbomImportService::importForModuleVersie()`,
   inline payload), `triggerEolSync` (`EolSyncService::run()`,
   `reach: external`).
 
 ## 6. Tests
 
-- [ ] 6.1 PHPUnit descriptor fixture: every entry has `scope` + `reach`
+- [x] 6.1 PHPUnit descriptor fixture: every entry has `scope` + `reach`
   from the closed vocabularies; reads are `readOnlyHint: true`;
   publication + EOL tools are `reach: external`; write set matches
   design.md exactly.
-- [ ] 6.2 PHPUnit per gate: non-owning caller → forbidden AND delegate
+- [x] 6.2 PHPUnit per gate: non-owning caller → forbidden AND delegate
   never called AND no `DecisionRequestedEvent` (mirror
   `contract-approval-ownership-guard`'s cases at the MCP seam);
   owning/admin caller passes through.
-- [ ] 6.3 PHPUnit validator ladder: missing/badly-typed argument →
+- [x] 6.3 PHPUnit validator ladder: missing/badly-typed argument →
   validation error, zero service calls.
-- [ ] 6.4 PHPUnit `submitReview` pending-forcing;
+- [x] 6.4 PHPUnit `submitReview` pending-forcing;
   `previewOrganisationMerge` never reaches `execute()`.
 - [x] 6.5 PHPUnit fragment/merge: schema key set unchanged after merge
   (no orphan Dutch slugs); vulnerability the only schema with write verbs.
-- [ ] 6.6 `composer check:strict` clean (PHPCS, PHPMD, Psalm, PHPStan) —
+- [x] 6.6 `composer check:strict` clean (PHPCS, PHPMD, Psalm, PHPStan) —
   fix pre-existing issues encountered in touched files.
 
 ## Build notes
@@ -116,7 +116,16 @@ Second slice (continuation), the derived fragment:
 - `tests/Unit/Mcp/McpFragmentTest.php` checks the fragment against the merged register: same schema key set with and without it, no retired slug, every filter a real property, the closed verb/scope vocabulary, write verbs on `vulnerability` only, the AMEF schemas and `sector` unannotated.
 - 1.4 (import on a dev instance) is a live task and stays open.
 
-Open after the fragment: the publication gate (3.2), the other read tools (4.1), the remaining write tools (5.2 to 5.5), and the tests that depend on them.
+Third slice (continuation), the curated tools:
+- `McpPublicationGate` (3.2) runs `PublicationController::authorizeEntry()`'s steps in its order: signed in, publishable type, entry resolves, not peer-sourced, then an administrator or an `aanbod-beheerder` whose active organisation owns the entry.
+- `McpSbomGate` holds `SbomController`'s two guards: reading the status needs an administrator or read access to the parent application (refused as not_found), importing needs an administrator or a manage group member who can read the parent application.
+- `McpReadTools` (4.1) and `McpWriteTools` (5.2, 5.3, 5.5 and the offer, usage and merge tools of 5.4) follow the ladder argument validation, caller, guard, service. The offer and usage services check the active organisation themselves, as they do for the REST routes. `getEolSyncStatus` and `triggerEolSync` are administrator-only, as their REST routes are (no access attribute). `listPendingModerations` and the moderation writes need an administrator. `getMyContactProfile` returns what `ContactpersonenController::getMe()` answers, so `/api/me` and the tool cannot drift.
+- 5.4 decision: `grantOrganisationMembership` and `revokeOrganisationMembership` are deferred. Their guard (`authorizeMaintainer()` with the caller-organisation lookup) and the join/leave calls live in private methods of `OrganisationMembersController`; extracting them is a refactor of a live access check that belongs in its own change. The provider answers `unknown_tool` for both.
+- `registerOrganisation` needs a signed-in caller, narrower than the anonymous intake route.
+- Tests: `McpToolCatalogueTest` (6.1, the grant matrix and dispatch), `McpGatesTest` (6.2), `McpCuratedToolsTest` (6.2 to 6.4: the validator ladder with zero service calls, anonymous and non-admin refusals, review pending, the merge preview never reaching `execute()`).
+- 6.6: lint, PHPCS, PHPMD (with the baseline), Psalm and PHPStan are clean on `lib/Mcp`.
+
+Left open: 1.4 (import on a dev instance and check the derived listing, a live task) and 7.2 (spec sync, done on archive).
 
 ## 7. Supersession + spec/docs
 
@@ -126,6 +135,6 @@ Open after the fragment: the publication gate (3.2), the other read tools (4.1),
   Ticked (decision 399): archived early as `openspec/changes/archive/2026-11-12-stackiq-mcp-adoption` with the superseded note at the top of its proposal; no `register.d/stackiq-mcp-adoption.json` exists.
 - [ ] 7.2 Sync this change's spec delta into
   `openspec/specs/mcp-tool-surface/spec.md` on archive.
-- [ ] 7.3 CHANGELOG entry under Unreleased: full MCP action surface
+- [x] 7.3 CHANGELOG entry under Unreleased: full MCP action surface
   (28 derived read tools, vulnerability writes, ~29 curated tools) for
   hermiq consumption.
