@@ -269,6 +269,8 @@ class PortfolioReportRowsTest extends TestCase {
 				'hostingModel' => ['SaaS'],
 				'annualisedCost' => 120.0,
 				'oneOffCost' => 99.0,
+				'referenceComponents' => [],
+				'overlapsWith' => [],
 			],
 			[
 				'businessValue' => null,
@@ -290,6 +292,8 @@ class PortfolioReportRowsTest extends TestCase {
 				'hostingModel' => ['IaaS'],
 				'annualisedCost' => 5.0,
 				'oneOffCost' => 0.0,
+				'referenceComponents' => [],
+				'overlapsWith' => [],
 			],
 			[
 				'businessValue' => null,
@@ -311,6 +315,8 @@ class PortfolioReportRowsTest extends TestCase {
 				'hostingModel' => [],
 				'annualisedCost' => 0.0,
 				'oneOffCost' => 0.0,
+				'referenceComponents' => [],
+				'overlapsWith' => [],
 			],
 		];
 	}//end expectedRows()
@@ -322,9 +328,9 @@ class PortfolioReportRowsTest extends TestCase {
 	 */
 	private function expectedCsv(): string {
 		return 'organisation,module,timeClassification,timeRationale,timeReviewDate,lifecyclePhase,eolStatus,hostingModel,annualisedCost,oneOffCost,'
-			. "businessValue,technicalFit,riskScore,scoredOn,suggestedTimeClassification,timeMismatch\n"
-			. "org-a,\"Module Een\",Invest,Kernsysteem,2027-01-01,Onbekend,passed,SaaS,120,99,,,,,,no\n"
-			. "org-a,m-2,,,,Onbekend,ok,IaaS,5,0,,,,,,no\n"
-			. "org-a,\"Module Een\",,,,Onbekend,ok,,0,0,,,,,,no\n";
+			. "businessValue,technicalFit,riskScore,scoredOn,suggestedTimeClassification,timeMismatch,overlapsWith\n"
+			. "org-a,\"Module Een\",Invest,Kernsysteem,2027-01-01,Onbekend,passed,SaaS,120,99,,,,,,no,\n"
+			. "org-a,m-2,,,,Onbekend,ok,IaaS,5,0,,,,,,no,\n"
+			. "org-a,\"Module Een\",,,,Onbekend,ok,,0,0,,,,,,no,\n";
 	}//end expectedCsv()
 }//end class

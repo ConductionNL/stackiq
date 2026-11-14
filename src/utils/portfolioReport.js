@@ -128,3 +128,36 @@ export function buildCsvExportUrl(baseUrl, organisationUuid) {
 	}
 	return `${baseUrl}?organisation=${encodeURIComponent(organisationUuid)}&format=csv`
 }
+
+/**
+ * The overlapping reference components of a report, each with every
+ * application in use that covers it (architecture-reference-component-coverage
+ * REQ-RCC-004). Built from the rows' `overlapsWith`, sorted by component name.
+ *
+ * @param {Array<object>} rows The report rows.
+ * @return {Array<{componentId: string, component: string, applications: Array<string>}>} The groups.
+ * @spec openspec/changes/architecture-reference-component-coverage/specs/reference-component-coverage/spec.md#requirement-req-rcc-004-the-portfolio-rationalization-report-shall-show-overlapping-applications
+ */
+export function overlapGroups(rows) {
+	const groups = new Map()
+	for (const row of rows || []) {
+		for (const overlap of row.overlapsWith || []) {
+			const group = groups.get(overlap.componentId) || {
+				componentId: overlap.componentId,
+				component: overlap.component,
+				applications: new Set(),
+			}
+			group.applications.add(row.moduleName)
+			for (const name of overlap.modules || []) {
+				group.applications.add(name)
+			}
+			groups.set(overlap.componentId, group)
+		}
+	}
+	return [...groups.values()]
+		.map((group) => ({
+			...group,
+			applications: [...group.applications].sort((a, b) => String(a).localeCompare(String(b))),
+		}))
+		.sort((a, b) => String(a.component).localeCompare(String(b.component)))
+}

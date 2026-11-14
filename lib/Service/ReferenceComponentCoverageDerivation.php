@@ -35,7 +35,7 @@ class ReferenceComponentCoverageDerivation {
 	/**
 	 * Usage statuses that do not count as using the application.
 	 */
-	private const NOT_COUNTING = ['Acquisition', 'Planned', 'Phased out'];
+	public const NOT_COUNTING = ['Acquisition', 'Planned', 'Phased out'];
 
 	/**
 	 * Constructor.

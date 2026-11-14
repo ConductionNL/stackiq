@@ -18,6 +18,7 @@
 import { describe, expect, it } from 'vitest'
 import {
 	buildCsvExportUrl,
+	overlapGroups,
 	cloudTransitionLabel,
 	formatCurrency,
 	groupRowsByQuadrant,
@@ -135,3 +136,23 @@ describe('buildCsvExportUrl', () => {
 		expect(buildCsvExportUrl(base, undefined)).toBe('')
 	})
 })
+
+describe('overlapGroups (REQ-RCC-004)', () => {
+	it('groups every application of an overlapping component once, sorted', () => {
+		expect(overlapGroups([
+			{ moduleName: 'B', overlapsWith: [{ componentId: 'z', component: 'Zaak', modules: ['A'] }, { componentId: 'd', component: 'DMS', modules: ['C'] }] },
+			{ moduleName: 'A', overlapsWith: [{ componentId: 'z', component: 'Zaak', modules: ['B'] }] },
+			{ moduleName: 'C', overlapsWith: [{ componentId: 'd', component: 'DMS', modules: ['B'] }] },
+			{ moduleName: 'E' },
+		])).toEqual([
+			{ componentId: 'd', component: 'DMS', applications: ['B', 'C'] },
+			{ componentId: 'z', component: 'Zaak', applications: ['A', 'B'] },
+		])
+	})
+
+	it('is empty without rows or overlap', () => {
+		expect(overlapGroups(undefined)).toEqual([])
+		expect(overlapGroups([{ moduleName: 'A', overlapsWith: [] }])).toEqual([])
+	})
+})
+

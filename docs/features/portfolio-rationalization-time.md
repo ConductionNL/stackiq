@@ -144,8 +144,24 @@ The controller resolves and checks the caller's organisation access
 The **same** bounded, RBAC-scoped row set as the JSON report, serialised as
 CSV (one row per gebruik: organisation, module, TIME classification,
 rationale, review date, lifecycle phase, EOL status, hosting model,
-annualised + one-off cost) — never a second, unbounded/unscoped export
-path.
+annualised + one-off cost, and `overlapsWith`) — never a second,
+unbounded/unscoped export path.
+
+### Overlap
+
+Two applications in use overlap when their usages name the same GEMMA
+reference component in **Used for reference components**. Usages with status
+Acquisition, Planned or Phased out do not count, and two usages of the same
+module are one application. Each row of the report carries
+`referenceComponents` (the components its usage names) and `overlapsWith`:
+per shared component, the other applications that cover it. The report counts
+the rows with an overlap in `overlap`, and the CSV column `overlapsWith` reads
+`component: application | application`, one component after another separated
+by `; `, empty for a row without overlap.
+
+A usage that names no reference component can never overlap, so fill in the
+reference components on the usages first; the Reference component coverage
+page shows how many usages name none.
 
 ### Report page
 
@@ -163,6 +179,10 @@ path.
   mix, annualised + one-off cost).
 - Gebruik-level detail tables, one section per quadrant (Unclassified
   always rendered, even when empty).
+- An **Overlap** section, when there is overlap: every reference component
+  two or more applications cover, with those applications. Each overlapping
+  row in the detail tables carries an **Overlap** mark whose tooltip names
+  the component and the other applications.
 - A truncation banner when the report is bounded.
 - An **Export CSV** button.
 
