@@ -1,0 +1,269 @@
+{
+  "_comment": "connections-api-catalogue (board SkKoppelingen, row stackiq:conn-api-catalogue). Adds the applicationInterface schema: an API an application offers, with its style, version, specification and the standards it follows, so the catalogue keeps APIs next to the application. Authorization is the module's own read rules, as an API is published with its application. A connection gains an optional interface field naming the API it calls; its version rises above the 0.3.5 that publication-field-rules.json sets, so the change deploys.",
+  "components": {
+    "registers": {
+      "stackiq": {
+        "schemas": [
+          "applicationInterface"
+        ],
+        "configuration": {
+          "schemas": {
+            "applicationInterface": {
+              "magicMapping": true,
+              "autoCreateTable": true
+            }
+          }
+        }
+      }
+    },
+    "schemas": {
+      "applicationInterface": {
+        "slug": "applicationInterface",
+        "title": "API",
+        "description": "An API an application offers: its style, version, specification and the standards it follows.",
+        "version": "0.1.0",
+        "icon": "Api",
+        "x-schema-org": "schema:WebAPI",
+        "required": [
+          "name",
+          "module"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "title": "Name",
+            "description": "The name of the API.",
+            "order": 1,
+            "required": true,
+            "maxLength": 200,
+            "facetable": false,
+            "table": {
+              "default": true
+            }
+          },
+          "shortDescription": {
+            "type": "string",
+            "title": "Short description",
+            "description": "What the API offers, in one line.",
+            "order": 2,
+            "maxLength": 255,
+            "facetable": false,
+            "table": {
+              "default": true
+            }
+          },
+          "longDescription": {
+            "type": "string",
+            "title": "Extended description",
+            "description": "A longer description; may use markdown.",
+            "order": 3,
+            "format": "markdown",
+            "maxLength": 5000,
+            "facetable": false
+          },
+          "module": {
+            "type": "object",
+            "title": "Application",
+            "description": "The application that offers the API.",
+            "order": 4,
+            "required": true,
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/module",
+            "inversedBy": "interfaces",
+            "facetable": false,
+            "table": {
+              "default": true
+            }
+          },
+          "style": {
+            "type": "string",
+            "title": "Style",
+            "description": "How the API is called.",
+            "order": 5,
+            "enum": [
+              "REST",
+              "SOAP",
+              "GraphQL",
+              "event or message",
+              "file",
+              "other"
+            ],
+            "facetable": true,
+            "table": {
+              "default": true
+            }
+          },
+          "version": {
+            "type": "string",
+            "title": "Version",
+            "description": "The version of the API.",
+            "order": 6,
+            "maxLength": 50,
+            "facetable": false,
+            "table": {
+              "default": true
+            }
+          },
+          "specificationUrl": {
+            "type": "string",
+            "format": "uri",
+            "title": "Specification",
+            "description": "Where the specification lives: an OpenAPI, WSDL or AsyncAPI document.",
+            "order": 7,
+            "maxLength": 500,
+            "facetable": false
+          },
+          "documentationUrl": {
+            "type": "string",
+            "format": "uri",
+            "title": "Documentation",
+            "description": "Where the documentation for developers lives.",
+            "order": 8,
+            "maxLength": 500,
+            "facetable": false
+          },
+          "standardVersions": {
+            "type": "array",
+            "title": "Standard version",
+            "description": "The standard versions the API follows.",
+            "order": 9,
+            "facetable": false,
+            "items": {
+              "type": "object",
+              "objectConfiguration": {
+                "handling": "related-object",
+                "queryParams": "gemmaType=standaardversie"
+              },
+              "$ref": "#/components/schemas/element"
+            }
+          },
+          "status": {
+            "type": "string",
+            "title": "Status",
+            "description": "Where the API is in its life.",
+            "order": 10,
+            "default": "in use",
+            "enum": [
+              "in development",
+              "in use",
+              "end of support",
+              "withdrawn"
+            ],
+            "facetable": true,
+            "table": {
+              "default": true
+            }
+          },
+          "publicationDate": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Publication date",
+            "description": "From this moment anyone can read the API, as for its application.",
+            "order": 50,
+            "facetable": false
+          },
+          "depublicationDate": {
+            "type": "string",
+            "format": "date-time",
+            "title": "Depublication date",
+            "description": "When the API stopped being published.",
+            "order": 51,
+            "facetable": false
+          }
+        },
+        "hardValidation": false,
+        "searchable": true,
+        "maxDepth": 0,
+        "authorization": {
+          "read": [
+            "gebruik-beheerder",
+            {
+              "group": "public",
+              "match": {
+                "publicationDate": {
+                  "$lte": "$now"
+                }
+              },
+              "crossOrganisation": true
+            },
+            {
+              "group": "aanbod-beheerder",
+              "match": {
+                "_organisation": "$organisation"
+              }
+            },
+            {
+              "group": "public",
+              "match": {
+                "registeredBy": "Supplier"
+              },
+              "crossOrganisation": true
+            }
+          ]
+        },
+        "configuration": {
+          "objectNameField": "name",
+          "objectSummaryField": "shortDescription",
+          "objectDescriptionField": "longDescription",
+          "autoPublish": false,
+          "jsonld": {
+            "type": "https://schema.org/WebAPI"
+          },
+          "x-openregister-lifecycle": {
+            "field": "status",
+            "initial": "in development",
+            "final": [
+              "withdrawn"
+            ],
+            "transitions": {
+              "release": {
+                "from": [
+                  "in development"
+                ],
+                "to": "in use",
+                "description": "Release the API."
+              },
+              "sunset": {
+                "from": [
+                  "in use"
+                ],
+                "to": "end of support",
+                "description": "Mark the API as end of support."
+              },
+              "withdraw": {
+                "from": [
+                  "in use",
+                  "end of support"
+                ],
+                "to": "withdrawn",
+                "description": "Withdraw the API."
+              }
+            }
+          }
+        }
+      },
+      "connection": {
+        "version": "0.3.6",
+        "properties": {
+          "interface": {
+            "type": "object",
+            "title": "API",
+            "description": "The API of application B that the connection calls.",
+            "order": 11,
+            "required": false,
+            "objectConfiguration": {
+              "handling": "related-object"
+            },
+            "$ref": "#/components/schemas/applicationInterface",
+            "x-relation-filter": {
+              "module": "@object.moduleB"
+            },
+            "facetable": false
+          }
+        }
+      }
+    }
+  }
+}

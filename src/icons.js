@@ -16,6 +16,7 @@ import AccountBoxOutline from 'vue-material-design-icons/AccountBoxOutline.vue'
 import AccountGroup from 'vue-material-design-icons/AccountGroup.vue'
 import AccountMultiple from 'vue-material-design-icons/AccountMultiple.vue'
 import AlertCircle from 'vue-material-design-icons/AlertCircle.vue'
+import Api from 'vue-material-design-icons/Api.vue'
 import ApplicationOutline from 'vue-material-design-icons/ApplicationOutline.vue'
 import ArchiveOutline from 'vue-material-design-icons/ArchiveOutline.vue'
 import ArrowRight from 'vue-material-design-icons/ArrowRight.vue'
@@ -79,6 +80,7 @@ export default {
 	AccountGroup,
 	AccountMultiple,
 	AlertCircle,
+	Api,
 	ApplicationOutline,
 	ArchiveOutline,
 	ArrowRight,

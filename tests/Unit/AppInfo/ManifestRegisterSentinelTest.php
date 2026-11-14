@@ -130,6 +130,23 @@ class ManifestRegisterSentinelTest extends TestCase {
 			true
 		);
 		$this->assertIsArray($registerConfig, 'the register JSON did not decode');
+
+		// A register.d fragment may attach a schema of its own to a register
+		// (connections-api-catalogue's applicationInterface); the loader
+		// appends those lists, so the attachment check sees them too.
+		foreach (glob($this->root . '/lib/Settings/register.d/*.json') ?: [] as $fragment) {
+			$overlay = json_decode((string)file_get_contents($fragment), true);
+			foreach (($overlay['components']['registers'] ?? []) as $slug => $register) {
+				foreach (($register['schemas'] ?? []) as $schema) {
+					if (isset($registerConfig['components']['registers'][$slug]) === true
+						&& in_array($schema, $registerConfig['components']['registers'][$slug]['schemas'], true) === false
+					) {
+						$registerConfig['components']['registers'][$slug]['schemas'][] = $schema;
+					}
+				}
+			}
+		}
+
 		$this->registerConfig = $registerConfig;
 
 		$this->applicationPhp = (string)file_get_contents(

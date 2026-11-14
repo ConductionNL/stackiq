@@ -102,8 +102,16 @@ class ReviewModerationOverlayReachesTheSchemaTest extends TestCase {
 		$orphans = [];
 		foreach ($fragments as $fragment) {
 			$overlay = json_decode((string)file_get_contents($fragment), true);
-			foreach (array_keys(($overlay['components']['schemas'] ?? [])) as $slug) {
-				if (in_array($slug, $declared, true) === false) {
+			// A fragment that declares a whole schema (slug and properties) and
+			// attaches it to a register adds it, rather than overlaying one.
+			$added = [];
+			foreach (($overlay['components']['registers'] ?? []) as $register) {
+				$added = array_merge($added, ($register['schemas'] ?? []));
+			}
+
+			foreach (($overlay['components']['schemas'] ?? []) as $slug => $schema) {
+				$isNew = in_array($slug, $added, true) === true && ($schema['slug'] ?? null) === $slug && isset($schema['properties']) === true;
+				if (in_array($slug, $declared, true) === false && $isNew === false) {
 					$orphans[] = basename($fragment).' -> '.$slug;
 				}
 			}

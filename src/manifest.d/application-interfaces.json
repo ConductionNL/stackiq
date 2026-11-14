@@ -1,0 +1,181 @@
+{
+  "$schema": "https://raw.githubusercontent.com/ConductionNL/nextcloud-vue/main/src/schemas/app-manifest-v2.schema.json",
+  "_note": "connections-api-catalogue: the APIs an application offers (schema applicationInterface). The menu entry is a child of Applications, next to Connections (ADR-097: no new top-level entry). Style and status are enums and facetable, so filterMenu offers them as column filters. The application page lists its own APIs in md-apis (src/manifest.json).",
+  "menu": [
+    {
+      "id": "Modules",
+      "children": [
+        {
+          "id": "Apis",
+          "label": "APIs",
+          "icon": "Api",
+          "route": "Apis",
+          "order": 11
+        }
+      ]
+    }
+  ],
+  "pages": [
+    {
+      "id": "Apis",
+      "route": "/apis",
+      "type": "index",
+      "title": "APIs",
+      "config": {
+        "register": "@resolve:voorzieningen_register",
+        "schema": "applicationInterface",
+        "description": "The APIs applications offer: their style, version, specification and status.",
+        "columns": [
+          "name",
+          {
+            "key": "module",
+            "label": "Application",
+            "widget": "fkResolve",
+            "widgetProps": {
+              "register": "@resolve:voorzieningen_register",
+              "schema": "module",
+              "labelField": "name"
+            }
+          },
+          "style",
+          "version",
+          "status"
+        ],
+        "filterMenu": true,
+        "quickFilters": [
+          {
+            "label": "All",
+            "filter": {},
+            "default": true
+          },
+          {
+            "label": "In use",
+            "filter": {
+              "status": "in use"
+            },
+            "icon": "CheckCircle"
+          },
+          {
+            "label": "In development",
+            "filter": {
+              "status": "in development"
+            }
+          },
+          {
+            "label": "End of support",
+            "filter": {
+              "status": "end of support"
+            },
+            "icon": "AlertCircle"
+          },
+          {
+            "label": "Withdrawn",
+            "filter": {
+              "status": "withdrawn"
+            }
+          }
+        ],
+        "sidebar": {
+          "enabled": true,
+          "showMetadata": true
+        },
+        "documentationUrl": "https://stackiq.conduction.nl"
+      }
+    },
+    {
+      "id": "ApiDetail",
+      "route": "/apis/:id",
+      "type": "detail",
+      "title": "API",
+      "config": {
+        "register": "@resolve:voorzieningen_register",
+        "schema": "applicationInterface",
+        "_note": "An API is read for what it offers and where it is described: data 8 wide, documents 4 wide at the right, then the related panel with the application, the standards and the connections that call it. Status transitions come from the schema's x-openregister-lifecycle (release, sunset, withdraw).",
+        "lifecycleActions": {
+          "field": "status"
+        },
+        "widgets": [
+          {
+            "id": "api-data",
+            "type": "data",
+            "title": "API",
+            "icon": "LinkVariant",
+            "content": {
+              "columns": 2,
+              "include": [
+                "name",
+                "module",
+                "style",
+                "version",
+                "status",
+                "specificationUrl",
+                "documentationUrl",
+                "standardVersions",
+                "shortDescription",
+                "longDescription",
+                "publicationDate",
+                "depublicationDate"
+              ]
+            }
+          },
+          {
+            "id": "api-files",
+            "type": "integration",
+            "integrationId": "files",
+            "title": "Documents",
+            "icon": "FolderOutline"
+          },
+          {
+            "id": "api-related",
+            "type": "related",
+            "title": "Application, standards and connections",
+            "icon": "LinkVariant"
+          }
+        ],
+        "layout": [
+          {
+            "id": "1",
+            "widgetId": "api-data",
+            "gridX": 0,
+            "gridY": 0,
+            "gridWidth": 8,
+            "gridHeight": 8
+          },
+          {
+            "id": "2",
+            "widgetId": "api-files",
+            "gridX": 8,
+            "gridY": 0,
+            "gridWidth": 4,
+            "gridHeight": 4
+          },
+          {
+            "id": "3",
+            "widgetId": "api-related",
+            "gridX": 8,
+            "gridY": 4,
+            "gridWidth": 4,
+            "gridHeight": 4
+          }
+        ],
+        "sidebar": {
+          "enabled": true,
+          "showMetadata": true,
+          "tabs": [
+            {
+              "id": "audit",
+              "label": "History",
+              "icon": "History",
+              "widgets": [
+                {
+                  "type": "audit"
+                }
+              ]
+            }
+          ]
+        },
+        "documentationUrl": "https://stackiq.conduction.nl"
+      }
+    }
+  ]
+}
