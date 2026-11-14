@@ -11,8 +11,8 @@ Starts after `architecture-views-editor` has landed the read-only GEMMA view pag
   - GIVEN `includeGebruik: true` WHEN the store fetches one view THEN the request carries `include_gebruik=true`
   - GIVEN `includeDeelnamesGebruik: true` WHEN the store fetches one view THEN the request carries `include_deelnames_gebruik=true`
   - GIVEN neither flag WHEN the store fetches THEN neither parameter is sent
-- [ ] Implement
-- [ ] Test (vitest tests/vitest/viewStoreEnrichment.spec.js)
+- [x] Implement (already on development: `fetchView` sends exactly the flags that are on; covered by `tests/vitest/viewStoreToggles.spec.js`)
+- [x] Test (vitest tests/vitest/viewStoreEnrichment.spec.js)
 
 ### Task 2: Map usage to overlay nodes
 - **spec_ref**: openspec/changes/architecture-shared-usage-on-views/specs/shared-usage-on-views/spec.md#requirement-req-suv-002-a-shared-application-must-be-drawn-apart-from-an-own-application-without-relying-on-colour
@@ -23,8 +23,8 @@ Starts after `architecture-views-editor` has landed the read-only GEMMA view pag
   - GIVEN the same application in both lists for one component WHEN mapped THEN one own node comes back
   - GIVEN more usages than fit the component's height WHEN mapped THEN the last node is "+N more"
   - GIVEN `CnGraphCanvas` from `@conduction/nextcloud-vue` WHEN a node with a `class` renders THEN the class reaches the Vue Flow node wrapper (check first; if not, file it on nextcloud-vue and keep the badge)
-- [ ] Implement
-- [ ] Test (vitest tests/vitest/usageOverlay.spec.js)
+- [x] Implement (`src/utils/usageOverlay.js`; the `CnGraphCanvas` class pass-through check waits for the view page of `architecture-views-editor`)
+- [x] Test (vitest tests/vitest/usageOverlay.spec.js)
 
 ### Task 3: Add the control, the overlay and the legend to the read-only view page
 - **spec_ref**: openspec/changes/architecture-shared-usage-on-views/specs/shared-usage-on-views/spec.md#requirement-req-suv-001-the-gemma-view-page-must-let-a-user-show-own-and-shared-applications-on-the-view
