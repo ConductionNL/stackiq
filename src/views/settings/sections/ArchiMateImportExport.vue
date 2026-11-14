@@ -650,6 +650,9 @@
 					</NcButton>
 				</div>
 			</div>
+
+			<!-- architecture-round-trip-check REQ-ART-004: Check a model file -->
+			<ArchiMateRoundTripCheck />
 		</div>
 
 		<!-- Info Content Slot -->
@@ -702,6 +705,7 @@ import Download from 'vue-material-design-icons/Download.vue'
 import Refresh from 'vue-material-design-icons/Refresh.vue'
 // Components
 import AlwaysVisibleSection from '../../../components/AlwaysVisibleSection.vue'
+import ArchiMateRoundTripCheck from './ArchiMateRoundTripCheck.vue'
 import { settingsStore } from '../../../store/store.js'
 import {
 	cancelImport,
@@ -796,6 +800,7 @@ export default {
 
 	components: {
 		AlwaysVisibleSection,
+		ArchiMateRoundTripCheck,
 		NcButton,
 		NcNoteCard,
 		NcLoadingIcon,

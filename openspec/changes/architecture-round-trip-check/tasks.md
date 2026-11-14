@@ -48,7 +48,7 @@
 - **acceptance_criteria**:
   - GIVEN the admin settings page WHEN the ArchiMate section renders THEN Check a model file offers a file picker, the two modes and a Check button
   - GIVEN a result WHEN it renders THEN a row per category shows the counts, examples expand per category, and the summary names the categories with losses or reads "No losses found"
-- [ ] Implement
+- [x] Implement
 - [ ] Test (Playwright `archimate-round-trip-check.spec.ts`)
 
 ### Task 6: Documentation and translations
