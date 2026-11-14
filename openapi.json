@@ -2339,7 +2339,7 @@
         },
         "/entries/{uuid}/type-change": {
             "get": {
-                "operationId": "entry_type-preview",
+                "operationId": "entry-type-preview",
                 "summary": "What a change to another type keeps, drops and is blocked by",
                 "description": "What a change of the entry to `target` (application, service or systemSoftware) keeps, drops with its values, and is blocked by. Writes nothing.",
                 "tags": [
@@ -2402,7 +2402,7 @@
                 ]
             },
             "post": {
-                "operationId": "entry_type-change",
+                "operationId": "entry-type-change",
                 "summary": "Change the entry into another type, keeping its uuid",
                 "description": "Change the entry into `target`. A change between application and service moves the object with OpenRegister, keeping its uuid, history, files and relations; `serviceTypes` is required for a service. Refused with 409 while other entries point at it.",
                 "tags": [

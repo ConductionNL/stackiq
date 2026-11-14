@@ -261,8 +261,8 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // back without a new uuid. The caller's own rights on both schemas are checked
         // in EntryTypeService before OpenRegister moves the object.
         // @spec openspec/changes/landscape-change-entry-type/specs/entry-type-change/spec.md#requirement-req-etc-001-an-entry-changes-type-and-keeps-its-identity
-        ['name' => 'entry_type#preview', 'url' => '/api/entries/{uuid}/type-change', 'verb' => 'GET'],
-        ['name' => 'entry_type#change', 'url' => '/api/entries/{uuid}/type-change', 'verb' => 'POST'],
+        ['name' => 'entryType#preview', 'url' => '/api/entries/{uuid}/type-change', 'verb' => 'GET'],
+        ['name' => 'entryType#change', 'url' => '/api/entries/{uuid}/type-change', 'verb' => 'POST'],
 
         // SELF-SERVICE COLLEAGUE ACCESS (multi-org-membership) — beheerder-of-this-
         // organisation gated (authorizeBeheerder() guard in the controller body,
