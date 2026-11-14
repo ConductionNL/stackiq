@@ -10,8 +10,8 @@
   - GIVEN the merged register WHEN it loads THEN `vng-gemma` lists `view-version` with magic mapping on
   - GIVEN the view lifecycle WHEN the shape test reads it THEN every `from` and `to` value is a member of the status enum
   - GIVEN the fragment WHEN it is compared with development THEN `view`, `element` and `relation` carry bumped versions
-- [ ] Implement
-- [ ] Test (PHPUnit `ArchitectureViewsRegisterShapeTest`, `RegisterFragmentMergeTest`)
+- [x] Implement
+- [x] Test (PHPUnit `ArchitectureViewsRegisterShapeTest`, `RegisterFragmentMergeTest`)
 
 ### Task 2: Views index page and Architecture menu group
 - **spec_ref**: openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-004-the-views-list-shall-filter-on-tag-status-and-owner
@@ -19,7 +19,7 @@
 - **acceptance_criteria**:
   - GIVEN the effective manifest WHEN it is built THEN `Views` is an index page at `/views` over `@resolve:amef_register` and `view` with the quick filters All, Mine, Drawn and Imported
   - GIVEN the effective menu WHEN it renders THEN Standards and Views sit under an Architecture group and the top-level count is unchanged
-- [ ] Implement
+- [x] Implement
 - [ ] Test (`tests/validate-manifest.js`, Playwright `tests/e2e/workflows/architecture-views.spec.ts` tag, status and Mine filters)
 
 ### Task 3: Canvas shape mapping
@@ -28,8 +28,8 @@
 - **acceptance_criteria**:
   - GIVEN an imported GEMMA view WHEN it is mapped to canvas nodes and back THEN every node keeps its absolute position, size and parent
   - GIVEN a canvas with a child node WHEN it is mapped to the save shape THEN the child carries its parent's `viewNodeId`
-- [ ] Implement
-- [ ] Test (vitest `viewGraph.spec.js`)
+- [x] Implement
+- [x] Test (vitest `viewGraph.spec.js`)
 
 ### Task 4: View editor page on CnGraphCanvas
 - **spec_ref**: openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view
@@ -79,8 +79,8 @@
   - GIVEN a drawn view WHEN `GET /api/views/{viewId}` is called with its uuid THEN the answer is 404
   - GIVEN drawn objects WHEN the full ArchiMate export runs THEN none of them is in the file
   - GIVEN a view imported before this change with no origin WHEN either reader runs THEN it is kept as imported
-- [ ] Implement
-- [ ] Test (PHPUnit `ViewServiceDrawnViewTest`, `ArchiMateExportServiceDrawnFilterTest`)
+- [x] Implement
+- [x] Test (PHPUnit `ViewServiceDrawnViewTest`, `ArchiMateExportServiceDrawnFilterTest`)
 
 ### Task 9: Documentation and translations
 - **spec_ref**: openspec/changes/architecture-views-editor/specs/architecture-views-editor/spec.md#requirement-req-ave-001-an-application-owner-shall-draw-and-save-an-architecture-view

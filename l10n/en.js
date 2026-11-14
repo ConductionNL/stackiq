@@ -1,7 +1,3 @@
-/**
- * SPDX-FileCopyrightText: 2026 Conduction B.V. <info@conduction.nl>
- * SPDX-License-Identifier: EUPL-1.2
- */
 OC.L10N.register(
     "stackiq",
     {
@@ -1265,7 +1261,12 @@ OC.L10N.register(
         "Gap, fillable": "Gap, fillable",
         "Gap": "Gap",
         "Licence": "Licence",
-        "Software catalogue": "Software catalogue"
+        "Software catalogue": "Software catalogue",
+        "Architecture": "Architecture",
+        "Views": "Views",
+        "Mine": "Mine",
+        "Drawn": "Drawn",
+        "Imported": "Imported"
     },
     "nplurals=2; plural=(n != 1);"
 )
