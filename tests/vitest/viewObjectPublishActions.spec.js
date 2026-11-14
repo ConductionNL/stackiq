@@ -60,8 +60,13 @@ function context(overrides = {}) {
 		rebuildObjectWithSchemaProperties: vi.fn((result) => ({ rebuilt: result })),
 		...overrides,
 	}
-	ctx.closePublishModal = methods.closePublishModal.bind(ctx)
-	ctx.closeDepublishModal = methods.closeDepublishModal.bind(ctx)
+	// Every other component method, bound, so a method under test can call
+	// the helpers it delegates to.
+	for (const [name, fn] of Object.entries(methods)) {
+		if (!(name in ctx)) {
+			ctx[name] = fn.bind(ctx)
+		}
+	}
 	return ctx
 }
 

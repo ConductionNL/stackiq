@@ -71,6 +71,11 @@ class ProgressTracker implements ProgressTrackerInterface {
 		// weighted percentage of the ArchiMate import's phases is unchanged; the
 		// CMDB section computes its own percentage from the item counts.
 		'reconciling' => ['weight' => 0, 'description' => 'Reconciling records missing from the source'],
+		// The organisation sync's own phases (operations-sync-status-and-progress).
+		// Weight 0, like `reconciling`, so the ArchiMate import's weighted
+		// percentage is unchanged; the sync reports its items per phase.
+		'processing_contacts' => ['weight' => 0, 'description' => 'Processing contact persons'],
+		'processing_users' => ['weight' => 0, 'description' => 'Processing users'],
 		'finalizing' => ['weight' => 5, 'description' => 'Finalizing import'],
 		'completed' => ['weight' => 0, 'description' => 'Completed'],
 	];
@@ -156,6 +161,7 @@ class ProgressTracker implements ProgressTrackerInterface {
 
 		$this->store->removeExpired();
 		$this->saveProgress();
+		$this->store->setCurrent(operationType: $operationType, operationId: $operationId);
 		$this->logStarted();
 
 		return $operationId;
@@ -410,6 +416,7 @@ class ProgressTracker implements ProgressTrackerInterface {
 		}
 
 		$this->saveProgress();
+		$this->clearCurrent();
 
 		$this->logger->info(
 			'Operation completed',
@@ -445,6 +452,7 @@ class ProgressTracker implements ProgressTrackerInterface {
 		$this->progress['status'] = 'failed';
 		$this->progress['estimated_completion'] = time();
 		$this->saveProgress();
+		$this->clearCurrent();
 
 		if ($this->progress['operation_id'] !== null) {
 			$this->store->clearCancel(operationId: $this->progress['operation_id']);
@@ -518,11 +526,55 @@ class ProgressTracker implements ProgressTrackerInterface {
 		$this->progress['status'] = 'cancelled';
 		$this->progress['estimated_completion'] = time();
 		$this->saveProgress();
+		$this->clearCurrent();
 
 		if ($this->progress['operation_id'] !== null) {
 			$this->store->clearCancel(operationId: $this->progress['operation_id']);
 		}
 	}//end cancelOperation()
+
+	/**
+	 * The running operation of an operation type, or null when none runs.
+	 *
+	 * A pointer whose operation has ended or expired counts as none, so a run
+	 * that died without completing does not show as running for ever.
+	 *
+	 * @param string $operationType The operation type, e.g. `organisation_sync`.
+	 *
+	 * @return array<string, mixed>|null The running operation's progress.
+	 *
+	 * @spec openspec/changes/operations-sync-status-and-progress/specs/sync-status-and-progress/spec.md#requirement-req-ssp-001-progress-of-a-long-operation-shall-be-readable-from-any-request-and-only-by-users-allowed-to-read-it
+	 */
+	public function getCurrentOperation(string $operationType): ?array {
+		$operationId = $this->store->getCurrent(operationType: $operationType);
+		if ($operationId === null) {
+			return null;
+		}
+
+		$progress = $this->getProgress(operationId: $operationId);
+		if ($progress === null || ($progress['status'] ?? null) !== 'running') {
+			return null;
+		}
+
+		return $progress;
+	}//end getCurrentOperation()
+
+	/**
+	 * Point the current operation's type at no running operation, when it still points at this one.
+	 *
+	 * @return void
+	 */
+	private function clearCurrent(): void {
+		$type = ($this->progress['operation_type'] ?? null);
+		$id   = ($this->progress['operation_id'] ?? null);
+		if (is_string($type) === false || is_string($id) === false) {
+			return;
+		}
+
+		if ($this->store->getCurrent(operationType: $type) === $id) {
+			$this->store->setCurrent(operationType: $type, operationId: null);
+		}
+	}//end clearCurrent()
 
 	/**
 	 * Get current progress state

@@ -30,6 +30,8 @@ parameters:
         # OpenRegister ships PhpSpreadsheet, so it is absent from the
         # analysis path; the stub mirrors the real 5.x signature.
         - tests/analysis-stubs/phpspreadsheet-read-filter.stub.php
+        # OpenRegister's MCP provider interface, present at runtime only.
+        - tests/Stubs/OpenRegister/Mcp/IMcpToolProvider.php
         # Integriq's connection-registry events (adopt-connection-registry).
         # ConnectionReportService names them by string behind class_exists.
         - tests/Stubs/Integriq/Event/ConnectionStatusReportedEvent.php
