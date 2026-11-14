@@ -12,6 +12,7 @@ All data is stored as OpenRegister objects (no own database tables). OpenRegiste
 | [GEMMA Faceted Search](#gemma-faceted-search) | Filter the application/service catalogue by GEMMA architecture dimension, with live counts |
 | [Supplier Facet](supplier-facet.md) | Narrow applications and services by supplier, next to the GEMMA facets |
 | [Architecture views](architecture-views.md) | Draw, tag and compare ArchiMate views; copy GEMMA views to edit them |
+| [Data model](data-model.md) | The GGM data entities and your own, their relations and attributes, and the applications that hold their data |
 | [Module Tracking](#module-tracking) | Break applications down into functional modules |
 | [Connection Mapping](#connection-mapping) | Map integrations (koppelingen) between applications and modules |
 | [Organisation and Contact Management](#organisation-and-contact-management) | Manage organisations and their contact persons |
