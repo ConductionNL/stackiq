@@ -58,4 +58,16 @@ interface ViewServiceInterface {
 	 * @spec   openspec/specs/dashboard-views-api/spec.md
 	 */
 	public function getView(string $viewId, array $options = []): array;
+
+	/**
+	 * One view as stored, read with OpenRegister's RBAC and multitenancy on,
+	 * or null when the caller may not read it or it does not exist.
+	 *
+	 * @param string $viewId The view identifier.
+	 *
+	 * @return array<string, mixed>|null The stored view object.
+	 *
+	 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-001-stackiq-shall-draw-a-view-as-a-standalone-svg-from-its-stored-geometry
+	 */
+	public function findStoredView(string $viewId): ?array;
 }//end interface
