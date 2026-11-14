@@ -4206,6 +4206,69 @@
                 "security": []
             }
         },
+        "/ask": {
+            "post": {
+                "operationId": "ask-ask",
+                "summary": "Ask a question about the catalogue",
+                "description": "Searches the catalogue entries the caller may read (applications, services, organisations, usages, connections, compliancy and contracts, at most 20) and has the hermiq assistant answer from them. Nothing is written. `sources` holds the entries the reply cites; `searched` everything the answer was grounded on. An empty `searched` means nothing matched and the assistant was not asked.",
+                "tags": [
+                    "ask"
+                ],
+                "responses": {
+                    "200": {
+                        "description": "`{sessionId, reply, sources, searched}`; each entry is `{ref, schema, id, title, summary, url}`.",
+                        "headers": {
+                            "API-Version": {
+                                "$ref": "#/components/headers/API-Version"
+                            }
+                        },
+                        "content": {
+                            "application/json": {
+                                "schema": {
+                                    "type": "object",
+                                    "additionalProperties": true
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "$ref": "#/components/responses/Problem400"
+                    },
+                    "401": {
+                        "$ref": "#/components/responses/Problem401"
+                    },
+                    "429": {
+                        "$ref": "#/components/responses/Problem429"
+                    },
+                    "503": {
+                        "$ref": "#/components/responses/Problem503"
+                    }
+                },
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "required": [
+                                    "question"
+                                ],
+                                "properties": {
+                                    "question": {
+                                        "type": "string",
+                                        "maxLength": 2000
+                                    },
+                                    "sessionId": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/settings": {
             "get": {
                 "operationId": "settings-index",
