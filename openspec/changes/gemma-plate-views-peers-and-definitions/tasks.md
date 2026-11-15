@@ -56,4 +56,4 @@
 - **acceptance_criteria**:
   - GIVEN the feature doc WHEN read THEN it explains the view picker, the comparable organisations layer and the anonymity rule
   - GIVEN the tasks are done WHEN the change is archived THEN the three rows move back to built with new evidence
-- [ ] Implement
+- [x] Implement
