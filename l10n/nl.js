@@ -1469,7 +1469,18 @@ OC.L10N.register(
         "from the organisation type {type}": "uit het organisatietype {type}",
         "on the contact person": "op de contactpersoon",
         "{due} of {total} people are due for review. A review is due when access was not reviewed in the last {days} days.": "{due} van {total} personen moeten worden beoordeeld. Een beoordeling is nodig als de toegang niet in de afgelopen {days} dagen is beoordeeld.",
-        "{role} removed from {person}": "{role} verwijderd bij {person}"
+        "{role} removed from {person}": "{role} verwijderd bij {person}",
+        "%n application in use shares a reference component with another one.": "%n applicatie in gebruik deelt een referentiecomponent met een andere.",
+        "%n applications in use share a reference component with another one.": "%n applicaties in gebruik delen een referentiecomponent met een andere.",
+        "Applications ({count}): {names}": "Applicaties ({count}): {names}",
+        "Coverage on a GEMMA view": "Dekking op een GEMMA-view",
+        "Empty view": "Lege view",
+        "GEMMA view": "GEMMA-view",
+        "Pick a GEMMA view to see the coverage drawn on it.": "Kies een GEMMA-view om de dekking erop te zien.",
+        "Select a view": "Selecteer een view",
+        "The GEMMA views could not be loaded.": "De GEMMA-views konden niet worden geladen.",
+        "The view could not be loaded.": "De view kon niet worden geladen.",
+        "This view holds no elements.": "Deze view bevat geen elementen."
     },
     "nplurals=2; plural=(n != 1);"
 )

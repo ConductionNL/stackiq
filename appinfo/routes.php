@@ -206,6 +206,7 @@ return \OCA\Stackiq\Middleware\Support\ApiPathAliases::withVersionedAliases([
         // View API endpoints for querying and enriching ArchiMate views
         ['name' => 'view#getAllViews', 'url' => '/api/views', 'verb' => 'GET'],
         ['name' => 'view#getApiDocumentation', 'url' => '/api/views/docs', 'verb' => 'GET'],
+        ['name' => 'view#getViewImage', 'url' => '/api/views/{viewId}/image.svg', 'verb' => 'GET'],
         ['name' => 'view#getView', 'url' => '/api/views/{viewId}', 'verb' => 'GET'],
 
         // ========================================================================

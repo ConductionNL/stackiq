@@ -1397,6 +1397,17 @@
         "on the contact person": "on the contact person",
         "{due} of {total} people are due for review. A review is due when access was not reviewed in the last {days} days.": "{due} of {total} people are due for review. A review is due when access was not reviewed in the last {days} days.",
         "{role} removed from {person}": "{role} removed from {person}",
-        "Review": "Review"
+        "Review": "Review",
+        "%n application in use shares a reference component with another one.": "%n application in use shares a reference component with another one.",
+        "%n applications in use share a reference component with another one.": "%n applications in use share a reference component with another one.",
+        "Applications ({count}): {names}": "Applications ({count}): {names}",
+        "Coverage on a GEMMA view": "Coverage on a GEMMA view",
+        "Empty view": "Empty view",
+        "GEMMA view": "GEMMA view",
+        "Pick a GEMMA view to see the coverage drawn on it.": "Pick a GEMMA view to see the coverage drawn on it.",
+        "Select a view": "Select a view",
+        "The GEMMA views could not be loaded.": "The GEMMA views could not be loaded.",
+        "The view could not be loaded.": "The view could not be loaded.",
+        "This view holds no elements.": "This view holds no elements."
     }
 }
