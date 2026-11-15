@@ -25,6 +25,10 @@ namespace OCA\Stackiq\Service;
 
 use Exception;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\AangebodenGebruikServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use OCP\App\IAppManager;
@@ -1006,9 +1010,13 @@ class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 			// so $gebruikData already carries every unchanged field forward.
 			$updatedGebruik = $objectService->saveObject(
 				object: $gebruikData,
-				register: $existingGebruik->getRegister(),
-				schema: $existingGebruik->getSchema(),
-				uuid: $gebruikId,
+				options: new ObjectSaveOptions(
+					target: new ObjectFindTarget(
+							register: $existingGebruik->getRegister(),
+							schema: $existingGebruik->getSchema()
+						),
+					uuid: $gebruikId
+				),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -1086,8 +1094,7 @@ class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 			try {
 				$object = $objectService->find(
 					id: $objectId,
-					register: $registerId,
-					schema: $schemaId,
+					options: new ObjectFindOptions(register: $registerId, schema: $schemaId),
 					_rbac: false,
 					_multitenancy: false
 				);
@@ -1253,8 +1260,7 @@ class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 
 			$organisationObject = $objectService->find(
 				id: $organisationUuid,
-				register: (int)$registerId,
-				schema: (int)$organisationSchemaId,
+				options: new ObjectFindOptions(register: (int)$registerId, schema: (int)$organisationSchemaId),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -1460,11 +1466,9 @@ class AangebodenGebruikService implements AangebodenGebruikServiceInterface {
 			$objectService->setSchema($existingGebruik->getSchema());
 
 			$deleteResult = $objectService->deleteObject(
-				uuid: $gebruikId,
+				new ObjectDeletion(uuid: $gebruikId),
 				_rbac: false,
-				// Disable RBAC to allow cross-organisation deletion.
 				_multitenancy: false
-				// Disable multitenancy to allow deletion from different organisations.
 			);
 
 			$this->logger->info(

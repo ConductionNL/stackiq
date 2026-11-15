@@ -47,6 +47,7 @@ use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * The convert-to-user flow of the contact persons controller.
@@ -222,6 +223,7 @@ class ContactpersonenControllerConvertToUserTest extends TestCase {
 		$read = [];
 		$this->objectService->expects($this->once())->method('find')->willReturnCallback(
 			static function (...$args) use (&$read): ?ObjectEntityInterface {
+				$args = LegacyObjectArgs::positional(method: 'find', args: $args);
 				$read = $args;
 				return null;
 			}
@@ -343,6 +345,7 @@ class ContactpersonenControllerConvertToUserTest extends TestCase {
 		$saved = [];
 		$this->objectService->expects($this->once())->method('saveObject')->willReturnCallback(
 			static function (...$args) use (&$saved, $contactPerson): ObjectEntityInterface {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				$saved = $args;
 				return $contactPerson;
 			}

@@ -18,6 +18,10 @@ declare(strict_types=1);
 namespace OCA\OpenRegister\Service;
 
 use OCA\OpenRegister\Db\ObjectEntity;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectDeletion;
+use OCA\OpenRegister\Kernel\Contracts\Value\BulkSaveOptions;
 
 /**
  * Stub for ObjectService with the surface used by Stackiq tests.
@@ -39,13 +43,9 @@ abstract class ObjectService {
 	 */
 	abstract public function find(
 		string|int $id,
-		?array $_extend = [],
-		bool $files = false,
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		?ObjectFindOptions $options = null,
 		bool $_rbac = true,
-		bool $_multitenancy = true,
-		bool $_render = true,
+		bool $_multitenancy = true
 	): ?ObjectEntity;
 
 	/**
@@ -150,15 +150,9 @@ abstract class ObjectService {
 	 */
 	abstract public function saveObject(
 		array|ObjectEntity $object = [],
-		int|string $register = '',
-		int|string $schema = '',
-		string $uuid = '',
+		ObjectSaveOptions $options = new ObjectSaveOptions(),
 		bool $_rbac = true,
-		bool $_multitenancy = true,
-		?array $extend = [],
-		bool $silent = false,
-		?array $uploadedFiles = null,
-		mixed $currentUser = null,
+		bool $_multitenancy = true
 	): ObjectEntity;
 
 	/**
@@ -180,9 +174,10 @@ abstract class ObjectService {
 	 * @return bool
 	 */
 	abstract public function deleteObject(
-		string $uuid,
+		ObjectDeletion $deletion,
 		bool $_rbac = true,
 		bool $_multitenancy = true,
+		bool $_retentionSweep = false
 	): bool;
 
 	/**
@@ -203,14 +198,9 @@ abstract class ObjectService {
 	 */
 	abstract public function saveObjects(
 		array $objects,
-		string|int|null $register = null,
-		string|int|null $schema = null,
+		BulkSaveOptions $options = new BulkSaveOptions(),
 		bool $_rbac = true,
-		bool $_multitenancy = true,
-		bool $validation = false,
-		bool $events = false,
-		bool $deduplicateIds = true,
-		bool $enrich = true,
+		bool $_multitenancy = true
 	): array;
 
 	/**
