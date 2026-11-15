@@ -23,8 +23,8 @@
 - **files**: `lib/Settings/register.d/contracts-to-decidesk.json`, `lib/Settings/softwarecatalogus_register.json`
 - **acceptance_criteria**:
   - GIVEN a contract without an approved decision WHEN a user saves it as Active THEN the save is refused
-- [ ] Implement
-- [ ] Test (PHPUnit `tests/Unit/Settings/ContractApprovalGuardTest.php`)
+- [x] Implement
+- [x] Test (PHPUnit `tests/Unit/Settings/ContractApprovalGuardTest.php`)
 
 ### Task 4: Record the requirements in the capability matrix
 - **spec_ref**: openspec/changes/capability-requirements-from-the-matrix/proposal.md
