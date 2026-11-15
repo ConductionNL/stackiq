@@ -1330,6 +1330,8 @@ OC.L10N.register(
         "Gap": "Gap",
         "Licence": "Licence",
         "Software catalogue": "Software catalogue",
+        "%n application in use shares a reference component with another one.": "%n application in use shares a reference component with another one.",
+        "%n applications in use share a reference component with another one.": "%n applications in use share a reference component with another one.",
         "Shared": "Shared",
         "{name}, shared by {partner}": "{name}, shared by {partner}",
         "+{count} more": "+{count} more",
@@ -1339,7 +1341,16 @@ OC.L10N.register(
         "Download as PNG": "Download as PNG",
         "Download links as CSV": "Download links as CSV",
         "The connections could not be loaded.": "The connections could not be loaded.",
-        "This application has no connections you can see.": "This application has no connections you can see."
+        "This application has no connections you can see.": "This application has no connections you can see.",
+        "Applications ({count}): {names}": "Applications ({count}): {names}",
+        "Coverage on a GEMMA view": "Coverage on a GEMMA view",
+        "Empty view": "Empty view",
+        "GEMMA view": "GEMMA view",
+        "Pick a GEMMA view to see the coverage drawn on it.": "Pick a GEMMA view to see the coverage drawn on it.",
+        "Select a view": "Select a view",
+        "The GEMMA views could not be loaded.": "The GEMMA views could not be loaded.",
+        "The view could not be loaded.": "The view could not be loaded.",
+        "This view holds no elements.": "This view holds no elements."
     },
     "nplurals=2; plural=(n != 1);"
 )

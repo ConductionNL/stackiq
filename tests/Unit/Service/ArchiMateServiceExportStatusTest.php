@@ -46,6 +46,7 @@ use RuntimeException;
  * @uses   \OCA\Stackiq\Service\ArchiMate\ObjectServiceLookup
  * @uses   \OCA\Stackiq\Service\ArchiMate\AmefRegisterId
  * @uses   \OCA\Stackiq\Service\ArchiMate\CamelCaseNames
+ * @uses   \OCA\Stackiq\Service\SearchBounds
  */
 class ArchiMateServiceExportStatusTest extends TestCase {
 
