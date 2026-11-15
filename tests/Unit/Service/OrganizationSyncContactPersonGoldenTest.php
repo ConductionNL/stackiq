@@ -38,6 +38,7 @@ use OCP\AppFramework\Db\DoesNotExistException;
 use OCP\IUser;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Golden cases for the contact person object sync.
@@ -218,7 +219,7 @@ class OrganizationSyncContactPersonGoldenTest extends TestCase {
 	 */
 	private static function named(string $method, array $args): array {
 		$named = [];
-		foreach ((new \ReflectionMethod(ObjectServiceInterface::class, $method))->getParameters() as $i => $param) {
+		foreach (LegacyObjectArgs::parameters(ObjectServiceInterface::class, $method) as $i => $param) {
 			if (array_key_exists($i, $args) === false) {
 				continue;
 			}
@@ -274,6 +275,7 @@ class OrganizationSyncContactPersonGoldenTest extends TestCase {
 		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('find')->willReturnCallback(
 			function (...$args) {
+				$args = LegacyObjectArgs::positional(method: 'find', args: $args);
 				$this->trace[] = ['objects.find', self::named(method: 'find', args: $args)];
 				$answer        = array_shift($this->plan['find']);
 				if ($answer instanceof \Throwable) {
@@ -285,6 +287,7 @@ class OrganizationSyncContactPersonGoldenTest extends TestCase {
 		);
 		$objects->method('saveObject')->willReturnCallback(
 			function (...$args) {
+				$args = LegacyObjectArgs::positional(method: 'saveObject', args: $args);
 				$this->trace[] = ['objects.saveObject', self::named(method: 'saveObject', args: $args)];
 				$answer        = array_shift($this->plan['save']);
 				if ($answer instanceof \Throwable) {

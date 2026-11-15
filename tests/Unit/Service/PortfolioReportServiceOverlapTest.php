@@ -35,6 +35,7 @@ use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use ReflectionClass;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
 
 /**
  * Tests for the overlap the portfolio report shows.
@@ -82,6 +83,7 @@ class PortfolioReportServiceOverlapTest extends TestCase {
 		);
 		$objectService->method('find')->willReturnCallback(
 			function (...$args) use ($names) {
+				$args = LegacyObjectArgs::positional(method: 'find', args: $args);
 				if (isset($names[$args[0]]) === false) {
 					throw new RuntimeException('not found');
 				}
