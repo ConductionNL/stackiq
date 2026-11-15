@@ -1329,6 +1329,8 @@
         "Gap": "Gap",
         "Licence": "Licence",
         "Software catalogue": "Software catalogue",
+        "Extensions": "Extensions",
+        "Features and roadmap": "Features and roadmap",
         "%n application in use shares a reference component with another one.": "%n application in use shares a reference component with another one.",
         "%n applications in use share a reference component with another one.": "%n applications in use share a reference component with another one.",
         "Shared": "Shared",

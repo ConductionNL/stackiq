@@ -5,8 +5,8 @@
 OC.L10N.register(
     "stackiq",
     {
-        "No mail transport is set, so registration, activation and account mails are not sent.": "No mail transport is set, so registration, activation and account mails are not sent.",
         "Set up the mail transport": "Set up the mail transport",
+        "No mail transport is set, so registration, activation and account mails are not sent.": "No mail transport is set, so registration, activation and account mails are not sent.",
         "Licence metric": "Licence metric",
         "What one licence covers, as the contract with the supplier states it.": "What one licence covers, as the contract with the supplier states it.",
         "Licences bought": "Licences bought",
@@ -1334,6 +1334,8 @@ OC.L10N.register(
         "Gap": "Gap",
         "Licence": "Licence",
         "Software catalogue": "Software catalogue",
+        "Extensions": "Extensions",
+        "Features and roadmap": "Features and roadmap",
         "%n application in use shares a reference component with another one.": "%n application in use shares a reference component with another one.",
         "%n applications in use share a reference component with another one.": "%n applications in use share a reference component with another one.",
         "Shared": "Shared",
