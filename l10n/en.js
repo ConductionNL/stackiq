@@ -1334,6 +1334,8 @@ OC.L10N.register(
         "Gap": "Gap",
         "Licence": "Licence",
         "Software catalogue": "Software catalogue",
+        "%n application in use shares a reference component with another one.": "%n application in use shares a reference component with another one.",
+        "%n applications in use share a reference component with another one.": "%n applications in use share a reference component with another one.",
         "Shared": "Shared",
         "{name}, shared by {partner}": "{name}, shared by {partner}",
         "+{count} more": "+{count} more",
@@ -1363,7 +1365,16 @@ OC.L10N.register(
         "The APIs applications offer: their style, version, specification and status.": "The APIs applications offer: their style, version, specification and status.",
         "Application, standards and connections": "Application, standards and connections",
         "Add API": "Add API",
-        "No APIs registered for this application": "No APIs registered for this application"
+        "No APIs registered for this application": "No APIs registered for this application",
+        "Applications ({count}): {names}": "Applications ({count}): {names}",
+        "Coverage on a GEMMA view": "Coverage on a GEMMA view",
+        "Empty view": "Empty view",
+        "GEMMA view": "GEMMA view",
+        "Pick a GEMMA view to see the coverage drawn on it.": "Pick a GEMMA view to see the coverage drawn on it.",
+        "Select a view": "Select a view",
+        "The GEMMA views could not be loaded.": "The GEMMA views could not be loaded.",
+        "The view could not be loaded.": "The view could not be loaded.",
+        "This view holds no elements.": "This view holds no elements."
     },
     "nplurals=2; plural=(n != 1);"
 )

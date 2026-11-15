@@ -196,6 +196,26 @@ class ViewService implements ViewServiceInterface {
 	}//end getView()
 
 	/**
+	 * One view as stored, read with OpenRegister's RBAC and multitenancy on;
+	 * null when the caller may not read it, it does not exist or the read fails.
+	 *
+	 * @param string $viewId The view identifier.
+	 *
+	 * @return array<string, mixed>|null The stored view object.
+	 *
+	 * @throws \RuntimeException When OpenRegister or the view configuration is missing.
+	 *
+	 * @spec openspec/changes/architecture-views-to-office-documents/specs/architecture-view-office-export/spec.md#requirement-req-avo-001-stackiq-shall-draw-a-view-as-a-standalone-svg-from-its-stored-geometry
+	 */
+	public function findStoredView(string $viewId): ?array {
+		if (trim($viewId) === '') {
+			return null;
+		}
+
+		return $this->getViewFromRegister(viewId: $viewId);
+	}//end findStoredView()
+
+	/**
 	 * The response for one view: not found, or the transformed and enriched view.
 	 *
 	 * @param string $viewId The view identifier.
