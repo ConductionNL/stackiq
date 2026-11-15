@@ -441,7 +441,7 @@ export default {
 		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
 		 */
 		viewChoices() {
-			return viewOptions(this.viewStore.views)
+			return viewOptions(this.viewStore?.views)
 		},
 
 		/**
@@ -451,7 +451,7 @@ export default {
 		 * @spec openspec/changes/gemma-plate-views-peers-and-definitions/specs/gemma-plate/spec.md#requirement-the-plate-draws-the-gemma-view-the-user-picks-req-gpl-001
 		 */
 		shownView() {
-			const active = this.viewStore.activeView
+			const active = this.viewStore?.activeView
 			if (!this.selectedView || !active) {
 				return null
 			}
