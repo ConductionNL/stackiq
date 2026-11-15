@@ -27,6 +27,8 @@ use PHPUnit\Framework\TestCase;
 use Psr\Container\ContainerInterface;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\Stackiq\Tests\Support\LegacyObjectArgs;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
 
 /**
  * Tests for the registeredBy derivation on module create/update.
@@ -106,7 +108,11 @@ class ModuleRegistrationServiceTest extends TestCase {
 		}
 
 		$this->objectService->method('find')->willReturnCallback(
-			function (int|string $id, ?array $_extend=[], bool $files=false, string|int|null $register=null, string|int|null $schema=null) use ($organisation) {
+			function (int|string $id, ?ObjectFindOptions $options = null) use ($organisation) {
+				$_extend = $options?->extend ?? [];
+				$files = $options?->files ?? false;
+				$register = $options?->register;
+				$schema = $options?->schema;
 				$this->assertSame('org-uuid', $id);
 				$this->assertSame(5, $register);
 				$this->assertSame(3, $schema);
@@ -139,15 +145,15 @@ class ModuleRegistrationServiceTest extends TestCase {
 		$this->configured(['type' => 'Supplier']);
 
 		$this->objectService->expects($this->once())->method('saveObject')
-			->with(
-				['name' => 'Mod', 'registeredBy' => 'Supplier'],
-				[],
-				'7',
-				'9',
-				'module-uuid',
-				false,
-				false
-			)
+			->with(...LegacyObjectArgs::with(method: 'saveObject', expected: [
+				'object' => ['name' => 'Mod', 'registeredBy' => 'Supplier'],
+				'extend' => [],
+				'register' => '7',
+				'schema' => '9',
+				'uuid' => 'module-uuid',
+				'_rbac' => false,
+				'_multitenancy' => false,
+			]))
 			->willReturn($this->createMock(ObjectEntity::class));
 
 		$this->service->handleModuleRegistration($this->module('org-uuid', ['name' => 'Mod']));

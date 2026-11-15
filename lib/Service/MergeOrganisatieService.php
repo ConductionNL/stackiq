@@ -62,6 +62,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Service\Organisation\OwnershipMap;
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
 use OCA\Stackiq\Kernel\Contracts\MergeOrganisatieServiceInterface;
@@ -587,10 +590,10 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 
 		$objectService->saveObject(
 			object: $data,
-			extend: [],
-			register: (int)$registerId,
-			schema: (int)$schemaId,
-			uuid: $entity->getUuid()
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(register: (int)$registerId, schema: (int)$schemaId),
+				uuid: $entity->getUuid()
+			)
 		);
 	}//end saveFull()
 
@@ -863,7 +866,7 @@ class MergeOrganisatieService implements MergeOrganisatieServiceInterface {
 		}
 
 		try {
-			return $objectService->find(id: $uuid, register: (int)$registerId, schema: (int)$schemaId);
+			return $objectService->find(id: $uuid, options: new ObjectFindOptions(register: (int)$registerId, schema: (int)$schemaId));
 		} catch (\Throwable $e) {
 			$this->logger->debug('MergeOrganisatieService: organisation not found', ['uuid' => $uuid, 'error' => $e->getMessage()]);
 			return null;

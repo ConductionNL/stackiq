@@ -21,6 +21,9 @@ declare(strict_types=1);
 
 namespace OCA\Stackiq\Service\Stackiq;
 
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\OpenRegister\Service\Organisation\NewOrganisation;
 use OCA\Stackiq\Kernel\Contracts\ContactPersonHandlerInterface;
 use OCA\Stackiq\Service\OrganisationSlug;
@@ -1022,7 +1025,10 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 			}
 
 			// Use find() method with proper register/schema context.
-			$organizationObject = $objectService->find(id: $organizationId, _extend: [], files: false, register: $registerId, schema: $organisationSchemaId);
+			$organizationObject = $objectService->find(
+				id: $organizationId,
+				options: new ObjectFindOptions(register: $registerId, schema: $organisationSchemaId)
+			);
 
 			if (empty($organizationObject) === false) {
 				$organizationData = $organizationObject->getObject();
@@ -1578,8 +1584,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 			// Find by UUID - use find() with register and schema.
 			$organizationObject = $objectService->find(
 				id: $organizationId,
-				register: $register,
-				schema: $organizationSchema,
+				options: new ObjectFindOptions(register: $register, schema: $organizationSchema),
 				_rbac: false,
 				_multitenancy: false
 			);
@@ -1695,10 +1700,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 
 					$organizationObject = $objectService->find(
 						id: $organizationId,
-						_extend: [],
-						files: false,
-						register: $registerId,
-						schema: $organisationSchemaId
+						options: new ObjectFindOptions(register: $registerId, schema: $organisationSchemaId)
 					);
 					if (empty($organizationObject) === false) {
 						$organizationData = $organizationObject->getObject();
@@ -2144,10 +2146,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 			try {
 				$organizationObject = $objectService->find(
 					id: $organizationUuid,
-					_extend: [],
-					files: false,
-					register: $registerId,
-					schema: $organisationSchemaId
+					options: new ObjectFindOptions(register: $registerId, schema: $organisationSchemaId)
 				);
 				$organizationData = $organizationObject->getObject();
 
@@ -2234,10 +2233,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 			try {
 				$organizationObject = $objectService->find(
 					id: $organizationUuid,
-					_extend: [],
-					files: false,
-					register: $registerId,
-					schema: $organisationSchemaId
+					options: new ObjectFindOptions(register: $registerId, schema: $organisationSchemaId)
 				);
 				$organizationData = $organizationObject->getObject();
 
@@ -2254,10 +2250,10 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 					// Update the organization object.
 					$updatedOrganization = $objectService->saveObject(
 						$organizationData,
-						[],
-						$registerId,
-						$organisationSchemaId,
-						$organizationUuid
+						new ObjectSaveOptions(
+							target: new ObjectFindTarget(register: $registerId, schema: $organisationSchemaId),
+							uuid: $organizationUuid
+						)
 					);
 
 					$this->_logger->info(
@@ -2540,8 +2536,7 @@ class ContactPersonHandler implements ContactPersonHandlerInterface {
 			// Find the organization object by UUID - use find() with register and schema.
 			$organizationObject = $objectService->find(
 				id: $organizationUuid,
-				register: $register,
-				schema: $organizationSchema,
+				options: new ObjectFindOptions(register: $register, schema: $organizationSchema),
 				_rbac: false,
 				_multitenancy: false
 			);

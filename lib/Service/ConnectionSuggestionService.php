@@ -30,6 +30,9 @@ declare(strict_types=1);
 namespace OCA\Stackiq\Service;
 
 use OCA\OpenRegister\Contract\ObjectServiceInterface;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindOptions;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectFindTarget;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 use OCA\Stackiq\Kernel\Contracts\ConnectionSuggestionServiceInterface;
 use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use RuntimeException;
@@ -101,8 +104,10 @@ class ConnectionSuggestionService implements ConnectionSuggestionServiceInterfac
 		try {
 			$usage = $this->objects()->find(
 				id: $usageUuid,
-				register: $this->config->getRegisterIdForObjectType('usage'),
-				schema: $this->config->getSchemaIdForObjectType('usage')
+				options: new ObjectFindOptions(
+					register: $this->config->getRegisterIdForObjectType('usage'),
+					schema: $this->config->getSchemaIdForObjectType('usage')
+				)
 			);
 		} catch (\Throwable) {
 			return null;
@@ -442,8 +447,10 @@ class ConnectionSuggestionService implements ConnectionSuggestionServiceInterfac
 			try {
 				$connection = $this->objects()->find(
 					id: $uuid,
-					register: $this->config->getRegisterIdForObjectType('connection'),
-					schema: $this->config->getSchemaIdForObjectType('connection')
+					options: new ObjectFindOptions(
+						register: $this->config->getRegisterIdForObjectType('connection'),
+						schema: $this->config->getSchemaIdForObjectType('connection')
+					)
 				);
 			} catch (\Throwable) {
 				continue;
@@ -499,8 +506,10 @@ class ConnectionSuggestionService implements ConnectionSuggestionServiceInterfac
 	private function createDraft(array $draft): string {
 		$created = $this->objects()->saveObject(
 			object: $draft,
-			register: $this->config->getRegisterIdForObjectType('connection'),
-			schema: $this->config->getSchemaIdForObjectType('connection')
+			options: new ObjectSaveOptions(target: new ObjectFindTarget(
+					register: $this->config->getRegisterIdForObjectType('connection'),
+					schema: $this->config->getSchemaIdForObjectType('connection')
+				))
 		);
 
 		return (string)$created->getUuid();
@@ -518,9 +527,13 @@ class ConnectionSuggestionService implements ConnectionSuggestionServiceInterfac
 		unset($usage['id']);
 		$this->objects()->saveObject(
 			object: $usage,
-			register: $this->config->getRegisterIdForObjectType('usage'),
-			schema: $this->config->getSchemaIdForObjectType('usage'),
-			uuid: $uuid
+			options: new ObjectSaveOptions(
+				target: new ObjectFindTarget(
+						register: $this->config->getRegisterIdForObjectType('usage'),
+						schema: $this->config->getSchemaIdForObjectType('usage')
+					),
+				uuid: $uuid
+			)
 		);
 	}//end saveUsage()
 

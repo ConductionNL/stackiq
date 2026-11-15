@@ -28,6 +28,7 @@ use OCA\Stackiq\Service\AangebodenGebruik\GebruikBulkHandler;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\LoggerInterface;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * A valid batch is saved item by item, and the outcome counts what was created and what failed.
@@ -58,7 +59,10 @@ class GebruikBulkSaveTest extends TestCase {
 		$objectService = $this->createMock(ObjectServiceInterface::class);
 		$saved         = [];
 		$objectService->expects($this->exactly(2))->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], $register = null, $schema = null) use (&$saved): ObjectEntityInterface {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use (&$saved): ObjectEntityInterface {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
 				$saved[] = [$object, $register, $schema];
 				return $this->saved('u-'.count($saved));
 			}

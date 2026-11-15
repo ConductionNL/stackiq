@@ -26,6 +26,7 @@ use OCA\Stackiq\Service\Settings\RegisterConfigReaderInterface;
 use PHPUnit\Framework\TestCase;
 use Psr\Log\AbstractLogger;
 use RuntimeException;
+use OCA\OpenRegister\Kernel\Contracts\Value\ObjectSaveOptions;
 
 /**
  * processSpecificGebruik(): the latest phase whose start date has passed becomes the status and is saved.
@@ -82,7 +83,11 @@ final class GebruikSyncServiceStatusDatesTest extends TestCase {
 		$settings->method('getVoorzieningenConfig')->willReturn($config);
 		$objects = $this->createMock(originalClassName: ObjectServiceInterface::class);
 		$objects->method('saveObject')->willReturnCallback(
-			function (array $object, ?array $extend = [], string|int|null $register = null, string|int|null $schema = null, ?string $uuid = null) use ($saveFails) {
+			function (array $object, ObjectSaveOptions $options = new ObjectSaveOptions()) use ($saveFails) {
+				$extend = $options->extend ?? [];
+				$register = $options->target->register;
+				$schema = $options->target->schema;
+				$uuid = $options->uuid;
 				if ($saveFails === true) {
 					throw new RuntimeException('database down');
 				}
