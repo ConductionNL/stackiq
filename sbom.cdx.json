@@ -903,10 +903,10 @@
       ]
     },
     {
-      "bom-ref": "symfony/http-client-contracts-3.7.1.0",
+      "bom-ref": "symfony/http-client-contracts-3.7.3.0",
       "type": "library",
       "name": "http-client-contracts",
-      "version": "v3.7.1",
+      "version": "v3.7.3",
       "group": "symfony",
       "description": "Generic abstractions related to HTTP clients",
       "author": "Nicolas Grekas, Symfony Community",
@@ -917,17 +917,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/symfony/http-client-contracts@v3.7.1",
+      "purl": "pkg:composer/symfony/http-client-contracts@v3.7.3",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/symfony/http-client-contracts/zipball/41fc42d276aeff21192465331ebbab7d83a743c0",
-          "comment": "dist reference: 41fc42d276aeff21192465331ebbab7d83a743c0"
+          "url": "https://api.github.com/repos/symfony/http-client-contracts/zipball/35be0019e2c2c9fba80f9dc033290a5240f7b44f",
+          "comment": "dist reference: 35be0019e2c2c9fba80f9dc033290a5240f7b44f"
         },
         {
           "type": "vcs",
           "url": "https://github.com/symfony/http-client-contracts.git",
-          "comment": "source reference: 41fc42d276aeff21192465331ebbab7d83a743c0"
+          "comment": "source reference: 35be0019e2c2c9fba80f9dc033290a5240f7b44f"
         },
         {
           "type": "website",
@@ -936,18 +936,18 @@
         },
         {
           "type": "vcs",
-          "url": "https://github.com/symfony/http-client-contracts/tree/v3.7.1",
+          "url": "https://github.com/symfony/http-client-contracts/tree/v3.7.3",
           "comment": "as detected from Composer manifest 'support.source'"
         }
       ],
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "41fc42d276aeff21192465331ebbab7d83a743c0"
+          "value": "35be0019e2c2c9fba80f9dc033290a5240f7b44f"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "41fc42d276aeff21192465331ebbab7d83a743c0"
+          "value": "35be0019e2c2c9fba80f9dc033290a5240f7b44f"
         },
         {
           "name": "cdx:composer:package:type",
@@ -1380,10 +1380,10 @@
       ]
     },
     {
-      "bom-ref": "symfony/polyfill-mbstring-1.38.2.0",
+      "bom-ref": "symfony/polyfill-mbstring-1.43.0.0",
       "type": "library",
       "name": "polyfill-mbstring",
-      "version": "v1.38.2",
+      "version": "v1.43.0",
       "group": "symfony",
       "description": "Symfony polyfill for the Mbstring extension",
       "author": "Nicolas Grekas, Symfony Community",
@@ -1394,17 +1394,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/symfony/polyfill-mbstring@v1.38.2",
+      "purl": "pkg:composer/symfony/polyfill-mbstring@v1.43.0",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6",
-          "comment": "dist reference: d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6"
+          "url": "https://api.github.com/repos/symfony/polyfill-mbstring/zipball/4d5d331bf731e0aedbc6b2f5e61135b7b7996a72",
+          "comment": "dist reference: 4d5d331bf731e0aedbc6b2f5e61135b7b7996a72"
         },
         {
           "type": "vcs",
           "url": "https://github.com/symfony/polyfill-mbstring.git",
-          "comment": "source reference: d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6"
+          "comment": "source reference: 4d5d331bf731e0aedbc6b2f5e61135b7b7996a72"
         },
         {
           "type": "website",
@@ -1413,18 +1413,18 @@
         },
         {
           "type": "vcs",
-          "url": "https://github.com/symfony/polyfill-mbstring/tree/v1.38.2",
+          "url": "https://github.com/symfony/polyfill-mbstring/tree/v1.43.0",
           "comment": "as detected from Composer manifest 'support.source'"
         }
       ],
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6"
+          "value": "4d5d331bf731e0aedbc6b2f5e61135b7b7996a72"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "d3d318bad5e7a1bfbd026009c8bfb8d8f99ae6b6"
+          "value": "4d5d331bf731e0aedbc6b2f5e61135b7b7996a72"
         },
         {
           "name": "cdx:composer:package:type",
@@ -1592,10 +1592,10 @@
       ]
     },
     {
-      "bom-ref": "symfony/service-contracts-3.7.1.0",
+      "bom-ref": "symfony/service-contracts-3.7.3.0",
       "type": "library",
       "name": "service-contracts",
-      "version": "v3.7.1",
+      "version": "v3.7.3",
       "group": "symfony",
       "description": "Generic abstractions related to writing services",
       "author": "Nicolas Grekas, Symfony Community",
@@ -1606,17 +1606,17 @@
           }
         }
       ],
-      "purl": "pkg:composer/symfony/service-contracts@v3.7.1",
+      "purl": "pkg:composer/symfony/service-contracts@v3.7.3",
       "externalReferences": [
         {
           "type": "distribution",
-          "url": "https://api.github.com/repos/symfony/service-contracts/zipball/c0a284bab1ed8aa0417e3d69250ab437739563a0",
-          "comment": "dist reference: c0a284bab1ed8aa0417e3d69250ab437739563a0"
+          "url": "https://api.github.com/repos/symfony/service-contracts/zipball/15e6a07ec2a2c75ceb1b21dd98105ee8456d2257",
+          "comment": "dist reference: 15e6a07ec2a2c75ceb1b21dd98105ee8456d2257"
         },
         {
           "type": "vcs",
           "url": "https://github.com/symfony/service-contracts.git",
-          "comment": "source reference: c0a284bab1ed8aa0417e3d69250ab437739563a0"
+          "comment": "source reference: 15e6a07ec2a2c75ceb1b21dd98105ee8456d2257"
         },
         {
           "type": "website",
@@ -1625,18 +1625,18 @@
         },
         {
           "type": "vcs",
-          "url": "https://github.com/symfony/service-contracts/tree/v3.7.1",
+          "url": "https://github.com/symfony/service-contracts/tree/v3.7.3",
           "comment": "as detected from Composer manifest 'support.source'"
         }
       ],
       "properties": [
         {
           "name": "cdx:composer:package:distReference",
-          "value": "c0a284bab1ed8aa0417e3d69250ab437739563a0"
+          "value": "15e6a07ec2a2c75ceb1b21dd98105ee8456d2257"
         },
         {
           "name": "cdx:composer:package:sourceReference",
-          "value": "c0a284bab1ed8aa0417e3d69250ab437739563a0"
+          "value": "15e6a07ec2a2c75ceb1b21dd98105ee8456d2257"
         },
         {
           "name": "cdx:composer:package:type",
@@ -32290,8 +32290,8 @@
         "psr/log-3.0.2.0",
         "symfony/deprecation-contracts-3.7.1.0",
         "symfony/http-client-6.4.34.0",
-        "symfony/http-client-contracts-3.7.1.0",
-        "symfony/service-contracts-3.7.1.0"
+        "symfony/http-client-contracts-3.7.3.0",
+        "symfony/service-contracts-3.7.3.0"
       ]
     },
     {
@@ -32355,13 +32355,13 @@
       "dependsOn": [
         "psr/log-3.0.2.0",
         "symfony/deprecation-contracts-3.7.1.0",
-        "symfony/http-client-contracts-3.7.1.0",
+        "symfony/http-client-contracts-3.7.3.0",
         "symfony/polyfill-php83-1.33.0.0",
-        "symfony/service-contracts-3.7.1.0"
+        "symfony/service-contracts-3.7.3.0"
       ]
     },
     {
-      "ref": "symfony/http-client-contracts-3.7.1.0"
+      "ref": "symfony/http-client-contracts-3.7.3.0"
     },
     {
       "ref": "symfony/mailer-6.4.40.0",
@@ -32371,7 +32371,7 @@
         "psr/log-3.0.2.0",
         "symfony/event-dispatcher-6.4.43.0",
         "symfony/mime-7.4.22.0",
-        "symfony/service-contracts-3.7.1.0"
+        "symfony/service-contracts-3.7.3.0"
       ]
     },
     {
@@ -32391,7 +32391,7 @@
       "dependsOn": [
         "symfony/deprecation-contracts-3.7.1.0",
         "symfony/polyfill-intl-idn-1.38.1.0",
-        "symfony/polyfill-mbstring-1.38.2.0"
+        "symfony/polyfill-mbstring-1.43.0.0"
       ]
     },
     {
@@ -32407,7 +32407,7 @@
       "ref": "symfony/polyfill-intl-normalizer-1.43.0.0"
     },
     {
-      "ref": "symfony/polyfill-mbstring-1.38.2.0"
+      "ref": "symfony/polyfill-mbstring-1.43.0.0"
     },
     {
       "ref": "symfony/polyfill-php83-1.33.0.0"
@@ -32426,7 +32426,7 @@
       ]
     },
     {
-      "ref": "symfony/service-contracts-3.7.1.0",
+      "ref": "symfony/service-contracts-3.7.3.0",
       "dependsOn": [
         "psr/container-2.0.2.0",
         "symfony/deprecation-contracts-3.7.1.0"
@@ -32437,7 +32437,7 @@
       "dependsOn": [
         "symfony/deprecation-contracts-3.7.1.0",
         "symfony/polyfill-ctype-1.37.0.0",
-        "symfony/polyfill-mbstring-1.38.2.0"
+        "symfony/polyfill-mbstring-1.43.0.0"
       ]
     },
     {
