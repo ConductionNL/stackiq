@@ -43,6 +43,30 @@ class StackiqToolProvider implements IMcpToolProvider {
 
 	public const APP_ID = 'stackiq';
 
+	private const READ_HINTS = ['readOnlyHint' => true, 'destructiveHint' => false, 'idempotentHint' => true];
+
+	private const WRITE_HINTS = ['readOnlyHint' => false, 'destructiveHint' => false, 'idempotentHint' => false];
+
+	private const IDEMPOTENT_WRITE_HINTS = ['readOnlyHint' => false, 'destructiveHint' => false, 'idempotentHint' => true];
+
+	private const DESTRUCTIVE_HINTS = ['readOnlyHint' => false, 'destructiveHint' => true, 'idempotentHint' => true];
+
+	private const LIMIT = ['type' => 'integer', 'minimum' => 1, 'maximum' => 100];
+
+	private const PAGE = ['type' => 'integer', 'minimum' => 1];
+
+	private const CONTRACT_HINTS = ['readOnlyHint' => false, 'destructiveHint' => false];
+
+	private const READ_TOOL = ['scope' => 'read', 'reach' => 'user', 'annotations' => self::READ_HINTS];
+
+	private const EXTERNAL_UPDATE_TOOL = ['scope' => 'update', 'reach' => 'external', 'annotations' => self::IDEMPOTENT_WRITE_HINTS];
+
+	private const UPDATE_TOOL = ['scope' => 'update', 'reach' => 'instance', 'annotations' => self::IDEMPOTENT_WRITE_HINTS];
+
+	private const CREATE_TOOL = ['scope' => 'create', 'reach' => 'instance', 'annotations' => self::WRITE_HINTS];
+
+	private const DELETE_TOOL = ['scope' => 'delete', 'reach' => 'instance', 'annotations' => self::DESTRUCTIVE_HINTS];
+
 	private const NO_INPUT = ['type' => 'object', 'properties' => [], 'required' => []];
 
 	private const UUID = ['type' => 'string', 'format' => 'uuid'];
@@ -96,10 +120,7 @@ class StackiqToolProvider implements IMcpToolProvider {
 			. 'aanbod-beheerder of the contract\'s organisation may.',
 		'scope' => 'update',
 		'reach' => 'instance',
-		'annotations' => [
-			'readOnlyHint' => false,
-			'destructiveHint' => false,
-		],
+		'annotations' => self::CONTRACT_HINTS,
 		'inputSchema' => self::CONTRACT_INPUT,
 	], [
 		'id' => 'stackiq.submitContractRenewal',
@@ -107,47 +128,25 @@ class StackiqToolProvider implements IMcpToolProvider {
 		'description' => 'Send a contract renewal to decidesk for an approval decision. Same permission as submitting the contract.',
 		'scope' => 'update',
 		'reach' => 'instance',
-		'annotations' => [
-			'readOnlyHint' => false,
-			'destructiveHint' => false,
-		],
+		'annotations' => self::CONTRACT_HINTS,
 		'inputSchema' => self::CONTRACT_INPUT,
 	], [
 		'id' => 'stackiq.getMyContactProfile',
 		'name' => 'My contact profile',
 		'description' => 'The signed-in user\'s own contact person (name, role, e-mail) and their active and other organisations.',
-		'scope' => 'read',
-		'reach' => 'user',
-		'annotations' => [
-			'readOnlyHint' => true,
-			'destructiveHint' => false,
-			'idempotentHint' => true,
-		],
+		...self::READ_TOOL,
 		'inputSchema' => self::NO_INPUT,
 	], [
 		'id' => 'stackiq.listOffers',
 		'name' => 'Pending offers',
 		'description' => 'The offers (usages, services, applications, connections) waiting for the caller\'s active '
 			. 'organisation to accept or decline.',
-		'scope' => 'read',
-		'reach' => 'user',
-		'annotations' => [
-			'readOnlyHint' => true,
-			'destructiveHint' => false,
-			'idempotentHint' => true,
-		],
+		...self::READ_TOOL,
 		'inputSchema' => [
 			'type' => 'object',
 			'properties' => [
-				'limit' => [
-					'type' => 'integer',
-					'minimum' => 1,
-					'maximum' => 100,
-				],
-				'page' => [
-					'type' => 'integer',
-					'minimum' => 1,
-				],
+				'limit' => self::LIMIT,
+				'page' => self::PAGE,
 			],
 			'required' => [],
 		],
@@ -156,13 +155,7 @@ class StackiqToolProvider implements IMcpToolProvider {
 		'name' => 'Offered usages',
 		'description' => 'Usage records offered to the caller\'s organisation as consumer (as: consumer), or shared with '
 			. 'it as a participant (as: participant).',
-		'scope' => 'read',
-		'reach' => 'user',
-		'annotations' => [
-			'readOnlyHint' => true,
-			'destructiveHint' => false,
-			'idempotentHint' => true,
-		],
+		...self::READ_TOOL,
 		'inputSchema' => [
 			'type' => 'object',
 			'properties' => [
@@ -170,15 +163,8 @@ class StackiqToolProvider implements IMcpToolProvider {
 					'type' => 'string',
 					'enum' => ['consumer', 'participant'],
 				],
-				'limit' => [
-					'type' => 'integer',
-					'minimum' => 1,
-					'maximum' => 100,
-				],
-				'page' => [
-					'type' => 'integer',
-					'minimum' => 1,
-				],
+				'limit' => self::LIMIT,
+				'page' => self::PAGE,
 			],
 			'required' => ['as'],
 		],
@@ -187,20 +173,11 @@ class StackiqToolProvider implements IMcpToolProvider {
 		'name' => 'Portfolio report',
 		'description' => 'The application portfolio report (TIME classification, lifecycle, costs) of one organisation. '
 			. 'Only for an organisation the caller may read; administrators may read any.',
-		'scope' => 'read',
-		'reach' => 'user',
-		'annotations' => [
-			'readOnlyHint' => true,
-			'destructiveHint' => false,
-			'idempotentHint' => true,
-		],
+		...self::READ_TOOL,
 		'inputSchema' => [
 			'type' => 'object',
 			'properties' => [
-				'organisationUuid' => [
-					'type' => 'string',
-					'format' => 'uuid',
-				],
+				'organisationUuid' => self::UUID,
 			],
 			'required' => ['organisationUuid'],
 		],
@@ -209,13 +186,7 @@ class StackiqToolProvider implements IMcpToolProvider {
 		'name' => 'Pending moderations',
 		'description' => 'The organisation registrations (type: organization, the default) or reviews (type: '
 			. 'software-review) waiting for moderation. Administrators only.',
-		'scope' => 'read',
-		'reach' => 'user',
-		'annotations' => [
-			'readOnlyHint' => true,
-			'destructiveHint' => false,
-			'idempotentHint' => true,
-		],
+		...self::READ_TOOL,
 		'inputSchema' => [
 			'type' => 'object',
 			'properties' => [
@@ -231,13 +202,7 @@ class StackiqToolProvider implements IMcpToolProvider {
 		'name' => 'Review aggregate',
 		'description' => 'The average rating, the number of approved reviews and the reviews themselves for one '
 			. 'application (subjectType: module) or service (subjectType: catalogService).',
-		'scope' => 'read',
-		'reach' => 'user',
-		'annotations' => [
-			'readOnlyHint' => true,
-			'destructiveHint' => false,
-			'idempotentHint' => true,
-		],
+		...self::READ_TOOL,
 		'inputSchema' => [
 			'type' => 'object',
 			'properties' => [
@@ -255,20 +220,11 @@ class StackiqToolProvider implements IMcpToolProvider {
 		'id' => 'stackiq.getSbomImportStatus',
 		'name' => 'SBOM import status',
 		'description' => 'The state of the SBOM import of one application version, or of one import operation. Needs read access to the application.',
-		'scope' => 'read',
-		'reach' => 'user',
-		'annotations' => [
-			'readOnlyHint' => true,
-			'destructiveHint' => false,
-			'idempotentHint' => true,
-		],
+		...self::READ_TOOL,
 		'inputSchema' => [
 			'type' => 'object',
 			'properties' => [
-				'moduleVersionUuid' => [
-					'type' => 'string',
-					'format' => 'uuid',
-				],
+				'moduleVersionUuid' => self::UUID,
 				'operationId' => [
 					'type' => 'string',
 				],
@@ -279,25 +235,13 @@ class StackiqToolProvider implements IMcpToolProvider {
 		'id' => 'stackiq.listViews',
 		'name' => 'Architecture views',
 		'description' => 'Every architecture (ArchiMate) view, enriched as the views API serves them.',
-		'scope' => 'read',
-		'reach' => 'user',
-		'annotations' => [
-			'readOnlyHint' => true,
-			'destructiveHint' => false,
-			'idempotentHint' => true,
-		],
+		...self::READ_TOOL,
 		'inputSchema' => self::NO_INPUT,
 	], [
 		'id' => 'stackiq.getView',
 		'name' => 'Architecture view',
 		'description' => 'One architecture (ArchiMate) view by id, with its elements and relations.',
-		'scope' => 'read',
-		'reach' => 'user',
-		'annotations' => [
-			'readOnlyHint' => true,
-			'destructiveHint' => false,
-			'idempotentHint' => true,
-		],
+		...self::READ_TOOL,
 		'inputSchema' => [
 			'type' => 'object',
 			'properties' => [
@@ -312,25 +256,13 @@ class StackiqToolProvider implements IMcpToolProvider {
 		'name' => 'Preview organisation merge',
 		'description' => 'What merging the source organisation into the target would move and change, without changing '
 			. 'anything. Administrators only.',
-		'scope' => 'read',
-		'reach' => 'user',
-		'annotations' => [
-			'readOnlyHint' => true,
-			'destructiveHint' => false,
-			'idempotentHint' => true,
-		],
+		...self::READ_TOOL,
 		'inputSchema' => self::MERGE_INPUT,
 	], [
 		'id' => 'stackiq.getEolSyncStatus',
 		'name' => 'End-of-life sync status',
 		'description' => 'When the end-of-life data was last synced from endoflife.date and with what result. Administrators only.',
-		'scope' => 'read',
-		'reach' => 'user',
-		'annotations' => [
-			'readOnlyHint' => true,
-			'destructiveHint' => false,
-			'idempotentHint' => true,
-		],
+		...self::READ_TOOL,
 		'inputSchema' => self::NO_INPUT,
 	], [
 		'id' => 'stackiq.publishObject',
@@ -338,13 +270,7 @@ class StackiqToolProvider implements IMcpToolProvider {
 		'description' => 'Publish an application, service, connection or organisation in the public catalogue, now or '
 			. 'from a date (when). Only an administrator, or an aanbod-beheerder whose organisation owns the '
 			. 'entry.',
-		'scope' => 'update',
-		'reach' => 'external',
-		'annotations' => [
-			'readOnlyHint' => false,
-			'destructiveHint' => false,
-			'idempotentHint' => true,
-		],
+		...self::EXTERNAL_UPDATE_TOOL,
 		'inputSchema' => [
 			'type' => 'object',
 			'properties' => [
@@ -352,10 +278,7 @@ class StackiqToolProvider implements IMcpToolProvider {
 					'type' => 'string',
 					'enum' => ['catalogService', 'module', 'connection', 'organization'],
 				],
-				'uuid' => [
-					'type' => 'string',
-					'format' => 'uuid',
-				],
+				'uuid' => self::UUID,
 				'when' => [
 					'type' => 'string',
 					'format' => 'date-time',
@@ -367,38 +290,20 @@ class StackiqToolProvider implements IMcpToolProvider {
 		'id' => 'stackiq.depublishObject',
 		'name' => 'Depublish catalogue entry',
 		'description' => 'Withdraw an entry from the public catalogue. Same permission as publishing.',
-		'scope' => 'update',
-		'reach' => 'external',
-		'annotations' => [
-			'readOnlyHint' => false,
-			'destructiveHint' => false,
-			'idempotentHint' => true,
-		],
+		...self::EXTERNAL_UPDATE_TOOL,
 		'inputSchema' => self::PUBLICATION_INPUT,
 	], [
 		'id' => 'stackiq.approveRegistration',
 		'name' => 'Approve registration',
 		'description' => 'Approve a pending organisation registration (type: organization, the default) or review (type: '
 			. 'software-review). Administrators only.',
-		'scope' => 'update',
-		'reach' => 'instance',
-		'annotations' => [
-			'readOnlyHint' => false,
-			'destructiveHint' => false,
-			'idempotentHint' => true,
-		],
+		...self::UPDATE_TOOL,
 		'inputSchema' => self::MODERATION_INPUT,
 	], [
 		'id' => 'stackiq.rejectRegistration',
 		'name' => 'Reject registration',
 		'description' => 'Reject a pending organisation registration or review. Administrators only.',
-		'scope' => 'update',
-		'reach' => 'instance',
-		'annotations' => [
-			'readOnlyHint' => false,
-			'destructiveHint' => false,
-			'idempotentHint' => true,
-		],
+		...self::UPDATE_TOOL,
 		'inputSchema' => self::MODERATION_INPUT,
 	], [
 		'id' => 'stackiq.submitReview',
@@ -406,13 +311,7 @@ class StackiqToolProvider implements IMcpToolProvider {
 		'description' => 'Review an application (subjectType: module) or service (subjectType: catalogService): review '
 			. 'holds rating (1 to 10), name and text. The review is always stored as pending until a moderator '
 			. 'approves it.',
-		'scope' => 'create',
-		'reach' => 'instance',
-		'annotations' => [
-			'readOnlyHint' => false,
-			'destructiveHint' => false,
-			'idempotentHint' => false,
-		],
+		...self::CREATE_TOOL,
 		'inputSchema' => [
 			'type' => 'object',
 			'properties' => [
@@ -434,13 +333,7 @@ class StackiqToolProvider implements IMcpToolProvider {
 		'name' => 'Register organisation',
 		'description' => 'Register a new organisation in the catalogue (organisation holds its name, type and contact '
 			. 'details). It waits for moderation before it is admitted.',
-		'scope' => 'create',
-		'reach' => 'instance',
-		'annotations' => [
-			'readOnlyHint' => false,
-			'destructiveHint' => false,
-			'idempotentHint' => false,
-		],
+		...self::CREATE_TOOL,
 		'inputSchema' => [
 			'type' => 'object',
 			'properties' => [
@@ -454,49 +347,25 @@ class StackiqToolProvider implements IMcpToolProvider {
 		'id' => 'stackiq.acceptOffer',
 		'name' => 'Accept offer',
 		'description' => 'Accept an offer made to the caller\'s active organisation.',
-		'scope' => 'update',
-		'reach' => 'instance',
-		'annotations' => [
-			'readOnlyHint' => false,
-			'destructiveHint' => false,
-			'idempotentHint' => true,
-		],
+		...self::UPDATE_TOOL,
 		'inputSchema' => self::OFFER_INPUT,
 	], [
 		'id' => 'stackiq.declineOffer',
 		'name' => 'Decline offer',
 		'description' => 'Decline an offer made to the caller\'s active organisation; the offer is removed.',
-		'scope' => 'delete',
-		'reach' => 'instance',
-		'annotations' => [
-			'readOnlyHint' => false,
-			'destructiveHint' => true,
-			'idempotentHint' => true,
-		],
+		...self::DELETE_TOOL,
 		'inputSchema' => self::OFFER_INPUT,
 	], [
 		'id' => 'stackiq.claimUsage',
 		'name' => 'Claim usage',
 		'description' => 'Take an offered usage record over as the caller\'s active organisation.',
-		'scope' => 'update',
-		'reach' => 'instance',
-		'annotations' => [
-			'readOnlyHint' => false,
-			'destructiveHint' => false,
-			'idempotentHint' => true,
-		],
+		...self::UPDATE_TOOL,
 		'inputSchema' => self::USAGE_INPUT,
 	], [
 		'id' => 'stackiq.declineUsage',
 		'name' => 'Decline usage',
 		'description' => 'Decline a usage record offered to the caller\'s organisation as consumer; the record is removed.',
-		'scope' => 'delete',
-		'reach' => 'instance',
-		'annotations' => [
-			'readOnlyHint' => false,
-			'destructiveHint' => true,
-			'idempotentHint' => true,
-		],
+		...self::DELETE_TOOL,
 		'inputSchema' => self::USAGE_INPUT,
 	], [
 		'id' => 'stackiq.mergeOrganisations',
@@ -517,20 +386,11 @@ class StackiqToolProvider implements IMcpToolProvider {
 		'description' => 'Import a software bill of materials for an application version, passed inline as JSON text '
 			. '(content, at most 10 MB) in CycloneDX (cyclonedx-json, the default) or SPDX (spdx-json) format. '
 			. 'Needs an administrator or a manage role with access to the application.',
-		'scope' => 'create',
-		'reach' => 'instance',
-		'annotations' => [
-			'readOnlyHint' => false,
-			'destructiveHint' => false,
-			'idempotentHint' => false,
-		],
+		...self::CREATE_TOOL,
 		'inputSchema' => [
 			'type' => 'object',
 			'properties' => [
-				'moduleVersionUuid' => [
-					'type' => 'string',
-					'format' => 'uuid',
-				],
+				'moduleVersionUuid' => self::UUID,
 				'content' => [
 					'type' => 'string',
 				],
@@ -548,13 +408,7 @@ class StackiqToolProvider implements IMcpToolProvider {
 		'id' => 'stackiq.triggerEolSync',
 		'name' => 'Run end-of-life sync',
 		'description' => 'Fetch the end-of-life dates from endoflife.date now and update the application versions. Administrators only.',
-		'scope' => 'update',
-		'reach' => 'external',
-		'annotations' => [
-			'readOnlyHint' => false,
-			'destructiveHint' => false,
-			'idempotentHint' => true,
-		],
+		...self::EXTERNAL_UPDATE_TOOL,
 		'inputSchema' => self::NO_INPUT,
 	]];
 
