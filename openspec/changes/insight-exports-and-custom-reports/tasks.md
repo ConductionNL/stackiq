@@ -63,8 +63,9 @@
   - GIVEN a new report with three fields in order and format CSV WHEN the user runs it THEN the CSV header holds those fields in that order
   - GIVEN a filter row bbnLevel equals BBN2 WHEN the report runs THEN every row is a BBN2 application
   - GIVEN a Nextcloud admin with other users' profiles in OpenRegister WHEN the page opens THEN it lists only the admin's own profiles
-- [ ] Implement
+- [x] Implement
 - [ ] Test (vitest tests/vitest/customReports.spec.js and Playwright tests/e2e/spec-coverage/custom-reports.spec.ts)
+  > Built: the `CustomReports` page at `/reports/custom` (`src/manifest.d/custom-reports.json`) and its card on the Reports page. `CustomReportsView` reads OpenRegister's export profiles and the catalogue register's schemas, lists only the caller's own profiles over that register, runs a report as the download from `/api/export-profiles/{id}/run` and deletes it. `CustomReportDialog` defines a report over the picked schema in `CnFormDialog`: name, fields in column order, value mode, CSV or JSON, and filter rows of a field and a value, stored as the profile's `filters`. vitest `customReports.spec.js` and `customReportDialog.spec.js`. The Playwright half needs a live instance.
 
 ### Task 7: Document the exports and the custom reports
 - **spec_ref**: openspec/changes/insight-exports-and-custom-reports/specs/catalogue-exports-and-reports/spec.md#requirement-req-cer-004-a-user-shall-define-run-and-delete-their-own-reports-over-one-catalogue-schema

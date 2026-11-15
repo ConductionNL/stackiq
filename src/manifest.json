@@ -1081,6 +1081,13 @@
 						"description": "Overlapping and ageing software across the portfolio.",
 						"icon": "BriefcaseOutline",
 						"route": "PortfolioReport"
+					},
+					{
+						"id": "CustomReports",
+						"label": "Custom reports",
+						"description": "Your own reports over the catalogue, as a CSV or JSON file.",
+						"icon": "FileTableOutline",
+						"route": "CustomReports"
 					}
 				]
 			},

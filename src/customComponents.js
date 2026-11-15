@@ -41,6 +41,7 @@ import LifecycleRoadmapView from './views/LifecycleRoadmapView.vue'
 import DataQualityReportView from './views/organisaties/DataQualityReport.vue'
 import GemmaPlateView from './views/organisaties/GemmaPlate.vue'
 import PortfolioReportView from './views/organisaties/PortfolioReport.vue'
+import CustomReportsView from './views/reports/CustomReportsView.vue'
 import StackiqSettingsPage from './views/settings/StackiqSettings.vue'
 import SuitesIndexView from './views/suites/SuitesIndexView.vue'
 import { createConnectionHandlers } from './services/connectionRegistry.js'
@@ -188,6 +189,9 @@ export default {
 	// fetched, pre-aggregated multi-metric report with a CSV export button.
 	// @spec openspec/changes/portfolio-rationalization-time/specs/portfolio-rationalization-time/spec.md
 	PortfolioReportView,
+	// The Custom reports page (insight-exports-and-custom-reports, REQ-CER-004):
+	// the caller's OpenRegister export profiles over the catalogue register.
+	CustomReportsView,
 	// --- Lib gap: the organisation-scoped data quality report. ---
 	// GET /api/data-quality evaluates the usage schema's declared quality
 	// rules over one organisation's usages, bounded like the portfolio report.
